@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Ongaku Ryoho</title>
+
+  <link rel="stylesheet" href="application.css" />
+</head>
+<body>
+
+  <div class="elm-container">
+    <noscript>
+      <p>Damn it, this application needs Javascript in order to operate.</p>
+    </noscript>
+  </div>
+
+  <script>
+    // insert loader
+    document.querySelector(".elm-container").innerHTML =
+      '<div class="centered"><svg class="spinner" height="29px" width="29px" viewbox="0 0 30 30"><circle class="spinner__path" cx="15" cy="15" fill="none" r="14" stroke-linecap="round" stroke-width="2"></circle></svg></div>';
+  </script>
+
+  <script src="application.js"></script>
+  <script src="elm-loader.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "devDependencies": {
+    "normalize.css": "~> 5.0.0",
+    "postcss": "~> 5.2.5",
+    "postcss-cli-simple": "^1.0.1",
+    "postcss-cssnext": "~> 2.9.0",
+    "postcss-custom-units": "~> 0.1.1",
+    "postcss-import": "~> 9.1.0",
+    "postcss-mixins": "~> 5.4.0",
+    "postcss-remify": "~> 1.0.1",
+    "postcss-simple-vars": "~> 3.0.0"
+  }
+}
