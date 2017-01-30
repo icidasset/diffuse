@@ -13,6 +13,7 @@ all: build
 
 
 build: clean system elm css
+	@echo "> Done ⚡ \n"
 
 
 clean:
@@ -35,7 +36,7 @@ css:
 
 
 elm:
-	elm-make $(SRC_DIR)/App/Main.elm --output $(BUILD_DIR)/application.js --yes
+	elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes
 
 
 

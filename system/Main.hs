@@ -35,6 +35,7 @@ sequences =
     in
         lsequence
             [ ( "pages",  process ["src/Static/Html/**/*.html"] >>= Shikensu.read )
+            , ( "images", process ["src/Static/Images/**/*.*"]  >>= Shikensu.read )
             , ( "js",     process ["src/*.js"]                  >>= Shikensu.read )
             ]
 
@@ -46,4 +47,5 @@ flow ("pages", dict) =
         |> clone "200.html" "index.html"
 
 
+flow ("images", dict) = prefixDirname "images/" dict
 flow ("js", dict) = dict

@@ -1,0 +1,3 @@
+@define-mixin default-font {
+  font-family: sans-serif;
+}

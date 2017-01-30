@@ -1,0 +1,16 @@
+html {
+  font-size: 13px;
+
+  @media (--xsmall) { font-size: 14px; }
+  @media (--small) { font-size: 15px; }
+  @media (--medium) { font-size: 16px; }
+}
+
+body {
+  @mixin default-font;
+  background: white;
+  color: $text-color;
+  font-size: 1rem;
+  line-height: 1.75;
+  text-rendering: optimizeLegibility;
+}

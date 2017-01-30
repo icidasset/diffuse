@@ -2,6 +2,7 @@ var node = document.querySelector(".elm-container");
 
 //
 // Setup Elm app
-var app = Elm.Main.embed(
-  node
+var app = Elm.App.embed(
+  node,
+  {}
 );
