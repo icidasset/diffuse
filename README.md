@@ -10,6 +10,6 @@ A music player which connects to your cloud storage.
 make
 
 # watch and build
-# stack install hobbes
+brew install watchexec
 make watch
 ```

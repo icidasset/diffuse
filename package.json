@@ -1,6 +1,7 @@
 {
   "private": true,
   "devDependencies": {
+    "elm-css": "^0.6.0",
     "normalize.css": "~> 5.0.0",
     "postcss": "~> 5.2.5",
     "postcss-cli-simple": "^1.0.1",

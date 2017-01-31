@@ -4,7 +4,8 @@
     "repository": "https://github.com/icidasset/ongakuryoho.git",
     "license": "BSD3",
     "source-directories": [
-        "src/App"
+        "src/App",
+        "src/Css"
     ],
     "exposed-modules": [],
     "dependencies": {
@@ -13,7 +14,11 @@
         "elm-lang/navigation": "2.1.0 <= v < 3.0.0",
         "elm-lang/svg": "2.0.0 <= v < 3.0.0",
         "etaque/elm-response": "3.0.0 <= v < 4.0.0",
-        "evancz/url-parser": "2.0.1 <= v < 3.0.0"
+        "evancz/url-parser": "2.0.1 <= v < 3.0.0",
+        "lukewestby/elm-string-interpolate": "1.0.1 <= v < 2.0.0",
+        "rtfeldman/elm-css": "8.0.0 <= v < 9.0.0",
+        "rtfeldman/elm-css-helpers": "2.0.1 <= v < 3.0.0",
+        "rtfeldman/elm-css-util": "1.0.2 <= v < 2.0.0"
     },
     "elm-version": "0.18.0 <= v < 0.19.0"
 }

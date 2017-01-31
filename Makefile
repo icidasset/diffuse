@@ -1,19 +1,22 @@
 .PHONY: build system
 
-
-# variables
+#
+# Variables
+#
 NODE_BIN=./node_modules/.bin
 
 SRC_DIR=./src
 BUILD_DIR=./build
 
 
-# tasks
+#
+# Tasks
+#
 all: build
 
 
 build: clean system elm css
-	@echo "> Done ⚡ \n"
+	@echo "> Done ⚡"
 
 
 clean:
@@ -21,23 +24,14 @@ clean:
 	@rm -rf $(BUILD_DIR)
 
 
-
 css:
-	@echo "> Compiling CSS"
-	@$(NODE_BIN)/postcss \
-		-u postcss-import \
-		-u postcss-mixins \
-		-u postcss-custom-units \
-		-u postcss-remify --postcss-remify.base=16 \
-		-u postcss-simple-vars \
-		-u postcss-cssnext --no-postcss-cssnext.features.rem \
-		-o $(BUILD_DIR)/application.css \
-		$(SRC_DIR)/Css/index.css
+	@echo "> Compiling Css"
+	@$(NODE_BIN)/elm-css $(SRC_DIR)/Css/Stylesheets.elm --output $(BUILD_DIR)
 
 
 elm:
-	elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes
-
+	@echo "> Compiling Elm"
+	@elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes
 
 
 server:
@@ -50,6 +44,17 @@ system:
 	@stack build && stack exec build
 
 
+#
+# Watch tasks
+#
 watch: build
 	@echo "> Watching"
-	@hobbes "$(SRC_DIR)/**.*" | xargs -n1 sh -c "make build"
+	@make -j watch_elm watch_system
+
+
+watch_elm:
+	@watchexec -p --filter *.elm -- make elm css
+
+
+watch_system:
+	@watchexec -p --ignore *.elm -- make system

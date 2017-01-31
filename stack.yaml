@@ -2,10 +2,6 @@ resolver: lts-7.17
 
 packages:
 - '.'
-- location:
-    git: https://github.com/jhickner/hobbes.git
-    commit: 1bc0798ea85996d26728f2590aa1143ed22cb446
-  extra-dep: true
 
 extra-deps:
 - 'shikensu-0.2.1'

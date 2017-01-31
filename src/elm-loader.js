@@ -1,4 +1,4 @@
-var node = document.querySelector(".elm-container");
+var node = document.getElementById("elm-container");
 
 //
 // Setup Elm app
