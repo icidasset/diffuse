@@ -6,21 +6,19 @@ import Types exposing (Model, Msg)
 import Utils exposing (..)
 
 
--- Children
+-- CHILDREN
 
 import BackgroundImage.View as BackgroundImage
 import Spinner.View as Spinner
 
 
--- Entry
+-- ENTRY
 
 
 entry : Model -> Html Msg
 entry model =
     div
         []
-        [ div
-            [ cssClass InTheMiddle ]
-            [ Spinner.entry ]
+        [ div [ cssClass InTheMiddle ] [ Spinner.entry ]
         , BackgroundImage.entry model.backgroundImage
         ]

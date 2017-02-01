@@ -9,7 +9,11 @@ type Msg
 
 type alias Model =
     { backgroundImage : String
-    , routing : Routing.Model
+    , showLoadingScreen : Bool
+    , ------------------------------------
+      -- Children
+      ------------------------------------
+      routing : Routing.Model
     }
 
 

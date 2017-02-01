@@ -22,5 +22,4 @@ colors =
 
 
 colorDerivatives =
-    { textColor = colors.base01
-    }
+    { textColor = colors.base01 }

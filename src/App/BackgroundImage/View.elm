@@ -14,8 +14,7 @@ entry imageUrl =
             identifierToString "" BackgroundImageFilter
 
         filterUrl =
-            String.concat
-                [ "url(#", imageFilterId, ")" ]
+            String.concat [ "url(#", imageFilterId, ")" ]
     in
         svg
             [ cssSvgClass BackgroundImage ]
@@ -23,11 +22,7 @@ entry imageUrl =
                 []
                 [ Svg.filter
                     [ id imageFilterId ]
-                    [ feGaussianBlur
-                        [ stdDeviation "10"
-                        ]
-                        []
-                    ]
+                    [ feGaussianBlur [ stdDeviation "10" ] [] ]
                 ]
             , image
                 [ x "-2.5%"

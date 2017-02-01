@@ -6,13 +6,17 @@ import Routing.State as Routing
 import Types exposing (..)
 
 
--- Initial
+-- INITIAL
 
 
 initialModel : ProgramFlags -> Navigation.Location -> Model
 initialModel flags location =
     { backgroundImage = "images/Background/1.jpg"
-    , routing = Routing.initialModel location
+    , showLoadingScreen = True
+    , ------------------------------------
+      -- Children
+      ------------------------------------
+      routing = Routing.initialModel location
     }
 
 
@@ -23,7 +27,7 @@ initialCommands _ _ =
 
 
 
--- Update
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

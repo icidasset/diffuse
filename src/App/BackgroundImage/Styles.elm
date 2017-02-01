@@ -1,6 +1,7 @@
 module BackgroundImage.Styles exposing (..)
 
 import Css exposing (..)
+import Css.Colors exposing (black)
 
 
 type Classes
@@ -14,7 +15,7 @@ type Ids
 styles : List Snippet
 styles =
     [ class BackgroundImage
-        [ backgroundColor (hex "#000")
+        [ backgroundColor black
         , height (vh 100)
         , left zero
         , position fixed

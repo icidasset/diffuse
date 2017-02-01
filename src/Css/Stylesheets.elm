@@ -5,7 +5,14 @@ import Css.File exposing (CssFileStructure, CssCompilerProgram)
 import Styles
 
 
+-- Ports
+
+
 port files : CssFileStructure -> Cmd msg
+
+
+
+-- Content
 
 
 fileStructure : CssFileStructure
@@ -15,10 +22,14 @@ fileStructure =
             Css.File.compile [ Css.stylesheet Styles.styles ]
 
         cssWithKeyframes =
-            { css | css = String.join "\n" [ css.css, Styles.keyframes ] }
+            { css | css = String.concat [ css.css, Styles.keyframes ] }
     in
         Css.File.toFileStructure
             [ ( "application.css", cssWithKeyframes ) ]
+
+
+
+-- Program
 
 
 main : CssCompilerProgram

@@ -3,7 +3,7 @@ module Traits exposing (..)
 import Css exposing (..)
 
 
--- Css / Grid
+-- CSS / Grid
 
 
 gr : Float -> Rem
@@ -12,7 +12,7 @@ gr number =
 
 
 
--- Css / Queries
+-- CSS / Queries
 
 
 querySmall : List Snippet -> Snippet
@@ -31,7 +31,7 @@ queryLarge =
 
 
 
--- Css / Mixins
+-- CSS / Mixins
 
 
 defaultFont : Mixin

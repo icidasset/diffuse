@@ -5,7 +5,7 @@ import Routing.Logic as Logic
 import Routing.Types exposing (..)
 
 
--- Initial
+-- INITIAL
 
 
 initialModel : Navigation.Location -> Model
@@ -19,7 +19,7 @@ initialCommands =
 
 
 
--- Update
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

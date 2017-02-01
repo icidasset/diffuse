@@ -11,6 +11,10 @@ type Classes
     | SpinnerCircle
 
 
+
+-- STYLES
+
+
 styles : List Snippet
 styles =
     [ class Spinner
@@ -21,20 +25,28 @@ styles =
             |> property "animation"
         ]
     , class SpinnerCircle
-        [ """
-            spinnerDash {0}s ease-in-out infinite,
-            spinnerColors {1}s ease-in-out infinite
-          """
-            |> (flip interpolate)
-                [ toString <| Variables.animationDuration
-                , toString <| Variables.animationDuration * 4
-                ]
-            |> property "animation"
+        [ property "animation" circleAnimation
         , property "stroke-dasharray" (toString Variables.offset)
         , property "stroke-dashoffset" "0"
         , property "transform-origin" "center"
         ]
     ]
+
+
+circleAnimation : String
+circleAnimation =
+    """
+    spinnerDash {0}s ease-in-out infinite,
+    spinnerColors {1}s ease-in-out infinite
+    """
+        |> (flip interpolate)
+            [ toString <| Variables.animationDuration
+            , toString <| Variables.animationDuration * 4
+            ]
+
+
+
+-- KEYFRAMES
 
 
 keyframes : String

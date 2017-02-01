@@ -6,7 +6,7 @@ import Traits exposing (..)
 import Variables exposing (..)
 
 
--- Collection
+-- COLLECTION
 
 import BackgroundImage.Styles as BackgroundImage
 import Spinner.Styles as Spinner
@@ -22,12 +22,11 @@ styles =
 keyframes : String
 keyframes =
     String.concat
-        [ Spinner.keyframes
-        ]
+        [ Spinner.keyframes ]
 
 
 
--- Local
+-- LOCAL
 
 
 type Classes
