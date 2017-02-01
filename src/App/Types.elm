@@ -1,20 +1,33 @@
 module Types exposing (..)
 
+import BackgroundImage.Types as BackgroundImage
 import Routing.Types as Routing
 
 
+-- MESSAGES
+
+
 type Msg
-    = RoutingMsg Routing.Msg
+    = BackgroundImageMsg BackgroundImage.Msg
+    | RoutingMsg Routing.Msg
+
+
+
+-- MODEL
 
 
 type alias Model =
-    { backgroundImage : String
-    , showLoadingScreen : Bool
+    { showLoadingScreen : Bool
     , ------------------------------------
       -- Children
       ------------------------------------
-      routing : Routing.Model
+      backgroundImage : BackgroundImage.Model
+    , routing : Routing.Model
     }
+
+
+
+-- FLAGS
 
 
 type alias ProgramFlags =

@@ -1,8 +1,8 @@
 module View exposing (entry)
 
-import Html exposing (Html, div)
+import Html exposing (Html, div, text)
 import Styles exposing (..)
-import Types exposing (Model, Msg)
+import Types exposing (..)
 import Utils exposing (..)
 
 
@@ -19,6 +19,14 @@ entry : Model -> Html Msg
 entry model =
     div
         []
-        [ div [ cssClass InTheMiddle ] [ Spinner.entry ]
-        , BackgroundImage.entry model.backgroundImage
+        [ -- Loading screen
+          if model.showLoadingScreen then
+            div
+                [ cssClass InTheMiddle ]
+                [ Spinner.entry ]
+          else
+            text ""
+        , --
+          BackgroundImage.entry model.backgroundImage
+            |> Html.map BackgroundImageMsg
         ]
