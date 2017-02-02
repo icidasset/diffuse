@@ -39,6 +39,7 @@ circleAnimation =
     spinnerDash {0}s ease-in-out infinite,
     spinnerColors {1}s ease-in-out infinite
     """
+        |> String.trim
         |> (flip interpolate)
             [ toString <| Variables.animationDuration
             , toString <| Variables.animationDuration * 4

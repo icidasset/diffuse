@@ -1,34 +1,39 @@
 module Types exposing (..)
 
-import BackgroundImage.Types as BackgroundImage
+import Firebase.Auth
+
+
+-- Children
+
 import Routing.Types as Routing
 
 
--- MESSAGES
+-- Messages
 
 
 type Msg
-    = BackgroundImageMsg BackgroundImage.Msg
+    = Authenticate
+      -- Children
     | RoutingMsg Routing.Msg
 
 
 
--- MODEL
+-- Model
 
 
 type alias Model =
-    { showLoadingScreen : Bool
+    { authenticatedUser : Maybe Firebase.Auth.User
+    , showLoadingScreen : Bool
     , ------------------------------------
       -- Children
       ------------------------------------
-      backgroundImage : BackgroundImage.Model
-    , routing : Routing.Model
+      routing : Routing.Model
     }
 
 
 
--- FLAGS
+-- Flags
 
 
 type alias ProgramFlags =
-    {}
+    { user : Maybe Firebase.Auth.User }

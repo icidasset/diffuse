@@ -30,7 +30,9 @@ keyframes =
 
 
 type Classes
-    = InTheMiddle
+    = AuthenticationButton
+    | AuthenticationButtonLogo
+    | InTheMiddle
 
 
 stylesLocal : List Snippet
@@ -50,6 +52,24 @@ stylesLocal =
         , fontSize (Css.rem 1)
         , lineHeight (Css.num 1.75)
         , textRendering optimizeLegibility
+        ]
+      --
+    , class AuthenticationButton
+        [ alignItems center
+        , backgroundColor (hex "#fff")
+        , borderRadius (px 3)
+        , cursor pointer
+        , displayFlex
+        , lineHeight (gr 1.5)
+        , padding2 (gr 1) (gr 1.5)
+          --
+        , descendants
+            [ class AuthenticationButtonLogo
+                [ height (px 22)
+                , marginRight (gr 1)
+                , width (px 22)
+                ]
+            ]
         ]
       ------------------------------------------------------
       -- In the middle

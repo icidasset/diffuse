@@ -1,50 +1,50 @@
 module State exposing (..)
 
+import Firebase.Auth
 import Navigation
 import Response exposing (..)
 import Types exposing (..)
 
 
--- CHILDREN
+-- Children
 
-import BackgroundImage.State as BackgroundImage
 import Routing.State as Routing
 
 
--- INITIAL
+-- Initial
 
 
 initialModel : ProgramFlags -> Navigation.Location -> Model
 initialModel flags location =
-    { showLoadingScreen = True
+    { authenticatedUser = flags.user
+    , showLoadingScreen = False
     , ------------------------------------
       -- Children
       ------------------------------------
-      backgroundImage = BackgroundImage.initialModel
-    , routing = Routing.initialModel location
+      routing = Routing.initialModel location
     }
 
 
 initialCommands : ProgramFlags -> Navigation.Location -> Cmd Msg
 initialCommands _ _ =
     Cmd.batch
-        [ Cmd.map BackgroundImageMsg BackgroundImage.initialCommands
-        , Cmd.map RoutingMsg Routing.initialCommands
+        [ Cmd.map RoutingMsg Routing.initialCommands
         ]
 
 
 
--- UPDATE
+-- Update
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        BackgroundImageMsg sub ->
-            BackgroundImage.update sub model.backgroundImage
-                |> mapModel (\x -> { model | backgroundImage = x })
-                |> mapCmd BackgroundImageMsg
+        Authenticate ->
+            ( model, Firebase.Auth.authenticate () )
 
+        ------------------------------------
+        -- Children
+        ------------------------------------
         RoutingMsg sub ->
             Routing.update sub model.routing
                 |> mapModel (\x -> { model | routing = x })
