@@ -8,17 +8,13 @@ import Firebase.Auth
 import Routing.Types as Routing
 
 
--- Messages
+-- Types
 
 
 type Msg
     = Authenticate
       -- Children
     | RoutingMsg Routing.Msg
-
-
-
--- Model
 
 
 type alias Model =
@@ -29,10 +25,6 @@ type alias Model =
       ------------------------------------
       routing : Routing.Model
     }
-
-
-
--- Flags
 
 
 type alias ProgramFlags =

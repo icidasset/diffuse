@@ -14,7 +14,7 @@ import Utils exposing (..)
 import Spinner.View as Spinner
 
 
--- 🍯 Entry
+-- 🍯
 
 
 entry : Model -> Html Msg

@@ -7,7 +7,7 @@ import Svg
 import Svg.Attributes
 
 
--- CSS
+-- Css
 
 
 emptyCssNamespace : Namespace String class id msg

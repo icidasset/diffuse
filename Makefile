@@ -4,7 +4,6 @@
 # Variables
 #
 NODE_BIN=./node_modules/.bin
-
 SRC_DIR=./src
 BUILD_DIR=./build
 
@@ -26,7 +25,7 @@ clean:
 
 css:
 	@echo "> Compiling Css"
-	@$(NODE_BIN)/elm-css $(SRC_DIR)/Css/Stylesheets.elm --output $(BUILD_DIR)
+	@$(NODE_BIN)/elm-css ./system/Stylesheets.elm --output $(BUILD_DIR)
 
 
 elm:

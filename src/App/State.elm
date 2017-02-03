@@ -11,7 +11,7 @@ import Types exposing (..)
 import Routing.State as Routing
 
 
--- Initial
+-- 💧
 
 
 initialModel : ProgramFlags -> Navigation.Location -> Model
@@ -33,7 +33,7 @@ initialCommands _ _ =
 
 
 
--- Update
+-- 🔥
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
