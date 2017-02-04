@@ -6,7 +6,7 @@ import Traits exposing (..)
 import Variables exposing (..)
 
 
--- COLLECTION
+-- Children
 
 import BackgroundImage.Styles as BackgroundImage
 import Spinner.Styles as Spinner
@@ -26,12 +26,13 @@ keyframes =
 
 
 
--- LOCAL
+-- Local
 
 
 type Classes
     = AuthenticationButton
     | AuthenticationButtonLogo
+    | Insulation
     | InTheMiddle
 
 
@@ -77,6 +78,19 @@ stylesLocal =
                 , width (px 22)
                 ]
             ]
+        ]
+      ------------------------------------------------------
+      -- Insulation
+      --
+      -- > Main wrapper used for the layout with the music
+      --   controls visible.
+      ------------------------------------------------------
+    , class Insulation
+        [ backgroundColor (hex "#fff")
+        , boxShadow4 (px 0) (px 2) (px 4) (rgba 0 0 0 0.2)
+        , margin3 (gr 5) auto (gr 10)
+        , maxWidth (gr 50)
+        , position relative
         ]
       ------------------------------------------------------
       -- In the middle

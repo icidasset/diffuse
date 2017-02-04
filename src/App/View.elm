@@ -2,6 +2,7 @@ module View exposing (entry)
 
 import Html exposing (..)
 import Html.Events exposing (onClick)
+import Routing.Types exposing (Page(..))
 import Styles exposing (..)
 import Svg exposing (Svg, g, path, svg)
 import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
@@ -33,12 +34,51 @@ entry model =
                 [ cssClass InTheMiddle ]
                 [ authButton ]
           else
-            text "Logged in"
+            -- Non-overriding, per-page views
+            case model.routing.currentPage of
+                ErrorScreen err ->
+                    -- TODO: Add proper styles for the error screen
+                    div
+                        [ cssClass InTheMiddle ]
+                        [ text ("Error: " ++ err) ]
+
+                Index ->
+                    defaultLayout
+                        [ text "Index" ]
+                        model
         ]
 
 
 
--- Tiny bits
+-- Authenticated bits
+
+
+defaultLayout : List (Html Msg) -> Model -> Html Msg
+defaultLayout children model =
+    -- TODO: Add other bits here:
+    --       Music controls, navigation, etc.
+    div
+        [ cssClass Insulation ]
+        (List.concat
+            [ defaultBeforeChildren model
+            , children
+            , defaultAfterChildren model
+            ]
+        )
+
+
+defaultBeforeChildren : Model -> List (Html Msg)
+defaultBeforeChildren _ =
+    []
+
+
+defaultAfterChildren : Model -> List (Html Msg)
+defaultAfterChildren _ =
+    []
+
+
+
+-- Auth bits
 
 
 authButton : Html Msg
