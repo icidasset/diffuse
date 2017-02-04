@@ -51,6 +51,7 @@ stylesLocal =
         , defaultFont
         , fontSize (Css.rem 1)
         , lineHeight (Css.num 1.75)
+        , margin zero {- TODO: Remove when normalize.css has been added -}
         , textRendering optimizeLegibility
         ]
       ------------------------------------------------------

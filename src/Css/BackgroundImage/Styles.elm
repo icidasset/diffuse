@@ -10,7 +10,7 @@ type Classes
 styles : List Snippet
 styles =
     [ class BackgroundImage
-        [ backgroundImage (url "images/Background/1_blurred.jpg")
+        [ backgroundImage (url "images/Background/1.jpg")
         , backgroundPosition center
         , backgroundRepeat noRepeat
         , backgroundSize (pct 110)
