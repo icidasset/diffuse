@@ -36,7 +36,7 @@ sequences =
         lsequence
             [ ( "pages",  process ["src/Static/Html/**/*.html"] >>= Shikensu.read )
             , ( "images", process ["src/Static/Images/**/*.*"]  >>= Shikensu.read )
-            , ( "js",     process ["src/*.js"]                  >>= Shikensu.read )
+            , ( "js",     process ["src/Js/**/*.js"]            >>= Shikensu.read )
             ]
 
 

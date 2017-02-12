@@ -14,7 +14,7 @@ main =
         { init = init
         , view = View.entry
         , update = State.update
-        , subscriptions = always Sub.none
+        , subscriptions = State.subscriptions
         }
 
 

@@ -5,6 +5,7 @@ import Firebase.Auth
 
 -- Children
 
+import Queue.Types as Queue
 import Routing.Types as Routing
 
 
@@ -14,6 +15,7 @@ import Routing.Types as Routing
 type Msg
     = Authenticate
       -- Children
+    | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
 
 
@@ -23,9 +25,17 @@ type alias Model =
     , ------------------------------------
       -- Children
       ------------------------------------
-      routing : Routing.Model
+      queue : Queue.Model
+    , routing : Routing.Model
+    }
+
+
+type alias Settings =
+    { queue : Queue.Settings
     }
 
 
 type alias ProgramFlags =
-    { user : Maybe Firebase.Auth.User }
+    { settings : Settings
+    , user : Maybe Firebase.Auth.User
+    }

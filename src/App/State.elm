@@ -8,6 +8,7 @@ import Types exposing (..)
 
 -- Children
 
+import Queue.State as Queue
 import Routing.State as Routing
 
 
@@ -21,14 +22,16 @@ initialModel flags location =
     , ------------------------------------
       -- Children
       ------------------------------------
-      routing = Routing.initialModel location
+      queue = Queue.initialModel flags.settings.queue
+    , routing = Routing.initialModel location
     }
 
 
 initialCommands : ProgramFlags -> Navigation.Location -> Cmd Msg
 initialCommands _ _ =
     Cmd.batch
-        [ Cmd.map RoutingMsg Routing.initialCommands
+        [ Cmd.map QueueMsg Queue.initialCommands
+        , Cmd.map RoutingMsg Routing.initialCommands
         ]
 
 
@@ -45,7 +48,22 @@ update msg model =
         ------------------------------------
         -- Children
         ------------------------------------
+        QueueMsg sub ->
+            Queue.update sub model.queue
+                |> mapModel (\x -> { model | queue = x })
+                |> mapCmd QueueMsg
+
         RoutingMsg sub ->
             Routing.update sub model.routing
                 |> mapModel (\x -> { model | routing = x })
                 |> mapCmd RoutingMsg
+
+
+
+-- 🌱
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Sub.map QueueMsg <| Queue.subscriptions model.queue ]
