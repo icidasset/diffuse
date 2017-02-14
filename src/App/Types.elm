@@ -1,6 +1,8 @@
 module Types exposing (..)
 
+import Date exposing (Date)
 import Firebase.Auth
+import Time exposing (Time)
 
 
 -- Children
@@ -14,6 +16,8 @@ import Routing.Types as Routing
 
 type Msg
     = Authenticate
+      -- Time
+    | SetTimestamp Time
       -- Children
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
@@ -22,6 +26,10 @@ type Msg
 type alias Model =
     { authenticatedUser : Maybe Firebase.Auth.User
     , showLoadingScreen : Bool
+    , ------------------------------------
+      -- Time
+      ------------------------------------
+      timestamp : Date
     , ------------------------------------
       -- Children
       ------------------------------------

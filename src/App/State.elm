@@ -1,8 +1,11 @@
 module State exposing (..)
 
+import Date
 import Firebase.Auth
 import Navigation
 import Response exposing (..)
+import Task
+import Time
 import Types exposing (..)
 
 
@@ -20,6 +23,10 @@ initialModel flags location =
     { authenticatedUser = flags.user
     , showLoadingScreen = False
     , ------------------------------------
+      -- Time
+      ------------------------------------
+      timestamp = Date.fromTime 0
+    , ------------------------------------
       -- Children
       ------------------------------------
       queue = Queue.initialModel flags.settings.queue
@@ -30,7 +37,10 @@ initialModel flags location =
 initialCommands : ProgramFlags -> Navigation.Location -> Cmd Msg
 initialCommands _ _ =
     Cmd.batch
-        [ Cmd.map QueueMsg Queue.initialCommands
+        [ -- Time
+          Task.perform SetTimestamp Time.now
+          -- Children
+        , Cmd.map QueueMsg Queue.initialCommands
         , Cmd.map RoutingMsg Routing.initialCommands
         ]
 
@@ -44,6 +54,10 @@ update msg model =
     case msg of
         Authenticate ->
             ( model, Firebase.Auth.authenticate () )
+
+        -- Time
+        SetTimestamp time ->
+            (!) { model | timestamp = Date.fromTime time } []
 
         ------------------------------------
         -- Children
@@ -66,4 +80,8 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Sub.map QueueMsg <| Queue.subscriptions model.queue ]
+        [ -- Time
+          Time.every (5 * Time.minute) SetTimestamp
+          -- Children
+        , Sub.map QueueMsg <| Queue.subscriptions model.queue
+        ]

@@ -1,6 +1,7 @@
 module Utils exposing (..)
 
 import Css.Helpers exposing (identifierToString)
+import Hex
 import Html exposing (Attribute)
 import Html.CssHelpers exposing (..)
 import Svg
@@ -43,3 +44,29 @@ cssId =
 cssSvgId : id -> Svg.Attribute msg
 cssSvgId id =
     Svg.Attributes.id (identifierToString "" id)
+
+
+
+-- Other
+
+
+lowercaseHexadecimalString : String -> String
+lowercaseHexadecimalString =
+    String.toLower >> hexFromString >> hexToString
+
+
+makeQueryParam : ( String, String ) -> String
+makeQueryParam ( a, b ) =
+    a ++ "=" ++ b
+
+
+hexFromString : String -> Int
+hexFromString string =
+    string
+        |> Hex.fromString
+        |> Result.withDefault 0
+
+
+hexToString : Int -> String
+hexToString =
+    Hex.toString
