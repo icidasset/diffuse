@@ -1,6 +1,6 @@
 module Queue.State exposing (..)
 
-import List.Extra as List
+import List.Extra as ListEx
 import Queue.Ports as Ports
 import Queue.Types as Types exposing (..)
 
@@ -47,8 +47,8 @@ update msg model =
                 { model
                     | future =
                         model.future
-                            |> List.findIndex isManualEntry
-                            |> Maybe.map (\idx -> List.setAt idx item model.future)
+                            |> ListEx.findIndex isManualEntry
+                            |> Maybe.map (\idx -> ListEx.setAt idx item model.future)
                             |> Maybe.map (Maybe.withDefault model.future)
                             |> Maybe.withDefault model.future
                 }
@@ -59,7 +59,7 @@ update msg model =
         --
         RemoveItem index ->
             (!)
-                { model | future = List.removeAt index model.future }
+                { model | future = ListEx.removeAt index model.future }
                 []
 
         ------------------------------------
@@ -71,7 +71,7 @@ update msg model =
         Rewind ->
             let
                 newActiveItem =
-                    List.last model.past
+                    ListEx.last model.past
             in
                 (!)
                     { model
@@ -85,7 +85,7 @@ update msg model =
                                 Nothing ->
                                     model.future
                         , past =
-                            Maybe.withDefault [] (List.init model.past)
+                            Maybe.withDefault [] (ListEx.init model.past)
                     }
                     [ Ports.activeQueueItemChanged newActiveItem ]
 
