@@ -1,8 +1,11 @@
 module Routing.Types exposing (..)
 
+import Sources.Types as Sources
+
 
 type Msg
-    = SetPage Page
+    = GoToPage Page
+    | GoToUrl String
 
 
 type alias Model =
@@ -10,5 +13,6 @@ type alias Model =
 
 
 type Page
-    = Index
-    | ErrorScreen String
+    = ErrorScreen String
+    | Index
+    | Sources Sources.Page

@@ -2,6 +2,7 @@ module Routing.Logic exposing (locationToMessage, locationToPage)
 
 import Navigation
 import Routing.Types exposing (..)
+import Sources.Types as Sources
 import UrlParser exposing (..)
 
 
@@ -11,7 +12,7 @@ locationToMessage : Navigation.Location -> Msg
 locationToMessage location =
     location
         |> locationToPage
-        |> SetPage
+        |> GoToPage
 
 
 {-| Parse the location and return a `Page`.
@@ -30,4 +31,8 @@ locationToPage location =
 route : Parser (Page -> a) a
 route =
     oneOf
-        [ map Index top ]
+        [ map (Sources Sources.Index) (s "sources")
+        , map (Sources Sources.New) (s "sources" </> s "new")
+          -- Other
+        , map Index top
+        ]

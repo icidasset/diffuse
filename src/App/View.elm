@@ -12,6 +12,7 @@ import Utils exposing (..)
 
 -- Children
 
+import Sources.View as Sources
 import Spinner.View as Spinner
 
 
@@ -45,7 +46,12 @@ entry model =
                 Index ->
                     defaultLayout
                         [ text "Index" ]
-                        model
+                        (model)
+
+                Sources sourcePage ->
+                    defaultLayout
+                        [ Sources.entry sourcePage ]
+                        (model)
         ]
 
 

@@ -1,7 +1,7 @@
 module Styles exposing (..)
 
 import Css exposing (..)
-import Css.Elements exposing (body, html)
+import Css.Elements exposing (..)
 import Traits exposing (..)
 import Variables exposing (..)
 
@@ -9,6 +9,7 @@ import Variables exposing (..)
 -- Children
 
 import BackgroundImage.Styles as BackgroundImage
+import HorizontalNavigation.Styles as HorizontalNavigation
 import Spinner.Styles as Spinner
 
 
@@ -16,6 +17,7 @@ styles : List Snippet
 styles =
     stylesLocal
         |> List.append BackgroundImage.styles
+        |> List.append HorizontalNavigation.styles
         |> List.append Spinner.styles
 
 
@@ -53,6 +55,16 @@ stylesLocal =
         , fontSize (Css.rem 1)
         , lineHeight (Css.num 1.75)
         , textRendering optimizeLegibility
+          --
+        , property "-webkit-font-smoothing" "antialiased"
+        , property "-moz-font-smoothing" "grayscale"
+        ]
+      ------------------------------------------------------
+      -- <🎃>
+      ------------------------------------------------------
+    , a
+        [ color inherit
+        , textDecoration none
         ]
       ------------------------------------------------------
       -- Authentication button
@@ -66,15 +78,14 @@ stylesLocal =
         , cursor pointer
         , displayFlex
         , fontSize (Css.rem 0.95)
-        , fontWeight (Css.int 300)
-        , lineHeight (gr 1.5)
-        , padding2 (gr 1) (gr 1.5)
+        , lineHeight (gr 3)
+        , padding2 (gr 2) (gr 3)
         , property "padding-top" "calc(.75rem + 1px)"
           --
         , descendants
             [ class AuthenticationButtonLogo
                 [ height (px 22)
-                , marginRight (gr 1)
+                , marginRight (gr 2)
                 , width (px 22)
                 ]
             ]
@@ -88,8 +99,8 @@ stylesLocal =
     , class Insulation
         [ backgroundColor (hex "#fff")
         , boxShadow4 (px 0) (px 2) (px 4) (rgba 0 0 0 0.2)
-        , margin3 (gr 5) auto (gr 10)
-        , maxWidth (gr 50)
+        , margin3 (gr 10) auto (gr 20)
+        , maxWidth (gr 100)
         , position relative
         ]
       ------------------------------------------------------

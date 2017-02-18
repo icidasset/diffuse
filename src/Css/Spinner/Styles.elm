@@ -12,7 +12,7 @@ type Classes
 
 
 
--- STYLES
+-- Styles
 
 
 styles : List Snippet
@@ -47,7 +47,7 @@ circleAnimation =
 
 
 
--- KEYFRAMES
+-- Keyframes
 
 
 keyframes : String

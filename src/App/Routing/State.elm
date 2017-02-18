@@ -25,5 +25,8 @@ initialCommands =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SetPage page ->
+        GoToPage page ->
             (!) { model | currentPage = page } []
+
+        GoToUrl url ->
+            (!) model [ Navigation.newUrl url ]

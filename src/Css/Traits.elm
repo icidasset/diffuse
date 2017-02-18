@@ -6,9 +6,9 @@ import Css exposing (..)
 -- Css / Grid
 
 
-gr : Float -> Rem
+gr : Int -> Rem
 gr number =
-    Css.rem (0.75 * number)
+    Css.rem (0.375 * (toFloat number))
 
 
 
