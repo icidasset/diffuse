@@ -10,7 +10,7 @@ import Variables exposing (..)
 
 import BackgroundImage.Styles as BackgroundImage
 import Form.Styles as Form
-import HorizontalNavigation.Styles as HorizontalNavigation
+import Navigation.Styles as Navigation
 import Spinner.Styles as Spinner
 
 
@@ -19,7 +19,7 @@ styles =
     stylesLocal
         |> List.append BackgroundImage.styles
         |> List.append Form.styles
-        |> List.append HorizontalNavigation.styles
+        |> List.append Navigation.styles
         |> List.append Spinner.styles
 
 
@@ -36,6 +36,7 @@ keyframes =
 type Classes
     = AuthenticationButton
     | AuthenticationButtonLogo
+    | Button
     | ContentBox
     | Insulation
     | InTheMiddle
@@ -53,7 +54,7 @@ stylesLocal =
       ------------------------------------------------------
     , body
         [ backgroundColor (hex "#fff")
-        , color (hex colorDerivatives.textColor)
+        , color (hex colorDerivatives.text)
         , defaultFont
         , fontSize (Css.rem 1)
         , lineHeight (Css.num 1.75)
@@ -75,7 +76,7 @@ stylesLocal =
     , class AuthenticationButton
         [ alignItems center
         , backgroundColor (rgba 0 0 0 0.45)
-        , borderRadius (px 3)
+        , borderRadius borderRadiuses.smallElements
         , boxShadow4 (px 0) (px 0) (px 20) (rgba 255 255 255 0.05)
         , color (hex "#fff")
         , cursor pointer
@@ -126,5 +127,21 @@ stylesLocal =
         , fontWeight (int 800)
         , letterSpacing (Css.em -0.025)
         , marginTop zero
+        ]
+      ------------------------------------------------------
+      -- Buttons
+      ------------------------------------------------------
+    , class Button
+        [ backgroundColor transparent
+        , border3 (px 1) solid (hex colorDerivatives.success)
+        , borderRadius borderRadiuses.smallElements
+        , color (hex colorDerivatives.success)
+        , cursor pointer
+        , display inlineBlock
+        , fontSize (Css.rem 0.95)
+        , fontWeight (int 600)
+        , height (gr 6)
+        , lineHeight (gr 6)
+        , padding3 (px 1) (gr 2) zero
         ]
     ]

@@ -1,12 +1,12 @@
 module Sources.View exposing (..)
 
 import Form.Styles as FormStyles
-import HorizontalNavigation.View as HorizontalNavigation
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Navigation.View as Navigation
 import Routing.Types as Routing
 import Sources.Types as Sources exposing (Page(..), Source(..))
-import Styles exposing (Classes(ContentBox))
+import Styles exposing (Classes(Button, ContentBox))
 import Types exposing (Model, Msg)
 import Utils exposing (cssClass)
 
@@ -40,7 +40,7 @@ pageIndex _ =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          HorizontalNavigation.entry
+          Navigation.horizontal
             [ ( "Add a new source", "/sources/new" )
             ]
         ]
@@ -57,7 +57,7 @@ pageNew model =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          HorizontalNavigation.entry
+          Navigation.horizontal
             [ ( "Show my sources", "/sources" )
             ]
           ------------------------------------
@@ -92,6 +92,12 @@ pageNew model =
             , div
                 []
                 (renderSourceProperties model.sources.newSource)
+            , div
+                []
+                [ a
+                    [ cssClass Button ]
+                    [ text "Create source" ]
+                ]
             ]
         ]
 

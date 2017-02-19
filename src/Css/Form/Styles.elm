@@ -3,7 +3,7 @@ module Form.Styles exposing (..)
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Traits exposing (defaultFont, gr)
-import Variables exposing (colorDerivatives)
+import Variables exposing (borderRadiuses, colorDerivatives)
 
 
 type Classes
@@ -77,7 +77,7 @@ formStyles =
         , singleLineInputStyles
           --
         , border zero
-        , borderBottom3 (px 1) solid (hex colorDerivatives.inputBorderColor)
+        , borderBottom3 (px 1) solid (hex colorDerivatives.inputBorder)
         , borderRadius zero
         , padding zero
         ]
@@ -104,14 +104,14 @@ inputStyles =
         [ defaultFont
           --
         , backgroundColor transparent
-        , border3 (px 1) solid (hex colorDerivatives.inputBorderColor)
-        , borderRadius (px 3)
+        , border3 (px 1) solid (hex colorDerivatives.inputBorder)
+        , borderRadius borderRadiuses.smallElements
         , boxSizing borderBox
         , display block
         , width (pct 100)
           --
         , focus
-            [ borderColor (hex colorDerivatives.focusBorderColor)
+            [ borderColor (hex colorDerivatives.focusBorder)
             , outline none
             ]
         ]

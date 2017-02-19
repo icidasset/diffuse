@@ -1,5 +1,7 @@
 module Variables exposing (..)
 
+import Css
+
 
 colors =
     { base00 = "#2f1e2e"
@@ -22,10 +24,18 @@ colors =
 
 
 colorDerivatives =
-    { subtleBorderColor = "#eee"
-    , inputBorderColor = "#ccc"
-    , focusBorderColor = colors.base0D
-    , errorBorderColor = colors.base08
+    { subtleBorder = "#eee"
+    , inputBorder = "#ccc"
+    , focusBorder = colors.base0D
+    , errorBorder = colors.base08
+    , -- States
+      success = colors.base0B
+    , error = colors.base08
     , -- Text
-      textColor = colors.base01
+      text = colors.base01
+    }
+
+
+borderRadiuses =
+    { smallElements = (Css.px 3)
     }

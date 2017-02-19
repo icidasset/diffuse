@@ -1,9 +1,9 @@
-module HorizontalNavigation.View exposing (..)
+module Navigation.View exposing (..)
 
-import HorizontalNavigation.Styles exposing (..)
 import Html exposing (Html, a, div, span, text)
 import Html.Attributes exposing (href)
 import Html.Events.Extra exposing (onClickPreventDefault)
+import Navigation.Styles exposing (..)
 import Routing.Types as Routing
 import Types exposing (Msg(RoutingMsg))
 import Utils exposing (cssClass)
@@ -12,8 +12,8 @@ import Utils exposing (cssClass)
 -- 🍯
 
 
-entry : List ( String, String ) -> Html Msg
-entry items =
+horizontal : List ( String, String ) -> Html Msg
+horizontal items =
     div
         [ cssClass HorizontalNavigation ]
         (items

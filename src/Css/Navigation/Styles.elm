@@ -1,4 +1,4 @@
-module HorizontalNavigation.Styles exposing (..)
+module Navigation.Styles exposing (..)
 
 import Css exposing (..)
 import Css.Elements exposing (a, span)
@@ -15,7 +15,10 @@ type Classes
 
 styles : List Snippet
 styles =
-    [ class HorizontalNavigation
+    [ ------------------------------------------------------
+      -- Horizontal
+      ------------------------------------------------------
+      class HorizontalNavigation
         [ borderBottom3 (px 1) solid (hex "#eee")
         , descendants
             [ a
