@@ -131,13 +131,15 @@ stylesLocal =
       ------------------------------------------------------
       -- Buttons
       ------------------------------------------------------
-    , class Button
+    , (each [ class Button, button ])
         [ backgroundColor transparent
         , border3 (px 1) solid (hex colorDerivatives.success)
         , borderRadius borderRadiuses.smallElements
+        , boxSizing contentBox
         , color (hex colorDerivatives.success)
         , cursor pointer
         , display inlineBlock
+        , fontFamily inherit
         , fontSize (Css.rem 0.95)
         , fontWeight (int 600)
         , height (gr 6)

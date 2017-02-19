@@ -94,8 +94,8 @@ pageNew model =
                 (renderSourceProperties model.sources.newSource)
             , div
                 []
-                [ a
-                    [ cssClass Button ]
+                [ button
+                    [ type_ "submit" ]
                     [ text "Create source" ]
                 ]
             ]
