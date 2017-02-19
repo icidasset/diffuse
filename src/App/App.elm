@@ -1,6 +1,5 @@
 module App exposing (..)
 
-import Sources.Services.Aws
 import Navigation
 import Routing.Logic
 import State

@@ -1,6 +1,12 @@
-module Sources.Services.Aws exposing (makeTrackUrl)
+module Sources.Services.AmazonS3
+    exposing
+        ( properties
+        , initialProperties
+        , translator
+        , makeTrackUrl
+        )
 
-{-| AWS Service.
+{-| Amazon S3 Service.
 
 Resources:
 - http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
@@ -18,16 +24,71 @@ import Time exposing (Time)
 import Utils
 
 
--- Hooks
+-- 📟
 
 
-makeTrackUrl : Date -> AwsSource -> String -> String
+{-| The list of properties we need from the user.
+    `(property, label, placeholder)`
+    Will be used for the forms.
+-}
+properties : List ( String, String, String )
+properties =
+    [ ( "accessKey", "Access key", "Fv6EWfLfCcMo" )
+    , ( "bucketName", "Bucket name", "music" )
+    , ( "region", "Region", initialProperties.region )
+    , ( "secretKey", "Secret key", "qeNcqiMpgqC8" )
+    ]
+
+
+{-| Initial properties.
+-}
+initialProperties : AmazonS3Source
+initialProperties =
+    { accessKey = ""
+    , bucketName = ""
+    , directoryPath = "/"
+    , name = "Amazon S3 source"
+    , region = "us-west-2"
+    , secretKey = ""
+    }
+
+
+{-| Translator.
+    Given a property key, what is the actual value?
+-}
+translator : AmazonS3Source -> String -> Maybe String
+translator source propertyKey =
+    case propertyKey of
+        "accessKey" ->
+            Just source.accessKey
+
+        "bucketName" ->
+            Just source.bucketName
+
+        "region" ->
+            Just source.region
+
+        "secretKey" ->
+            Just source.secretKey
+
+        _ ->
+            Nothing
+
+
+{-| Create a public url for a file.
+    We need this to play the track.
+-}
+makeTrackUrl : Date -> AmazonS3Source -> String -> String
 makeTrackUrl currentDate aws pathToFile =
     -- Create a presigned url that's valid for 24 hours
     presignedUrl 86400 [] currentDate aws pathToFile
 
 
-makeTree : Date -> AwsSource -> List String
+{-| Create a directory tree.
+    List all the tracks in the bucket.
+    Or a specific directory in the bucket.
+-}
+makeTree : Date -> AmazonS3Source -> List String
 makeTree currentDate aws =
     -- TODO
     -- presignedUrl 60 [ ( "marker", marker ), ( "max-keys", "1000" ) ] currentDate aws "/"
@@ -35,10 +96,10 @@ makeTree currentDate aws =
 
 
 
--- Signature
+-- 🚫
 
 
-presignedUrl : Time -> List ( String, String ) -> Date -> AwsSource -> String -> String
+presignedUrl : Time -> List ( String, String ) -> Date -> AmazonS3Source -> String -> String
 presignedUrl lifeExpectancy extraParams currentDate aws pathToFile =
     let
         host =

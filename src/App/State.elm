@@ -13,6 +13,7 @@ import Types exposing (..)
 
 import Queue.State as Queue
 import Routing.State as Routing
+import Sources.State as Sources
 
 
 -- 💧
@@ -31,6 +32,7 @@ initialModel flags location =
       ------------------------------------
       queue = Queue.initialModel flags.settings.queue
     , routing = Routing.initialModel location
+    , sources = Sources.initialModel
     }
 
 
@@ -42,6 +44,7 @@ initialCommands _ _ =
           -- Children
         , Cmd.map QueueMsg Queue.initialCommands
         , Cmd.map RoutingMsg Routing.initialCommands
+        , Cmd.map SourcesMsg Sources.initialCommands
         ]
 
 
@@ -71,6 +74,11 @@ update msg model =
             Routing.update sub model.routing
                 |> mapModel (\x -> { model | routing = x })
                 |> mapCmd RoutingMsg
+
+        SourcesMsg sub ->
+            Sources.update sub model.sources
+                |> mapModel (\x -> { model | sources = x })
+                |> mapCmd SourcesMsg
 
 
 

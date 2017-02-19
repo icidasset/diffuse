@@ -22,4 +22,10 @@ colors =
 
 
 colorDerivatives =
-    { textColor = colors.base01 }
+    { subtleBorderColor = "#eee"
+    , inputBorderColor = "#ccc"
+    , focusBorderColor = colors.base0D
+    , errorBorderColor = colors.base08
+    , -- Text
+      textColor = colors.base01
+    }

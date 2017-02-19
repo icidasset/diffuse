@@ -9,6 +9,7 @@ import Variables exposing (..)
 -- Children
 
 import BackgroundImage.Styles as BackgroundImage
+import Form.Styles as Form
 import HorizontalNavigation.Styles as HorizontalNavigation
 import Spinner.Styles as Spinner
 
@@ -17,6 +18,7 @@ styles : List Snippet
 styles =
     stylesLocal
         |> List.append BackgroundImage.styles
+        |> List.append Form.styles
         |> List.append HorizontalNavigation.styles
         |> List.append Spinner.styles
 
@@ -28,12 +30,13 @@ keyframes =
 
 
 
--- Local
+-- 🦄
 
 
 type Classes
     = AuthenticationButton
     | AuthenticationButtonLogo
+    | ContentBox
     | Insulation
     | InTheMiddle
 
@@ -111,5 +114,17 @@ stylesLocal =
         , displayFlex
         , height (vh 100)
         , justifyContent center
+        ]
+      ------------------------------------------------------
+      -- Content
+      ------------------------------------------------------
+    , class ContentBox
+        [ padding2 (gr 6) (gr 4)
+        ]
+    , h1
+        [ fontSize (Css.rem 1.55)
+        , fontWeight (int 800)
+        , letterSpacing (Css.em -0.025)
+        , marginTop zero
         ]
     ]

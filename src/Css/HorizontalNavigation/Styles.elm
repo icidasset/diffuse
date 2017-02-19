@@ -10,7 +10,7 @@ type Classes
 
 
 
--- Styles
+-- 🦄
 
 
 styles : List Snippet
@@ -27,7 +27,8 @@ styles =
                 , padding2 zero (gr 3)
                 ]
             , span
-                [ position relative
+                [ letterSpacing (Css.em -0.0125)
+                , position relative
                 , top (px 1)
                 ]
             ]

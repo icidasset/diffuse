@@ -50,7 +50,7 @@ entry model =
 
                 Sources sourcePage ->
                     defaultLayout
-                        [ Sources.entry sourcePage ]
+                        [ Sources.entry sourcePage model ]
                         (model)
         ]
 

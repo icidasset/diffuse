@@ -48,11 +48,15 @@ system:
 #
 watch: build
 	@echo "> Watching"
-	@make -j watch_elm watch_system
+	@make -j watch_elm watch_css watch_system
 
 
 watch_elm:
-	@watchexec -p --filter *.elm -- make elm css
+	@watchexec -p -w $(SRC_DIR)/App --filter *.elm -- make elm
+
+
+watch_css:
+	@watchexec -p -w $(SRC_DIR)/Css --filter *.elm -- make elm css
 
 
 watch_system:

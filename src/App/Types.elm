@@ -9,6 +9,7 @@ import Time exposing (Time)
 
 import Queue.Types as Queue
 import Routing.Types as Routing
+import Sources.Types as Sources
 
 
 -- Types
@@ -21,6 +22,7 @@ type Msg
       -- Children
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
+    | SourcesMsg Sources.Msg
 
 
 type alias Model =
@@ -35,6 +37,7 @@ type alias Model =
       ------------------------------------
       queue : Queue.Model
     , routing : Routing.Model
+    , sources : Sources.Model
     }
 
 
