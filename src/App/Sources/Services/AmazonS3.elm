@@ -2,7 +2,8 @@ module Sources.Services.AmazonS3
     exposing
         ( properties
         , initialProperties
-        , translator
+        , translateFrom
+        , translateTo
         , makeTrackUrl
         )
 
@@ -34,9 +35,10 @@ import Utils
 properties : List ( String, String, String )
 properties =
     [ ( "accessKey", "Access key", "Fv6EWfLfCcMo" )
+    , ( "secretKey", "Secret key", "qeNcqiMpgqC8" )
     , ( "bucketName", "Bucket name", "music" )
     , ( "region", "Region", initialProperties.region )
-    , ( "secretKey", "Secret key", "qeNcqiMpgqC8" )
+    , ( "directoryPath", "Directory", "/" )
     ]
 
 
@@ -53,26 +55,52 @@ initialProperties =
     }
 
 
-{-| Translator.
-    Given a property key, what is the actual value?
+{-| Translations.
+    1. Given a property key, what is the actual value?
+    2. Given a property key and a value, give me a new source.
 -}
-translator : AmazonS3Source -> String -> Maybe String
-translator source propertyKey =
+translateFrom : AmazonS3Source -> String -> String
+translateFrom source propertyKey =
     case propertyKey of
         "accessKey" ->
-            Just source.accessKey
+            source.accessKey
 
         "bucketName" ->
-            Just source.bucketName
+            source.bucketName
+
+        "directoryPath" ->
+            source.directoryPath
 
         "region" ->
-            Just source.region
+            source.region
 
         "secretKey" ->
-            Just source.secretKey
+            source.secretKey
 
         _ ->
-            Nothing
+            ""
+
+
+translateTo : AmazonS3Source -> String -> String -> AmazonS3Source
+translateTo source propertyKey propertyValue =
+    case propertyKey of
+        "accessKey" ->
+            { source | accessKey = propertyValue }
+
+        "bucketName" ->
+            { source | bucketName = propertyValue }
+
+        "directoryPath" ->
+            { source | directoryPath = propertyValue }
+
+        "region" ->
+            { source | region = propertyValue }
+
+        "secretKey" ->
+            { source | secretKey = propertyValue }
+
+        _ ->
+            source
 
 
 {-| Create a public url for a file.

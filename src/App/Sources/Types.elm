@@ -49,6 +49,7 @@ type alias Model =
 
 type Msg
     = SetNewSource Source
+    | SetNewSourceProperty Source String String
 
 
 type Page

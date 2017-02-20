@@ -3,11 +3,12 @@ module Sources.View exposing (..)
 import Form.Styles as FormStyles
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onInput)
 import Navigation.View as Navigation
 import Routing.Types as Routing
 import Sources.Types as Sources exposing (Page(..), Source(..))
 import Styles exposing (Classes(Button, ContentBox))
-import Types exposing (Model, Msg)
+import Types exposing (Model, Msg(SourcesMsg))
 import Utils exposing (cssClass)
 
 
@@ -89,9 +90,9 @@ pageNew model =
                         [ text "Amazon S3" ]
                     ]
                 ]
-            , div
-                []
-                (renderSourceProperties model.sources.newSource)
+            , Html.map
+                SourcesMsg
+                (div [] <| renderSourceProperties model.sources.newSource)
             , div
                 []
                 [ button
@@ -106,11 +107,7 @@ pageNew model =
 -- Properties
 
 
-propertyRenderer :
-    source
-    -> (source -> String -> Maybe String)
-    -> ( String, String, String )
-    -> Html msg
+propertyRenderer : Source -> (String -> String) -> ( String, String, String ) -> Html Sources.Msg
 propertyRenderer source translator ( propKey, propLabel, propPlaceholder ) =
     div
         []
@@ -123,26 +120,22 @@ propertyRenderer source translator ( propKey, propLabel, propPlaceholder ) =
                 [ name propKey
                 , type_ "text"
                 , placeholder propPlaceholder
-                , value
-                    (propKey
-                        |> translator source
-                        |> Maybe.withDefault ""
-                    )
+                , value (translator propKey)
+                , onInput (Sources.SetNewSourceProperty source propKey)
                 ]
                 []
             ]
         ]
 
 
-renderSourceProperties : Source -> List (Html msg)
+renderSourceProperties : Source -> List (Html Sources.Msg)
 renderSourceProperties source =
     let
-        ( src, translator, properties ) =
+        ( translator, properties ) =
             case source of
-                AmazonS3 src ->
-                    ( src
-                    , Sources.Services.AmazonS3.translator
+                AmazonS3 data ->
+                    ( Sources.Services.AmazonS3.translateFrom data
                     , Sources.Services.AmazonS3.properties
                     )
     in
-        List.map (propertyRenderer src translator) properties
+        List.map (propertyRenderer source translator) properties

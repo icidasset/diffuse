@@ -31,3 +31,14 @@ update msg model =
     case msg of
         SetNewSource source ->
             (!) { model | newSource = source } []
+
+        SetNewSourceProperty source propKey propValue ->
+            let
+                updatedSource =
+                    case source of
+                        AmazonS3 sourceData ->
+                            propValue
+                                |> Sources.Services.AmazonS3.translateTo sourceData propKey
+                                |> AmazonS3
+            in
+                (!) { model | newSource = updatedSource } []
