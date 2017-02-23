@@ -8,7 +8,7 @@ A music player which connects to your cloud storage.
 
 - Loads of `Elm`
 - A moderate amount of `Haskell` for the build system and static server
-- A tiny bit of `Node` (for making an separate css file)
+- A tiny bit of `Node` (for making a separate css file)
 
 
 
