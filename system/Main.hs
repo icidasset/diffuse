@@ -1,6 +1,5 @@
 module Main where
 
-import Control.Monad as Monad ((>=>), join)
 import Flow
 import Shikensu
 import Shikensu.Types
@@ -9,6 +8,7 @@ import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities (lsequence)
 import System.Directory (canonicalizePath)
 
+import qualified Control.Monad as Monad (join)
 import qualified Data.List as List (concatMap)
 
 
@@ -31,7 +31,8 @@ sequences :: IO [( String, Dictionary )]
 sequences =
     let
         process =
-            \p -> canonicalizePath "./" >>= list p
+            {- Use the cwd as the root directory -}
+            \patterns -> canonicalizePath "./" >>= list patterns
     in
         lsequence
             [ ( "pages",  process ["src/Static/Html/**/*.html"] >>= Shikensu.read )
