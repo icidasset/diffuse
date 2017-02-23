@@ -8,7 +8,6 @@ import Variables exposing (..)
 
 -- Children
 
-import BackgroundImage.Styles as BackgroundImage
 import Form.Styles as Form
 import Navigation.Styles as Navigation
 import Spinner.Styles as Spinner
@@ -17,7 +16,6 @@ import Spinner.Styles as Spinner
 styles : List Snippet
 styles =
     stylesLocal
-        |> List.append BackgroundImage.styles
         |> List.append Form.styles
         |> List.append Navigation.styles
         |> List.append Spinner.styles
@@ -36,6 +34,7 @@ keyframes =
 type Classes
     = AuthenticationButton
     | AuthenticationButtonLogo
+    | BackgroundImage
     | Button
     | ContentBox
     | Insulation
@@ -64,11 +63,85 @@ stylesLocal =
         , property "-moz-font-smoothing" "grayscale"
         ]
       ------------------------------------------------------
+      -- Background image
+      --
+      -- > Not on the <body> for a reason.
+      ------------------------------------------------------
+    , class BackgroundImage
+        [ backgroundImage (url "images/Background/1.jpg")
+        , backgroundPosition center
+        , backgroundRepeat noRepeat
+        , backgroundSize (pct 110)
+        , height (vh 100)
+        , left zero
+        , position fixed
+        , top zero
+        , width (vw 100)
+        , zIndex (int -10)
+        ]
+      ------------------------------------------------------
+      -- Insulation
+      --
+      -- > Main wrapper used for the layout with the music
+      --   controls visible.
+      ------------------------------------------------------
+    , class Insulation
+        [ backgroundColor (hex "#fff")
+        , boxShadow4 (px 0) (px 2) (px 4) (rgba 0 0 0 0.2)
+        , margin3 (gr 10) auto (gr 20)
+        , maxWidth (gr 100)
+        , position relative
+        ]
+      ------------------------------------------------------
+      -- In the middle
+      --
+      -- > Vertically and horizontally center stuff.
+      ------------------------------------------------------
+    , class InTheMiddle
+        [ alignItems center
+        , displayFlex
+        , height (vh 100)
+        , justifyContent center
+        ]
+      ------------------------------------------------------
+      -- Content box
+      --
+      -- > Just a box with some padding and stuff.
+      --   Mainly used for containing text elements.
+      ------------------------------------------------------
+    , class ContentBox
+        [ padding2 (gr 6) (gr 4)
+        ]
+      ------------------------------------------------------
       -- <🎃>
       ------------------------------------------------------
+    , h1
+        [ fontSize (Css.rem 1.55)
+        , fontWeight (int 800)
+        , letterSpacing (Css.em -0.025)
+        , marginTop zero
+        ]
     , a
         [ color inherit
         , textDecoration none
+        ]
+      ------------------------------------------------------
+      -- Buttons
+      ------------------------------------------------------
+    , (each [ class Button, button ])
+        [ backgroundColor transparent
+        , border3 (px 1) solid (hex colorDerivatives.success)
+        , borderRadius borderRadiuses.smallElements
+        , boxSizing contentBox
+        , color (hex colorDerivatives.success)
+        , cursor pointer
+        , display inlineBlock
+        , fontFamily inherit
+        , fontSize (Css.rem 0.95)
+        , fontWeight (int 600)
+        , height (gr 6)
+        , lineHeight (gr 6)
+        , padding3 (px 1) (gr 2) zero
         ]
       ------------------------------------------------------
       -- Authentication button
@@ -93,57 +166,5 @@ stylesLocal =
                 , width (px 22)
                 ]
             ]
-        ]
-      ------------------------------------------------------
-      -- Insulation
-      --
-      -- > Main wrapper used for the layout with the music
-      --   controls visible.
-      ------------------------------------------------------
-    , class Insulation
-        [ backgroundColor (hex "#fff")
-        , boxShadow4 (px 0) (px 2) (px 4) (rgba 0 0 0 0.2)
-        , margin3 (gr 10) auto (gr 20)
-        , maxWidth (gr 100)
-        , position relative
-        ]
-      ------------------------------------------------------
-      -- In the middle
-      ------------------------------------------------------
-    , class InTheMiddle
-        [ alignItems center
-        , displayFlex
-        , height (vh 100)
-        , justifyContent center
-        ]
-      ------------------------------------------------------
-      -- Content
-      ------------------------------------------------------
-    , class ContentBox
-        [ padding2 (gr 6) (gr 4)
-        ]
-    , h1
-        [ fontSize (Css.rem 1.55)
-        , fontWeight (int 800)
-        , letterSpacing (Css.em -0.025)
-        , marginTop zero
-        ]
-      ------------------------------------------------------
-      -- Buttons
-      ------------------------------------------------------
-    , (each [ class Button, button ])
-        [ backgroundColor transparent
-        , border3 (px 1) solid (hex colorDerivatives.success)
-        , borderRadius borderRadiuses.smallElements
-        , boxSizing contentBox
-        , color (hex colorDerivatives.success)
-        , cursor pointer
-        , display inlineBlock
-        , fontFamily inherit
-        , fontSize (Css.rem 0.95)
-        , fontWeight (int 600)
-        , height (gr 6)
-        , lineHeight (gr 6)
-        , padding3 (px 1) (gr 2) zero
         ]
     ]

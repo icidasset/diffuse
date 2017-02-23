@@ -25,7 +25,7 @@ locationToPage location =
 
 
 
--- Private
+-- Routes
 
 
 route : Parser (Page -> a) a
