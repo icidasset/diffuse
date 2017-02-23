@@ -105,10 +105,10 @@ translateTo source propertyKey propertyValue =
 
 {-| Create a public url for a file.
     We need this to play the track.
+    (!) Creates a presigned url that's valid for 24 hours
 -}
 makeTrackUrl : Date -> AmazonS3Source -> String -> String
 makeTrackUrl currentDate aws pathToFile =
-    -- Create a presigned url that's valid for 24 hours
     presignedUrl 86400 [] currentDate aws pathToFile
 
 
