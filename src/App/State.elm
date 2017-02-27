@@ -60,7 +60,19 @@ update msg model =
 
         -- Time
         SetTimestamp time ->
-            (!) { model | timestamp = Date.fromTime time } []
+            let
+                timestamp =
+                    Date.fromTime time
+
+                sources =
+                    model.sources
+
+                sources_ =
+                    { sources | timestamp = timestamp }
+            in
+                (!)
+                    { model | sources = sources_, timestamp = timestamp }
+                    []
 
         ------------------------------------
         -- Children

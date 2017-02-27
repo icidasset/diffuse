@@ -1,11 +1,4 @@
-module Sources.Services.AmazonS3
-    exposing
-        ( properties
-        , initialProperties
-        , translateFrom
-        , translateTo
-        , makeTrackUrl
-        )
+module Sources.Services.AmazonS3 exposing (..)
 
 {-| Amazon S3 Service.
 
@@ -14,17 +7,17 @@ Resources:
 
 -}
 
+import Debug
 import Date exposing (Date)
-import Date.Format
 import Http
-import SHA
-import Sources.Crypto.Hmac as Hmac
+import Sources.Services.AmazonS3.Parser as Parser
+import Sources.Services.AmazonS3.Presign exposing (..)
+import Sources.Services.AmazonS3.Types exposing (..)
 import Sources.Types exposing (..)
-import String.Interpolate exposing (interpolate)
-import Time exposing (Time)
-import Utils
+import Time
 
 
+-- Properties
 -- 📟
 
 
@@ -46,12 +39,12 @@ properties =
 -}
 initialProperties : AmazonS3Source
 initialProperties =
-    { accessKey = ""
-    , bucketName = ""
+    { accessKey = "AKIAJZBG7YVSKEGIIUGA"
+    , bucketName = "ongaku-ryoho-test"
     , directoryPath = "/"
     , name = "Amazon S3 source"
-    , region = "us-west-2"
-    , secretKey = ""
+    , region = "eu-west-1"
+    , secretKey = "eoUN4zF5oA3ajBfc2n1o61345j9m9dASgiVTKQ5j"
     }
 
 
@@ -103,100 +96,57 @@ translateTo source propertyKey propertyValue =
             source
 
 
+
+-- Track URL
+
+
 {-| Create a public url for a file.
     We need this to play the track.
     (!) Creates a presigned url that's valid for 24 hours
 -}
 makeTrackUrl : Date -> AmazonS3Source -> String -> String
 makeTrackUrl currentDate aws pathToFile =
-    presignedUrl 86400 [] currentDate aws pathToFile
+    presignedUrl (Time.second * 86400) [] currentDate aws pathToFile
+
+
+
+-- Tree
 
 
 {-| Create a directory tree.
     List all the tracks in the bucket.
     Or a specific directory in the bucket.
 -}
-makeTree : Date -> AmazonS3Source -> List String
-makeTree currentDate aws =
-    -- TODO
-    -- presignedUrl 60 [ ( "marker", marker ), ( "max-keys", "1000" ) ] currentDate aws "/"
-    []
-
-
-
--- 🚫
-
-
-presignedUrl : Time -> List ( String, String ) -> Date -> AmazonS3Source -> String -> String
-presignedUrl lifeExpectancy extraParams currentDate aws pathToFile =
+makeTree : (StepResult -> msg) -> AmazonS3Source -> Marker -> Date -> Cmd msg
+makeTree msg aws marker currentDate =
     let
-        host =
-            aws.bucketName ++ ".s3.amazonaws.com"
+        marker_ =
+            case marker of
+                InProgress s ->
+                    s
 
-        filePath =
-            if String.startsWith "/" pathToFile then
-                pathToFile
-            else
-                "/" ++ pathToFile
+                _ ->
+                    ""
 
-        timestamp =
-            Date.Format.formatISO8601 currentDate
+        params =
+            []
 
-        date =
-            Date.Format.format "%Y%M%D" currentDate
-
-        lifeExpectancyInSeconds =
-            Time.inSeconds lifeExpectancy
-
-        -- Request
-        credential =
-            [ aws.accessKey
-            , date
-            , aws.region
-            , "s3"
-            , "aws4_request"
-            ]
-                |> String.join "/"
-
-        queryString =
-            [ ( "X-Amz-Algorithm", "AWS4-HMAC-SHA256" )
-            , ( "X-Amz-Credential", credential )
-            , ( "X-Amz-Date", date )
-            , ( "X-Amz-Expires", toString lifeExpectancyInSeconds )
-            , ( "X-Amz-SignedHeaders", "host" )
-            ]
-                |> List.append extraParams
-                |> List.map Utils.makeQueryParam
-                |> String.join "&"
-                |> String.append "?"
-
-        request =
-            String.join
-                "\n"
-                [ "GET"
-                , Http.encodeUri filePath
-                , Http.encodeUri queryString
-                , "host:" ++ host
-                , ""
-                , "UNSIGNED-PAYLOAD"
-                ]
-                |> SHA.sha256sum
-                |> Utils.lowercaseHexadecimalString
-
-        -- String to sign
-        stringToSign =
-            String.join
-                "\n"
-                [ "AWS4-HMAC-SHA256"
-                , timestamp
-                , String.join "/" [ date, aws.region, "s3", "aws4_request" ]
-                , request
-                ]
+        url =
+            presignedUrl (Time.second * 60) params currentDate aws aws.directoryPath
     in
-        ("AWS4" ++ aws.secretKey)
-            |> Hmac.encrypt64 SHA.sha256sum date
-            |> Hmac.encrypt64 SHA.sha256sum aws.region
-            |> Hmac.encrypt64 SHA.sha256sum "s3"
-            |> Hmac.encrypt64 SHA.sha256sum "aws4_request"
-            |> Hmac.encrypt64 SHA.sha256sum stringToSign
-            |> Utils.lowercaseHexadecimalString
+        url
+            |> Debug.log "url"
+            |> Http.getString
+            |> Http.send msg
+
+
+handleTreeResponse : ProcessingContext -> String -> ProcessingContext
+handleTreeResponse context response =
+    let
+        parsedResponse =
+            Parser.parseResponse response
+    in
+        { context
+            | filePaths = context.filePaths ++ parsedResponse.filePaths
+            , treeMarker = InProgress parsedResponse.marker
+        }

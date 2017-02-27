@@ -1,11 +1,13 @@
-module Sources.Types
-    exposing
-        ( Source(..)
-        , AmazonS3Source
-        , Model
-        , Msg(..)
-        , Page(..)
-        )
+module Sources.Types exposing (..)
+
+import Date exposing (Date)
+import Http
+
+
+-- Services
+
+import Sources.Services.AmazonS3.Types as AmazonS3 exposing (..)
+
 
 -- Sources
 
@@ -14,27 +16,20 @@ type Source
     = AmazonS3 AmazonS3Source
 
 
-type alias GenericSourceAttributes =
-    { name : String }
+type Marker
+    = TheBeginning
+    | InProgress String
+    | TheEnd
 
 
-
--- Services
-
-
-{-| Amazon S3
--}
-type alias AmazonS3Source =
-    AmazonS3Properties GenericSourceAttributes
+type alias StepResult =
+    Result Http.Error String
 
 
-type alias AmazonS3Properties a =
-    { a
-        | accessKey : String
-        , bucketName : String
-        , directoryPath : String
-        , region : String
-        , secretKey : String
+type alias ProcessingContext =
+    { filePaths : List String
+    , source : Source
+    , treeMarker : Marker
     }
 
 
@@ -43,13 +38,20 @@ type alias AmazonS3Properties a =
 
 
 type alias Model =
-    { newSource : Source
+    { isProcessing : Maybe (List Source)
+    , newSource : Source
+    , sources : List Source
+    , timestamp : Date
     }
 
 
 type Msg
-    = SetNewSource Source
+    = Process
+    | ProcessStep ProcessingContext StepResult
+      -- Forms
+    | SetNewSource Source
     | SetNewSourceProperty Source String String
+    | SubmitNewSourceForm
 
 
 type Page

@@ -3,12 +3,12 @@ module Sources.View exposing (..)
 import Form.Styles as FormStyles
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onInput, onSubmit)
 import Navigation.View as Navigation
 import Routing.Types as Routing
 import Sources.Types as Sources exposing (Page(..), Source(..))
 import Styles exposing (Classes(Button, ContentBox))
-import Types exposing (Model, Msg(SourcesMsg))
+import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
 
 
@@ -64,41 +64,48 @@ pageNew model =
           ------------------------------------
           -- Form
           ------------------------------------
-        , Html.form
-            [ cssClass ContentBox ]
-            [ h1
+        , Html.map SourcesMsg (pageNewForm model)
+        ]
+
+
+pageNewForm : Model -> Html Sources.Msg
+pageNewForm model =
+    Html.form
+        [ cssClass ContentBox
+        , onSubmit Sources.SubmitNewSourceForm
+        ]
+        [ h1
+            []
+            [ text "Add a new source" ]
+        , p
+            [ cssClass FormStyles.Intro ]
+            [ text """
+                A source is a place where your music is stored.
+                By connecting a source, the application will scan it
+                and keep a list of all the music in it. It will not
+                copy anything.
+              """
+            ]
+        , label
+            []
+            [ text "Source type/service" ]
+        , div
+            [ cssClass FormStyles.SelectBox ]
+            [ select
                 []
-                [ text "Add a new source" ]
-            , p
-                [ cssClass FormStyles.Intro ]
-                [ text """
-                    A source is a place where your music is stored.
-                    By connecting a source, the application will scan it
-                    and keep a list of all the music in it. It will not
-                    copy anything.
-                  """
+                [ option
+                    [ value "amazon-s3" ]
+                    [ text "Amazon S3" ]
                 ]
-            , label
-                []
-                [ text "Source type/service" ]
-            , div
-                [ cssClass FormStyles.SelectBox ]
-                [ select
-                    []
-                    [ option
-                        [ value "amazon-s3" ]
-                        [ text "Amazon S3" ]
-                    ]
-                ]
-            , Html.map
-                SourcesMsg
-                (div [] <| renderSourceProperties model.sources.newSource)
-            , div
-                []
-                [ button
-                    [ type_ "submit" ]
-                    [ text "Create source" ]
-                ]
+            ]
+        , div
+            []
+            (renderSourceProperties model.sources.newSource)
+        , div
+            []
+            [ button
+                [ type_ "submit" ]
+                [ text "Create source" ]
             ]
         ]
 
@@ -118,10 +125,11 @@ propertyRenderer source translator ( propKey, propLabel, propPlaceholder ) =
             [ cssClass FormStyles.InputBox ]
             [ input
                 [ name propKey
-                , type_ "text"
-                , placeholder propPlaceholder
-                , value (translator propKey)
                 , onInput (Sources.SetNewSourceProperty source propKey)
+                , placeholder propPlaceholder
+                , required True
+                , type_ "text"
+                , value (translator propKey)
                 ]
                 []
             ]

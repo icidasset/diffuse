@@ -142,6 +142,10 @@ stylesLocal =
         , height (gr 6)
         , lineHeight (gr 6)
         , padding3 (px 1) (gr 2) zero
+          --
+        , focus
+            [ outline none
+            ]
         ]
       ------------------------------------------------------
       -- Authentication button

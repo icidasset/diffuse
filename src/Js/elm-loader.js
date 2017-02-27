@@ -34,6 +34,9 @@ function authStatechange(userObj) {
 function setupElm(params) {
   didSetupElm = true;
 
+  // Clean
+  node.innerHTML = "";
+
   // Embed
   const app = Elm.App.embed(
     node,

@@ -5,6 +5,8 @@ module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
 -}
 
 import Bitwise
+import Char
+import List.Extra
 import Sources.Crypto.Types exposing (..)
 import Utils
 
@@ -43,17 +45,28 @@ encrypt blockSize hasher message key =
             else
                 key
 
+        keyCodePoints =
+            keyWithCorrectSize
+                |> String.toList
+                |> List.map Char.toCode
+
         firstPart =
             String.repeat blockSize "\\"
-                |> Utils.hexFromString
-                |> Bitwise.xor (Utils.hexFromString keyWithCorrectSize)
-                |> Utils.hexToString
+                |> String.toList
+                |> List.map Char.toCode
+                |> List.Extra.zip (keyCodePoints)
+                |> List.map (\( b, a ) -> Bitwise.xor a b)
+                |> List.map Char.fromCode
+                |> String.fromList
 
         secondPart =
             String.repeat blockSize "6"
-                |> Utils.hexFromString
-                |> Bitwise.xor (Utils.hexFromString keyWithCorrectSize)
-                |> Utils.hexToString
+                |> String.toList
+                |> List.map Char.toCode
+                |> List.Extra.zip (keyCodePoints)
+                |> List.map (\( b, a ) -> Bitwise.xor a b)
+                |> List.map Char.fromCode
+                |> String.fromList
     in
         {-
            Basicly:
