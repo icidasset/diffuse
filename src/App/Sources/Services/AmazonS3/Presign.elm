@@ -88,6 +88,7 @@ presignedUrl lifeExpectancy extraParams currentDate dirtyAws pathToFile =
         signature =
             ("AWS4" ++ aws.secretKey)
                 |> Hmac.encrypt64 SHA.sha256sum date
+                |> Debug.log ("Hmac")
                 |> Hmac.encrypt64 SHA.sha256sum aws.region
                 |> Hmac.encrypt64 SHA.sha256sum "s3"
                 |> Hmac.encrypt64 SHA.sha256sum "aws4_request"
