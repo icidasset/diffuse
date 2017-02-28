@@ -40,14 +40,14 @@ encrypt128 =
 encrypt : Int -> HashFunction -> String -> String -> String
 encrypt blockSize hasher message key =
     let
-        givenKeySize =
+        keySize =
             String.length key
 
         keyWithCorrectSize =
-            if givenKeySize > blockSize then
+            if keySize > blockSize then
                 hasher key
-            else if givenKeySize < blockSize then
-                String.padRight blockSize '0' key
+            else if keySize < blockSize then
+                String.padRight blockSize (Char.fromCode 0) key
             else
                 key
 
@@ -56,26 +56,18 @@ encrypt blockSize hasher message key =
                 |> String.toList
                 |> List.map Char.toCode
 
-        firstPart =
-            keyCodePoints
-                |> List.map (Bitwise.xor 92 >> Char.fromCode)
-                |> String.fromList
-
-        secondPart =
+        partA =
             keyCodePoints
                 |> List.map (Bitwise.xor 54 >> Char.fromCode)
                 |> String.fromList
+
+        partB =
+            keyCodePoints
+                |> List.map (Bitwise.xor 92 >> Char.fromCode)
+                |> String.fromList
     in
-        {-
-           Basicly:
-           1. Combine the second part and the message
-           2. Send that to the hasher function (e.g. run through SHA-256 hashing algorithm)
-           3. Combine that with the first part (i.e. append the hasher-function result)
-           4. Send that again to the hasher function
-           5. Success 🤘
-        -}
         message
-            |> String.append secondPart
+            |> String.append partA
             |> hasher
-            |> String.append firstPart
+            |> String.append partB
             |> hasher
