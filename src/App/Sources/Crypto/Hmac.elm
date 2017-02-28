@@ -56,12 +56,12 @@ encrypt blockSize hasher message key =
                 |> String.toList
                 |> List.map Char.toCode
 
-        oPad =
+        firstPart =
             keyCodePoints
                 |> List.map (Bitwise.xor 92 >> Char.fromCode)
                 |> String.fromList
 
-        iPad =
+        secondPart =
             keyCodePoints
                 |> List.map (Bitwise.xor 54 >> Char.fromCode)
                 |> String.fromList
@@ -75,7 +75,7 @@ encrypt blockSize hasher message key =
            5. Success 🤘
         -}
         message
-            |> String.append iPad
+            |> String.append secondPart
             |> hasher
-            |> String.append oPad
+            |> String.append firstPart
             |> hasher
