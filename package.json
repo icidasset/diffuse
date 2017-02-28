@@ -1,6 +1,8 @@
 {
   "private": true,
   "devDependencies": {
-    "elm-css": "^0.6.0"
+    "elm-css": "^0.6.0",
+    "elm-doc-test": "^2.2.3",
+    "elm-test": "^0.18.2"
   }
 }

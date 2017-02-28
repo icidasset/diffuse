@@ -43,6 +43,11 @@ system:
 	@stack build && stack exec build
 
 
+test:
+	@echo "> Run tests"
+	@$(NODE_BIN)/elm-doc-test && $(NODE_BIN)/elm-test tests/Doc/Main.elm
+
+
 #
 # Watch tasks
 #

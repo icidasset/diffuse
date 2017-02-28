@@ -3,3 +3,4 @@
 build
 elm-stuff
 node_modules
+tests/Doc

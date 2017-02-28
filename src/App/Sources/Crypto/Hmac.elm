@@ -6,6 +6,7 @@ module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
 
 import Bitwise
 import Char
+import Debug
 import List.Extra
 import Sources.Crypto.Types exposing (..)
 import Utils
@@ -13,6 +14,11 @@ import Utils
 
 {-| HMAC encryption for hashing algorithms with a `blockSize` of 64.
 These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
+
+    >>> import SHA
+
+    >>> encrypt64 SHA.sha256sum "The quick brown fox jumps over the lazy dog" "key"
+    "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
 -}
 encrypt64 : HashFunction -> String -> String -> String
 encrypt64 =
