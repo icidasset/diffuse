@@ -6,7 +6,6 @@ module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
 
 import Bitwise
 import Char
-import Debug
 import List.Extra
 import Sources.Crypto.Types exposing (..)
 import Utils
@@ -16,9 +15,16 @@ import Utils
 These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
 
     >>> import SHA
+    >>> import MD5
 
     >>> encrypt64 SHA.sha256sum "The quick brown fox jumps over the lazy dog" "key"
     "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
+
+    >>> encrypt64 SHA.sha256sum "" ""
+    "b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad"
+
+    >>> encrypt64 MD5.hex "" ""
+    "74e6f7298a9c2d168935f58c001bad88"
 -}
 encrypt64 : HashFunction -> String -> String -> String
 encrypt64 =
