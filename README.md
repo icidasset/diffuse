@@ -11,6 +11,13 @@ A music player which connects to your cloud storage.
 - A tiny bit of `Node` (for making a separate css file)
 
 
+### Setup
+
+```
+npm install
+```
+
+
 
 ## How to run
 
