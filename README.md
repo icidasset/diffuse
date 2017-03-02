@@ -21,6 +21,9 @@ make
 # run the static server
 make server
 
+# run tests
+make test
+
 # watch and build
 brew install watchexec
 make watch
