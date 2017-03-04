@@ -1,6 +1,7 @@
 {
   "root": "../src/App",
   "tests": [
+    "Sources.Crypto.Hex",
     "Sources.Crypto.Hmac"
   ]
 }

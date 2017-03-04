@@ -6,9 +6,9 @@ module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
 
 import Bitwise
 import Char
-import List.Extra
+import Debug
+import Sources.Crypto.Hex exposing (hexStringToUtf8String)
 import Sources.Crypto.Types exposing (..)
-import Utils
 
 
 {-| HMAC encryption for hashing algorithms with a `blockSize` of 64.
@@ -51,7 +51,7 @@ encrypt blockSize hasher message key =
 
         keyWithCorrectSize =
             if keySize > blockSize then
-                hasher key
+                hexStringToUtf8String (hasher key)
             else if keySize < blockSize then
                 String.padRight blockSize (Char.fromCode 0) key
             else
@@ -75,5 +75,6 @@ encrypt blockSize hasher message key =
         message
             |> String.append partA
             |> hasher
+            |> hexStringToUtf8String
             |> String.append partB
             |> hasher

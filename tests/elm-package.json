@@ -29,7 +29,8 @@
         "rtfeldman/node-test-runner": "3.0.0 <= v < 4.0.0",
         "sanichi/elm-md5": "1.0.6 <= v < 2.0.0",
         "scottcorgan/elm-css-normalize": "1.1.7 <= v < 2.0.0",
-        "spisemisu/elm-sha": "1.0.5 <= v < 2.0.0"
+        "spisemisu/elm-sha": "1.0.5 <= v < 2.0.0",
+        "spisemisu/elm-utf8": "1.0.1 <= v < 2.0.0"
     },
     "elm-version": "0.18.0 <= v < 0.19.0"
 }
