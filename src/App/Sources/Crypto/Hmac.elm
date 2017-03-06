@@ -7,9 +7,17 @@ module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
 import Bitwise
 import Char
 import Debug
+import Hex
 import Sources.Crypto.Hex exposing (hexStringToUtf8String)
 import Sources.Crypto.Types exposing (..)
 
+toSHAHex : String -> String
+toSHAHex input =
+    input
+        |> String.toList
+        |> List.map Char.toCode
+        |> List.map Hex.toString
+        |> String.concat
 
 {-| HMAC encryption for hashing algorithms with a `blockSize` of 64.
 These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
@@ -75,6 +83,5 @@ encrypt blockSize hasher message key =
         message
             |> String.append partA
             |> hasher
-            |> hexStringToUtf8String
-            |> String.append partB
+            |> String.append("0x" ++ toSHAHex(partB))
             |> hasher
