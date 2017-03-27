@@ -11,7 +11,7 @@ BUILD_DIR=./build
 #
 # Tasks
 #
-all: build
+all: dev
 
 
 build: clean system elm css
@@ -26,6 +26,11 @@ clean:
 css:
 	@echo "> Compiling Css"
 	@$(NODE_BIN)/elm-css ./system/Stylesheets.elm --output $(BUILD_DIR)
+
+
+dev:
+	@echo "> \033[1mBuild & serve\033[0m (dev)"
+	@make -j watch server
 
 
 elm:

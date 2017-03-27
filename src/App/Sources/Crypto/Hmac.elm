@@ -26,11 +26,14 @@ import Sources.Crypto.Utils exposing (..)
 These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
 
     >>> import SHA
+    >>> import Sources.Crypto.Hex as Utils
 
     >>> encrypt64 SHA.sha256sum "The quick brown fox jumps over the lazy dog" "key"
+    ... |> Utils.unicodeToHex 2
     "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
 
     >>> encrypt64 SHA.sha256sum "" ""
+    ... |> Utils.unicodeToHex 2
     "b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad"
 -}
 encrypt64 : HashFunction -> String -> String -> String
@@ -56,9 +59,15 @@ encrypt blockSize hasher message key =
         keySize =
             String.length key
 
+        hash =
+            unicodeToHex 2
+                >> String.append "0x"
+                >> hasher
+                >> unicodeHexToUnicode
+
         keyWithBlockSize =
             if keySize > blockSize then
-                unicodeHexToUnicode (hasher key)
+                hash key
             else if keySize < blockSize then
                 String.padRight blockSize (Char.fromCode 0) key
             else
@@ -72,9 +81,6 @@ encrypt blockSize hasher message key =
     in
         message
             |> String.append (byteArrayToString byteArrayOne)
-            |> hasher
-            |> unicodeHexToUnicode
+            |> hash
             |> String.append (byteArrayToString byteArrayTwo)
-            |> unicodeToHex 2
-            |> String.append "0x"
-            |> hasher
+            |> hash

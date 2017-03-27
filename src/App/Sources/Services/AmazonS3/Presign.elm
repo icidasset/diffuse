@@ -5,6 +5,7 @@ import Date.Extra
 import Debug
 import Http
 import SHA
+import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
 import Sources.Services.AmazonS3.Types exposing (..)
 import Time exposing (Time)
@@ -58,6 +59,7 @@ presignedUrl lifeExpectancy extraParams currentDate dirtyAws pathToFile =
             , ( "X-Amz-SignedHeaders", "host" )
             ]
                 |> List.append extraParams
+                |> List.sortBy Tuple.first
                 |> List.map Utils.makeQueryParam
                 |> String.join "&"
 
@@ -65,14 +67,13 @@ presignedUrl lifeExpectancy extraParams currentDate dirtyAws pathToFile =
             String.join
                 "\n"
                 [ "GET"
-                , Http.encodeUri filePath
+                , filePath
                 , queryString
                 , "host:" ++ host
                 , ""
+                , "host"
                 , "UNSIGNED-PAYLOAD"
                 ]
-                |> SHA.sha256sum
-                |> Utils.lowercaseHexadecimalString
 
         -- String to sign
         stringToSign =
@@ -81,19 +82,18 @@ presignedUrl lifeExpectancy extraParams currentDate dirtyAws pathToFile =
                 [ "AWS4-HMAC-SHA256"
                 , timestamp
                 , String.join "/" [ date, aws.region, "s3", "aws4_request" ]
-                , request
+                , SHA.sha256sum request
                 ]
 
         -- Signature
         signature =
             ("AWS4" ++ aws.secretKey)
                 |> Hmac.encrypt64 SHA.sha256sum date
-                |> Debug.log ("Hmac")
                 |> Hmac.encrypt64 SHA.sha256sum aws.region
                 |> Hmac.encrypt64 SHA.sha256sum "s3"
                 |> Hmac.encrypt64 SHA.sha256sum "aws4_request"
                 |> Hmac.encrypt64 SHA.sha256sum stringToSign
-                |> Utils.lowercaseHexadecimalString
+                |> unicodeToHex 2
     in
         String.concat
             [ "https://"

@@ -20,6 +20,7 @@ initialModel : Model
 initialModel =
     { isProcessing = Nothing
     , newSource = AmazonS3 AmazonS3.initialProperties
+    , processingError = Nothing
     , sources = []
     , timestamp = Date.fromTime 0
     }
@@ -76,41 +77,48 @@ update msg model =
 
         {- Processing step,
            Phase 1, `makeTree`.
+           ie. make a file list/tree.
         -}
-        ProcessStep context (Ok stringResponse) ->
+        ProcessTreeStep context (Ok stringResponse) ->
             let
-                newContext =
-                    Processing.takeNextStep context stringResponse
+                ( newContext, maybeCommand ) =
+                    Processing.takeTreeStep context stringResponse
 
                 command =
-                    case newContext.treeMarker of
-                        InProgress _ ->
-                            Processing.process newContext model.timestamp
+                    case maybeCommand of
+                        Just getCmd ->
+                            getCmd model.timestamp
 
-                        _ ->
+                        Nothing ->
                             -- TheEnd
                             -- TODO
                             let
                                 zIsDead =
-                                    Debug.log "Finished with the first!" context
+                                    Debug.log "Finished with the first!" newContext
                             in
                                 Cmd.none
             in
                 (!) model [ command ]
 
-        ProcessStep _ (Err err) ->
-            -- TODO: Handle Http.Error
-            let
-                e_ =
-                    Debug.log "Error" (toString err)
-            in
-                (!) model []
+        ProcessTreeStep _ (Err err) ->
+            (!)
+                { model | processingError = Just "" }
+                []
+
+        {- Processing step,
+           Phase 2, `makeTags`.
+           ie. get the tags for each file in the file list.
+        -}
+        ProcessTagsStep context ->
+            (!) model [ Processing.takeTagsStep context ]
 
         ------------------------------------
         -- Forms
         ------------------------------------
         SetNewSource source ->
-            (!) { model | newSource = source } []
+            (!)
+                { model | newSource = source }
+                []
 
         SetNewSourceProperty source propKey propValue ->
             let
@@ -125,5 +133,8 @@ update msg model =
 
         SubmitNewSourceForm ->
             (!)
-                { model | sources = model.newSource :: model.sources }
+                { model
+                    | processingError = Nothing
+                    , sources = model.newSource :: model.sources
+                }
                 [ Task.perform identity (Task.succeed Process) ]

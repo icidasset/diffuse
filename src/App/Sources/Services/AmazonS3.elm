@@ -7,7 +7,6 @@ Resources:
 
 -}
 
-import Debug
 import Date exposing (Date)
 import Http
 import Sources.Services.AmazonS3.Parser as Parser
@@ -22,16 +21,16 @@ import Time
 
 
 {-| The list of properties we need from the user.
-    `(property, label, placeholder)`
+    `(property, label, placeholder, isPassword)`
     Will be used for the forms.
 -}
-properties : List ( String, String, String )
+properties : List ( String, String, String, Bool )
 properties =
-    [ ( "accessKey", "Access key", "Fv6EWfLfCcMo" )
-    , ( "secretKey", "Secret key", "qeNcqiMpgqC8" )
-    , ( "bucketName", "Bucket name", "music" )
-    , ( "region", "Region", initialProperties.region )
-    , ( "directoryPath", "Directory", "/" )
+    [ ( "accessKey", "Access key", "Fv6EWfLfCcMo", True )
+    , ( "secretKey", "Secret key", "qeNcqiMpgqC8", True )
+    , ( "bucketName", "Bucket name", "music", False )
+    , ( "region", "Region", initialProperties.region, False )
+    , ( "directoryPath", "Directory", "/", False )
     ]
 
 
@@ -39,12 +38,12 @@ properties =
 -}
 initialProperties : AmazonS3Source
 initialProperties =
-    { accessKey = "AKIAJZBG7YVSKEGIIUGA"
-    , bucketName = "ongaku-ryoho-test"
+    { accessKey = ""
+    , bucketName = ""
     , directoryPath = "/"
     , name = "Amazon S3 source"
     , region = "eu-west-1"
-    , secretKey = "eoUN4zF5oA3ajBfc2n1o61345j9m9dASgiVTKQ5j"
+    , secretKey = ""
     }
 
 
@@ -117,25 +116,27 @@ makeTrackUrl currentDate aws pathToFile =
     List all the tracks in the bucket.
     Or a specific directory in the bucket.
 -}
-makeTree : (StepResult -> msg) -> AmazonS3Source -> Marker -> Date -> Cmd msg
+makeTree : (TreeStepResult -> msg) -> AmazonS3Source -> Marker -> Date -> Cmd msg
 makeTree msg aws marker currentDate =
     let
-        marker_ =
+        initialParams =
+            [ ( "max-keys", "1000" ) ]
+
+        additionalParams =
             case marker of
                 InProgress s ->
-                    s
+                    [ ( "marker", s ) ]
 
                 _ ->
-                    ""
+                    []
 
         params =
-            []
+            initialParams ++ additionalParams
 
         url =
             presignedUrl (Time.second * 60) params currentDate aws aws.directoryPath
     in
         url
-            |> Debug.log "url"
             |> Http.getString
             |> Http.send msg
 
@@ -148,5 +149,5 @@ handleTreeResponse context response =
     in
         { context
             | filePaths = context.filePaths ++ parsedResponse.filePaths
-            , treeMarker = InProgress parsedResponse.marker
+            , treeMarker = parsedResponse.marker
         }

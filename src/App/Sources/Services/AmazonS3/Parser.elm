@@ -1,14 +1,15 @@
 module Sources.Services.AmazonS3.Parser exposing (parseResponse)
 
-import Debug
+import List.Extra
 import Sources.Services.AmazonS3.Types exposing (ParsedResponse)
+import Sources.Types exposing (Marker(..))
 import Xml
 import Xml.Encode as Xml
 import Xml.Decode as Xml
 import Xml.Query exposing (..)
 
 
-parseResponse : String -> ParsedResponse
+parseResponse : String -> ParsedResponse Marker
 parseResponse response =
     let
         decodedXml =
@@ -22,11 +23,19 @@ parseResponse response =
                 |> tags "Contents"
                 |> collect (tag "Key" string)
 
-        marker =
+        isTruncated =
             decodedXml
-                |> tag "Marker" string
+                |> tag "IsTruncated" string
                 |> Result.withDefault ""
+
+        marker =
+            if isTruncated == "true" then
+                List.Extra.last filePaths
+                    |> Maybe.map InProgress
+                    |> Maybe.withDefault TheEnd
+            else
+                TheEnd
     in
-        { filePaths = Debug.log "files" filePaths
-        , marker = Debug.log "marker" marker
+        { filePaths = filePaths
+        , marker = marker
         }

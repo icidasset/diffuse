@@ -13,7 +13,7 @@ type alias AmazonS3Source =
     }
 
 
-type alias ParsedResponse =
+type alias ParsedResponse marker =
     { filePaths : List String
-    , marker : String
+    , marker : marker
     }

@@ -22,7 +22,7 @@ type Marker
     | TheEnd
 
 
-type alias StepResult =
+type alias TreeStepResult =
     Result Http.Error String
 
 
@@ -40,6 +40,7 @@ type alias ProcessingContext =
 type alias Model =
     { isProcessing : Maybe (List Source)
     , newSource : Source
+    , processingError : Maybe String
     , sources : List Source
     , timestamp : Date
     }
@@ -47,7 +48,8 @@ type alias Model =
 
 type Msg
     = Process
-    | ProcessStep ProcessingContext StepResult
+    | ProcessTreeStep ProcessingContext TreeStepResult
+    | ProcessTagsStep ProcessingContext
       -- Forms
     | SetNewSource Source
     | SetNewSourceProperty Source String String

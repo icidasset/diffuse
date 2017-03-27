@@ -114,8 +114,12 @@ pageNewForm model =
 -- Properties
 
 
-propertyRenderer : Source -> (String -> String) -> ( String, String, String ) -> Html Sources.Msg
-propertyRenderer source translator ( propKey, propLabel, propPlaceholder ) =
+propertyRenderer :
+    Source
+    -> (String -> String)
+    -> ( String, String, String, Bool )
+    -> Html Sources.Msg
+propertyRenderer source translator ( propKey, propLabel, propPlaceholder, isPassword ) =
     div
         []
         [ label
@@ -128,7 +132,12 @@ propertyRenderer source translator ( propKey, propLabel, propPlaceholder ) =
                 , onInput (Sources.SetNewSourceProperty source propKey)
                 , placeholder propPlaceholder
                 , required True
-                , type_ "text"
+                , type_
+                    (if isPassword then
+                        "password"
+                     else
+                        "text"
+                    )
                 , value (translator propKey)
                 ]
                 []

@@ -55,14 +55,11 @@ cssSvgId id =
 lowercaseHexadecimalString : String -> String
 lowercaseHexadecimalString input =
     input
-
-
-
--- |> String.toLower
--- |> String.toList
--- |> List.map Char.toCode
--- |> List.map Hex.toString
--- |> String.concat
+        |> String.toLower
+        |> String.toList
+        |> List.map Char.toCode
+        |> List.map Hex.toString
+        |> String.concat
 
 
 makeQueryParam : ( String, String ) -> String
