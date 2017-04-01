@@ -1,8 +1,14 @@
 {
   "private": true,
   "devDependencies": {
+    "browserify": "^14.1.0",
     "elm-css": "^0.6.0",
     "elm-doc-test": "^2.2.3",
     "elm-test": "^0.18.2"
+  },
+  "dependencies": {
+    "firebase": "^3.7.4",
+    "jsmediatags": "^3.4.0",
+    "lodash": "^4.17.4"
   }
 }

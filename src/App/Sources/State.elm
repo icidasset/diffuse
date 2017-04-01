@@ -1,8 +1,8 @@
 module Sources.State exposing (..)
 
 import Date
-import Debug
 import Navigation
+import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
 import Task
@@ -90,27 +90,48 @@ update msg model =
                             getCmd model.timestamp
 
                         Nothing ->
-                            -- TheEnd
-                            -- TODO
-                            let
-                                zIsDead =
-                                    Debug.log "Finished with the first!" newContext
-                            in
-                                Cmd.none
+                            newContext
+                                |> processingContextToTagsContext
+                                |> ProcessTagsStep
+                                |> Task.succeed
+                                |> Task.perform identity
             in
                 (!) model [ command ]
 
         ProcessTreeStep _ (Err err) ->
             (!)
-                { model | processingError = Just "" }
+                { model | processingError = Just (toString err) }
                 []
 
         {- Processing step,
            Phase 2, `makeTags`.
            ie. get the tags for each file in the file list.
         -}
-        ProcessTagsStep context ->
-            (!) model [ Processing.takeTagsStep context ]
+        ProcessTagsStep tagsContext ->
+            -- TODO: Do something with the tags
+            let
+                receivedTags =
+                    Debug.log "tags" tagsContext.receivedTags
+
+                context =
+                    case model.isProcessing of
+                        Just sources ->
+                            case List.head sources of
+                                Just source ->
+                                    tagsContextToProcessingContext source tagsContext
+
+                                Nothing ->
+                                    Debug.crash "Invalid state occurred, fix it."
+
+                        Nothing ->
+                            Debug.crash "Invalid state occurred, fix it."
+            in
+                case Processing.takeTagsStep model.timestamp context of
+                    Just cmd ->
+                        (!) model [ cmd ]
+
+                    Nothing ->
+                        (!) model []
 
         ------------------------------------
         -- Forms
@@ -138,3 +159,33 @@ update msg model =
                     , sources = model.newSource :: model.sources
                 }
                 [ Task.perform identity (Task.succeed Process) ]
+
+
+
+-- 🌱
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.batch
+        [ Ports.receiveTags ProcessTagsStep ]
+
+
+
+-- Utils
+
+
+tagsContextToProcessingContext : Source -> ProcessingContextForTags -> ProcessingContext
+tagsContextToProcessingContext source context =
+    { filePaths = context.filePaths
+    , source = source
+    , treeMarker = TheBeginning
+    }
+
+
+processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags
+processingContextToTagsContext context =
+    { filePaths = context.filePaths
+    , receivedTags = []
+    , urlsForTags = []
+    }

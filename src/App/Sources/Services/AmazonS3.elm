@@ -103,9 +103,9 @@ translateTo source propertyKey propertyValue =
     We need this to play the track.
     (!) Creates a presigned url that's valid for 24 hours
 -}
-makeTrackUrl : Date -> AmazonS3Source -> String -> String
-makeTrackUrl currentDate aws pathToFile =
-    presignedUrl (Time.second * 86400) [] currentDate aws pathToFile
+makeTrackUrl : Date -> AmazonS3Source -> HttpMethod -> String -> String
+makeTrackUrl currentDate aws method pathToFile =
+    presignedUrl method (Time.second * 86400) [] currentDate aws pathToFile
 
 
 
@@ -134,7 +134,7 @@ makeTree msg aws marker currentDate =
             initialParams ++ additionalParams
 
         url =
-            presignedUrl (Time.second * 60) params currentDate aws aws.directoryPath
+            presignedUrl Get (Time.second * 60) params currentDate aws aws.directoryPath
     in
         url
             |> Http.getString

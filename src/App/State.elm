@@ -104,4 +104,5 @@ subscriptions model =
           Time.every (5 * Time.minute) SetTimestamp
           -- Children
         , Sub.map QueueMsg <| Queue.subscriptions model.queue
+        , Sub.map SourcesMsg <| Sources.subscriptions model.sources
         ]

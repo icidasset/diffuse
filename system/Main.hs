@@ -6,7 +6,6 @@ import Shikensu.Types
 import Shikensu.Contrib
 import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities (lsequence)
-import System.Directory (canonicalizePath)
 
 import qualified Control.Monad as Monad (join)
 import qualified Data.List as List (concatMap)
@@ -23,22 +22,22 @@ main =
         |> Monad.join
 
 
+process :: [String] -> IO Dictionary
+process patterns =
+    Shikensu.listRelativeF "./" patterns >>= Shikensu.read
+
+
 
 -- Sequences
 
 
 sequences :: IO [( String, Dictionary )]
 sequences =
-    let
-        process =
-            {- Use the cwd as the root directory -}
-            \patterns -> canonicalizePath "./" >>= list patterns
-    in
-        lsequence
-            [ ( "pages",  process ["src/Static/Html/**/*.html"] >>= Shikensu.read )
-            , ( "images", process ["src/Static/Images/**/*.*"]  >>= Shikensu.read )
-            , ( "js",     process ["src/Js/**/*.js"]            >>= Shikensu.read )
-            ]
+    lsequence
+        [ ( "pages",  process ["src/Static/Html/**/*.html"] )
+        , ( "images", process ["src/Static/Images/**/*.*"]  )
+        , ( "js",     process ["src/Js/**/*.js"]            )
+        ]
 
 
 flow :: (String, Dictionary) -> Dictionary

@@ -8,12 +8,20 @@ import SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
 import Sources.Services.AmazonS3.Types exposing (..)
+import Sources.Types exposing (HttpMethod)
 import Time exposing (Time)
 import Utils
 
 
-presignedUrl : Time -> List ( String, String ) -> Date -> AmazonS3Source -> String -> String
-presignedUrl lifeExpectancy extraParams currentDate dirtyAws pathToFile =
+presignedUrl :
+    HttpMethod
+    -> Time
+    -> List ( String, String )
+    -> Date
+    -> AmazonS3Source
+    -> String
+    -> String
+presignedUrl method lifeExpectancy extraParams currentDate dirtyAws pathToFile =
     let
         aws =
             { dirtyAws
@@ -66,7 +74,9 @@ presignedUrl lifeExpectancy extraParams currentDate dirtyAws pathToFile =
         request =
             String.join
                 "\n"
-                [ "GET"
+                [ method
+                    |> toString
+                    |> String.toUpper
                 , filePath
                 , queryString
                 , "host:" ++ host

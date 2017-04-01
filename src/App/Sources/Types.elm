@@ -2,6 +2,7 @@ module Sources.Types exposing (..)
 
 import Date exposing (Date)
 import Http
+import Tracks.Types exposing (..)
 
 
 -- Services
@@ -9,7 +10,7 @@ import Http
 import Sources.Services.AmazonS3.Types as AmazonS3 exposing (..)
 
 
--- Sources
+-- Sources & Processing
 
 
 type Source
@@ -22,8 +23,9 @@ type Marker
     | TheEnd
 
 
-type alias TreeStepResult =
-    Result Http.Error String
+type HttpMethod
+    = Get
+    | Head
 
 
 type alias ProcessingContext =
@@ -31,6 +33,21 @@ type alias ProcessingContext =
     , source : Source
     , treeMarker : Marker
     }
+
+
+type alias ProcessingContextForTags =
+    { filePaths : List String
+    , receivedTags : List Tags
+    , urlsForTags : List TagUrls
+    }
+
+
+type alias CmdWithTimestamp =
+    Date -> Cmd Msg
+
+
+type alias TreeStepResult =
+    Result Http.Error String
 
 
 
@@ -49,7 +66,7 @@ type alias Model =
 type Msg
     = Process
     | ProcessTreeStep ProcessingContext TreeStepResult
-    | ProcessTagsStep ProcessingContext
+    | ProcessTagsStep ProcessingContextForTags
       -- Forms
     | SetNewSource Source
     | SetNewSourceProperty Source String String

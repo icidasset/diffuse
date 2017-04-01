@@ -61,12 +61,34 @@ function setupElm(params) {
     elm: app
   };
 
-  app.ports.activeQueueItemChanged.subscribe((item) => {
+  app.ports.activeQueueItemChanged.subscribe(item => {
     const timestampInMilliseconds = Date.now();
 
     audioEnvironmentContext.activeQueueItem = item;
 
     createAudioElement(audioEnvironmentContext, item);
     removeOlderAudioElements(timestampInMilliseconds);
+  });
+
+  // > Processing
+  app.ports.requestTags.subscribe(distantContext => {
+    const context = Object.assign({}, distantContext);
+    const initialPromise = Promise.resolve([]);
+
+    // TODO: Handle errors
+
+    return context.urlsForTags.reduce((accumulator, urls) => {
+      return accumulator.then(
+        col => getTags(urls.getUrl, urls.headUrl).then(tags => col.concat(tags)),
+        console.error
+      );
+
+    }, initialPromise).then(col => {
+      const tagsList = col.map(pickTags);
+
+      context.receivedTags = tagsList;
+      app.ports.receiveTags.send(context);
+
+    });
   });
 }
