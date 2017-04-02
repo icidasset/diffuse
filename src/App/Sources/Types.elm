@@ -65,8 +65,10 @@ type alias Model =
 
 type Msg
     = Process
+    | ProcessNextInLine
     | ProcessTreeStep ProcessingContext TreeStepResult
     | ProcessTagsStep ProcessingContextForTags
+    | ProcessInsertionStep Source ProcessingContextForTags
       -- Forms
     | SetNewSource Source
     | SetNewSourceProperty Source String String

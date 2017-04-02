@@ -4,30 +4,70 @@ import Html exposing (Html, a, div, span, text)
 import Html.Attributes exposing (href)
 import Html.Events.Extra exposing (onClickPreventDefault)
 import Navigation.Styles exposing (..)
+import Routing.Logic exposing (pageToParentHref)
 import Routing.Types as Routing
-import Types exposing (Msg(RoutingMsg))
+import Types exposing (Model, Msg(RoutingMsg))
 import Utils exposing (cssClass)
 
 
 -- 🍯
 
 
-horizontal : List ( String, String ) -> Html Msg
-horizontal items =
+outside : Model -> List ( Label, String ) -> Html Msg
+outside model items =
+    let
+        currentHref =
+            pageToParentHref model.routing.currentPage
+    in
+        div
+            [ cssClass OutsideNavigation ]
+            (List.map (itemViewWithActiveLink currentHref) items)
+
+
+inside : List ( Label, String ) -> Html Msg
+inside items =
     div
-        [ cssClass HorizontalNavigation ]
-        (items
-            |> List.map itemView
-            |> List.map (Html.map RoutingMsg)
-        )
+        [ cssClass InsideNavigation ]
+        (List.map (itemView) items)
+
+
+
+-- Utility types
+
+
+type alias Label =
+    Html Msg
 
 
 
 -- Items
 
 
-itemView : ( String, String ) -> Html Routing.Msg
+itemView : ( Label, String ) -> Html Msg
 itemView ( itemLabel, itemHref ) =
     a
-        [ href itemHref, onClickPreventDefault (Routing.GoToUrl itemHref) ]
-        [ span [] [ text itemLabel ] ]
+        [ href itemHref
+        , onClickPreventDefault (RoutingMsg <| Routing.GoToUrl itemHref)
+        ]
+        [ span
+            []
+            [ itemLabel ]
+        ]
+
+
+itemViewWithActiveLink : String -> ( Label, String ) -> Html Msg
+itemViewWithActiveLink activeHref ( itemLabel, itemHref ) =
+    a
+        [ href itemHref
+        , onClickPreventDefault (RoutingMsg <| Routing.GoToUrl itemHref)
+
+        --
+        , if itemHref == activeHref then
+            cssClass ActiveLink
+          else
+            cssClass NonActiveLink
+        ]
+        [ span
+            []
+            [ itemLabel ]
+        ]

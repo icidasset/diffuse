@@ -15,4 +15,6 @@ type alias Model =
 type Page
     = ErrorScreen String
     | Index
+    | Queue
+    | Settings
     | Sources Sources.Page

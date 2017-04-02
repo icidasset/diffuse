@@ -5,7 +5,7 @@ import Navigation
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
-import Task
+import Utils exposing (do)
 
 
 -- Services
@@ -66,14 +66,41 @@ update msg model =
                         Nothing ->
                             case List.head model.sources of
                                 Just source ->
+                                    {- 🚀 STEP -}
                                     Processing.takeFirstStep source model.timestamp
 
                                 Nothing ->
                                     Cmd.none
             in
-                (!)
+                (,)
                     { model | isProcessing = isProcessing }
-                    [ command ]
+                    command
+
+        {- If not processing, do nothing.
+           If there are no sources left, set `isProcessing` to `Nothing`.
+           If there are sources left, start processing the next source in line.
+        -}
+        ProcessNextInLine ->
+            case model.isProcessing of
+                Just sources ->
+                    let
+                        newSources =
+                            List.drop 1 sources
+                    in
+                        case List.head newSources of
+                            {- 🚀 STEP -}
+                            Just source ->
+                                (!)
+                                    { model | isProcessing = Just newSources }
+                                    [ Processing.takeFirstStep source model.timestamp ]
+
+                            Nothing ->
+                                (,)
+                                    { model | isProcessing = Nothing }
+                                    Cmd.none
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         {- Processing step,
            Phase 1, `makeTree`.
@@ -83,55 +110,77 @@ update msg model =
             let
                 ( newContext, maybeCommand ) =
                     Processing.takeTreeStep context stringResponse
-
-                command =
-                    case maybeCommand of
+            in
+                (!)
+                    model
+                    [ case maybeCommand of
                         Just getCmd ->
                             getCmd model.timestamp
 
                         Nothing ->
+                            {- 🚀 STEP -}
                             newContext
                                 |> processingContextToTagsContext
                                 |> ProcessTagsStep
-                                |> Task.succeed
-                                |> Task.perform identity
-            in
-                (!) model [ command ]
+                                |> do
+                    ]
 
         ProcessTreeStep _ (Err err) ->
             (!)
-                { model | processingError = Just (toString err) }
+                { model
+                    | isProcessing = Nothing
+                    , processingError = Just (toString err)
+                }
                 []
 
         {- Processing step,
            Phase 2, `makeTags`.
            ie. get the tags for each file in the file list.
+
+           TODO: Could be improved:
+           - Remove `Debug.crash` calls
+           - Retrieve related `source` in a better way
         -}
         ProcessTagsStep tagsContext ->
-            -- TODO: Do something with the tags
             let
-                receivedTags =
-                    Debug.log "tags" tagsContext.receivedTags
-
-                context =
+                ( source, context ) =
                     case model.isProcessing of
                         Just sources ->
                             case List.head sources of
                                 Just source ->
-                                    tagsContextToProcessingContext source tagsContext
+                                    ( source
+                                    , tagsContextToProcessingContext source tagsContext
+                                    )
 
                                 Nothing ->
                                     Debug.crash "Invalid state occurred, fix it."
 
                         Nothing ->
                             Debug.crash "Invalid state occurred, fix it."
+
+                insert =
+                    tagsContext
+                        |> ProcessInsertionStep source
+                        |> do
             in
                 case Processing.takeTagsStep model.timestamp context of
                     Just cmd ->
-                        (!) model [ cmd ]
+                        {- 🚀 STEP -}
+                        (!) model [ cmd, insert ]
 
                     Nothing ->
-                        (!) model []
+                        {- 🍪 NEXT -}
+                        (!) model [ do ProcessNextInLine, insert ]
+
+        {- Processing step,
+           Phase 3, store the data.
+        -}
+        ProcessInsertionStep source tagsContext ->
+            let
+                a =
+                    Debug.log "tags" tagsContext.receivedTags
+            in
+                (!) model []
 
         ------------------------------------
         -- Forms
@@ -158,7 +207,7 @@ update msg model =
                     | processingError = Nothing
                     , sources = model.newSource :: model.sources
                 }
-                [ Task.perform identity (Task.succeed Process) ]
+                [ do Process ]
 
 
 

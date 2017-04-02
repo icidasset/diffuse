@@ -1,5 +1,6 @@
 module Spinner.Styles exposing (..)
 
+import Color.Convert
 import Css exposing (..)
 import Spinner.Variables as Variables
 import String.Interpolate exposing (interpolate)
@@ -81,10 +82,10 @@ keyframes =
           }
         }
         """
-        [ colors.base08
-        , colors.base0A
-        , colors.base0B
-        , colors.base0D
+        [ Color.Convert.colorToHex colors.base08
+        , Color.Convert.colorToHex colors.base0A
+        , Color.Convert.colorToHex colors.base0B
+        , Color.Convert.colorToHex colors.base0D
         , toString <| Variables.offset
         , toString <| Variables.offset / 4
         ]

@@ -1,15 +1,18 @@
 module Sources.View exposing (..)
 
+import Color
 import Form.Styles as FormStyles
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
+import Material.Icons.Action as Icons
 import Navigation.View as Navigation
 import Routing.Types as Routing
 import Sources.Types as Sources exposing (Page(..), Source(..))
 import Styles exposing (Classes(Button, ContentBox))
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
+import Variables exposing (colorDerivatives)
 
 
 -- Services
@@ -41,8 +44,8 @@ pageIndex _ =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.horizontal
-            [ ( "Add a new source", "/sources/new" )
+          Navigation.inside
+            [ ( text "Add a new source", "/sources/new" )
             ]
         ]
 
@@ -58,12 +61,13 @@ pageNew model =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.horizontal
-            [ ( "Show my sources", "/sources" )
+          Navigation.inside
+            [ ( Icons.list colorDerivatives.text 16, "/sources" )
             ]
-          ------------------------------------
-          -- Form
-          ------------------------------------
+
+        ------------------------------------
+        -- Form
+        ------------------------------------
         , Html.map SourcesMsg (pageNewForm model)
         ]
 

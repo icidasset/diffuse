@@ -1,8 +1,9 @@
 module Form.Mixins exposing (..)
 
+import Color
 import Css exposing (..)
 import Css.Elements exposing (..)
-import Traits exposing (defaultFont, gr)
+import Traits exposing (cssColor, defaultFont, gr)
 import Variables exposing (borderRadiuses, colorDerivatives)
 
 
@@ -17,16 +18,18 @@ inputStyles : Mixin
 inputStyles =
     mixin
         [ defaultFont
-          --
+
+        --
         , backgroundColor transparent
-        , border3 (px 1) solid (hex colorDerivatives.inputBorder)
+        , border3 (px 1) solid (cssColor colorDerivatives.inputBorder)
         , borderRadius borderRadiuses.smallElements
         , boxSizing borderBox
         , display block
         , width (pct 100)
-          --
+
+        --
         , focus
-            [ borderColor (hex colorDerivatives.focusBorder)
+            [ borderColor (cssColor colorDerivatives.focusBorder)
             , outline none
             ]
         ]

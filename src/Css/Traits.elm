@@ -1,5 +1,6 @@
 module Traits exposing (..)
 
+import Color
 import Css exposing (..)
 
 
@@ -37,3 +38,16 @@ queryLarge =
 defaultFont : Mixin
 defaultFont =
     mixin [ fontFamilies [ "Overpass", "sans-serif" ] ]
+
+
+
+-- Css / Colors
+
+
+cssColor : Color.Color -> Css.Color
+cssColor theColor =
+    let
+        values =
+            Color.toRgb theColor
+    in
+        Css.rgba values.red values.green values.blue values.alpha

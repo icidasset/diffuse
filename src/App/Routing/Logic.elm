@@ -1,4 +1,4 @@
-module Routing.Logic exposing (locationToMessage, locationToPage)
+module Routing.Logic exposing (locationToMessage, locationToPage, pageToParentHref)
 
 import Navigation
 import Routing.Types exposing (..)
@@ -24,6 +24,18 @@ locationToPage location =
         |> Maybe.withDefault (ErrorScreen "Page not found.")
 
 
+{-| Href to `Page`.
+-}
+pageToParentHref : Page -> String
+pageToParentHref page =
+    case page of
+        Sources _ ->
+            "/sources"
+
+        _ ->
+            "/"
+
+
 
 -- Routes
 
@@ -33,6 +45,9 @@ route =
     oneOf
         [ map (Sources Sources.Index) (s "sources")
         , map (Sources Sources.New) (s "sources" </> s "new")
-          -- Other
+
+        -- Other
+        , map Queue (s "queue")
+        , map Settings (s "settings")
         , map Index top
         ]

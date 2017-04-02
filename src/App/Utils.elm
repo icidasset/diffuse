@@ -8,6 +8,7 @@ import Svg
 import Svg.Attributes
 import Char
 import Hex
+import Task
 
 
 -- Css
@@ -26,6 +27,11 @@ cssClasses =
 cssClass : class -> Attribute msg
 cssClass class =
     cssClasses [ class ]
+
+
+cssClassWithNamespace : String -> class -> Attribute msg
+cssClassWithNamespace namespace class =
+    .class (withNamespace namespace) [ class ]
 
 
 cssSvgClass : class -> Svg.Attribute msg
@@ -50,6 +56,11 @@ cssSvgId id =
 
 
 -- Other
+
+
+do : msg -> Cmd msg
+do msg =
+    Task.perform identity (Task.succeed msg)
 
 
 lowercaseHexadecimalString : String -> String
