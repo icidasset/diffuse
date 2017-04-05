@@ -14,6 +14,9 @@ import Types exposing (..)
 import Queue.State as Queue
 import Routing.State as Routing
 import Sources.State as Sources
+import Queue.Types
+import Routing.Types
+import Sources.Types
 
 
 -- 💧
@@ -41,7 +44,8 @@ initialCommands _ _ =
     Cmd.batch
         [ -- Time
           Task.perform SetTimestamp Time.now
-          -- Children
+
+        -- Children
         , Cmd.map QueueMsg Queue.initialCommands
         , Cmd.map RoutingMsg Routing.initialCommands
         , Cmd.map SourcesMsg Sources.initialCommands
@@ -78,19 +82,38 @@ update msg model =
         -- Children
         ------------------------------------
         QueueMsg sub ->
-            Queue.update sub model.queue
-                |> mapModel (\x -> { model | queue = x })
-                |> mapCmd QueueMsg
+            updateQueue sub model
 
         RoutingMsg sub ->
-            Routing.update sub model.routing
-                |> mapModel (\x -> { model | routing = x })
-                |> mapCmd RoutingMsg
+            updateRouting sub model
 
         SourcesMsg sub ->
-            Sources.update sub model.sources
-                |> mapModel (\x -> { model | sources = x })
-                |> mapCmd SourcesMsg
+            updateSources sub model
+
+
+
+-- Children boilerplate
+
+
+updateQueue : Queue.Types.Msg -> Model -> ( Model, Cmd Msg )
+updateQueue msg model =
+    Queue.update msg model.queue
+        |> mapModel (\x -> { model | queue = x })
+        |> mapCmd QueueMsg
+
+
+updateRouting : Routing.Types.Msg -> Model -> ( Model, Cmd Msg )
+updateRouting msg model =
+    Routing.update msg model.routing
+        |> mapModel (\x -> { model | routing = x })
+        |> mapCmd RoutingMsg
+
+
+updateSources : Sources.Types.Msg -> Model -> ( Model, Cmd Msg )
+updateSources msg model =
+    Sources.update msg model.sources
+        |> mapModel (\x -> { model | sources = x })
+        |> mapCmd SourcesMsg
 
 
 
@@ -102,7 +125,8 @@ subscriptions model =
     Sub.batch
         [ -- Time
           Time.every (5 * Time.minute) SetTimestamp
-          -- Children
+
+        -- Children
         , Sub.map QueueMsg <| Queue.subscriptions model.queue
         , Sub.map SourcesMsg <| Sources.subscriptions model.sources
         ]

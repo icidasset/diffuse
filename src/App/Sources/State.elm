@@ -1,10 +1,13 @@
 module Sources.State exposing (..)
 
 import Date
+import List.Extra as ListEx
 import Navigation
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
+import Time
+import Tracks.Types as Tracks
 import Utils exposing (do)
 
 
@@ -19,9 +22,10 @@ import Sources.Services.AmazonS3 as AmazonS3
 initialModel : Model
 initialModel =
     { isProcessing = Nothing
-    , newSource = AmazonS3 AmazonS3.initialProperties
+    , newSource = newSource (AmazonS3 AmazonS3.initialProperties)
     , processingError = Nothing
     , sources = []
+    , tracks = []
     , timestamp = Date.fromTime 0
     }
 
@@ -137,77 +141,75 @@ update msg model =
            Phase 2, `makeTags`.
            ie. get the tags for each file in the file list.
 
-           TODO: Could be improved:
-           - Remove `Debug.crash` calls
-           - Retrieve related `source` in a better way
+           TODO: Get `Source` from model.isProcessing?
         -}
         ProcessTagsStep tagsContext ->
-            let
-                ( source, context ) =
-                    case model.isProcessing of
-                        Just sources ->
-                            case List.head sources of
-                                Just source ->
-                                    ( source
-                                    , tagsContextToProcessingContext source tagsContext
-                                    )
+            case getTagsContextSource tagsContext model.sources of
+                {- Ideally this should never happen, but just in case ... -}
+                Nothing ->
+                    (!)
+                        { model
+                            | processingError =
+                                Just "Could not find source during ProcessTagsStep"
+                        }
+                        []
 
-                                Nothing ->
-                                    Debug.crash "Invalid state occurred, fix it."
+                {- Actual processing -}
+                Just source ->
+                    let
+                        context =
+                            tagsContextToProcessingContext tagsContext source
 
-                        Nothing ->
-                            Debug.crash "Invalid state occurred, fix it."
+                        insert =
+                            tagsContext
+                                |> ProcessInsertionStep source
+                                |> do
+                    in
+                        case Processing.takeTagsStep model.timestamp context of
+                            Just cmd ->
+                                {- 🚀 STEP -}
+                                (!) model [ cmd, insert ]
 
-                insert =
-                    tagsContext
-                        |> ProcessInsertionStep source
-                        |> do
-            in
-                case Processing.takeTagsStep model.timestamp context of
-                    Just cmd ->
-                        {- 🚀 STEP -}
-                        (!) model [ cmd, insert ]
-
-                    Nothing ->
-                        {- 🍪 NEXT -}
-                        (!) model [ do ProcessNextInLine, insert ]
+                            Nothing ->
+                                {- 🍪 NEXT -}
+                                (!) model [ do ProcessNextInLine, insert ]
 
         {- Processing step,
-           Phase 3, store the data.
+           Phase 3, store the tracks.
         -}
         ProcessInsertionStep source tagsContext ->
-            let
-                a =
-                    Debug.log "tags" tagsContext.receivedTags
-            in
-                (!) model []
+            (!)
+                { model | tracks = tracksFromTagsContext tagsContext }
+                [ do SyncTracks ]
+
+        ------------------------------------
+        -- TODO : Firebase
+        ------------------------------------
+        SyncSources ->
+            (!) model []
+
+        SyncTracks ->
+            (!) model []
 
         ------------------------------------
         -- Forms
         ------------------------------------
-        SetNewSource source ->
+        SetNewSourceProperty source key value ->
             (!)
-                { model | newSource = source }
+                { model
+                    | newSource = setNewSourceProperty key value model.newSource
+                }
                 []
-
-        SetNewSourceProperty source propKey propValue ->
-            let
-                updatedSource =
-                    case source of
-                        AmazonS3 sourceData ->
-                            propValue
-                                |> AmazonS3.translateTo sourceData propKey
-                                |> AmazonS3
-            in
-                (!) { model | newSource = updatedSource } []
 
         SubmitNewSourceForm ->
             (!)
                 { model
                     | processingError = Nothing
-                    , sources = model.newSource :: model.sources
+                    , sources = (setProperSourceId model model.newSource) :: model.sources
                 }
-                [ do Process ]
+                [ do Process
+                , do SyncSources
+                ]
 
 
 
@@ -221,12 +223,71 @@ subscriptions _ =
 
 
 
+-- Sources
+
+
+setProperSourceId : Model -> Source -> Source
+setProperSourceId model source =
+    { source
+        | id =
+            model.timestamp
+                |> Date.toTime
+                |> Time.inMilliseconds
+                |> round
+                |> toString
+                |> (flip String.append) (List.length model.sources |> (+) 1 |> toString)
+    }
+
+
+
+-- Tracks
+
+
+tracksFromTagsContext : ProcessingContextForTags -> List Tracks.Track
+tracksFromTagsContext context =
+    context.receivedTags
+        |> ListEx.zip context.receivedFilePaths
+        |> List.map (makeTrack context.sourceId)
+        |> Debug.log "tracks"
+
+
+makeTrack : String -> ( String, Tracks.Tags ) -> Tracks.Track
+makeTrack sourceId ( path, tags ) =
+    { path = path
+    , sourceId = sourceId
+    , tags = tags
+    }
+
+
+
+-- Forms
+
+
+setNewSourceProperty : String -> String -> Source -> Source
+setNewSourceProperty key value source =
+    let
+        newSourceData =
+            case source.data of
+                AmazonS3 s3Data ->
+                    value
+                        |> AmazonS3.translateTo s3Data key
+                        |> AmazonS3
+    in
+        { source | data = newSourceData }
+
+
+
 -- Utils
 
 
-tagsContextToProcessingContext : Source -> ProcessingContextForTags -> ProcessingContext
-tagsContextToProcessingContext source context =
-    { filePaths = context.filePaths
+getTagsContextSource : ProcessingContextForTags -> List Source -> Maybe Source
+getTagsContextSource tagsContext =
+    ListEx.find (.id >> (==) tagsContext.sourceId)
+
+
+tagsContextToProcessingContext : ProcessingContextForTags -> Source -> ProcessingContext
+tagsContextToProcessingContext context source =
+    { filePaths = context.nextFilePaths
     , source = source
     , treeMarker = TheBeginning
     }
@@ -234,7 +295,9 @@ tagsContextToProcessingContext source context =
 
 processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags
 processingContextToTagsContext context =
-    { filePaths = context.filePaths
+    { nextFilePaths = context.filePaths
+    , receivedFilePaths = []
     , receivedTags = []
+    , sourceId = context.source.id
     , urlsForTags = []
     }

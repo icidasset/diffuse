@@ -45,4 +45,4 @@ borderRadiuses =
 
 
 insulationWidth =
-    gr 100
+    gr 140

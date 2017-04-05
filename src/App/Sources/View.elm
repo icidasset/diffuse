@@ -8,7 +8,7 @@ import Html.Events exposing (onInput, onSubmit)
 import Material.Icons.Action as Icons
 import Navigation.View as Navigation
 import Routing.Types as Routing
-import Sources.Types as Sources exposing (Page(..), Source(..))
+import Sources.Types as Sources exposing (Page(..), Source, SourceData(..))
 import Styles exposing (Classes(Button, ContentBox))
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
@@ -153,9 +153,9 @@ renderSourceProperties : Source -> List (Html Sources.Msg)
 renderSourceProperties source =
     let
         ( translator, properties ) =
-            case source of
-                AmazonS3 data ->
-                    ( Sources.Services.AmazonS3.translateFrom data
+            case source.data of
+                AmazonS3 s3Data ->
+                    ( Sources.Services.AmazonS3.translateFrom s3Data
                     , Sources.Services.AmazonS3.properties
                     )
     in

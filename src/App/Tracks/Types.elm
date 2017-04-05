@@ -15,3 +15,10 @@ type alias TagUrls =
     { getUrl : String
     , headUrl : String
     }
+
+
+type alias Track =
+    { path : String
+    , sourceId : String
+    , tags : Tags
+    }

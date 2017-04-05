@@ -32,7 +32,7 @@ css:
 
 elm:
 	@echo "> Compiling Elm"
-	@elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes
+	@elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes --debug
 
 
 system:
@@ -48,9 +48,8 @@ vendor:
 #
 # Dev tasks
 #
-dev:
-	@echo "> \033[1mBuild & serve\033[0m (dev)"
-	@make -j watch server
+dev: build
+	@make -j watch_wo_build server
 
 
 server:
@@ -64,6 +63,10 @@ test:
 
 
 watch: build
+	@make watch_wo_build
+
+
+watch_wo_build:
 	@echo "> Watching"
 	@make -j watch_elm watch_css watch_system
 

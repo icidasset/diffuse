@@ -75,7 +75,7 @@ stylesLocal =
     ------------------------------------------------------
     , class BackgroundImage
         [ backgroundImage (url "images/Background/1.jpg")
-        , backgroundPosition2 (pct 50) (pct 35)
+        , backgroundPosition2 (pct 50) (pct 19)
         , backgroundRepeat noRepeat
         , backgroundSize (pct 110)
         , height (vh 100)

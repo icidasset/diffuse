@@ -87,8 +87,10 @@ takeTagsStep currentDate context =
             ListEx.splitAt tagsBatchSize context.filePaths
 
         tagsContext =
-            { filePaths = nextFiles
+            { nextFilePaths = nextFiles
+            , receivedFilePaths = filesToProcess
             , receivedTags = []
+            , sourceId = context.source.id
             , urlsForTags = makeTrackUrls currentDate context filesToProcess
             }
     in
@@ -104,7 +106,7 @@ takeTagsStep currentDate context =
 
 handleTreeResponse : ProcessingContext -> String -> ProcessingContext
 handleTreeResponse context response =
-    case context.source of
+    case context.source.data of
         AmazonS3 _ ->
             AmazonS3.handleTreeResponse context response
 
@@ -115,9 +117,9 @@ makeTree context =
         msg =
             ProcessTreeStep context
     in
-        case context.source of
-            AmazonS3 sourceData ->
-                AmazonS3.makeTree msg sourceData context.treeMarker
+        case context.source.data of
+            AmazonS3 s3Data ->
+                AmazonS3.makeTree msg s3Data context.treeMarker
 
 
 
@@ -126,11 +128,11 @@ makeTree context =
 
 makeTrackUrls : Date -> ProcessingContext -> List String -> List TagUrls
 makeTrackUrls currentDate context filePaths =
-    case context.source of
-        AmazonS3 sourceDate ->
+    case context.source.data of
+        AmazonS3 s3Data ->
             let
                 maker =
-                    AmazonS3.makeTrackUrl currentDate sourceDate
+                    AmazonS3.makeTrackUrl currentDate s3Data
 
                 mapFn =
                     \path ->

@@ -6,22 +6,15 @@ import Html.CssHelpers exposing (..)
 import Http
 import Svg
 import Svg.Attributes
-import Char
-import Hex
 import Task
 
 
 -- Css
 
 
-emptyCssNamespace : Namespace String class id msg
-emptyCssNamespace =
-    withNamespace ""
-
-
 cssClasses : List class -> Attribute msg
 cssClasses =
-    emptyCssNamespace.class
+    .class (withNamespace "")
 
 
 cssClass : class -> Attribute msg
@@ -29,29 +22,9 @@ cssClass class =
     cssClasses [ class ]
 
 
-cssClassWithNamespace : String -> class -> Attribute msg
-cssClassWithNamespace namespace class =
-    .class (withNamespace namespace) [ class ]
-
-
 cssSvgClass : class -> Svg.Attribute msg
 cssSvgClass class =
     Svg.Attributes.class (identifierToString "" class)
-
-
-cssClassList : List ( class, Bool ) -> Attribute msg
-cssClassList =
-    emptyCssNamespace.classList
-
-
-cssId : id -> Attribute msg
-cssId =
-    emptyCssNamespace.id
-
-
-cssSvgId : id -> Svg.Attribute msg
-cssSvgId id =
-    Svg.Attributes.id (identifierToString "" id)
 
 
 
@@ -61,16 +34,6 @@ cssSvgId id =
 do : msg -> Cmd msg
 do msg =
     Task.perform identity (Task.succeed msg)
-
-
-lowercaseHexadecimalString : String -> String
-lowercaseHexadecimalString input =
-    input
-        |> String.toLower
-        |> String.toList
-        |> List.map Char.toCode
-        |> List.map Hex.toString
-        |> String.concat
 
 
 makeQueryParam : ( String, String ) -> String

@@ -10,22 +10,39 @@ import Tracks.Types exposing (..)
 import Sources.Services.AmazonS3.Types as AmazonS3 exposing (..)
 
 
--- Sources & Processing
+-- Sources
 
 
-type Source
+type SourceData
     = AmazonS3 AmazonS3Source
+
+
+type alias Source =
+    { id : String
+    , data : SourceData
+    }
+
+
+newSource : SourceData -> Source
+newSource data =
+    { id = "change_me_please"
+    , data = data
+    }
+
+
+
+-- Processing
+
+
+type HttpMethod
+    = Get
+    | Head
 
 
 type Marker
     = TheBeginning
     | InProgress String
     | TheEnd
-
-
-type HttpMethod
-    = Get
-    | Head
 
 
 type alias ProcessingContext =
@@ -36,8 +53,10 @@ type alias ProcessingContext =
 
 
 type alias ProcessingContextForTags =
-    { filePaths : List String
+    { nextFilePaths : List String
+    , receivedFilePaths : List String
     , receivedTags : List Tags
+    , sourceId : String
     , urlsForTags : List TagUrls
     }
 
@@ -59,6 +78,7 @@ type alias Model =
     , newSource : Source
     , processingError : Maybe String
     , sources : List Source
+    , tracks : List Track
     , timestamp : Date
     }
 
@@ -69,8 +89,10 @@ type Msg
     | ProcessTreeStep ProcessingContext TreeStepResult
     | ProcessTagsStep ProcessingContextForTags
     | ProcessInsertionStep Source ProcessingContextForTags
+      -- Firebase
+    | SyncSources
+    | SyncTracks
       -- Forms
-    | SetNewSource Source
     | SetNewSourceProperty Source String String
     | SubmitNewSourceForm
 
