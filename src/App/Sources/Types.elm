@@ -1,33 +1,27 @@
 module Sources.Types exposing (..)
 
 import Date exposing (Date)
+import Dict exposing (Dict)
 import Http
 import Json.Encode
 import Tracks.Types exposing (..)
 
 
--- Services
-
-import Sources.Services.AmazonS3.Types as AmazonS3 exposing (..)
-
-
 -- Sources
 
 
-type SourceData
-    = AmazonS3 AmazonS3Source
+type Service
+    = AmazonS3
+
+
+type alias SourceData =
+    Dict String String
 
 
 type alias Source =
     { id : String
     , data : SourceData
-    }
-
-
-type alias SourceReplica =
-    { id : String
-    , data : Json.Encode.Value
-    , typ : String
+    , service : Service
     }
 
 

@@ -1,6 +1,7 @@
 module Sources.View exposing (..)
 
 import Color
+import Dict
 import Form.Styles as FormStyles
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -8,7 +9,7 @@ import Html.Events exposing (onInput, onSubmit)
 import Material.Icons.Action as Icons
 import Navigation.View as Navigation
 import Routing.Types as Routing
-import Sources.Types as Sources exposing (Page(..), Source, SourceData(..))
+import Sources.Types as Sources exposing (Page(..), Service(..), Source)
 import Styles exposing (Classes(Button, ContentBox))
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
@@ -17,7 +18,7 @@ import Variables exposing (colorDerivatives)
 
 -- Services
 
-import Sources.Services.AmazonS3
+import Sources.Services.AmazonS3 as AmazonS3
 
 
 -- 🍯
@@ -128,12 +129,8 @@ pageNewForm model =
 -- Properties
 
 
-propertyRenderer :
-    Source
-    -> (String -> String)
-    -> ( String, String, String, Bool )
-    -> Html Sources.Msg
-propertyRenderer source translator ( propKey, propLabel, propPlaceholder, isPassword ) =
+propertyRenderer : Source -> ( String, String, String, Bool ) -> Html Sources.Msg
+propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
     div
         []
         [ label
@@ -152,7 +149,11 @@ propertyRenderer source translator ( propKey, propLabel, propPlaceholder, isPass
                      else
                         "text"
                     )
-                , value (translator propKey)
+                , value
+                    (source.data
+                        |> Dict.get propKey
+                        |> Maybe.withDefault ""
+                    )
                 ]
                 []
             ]
@@ -161,12 +162,6 @@ propertyRenderer source translator ( propKey, propLabel, propPlaceholder, isPass
 
 renderSourceProperties : Source -> List (Html Sources.Msg)
 renderSourceProperties source =
-    let
-        ( translator, properties ) =
-            case source.data of
-                AmazonS3 s3Data ->
-                    ( Sources.Services.AmazonS3.translateFrom s3Data
-                    , Sources.Services.AmazonS3.properties
-                    )
-    in
-        List.map (propertyRenderer source translator) properties
+    case source.service of
+        AmazonS3 ->
+            List.map (propertyRenderer source) AmazonS3.properties

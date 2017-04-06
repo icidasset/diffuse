@@ -28,6 +28,7 @@ import List.Extra as List
 import Sources.Ports as Ports
 import Sources.Types exposing (..)
 import Tracks.Types exposing (..)
+import Tracks.Utils exposing (makeTrack)
 import Utils exposing (do)
 
 
@@ -113,8 +114,8 @@ handleTreeResponse : ProcessingContext -> String -> ProcessingContext
 handleTreeResponse context response =
     let
         parsingFunc =
-            case context.source.data of
-                AmazonS3 _ ->
+            case context.source.service of
+                AmazonS3 ->
                     AmazonS3.parseTreeResponse
 
         parsedResponse =
@@ -130,11 +131,11 @@ makeTree : ProcessingContext -> CmdWithTimestamp
 makeTree context =
     let
         fn =
-            case context.source.data of
-                AmazonS3 s3Data ->
-                    AmazonS3.makeTree s3Data
+            case context.source.service of
+                AmazonS3 ->
+                    AmazonS3.makeTree
     in
-        fn context.treeMarker (ProcessTreeStep context)
+        fn context.source.data context.treeMarker (ProcessTreeStep context)
 
 
 
@@ -143,19 +144,19 @@ makeTree context =
 
 makeTrackUrls : Date -> Source -> List String -> List TagUrls
 makeTrackUrls currentDate source filePaths =
-    case source.data of
-        AmazonS3 s3Data ->
-            let
-                maker =
-                    AmazonS3.makeTrackUrl currentDate s3Data
+    let
+        maker =
+            case source.service of
+                AmazonS3 ->
+                    AmazonS3.makeTrackUrl
 
-                mapFn =
-                    \path ->
-                        { getUrl = maker Get path
-                        , headUrl = maker Head path
-                        }
-            in
-                List.map mapFn filePaths
+        mapFn =
+            \path ->
+                { getUrl = maker currentDate source.data Get path
+                , headUrl = maker currentDate source.data Head path
+                }
+    in
+        List.map mapFn filePaths
 
 
 

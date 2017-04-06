@@ -2,13 +2,13 @@ module Sources.Services.AmazonS3.Presign exposing (presignedUrl)
 
 import Date exposing (Date)
 import Date.Extra
-import Debug
+import Dict
+import Dict.Ext as Dict
 import Http
 import SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
-import Sources.Services.AmazonS3.Types exposing (..)
-import Sources.Types exposing (HttpMethod)
+import Sources.Types exposing (HttpMethod, SourceData)
 import Time exposing (Time)
 import Utils
 
@@ -18,28 +18,28 @@ presignedUrl :
     -> Time
     -> List ( String, String )
     -> Date
-    -> AmazonS3Source
+    -> SourceData
     -> String
     -> String
-presignedUrl method lifeExpectancy extraParams currentDate dirtyAws pathToFile =
+presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
     let
         aws =
-            { dirtyAws
-                | accessKey = String.trim dirtyAws.accessKey
-                , bucketName = String.trim dirtyAws.bucketName
-                , region = String.trim dirtyAws.region
-                , secretKey = String.trim dirtyAws.secretKey
-            }
+            Dict.map (\k v -> String.trim v) srcData
+
+        region =
+            Dict.fetchUnknown "region" aws
 
         host =
-            aws.bucketName ++ ".s3.amazonaws.com"
+            Dict.fetchUnknown "bucketName" aws ++ ".s3.amazonaws.com"
 
+        -- {var} Paths
         filePath =
             if String.startsWith "/" pathToFile then
                 pathToFile
             else
                 "/" ++ pathToFile
 
+        -- {var} Time
         timestamp =
             Date.Extra.toUtcFormattedString "yMMddTHHmmssZ" currentDate
 
@@ -51,9 +51,9 @@ presignedUrl method lifeExpectancy extraParams currentDate dirtyAws pathToFile =
 
         -- Request
         credential =
-            [ aws.accessKey
+            [ Dict.fetchUnknown "accessKey" aws
             , date
-            , aws.region
+            , region
             , "s3"
             , "aws4_request"
             ]
@@ -91,15 +91,15 @@ presignedUrl method lifeExpectancy extraParams currentDate dirtyAws pathToFile =
                 "\n"
                 [ "AWS4-HMAC-SHA256"
                 , timestamp
-                , String.join "/" [ date, aws.region, "s3", "aws4_request" ]
+                , String.join "/" [ date, region, "s3", "aws4_request" ]
                 , SHA.sha256sum request
                 ]
 
         -- Signature
         signature =
-            ("AWS4" ++ aws.secretKey)
+            ("AWS4" ++ Dict.fetchUnknown "secretKey" aws)
                 |> Hmac.encrypt64 SHA.sha256sum date
-                |> Hmac.encrypt64 SHA.sha256sum aws.region
+                |> Hmac.encrypt64 SHA.sha256sum region
                 |> Hmac.encrypt64 SHA.sha256sum "s3"
                 |> Hmac.encrypt64 SHA.sha256sum "aws4_request"
                 |> Hmac.encrypt64 SHA.sha256sum stringToSign

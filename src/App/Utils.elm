@@ -1,6 +1,7 @@
 module Utils exposing (..)
 
 import Css.Helpers exposing (identifierToString)
+import Dict
 import Html exposing (Attribute)
 import Html.CssHelpers exposing (..)
 import Http

@@ -3,8 +3,11 @@ module Sources.Encoding exposing (..)
 {-| Encoding.
 -}
 
-import Json.Encode
+import Dict
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Sources.Types exposing (..)
+import Sources.Utils exposing (makeSource)
 
 
 -- Services
@@ -12,28 +15,55 @@ import Sources.Types exposing (..)
 import Sources.Services.AmazonS3 as AmazonS3
 
 
--- Functions
+-- Encode
 
 
-encode : SourceData -> Json.Encode.Value
-encode data =
-    case data of
-        AmazonS3 s3Data ->
-            AmazonS3.encode s3Data
+encode : Source -> Encode.Value
+encode source =
+    Encode.object
+        [ ( "id", Encode.string source.id )
+        , ( "data", encodeData source.data )
+        , ( "service", Encode.string (toString source.service) )
+        ]
 
 
-decode : String -> Json.Encode.Value -> SourceData
-decode typ value =
-    case typ of
+encodeData : SourceData -> Encode.Value
+encodeData data =
+    data
+        |> Dict.toList
+        |> List.map (Tuple.mapSecond Encode.string)
+        |> Encode.object
+
+
+
+-- Decode
+
+
+decode : Decode.Value -> Source
+decode value =
+    {- TODO: `Result.withDefault` is probably a bad idea -}
+    Decode.decodeValue decoder value
+        |> Result.withDefault (makeSource AmazonS3 AmazonS3.initialData)
+
+
+decoder : Decode.Decoder Source
+decoder =
+    Decode.map3 Source
+        (Decode.field "id" Decode.string)
+        (Decode.field "data" (Decode.dict Decode.string))
+        (Decode.field "service" serviceDecoder)
+
+
+serviceDecoder : Decode.Decoder Service
+serviceDecoder =
+    Decode.map serviceStringToType Decode.string
+
+
+serviceStringToType : String -> Service
+serviceStringToType str =
+    case str of
         "AmazonS3" ->
-            AmazonS3 (AmazonS3.decode value)
+            AmazonS3
 
         _ ->
-            Debug.crash "TODO: Invalid source type"
-
-
-dataType : SourceData -> String
-dataType data =
-    case data of
-        AmazonS3 _ ->
-            "AmazonS3"
+            AmazonS3

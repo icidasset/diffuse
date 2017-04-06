@@ -65,17 +65,17 @@ update msg model =
         -- Time
         SetTimestamp time ->
             let
-                timestamp =
+                stamp =
                     Date.fromTime time
 
                 sources =
                     model.sources
-
-                sources_ =
-                    { sources | timestamp = timestamp }
             in
                 (!)
-                    { model | sources = sources_, timestamp = timestamp }
+                    { model
+                        | sources = { sources | timestamp = stamp }
+                        , timestamp = stamp
+                    }
                     []
 
         ------------------------------------

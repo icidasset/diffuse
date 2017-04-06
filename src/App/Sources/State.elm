@@ -1,10 +1,12 @@
 module Sources.State exposing (..)
 
 import Date
+import Dict
 import List.Extra as List
-import Maybe.Extensions as Maybe
+import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
 import Navigation
+import Sources.Encoding
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
@@ -12,7 +14,6 @@ import Sources.Utils exposing (..)
 import Time
 import Types exposing (ProgramFlags)
 import Tracks.Encoding
-import Tracks.Types as Tracks exposing (makeTrack)
 import Utils exposing (do)
 
 
@@ -27,9 +28,9 @@ import Sources.Services.AmazonS3 as AmazonS3
 initialModel : ProgramFlags -> Model
 initialModel flags =
     { isProcessing = Nothing
-    , newSource = makeSource (AmazonS3 AmazonS3.initialProperties)
+    , newSource = makeSource AmazonS3 AmazonS3.initialData
     , processingError = Nothing
-    , sources = List.map Sources.Utils.purify (Maybe.withDefault [] flags.sources)
+    , sources = List.map Sources.Encoding.decode (Maybe.withDefault [] flags.sources)
     , tracks = List.map Tracks.Encoding.decode (Maybe.withDefault [] flags.tracks)
     , timestamp = Date.fromTime 0
     }
@@ -141,10 +142,10 @@ update msg model =
         -- Firebase
         ------------------------------------
         SyncSources ->
-            (!) model [ Ports.storeSources (List.map makeSourceReplica model.sources) ]
+            (!) model [ Ports.storeSources (List.map Sources.Encoding.encode model.sources) ]
 
         SyncTracks ->
-            (!) model [ Ports.storeTracks model.tracks ]
+            (!) model [ Ports.storeTracks (List.map Tracks.Encoding.encode model.tracks) ]
 
         ------------------------------------
         -- Forms
@@ -152,7 +153,7 @@ update msg model =
         SetNewSourceProperty source key value ->
             (!)
                 { model
-                    | newSource = setNewSourceProperty key value model.newSource
+                    | newSource = { source | data = Dict.insert key value source.data }
                 }
                 []
 
@@ -175,23 +176,6 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveTags ProcessTagsStep ]
-
-
-
--- Forms
-
-
-setNewSourceProperty : String -> String -> Source -> Source
-setNewSourceProperty key value source =
-    let
-        newSourceData =
-            case source.data of
-                AmazonS3 s3Data ->
-                    value
-                        |> AmazonS3.translateTo s3Data key
-                        |> AmazonS3
-    in
-        { source | data = newSourceData }
 
 
 

@@ -1,31 +1,67 @@
 module Tracks.Encoding exposing (..)
 
-import Json.Decode exposing (Decoder, field, int, maybe, string)
-import Json.Encode
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Tracks.Types exposing (..)
+import Tracks.Utils exposing (emptyTrack)
 
 
-decode : Json.Encode.Value -> Track
+-- Encode
+
+
+encode : Track -> Encode.Value
+encode track =
+    Encode.object
+        [ ( "path", Encode.string track.path )
+        , ( "sourceId", Encode.string track.sourceId )
+        , ( "tags", encodeTags track.tags )
+        ]
+
+
+encodeTags : Tags -> Encode.Value
+encodeTags tags =
+    Encode.object
+        [ ( "album", encodeMaybe tags.album Encode.string )
+        , ( "artist", encodeMaybe tags.artist Encode.string )
+        , ( "genre", encodeMaybe tags.genre Encode.string )
+        , ( "title", encodeMaybe tags.title Encode.string )
+        , ( "track", encodeMaybe tags.track Encode.int )
+        , ( "year", encodeMaybe tags.year Encode.int )
+        ]
+
+
+encodeMaybe : Maybe a -> (a -> Encode.Value) -> Encode.Value
+encodeMaybe maybe encoder =
+    maybe
+        |> Maybe.map encoder
+        |> Maybe.withDefault Encode.null
+
+
+
+-- Decode
+
+
+decode : Decode.Value -> Track
 decode value =
     {- TODO: `Result.withDefault` is probably a bad idea -}
-    Json.Decode.decodeValue decoder value
+    Decode.decodeValue decoder value
         |> Result.withDefault emptyTrack
 
 
-decoder : Decoder Track
+decoder : Decode.Decoder Track
 decoder =
-    Json.Decode.map3 Track
-        (field "path" string)
-        (field "sourceId" string)
-        (field "tags" tagsDecoder)
+    Decode.map3 Track
+        (Decode.field "path" Decode.string)
+        (Decode.field "sourceId" Decode.string)
+        (Decode.field "tags" tagsDecoder)
 
 
-tagsDecoder : Decoder Tags
+tagsDecoder : Decode.Decoder Tags
 tagsDecoder =
-    Json.Decode.map6 Tags
-        (maybe <| field "album" string)
-        (maybe <| field "artist" string)
-        (maybe <| field "genre" string)
-        (maybe <| field "title" string)
-        (maybe <| field "track" int)
-        (maybe <| field "year" int)
+    Decode.map6 Tags
+        (Decode.maybe <| Decode.field "album" Decode.string)
+        (Decode.maybe <| Decode.field "artist" Decode.string)
+        (Decode.maybe <| Decode.field "genre" Decode.string)
+        (Decode.maybe <| Decode.field "title" Decode.string)
+        (Decode.maybe <| Decode.field "track" Decode.int)
+        (Decode.maybe <| Decode.field "year" Decode.int)

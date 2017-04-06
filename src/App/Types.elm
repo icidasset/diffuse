@@ -50,7 +50,7 @@ type alias Settings =
 
 type alias ProgramFlags =
     { settings : Settings
-    , sources : Maybe (List Sources.SourceReplica)
+    , sources : Maybe (List Json.Encode.Value)
     , tracks : Maybe (List Json.Encode.Value)
     , user : Maybe Firebase.Auth.User
     }

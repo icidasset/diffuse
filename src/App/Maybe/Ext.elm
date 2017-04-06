@@ -1,4 +1,4 @@
-module Maybe.Extensions exposing (..)
+module Maybe.Ext exposing (..)
 
 import Maybe.Extra
 
