@@ -38,7 +38,7 @@ entry page model =
 
 
 pageIndex : Model -> Html Msg
-pageIndex _ =
+pageIndex model =
     div
         []
         [ ------------------------------------
@@ -47,6 +47,16 @@ pageIndex _ =
           Navigation.inside
             [ ( text "Add a new source", "/sources/new" )
             ]
+
+        ------------------------------------
+        -- List (TODO)
+        ------------------------------------
+        , ul
+            []
+            (List.map
+                (\s -> li [] [ text (toString s.id) ])
+                model.sources.sources
+            )
         ]
 
 

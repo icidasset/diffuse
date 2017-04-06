@@ -9,6 +9,8 @@ Resources:
 
 import Date exposing (Date)
 import Http
+import Json.Decode exposing (Decoder, field, string)
+import Json.Encode
 import Sources.Services.AmazonS3.Parser as Parser
 import Sources.Services.AmazonS3.Presign exposing (..)
 import Sources.Services.AmazonS3.Types exposing (..)
@@ -31,6 +33,7 @@ properties =
     , ( "bucketName", "Bucket name", "music", False )
     , ( "region", "Region", initialProperties.region, False )
     , ( "directoryPath", "Directory", "/", False )
+    , ( "name", "Label", initialProperties.name, False )
     ]
 
 
@@ -63,6 +66,9 @@ translateFrom source propertyKey =
         "directoryPath" ->
             source.directoryPath
 
+        "name" ->
+            source.name
+
         "region" ->
             source.region
 
@@ -85,6 +91,9 @@ translateTo source propertyKey propertyValue =
         "directoryPath" ->
             { source | directoryPath = propertyValue }
 
+        "name" ->
+            { source | name = propertyValue }
+
         "region" ->
             { source | region = propertyValue }
 
@@ -93,6 +102,41 @@ translateTo source propertyKey propertyValue =
 
         _ ->
             source
+
+
+{-| JSON.
+-}
+encode : AmazonS3Source -> Json.Encode.Value
+encode source =
+    properties
+        |> List.map
+            (\( prop, _, _, _ ) ->
+                ( prop
+                , prop
+                    |> translateFrom source
+                    |> Json.Encode.string
+                )
+            )
+        |> Json.Encode.object
+
+
+decode : Json.Encode.Value -> AmazonS3Source
+decode value =
+    {- TODO: `Result.withDefault` is probably a bad idea -}
+    value
+        |> Json.Decode.decodeValue decoder
+        |> Result.withDefault initialProperties
+
+
+decoder : Decoder AmazonS3Source
+decoder =
+    Json.Decode.map6 AmazonS3Source
+        (field "accessKey" string)
+        (field "bucketName" string)
+        (field "directoryPath" string)
+        (field "name" string)
+        (field "region" string)
+        (field "secretKey" string)
 
 
 

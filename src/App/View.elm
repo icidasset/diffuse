@@ -21,6 +21,7 @@ import Variables exposing (colorDerivatives)
 import Queue.View as Queue
 import Sources.View as Sources
 import Spinner.View as Spinner
+import Tracks.View as Tracks
 
 
 -- 🍯
@@ -52,7 +53,7 @@ entry model =
 
                 Index ->
                     defaultLayout
-                        [ text "Index" ]
+                        [ Tracks.entry model ]
                         (model)
 
                 Queue ->

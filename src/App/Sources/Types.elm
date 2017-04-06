@@ -2,6 +2,7 @@ module Sources.Types exposing (..)
 
 import Date exposing (Date)
 import Http
+import Json.Encode
 import Tracks.Types exposing (..)
 
 
@@ -23,10 +24,10 @@ type alias Source =
     }
 
 
-makeSource : SourceData -> Source
-makeSource data =
-    { id = "change_me_please"
-    , data = data
+type alias SourceReplica =
+    { id : String
+    , data : Json.Encode.Value
+    , typ : String
     }
 
 

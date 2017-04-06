@@ -8,7 +8,10 @@ import Navigation
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
+import Sources.Utils exposing (..)
 import Time
+import Types exposing (ProgramFlags)
+import Tracks.Encoding
 import Tracks.Types as Tracks exposing (makeTrack)
 import Utils exposing (do)
 
@@ -21,13 +24,13 @@ import Sources.Services.AmazonS3 as AmazonS3
 -- 💧
 
 
-initialModel : Model
-initialModel =
+initialModel : ProgramFlags -> Model
+initialModel flags =
     { isProcessing = Nothing
     , newSource = makeSource (AmazonS3 AmazonS3.initialProperties)
     , processingError = Nothing
-    , sources = []
-    , tracks = []
+    , sources = List.map Sources.Utils.purify (Maybe.withDefault [] flags.sources)
+    , tracks = List.map Tracks.Encoding.decode (Maybe.withDefault [] flags.tracks)
     , timestamp = Date.fromTime 0
     }
 
@@ -135,13 +138,13 @@ update msg model =
                 [ do SyncTracks ]
 
         ------------------------------------
-        -- TODO : Firebase
+        -- Firebase
         ------------------------------------
         SyncSources ->
-            (!) model []
+            (!) model [ Ports.storeSources (List.map makeSourceReplica model.sources) ]
 
         SyncTracks ->
-            (!) model []
+            (!) model [ Ports.storeTracks model.tracks ]
 
         ------------------------------------
         -- Forms

@@ -35,3 +35,19 @@ make test
 brew install watchexec
 make watch
 ```
+
+
+
+## Setting up Firebase
+
+1. Create app
+2. Add Google authentication
+3. Add the following `Storage` rules
+
+```
+service firebase.storage {
+  match /users/{userId}/{allPaths=**} {
+  	allow read, write: if request.auth != null;
+  }
+}
+```

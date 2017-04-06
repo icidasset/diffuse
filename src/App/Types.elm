@@ -2,6 +2,7 @@ module Types exposing (..)
 
 import Date exposing (Date)
 import Firebase.Auth
+import Json.Encode
 import Time exposing (Time)
 
 
@@ -10,6 +11,7 @@ import Time exposing (Time)
 import Queue.Types as Queue
 import Routing.Types as Routing
 import Sources.Types as Sources
+import Tracks.Types as Tracks
 
 
 -- Types
@@ -48,5 +50,7 @@ type alias Settings =
 
 type alias ProgramFlags =
     { settings : Settings
+    , sources : Maybe (List Sources.SourceReplica)
+    , tracks : Maybe (List Json.Encode.Value)
     , user : Maybe Firebase.Auth.User
     }

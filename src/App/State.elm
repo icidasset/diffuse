@@ -35,7 +35,7 @@ initialModel flags location =
       ------------------------------------
       queue = Queue.initialModel flags.settings.queue
     , routing = Routing.initialModel location
-    , sources = Sources.initialModel
+    , sources = Sources.initialModel flags
     }
 
 

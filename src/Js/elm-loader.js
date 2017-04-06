@@ -21,9 +21,39 @@ firebase.auth().onAuthStateChanged(authStatechange); // TODO - Handle errors
 function authStatechange(userObj) {
   if (didSetupElm) return;
 
-  // go ahead
+  // check user props
   const maybeUser = userObj ? _.pick(userProps, userObj) : null;
-  setupElm({ user: maybeUser });
+
+  // {unauthenticated}
+  if (!maybeUser) {
+    setupElm({ user: maybeUser });
+    return;
+  }
+
+  // {authenticated}
+  Promise.all([
+    firebase.database().ref(`/users/${maybeUser.uid}/sources`).once("value"),
+    firebase.database().ref(`/users/${maybeUser.uid}/tracks`).once("value")
+  ]).then(
+    x => x.map(s => s.val())
+  ).then(
+    x => setupElm({ user: maybeUser, sources: x[0], tracks: x[1] })
+  ).catch(
+    e => {
+      // TODO: Show error message
+      console.error("Could not load data");
+      console.error(e);
+    }
+  );
+}
+
+
+function storeData(key, data) {
+  const obj = {};
+  const userId = firebase.auth().currentUser.uid;
+
+  obj[key] = data;
+  firebase.database().ref(`/users/${userId}`).update(obj);
 }
 
 
@@ -43,7 +73,9 @@ function setupElm(params) {
     { settings:
         { queue: { repeat: false, shuffle: false } // TODO
         }
-    , user: params.user || null
+    , sources: params.sources
+    , tracks: params.tracks
+    , user: params.user
     }
   );
 
@@ -91,4 +123,8 @@ function setupElm(params) {
 
     });
   });
+
+  // > Data
+  app.ports.storeSources.subscribe(v => storeData("sources", v));
+  app.ports.storeTracks.subscribe(v => storeData("tracks", v));
 }
