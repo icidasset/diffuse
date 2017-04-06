@@ -22,3 +22,11 @@ type alias Track =
     , sourceId : String
     , tags : Tags
     }
+
+
+makeTrack : String -> ( String, Tags ) -> Track
+makeTrack sourceId ( path, tags ) =
+    { path = path
+    , sourceId = sourceId
+    , tags = tags
+    }

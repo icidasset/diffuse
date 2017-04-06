@@ -1,16 +1,15 @@
-module Sources.Services.AmazonS3.Parser exposing (parseResponse)
+module Sources.Services.AmazonS3.Parser exposing (..)
 
 import List.Extra
-import Sources.Services.AmazonS3.Types exposing (ParsedResponse)
-import Sources.Types exposing (Marker(..))
+import Sources.Types exposing (Marker(..), ParsedResponse)
 import Xml
 import Xml.Encode as Xml
 import Xml.Decode as Xml
 import Xml.Query exposing (..)
 
 
-parseResponse : String -> ParsedResponse Marker
-parseResponse response =
+parseTreeResponse : String -> ParsedResponse Marker
+parseTreeResponse response =
     let
         decodedXml =
             response

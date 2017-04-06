@@ -3,6 +3,9 @@ module Sources.Processing
         ( takeFirstStep
         , takeTreeStep
         , takeTagsStep
+          --
+        , findTagsContextSource
+        , tracksFromTagsContext
         )
 
 {-| Processing.
@@ -21,10 +24,11 @@ module Sources.Processing
 -}
 
 import Date exposing (Date)
-import List.Extra as ListEx
+import List.Extra as List
 import Sources.Ports as Ports
 import Sources.Types exposing (..)
 import Tracks.Types exposing (..)
+import Utils exposing (do)
 
 
 -- Services
@@ -50,8 +54,8 @@ tagsBatchSize =
 -- {public} Steps
 
 
-takeFirstStep : Source -> CmdWithTimestamp
-takeFirstStep source =
+takeFirstStep : Date -> Source -> Cmd Msg
+takeFirstStep currentDate source =
     let
         initialContext =
             { filePaths = []
@@ -59,45 +63,46 @@ takeFirstStep source =
             , treeMarker = TheBeginning
             }
     in
-        makeTree initialContext
+        makeTree initialContext currentDate
 
 
-takeTreeStep : ProcessingContext -> String -> ( ProcessingContext, Maybe CmdWithTimestamp )
-takeTreeStep context response =
+takeTreeStep : ProcessingContext -> String -> CmdWithTimestamp
+takeTreeStep context response currentDate =
     let
         newContext =
             handleTreeResponse context response
     in
-        case context.treeMarker of
+        case newContext.treeMarker of
+            TheBeginning ->
+                Cmd.none
+
             InProgress _ ->
-                ( newContext
-                , Just (makeTree context)
-                )
+                makeTree newContext currentDate
 
-            _ ->
-                ( newContext
-                , Nothing
-                )
+            TheEnd ->
+                newContext
+                    |> processingContextToTagsContext
+                    |> ProcessTagsStep
+                    |> do
 
 
-takeTagsStep : Date -> ProcessingContext -> Maybe (Cmd Msg)
-takeTagsStep currentDate context =
+takeTagsStep : Date -> ProcessingContextForTags -> Source -> Maybe (Cmd Msg)
+takeTagsStep currentDate tagsCtx source =
     let
         ( filesToProcess, nextFiles ) =
-            ListEx.splitAt tagsBatchSize context.filePaths
+            List.splitAt tagsBatchSize tagsCtx.nextFilePaths
 
-        tagsContext =
+        newTagsCtx =
             { nextFilePaths = nextFiles
             , receivedFilePaths = filesToProcess
             , receivedTags = []
-            , sourceId = context.source.id
-            , urlsForTags = makeTrackUrls currentDate context filesToProcess
+            , sourceId = source.id
+            , urlsForTags = makeTrackUrls currentDate source filesToProcess
             }
     in
-        if List.length filesToProcess > 0 then
-            Just (Ports.requestTags tagsContext)
-        else
-            Nothing
+        filesToProcess
+            |> List.head
+            |> Maybe.map (always (Ports.requestTags newTagsCtx))
 
 
 
@@ -106,29 +111,39 @@ takeTagsStep currentDate context =
 
 handleTreeResponse : ProcessingContext -> String -> ProcessingContext
 handleTreeResponse context response =
-    case context.source.data of
-        AmazonS3 _ ->
-            AmazonS3.handleTreeResponse context response
+    let
+        parsingFunc =
+            case context.source.data of
+                AmazonS3 _ ->
+                    AmazonS3.parseTreeResponse
+
+        parsedResponse =
+            parsingFunc response
+    in
+        { context
+            | filePaths = context.filePaths ++ parsedResponse.filePaths
+            , treeMarker = parsedResponse.marker
+        }
 
 
 makeTree : ProcessingContext -> CmdWithTimestamp
 makeTree context =
     let
-        msg =
-            ProcessTreeStep context
+        fn =
+            case context.source.data of
+                AmazonS3 s3Data ->
+                    AmazonS3.makeTree s3Data
     in
-        case context.source.data of
-            AmazonS3 s3Data ->
-                AmazonS3.makeTree msg s3Data context.treeMarker
+        fn context.treeMarker (ProcessTreeStep context)
 
 
 
 -- Tags
 
 
-makeTrackUrls : Date -> ProcessingContext -> List String -> List TagUrls
-makeTrackUrls currentDate context filePaths =
-    case context.source.data of
+makeTrackUrls : Date -> Source -> List String -> List TagUrls
+makeTrackUrls currentDate source filePaths =
+    case source.data of
         AmazonS3 s3Data ->
             let
                 maker =
@@ -141,3 +156,34 @@ makeTrackUrls currentDate context filePaths =
                         }
             in
                 List.map mapFn filePaths
+
+
+
+-- {Public} Utils
+
+
+findTagsContextSource : ProcessingContextForTags -> List Source -> Maybe Source
+findTagsContextSource tagsContext =
+    List.find (.id >> (==) tagsContext.sourceId)
+
+
+tracksFromTagsContext : ProcessingContextForTags -> List Track
+tracksFromTagsContext context =
+    context.receivedTags
+        |> List.zip context.receivedFilePaths
+        |> List.map (makeTrack context.sourceId)
+        |> Debug.log "tracks"
+
+
+
+-- {Private} Utils
+
+
+processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags
+processingContextToTagsContext context =
+    { nextFilePaths = context.filePaths
+    , receivedFilePaths = []
+    , receivedTags = []
+    , sourceId = context.source.id
+    , urlsForTags = []
+    }

@@ -116,8 +116,8 @@ makeTrackUrl currentDate aws method pathToFile =
     List all the tracks in the bucket.
     Or a specific directory in the bucket.
 -}
-makeTree : (TreeStepResult -> msg) -> AmazonS3Source -> Marker -> Date -> Cmd msg
-makeTree msg aws marker currentDate =
+makeTree : AmazonS3Source -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
+makeTree aws marker msg currentDate =
     let
         initialParams =
             [ ( "max-keys", "1000" ) ]
@@ -141,13 +141,8 @@ makeTree msg aws marker currentDate =
             |> Http.send msg
 
 
-handleTreeResponse : ProcessingContext -> String -> ProcessingContext
-handleTreeResponse context response =
-    let
-        parsedResponse =
-            Parser.parseResponse response
-    in
-        { context
-            | filePaths = context.filePaths ++ parsedResponse.filePaths
-            , treeMarker = parsedResponse.marker
-        }
+{-| Re-export the tree-parser function.
+-}
+parseTreeResponse : String -> ParsedResponse Marker
+parseTreeResponse =
+    Parser.parseTreeResponse

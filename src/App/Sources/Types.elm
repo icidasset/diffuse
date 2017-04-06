@@ -23,8 +23,8 @@ type alias Source =
     }
 
 
-newSource : SourceData -> Source
-newSource data =
+makeSource : SourceData -> Source
+makeSource data =
     { id = "change_me_please"
     , data = data
     }
@@ -43,6 +43,12 @@ type Marker
     = TheBeginning
     | InProgress String
     | TheEnd
+
+
+type alias ParsedResponse marker =
+    { filePaths : List String
+    , marker : marker
+    }
 
 
 type alias ProcessingContext =
@@ -88,7 +94,7 @@ type Msg
     | ProcessNextInLine
     | ProcessTreeStep ProcessingContext TreeStepResult
     | ProcessTagsStep ProcessingContextForTags
-    | ProcessInsertionStep Source ProcessingContextForTags
+    | ProcessInsertionStep ProcessingContextForTags
       -- Firebase
     | SyncSources
     | SyncTracks

@@ -11,9 +11,3 @@ type alias AmazonS3Source =
     , region : String
     , secretKey : String
     }
-
-
-type alias ParsedResponse marker =
-    { filePaths : List String
-    , marker : marker
-    }
