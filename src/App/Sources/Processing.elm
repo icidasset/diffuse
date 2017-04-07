@@ -5,6 +5,7 @@ module Sources.Processing
         , takeTagsStep
           --
         , findTagsContextSource
+        , makeTrackUrl
         , tracksFromTagsContext
         )
 
@@ -165,6 +166,13 @@ makeTrackUrls currentDate source filePaths =
 findTagsContextSource : ProcessingContextForTags -> List Source -> Maybe Source
 findTagsContextSource tagsContext =
     List.find (.id >> (==) tagsContext.sourceId)
+
+
+makeTrackUrl : Date -> Source -> String -> String
+makeTrackUrl currentDate source filePath =
+    case source.service of
+        AmazonS3 ->
+            AmazonS3.makeTrackUrl currentDate source.data Get filePath
 
 
 tracksFromTagsContext : ProcessingContextForTags -> List Track

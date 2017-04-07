@@ -1,5 +1,10 @@
 module Queue.Types exposing (Msg(..), Model, Settings, Item)
 
+import Tracks.Types exposing (Track)
+
+
+-- Types
+
 
 type Msg
     = InjectFirst Item
@@ -7,13 +12,17 @@ type Msg
     | RemoveItem Int
       -- Position
     | Rewind
-    | Reset
     | Shift
+      -- Contents
+    | Fill
+    | Reset
       -- Combos
     | InjectFirstAndPlay Item
       -- Settings
     | ToggleRepeat
     | ToggleShuffle
+      -- Tracks
+    | AddTracks (List Track)
 
 
 type alias Model =
@@ -27,8 +36,9 @@ type alias Settings =
 
 
 type alias Item =
-    { id : TrackId
+    { id : String
     , manualEntry : Bool
+    , track : Track
     , url : String
     }
 
@@ -42,8 +52,5 @@ type alias InternalModel extension =
         | activeItem : Maybe Item
         , future : List Item
         , past : List Item
+        , tracks : List Track
     }
-
-
-type alias TrackId =
-    Int

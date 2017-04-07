@@ -4,12 +4,12 @@ import Date
 import Dict
 import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
+import Queue.Types
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
 import Sources.Utils exposing (..)
 import Types as TopLevel
-import Tracks.Types
 import Utils exposing (do)
 
 
@@ -120,8 +120,8 @@ update msg model =
                 insert =
                     tagsCtx
                         |> Processing.tracksFromTagsContext
-                        |> Tracks.Types.AddTracks
-                        |> TopLevel.TracksMsg
+                        |> Queue.Types.AddTracks
+                        |> TopLevel.QueueMsg
                         |> do
 
                 cmd =

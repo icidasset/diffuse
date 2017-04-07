@@ -1,11 +1,7 @@
 module View exposing (entry)
 
-import Color
-import Console.Styles exposing (..)
 import Html exposing (..)
-import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Material.Icons.Av as Icons
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(..))
 import Styles exposing (..)
@@ -13,11 +9,11 @@ import Svg exposing (Svg, g, path, svg)
 import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
 import Types exposing (..)
 import Utils exposing (..)
-import Variables exposing (colorDerivatives)
 
 
 -- Children
 
+import Console.View as Console
 import Queue.View as Queue
 import Sources.View as Sources
 import Spinner.View as Spinner
@@ -95,71 +91,7 @@ defaultLayout children model =
             (children)
 
         --
-        , console model
-        ]
-
-
-console : Model -> Html Msg
-console model =
-    div
-        [ cssClass Console ]
-        [ div
-            [ cssClass NowPlaying ]
-            [ text "Ongaku Ryoho" ]
-
-        -- Progress
-        , div
-            [ cssClass ProgressBar ]
-            [ div
-                [ cssClass ProgressBarValue, style [ ( "width", "50%" ) ] ]
-                []
-            ]
-
-        -- Buttons
-        , div
-            [ cssClass ConsoleButtonsContainer ]
-            [ a
-                [ cssClass ConsoleButton ]
-                [ Icons.repeat colorDerivatives.consoleText 18
-                , span
-                    [ cssClasses
-                        [ ConsoleButtonLight
-                        ]
-                    ]
-                    []
-                ]
-            , a
-                [ cssClass ConsoleButton ]
-                [ Icons.fast_rewind colorDerivatives.consoleText 20 ]
-            , a
-                [ cssClass ConsoleButton ]
-                [ span
-                    []
-                    [ text "PLAY" ]
-                , span
-                    [ cssClasses
-                        [ ConsoleButtonLight
-                        , ConsoleButtonLightExtended
-                        , ConsoleButtonLightExtendedOn
-                        ]
-                    ]
-                    []
-                ]
-            , a
-                [ cssClass ConsoleButton ]
-                [ Icons.fast_forward colorDerivatives.consoleText 20 ]
-            , a
-                [ cssClass ConsoleButton ]
-                [ Icons.shuffle colorDerivatives.consoleText 18
-                , span
-                    [ cssClasses
-                        [ ConsoleButtonLight
-                        , ConsoleButtonLightOn
-                        ]
-                    ]
-                    []
-                ]
-            ]
+        , Console.entry model
         ]
 
 

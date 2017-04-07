@@ -27,19 +27,6 @@ type alias Track =
 
 
 
--- Other types
-
-
-type Msg
-    = AddTracks (List Track)
-
-
-type alias Model =
-    { collection : List Track
-    }
-
-
-
 -- 🌱
 
 

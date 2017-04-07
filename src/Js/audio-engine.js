@@ -111,8 +111,8 @@ hi.connect(context.destination);
 // it's easier to have the information here.
 
 function createAudioElement(environmentalContext, queueItem) {
-  if (!src) console.error("audioElement, missing `src`");
-  if (!trackId) console.error("audioElement, missing `trackId`");
+  if (!queueItem.url) console.error("audioElement, missing `url`");
+  if (!queueItem.id) console.error("audioElement, missing `id`");
 
   // new
   let newNode;
@@ -127,8 +127,6 @@ function createAudioElement(environmentalContext, queueItem) {
   newNode.setAttribute("data-timestamp", timestampInMilliseconds);
 
   newNode.volume = 1;
-  // TODO: newNode.currentTime = 0.00001;
-  // fixes no-volume issue
 
   newNode.addEventListener("error", audioErrorEvent);
   newNode.addEventListener("timeupdate", audioTimeUpdateEvent.bind(environmentalContext));
@@ -140,6 +138,7 @@ function createAudioElement(environmentalContext, queueItem) {
   newNode.load();
 
   audioElementsContainer.appendChild(newNode);
+  environmentalContext.audio = newNode;
 
   return newNode;
 }
@@ -187,25 +186,25 @@ function audioTimeUpdateEvent(event) {
 
 function audioEndEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
-  this.elm.ports.activeQueueItemEnded.send();
+  this.elm.ports.activeQueueItemEnded.send(null);
 }
 
 
 function audioPlayEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
-  // TODO: this.elm.ports.setIsPlaying.send(true);
+  this.elm.ports.setIsPlaying.send(true);
 }
 
 
 function audioPauseEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
-  // TODO: this.elm.ports.setIsPlaying.send(false);
+  this.elm.ports.setIsPlaying.send(false);
 }
 
 
 function audioCanPlayEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
-  // TODO?
+  event.target.play();
 }
 
 

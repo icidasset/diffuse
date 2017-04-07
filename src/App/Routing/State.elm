@@ -3,6 +3,7 @@ module Routing.State exposing (..)
 import Navigation
 import Routing.Logic as Logic
 import Routing.Types exposing (..)
+import Types as TopLevel
 
 
 -- 💧
@@ -22,7 +23,7 @@ initialCommands =
 -- 🔥
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
         GoToPage page ->

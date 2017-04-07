@@ -97,9 +97,33 @@ function setupElm(params) {
     const timestampInMilliseconds = Date.now();
 
     audioEnvironmentContext.activeQueueItem = item;
+    audioEnvironmentContext.audio = null;
 
-    createAudioElement(audioEnvironmentContext, item);
-    removeOlderAudioElements(timestampInMilliseconds);
+    if (item) {
+      createAudioElement(audioEnvironmentContext, item);
+      removeOlderAudioElements(timestampInMilliseconds);
+    }
+  });
+
+  app.ports.requestPlay.subscribe(_ => {
+    if (audioEnvironmentContext.audio) {
+      audioEnvironmentContext.audio.play();
+    }
+  });
+
+  app.ports.requestPause.subscribe(_ => {
+    if (audioEnvironmentContext.audio) {
+      audioEnvironmentContext.audio.pause();
+    }
+  });
+
+  app.ports.requestSeek.subscribe(percentage => {
+    const audio = audioEnvironmentContext.audio;
+
+    if (audio && !isNaN(audio.duration)) {
+      console.log("{seek}", percentage, audio.duration * percentage);
+      audio.currentTime = audio.duration * percentage;
+    }
   });
 
   // > Processing

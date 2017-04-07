@@ -11,14 +11,10 @@ import Types exposing (..)
 
 -- Children
 
+import Console.State as Console
 import Queue.State as Queue
 import Routing.State as Routing
 import Sources.State as Sources
-import Tracks.State as Tracks
-import Queue.Types
-import Routing.Types
-import Sources.Types
-import Tracks.Types
 
 
 -- 💧
@@ -28,17 +24,19 @@ initialModel : ProgramFlags -> Navigation.Location -> Model
 initialModel flags location =
     { authenticatedUser = flags.user
     , showLoadingScreen = False
-    , ------------------------------------
-      -- Time
-      ------------------------------------
-      timestamp = Date.fromTime 0
-    , ------------------------------------
-      -- Children
-      ------------------------------------
-      queue = Queue.initialModel flags.settings.queue
+
+    ------------------------------------
+    -- Time
+    ------------------------------------
+    , timestamp = Date.fromTime 0
+
+    ------------------------------------
+    -- Children
+    ------------------------------------
+    , console = Console.initialModel
+    , queue = Queue.initialModel flags
     , routing = Routing.initialModel location
     , sources = Sources.initialModel flags
-    , tracks = Tracks.initialModel flags
     }
 
 
@@ -49,6 +47,7 @@ initialCommands _ _ =
           Task.perform SetTimestamp Time.now
 
         -- Children
+        , Cmd.map ConsoleMsg Console.initialCommands
         , Cmd.map QueueMsg Queue.initialCommands
         , Cmd.map RoutingMsg Routing.initialCommands
         , Cmd.map SourcesMsg Sources.initialCommands
@@ -84,47 +83,21 @@ update msg model =
         ------------------------------------
         -- Children
         ------------------------------------
+        ConsoleMsg sub ->
+            Console.update sub model.console
+                |> mapModel (\x -> { model | console = x })
+
         QueueMsg sub ->
-            updateQueue sub model
+            Queue.update sub model.queue
+                |> mapModel (\x -> { model | queue = x })
 
         RoutingMsg sub ->
-            updateRouting sub model
+            Routing.update sub model.routing
+                |> mapModel (\x -> { model | routing = x })
 
         SourcesMsg sub ->
-            updateSources sub model
-
-        TracksMsg sub ->
-            updateTracks sub model
-
-
-
--- Children boilerplate
-
-
-updateQueue : Queue.Types.Msg -> Model -> ( Model, Cmd Msg )
-updateQueue msg model =
-    Queue.update msg model.queue
-        |> mapModel (\x -> { model | queue = x })
-        |> mapCmd QueueMsg
-
-
-updateRouting : Routing.Types.Msg -> Model -> ( Model, Cmd Msg )
-updateRouting msg model =
-    Routing.update msg model.routing
-        |> mapModel (\x -> { model | routing = x })
-        |> mapCmd RoutingMsg
-
-
-updateSources : Sources.Types.Msg -> Model -> ( Model, Cmd Msg )
-updateSources msg model =
-    Sources.update msg model.sources
-        |> mapModel (\x -> { model | sources = x })
-
-
-updateTracks : Tracks.Types.Msg -> Model -> ( Model, Cmd Msg )
-updateTracks msg model =
-    Tracks.update msg model.tracks
-        |> mapModel (\x -> { model | tracks = x })
+            Sources.update sub model.sources
+                |> mapModel (\x -> { model | sources = x })
 
 
 
@@ -138,6 +111,7 @@ subscriptions model =
           Time.every (5 * Time.minute) SetTimestamp
 
         -- Children
+        , Sub.map ConsoleMsg <| Console.subscriptions model.console
         , Sub.map QueueMsg <| Queue.subscriptions model.queue
         , Sub.map SourcesMsg <| Sources.subscriptions model.sources
         ]

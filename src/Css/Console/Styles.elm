@@ -16,6 +16,7 @@ type Classes
     | ConsoleButtonsContainer
     | NowPlaying
     | ProgressBar
+    | ProgressBarInner
     | ProgressBarValue
 
 
@@ -38,7 +39,7 @@ styles =
         [ color (cssColor colorDerivatives.consoleText)
         , displayFlex
         , justifyContent center
-        , marginTop (gr 2)
+        , marginTop (gr 1)
         , textAlign center
         ]
 
@@ -94,7 +95,7 @@ styles =
         , fontSize (Css.rem (13 / 16))
         , fontStyle italic
         , fontWeight (int 300)
-        , padding2 (gr 2) zero
+        , padding3 (gr 2) zero (gr 1)
         , textAlign center
         ]
 
@@ -102,6 +103,11 @@ styles =
     -- Progress Bar
     ------------------------------------------------------
     , class ProgressBar
+        [ cursor pointer
+        , height (px 3)
+        , padding2 (gr 1) zero
+        ]
+    , class ProgressBarInner
         [ backgroundColor (rgba 255 255 255 0.25)
         , borderRadius (px 3)
         , height (px 3)

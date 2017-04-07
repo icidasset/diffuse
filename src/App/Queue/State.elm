@@ -1,20 +1,26 @@
 module Queue.State exposing (..)
 
-import List.Extra as ListEx
+import List.Extra as List
 import Queue.Ports as Ports
 import Queue.Types as Types exposing (..)
+import Queue.Utils exposing (..)
+import Tracks.Utils
+import Types as TopLevel
 
 
 -- 💧
 
 
-initialModel : Settings -> Model
-initialModel settings =
+initialModel : TopLevel.ProgramFlags -> Model
+initialModel flags =
     { activeItem = Nothing
     , future = []
     , past = []
-    , repeat = settings.repeat
-    , shuffle = settings.shuffle
+    , tracks = Tracks.Utils.decodeTracks flags
+
+    -- Settings
+    , repeat = flags.settings.queue.repeat
+    , shuffle = flags.settings.queue.shuffle
     }
 
 
@@ -27,7 +33,7 @@ initialCommands =
 -- 🔥
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
         -- # InjectFirst Queue.Item
@@ -35,7 +41,11 @@ update msg model =
         --
         InjectFirst item ->
             (!)
-                { model | future = item :: model.future }
+                { model
+                    | future =
+                        model.future
+                            |> (::) item
+                }
                 []
 
         -- # InjectLast Queue.Item
@@ -47,8 +57,8 @@ update msg model =
                 { model
                     | future =
                         model.future
-                            |> ListEx.findIndex isManualEntry
-                            |> Maybe.map (\idx -> ListEx.setAt idx item model.future)
+                            |> List.findIndex (.manualEntry >> (==) True)
+                            |> Maybe.map (\idx -> List.setAt idx item model.future)
                             |> Maybe.map (Maybe.withDefault model.future)
                             |> Maybe.withDefault model.future
                 }
@@ -59,7 +69,11 @@ update msg model =
         --
         RemoveItem index ->
             (!)
-                { model | future = ListEx.removeAt index model.future }
+                { model
+                    | future =
+                        model.future
+                            |> List.removeAt index
+                }
                 []
 
         ------------------------------------
@@ -71,32 +85,25 @@ update msg model =
         Rewind ->
             let
                 newActiveItem =
-                    ListEx.last model.past
-            in
-                (!)
+                    List.last model.past
+
+                newModel =
                     { model
                         | activeItem =
                             newActiveItem
                         , future =
-                            case model.activeItem of
-                                Just item ->
-                                    item :: model.future
-
-                                Nothing ->
-                                    model.future
+                            model.activeItem
+                                |> Maybe.map ((flip (::)) model.future)
+                                |> Maybe.withDefault model.future
                         , past =
-                            Maybe.withDefault [] (ListEx.init model.past)
+                            model.past
+                                |> List.init
+                                |> Maybe.withDefault []
                     }
-                    [ Ports.activeQueueItemChanged newActiveItem ]
-
-        -- # Reset (TODO)
-        -- > Renew the queue, meaning that the auto-generated items in the queue
-        --   are removed and new items are added.
-        --
-        Reset ->
-            (!)
-                model
-                []
+            in
+                newModel
+                    |> fill
+                    |> withCmds [ Ports.activeQueueItemChanged newActiveItem ]
 
         -- # Shift
         -- > Put the next item in the queue as the current one.
@@ -105,20 +112,45 @@ update msg model =
             let
                 newActiveItem =
                     List.head model.future
-            in
-                (!)
-                    { model
-                        | activeItem = List.head model.future
-                        , future = List.drop 1 model.future
-                        , past =
-                            case model.activeItem of
-                                Just item ->
-                                    model.past ++ (List.singleton item)
 
-                                Nothing ->
-                                    model.past
+                newModel =
+                    { model
+                        | activeItem =
+                            newActiveItem
+                        , future =
+                            model.future
+                                |> List.drop 1
+                        , past =
+                            model.activeItem
+                                |> Maybe.map (List.singleton)
+                                |> Maybe.map (List.append model.past)
+                                |> Maybe.withDefault model.past
                     }
-                    [ Ports.activeQueueItemChanged newActiveItem ]
+            in
+                newModel
+                    |> fill
+                    |> withCmds [ Ports.activeQueueItemChanged newActiveItem ]
+
+        ------------------------------------
+        -- Contents
+        ------------------------------------
+        -- # Fill
+        -- > Fill the queue with items.
+        --   Also checks if there no-longer-existing tracks in the queue.
+        --
+        Fill ->
+            (!)
+                (fill model)
+                []
+
+        -- # Reset (TODO)
+        -- > Renew the queue, meaning that the auto-generated items in the queue
+        --   are removed and new items are added.
+        --
+        Reset ->
+            (!)
+                (fill model)
+                []
 
         ------------------------------------
         -- Combos
@@ -131,7 +163,7 @@ update msg model =
                 ( c, d ) =
                     update (Shift) a
             in
-                (!) c [ b, d ]
+                ($) c [] [ b, d ]
 
         ------------------------------------
         -- Settings
@@ -141,6 +173,15 @@ update msg model =
 
         ToggleShuffle ->
             (!) { model | shuffle = not model.shuffle } []
+
+        ------------------------------------
+        -- Tracks
+        ------------------------------------
+        AddTracks additionalTracks ->
+            additionalTracks
+                |> List.append model.tracks
+                |> (\col -> { model | tracks = col })
+                |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
 
 
 
@@ -157,6 +198,15 @@ subscriptions _ =
 -- Utils
 
 
-isManualEntry : Item -> Bool
-isManualEntry item =
-    item.manualEntry == True
+{-| TODO: Properly implement.
+-}
+fill : Model -> Model
+fill model =
+    model
+
+
+{-| Similar to `Response.withCmd`.
+-}
+withCmds : List (Cmd Msg) -> Model -> ( Model, Cmd TopLevel.Msg )
+withCmds cmds model =
+    ($) model cmds []

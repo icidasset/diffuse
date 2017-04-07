@@ -2,8 +2,11 @@ module Tracks.View exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onDoubleClick)
 import Maybe.Extra as Maybe
 import Navigation.View as Navigation
+import Queue.Types as Queue
+import Queue.Utils exposing (makeQueueItem)
 import Styles exposing (Classes(Button, ContentBox))
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
@@ -19,7 +22,12 @@ entry model =
         (List.map
             (\track ->
                 li
-                    []
+                    [ track
+                        |> makeQueueItem model
+                        |> Queue.InjectFirstAndPlay
+                        |> QueueMsg
+                        |> onDoubleClick
+                    ]
                     ([ track.tags.artist
                      , track.tags.title
                      ]
@@ -30,5 +38,5 @@ entry model =
                         |> List.singleton
                     )
             )
-            model.tracks.collection
+            model.queue.tracks
         )

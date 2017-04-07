@@ -8,10 +8,10 @@ import Time exposing (Time)
 
 -- Children
 
+import Console.Types as Console
 import Queue.Types as Queue
 import Routing.Types as Routing
 import Sources.Types as Sources
-import Tracks.Types as Tracks
 
 
 -- Types
@@ -22,26 +22,28 @@ type Msg
       -- Time
     | SetTimestamp Time
       -- Children
+    | ConsoleMsg Console.Msg
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
     | SourcesMsg Sources.Msg
-    | TracksMsg Tracks.Msg
 
 
 type alias Model =
     { authenticatedUser : Maybe Firebase.Auth.User
     , showLoadingScreen : Bool
-    , ------------------------------------
-      -- Time
-      ------------------------------------
-      timestamp : Date
-    , ------------------------------------
-      -- Children
-      ------------------------------------
-      queue : Queue.Model
+
+    ------------------------------------
+    -- Time
+    ------------------------------------
+    , timestamp : Date
+
+    ------------------------------------
+    -- Children
+    ------------------------------------
+    , console : Console.Model
+    , queue : Queue.Model
     , routing : Routing.Model
     , sources : Sources.Model
-    , tracks : Tracks.Model
     }
 
 
