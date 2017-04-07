@@ -1,30 +1,23 @@
 module Tracks.Utils exposing (..)
 
+import Firebase.Data
+import Tracks.Encoding
 import Tracks.Types exposing (..)
+import Types as TopLevel
 
 
-emptyTags : Tags
-emptyTags =
-    { album = Nothing
-    , artist = Nothing
-    , genre = Nothing
-    , title = Nothing
-    , track = Nothing
-    , year = Nothing
-    }
+-- 💧
 
 
-emptyTrack : Track
-emptyTrack =
-    { path = ""
-    , sourceId = ""
-    , tags = emptyTags
-    }
+decodeTracks : TopLevel.ProgramFlags -> List Track
+decodeTracks flags =
+    List.map Tracks.Encoding.decode (Maybe.withDefault [] flags.tracks)
 
 
-makeTrack : String -> ( String, Tags ) -> Track
-makeTrack sourceId ( path, tags ) =
-    { path = path
-    , sourceId = sourceId
-    , tags = tags
-    }
+
+-- 🔥
+
+
+storeTracks : List Track -> Cmd TopLevel.Msg
+storeTracks =
+    List.map Tracks.Encoding.encode >> Firebase.Data.storeTracks

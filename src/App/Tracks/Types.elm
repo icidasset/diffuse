@@ -1,5 +1,7 @@
 module Tracks.Types exposing (..)
 
+-- `Track` record
+
 
 type alias Tags =
     { album : Maybe String
@@ -21,4 +23,48 @@ type alias Track =
     { path : String
     , sourceId : String
     , tags : Tags
+    }
+
+
+
+-- Other types
+
+
+type Msg
+    = AddTracks (List Track)
+
+
+type alias Model =
+    { collection : List Track
+    }
+
+
+
+-- 🌱
+
+
+emptyTags : Tags
+emptyTags =
+    { album = Nothing
+    , artist = Nothing
+    , genre = Nothing
+    , title = Nothing
+    , track = Nothing
+    , year = Nothing
+    }
+
+
+emptyTrack : Track
+emptyTrack =
+    { path = ""
+    , sourceId = ""
+    , tags = emptyTags
+    }
+
+
+makeTrack : String -> ( String, Tags ) -> Track
+makeTrack sourceId ( path, tags ) =
+    { path = path
+    , sourceId = sourceId
+    , tags = tags
     }

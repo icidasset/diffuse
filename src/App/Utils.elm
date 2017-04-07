@@ -37,6 +37,19 @@ do msg =
     Task.perform identity (Task.succeed msg)
 
 
+{-| A child state `update` function that
+    takes both child-level messages and top-level messages.
+-}
+illuminate : (a -> b) -> model -> List (Cmd a) -> List (Cmd b) -> ( model, Cmd b )
+illuminate childMsgContainer model childCmds topLevelCmds =
+    ( model
+    , Cmd.batch
+        [ Cmd.map childMsgContainer (Cmd.batch childCmds)
+        , Cmd.batch topLevelCmds
+        ]
+    )
+
+
 makeQueryParam : ( String, String ) -> String
 makeQueryParam ( a, b ) =
     Http.encodeUri a ++ "=" ++ Http.encodeUri b

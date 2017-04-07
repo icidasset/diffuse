@@ -14,9 +14,11 @@ import Types exposing (..)
 import Queue.State as Queue
 import Routing.State as Routing
 import Sources.State as Sources
+import Tracks.State as Tracks
 import Queue.Types
 import Routing.Types
 import Sources.Types
+import Tracks.Types
 
 
 -- 💧
@@ -36,6 +38,7 @@ initialModel flags location =
       queue = Queue.initialModel flags.settings.queue
     , routing = Routing.initialModel location
     , sources = Sources.initialModel flags
+    , tracks = Tracks.initialModel flags
     }
 
 
@@ -90,6 +93,9 @@ update msg model =
         SourcesMsg sub ->
             updateSources sub model
 
+        TracksMsg sub ->
+            updateTracks sub model
+
 
 
 -- Children boilerplate
@@ -113,7 +119,12 @@ updateSources : Sources.Types.Msg -> Model -> ( Model, Cmd Msg )
 updateSources msg model =
     Sources.update msg model.sources
         |> mapModel (\x -> { model | sources = x })
-        |> mapCmd SourcesMsg
+
+
+updateTracks : Tracks.Types.Msg -> Model -> ( Model, Cmd Msg )
+updateTracks msg model =
+    Tracks.update msg model.tracks
+        |> mapModel (\x -> { model | tracks = x })
 
 
 

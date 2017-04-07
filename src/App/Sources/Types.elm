@@ -75,11 +75,10 @@ type alias TreeStepResult =
 
 
 type alias Model =
-    { isProcessing : Maybe (List Source)
+    { collection : List Source
+    , isProcessing : Maybe (List Source)
     , newSource : Source
     , processingError : Maybe String
-    , sources : List Source
-    , tracks : List Track
     , timestamp : Date
     }
 
@@ -89,10 +88,6 @@ type Msg
     | ProcessNextInLine
     | ProcessTreeStep ProcessingContext TreeStepResult
     | ProcessTagsStep ProcessingContextForTags
-    | ProcessInsertionStep ProcessingContextForTags
-      -- Firebase
-    | SyncSources
-    | SyncTracks
       -- Forms
     | SetNewSourceProperty Source String String
     | SubmitNewSourceForm
@@ -101,3 +96,15 @@ type Msg
 type Page
     = Index
     | New
+
+
+
+-- 🌱
+
+
+makeSource : Service -> SourceData -> Source
+makeSource service data =
+    { id = "change_me_please"
+    , data = data
+    , service = service
+    }

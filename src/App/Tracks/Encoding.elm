@@ -3,7 +3,6 @@ module Tracks.Encoding exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Tracks.Types exposing (..)
-import Tracks.Utils exposing (emptyTrack)
 
 
 -- Encode

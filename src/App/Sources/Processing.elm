@@ -27,8 +27,7 @@ import Date exposing (Date)
 import List.Extra as List
 import Sources.Ports as Ports
 import Sources.Types exposing (..)
-import Tracks.Types exposing (..)
-import Tracks.Utils exposing (makeTrack)
+import Tracks.Types exposing (TagUrls, Track, makeTrack)
 import Utils exposing (do)
 
 

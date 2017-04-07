@@ -30,5 +30,5 @@ entry model =
                         |> List.singleton
                     )
             )
-            model.sources.tracks
+            model.tracks.collection
         )

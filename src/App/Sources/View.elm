@@ -1,19 +1,21 @@
 module Sources.View exposing (..)
 
-import Color
 import Dict
-import Form.Styles as FormStyles
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
 import Material.Icons.Action as Icons
 import Navigation.View as Navigation
-import Routing.Types as Routing
 import Sources.Types as Sources exposing (Page(..), Service(..), Source)
-import Styles exposing (Classes(Button, ContentBox))
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
 import Variables exposing (colorDerivatives)
+
+
+-- Styles
+
+import Form.Styles as FormStyles
+import Styles exposing (Classes(Button, ContentBox))
 
 
 -- Services
@@ -56,7 +58,7 @@ pageIndex model =
             []
             (List.map
                 (\s -> li [] [ text (toString s.id) ])
-                model.sources.sources
+                model.sources.collection
             )
         ]
 

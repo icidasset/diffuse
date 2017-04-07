@@ -25,6 +25,7 @@ type Msg
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
     | SourcesMsg Sources.Msg
+    | TracksMsg Tracks.Msg
 
 
 type alias Model =
@@ -40,6 +41,7 @@ type alias Model =
       queue : Queue.Model
     , routing : Routing.Model
     , sources : Sources.Model
+    , tracks : Tracks.Model
     }
 
 
@@ -54,3 +56,7 @@ type alias ProgramFlags =
     , tracks : Maybe (List Json.Encode.Value)
     , user : Maybe Firebase.Auth.User
     }
+
+
+type alias Illumination model childMsg =
+    model -> List (Cmd childMsg) -> List (Cmd Msg) -> ( model, Cmd Msg )

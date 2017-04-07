@@ -2,18 +2,14 @@ module Sources.State exposing (..)
 
 import Date
 import Dict
-import List.Extra as List
 import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
-import Navigation
-import Sources.Encoding
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
 import Sources.Utils exposing (..)
-import Time
-import Types exposing (ProgramFlags)
-import Tracks.Encoding
+import Types as TopLevel
+import Tracks.Types
 import Utils exposing (do)
 
 
@@ -25,13 +21,12 @@ import Sources.Services.AmazonS3 as AmazonS3
 -- 💧
 
 
-initialModel : ProgramFlags -> Model
+initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
-    { isProcessing = Nothing
+    { collection = decodeSources flags
+    , isProcessing = Nothing
     , newSource = makeSource AmazonS3 AmazonS3.initialData
     , processingError = Nothing
-    , sources = List.map Sources.Encoding.decode (Maybe.withDefault [] flags.sources)
-    , tracks = List.map Tracks.Encoding.decode (Maybe.withDefault [] flags.tracks)
     , timestamp = Date.fromTime 0
     }
 
@@ -45,7 +40,7 @@ initialCommands =
 -- 🔥
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
         ------------------------------------
@@ -58,21 +53,22 @@ update msg model =
         Process ->
             let
                 isProcessing =
-                    model.sources
+                    model.collection
                         |> List.head
-                        |> Maybe.map (always model.sources)
+                        |> Maybe.map (always model.collection)
                         |> Maybe.preferFirst model.isProcessing
 
                 command =
-                    model.sources
+                    model.collection
                         |> List.head
                         |> Maybe.map (Processing.takeFirstStep model.timestamp)
                         |> Maybe.preferSecond (Maybe.map (always Cmd.none) model.isProcessing)
                         |> Maybe.withDefault Cmd.none
             in
-                (,)
+                ($)
                     { model | isProcessing = isProcessing }
-                    command
+                    [ command ]
+                    []
 
         {- If not processing, do nothing.
            If there are no sources left, do nothing.
@@ -89,21 +85,23 @@ update msg model =
                         |> Maybe.andThen (\a -> Maybe.map ((,) a) (List.head a))
                         |> Maybe.map (Tuple.mapSecond takeStep)
             in
-                (!)
+                ($)
                     { model | isProcessing = Maybe.map Tuple.first maybe }
                     [ maybe
                         |> Maybe.map Tuple.second
                         |> Maybe.withDefault Cmd.none
                     ]
+                    []
 
         {- Processing step,
            Phase 1, `makeTree`.
            ie. make a file list/tree.
         -}
         ProcessTreeStep ctx (Ok resp) ->
-            (!)
+            ($)
                 model
                 [ Processing.takeTreeStep ctx resp model.timestamp ]
+                []
 
         ProcessTreeStep _ (Err err) ->
             (!)
@@ -120,7 +118,11 @@ update msg model =
         ProcessTagsStep tagsCtx ->
             let
                 insert =
-                    do (ProcessInsertionStep tagsCtx)
+                    tagsCtx
+                        |> Processing.tracksFromTagsContext
+                        |> Tracks.Types.AddTracks
+                        |> TopLevel.TracksMsg
+                        |> do
 
                 cmd =
                     model.isProcessing
@@ -128,44 +130,27 @@ update msg model =
                         |> Maybe.andThen (Processing.takeTagsStep model.timestamp tagsCtx)
                         |> Maybe.withDefault (do ProcessNextInLine)
             in
-                (!) model [ cmd, insert ]
-
-        {- Processing step,
-           Phase 3, store the tracks.
-        -}
-        ProcessInsertionStep tagsCtx ->
-            (!)
-                { model | tracks = Processing.tracksFromTagsContext tagsCtx }
-                [ do SyncTracks ]
-
-        ------------------------------------
-        -- Firebase
-        ------------------------------------
-        SyncSources ->
-            (!) model [ Ports.storeSources (List.map Sources.Encoding.encode model.sources) ]
-
-        SyncTracks ->
-            (!) model [ Ports.storeTracks (List.map Tracks.Encoding.encode model.tracks) ]
+                ($) model [ cmd ] [ insert ]
 
         ------------------------------------
         -- Forms
         ------------------------------------
         SetNewSourceProperty source key value ->
-            (!)
-                { model
-                    | newSource = { source | data = Dict.insert key value source.data }
-                }
-                []
+            let
+                newSource =
+                    { source | data = Dict.insert key value source.data }
+            in
+                (!) { model | newSource = newSource } []
 
         SubmitNewSourceForm ->
-            (!)
-                { model
-                    | processingError = Nothing
-                    , sources = (setProperSourceId model model.newSource) :: model.sources
-                }
-                [ do Process
-                , do SyncSources
-                ]
+            let
+                newCollection =
+                    (setProperSourceId model model.newSource) :: model.collection
+            in
+                ($)
+                    { model | collection = newCollection, processingError = Nothing }
+                    [ do Process ]
+                    [ storeSources newCollection ]
 
 
 
@@ -176,20 +161,3 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveTags ProcessTagsStep ]
-
-
-
--- Sources
-
-
-setProperSourceId : Model -> Source -> Source
-setProperSourceId model source =
-    { source
-        | id =
-            model.timestamp
-                |> Date.toTime
-                |> Time.inMilliseconds
-                |> round
-                |> toString
-                |> (flip String.append) (List.length model.sources |> (+) 1 |> toString)
-    }
