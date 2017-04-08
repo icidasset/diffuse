@@ -59,6 +59,27 @@ function storeData(key, data) {
 
 
 //
+// Settings
+
+function saveSettings(key, settings) {
+  localStorage.setItem("settings." + key, JSON.stringify(settings));
+}
+
+
+function loadSettings(key) {
+  let val = localStorage.getItem("settings." + key);
+  if (!val || !val.length) return null;
+
+  try {
+    return JSON.parse(val);
+  } catch (_) {
+    return null;
+  }
+}
+
+
+
+//
 // Elm
 
 function setupElm(params) {
@@ -71,7 +92,7 @@ function setupElm(params) {
   const app = Elm.App.embed(
     node,
     { settings:
-        { queue: { repeat: false, shuffle: false } // TODO
+        { queue: loadSettings("queue") || { repeat: false, shuffle: false }
         }
     , sources: params.sources
     , tracks: params.tracks
@@ -150,4 +171,8 @@ function setupElm(params) {
   // > Data
   app.ports.storeSources.subscribe(v => storeData("sources", v));
   app.ports.storeTracks.subscribe(v => storeData("tracks", v));
+
+  app.ports.storeQueueSettings.subscribe(settings => {
+    saveSettings("queue", settings);
+  });
 }

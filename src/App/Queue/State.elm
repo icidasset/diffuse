@@ -167,13 +167,16 @@ update msg model =
 
         ------------------------------------
         -- Settings
-        -- > (TODO) Save this data in localStorage
         ------------------------------------
         ToggleRepeat ->
-            (!) { model | repeat = not model.repeat } []
+            model
+                |> (\m -> { m | repeat = not model.repeat })
+                |> (\m -> (!) m [ storeSettings m ])
 
         ToggleShuffle ->
-            (!) { model | shuffle = not model.shuffle } []
+            model
+                |> (\m -> { m | shuffle = not model.shuffle })
+                |> (\m -> (!) m [ storeSettings m ])
 
         ------------------------------------
         -- Tracks
@@ -204,6 +207,16 @@ subscriptions _ =
 fill : Model -> Model
 fill model =
     model
+
+
+{-| Store settings via port.
+-}
+storeSettings : Model -> Cmd TopLevel.Msg
+storeSettings model =
+    Ports.storeQueueSettings
+        { repeat = model.repeat
+        , shuffle = model.shuffle
+        }
 
 
 {-| Similar to `Response.withCmd`.
