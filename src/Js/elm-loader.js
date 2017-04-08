@@ -121,7 +121,6 @@ function setupElm(params) {
     const audio = audioEnvironmentContext.audio;
 
     if (audio && !isNaN(audio.duration)) {
-      console.log("{seek}", percentage, audio.duration * percentage);
       audio.currentTime = audio.duration * percentage;
     }
   });

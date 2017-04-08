@@ -50,7 +50,8 @@ styles =
         [ cursor pointer
         , height (gr 11)
         , lineHeight (gr 11)
-        , padding2 zero (gr 6)
+        , margin2 zero (gr 4)
+        , padding2 zero (gr 2)
         , position relative
 
         --
@@ -119,5 +120,8 @@ styles =
         , left zero
         , position absolute
         , top zero
+
+        --
+        , property "transition" "width 250ms ease"
         ]
     ]

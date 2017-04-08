@@ -96,6 +96,8 @@ update msg model =
         {- Processing step,
            Phase 1, `makeTree`.
            ie. make a file list/tree.
+
+           TODO: Remove old tracks
         -}
         ProcessTreeStep ctx (Ok resp) ->
             ($)

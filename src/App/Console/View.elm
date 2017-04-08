@@ -1,12 +1,15 @@
 module Console.View exposing (entry)
 
-import Console.Types exposing (Msg(Seek))
+import Console.Ports
+import Console.Types exposing (Msg(..))
 import Console.Styles exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
-import Html.Events exposing (on)
+import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Material.Icons.Av as Icons
+import Maybe.Extra as Maybe
+import Queue.Types exposing (Msg(Rewind, Shift, ToggleRepeat, ToggleShuffle))
 import Types as TopLevel
 import Utils exposing (..)
 import Variables exposing (colorDerivatives)
@@ -21,7 +24,20 @@ entry model =
         [ cssClass Console ]
         [ div
             [ cssClass NowPlaying ]
-            [ text "Ongaku Ryoho" ]
+            [ case model.queue.activeItem of
+                Just item ->
+                    ([ item.track.tags.artist
+                     , item.track.tags.title
+                     ]
+                        |> List.filter (Maybe.isJust)
+                        |> List.map (Maybe.withDefault "")
+                        |> String.join " – "
+                        |> text
+                    )
+
+                Nothing ->
+                    text "Ongaku Ryoho"
+            ]
 
         -- Progress
         , div
@@ -33,9 +49,17 @@ entry model =
             ]
             [ div
                 [ cssClass ProgressBarInner ]
-                [ div
-                    [ cssClass ProgressBarValue, style [ ( "width", "50%" ) ] ]
-                    []
+                [ let
+                    width =
+                        model.console.progress
+                            |> (*) 100
+                            |> toString
+                  in
+                    div
+                        [ cssClass ProgressBarValue
+                        , style [ ( "width", width ++ "%" ) ]
+                        ]
+                        []
                 ]
             ]
 
@@ -43,43 +67,71 @@ entry model =
         , div
             [ cssClass ConsoleButtonsContainer ]
             [ a
-                [ cssClass ConsoleButton ]
+                [ cssClass ConsoleButton
+                , onClick (TopLevel.QueueMsg ToggleRepeat)
+                ]
                 [ Icons.repeat colorDerivatives.consoleText 18
                 , span
-                    [ cssClasses
-                        [ ConsoleButtonLight
-                        ]
+                    [ model.queue.repeat
+                        |> (\b ->
+                                if b == True then
+                                    [ ConsoleButtonLightOn ]
+                                else
+                                    []
+                           )
+                        |> List.append [ ConsoleButtonLight ]
+                        |> cssClasses
                     ]
                     []
                 ]
             , a
-                [ cssClass ConsoleButton ]
+                [ cssClass ConsoleButton
+                , onClick (TopLevel.QueueMsg Rewind)
+                ]
                 [ Icons.fast_rewind colorDerivatives.consoleText 20 ]
             , a
-                [ cssClass ConsoleButton ]
+                [ cssClass ConsoleButton
+                , if model.console.isPlaying then
+                    onClick (TopLevel.ConsoleMsg RequestPause)
+                  else
+                    onClick (TopLevel.ConsoleMsg RequestPlay)
+                ]
                 [ span
                     []
                     [ text "PLAY" ]
                 , span
-                    [ cssClasses
-                        [ ConsoleButtonLight
-                        , ConsoleButtonLightExtended
-                        , ConsoleButtonLightExtendedOn
-                        ]
+                    [ model.console.isPlaying
+                        |> (\b ->
+                                if b == True then
+                                    [ ConsoleButtonLightExtendedOn ]
+                                else
+                                    []
+                           )
+                        |> List.append [ ConsoleButtonLight, ConsoleButtonLightExtended ]
+                        |> cssClasses
                     ]
                     []
                 ]
             , a
-                [ cssClass ConsoleButton ]
+                [ cssClass ConsoleButton
+                , onClick (TopLevel.QueueMsg Rewind)
+                ]
                 [ Icons.fast_forward colorDerivatives.consoleText 20 ]
             , a
-                [ cssClass ConsoleButton ]
+                [ cssClass ConsoleButton
+                , onClick (TopLevel.QueueMsg ToggleShuffle)
+                ]
                 [ Icons.shuffle colorDerivatives.consoleText 18
                 , span
-                    [ cssClasses
-                        [ ConsoleButtonLight
-                        , ConsoleButtonLightOn
-                        ]
+                    [ model.queue.shuffle
+                        |> (\b ->
+                                if b == True then
+                                    [ ConsoleButtonLightOn ]
+                                else
+                                    []
+                           )
+                        |> List.append [ ConsoleButtonLight ]
+                        |> cssClasses
                     ]
                     []
                 ]

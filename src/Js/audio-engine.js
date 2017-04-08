@@ -117,6 +117,7 @@ function createAudioElement(environmentalContext, queueItem) {
   // new
   let newNode;
   let timestampInMilliseconds = Date.now();
+  let timeupdateFunc = _.throttle(500, audioTimeUpdateEvent.bind(environmentalContext));
 
   newNode = new window.Audio();
   newNode.setAttribute("crossorigin", "anonymous");
@@ -129,7 +130,7 @@ function createAudioElement(environmentalContext, queueItem) {
   newNode.volume = 1;
 
   newNode.addEventListener("error", audioErrorEvent);
-  newNode.addEventListener("timeupdate", audioTimeUpdateEvent.bind(environmentalContext));
+  newNode.addEventListener("timeupdate", timeupdateFunc);
   newNode.addEventListener("ended", audioEndEvent.bind(environmentalContext));
   newNode.addEventListener("play", audioPlayEvent.bind(environmentalContext));
   newNode.addEventListener("pause", audioPauseEvent.bind(environmentalContext));
@@ -152,6 +153,7 @@ function audioElementTrackId(node) {
 
 
 function isActiveAudioElement(environmentalContext, node) {
+  if (!environmentalContext.activeQueueItem) return;
   return environmentalContext.activeQueueItem.id === audioElementTrackId(node);
 }
 
@@ -180,7 +182,11 @@ function audioErrorEvent(event) {
 
 function audioTimeUpdateEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
-  // TODO
+  if (isNaN(event.target.duration) || isNaN(event.target.currentTime)) {
+    this.elm.ports.setProgress.send(0);
+  } else if (event.target.duration > 0) {
+    this.elm.ports.setProgress.send(event.target.currentTime / event.target.duration);
+  }
 }
 
 
@@ -204,6 +210,7 @@ function audioPauseEvent(event) {
 
 function audioCanPlayEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
+  this.elm.ports.setDuration.send(event.target.duration || 0);
   event.target.play();
 }
 

@@ -167,6 +167,7 @@ update msg model =
 
         ------------------------------------
         -- Settings
+        -- > (TODO) Save this data in localStorage
         ------------------------------------
         ToggleRepeat ->
             (!) { model | repeat = not model.repeat } []
