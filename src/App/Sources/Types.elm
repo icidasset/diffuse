@@ -80,7 +80,7 @@ type alias TreeStepResult =
 
 type alias Model =
     { collection : List Source
-    , isProcessing : Maybe (List Source)
+    , isProcessing : Maybe (List ( Source, List Track ))
     , newSource : Source
     , processingError : Maybe String
     , timestamp : Date
@@ -88,9 +88,10 @@ type alias Model =
 
 
 type Msg
-    = Process
+    = Process (List Track)
     | ProcessNextInLine
     | ProcessTreeStep ProcessingContext TreeStepResult
+    | ProcessTreeStepRemoveTracks SourceId (List String)
     | ProcessTagsStep ProcessingContextForTags
       -- CRUD
     | Destroy SourceId

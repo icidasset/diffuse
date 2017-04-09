@@ -7,6 +7,7 @@ import Response exposing (..)
 import Task
 import Time
 import Types exposing (..)
+import Utils exposing (do)
 
 
 -- Children
@@ -15,6 +16,11 @@ import Console.State as Console
 import Queue.State as Queue
 import Routing.State as Routing
 import Sources.State as Sources
+
+
+-- Children types
+
+import Sources.Types
 
 
 -- 💧
@@ -100,6 +106,18 @@ update msg model =
         SourcesMsg sub ->
             Sources.update sub model.sources
                 |> mapModel (\x -> { model | sources = x })
+
+        ------------------------------------
+        -- Children, Pt. 2
+        ------------------------------------
+        ProcessSources ->
+            (!)
+                model
+                [ model.queue.tracks
+                    |> Sources.Types.Process
+                    |> SourcesMsg
+                    |> do
+                ]
 
         ------------------------------------
         -- Other

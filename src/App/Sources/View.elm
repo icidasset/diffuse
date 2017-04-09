@@ -74,10 +74,7 @@ pageIndex model =
                                 ]
                                 [ text "Destroy" ]
                             , a
-                                [ Sources.Process
-                                    |> TopLevel.SourcesMsg
-                                    |> onClick
-                                ]
+                                [ onClick TopLevel.ProcessSources ]
                                 [ text "Process" ]
                             ]
                     )

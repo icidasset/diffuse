@@ -2,6 +2,7 @@ module Sources.State exposing (..)
 
 import Date
 import Dict
+import List.Extra as List
 import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
 import Queue.Types
@@ -9,6 +10,7 @@ import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
 import Sources.Utils exposing (..)
+import Tracks.Types exposing (emptyTrack)
 import Types as TopLevel
 import Utils exposing (do)
 
@@ -50,12 +52,38 @@ update msg model =
            If there are no sources, do nothing.
            If there are sources, start processing the first source.
         -}
-        Process ->
+        Process tracks ->
             let
+                -- TODO: Refactor
+                sourceTracks =
+                    tracks
+                        |> List.groupWhile (\a b -> a.sourceId == b.sourceId)
+                        |> List.map
+                            (\tracksGroup ->
+                                tracksGroup
+                                    |> List.head
+                                    |> Maybe.withDefault emptyTrack
+                                    |> .sourceId
+                                    |> (flip (,)) tracksGroup
+                            )
+
+                -- TODO: Refactor
+                processingData =
+                    List.map
+                        (\source ->
+                            ( source
+                            , sourceTracks
+                                |> List.find (Tuple.first >> (==) source.id)
+                                |> Maybe.map (Tuple.second)
+                                |> Maybe.withDefault []
+                            )
+                        )
+                        model.collection
+
                 isProcessing =
                     model.collection
                         |> List.head
-                        |> Maybe.map (always model.collection)
+                        |> Maybe.map (always processingData)
                         |> Maybe.preferFirst model.isProcessing
 
                 command =
@@ -83,6 +111,7 @@ update msg model =
                     model.isProcessing
                         |> Maybe.andThen (List.tail)
                         |> Maybe.andThen (\a -> Maybe.map ((,) a) (List.head a))
+                        |> Maybe.map (Tuple.mapSecond Tuple.first)
                         |> Maybe.map (Tuple.mapSecond takeStep)
             in
                 ($)
@@ -96,14 +125,19 @@ update msg model =
         {- Processing step,
            Phase 1, `makeTree`.
            ie. make a file list/tree.
-
-           TODO: Remove old tracks
         -}
         ProcessTreeStep ctx (Ok resp) ->
-            ($)
-                model
-                [ Processing.takeTreeStep ctx resp model.timestamp ]
-                []
+            let
+                associatedTracks =
+                    model.isProcessing
+                        |> Maybe.andThen List.head
+                        |> Maybe.map Tuple.second
+                        |> Maybe.withDefault []
+            in
+                ($)
+                    model
+                    [ Processing.takeTreeStep ctx resp associatedTracks model.timestamp ]
+                    []
 
         ProcessTreeStep _ (Err err) ->
             (!)
@@ -112,6 +146,16 @@ update msg model =
                     , processingError = Just (toString err)
                 }
                 []
+
+        ProcessTreeStepRemoveTracks sourceId filePaths ->
+            ($)
+                model
+                []
+                [ filePaths
+                    |> Queue.Types.RemoveTracksByPaths sourceId
+                    |> TopLevel.QueueMsg
+                    |> do
+                ]
 
         {- Processing step,
            Phase 2, `makeTags`.
@@ -128,6 +172,7 @@ update msg model =
 
                 cmd =
                     model.isProcessing
+                        |> Maybe.map (List.map Tuple.first)
                         |> Maybe.andThen (Processing.findTagsContextSource tagsCtx)
                         |> Maybe.andThen (Processing.takeTagsStep model.timestamp tagsCtx)
                         |> Maybe.withDefault (do ProcessNextInLine)
@@ -169,8 +214,10 @@ update msg model =
             in
                 ($)
                     { model | collection = newCollection, processingError = Nothing }
-                    [ do Process ]
-                    [ storeSources newCollection ]
+                    []
+                    [ do TopLevel.ProcessSources
+                    , storeSources newCollection
+                    ]
 
 
 

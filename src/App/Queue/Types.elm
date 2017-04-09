@@ -24,6 +24,7 @@ type Msg
       -- Tracks
     | AddTracks (List Track)
     | RemoveTracks SourceId
+    | RemoveTracksByPaths SourceId (List String)
 
 
 type alias Model =

@@ -69,8 +69,8 @@ takeFirstStep currentDate source =
         makeTree initialContext currentDate
 
 
-takeTreeStep : ProcessingContext -> String -> CmdWithTimestamp
-takeTreeStep context response currentDate =
+takeTreeStep : ProcessingContext -> String -> List Track -> CmdWithTimestamp
+takeTreeStep context response associatedTracks currentDate =
     let
         newContext =
             handleTreeResponse context response
@@ -83,10 +83,31 @@ takeTreeStep context response currentDate =
                 makeTree newContext currentDate
 
             TheEnd ->
-                newContext
-                    |> processingContextToTagsContext
-                    |> ProcessTagsStep
-                    |> do
+                let
+                    -- TODO: Refactor
+                    filteredContext =
+                        selectMusicFiles newContext
+
+                    tracksToRemoveFilter =
+                        \t -> List.notMember t.path filteredContext.filePaths
+
+                    tracksToRemove =
+                        List.filter tracksToRemoveFilter associatedTracks
+
+                    tracksLeft =
+                        List.filterNot tracksToRemoveFilter associatedTracks
+                in
+                    Cmd.batch
+                        [ filteredContext
+                            |> selectNonExisting (List.map .path tracksLeft)
+                            |> processingContextToTagsContext
+                            |> ProcessTagsStep
+                            |> do
+                        , tracksToRemove
+                            |> List.map .path
+                            |> ProcessTreeStepRemoveTracks context.source.id
+                            |> do
+                        ]
 
 
 takeTagsStep : Date -> ProcessingContextForTags -> Source -> Maybe (Cmd Msg)
@@ -161,6 +182,28 @@ makeTrackUrls currentDate source filePaths =
         List.map mapFn filePaths
 
 
+selectMusicFiles : ProcessingContext -> ProcessingContext
+selectMusicFiles context =
+    let
+        regex =
+            Regex.regex "\\.(mp3|mp4|m4a)$"
+    in
+        { context
+            | filePaths = List.filter (Regex.contains regex) context.filePaths
+        }
+
+
+selectNonExisting : List String -> ProcessingContext -> ProcessingContext
+selectNonExisting existingPaths context =
+    let
+        notMember =
+            flip List.notMember
+    in
+        { context
+            | filePaths = List.filter (notMember existingPaths) context.filePaths
+        }
+
+
 
 -- {Public} Utils
 
@@ -191,18 +234,9 @@ tracksFromTagsContext context =
 -- {Private} Utils
 
 
-selectMusicFiles : List String -> List String
-selectMusicFiles =
-    let
-        regex =
-            Regex.regex "\\.(mp3|mp4|m4a)$"
-    in
-        List.filter (Regex.contains regex)
-
-
 processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags
 processingContextToTagsContext context =
-    { nextFilePaths = selectMusicFiles context.filePaths
+    { nextFilePaths = context.filePaths
     , receivedFilePaths = []
     , receivedTags = []
     , sourceId = context.source.id

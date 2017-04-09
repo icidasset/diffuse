@@ -193,6 +193,18 @@ update msg model =
                 |> (\col -> { model | tracks = col })
                 |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
 
+        RemoveTracksByPaths sourceId pathsList ->
+            model.tracks
+                |> List.filter
+                    (\t ->
+                        if t.sourceId == sourceId then
+                            List.notMember t.path pathsList
+                        else
+                            True
+                    )
+                |> (\col -> { model | tracks = col })
+                |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
+
 
 
 -- 🌱
