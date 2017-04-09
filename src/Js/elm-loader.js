@@ -151,18 +151,17 @@ function setupElm(params) {
     const context = Object.assign({}, distantContext);
     const initialPromise = Promise.resolve([]);
 
-    // TODO: Handle errors
-
     return context.urlsForTags.reduce((accumulator, urls) => {
       return accumulator.then(
-        col => getTags(urls.getUrl, urls.headUrl).then(tags => col.concat(tags)),
-        console.error
+        col => {
+          return getTags(urls.getUrl, urls.headUrl)
+            .then(r => col.concat(r))
+            .catch(_ => col.concat(null));
+        }
       );
 
     }, initialPromise).then(col => {
-      const tagsList = col.map(pickTags);
-
-      context.receivedTags = tagsList;
+      context.receivedTags = col.map(pickTags);
       app.ports.receiveTags.send(context);
 
     });

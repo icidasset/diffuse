@@ -132,7 +132,7 @@ stylesLocal =
     --   Mainly used for containing text elements.
     ------------------------------------------------------
     , class ContentBox
-        [ padding2 (gr 6) (gr 4)
+        [ padding3 (gr 4) (gr 4) (gr 6)
         ]
 
     ------------------------------------------------------

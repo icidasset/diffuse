@@ -10,6 +10,7 @@ Resources:
 import Date exposing (Date)
 import Dict
 import Http
+import Regex
 import Sources.Services.AmazonS3.Parser as Parser
 import Sources.Services.AmazonS3.Presign exposing (..)
 import Sources.Types exposing (..)
@@ -80,13 +81,24 @@ makeTrackUrl currentDate srcData method pathToFile =
 makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
 makeTree srcData marker msg currentDate =
     let
+        directoryPath =
+            srcData
+                |> Dict.get "directoryPath"
+                |> Maybe.withDefault defaults.directoryPath
+                |> String.trim
+                |> Regex.replace Regex.All (Regex.regex "(^\\/|\\/$)") (\_ -> "")
+                |> (\d -> d ++ "/")
+
         initialParams =
-            [ ( "max-keys", "1000" ) ]
+            [ ( "list-type", "2" )
+            , ( "max-keys", "1000" )
+            , ( "prefix", directoryPath )
+            ]
 
         additionalParams =
             case marker of
                 InProgress s ->
-                    [ ( "marker", s ) ]
+                    [ ( "continuation-token", s ) ]
 
                 _ ->
                     []
@@ -94,13 +106,8 @@ makeTree srcData marker msg currentDate =
         params =
             initialParams ++ additionalParams
 
-        directoryPath =
-            srcData
-                |> Dict.get "directoryPath"
-                |> Maybe.withDefault defaults.directoryPath
-
         url =
-            presignedUrl Get (Time.second * 60) params currentDate srcData directoryPath
+            presignedUrl Get (Time.second * 60 * 5) params currentDate srcData "/"
     in
         url
             |> Http.getString

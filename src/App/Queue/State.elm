@@ -187,6 +187,12 @@ update msg model =
                 |> (\col -> { model | tracks = col })
                 |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
 
+        RemoveTracks sourceId ->
+            model.tracks
+                |> List.filter (\t -> t.sourceId /= sourceId)
+                |> (\col -> { model | tracks = col })
+                |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
+
 
 
 -- 🌱

@@ -8,7 +8,8 @@ import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities (mapIO)
 import System.Process (readProcess)
 
-import qualified Data.ByteString.Char8 as ByteString (pack)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 
 
 -- | (• ◡•)| (❍ᴥ❍ʋ)
@@ -39,5 +40,6 @@ vendorScripts =
 browserify :: Definition -> IO Definition
 browserify def =
     readProcess "./node_modules/.bin/browserify" [ (workspacePath def) ] ""
-        |> fmap (ByteString.pack)
+        |> fmap (Text.pack)
+        |> fmap (Text.encodeUtf8)
         |> fmap (\c -> def { content = Just c })

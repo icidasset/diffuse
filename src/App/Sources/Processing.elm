@@ -26,6 +26,8 @@ module Sources.Processing
 
 import Date exposing (Date)
 import List.Extra as List
+import Maybe.Extra as Maybe
+import Regex
 import Sources.Ports as Ports
 import Sources.Types exposing (..)
 import Tracks.Types exposing (TagUrls, Track, makeTrack)
@@ -179,6 +181,8 @@ tracksFromTagsContext : ProcessingContextForTags -> List Track
 tracksFromTagsContext context =
     context.receivedTags
         |> List.zip context.receivedFilePaths
+        |> List.filter (Tuple.second >> Maybe.isJust)
+        |> List.map (Tuple.mapSecond (Maybe.withDefault Tracks.Types.emptyTags))
         |> List.map (makeTrack context.sourceId)
         |> Debug.log "tracks"
 
@@ -187,9 +191,18 @@ tracksFromTagsContext context =
 -- {Private} Utils
 
 
+selectMusicFiles : List String -> List String
+selectMusicFiles =
+    let
+        regex =
+            Regex.regex "\\.(mp3|mp4|m4a)$"
+    in
+        List.filter (Regex.contains regex)
+
+
 processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags
 processingContextToTagsContext context =
-    { nextFilePaths = context.filePaths
+    { nextFilePaths = selectMusicFiles context.filePaths
     , receivedFilePaths = []
     , receivedTags = []
     , sourceId = context.source.id

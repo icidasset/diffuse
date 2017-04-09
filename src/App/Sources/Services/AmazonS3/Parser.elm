@@ -1,6 +1,7 @@
-module Sources.Services.AmazonS3.Parser exposing (..)
+module Sources.Services.AmazonS3.Parser exposing (parseTreeResponse)
 
 import List.Extra
+import Regex exposing (HowMany(All), regex)
 import Sources.Types exposing (Marker(..), ParsedResponse)
 import Xml
 import Xml.Encode as Xml
@@ -21,6 +22,7 @@ parseTreeResponse response =
             decodedXml
                 |> tags "Contents"
                 |> collect (tag "Key" string)
+                |> List.map (unescape)
 
         isTruncated =
             decodedXml
@@ -38,3 +40,25 @@ parseTreeResponse response =
         { filePaths = filePaths
         , marker = marker
         }
+
+
+
+-- Private
+
+
+{-| String replacement.
+-}
+replace : String -> String -> String -> String
+replace needle replacement haystack =
+    Regex.replace All (regex needle) (always replacement) haystack
+
+
+{-| Unescape these codes specific to XML.
+-}
+unescape : String -> String
+unescape =
+    replace "&apos;" "'"
+        >> replace "&quot;" "\""
+        >> replace "&lt;" "<"
+        >> replace "&gt;" ">"
+        >> replace "&amp;" "&"

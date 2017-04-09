@@ -23,10 +23,15 @@ type Msg
     | ToggleShuffle
       -- Tracks
     | AddTracks (List Track)
+    | RemoveTracks SourceId
 
 
 type alias Model =
     InternalModel Settings
+
+
+type alias SourceId =
+    String
 
 
 type alias Settings =

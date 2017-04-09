@@ -2,7 +2,7 @@
 // Tag reader
 
 function getTags(urlGET, urlHEAD) {
-  const fakeURL = 'STOP_ME_FROM_DOING_EVIL';
+  const fakeURL = "THIS_WONT_BE_USED_ANYWAYS";
 
   const reader = new jsmediatags.Reader(fakeURL);
   const fileReader = new XhrFileReader(fakeURL);
@@ -13,7 +13,7 @@ function getTags(urlGET, urlHEAD) {
   };
 
   fileReader._makeXHRRequest = function(method, ...args) {
-    this._url = method.toUpperCase() === 'HEAD' ? urlHEAD : urlGET;
+    this._url = method.toUpperCase() === "HEAD" ? urlHEAD : urlGET;
     return makeXHRRequest.call(this, method, ...args);
   };
 
@@ -37,6 +37,8 @@ function getTags(urlGET, urlHEAD) {
 }
 
 
+//
+// Get the tags we need
 
 function pickTags(tagsFromJsmediatags) {
   const tags = _.pick(
@@ -49,7 +51,15 @@ function pickTags(tagsFromJsmediatags) {
     artist: tags.artist && tags.artist.length ? tags.artist : null,
     genre: tags.genre && tags.genre.length ? tags.genre : null,
     title: tags.title && tags.title.length ? tags.title : null,
-    track: tags.track && tags.track.length ? parseInt(tags.track, 10) : null,
-    year: tags.year && tags.year.length ? parseInt(tags.year, 10) : null,
+    track: tags.track ? tags.track : null,
+    year: tags.year && tags.year.length ? getYear(tags.year) : null,
   };
+}
+
+
+//
+// Utils
+
+function getYear(dateStr) {
+  return (new Date(dateStr)).getFullYear();
 }

@@ -135,6 +135,24 @@ update msg model =
                 ($) model [ cmd ] [ insert ]
 
         ------------------------------------
+        -- CRUD
+        ------------------------------------
+        Destroy sourceId ->
+            let
+                newCollection =
+                    List.filter (\s -> s.id /= sourceId) model.collection
+            in
+                ($)
+                    { model | collection = newCollection }
+                    []
+                    [ sourceId
+                        |> Queue.Types.RemoveTracks
+                        |> TopLevel.QueueMsg
+                        |> do
+                    , storeSources newCollection
+                    ]
+
+        ------------------------------------
         -- Forms
         ------------------------------------
         SetNewSourceProperty source key value ->

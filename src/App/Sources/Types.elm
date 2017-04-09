@@ -18,8 +18,12 @@ type alias SourceData =
     Dict String String
 
 
+type alias SourceId =
+    String
+
+
 type alias Source =
-    { id : String
+    { id : SourceId
     , data : SourceData
     , service : Service
     }
@@ -56,7 +60,7 @@ type alias ProcessingContext =
 type alias ProcessingContextForTags =
     { nextFilePaths : List String
     , receivedFilePaths : List String
-    , receivedTags : List Tags
+    , receivedTags : List (Maybe Tags)
     , sourceId : String
     , urlsForTags : List TagUrls
     }
@@ -88,6 +92,8 @@ type Msg
     | ProcessNextInLine
     | ProcessTreeStep ProcessingContext TreeStepResult
     | ProcessTagsStep ProcessingContextForTags
+      -- CRUD
+    | Destroy SourceId
       -- Forms
     | SetNewSourceProperty Source String String
     | SubmitNewSourceForm

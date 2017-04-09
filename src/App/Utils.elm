@@ -1,10 +1,13 @@
 module Utils exposing (..)
 
+import Char
 import Css.Helpers exposing (identifierToString)
 import Dict
+import Hex
 import Html exposing (Attribute)
 import Html.CssHelpers exposing (..)
 import Http
+import Regex exposing (regex, HowMany(All))
 import Svg
 import Svg.Attributes
 import Task
@@ -29,6 +32,44 @@ cssSvgClass class =
 
 
 
+-- URL stuff
+
+
+{-| More extensive version of `encodeUri`.
+    Also covers the following characters: `! * ' ( )`
+
+    @source https://github.com/ktonon/aws-sdk-elm/blob/master/src/AWS/Encode.elm
+-}
+encodeUri : String -> String
+encodeUri x =
+    x
+        |> Http.encodeUri
+        |> Regex.replace All
+            (regex "[!*'()]")
+            (\match ->
+                match.match
+                    |> String.toList
+                    |> List.head
+                    |> Maybe.map
+                        (\char ->
+                            char
+                                |> Char.toCode
+                                |> Hex.toString
+                                |> String.toUpper
+                                |> (++) "%"
+                        )
+                    |> Maybe.withDefault ""
+            )
+
+
+{-| Make a queryString param.
+-}
+makeQueryParam : ( String, String ) -> String
+makeQueryParam ( a, b ) =
+    encodeUri a ++ "=" ++ encodeUri b
+
+
+
 -- Other
 
 
@@ -48,8 +89,3 @@ illuminate childMsgContainer model childCmds topLevelCmds =
         , Cmd.batch topLevelCmds
         ]
     )
-
-
-makeQueryParam : ( String, String ) -> String
-makeQueryParam ( a, b ) =
-    Http.encodeUri a ++ "=" ++ Http.encodeUri b

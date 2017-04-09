@@ -3,11 +3,11 @@ module Sources.View exposing (..)
 import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput, onSubmit)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import Material.Icons.Action as Icons
 import Navigation.View as Navigation
 import Sources.Types as Sources exposing (Page(..), Service(..), Source)
-import Types exposing (Model, Msg(..))
+import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass)
 import Variables exposing (colorDerivatives)
 
@@ -54,12 +54,36 @@ pageIndex model =
         ------------------------------------
         -- List (TODO)
         ------------------------------------
-        , ul
-            []
-            (List.map
-                (\s -> li [] [ text (toString s.id) ])
-                model.sources.collection
-            )
+        , div
+            [ cssClass ContentBox ]
+            [ h1
+                []
+                [ text "Sources" ]
+            , ul
+                []
+                (List.map
+                    (\s ->
+                        li
+                            []
+                            [ text s.id
+                            , a
+                                [ s.id
+                                    |> Sources.Destroy
+                                    |> TopLevel.SourcesMsg
+                                    |> onClick
+                                ]
+                                [ text "Destroy" ]
+                            , a
+                                [ Sources.Process
+                                    |> TopLevel.SourcesMsg
+                                    |> onClick
+                                ]
+                                [ text "Process" ]
+                            ]
+                    )
+                    model.sources.collection
+                )
+            ]
         ]
 
 

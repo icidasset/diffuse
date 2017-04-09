@@ -34,10 +34,14 @@ presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
 
         -- {var} Paths
         filePath =
-            if String.startsWith "/" pathToFile then
+            (if String.startsWith "/" pathToFile then
                 pathToFile
-            else
+             else
                 "/" ++ pathToFile
+            )
+                |> String.split "/"
+                |> List.map Utils.encodeUri
+                |> String.join "/"
 
         -- {var} Time
         timestamp =
