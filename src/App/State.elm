@@ -64,7 +64,9 @@ update msg model =
         Authenticate ->
             ( model, Firebase.Auth.authenticate () )
 
+        ------------------------------------
         -- Time
+        ------------------------------------
         SetTimestamp time ->
             let
                 stamp =
@@ -98,6 +100,12 @@ update msg model =
         SourcesMsg sub ->
             Sources.update sub model.sources
                 |> mapModel (\x -> { model | sources = x })
+
+        ------------------------------------
+        -- Other
+        ------------------------------------
+        NoOp ->
+            (!) model []
 
 
 

@@ -96,7 +96,7 @@ entry model =
                   else
                     onClick (TopLevel.ConsoleMsg RequestPlay)
                 ]
-                [ span
+                [ label
                     []
                     [ text "PLAY" ]
                 , span

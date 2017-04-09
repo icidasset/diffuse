@@ -2,7 +2,6 @@ module Variables exposing (..)
 
 import Color
 import Css
-import Traits exposing (gr)
 
 
 colors =
@@ -39,10 +38,14 @@ colorDerivatives =
     }
 
 
+baseFontSize =
+    16
+
+
 borderRadiuses =
     { smallElements = (Css.px 3)
     }
 
 
 insulationWidth =
-    gr 140
+    Css.rem (0.375 * 140)

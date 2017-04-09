@@ -2,6 +2,16 @@ module Traits exposing (..)
 
 import Color
 import Css exposing (..)
+import Variables exposing (baseFontSize)
+
+
+-- Css / Fonts
+
+
+basem : Float -> Rem
+basem number =
+    Css.rem (number / baseFontSize)
+
 
 
 -- Css / Grid

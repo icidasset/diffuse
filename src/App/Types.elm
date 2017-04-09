@@ -26,6 +26,8 @@ type Msg
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
     | SourcesMsg Sources.Msg
+      -- Other
+    | NoOp
 
 
 type alias Model =

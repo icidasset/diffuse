@@ -12,6 +12,7 @@ import Console.Styles as Console
 import Form.Styles as Form
 import Navigation.Styles as Navigation
 import Spinner.Styles as Spinner
+import Tracks.Styles as Tracks
 
 
 styles : List Snippet
@@ -21,6 +22,7 @@ styles =
         |> List.append Form.styles
         |> List.append Navigation.styles
         |> List.append Spinner.styles
+        |> List.append Tracks.styles
 
 
 keyframes : String
@@ -50,7 +52,7 @@ stylesLocal =
       -- <html>
       ------------------------------------------------------
       html
-        [ fontSize (px 16) ]
+        [ fontSize (px baseFontSize) ]
 
     ------------------------------------------------------
     -- <body>
@@ -76,6 +78,8 @@ stylesLocal =
     , class BackgroundImage
         [ backgroundImage (url "images/Background/1.jpg")
         , backgroundPosition2 (pct 50) (pct 19)
+
+        -- , backgroundPosition bottom
         , backgroundRepeat noRepeat
         , backgroundSize (pct 110)
         , height (vh 100)

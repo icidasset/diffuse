@@ -23,8 +23,8 @@ styles =
       -- Outside
       ------------------------------------------------------
       class OutsideNavigation
-        [ color (rgba 0 0 0 0.55)
-        , fontSize (em 0.875)
+        [ color (rgba 0 0 0 0.4)
+        , fontSize (em 0.85)
         , margin3 (gr 7) auto zero
         , maxWidth insulationWidth
         , textAlign center
@@ -57,8 +57,10 @@ styles =
         , descendants
             [ a
                 [ borderRight3 (px 1) solid (hex "#eee")
+                , cursor pointer
                 , display inlineBlock
-                , fontSize (Css.rem 0.85)
+                , fontSize (Traits.basem 13)
+                , fontWeight (int 600)
                 , height (gr 7)
                 , letterSpacing (Css.em -0.0125)
                 , lineHeight (gr 7)

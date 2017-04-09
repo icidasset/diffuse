@@ -28,7 +28,14 @@ inside : List ( Label, String ) -> Html Msg
 inside items =
     div
         [ cssClass InsideNavigation ]
-        (List.map (itemView) items)
+        (List.map itemView items)
+
+
+insideCustom : List ( Label, Msg ) -> Html Msg
+insideCustom items =
+    div
+        [ cssClass InsideNavigation ]
+        (List.map itemViewCustom items)
 
 
 
@@ -67,6 +74,16 @@ itemViewWithActiveLink activeHref ( itemLabel, itemHref ) =
           else
             cssClass NonActiveLink
         ]
+        [ span
+            []
+            [ itemLabel ]
+        ]
+
+
+itemViewCustom : ( Label, Msg ) -> Html Msg
+itemViewCustom ( itemLabel, msg ) =
+    a
+        [ onClickPreventDefault msg ]
         [ span
             []
             [ itemLabel ]

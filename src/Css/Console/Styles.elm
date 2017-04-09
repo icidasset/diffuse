@@ -1,7 +1,7 @@
 module Console.Styles exposing (..)
 
 import Css exposing (..)
-import Css.Elements exposing (span, svg)
+import Css.Elements exposing (label, span, svg)
 import Traits exposing (cssColor, gr)
 import Variables exposing (..)
 
@@ -56,9 +56,10 @@ styles =
 
         --
         , children
-            [ span
-                [ fontSize (Css.rem (12 / 16))
-                , fontWeight (int 700)
+            [ label
+                [ cursor inherit
+                , fontSize (Traits.basem 12)
+                , fontWeight (int 900)
                 , letterSpacing (Css.em 0.25)
                 ]
             , svg
@@ -93,10 +94,9 @@ styles =
     ------------------------------------------------------
     , class NowPlaying
         [ color (rgba 255 255 255 0.8)
-        , fontSize (Css.rem (13 / 16))
+        , fontSize (Traits.basem 13)
         , fontStyle italic
-        , fontWeight (int 300)
-        , padding3 (gr 2) zero (gr 1)
+        , padding3 (gr 3) zero (gr 2)
         , textAlign center
         ]
 
