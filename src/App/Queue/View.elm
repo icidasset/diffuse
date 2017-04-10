@@ -8,7 +8,7 @@ import Utils exposing (cssClass)
 
 -- Styles
 
-import Styles exposing (Classes(Button, ContentBox))
+import Styles exposing (Classes(Button, ContentBox, InsulationContent))
 
 
 -- 🍯
@@ -17,7 +17,7 @@ import Styles exposing (Classes(Button, ContentBox))
 entry : Model -> Html Msg
 entry model =
     div
-        []
+        [ cssClass InsulationContent ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------

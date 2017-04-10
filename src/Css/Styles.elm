@@ -42,6 +42,7 @@ type Classes
     | Button
     | ContentBox
     | Insulation
+    | InsulationContent
     | InTheMiddle
     | Shell
 
@@ -58,7 +59,7 @@ stylesLocal =
     -- <body>
     ------------------------------------------------------
     , body
-        [ backgroundColor (hex "#fff")
+        [ backgroundColor (hex "#000")
         , color (cssColor colorDerivatives.text)
         , defaultFont
         , fontSize (Css.rem 1)
@@ -76,12 +77,15 @@ stylesLocal =
     -- > Not on the <body> for a reason.
     ------------------------------------------------------
     , class BackgroundImage
-        [ backgroundImage (url "images/Background/1.jpg")
-        , backgroundPosition2 (pct 50) (pct 19)
+        [ backgroundImage (url "images/Background/2.jpg")
+        , backgroundPosition bottom
+        , backgroundSize cover
 
-        -- , backgroundPosition bottom
+        -- For: 1.jpg
+        --, backgroundPosition2 (pct 50) (pct 19)
+        -- , backgroundSize (pct 110)
+        --
         , backgroundRepeat noRepeat
-        , backgroundSize (pct 110)
         , height (vh 100)
         , left zero
         , position fixed
@@ -110,11 +114,16 @@ stylesLocal =
     , class Insulation
         [ backgroundColor (hex "#fff")
         , boxShadow4 (px 0) (px 2) (px 4) (rgba 0 0 0 0.2)
+        , displayFlex
         , flex (int 1)
         , margin3 (gr 10) auto zero
         , maxWidth insulationWidth
         , position relative
         , width (pct 100)
+        ]
+    , class InsulationContent
+        [ flex (int 1)
+        , overflow scroll
         ]
 
     ------------------------------------------------------

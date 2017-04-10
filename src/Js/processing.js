@@ -50,7 +50,7 @@ function pickTags(tagsFromJsmediatags) {
     album: tags.album && tags.album.length ? tags.album : null,
     artist: tags.artist && tags.artist.length ? tags.artist : null,
     genre: tags.genre && tags.genre.length ? tags.genre : null,
-    nr: tags.track ? tags.track : null,
+    nr: tags.track ? parseInt(tags.track, 10) : null,
     title: tags.title && tags.title.length ? tags.title : null,
     year: tags.year && tags.year.length ? getYear(tags.year) : null,
   };

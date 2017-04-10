@@ -50,7 +50,7 @@ import Sources.Services.AmazonS3 as AmazonS3
 -}
 tagsBatchSize : Int
 tagsBatchSize =
-    100
+    50
 
 
 

@@ -15,7 +15,7 @@ import Variables exposing (colorDerivatives)
 -- Styles
 
 import Form.Styles as FormStyles
-import Styles exposing (Classes(Button, ContentBox))
+import Styles exposing (Classes(Button, ContentBox, InsulationContent))
 
 
 -- Services
@@ -43,7 +43,7 @@ entry page model =
 pageIndex : Model -> Html Msg
 pageIndex model =
     div
-        []
+        [ cssClass InsulationContent ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------

@@ -196,7 +196,11 @@ update msg model =
                     (setProperSourceId model model.newSource) :: model.collection
             in
                 ($)
-                    { model | collection = newCollection, processingError = Nothing }
+                    { model
+                        | collection = newCollection
+                        , newSource = makeSource AmazonS3 AmazonS3.initialData
+                        , processingError = Nothing
+                    }
                     []
                     [ do TopLevel.ProcessSources
                     , storeSources newCollection
