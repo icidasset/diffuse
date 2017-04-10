@@ -54,28 +54,11 @@ update msg model =
         -}
         Process tracks ->
             let
-                -- TODO: Refactor
-                sourceTracks =
-                    tracks
-                        |> List.groupWhile (\a b -> a.sourceId == b.sourceId)
-                        |> List.map
-                            (\tracksGroup ->
-                                tracksGroup
-                                    |> List.head
-                                    |> Maybe.withDefault emptyTrack
-                                    |> .sourceId
-                                    |> (flip (,)) tracksGroup
-                            )
-
-                -- TODO: Refactor
                 processingData =
                     List.map
                         (\source ->
                             ( source
-                            , sourceTracks
-                                |> List.find (Tuple.first >> (==) source.id)
-                                |> Maybe.map (Tuple.second)
-                                |> Maybe.withDefault []
+                            , List.filter (\t -> t.sourceId == source.id) tracks
                             )
                         )
                         model.collection

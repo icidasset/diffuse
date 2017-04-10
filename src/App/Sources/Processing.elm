@@ -84,27 +84,24 @@ takeTreeStep context response associatedTracks currentDate =
 
             TheEnd ->
                 let
-                    -- TODO: Refactor
                     filteredContext =
                         selectMusicFiles newContext
 
-                    tracksToRemoveFilter =
-                        \t -> List.notMember t.path filteredContext.filePaths
+                    pathFilter =
+                        (\paths path -> List.member path paths) filteredContext.filePaths
 
-                    tracksToRemove =
-                        List.filter tracksToRemoveFilter associatedTracks
-
-                    tracksLeft =
-                        List.filterNot tracksToRemoveFilter associatedTracks
+                    ( pathsLeft, pathsToRemove ) =
+                        associatedTracks
+                            |> List.map .path
+                            |> List.partition pathFilter
                 in
                     Cmd.batch
                         [ filteredContext
-                            |> selectNonExisting (List.map .path tracksLeft)
+                            |> selectNonExisting pathsLeft
                             |> processingContextToTagsContext
                             |> ProcessTagsStep
                             |> do
-                        , tracksToRemove
-                            |> List.map .path
+                        , pathsToRemove
                             |> ProcessTreeStepRemoveTracks context.source.id
                             |> do
                         ]
