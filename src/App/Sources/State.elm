@@ -33,7 +33,7 @@ initialModel flags =
     }
 
 
-initialCommands : Cmd Msg
+initialCommands : Cmd TopLevel.Msg
 initialCommands =
     Cmd.none
 

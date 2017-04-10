@@ -153,7 +153,7 @@ function audioElementTrackId(node) {
 
 
 function isActiveAudioElement(environmentalContext, node) {
-  if (!environmentalContext.activeQueueItem) return;
+  if (!environmentalContext.activeQueueItem || !node) return false;
   return environmentalContext.activeQueueItem.id === audioElementTrackId(node);
 }
 

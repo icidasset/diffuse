@@ -14,7 +14,7 @@ initialModel location =
     { currentPage = Logic.locationToPage location }
 
 
-initialCommands : Cmd Msg
+initialCommands : Cmd TopLevel.Msg
 initialCommands =
     Cmd.none
 

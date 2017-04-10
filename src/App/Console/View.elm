@@ -93,6 +93,8 @@ entry model =
                 [ cssClass ConsoleButton
                 , if model.console.isPlaying then
                     onClick (TopLevel.ConsoleMsg RequestPause)
+                  else if Maybe.isNothing model.queue.activeItem then
+                    onClick (TopLevel.QueueMsg Shift)
                   else
                     onClick (TopLevel.ConsoleMsg RequestPlay)
                 ]
@@ -114,7 +116,7 @@ entry model =
                 ]
             , a
                 [ cssClass ConsoleButton
-                , onClick (TopLevel.QueueMsg Rewind)
+                , onClick (TopLevel.QueueMsg Shift)
                 ]
                 [ Icons.fast_forward colorDerivatives.consoleText 20 ]
             , a

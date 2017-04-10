@@ -27,6 +27,7 @@ type Msg
     | RoutingMsg Routing.Msg
     | SourcesMsg Sources.Msg
       -- Children, Pt. 2
+    | FillQueue
     | ProcessSources
       -- Other
     | NoOp

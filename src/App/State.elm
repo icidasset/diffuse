@@ -20,6 +20,7 @@ import Sources.State as Sources
 
 -- Children types
 
+import Queue.Types
 import Sources.Types
 
 
@@ -53,10 +54,10 @@ initialCommands _ _ =
           Task.perform SetTimestamp Time.now
 
         -- Children
-        , Cmd.map ConsoleMsg Console.initialCommands
-        , Cmd.map QueueMsg Queue.initialCommands
-        , Cmd.map RoutingMsg Routing.initialCommands
-        , Cmd.map SourcesMsg Sources.initialCommands
+        , Console.initialCommands
+        , Queue.initialCommands
+        , Routing.initialCommands
+        , Sources.initialCommands
         ]
 
 
@@ -78,12 +79,16 @@ update msg model =
                 stamp =
                     Date.fromTime time
 
+                queue =
+                    model.queue
+
                 sources =
                     model.sources
             in
                 (!)
                     { model
-                        | sources = { sources | timestamp = stamp }
+                        | queue = { queue | timestamp = stamp }
+                        , sources = { sources | timestamp = stamp }
                         , timestamp = stamp
                     }
                     []
@@ -110,6 +115,15 @@ update msg model =
         ------------------------------------
         -- Children, Pt. 2
         ------------------------------------
+        FillQueue ->
+            (!)
+                model
+                [ model.sources.collection
+                    |> Queue.Types.Fill
+                    |> QueueMsg
+                    |> do
+                ]
+
         ProcessSources ->
             (!)
                 model

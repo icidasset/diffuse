@@ -7,8 +7,8 @@ type alias Tags =
     { album : Maybe String
     , artist : Maybe String
     , genre : Maybe String
+    , nr : Maybe Int
     , title : Maybe String
-    , track : Maybe Int
     , year : Maybe Int
     }
 
@@ -35,8 +35,8 @@ emptyTags =
     { album = Nothing
     , artist = Nothing
     , genre = Nothing
+    , nr = Nothing
     , title = Nothing
-    , track = Nothing
     , year = Nothing
     }
 

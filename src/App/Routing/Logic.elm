@@ -29,6 +29,12 @@ locationToPage location =
 pageToParentHref : Page -> String
 pageToParentHref page =
     case page of
+        Queue ->
+            "/queue"
+
+        Settings ->
+            "/settings"
+
         Sources _ ->
             "/sources"
 

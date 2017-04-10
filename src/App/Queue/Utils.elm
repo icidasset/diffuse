@@ -1,5 +1,6 @@
 module Queue.Utils exposing (($), makeQueueItem)
 
+import Date exposing (Date)
 import List.Extra as List
 import Queue.Types as Queue exposing (..)
 import Sources.Processing
@@ -21,15 +22,15 @@ import Utils
 -- 🌱
 
 
-makeQueueItem : TopLevel.Model -> Track -> Queue.Item
-makeQueueItem model track =
+makeQueueItem : Bool -> Date -> List Source -> Track -> Queue.Item
+makeQueueItem isManualEntry timestamp sources track =
     { id = track.sourceId ++ "-" ++ track.path
-    , manualEntry = True
+    , manualEntry = isManualEntry
     , track = track
     , url =
-        model.sources.collection
+        sources
             |> List.find (findSource track.sourceId)
-            |> Maybe.map (makeTrackUrl model track)
+            |> Maybe.map (makeTrackUrl timestamp track)
             |> Maybe.withDefault "<missing-source>"
     }
 
@@ -43,6 +44,6 @@ findSource wantedSourceId source =
     source.id == wantedSourceId
 
 
-makeTrackUrl : TopLevel.Model -> Track -> Source -> String
-makeTrackUrl model track source =
-    Sources.Processing.makeTrackUrl model.timestamp source track.path
+makeTrackUrl : Date -> Track -> Source -> String
+makeTrackUrl timestamp track source =
+    Sources.Processing.makeTrackUrl timestamp source track.path

@@ -1,11 +1,17 @@
 module Queue.State exposing (..)
 
+import Date
 import List.Extra as List
 import Queue.Ports as Ports
 import Queue.Types as Types exposing (..)
 import Queue.Utils exposing (..)
+import Random
+import Random.List exposing (shuffle)
+import Sources.Types exposing (Source)
+import Tracks.Types exposing (Track)
 import Tracks.Utils
 import Types as TopLevel
+import Utils exposing (do)
 
 
 -- 💧
@@ -16,6 +22,9 @@ initialModel flags =
     { activeItem = Nothing
     , future = []
     , past = []
+
+    --
+    , timestamp = Date.fromTime 0
     , tracks = Tracks.Utils.decodeTracks flags
 
     -- Settings
@@ -24,9 +33,9 @@ initialModel flags =
     }
 
 
-initialCommands : Cmd Msg
+initialCommands : Cmd TopLevel.Msg
 initialCommands =
-    Cmd.none
+    do TopLevel.FillQueue
 
 
 
@@ -44,6 +53,7 @@ update msg model =
                 { model
                     | future =
                         model.future
+                            |> List.filter (\i -> not (i.manualEntry == False && i.id == item.id))
                             |> (::) item
                 }
                 []
@@ -68,13 +78,14 @@ update msg model =
         -- > Remove an item from the queue.
         --
         RemoveItem index ->
-            (!)
+            ($)
                 { model
                     | future =
                         model.future
                             |> List.removeAt index
                 }
                 []
+                [ do TopLevel.FillQueue ]
 
         ------------------------------------
         -- Position
@@ -101,9 +112,12 @@ update msg model =
                                 |> Maybe.withDefault []
                     }
             in
-                newModel
-                    |> fill
-                    |> withCmds [ Ports.activeQueueItemChanged newActiveItem ]
+                ($)
+                    newModel
+                    []
+                    [ Ports.activeQueueItemChanged newActiveItem
+                    , do TopLevel.FillQueue
+                    ]
 
         -- # Shift
         -- > Put the next item in the queue as the current one.
@@ -127,21 +141,68 @@ update msg model =
                                 |> Maybe.withDefault model.past
                     }
             in
-                newModel
-                    |> fill
-                    |> withCmds [ Ports.activeQueueItemChanged newActiveItem ]
+                ($)
+                    newModel
+                    []
+                    [ Ports.activeQueueItemChanged newActiveItem
+                    , do TopLevel.FillQueue
+                    ]
 
         ------------------------------------
         -- Contents
         ------------------------------------
         -- # Fill
         -- > Fill the queue with items.
-        --   Also checks if there no-longer-existing tracks in the queue.
+        --   (TODO) Also checks if there no-longer-existing tracks in the queue.
+        --   (TODO) Doesn't work properly yet for "non-shuffle" playback.
         --
-        Fill ->
-            (!)
-                (fill model)
+        Fill sources ->
+            ($)
+                model
+                [ Random.generate (FillStepTwo sources) (shuffle model.tracks) ]
                 []
+
+        FillStepTwo sources shuffledTracks ->
+            let
+                pastPaths =
+                    List.map (.track >> .path) model.past
+
+                futurePaths =
+                    List.map (.track >> .path) model.future
+
+                tracks =
+                    if model.shuffle then
+                        shuffledTracks
+                    else
+                        model.tracks
+
+                tracksWoActive =
+                    case model.activeItem of
+                        Just item ->
+                            List.filter (.path >> (/=) item.track.path) tracks
+
+                        Nothing ->
+                            tracks
+
+                newFuture =
+                    tracksWoActive
+                        |> List.filter (\t -> List.notMember t.path pastPaths)
+                        |> List.filter (\t -> List.notMember t.path futurePaths)
+                        |> List.take (50 - (List.length futurePaths))
+                        |> List.map (makeQueueItem False model.timestamp sources)
+                        |> List.append model.future
+
+                newFuture_ =
+                    if List.length newFuture == 0 then
+                        tracksWoActive
+                            |> List.take 50
+                            |> List.map (makeQueueItem False model.timestamp sources)
+                    else
+                        newFuture
+            in
+                (!)
+                    { model | future = newFuture_ }
+                    []
 
         -- # Reset (TODO)
         -- > Renew the queue, meaning that the auto-generated items in the queue
@@ -149,7 +210,7 @@ update msg model =
         --
         Reset ->
             (!)
-                (fill model)
+                model
                 []
 
         ------------------------------------
@@ -171,39 +232,56 @@ update msg model =
         ToggleRepeat ->
             model
                 |> (\m -> { m | repeat = not model.repeat })
-                |> (\m -> (!) m [ storeSettings m ])
+                |> (\m -> ($) m [] [ storeSettings m ])
 
         ToggleShuffle ->
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
-                |> (\m -> (!) m [ storeSettings m ])
+                |> (\m -> ($) m [ do Reset ] [ storeSettings m ])
 
         ------------------------------------
         -- Tracks
         ------------------------------------
         AddTracks additionalTracks ->
-            additionalTracks
-                |> List.append model.tracks
-                |> (\col -> { model | tracks = col })
-                |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
+            let
+                col =
+                    additionalTracks
+                        |> List.append model.tracks
+                        |> List.sortBy trackSortComparable
+            in
+                ($)
+                    { model | tracks = col }
+                    []
+                    [ do TopLevel.FillQueue, Tracks.Utils.storeTracks col ]
 
         RemoveTracks sourceId ->
-            model.tracks
-                |> List.filter (\t -> t.sourceId /= sourceId)
-                |> (\col -> { model | tracks = col })
-                |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
+            let
+                col =
+                    List.filter
+                        (\t -> t.sourceId /= sourceId)
+                        model.tracks
+            in
+                ($)
+                    { model | tracks = col }
+                    []
+                    [ do TopLevel.FillQueue, Tracks.Utils.storeTracks col ]
 
         RemoveTracksByPaths sourceId pathsList ->
-            model.tracks
-                |> List.filter
-                    (\t ->
-                        if t.sourceId == sourceId then
-                            List.notMember t.path pathsList
-                        else
-                            True
-                    )
-                |> (\col -> { model | tracks = col })
-                |> (\model -> ($) model [] [ Tracks.Utils.storeTracks model.tracks ])
+            let
+                col =
+                    List.filter
+                        (\t ->
+                            if t.sourceId == sourceId then
+                                List.notMember t.path pathsList
+                            else
+                                True
+                        )
+                        model.tracks
+            in
+                ($)
+                    { model | tracks = col }
+                    []
+                    [ do TopLevel.FillQueue, Tracks.Utils.storeTracks col ]
 
 
 
@@ -220,11 +298,15 @@ subscriptions _ =
 -- Utils
 
 
-{-| TODO: Properly implement.
+{-| Sort.
 -}
-fill : Model -> Model
-fill model =
-    model
+trackSortComparable : Track -> String
+trackSortComparable t =
+    t.tags.title
+        |> Maybe.withDefault ""
+        |> String.append (toString (Maybe.withDefault 0 t.tags.nr))
+        |> String.append (Maybe.withDefault "" t.tags.album)
+        |> String.append (Maybe.withDefault "" t.tags.artist)
 
 
 {-| Store settings via port.
@@ -235,10 +317,3 @@ storeSettings model =
         { repeat = model.repeat
         , shuffle = model.shuffle
         }
-
-
-{-| Similar to `Response.withCmd`.
--}
-withCmds : List (Cmd Msg) -> Model -> ( Model, Cmd TopLevel.Msg )
-withCmds cmds model =
-    ($) model cmds []

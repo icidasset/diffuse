@@ -1,5 +1,7 @@
 module Queue.Types exposing (Msg(..), Model, Settings, Item)
 
+import Date exposing (Date)
+import Sources.Types exposing (Source)
 import Tracks.Types exposing (Track)
 
 
@@ -14,7 +16,8 @@ type Msg
     | Rewind
     | Shift
       -- Contents
-    | Fill
+    | Fill (List Source)
+    | FillStepTwo (List Source) (List Track)
     | Reset
       -- Combos
     | InjectFirstAndPlay Item
@@ -58,5 +61,8 @@ type alias InternalModel extension =
         | activeItem : Maybe Item
         , future : List Item
         , past : List Item
+
+        --
+        , timestamp : Date
         , tracks : List Track
     }

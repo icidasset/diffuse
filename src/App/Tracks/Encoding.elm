@@ -23,8 +23,8 @@ encodeTags tags =
         [ ( "album", encodeMaybe tags.album Encode.string )
         , ( "artist", encodeMaybe tags.artist Encode.string )
         , ( "genre", encodeMaybe tags.genre Encode.string )
+        , ( "nr", encodeMaybe tags.nr Encode.int )
         , ( "title", encodeMaybe tags.title Encode.string )
-        , ( "track", encodeMaybe tags.track Encode.int )
         , ( "year", encodeMaybe tags.year Encode.int )
         ]
 
@@ -61,6 +61,6 @@ tagsDecoder =
         (Decode.maybe <| Decode.field "album" Decode.string)
         (Decode.maybe <| Decode.field "artist" Decode.string)
         (Decode.maybe <| Decode.field "genre" Decode.string)
+        (Decode.maybe <| Decode.field "nr" Decode.int)
         (Decode.maybe <| Decode.field "title" Decode.string)
-        (Decode.maybe <| Decode.field "track" Decode.int)
         (Decode.maybe <| Decode.field "year" Decode.int)

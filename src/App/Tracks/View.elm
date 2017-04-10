@@ -62,7 +62,7 @@ tracksTable model =
                 (\track ->
                     tr
                         [ track
-                            |> makeQueueItem model
+                            |> makeQueueItem True model.timestamp model.sources.collection
                             |> Queue.InjectFirstAndPlay
                             |> QueueMsg
                             |> onDoubleClick

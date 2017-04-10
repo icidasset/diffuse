@@ -123,6 +123,10 @@ function setupElm(params) {
     if (item) {
       createAudioElement(audioEnvironmentContext, item);
       removeOlderAudioElements(timestampInMilliseconds);
+    } else {
+      removeOlderAudioElements(timestampInMilliseconds);
+      app.ports.setIsPlaying.send(false);
+      app.ports.setProgress.send(0);
     }
   });
 
