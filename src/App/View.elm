@@ -2,6 +2,7 @@ module View exposing (entry)
 
 import Html exposing (..)
 import Html.Events exposing (onClick)
+import Html.Lazy
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(..))
 import Styles exposing (..)
@@ -77,21 +78,20 @@ defaultLayout : List (Html Msg) -> Model -> Html Msg
 defaultLayout children model =
     div
         [ cssClass Shell ]
-        [ Navigation.outside
-            model
-            [ ( text "Tracks", "/" )
-            , ( text "Sources", "/sources" )
-            , ( text "Queue", "/queue" )
-            , ( text "Settings", "/settings" )
-            ]
-
-        --
-        , div
-            [ cssClass Insulation ]
-            (children)
-
-        --
+        [ Html.Lazy.lazy outsideNavigation model.routing.currentPage
+        , div [ cssClass Insulation ] (children)
         , Console.entry model
+        ]
+
+
+outsideNavigation : Page -> Html Msg
+outsideNavigation currentPage =
+    Navigation.outside
+        currentPage
+        [ ( text "Tracks", "/" )
+        , ( text "Sources", "/sources" )
+        , ( text "Queue", "/queue" )
+        , ( text "Settings", "/settings" )
         ]
 
 

@@ -1,15 +1,19 @@
 module Tracks.View exposing (entry)
 
 import Color
+import Date exposing (Date)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onDoubleClick)
+import Html.Keyed
+import Html.Lazy exposing (lazy3)
 import Maybe.Extra as Maybe
 import Material.Icons.Content
 import Material.Icons.Toggle
 import Navigation.View as Navigation
 import Queue.Types as Queue
 import Queue.Utils exposing (makeQueueItem)
+import Sources.Types exposing (Source)
 import Styles exposing (Classes(Button, ContentBox))
 import Tracks.Styles exposing (..)
 import Tracks.Types exposing (Track)
@@ -23,6 +27,15 @@ import Variables exposing (colors, colorDerivatives)
 
 entry : Model -> Html Msg
 entry model =
+    lazy3
+        lazyEntry
+        model.timestamp
+        model.sources.collection
+        model.queue.tracks
+
+
+lazyEntry : Date -> List Source -> List Track -> Html Msg
+lazyEntry timestamp sources tracks =
     div
         [ cssClass TracksContainer ]
         [ ------------------------------------
@@ -37,7 +50,7 @@ entry model =
         ------------------------------------
         , div
             [ cssClass TracksTableContainer ]
-            [ tracksTable model ]
+            [ tracksTable timestamp sources tracks ]
         ]
 
 
@@ -45,8 +58,8 @@ entry model =
 -- Views
 
 
-tracksTable : Model -> Html Msg
-tracksTable model =
+tracksTable : Date -> List Source -> List Track -> Html Msg
+tracksTable timestamp sources tracks =
     table
         [ cssClass TracksTable ]
         [ thead
@@ -56,13 +69,15 @@ tracksTable model =
             , th [] [ text "Title" ]
             , th [] [ text "Album" ]
             ]
-        , tbody
+        , Html.Keyed.node
+            "tbody"
             []
             (List.map
                 (\track ->
-                    tr
+                    ( track.sourceId ++ track.path
+                    , tr
                         [ track
-                            |> makeQueueItem True model.timestamp model.sources.collection
+                            |> makeQueueItem True timestamp sources
                             |> Queue.InjectFirstAndPlay
                             |> QueueMsg
                             |> onDoubleClick
@@ -72,7 +87,8 @@ tracksTable model =
                         , td [] [ text (Maybe.withDefault "Unknown" track.tags.title) ]
                         , td [] [ text (Maybe.withDefault "Unknown" track.tags.album) ]
                         ]
+                    )
                 )
-                model.queue.tracks
+                tracks
             )
         ]

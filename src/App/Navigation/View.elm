@@ -13,11 +13,11 @@ import Utils exposing (cssClass)
 -- 🍯
 
 
-outside : Model -> List ( Label, String ) -> Html Msg
-outside model items =
+outside : Routing.Page -> List ( Label, String ) -> Html Msg
+outside currentPage items =
     let
         currentHref =
-            pageToParentHref model.routing.currentPage
+            pageToParentHref currentPage
     in
         div
             [ cssClass OutsideNavigation ]
