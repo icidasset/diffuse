@@ -5,7 +5,6 @@ import Dict
 import List.Extra as List
 import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
-import Queue.Types
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
@@ -135,8 +134,8 @@ update msg model =
                 model
                 []
                 [ filePaths
-                    |> Queue.Types.RemoveTracksByPaths sourceId
-                    |> TopLevel.QueueMsg
+                    |> Tracks.Types.RemoveByPath sourceId
+                    |> TopLevel.TracksMsg
                     |> do
                 ]
 
@@ -149,8 +148,8 @@ update msg model =
                 insert =
                     tagsCtx
                         |> Processing.tracksFromTagsContext
-                        |> Queue.Types.AddTracks
-                        |> TopLevel.QueueMsg
+                        |> Tracks.Types.Add
+                        |> TopLevel.TracksMsg
                         |> do
 
                 cmd =
@@ -174,8 +173,8 @@ update msg model =
                     { model | collection = newCollection }
                     []
                     [ sourceId
-                        |> Queue.Types.RemoveTracks
-                        |> TopLevel.QueueMsg
+                        |> Tracks.Types.Remove
+                        |> TopLevel.TracksMsg
                         |> do
                     , storeSources newCollection
                     ]

@@ -16,26 +16,18 @@ type Msg
     | Rewind
     | Shift
       -- Contents
-    | Fill (List Source)
-    | FillStepTwo (List Source) (List Track)
+    | Fill (List Source) (List Track)
+    | FillStepTwo (List Source) (List Track) (List Track)
     | Reset
       -- Combos
     | InjectFirstAndPlay Item
       -- Settings
     | ToggleRepeat
     | ToggleShuffle
-      -- Tracks
-    | AddTracks (List Track)
-    | RemoveTracks SourceId
-    | RemoveTracksByPaths SourceId (List String)
 
 
 type alias Model =
     InternalModel Settings
-
-
-type alias SourceId =
-    String
 
 
 type alias Settings =
@@ -64,5 +56,4 @@ type alias InternalModel extension =
 
         --
         , timestamp : Date
-        , tracks : List Track
     }

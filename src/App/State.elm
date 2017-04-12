@@ -2,7 +2,9 @@ module State exposing (..)
 
 import Date
 import Firebase.Auth
+import List.Extra as List
 import Navigation
+import Queue.Utils exposing (makeQueueItem)
 import Response exposing (..)
 import Task
 import Time
@@ -16,6 +18,7 @@ import Console.State as Console
 import Queue.State as Queue
 import Routing.State as Routing
 import Sources.State as Sources
+import Tracks.State as Tracks
 
 
 -- Children types
@@ -44,6 +47,7 @@ initialModel flags location =
     , queue = Queue.initialModel flags
     , routing = Routing.initialModel location
     , sources = Sources.initialModel flags
+    , tracks = Tracks.initialModel flags
     }
 
 
@@ -58,6 +62,7 @@ initialCommands _ _ =
         , Queue.initialCommands
         , Routing.initialCommands
         , Sources.initialCommands
+        , Tracks.initialCommands
         ]
 
 
@@ -112,22 +117,40 @@ update msg model =
             Sources.update sub model.sources
                 |> mapModel (\x -> { model | sources = x })
 
+        TracksMsg sub ->
+            Tracks.update sub model.tracks
+                |> mapModel (\x -> { model | tracks = x })
+
         ------------------------------------
         -- Children, Pt. 2
         ------------------------------------
         FillQueue ->
             (!)
                 model
-                [ model.sources.collection
-                    |> Queue.Types.Fill
+                [ model.tracks.collection
+                    |> Queue.Types.Fill model.sources.collection
                     |> QueueMsg
                     |> do
+                ]
+
+        PlayTrack index ->
+            (!)
+                model
+                [ index
+                    |> String.toInt
+                    |> Result.toMaybe
+                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection)
+                    |> Maybe.map (makeQueueItem True model.timestamp model.sources.collection)
+                    |> Maybe.map (Queue.Types.InjectFirstAndPlay)
+                    |> Maybe.map (QueueMsg)
+                    |> Maybe.map (do)
+                    |> Maybe.withDefault Cmd.none
                 ]
 
         ProcessSources ->
             (!)
                 model
-                [ model.queue.tracks
+                [ model.tracks.collection
                     |> Sources.Types.Process
                     |> SourcesMsg
                     |> do

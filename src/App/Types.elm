@@ -12,6 +12,7 @@ import Console.Types as Console
 import Queue.Types as Queue
 import Routing.Types as Routing
 import Sources.Types as Sources
+import Tracks.Types as Tracks
 
 
 -- Types
@@ -26,8 +27,10 @@ type Msg
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
     | SourcesMsg Sources.Msg
+    | TracksMsg Tracks.Msg
       -- Children, Pt. 2
     | FillQueue
+    | PlayTrack String
     | ProcessSources
       -- Other
     | NoOp
@@ -49,6 +52,7 @@ type alias Model =
     , queue : Queue.Model
     , routing : Routing.Model
     , sources : Sources.Model
+    , tracks : Tracks.Model
     }
 
 

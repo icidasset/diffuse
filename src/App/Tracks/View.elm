@@ -1,23 +1,20 @@
 module Tracks.View exposing (entry)
 
 import Color
-import Date exposing (Date)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onDoubleClick)
+import Html.Events exposing (on)
 import Html.Keyed
-import Html.Lazy exposing (lazy3)
-import Maybe.Extra as Maybe
+import Html.Lazy exposing (lazy)
+import Json.Decode as Decode
 import Material.Icons.Content
 import Material.Icons.Toggle
 import Navigation.View as Navigation
-import Queue.Types as Queue
-import Queue.Utils exposing (makeQueueItem)
 import Sources.Types exposing (Source)
 import Styles exposing (Classes(Button, ContentBox))
 import Tracks.Styles exposing (..)
 import Tracks.Types exposing (Track)
-import Types as TopLevel exposing (Model, Msg(..))
+import Types as TopLevel exposing (Model, Msg)
 import Utils exposing (cssClass)
 import Variables exposing (colors, colorDerivatives)
 
@@ -27,15 +24,11 @@ import Variables exposing (colors, colorDerivatives)
 
 entry : Model -> Html Msg
 entry model =
-    lazy3
-        lazyEntry
-        model.timestamp
-        model.sources.collection
-        model.queue.tracks
+    lazy lazyEntry model.tracks.collection
 
 
-lazyEntry : Date -> List Source -> List Track -> Html Msg
-lazyEntry timestamp sources tracks =
+lazyEntry : List Track -> Html Msg
+lazyEntry tracks =
     div
         [ cssClass TracksContainer ]
         [ ------------------------------------
@@ -50,7 +43,7 @@ lazyEntry timestamp sources tracks =
         ------------------------------------
         , div
             [ cssClass TracksTableContainer ]
-            [ tracksTable timestamp sources tracks ]
+            [ tracksTable tracks ]
         ]
 
 
@@ -58,8 +51,8 @@ lazyEntry timestamp sources tracks =
 -- Views
 
 
-tracksTable : Date -> List Source -> List Track -> Html Msg
-tracksTable timestamp sources tracks =
+tracksTable : List Track -> Html Msg
+tracksTable tracks =
     table
         [ cssClass TracksTable ]
         [ thead
@@ -71,24 +64,49 @@ tracksTable timestamp sources tracks =
             ]
         , Html.Keyed.node
             "tbody"
-            []
-            (List.map
-                (\track ->
-                    ( track.sourceId ++ track.path
-                    , tr
-                        [ track
-                            |> makeQueueItem True timestamp sources
-                            |> Queue.InjectFirstAndPlay
-                            |> QueueMsg
-                            |> onDoubleClick
-                        ]
-                        [ td [] [ Material.Icons.Toggle.star (Color.greyscale 0.0675) 16 ]
-                        , td [] [ text (Maybe.withDefault "Unknown" track.tags.artist) ]
-                        , td [] [ text (Maybe.withDefault "Unknown" track.tags.title) ]
-                        , td [] [ text (Maybe.withDefault "Unknown" track.tags.album) ]
-                        ]
-                    )
-                )
-                tracks
-            )
+            [ on "click" playTrack ]
+            (List.indexedMap tracksTableItem tracks)
         ]
+
+
+tracksTableItem : Int -> Track -> ( String, Html Msg )
+tracksTableItem index track =
+    let
+        key =
+            toString index
+    in
+        ( key
+        , tr
+            [ rel key ]
+            [ td [] [ starIcon ]
+            , td [] [ text track.tags.artist ]
+            , td [] [ text track.tags.title ]
+            , td [] [ text track.tags.album ]
+            ]
+        )
+
+
+
+-- Events and stuff
+
+
+playTrack : Decode.Decoder TopLevel.Msg
+playTrack =
+    Decode.map TopLevel.PlayTrack tableTrackDecoder
+
+
+tableTrackDecoder : Decode.Decoder String
+tableTrackDecoder =
+    Decode.oneOf
+        [ Decode.at [ "target", "parentNode", "attributes", "rel", "value" ] Decode.string
+        , Decode.at [ "target", "attributes", "rel", "value" ] Decode.string
+        ]
+
+
+
+-- Helpers
+
+
+starIcon : Html Msg
+starIcon =
+    Material.Icons.Toggle.star (Color.greyscale 0.0675) 16

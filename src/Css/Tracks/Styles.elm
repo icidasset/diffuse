@@ -21,6 +21,7 @@ styles =
     [ class TracksContainer
         [ displayFlex
         , flexDirection column
+        , width (pct 100)
         ]
 
     ------------------------------------------------------

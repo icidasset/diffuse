@@ -39,14 +39,7 @@ nowPlaying activeItem =
         [ cssClass NowPlaying ]
         [ case activeItem of
             Just item ->
-                ([ item.track.tags.artist
-                 , item.track.tags.title
-                 ]
-                    |> List.filter (Maybe.isJust)
-                    |> List.map (Maybe.withDefault "")
-                    |> String.join " – "
-                    |> text
-                )
+                text (item.track.tags.artist ++ " – " ++ item.track.tags.title)
 
             Nothing ->
                 text "Ongaku Ryoho"

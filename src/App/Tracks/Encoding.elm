@@ -20,11 +20,15 @@ encode track =
 encodeTags : Tags -> Encode.Value
 encodeTags tags =
     Encode.object
-        [ ( "album", encodeMaybe tags.album Encode.string )
-        , ( "artist", encodeMaybe tags.artist Encode.string )
+        [ ( "nr", Encode.int tags.nr )
+
+        --
+        , ( "album", Encode.string tags.album )
+        , ( "artist", Encode.string tags.artist )
+        , ( "title", Encode.string tags.title )
+
+        --
         , ( "genre", encodeMaybe tags.genre Encode.string )
-        , ( "nr", encodeMaybe tags.nr Encode.int )
-        , ( "title", encodeMaybe tags.title Encode.string )
         , ( "year", encodeMaybe tags.year Encode.int )
         ]
 
@@ -58,9 +62,9 @@ decoder =
 tagsDecoder : Decode.Decoder Tags
 tagsDecoder =
     Decode.map6 Tags
-        (Decode.maybe <| Decode.field "album" Decode.string)
-        (Decode.maybe <| Decode.field "artist" Decode.string)
+        (Decode.field "nr" Decode.int)
+        (Decode.field "album" Decode.string)
+        (Decode.field "artist" Decode.string)
+        (Decode.field "title" Decode.string)
         (Decode.maybe <| Decode.field "genre" Decode.string)
-        (Decode.maybe <| Decode.field "nr" Decode.int)
-        (Decode.maybe <| Decode.field "title" Decode.string)
         (Decode.maybe <| Decode.field "year" Decode.int)

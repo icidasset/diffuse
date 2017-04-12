@@ -38,14 +38,14 @@ update msg model =
         Seek float ->
             ($) model [ Ports.requestSeek float ] []
 
-        SetDuration duration ->
-            ($) { model | duration = duration } [] []
+        SetDuration float ->
+            (,) { model | duration = float } Cmd.none
 
         SetIsPlaying bool ->
-            ($) { model | isPlaying = bool } [] []
+            (,) { model | isPlaying = bool } Cmd.none
 
-        SetProgress progress ->
-            ($) { model | progress = progress } [] []
+        SetProgress float ->
+            (,) { model | progress = float } Cmd.none
 
 
 

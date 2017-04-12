@@ -47,11 +47,11 @@ function pickTags(tagsFromJsmediatags) {
   );
 
   return {
-    album: tags.album && tags.album.length ? tags.album : null,
-    artist: tags.artist && tags.artist.length ? tags.artist : null,
+    nr: tags.track ? parseInt(tags.track, 10) : 0,
+    album: tags.album && tags.album.length ? tags.album : "Unknown",
+    artist: tags.artist && tags.artist.length ? tags.artist : "Unknown",
+    title: tags.title && tags.title.length ? tags.title : "Unknown",
     genre: tags.genre && tags.genre.length ? tags.genre : null,
-    nr: tags.track ? parseInt(tags.track, 10) : null,
-    title: tags.title && tags.title.length ? tags.title : null,
     year: tags.year && tags.year.length ? getYear(tags.year) : null,
   };
 }

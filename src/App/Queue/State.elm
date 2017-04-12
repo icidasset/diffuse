@@ -7,9 +7,6 @@ import Queue.Types as Types exposing (..)
 import Queue.Utils exposing (..)
 import Random
 import Random.List exposing (shuffle)
-import Sources.Types exposing (Source)
-import Tracks.Types exposing (Track)
-import Tracks.Utils
 import Types as TopLevel
 import Utils exposing (do)
 
@@ -25,7 +22,6 @@ initialModel flags =
 
     --
     , timestamp = Date.fromTime 0
-    , tracks = Tracks.Utils.decodeTracks flags
 
     -- Settings
     , repeat = flags.settings.queue.repeat
@@ -156,13 +152,13 @@ update msg model =
         --   (TODO) Also checks if there no-longer-existing tracks in the queue.
         --   (TODO) Doesn't work properly yet for "non-shuffle" playback.
         --
-        Fill sources ->
+        Fill sources tracks ->
             ($)
                 model
-                [ Random.generate (FillStepTwo sources) (shuffle model.tracks) ]
+                [ Random.generate (FillStepTwo sources tracks) (shuffle tracks) ]
                 []
 
-        FillStepTwo sources shuffledTracks ->
+        FillStepTwo sources tracks shuffledTracks ->
             let
                 pastPaths =
                     List.map (.track >> .path) model.past
@@ -170,19 +166,19 @@ update msg model =
                 futurePaths =
                     List.map (.track >> .path) model.future
 
-                tracks =
+                tracksCollection =
                     if model.shuffle then
                         shuffledTracks
                     else
-                        model.tracks
+                        tracks
 
                 tracksWoActive =
                     case model.activeItem of
                         Just item ->
-                            List.filter (.path >> (/=) item.track.path) tracks
+                            List.filter (.path >> (/=) item.track.path) tracksCollection
 
                         Nothing ->
-                            tracks
+                            tracksCollection
 
                 newFuture =
                     tracksWoActive
@@ -239,50 +235,6 @@ update msg model =
                 |> (\m -> { m | shuffle = not model.shuffle })
                 |> (\m -> ($) m [ do Reset ] [ storeSettings m ])
 
-        ------------------------------------
-        -- Tracks
-        ------------------------------------
-        AddTracks additionalTracks ->
-            let
-                col =
-                    additionalTracks
-                        |> List.append model.tracks
-                        |> List.sortBy trackSortComparable
-            in
-                ($)
-                    { model | tracks = col }
-                    []
-                    [ do TopLevel.FillQueue, Tracks.Utils.storeTracks col ]
-
-        RemoveTracks sourceId ->
-            let
-                col =
-                    List.filter
-                        (\t -> t.sourceId /= sourceId)
-                        model.tracks
-            in
-                ($)
-                    { model | tracks = col }
-                    []
-                    [ do TopLevel.FillQueue, Tracks.Utils.storeTracks col ]
-
-        RemoveTracksByPaths sourceId pathsList ->
-            let
-                col =
-                    List.filter
-                        (\t ->
-                            if t.sourceId == sourceId then
-                                List.notMember t.path pathsList
-                            else
-                                True
-                        )
-                        model.tracks
-            in
-                ($)
-                    { model | tracks = col }
-                    []
-                    [ do TopLevel.FillQueue, Tracks.Utils.storeTracks col ]
-
 
 
 -- 🌱
@@ -296,17 +248,6 @@ subscriptions _ =
 
 
 -- Utils
-
-
-{-| Sort.
--}
-trackSortComparable : Track -> String
-trackSortComparable t =
-    t.tags.title
-        |> Maybe.withDefault ""
-        |> String.append (toString (Maybe.withDefault 0 t.tags.nr))
-        |> String.append (Maybe.withDefault "" t.tags.album)
-        |> String.append (Maybe.withDefault "" t.tags.artist)
 
 
 {-| Store settings via port.

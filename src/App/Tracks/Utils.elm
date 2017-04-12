@@ -3,7 +3,8 @@ module Tracks.Utils exposing (..)
 import Firebase.Data
 import Tracks.Encoding
 import Tracks.Types exposing (..)
-import Types as TopLevel
+import Types as TopLevel exposing (Illumination)
+import Utils
 
 
 -- 💧
@@ -16,6 +17,11 @@ decodeTracks flags =
 
 
 -- 🔥
+
+
+($) : Illumination Model Msg
+($) =
+    Utils.illuminate TopLevel.TracksMsg
 
 
 storeTracks : List Track -> Cmd TopLevel.Msg

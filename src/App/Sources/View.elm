@@ -91,7 +91,7 @@ pageIndex model =
 pageNew : Model -> Html Msg
 pageNew model =
     div
-        []
+        [ cssClass InsulationContent ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------

@@ -4,11 +4,15 @@ module Tracks.Types exposing (..)
 
 
 type alias Tags =
-    { album : Maybe String
-    , artist : Maybe String
+    { nr : Int
+
+    -- Main
+    , album : String
+    , artist : String
+    , title : String
+
+    -- Extra
     , genre : Maybe String
-    , nr : Maybe Int
-    , title : Maybe String
     , year : Maybe Int
     }
 
@@ -21,8 +25,27 @@ type alias TagUrls =
 
 type alias Track =
     { path : String
-    , sourceId : String
+    , sourceId : SourceId
     , tags : Tags
+    }
+
+
+type alias SourceId =
+    String
+
+
+
+-- Other
+
+
+type Msg
+    = Add (List Track)
+    | Remove SourceId
+    | RemoveByPath SourceId (List String)
+
+
+type alias Model =
+    { collection : List Track
     }
 
 
@@ -32,11 +55,11 @@ type alias Track =
 
 emptyTags : Tags
 emptyTags =
-    { album = Nothing
-    , artist = Nothing
+    { nr = 0
+    , album = "Empty"
+    , artist = "Empty"
+    , title = "Empty"
     , genre = Nothing
-    , nr = Nothing
-    , title = Nothing
     , year = Nothing
     }
 

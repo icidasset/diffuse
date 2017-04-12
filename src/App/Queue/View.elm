@@ -38,9 +38,9 @@ entry model =
                     (\item ->
                         li
                             []
-                            [ text (Maybe.withDefault "" item.track.tags.artist)
+                            [ text item.track.tags.artist
                             , text " - "
-                            , text (Maybe.withDefault "" item.track.tags.title)
+                            , text item.track.tags.title
                             ]
                     )
                     model.queue.future
