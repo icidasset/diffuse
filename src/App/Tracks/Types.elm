@@ -35,6 +35,21 @@ type alias SourceId =
 
 
 
+-- Sorting
+
+
+type SortBy
+    = Artist
+    | Album
+    | Title
+
+
+type SortDirection
+    = Asc
+    | Desc
+
+
+
 -- Other
 
 
@@ -42,10 +57,13 @@ type Msg
     = Add (List Track)
     | Remove SourceId
     | RemoveByPath SourceId (List String)
+    | SortBy SortBy
 
 
 type alias Model =
     { collection : List Track
+    , sortBy : SortBy
+    , sortDirection : SortDirection
     }
 
 

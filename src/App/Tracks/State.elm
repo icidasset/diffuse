@@ -13,6 +13,8 @@ import Utils exposing (do)
 initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
     { collection = decodeTracks flags
+    , sortBy = Artist
+    , sortDirection = Asc
     }
 
 
@@ -36,7 +38,7 @@ update msg model =
                 col =
                     additionalTracks
                         |> List.append model.collection
-                        |> List.sortBy trackSortComparable
+                        |> sortTracksBy model.sortBy model.sortDirection
             in
                 ($)
                     { model | collection = col }
@@ -80,6 +82,26 @@ update msg model =
                     []
                     [ do TopLevel.FillQueue, storeTracks col ]
 
+        -- # Sort
+        --
+        SortBy property ->
+            let
+                sortDir =
+                    if model.sortBy /= property then
+                        Asc
+                    else if model.sortDirection == Asc then
+                        Desc
+                    else
+                        Asc
+            in
+                (!)
+                    { model
+                        | collection = sortTracksBy property sortDir model.collection
+                        , sortBy = property
+                        , sortDirection = sortDir
+                    }
+                    []
+
 
 
 -- Utils
@@ -87,9 +109,50 @@ update msg model =
 
 {-| Sort.
 -}
-trackSortComparable : Track -> String
-trackSortComparable t =
+sortTracksBy : SortBy -> SortDirection -> List Track -> List Track
+sortTracksBy property direction =
+    let
+        sortFn =
+            case property of
+                Album ->
+                    sortByAlbum
+
+                Artist ->
+                    sortByArtist
+
+                Title ->
+                    sortByTitle
+
+        dirFn =
+            if direction == Desc then
+                List.reverse
+            else
+                identity
+    in
+        List.sortBy sortFn >> dirFn
+
+
+sortByAlbum : Track -> String
+sortByAlbum t =
+    t.tags.title
+        |> String.append (toString t.tags.nr)
+        |> String.append t.tags.artist
+        |> String.append t.tags.album
+        |> String.toLower
+
+
+sortByArtist : Track -> String
+sortByArtist t =
     t.tags.title
         |> String.append (toString t.tags.nr)
         |> String.append t.tags.album
         |> String.append t.tags.artist
+        |> String.toLower
+
+
+sortByTitle : Track -> String
+sortByTitle t =
+    t.tags.album
+        |> String.append t.tags.artist
+        |> String.append t.tags.title
+        |> String.toLower

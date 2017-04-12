@@ -110,14 +110,22 @@ hi.connect(context.destination);
 // We should try to do most of this contextual work in Elm, but sometimes
 // it's easier to have the information here.
 
-function createAudioElement(environmentalContext, queueItem) {
-  if (!queueItem.url) console.error("audioElement, missing `url`");
-  if (!queueItem.id) console.error("audioElement, missing `id`");
+function insertTrack(environmentalContext, queueItem) {
+  if (!queueItem.url) console.error("insertTrack, missing `url`");
+  if (!queueItem.id) console.error("insertTrack, missing `id`");
 
-  // new
+  let audioNode;
+
+  audioNode = createAudioElement(environmentalContext, queueItem);
+  audioNode.context = context.createMediaElementSource(audioNode);
+  audioNode.context.connect(volume);
+}
+
+
+function createAudioElement(environmentalContext, queueItem) {
   let newNode;
   let timestampInMilliseconds = Date.now();
-  let timeupdateFunc = _.throttle(500, audioTimeUpdateEvent.bind(environmentalContext));
+  let timeupdateFunc = _.throttle(250, audioTimeUpdateEvent.bind(environmentalContext));
 
   newNode = new window.Audio();
   newNode.setAttribute("crossorigin", "anonymous");
@@ -145,7 +153,10 @@ function createAudioElement(environmentalContext, queueItem) {
 }
 
 
-// `createAudioElement` related
+
+//
+// # `createAudioElement` related
+// > Audio events
 
 function audioElementTrackId(node) {
   return node ? node.getAttribute("rel") : undefined;
@@ -227,6 +238,11 @@ function removeOlderAudioElements(timestamp) {
 
   nodes.forEach(node => {
     const t = parseInt(node.getAttribute("data-timestamp"), 10);
-    if (t < timestamp) audioElementsContainer.removeChild(node);
+    if (t >= timestamp) return;
+
+    node.context.disconnect();
+    node.context = null;
+
+    audioElementsContainer.removeChild(node);
   });
 }
