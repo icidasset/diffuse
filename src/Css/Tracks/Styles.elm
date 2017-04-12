@@ -54,21 +54,35 @@ styles =
 
         --
         , descendants
-            [ th
+            [ --
+              -- <thead>
+              --
+              th
                 [ backgroundColor (hex "#fff")
                 , borderBottom3 (px 1) solid (cssColor colorDerivatives.subtleBorder)
                 , borderLeft3 (px 1) solid (cssColor colorDerivatives.subtleBorder)
                 , color (hex "#CFCFCF")
+                , cursor pointer
                 , fontSize (Css.rem 0.65)
                 , paddingLeft (gr 2)
                 , paddingTop (px 3)
+                , position relative
                 , textAlign left
                 ]
             , (th << toa << firstChild)
                 [ borderLeft zero
                 , width (gr 4)
                 ]
-            , th [ cursor pointer ]
+            , (th << toa << descendants << toa << svg)
+                [ position absolute
+                , right (gr 1)
+                , top (pct 50)
+                , transform (translateY (pct -50))
+                ]
+
+            --
+            -- <tbody>
+            --
             , tr [ cursor pointer ]
             , (tr << toa << nthChild "2n" << toa << descendants << toa << td)
                 [ backgroundColor (hex "#fcfcfc")
@@ -79,23 +93,21 @@ styles =
                 , maxWidth zero
                 , overflow hidden
                 , padding2 (gr 1) (gr 2)
+                , property "padding-bottom" "calc(.375rem + 1px)"
                 , textOverflow ellipsis
                 , whiteSpace noWrap
-
-                --
-                , property "padding-bottom" "calc(.375rem + 1px)"
                 ]
             , (td << toa << descendants << toa << svg)
                 [ display inlineBlock
                 , verticalAlign textBottom
                 ]
 
-            -- Add some extra space on top
+            -- <tbody> Add some extra space on top
             , (tr << toa << firstChild << toa << descendants << toa << td)
                 [ paddingTop (gr 2)
                 ]
 
-            -- And on the bottom
+            -- <tbody> And on the bottom
             , (tr << toa << lastChild << toa << descendants << toa << td)
                 [ paddingBottom (gr 2)
                 ]
