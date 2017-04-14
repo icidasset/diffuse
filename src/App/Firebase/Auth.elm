@@ -11,3 +11,6 @@ type alias User =
 
 
 port authenticate : () -> Cmd msg
+
+
+port deauthenticate : () -> Cmd msg

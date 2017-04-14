@@ -16,6 +16,7 @@ import Utils exposing (..)
 
 import Console.View as Console
 import Queue.View as Queue
+import Settings.View as Settings
 import Sources.View as Sources
 import Spinner.View as Spinner
 import Tracks.View as Tracks
@@ -53,14 +54,14 @@ entry model =
                         [ Tracks.entry model ]
                         (model)
 
-                Queue ->
+                Queue queuePage ->
                     defaultLayout
-                        [ Queue.entry model ]
+                        [ Queue.entry queuePage model ]
                         (model)
 
                 Settings ->
                     defaultLayout
-                        [ text "Settings" ]
+                        [ Settings.entry model ]
                         (model)
 
                 Sources sourcePage ->
@@ -89,8 +90,8 @@ outsideNavigation currentPage =
     Navigation.outside
         currentPage
         [ ( text "Tracks", "/" )
-        , ( text "Sources", "/sources" )
         , ( text "Queue", "/queue" )
+        , ( text "Sources", "/sources" )
         , ( text "Settings", "/settings" )
         ]
 

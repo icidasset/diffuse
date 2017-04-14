@@ -9,7 +9,6 @@ import Variables exposing (colorDerivatives)
 
 type Classes
     = InputBox
-    | Intro
     | SelectBox
 
 
@@ -26,19 +25,10 @@ styles =
 
 formStyles : List Snippet
 formStyles =
-    [ class Intro
-        [ fontSize (Css.em 0.95)
-        , fontWeight (int 600)
-        , headerFont
-        , lineHeight (num 1.55)
-        , marginBottom (gr 6)
-        , opacity (num 0.475)
-        ]
-
-    ------------------------------------------------------
-    -- Label
-    ------------------------------------------------------
-    , label
+    [ ------------------------------------------------------
+      -- Label
+      ------------------------------------------------------
+      label
         [ display block
         , fontSize (Css.em 0.7)
         , fontWeight bold

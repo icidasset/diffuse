@@ -57,8 +57,7 @@ styles =
         --
         , children
             [ label
-                [ cursor inherit
-                , fontSize (Traits.basem 12)
+                [ fontSize (Traits.basem 12)
                 , fontWeight (int 900)
                 , letterSpacing (Css.em 0.25)
                 ]

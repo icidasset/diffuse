@@ -20,6 +20,7 @@ import Tracks.Types as Tracks
 
 type Msg
     = Authenticate
+    | SignOut
       -- Time
     | SetTimestamp Time
       -- Children

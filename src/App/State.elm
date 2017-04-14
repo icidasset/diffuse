@@ -76,6 +76,9 @@ update msg model =
         Authenticate ->
             ( model, Firebase.Auth.authenticate () )
 
+        SignOut ->
+            (!) { model | authenticatedUser = Nothing } []
+
         ------------------------------------
         -- Time
         ------------------------------------

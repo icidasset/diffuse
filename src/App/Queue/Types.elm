@@ -1,4 +1,4 @@
-module Queue.Types exposing (Msg(..), Model, Settings, Item)
+module Queue.Types exposing (Msg(..), Model, Settings, Item, Page(..))
 
 import Date exposing (Date)
 import Sources.Types exposing (Source)
@@ -42,6 +42,15 @@ type alias Item =
     , track : Track
     , url : String
     }
+
+
+
+-- Routing
+
+
+type Page
+    = Index
+    | History
 
 
 

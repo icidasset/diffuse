@@ -1,6 +1,7 @@
 module Routing.Logic exposing (locationToMessage, locationToPage, pageToParentHref)
 
 import Navigation
+import Queue.Types as Queue
 import Routing.Types exposing (..)
 import Sources.Types as Sources
 import UrlParser exposing (..)
@@ -29,7 +30,7 @@ locationToPage location =
 pageToParentHref : Page -> String
 pageToParentHref page =
     case page of
-        Queue ->
+        Queue _ ->
             "/queue"
 
         Settings ->
@@ -52,8 +53,11 @@ route =
         [ map (Sources Sources.Index) (s "sources")
         , map (Sources Sources.New) (s "sources" </> s "new")
 
+        -- Queue
+        , map (Queue Queue.Index) (s "queue")
+        , map (Queue Queue.History) (s "queue" </> s "history")
+
         -- Other
-        , map Queue (s "queue")
         , map Settings (s "settings")
         , map Index top
         ]

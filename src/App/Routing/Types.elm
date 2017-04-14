@@ -1,5 +1,6 @@
 module Routing.Types exposing (..)
 
+import Queue.Types as Queue
 import Sources.Types as Sources
 
 
@@ -15,6 +16,6 @@ type alias Model =
 type Page
     = ErrorScreen String
     | Index
-    | Queue
+    | Queue Queue.Page
     | Settings
     | Sources Sources.Page

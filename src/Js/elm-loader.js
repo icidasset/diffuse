@@ -108,6 +108,10 @@ function setupElm(params) {
     );
   });
 
+  app.ports.deauthenticate.subscribe(() => {
+    firebase.auth().signOut();
+  });
+
   // > Audio
   var audioEnvironmentContext = {
     activeQueueItem: null,

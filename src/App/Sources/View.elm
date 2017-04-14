@@ -4,8 +4,13 @@ import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Keyed
+import Html.Lazy exposing (lazy)
 import Material.Icons.Action as Icons
+import Material.Icons.File as Icons
+import Material.Icons.Content as Icons
 import Navigation.View as Navigation
+import Routing.Types exposing (Msg(..))
 import Sources.Types as Sources exposing (Page(..), Service(..), Source)
 import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass)
@@ -15,7 +20,8 @@ import Variables exposing (colorDerivatives)
 -- Styles
 
 import Form.Styles as FormStyles
-import Styles exposing (Classes(Button, ContentBox, InsulationContent))
+import List.Styles exposing (Classes(..))
+import Styles exposing (Classes(Button, ContentBox, InsulationContent, Intro))
 
 
 -- Services
@@ -26,88 +32,135 @@ import Sources.Services.AmazonS3 as AmazonS3
 -- 🍯
 
 
-entry : Sources.Page -> Model -> Html Msg
+entry : Sources.Page -> TopLevel.Model -> Html TopLevel.Msg
 entry page model =
     case page of
         Index ->
-            pageIndex model
+            lazy pageIndex model.sources.collection
 
         New ->
-            pageNew model
+            lazy pageNew model.sources.newSource
 
 
 
 -- {Page} index
 
 
-pageIndex : Model -> Html Msg
-pageIndex model =
+pageIndex : List Source -> Html TopLevel.Msg
+pageIndex sources =
     div
         [ cssClass InsulationContent ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.inside
-            [ ( text "Add a new source", "/sources/new" )
+          Navigation.insideCustom
+            [ ( span
+                    []
+                    [ Icons.add_circle_outline colorDerivatives.text 16
+                    , label [] [ text "Add a new source" ]
+                    ]
+              , RoutingMsg (GoToUrl "/sources/new")
+              )
+            , ( span
+                    []
+                    [ Icons.cloud_queue colorDerivatives.text 16
+                    , label [] [ text "Process sources" ]
+                    ]
+              , TopLevel.ProcessSources
+              )
             ]
 
         ------------------------------------
-        -- List (TODO)
+        -- List
         ------------------------------------
         , div
             [ cssClass ContentBox ]
             [ h1
                 []
                 [ text "Sources" ]
-            , ul
-                []
-                (List.map
-                    (\s ->
-                        li
-                            []
-                            [ text s.id
-                            , a
-                                [ s.id
-                                    |> Sources.Destroy
-                                    |> TopLevel.SourcesMsg
-                                    |> onClick
-                                ]
-                                [ text "Destroy" ]
-                            , a
-                                [ onClick TopLevel.ProcessSources ]
-                                [ text "Process" ]
-                            ]
-                    )
-                    model.sources.collection
-                )
+            , p
+                [ cssClass Intro ]
+                [ text """
+                    A source is a place where your music is stored.
+                    By connecting a source, the application will scan it
+                    and keep a list of all the music in it. It will not
+                    copy anything.
+                  """
+                ]
+            , Html.Keyed.node
+                "ul"
+                [ cssClass ListWithActions ]
+                (List.indexedMap renderSource sources)
             ]
         ]
+
+
+
+{-
+   a
+       [ s.id
+           |> Sources.Destroy
+           |> TopLevel.SourcesMsg
+           |> onClick
+       ]
+       [ text "Destroy" ]
+-}
+
+
+renderSource : Int -> Source -> ( String, Html TopLevel.Msg )
+renderSource index source =
+    let
+        key =
+            toString index
+    in
+        ( key
+        , li
+            [ rel key ]
+            [ label
+                []
+                [ source.data
+                    |> Dict.get "name"
+                    |> Maybe.withDefault source.id
+                    |> text
+                ]
+            , span
+                [ cssClass ListActions ]
+                [ Icons.delete colorDerivatives.text 16
+                ]
+            ]
+        )
 
 
 
 -- {Page} New
 
 
-pageNew : Model -> Html Msg
-pageNew model =
+pageNew : Source -> Html TopLevel.Msg
+pageNew newSource =
     div
         [ cssClass InsulationContent ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
           Navigation.inside
-            [ ( Icons.list colorDerivatives.text 16, "/sources" )
+            [ ( span
+                    []
+                    [ Icons.list colorDerivatives.text 16
+                    , label [] [ text "Go to index" ]
+                    ]
+              , "/sources"
+              )
             ]
 
         ------------------------------------
         -- Form
         ------------------------------------
-        , Html.map SourcesMsg (pageNewForm model)
+        , Html.map SourcesMsg (pageNewForm newSource)
         ]
 
 
-pageNewForm : Model -> Html Sources.Msg
-pageNewForm model =
+pageNewForm : Source -> Html Sources.Msg
+pageNewForm newSource =
     Html.form
         [ cssClass ContentBox
         , onSubmit Sources.SubmitNewSourceForm
@@ -116,12 +169,9 @@ pageNewForm model =
             []
             [ text "Add a new source" ]
         , p
-            [ cssClass FormStyles.Intro ]
+            [ cssClass Styles.Intro ]
             [ text """
-                A source is a place where your music is stored.
-                By connecting a source, the application will scan it
-                and keep a list of all the music in it. It will not
-                copy anything.
+                Choose a type of source, fill in its credentials and add it.
               """
             ]
         , label
@@ -138,7 +188,7 @@ pageNewForm model =
             ]
         , div
             []
-            (renderSourceProperties model.sources.newSource)
+            (renderSourceProperties newSource)
         , div
             []
             [ button

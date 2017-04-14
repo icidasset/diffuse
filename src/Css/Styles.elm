@@ -10,6 +10,7 @@ import Variables exposing (..)
 
 import Console.Styles as Console
 import Form.Styles as Form
+import List.Styles as List
 import Navigation.Styles as Navigation
 import Spinner.Styles as Spinner
 import Tracks.Styles as Tracks
@@ -20,6 +21,7 @@ styles =
     stylesLocal
         |> List.append Console.styles
         |> List.append Form.styles
+        |> List.append List.styles
         |> List.append Navigation.styles
         |> List.append Spinner.styles
         |> List.append Tracks.styles
@@ -44,6 +46,7 @@ type Classes
     | Insulation
     | InsulationContent
     | InTheMiddle
+    | Intro
     | Shell
 
 
@@ -161,6 +164,17 @@ stylesLocal =
     , a
         [ color inherit
         , textDecoration none
+        ]
+    , label
+        [ cursor inherit
+        ]
+    , class Intro
+        [ fontSize (Css.em 0.95)
+        , fontWeight (int 600)
+        , headerFont
+        , lineHeight (num 1.55)
+        , marginBottom (gr 6)
+        , opacity (num 0.475)
         ]
 
     ------------------------------------------------------
