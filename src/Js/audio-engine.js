@@ -203,7 +203,13 @@ function audioTimeUpdateEvent(event) {
 
 function audioEndEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
-  this.elm.ports.activeQueueItemEnded.send(null);
+
+  const queueSettings = loadSettings("queue");
+  if (queueSettings && queueSettings.repeat) {
+    event.target.play();
+  } else {
+    this.elm.ports.activeQueueItemEnded.send(null);
+  }
 }
 
 
