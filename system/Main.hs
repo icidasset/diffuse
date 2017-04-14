@@ -36,6 +36,7 @@ sequences =
     lsequence
         [ ( "pages",  process ["src/Static/Html/**/*.html"] )
         , ( "images", process ["src/Static/Images/**/*.*"]  )
+        , ( "fonts",  process ["src/Static/Fonts/**/*.*"]   )
         , ( "js",     process ["src/Js/**/*.js"]            )
         ]
 
@@ -48,4 +49,5 @@ flow ("pages", dict) =
 
 
 flow ("images", dict) = prefixDirname "images/" dict
+flow ("fonts", dict) = prefixDirname "fonts/" dict
 flow ("js", dict) = dict

@@ -50,6 +50,11 @@ defaultFont =
     mixin [ fontFamilies [ "Overpass", "sans-serif" ] ]
 
 
+headerFont : Mixin
+headerFont =
+    mixin [ fontFamilies [ "Assistant", "sans-serif" ] ]
+
+
 
 -- Css / Colors
 

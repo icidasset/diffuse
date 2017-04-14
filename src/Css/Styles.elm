@@ -152,8 +152,9 @@ stylesLocal =
     -- <🎃>
     ------------------------------------------------------
     , h1
-        [ fontSize (Css.rem 1.55)
-        , fontWeight (int 800)
+        [ fontSize (Css.rem 1.675)
+        , fontWeight (int 700)
+        , headerFont
         , letterSpacing (Css.em -0.025)
         , marginTop zero
         ]

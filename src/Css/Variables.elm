@@ -28,7 +28,7 @@ colorDerivatives =
     { consoleText = Color.rgba 255 255 255 0.875
     , errorBorder = colors.base08
     , focusBorder = colors.base0D
-    , inputBorder = Color.rgb 204 204 204
+    , inputBorder = Color.rgb 225 225 225
     , subtleBorder = Color.rgb 238 238 238
     , -- States
       success = colors.base0B

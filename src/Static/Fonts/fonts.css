@@ -1,0 +1,68 @@
+@font-face {
+  font-family: 'overpass';
+  src: url('overpass/overpass-light.woff2') format('woff2'),
+       url('overpass/overpass-light.woff') format('woff'),
+       url('overpass/overpass-light.ttf')  format('truetype');
+       font-weight: 300;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'overpass';
+  src: url('overpass/overpass-regular.woff2') format('woff2'),
+       url('overpass/overpass-regular.woff') format('woff'),
+       url('overpass/overpass-regular.ttf')  format('truetype');
+       font-weight: 400;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'overpass';
+  src: url('overpass/overpass-italic.woff2') format('woff2'),
+       url('overpass/overpass-italic.woff') format('woff'),
+       url('overpass/overpass-italic.ttf')  format('truetype');
+       font-weight: 400;
+       font-style: italic;
+}
+
+
+@font-face {
+  font-family: 'overpass';
+  src: url('overpass/overpass-semibold.woff2') format('woff2'),
+       url('overpass/overpass-semibold.woff') format('woff'),
+       url('overpass/overpass-semibold.ttf')  format('truetype');
+       font-weight: 600;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'overpass';
+  src: url('overpass/overpass-bold.woff2') format('woff2'),
+       url('overpass/overpass-bold.woff') format('woff'),
+       url('overpass/overpass-bold.ttf')  format('truetype');
+       font-weight: 700;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'overpass';
+  src: url('overpass/overpass-extrabold.woff2') format('woff2'),
+       url('overpass/overpass-extrabold.woff') format('woff'),
+       url('overpass/overpass-extrabold.ttf')  format('truetype');
+       font-weight: 800;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'overpass';
+  src: url('overpass/overpass-heavy.woff2') format('woff2'),
+       url('overpass/overpass-heavy.woff') format('woff'),
+       url('overpass/overpass-heavy.ttf')  format('truetype');
+       font-weight: 900;
+       font-style: normal;
+}

@@ -3,7 +3,7 @@ module Form.Styles exposing (..)
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Form.Mixins exposing (..)
-import Traits exposing (cssColor, gr)
+import Traits exposing (cssColor, gr, headerFont)
 import Variables exposing (colorDerivatives)
 
 
@@ -28,10 +28,11 @@ formStyles : List Snippet
 formStyles =
     [ class Intro
         [ fontSize (Css.em 0.95)
-        , fontStyle italic
+        , fontWeight (int 600)
+        , headerFont
         , lineHeight (num 1.55)
         , marginBottom (gr 6)
-        , opacity (num 0.55)
+        , opacity (num 0.475)
         ]
 
     ------------------------------------------------------
