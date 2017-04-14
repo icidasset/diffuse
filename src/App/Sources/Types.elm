@@ -74,15 +74,19 @@ type alias TreeStepResult =
     Result Http.Error String
 
 
+type alias IsProcessing =
+    Maybe (List ( Source, List Track ))
+
+
 
 -- Other types
 
 
 type alias Model =
     { collection : List Source
-    , isProcessing : Maybe (List ( Source, List Track ))
+    , isProcessing : IsProcessing
     , newSource : Source
-    , processingError : Maybe String
+    , processingErrors : List ( SourceId, String )
     , timestamp : Date
     }
 

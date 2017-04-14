@@ -1,7 +1,7 @@
 module List.Styles exposing (..)
 
 import Css exposing (..)
-import Css.Elements exposing (label, li)
+import Css.Elements exposing (a, label, li, span)
 import Traits exposing (basem, cssColor, gr)
 import Variables exposing (colorDerivatives)
 
@@ -39,6 +39,12 @@ styles =
             , label
                 [ flex (int 1)
                 ]
+            , Css.Elements.small
+                [ color (hex "#afafaf")
+                , display inlineBlock
+                , fontSize (pct 87.5)
+                , marginRight (gr 2)
+                ]
             ]
         ]
 
@@ -47,5 +53,16 @@ styles =
     ------------------------------------------------------
     , class ListActions
         [ displayFlex
+        , children
+            [ a
+                [ cursor pointer
+                , display inlineBlock
+                , marginLeft (px 2)
+                ]
+            , span
+                [ display inlineBlock
+                , marginLeft (px 2)
+                ]
+            ]
         ]
     ]

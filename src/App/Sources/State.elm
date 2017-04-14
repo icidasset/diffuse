@@ -5,6 +5,7 @@ import Dict
 import List.Extra as List
 import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
+import Navigation
 import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Types exposing (..)
@@ -27,7 +28,7 @@ initialModel flags =
     { collection = decodeSources flags
     , isProcessing = Nothing
     , newSource = makeSource AmazonS3 AmazonS3.initialData
-    , processingError = Nothing
+    , processingErrors = []
     , timestamp = Date.fromTime 0
     }
 
@@ -74,9 +75,14 @@ update msg model =
                         |> Maybe.map (Processing.takeFirstStep model.timestamp)
                         |> Maybe.preferSecond (Maybe.map (always Cmd.none) model.isProcessing)
                         |> Maybe.withDefault Cmd.none
+
+                processingErrors =
+                    model.isProcessing
+                        |> Maybe.map (\_ -> model.processingErrors)
+                        |> Maybe.withDefault []
             in
                 ($)
-                    { model | isProcessing = isProcessing }
+                    { model | isProcessing = isProcessing, processingErrors = processingErrors }
                     [ command ]
                     []
 
@@ -121,12 +127,13 @@ update msg model =
                     [ Processing.takeTreeStep ctx resp associatedTracks model.timestamp ]
                     []
 
-        ProcessTreeStep _ (Err err) ->
-            (!)
+        ProcessTreeStep ctx (Err err) ->
+            ($)
                 { model
-                    | isProcessing = Nothing
-                    , processingError = Just (toString err)
+                    | processingErrors =
+                        ( ctx.source.id, toString err ) :: model.processingErrors
                 }
+                [ do ProcessNextInLine ]
                 []
 
         ProcessTreeStepRemoveTracks sourceId filePaths ->
@@ -198,10 +205,10 @@ update msg model =
                     { model
                         | collection = newCollection
                         , newSource = makeSource AmazonS3 AmazonS3.initialData
-                        , processingError = Nothing
                     }
                     []
                     [ do TopLevel.ProcessSources
+                    , Navigation.newUrl "/sources"
                     , storeSources newCollection
                     ]
 

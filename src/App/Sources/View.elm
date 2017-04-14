@@ -1,17 +1,21 @@
 module Sources.View exposing (..)
 
+import Color
 import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy, lazy3)
+import List.Extra as List
+import Material.Icons.Alert as Icons
 import Material.Icons.Action as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Content as Icons
+import Material.Icons.Navigation as Icons
 import Navigation.View as Navigation
 import Routing.Types exposing (Msg(..))
-import Sources.Types as Sources exposing (Page(..), Service(..), Source)
+import Sources.Types as Sources exposing (..)
 import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass)
 import Variables exposing (colorDerivatives)
@@ -36,7 +40,11 @@ entry : Sources.Page -> TopLevel.Model -> Html TopLevel.Msg
 entry page model =
     case page of
         Index ->
-            lazy pageIndex model.sources.collection
+            lazy3
+                pageIndex
+                model.sources.collection
+                model.sources.isProcessing
+                model.sources.processingErrors
 
         New ->
             lazy pageNew model.sources.newSource
@@ -46,8 +54,8 @@ entry page model =
 -- {Page} index
 
 
-pageIndex : List Source -> Html TopLevel.Msg
-pageIndex sources =
+pageIndex : List Source -> IsProcessing -> List ( SourceId, String ) -> Html TopLevel.Msg
+pageIndex sources isProcessing processingErrors =
     div
         [ cssClass InsulationContent ]
         [ ------------------------------------
@@ -87,28 +95,36 @@ pageIndex sources =
                     copy anything.
                   """
                 ]
-            , Html.Keyed.node
-                "ul"
-                [ cssClass ListWithActions ]
-                (List.indexedMap renderSource sources)
+
+            -- Check if sources are processing
+            -- and if they have processing errors
+            , let
+                sourcesWithContext =
+                    List.map
+                        (\s ->
+                            ( s
+                            , isProcessing
+                                |> Maybe.andThen (List.find (Tuple.first >> .id >> (==) s.id))
+                                |> Maybe.map (always True)
+                                |> Maybe.withDefault False
+                            , processingErrors
+                                |> List.find (Tuple.first >> (==) s.id)
+                                |> Maybe.map (Tuple.second)
+                            )
+                        )
+                        sources
+              in
+                -- Render list
+                Html.Keyed.node
+                    "ul"
+                    [ cssClass ListWithActions ]
+                    (List.indexedMap renderSource sourcesWithContext)
             ]
         ]
 
 
-
-{-
-   a
-       [ s.id
-           |> Sources.Destroy
-           |> TopLevel.SourcesMsg
-           |> onClick
-       ]
-       [ text "Destroy" ]
--}
-
-
-renderSource : Int -> Source -> ( String, Html TopLevel.Msg )
-renderSource index source =
+renderSource : Int -> ( Source, Bool, Maybe String ) -> ( String, Html TopLevel.Msg )
+renderSource index ( source, isProcessing, processingError ) =
     let
         key =
             toString index
@@ -125,7 +141,34 @@ renderSource index source =
                 ]
             , span
                 [ cssClass ListActions ]
-                [ Icons.delete colorDerivatives.text 16
+                [ -- Processing error
+                  span
+                    []
+                    [ case processingError of
+                        Just err ->
+                            Icons.error_outline colorDerivatives.error 16
+
+                        Nothing ->
+                            text ""
+                    ]
+
+                -- Is processing
+                , span
+                    []
+                    [ if isProcessing == True then
+                        Icons.hourglass_empty colorDerivatives.text 16
+                      else
+                        text ""
+                    ]
+
+                -- Delete
+                , a
+                    [ source.id
+                        |> Sources.Destroy
+                        |> TopLevel.SourcesMsg
+                        |> onClick
+                    ]
+                    [ Icons.delete colorDerivatives.text 16 ]
                 ]
             ]
         )
@@ -185,6 +228,7 @@ pageNewForm newSource =
                     [ value "amazon-s3" ]
                     [ text "Amazon S3" ]
                 ]
+            , Icons.expand_more (Color.greyscale 0.325) 20
             ]
         , div
             []

@@ -1,6 +1,5 @@
 module Form.Mixins exposing (..)
 
-import Color
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Traits exposing (cssColor, defaultFont, gr)
@@ -24,7 +23,9 @@ inputStyles =
         , border3 (px 1) solid (cssColor colorDerivatives.inputBorder)
         , borderRadius borderRadiuses.smallElements
         , boxSizing borderBox
+        , color (cssColor colorDerivatives.text)
         , display block
+        , fontSize (Traits.basem 15)
         , width (pct 100)
 
         --

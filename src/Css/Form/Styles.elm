@@ -1,7 +1,7 @@
 module Form.Styles exposing (..)
 
 import Css exposing (..)
-import Css.Elements exposing (..)
+import Css.Elements exposing (form, label, input, select, svg)
 import Form.Mixins exposing (..)
 import Traits exposing (cssColor, gr, headerFont)
 import Variables exposing (colorDerivatives)
@@ -56,15 +56,14 @@ formStyles =
         , position relative
 
         --
-        , after
-            [ marginTop (px -2)
-            , position absolute
-            , right (gr 3)
-            , top (pct 50)
-            , transforms [ translateY <| pct -50, rotate (deg -45) ]
-
-            --
-            , property "content" "'∟'"
+        , descendants
+            [ svg
+                [ position absolute
+                , property "pointer-events" "none"
+                , right (gr 2)
+                , top (pct 50)
+                , transforms [ translateY <| pct -50 ]
+                ]
             ]
         ]
 
