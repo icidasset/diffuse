@@ -45,11 +45,10 @@ encodeMaybe maybe encoder =
 -- Decode
 
 
-decode : Decode.Value -> Track
+decode : Decode.Value -> Maybe Track
 decode value =
-    {- TODO: `Result.withDefault` is probably a bad idea -}
     Decode.decodeValue decoder value
-        |> Result.withDefault emptyTrack
+        |> Result.toMaybe
 
 
 decoder : Decode.Decoder Track

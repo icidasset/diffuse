@@ -1,6 +1,7 @@
 module Tracks.Utils exposing (..)
 
 import Firebase.Data
+import Maybe.Extra as Maybe
 import Tracks.Encoding
 import Tracks.Types exposing (..)
 import Types as TopLevel exposing (Illumination)
@@ -12,7 +13,10 @@ import Utils
 
 decodeTracks : TopLevel.ProgramFlags -> List Track
 decodeTracks flags =
-    List.map Tracks.Encoding.decode (Maybe.withDefault [] flags.tracks)
+    flags.tracks
+        |> Maybe.withDefault []
+        |> List.map Tracks.Encoding.decode
+        |> Maybe.values
 
 
 

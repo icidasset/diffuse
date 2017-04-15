@@ -38,11 +38,10 @@ encodeData data =
 -- Decode
 
 
-decode : Decode.Value -> Source
+decode : Decode.Value -> Maybe Source
 decode value =
-    {- TODO: `Result.withDefault` is probably a bad idea -}
     Decode.decodeValue decoder value
-        |> Result.withDefault (makeSource AmazonS3 AmazonS3.initialData)
+        |> Result.toMaybe
 
 
 decoder : Decode.Decoder Source

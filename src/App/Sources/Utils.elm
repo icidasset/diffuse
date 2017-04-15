@@ -2,6 +2,7 @@ module Sources.Utils exposing (..)
 
 import Date
 import Firebase.Data
+import Maybe.Extra as Maybe
 import Sources.Encoding
 import Sources.Types exposing (..)
 import Time
@@ -14,7 +15,10 @@ import Utils
 
 decodeSources : TopLevel.ProgramFlags -> List Source
 decodeSources flags =
-    List.map Sources.Encoding.decode (Maybe.withDefault [] flags.sources)
+    flags.sources
+        |> Maybe.withDefault []
+        |> List.map Sources.Encoding.decode
+        |> Maybe.values
 
 
 
