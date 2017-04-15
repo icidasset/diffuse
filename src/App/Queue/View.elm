@@ -71,13 +71,18 @@ pageIndex futureItems =
             [ h1
                 []
                 [ text "Up next" ]
-            , Html.Keyed.node
-                "ul"
-                [ cssClass ListWithActions ]
-                (futureItems
-                    |> List.indexedMap futureActions
-                    |> List.indexedMap renderItem
-                )
+            , if List.isEmpty futureItems then
+                p
+                    [ cssClass Intro ]
+                    [ text "No tracks available." ]
+              else
+                Html.Keyed.node
+                    "ul"
+                    [ cssClass ListWithActions ]
+                    (futureItems
+                        |> List.indexedMap futureActions
+                        |> List.indexedMap renderItem
+                    )
             ]
         ]
 
