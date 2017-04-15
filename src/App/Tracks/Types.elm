@@ -1,5 +1,9 @@
 module Tracks.Types exposing (..)
 
+import Base64
+import Regex exposing (HowMany(..), regex)
+
+
 -- `Track` record
 
 
@@ -24,7 +28,8 @@ type alias TagUrls =
 
 
 type alias Track =
-    { path : String
+    { id : String
+    , path : String
     , sourceId : SourceId
     , tags : Tags
     }
@@ -84,7 +89,8 @@ emptyTags =
 
 emptyTrack : Track
 emptyTrack =
-    { path = ""
+    { id = ""
+    , path = ""
     , sourceId = ""
     , tags = emptyTags
     }
@@ -92,7 +98,16 @@ emptyTrack =
 
 makeTrack : String -> ( String, Tags ) -> Track
 makeTrack sourceId ( path, tags ) =
-    { path = path
+    { id =
+        let
+            id =
+                sourceId ++ "//" ++ path
+        in
+            id
+                |> Base64.encode
+                |> Result.withDefault (id)
+                |> Regex.replace All (regex "=+$") (\_ -> "")
+    , path = path
     , sourceId = sourceId
     , tags = tags
     }

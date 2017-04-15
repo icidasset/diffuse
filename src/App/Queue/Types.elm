@@ -18,6 +18,7 @@ type Msg
       -- Contents
     | Fill (List Source) (List Track)
     | FillStepTwo (List Source) (List Track) (List Track)
+    | Clean (List Track)
     | Reset
       -- Combos
     | InjectFirstAndPlay Item

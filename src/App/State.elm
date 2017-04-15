@@ -127,6 +127,15 @@ update msg model =
         ------------------------------------
         -- Children, Pt. 2
         ------------------------------------
+        CleanQueue ->
+            (!)
+                model
+                [ model.tracks.collection
+                    |> Queue.Types.Clean
+                    |> QueueMsg
+                    |> do
+                ]
+
         FillQueue ->
             (!)
                 model

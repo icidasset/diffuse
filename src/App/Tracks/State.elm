@@ -43,7 +43,7 @@ update msg model =
                 ($)
                     { model | collection = col }
                     []
-                    [ do TopLevel.FillQueue, storeTracks col ]
+                    [ do TopLevel.CleanQueue, storeTracks col ]
 
         -- # Remove
         -- > Remove tracks from the collection,
@@ -59,7 +59,7 @@ update msg model =
                 ($)
                     { model | collection = col }
                     []
-                    [ do TopLevel.FillQueue, storeTracks col ]
+                    [ do TopLevel.CleanQueue, storeTracks col ]
 
         -- # Remove
         -- > Remove tracks from the collection,
@@ -80,7 +80,7 @@ update msg model =
                 ($)
                     { model | collection = col }
                     []
-                    [ do TopLevel.FillQueue, storeTracks col ]
+                    [ do TopLevel.CleanQueue, storeTracks col ]
 
         -- # Sort
         --

@@ -11,7 +11,8 @@ import Tracks.Types exposing (..)
 encode : Track -> Encode.Value
 encode track =
     Encode.object
-        [ ( "path", Encode.string track.path )
+        [ ( "id", Encode.string track.id )
+        , ( "path", Encode.string track.path )
         , ( "sourceId", Encode.string track.sourceId )
         , ( "tags", encodeTags track.tags )
         ]
@@ -53,7 +54,8 @@ decode value =
 
 decoder : Decode.Decoder Track
 decoder =
-    Decode.map3 Track
+    Decode.map4 Track
+        (Decode.field "id" Decode.string)
         (Decode.field "path" Decode.string)
         (Decode.field "sourceId" Decode.string)
         (Decode.field "tags" tagsDecoder)

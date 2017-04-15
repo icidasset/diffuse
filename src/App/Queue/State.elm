@@ -149,8 +149,6 @@ update msg model =
         ------------------------------------
         -- # Fill
         -- > Fill the queue with items.
-        --   (TODO) Also checks if there no-longer-existing tracks in the queue.
-        --   (TODO) Doesn't work properly yet for "non-shuffle" playback.
         --
         Fill sources tracks ->
             ($)
@@ -159,55 +157,98 @@ update msg model =
                 []
 
         FillStepTwo sources tracks shuffledTracks ->
-            let
-                pastPaths =
-                    List.map (.track >> .path) model.past
+            if model.shuffle then
+                ----------
+                -- Shuffle
+                ----------
+                let
+                    pastIds =
+                        List.map (.track >> .id) model.past
 
-                futurePaths =
-                    List.map (.track >> .path) model.future
+                    futureIds =
+                        List.map (.track >> .id) model.future
 
-                tracksCollection =
-                    if model.shuffle then
-                        shuffledTracks
-                    else
-                        tracks
+                    tracksWoActive =
+                        case model.activeItem of
+                            Just item ->
+                                List.filter (.id >> (/=) item.track.id) shuffledTracks
 
-                tracksWoActive =
-                    case model.activeItem of
-                        Just item ->
-                            List.filter (.path >> (/=) item.track.path) tracksCollection
+                            Nothing ->
+                                shuffledTracks
 
-                        Nothing ->
-                            tracksCollection
-
-                newFuture =
-                    tracksWoActive
-                        |> List.filter (\t -> List.notMember t.path pastPaths)
-                        |> List.filter (\t -> List.notMember t.path futurePaths)
-                        |> List.take (50 - (List.length futurePaths))
-                        |> List.map (makeQueueItem False model.timestamp sources)
-                        |> List.append model.future
-
-                newFuture_ =
-                    if List.length newFuture == 0 then
+                    newFuture =
                         tracksWoActive
-                            |> List.take 50
+                            |> List.filter (\t -> List.notMember t.id pastIds)
+                            |> List.filter (\t -> List.notMember t.id futureIds)
+                            |> List.take (queueLength - (List.length futureIds))
                             |> List.map (makeQueueItem False model.timestamp sources)
-                    else
-                        newFuture
+                            |> List.append model.future
+
+                    newFuture_ =
+                        if List.length newFuture == 0 then
+                            tracksWoActive
+                                |> List.take queueLength
+                                |> List.map (makeQueueItem False model.timestamp sources)
+                        else
+                            newFuture
+                in
+                    (!)
+                        { model | future = newFuture_ }
+                        []
+            else
+                ----------
+                -- Default
+                ----------
+                let
+                    manualEntries =
+                        List.filter (.manualEntry >> (==) True) model.future
+
+                    manualCount =
+                        List.length manualEntries
+
+                    remaining =
+                        queueLength - manualCount
+
+                    newFuture =
+                        case model.activeItem of
+                            Just activeItem ->
+                                tracks
+                                    |> List.findIndex ((==) activeItem.track)
+                                    |> Maybe.map (\idx -> List.drop (idx + 1) tracks)
+                                    |> Maybe.withDefault tracks
+                                    |> List.take remaining
+                                    |> (\a -> a ++ List.take (remaining - List.length a) tracks)
+                                    |> List.map (makeQueueItem False model.timestamp sources)
+
+                            Nothing ->
+                                tracks
+                                    |> List.take remaining
+                                    |> List.map (makeQueueItem False model.timestamp sources)
+                in
+                    (!)
+                        { model | future = manualEntries ++ newFuture }
+                        []
+
+        -- # Clean
+        -- > Remove no-longer-existing items from the queue.
+        --
+        Clean tracks ->
+            let
+                newFuture =
+                    List.filter (\i -> List.member i.track tracks) model.future
             in
                 (!)
-                    { model | future = newFuture_ }
-                    []
+                    { model | future = newFuture }
+                    [ do TopLevel.FillQueue ]
 
-        -- # Reset (TODO)
+        -- # Reset
         -- > Renew the queue, meaning that the auto-generated items in the queue
         --   are removed and new items are added.
         --
         Reset ->
             (!)
-                model
-                []
+                { model | future = [] }
+                [ do TopLevel.FillQueue ]
 
         ------------------------------------
         -- Combos
@@ -234,6 +275,11 @@ update msg model =
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
                 |> (\m -> ($) m [ do Reset ] [ storeSettings m ])
+
+
+queueLength : Int
+queueLength =
+    30
 
 
 
