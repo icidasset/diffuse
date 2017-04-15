@@ -2,6 +2,7 @@ module Sources.State exposing (..)
 
 import Date
 import Dict
+import Http exposing (Error(..))
 import List.Extra as List
 import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
@@ -128,13 +129,28 @@ update msg model =
                     []
 
         ProcessTreeStep ctx (Err err) ->
-            ($)
-                { model
-                    | processingErrors =
-                        ( ctx.source.id, toString err ) :: model.processingErrors
-                }
-                [ do ProcessNextInLine ]
-                []
+            let
+                publicError =
+                    case err of
+                        NetworkError ->
+                            "Are you sure you're connected to cyberspace?!"
+
+                        Timeout ->
+                            "The server for this source type did not respond."
+
+                        BadStatus response ->
+                            Processing.decodeError ctx.source response.body
+
+                        _ ->
+                            toString err
+            in
+                ($)
+                    { model
+                        | processingErrors =
+                            ( ctx.source.id, publicError ) :: model.processingErrors
+                    }
+                    [ do ProcessNextInLine ]
+                    []
 
         ProcessTreeStepRemoveTracks sourceId filePaths ->
             ($)

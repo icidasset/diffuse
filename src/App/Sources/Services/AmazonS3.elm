@@ -114,8 +114,13 @@ makeTree srcData marker msg currentDate =
             |> Http.send msg
 
 
-{-| Re-export the tree-parser function.
+{-| Re-export parser functions.
 -}
 parseTreeResponse : String -> ParsedResponse Marker
 parseTreeResponse =
     Parser.parseTreeResponse
+
+
+parseErrorResponse : String -> String
+parseErrorResponse =
+    Parser.parseErrorResponse

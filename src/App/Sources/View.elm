@@ -142,24 +142,18 @@ renderSource index ( source, isProcessing, processingError ) =
             , span
                 [ cssClass ListActions ]
                 [ -- Processing error
-                  span
-                    []
-                    [ case processingError of
-                        Just err ->
-                            Icons.error_outline colorDerivatives.error 16
+                  case processingError of
+                    Just err ->
+                        span [ title err ] [ Icons.error_outline colorDerivatives.error 16 ]
 
-                        Nothing ->
-                            text ""
-                    ]
+                    Nothing ->
+                        text ""
 
                 -- Is processing
-                , span
-                    []
-                    [ if isProcessing == True then
-                        Icons.hourglass_empty colorDerivatives.text 16
-                      else
-                        text ""
-                    ]
+                , if isProcessing == True then
+                    span [] [ Icons.hourglass_empty colorDerivatives.text 16 ]
+                  else
+                    text ""
 
                 -- Delete
                 , a

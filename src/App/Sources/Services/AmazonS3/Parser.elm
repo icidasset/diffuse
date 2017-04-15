@@ -1,4 +1,4 @@
-module Sources.Services.AmazonS3.Parser exposing (parseTreeResponse)
+module Sources.Services.AmazonS3.Parser exposing (parseTreeResponse, parseErrorResponse)
 
 import List.Extra
 import Regex exposing (HowMany(All), regex)
@@ -7,6 +7,9 @@ import Xml
 import Xml.Encode as Xml
 import Xml.Decode as Xml
 import Xml.Query exposing (..)
+
+
+-- Tree
 
 
 parseTreeResponse : String -> ParsedResponse Marker
@@ -40,6 +43,26 @@ parseTreeResponse response =
         { filePaths = filePaths
         , marker = marker
         }
+
+
+
+-- Error
+
+
+parseErrorResponse : String -> String
+parseErrorResponse response =
+    let
+        decodedXml =
+            response
+                |> Xml.decode
+                |> Result.toMaybe
+                |> Maybe.withDefault Xml.null
+    in
+        decodedXml
+            |> tags "Error"
+            |> collect (tag "Message" string)
+            |> List.head
+            |> Maybe.withDefault "Invalid request"
 
 
 

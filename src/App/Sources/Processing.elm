@@ -4,6 +4,7 @@ module Sources.Processing
         , takeTreeStep
         , takeTagsStep
           --
+        , decodeError
         , findTagsContextSource
         , makeTrackUrl
         , tracksFromTagsContext
@@ -203,6 +204,13 @@ selectNonExisting existingPaths context =
 
 
 -- {Public} Utils
+
+
+decodeError : Source -> String -> String
+decodeError source =
+    case source.service of
+        AmazonS3 ->
+            AmazonS3.parseErrorResponse
 
 
 findTagsContextSource : ProcessingContextForTags -> List Source -> Maybe Source
