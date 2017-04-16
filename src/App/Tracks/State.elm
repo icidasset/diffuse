@@ -1,5 +1,6 @@
 module Tracks.State exposing (..)
 
+import ElmTextSearch
 import List.Extra as List
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
@@ -12,10 +13,23 @@ import Utils exposing (do)
 
 initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
-    { collection = decodeTracks flags
-    , sortBy = Artist
-    , sortDirection = Asc
-    }
+    let
+        collection =
+            decodeTracks flags
+
+        index =
+            createIndex
+                |> ElmTextSearch.addDocs collection
+                |> Tuple.first
+    in
+        { collection = collection
+        , filteredCollection = collection
+        , index = index
+        , indexFor = ""
+        , searchTerm = Nothing
+        , sortBy = Artist
+        , sortDirection = Asc
+        }
 
 
 initialCommands : Cmd TopLevel.Msg
@@ -42,7 +56,7 @@ update msg model =
             in
                 ($)
                     { model | collection = col }
-                    []
+                    [ do UpdateSearchIndex ]
                     [ do TopLevel.CleanQueue, storeTracks col ]
 
         -- # Remove
@@ -58,7 +72,7 @@ update msg model =
             in
                 ($)
                     { model | collection = col }
-                    []
+                    [ do UpdateSearchIndex ]
                     [ do TopLevel.CleanQueue, storeTracks col ]
 
         -- # Remove
@@ -79,8 +93,43 @@ update msg model =
             in
                 ($)
                     { model | collection = col }
-                    []
+                    [ do UpdateSearchIndex ]
                     [ do TopLevel.CleanQueue, storeTracks col ]
+
+        -- # Search
+        --
+        Search ->
+            case model.searchTerm of
+                Just term ->
+                    search model term
+
+                Nothing ->
+                    (!) { model | filteredCollection = model.collection } []
+
+        SetSearchTerm value ->
+            let
+                searchTerm =
+                    case String.trim value of
+                        "" ->
+                            Nothing
+
+                        v ->
+                            Just v
+            in
+                (!)
+                    { model | searchTerm = searchTerm }
+                    []
+
+        UpdateSearchIndex ->
+            ($)
+                { model
+                    | index =
+                        createIndex
+                            |> ElmTextSearch.addDocs model.collection
+                            |> Tuple.first
+                }
+                [ do Search ]
+                []
 
         -- # Sort
         --
@@ -105,6 +154,39 @@ update msg model =
 
 
 -- Utils
+
+
+{-| Search.
+-}
+search : Model -> String -> ( Model, Cmd TopLevel.Msg )
+search model filter =
+    let
+        searchResults =
+            model.index
+                |> ElmTextSearch.search filter
+                |> Result.toMaybe
+    in
+        case searchResults of
+            Just ( newIndex, results ) ->
+                (!)
+                    { model
+                        | filteredCollection =
+                            let
+                                trackIds =
+                                    List.map Tuple.first results
+                            in
+                                List.filter
+                                    (.id >> (\t -> List.member t trackIds))
+                                    (model.collection)
+                        , index = newIndex
+                        , indexFor = filter
+                    }
+                    []
+
+            Nothing ->
+                (!)
+                    model
+                    []
 
 
 {-| Sort.

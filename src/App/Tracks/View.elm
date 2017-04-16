@@ -3,10 +3,11 @@ module Tracks.View exposing (entry)
 import Color
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onClick)
+import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit)
 import Html.Keyed
 import Html.Lazy exposing (lazy3)
 import Json.Decode as Decode
+import Material.Icons.Action
 import Material.Icons.Content
 import Material.Icons.Navigation
 import Material.Icons.Toggle
@@ -27,7 +28,7 @@ entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     lazy3
         lazyEntry
-        model.tracks.collection
+        model.tracks.filteredCollection
         model.tracks.sortBy
         model.tracks.sortDirection
 
@@ -41,8 +42,23 @@ lazyEntry tracks activeSortBy sortDirection =
           ------------------------------------
           div
             [ cssClass TracksNavigation ]
-            [ Navigation.insideCustom
-                [ ( Material.Icons.Content.sort colorDerivatives.text 16, TopLevel.NoOp )
+            [ Html.map
+                TopLevel.TracksMsg
+                (Html.form
+                    [ onSubmit Search ]
+                    [ input
+                        [ placeholder "Search"
+                        , onBlur Search
+                        , onInput SetSearchTerm
+                        ]
+                        []
+                    , Material.Icons.Action.search
+                        (Color.rgb 205 205 205)
+                        16
+                    ]
+                )
+            , Navigation.insideCustom
+                [ ( Material.Icons.Content.filter_list colorDerivatives.text 16, TopLevel.NoOp )
                 ]
             ]
 
@@ -50,8 +66,15 @@ lazyEntry tracks activeSortBy sortDirection =
         -- Table
         ------------------------------------
         , div
-            [ cssClass TracksTableContainer ]
-            [ tracksTable tracks activeSortBy sortDirection ]
+            [ cssClass TracksChild ]
+            [ if List.isEmpty tracks then
+                -- TODO
+                p
+                    []
+                    [ text "No results" ]
+              else
+                tracksTable tracks activeSortBy sortDirection
+            ]
         ]
 
 

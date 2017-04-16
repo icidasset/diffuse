@@ -1,6 +1,7 @@
 module Tracks.Types exposing (..)
 
 import Base64
+import ElmTextSearch
 import Regex exposing (HowMany(..), regex)
 
 
@@ -63,10 +64,18 @@ type Msg
     | Remove SourceId
     | RemoveByPath SourceId (List String)
     | SortBy SortBy
+      -- Search
+    | Search
+    | SetSearchTerm String
+    | UpdateSearchIndex
 
 
 type alias Model =
     { collection : List Track
+    , filteredCollection : List Track
+    , index : ElmTextSearch.Index Track
+    , indexFor : String
+    , searchTerm : Maybe String
     , sortBy : SortBy
     , sortDirection : SortDirection
     }

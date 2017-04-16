@@ -1,16 +1,16 @@
 module Tracks.Styles exposing (..)
 
 import Css exposing (..)
-import Css.Elements exposing (svg, table, td, th, tr)
+import Css.Elements exposing (..)
 import Traits exposing (cssColor, gr)
 import Variables exposing (colorDerivatives)
 
 
 type Classes
     = TracksContainer
+    | TracksChild
     | TracksNavigation
     | TracksTable
-    | TracksTableContainer
 
 
 
@@ -25,28 +25,62 @@ styles =
         , overflow hidden
         , width (pct 100)
         ]
+    , class TracksChild
+        [ flex (int 1)
+        , overflow scroll
+        , property "user-select" "none"
+        , position relative
+        , zIndex (int 2)
+        ]
 
     ------------------------------------------------------
     -- Navigation
     ------------------------------------------------------
     , class TracksNavigation
         [ boxShadow5 zero zero (px 10) (px 1) (Css.rgba 0 0 0 0.05)
+        , displayFlex
         , position relative
         , zIndex (int 1)
+
+        --
+        , descendants
+            [ form
+                [ borderBottom3 (px 1) solid (cssColor colorDerivatives.subtleBorder)
+                , borderRight3 (px 1) solid (cssColor colorDerivatives.subtleBorder)
+                , flex (int 1)
+                , position relative
+                ]
+            , input
+                [ borderBottom zero
+                , borderTop3 (px 1) solid transparent
+                , fontSize (Traits.basem 14)
+                , padding2 zero (gr 2)
+                , paddingLeft (gr 6)
+                , position relative
+                , zIndex (int 1)
+
+                --
+                , focus
+                    [ borderTopColor transparent
+                    ]
+                ]
+            , selector "input::placeholder"
+                [ color (rgb 205 205 205)
+                ]
+            , (form << toa << children << toa << svg)
+                [ left (gr 2)
+                , marginTop (px 1)
+                , position absolute
+                , top (pct 50)
+                , transform (translateY (pct -50))
+                , zIndex (int 0)
+                ]
+            ]
         ]
 
     ------------------------------------------------------
     -- Table
     ------------------------------------------------------
-    , class TracksTableContainer
-        [ flex (int 1)
-        , overflow scroll
-        , position relative
-        , zIndex (int 2)
-
-        --
-        , property "user-select" "none"
-        ]
     , class TracksTable
         [ borderCollapse collapse
         , color (hex "#444")
