@@ -143,12 +143,13 @@ update msg model =
                     else
                         Asc
             in
-                (!)
+                ($)
                     { model
                         | collection = sortTracksBy property sortDir model.collection
                         , sortBy = property
                         , sortDirection = sortDir
                     }
+                    [ do Search ]
                     []
 
 

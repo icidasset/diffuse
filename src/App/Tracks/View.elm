@@ -27,14 +27,14 @@ import Variables exposing (colors, colorDerivatives)
 entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     lazy3
-        lazyEntry
+        (lazyEntry model.tracks.searchTerm)
         model.tracks.filteredCollection
         model.tracks.sortBy
         model.tracks.sortDirection
 
 
-lazyEntry : List Track -> SortBy -> SortDirection -> Html TopLevel.Msg
-lazyEntry tracks activeSortBy sortDirection =
+lazyEntry : Maybe String -> List Track -> SortBy -> SortDirection -> Html TopLevel.Msg
+lazyEntry searchTerm tracks activeSortBy sortDirection =
     div
         [ cssClass TracksContainer ]
         [ ------------------------------------
@@ -48,6 +48,7 @@ lazyEntry tracks activeSortBy sortDirection =
                     [ onSubmit Search ]
                     [ input
                         [ placeholder "Search"
+                        , defaultValue (Maybe.withDefault "" searchTerm)
                         , onBlur Search
                         , onInput SetSearchTerm
                         ]
