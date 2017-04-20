@@ -67,6 +67,7 @@ stylesLocal =
         , defaultFont
         , fontSize (Css.rem 1)
         , lineHeight (Css.num 1.75)
+        , overflow hidden
         , textRendering optimizeLegibility
 
         --

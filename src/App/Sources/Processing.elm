@@ -51,7 +51,7 @@ import Sources.Services.AmazonS3 as AmazonS3
 -}
 tagsBatchSize : Int
 tagsBatchSize =
-    50
+    250
 
 
 
@@ -232,7 +232,6 @@ tracksFromTagsContext context =
         |> List.filter (Tuple.second >> Maybe.isJust)
         |> List.map (Tuple.mapSecond (Maybe.withDefault Tracks.Types.emptyTags))
         |> List.map (makeTrack context.sourceId)
-        |> Debug.log "tracks"
 
 
 

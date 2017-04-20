@@ -1,7 +1,7 @@
 module Tracks.State exposing (..)
 
-import ElmTextSearch
 import List.Extra as List
+import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
@@ -16,16 +16,10 @@ initialModel flags =
     let
         collection =
             decodeTracks flags
-
-        index =
-            createIndex
-                |> ElmTextSearch.addDocs collection
-                |> Tuple.first
     in
         { collection = collection
-        , filteredCollection = collection
-        , index = index
-        , indexFor = ""
+        , resultant = List.take partial collection
+        , searchResults = collection
         , searchTerm = Nothing
         , sortBy = Artist
         , sortDirection = Asc
@@ -54,10 +48,9 @@ update msg model =
                         |> List.append model.collection
                         |> sortTracksBy model.sortBy model.sortDirection
             in
-                ($)
+                (!)
                     { model | collection = col }
-                    [ do UpdateSearchIndex ]
-                    [ do TopLevel.CleanQueue, storeTracks col ]
+                    [ do TopLevel.CleanQueue, handleNewCollection col ]
 
         -- # Remove
         -- > Remove tracks from the collection,
@@ -70,10 +63,9 @@ update msg model =
                         (\t -> t.sourceId /= sourceId)
                         model.collection
             in
-                ($)
+                (!)
                     { model | collection = col }
-                    [ do UpdateSearchIndex ]
-                    [ do TopLevel.CleanQueue, storeTracks col ]
+                    [ do TopLevel.CleanQueue, handleNewCollection col ]
 
         -- # Remove
         -- > Remove tracks from the collection,
@@ -91,45 +83,20 @@ update msg model =
                         )
                         model.collection
             in
-                ($)
+                (!)
                     { model | collection = col }
-                    [ do UpdateSearchIndex ]
-                    [ do TopLevel.CleanQueue, storeTracks col ]
+                    [ do TopLevel.CleanQueue, handleNewCollection col ]
 
-        -- # Search
+        -- # Recalibrate
         --
-        Search ->
-            case model.searchTerm of
-                Just term ->
-                    search model term
-
-                Nothing ->
-                    (!) { model | filteredCollection = model.collection } []
-
-        SetSearchTerm value ->
+        Recalibrate ->
             let
-                searchTerm =
-                    case String.trim value of
-                        "" ->
-                            Nothing
-
-                        v ->
-                            Just v
+                col =
+                    List.take partial model.searchResults
             in
                 (!)
-                    { model | searchTerm = searchTerm }
+                    { model | resultant = col }
                     []
-
-        UpdateSearchIndex ->
-            ($)
-                { model
-                    | index =
-                        createIndex
-                            |> ElmTextSearch.addDocs model.collection
-                            |> Tuple.first
-                }
-                [ do Search ]
-                []
 
         -- # Sort
         --
@@ -146,48 +113,81 @@ update msg model =
                 ($)
                     { model
                         | collection = sortTracksBy property sortDir model.collection
+                        , searchResults = sortTracksBy property sortDir model.searchResults
                         , sortBy = property
                         , sortDirection = sortDir
                     }
-                    [ do Search ]
+                    [ do Recalibrate ]
                     []
+
+        -- # Search
+        --
+        ReceiveSearchResults trackIds ->
+            let
+                col =
+                    List.filter (\t -> List.member t.id trackIds) model.collection
+            in
+                ($)
+                    { model | searchResults = col }
+                    [ do Recalibrate ]
+                    []
+
+        Search ->
+            case model.searchTerm of
+                Just term ->
+                    (!)
+                        model
+                        [ Ports.performSearch term ]
+
+                Nothing ->
+                    ($)
+                        { model | searchResults = model.collection }
+                        [ do Recalibrate ]
+                        []
+
+        SetSearchTerm value ->
+            let
+                searchTerm =
+                    case String.trim value of
+                        "" ->
+                            Nothing
+
+                        v ->
+                            Just v
+            in
+                (!)
+                    { model | searchTerm = searchTerm }
+                    []
+
+        -- # UI
+        --
+        ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
+            -- When you're over the point-of-no-return
+            if scrolledHeight >= (contentHeight - containerHeight - 50) then
+                let
+                    par =
+                        (List.length model.resultant) + partial
+
+                    col =
+                        List.take par model.searchResults
+                in
+                    (!) { model | resultant = col } []
+            else
+                (!) model []
+
+
+
+-- 🌱
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.batch
+        [ Ports.receiveSearchResults ReceiveSearchResults ]
 
 
 
 -- Utils
-
-
-{-| Search.
--}
-search : Model -> String -> ( Model, Cmd TopLevel.Msg )
-search model filter =
-    let
-        searchResults =
-            model.index
-                |> ElmTextSearch.search filter
-                |> Result.toMaybe
-    in
-        case searchResults of
-            Just ( newIndex, results ) ->
-                (!)
-                    { model
-                        | filteredCollection =
-                            let
-                                trackIds =
-                                    List.map Tuple.first results
-                            in
-                                List.filter
-                                    (.id >> (\t -> List.member t trackIds))
-                                    (model.collection)
-                        , index = newIndex
-                        , indexFor = filter
-                    }
-                    []
-
-            Nothing ->
-                (!)
-                    model
-                    []
 
 
 {-| Sort.

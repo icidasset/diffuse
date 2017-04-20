@@ -87,15 +87,25 @@ makeTree srcData marker msg currentDate =
                 |> Maybe.withDefault defaults.directoryPath
                 |> String.trim
                 |> Regex.replace Regex.All (Regex.regex "(^\\/|\\/$)") (\_ -> "")
-                |> (\d -> d ++ "/")
+                |> (\d ->
+                        if String.isEmpty d then
+                            d
+                        else
+                            d ++ "/"
+                   )
 
         initialParams =
             [ ( "list-type", "2" )
             , ( "max-keys", "1000" )
-            , ( "prefix", directoryPath )
             ]
 
-        additionalParams =
+        prefix =
+            if String.length directoryPath > 0 then
+                [ ( "prefix", directoryPath ) ]
+            else
+                []
+
+        continuation =
             case marker of
                 InProgress s ->
                     [ ( "continuation-token", s ) ]
@@ -104,7 +114,7 @@ makeTree srcData marker msg currentDate =
                     []
 
         params =
-            initialParams ++ additionalParams
+            initialParams ++ prefix ++ continuation
 
         url =
             presignedUrl Get (Time.second * 60 * 5) params currentDate srcData "/"

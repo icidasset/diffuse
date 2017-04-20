@@ -130,7 +130,7 @@ update msg model =
         CleanQueue ->
             (!)
                 model
-                [ model.tracks.collection
+                [ model.tracks.searchResults
                     |> Queue.Types.Clean
                     |> QueueMsg
                     |> do
@@ -139,7 +139,7 @@ update msg model =
         FillQueue ->
             (!)
                 model
-                [ model.tracks.collection
+                [ model.tracks.searchResults
                     |> Queue.Types.Fill model.sources.collection
                     |> QueueMsg
                     |> do
@@ -151,7 +151,7 @@ update msg model =
                 [ index
                     |> String.toInt
                     |> Result.toMaybe
-                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection)
+                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.resultant)
                     |> Maybe.map (makeQueueItem True model.timestamp model.sources.collection)
                     |> Maybe.map (Queue.Types.InjectFirstAndPlay)
                     |> Maybe.map (QueueMsg)
@@ -189,4 +189,5 @@ subscriptions model =
         , Sub.map ConsoleMsg <| Console.subscriptions model.console
         , Sub.map QueueMsg <| Queue.subscriptions model.queue
         , Sub.map SourcesMsg <| Sources.subscriptions model.sources
+        , Sub.map TracksMsg <| Tracks.subscriptions model.tracks
         ]

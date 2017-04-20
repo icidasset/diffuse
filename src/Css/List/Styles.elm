@@ -57,11 +57,11 @@ styles =
             [ a
                 [ cursor pointer
                 , display inlineBlock
-                , marginLeft (px 2)
+                , marginLeft (px 3)
                 ]
             , span
                 [ display inlineBlock
-                , marginLeft (px 2)
+                , marginLeft (px 3)
                 ]
             ]
         ]

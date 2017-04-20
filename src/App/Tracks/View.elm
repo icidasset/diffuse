@@ -8,6 +8,7 @@ import Html.Keyed
 import Html.Lazy exposing (lazy3)
 import Json.Decode as Decode
 import Material.Icons.Action
+import Material.Icons.Av
 import Material.Icons.Content
 import Material.Icons.Navigation
 import Material.Icons.Toggle
@@ -28,7 +29,7 @@ entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     lazy3
         (lazyEntry model.tracks.searchTerm)
-        model.tracks.filteredCollection
+        model.tracks.resultant
         model.tracks.sortBy
         model.tracks.sortDirection
 
@@ -59,7 +60,7 @@ lazyEntry searchTerm tracks activeSortBy sortDirection =
                     ]
                 )
             , Navigation.insideCustom
-                [ ( Material.Icons.Content.filter_list colorDerivatives.text 16, TopLevel.NoOp )
+                [ ( Material.Icons.Av.featured_play_list colorDerivatives.text 16, TopLevel.NoOp )
                 ]
             ]
 
@@ -67,7 +68,9 @@ lazyEntry searchTerm tracks activeSortBy sortDirection =
         -- Table
         ------------------------------------
         , div
-            [ cssClass TracksChild ]
+            [ cssClass (TracksChild)
+            , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
+            ]
             [ if List.isEmpty tracks then
                 -- TODO
                 p
@@ -156,6 +159,24 @@ tableTrackDecoder =
 sortBy : SortBy -> TopLevel.Msg
 sortBy =
     TopLevel.TracksMsg << SortBy
+
+
+
+-- Scrolling
+
+
+onScroll : (ScrollPos -> msg) -> Attribute msg
+onScroll msg =
+    on "scroll" (Decode.map msg decodeScrollPosition)
+
+
+decodeScrollPosition : Decode.Decoder ScrollPos
+decodeScrollPosition =
+    Decode.map3
+        ScrollPos
+        (Decode.at [ "target", "scrollTop" ] Decode.int)
+        (Decode.at [ "target", "scrollHeight" ] Decode.int)
+        (Decode.at [ "target", "clientHeight" ] Decode.int)
 
 
 

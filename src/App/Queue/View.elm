@@ -97,7 +97,7 @@ futureActions index item =
                 |> TopLevel.QueueMsg
                 |> onClick
             ]
-            [ Icons.remove (Color.grayscale 0.175) 16 ]
+            [ Icons.remove_circle_outline (Color.grayscale 0.175) 16 ]
         ]
 
 

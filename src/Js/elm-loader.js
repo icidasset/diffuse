@@ -80,6 +80,13 @@ function loadSettings(key) {
 
 
 //
+// Search
+
+const search = new Worker("search.js");
+
+
+
+//
 // Elm
 
 function setupElm(params) {
@@ -88,17 +95,16 @@ function setupElm(params) {
   // Clean
   node.innerHTML = "";
 
+  // Flags
+  const flags = {
+    settings: { queue: loadSettings("queue") || { repeat: false, shuffle: false } },
+    sources: params.sources,
+    tracks: params.tracks,
+    user: params.user
+  }
+
   // Embed
-  const app = Elm.App.embed(
-    node,
-    { settings:
-        { queue: loadSettings("queue") || { repeat: false, shuffle: false }
-        }
-    , sources: params.sources
-    , tracks: params.tracks
-    , user: params.user
-    }
-  );
+  const app = Elm.App.embed(node, flags);
 
   // Ports
   // > Authentication
@@ -164,12 +170,15 @@ function setupElm(params) {
         col => {
           return getTags(urls.getUrl, urls.headUrl)
             .then(r => col.concat(r))
-            .catch(_ => col.concat(null));
+            .catch(e => {
+              console.error(e);
+              return col.concat(null);
+            });
         }
       );
 
     }, initialPromise).then(col => {
-      context.receivedTags = col.map(pickTags);
+      context.receivedTags = _.compact(col).map(pickTags);
       app.ports.receiveTags.send(context);
 
     });
@@ -181,5 +190,33 @@ function setupElm(params) {
 
   app.ports.storeQueueSettings.subscribe(settings => {
     saveSettings("queue", settings);
+  });
+
+  // > Search
+  app.ports.performSearch.subscribe(searchTerm => {
+    search.postMessage({
+      action: "perform_search",
+      data: searchTerm
+    });
+  });
+
+  app.ports.updateSearchIndex.subscribe(tracksJSON => {
+    search.postMessage({
+      action: "update_search_index",
+      data: tracksJSON
+    });
+  });
+
+  search.onmessage = event => {
+    switch (event.data.action) {
+      case "perform_search":
+        app.ports.receiveSearchResults.send(event.data.data);
+        break;
+    }
+  };
+
+  search.postMessage({
+    action: "update_search_index",
+    data: flags.tracks
   });
 }

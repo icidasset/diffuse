@@ -17,20 +17,10 @@ import qualified Data.Text.Encoding as Text
 
 main :: IO Dictionary
 main =
-    Shikensu.listRelative vendorScripts "./"
+    Shikensu.listRelative [ "src/Vendor/**/*.js" ] "./"
         >>= mapIO browserify
         >>= return . prefixDirname "vendor"
         >>= write "./build"
-
-
-
--- List
-
-
-vendorScripts :: [String]
-vendorScripts =
-    [ "src/Vendor/package.js"
-    ]
 
 
 

@@ -34,7 +34,9 @@ parseTreeResponse response =
 
         marker =
             if isTruncated == "true" then
-                List.Extra.last filePaths
+                decodedXml
+                    |> tag "NextContinuationToken" string
+                    |> Result.toMaybe
                     |> Maybe.map InProgress
                     |> Maybe.withDefault TheEnd
             else

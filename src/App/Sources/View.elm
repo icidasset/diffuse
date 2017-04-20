@@ -151,7 +151,7 @@ renderSource index ( source, isProcessing, processingError ) =
 
                 -- Is processing
                 , if isProcessing == True then
-                    span [] [ Icons.hourglass_empty colorDerivatives.text 16 ]
+                    span [] [ Icons.update colorDerivatives.text 16 ]
                   else
                     text ""
 
@@ -162,7 +162,7 @@ renderSource index ( source, isProcessing, processingError ) =
                         |> TopLevel.SourcesMsg
                         |> onClick
                     ]
-                    [ Icons.delete colorDerivatives.text 16 ]
+                    [ Icons.remove_circle_outline colorDerivatives.text 16 ]
                 ]
             ]
         )

@@ -26,7 +26,6 @@
         "evancz/url-parser": "2.0.1 <= v < 3.0.0",
         "justinmimbs/elm-date-extra": "2.0.3 <= v < 3.0.0",
         "lukewestby/elm-string-interpolate": "1.0.1 <= v < 2.0.0",
-        "rluiten/elm-text-search": "3.1.1 <= v < 4.0.0",
         "rtfeldman/elm-css": "8.0.0 <= v < 9.0.0",
         "rtfeldman/elm-css-helpers": "2.0.1 <= v < 3.0.0",
         "rtfeldman/elm-css-util": "1.0.2 <= v < 2.0.0",

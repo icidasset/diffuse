@@ -1,7 +1,6 @@
 module Tracks.Types exposing (..)
 
 import Base64
-import ElmTextSearch
 import Regex exposing (HowMany(..), regex)
 
 
@@ -29,7 +28,7 @@ type alias TagUrls =
 
 
 type alias Track =
-    { id : String
+    { id : TrackId
     , path : String
     , sourceId : SourceId
     , tags : Tags
@@ -37,6 +36,10 @@ type alias Track =
 
 
 type alias SourceId =
+    String
+
+
+type alias TrackId =
     String
 
 
@@ -63,21 +66,30 @@ type Msg
     = Add (List Track)
     | Remove SourceId
     | RemoveByPath SourceId (List String)
+    | Recalibrate
     | SortBy SortBy
       -- Search
+    | ReceiveSearchResults (List SourceId)
     | Search
     | SetSearchTerm String
-    | UpdateSearchIndex
+      -- UI
+    | ScrollThroughTable ScrollPos
 
 
 type alias Model =
     { collection : List Track
-    , filteredCollection : List Track
-    , index : ElmTextSearch.Index Track
-    , indexFor : String
+    , resultant : List Track -- Use this for the UI
+    , searchResults : List Track
     , searchTerm : Maybe String
     , sortBy : SortBy
     , sortDirection : SortDirection
+    }
+
+
+type alias ScrollPos =
+    { scrolledHeight : Int
+    , contentHeight : Int
+    , containerHeight : Int
     }
 
 

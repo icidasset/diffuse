@@ -47,7 +47,7 @@ function pickTags(tagsFromJsmediatags) {
   );
 
   return {
-    nr: tags.track ? parseInt(tags.track, 10) : 0,
+    nr: (tags.track ? parseInt(tags.track, 10) : 0) || 0,
     album: tags.album && tags.album.length ? tags.album : "Unknown",
     artist: tags.artist && tags.artist.length ? tags.artist : "Unknown",
     title: tags.title && tags.title.length ? tags.title : "Unknown",
