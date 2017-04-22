@@ -1,11 +1,13 @@
 module Tracks.State exposing (..)
 
+import Json.Encode as Json
 import List.Extra as List
+import Time
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
-import Utils exposing (do)
+import Utils exposing (do, doDelayed)
 
 
 -- 💧
@@ -13,22 +15,33 @@ import Utils exposing (do)
 
 initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
+    { collection = []
+    , resultant = []
+    , searchResults = []
+    , searchTerm = Nothing
+    , sortBy = Artist
+    , sortDirection = Asc
+    }
+
+
+initialCommands : Maybe (List Json.Value) -> Cmd TopLevel.Msg
+initialCommands maybeEncodedTracks =
     let
-        collection =
-            decodeTracks flags
+        encodedTracks =
+            Maybe.withDefault [] maybeEncodedTracks
     in
-        { collection = collection
-        , resultant = List.take partial collection
-        , searchResults = collection
-        , searchTerm = Nothing
-        , sortBy = Artist
-        , sortDirection = Asc
-        }
-
-
-initialCommands : Cmd TopLevel.Msg
-initialCommands =
-    Cmd.none
+        Cmd.batch
+            [ encodedTracks
+                |> List.take partial
+                |> Decode
+                |> TopLevel.TracksMsg
+                |> do
+            , encodedTracks
+                |> List.drop partial
+                |> Decode
+                |> TopLevel.TracksMsg
+                |> doDelayed (Time.millisecond * 1500)
+            ]
 
 
 
@@ -38,6 +51,42 @@ initialCommands =
 update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
+        -- # Recalibrate
+        --
+        Recalibrate ->
+            let
+                col =
+                    List.take partial model.searchResults
+            in
+                (!)
+                    { model | resultant = col }
+                    []
+
+        -- # Sort
+        --
+        SortBy property ->
+            let
+                sortDir =
+                    if model.sortBy /= property then
+                        Asc
+                    else if model.sortDirection == Asc then
+                        Desc
+                    else
+                        Asc
+            in
+                ($)
+                    { model
+                        | collection = sortTracksBy property sortDir model.collection
+                        , searchResults = sortTracksBy property sortDir model.searchResults
+                        , sortBy = property
+                        , sortDirection = sortDir
+                    }
+                    [ do Recalibrate ]
+                    []
+
+        ------------------------------------
+        -- Content
+        ------------------------------------
         -- # Add
         -- > Add tracks to the collection.
         --
@@ -51,6 +100,21 @@ update msg model =
                 (!)
                     { model | collection = col }
                     [ do TopLevel.CleanQueue, handleNewCollection col ]
+
+        -- # Decode
+        --
+        Decode encodedTracks ->
+            let
+                col =
+                    model.collection ++ decodeTracks encodedTracks
+            in
+                (!)
+                    { model
+                        | collection = col
+                        , resultant = List.take partial col
+                        , searchResults = col
+                    }
+                    []
 
         -- # Remove
         -- > Remove tracks from the collection,
@@ -87,41 +151,9 @@ update msg model =
                     { model | collection = col }
                     [ do TopLevel.CleanQueue, handleNewCollection col ]
 
-        -- # Recalibrate
-        --
-        Recalibrate ->
-            let
-                col =
-                    List.take partial model.searchResults
-            in
-                (!)
-                    { model | resultant = col }
-                    []
-
-        -- # Sort
-        --
-        SortBy property ->
-            let
-                sortDir =
-                    if model.sortBy /= property then
-                        Asc
-                    else if model.sortDirection == Asc then
-                        Desc
-                    else
-                        Asc
-            in
-                ($)
-                    { model
-                        | collection = sortTracksBy property sortDir model.collection
-                        , searchResults = sortTracksBy property sortDir model.searchResults
-                        , sortBy = property
-                        , sortDirection = sortDir
-                    }
-                    [ do Recalibrate ]
-                    []
-
-        -- # Search
-        --
+        ------------------------------------
+        -- Search
+        ------------------------------------
         ReceiveSearchResults trackIds ->
             let
                 col =
@@ -159,8 +191,9 @@ update msg model =
                     { model | searchTerm = searchTerm }
                     []
 
-        -- # UI
-        --
+        ------------------------------------
+        -- UI
+        ------------------------------------
         ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
             -- When you're over the point-of-no-return
             if scrolledHeight >= (contentHeight - containerHeight - 50) then

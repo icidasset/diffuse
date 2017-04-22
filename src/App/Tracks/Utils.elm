@@ -1,6 +1,7 @@
 module Tracks.Utils exposing (..)
 
 import Firebase.Data
+import Json.Encode as Json
 import Maybe.Extra as Maybe
 import Tracks.Encoding
 import Tracks.Ports as Ports
@@ -12,10 +13,9 @@ import Utils
 -- 💧
 
 
-decodeTracks : TopLevel.ProgramFlags -> List Track
-decodeTracks flags =
-    flags.tracks
-        |> Maybe.withDefault []
+decodeTracks : List Json.Value -> List Track
+decodeTracks encodedTracks =
+    encodedTracks
         |> List.map Tracks.Encoding.decode
         |> Maybe.values
 

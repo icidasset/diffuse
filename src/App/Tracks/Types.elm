@@ -1,6 +1,7 @@
 module Tracks.Types exposing (..)
 
 import Base64
+import Json.Encode as Json
 import Regex exposing (HowMany(..), regex)
 
 
@@ -63,11 +64,13 @@ type SortDirection
 
 
 type Msg
-    = Add (List Track)
+    = Recalibrate
+    | SortBy SortBy
+      -- Collection
+    | Add (List Track)
+    | Decode (List Json.Value)
     | Remove SourceId
     | RemoveByPath SourceId (List String)
-    | Recalibrate
-    | SortBy SortBy
       -- Search
     | ReceiveSearchResults (List SourceId)
     | Search

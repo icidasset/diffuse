@@ -52,7 +52,7 @@ initialModel flags location =
 
 
 initialCommands : ProgramFlags -> Navigation.Location -> Cmd Msg
-initialCommands _ _ =
+initialCommands flags _ =
     Cmd.batch
         [ -- Time
           Task.perform SetTimestamp Time.now
@@ -62,7 +62,7 @@ initialCommands _ _ =
         , Queue.initialCommands
         , Routing.initialCommands
         , Sources.initialCommands
-        , Tracks.initialCommands
+        , Tracks.initialCommands flags.tracks
         ]
 
 
