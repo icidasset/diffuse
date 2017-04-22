@@ -72,6 +72,7 @@ type Msg
     | Remove SourceId
     | RemoveByPath SourceId (List String)
       -- Search
+    | ClearSearch
     | ReceiveSearchResults (List SourceId)
     | Search
     | SetSearchTerm String

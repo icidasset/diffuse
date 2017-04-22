@@ -3,13 +3,15 @@ module Tracks.Styles exposing (..)
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Traits exposing (cssColor, gr)
-import Variables exposing (colorDerivatives)
+import Variables exposing (colors, colorDerivatives)
 
 
 type Classes
-    = TracksContainer
+    = NoTracksFound
+    | TracksContainer
     | TracksChild
     | TracksNavigation
+    | TracksNavigationIcon
     | TracksTable
 
 
@@ -31,6 +33,15 @@ styles =
         , property "user-select" "none"
         , position relative
         , zIndex (int 2)
+        ]
+    , class NoTracksFound
+        [ color (cssColor colors.base09)
+        , fontWeight (int 600)
+        , left (pct 50)
+        , position absolute
+        , textAlign center
+        , top (pct 50)
+        , transform (translate2 (pct -50) (pct -50))
         ]
 
     ------------------------------------------------------
@@ -67,13 +78,24 @@ styles =
             , selector "input::placeholder"
                 [ color (rgb 205 205 205)
                 ]
-            , (form << toa << children << toa << svg)
-                [ left (gr 2)
+            , class TracksNavigationIcon
+                [ lineHeight zero
                 , marginTop (px 1)
                 , position absolute
                 , top (pct 50)
                 , transform (translateY (pct -50))
                 , zIndex (int 0)
+
+                -- Search icon
+                , nthOfType "1"
+                    [ left (gr 2) ]
+
+                -- Clear icon
+                , nthOfType "2"
+                    [ cursor pointer
+                    , right (gr 2)
+                    , zIndex (int 2)
+                    ]
                 ]
             ]
         ]

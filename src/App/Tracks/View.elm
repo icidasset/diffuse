@@ -48,15 +48,31 @@ lazyEntry searchTerm tracks activeSortBy sortDirection =
                 (Html.form
                     [ onSubmit Search ]
                     [ input
-                        [ placeholder "Search"
-                        , defaultValue (Maybe.withDefault "" searchTerm)
-                        , onBlur Search
+                        [ onBlur Search
                         , onInput SetSearchTerm
+                        , placeholder "Search"
+                        , value (Maybe.withDefault "" searchTerm)
                         ]
                         []
-                    , Material.Icons.Action.search
-                        (Color.rgb 205 205 205)
-                        16
+                    , span
+                        [ cssClass TracksNavigationIcon ]
+                        [ Material.Icons.Action.search
+                            (Color.rgb 205 205 205)
+                            16
+                        ]
+                    , case searchTerm of
+                        Just _ ->
+                            span
+                                [ cssClass TracksNavigationIcon
+                                , onClick ClearSearch
+                                ]
+                                [ Material.Icons.Content.clear
+                                    (Color.rgb 205 205 205)
+                                    16
+                                ]
+
+                        Nothing ->
+                            text ""
                     ]
                 )
             , Navigation.insideCustom
@@ -72,10 +88,9 @@ lazyEntry searchTerm tracks activeSortBy sortDirection =
             , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
             ]
             [ if List.isEmpty tracks then
-                -- TODO
-                p
-                    []
-                    [ text "No results" ]
+                div
+                    [ cssClass NoTracksFound ]
+                    [ text "No tracks found" ]
               else
                 tracksTable tracks activeSortBy sortDirection
             ]

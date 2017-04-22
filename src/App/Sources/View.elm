@@ -13,6 +13,7 @@ import Material.Icons.Action as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
+import Material.Icons.Notification as Icons
 import Navigation.View as Navigation
 import Routing.Types exposing (Msg(..))
 import Sources.Types as Sources exposing (..)
@@ -151,13 +152,14 @@ renderSource index ( source, isProcessing, processingError ) =
 
                 -- Is processing
                 , if isProcessing == True then
-                    span [] [ Icons.update colorDerivatives.text 16 ]
+                    span [ title "Processing …" ] [ Icons.sync colorDerivatives.text 16 ]
                   else
                     text ""
 
                 -- Delete
                 , a
-                    [ source.id
+                    [ title "Remove"
+                    , source.id
                         |> Sources.Destroy
                         |> TopLevel.SourcesMsg
                         |> onClick

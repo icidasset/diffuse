@@ -154,6 +154,12 @@ update msg model =
         ------------------------------------
         -- Search
         ------------------------------------
+        ClearSearch ->
+            ($)
+                { model | searchTerm = Nothing }
+                [ do Search ]
+                []
+
         ReceiveSearchResults trackIds ->
             let
                 col =
