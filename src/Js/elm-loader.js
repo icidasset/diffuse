@@ -131,8 +131,8 @@ function setupElm(params) {
     audioEnvironmentContext.audio = null;
 
     if (item) {
-      insertTrack(audioEnvironmentContext, item);
       removeOlderAudioElements(timestampInMilliseconds);
+      insertTrack(audioEnvironmentContext, item);
     } else {
       removeOlderAudioElements(timestampInMilliseconds);
       app.ports.setIsPlaying.send(false);

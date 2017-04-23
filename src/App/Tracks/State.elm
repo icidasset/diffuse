@@ -42,7 +42,9 @@ initialCommands maybeEncodedTracks =
                 |> List.drop partial
                 |> InitialCollection
                 |> TopLevel.TracksMsg
-                |> doDelayed (Time.millisecond * 1500)
+                |> doDelayed (Time.millisecond * 1000)
+            , TopLevel.FillQueue
+                |> doDelayed (Time.millisecond * 1250)
             ]
 
 

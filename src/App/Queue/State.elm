@@ -26,7 +26,7 @@ initialModel flags =
 
 initialCommands : Cmd TopLevel.Msg
 initialCommands =
-    do TopLevel.FillQueue
+    Cmd.none
 
 
 
