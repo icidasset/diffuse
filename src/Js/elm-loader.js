@@ -98,8 +98,8 @@ function setupElm(params) {
   // Flags
   const flags = {
     settings: { queue: loadSettings("queue") || { repeat: false, shuffle: false } },
-    sources: params.sources,
-    tracks: params.tracks,
+    sources: params.sources || null,
+    tracks: params.tracks || null,
     user: params.user
   }
 

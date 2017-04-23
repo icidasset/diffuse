@@ -75,10 +75,14 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Authenticate ->
-            ( model, Firebase.Auth.authenticate () )
+            (!)
+                model
+                [ Firebase.Auth.authenticate () ]
 
         SignOut ->
-            (!) { model | authenticatedUser = Nothing } []
+            (!)
+                { model | authenticatedUser = Nothing }
+                [ Firebase.Auth.deauthenticate () ]
 
         ------------------------------------
         -- Time

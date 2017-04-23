@@ -46,7 +46,7 @@ function updateSearchIndex(input) {
     i.addField("artist");
     i.addField("title");
 
-    tracks
+    (tracks || [])
       .map(mapTrack)
       .forEach(t => i.addDoc(t));
   });
