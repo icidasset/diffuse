@@ -66,15 +66,16 @@ type SortDirection
 type Msg
     = Recalibrate
     | SortBy SortBy
-      -- Collection
+      -- Collection Pt. 1
+    | InitialCollection (List Json.Value)
+    | UpdateCollection (List Track)
+      -- Collection Pt. 2
     | Add (List Track)
-    | Decode (List Json.Value)
     | Remove SourceId
     | RemoveByPath SourceId (List String)
       -- Search
-    | ClearSearch
     | ReceiveSearchResults (List SourceId)
-    | Search
+    | Search (Maybe String)
     | SetSearchTerm String
       -- UI
     | ScrollThroughTable ScrollPos

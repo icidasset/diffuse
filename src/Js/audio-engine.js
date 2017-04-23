@@ -112,7 +112,7 @@ hi.connect(context.destination);
 
 function insertTrack(environmentalContext, queueItem) {
   if (!queueItem.url) console.error("insertTrack, missing `url`");
-  if (!queueItem.id) console.error("insertTrack, missing `id`");
+  if (!queueItem.track && !queueItem.track.id) console.error("insertTrack, missing `track.id`");
 
   let audioNode;
 
@@ -132,7 +132,7 @@ function createAudioElement(environmentalContext, queueItem) {
   newNode.setAttribute("crossOrigin", "anonymous");
   newNode.setAttribute("preload", "none");
   newNode.setAttribute("src", queueItem.url);
-  newNode.setAttribute("rel", queueItem.id);
+  newNode.setAttribute("rel", queueItem.track.id);
   newNode.setAttribute("data-timestamp", timestampInMilliseconds);
 
   newNode.volume = 1;
@@ -165,7 +165,7 @@ function audioElementTrackId(node) {
 
 function isActiveAudioElement(environmentalContext, node) {
   if (!environmentalContext.activeQueueItem || !node) return false;
-  return environmentalContext.activeQueueItem.id === audioElementTrackId(node);
+  return environmentalContext.activeQueueItem.track.id === audioElementTrackId(node);
 }
 
 

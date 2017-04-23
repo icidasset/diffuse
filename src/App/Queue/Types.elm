@@ -1,27 +1,26 @@
-module Queue.Types exposing (Msg(..), Model, Settings, Item, Page(..))
+module Queue.Types exposing (Msg(..), Model, Settings, Item, EngineItem, Page(..))
 
 import Date exposing (Date)
 import Sources.Types exposing (Source)
-import Tracks.Types exposing (Track)
+import Tracks.Types exposing (Track, TrackId)
 
 
 -- Types
 
 
 type Msg
-    = InjectFirst Item
-    | InjectLast Item
+    = InjectFirst Track
+    | InjectLast Track
     | RemoveItem Int
       -- Position
     | Rewind
     | Shift
       -- Contents
-    | Fill (List Source) (List Track)
-    | FillStepTwo (List Source) (List Track) (List Track)
+    | Fill Date (List Track)
     | Clean (List Track)
     | Reset
       -- Combos
-    | InjectFirstAndPlay Item
+    | InjectFirstAndPlay Track
       -- Settings
     | ToggleRepeat
     | ToggleShuffle
@@ -38,9 +37,13 @@ type alias Settings =
 
 
 type alias Item =
-    { id : String
-    , manualEntry : Bool
+    { manualEntry : Bool
     , track : Track
+    }
+
+
+type alias EngineItem =
+    { track : Track
     , url : String
     }
 
@@ -63,7 +66,4 @@ type alias InternalModel extension =
         | activeItem : Maybe Item
         , future : List Item
         , past : List Item
-
-        --
-        , timestamp : Date
     }

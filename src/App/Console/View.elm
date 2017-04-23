@@ -84,7 +84,10 @@ buttons : Queue.Types.Model -> Bool -> Html TopLevel.Msg
 buttons queue isPlaying =
     div
         [ cssClass ConsoleButtonsContainer ]
-        [ a
+        [ ------------------------------------
+          -- Repeat
+          ------------------------------------
+          a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg ToggleRepeat)
             ]
@@ -102,11 +105,19 @@ buttons queue isPlaying =
                 ]
                 []
             ]
+
+        ------------------------------------
+        -- Previous
+        ------------------------------------
         , a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg Rewind)
             ]
             [ Icons.fast_rewind colorDerivatives.consoleText 20 ]
+
+        ------------------------------------
+        -- Play / Pause
+        ------------------------------------
         , a
             [ cssClass ConsoleButton
             , if isPlaying then
@@ -132,11 +143,19 @@ buttons queue isPlaying =
                 ]
                 []
             ]
+
+        ------------------------------------
+        -- Next
+        ------------------------------------
         , a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg Shift)
             ]
             [ Icons.fast_forward colorDerivatives.consoleText 20 ]
+
+        ------------------------------------
+        -- Shuffle
+        ------------------------------------
         , a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg ToggleShuffle)

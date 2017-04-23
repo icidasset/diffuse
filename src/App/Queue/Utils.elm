@@ -1,8 +1,8 @@
-module Queue.Utils exposing (($), makeQueueItem)
+module Queue.Utils exposing (($), makeItem, makeEngineItem)
 
 import Date exposing (Date)
 import List.Extra as List
-import Queue.Types as Queue exposing (..)
+import Queue.Types exposing (..)
 import Sources.Processing
 import Sources.Types exposing (Source)
 import Tracks.Types exposing (Track)
@@ -18,20 +18,21 @@ import Utils
     Utils.illuminate TopLevel.QueueMsg
 
 
-
--- 🌱
-
-
-makeQueueItem : Bool -> Date -> List Source -> Track -> Queue.Item
-makeQueueItem isManualEntry timestamp sources track =
-    { id = track.sourceId ++ "-" ++ track.path
-    , manualEntry = isManualEntry
-    , track = track
+makeEngineItem : Date -> List Source -> Track -> EngineItem
+makeEngineItem timestamp sources track =
+    { track = track
     , url =
         sources
             |> List.find (findSource track.sourceId)
             |> Maybe.map (makeTrackUrl timestamp track)
             |> Maybe.withDefault "<missing-source>"
+    }
+
+
+makeItem : Bool -> Track -> Item
+makeItem isManualEntry track =
+    { manualEntry = isManualEntry
+    , track = track
     }
 
 

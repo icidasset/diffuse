@@ -1,8 +1,10 @@
 module Tracks.State exposing (..)
 
+import Firebase.Data
 import Json.Encode as Json
 import List.Extra as List
 import Time
+import Tracks.Encoding
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
@@ -33,12 +35,12 @@ initialCommands maybeEncodedTracks =
         Cmd.batch
             [ encodedTracks
                 |> List.take partial
-                |> Decode
+                |> InitialCollection
                 |> TopLevel.TracksMsg
                 |> do
             , encodedTracks
                 |> List.drop partial
-                |> Decode
+                |> InitialCollection
                 |> TopLevel.TracksMsg
                 |> doDelayed (Time.millisecond * 1500)
             ]
@@ -85,28 +87,17 @@ update msg model =
                     []
 
         ------------------------------------
-        -- Content
+        -- Collection, Pt. 1
         ------------------------------------
-        -- # Add
-        -- > Add tracks to the collection.
+        -- # Initial Collection
         --
-        Add additionalTracks ->
+        InitialCollection encodedTracks ->
             let
                 col =
-                    additionalTracks
-                        |> List.append model.collection
+                    encodedTracks
+                        |> decodeTracks
+                        |> (++) model.collection
                         |> sortTracksBy model.sortBy model.sortDirection
-            in
-                (!)
-                    { model | collection = col }
-                    [ do TopLevel.CleanQueue, handleNewCollection col ]
-
-        -- # Decode
-        --
-        Decode encodedTracks ->
-            let
-                col =
-                    model.collection ++ decodeTracks encodedTracks
             in
                 (!)
                     { model
@@ -114,6 +105,40 @@ update msg model =
                         , resultant = List.take partial col
                         , searchResults = col
                     }
+                    []
+
+        -- # Update Collection
+        --
+        UpdateCollection tracks ->
+            let
+                newCollection =
+                    sortTracksBy model.sortBy model.sortDirection tracks
+
+                encodedCollection =
+                    List.map Tracks.Encoding.encode newCollection
+            in
+                (!)
+                    { model | collection = newCollection }
+                    [ do TopLevel.CleanQueue
+                    , Firebase.Data.storeTracks encodedCollection
+                    , Ports.updateSearchIndex encodedCollection
+                    , do (TopLevel.TracksMsg (Search model.searchTerm))
+                    ]
+
+        ------------------------------------
+        -- Collection, Pt. 2
+        ------------------------------------
+        -- # Add
+        -- > Add tracks to the collection.
+        --
+        Add additionalTracks ->
+            let
+                col =
+                    model.collection ++ additionalTracks
+            in
+                ($)
+                    model
+                    [ do (UpdateCollection col) ]
                     []
 
         -- # Remove
@@ -125,11 +150,12 @@ update msg model =
                 col =
                     List.filter
                         (\t -> t.sourceId /= sourceId)
-                        model.collection
+                        (model.collection)
             in
-                (!)
-                    { model | collection = col }
-                    [ do TopLevel.CleanQueue, handleNewCollection col ]
+                ($)
+                    model
+                    [ do (UpdateCollection col) ]
+                    []
 
         -- # Remove
         -- > Remove tracks from the collection,
@@ -147,55 +173,52 @@ update msg model =
                         )
                         model.collection
             in
-                (!)
-                    { model | collection = col }
-                    [ do TopLevel.CleanQueue, handleNewCollection col ]
+                ($)
+                    model
+                    [ do (UpdateCollection col) ]
+                    []
 
         ------------------------------------
         -- Search
         ------------------------------------
-        ClearSearch ->
+        -- > Step 1, set search term
+        SetSearchTerm "" ->
+            (!) { model | searchTerm = Nothing } []
+
+        SetSearchTerm value ->
+            (!) { model | searchTerm = Just value } []
+
+        -- > Step 2, perform search
+        Search Nothing ->
             ($)
-                { model | searchTerm = Nothing }
-                [ do Search ]
+                { model | searchTerm = Nothing, searchResults = model.collection }
+                [ do Recalibrate ]
+                []
+
+        Search (Just term) ->
+            ($)
+                { model | searchTerm = Just term }
+                [ Ports.performSearch term ]
+                []
+
+        -- > Step 3, receive search results
+        ReceiveSearchResults [] ->
+            ($)
+                { model
+                    | searchResults =
+                        []
+                }
+                [ do Recalibrate ]
                 []
 
         ReceiveSearchResults trackIds ->
-            let
-                col =
-                    List.filter (\t -> List.member t.id trackIds) model.collection
-            in
-                ($)
-                    { model | searchResults = col }
-                    [ do Recalibrate ]
-                    []
-
-        Search ->
-            case model.searchTerm of
-                Just term ->
-                    (!)
-                        model
-                        [ Ports.performSearch term ]
-
-                Nothing ->
-                    ($)
-                        { model | searchResults = model.collection }
-                        [ do Recalibrate ]
-                        []
-
-        SetSearchTerm value ->
-            let
-                searchTerm =
-                    case String.trim value of
-                        "" ->
-                            Nothing
-
-                        v ->
-                            Just v
-            in
-                (!)
-                    { model | searchTerm = searchTerm }
-                    []
+            ($)
+                { model
+                    | searchResults =
+                        List.filter (\t -> List.member t.id trackIds) model.collection
+                }
+                [ do Recalibrate ]
+                []
 
         ------------------------------------
         -- UI

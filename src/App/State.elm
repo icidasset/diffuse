@@ -4,7 +4,6 @@ import Date
 import Firebase.Auth
 import List.Extra as List
 import Navigation
-import Queue.Utils exposing (makeQueueItem)
 import Response exposing (..)
 import Task
 import Time
@@ -21,9 +20,11 @@ import Sources.State as Sources
 import Tracks.State as Tracks
 
 
--- Children types
+-- Children, Pt. 2
 
+import Queue.Ports
 import Queue.Types
+import Queue.Utils
 import Sources.Types
 
 
@@ -87,16 +88,12 @@ update msg model =
                 stamp =
                     Date.fromTime time
 
-                queue =
-                    model.queue
-
                 sources =
                     model.sources
             in
                 (!)
                     { model
-                        | queue = { queue | timestamp = stamp }
-                        , sources = { sources | timestamp = stamp }
+                        | sources = { sources | timestamp = stamp }
                         , timestamp = stamp
                     }
                     []
@@ -127,6 +124,20 @@ update msg model =
         ------------------------------------
         -- Children, Pt. 2
         ------------------------------------
+        ActiveQueueItemChanged maybeQueueItem ->
+            (!)
+                model
+                [ maybeQueueItem
+                    |> Maybe.map
+                        (.track)
+                    |> Maybe.map
+                        (Queue.Utils.makeEngineItem
+                            model.timestamp
+                            model.sources.collection
+                        )
+                    |> Queue.Ports.activeQueueItemChanged
+                ]
+
         CleanQueue ->
             (!)
                 model
@@ -140,7 +151,7 @@ update msg model =
             (!)
                 model
                 [ model.tracks.searchResults
-                    |> Queue.Types.Fill model.sources.collection
+                    |> Queue.Types.Fill model.timestamp
                     |> QueueMsg
                     |> do
                 ]
@@ -152,7 +163,6 @@ update msg model =
                     |> String.toInt
                     |> Result.toMaybe
                     |> Maybe.andThen (\idx -> List.getAt idx model.tracks.resultant)
-                    |> Maybe.map (makeQueueItem True model.timestamp model.sources.collection)
                     |> Maybe.map (Queue.Types.InjectFirstAndPlay)
                     |> Maybe.map (QueueMsg)
                     |> Maybe.map (do)
@@ -183,7 +193,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ -- Time
-          Time.every (5 * Time.minute) SetTimestamp
+          Time.every (1 * Time.minute) SetTimestamp
 
         -- Children
         , Sub.map ConsoleMsg <| Console.subscriptions model.console

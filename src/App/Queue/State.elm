@@ -1,12 +1,10 @@
 module Queue.State exposing (..)
 
-import Date
 import List.Extra as List
+import Queue.Fill as Fill
 import Queue.Ports as Ports
 import Queue.Types as Types exposing (..)
 import Queue.Utils exposing (..)
-import Random
-import Random.List exposing (shuffle)
 import Types as TopLevel
 import Utils exposing (do)
 
@@ -19,9 +17,6 @@ initialModel flags =
     { activeItem = Nothing
     , future = []
     , past = []
-
-    --
-    , timestamp = Date.fromTime 0
 
     -- Settings
     , repeat = flags.settings.queue.repeat
@@ -41,34 +36,43 @@ initialCommands =
 update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
-        -- # InjectFirst Queue.Item
+        -- # InjectFirst
         -- > Add an item in front of the queue.
         --
-        InjectFirst item ->
-            (!)
-                { model
-                    | future =
-                        model.future
-                            |> List.filter (\i -> not (i.manualEntry == False && i.id == item.id))
-                            |> (::) item
-                }
-                []
+        InjectFirst track ->
+            let
+                item =
+                    { manualEntry = True
+                    , track = track
+                    }
+            in
+                (!)
+                    { model
+                        | future = item :: model.future
+                    }
+                    []
 
-        -- # InjectLast Queue.Item
+        -- # InjectLast
         -- > Add an item after the last manual entry
         --   (ie. after the last injected item).
         --
-        InjectLast item ->
-            (!)
-                { model
-                    | future =
-                        model.future
-                            |> List.findIndex (.manualEntry >> (==) True)
-                            |> Maybe.map (\idx -> List.setAt idx item model.future)
-                            |> Maybe.map (Maybe.withDefault model.future)
-                            |> Maybe.withDefault model.future
-                }
-                []
+        InjectLast track ->
+            let
+                item =
+                    { manualEntry = True
+                    , track = track
+                    }
+            in
+                (!)
+                    { model
+                        | future =
+                            model.future
+                                |> List.findIndex (.manualEntry >> (==) True)
+                                |> Maybe.map (\idx -> List.setAt idx item model.future)
+                                |> Maybe.map (Maybe.withDefault model.future)
+                                |> Maybe.withDefault model.future
+                    }
+                    []
 
         -- # RemoveItem Int
         -- > Remove an item from the queue.
@@ -111,8 +115,8 @@ update msg model =
                 ($)
                     newModel
                     []
-                    [ Ports.activeQueueItemChanged newActiveItem
-                    , do TopLevel.FillQueue
+                    [ do (TopLevel.ActiveQueueItemChanged newActiveItem)
+                    , do (TopLevel.FillQueue)
                     ]
 
         -- # Shift
@@ -140,8 +144,8 @@ update msg model =
                 ($)
                     newModel
                     []
-                    [ Ports.activeQueueItemChanged newActiveItem
-                    , do TopLevel.FillQueue
+                    [ do (TopLevel.ActiveQueueItemChanged newActiveItem)
+                    , do (TopLevel.FillQueue)
                     ]
 
         ------------------------------------
@@ -150,84 +154,19 @@ update msg model =
         -- # Fill
         -- > Fill the queue with items.
         --
-        Fill sources tracks ->
-            ($)
-                model
-                [ Random.generate (FillStepTwo sources tracks) (shuffle tracks) ]
-                []
+        Fill timestamp tracks ->
+            let
+                newFuture =
+                    case model.shuffle of
+                        False ->
+                            Fill.ordered model tracks
 
-        FillStepTwo sources tracks shuffledTracks ->
-            if model.shuffle then
-                ----------
-                -- Shuffle
-                ----------
-                let
-                    pastIds =
-                        List.map (.track >> .id) model.past
-
-                    futureIds =
-                        List.map (.track >> .id) model.future
-
-                    tracksWoActive =
-                        case model.activeItem of
-                            Just item ->
-                                List.filter (.id >> (/=) item.track.id) shuffledTracks
-
-                            Nothing ->
-                                shuffledTracks
-
-                    newFuture =
-                        tracksWoActive
-                            |> List.filter (\t -> List.notMember t.id pastIds)
-                            |> List.filter (\t -> List.notMember t.id futureIds)
-                            |> List.take (queueLength - (List.length futureIds))
-                            |> List.map (makeQueueItem False model.timestamp sources)
-                            |> List.append model.future
-
-                    newFuture_ =
-                        if List.length newFuture == 0 then
-                            tracksWoActive
-                                |> List.take queueLength
-                                |> List.map (makeQueueItem False model.timestamp sources)
-                        else
-                            newFuture
-                in
-                    (!)
-                        { model | future = newFuture_ }
-                        []
-            else
-                ----------
-                -- Default
-                ----------
-                let
-                    manualEntries =
-                        List.filter (.manualEntry >> (==) True) model.future
-
-                    manualCount =
-                        List.length manualEntries
-
-                    remaining =
-                        queueLength - manualCount
-
-                    newFuture =
-                        case model.activeItem of
-                            Just activeItem ->
-                                tracks
-                                    |> List.findIndex ((==) activeItem.track)
-                                    |> Maybe.map (\idx -> List.drop (idx + 1) tracks)
-                                    |> Maybe.withDefault tracks
-                                    |> List.take remaining
-                                    |> (\a -> a ++ List.take (remaining - List.length a) tracks)
-                                    |> List.map (makeQueueItem False model.timestamp sources)
-
-                            Nothing ->
-                                tracks
-                                    |> List.take remaining
-                                    |> List.map (makeQueueItem False model.timestamp sources)
-                in
-                    (!)
-                        { model | future = manualEntries ++ newFuture }
-                        []
+                        True ->
+                            Fill.shuffled model timestamp tracks
+            in
+                (!)
+                    { model | future = newFuture }
+                    []
 
         -- # Clean
         -- > Remove no-longer-existing items from the queue.
@@ -253,10 +192,10 @@ update msg model =
         ------------------------------------
         -- Combos
         ------------------------------------
-        InjectFirstAndPlay item ->
+        InjectFirstAndPlay track ->
             let
                 ( a, b ) =
-                    update (InjectFirst item) model
+                    update (InjectFirst track) model
 
                 ( c, d ) =
                     update (Shift) a
@@ -275,11 +214,6 @@ update msg model =
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
                 |> (\m -> ($) m [ do Reset ] [ storeSettings m ])
-
-
-queueLength : Int
-queueLength =
-    30
 
 
 

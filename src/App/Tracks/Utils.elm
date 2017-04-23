@@ -1,10 +1,8 @@
 module Tracks.Utils exposing (..)
 
-import Firebase.Data
 import Json.Encode as Json
 import Maybe.Extra as Maybe
 import Tracks.Encoding
-import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Types as TopLevel exposing (Illumination)
 import Utils
@@ -32,15 +30,3 @@ partial =
 ($) : Illumination Model Msg
 ($) =
     Utils.illuminate TopLevel.TracksMsg
-
-
-handleNewCollection : List Track -> Cmd TopLevel.Msg
-handleNewCollection tracks =
-    let
-        encodedTracks =
-            List.map Tracks.Encoding.encode tracks
-    in
-        Cmd.batch
-            [ Firebase.Data.storeTracks encodedTracks
-            , Ports.updateSearchIndex encodedTracks -- TODO: Perform search?
-            ]

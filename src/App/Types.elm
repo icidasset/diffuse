@@ -30,6 +30,7 @@ type Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
       -- Children, Pt. 2
+    | ActiveQueueItemChanged (Maybe Queue.Item)
     | CleanQueue
     | FillQueue
     | PlayTrack String

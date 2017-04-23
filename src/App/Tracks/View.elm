@@ -46,9 +46,9 @@ lazyEntry searchTerm tracks activeSortBy sortDirection =
             [ Html.map
                 TopLevel.TracksMsg
                 (Html.form
-                    [ onSubmit Search ]
+                    [ onSubmit (Search searchTerm) ]
                     [ input
-                        [ onBlur Search
+                        [ onBlur (Search searchTerm)
                         , onInput SetSearchTerm
                         , placeholder "Search"
                         , value (Maybe.withDefault "" searchTerm)
@@ -64,7 +64,7 @@ lazyEntry searchTerm tracks activeSortBy sortDirection =
                         Just _ ->
                             span
                                 [ cssClass TracksNavigationIcon
-                                , onClick ClearSearch
+                                , onClick (Search Nothing)
                                 ]
                                 [ Material.Icons.Content.clear
                                     (Color.rgb 205 205 205)

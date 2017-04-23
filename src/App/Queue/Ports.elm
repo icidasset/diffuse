@@ -1,12 +1,12 @@
 port module Queue.Ports exposing (..)
 
-import Queue.Types exposing (Item, Settings)
+import Queue.Types exposing (EngineItem, Settings)
 
 
 -- 💡
 
 
-port activeQueueItemChanged : Maybe Item -> Cmd msg
+port activeQueueItemChanged : Maybe EngineItem -> Cmd msg
 
 
 port storeQueueSettings : Settings -> Cmd msg
