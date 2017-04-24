@@ -82,7 +82,9 @@ update msg model =
         SignOut ->
             (!)
                 { model | authenticatedUser = Nothing }
-                [ Firebase.Auth.deauthenticate () ]
+                [ Firebase.Auth.deauthenticate ()
+                , Navigation.modifyUrl "/"
+                ]
 
         ------------------------------------
         -- Time

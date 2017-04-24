@@ -1,8 +1,12 @@
 module View exposing (entry)
 
+import Color
 import Html exposing (..)
+import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Html.Lazy
+import Material.Icons.Action
+import Material.Icons.Alert
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(..))
 import Styles exposing (..)
@@ -29,43 +33,74 @@ entry : Model -> Html Msg
 entry model =
     div
         []
-        [ -- Overriding states
-          -- 1. Loading
-          -- 2. Need authentication
+        [ -- {override} Loading
           if model.showLoadingScreen then
             div
                 [ cssClass InTheMiddle ]
                 [ Spinner.entry ]
-          else if model.authenticatedUser == Nothing then
-            div
-                [ cssClass InTheMiddle ]
-                [ authButton ]
           else
-            -- Non-overriding, per-page views
             case model.routing.currentPage of
                 ErrorScreen err ->
-                    -- TODO: Add proper styles for the error screen
                     div
-                        [ cssClass InTheMiddle ]
-                        [ text ("Error: " ++ err) ]
+                        [ cssClass Shell ]
+                        [ if model.authenticatedUser == Nothing then
+                            unauthenticatedNavigation model.routing.currentPage
+                          else
+                            authenticatedNavigation model.routing.currentPage
+                        , div
+                            [ cssClasses [ InTheMiddle, Basic ] ]
+                            [ p
+                                []
+                                [ Material.Icons.Alert.error Color.white 14
+                                , strong [] [ text err ]
+                                ]
+                            ]
+                        ]
 
+                About ->
+                    unauthenticated
+                        [ p
+                            []
+                            [ strong [] [ text "Ongaku Ryoho." ]
+                            , br [] []
+                            , text "A music player that connects to your cloud storage."
+                            ]
+                        ]
+                        (model)
+
+                Custom ->
+                    unauthenticated
+                        [ p
+                            []
+                            [ strong [] [ text "Coming soon." ]
+                            , br [] []
+                            , text """
+                                Will allow you to use
+                                a personal Firebase app.
+                              """
+                            ]
+                        ]
+                        (model)
+
+                -- # Need authentication
+                --
                 Index ->
-                    defaultLayout
+                    authenticated
                         [ Tracks.entry model ]
                         (model)
 
                 Queue queuePage ->
-                    defaultLayout
+                    authenticated
                         [ Queue.entry queuePage model ]
                         (model)
 
                 Settings ->
-                    defaultLayout
+                    authenticated
                         [ Settings.entry model ]
                         (model)
 
                 Sources sourcePage ->
-                    defaultLayout
+                    authenticated
                         [ Sources.entry sourcePage model ]
                         (model)
         ]
@@ -75,18 +110,23 @@ entry model =
 -- Authenticated bits
 
 
-defaultLayout : List (Html Msg) -> Model -> Html Msg
-defaultLayout children model =
-    div
-        [ cssClass Shell ]
-        [ Html.Lazy.lazy outsideNavigation model.routing.currentPage
-        , div [ cssClass Insulation ] (children)
-        , Console.entry model
-        ]
+authenticated : List (Html Msg) -> Model -> Html Msg
+authenticated children model =
+    if model.authenticatedUser == Nothing then
+        unauthenticated
+            [ authButton ]
+            (model)
+    else
+        div
+            [ cssClass Shell ]
+            [ Html.Lazy.lazy authenticatedNavigation model.routing.currentPage
+            , div [ cssClass Insulation ] (children)
+            , Console.entry model
+            ]
 
 
-outsideNavigation : Page -> Html Msg
-outsideNavigation currentPage =
+authenticatedNavigation : Page -> Html Msg
+authenticatedNavigation currentPage =
     Navigation.outside
         currentPage
         [ ( text "Tracks", "/" )
@@ -97,7 +137,28 @@ outsideNavigation currentPage =
 
 
 
--- Auth bits
+-- Unauthenticated bits
+
+
+unauthenticated : List (Html Msg) -> Model -> Html Msg
+unauthenticated children model =
+    div
+        [ cssClass Shell ]
+        [ unauthenticatedNavigation model.routing.currentPage
+        , div
+            [ cssClasses [ InTheMiddle, Basic ] ]
+            (children)
+        ]
+
+
+unauthenticatedNavigation : Page -> Html Msg
+unauthenticatedNavigation currentPage =
+    Navigation.outside
+        currentPage
+        [ ( Material.Icons.Action.home navColor 16, "/" )
+        , ( Material.Icons.Action.info navColor 16, "/about" )
+        , ( Material.Icons.Action.settings navColor 16, "/customize" )
+        ]
 
 
 authButton : Html Msg
@@ -146,3 +207,12 @@ googleLogo =
                 []
             ]
         ]
+
+
+
+-- Shared
+
+
+navColor : Color.Color
+navColor =
+    Color.rgba 0 0 0 0.4

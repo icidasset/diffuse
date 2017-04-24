@@ -30,6 +30,12 @@ locationToPage location =
 pageToParentHref : Page -> String
 pageToParentHref page =
     case page of
+        About ->
+            "/about"
+
+        Custom ->
+            "/customize"
+
         Queue _ ->
             "/queue"
 
@@ -58,6 +64,8 @@ route =
         , map (Queue Queue.History) (s "queue" </> s "history")
 
         -- Other
+        , map About (s "about")
+        , map Custom (s "customize")
         , map Settings (s "settings")
         , map Index top
         ]

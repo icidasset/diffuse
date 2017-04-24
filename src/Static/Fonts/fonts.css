@@ -10,6 +10,16 @@
 
 @font-face {
   font-family: 'overpass';
+  src: url('overpass/overpass-light-italic.woff2') format('woff2'),
+       url('overpass/overpass-light-italic.woff') format('woff'),
+       url('overpass/overpass-light-italic.ttf')  format('truetype');
+       font-weight: 300;
+       font-style: italic;
+}
+
+
+@font-face {
+  font-family: 'overpass';
   src: url('overpass/overpass-regular.woff2') format('woff2'),
        url('overpass/overpass-regular.woff') format('woff'),
        url('overpass/overpass-regular.ttf')  format('truetype');

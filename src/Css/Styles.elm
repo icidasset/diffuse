@@ -41,6 +41,7 @@ type Classes
     = AuthenticationButton
     | AuthenticationButtonLogo
     | BackgroundImage
+    | Basic
     | Button
     | ContentBox
     | Insulation
@@ -81,7 +82,7 @@ stylesLocal =
     -- > Not on the <body> for a reason.
     ------------------------------------------------------
     , class BackgroundImage
-        [ backgroundImage (url "images/Background/2.jpg")
+        [ backgroundImage (url "images/Background/4.jpg")
         , backgroundPosition bottom
         , backgroundSize cover
 
@@ -168,6 +169,20 @@ stylesLocal =
         ]
     , label
         [ cursor inherit
+        ]
+    , class Basic
+        [ color (hex "#fff")
+        , lineHeight (num 1.5)
+        , textAlign center
+
+        --
+        , descendants
+            [ svg
+                [ display inlineBlock
+                , marginRight (gr 1)
+                , transform (translateY (px 2))
+                ]
+            ]
         ]
     , class Intro
         [ fontSize (Css.em 0.95)

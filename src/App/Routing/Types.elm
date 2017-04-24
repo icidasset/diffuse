@@ -14,7 +14,9 @@ type alias Model =
 
 
 type Page
-    = ErrorScreen String
+    = About
+    | Custom
+    | ErrorScreen String
     | Index
     | Queue Queue.Page
     | Settings
