@@ -108,6 +108,7 @@ stylesLocal =
         [ displayFlex
         , flexDirection column
         , height (vh 100)
+        , padding2 zero (gr 3)
         ]
 
     ------------------------------------------------------

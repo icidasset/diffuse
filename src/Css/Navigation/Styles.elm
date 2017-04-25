@@ -67,6 +67,11 @@ styles =
                 , padding2 zero (gr 3)
 
                 --
+                , lastChild
+                    [ borderRight zero
+                    ]
+
+                --
                 , children
                     [ span
                         [ display inlineBlock

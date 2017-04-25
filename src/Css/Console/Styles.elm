@@ -38,8 +38,9 @@ styles =
     , class ConsoleButtonsContainer
         [ color (cssColor colorDerivatives.consoleText)
         , displayFlex
-        , justifyContent center
-        , marginTop (gr 1)
+        , justifyContent spaceBetween
+        , margin3 (gr 1) auto zero
+        , maxWidth (px 432)
         , textAlign center
         ]
 
@@ -50,7 +51,6 @@ styles =
         [ cursor pointer
         , height (gr 11)
         , lineHeight (gr 11)
-        , margin2 zero (gr 4)
         , padding2 zero (gr 2)
         , position relative
 
