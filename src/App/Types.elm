@@ -33,8 +33,10 @@ type Msg
     | ActiveQueueItemChanged (Maybe Queue.Item)
     | CleanQueue
     | FillQueue
+    | ResetQueue
     | PlayTrack String
     | ProcessSources
+    | ToggleFavourite String
       -- Other
     | NoOp
 
@@ -66,9 +68,12 @@ type alias Settings =
 
 type alias ProgramFlags =
     { settings : Settings
+    , user : Maybe Firebase.Auth.User
+
+    -- Data
+    , favourites : Maybe (List Json.Encode.Value)
     , sources : Maybe (List Json.Encode.Value)
     , tracks : Maybe (List Json.Encode.Value)
-    , user : Maybe Firebase.Auth.User
     }
 
 

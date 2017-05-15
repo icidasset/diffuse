@@ -33,11 +33,12 @@ function authStatechange(userObj) {
   // {authenticated}
   Promise.all([
     firebase.database().ref(`/users/${maybeUser.uid}/sources`).once("value"),
-    firebase.database().ref(`/users/${maybeUser.uid}/tracks`).once("value")
+    firebase.database().ref(`/users/${maybeUser.uid}/tracks`).once("value"),
+    firebase.database().ref(`/users/${maybeUser.uid}/favourites`).once("value")
   ]).then(
     x => x.map(s => s.val())
   ).then(
-    x => setupElm({ user: maybeUser, sources: x[0], tracks: x[1] })
+    x => setupElm({ user: maybeUser, sources: x[0], tracks: x[1], favourites: x[2] })
   ).catch(
     e => {
       // TODO: Show error message
@@ -98,9 +99,11 @@ function setupElm(params) {
   // Flags
   const flags = {
     settings: { queue: loadSettings("queue") || { repeat: false, shuffle: false } },
+    user: params.user,
+
+    favourites: params.favourites || null,
     sources: params.sources || null,
-    tracks: params.tracks || null,
-    user: params.user
+    tracks: params.tracks || null
   }
 
   // Embed
@@ -187,6 +190,7 @@ function setupElm(params) {
   // > Data
   app.ports.storeSources.subscribe(v => storeData("sources", v));
   app.ports.storeTracks.subscribe(v => storeData("tracks", v));
+  app.ports.storeFavourites.subscribe(v => storeData("favourites", v));
 
   app.ports.storeQueueSettings.subscribe(settings => {
     saveSettings("queue", settings);

@@ -82,7 +82,7 @@ entry model =
                         ]
                         (model)
 
-                -- # Need authentication
+                -- # Needs authentication
                 --
                 Index ->
                     authenticated

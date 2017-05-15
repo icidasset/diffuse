@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit)
 import Html.Keyed
-import Html.Lazy exposing (lazy3)
+import Html.Lazy exposing (lazy, lazy3)
 import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Av
@@ -27,73 +27,16 @@ import Variables exposing (colors, colorDerivatives)
 
 entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
-    lazy3
-        (lazyEntry model.tracks.searchTerm)
-        model.tracks.resultant
-        model.tracks.sortBy
-        model.tracks.sortDirection
-
-
-lazyEntry : Maybe String -> List Track -> SortBy -> SortDirection -> Html TopLevel.Msg
-lazyEntry searchTerm tracks activeSortBy sortDirection =
     div
         [ cssClass TracksContainer ]
-        [ ------------------------------------
-          -- Navigation
-          ------------------------------------
-          div
-            [ cssClass TracksNavigation ]
-            [ Html.map
-                TopLevel.TracksMsg
-                (Html.form
-                    [ onSubmit (Search searchTerm) ]
-                    [ input
-                        [ onBlur (Search searchTerm)
-                        , onInput SetSearchTerm
-                        , placeholder "Search"
-                        , value (Maybe.withDefault "" searchTerm)
-                        ]
-                        []
-                    , span
-                        [ cssClass TracksNavigationIcon ]
-                        [ Material.Icons.Action.search
-                            (Color.rgb 205 205 205)
-                            16
-                        ]
-                    , case searchTerm of
-                        Just _ ->
-                            span
-                                [ cssClass TracksNavigationIcon
-                                , onClick (Search Nothing)
-                                ]
-                                [ Material.Icons.Content.clear
-                                    (Color.rgb 205 205 205)
-                                    16
-                                ]
-
-                        Nothing ->
-                            text ""
-                    ]
-                )
-            , Navigation.insideCustom
-                [ ( Material.Icons.Av.featured_play_list colorDerivatives.text 16, TopLevel.NoOp )
-                ]
-            ]
-
-        ------------------------------------
-        -- Table
-        ------------------------------------
-        , div
-            [ cssClass (TracksChild)
-            , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
-            ]
-            [ if List.isEmpty tracks then
-                div
-                    [ cssClass NoTracksFound ]
-                    [ text "No tracks found" ]
-              else
-                tracksTable tracks activeSortBy sortDirection
-            ]
+        [ lazy
+            navigation
+            model.tracks.searchTerm
+        , lazy3
+            content
+            model.tracks.collectionExposed
+            model.tracks.sortBy
+            model.tracks.sortDirection
         ]
 
 
@@ -101,7 +44,68 @@ lazyEntry searchTerm tracks activeSortBy sortDirection =
 -- Views
 
 
-tracksTable : List Track -> SortBy -> SortDirection -> Html TopLevel.Msg
+navigation : Maybe String -> Html TopLevel.Msg
+navigation searchTerm =
+    div
+        [ cssClass TracksNavigation ]
+        [ Html.map
+            TopLevel.TracksMsg
+            (Html.form
+                [ onSubmit (Search searchTerm) ]
+                [ input
+                    [ onBlur (Search searchTerm)
+                    , onInput SetSearchTerm
+                    , placeholder "Search"
+                    , value (Maybe.withDefault "" searchTerm)
+                    ]
+                    []
+                , span
+                    [ cssClass TracksNavigationIcon ]
+                    [ Material.Icons.Action.search
+                        (Color.rgb 205 205 205)
+                        16
+                    ]
+                , case searchTerm of
+                    Just _ ->
+                        span
+                            [ cssClass TracksNavigationIcon
+                            , onClick (Search Nothing)
+                            ]
+                            [ Material.Icons.Content.clear
+                                (Color.rgb 205 205 205)
+                                16
+                            ]
+
+                    Nothing ->
+                        text ""
+                ]
+            )
+        , Navigation.insideCustom
+            [ ( Material.Icons.Av.featured_play_list colorDerivatives.text 16, TopLevel.NoOp )
+            ]
+        ]
+
+
+content : List IdentifiedTrack -> SortBy -> SortDirection -> Html TopLevel.Msg
+content resultant sortBy sortDirection =
+    div
+        [ cssClass (TracksChild)
+        , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
+        ]
+        [ if List.isEmpty resultant then
+            div
+                [ cssClass NoTracksFound ]
+                [ text "No tracks found" ]
+          else
+            tracksTable resultant sortBy sortDirection
+        ]
+
+
+
+-- Content views
+
+
+tracksTable : List IdentifiedTrack -> SortBy -> SortDirection -> Html TopLevel.Msg
 tracksTable tracks activeSortBy sortDirection =
     let
         sortIcon =
@@ -132,21 +136,29 @@ tracksTable tracks activeSortBy sortDirection =
                 ]
             , Html.Keyed.node
                 "tbody"
-                [ on "dblclick" playTrack ]
+                [ on "dblclick" playTrack, on "click" toggleFavourite ]
                 (List.indexedMap tracksTableItem tracks)
             ]
 
 
-tracksTableItem : Int -> Track -> ( String, Html TopLevel.Msg )
-tracksTableItem index track =
+tracksTableItem : Int -> IdentifiedTrack -> ( String, Html TopLevel.Msg )
+tracksTableItem index ( identifiers, track ) =
     let
         key =
             toString index
+
+        favAttr =
+            case identifiers.isFavourite of
+                True ->
+                    "t"
+
+                False ->
+                    "f"
     in
         ( key
         , tr
             [ rel key ]
-            [ td [] [{- starIcon -}]
+            [ td [ attribute "data-favourite" favAttr ] [ text "" ]
             , td [] [ text track.tags.title ]
             , td [] [ text track.tags.artist ]
             , td [] [ text track.tags.album ]
@@ -169,6 +181,23 @@ tableTrackDecoder =
         [ Decode.at [ "target", "parentNode", "attributes", "rel", "value" ] Decode.string
         , Decode.at [ "target", "attributes", "rel", "value" ] Decode.string
         ]
+
+
+toggleFavourite : Decode.Decoder TopLevel.Msg
+toggleFavourite =
+    Decode.map TopLevel.ToggleFavourite tableFavouriteDecoder
+
+
+tableFavouriteDecoder : Decode.Decoder String
+tableFavouriteDecoder =
+    Decode.string
+        |> Decode.at [ "target", "attributes", "data-favourite", "value" ]
+        |> Decode.andThen
+            (\_ ->
+                Decode.at
+                    [ "target", "parentNode", "attributes", "rel", "value" ]
+                    Decode.string
+            )
 
 
 sortBy : SortBy -> TopLevel.Msg
@@ -204,8 +233,3 @@ maybeShowSortIcon activeSortBy targetSortBy sortIcon =
         sortIcon
     else
         text ""
-
-
-starIcon : Html TopLevel.Msg
-starIcon =
-    Material.Icons.Toggle.star (Color.greyscale 0.0675) 16

@@ -26,6 +26,8 @@ import Queue.Ports
 import Queue.Types
 import Queue.Utils
 import Sources.Types
+import Tracks.Types
+import Tracks.Utils
 
 
 -- 💧
@@ -147,7 +149,8 @@ update msg model =
         CleanQueue ->
             (!)
                 model
-                [ model.tracks.searchResults
+                [ model.tracks.collectionHarvested
+                    |> List.map Tracks.Utils.unindentify
                     |> Queue.Types.Clean
                     |> QueueMsg
                     |> do
@@ -156,8 +159,17 @@ update msg model =
         FillQueue ->
             (!)
                 model
-                [ model.tracks.searchResults
+                [ model.tracks.collectionHarvested
+                    |> List.map Tracks.Utils.unindentify
                     |> Queue.Types.Fill model.timestamp
+                    |> QueueMsg
+                    |> do
+                ]
+
+        ResetQueue ->
+            (!)
+                model
+                [ Queue.Types.Reset
                     |> QueueMsg
                     |> do
                 ]
@@ -168,10 +180,11 @@ update msg model =
                 [ index
                     |> String.toInt
                     |> Result.toMaybe
-                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.resultant)
-                    |> Maybe.map (Queue.Types.InjectFirstAndPlay)
-                    |> Maybe.map (QueueMsg)
-                    |> Maybe.map (do)
+                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collectionExposed)
+                    |> Maybe.map Tracks.Utils.unindentify
+                    |> Maybe.map Queue.Types.InjectFirstAndPlay
+                    |> Maybe.map QueueMsg
+                    |> Maybe.map do
                     |> Maybe.withDefault Cmd.none
                 ]
 
@@ -181,6 +194,15 @@ update msg model =
                 [ model.tracks.collection
                     |> Sources.Types.Process
                     |> SourcesMsg
+                    |> do
+                ]
+
+        ToggleFavourite index ->
+            (!)
+                model
+                [ index
+                    |> Tracks.Types.ToggleFavourite
+                    |> TracksMsg
                     |> do
                 ]
 

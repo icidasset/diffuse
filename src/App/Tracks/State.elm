@@ -18,8 +18,11 @@ import Utils exposing (do, doDelayed)
 initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
     { collection = []
-    , resultant = []
-    , searchResults = []
+    , collectionIdentified = []
+    , collectionHarvested = []
+    , collectionExposed = []
+    , exposedStep = 0
+    , favourites = decodeFavourites (Maybe.withDefault [] flags.favourites)
     , searchTerm = Nothing
     , sortBy = Artist
     , sortDirection = Asc
@@ -33,16 +36,22 @@ initialCommands maybeEncodedTracks =
             Maybe.withDefault [] maybeEncodedTracks
     in
         Cmd.batch
-            [ encodedTracks
+            [ -- Don't block the UI
+              -- Pt. 1
+              encodedTracks
                 |> List.take partial
                 |> InitialCollection
                 |> TopLevel.TracksMsg
                 |> do
+
+            -- Pt.  2
             , encodedTracks
                 |> List.drop partial
                 |> InitialCollection
                 |> TopLevel.TracksMsg
                 |> doDelayed (Time.millisecond * 1000)
+
+            -- Fill queue
             , TopLevel.FillQueue
                 |> doDelayed (Time.millisecond * 1250)
             ]
@@ -58,13 +67,7 @@ update msg model =
         -- # Recalibrate
         --
         Recalibrate ->
-            let
-                col =
-                    List.take partial model.searchResults
-            in
-                (!)
-                    { model | resultant = col }
-                    []
+            (!) (expose 1 model) []
 
         -- # Sort
         --
@@ -77,11 +80,14 @@ update msg model =
                         Desc
                     else
                         Asc
+
+                sortFn =
+                    sortTracksBy property sortDir
             in
                 ($)
                     { model
-                        | collection = sortTracksBy property sortDir model.collection
-                        , searchResults = sortTracksBy property sortDir model.searchResults
+                        | collectionIdentified = sortFn model.collectionIdentified
+                        , collectionHarvested = sortFn model.collectionHarvested
                         , sortBy = property
                         , sortDirection = sortDir
                     }
@@ -99,28 +105,40 @@ update msg model =
                     encodedTracks
                         |> decodeTracks
                         |> (++) model.collection
+
+                colIdent =
+                    col
+                        |> identifyCollection model.favourites
                         |> sortTracksBy model.sortBy model.sortDirection
-            in
-                (!)
+
+                newModel =
                     { model
                         | collection = col
-                        , resultant = List.take partial col
-                        , searchResults = col
+                        , collectionIdentified = colIdent
+                        , collectionHarvested = colIdent
                     }
+            in
+                (!)
+                    (expose 1 newModel)
                     []
 
         -- # Update Collection
         --
         UpdateCollection tracks ->
             let
-                newCollection =
-                    sortTracksBy model.sortBy model.sortDirection tracks
+                newIdentifiedCollection =
+                    tracks
+                        |> identifyCollection model.favourites
+                        |> sortTracksBy model.sortBy model.sortDirection
 
                 encodedCollection =
-                    List.map Tracks.Encoding.encode newCollection
+                    List.map Tracks.Encoding.encodeTrack tracks
             in
                 (!)
-                    { model | collection = newCollection }
+                    { model
+                        | collection = tracks
+                        , collectionIdentified = newIdentifiedCollection
+                    }
                     [ do TopLevel.CleanQueue
                     , Firebase.Data.storeTracks encodedCollection
                     , Ports.updateSearchIndex encodedCollection
@@ -151,7 +169,7 @@ update msg model =
             let
                 col =
                     List.filter
-                        (\t -> t.sourceId /= sourceId)
+                        (.sourceId >> (/=) sourceId)
                         (model.collection)
             in
                 ($)
@@ -193,9 +211,9 @@ update msg model =
         -- > Step 2, perform search
         Search Nothing ->
             ($)
-                { model | searchTerm = Nothing, searchResults = model.collection }
+                { model | collectionHarvested = model.collectionIdentified, searchTerm = Nothing }
                 [ do Recalibrate ]
-                []
+                [ do TopLevel.ResetQueue ]
 
         Search (Just term) ->
             ($)
@@ -206,38 +224,62 @@ update msg model =
         -- > Step 3, receive search results
         ReceiveSearchResults [] ->
             ($)
-                { model
-                    | searchResults =
-                        []
-                }
+                { model | collectionHarvested = [] }
                 [ do Recalibrate ]
-                []
+                [ do TopLevel.ResetQueue ]
 
         ReceiveSearchResults trackIds ->
             ($)
-                { model
-                    | searchResults =
-                        List.filter (\t -> List.member t.id trackIds) model.collection
-                }
+                { model | collectionHarvested = harvest trackIds model }
                 [ do Recalibrate ]
-                []
+                [ do TopLevel.ResetQueue ]
+
+        ------------------------------------
+        -- Favourites
+        ------------------------------------
+        ToggleFavourite index_as_string ->
+            let
+                maybeIdentifiedTrack =
+                    index_as_string
+                        |> String.toInt
+                        |> Result.toMaybe
+                        |> Maybe.andThen (\idx -> List.getAt idx model.collectionExposed)
+            in
+                case maybeIdentifiedTrack of
+                    Just ( i, t ) ->
+                        let
+                            newFavourites =
+                                toggleFavourite model.favourites ( i, t )
+
+                            encodedFavourites =
+                                List.map Tracks.Encoding.encodeFavourite newFavourites
+                        in
+                            (!)
+                                { model
+                                    | collectionExposed =
+                                        toggleFavouriteInCollection model.collectionIdentified t
+                                    , collectionHarvested =
+                                        toggleFavouriteInCollection model.collectionHarvested t
+                                    , collectionExposed =
+                                        toggleFavouriteInCollection model.collectionExposed t
+                                    , favourites =
+                                        newFavourites
+                                }
+                                [ Firebase.Data.storeFavourites encodedFavourites ]
+
+                    Nothing ->
+                        (!)
+                            model
+                            []
 
         ------------------------------------
         -- UI
         ------------------------------------
         ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
-            -- When you're over the point-of-no-return
             if scrolledHeight >= (contentHeight - containerHeight - 50) then
-                let
-                    par =
-                        (List.length model.resultant) + partial
-
-                    col =
-                        List.take par model.searchResults
-                in
-                    (!) { model | resultant = col } []
+                (!) (expose (model.exposedStep + 1) model) []
             else
-                (!) model []
+                (!) (model) []
 
 
 
@@ -251,12 +293,10 @@ subscriptions _ =
 
 
 
--- Utils
+-- Sorting
 
 
-{-| Sort.
--}
-sortTracksBy : SortBy -> SortDirection -> List Track -> List Track
+sortTracksBy : SortBy -> SortDirection -> List IdentifiedTrack -> List IdentifiedTrack
 sortTracksBy property direction =
     let
         sortFn =
@@ -279,27 +319,162 @@ sortTracksBy property direction =
         List.sortBy sortFn >> dirFn
 
 
-sortByAlbum : Track -> String
-sortByAlbum t =
-    t.tags.title
-        |> String.append (toString t.tags.nr)
-        |> String.append t.tags.artist
-        |> String.append t.tags.album
-        |> String.toLower
+sortByAlbum : IdentifiedTrack -> String
+sortByAlbum twi =
+    let
+        t =
+            Tuple.second twi
+    in
+        t.tags.title
+            |> String.append (toString t.tags.nr)
+            |> String.append t.tags.artist
+            |> String.append t.tags.album
+            |> String.toLower
 
 
-sortByArtist : Track -> String
-sortByArtist t =
-    t.tags.title
-        |> String.append (toString t.tags.nr)
-        |> String.append t.tags.album
-        |> String.append t.tags.artist
-        |> String.toLower
+sortByArtist : IdentifiedTrack -> String
+sortByArtist twi =
+    let
+        t =
+            Tuple.second twi
+    in
+        t.tags.title
+            |> String.append (toString t.tags.nr)
+            |> String.append t.tags.album
+            |> String.append t.tags.artist
+            |> String.toLower
 
 
-sortByTitle : Track -> String
-sortByTitle t =
-    t.tags.album
-        |> String.append t.tags.artist
-        |> String.append t.tags.title
-        |> String.toLower
+sortByTitle : IdentifiedTrack -> String
+sortByTitle twi =
+    let
+        t =
+            Tuple.second twi
+    in
+        t.tags.album
+            |> String.append t.tags.artist
+            |> String.append t.tags.title
+            |> String.toLower
+
+
+
+-- Favouriting
+
+
+toggleFavourite : List Favourite -> IdentifiedTrack -> List Favourite
+toggleFavourite favourites ( i, t ) =
+    let
+        artist =
+            String.toLower t.tags.artist
+
+        title =
+            String.toLower t.tags.title
+    in
+        case i.isFavourite of
+            True ->
+                List.filter
+                    (\f -> not (f.artist == artist && f.title == title))
+                    favourites
+
+            False ->
+                List.append
+                    favourites
+                    [ { artist = artist
+                      , title = title
+                      }
+                    ]
+
+
+toggleFavouriteInCollection : List IdentifiedTrack -> Track -> List IdentifiedTrack
+toggleFavouriteInCollection collection track =
+    let
+        indexer =
+            Tuple.second >> .id >> (==) track.id
+
+        updater =
+            Tuple.mapFirst (\i -> { i | isFavourite = not i.isFavourite })
+    in
+        collection
+            |> List.findIndex indexer
+            |> Maybe.andThen (\idx -> List.updateAt idx updater collection)
+            |> Maybe.withDefault collection
+
+
+
+-- Identifying
+
+
+identifyCollection : List Favourite -> List Track -> List IdentifiedTrack
+identifyCollection favourites tracks =
+    tracks
+        |> List.foldl identifier ( [], favourites )
+        |> Tuple.first
+
+
+identifier :
+    Track
+    -> ( List IdentifiedTrack, List Favourite )
+    -> ( List IdentifiedTrack, List Favourite )
+identifier track ( acc, favourites ) =
+    let
+        artist =
+            String.toLower track.tags.artist
+
+        title =
+            String.toLower track.tags.title
+
+        idx =
+            List.findIndex
+                (\f -> f.artist == artist && f.title == title)
+                favourites
+    in
+        case idx of
+            Just i ->
+                ( acc ++ [ ( { isFavourite = True }, track ) ]
+                , List.removeAt i favourites
+                )
+
+            Nothing ->
+                ( acc ++ [ ( { isFavourite = False }, track ) ]
+                , favourites
+                )
+
+
+
+-- Harvesting
+
+
+harvest : List TrackId -> Model -> List IdentifiedTrack
+harvest trackIds model =
+    model.collectionIdentified
+        |> List.foldl harvester ( [], trackIds )
+        |> Tuple.first
+
+
+harvester :
+    IdentifiedTrack
+    -> ( List IdentifiedTrack, List TrackId )
+    -> ( List IdentifiedTrack, List TrackId )
+harvester ( i, t ) ( acc, trackIds ) =
+    case List.findIndex ((==) t.id) trackIds of
+        Just idx ->
+            ( acc ++ [ ( i, t ) ]
+            , List.removeAt idx trackIds
+            )
+
+        Nothing ->
+            ( acc
+            , trackIds
+            )
+
+
+
+-- Exposing
+
+
+expose : Int -> Model -> Model
+expose step model =
+    { model
+        | collectionExposed = List.take (step * partial) model.collectionHarvested
+        , exposedStep = step
+    }

@@ -5,7 +5,7 @@ import Json.Encode as Json
 import Regex exposing (HowMany(..), regex)
 
 
--- `Track` record
+-- `Tags` record
 
 
 type alias Tags =
@@ -28,6 +28,10 @@ type alias TagUrls =
     }
 
 
+
+-- `Track` record
+
+
 type alias Track =
     { id : TrackId
     , path : String
@@ -42,6 +46,29 @@ type alias SourceId =
 
 type alias TrackId =
     String
+
+
+
+-- `IdentifiedTrack` record
+
+
+type alias IdentifiedTrack =
+    ( Identifiers, Track )
+
+
+type alias Identifiers =
+    { isFavourite : Bool
+    }
+
+
+
+-- `Favourite` record
+
+
+type alias Favourite =
+    { artist : String
+    , title : String
+    }
 
 
 
@@ -77,14 +104,19 @@ type Msg
     | ReceiveSearchResults (List SourceId)
     | Search (Maybe String)
     | SetSearchTerm String
+      -- Favourites
+    | ToggleFavourite String
       -- UI
     | ScrollThroughTable ScrollPos
 
 
 type alias Model =
     { collection : List Track
-    , resultant : List Track -- Use this for the UI
-    , searchResults : List Track
+    , collectionIdentified : List IdentifiedTrack
+    , collectionHarvested : List IdentifiedTrack
+    , collectionExposed : List IdentifiedTrack -- Use this for the UI
+    , exposedStep : Int
+    , favourites : List Favourite
     , searchTerm : Maybe String
     , sortBy : SortBy
     , sortDirection : SortDirection

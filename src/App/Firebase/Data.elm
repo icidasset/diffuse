@@ -6,6 +6,9 @@ port module Firebase.Data exposing (..)
 import Json.Encode as Json
 
 
+port storeFavourites : List Json.Value -> Cmd msg
+
+
 port storeSources : List Json.Value -> Cmd msg
 
 

@@ -173,11 +173,14 @@ update msg model =
         --
         Clean tracks ->
             let
+                newPast =
+                    List.filter (\i -> List.member i.track tracks) model.past
+
                 newFuture =
                     List.filter (\i -> List.member i.track tracks) model.future
             in
                 (!)
-                    { model | future = newFuture }
+                    { model | future = newFuture, past = newPast }
                     [ do TopLevel.FillQueue ]
 
         -- # Reset

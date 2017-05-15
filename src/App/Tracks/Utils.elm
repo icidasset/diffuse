@@ -14,7 +14,14 @@ import Utils
 decodeTracks : List Json.Value -> List Track
 decodeTracks encodedTracks =
     encodedTracks
-        |> List.map Tracks.Encoding.decode
+        |> List.map Tracks.Encoding.decodeTrack
+        |> Maybe.values
+
+
+decodeFavourites : List Json.Value -> List Favourite
+decodeFavourites encodedFavourites =
+    encodedFavourites
+        |> List.map Tracks.Encoding.decodeFavourite
         |> Maybe.values
 
 
@@ -30,3 +37,17 @@ partial =
 ($) : Illumination Model Msg
 ($) =
     Utils.illuminate TopLevel.TracksMsg
+
+
+
+-- 🌱
+
+
+getIdentifiers : IdentifiedTrack -> Identifiers
+getIdentifiers =
+    Tuple.first
+
+
+unindentify : IdentifiedTrack -> Track
+unindentify =
+    Tuple.second

@@ -6,7 +6,7 @@ import Console.Styles exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (on, onClick)
-import Html.Lazy
+import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode as Decode
 import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
@@ -23,9 +23,9 @@ entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     div
         [ cssClass Console ]
-        [ Html.Lazy.lazy nowPlaying model.queue.activeItem
-        , progress model.console.progress
-        , Html.Lazy.lazy2 buttons model.queue model.console.isPlaying
+        [ lazy nowPlaying model.queue.activeItem
+        , lazy progress model.console.progress
+        , lazy2 buttons model.queue model.console.isPlaying
         ]
 
 

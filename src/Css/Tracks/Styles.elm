@@ -153,9 +153,13 @@ styles =
                 , textOverflow ellipsis
                 , whiteSpace noWrap
                 ]
-            , (td << toa << descendants << toa << svg)
-                [ display inlineBlock
-                , verticalAlign textBottom
+            , selector "td[data-favourite]"
+                [ color (hex "#dedede")
+                , before [ property "content" "'✕'" ]
+                ]
+            , selector "td[data-favourite=\"t\"]"
+                [ color (cssColor colors.base0A)
+                , before [ property "content" "'✔'" ]
                 ]
 
             -- <tbody> Add some extra space on top
