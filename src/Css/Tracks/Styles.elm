@@ -155,11 +155,12 @@ styles =
                 ]
             , selector "td[data-favourite]"
                 [ color (hex "#dedede")
-                , before [ property "content" "'✕'" ]
+                , fontFamilies [ "Material Icons" ]
+                , before [ property "content" "'favorite_border'" ]
                 ]
             , selector "td[data-favourite=\"t\"]"
-                [ color (cssColor colors.base0A)
-                , before [ property "content" "'✔'" ]
+                [ color (cssColor colors.base08)
+                , before [ property "content" "'favorite'" ]
                 ]
 
             -- <tbody> Add some extra space on top
