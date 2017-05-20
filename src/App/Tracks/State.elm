@@ -3,6 +3,7 @@ module Tracks.State exposing (..)
 import Firebase.Data
 import Json.Encode as Json
 import List.Extra as List
+import Response
 import Time
 import Tracks.Encoding
 import Tracks.Ports as Ports
@@ -23,6 +24,8 @@ initialModel flags =
     , collectionExposed = []
     , exposedStep = 0
     , favourites = decodeFavourites (Maybe.withDefault [] flags.favourites)
+    , favouritesOnly = False
+    , searchResults = Nothing
     , searchTerm = Nothing
     , sortBy = Artist
     , sortDirection = Asc
@@ -211,9 +214,10 @@ update msg model =
         -- > Step 2, perform search
         Search Nothing ->
             ($)
-                { model | collectionHarvested = model.collectionIdentified, searchTerm = Nothing }
+                { model | searchResults = Nothing, searchTerm = Nothing }
                 [ do Recalibrate ]
                 [ do TopLevel.ResetQueue ]
+                |> Response.mapModel harvest
 
         Search (Just term) ->
             ($)
@@ -224,19 +228,22 @@ update msg model =
         -- > Step 3, receive search results
         ReceiveSearchResults [] ->
             ($)
-                { model | collectionHarvested = [] }
+                { model | searchResults = Just [] }
                 [ do Recalibrate ]
                 [ do TopLevel.ResetQueue ]
+                |> Response.mapModel harvest
 
         ReceiveSearchResults trackIds ->
             ($)
-                { model | collectionHarvested = harvest trackIds model }
+                { model | searchResults = Just trackIds }
                 [ do Recalibrate ]
                 [ do TopLevel.ResetQueue ]
+                |> Response.mapModel harvest
 
         ------------------------------------
         -- Favourites
         ------------------------------------
+        -- > Make a track a favourite, or remove it as a favourite
         ToggleFavourite index_as_string ->
             let
                 maybeIdentifiedTrack =
@@ -271,6 +278,12 @@ update msg model =
                         (!)
                             model
                             []
+
+        -- Filter collection by favourites only {toggle}
+        ToggleFavouritesOnly ->
+            { model | favouritesOnly = not model.favouritesOnly }
+                |> harvest
+                |> Response.withCmd (do TopLevel.RecalibrateTracks)
 
         ------------------------------------
         -- UI
@@ -444,11 +457,29 @@ identifier track ( acc, favourites ) =
 -- Harvesting
 
 
-harvest : List TrackId -> Model -> List IdentifiedTrack
-harvest trackIds model =
-    model.collectionIdentified
-        |> List.foldl harvester ( [], trackIds )
-        |> Tuple.first
+harvest : Model -> Model
+harvest model =
+    let
+        newCollection =
+            case model.searchResults of
+                Just [] ->
+                    []
+
+                Just trackIds ->
+                    model.collectionIdentified
+                        |> List.foldl harvester ( [], trackIds )
+                        |> Tuple.first
+
+                Nothing ->
+                    model.collectionIdentified
+
+        newCollectionWOWF =
+            if model.favouritesOnly then
+                List.filter (\( i, t ) -> i.isFavourite == True) newCollection
+            else
+                newCollection
+    in
+        { model | collectionHarvested = newCollectionWOWF }
 
 
 harvester :

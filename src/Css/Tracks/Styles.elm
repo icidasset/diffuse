@@ -7,7 +7,8 @@ import Variables exposing (colors, colorDerivatives)
 
 
 type Classes
-    = NoTracksFound
+    = FavouritesOnly
+    | NoTracksFound
     | TracksContainer
     | TracksChild
     | TracksNavigation
@@ -93,6 +94,13 @@ styles =
                 -- Clear icon
                 , nthOfType "2"
                     [ cursor pointer
+                    , right (gr 6)
+                    , zIndex (int 2)
+                    ]
+
+                -- Favourites-only icon
+                , nthOfType "3"
+                    [ cursor pointer
                     , right (gr 2)
                     , zIndex (int 2)
                     ]
@@ -173,6 +181,14 @@ styles =
                 [ paddingBottom (gr 2)
                 ]
             ]
+        ]
+    , (class FavouritesOnly
+        << toa
+        << descendants
+        << toa
+        << selector "td[data-favourite]"
+      )
+        [ color (hex "#dedede")
         ]
     ]
 

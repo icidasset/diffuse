@@ -106,6 +106,7 @@ type Msg
     | SetSearchTerm String
       -- Favourites
     | ToggleFavourite String
+    | ToggleFavouritesOnly
       -- UI
     | ScrollThroughTable ScrollPos
 
@@ -117,6 +118,8 @@ type alias Model =
     , collectionExposed : List IdentifiedTrack -- Use this for the UI
     , exposedStep : Int
     , favourites : List Favourite
+    , favouritesOnly : Bool -- Whether or not to only show favourites in the UI
+    , searchResults : Maybe (List TrackId)
     , searchTerm : Maybe String
     , sortBy : SortBy
     , sortDirection : SortDirection

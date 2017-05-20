@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit)
 import Html.Keyed
-import Html.Lazy exposing (lazy, lazy3)
+import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Av
@@ -18,7 +18,7 @@ import Styles exposing (Classes(Button, ContentBox))
 import Tracks.Styles exposing (..)
 import Tracks.Types exposing (..)
 import Types as TopLevel exposing (Model, Msg)
-import Utils exposing (cssClass)
+import Utils exposing (cssClass, cssClasses)
 import Variables exposing (colors, colorDerivatives)
 
 
@@ -28,10 +28,11 @@ import Variables exposing (colors, colorDerivatives)
 entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     div
-        [ cssClass TracksContainer ]
-        [ lazy
+        [ entryClasses model.tracks.favouritesOnly ]
+        [ lazy2
             navigation
             model.tracks.searchTerm
+            model.tracks.favouritesOnly
         , lazy3
             content
             model.tracks.collectionExposed
@@ -40,44 +41,81 @@ entry model =
         ]
 
 
+entryClasses : Bool -> Attribute TopLevel.Msg
+entryClasses favouritesOnly =
+    case favouritesOnly of
+        True ->
+            cssClasses [ TracksContainer, FavouritesOnly ]
+
+        False ->
+            cssClasses [ TracksContainer ]
+
+
 
 -- Views
 
 
-navigation : Maybe String -> Html TopLevel.Msg
-navigation searchTerm =
+navigation : Maybe String -> Bool -> Html TopLevel.Msg
+navigation searchTerm favouritesOnly =
     div
         [ cssClass TracksNavigation ]
         [ Html.map
             TopLevel.TracksMsg
             (Html.form
                 [ onSubmit (Search searchTerm) ]
-                [ input
+                [ -- Input
+                  input
                     [ onBlur (Search searchTerm)
                     , onInput SetSearchTerm
                     , placeholder "Search"
                     , value (Maybe.withDefault "" searchTerm)
                     ]
                     []
+
+                -- Search icon
                 , span
                     [ cssClass TracksNavigationIcon ]
                     [ Material.Icons.Action.search
                         (Color.rgb 205 205 205)
                         16
                     ]
-                , case searchTerm of
-                    Just _ ->
-                        span
-                            [ cssClass TracksNavigationIcon
-                            , onClick (Search Nothing)
-                            ]
+
+                -- Clear icon
+                , span
+                    [ cssClass TracksNavigationIcon
+                    , onClick (Search Nothing)
+                    , title "Clear search"
+                    ]
+                    (case searchTerm of
+                        Just _ ->
                             [ Material.Icons.Content.clear
                                 (Color.rgb 205 205 205)
                                 16
                             ]
 
-                    Nothing ->
-                        text ""
+                        Nothing ->
+                            []
+                    )
+
+                -- Favourites-only icon
+                , span
+                    [ cssClass TracksNavigationIcon
+                    , onClick ToggleFavouritesOnly
+                    , title "Toggle favourites-only"
+                    ]
+                    (case favouritesOnly of
+                        True ->
+                            [ Material.Icons.Action.favorite
+                                colors.base08
+                                16
+                            ]
+
+                        False ->
+                            [ Material.Icons.Action.favorite_border
+                                (Color.rgb 205 205 205)
+                                16
+                            ]
+                    )
                 ]
             )
         , Navigation.insideCustom
