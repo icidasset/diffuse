@@ -33,6 +33,7 @@ type Msg
     | ActiveQueueItemChanged (Maybe Queue.Item)
     | CleanQueue
     | FillQueue
+    | RecalibrateTracks
     | ResetQueue
     | PlayTrack String
     | ProcessSources

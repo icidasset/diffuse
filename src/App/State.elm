@@ -166,6 +166,14 @@ update msg model =
                     |> do
                 ]
 
+        RecalibrateTracks ->
+            (!)
+                model
+                [ Tracks.Types.Recalibrate
+                    |> TracksMsg
+                    |> do
+                ]
+
         ResetQueue ->
             (!)
                 model
