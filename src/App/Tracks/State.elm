@@ -258,21 +258,23 @@ update msg model =
                             newFavourites =
                                 toggleFavourite model.favourites ( i, t )
 
+                            newIdentifiedCollection =
+                                toggleFavouriteInCollection model.collectionIdentified t
+
                             encodedFavourites =
                                 List.map Tracks.Encoding.encodeFavourite newFavourites
                         in
-                            (!)
-                                { model
-                                    | collectionExposed =
-                                        toggleFavouriteInCollection model.collectionIdentified t
-                                    , collectionHarvested =
-                                        toggleFavouriteInCollection model.collectionHarvested t
-                                    , collectionExposed =
-                                        toggleFavouriteInCollection model.collectionExposed t
-                                    , favourites =
-                                        newFavourites
-                                }
-                                [ Firebase.Data.storeFavourites encodedFavourites ]
+                            model
+                                |> Response.withCmd (Firebase.Data.storeFavourites encodedFavourites)
+                                |> Response.mapModel
+                                    (\m ->
+                                        { m
+                                            | collectionIdentified = newIdentifiedCollection
+                                            , favourites = newFavourites
+                                        }
+                                    )
+                                |> Response.mapModel harvest
+                                |> Response.mapModel (expose model.exposedStep)
 
                     Nothing ->
                         (!)
