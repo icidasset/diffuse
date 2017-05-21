@@ -53,19 +53,12 @@ nowPlaying activeItem =
 progress : Float -> Html TopLevel.Msg
 progress progress =
     div
-        [ cssClass ProgressBar
-        , TopLevel.ConsoleMsg
-            |> (>>) Seek
-            |> decodeClickLocation
-            |> on "click"
-        ]
+        (progressAttributes)
         [ div
             [ cssClass ProgressBarInner ]
             [ let
                 width =
-                    progress
-                        |> (*) 100
-                        |> toString
+                    toString (progress * 100)
               in
                 div
                     [ cssClass ProgressBarValue
@@ -74,6 +67,16 @@ progress progress =
                     []
             ]
         ]
+
+
+progressAttributes : List (Attribute TopLevel.Msg)
+progressAttributes =
+    [ cssClass ProgressBar
+    , TopLevel.ConsoleMsg
+        |> (>>) Seek
+        |> decodeClickLocation
+        |> on "click"
+    ]
 
 
 

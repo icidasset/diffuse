@@ -36,9 +36,9 @@ styles =
         , zIndex (int 2)
         ]
     , class NoTracksFound
-        [ color (cssColor colors.base09)
-        , fontWeight (int 600)
+        [ color (cssColor colors.base06)
         , left (pct 50)
+        , opacity (num 0.75)
         , position absolute
         , textAlign center
         , top (pct 50)

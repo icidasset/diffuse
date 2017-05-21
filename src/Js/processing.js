@@ -42,12 +42,13 @@ function getTags(urlGET, urlHEAD) {
 
 function pickTags(tagsFromJsmediatags) {
   const tags = _.pick(
-    ["album", "artist", "genre", "title", "track", "year"],
+    ["album", "artist", "disk", "genre", "title", "track", "year"],
     tagsFromJsmediatags.tags
   );
 
   return {
-    nr: (tags.track ? parseInt(tags.track, 10) : 0) || 0,
+    disc: (tags.disk ? parseInt(tags.disk, 10) : 1) || 1,
+    nr: (tags.track ? parseInt(tags.track, 10) : 1) || 1,
     album: tags.album && tags.album.length ? tags.album : "Unknown",
     artist: tags.artist && tags.artist.length ? tags.artist : "Unknown",
     title: tags.title && tags.title.length ? tags.title : "Unknown",
