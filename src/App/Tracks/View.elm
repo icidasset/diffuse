@@ -35,7 +35,7 @@ entry model =
             model.tracks.favouritesOnly
         , lazy3
             content
-            model.tracks.collectionExposed
+            model.tracks.collection.exposed
             model.tracks.sortBy
             model.tracks.sortDirection
         ]

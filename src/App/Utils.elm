@@ -85,6 +85,13 @@ doDelayed delay msg =
     Task.perform (always msg) (Process.sleep delay)
 
 
+addCmd : Cmd msg -> ( model, Cmd msg ) -> ( model, Cmd msg )
+addCmd cmdToAdd ( model, currentCmd ) =
+    ( model
+    , Cmd.batch [ currentCmd, cmdToAdd ]
+    )
+
+
 {-| A child state `update` function that
     takes both child-level messages and top-level messages.
 -}

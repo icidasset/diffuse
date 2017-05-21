@@ -1,11 +1,11 @@
 module Tracks.State exposing (..)
 
-import Firebase.Data
 import Json.Encode as Json
 import List.Extra as List
 import Response
 import Time
-import Tracks.Encoding
+import Tracks.Collection as Collection exposing (..)
+import Tracks.Favourites as Favourites
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
@@ -18,11 +18,8 @@ import Utils exposing (do, doDelayed)
 
 initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
-    { collection = []
-    , collectionIdentified = []
-    , collectionHarvested = []
-    , collectionExposed = []
-    , exposedStep = 0
+    { collection = emptyCollection
+    , exposedStep = 1
     , favourites = decodeFavourites (Maybe.withDefault [] flags.favourites)
     , favouritesOnly = False
     , searchResults = Nothing
@@ -42,14 +39,14 @@ initialCommands maybeEncodedTracks =
             [ -- Don't block the UI
               -- Pt. 1
               encodedTracks
-                |> List.take partial
+                |> List.take Collection.partial
                 |> InitialCollection
                 |> TopLevel.TracksMsg
                 |> do
 
             -- Pt.  2
             , encodedTracks
-                |> List.drop partial
+                |> List.drop Collection.partial
                 |> InitialCollection
                 |> TopLevel.TracksMsg
                 |> doDelayed (Time.millisecond * 1000)
@@ -70,7 +67,11 @@ update msg model =
         -- # Recalibrate
         --
         Recalibrate ->
-            (!) (expose 1 model) []
+            model
+                |> Collection.makeParcel
+                |> Collection.recalibrate
+                |> Collection.reexpose
+                |> Collection.set
 
         -- # Sort
         --
@@ -83,19 +84,11 @@ update msg model =
                         Desc
                     else
                         Asc
-
-                sortFn =
-                    sortTracksBy property sortDir
             in
-                ($)
-                    { model
-                        | collectionIdentified = sortFn model.collectionIdentified
-                        , collectionHarvested = sortFn model.collectionHarvested
-                        , sortBy = property
-                        , sortDirection = sortDir
-                    }
-                    [ do Recalibrate ]
-                    []
+                { model | sortBy = property, sortDirection = sortDir }
+                    |> Collection.makeParcel
+                    |> Collection.reidentify
+                    |> Collection.set
 
         ------------------------------------
         -- Collection, Pt. 1
@@ -103,50 +96,10 @@ update msg model =
         -- # Initial Collection
         --
         InitialCollection encodedTracks ->
-            let
-                col =
-                    encodedTracks
-                        |> decodeTracks
-                        |> (++) model.collection
-
-                colIdent =
-                    col
-                        |> identifyCollection model.favourites
-                        |> sortTracksBy model.sortBy model.sortDirection
-
-                newModel =
-                    { model
-                        | collection = col
-                        , collectionIdentified = colIdent
-                        , collectionHarvested = colIdent
-                    }
-            in
-                (!)
-                    (expose 1 newModel)
-                    []
-
-        -- # Update Collection
-        --
-        UpdateCollection tracks ->
-            let
-                newIdentifiedCollection =
-                    tracks
-                        |> identifyCollection model.favourites
-                        |> sortTracksBy model.sortBy model.sortDirection
-
-                encodedCollection =
-                    List.map Tracks.Encoding.encodeTrack tracks
-            in
-                (!)
-                    { model
-                        | collection = tracks
-                        , collectionIdentified = newIdentifiedCollection
-                    }
-                    [ do TopLevel.CleanQueue
-                    , Firebase.Data.storeTracks encodedCollection
-                    , Ports.updateSearchIndex encodedCollection
-                    , do (TopLevel.TracksMsg (Search model.searchTerm))
-                    ]
+            model
+                |> Collection.makeParcel
+                |> Collection.add (decodeTracks encodedTracks)
+                |> Collection.setWithoutConsequences
 
         ------------------------------------
         -- Collection, Pt. 2
@@ -155,146 +108,96 @@ update msg model =
         -- > Add tracks to the collection.
         --
         Add additionalTracks ->
-            let
-                col =
-                    model.collection ++ additionalTracks
-            in
-                ($)
-                    model
-                    [ do (UpdateCollection col) ]
-                    []
+            model
+                |> Collection.makeParcel
+                |> Collection.add additionalTracks
+                |> Collection.set
 
         -- # Remove
         -- > Remove tracks from the collection,
         --   matching by the `sourceId`.
         --
         Remove sourceId ->
-            let
-                col =
-                    List.filter
-                        (.sourceId >> (/=) sourceId)
-                        (model.collection)
-            in
-                ($)
-                    model
-                    [ do (UpdateCollection col) ]
-                    []
+            model
+                |> Collection.makeParcel
+                |> Collection.removeBySourceId sourceId
+                |> Collection.set
 
         -- # Remove
         -- > Remove tracks from the collection,
         --   matching by the `sourceId` and the `path`.
         --
-        RemoveByPath sourceId pathsList ->
-            let
-                col =
-                    List.filter
-                        (\t ->
-                            if t.sourceId == sourceId then
-                                List.notMember t.path pathsList
-                            else
-                                True
-                        )
-                        model.collection
-            in
-                ($)
-                    model
-                    [ do (UpdateCollection col) ]
-                    []
+        RemoveByPath sourceId paths ->
+            model
+                |> Collection.makeParcel
+                |> Collection.removeByPath sourceId paths
+                |> Collection.set
 
         ------------------------------------
         -- Search
         ------------------------------------
         -- > Step 1, set search term
         SetSearchTerm "" ->
-            (!) { model | searchTerm = Nothing } []
+            { model | searchTerm = Nothing }
+                |> Response.withNone
 
         SetSearchTerm value ->
-            (!) { model | searchTerm = Just value } []
+            { model | searchTerm = Just value }
+                |> Response.withNone
 
         -- > Step 2, perform search
-        Search Nothing ->
-            ($)
-                { model | searchResults = Nothing, searchTerm = Nothing }
-                [ do Recalibrate ]
-                [ do TopLevel.ResetQueue ]
-                |> Response.mapModel harvest
-
         Search (Just term) ->
-            ($)
-                { model | searchTerm = Just term }
-                [ Ports.performSearch term ]
-                []
+            { model | searchTerm = Just term }
+                |> Response.withCmd (Ports.performSearch term)
+
+        Search Nothing ->
+            { model | searchResults = Nothing, searchTerm = Nothing }
+                |> Collection.makeParcel
+                |> Collection.recalibrate
+                |> Collection.reharvest
+                |> Collection.set
 
         -- > Step 3, receive search results
-        ReceiveSearchResults [] ->
-            ($)
-                { model | searchResults = Just [] }
-                [ do Recalibrate ]
-                [ do TopLevel.ResetQueue ]
-                |> Response.mapModel harvest
-
         ReceiveSearchResults trackIds ->
-            ($)
-                { model | searchResults = Just trackIds }
-                [ do Recalibrate ]
-                [ do TopLevel.ResetQueue ]
-                |> Response.mapModel harvest
+            { model | searchResults = Just trackIds }
+                |> Collection.makeParcel
+                |> Collection.recalibrate
+                |> Collection.reharvest
+                |> Collection.set
 
         ------------------------------------
         -- Favourites
         ------------------------------------
         -- > Make a track a favourite, or remove it as a favourite
-        ToggleFavourite index_as_string ->
-            let
-                maybeIdentifiedTrack =
-                    index_as_string
-                        |> String.toInt
-                        |> Result.toMaybe
-                        |> Maybe.andThen (\idx -> List.getAt idx model.collectionExposed)
-            in
-                case maybeIdentifiedTrack of
-                    Just ( i, t ) ->
-                        let
-                            newFavourites =
-                                toggleFavourite model.favourites ( i, t )
-
-                            newIdentifiedCollection =
-                                toggleFavouriteInCollection model.collectionIdentified t
-
-                            encodedFavourites =
-                                List.map Tracks.Encoding.encodeFavourite newFavourites
-                        in
-                            model
-                                |> Response.withCmd (Firebase.Data.storeFavourites encodedFavourites)
-                                |> Response.mapModel
-                                    (\m ->
-                                        { m
-                                            | collectionIdentified = newIdentifiedCollection
-                                            , favourites = newFavourites
-                                        }
-                                    )
-                                |> Response.mapModel harvest
-                                |> Response.mapModel (expose model.exposedStep)
-
-                    Nothing ->
-                        (!)
-                            model
-                            []
+        ToggleFavourite index ->
+            index
+                |> String.toInt
+                |> Result.toMaybe
+                |> Maybe.andThen (\idx -> List.getAt idx model.collection.exposed)
+                |> Maybe.map (Favourites.toggleInModel model)
+                |> Maybe.withDefault ((,) model Cmd.none)
 
         -- Filter collection by favourites only {toggle}
         ToggleFavouritesOnly ->
             { model | favouritesOnly = not model.favouritesOnly }
-                |> harvest
-                |> Response.withCmd (do TopLevel.RecalibrateTracks)
+                |> Collection.makeParcel
+                |> Collection.recalibrate
+                |> Collection.reharvest
+                |> Collection.set
 
         ------------------------------------
         -- UI
         ------------------------------------
         ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
-            if scrolledHeight >= (contentHeight - containerHeight - 50) then
-                (!) (expose (model.exposedStep + 1) model) []
-            else
-                (!) (model) []
+            case scrolledHeight >= (contentHeight - containerHeight - 50) of
+                True ->
+                    { model | exposedStep = model.exposedStep + 1 }
+                        |> Collection.makeParcel
+                        |> Collection.reexpose
+                        |> Collection.set
+
+                False ->
+                    Response.withNone model
 
 
 
@@ -305,209 +208,3 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveSearchResults ReceiveSearchResults ]
-
-
-
--- Sorting
-
-
-sortTracksBy : SortBy -> SortDirection -> List IdentifiedTrack -> List IdentifiedTrack
-sortTracksBy property direction =
-    let
-        sortFn =
-            case property of
-                Album ->
-                    sortByAlbum
-
-                Artist ->
-                    sortByArtist
-
-                Title ->
-                    sortByTitle
-
-        dirFn =
-            if direction == Desc then
-                List.reverse
-            else
-                identity
-    in
-        List.sortBy sortFn >> dirFn
-
-
-sortByAlbum : IdentifiedTrack -> String
-sortByAlbum twi =
-    let
-        t =
-            Tuple.second twi
-    in
-        t.tags.title
-            |> String.append (toString t.tags.nr)
-            |> String.append t.tags.artist
-            |> String.append t.tags.album
-            |> String.toLower
-
-
-sortByArtist : IdentifiedTrack -> String
-sortByArtist twi =
-    let
-        t =
-            Tuple.second twi
-    in
-        t.tags.title
-            |> String.append (toString t.tags.nr)
-            |> String.append t.tags.album
-            |> String.append t.tags.artist
-            |> String.toLower
-
-
-sortByTitle : IdentifiedTrack -> String
-sortByTitle twi =
-    let
-        t =
-            Tuple.second twi
-    in
-        t.tags.album
-            |> String.append t.tags.artist
-            |> String.append t.tags.title
-            |> String.toLower
-
-
-
--- Favouriting
-
-
-toggleFavourite : List Favourite -> IdentifiedTrack -> List Favourite
-toggleFavourite favourites ( i, t ) =
-    let
-        artist =
-            String.toLower t.tags.artist
-
-        title =
-            String.toLower t.tags.title
-    in
-        case i.isFavourite of
-            True ->
-                List.filter
-                    (\f -> not (f.artist == artist && f.title == title))
-                    favourites
-
-            False ->
-                List.append
-                    favourites
-                    [ { artist = artist
-                      , title = title
-                      }
-                    ]
-
-
-toggleFavouriteInCollection : List IdentifiedTrack -> Track -> List IdentifiedTrack
-toggleFavouriteInCollection collection track =
-    let
-        indexer =
-            Tuple.second >> .id >> (==) track.id
-
-        updater =
-            Tuple.mapFirst (\i -> { i | isFavourite = not i.isFavourite })
-    in
-        collection
-            |> List.findIndex indexer
-            |> Maybe.andThen (\idx -> List.updateAt idx updater collection)
-            |> Maybe.withDefault collection
-
-
-
--- Identifying
-
-
-identifyCollection : List Favourite -> List Track -> List IdentifiedTrack
-identifyCollection favourites tracks =
-    tracks
-        |> List.foldl identifier ( [], favourites )
-        |> Tuple.first
-
-
-identifier :
-    Track
-    -> ( List IdentifiedTrack, List Favourite )
-    -> ( List IdentifiedTrack, List Favourite )
-identifier track ( acc, favourites ) =
-    let
-        artist =
-            String.toLower track.tags.artist
-
-        title =
-            String.toLower track.tags.title
-
-        idx =
-            List.findIndex
-                (\f -> f.artist == artist && f.title == title)
-                favourites
-    in
-        case idx of
-            Just i ->
-                ( acc ++ [ ( { isFavourite = True }, track ) ]
-                , List.removeAt i favourites
-                )
-
-            Nothing ->
-                ( acc ++ [ ( { isFavourite = False }, track ) ]
-                , favourites
-                )
-
-
-
--- Harvesting
-
-
-harvest : Model -> Model
-harvest model =
-    let
-        newCollection =
-            case model.searchResults of
-                Just [] ->
-                    []
-
-                Just trackIds ->
-                    model.collectionIdentified
-                        |> List.foldl harvester ( [], trackIds )
-                        |> Tuple.first
-
-                Nothing ->
-                    model.collectionIdentified
-
-        newCollectionWOWF =
-            if model.favouritesOnly then
-                List.filter (\( i, t ) -> i.isFavourite == True) newCollection
-            else
-                newCollection
-    in
-        { model | collectionHarvested = newCollectionWOWF }
-
-
-harvester :
-    IdentifiedTrack
-    -> ( List IdentifiedTrack, List TrackId )
-    -> ( List IdentifiedTrack, List TrackId )
-harvester ( i, t ) ( acc, trackIds ) =
-    case List.findIndex ((==) t.id) trackIds of
-        Just idx ->
-            ( acc ++ [ ( i, t ) ]
-            , List.removeAt idx trackIds
-            )
-
-        Nothing ->
-            ( acc
-            , trackIds
-            )
-
-
-
--- Exposing
-
-
-expose : Int -> Model -> Model
-expose step model =
-    { model
-        | collectionExposed = List.take (step * partial) model.collectionHarvested
-        , exposedStep = step
-    }

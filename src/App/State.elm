@@ -149,7 +149,7 @@ update msg model =
         CleanQueue ->
             (!)
                 model
-                [ model.tracks.collectionHarvested
+                [ model.tracks.collection.harvested
                     |> List.map Tracks.Utils.unindentify
                     |> Queue.Types.Clean
                     |> QueueMsg
@@ -159,7 +159,7 @@ update msg model =
         FillQueue ->
             (!)
                 model
-                [ model.tracks.collectionHarvested
+                [ model.tracks.collection.harvested
                     |> List.map Tracks.Utils.unindentify
                     |> Queue.Types.Fill model.timestamp
                     |> QueueMsg
@@ -188,7 +188,7 @@ update msg model =
                 [ index
                     |> String.toInt
                     |> Result.toMaybe
-                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collectionExposed)
+                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection.exposed)
                     |> Maybe.map Tracks.Utils.unindentify
                     |> Maybe.map Queue.Types.InjectFirstAndPlay
                     |> Maybe.map QueueMsg
@@ -199,7 +199,7 @@ update msg model =
         ProcessSources ->
             (!)
                 model
-                [ model.tracks.collection
+                [ model.tracks.collection.untouched
                     |> Sources.Types.Process
                     |> SourcesMsg
                     |> do

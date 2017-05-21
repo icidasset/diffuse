@@ -25,11 +25,6 @@ decodeFavourites encodedFavourites =
         |> Maybe.values
 
 
-partial : Int
-partial =
-    50
-
-
 
 -- 🔥
 

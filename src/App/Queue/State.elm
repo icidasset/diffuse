@@ -189,7 +189,7 @@ update msg model =
         --
         Reset ->
             (!)
-                { model | future = [] }
+                { model | future = [], past = [] }
                 [ do TopLevel.FillQueue ]
 
         ------------------------------------

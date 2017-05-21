@@ -87,6 +87,28 @@ type SortDirection
 
 
 
+-- Collections
+
+
+type alias Collection =
+    { untouched : List Track
+
+    -- `Track`s with `Identifiers`
+    , identified : List IdentifiedTrack
+
+    -- Filtered by search results and favourites
+    , harvested : List IdentifiedTrack
+
+    -- Partial rendering of the harvested collection in the UI
+    , exposed : List IdentifiedTrack
+    }
+
+
+type alias Parcel =
+    ( Model, Collection )
+
+
+
 -- Other
 
 
@@ -95,7 +117,6 @@ type Msg
     | SortBy SortBy
       -- Collection Pt. 1
     | InitialCollection (List Json.Value)
-    | UpdateCollection (List Track)
       -- Collection Pt. 2
     | Add (List Track)
     | Remove SourceId
@@ -112,10 +133,7 @@ type Msg
 
 
 type alias Model =
-    { collection : List Track
-    , collectionIdentified : List IdentifiedTrack
-    , collectionHarvested : List IdentifiedTrack
-    , collectionExposed : List IdentifiedTrack -- Use this for the UI
+    { collection : Collection
     , exposedStep : Int
     , favourites : List Favourite
     , favouritesOnly : Bool -- Whether or not to only show favourites in the UI
@@ -154,6 +172,15 @@ emptyTrack =
     , path = ""
     , sourceId = ""
     , tags = emptyTags
+    }
+
+
+emptyCollection : Collection
+emptyCollection =
+    { untouched = []
+    , identified = []
+    , harvested = []
+    , exposed = []
     }
 
 
