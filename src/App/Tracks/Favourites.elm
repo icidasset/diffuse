@@ -1,79 +1,68 @@
-module Tracks.Favourites exposing (toggleInModel)
+module Tracks.Favourites exposing (..)
 
-import Firebase.Data
 import List.Extra as List
-import Tracks.Collection exposing (makeParcel, reharvest, remap, set)
-import Tracks.Encoding
 import Tracks.Types exposing (..)
-import Types as TopLevel
-import Utils exposing (addCmd)
 
 
--- 🍯
-
-
-toggleInModel : Model -> IdentifiedTrack -> ( Model, Cmd TopLevel.Msg )
-toggleInModel model ( i, t ) =
+matcher : String -> String -> Favourite -> Bool
+matcher lowerArtist lowerTitle fav =
     let
-        newFavourites =
-            toggleInList model.favourites ( i, t )
+        lowerFavArtist =
+            String.toLower fav.artist
 
-        storeFavourites =
-            newFavourites
-                |> List.map Tracks.Encoding.encodeFavourite
-                |> Firebase.Data.storeFavourites
-
-        effect =
-            if model.favouritesOnly then
-                remap (toggleInCollection t) >> reharvest
-            else
-                remap (toggleInCollection t)
+        lowerFavTitle =
+            String.toLower fav.title
     in
-        { model | favourites = newFavourites }
-            |> makeParcel
-            |> effect
-            |> set
-            |> addCmd storeFavourites
-
-
-
--- ❌
+        lowerFavArtist == lowerArtist && lowerFavTitle == lowerTitle
 
 
 toggleInCollection : Track -> List IdentifiedTrack -> List IdentifiedTrack
 toggleInCollection track collection =
     let
-        indexer =
-            Tuple.second >> .id >> (==) track.id
+        lartist =
+            lowercaseArtist track
 
-        updater =
-            Tuple.mapFirst (\i -> { i | isFavourite = not i.isFavourite })
+        ltitle =
+            lowercaseTitle track
     in
-        collection
-            |> List.findIndex indexer
-            |> Maybe.andThen (\idx -> List.updateAt idx updater collection)
-            |> Maybe.withDefault collection
+        List.map
+            (\( i, t ) ->
+                if lowercaseArtist t == lartist && lowercaseTitle t == ltitle then
+                    ( { i | isFavourite = not i.isFavourite }, t )
+                else
+                    ( i, t )
+            )
+            collection
 
 
 toggleInList : List Favourite -> IdentifiedTrack -> List Favourite
 toggleInList favourites ( i, t ) =
-    let
-        artist =
-            String.toLower t.tags.artist
+    case i.isFavourite of
+        True ->
+            -- Remove from list
+            List.filterNot
+                (matcher (lowercaseArtist t) (lowercaseTitle t))
+                favourites
 
-        title =
-            String.toLower t.tags.title
-    in
-        case i.isFavourite of
-            True ->
-                List.filter
-                    (\f -> not (f.artist == artist && f.title == title))
-                    favourites
+        False ->
+            -- Add to list
+            List.append
+                favourites
+                [ { artist = t.tags.artist
+                  , title = t.tags.title
+                  }
+                ]
 
-            False ->
-                List.append
-                    favourites
-                    [ { artist = artist
-                      , title = title
-                      }
-                    ]
+
+
+-- Utils
+
+
+lowercaseArtist : Track -> String
+lowercaseArtist =
+    .tags >> .artist >> String.toLower
+
+
+lowercaseTitle : Track -> String
+lowercaseTitle =
+    .tags >> .title >> String.toLower

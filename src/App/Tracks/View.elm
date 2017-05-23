@@ -192,10 +192,18 @@ tracksTableItem index ( identifiers, track ) =
 
                 False ->
                     "f"
+
+        missingAttr =
+            case identifiers.isMissing of
+                True ->
+                    "t"
+
+                False ->
+                    "f"
     in
         ( key
         , tr
-            [ rel key ]
+            [ rel key, attribute "data-missing" missingAttr ]
             [ td [ attribute "data-favourite" favAttr ] [ text "" ]
             , td [] [ text track.tags.title ]
             , td [] [ text track.tags.artist ]
@@ -216,9 +224,25 @@ playTrack =
 tableTrackDecoder : Decode.Decoder String
 tableTrackDecoder =
     Decode.oneOf
-        [ Decode.at [ "target", "parentNode", "attributes", "rel", "value" ] Decode.string
-        , Decode.at [ "target", "attributes", "rel", "value" ] Decode.string
+        [ Decode.at [ "target", "parentNode", "attributes", "data-missing", "value" ] Decode.string
+        , Decode.at [ "target", "attributes", "data-missing", "value" ] Decode.string
         ]
+        |> Decode.andThen
+            (\isMissing ->
+                case isMissing of
+                    "f" ->
+                        Decode.oneOf
+                            [ Decode.at
+                                [ "target", "parentNode", "attributes", "rel", "value" ]
+                                Decode.string
+                            , Decode.at
+                                [ "target", "attributes", "rel", "value" ]
+                                Decode.string
+                            ]
+
+                    _ ->
+                        Decode.fail "Can't play a missing track"
+            )
 
 
 toggleFavourite : Decode.Decoder TopLevel.Msg

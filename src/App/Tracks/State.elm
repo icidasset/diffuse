@@ -1,16 +1,18 @@
 module Tracks.State exposing (..)
 
+import Firebase.Data
 import Json.Encode as Json
 import List.Extra as List
 import Response
 import Time
 import Tracks.Collection as Collection exposing (..)
+import Tracks.Encoding
 import Tracks.Favourites as Favourites
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
-import Utils exposing (do, doDelayed)
+import Utils exposing (addCmd, do, doDelayed)
 
 
 -- 💧
@@ -174,7 +176,7 @@ update msg model =
                 |> String.toInt
                 |> Result.toMaybe
                 |> Maybe.andThen (\idx -> List.getAt idx model.collection.exposed)
-                |> Maybe.map (Favourites.toggleInModel model)
+                |> Maybe.map (toggleFavourite model)
                 |> Maybe.withDefault ((,) model Cmd.none)
 
         -- Filter collection by favourites only {toggle}
@@ -198,6 +200,30 @@ update msg model =
 
                 False ->
                     Response.withNone model
+
+
+toggleFavourite : Model -> IdentifiedTrack -> ( Model, Cmd TopLevel.Msg )
+toggleFavourite model ( i, t ) =
+    let
+        newFavourites =
+            Favourites.toggleInList model.favourites ( i, t )
+
+        storeFavourites =
+            newFavourites
+                |> List.map Tracks.Encoding.encodeFavourite
+                |> Firebase.Data.storeFavourites
+
+        effect =
+            if model.favouritesOnly then
+                remap (Favourites.toggleInCollection t) >> reharvest
+            else
+                remap (Favourites.toggleInCollection t)
+    in
+        { model | favourites = newFavourites }
+            |> makeParcel
+            |> effect
+            |> set
+            |> addCmd storeFavourites
 
 
 

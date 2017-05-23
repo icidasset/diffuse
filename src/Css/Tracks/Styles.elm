@@ -161,6 +161,9 @@ styles =
                 , textOverflow ellipsis
                 , whiteSpace noWrap
                 ]
+            , selector "tr[data-missing=\"t\"]"
+                [ color (hex "#8f8f8f")
+                ]
             , selector "td[data-favourite]"
                 [ color (hex "#dedede")
                 , fontFamilies [ "Material Icons" ]

@@ -10,6 +10,7 @@ module Tracks.Collection.Internal
         )
 
 import List.Extra as List
+import Tracks.Favourites as Favourites
 import Tracks.Sorting as Sorting
 import Tracks.Types exposing (..)
 
@@ -44,41 +45,63 @@ initialize tracks ( model, collection ) =
 
 identify : Parcel -> Parcel
 identify ( model, collection ) =
-    collection.untouched
-        |> List.foldl identifier ( [], model.favourites )
-        |> Tuple.first
-        |> Sorting.sort model.sortBy model.sortDirection
-        |> (\x -> { collection | identified = x })
-        |> (\x -> (,) model x)
+    let
+        ( identifiedUnsorted, missingFavourites ) =
+            List.foldl
+                (identifier model.favourites)
+                ( [], model.favourites )
+                collection.untouched
+    in
+        identifiedUnsorted
+            |> List.append (List.map makeMissingFavouriteTrack missingFavourites)
+            |> Sorting.sort model.sortBy model.sortDirection
+            |> (\x -> { collection | identified = x })
+            |> (\x -> (,) model x)
 
 
 identifier :
-    Track
+    List Favourite
+    -> Track
     -> ( List IdentifiedTrack, List Favourite )
     -> ( List IdentifiedTrack, List Favourite )
-identifier track ( acc, favourites ) =
+identifier favourites track ( acc, missingFavourites ) =
     let
-        artist =
+        lartist =
             String.toLower track.tags.artist
 
-        title =
+        ltitle =
             String.toLower track.tags.title
 
         idx =
-            List.findIndex
-                (\f -> f.artist == artist && f.title == title)
-                favourites
+            List.findIndex (Favourites.matcher lartist ltitle) missingFavourites
     in
         case idx of
             Just i ->
-                ( acc ++ [ ( { isFavourite = True }, track ) ]
-                , List.removeAt i favourites
+                ( acc ++ [ ( { isFavourite = True, isMissing = False }, track ) ]
+                , List.removeAt i missingFavourites
                 )
 
             Nothing ->
-                ( acc ++ [ ( { isFavourite = False }, track ) ]
-                , favourites
+                ( acc ++ [ ( { isFavourite = False, isMissing = False }, track ) ]
+                , missingFavourites
                 )
+
+
+makeMissingFavouriteTrack : Favourite -> IdentifiedTrack
+makeMissingFavouriteTrack fav =
+    let
+        tags =
+            { nr = 0
+            , artist = fav.artist
+            , title = fav.title
+            , album = "<missing>"
+            , genre = Nothing
+            , year = Nothing
+            }
+    in
+        (,)
+            { isFavourite = True, isMissing = True }
+            { tags = tags, id = "<missing>", path = "<missing>", sourceId = "<missing>" }
 
 
 
@@ -105,7 +128,7 @@ harvest ( model, collection ) =
             if model.favouritesOnly then
                 List.filter (\( i, t ) -> i.isFavourite == True) harvested
             else
-                harvested
+                List.filter (\( i, t ) -> i.isMissing == False) harvested
     in
         (,)
             model

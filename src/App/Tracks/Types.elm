@@ -58,6 +58,7 @@ type alias IdentifiedTrack =
 
 type alias Identifiers =
     { isFavourite : Bool
+    , isMissing : Bool
     }
 
 
