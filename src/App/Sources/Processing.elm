@@ -46,12 +46,12 @@ import Sources.Services.AmazonS3 as AmazonS3
 {-| How much tags do we want to process
     before we send them back to Elm.
 
-    eg. After we got the tags for 100 tracks,
+    eg. After we got the tags for 50 tracks,
     we store these and continue with the rest.
 -}
 tagsBatchSize : Int
 tagsBatchSize =
-    250
+    50
 
 
 
@@ -88,13 +88,27 @@ takeTreeStep context response associatedTracks currentDate =
                     filteredContext =
                         selectMusicFiles newContext
 
-                    pathFilter =
-                        (\paths path -> List.member path paths) filteredContext.filePaths
+                    remove =
+                        \list path ->
+                            list
+                                |> List.findIndex (\x -> x == path)
+                                |> Maybe.map (\idx -> List.removeAt idx list)
+                                |> Maybe.withDefault list
 
-                    ( pathsLeft, pathsToRemove ) =
-                        associatedTracks
-                            |> List.map .path
-                            |> List.partition pathFilter
+                    ( pathsLeft, pathsToRemove, _ ) =
+                        List.foldr
+                            (\track ( left, toRemove, srcOfTruth ) ->
+                                let
+                                    path =
+                                        track.path
+                                in
+                                    if List.member path srcOfTruth then
+                                        ( path :: left, toRemove, remove srcOfTruth path )
+                                    else
+                                        ( left, path :: toRemove, srcOfTruth )
+                            )
+                            ( [], [], filteredContext.filePaths )
+                            associatedTracks
                 in
                     Cmd.batch
                         [ filteredContext

@@ -34,7 +34,7 @@ harvestingConsequences : Collection -> Collection -> Model -> Cmd TopLevel.Msg
 harvestingConsequences oldCollection newCollection _ =
     case oldCollection.harvested /= newCollection.harvested of
         True ->
-            do TopLevel.CleanQueue
+            do TopLevel.ResetQueue
 
         False ->
             Cmd.none

@@ -112,6 +112,7 @@ update msg model =
         Add additionalTracks ->
             model
                 |> Collection.makeParcel
+                |> Collection.recalibrate
                 |> Collection.add additionalTracks
                 |> Collection.set
 
