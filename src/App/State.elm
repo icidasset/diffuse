@@ -36,7 +36,7 @@ import Tracks.Utils
 initialModel : ProgramFlags -> Navigation.Location -> Model
 initialModel flags location =
     { authenticatedUser = flags.user
-    , showLoadingScreen = False
+    , showLoadingScreen = True
 
     ------------------------------------
     -- Time
@@ -80,6 +80,11 @@ update msg model =
             (!)
                 model
                 [ Firebase.Auth.authenticate () ]
+
+        HideLoadingScreen ->
+            (!)
+                { model | showLoadingScreen = False }
+                []
 
         SignOut ->
             (!)

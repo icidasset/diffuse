@@ -20,6 +20,7 @@ import Tracks.Types as Tracks
 
 type Msg
     = Authenticate
+    | HideLoadingScreen
     | SignOut
       -- Time
     | SetTimestamp Time

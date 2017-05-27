@@ -39,23 +39,18 @@ initialCommands maybeEncodedTracks =
     in
         Cmd.batch
             [ -- Don't block the UI
-              -- Pt. 1
               encodedTracks
-                |> List.take Collection.partial
                 |> InitialCollection
                 |> TopLevel.TracksMsg
-                |> do
-
-            -- Pt.  2
-            , encodedTracks
-                |> List.drop Collection.partial
-                |> InitialCollection
-                |> TopLevel.TracksMsg
-                |> doDelayed (Time.millisecond * 1000)
+                |> doDelayed (Time.millisecond * 250)
 
             -- Fill queue
             , TopLevel.FillQueue
-                |> doDelayed (Time.millisecond * 1250)
+                |> doDelayed (Time.millisecond * 500)
+
+            -- Hide loader
+            , TopLevel.HideLoadingScreen
+                |> doDelayed (Time.millisecond * 500)
             ]
 
 
