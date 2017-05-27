@@ -188,9 +188,13 @@ update msg model =
         --   are removed and new items are added.
         --
         Reset ->
-            (!)
-                { model | future = [], past = [] }
-                [ do TopLevel.FillQueue ]
+            let
+                newFuture =
+                    List.filter (.manualEntry >> (==) True) model.future
+            in
+                (!)
+                    { model | future = newFuture }
+                    [ do TopLevel.FillQueue ]
 
         ------------------------------------
         -- Combos

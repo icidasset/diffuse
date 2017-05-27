@@ -51,8 +51,11 @@ ordered model tracks =
 shuffled : Model -> Date -> List Track -> List Item
 shuffled model timestamp tracks =
     let
+        amountOfTracks =
+            List.length tracks
+
         generator =
-            Random.int 0 ((List.length tracks) - 1)
+            Random.int 0 (amountOfTracks - 1)
 
         pastIds =
             List.map (.track >> .id) model.past
@@ -64,38 +67,75 @@ shuffled model timestamp tracks =
             Maybe.map (.track >> .id) model.activeItem
 
         usedIndexes =
-            List.indexedFoldl
-                (\idx t acc ->
-                    if List.member t.id pastIds then
-                        idx :: acc
-                    else if List.member t.id futureIds then
-                        idx :: acc
-                    else if Just t.id == activeId then
-                        idx :: acc
-                    else
-                        acc
-                )
-                []
+            collectIndexes
                 tracks
+                [ (\t -> List.member t.id pastIds)
+                , (\t -> List.member t.id futureIds)
+                , (\t -> Just t.id == activeId)
+                ]
 
         usedIndexes_ =
-            if List.length usedIndexes < List.length tracks then
-                usedIndexes
-            else
-                []
+            let
+                isUsedUp =
+                    List.length usedIndexes >= amountOfTracks
+
+                hasNoFuture =
+                    List.length model.future < 1
+            in
+                if isUsedUp && hasNoFuture && amountOfTracks > 1 then
+                    case amountOfTracks > 1 of
+                        True ->
+                            collectIndexes tracks [ (\t -> Just t.id == activeId) ]
+
+                        False ->
+                            []
+                else
+                    usedIndexes
+
+        toAmount =
+            max (queueLength - (List.length model.future)) 0
+
+        maxAmount =
+            max (amountOfTracks - (List.length usedIndexes_)) 0
 
         howMany =
-            max (queueLength - (List.length model.future)) 0
+            min toAmount maxAmount
     in
-        timestamp
-            |> Date.toTime
-            |> round
-            |> Random.initialSeed
-            |> generateIndexes generator howMany usedIndexes_ []
-            |> List.map (\idx -> List.getAt idx tracks)
-            |> Maybe.values
-            |> List.map (makeItem False)
-            |> List.append model.future
+        if howMany > 0 then
+            timestamp
+                |> Date.toTime
+                |> round
+                |> Random.initialSeed
+                |> generateIndexes generator howMany usedIndexes_ []
+                |> List.map (\idx -> List.getAt idx tracks)
+                |> Maybe.values
+                |> List.map (makeItem False)
+                |> List.append model.future
+        else
+            model.future
+
+
+collectIndexes : List Track -> List (Track -> Bool) -> List Int
+collectIndexes tracks audits =
+    List.indexedFoldl (collector audits) [] tracks
+
+
+collector : List (Track -> Bool) -> Int -> Track -> List Int -> List Int
+collector audits idx track acc =
+    case List.foldl (auditor track) False audits of
+        True ->
+            idx :: acc
+
+        False ->
+            acc
+
+
+auditor : Track -> (Track -> Bool) -> Bool -> Bool
+auditor track audit acc =
+    if acc == True then
+        acc
+    else
+        audit track
 
 
 {-| Generated random indexes.
@@ -110,6 +150,8 @@ generateIndexes generator howMany usedIndexes squirrel seed =
 
         newSquirrel =
             if List.member index usedIndexes then
+                squirrel
+            else if List.member index squirrel then
                 squirrel
             else
                 index :: squirrel
