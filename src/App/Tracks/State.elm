@@ -202,6 +202,22 @@ update msg model =
                 False ->
                     Response.withNone model
 
+        -- Identify the active track
+        SetActiveTrack maybeTrack ->
+            let
+                mapFn =
+                    case maybeTrack of
+                        Just track ->
+                            (\( i, t ) -> ( { i | isNowPlaying = (t == track) }, t ))
+
+                        Nothing ->
+                            (\( i, t ) -> ( { i | isNowPlaying = False }, t ))
+            in
+                model
+                    |> Collection.makeParcel
+                    |> Collection.remap (List.map mapFn)
+                    |> Collection.set
+
 
 toggleFavourite : Model -> IdentifiedTrack -> ( Model, Cmd TopLevel.Msg )
 toggleFavourite model ( i, t ) =

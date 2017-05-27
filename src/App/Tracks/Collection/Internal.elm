@@ -77,12 +77,26 @@ identifier favourites track ( acc, missingFavourites ) =
     in
         case idx of
             Just i ->
-                ( acc ++ [ ( { isFavourite = True, isMissing = False }, track ) ]
+                ( acc
+                    ++ [ ( { isFavourite = True
+                           , isMissing = False
+                           , isNowPlaying = False
+                           }
+                         , track
+                         )
+                       ]
                 , List.removeAt i missingFavourites
                 )
 
             Nothing ->
-                ( acc ++ [ ( { isFavourite = False, isMissing = False }, track ) ]
+                ( acc
+                    ++ [ ( { isFavourite = False
+                           , isMissing = False
+                           , isNowPlaying = False
+                           }
+                         , track
+                         )
+                       ]
                 , missingFavourites
                 )
 
@@ -100,7 +114,7 @@ makeMissingFavouriteTrack fav =
             }
     in
         (,)
-            { isFavourite = True, isMissing = True }
+            { isFavourite = True, isMissing = True, isNowPlaying = False }
             { tags = tags, id = "<missing>", path = "<missing>", sourceId = "<missing>" }
 
 

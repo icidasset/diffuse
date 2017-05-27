@@ -184,27 +184,16 @@ tracksTableItem index ( identifiers, track ) =
     let
         key =
             toString index
-
-        favAttr =
-            case identifiers.isFavourite of
-                True ->
-                    "t"
-
-                False ->
-                    "f"
-
-        missingAttr =
-            case identifiers.isMissing of
-                True ->
-                    "t"
-
-                False ->
-                    "f"
     in
         ( key
         , tr
-            [ rel key, attribute "data-missing" missingAttr ]
-            [ td [ attribute "data-favourite" favAttr ] [ text "" ]
+            [ rel key
+            , attribute "data-missing" (boolToAttr identifiers.isMissing)
+            , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
+            ]
+            [ td
+                [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ]
+                [ text "" ]
             , td [] [ text track.tags.title ]
             , td [] [ text track.tags.artist ]
             , td [] [ text track.tags.album ]
@@ -295,3 +284,13 @@ maybeShowSortIcon activeSortBy targetSortBy sortIcon =
         sortIcon
     else
         text ""
+
+
+boolToAttr : Bool -> String
+boolToAttr bool =
+    case bool of
+        True ->
+            "t"
+
+        False ->
+            "f"

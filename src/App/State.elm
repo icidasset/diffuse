@@ -140,7 +140,8 @@ update msg model =
         ActiveQueueItemChanged maybeQueueItem ->
             (!)
                 model
-                [ maybeQueueItem
+                [ -- `activeQueueItemChanged` port
+                  maybeQueueItem
                     |> Maybe.map
                         (.track)
                     |> Maybe.map
@@ -149,6 +150,13 @@ update msg model =
                             model.sources.collection
                         )
                     |> Queue.Ports.activeQueueItemChanged
+
+                -- Identify
+                , maybeQueueItem
+                    |> Maybe.map (.track)
+                    |> Tracks.Types.SetActiveTrack
+                    |> TracksMsg
+                    |> do
                 ]
 
         CleanQueue ->

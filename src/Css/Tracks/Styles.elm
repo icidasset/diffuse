@@ -161,9 +161,8 @@ styles =
                 , textOverflow ellipsis
                 , whiteSpace noWrap
                 ]
-            , selector "tr[data-missing=\"t\"]"
-                [ color (hex "#8f8f8f")
-                ]
+
+            -- <tbody> Favourites
             , selector "td[data-favourite]"
                 [ color (hex "#dedede")
                 , fontFamilies [ "Material Icons" ]
@@ -172,6 +171,17 @@ styles =
             , selector "td[data-favourite=\"t\"]"
                 [ color (cssColor colors.base08)
                 , before [ property "content" "'favorite'" ]
+                ]
+
+            -- <tbody> Modifiers
+            , selector "tr[data-missing=\"t\"]"
+                [ color (hex "#8f8f8f")
+                ]
+            , selector "tr[data-nowplaying=\"t\"]"
+                [ color (cssColor colors.base0B)
+                ]
+            , selector "tr[data-nowplaying=\"t\"] td[data-favourite=\"t\"]"
+                [ color (cssColor colors.base0B)
                 ]
 
             -- <tbody> Add some extra space on top

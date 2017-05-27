@@ -59,6 +59,7 @@ type alias IdentifiedTrack =
 type alias Identifiers =
     { isFavourite : Bool
     , isMissing : Bool
+    , isNowPlaying : Bool
     }
 
 
@@ -131,6 +132,7 @@ type Msg
     | ToggleFavouritesOnly
       -- UI
     | ScrollThroughTable ScrollPos
+    | SetActiveTrack (Maybe Track)
 
 
 
