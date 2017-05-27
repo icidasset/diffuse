@@ -110,7 +110,7 @@ type alias Parcel =
 
 
 
--- Other
+-- Messages
 
 
 type Msg
@@ -133,16 +133,33 @@ type Msg
     | ScrollThroughTable ScrollPos
 
 
+
+-- Model
+
+
 type alias Model =
-    { collection : Collection
-    , exposedStep : Int
-    , favourites : List Favourite
-    , favouritesOnly : Bool -- Whether or not to only show favourites in the UI
-    , searchResults : Maybe (List TrackId)
-    , searchTerm : Maybe String
-    , sortBy : SortBy
-    , sortDirection : SortDirection
+    InternalModel Settings
+
+
+type alias InternalModel extension =
+    { extension
+        | collection : Collection
+        , exposedStep : Int
+        , favourites : List Favourite
+        , searchResults : Maybe (List TrackId)
+        , sortBy : SortBy
+        , sortDirection : SortDirection
     }
+
+
+type alias Settings =
+    { favouritesOnly : Bool -- Whether or not to only show favourites in the UI
+    , searchTerm : Maybe String
+    }
+
+
+
+-- Other
 
 
 type alias ScrollPos =

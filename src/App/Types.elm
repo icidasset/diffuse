@@ -65,6 +65,7 @@ type alias Model =
 
 type alias Settings =
     { queue : Queue.Settings
+    , tracks : Tracks.Settings
     }
 
 

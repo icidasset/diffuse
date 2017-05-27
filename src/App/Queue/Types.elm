@@ -1,11 +1,11 @@
-module Queue.Types exposing (Msg(..), Model, Settings, Item, EngineItem, Page(..))
+module Queue.Types exposing (..)
 
 import Date exposing (Date)
 import Sources.Types exposing (Source)
 import Tracks.Types exposing (Track, TrackId)
 
 
--- Types
+-- Messages
 
 
 type Msg
@@ -26,14 +26,30 @@ type Msg
     | ToggleShuffle
 
 
+
+-- Model
+
+
 type alias Model =
     InternalModel Settings
+
+
+type alias InternalModel extension =
+    { extension
+        | activeItem : Maybe Item
+        , future : List Item
+        , past : List Item
+    }
 
 
 type alias Settings =
     { repeat : Bool
     , shuffle : Bool
     }
+
+
+
+-- Items
 
 
 type alias Item =
@@ -55,15 +71,3 @@ type alias EngineItem =
 type Page
     = Index
     | History
-
-
-
--- Private
-
-
-type alias InternalModel extension =
-    { extension
-        | activeItem : Maybe Item
-        , future : List Item
-        , past : List Item
-    }

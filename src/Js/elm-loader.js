@@ -74,7 +74,7 @@ function loadSettings(key) {
   try {
     return JSON.parse(val);
   } catch (_) {
-    return null;
+    return {};
   }
 }
 
@@ -98,7 +98,17 @@ function setupElm(params) {
 
   // Flags
   const flags = {
-    settings: { queue: loadSettings("queue") || { repeat: false, shuffle: false } },
+    settings: {
+      queue: Object.assign(
+        { repeat: false, shuffle: false },
+        loadSettings("queue")
+      ),
+      tracks: Object.assign(
+        { favouritesOnly: false, searchTerm: null },
+        loadSettings("tracks")
+      )
+    },
+
     user: params.user,
 
     favourites: params.favourites || null,
@@ -192,9 +202,8 @@ function setupElm(params) {
   app.ports.storeTracks.subscribe(v => storeData("tracks", v));
   app.ports.storeFavourites.subscribe(v => storeData("favourites", v));
 
-  app.ports.storeQueueSettings.subscribe(settings => {
-    saveSettings("queue", settings);
-  });
+  app.ports.storeQueueSettings.subscribe(s => saveSettings("queue", s));
+  app.ports.storeTracksSettings.subscribe(s => saveSettings("tracks", s));
 
   // > Search
   app.ports.performSearch.subscribe(searchTerm => {

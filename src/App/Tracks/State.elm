@@ -4,6 +4,7 @@ import Firebase.Data
 import Json.Encode as Json
 import List.Extra as List
 import Response
+import Response.Ext as Response
 import Time
 import Tracks.Collection as Collection exposing (..)
 import Tracks.Encoding
@@ -23,9 +24,9 @@ initialModel flags =
     { collection = emptyCollection
     , exposedStep = 1
     , favourites = decodeFavourites (Maybe.withDefault [] flags.favourites)
-    , favouritesOnly = False
+    , favouritesOnly = flags.settings.tracks.favouritesOnly
     , searchResults = Nothing
-    , searchTerm = Nothing
+    , searchTerm = flags.settings.tracks.searchTerm
     , sortBy = Artist
     , sortDirection = Asc
     }
@@ -97,6 +98,7 @@ update msg model =
                 |> Collection.makeParcel
                 |> Collection.add (decodeTracks encodedTracks)
                 |> Collection.setWithoutConsequences
+                |> Response.andAlso search
 
         ------------------------------------
         -- Collection, Pt. 2
@@ -137,16 +139,17 @@ update msg model =
         -- > Step 1, set search term
         SetSearchTerm "" ->
             { model | searchTerm = Nothing }
-                |> Response.withNone
+                |> Response.withAlso storeSettings
 
         SetSearchTerm value ->
             { model | searchTerm = Just value }
-                |> Response.withNone
+                |> Response.withAlso storeSettings
 
         -- > Step 2, perform search
         Search (Just term) ->
             { model | searchTerm = Just term }
                 |> Response.withCmd (Ports.performSearch term)
+                |> Response.andAlso storeSettings
 
         Search Nothing ->
             { model | searchResults = Nothing, searchTerm = Nothing }
@@ -154,6 +157,7 @@ update msg model =
                 |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
+                |> Response.andAlso storeSettings
 
         -- > Step 3, receive search results
         ReceiveSearchResults trackIds ->
@@ -182,6 +186,7 @@ update msg model =
                 |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
+                |> Response.andAlso storeSettings
 
         ------------------------------------
         -- UI
@@ -230,3 +235,27 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveSearchResults ReceiveSearchResults ]
+
+
+
+-- Utils
+
+
+{-| Store settings via port.
+-}
+storeSettings : Model -> Cmd TopLevel.Msg
+storeSettings model =
+    Ports.storeTracksSettings
+        { favouritesOnly = model.favouritesOnly
+        , searchTerm = model.searchTerm
+        }
+
+
+{-| Search
+-}
+search : Model -> Cmd TopLevel.Msg
+search model =
+    model.searchTerm
+        |> Search
+        |> TopLevel.TracksMsg
+        |> do
