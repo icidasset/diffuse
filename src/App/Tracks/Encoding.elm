@@ -29,7 +29,8 @@ encodeFavourite fav =
 encodeTags : Tags -> Encode.Value
 encodeTags tags =
     Encode.object
-        [ ( "nr", Encode.int tags.nr )
+        [ ( "disc", Encode.int tags.disc )
+        , ( "nr", Encode.int tags.nr )
 
         --
         , ( "album", Encode.string tags.album )
@@ -76,7 +77,8 @@ trackDecoder =
 
 tagsDecoder : Decode.Decoder Tags
 tagsDecoder =
-    Decode.map6 Tags
+    Decode.map7 Tags
+        (Decode.field "disc" Decode.int)
         (Decode.field "nr" Decode.int)
         (Decode.field "album" Decode.string)
         (Decode.field "artist" Decode.string)

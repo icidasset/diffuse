@@ -1,5 +1,6 @@
-module Tracks.Sorting exposing (..)
+module Tracks.Sorting exposing (sort)
 
+import Char
 import Tracks.Types exposing (..)
 
 
@@ -23,42 +24,61 @@ sort property direction =
             else
                 identity
     in
-        List.sortBy sortFn >> dirFn
+        List.sortWith sortFn >> dirFn
 
 
-sortByAlbum : IdentifiedTrack -> String
-sortByAlbum twi =
-    let
-        t =
-            Tuple.second twi
-    in
-        t.tags.title
-            |> String.append (toString t.tags.nr)
-            |> String.append t.tags.artist
-            |> String.append t.tags.album
-            |> String.toLower
+
+-- {by} Album
 
 
-sortByArtist : IdentifiedTrack -> String
-sortByArtist twi =
-    let
-        t =
-            Tuple.second twi
-    in
-        t.tags.title
-            |> String.append (toString t.tags.nr)
-            |> String.append t.tags.album
-            |> String.append t.tags.artist
-            |> String.toLower
+sortByAlbum : IdentifiedTrack -> IdentifiedTrack -> Order
+sortByAlbum ( _, a ) ( _, b ) =
+    EQ
+        |> andThenCompare (.tags >> .album >> low) a b
+        |> andThenCompare (.tags >> .disc) a b
+        |> andThenCompare (.tags >> .nr) a b
+        |> andThenCompare (.tags >> .artist >> low) a b
+        |> andThenCompare (.tags >> .title >> low) a b
 
 
-sortByTitle : IdentifiedTrack -> String
-sortByTitle twi =
-    let
-        t =
-            Tuple.second twi
-    in
-        t.tags.album
-            |> String.append t.tags.artist
-            |> String.append t.tags.title
-            |> String.toLower
+
+-- {by} Artist
+
+
+sortByArtist : IdentifiedTrack -> IdentifiedTrack -> Order
+sortByArtist ( _, a ) ( _, b ) =
+    EQ
+        |> andThenCompare (.tags >> .artist >> low) a b
+        |> andThenCompare (.tags >> .album >> low) a b
+        |> andThenCompare (.tags >> .disc) a b
+        |> andThenCompare (.tags >> .nr) a b
+        |> andThenCompare (.tags >> .title >> low) a b
+
+
+
+-- {by} Title
+
+
+sortByTitle : IdentifiedTrack -> IdentifiedTrack -> Order
+sortByTitle ( _, a ) ( _, b ) =
+    EQ
+        |> andThenCompare (.tags >> .title >> low) a b
+        |> andThenCompare (.tags >> .artist >> low) a b
+        |> andThenCompare (.tags >> .album >> low) a b
+
+
+
+-- Utils
+
+
+andThenCompare : (ctx -> comparable) -> ctx -> ctx -> Order -> Order
+andThenCompare fn a b order =
+    if order == EQ then
+        compare (fn a) (fn b)
+    else
+        order
+
+
+low : String -> String
+low =
+    String.toLower

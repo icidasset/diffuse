@@ -9,7 +9,8 @@ import Regex exposing (HowMany(..), regex)
 
 
 type alias Tags =
-    { nr : Int
+    { disc : Int
+    , nr : Int
 
     -- Main
     , album : String
@@ -179,7 +180,8 @@ type alias ScrollPos =
 
 emptyTags : Tags
 emptyTags =
-    { nr = 0
+    { disc = 1
+    , nr = 0
     , album = "Empty"
     , artist = "Empty"
     , title = "Empty"

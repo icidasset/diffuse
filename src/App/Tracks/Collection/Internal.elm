@@ -105,7 +105,8 @@ makeMissingFavouriteTrack : Favourite -> IdentifiedTrack
 makeMissingFavouriteTrack fav =
     let
         tags =
-            { nr = 0
+            { disc = 1
+            , nr = 0
             , artist = fav.artist
             , title = fav.title
             , album = "<missing>"
