@@ -230,10 +230,12 @@ let lastSetDuration = 0;
 
 function audioCanPlayEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
-  if (event.target.duration == lastSetDuration) return;
-  this.elm.ports.setDuration.send(event.target.duration || 0);
-  event.target.play();
-  lastSetDuration = event.target.duration;
+  if (event.target.paused) event.target.play();
+
+  if (event.target.duration != lastSetDuration) {
+    this.elm.ports.setDuration.send(event.target.duration || 0);
+    lastSetDuration = event.target.duration;
+  }
 }
 
 
