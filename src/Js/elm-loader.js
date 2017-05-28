@@ -170,6 +170,7 @@ function setupElm(params) {
 
     if (audio && !isNaN(audio.duration)) {
       audio.currentTime = audio.duration * percentage;
+      if (audio.paused) audio.pause();
     }
   });
 

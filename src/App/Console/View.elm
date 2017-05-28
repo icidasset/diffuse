@@ -37,19 +37,12 @@ entry model =
 nowPlaying : Maybe Queue.Types.Item -> Html TopLevel.Msg
 nowPlaying activeItem =
     div
-        (case activeItem of
-            Just item ->
-                [ cssClass NowPlaying
-                , onClick (TopLevel.TracksMsg (Tracks.Types.ScrollToActiveTrack item.track))
-                ]
-
-            Nothing ->
-                [ cssClass NowPlaying
-                ]
-        )
+        [ cssClass NowPlaying ]
         [ case activeItem of
             Just item ->
-                text (item.track.tags.artist ++ " – " ++ item.track.tags.title)
+                span
+                    [ onClick (TopLevel.TracksMsg (Tracks.Types.ScrollToActiveTrack item.track)) ]
+                    [ text (item.track.tags.artist ++ " – " ++ item.track.tags.title) ]
 
             Nothing ->
                 text "Ongaku Ryoho"
