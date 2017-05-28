@@ -116,6 +116,7 @@ type alias Parcel =
 
 type Msg
     = Recalibrate
+    | Reharvest
     | SortBy SortBy
       -- Collection Pt. 1
     | InitialCollection (List Json.Value)
@@ -132,7 +133,8 @@ type Msg
     | ToggleFavouritesOnly
       -- UI
     | ScrollThroughTable ScrollPos
-    | SetActiveTrack (Maybe Track)
+    | ScrollToActiveTrack Track
+    | IdentifyActiveTrack (Maybe Track)
 
 
 

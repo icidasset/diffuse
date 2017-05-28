@@ -13,7 +13,6 @@ initialModel : Model
 initialModel =
     { duration = 0
     , isPlaying = False
-    , progress = 0
     }
 
 
@@ -44,9 +43,6 @@ update msg model =
         SetIsPlaying bool ->
             (,) { model | isPlaying = bool } Cmd.none
 
-        SetProgress float ->
-            (,) { model | progress = float } Cmd.none
-
 
 
 -- 🌱
@@ -57,5 +53,4 @@ subscriptions _ =
     Sub.batch
         [ Ports.setDuration SetDuration
         , Ports.setIsPlaying SetIsPlaying
-        , Ports.setProgress SetProgress
         ]

@@ -129,6 +129,7 @@ content resultant sortBy sortDirection =
     div
         [ cssClass (TracksChild)
         , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
+        , id "tracks"
         ]
         [ if List.isEmpty resultant then
             div
@@ -191,9 +192,7 @@ tracksTableItem index ( identifiers, track ) =
             , attribute "data-missing" (boolToAttr identifiers.isMissing)
             , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
             ]
-            [ td
-                [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ]
-                [ text "" ]
+            [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
             , td [] [ text track.tags.title ]
             , td [] [ text track.tags.artist ]
             , td [] [ text track.tags.album ]

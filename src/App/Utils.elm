@@ -73,6 +73,7 @@ makeQueryParam ( a, b ) =
 
 
 -- Other
+-- > TODO: Move the first 3 functions to Response.Ext
 
 
 do : msg -> Cmd msg

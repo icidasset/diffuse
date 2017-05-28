@@ -11,6 +11,7 @@ import Json.Decode as Decode
 import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue.Types exposing (Msg(..))
+import Tracks.Types
 import Types as TopLevel
 import Utils exposing (..)
 import Variables exposing (colorDerivatives)
@@ -24,7 +25,7 @@ entry model =
     div
         [ cssClass Console ]
         [ lazy nowPlaying model.queue.activeItem
-        , lazy progress model.console.progress
+        , lazy progress model.queue.activeItem
         , lazy2 buttons model.queue model.console.isPlaying
         ]
 
@@ -36,7 +37,16 @@ entry model =
 nowPlaying : Maybe Queue.Types.Item -> Html TopLevel.Msg
 nowPlaying activeItem =
     div
-        [ cssClass NowPlaying ]
+        (case activeItem of
+            Just item ->
+                [ cssClass NowPlaying
+                , onClick (TopLevel.TracksMsg (Tracks.Types.ScrollToActiveTrack item.track))
+                ]
+
+            Nothing ->
+                [ cssClass NowPlaying
+                ]
+        )
         [ case activeItem of
             Just item ->
                 text (item.track.tags.artist ++ " – " ++ item.track.tags.title)
@@ -50,21 +60,15 @@ nowPlaying activeItem =
 -- Progress
 
 
-progress : Float -> Html TopLevel.Msg
-progress progress =
+progress : Maybe Queue.Types.Item -> Html TopLevel.Msg
+progress _ =
     div
         (progressAttributes)
         [ div
             [ cssClass ProgressBarInner ]
-            [ let
-                width =
-                    toString (progress * 100)
-              in
-                div
-                    [ cssClass ProgressBarValue
-                    , style [ ( "width", width ++ "%" ) ]
-                    ]
-                    []
+            [ div
+                [ cssClass ProgressBarValue ]
+                []
             ]
         ]
 

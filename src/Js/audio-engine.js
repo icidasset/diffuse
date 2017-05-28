@@ -194,9 +194,9 @@ function audioErrorEvent(event) {
 function audioTimeUpdateEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
   if (isNaN(event.target.duration) || isNaN(event.target.currentTime)) {
-    this.elm.ports.setProgress.send(0);
+    setProgressBarWidth(0)
   } else if (event.target.duration > 0) {
-    this.elm.ports.setProgress.send(event.target.currentTime / event.target.duration);
+    setProgressBarWidth(event.target.currentTime / event.target.duration);
   }
 }
 
@@ -225,10 +225,27 @@ function audioPauseEvent(event) {
 }
 
 
+let lastSetDuration = 0;
+
+
 function audioCanPlayEvent(event) {
   if (isActiveAudioElement(this, event.target) === false) return;
+  if (event.target.duration == lastSetDuration) return;
   this.elm.ports.setDuration.send(event.target.duration || 0);
   event.target.play();
+  lastSetDuration = event.target.duration;
+}
+
+
+
+//
+// Progress Bar
+//
+let progressBarNode;
+
+function setProgressBarWidth(float) {
+  if (!progressBarNode) progressBarNode = document.querySelector(".ProgressBarValue");
+  if (progressBarNode) progressBarNode.style.width = (float * 100).toString() + "%";
 }
 
 

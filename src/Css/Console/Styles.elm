@@ -93,6 +93,7 @@ styles =
     ------------------------------------------------------
     , class NowPlaying
         [ color (rgba 255 255 255 0.8)
+        , cursor pointer
         , fontSize (Traits.basem 13)
         , fontStyle italic
         , padding3 (gr 3) zero (gr 2)
@@ -119,8 +120,5 @@ styles =
         , left zero
         , position absolute
         , top zero
-
-        --
-        , property "transition" "width 250ms ease"
         ]
     ]

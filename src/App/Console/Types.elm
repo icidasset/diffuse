@@ -9,7 +9,6 @@ type Msg
     | Seek Float
     | SetDuration Float
     | SetIsPlaying Bool
-    | SetProgress Percentage
 
 
 {-| Model.
@@ -21,9 +20,4 @@ type Msg
 type alias Model =
     { duration : Float
     , isPlaying : Bool
-    , progress : Percentage
     }
-
-
-type alias Percentage =
-    Float

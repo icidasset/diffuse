@@ -1,10 +1,12 @@
 module Tracks.State exposing (..)
 
+import Dom.Scroll
 import Firebase.Data
 import Json.Encode as Json
 import List.Extra as List
 import Response
 import Response.Ext as Response
+import Task
 import Time
 import Tracks.Collection as Collection exposing (..)
 import Tracks.Encoding
@@ -69,6 +71,14 @@ update msg model =
                 |> Collection.makeParcel
                 |> Collection.recalibrate
                 |> Collection.reexpose
+                |> Collection.set
+
+        -- # Reharvest
+        --
+        Reharvest ->
+            model
+                |> Collection.makeParcel
+                |> Collection.reharvest
                 |> Collection.set
 
         -- # Sort
@@ -202,8 +212,17 @@ update msg model =
                 False ->
                     Response.withNone model
 
+        -- Scroll to the active track
+        --
+        ScrollToActiveTrack track ->
+            model.collection.harvested
+                |> List.findIndex (Tuple.second >> (==) track)
+                |> Maybe.map (scrollToIndex model)
+                |> Maybe.withDefault (Response.withNone model)
+
         -- Identify the active track
-        SetActiveTrack maybeTrack ->
+        --
+        IdentifyActiveTrack maybeTrack ->
             let
                 mapFn =
                     case maybeTrack of
@@ -217,6 +236,10 @@ update msg model =
                     |> Collection.makeParcel
                     |> Collection.remap (List.map mapFn)
                     |> Collection.set
+
+
+
+-- 🔥 / Functions
 
 
 toggleFavourite : Model -> IdentifiedTrack -> ( Model, Cmd TopLevel.Msg )
@@ -241,6 +264,39 @@ toggleFavourite model ( i, t ) =
             |> effect
             |> set
             |> addCmd storeFavourites
+
+
+scrollToIndex : Model -> Int -> ( Model, Cmd TopLevel.Msg )
+scrollToIndex model idx =
+    let
+        isExposed =
+            (idx + 1) <= (List.length model.collection.exposed)
+
+        newExposedStep =
+            if not isExposed then
+                ceiling (toFloat (idx) / toFloat (Collection.partial))
+            else
+                model.exposedStep
+
+        scrollTask =
+            (7 + 5 + idx * 32)
+                |> toFloat
+                |> Dom.Scroll.toY "tracks"
+
+        exposedCmd =
+            if not isExposed then
+                do (TopLevel.TracksMsg Reharvest)
+            else
+                Cmd.none
+
+        cmd =
+            Cmd.batch
+                [ exposedCmd
+                , Task.attempt (always TopLevel.NoOp) scrollTask
+                ]
+    in
+        { model | exposedStep = newExposedStep }
+            |> Response.withCmd cmd
 
 
 

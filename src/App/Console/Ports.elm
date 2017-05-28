@@ -20,6 +20,3 @@ port setDuration : (Float -> msg) -> Sub msg
 
 
 port setIsPlaying : (Bool -> msg) -> Sub msg
-
-
-port setProgress : (Float -> msg) -> Sub msg
