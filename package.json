@@ -9,7 +9,7 @@
   "dependencies": {
     "elasticlunr": "^0.9.5",
     "firebase": "^3.9.0",
-    "jsmediatags": "^3.4.0",
+    "jsmediatags": "^3.5.0",
     "lodash": "^4.17.4"
   }
 }
