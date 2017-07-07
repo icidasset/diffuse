@@ -1,7 +1,4 @@
-resolver: lts-8.6
+resolver: nightly-2017-07-06
 
 packages:
 - '.'
-
-extra-deps:
-- 'shikensu-0.3.0'

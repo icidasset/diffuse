@@ -1,6 +1,7 @@
 .stack-work
 .DS_Store
-build
+*.cabal
+/build
 elm-stuff
 node_modules
 tests/Doc

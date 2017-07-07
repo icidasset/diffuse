@@ -1,0 +1,41 @@
+name: ongaku-ryoho
+version: 1.0.0
+
+
+default-extensions:
+  - ExtendedDefaultRules
+  - OverloadedStrings
+
+
+dependencies:
+  - base >= 4.7 && < 5
+  - binary == 0.8.*
+  - bytestring == 0.10.*
+  - directory == 1.3.*
+  - flow == 1.*
+  - http-types == 0.9.*
+  - process == 1.4.*
+  - shikensu == 0.3.*
+  - text == 1.*
+  - wai == 3.2.*
+  - wai-app-static == 3.1.*
+  - warp == 3.2.*
+
+
+executables:
+  # 🚜
+  build:
+    main: Main.hs
+    source-dirs:
+      - src
+      - system/Build
+
+  # 🏔
+  server:
+    main: Main.hs
+    source-dirs: system/Server
+
+  # 🏪
+  vendor:
+    main: Main.hs
+    source-dirs: system/Vendor

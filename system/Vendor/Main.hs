@@ -2,7 +2,6 @@ module Main where
 
 import Flow
 import Shikensu
-import Shikensu.Types
 import Shikensu.Contrib
 import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities (mapIO)

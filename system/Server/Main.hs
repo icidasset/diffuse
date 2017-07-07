@@ -16,7 +16,7 @@ import qualified Data.Tuple as Tuple (snd)
 
 
 main :: IO ()
-main = run 8080 app
+main = run 8888 app
 
 
 app :: Application
