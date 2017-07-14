@@ -115,6 +115,7 @@ function setupElm(params) {
 
   // Ports
   // > Authentication
+
   app.ports.authenticate.subscribe(() => {
     blockstack.redirectToSignIn();
   });
@@ -124,6 +125,7 @@ function setupElm(params) {
   });
 
   // > Audio
+
   var audioEnvironmentContext = {
     activeQueueItem: null,
     elm: app
@@ -167,6 +169,7 @@ function setupElm(params) {
   });
 
   // > Processing
+
   app.ports.requestTags.subscribe(distantContext => {
     const context = Object.assign({}, distantContext);
     const initialPromise = Promise.resolve([]);
@@ -191,6 +194,7 @@ function setupElm(params) {
   });
 
   // > Data
+
   app.ports.storeSources.subscribe(v => storeData("sources", v));
   app.ports.storeTracks.subscribe(v => storeData("tracks", v));
   app.ports.storeFavourites.subscribe(v => storeData("favourites", v));
@@ -199,6 +203,7 @@ function setupElm(params) {
   app.ports.storeTracksSettings.subscribe(s => saveSettings("tracks", s));
 
   // > Search
+
   app.ports.performSearch.subscribe(searchTerm => {
     search.postMessage({
       action: "perform_search",

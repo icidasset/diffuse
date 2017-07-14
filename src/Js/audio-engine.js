@@ -243,6 +243,7 @@ function audioCanPlayEvent(event) {
 //
 // Progress Bar
 //
+
 let progressBarNode;
 
 function setProgressBarWidth(float) {
