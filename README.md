@@ -16,7 +16,13 @@ A music player which connects to your cloud/distributed storage.
 
 ### Setup
 
-```
+```shell
+# This assumes that you are using macOS
+
+brew install haskell-stack
+brew install elm
+brew install nodejs
+
 npm install
 ```
 
