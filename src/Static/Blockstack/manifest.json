@@ -1,0 +1,10 @@
+{
+  "name": "Ongaku Ryoho",
+  "start_url": "localhost:5000",
+  "description": "A music player which connects to your cloud/distributed storage",
+  "icons": [{
+    "src": "https://helloblockstack.com/icon-192x192.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  }]
+}

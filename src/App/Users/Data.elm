@@ -1,7 +1,4 @@
-port module Firebase.Data exposing (..)
-
-{-| This module is related to the Firebase database.
--}
+port module Users.Data exposing (..)
 
 import Json.Encode as Json
 

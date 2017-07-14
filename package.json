@@ -7,8 +7,9 @@
     "elm-test": "^0.18.2"
   },
   "dependencies": {
+    "blockstack": "^0.9.0",
+    "blockstack-storage": "blockstack/blockstack-storage-js#14aebc9bf5da16bc823cf754c7df2007de25107b",
     "elasticlunr": "^0.9.5",
-    "firebase": "^3.9.0",
     "jsmediatags": "^3.5.0",
     "lodash": "^4.17.4"
   }

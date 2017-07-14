@@ -7,6 +7,7 @@ import Network.HTTP.Types.Header (hAccept)
 import Network.Wai
 import Network.Wai.Application.Static
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Cors
 import System.Directory (doesFileExist)
 
 import qualified Data.Binary.Builder as Builder (empty, putStringUtf8)
@@ -16,7 +17,7 @@ import qualified Data.Tuple as Tuple (snd)
 
 
 main :: IO ()
-main = run 8888 app
+main = run 5000 (simpleCors app)
 
 
 app :: Application

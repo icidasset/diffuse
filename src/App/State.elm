@@ -1,33 +1,28 @@
 module State exposing (..)
 
-import Date
-import Firebase.Auth
-import List.Extra as List
-import Navigation
-import Response exposing (..)
-import Task
-import Time
-import Types exposing (..)
-import Utils exposing (do)
-
-
 -- Children
-
-import Console.State as Console
-import Queue.State as Queue
-import Routing.State as Routing
-import Sources.State as Sources
-import Tracks.State as Tracks
-
-
 -- Children, Pt. 2
 
+import Console.State as Console
+import Date
+import List.Extra as List
+import Navigation
 import Queue.Ports
+import Queue.State as Queue
 import Queue.Types
 import Queue.Utils
+import Response exposing (..)
+import Routing.State as Routing
+import Sources.State as Sources
 import Sources.Types
+import Task
+import Time
+import Tracks.State as Tracks
 import Tracks.Types
 import Tracks.Utils
+import Types exposing (..)
+import Users.Auth
+import Utils exposing (do)
 
 
 -- 💧
@@ -79,7 +74,7 @@ update msg model =
         Authenticate ->
             (!)
                 model
-                [ Firebase.Auth.authenticate () ]
+                [ Users.Auth.authenticate () ]
 
         HideLoadingScreen ->
             (!)
@@ -89,7 +84,7 @@ update msg model =
         SignOut ->
             (!)
                 { model | authenticatedUser = Nothing }
-                [ Firebase.Auth.deauthenticate ()
+                [ Users.Auth.deauthenticate ()
                 , Navigation.modifyUrl "/"
                 ]
 
@@ -104,12 +99,12 @@ update msg model =
                 sources =
                     model.sources
             in
-                (!)
-                    { model
-                        | sources = { sources | timestamp = stamp }
-                        , timestamp = stamp
-                    }
-                    []
+            (!)
+                { model
+                    | sources = { sources | timestamp = stamp }
+                    , timestamp = stamp
+                }
+                []
 
         ------------------------------------
         -- Children
@@ -143,7 +138,7 @@ update msg model =
                 [ -- `activeQueueItemChanged` port
                   maybeQueueItem
                     |> Maybe.map
-                        (.track)
+                        .track
                     |> Maybe.map
                         (Queue.Utils.makeEngineItem
                             model.timestamp
@@ -153,7 +148,7 @@ update msg model =
 
                 -- Identify
                 , maybeQueueItem
-                    |> Maybe.map (.track)
+                    |> Maybe.map .track
                     |> Tracks.Types.IdentifyActiveTrack
                     |> TracksMsg
                     |> do

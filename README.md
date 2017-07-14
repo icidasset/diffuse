@@ -1,6 +1,6 @@
 # Ongaku Ryoho
 
-A music player which connects to your cloud storage.
+A music player which connects to your cloud/distributed storage.
 
 ![](http://icidasset-public.s3.amazonaws.com/Screen%20Shot%202017-06-12%20at%207.33.13%20PM.png)
 
@@ -11,6 +11,7 @@ A music player which connects to your cloud storage.
 - Loads of `Elm`
 - A moderate amount of `Haskell` for the build system and static server
 - A tiny bit of `Node` (for making a separate css file)
+- Blockstack
 
 
 ### Setup
@@ -36,20 +37,4 @@ make test
 # watch and build
 brew install watchexec
 make watch
-```
-
-
-
-## Setting up Firebase
-
-1. Create app
-2. Add Google authentication
-3. Add the following `Storage` rules
-
-```
-service firebase.storage {
-  match /users/{userId}/{allPaths=**} {
-  	allow read, write: if request.auth != null;
-  }
-}
 ```

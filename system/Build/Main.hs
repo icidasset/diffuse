@@ -33,11 +33,12 @@ process patterns =
 sequences :: IO [( String, Dictionary )]
 sequences =
     lsequence
-        [ ( "pages",    process ["src/Static/Html/**/*.html"]   )
-        , ( "images",   process ["src/Static/Images/**/*.*"]    )
-        , ( "favicons", process ["src/Static/Favicons/**/*.*"]  )
-        , ( "fonts",    process ["src/Static/Fonts/**/*.*"]     )
-        , ( "js",       process ["src/Js/**/*.js"]              )
+        [ ( "pages",        process ["src/Static/Html/**/*.html"]       )
+        , ( "images",       process ["src/Static/Images/**/*.*"]        )
+        , ( "favicons",     process ["src/Static/Favicons/**/*.*"]      )
+        , ( "fonts",        process ["src/Static/Fonts/**/*.*"]         )
+        , ( "blockstack",   process ["src/Static/Blockstack/**/*.*"]    )
+        , ( "js",           process ["src/Js/**/*.js"]                  )
         ]
 
 
@@ -51,4 +52,5 @@ flow ("pages", dict) =
 flow ("images", dict) = prefixDirname "images/" dict
 flow ("favicons", dict) = prefixDirname "favicons/" dict
 flow ("fonts", dict) = prefixDirname "fonts/" dict
+flow ("blockstack", dict) = dict
 flow ("js", dict) = dict

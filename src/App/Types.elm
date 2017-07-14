@@ -1,18 +1,16 @@
 module Types exposing (..)
 
-import Date exposing (Date)
-import Firebase.Auth
-import Json.Encode
-import Time exposing (Time)
-
-
 -- Children
 
 import Console.Types as Console
+import Date exposing (Date)
+import Json.Encode
 import Queue.Types as Queue
 import Routing.Types as Routing
 import Sources.Types as Sources
+import Time exposing (Time)
 import Tracks.Types as Tracks
+import Users.Types exposing (User)
 
 
 -- Types
@@ -44,7 +42,7 @@ type Msg
 
 
 type alias Model =
-    { authenticatedUser : Maybe Firebase.Auth.User
+    { authenticatedUser : Maybe User
     , showLoadingScreen : Bool
 
     ------------------------------------
@@ -71,7 +69,7 @@ type alias Settings =
 
 type alias ProgramFlags =
     { settings : Settings
-    , user : Maybe Firebase.Auth.User
+    , user : Maybe User
 
     -- Data
     , favourites : Maybe (List Json.Encode.Value)

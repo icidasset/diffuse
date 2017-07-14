@@ -33,9 +33,6 @@ pageToParentHref page =
         About ->
             "/about"
 
-        Custom ->
-            "/customize"
-
         Queue _ ->
             "/queue"
 
@@ -65,7 +62,6 @@ route =
 
         -- Other
         , map About (s "about")
-        , map Custom (s "customize")
         , map Settings (s "settings")
         , map Index top
         ]

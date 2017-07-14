@@ -19,6 +19,7 @@ dependencies:
   - text == 1.*
   - wai == 3.2.*
   - wai-app-static == 3.1.*
+  - wai-cors == 0.2.*
   - warp == 3.2.*
 
 

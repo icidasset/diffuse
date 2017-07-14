@@ -1,60 +1,64 @@
 let node = document.getElementById("elm-container");
-let userProps = ["displayName", "email", "photoURL", "refreshToken", "uid"];
-let didSetupElm = false;
+let dataContainer = {};
 
 
 
 //
-// Firebase
+// Search
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCEblV1BTVwpMCdAWZlchV23qJCsW_PCjw",
-  authDomain: "ongaku-ryoho-v3-test.firebaseapp.com",
-  databaseURL: "https://ongaku-ryoho-v3-test.firebaseio.com"
-};
-
-firebase.initializeApp(firebaseConfig);
-firebase.auth().getRedirectResult(); // TODO - Handle errors
-firebase.auth().onAuthStateChanged(authStatechange); // TODO - Handle errors
+const search = new Worker("search.js");
 
 
-function authStatechange(userObj) {
-  if (didSetupElm) return;
 
-  // check user props
-  const maybeUser = userObj ? _.pick(userProps, userObj) : null;
+//
+// Blockstack
 
-  // {unauthenticated}
-  if (!maybeUser) {
-    setupElm({ user: maybeUser });
-    return;
-  }
+const BLOCKSTACK_FILE_PATH = "ongaku-ryoho-v1_0.json";
 
-  // {authenticated}
-  Promise.all([
-    firebase.database().ref(`/users/${maybeUser.uid}/sources`).once("value"),
-    firebase.database().ref(`/users/${maybeUser.uid}/tracks`).once("value"),
-    firebase.database().ref(`/users/${maybeUser.uid}/favourites`).once("value")
-  ]).then(
-    x => x.map(s => s.val())
-  ).then(
-    x => setupElm({ user: maybeUser, sources: x[0], tracks: x[1], favourites: x[2] })
-  ).catch(
-    e => {
-      // TODO: Show error message
-      console.error("Could not load data");
-      console.error(e);
-    }
+
+// {state} Authenticated
+if (blockstack.isUserSignedIn()) {
+  const userData = blockstack.loadUserData();
+  const name = userData.username || "anonymous";
+
+  getData()
+    .then(d => _.assign(d, { user: { displayName: name }}))
+    .then(setupElm)
+    .catch(_ => console.error("Failed to load application data"));
+
+// {state} Is authenticating
+} else if (blockstack.isSignInPending()) {
+  blockstack.handlePendingSignIn().then(
+    _   => window.location = window.location.origin,
+    err => console.error("Failed to authenticate", err)
   );
+
+// {state} Not authenticated
+} else {
+  setupElm({ user: null });
+
 }
 
 
-function storeData(key, data) {
-  const obj = {};
-  const userId = firebase.auth().currentUser.uid;
+/**
+ * Get the application data from the Blockstack storage.
+ */
+function getData() {
+  return blockstackStorage.getFile(BLOCKSTACK_FILE_PATH)
+    .then(con => dataContainer = JSON.parse(con || "{}"))
+    .then(_   => dataContainer);
+}
 
-  obj[key] = data;
-  firebase.database().ref(`/users/${userId}`).update(obj);
+
+/**
+ * Store some data in the Blockstack storage.
+ */
+function storeData(key, data) {
+  dataContainer = _.set(key, data, dataContainer);
+
+  // Store
+  const content = JSON.stringify(dataContainer);
+  return blockstackStorage.putFile(BLOCKSTACK_FILE_PATH, content);
 }
 
 
@@ -81,19 +85,9 @@ function loadSettings(key) {
 
 
 //
-// Search
-
-const search = new Worker("search.js");
-
-
-
-//
 // Elm
 
 function setupElm(params) {
-  didSetupElm = true;
-
-  // Clean
   node.innerHTML = "";
 
   // Flags
@@ -114,7 +108,7 @@ function setupElm(params) {
     favourites: params.favourites || null,
     sources: params.sources || null,
     tracks: params.tracks || null
-  }
+  };
 
   // Embed
   const app = Elm.App.embed(node, flags);
@@ -122,13 +116,11 @@ function setupElm(params) {
   // Ports
   // > Authentication
   app.ports.authenticate.subscribe(() => {
-    firebase.auth().signInWithRedirect(
-      new firebase.auth.GoogleAuthProvider()
-    );
+    blockstack.redirectToSignIn();
   });
 
   app.ports.deauthenticate.subscribe(() => {
-    firebase.auth().signOut();
+    blockstack.signUserOut(window.location.origin);
   });
 
   // > Audio
