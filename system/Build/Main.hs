@@ -37,7 +37,7 @@ sequences =
         , ( "images",       process ["src/Static/Images/**/*.*"]        )
         , ( "favicons",     process ["src/Static/Favicons/**/*.*"]      )
         , ( "fonts",        process ["src/Static/Fonts/**/*.*"]         )
-        , ( "blockstack",   process ["src/Static/Blockstack/**/*.*"]    )
+        , ( "blockstack",   process ["src/Static/Blockstack/**/*"]      )
         , ( "js",           process ["src/Js/**/*.js"]                  )
         ]
 

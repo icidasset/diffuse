@@ -13,13 +13,13 @@ import Material.Icons.Content
 import Material.Icons.Navigation
 import Material.Icons.Toggle
 import Navigation.View as Navigation
-import Sources.Types exposing (Source)
+import Sources.Types exposing (IsProcessing, Source)
 import Styles exposing (Classes(Button, ContentBox))
 import Tracks.Styles exposing (..)
 import Tracks.Types exposing (..)
 import Types as TopLevel exposing (Model, Msg)
 import Utils exposing (cssClass, cssClasses)
-import Variables exposing (colors, colorDerivatives)
+import Variables exposing (colorDerivatives, colors)
 
 
 -- 🍯
@@ -33,11 +33,13 @@ entry model =
             navigation
             model.tracks.searchTerm
             model.tracks.favouritesOnly
-        , lazy3
+        , lazy2
             content
             model.tracks.collection.exposed
-            model.tracks.sortBy
-            model.tracks.sortDirection
+            ( model.tracks.sortBy
+            , model.tracks.sortDirection
+            , model.sources.isProcessing
+            )
         ]
 
 
@@ -124,17 +126,23 @@ navigation searchTerm favouritesOnly =
         ]
 
 
-content : List IdentifiedTrack -> SortBy -> SortDirection -> Html TopLevel.Msg
-content resultant sortBy sortDirection =
+content : List IdentifiedTrack -> ( SortBy, SortDirection, IsProcessing ) -> Html TopLevel.Msg
+content resultant ( sortBy, sortDirection, isProcessing ) =
     div
-        [ cssClass (TracksChild)
+        [ cssClass TracksChild
         , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
         , id "tracks"
         ]
         [ if List.isEmpty resultant then
             div
                 [ cssClass NoTracksFound ]
-                [ text "No tracks found" ]
+                [ case isProcessing of
+                    Just _ ->
+                        text "Processing Tracks ..."
+
+                    Nothing ->
+                        text "No tracks found"
+                ]
           else
             tracksTable resultant sortBy sortDirection
         ]
@@ -154,30 +162,30 @@ tracksTable tracks activeSortBy sortDirection =
                 Material.Icons.Navigation.expand_more
             )
                 (Color.rgb 207 207 207)
-                (16)
+                16
     in
-        table
-            [ cssClass TracksTable ]
-            [ thead
+    table
+        [ cssClass TracksTable ]
+        [ thead
+            []
+            [ th
+                [ style [ ( "width", "4.50%" ) ] ]
                 []
-                [ th
-                    [ style [ ( "width", "4.50%" ) ] ]
-                    []
-                , th
-                    [ style [ ( "width", "37.5%" ) ], onClick (sortBy Title) ]
-                    [ text "Title", maybeShowSortIcon activeSortBy Title sortIcon ]
-                , th
-                    [ style [ ( "width", "29.0%" ) ], onClick (sortBy Artist) ]
-                    [ text "Artist", maybeShowSortIcon activeSortBy Artist sortIcon ]
-                , th
-                    [ style [ ( "width", "29.0%" ) ], onClick (sortBy Album) ]
-                    [ text "Album", maybeShowSortIcon activeSortBy Album sortIcon ]
-                ]
-            , Html.Keyed.node
-                "tbody"
-                [ on "dblclick" playTrack, on "click" toggleFavourite ]
-                (List.indexedMap tracksTableItem tracks)
+            , th
+                [ style [ ( "width", "37.5%" ) ], onClick (sortBy Title) ]
+                [ text "Title", maybeShowSortIcon activeSortBy Title sortIcon ]
+            , th
+                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Artist) ]
+                [ text "Artist", maybeShowSortIcon activeSortBy Artist sortIcon ]
+            , th
+                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Album) ]
+                [ text "Album", maybeShowSortIcon activeSortBy Album sortIcon ]
             ]
+        , Html.Keyed.node
+            "tbody"
+            [ on "dblclick" playTrack, on "click" toggleFavourite ]
+            (List.indexedMap tracksTableItem tracks)
+        ]
 
 
 tracksTableItem : Int -> IdentifiedTrack -> ( String, Html TopLevel.Msg )
@@ -186,18 +194,18 @@ tracksTableItem index ( identifiers, track ) =
         key =
             toString index
     in
-        ( key
-        , tr
-            [ rel key
-            , attribute "data-missing" (boolToAttr identifiers.isMissing)
-            , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
-            ]
-            [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
-            , td [] [ text track.tags.title ]
-            , td [] [ text track.tags.artist ]
-            , td [] [ text track.tags.album ]
-            ]
-        )
+    ( key
+    , tr
+        [ rel key
+        , attribute "data-missing" (boolToAttr identifiers.isMissing)
+        , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
+        ]
+        [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
+        , td [] [ text track.tags.title ]
+        , td [] [ text track.tags.artist ]
+        , td [] [ text track.tags.album ]
+        ]
+    )
 
 
 

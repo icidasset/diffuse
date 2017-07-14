@@ -11,6 +11,7 @@
     "blockstack-storage": "blockstack/blockstack-storage-js#14aebc9bf5da16bc823cf754c7df2007de25107b",
     "elasticlunr": "^0.9.5",
     "jsmediatags": "^3.5.0",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "surge": "^0.19.0"
   }
 }

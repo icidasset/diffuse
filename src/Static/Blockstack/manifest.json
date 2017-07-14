@@ -1,9 +1,9 @@
 {
   "name": "Ongaku Ryoho",
-  "start_url": "localhost:5000",
+  "start_url": "ongakuryoho.com",
   "description": "A music player which connects to your cloud/distributed storage",
   "icons": [{
-    "src": "https://helloblockstack.com/icon-192x192.png",
+    "src": "http://ongakuryoho.com/favicons/android-chrome-512x512.png",
     "sizes": "192x192",
     "type": "image/png"
   }]
