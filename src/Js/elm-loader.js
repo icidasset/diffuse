@@ -6,7 +6,7 @@ let dataContainer = {};
 //
 // Search
 
-const search = new Worker("search.js");
+const search = new Worker("/search.js");
 
 
 
