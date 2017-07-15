@@ -12,8 +12,8 @@ import Xml.Query exposing (..)
 -- Tree
 
 
-parseTreeResponse : String -> ParsedResponse Marker
-parseTreeResponse response =
+parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parseTreeResponse response _ =
     let
         decodedXml =
             response

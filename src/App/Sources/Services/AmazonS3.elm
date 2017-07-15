@@ -3,7 +3,8 @@ module Sources.Services.AmazonS3 exposing (..)
 {-| Amazon S3 Service.
 
 Resources:
-- http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
+
+  - <http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html>
 
 -}
 
@@ -14,6 +15,7 @@ import Regex
 import Sources.Services.AmazonS3.Parser as Parser
 import Sources.Services.AmazonS3.Presign exposing (..)
 import Sources.Types exposing (..)
+import Sources.Utils
 import Time
 
 
@@ -29,8 +31,10 @@ defaults =
 
 
 {-| The list of properties we need from the user.
-    `(property, label, placeholder, isPassword)`
-    Will be used for the forms.
+
+Tuple: (property, label, placeholder, isPassword)
+Will be used for the forms.
+
 -}
 properties : List ( String, String, String, Bool )
 properties =
@@ -62,8 +66,10 @@ initialData =
 
 
 {-| Create a public url for a file.
-    We need this to play the track.
-    (!) Creates a presigned url that's valid for 24 hours
+
+We need this to play the track.
+(!) Creates a presigned url that's valid for 24 hours
+
 -}
 makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl currentDate srcData method pathToFile =
@@ -75,8 +81,10 @@ makeTrackUrl currentDate srcData method pathToFile =
 
 
 {-| Create a directory tree.
-    List all the tracks in the bucket.
-    Or a specific directory in the bucket.
+
+List all the tracks in the bucket.
+Or a specific directory in the bucket.
+
 -}
 makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
 makeTree srcData marker msg currentDate =
@@ -126,7 +134,7 @@ makeTree srcData marker msg currentDate =
 
 {-| Re-export parser functions.
 -}
-parseTreeResponse : String -> ParsedResponse Marker
+parseTreeResponse : String -> Marker -> ParsedResponse Marker
 parseTreeResponse =
     Parser.parseTreeResponse
 
@@ -134,3 +142,17 @@ parseTreeResponse =
 parseErrorResponse : String -> String
 parseErrorResponse =
     Parser.parseErrorResponse
+
+
+
+-- Post
+
+
+{-| Post process the tree results.
+
+!!! Make sure we only use music files that we can use.
+
+-}
+postProcessTree : List String -> List String
+postProcessTree =
+    Sources.Utils.selectMusicFiles

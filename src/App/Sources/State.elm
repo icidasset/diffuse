@@ -19,6 +19,7 @@ import Utils exposing (do)
 -- Services
 
 import Sources.Services.AmazonS3 as AmazonS3
+import Sources.Services.Ipfs as Ipfs
 
 
 -- 💧
@@ -28,7 +29,7 @@ initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
     { collection = decodeSources flags
     , isProcessing = Nothing
-    , newSource = makeSource AmazonS3 AmazonS3.initialData
+    , newSource = makeSource Ipfs Ipfs.initialData
     , processingErrors = []
     , timestamp = Date.fromTime 0
     }
@@ -208,7 +209,22 @@ update msg model =
         SetNewSourceProperty source key value ->
             let
                 newSource =
-                    { source | data = Dict.insert key value source.data }
+                    { source | data = Dict.insert key (String.trim value) source.data }
+            in
+                (!) { model | newSource = newSource } []
+
+        SetNewSourceType typeString ->
+            let
+                newSource =
+                    case typeString of
+                        "AmazonS3" ->
+                            makeSource AmazonS3 AmazonS3.initialData
+
+                        "Ipfs" ->
+                            makeSource Ipfs Ipfs.initialData
+
+                        _ ->
+                            makeSource AmazonS3 AmazonS3.initialData
             in
                 (!) { model | newSource = newSource } []
 

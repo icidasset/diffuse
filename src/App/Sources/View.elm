@@ -32,6 +32,7 @@ import Styles exposing (Classes(Button, ContentBox, InsulationContent, Intro))
 -- Services
 
 import Sources.Services.AmazonS3 as AmazonS3
+import Sources.Services.Ipfs as Ipfs
 
 
 -- 🍯
@@ -143,6 +144,7 @@ renderSource index ( source, isProcessing, processingError ) =
             , span
                 [ cssClass ListActions ]
                 [ -- Processing error
+                  --
                   case processingError of
                     Just err ->
                         span [ title err ] [ Icons.error_outline colorDerivatives.error 16 ]
@@ -151,12 +153,14 @@ renderSource index ( source, isProcessing, processingError ) =
                         text ""
 
                 -- Is processing
+                --
                 , if isProcessing == True then
                     span [ title "Processing …" ] [ Icons.sync colorDerivatives.text 16 ]
                   else
                     text ""
 
                 -- Delete
+                --
                 , a
                     [ title "Remove"
                     , source.id
@@ -204,31 +208,61 @@ pageNewForm newSource =
         [ cssClass ContentBox
         , onSubmit Sources.SubmitNewSourceForm
         ]
-        [ h1
+        [ -- Title
+          --
+          h1
             []
             [ text "Add a new source" ]
+
+        -- Intro
+        --
         , p
             [ cssClass Styles.Intro ]
-            [ text """
-                Choose a type of source, fill in its credentials and add it.
-              """
+            [ text "Choose a type of source, fill in its credentials and add it."
+            , br
+                []
+                []
+            , strong
+                []
+                [ text """
+                    Make sure CORS is enabled for IPFS and Amazon S3 repositories.
+                  """
+                ]
             ]
+
+        -- Select the type of the source
+        --
         , label
             []
             [ text "Source type/service" ]
         , div
             [ cssClass FormStyles.SelectBox ]
             [ select
-                []
-                [ option
-                    [ value "amazon-s3" ]
-                    [ text "Amazon S3" ]
+                [ onInput SetNewSourceType
                 ]
+                (List.map
+                    (\( typStr, labe ) ->
+                        option
+                            [ selected <| (toString newSource.service) == typStr
+                            , value typStr
+                            ]
+                            [ text labe ]
+                    )
+                    [ ( "AmazonS3", "Amazon S3" )
+                    , ( "Ipfs", "IPFS" )
+                    ]
+                )
             , Icons.expand_more (Color.greyscale 0.325) 20
             ]
+
+        -- Source properties
+        --
         , div
             []
             (renderSourceProperties newSource)
+
+        -- Submit button
+        --
         , div
             []
             [ button
@@ -278,3 +312,6 @@ renderSourceProperties source =
     case source.service of
         AmazonS3 ->
             List.map (propertyRenderer source) AmazonS3.properties
+
+        Ipfs ->
+            List.map (propertyRenderer source) Ipfs.properties

@@ -9,11 +9,6 @@ import Json.Encode as Encode
 import Sources.Types exposing (..)
 
 
--- Services
-
-import Sources.Services.AmazonS3 as AmazonS3
-
-
 -- Encode
 
 
@@ -62,6 +57,9 @@ serviceStringToType str =
     case str of
         "AmazonS3" ->
             AmazonS3
+
+        "Ipfs" ->
+            Ipfs
 
         _ ->
             AmazonS3
