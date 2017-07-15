@@ -238,7 +238,8 @@ stylesLocal =
         , descendants
             [ class AuthenticationButtonLogo
                 [ height (px 22)
-                , marginRight (gr 2)
+                , marginRight (gr 1)
+                , transform none
                 , width (px 22)
                 ]
             ]
