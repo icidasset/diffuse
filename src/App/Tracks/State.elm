@@ -40,21 +40,21 @@ initialCommands maybeEncodedTracks =
         encodedTracks =
             Maybe.withDefault [] maybeEncodedTracks
     in
-    Cmd.batch
-        [ -- Don't block the UI
-          encodedTracks
-            |> InitialCollection
-            |> TopLevel.TracksMsg
-            |> doDelayed (Time.millisecond * 250)
+        Cmd.batch
+            [ -- Don't block the UI
+              encodedTracks
+                |> InitialCollection
+                |> TopLevel.TracksMsg
+                |> doDelayed (Time.millisecond * 250)
 
-        -- Fill queue
-        , TopLevel.FillQueue
-            |> doDelayed (Time.millisecond * 500)
+            -- Fill queue
+            , TopLevel.FillQueue
+                |> doDelayed (Time.millisecond * 500)
 
-        -- Hide loader
-        , TopLevel.HideLoadingScreen
-            |> doDelayed (Time.millisecond * 500)
-        ]
+            -- Hide loader
+            , TopLevel.HideLoadingScreen
+                |> doDelayed (Time.millisecond * 500)
+            ]
 
 
 
@@ -93,10 +93,10 @@ update msg model =
                     else
                         Asc
             in
-            { model | sortBy = property, sortDirection = sortDir }
-                |> Collection.makeParcel
-                |> Collection.reidentify
-                |> Collection.set
+                { model | sortBy = property, sortDirection = sortDir }
+                    |> Collection.makeParcel
+                    |> Collection.reidentify
+                    |> Collection.set
 
         ------------------------------------
         -- Collection, Pt. 1
@@ -232,10 +232,10 @@ update msg model =
                         Nothing ->
                             \( i, t ) -> ( { i | isNowPlaying = False }, t )
             in
-            model
-                |> Collection.makeParcel
-                |> Collection.remap (List.map mapFn)
-                |> Collection.set
+                model
+                    |> Collection.makeParcel
+                    |> Collection.remap (List.map mapFn)
+                    |> Collection.set
 
 
 
@@ -259,11 +259,11 @@ toggleFavourite model ( i, t ) =
             else
                 remap (Favourites.toggleInCollection t)
     in
-    { model | favourites = newFavourites }
-        |> makeParcel
-        |> effect
-        |> set
-        |> addCmd storeFavourites
+        { model | favourites = newFavourites }
+            |> makeParcel
+            |> effect
+            |> set
+            |> addCmd storeFavourites
 
 
 scrollToIndex : Model -> Int -> ( Model, Cmd TopLevel.Msg )
@@ -295,8 +295,8 @@ scrollToIndex model idx =
                 , Task.attempt (always TopLevel.NoOp) scrollTask
                 ]
     in
-    { model | exposedStep = newExposedStep }
-        |> Response.withCmd cmd
+        { model | exposedStep = newExposedStep }
+            |> Response.withCmd cmd
 
 
 

@@ -1,9 +1,6 @@
 module View exposing (entry)
 
--- Children
-
 import Color
-import Console.View as Console
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
@@ -11,17 +8,22 @@ import Html.Lazy
 import Material.Icons.Action
 import Material.Icons.Alert
 import Navigation.View as Navigation
-import Queue.View as Queue
 import Routing.Types exposing (Page(..))
-import Settings.View as Settings
-import Sources.View as Sources
-import Spinner.View as Spinner
 import Styles exposing (..)
 import Svg exposing (Svg, g, path, svg)
 import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
-import Tracks.View as Tracks
 import Types exposing (..)
 import Utils exposing (..)
+
+
+-- Children
+
+import Console.View as Console
+import Queue.View as Queue
+import Settings.View as Settings
+import Sources.View as Sources
+import Spinner.View as Spinner
+import Tracks.View as Tracks
 
 
 -- 🍯

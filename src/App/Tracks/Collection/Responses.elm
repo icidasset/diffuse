@@ -18,11 +18,11 @@ globalConsequences oldCollection newCollection model =
                 encodedTracks =
                     List.map Tracks.Encoding.encodeTrack newCollection.untouched
             in
-            Cmd.batch
-                [ Users.Data.storeTracks encodedTracks
-                , Ports.updateSearchIndex encodedTracks
-                , do (TopLevel.TracksMsg (Search model.searchTerm))
-                ]
+                Cmd.batch
+                    [ Users.Data.storeTracks encodedTracks
+                    , Ports.updateSearchIndex encodedTracks
+                    , do (TopLevel.TracksMsg (Search model.searchTerm))
+                    ]
 
         False ->
             Cmd.none

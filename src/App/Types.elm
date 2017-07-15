@@ -1,16 +1,18 @@
 module Types exposing (..)
 
+import Date exposing (Date)
+import Json.Encode
+import Time exposing (Time)
+import Users.Types exposing (..)
+
+
 -- Children
 
 import Console.Types as Console
-import Date exposing (Date)
-import Json.Encode
 import Queue.Types as Queue
 import Routing.Types as Routing
 import Sources.Types as Sources
-import Time exposing (Time)
 import Tracks.Types as Tracks
-import Users.Types exposing (User)
 
 
 -- Types

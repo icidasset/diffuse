@@ -1,28 +1,33 @@
 module State exposing (..)
 
--- Children
--- Children, Pt. 2
-
-import Console.State as Console
 import Date
 import List.Extra as List
 import Navigation
-import Queue.Ports
-import Queue.State as Queue
-import Queue.Types
-import Queue.Utils
 import Response exposing (..)
-import Routing.State as Routing
-import Sources.State as Sources
-import Sources.Types
 import Task
 import Time
-import Tracks.State as Tracks
-import Tracks.Types
-import Tracks.Utils
 import Types exposing (..)
 import Users.Auth
 import Utils exposing (do)
+
+
+-- Children
+
+import Console.State as Console
+import Queue.State as Queue
+import Routing.State as Routing
+import Sources.State as Sources
+import Tracks.State as Tracks
+
+
+-- Children, Pt. 2
+
+import Queue.Ports
+import Queue.Types
+import Queue.Utils
+import Sources.Types
+import Tracks.Types
+import Tracks.Utils
 
 
 -- 💧
@@ -99,12 +104,12 @@ update msg model =
                 sources =
                     model.sources
             in
-            (!)
-                { model
-                    | sources = { sources | timestamp = stamp }
-                    , timestamp = stamp
-                }
-                []
+                (!)
+                    { model
+                        | sources = { sources | timestamp = stamp }
+                        , timestamp = stamp
+                    }
+                    []
 
         ------------------------------------
         -- Children
