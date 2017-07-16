@@ -129,7 +129,8 @@ stylesLocal =
         ]
     , class InsulationContent
         [ flex (int 1)
-        , overflow scroll
+        , overflowX hidden
+        , overflowY auto
         ]
 
     ------------------------------------------------------

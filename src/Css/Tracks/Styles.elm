@@ -30,7 +30,8 @@ styles =
         ]
     , class TracksChild
         [ flex (int 1)
-        , overflow scroll
+        , overflowX hidden
+        , overflowY scroll
         , property "user-select" "none"
         , position relative
         , zIndex (int 2)
