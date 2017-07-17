@@ -164,28 +164,30 @@ tracksTable tracks activeSortBy sortDirection =
                 (Color.rgb 207 207 207)
                 16
     in
-    table
-        [ cssClass TracksTable ]
-        [ thead
-            []
-            [ th
-                [ style [ ( "width", "4.50%" ) ] ]
+        table
+            [ cssClass TracksTable ]
+            [ thead
                 []
-            , th
-                [ style [ ( "width", "37.5%" ) ], onClick (sortBy Title) ]
-                [ text "Title", maybeShowSortIcon activeSortBy Title sortIcon ]
-            , th
-                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Artist) ]
-                [ text "Artist", maybeShowSortIcon activeSortBy Artist sortIcon ]
-            , th
-                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Album) ]
-                [ text "Album", maybeShowSortIcon activeSortBy Album sortIcon ]
+                [ th
+                    [ style [ ( "width", "4.50%" ) ] ]
+                    []
+                , th
+                    [ style [ ( "width", "37.5%" ) ], onClick (sortBy Title) ]
+                    [ text "Title", maybeShowSortIcon activeSortBy Title sortIcon ]
+                , th
+                    [ style [ ( "width", "29.0%" ) ], onClick (sortBy Artist) ]
+                    [ text "Artist", maybeShowSortIcon activeSortBy Artist sortIcon ]
+                , th
+                    [ style [ ( "width", "29.0%" ) ], onClick (sortBy Album) ]
+                    [ text "Album", maybeShowSortIcon activeSortBy Album sortIcon ]
+                ]
+            , Html.Keyed.node
+                "tbody"
+                [ on "dblclick" playTrack
+                , on "click" toggleFavourite
+                ]
+                (List.indexedMap tracksTableItem tracks)
             ]
-        , Html.Keyed.node
-            "tbody"
-            [ on "dblclick" playTrack, on "click" toggleFavourite ]
-            (List.indexedMap tracksTableItem tracks)
-        ]
 
 
 tracksTableItem : Int -> IdentifiedTrack -> ( String, Html TopLevel.Msg )
@@ -194,22 +196,22 @@ tracksTableItem index ( identifiers, track ) =
         key =
             toString index
     in
-    ( key
-    , tr
-        [ rel key
-        , attribute "data-missing" (boolToAttr identifiers.isMissing)
-        , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
-        ]
-        [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
-        , td [] [ text track.tags.title ]
-        , td [] [ text track.tags.artist ]
-        , td [] [ text track.tags.album ]
-        ]
-    )
+        ( key
+        , tr
+            [ rel key
+            , attribute "data-missing" (boolToAttr identifiers.isMissing)
+            , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
+            ]
+            [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
+            , td [] [ text track.tags.title ]
+            , td [] [ text track.tags.artist ]
+            , td [] [ text track.tags.album ]
+            ]
+        )
 
 
 
--- Events and stuff
+-- Events {1}
 
 
 playTrack : Decode.Decoder TopLevel.Msg
@@ -219,26 +221,23 @@ playTrack =
 
 tableTrackDecoder : Decode.Decoder String
 tableTrackDecoder =
-    Decode.oneOf
-        [ Decode.at [ "target", "parentNode", "attributes", "data-missing", "value" ] Decode.string
-        , Decode.at [ "target", "attributes", "data-missing", "value" ] Decode.string
-        ]
-        |> Decode.andThen
-            (\isMissing ->
-                case isMissing of
-                    "f" ->
-                        Decode.oneOf
-                            [ Decode.at
-                                [ "target", "parentNode", "attributes", "rel", "value" ]
-                                Decode.string
-                            , Decode.at
-                                [ "target", "attributes", "rel", "value" ]
-                                Decode.string
-                            ]
+    Decode.andThen
+        (\isMissing ->
+            case isMissing of
+                "f" ->
+                    Decode.oneOf
+                        [ Decode.at
+                            [ "target", "parentNode", "attributes", "rel", "value" ]
+                            Decode.string
+                        , Decode.at
+                            [ "target", "attributes", "rel", "value" ]
+                            Decode.string
+                        ]
 
-                    _ ->
-                        Decode.fail "Can't play a missing track"
-            )
+                _ ->
+                    Decode.fail "Can't play a missing track"
+        )
+        missingTrackDecoder
 
 
 toggleFavourite : Decode.Decoder TopLevel.Msg
@@ -256,6 +255,28 @@ tableFavouriteDecoder =
                     [ "target", "parentNode", "attributes", "rel", "value" ]
                     Decode.string
             )
+
+
+showContextMenu : Decode.Decoder TopLevel.Msg
+showContextMenu =
+    Decode.map TopLevel.PlayTrack tableTrackDecoder
+
+
+tableContextDecoder : Decode.Decoder String
+tableContextDecoder =
+    Decode.succeed "TODO"
+
+
+
+-- Events {2}
+
+
+missingTrackDecoder : Decode.Decoder String
+missingTrackDecoder =
+    Decode.oneOf
+        [ Decode.at [ "target", "parentNode", "attributes", "data-missing", "value" ] Decode.string
+        , Decode.at [ "target", "attributes", "data-missing", "value" ] Decode.string
+        ]
 
 
 sortBy : SortBy -> TopLevel.Msg

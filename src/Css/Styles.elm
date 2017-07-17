@@ -193,6 +193,13 @@ stylesLocal =
         , lineHeight (num 1.55)
         , marginBottom (gr 6)
         , opacity (num 0.475)
+
+        --
+        , descendants
+            [ a
+                [ borderBottom3 (px 2) solid (cssColor colors.base0A)
+                ]
+            ]
         ]
 
     ------------------------------------------------------

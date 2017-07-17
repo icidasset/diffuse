@@ -228,6 +228,16 @@ pageNewForm newSource =
                     Make sure CORS is enabled for IPFS and Amazon S3 repositories.
                   """
                 ]
+            , br
+                []
+                []
+            , text "You can find the instructions over "
+            , a
+                [ href "https://gist.github.com/icidasset/c1883d594574a958ae4b4a5a91db1070#cors"
+                , target "blank"
+                ]
+                [ text "here" ]
+            , text "."
             ]
 
         -- Select the type of the source

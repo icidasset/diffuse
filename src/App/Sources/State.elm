@@ -236,7 +236,7 @@ update msg model =
                 ($)
                     { model
                         | collection = newCollection
-                        , newSource = makeSource AmazonS3 AmazonS3.initialData
+                        , newSource = makeSource Ipfs Ipfs.initialData
                     }
                     []
                     [ do TopLevel.ProcessSources
