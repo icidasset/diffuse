@@ -1,5 +1,6 @@
 module View exposing (entry)
 
+import ContextMenu.Styles as CTS
 import Color
 import Html exposing (..)
 import Html.Attributes exposing (style)
@@ -32,14 +33,21 @@ import Tracks.View as Tracks
 entry : Model -> Html Msg
 entry model =
     div
-        []
-        [ -- {override} Loading
+        [ onClick ClickAway ]
+        [ --
+          -- {override} Loading
+          --
           if model.showLoadingScreen then
             div
                 [ cssClass InTheMiddle ]
                 [ Spinner.entry ]
+            --
+            -- Default
+            --
           else
             case model.routing.currentPage of
+                -- # Doesn't need authentication
+                --
                 ErrorScreen err ->
                     div
                         [ cssClass Shell ]
@@ -89,6 +97,25 @@ entry model =
                     authenticated
                         [ Sources.entry sourcePage model ]
                         model
+
+        --
+        -- Context menu
+        --
+        , Html.Lazy.lazy contextMenu model.contextMenu
+
+        --
+        -- Overlay
+        --
+        , div
+            [ cssClass Overlay
+            , case model.contextMenu of
+                Just _ ->
+                    style [ ( "opacity", "1" ) ]
+
+                Nothing ->
+                    style []
+            ]
+            []
         ]
 
 
@@ -193,3 +220,23 @@ blockstackLogo =
 navColor : Color.Color
 navColor =
     Color.rgba 0 0 0 0.4
+
+
+contextMenu : Maybe ContextMenu -> Html Msg
+contextMenu maybeContextMenu =
+    case maybeContextMenu of
+        Just (ContextMenu items mousePos) ->
+            div
+                [ cssClass CTS.ContextMenu
+                , style
+                    [ ( "left", toString mousePos.x ++ "px" )
+                    , ( "top", toString mousePos.y ++ "px" )
+                    ]
+                ]
+                (List.map
+                    (\( icon, label, msg ) -> a [ onClick msg ] [ icon, text label ])
+                    items
+                )
+
+        _ ->
+            text ""

@@ -62,15 +62,20 @@ update msg model =
                     { manualEntry = True
                     , track = track
                     }
+
+                manualItems =
+                    model.future
+                        |> List.filter (.manualEntry >> (==) True)
+                        |> List.length
             in
                 (!)
                     { model
                         | future =
-                            model.future
-                                |> List.findIndex (.manualEntry >> (==) True)
-                                |> Maybe.map (\idx -> List.setAt idx item model.future)
-                                |> Maybe.map (Maybe.withDefault model.future)
-                                |> Maybe.withDefault model.future
+                            List.concat
+                                [ List.take manualItems model.future
+                                , [ item ]
+                                , List.drop manualItems model.future
+                                ]
                     }
                     []
 

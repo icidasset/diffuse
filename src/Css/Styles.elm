@@ -8,6 +8,7 @@ import Variables exposing (..)
 
 -- Children
 
+import ContextMenu.Styles as ContextMenu
 import Console.Styles as Console
 import Form.Styles as Form
 import List.Styles as List
@@ -19,6 +20,7 @@ import Tracks.Styles as Tracks
 styles : List Snippet
 styles =
     stylesLocal
+        |> List.append ContextMenu.styles
         |> List.append Console.styles
         |> List.append Form.styles
         |> List.append List.styles
@@ -48,6 +50,7 @@ type Classes
     | InsulationContent
     | InTheMiddle
     | Intro
+    | Overlay
     | Shell
 
 
@@ -251,5 +254,21 @@ stylesLocal =
                 , width (px 22)
                 ]
             ]
+        ]
+
+    ------------------------------------------------------
+    -- Overlay
+    ------------------------------------------------------
+    , class Overlay
+        [ backgroundColor (rgba 0 0 0 0.25)
+        , height (vh 100)
+        , left zero
+        , opacity zero
+        , position fixed
+        , property "pointer-events" "none"
+        , property "transition" "opacity 1s ease"
+        , top zero
+        , width (vw 100)
+        , zIndex (int 900)
         ]
     ]

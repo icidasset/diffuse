@@ -2,6 +2,8 @@ module Types exposing (..)
 
 import Date exposing (Date)
 import Json.Encode
+import Mouse
+import Svg exposing (Svg)
 import Time exposing (Time)
 import Users.Types exposing (..)
 
@@ -15,11 +17,12 @@ import Sources.Types as Sources
 import Tracks.Types as Tracks
 
 
--- Types
+-- Messages
 
 
 type Msg
     = Authenticate
+    | ClickAway
     | HideLoadingScreen
     | SignOut
       -- Time
@@ -38,13 +41,19 @@ type Msg
     | ResetQueue
     | PlayTrack String
     | ProcessSources
+    | ShowTrackContextMenu ( String, Mouse.Position )
     | ToggleFavourite String
       -- Other
     | NoOp
 
 
+
+-- Model
+
+
 type alias Model =
     { authenticatedUser : Maybe User
+    , contextMenu : Maybe ContextMenu
     , showLoadingScreen : Bool
 
     ------------------------------------
@@ -63,10 +72,8 @@ type alias Model =
     }
 
 
-type alias Settings =
-    { queue : Queue.Settings
-    , tracks : Tracks.Settings
-    }
+
+-- Flags
 
 
 type alias ProgramFlags =
@@ -78,6 +85,32 @@ type alias ProgramFlags =
     , sources : Maybe (List Json.Encode.Value)
     , tracks : Maybe (List Json.Encode.Value)
     }
+
+
+
+-- Settings
+
+
+type alias Settings =
+    { queue : Queue.Settings
+    , tracks : Tracks.Settings
+    }
+
+
+
+-- Context Menu
+
+
+type ContextMenu
+    = ContextMenu ContextMenuItems Mouse.Position
+
+
+type alias ContextMenuItems =
+    List ( Svg Msg, String, Msg )
+
+
+
+-- Other
 
 
 type alias Illumination model childMsg =

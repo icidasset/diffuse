@@ -2,6 +2,7 @@ module Tracks.Types exposing (..)
 
 import Base64
 import Json.Encode as Json
+import Mouse
 import Regex exposing (HowMany(..), regex)
 
 
@@ -133,9 +134,9 @@ type Msg
     | ToggleFavourite String
     | ToggleFavouritesOnly
       -- UI
+    | IdentifyActiveTrack (Maybe Track)
     | ScrollThroughTable ScrollPos
     | ScrollToActiveTrack Track
-    | IdentifyActiveTrack (Maybe Track)
 
 
 

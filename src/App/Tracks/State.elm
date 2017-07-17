@@ -201,6 +201,25 @@ update msg model =
         ------------------------------------
         -- UI
         ------------------------------------
+        -- Identify the active track
+        --
+        IdentifyActiveTrack maybeTrack ->
+            let
+                mapFn =
+                    case maybeTrack of
+                        Just track ->
+                            \( i, t ) -> ( { i | isNowPlaying = t == track }, t )
+
+                        Nothing ->
+                            \( i, t ) -> ( { i | isNowPlaying = False }, t )
+            in
+                model
+                    |> Collection.makeParcel
+                    |> Collection.remap (List.map mapFn)
+                    |> Collection.set
+
+        -- Table-scroll event handler
+        --
         ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
             case scrolledHeight >= (contentHeight - containerHeight - 50) of
                 True ->
@@ -219,23 +238,6 @@ update msg model =
                 |> List.findIndex (Tuple.second >> (==) track)
                 |> Maybe.map (scrollToIndex model)
                 |> Maybe.withDefault (Response.withNone model)
-
-        -- Identify the active track
-        --
-        IdentifyActiveTrack maybeTrack ->
-            let
-                mapFn =
-                    case maybeTrack of
-                        Just track ->
-                            \( i, t ) -> ( { i | isNowPlaying = t == track }, t )
-
-                        Nothing ->
-                            \( i, t ) -> ( { i | isNowPlaying = False }, t )
-            in
-                model
-                    |> Collection.makeParcel
-                    |> Collection.remap (List.map mapFn)
-                    |> Collection.set
 
 
 

@@ -26,6 +26,7 @@ import Queue.Ports
 import Queue.Types
 import Queue.Utils
 import Sources.Types
+import Tracks.ContextMenu
 import Tracks.Types
 import Tracks.Utils
 
@@ -36,6 +37,7 @@ import Tracks.Utils
 initialModel : ProgramFlags -> Navigation.Location -> Model
 initialModel flags location =
     { authenticatedUser = flags.user
+    , contextMenu = Nothing
     , showLoadingScreen = True
 
     ------------------------------------
@@ -80,6 +82,11 @@ update msg model =
             (!)
                 model
                 [ Users.Auth.authenticate () ]
+
+        ClickAway ->
+            (!)
+                { model | contextMenu = Nothing }
+                []
 
         HideLoadingScreen ->
             (!)
@@ -217,6 +224,23 @@ update msg model =
                     |> SourcesMsg
                     |> do
                 ]
+
+        ShowTrackContextMenu ( index, mousePos ) ->
+            let
+                maybeIdentifiedTrack =
+                    index
+                        |> String.toInt
+                        |> Result.toMaybe
+                        |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection.exposed)
+
+                contextMenu =
+                    maybeIdentifiedTrack
+                        |> Maybe.map Tracks.ContextMenu.build
+                        |> Maybe.map (\fn -> fn mousePos)
+            in
+                (!)
+                    { model | contextMenu = contextMenu }
+                    []
 
         ToggleFavourite index ->
             (!)
