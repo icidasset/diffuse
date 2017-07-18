@@ -6,6 +6,7 @@ import Mouse
 import Svg exposing (Svg)
 import Time exposing (Time)
 import Users.Types exposing (..)
+import Window
 
 
 -- Children
@@ -42,6 +43,8 @@ type Msg
     | PlayTrack String
     | ProcessSources
     | ShowTrackContextMenu ( String, Mouse.Position )
+    | ShowViewMenu
+    | ShowViewMenuWithWindow Window.Size
     | ToggleFavourite String
       -- Other
     | NoOp

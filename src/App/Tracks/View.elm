@@ -122,7 +122,9 @@ navigation searchTerm favouritesOnly =
                 ]
             )
         , Navigation.insideCustom
-            [ ( Material.Icons.Av.featured_play_list colorDerivatives.text 16, TopLevel.NoOp )
+            [ ( Material.Icons.Av.featured_play_list colorDerivatives.text 16
+              , TopLevel.ShowViewMenu
+              )
             ]
         ]
 

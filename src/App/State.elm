@@ -9,6 +9,7 @@ import Time
 import Types exposing (..)
 import Users.Auth
 import Utils exposing (do)
+import Window
 
 
 -- Children
@@ -235,11 +236,30 @@ update msg model =
 
                 contextMenu =
                     maybeIdentifiedTrack
-                        |> Maybe.map Tracks.ContextMenu.build
+                        |> Maybe.map Tracks.ContextMenu.trackMenu
                         |> Maybe.map (\fn -> fn mousePos)
             in
                 (!)
                     { model | contextMenu = contextMenu }
+                    []
+
+        ShowViewMenu ->
+            case model.contextMenu of
+                Just _ ->
+                    (!) { model | contextMenu = Nothing } []
+
+                Nothing ->
+                    (!) model [ Task.perform ShowViewMenuWithWindow Window.size ]
+
+        ShowViewMenuWithWindow windowSize ->
+            let
+                position =
+                    { x = windowSize.width // 2
+                    , y = windowSize.height // 2
+                    }
+            in
+                (!)
+                    { model | contextMenu = Just (Tracks.ContextMenu.viewMenu position) }
                     []
 
         ToggleFavourite index ->
