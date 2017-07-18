@@ -29,7 +29,7 @@ initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
     { collection = decodeSources flags
     , isProcessing = Nothing
-    , newSource = makeSource Ipfs Ipfs.initialData
+    , newSource = initialSource
     , processingErrors = []
     , timestamp = Date.fromTime 0
     }
@@ -38,6 +38,11 @@ initialModel flags =
 initialCommands : Cmd TopLevel.Msg
 initialCommands =
     Cmd.none
+
+
+initialSource : Source
+initialSource =
+    makeSource AmazonS3 AmazonS3.initialData
 
 
 
@@ -224,7 +229,7 @@ update msg model =
                             makeSource Ipfs Ipfs.initialData
 
                         _ ->
-                            makeSource AmazonS3 AmazonS3.initialData
+                            initialSource
             in
                 (!) { model | newSource = newSource } []
 
@@ -236,7 +241,7 @@ update msg model =
                 ($)
                     { model
                         | collection = newCollection
-                        , newSource = makeSource Ipfs Ipfs.initialData
+                        , newSource = initialSource
                     }
                     []
                     [ do TopLevel.ProcessSources

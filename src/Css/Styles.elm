@@ -202,6 +202,10 @@ stylesLocal =
             [ a
                 [ borderBottom3 (px 2) solid (cssColor colors.base0A)
                 ]
+            , svg
+                [ marginRight (gr 1)
+                , verticalAlign middle
+                ]
             ]
         ]
 

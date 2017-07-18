@@ -238,6 +238,18 @@ pageNewForm newSource =
                 ]
                 [ text "here" ]
             , text "."
+            , br
+                []
+                []
+            , br
+                []
+                []
+            , Icons.warning (Color.rgb 65 50 63) 16
+            , text "In order to use IPFS you currently must use "
+            , a [ href "https://github.com/icidasset/go-ipfs" ] [ text "my fork" ]
+            , text ", I'm still waiting for "
+            , a [ href "https://github.com/ipfs/go-ipfs/pull/4073" ] [ text "my pull-request" ]
+            , text " to be merged."
             ]
 
         -- Select the type of the source
