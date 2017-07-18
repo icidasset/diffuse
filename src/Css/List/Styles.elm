@@ -10,6 +10,7 @@ type Classes
     = ListWithActions
       -- Children
     | ListActions
+    | SubtleListItem
 
 
 
@@ -64,5 +65,8 @@ styles =
                 , marginLeft (px 4)
                 ]
             ]
+        ]
+    , class SubtleListItem
+        [ color (hex "#777")
         ]
     ]

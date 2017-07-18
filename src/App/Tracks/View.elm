@@ -3,7 +3,7 @@ module Tracks.View exposing (entry)
 import Color
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit)
+import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit, onWithOptions)
 import Html.Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Json.Decode as Decode
@@ -12,6 +12,7 @@ import Material.Icons.Av
 import Material.Icons.Content
 import Material.Icons.Navigation
 import Material.Icons.Toggle
+import Mouse
 import Navigation.View as Navigation
 import Sources.Types exposing (IsProcessing, Source)
 import Styles exposing (Classes(Button, ContentBox))
@@ -164,28 +165,36 @@ tracksTable tracks activeSortBy sortDirection =
                 (Color.rgb 207 207 207)
                 16
     in
-    table
-        [ cssClass TracksTable ]
-        [ thead
-            []
-            [ th
-                [ style [ ( "width", "4.50%" ) ] ]
+        table
+            [ cssClass TracksTable ]
+            [ thead
                 []
-            , th
-                [ style [ ( "width", "37.5%" ) ], onClick (sortBy Title) ]
-                [ text "Title", maybeShowSortIcon activeSortBy Title sortIcon ]
-            , th
-                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Artist) ]
-                [ text "Artist", maybeShowSortIcon activeSortBy Artist sortIcon ]
-            , th
-                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Album) ]
-                [ text "Album", maybeShowSortIcon activeSortBy Album sortIcon ]
+                [ th
+                    [ style [ ( "width", "4.50%" ) ] ]
+                    []
+                , th
+                    [ style [ ( "width", "37.5%" ) ], onClick (sortBy Title) ]
+                    [ text "Title", maybeShowSortIcon activeSortBy Title sortIcon ]
+                , th
+                    [ style [ ( "width", "29.0%" ) ], onClick (sortBy Artist) ]
+                    [ text "Artist", maybeShowSortIcon activeSortBy Artist sortIcon ]
+                , th
+                    [ style [ ( "width", "29.0%" ) ], onClick (sortBy Album) ]
+                    [ text "Album", maybeShowSortIcon activeSortBy Album sortIcon ]
+                ]
+            , Html.Keyed.node
+                "tbody"
+                [ on "dblclick" playTrack
+                , on "click" toggleFavourite
+                , onWithOptions
+                    "contextmenu"
+                    { stopPropagation = True
+                    , preventDefault = True
+                    }
+                    showContextMenu
+                ]
+                (List.indexedMap tracksTableItem tracks)
             ]
-        , Html.Keyed.node
-            "tbody"
-            [ on "dblclick" playTrack, on "click" toggleFavourite ]
-            (List.indexedMap tracksTableItem tracks)
-        ]
 
 
 tracksTableItem : Int -> IdentifiedTrack -> ( String, Html TopLevel.Msg )
@@ -194,68 +203,97 @@ tracksTableItem index ( identifiers, track ) =
         key =
             toString index
     in
-    ( key
-    , tr
-        [ rel key
-        , attribute "data-missing" (boolToAttr identifiers.isMissing)
-        , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
-        ]
-        [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
-        , td [] [ text track.tags.title ]
-        , td [] [ text track.tags.artist ]
-        , td [] [ text track.tags.album ]
-        ]
-    )
+        ( key
+        , tr
+            [ rel key
+            , attribute "data-missing" (boolToAttr identifiers.isMissing)
+            , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
+            ]
+            [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
+            , td [] [ text track.tags.title ]
+            , td [] [ text track.tags.artist ]
+            , td [] [ text track.tags.album ]
+            ]
+        )
 
 
 
--- Events and stuff
+-- Events {1}
 
 
 playTrack : Decode.Decoder TopLevel.Msg
 playTrack =
-    Decode.map TopLevel.PlayTrack tableTrackDecoder
+    Decode.map TopLevel.PlayTrack playTrackDecoder
 
 
-tableTrackDecoder : Decode.Decoder String
-tableTrackDecoder =
-    Decode.oneOf
-        [ Decode.at [ "target", "parentNode", "attributes", "data-missing", "value" ] Decode.string
-        , Decode.at [ "target", "attributes", "data-missing", "value" ] Decode.string
-        ]
-        |> Decode.andThen
-            (\isMissing ->
-                case isMissing of
-                    "f" ->
-                        Decode.oneOf
-                            [ Decode.at
-                                [ "target", "parentNode", "attributes", "rel", "value" ]
-                                Decode.string
-                            , Decode.at
-                                [ "target", "attributes", "rel", "value" ]
-                                Decode.string
-                            ]
-
-                    _ ->
-                        Decode.fail "Can't play a missing track"
-            )
+playTrackDecoder : Decode.Decoder String
+playTrackDecoder =
+    presentTrackDecoder
+        |> Decode.andThen (always trackRelDecoder)
 
 
 toggleFavourite : Decode.Decoder TopLevel.Msg
 toggleFavourite =
-    Decode.map TopLevel.ToggleFavourite tableFavouriteDecoder
+    Decode.map TopLevel.ToggleFavourite toggleFavouriteDecoder
 
 
-tableFavouriteDecoder : Decode.Decoder String
-tableFavouriteDecoder =
+toggleFavouriteDecoder : Decode.Decoder String
+toggleFavouriteDecoder =
     Decode.string
         |> Decode.at [ "target", "attributes", "data-favourite", "value" ]
-        |> Decode.andThen
-            (\_ ->
-                Decode.at
-                    [ "target", "parentNode", "attributes", "rel", "value" ]
-                    Decode.string
-            )
+        |> Decode.andThen (always trackRelDecoder)
+
+
+showContextMenu : Decode.Decoder TopLevel.Msg
+showContextMenu =
+    Decode.map TopLevel.ShowTrackContextMenu showContextMenuDecoder
+
+
+showContextMenuDecoder : Decode.Decoder ( String, Mouse.Position )
+showContextMenuDecoder =
+    presentTrackDecoder
+        |> Decode.andThen (always trackRelDecoder)
+        |> Decode.andThen (\x -> Decode.andThen (Decode.succeed << (,) x) mousePositionDecoder)
+
+
+
+-- Events {2}
+
+
+presentTrackDecoder : Decode.Decoder String
+presentTrackDecoder =
+    Decode.andThen
+        (\missingValue ->
+            if missingValue == "f" then
+                Decode.succeed "Track is present"
+            else
+                Decode.fail "Track is missing, invalid operation"
+        )
+        (Decode.oneOf
+            [ Decode.at [ "target", "parentNode", "attributes", "data-missing", "value" ] Decode.string
+            , Decode.at [ "target", "attributes", "data-missing", "value" ] Decode.string
+            ]
+        )
+
+
+trackRelDecoder : Decode.Decoder String
+trackRelDecoder =
+    Decode.oneOf
+        [ Decode.at
+            [ "target", "parentNode", "attributes", "rel", "value" ]
+            Decode.string
+        , Decode.at
+            [ "target", "attributes", "rel", "value" ]
+            Decode.string
+        ]
+
+
+mousePositionDecoder : Decode.Decoder Mouse.Position
+mousePositionDecoder =
+    Decode.map2
+        Mouse.Position
+        (Decode.field "pageX" Decode.int)
+        (Decode.field "pageY" Decode.int)
 
 
 sortBy : SortBy -> TopLevel.Msg

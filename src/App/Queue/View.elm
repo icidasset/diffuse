@@ -167,9 +167,9 @@ renderItem index ( item, actions ) =
                 []
                 [ small [] [ text (toString (index + 1) ++ ".") ]
                 , if item.manualEntry == True then
-                    strong [] [ text itemLabel ]
-                  else
                     span [] [ text itemLabel ]
+                  else
+                    span [ cssClass SubtleListItem ] [ text itemLabel ]
                 ]
             , span
                 [ cssClass ListActions ]
