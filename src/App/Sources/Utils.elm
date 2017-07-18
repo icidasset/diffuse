@@ -2,6 +2,7 @@ module Sources.Utils exposing (..)
 
 import Date
 import Maybe.Extra as Maybe
+import Regex
 import Sources.Encoding
 import Sources.Types exposing (..)
 import Time
@@ -46,3 +47,17 @@ setProperSourceId model source =
 storeSources : List Source -> Cmd TopLevel.Msg
 storeSources =
     List.map Sources.Encoding.encode >> Users.Data.storeSources
+
+
+
+-- 🌱
+
+
+isMusicFile : String -> Bool
+isMusicFile =
+    Regex.contains (Regex.regex "\\.(mp3|mp4|m4a)$")
+
+
+selectMusicFiles : List String -> List String
+selectMusicFiles =
+    List.filter isMusicFile

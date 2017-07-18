@@ -23,12 +23,12 @@ module Sources.Processing
        -> This also happens in multiple steps, so that we can flush
           every x tracks while processing.
           A command is issued for each step of this process.
+
 -}
 
 import Date exposing (Date)
-import List.Extra as List
+import List.Extra as List exposing (remove)
 import Maybe.Extra as Maybe
-import Regex
 import Sources.Ports as Ports
 import Sources.Types exposing (..)
 import Tracks.Types exposing (TagUrls, Track, makeTrack)
@@ -38,16 +38,18 @@ import Utils exposing (do)
 -- Services
 
 import Sources.Services.AmazonS3 as AmazonS3
+import Sources.Services.Ipfs as Ipfs
 
 
 -- Settings
 
 
 {-| How much tags do we want to process
-    before we send them back to Elm.
+before we send them back to Elm.
 
     eg. After we got the tags for 50 tracks,
     we store these and continue with the rest.
+
 -}
 tagsBatchSize : Int
 tagsBatchSize =
@@ -85,33 +87,22 @@ takeTreeStep context response associatedTracks currentDate =
 
             TheEnd ->
                 let
-                    filteredContext =
-                        selectMusicFiles newContext
+                    filteredFiles =
+                        case newContext.source.service of
+                            AmazonS3 ->
+                                AmazonS3.postProcessTree newContext.filePaths
 
-                    remove =
-                        \list path ->
-                            list
-                                |> List.findIndex (\x -> x == path)
-                                |> Maybe.map (\idx -> List.removeAt idx list)
-                                |> Maybe.withDefault list
+                            Ipfs ->
+                                Ipfs.postProcessTree newContext.filePaths
+
+                    postContext =
+                        { newContext | filePaths = filteredFiles }
 
                     ( pathsLeft, pathsToRemove, _ ) =
-                        List.foldr
-                            (\track ( left, toRemove, srcOfTruth ) ->
-                                let
-                                    path =
-                                        track.path
-                                in
-                                    if List.member path srcOfTruth then
-                                        ( path :: left, toRemove, remove srcOfTruth path )
-                                    else
-                                        ( left, path :: toRemove, srcOfTruth )
-                            )
-                            ( [], [], filteredContext.filePaths )
-                            associatedTracks
+                        separateTree postContext associatedTracks
                 in
                     Cmd.batch
-                        [ filteredContext
+                        [ postContext
                             |> selectNonExisting pathsLeft
                             |> processingContextToTagsContext
                             |> ProcessTagsStep
@@ -153,8 +144,11 @@ handleTreeResponse context response =
                 AmazonS3 ->
                     AmazonS3.parseTreeResponse
 
+                Ipfs ->
+                    Ipfs.parseTreeResponse
+
         parsedResponse =
-            parsingFunc response
+            parsingFunc response context.treeMarker
     in
         { context
             | filePaths = context.filePaths ++ parsedResponse.filePaths
@@ -169,8 +163,28 @@ makeTree context =
             case context.source.service of
                 AmazonS3 ->
                     AmazonS3.makeTree
+
+                Ipfs ->
+                    Ipfs.makeTree
     in
         fn context.source.data context.treeMarker (ProcessTreeStep context)
+
+
+separateTree : ProcessingContext -> List Track -> ( List String, List String, List String )
+separateTree context tracks =
+    List.foldr
+        (\track ( left, toRemove, srcOfTruth ) ->
+            let
+                path =
+                    track.path
+            in
+                if List.member path srcOfTruth then
+                    ( path :: left, toRemove, remove path srcOfTruth )
+                else
+                    ( left, path :: toRemove, srcOfTruth )
+        )
+        ( [], [], context.filePaths )
+        tracks
 
 
 
@@ -185,6 +199,9 @@ makeTrackUrls currentDate source filePaths =
                 AmazonS3 ->
                     AmazonS3.makeTrackUrl
 
+                Ipfs ->
+                    Ipfs.makeTrackUrl
+
         mapFn =
             \path ->
                 { getUrl = maker currentDate source.data Get path
@@ -192,17 +209,6 @@ makeTrackUrls currentDate source filePaths =
                 }
     in
         List.map mapFn filePaths
-
-
-selectMusicFiles : ProcessingContext -> ProcessingContext
-selectMusicFiles context =
-    let
-        regex =
-            Regex.regex "\\.(mp3|mp4|m4a)$"
-    in
-        { context
-            | filePaths = List.filter (Regex.contains regex) context.filePaths
-        }
 
 
 selectNonExisting : List String -> ProcessingContext -> ProcessingContext
@@ -226,6 +232,9 @@ decodeError source =
         AmazonS3 ->
             AmazonS3.parseErrorResponse
 
+        Ipfs ->
+            Ipfs.parseErrorResponse
+
 
 findTagsContextSource : ProcessingContextForTags -> List Source -> Maybe Source
 findTagsContextSource tagsContext =
@@ -237,6 +246,9 @@ makeTrackUrl currentDate source filePath =
     case source.service of
         AmazonS3 ->
             AmazonS3.makeTrackUrl currentDate source.data Get filePath
+
+        Ipfs ->
+            Ipfs.makeTrackUrl currentDate source.data Get filePath
 
 
 tracksFromTagsContext : ProcessingContextForTags -> List Track

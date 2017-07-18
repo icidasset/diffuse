@@ -7,9 +7,16 @@ function getTags(urlGET, urlHEAD) {
   const reader = new jsmediatags.Reader(fakeURL);
   const fileReader = new XhrFileReader(fakeURL);
   const makeXHRRequest = fileReader._makeXHRRequest;
+  const setRequestHeader = fileReader._setRequestHeader;
 
   fileReader._createXHRObject = function() {
     return new XMLHttpRequest();
+  };
+
+  fileReader._setRequestHeader = function(xhr, headerName, headerValue) {
+    if (headerName != "If-Modified-Since") {
+      setRequestHeader(xhr, headerName, headerValue);
+    }
   };
 
   fileReader._makeXHRRequest = function(method, ...args) {

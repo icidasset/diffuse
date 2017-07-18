@@ -12,6 +12,7 @@ import Tracks.Types exposing (..)
 
 type Service
     = AmazonS3
+    | Ipfs
 
 
 type alias SourceData =
@@ -79,16 +80,7 @@ type alias IsProcessing =
 
 
 
--- Other types
-
-
-type alias Model =
-    { collection : List Source
-    , isProcessing : IsProcessing
-    , newSource : Source
-    , processingErrors : List ( SourceId, String )
-    , timestamp : Date
-    }
+-- Messages
 
 
 type Msg
@@ -101,7 +93,25 @@ type Msg
     | Destroy SourceId
       -- Forms
     | SetNewSourceProperty Source String String
+    | SetNewSourceType String
     | SubmitNewSourceForm
+
+
+
+-- Model
+
+
+type alias Model =
+    { collection : List Source
+    , isProcessing : IsProcessing
+    , newSource : Source
+    , processingErrors : List ( SourceId, String )
+    , timestamp : Date
+    }
+
+
+
+-- Other Types
 
 
 type Page
