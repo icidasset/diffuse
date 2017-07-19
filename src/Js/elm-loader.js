@@ -44,7 +44,7 @@ if (blockstack.isUserSignedIn()) {
  * Get the application data from the Blockstack storage.
  */
 function getData() {
-  return blockstackStorage.getFile(BLOCKSTACK_FILE_PATH)
+  return blockstack.getFile(BLOCKSTACK_FILE_PATH)
     .then(con => dataContainer = JSON.parse(con || "{}"))
     .then(_   => dataContainer);
 }
@@ -58,7 +58,7 @@ function storeData(key, data) {
 
   // Store
   const content = JSON.stringify(dataContainer);
-  return blockstackStorage.putFile(BLOCKSTACK_FILE_PATH, content);
+  return blockstack.putFile(BLOCKSTACK_FILE_PATH, content);
 }
 
 
