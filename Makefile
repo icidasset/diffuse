@@ -17,7 +17,12 @@ all: dev
 # Build tasks
 #
 build: clean vendor system elm css
-	@echo "> Done ⚡"
+	@echo "> Build completed ⚡"
+
+
+production-build: build
+	@echo "> Autoprefixing CSS"
+	@$(NODE_BIN)/postcss ./build/application.css --use autoprefixer --replace
 
 
 clean:
