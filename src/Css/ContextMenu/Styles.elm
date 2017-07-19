@@ -31,6 +31,11 @@ styles =
                 , display block
                 , lineHeight (num 1.35)
                 , padding2 (gr 2) (gr 3)
+
+                --
+                , lastChild
+                    [ borderBottom zero
+                    ]
                 ]
             , svg
                 [ marginRight (gr 1)
