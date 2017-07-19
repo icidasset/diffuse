@@ -125,7 +125,13 @@ function insertTrack(environmentalContext, queueItem) {
 function createAudioElement(environmentalContext, queueItem) {
   let newNode;
   let timestampInMilliseconds = Date.now();
-  let timeupdateFunc = _.throttle(250, audioTimeUpdateEvent.bind(environmentalContext));
+
+  const bind = fn => event => {
+    const is = isActiveAudioElement(environmentalContext, event.target);
+    if (is) fn.call(environmentalContext, event);
+  };
+
+  const timeupdateFunc = _.throttle(250, bind(audioTimeUpdateEvent));
 
   newNode = new window.Audio();
   newNode.setAttribute("crossorigin", "anonymous");
@@ -139,10 +145,10 @@ function createAudioElement(environmentalContext, queueItem) {
 
   newNode.addEventListener("error", audioErrorEvent);
   newNode.addEventListener("timeupdate", timeupdateFunc);
-  newNode.addEventListener("ended", audioEndEvent.bind(environmentalContext));
-  newNode.addEventListener("play", audioPlayEvent.bind(environmentalContext));
-  newNode.addEventListener("pause", audioPauseEvent.bind(environmentalContext));
-  newNode.addEventListener("canplay", audioCanPlayEvent.bind(environmentalContext));
+  newNode.addEventListener("ended", bind(audioEndEvent));
+  newNode.addEventListener("play", bind(audioPlayEvent));
+  newNode.addEventListener("pause", bind(audioPauseEvent));
+  newNode.addEventListener("canplay", bind(audioCanPlayEvent));
 
   newNode.load();
 
@@ -192,7 +198,6 @@ function audioErrorEvent(event) {
 
 
 function audioTimeUpdateEvent(event) {
-  if (isActiveAudioElement(this, event.target) === false) return;
   if (isNaN(event.target.duration) || isNaN(event.target.currentTime)) {
     setProgressBarWidth(0)
   } else if (event.target.duration > 0) {
@@ -202,9 +207,8 @@ function audioTimeUpdateEvent(event) {
 
 
 function audioEndEvent(event) {
-  if (isActiveAudioElement(this, event.target) === false) return;
-
   const queueSettings = loadSettings("queue");
+
   if (queueSettings && queueSettings.repeat) {
     event.target.play();
   } else {
@@ -214,13 +218,11 @@ function audioEndEvent(event) {
 
 
 function audioPlayEvent(event) {
-  if (isActiveAudioElement(this, event.target) === false) return;
   this.elm.ports.setIsPlaying.send(true);
 }
 
 
 function audioPauseEvent(event) {
-  if (isActiveAudioElement(this, event.target) === false) return;
   this.elm.ports.setIsPlaying.send(false);
 }
 
@@ -229,9 +231,7 @@ let lastSetDuration = 0;
 
 
 function audioCanPlayEvent(event) {
-  if (isActiveAudioElement(this, event.target) === false) return;
   if (event.target.paused) event.target.play();
-
   if (event.target.duration != lastSetDuration) {
     this.elm.ports.setDuration.send(event.target.duration || 0);
     lastSetDuration = event.target.duration;

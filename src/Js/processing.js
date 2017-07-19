@@ -1,13 +1,17 @@
 //
 // Tag reader
+// > Override jsmediatags
+//
 
 function getTags(urlGET, urlHEAD) {
-  const fakeURL = "THIS_WONT_BE_USED_ANYWAYS";
+  const fakeURL           = "THIS_WONT_BE_USED_ANYWAYS";
 
-  const reader = new jsmediatags.Reader(fakeURL);
-  const fileReader = new XhrFileReader(fakeURL);
-  const makeXHRRequest = fileReader._makeXHRRequest;
-  const setRequestHeader = fileReader._setRequestHeader;
+  const reader            = new jsmediatags.Reader(fakeURL);
+  const fileReader        = new XhrFileReader(fakeURL);
+  const makeXHRRequest    = fileReader._makeXHRRequest;
+  const setRequestHeader  = fileReader._setRequestHeader;
+
+  // Override fileReader stuff
 
   fileReader._createXHRObject = function() {
     return new XMLHttpRequest();
@@ -23,6 +27,8 @@ function getTags(urlGET, urlHEAD) {
     this._url = method.toUpperCase() === "HEAD" ? urlHEAD : urlGET;
     return makeXHRRequest.call(this, method, ...args);
   };
+
+  // Get tags
 
   return new Promise((resolve, reject) => {
     fileReader.init({
