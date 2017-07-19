@@ -6,10 +6,11 @@ import Html.Attributes exposing (rel)
 import Html.Events exposing (onClick)
 import Html.Keyed
 import Html.Lazy exposing (lazy)
-import Material.Icons.Content as Icons
 import Material.Icons.Av as Icons
+import Material.Icons.Content as Icons
 import Navigation.View as Navigation
 import Queue.Types as Queue exposing (Item, Page(..))
+import Routing.Types
 import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass)
 import Variables exposing (colorDerivatives)
@@ -53,13 +54,20 @@ pageIndex futureItems =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.inside
+          Navigation.insideCustom
             [ ( span
                     []
                     [ Icons.queue_music colorDerivatives.text 16
                     , label [] [ text "History" ]
                     ]
-              , "/queue/history"
+              , RoutingMsg (Routing.Types.GoToUrl "/queue/history")
+              )
+            , ( span
+                    []
+                    [ Icons.clear colorDerivatives.text 16
+                    , label [] [ text "Clear" ]
+                    ]
+              , QueueMsg (Queue.Clear)
               )
             ]
 

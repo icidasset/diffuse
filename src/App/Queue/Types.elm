@@ -17,6 +17,7 @@ type Msg
     | Shift
       -- Contents
     | Fill Date (List Track)
+    | Clear
     | Clean (List Track)
     | Reset
       -- Combos

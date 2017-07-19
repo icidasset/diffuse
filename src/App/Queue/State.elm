@@ -179,6 +179,14 @@ update msg model =
                     { model | future = newFuture }
                     []
 
+        -- # Clear
+        -- > Clear all future items and then re-fill
+        --
+        Clear ->
+            (!)
+                { model | future = [] }
+                [ do TopLevel.FillQueue ]
+
         -- # Clean
         -- > Remove no-longer-existing items from the queue.
         --
