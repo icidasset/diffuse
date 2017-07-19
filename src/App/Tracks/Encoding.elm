@@ -39,6 +39,7 @@ encodeTags tags =
 
         --
         , ( "genre", encodeMaybe tags.genre Encode.string )
+        , ( "picture", encodeMaybe tags.picture Encode.string )
         , ( "year", encodeMaybe tags.year Encode.int )
         ]
 
@@ -77,13 +78,14 @@ trackDecoder =
 
 tagsDecoder : Decode.Decoder Tags
 tagsDecoder =
-    Decode.map7 Tags
+    Decode.map8 Tags
         (Decode.field "disc" Decode.int)
         (Decode.field "nr" Decode.int)
         (Decode.field "album" Decode.string)
         (Decode.field "artist" Decode.string)
         (Decode.field "title" Decode.string)
         (Decode.maybe <| Decode.field "genre" Decode.string)
+        (Decode.maybe <| Decode.field "picture" Decode.string)
         (Decode.maybe <| Decode.field "year" Decode.int)
 
 

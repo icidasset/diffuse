@@ -20,6 +20,7 @@ type alias Tags =
 
     -- Extra
     , genre : Maybe String
+    , picture : Maybe String
     , year : Maybe Int
     }
 
@@ -189,6 +190,7 @@ emptyTags =
     , artist = "Empty"
     , title = "Empty"
     , genre = Nothing
+    , picture = Nothing
     , year = Nothing
     }
 

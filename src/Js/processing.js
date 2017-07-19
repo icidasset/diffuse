@@ -1,3 +1,6 @@
+const tagSet = ["album", "artist", "disc", "genre", "nr", "picture", "title", "year"];
+
+
 //
 // Tag reader
 // > Override jsmediatags
@@ -59,7 +62,7 @@ function getTags(urlGET, urlHEAD) {
 
 function pickTags(tagsFromJsmediatags) {
   const tags = _.pick(
-    ["album", "artist", "disk", "genre", "title", "track", "year"],
+    ["album", "artist", "disk", "genre", "picture", "title", "track", "year"],
     tagsFromJsmediatags.tags
   );
 
@@ -71,7 +74,14 @@ function pickTags(tagsFromJsmediatags) {
     title: tags.title && tags.title.length ? tags.title : "Unknown",
     genre: tags.genre && tags.genre.length ? tags.genre : null,
     year: tags.year && tags.year.length ? getYear(tags.year) : null,
+    picture: tags.picture ? pictureDataUri(tags.picture) : null
   };
+}
+
+
+function pictureDataUri(rawPicture) {
+  const binary = rawPicture.data.reduce((str, code) => str + String.fromCharCode(code), "");
+  return "data:" + rawPicture.format + ";base64," + window.btoa(binary);
 }
 
 

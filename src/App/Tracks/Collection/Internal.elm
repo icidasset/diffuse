@@ -111,6 +111,7 @@ makeMissingFavouriteTrack fav =
             , title = fav.title
             , album = "<missing>"
             , genre = Nothing
+            , picture = Nothing
             , year = Nothing
             }
     in
