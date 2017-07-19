@@ -24,7 +24,7 @@ if (blockstack.isUserSignedIn()) {
   getData()
     .then(d => _.assign(d, { user: { displayName: name }}))
     .then(setupElm)
-    .catch(_ => console.error("Failed to load application data"));
+    .catch(err => console.error(err));
 
 // {state} Is authenticating
 } else if (blockstack.isSignInPending()) {
@@ -143,7 +143,7 @@ function setupElm(params) {
     } else {
       removeOlderAudioElements(timestampInMilliseconds);
       app.ports.setIsPlaying.send(false);
-      app.ports.setProgress.send(0);
+      setProgressBarWidth(0);
     }
   });
 
