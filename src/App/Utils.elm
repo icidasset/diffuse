@@ -7,12 +7,9 @@ import Hex
 import Html exposing (Attribute)
 import Html.CssHelpers exposing (..)
 import Http
-import Process
 import Regex exposing (regex, HowMany(All))
 import Svg
 import Svg.Attributes
-import Task
-import Time exposing (Time)
 
 
 -- Css
@@ -38,9 +35,10 @@ cssSvgClass class =
 
 
 {-| More extensive version of `encodeUri`.
-    Also covers the following characters: `! * ' ( )`
+Also covers the following characters: `! * ' ( )`
 
     @source https://github.com/ktonon/aws-sdk-elm/blob/master/src/AWS/Encode.elm
+
 -}
 encodeUri : String -> String
 encodeUri x =
@@ -71,30 +69,8 @@ makeQueryParam ( a, b ) =
     encodeUri a ++ "=" ++ encodeUri b
 
 
-
--- Other
--- > TODO: Move the first 3 functions to Response.Ext
-
-
-do : msg -> Cmd msg
-do msg =
-    Task.perform identity (Task.succeed msg)
-
-
-doDelayed : Time -> msg -> Cmd msg
-doDelayed delay msg =
-    Task.perform (always msg) (Process.sleep delay)
-
-
-addCmd : Cmd msg -> ( model, Cmd msg ) -> ( model, Cmd msg )
-addCmd cmdToAdd ( model, currentCmd ) =
-    ( model
-    , Cmd.batch [ currentCmd, cmdToAdd ]
-    )
-
-
 {-| A child state `update` function that
-    takes both child-level messages and top-level messages.
+takes both child-level messages and top-level messages.
 -}
 illuminate : (a -> b) -> model -> List (Cmd a) -> List (Cmd b) -> ( model, Cmd b )
 illuminate childMsgContainer model childCmds topLevelCmds =

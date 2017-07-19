@@ -1,10 +1,10 @@
 module Routing.State exposing (..)
 
 import Navigation
+import Response.Ext exposing (do)
 import Routing.Logic as Logic
 import Routing.Types exposing (..)
 import Types as TopLevel
-import Utils exposing (do)
 
 
 -- 💧

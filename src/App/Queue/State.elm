@@ -1,12 +1,12 @@
 module Queue.State exposing (..)
 
 import List.Extra as List
+import Response.Ext exposing (do)
 import Queue.Fill as Fill
 import Queue.Ports as Ports
 import Queue.Types as Types exposing (..)
 import Queue.Utils exposing (..)
 import Types as TopLevel
-import Utils exposing (do)
 
 
 -- 💧

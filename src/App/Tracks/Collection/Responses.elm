@@ -1,11 +1,11 @@
 module Tracks.Collection.Responses exposing (..)
 
+import Response.Ext exposing (do)
 import Tracks.Encoding
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Types as TopLevel
 import Users.Data
-import Utils exposing (do)
 
 
 {-| Consequences when changing `collection.untouched`.

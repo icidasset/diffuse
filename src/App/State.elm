@@ -2,13 +2,14 @@ module State exposing (..)
 
 import Date
 import List.Extra as List
+import Maybe.Extra as Maybe
 import Navigation
 import Response exposing (..)
+import Response.Ext exposing (do)
 import Task
 import Time
 import Types exposing (..)
 import Users.Auth
-import Utils exposing (do)
 import Window
 
 
@@ -228,14 +229,11 @@ update msg model =
 
         ShowTrackContextMenu ( index, mousePos ) ->
             let
-                maybeIdentifiedTrack =
+                contextMenu =
                     index
                         |> String.toInt
                         |> Result.toMaybe
                         |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection.exposed)
-
-                contextMenu =
-                    maybeIdentifiedTrack
                         |> Maybe.map Tracks.ContextMenu.trackMenu
                         |> Maybe.map (\fn -> fn mousePos)
             in
@@ -244,23 +242,21 @@ update msg model =
                     []
 
         ShowViewMenu ->
-            case model.contextMenu of
-                Just _ ->
-                    (!) { model | contextMenu = Nothing } []
-
-                Nothing ->
-                    (!) model [ Task.perform ShowViewMenuWithWindow Window.size ]
+            (!)
+                { model | contextMenu = Nothing }
+                [ model.contextMenu
+                    |> Maybe.map (\_ -> Task.perform ShowViewMenuWithWindow Window.size)
+                    |> Maybe.withDefault Cmd.none
+                ]
 
         ShowViewMenuWithWindow windowSize ->
-            let
-                position =
-                    { x = windowSize.width // 2
-                    , y = windowSize.height // 2
-                    }
-            in
-                (!)
-                    { model | contextMenu = Just (Tracks.ContextMenu.viewMenu position) }
-                    []
+            { x = windowSize.width // 2
+            , y = windowSize.height // 2
+            }
+                |> Tracks.ContextMenu.viewMenu
+                |> Just
+                |> (\c -> { model | contextMenu = c })
+                |> (\m -> ( m, Cmd.none ))
 
         ToggleFavourite index ->
             (!)

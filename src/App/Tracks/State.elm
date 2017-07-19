@@ -4,7 +4,7 @@ import Dom.Scroll
 import Json.Encode as Json
 import List.Extra as List
 import Response
-import Response.Ext as Response
+import Response.Ext as Response exposing (..)
 import Task
 import Time
 import Tracks.Collection as Collection exposing (..)
@@ -15,7 +15,6 @@ import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
 import Users.Data
-import Utils exposing (addCmd, do, doDelayed)
 
 
 -- 💧
