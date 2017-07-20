@@ -9,6 +9,7 @@ import Variables exposing (colors, colorDerivatives)
 type Classes
     = FavouritesOnly
     | NoTracksFound
+    | NoTracksFoundUnderline
     | TracksContainer
     | TracksChild
     | TracksNavigation
@@ -37,13 +38,17 @@ styles =
         , zIndex (int 2)
         ]
     , class NoTracksFound
-        [ color (cssColor colors.base06)
+        [ fontSize (Css.rem 0.925)
+        , fontWeight (int 600)
         , left (pct 50)
         , opacity (num 0.75)
         , position absolute
         , textAlign center
         , top (pct 50)
         , transform (translate2 (pct -50) (pct -50))
+        ]
+    , class NoTracksFoundUnderline
+        [ borderBottom3 (px 2) solid currentColor
         ]
 
     ------------------------------------------------------

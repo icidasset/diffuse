@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 42 (36781) - http://www.bohemiancoding.com/sketch -->
+    <title>favicon</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <circle id="path-1" cx="35" cy="35" r="35"></circle>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="favicon">
+            <g id="OR" transform="translate(5.000000, 5.000000)">
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <use id="Mask" fill="#5F8993" xlink:href="#path-1"></use>
+                <text mask="url(#mask-2)" font-family="Overpass-ThinItalic, Overpass" font-size="48" font-style="italic" font-weight="300" letter-spacing="-3.36000013" fill="#FFFFFF">
+                    <tspan x="14.1800001" y="53">OR</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>

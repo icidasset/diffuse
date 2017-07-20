@@ -14,11 +14,12 @@ import Material.Icons.Navigation
 import Material.Icons.Toggle
 import Mouse
 import Navigation.View as Navigation
+import Routing.Types exposing (Msg(..))
 import Sources.Types exposing (IsProcessing, Source)
-import Styles exposing (Classes(Button, ContentBox))
+import Styles exposing (Classes(Button, ContentBox, Important, LogoBackdrop))
 import Tracks.Styles exposing (..)
 import Tracks.Types exposing (..)
-import Types as TopLevel exposing (Model, Msg)
+import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass, cssClasses)
 import Variables exposing (colorDerivatives, colors)
 
@@ -40,6 +41,7 @@ entry model =
             ( model.tracks.sortBy
             , model.tracks.sortDirection
             , model.sources.isProcessing
+            , model.sources.collection
             )
         ]
 
@@ -129,8 +131,11 @@ navigation searchTerm favouritesOnly =
         ]
 
 
-content : List IdentifiedTrack -> ( SortBy, SortDirection, IsProcessing ) -> Html TopLevel.Msg
-content resultant ( sortBy, sortDirection, isProcessing ) =
+content :
+    List IdentifiedTrack
+    -> ( SortBy, SortDirection, IsProcessing, List Source )
+    -> Html TopLevel.Msg
+content resultant ( sortBy, sortDirection, isProcessing, sources ) =
     div
         [ cssClass TracksChild
         , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
@@ -138,17 +143,81 @@ content resultant ( sortBy, sortDirection, isProcessing ) =
         ]
         [ if List.isEmpty resultant then
             div
-                [ cssClass NoTracksFound ]
-                [ case isProcessing of
-                    Just _ ->
-                        text "Processing Tracks ..."
+                []
+                [ div
+                    [ cssClasses
+                        (case List.length sources of
+                            0 ->
+                                [ NoTracksFound ]
 
-                    Nothing ->
-                        text "No tracks found"
+                            _ ->
+                                [ NoTracksFound, NoTracksFoundUnderline ]
+                        )
+                    ]
+                    [ case isProcessing of
+                        Just _ ->
+                            msgProcessing
+
+                        Nothing ->
+                            case List.length sources of
+                                0 ->
+                                    msgNoSources
+
+                                _ ->
+                                    msgNoTracks
+                    ]
+                , div
+                    [ cssClass LogoBackdrop ]
+                    []
                 ]
           else
             tracksTable resultant sortBy sortDirection
         ]
+
+
+
+-- Content messages
+
+
+msgProcessing : Html TopLevel.Msg
+msgProcessing =
+    text "Processing Tracks ..."
+
+
+msgNoSources : Html TopLevel.Msg
+msgNoSources =
+    a
+        [ cssClass Important
+        , href "/sources/new"
+        , onWithOptions
+            "click"
+            { stopPropagation = False
+            , preventDefault = True
+            }
+            ("/sources/new"
+                |> GoToUrl
+                |> RoutingMsg
+                |> Decode.succeed
+            )
+        ]
+        [ span
+            [ style
+                [ ( "margin-right", "0.375rem" )
+                , ( "position", "relative" )
+                , ( "top", "2px" )
+                ]
+            ]
+            [ Material.Icons.Content.add
+                (Color.rgb 185 182 176)
+                15
+            ]
+        , text "Add some music"
+        ]
+
+
+msgNoTracks : Html TopLevel.Msg
+msgNoTracks =
+    text "No tracks found"
 
 
 

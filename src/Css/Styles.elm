@@ -1,5 +1,6 @@
 module Styles exposing (..)
 
+import Color.Manipulate
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Traits exposing (..)
@@ -45,10 +46,12 @@ type Classes
     | Basic
     | Button
     | ContentBox
+    | Important
     | Insulation
     | InsulationContent
     | InTheMiddle
     | Intro
+    | LogoBackdrop
     | Overlay
     | Shell
 
@@ -174,6 +177,10 @@ stylesLocal =
     , label
         [ cursor inherit
         ]
+
+    ------------------------------------------------------
+    -- <🎃> Basic wrapper
+    ------------------------------------------------------
     , class Basic
         [ color (hex "#fff")
         , lineHeight (num 1.5)
@@ -188,6 +195,10 @@ stylesLocal =
                 ]
             ]
         ]
+
+    ------------------------------------------------------
+    -- <🎃> Intro
+    ------------------------------------------------------
     , class Intro
         [ fontSize (Css.em 0.95)
         , fontWeight (int 600)
@@ -206,6 +217,48 @@ stylesLocal =
                 , verticalAlign middle
                 ]
             ]
+        ]
+
+    ------------------------------------------------------
+    -- <🎃> Important text
+    ------------------------------------------------------
+    , class Important
+        [ alignItems center
+        , border3
+            (px 2)
+            solid
+            (colors.base0B
+                |> Color.Manipulate.fadeOut 0.575
+                |> cssColor
+            )
+        , borderRadius (px 3)
+        , color (cssColor colors.base0B)
+        , displayFlex
+        , fontWeight (int 700)
+        , padding2 (px 10) (gr 2)
+
+        --
+        , descendants
+            [ selector "svg g"
+                [ fill currentColor ]
+            ]
+        ]
+
+    ------------------------------------------------------
+    -- <🎃> Logo backdrop
+    ------------------------------------------------------
+    , class LogoBackdrop
+        [ backgroundImage (url "/images/icon.svg")
+        , backgroundPosition2 (px -124) (pct 53.75)
+        , backgroundRepeat noRepeat
+        , backgroundSize cover
+        , bottom zero
+        , left zero
+        , opacity (num 0.075)
+        , position absolute
+        , right zero
+        , top zero
+        , zIndex (int -1)
         ]
 
     ------------------------------------------------------
