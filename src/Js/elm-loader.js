@@ -1,85 +1,22 @@
-let node = document.getElementById("elm-container");
-let dataContainer = {};
+const state = {
+  auth: authenticationMethod(),
+  dataContainer: {}
+};
 
 
-
-//
-// Search
-
-const search = new Worker("/search.js");
+const node    = document.getElementById("elm-container");
+const search  = new Worker("/search.js");
 
 
+if (state.auth.isSignedIn()) {
+  state.auth.getData().then(keepDataInContainer).then(initialize).catch(console.error);
 
-//
-// Blockstack
+} else if (state.auth.isSigningIn()) {
+  state.auth.handleSignInProcess();
 
-const BLOCKSTACK_FILE_PATH = "ongaku-ryoho-v1_0.json";
-
-
-// {state} Authenticated
-if (blockstack.isUserSignedIn()) {
-  const userData = blockstack.loadUserData();
-  const name = userData.username || "anonymous";
-
-  getData()
-    .then(d => _.assign(d, { user: { displayName: name }}))
-    .then(setupElm)
-    .catch(err => console.error(err));
-
-// {state} Is authenticating
-} else if (blockstack.isSignInPending()) {
-  blockstack.handlePendingSignIn().then(
-    _   => window.location = window.location.origin,
-    err => console.error("Failed to authenticate", err)
-  );
-
-// {state} Not authenticated
 } else {
-  setupElm({ user: null });
+  initialize({});
 
-}
-
-
-/**
- * Get the application data from the Blockstack storage.
- */
-function getData() {
-  return blockstack.getFile(BLOCKSTACK_FILE_PATH)
-    .then(con => dataContainer = JSON.parse(con || "{}"))
-    .then(_   => dataContainer);
-}
-
-
-/**
- * Store some data in the Blockstack storage.
- */
-function storeData(key, data) {
-  dataContainer = _.set(key, data, dataContainer);
-
-  // Store
-  const content = JSON.stringify(dataContainer);
-  return blockstack.putFile(BLOCKSTACK_FILE_PATH, content);
-}
-
-
-
-//
-// Settings
-
-function saveSettings(key, settings) {
-  localStorage.setItem("settings." + key, JSON.stringify(settings));
-}
-
-
-function loadSettings(key) {
-  let val = localStorage.getItem("settings." + key);
-  if (!val || !val.length) return null;
-
-  try {
-    return JSON.parse(val);
-  } catch (_) {
-    return {};
-  }
 }
 
 
@@ -87,11 +24,18 @@ function loadSettings(key) {
 //
 // Elm
 
-function setupElm(params) {
+function initialize(params) {
   node.innerHTML = "";
 
-  // Flags
-  const flags = {
+  const flags = initializeFlags(params);
+  const app = Elm.App.embed(node, flags);
+
+  initializePorts(app, flags);
+}
+
+
+function initializeFlags(params) {
+  return {
     settings: {
       queue: Object.assign(
         { repeat: false, shuffle: false },
@@ -103,30 +47,31 @@ function setupElm(params) {
       )
     },
 
-    user: params.user,
+    user: state.auth.isSignedIn() ? state.auth.userData() : null,
 
     favourites: params.favourites || null,
     sources: params.sources || null,
     tracks: params.tracks || null
   };
+}
 
-  // Embed
-  const app = Elm.App.embed(node, flags);
 
-  // Ports
+function initializePorts(app, flags) {
   // > Authentication
 
-  app.ports.authenticate.subscribe(() => {
-    blockstack.redirectToSignIn();
+  app.ports.authenticate.subscribe(method => {
+    state.auth = setAuthenticationMethod(method);
+    state.auth.signIn();
   });
 
   app.ports.deauthenticate.subscribe(() => {
-    blockstack.signUserOut(window.location.origin);
+    state.auth.signOut();
+    unsetAuthenticationMethod();
   });
 
   // > Audio
 
-  var audioEnvironmentContext = {
+  const audioEnvironmentContext = {
     activeQueueItem: null,
     elm: app
   };
@@ -175,19 +120,23 @@ function setupElm(params) {
     const initialPromise = Promise.resolve([]);
 
     return context.urlsForTags.reduce((accumulator, urls) => {
-      return accumulator.then(
-        col => {
-          return getTags(urls.getUrl, urls.headUrl)
-            .then(r => col.concat(r))
-            .catch(e => {
-              console.error(e);
-              return col.concat(null);
-            });
-        }
+      return accumulator.then(col =>
+        getTags(urls.getUrl, urls.headUrl)
+          .then(r => col.concat(r))
+          .catch(e => {
+            console.error(e);
+            return col.concat(null);
+          })
       );
 
     }, initialPromise).then(col => {
-      context.receivedTags = _.compact(col).map(pickTags);
+      context.receivedTags = _.compose(
+        x => _.map(pickTags, x),
+        x => _.filter(_.isObject, x)
+      )(
+        col
+      );
+
       app.ports.receiveTags.send(context);
 
     });
@@ -230,4 +179,41 @@ function setupElm(params) {
     action: "update_search_index",
     data: flags.tracks
   });
+}
+
+
+
+//
+// Data
+
+function storeData(key, data) {
+  state.dataContainer = _.put(key, data, state.dataContainer);
+  return state.auth.storeData(state.dataContainer);
+}
+
+
+function keepDataInContainer(data) {
+  state.dataContainer = data;
+  return data;
+}
+
+
+
+//
+// Settings
+
+function saveSettings(key, settings) {
+  localStorage.setItem("settings." + key, JSON.stringify(settings));
+}
+
+
+function loadSettings(key) {
+  const val = localStorage.getItem("settings." + key);
+  if (!val || !val.length) return null;
+
+  try {
+    return JSON.parse(val);
+  } catch (_) {
+    return {};
+  }
 }

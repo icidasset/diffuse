@@ -14,7 +14,7 @@ import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
-import Users.Data
+import Users.Ports
 
 
 -- 💧
@@ -252,7 +252,7 @@ toggleFavourite model ( i, t ) =
         storeFavourites =
             newFavourites
                 |> List.map Tracks.Encoding.encodeFavourite
-                |> Users.Data.storeFavourites
+                |> Users.Ports.storeFavourites
 
         effect =
             if model.favouritesOnly then

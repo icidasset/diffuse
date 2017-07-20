@@ -7,7 +7,7 @@ import Sources.Encoding
 import Sources.Types exposing (..)
 import Time
 import Types as TopLevel exposing (Illumination)
-import Users.Data
+import Users.Ports
 import Utils
 
 
@@ -46,7 +46,7 @@ setProperSourceId model source =
 
 storeSources : List Source -> Cmd TopLevel.Msg
 storeSources =
-    List.map Sources.Encoding.encode >> Users.Data.storeSources
+    List.map Sources.Encoding.encode >> Users.Ports.storeSources
 
 
 

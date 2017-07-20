@@ -9,7 +9,7 @@ import Response.Ext exposing (do)
 import Task
 import Time
 import Types exposing (..)
-import Users.Auth
+import Users.Ports
 import Window
 
 
@@ -80,10 +80,14 @@ initialCommands flags _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Authenticate ->
+        Authenticate method ->
             (!)
                 model
-                [ Users.Auth.authenticate () ]
+                [ method
+                    |> toString
+                    |> String.toUpper
+                    |> Users.Ports.authenticate
+                ]
 
         ClickAway ->
             (!)
@@ -98,7 +102,7 @@ update msg model =
         SignOut ->
             (!)
                 { model | authenticatedUser = Nothing }
-                [ Users.Auth.deauthenticate ()
+                [ Users.Ports.deauthenticate ()
                 , Navigation.modifyUrl "/"
                 ]
 

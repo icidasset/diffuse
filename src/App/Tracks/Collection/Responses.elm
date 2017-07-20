@@ -5,7 +5,7 @@ import Tracks.Encoding
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Types as TopLevel
-import Users.Data
+import Users.Ports
 
 
 {-| Consequences when changing `collection.untouched`.
@@ -19,7 +19,7 @@ globalConsequences oldCollection newCollection model =
                     List.map Tracks.Encoding.encodeTrack newCollection.untouched
             in
                 Cmd.batch
-                    [ Users.Data.storeTracks encodedTracks
+                    [ Users.Ports.storeTracks encodedTracks
                     , Ports.updateSearchIndex encodedTracks
                     , do (TopLevel.TracksMsg (Search model.searchTerm))
                     ]

@@ -5,7 +5,6 @@ import Json.Encode
 import Mouse
 import Svg exposing (Svg)
 import Time exposing (Time)
-import Users.Types exposing (..)
 import Window
 
 
@@ -22,7 +21,7 @@ import Tracks.Types as Tracks
 
 
 type Msg
-    = Authenticate
+    = Authenticate AuthMethod
     | ClickAway
     | HideLoadingScreen
     | SignOut
@@ -114,6 +113,16 @@ type alias ContextMenuItems =
 
 
 -- Other
+
+
+type AuthMethod
+    = Local
+    | Blockstack
+
+
+type alias User =
+    { displayName : String
+    }
 
 
 type alias Illumination model childMsg =

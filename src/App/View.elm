@@ -127,7 +127,12 @@ authenticated : List (Html Msg) -> Model -> Html Msg
 authenticated children model =
     if model.authenticatedUser == Nothing then
         unauthenticated
-            [ authButton ]
+            [ div
+                []
+                [ authButton Blockstack
+                , authButton Local
+                ]
+            ]
             model
     else
         div
@@ -173,24 +178,29 @@ unauthenticatedNavigation currentPage =
         ]
 
 
-authButton : Html Msg
-authButton =
+authButton : AuthMethod -> Html Msg
+authButton authMethod =
     a
-        [ cssClass AuthenticationButton, onClick Authenticate ]
-        [ blockstackLogo
-        , span
-            []
-            [ text "Sign in with Blockstack" ]
-        ]
+        [ cssClass AuthenticationButton, onClick (Authenticate authMethod) ]
+        (case authMethod of
+            Local ->
+                [ Material.Icons.Action.https Color.white 17
+                , text "Sign in anonymously"
+                ]
+
+            Blockstack ->
+                [ blockstackLogo
+                , text "Sign in with Blockstack"
+                ]
+        )
 
 
 blockstackLogo : Svg Msg
 blockstackLogo =
     Svg.svg
-        [ height "512"
-        , cssSvgClass AuthenticationButtonLogo
+        [ height "22"
         , viewBox "0 0 512 512"
-        , width "512"
+        , width "22"
         ]
         [ g
             [ fill "none", fillRule "evenodd" ]

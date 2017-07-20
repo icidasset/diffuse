@@ -41,7 +41,6 @@ keyframes =
 
 type Classes
     = AuthenticationButton
-    | AuthenticationButtonLogo
     | BackgroundImage
     | Basic
     | Button
@@ -245,15 +244,22 @@ stylesLocal =
         , cursor pointer
         , displayFlex
         , fontSize (Css.rem 0.95)
+        , height (px 22)
         , lineHeight (gr 3)
+        , marginBottom (gr 2)
         , padding2 (gr 2) (gr 3)
         , property "padding-top" "calc(.75rem + 1px)"
+        , width (px 220)
+
+        --
+        , lastChild
+            [ marginBottom zero
+            ]
 
         --
         , descendants
-            [ class AuthenticationButtonLogo
-                [ height (px 22)
-                , marginRight (gr 1)
+            [ svg
+                [ marginRight (gr 1)
                 , transform none
                 , width (px 22)
                 ]

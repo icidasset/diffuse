@@ -131,7 +131,8 @@ function createAudioElement(environmentalContext, queueItem) {
     if (is) fn.call(environmentalContext, event);
   };
 
-  const timeupdateFunc = _.throttle(250, bind(audioTimeUpdateEvent));
+  // TODO: Throttle?
+  const timeupdateFunc = bind(audioTimeUpdateEvent);
 
   newNode = new window.Audio();
   newNode.setAttribute("crossorigin", "anonymous");
