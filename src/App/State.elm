@@ -248,9 +248,12 @@ update msg model =
         ShowViewMenu ->
             (!)
                 { model | contextMenu = Nothing }
-                [ model.contextMenu
-                    |> Maybe.map (\_ -> Task.perform ShowViewMenuWithWindow Window.size)
-                    |> Maybe.withDefault Cmd.none
+                [ case model.contextMenu of
+                    Just _ ->
+                        Cmd.none
+
+                    Nothing ->
+                        Task.perform ShowViewMenuWithWindow Window.size
                 ]
 
         ShowViewMenuWithWindow windowSize ->
