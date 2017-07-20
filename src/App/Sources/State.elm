@@ -245,7 +245,7 @@ update msg model =
                     }
                     []
                     [ do TopLevel.ProcessSources
-                    , Navigation.newUrl "/sources"
+                    , Navigation.newUrl "/"
                     , storeSources newCollection
                     ]
 
