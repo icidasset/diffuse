@@ -205,6 +205,7 @@ update msg model =
                         |> Tracks.Types.Remove
                         |> TopLevel.TracksMsg
                         |> do
+                    , updateEnabledSourceIds newCollection
                     , storeSources newCollection
                     ]
 
@@ -246,6 +247,24 @@ update msg model =
                     []
                     [ do TopLevel.ProcessSources
                     , Navigation.newUrl "/"
+                    , updateEnabledSourceIds newCollection
+                    , storeSources newCollection
+                    ]
+
+        ------------------------------------
+        -- Other
+        ------------------------------------
+        ToggleSource source ->
+            let
+                newCollection =
+                    List.updateIf
+                        (.id >> (==) source.id)
+                        (\s -> { s | enabled = not s.enabled })
+                        model.collection
+            in
+                (!)
+                    { model | collection = newCollection }
+                    [ updateEnabledSourceIds newCollection
                     , storeSources newCollection
                     ]
 

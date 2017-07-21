@@ -139,15 +139,32 @@ harvest ( model, collection ) =
                 Nothing ->
                     collection.identified
 
-        filtered =
-            if model.favouritesOnly then
-                List.filter (\( i, t ) -> i.isFavourite == True) harvested
-            else
-                List.filter (\( i, t ) -> i.isMissing == False) harvested
+        filters =
+            [ -- Enabled sources only
+              Tuple.second >> .sourceId >> (\id -> List.member id model.enabledSourceIds)
+
+            -- Favourites / Missing
+            , if model.favouritesOnly then
+                Tuple.first >> .isFavourite >> (==) True
+              else
+                Tuple.first >> .isMissing >> (==) False
+            ]
+
+        theFilter =
+            \x ->
+                List.foldl
+                    (\filter bool ->
+                        if bool == True then
+                            filter x
+                        else
+                            bool
+                    )
+                    True
+                    filters
     in
         (,)
             model
-            { collection | harvested = filtered }
+            { collection | harvested = List.filter theFilter harvested }
 
 
 harvester :

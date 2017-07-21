@@ -23,6 +23,7 @@ import Users.Ports
 initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
     { collection = emptyCollection
+    , enabledSourceIds = decodeEnabledSourceIds flags
     , exposedStep = 1
     , favourites = decodeFavourites (Maybe.withDefault [] flags.favourites)
     , favouritesOnly = flags.settings.tracks.favouritesOnly
@@ -76,6 +77,15 @@ update msg model =
         --
         Reharvest ->
             model
+                |> Collection.makeParcel
+                |> Collection.reharvest
+                |> Collection.set
+
+        -- # SetEnabledSourceIds
+        --
+        SetEnabledSourceIds ids ->
+            model
+                |> (\m -> { m | enabledSourceIds = ids })
                 |> Collection.makeParcel
                 |> Collection.reharvest
                 |> Collection.set

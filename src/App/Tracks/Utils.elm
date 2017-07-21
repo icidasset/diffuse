@@ -2,6 +2,7 @@ module Tracks.Utils exposing (..)
 
 import Json.Encode as Json
 import Maybe.Extra as Maybe
+import Sources.Utils exposing (decodeSources)
 import Tracks.Encoding
 import Tracks.Types exposing (..)
 import Types as TopLevel exposing (Illumination)
@@ -23,6 +24,14 @@ decodeFavourites encodedFavourites =
     encodedFavourites
         |> List.map Tracks.Encoding.decodeFavourite
         |> Maybe.values
+
+
+decodeEnabledSourceIds : TopLevel.ProgramFlags -> List SourceId
+decodeEnabledSourceIds flags =
+    flags
+        |> decodeSources
+        |> List.filter (.enabled >> (==) True)
+        |> List.map .id
 
 
 

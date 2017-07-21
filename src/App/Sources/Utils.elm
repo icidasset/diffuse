@@ -3,8 +3,10 @@ module Sources.Utils exposing (..)
 import Date
 import Maybe.Extra as Maybe
 import Regex
+import Response.Ext exposing (do)
 import Sources.Encoding
 import Sources.Types exposing (..)
+import Tracks.Types
 import Time
 import Types as TopLevel exposing (Illumination)
 import Users.Ports
@@ -47,6 +49,16 @@ setProperSourceId model source =
 storeSources : List Source -> Cmd TopLevel.Msg
 storeSources =
     List.map Sources.Encoding.encode >> Users.Ports.storeSources
+
+
+updateEnabledSourceIds : List Source -> Cmd TopLevel.Msg
+updateEnabledSourceIds collection =
+    collection
+        |> List.filter (.enabled >> (==) True)
+        |> List.map .id
+        |> Tracks.Types.SetEnabledSourceIds
+        |> TopLevel.TracksMsg
+        |> do
 
 
 

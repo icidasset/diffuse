@@ -100,7 +100,7 @@ type alias Collection =
     -- `Track`s with `Identifiers`
     , identified : List IdentifiedTrack
 
-    -- Filtered by search results and favourites
+    -- Filtered by search results, favourites, etc.
     , harvested : List IdentifiedTrack
 
     -- Partial rendering of the harvested collection in the UI
@@ -119,6 +119,7 @@ type alias Parcel =
 type Msg
     = Recalibrate
     | Reharvest
+    | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
       -- Collection Pt. 1
     | InitialCollection (List Json.Value)
@@ -150,6 +151,7 @@ type alias Model =
 type alias InternalModel extension =
     { extension
         | collection : Collection
+        , enabledSourceIds : List SourceId
         , exposedStep : Int
         , favourites : List Favourite
         , searchResults : Maybe (List TrackId)

@@ -1,7 +1,7 @@
 module Tracks.Collection exposing (..)
 
 import List.Extra as List
-import Tracks.Collection.Internal exposing (build, buildf, initialize, identify, harvest, expose)
+import Tracks.Collection.Internal exposing (build, buildf, identify, harvest, expose)
 import Tracks.Collection.Responses exposing (..)
 import Tracks.Types exposing (..)
 import Types as TopLevel

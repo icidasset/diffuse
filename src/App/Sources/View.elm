@@ -10,6 +10,7 @@ import Html.Lazy exposing (lazy, lazy3)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Action as Icons
+import Material.Icons.Av as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
@@ -158,6 +159,24 @@ renderSource index ( source, isProcessing, processingError ) =
                     span [ title "Processing …" ] [ Icons.sync colorDerivatives.text 16 ]
                   else
                     text ""
+
+                -- Enabled/Disabled
+                --
+                , a
+                    [ source
+                        |> ToggleSource
+                        |> SourcesMsg
+                        |> onClick
+                    , if source.enabled then
+                        title "Disable source"
+                      else
+                        title "Enable source"
+                    ]
+                    [ if source.enabled then
+                        Icons.volume_up colorDerivatives.text 16
+                      else
+                        Icons.volume_off colorDerivatives.text 16
+                    ]
 
                 -- Delete
                 --

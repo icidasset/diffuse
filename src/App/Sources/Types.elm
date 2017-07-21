@@ -26,6 +26,7 @@ type alias SourceId =
 type alias Source =
     { id : SourceId
     , data : SourceData
+    , enabled : Bool
     , service : Service
     }
 
@@ -95,6 +96,8 @@ type Msg
     | SetNewSourceProperty Source String String
     | SetNewSourceType String
     | SubmitNewSourceForm
+      -- Other
+    | ToggleSource Source
 
 
 
@@ -127,5 +130,6 @@ makeSource : Service -> SourceData -> Source
 makeSource service data =
     { id = "change_me_please"
     , data = data
+    , enabled = True
     , service = service
     }
