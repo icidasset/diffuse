@@ -52,7 +52,7 @@ defaultFont =
 
 headerFont : Mixin
 headerFont =
-    mixin [ fontFamilies [ "Assistant", "sans-serif" ] ]
+    mixin [ fontFamilies [ "Montserrat", "sans-serif" ] ]
 
 
 

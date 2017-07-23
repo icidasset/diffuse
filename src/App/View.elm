@@ -184,7 +184,7 @@ authButton authMethod =
         [ cssClass AuthenticationButton, onClick (Authenticate authMethod) ]
         (case authMethod of
             Local ->
-                [ Material.Icons.Action.https Color.white 17
+                [ Material.Icons.Action.lock_outline Color.white 17
                 , text "Sign in anonymously"
                 ]
 

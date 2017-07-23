@@ -28,13 +28,14 @@ styles =
         , margin3 (gr 7) auto zero
         , maxWidth insulationWidth
         , textAlign center
+        , whiteSpace noWrap
         , width (pct 100)
 
         --
         , descendants
             [ a
                 [ display inlineBlock
-                , marginRight (gr 9)
+                , marginRight (gr 6)
 
                 --
                 , lastChild
@@ -43,6 +44,18 @@ styles =
                 ]
             , class ActiveLink
                 [ fontWeight (int 700)
+                ]
+            ]
+        ]
+
+    -- TODO: https://github.com/rtfeldman/elm-css/pull/281
+    --
+    , mediaQuery "screen and ( min-width: 700px )"
+        [ class OutsideNavigation
+            [ descendants
+                [ a
+                    [ marginRight (gr 9)
+                    ]
                 ]
             ]
         ]

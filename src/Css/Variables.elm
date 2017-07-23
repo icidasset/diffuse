@@ -29,7 +29,9 @@ colorDerivatives =
     , errorBorder = colors.base08
     , focusBorder = colors.base0D
     , inputBorder = Color.rgb 225 225 225
+    , logo = Color.rgb 95 137 147
     , subtleBorder = Color.rgb 238 238 238
+    , sunset = Color.rgb 206 186 183
     , -- States
       success = colors.base0B
     , error = colors.base08

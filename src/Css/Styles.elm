@@ -157,18 +157,26 @@ stylesLocal =
     --   Mainly used for containing text elements.
     ------------------------------------------------------
     , class ContentBox
-        [ padding3 (gr 4) (gr 4) (gr 6)
+        [ padding3 zero (gr 4) (gr 6)
         ]
 
     ------------------------------------------------------
     -- <🎃>
     ------------------------------------------------------
     , h1
-        [ fontSize (Css.rem 1.675)
+        [ backgroundColor (cssColor colors.base06)
+        , borderBottomLeftRadius (px 4)
+        , borderBottomRightRadius (px 4)
+        , color (rgb 255 255 255)
+        , display Css.table
+        , fontSize (gr 2)
         , fontWeight (int 600)
         , headerFont
-        , letterSpacing (Css.em -0.025)
-        , marginTop zero
+        , letterSpacing (Css.em -0.0125)
+        , marginBottom (gr 3)
+        , marginTop (px -1)
+        , padding2 (px 3) (px 9)
+        , textTransform uppercase
         ]
     , a
         [ color inherit
@@ -200,11 +208,10 @@ stylesLocal =
     -- <🎃> Intro
     ------------------------------------------------------
     , class Intro
-        [ fontSize (Css.em 0.95)
-        , fontWeight (int 600)
-        , headerFont
-        , lineHeight (num 1.55)
+        [ fontSize (Css.em 0.9)
+        , lineHeight (num 1.6)
         , marginBottom (gr 6)
+        , marginTop (gr 4)
         , opacity (num 0.475)
 
         --

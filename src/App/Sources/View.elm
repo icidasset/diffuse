@@ -168,14 +168,14 @@ renderSource index ( source, isProcessing, processingError ) =
                         |> SourcesMsg
                         |> onClick
                     , if source.enabled then
-                        title "Disable source"
+                        title "Enabled (click to disable)"
                       else
-                        title "Enable source"
+                        title "Disabled (click to enable)"
                     ]
                     [ if source.enabled then
-                        Icons.volume_up colorDerivatives.text 16
+                        Icons.check_circle colorDerivatives.text 16
                       else
-                        Icons.volume_off colorDerivatives.text 16
+                        Icons.not_interested colorDerivatives.text 16
                     ]
 
                 -- Delete
@@ -231,7 +231,7 @@ pageNewForm newSource =
           --
           h1
             []
-            [ text "Add a new source" ]
+            [ text "New source" ]
 
         -- Intro
         --
@@ -263,7 +263,7 @@ pageNewForm newSource =
             , br
                 []
                 []
-            , Icons.warning (Color.rgb 65 50 63) 16
+            , Icons.warning colorDerivatives.text 16
             , text "In order to use IPFS you currently must use "
             , a [ href "https://github.com/icidasset/go-ipfs" ] [ text "my fork" ]
             , text ", I'm still waiting for "
