@@ -215,7 +215,7 @@ update msg model =
         SetNewSourceProperty source key value ->
             let
                 newSource =
-                    { source | data = Dict.insert key (String.trim value) source.data }
+                    { source | data = Dict.insert key value source.data }
             in
                 (!) { model | newSource = newSource } []
 
@@ -236,8 +236,14 @@ update msg model =
 
         SubmitNewSourceForm ->
             let
+                ns =
+                    model.newSource
+
+                newSource =
+                    { ns | data = Dict.map (always String.trim) ns.data }
+
                 newCollection =
-                    (setProperSourceId model model.newSource) :: model.collection
+                    setProperSourceId model newSource :: model.collection
             in
                 ($)
                     { model
