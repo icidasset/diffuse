@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (rel)
 import Html.Events exposing (onClick)
 import Html.Keyed
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy, lazy2)
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Navigation.View as Navigation
@@ -37,7 +37,7 @@ entry : Queue.Page -> TopLevel.Model -> Html TopLevel.Msg
 entry page model =
     case page of
         Index ->
-            lazy pageIndex model.queue.future
+            lazy2 pageIndex model.queue.future model.queue.shuffle
 
         History ->
             lazy pageHistory model.queue.past
@@ -47,8 +47,8 @@ entry page model =
 -- {Page} index
 
 
-pageIndex : List Item -> Html TopLevel.Msg
-pageIndex futureItems =
+pageIndex : List Item -> Bool -> Html TopLevel.Msg
+pageIndex futureItems shuffled =
     div
         [ cssClass InsulationContent ]
         [ ------------------------------------
@@ -88,24 +88,27 @@ pageIndex futureItems =
                     "ul"
                     [ cssClass ListWithActions ]
                     (futureItems
-                        |> List.indexedMap futureActions
+                        |> List.indexedMap (futureActions shuffled)
                         |> List.indexedMap renderItem
                     )
             ]
         ]
 
 
-futureActions : Int -> Item -> ItemWithActions
-futureActions index item =
+futureActions : Bool -> Int -> Item -> ItemWithActions
+futureActions shuffled index item =
     (,)
         item
-        [ a
-            [ index
-                |> Queue.RemoveItem
-                |> TopLevel.QueueMsg
-                |> onClick
-            ]
-            [ Icons.remove_circle_outline (Color.grayscale 0.175) 16 ]
+        [ if item.manualEntry || shuffled then
+            a
+                [ index
+                    |> Queue.RemoveItem
+                    |> TopLevel.QueueMsg
+                    |> onClick
+                ]
+                [ Icons.remove_circle_outline (Color.grayscale 0.175) 16 ]
+          else
+            text ""
         ]
 
 
