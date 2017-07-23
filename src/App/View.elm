@@ -13,6 +13,7 @@ import Routing.Types exposing (Page(..))
 import Styles exposing (..)
 import Svg exposing (Svg, g, path, svg)
 import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
+import Traits exposing (intoRem)
 import Types exposing (..)
 import Utils exposing (..)
 
@@ -137,8 +138,16 @@ authenticated children model =
     else
         div
             [ cssClass Shell ]
-            [ Html.Lazy.lazy authenticatedNavigation model.routing.currentPage
+            [ -- Navigation
+              --
+              Html.Lazy.lazy authenticatedNavigation model.routing.currentPage
+
+            -- Page
+            --
             , div [ cssClass Insulation ] children
+
+            -- Console
+            --
             , Console.entry model
             ]
 
@@ -184,12 +193,16 @@ authButton authMethod =
         [ cssClass AuthenticationButton, onClick (Authenticate authMethod) ]
         (case authMethod of
             Local ->
-                [ Material.Icons.Action.lock_outline Color.white 17
+                [ span
+                    [ style [ ( "fontSize", intoRem 17 ) ] ]
+                    [ Material.Icons.Action.lock_outline Color.white 17 ]
                 , text "Sign in anonymously"
                 ]
 
             Blockstack ->
-                [ blockstackLogo
+                [ span
+                    [ style [ ( "fontSize", intoRem 22 ) ] ]
+                    [ blockstackLogo ]
                 , text "Sign in with Blockstack"
                 ]
         )

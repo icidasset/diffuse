@@ -13,6 +13,11 @@ basem number =
     Css.rem (number / baseFontSize)
 
 
+intoRem : Float -> String
+intoRem number =
+    .value (basem number)
+
+
 
 -- Css / Grid
 

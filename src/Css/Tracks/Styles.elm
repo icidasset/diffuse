@@ -172,6 +172,7 @@ styles =
             , selector "td[data-favourite]"
                 [ color (hex "#dedede")
                 , fontFamilies [ "Material Icons" ]
+                , property "text-overflow" "initial"
                 , before [ property "content" "'favorite_border'" ]
                 ]
             , selector "td[data-favourite=\"t\"]"

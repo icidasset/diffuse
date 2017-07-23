@@ -62,7 +62,15 @@ stylesLocal =
       -- <html>
       ------------------------------------------------------
       html
-        [ fontSize (px baseFontSize) ]
+        [ fontSize (px 14)
+        ]
+
+    --
+    , mediaQuery "screen and ( min-width: 700px )"
+        [ html
+            [ fontSize (px baseFontSize)
+            ]
+        ]
 
     ------------------------------------------------------
     -- <body>
@@ -170,12 +178,11 @@ stylesLocal =
         , color (rgb 255 255 255)
         , display Css.table
         , fontSize (gr 2)
-        , fontWeight (int 600)
-        , headerFont
-        , letterSpacing (Css.em -0.0125)
+        , fontWeight (int 700)
+        , letterSpacing (Css.em 0.0125)
         , marginBottom (gr 3)
         , marginTop (px -1)
-        , padding2 (px 3) (px 9)
+        , padding3 (basem 4) (basem 10) (basem 3)
         , textTransform uppercase
         ]
     , a
@@ -184,6 +191,10 @@ stylesLocal =
         ]
     , label
         [ cursor inherit
+        ]
+    , svg
+        [ height (Css.em 1)
+        , width (Css.em 1)
         ]
 
     ------------------------------------------------------
@@ -318,10 +329,13 @@ stylesLocal =
 
         --
         , descendants
-            [ svg
+            [ span
+                [ lineHeight (Css.rem 1)
+                ]
+            , svg
                 [ marginRight (gr 1)
                 , transform none
-                , width (px 22)
+                , width (basem 22)
                 ]
             ]
         ]

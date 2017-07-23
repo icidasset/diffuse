@@ -12,6 +12,7 @@ import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue.Types exposing (Msg(..))
 import Tracks.Types
+import Traits exposing (intoRem)
 import Types as TopLevel
 import Utils exposing (..)
 import Variables exposing (colorDerivatives)
@@ -90,6 +91,7 @@ buttons queue isPlaying =
           a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg ToggleRepeat)
+            , style [ ( "font-size", intoRem 18 ) ]
             ]
             [ Icons.repeat colorDerivatives.consoleText 18
             , span
@@ -112,6 +114,7 @@ buttons queue isPlaying =
         , a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg Rewind)
+            , style [ ( "font-size", intoRem 20 ) ]
             ]
             [ Icons.fast_rewind colorDerivatives.consoleText 20 ]
 
@@ -150,6 +153,7 @@ buttons queue isPlaying =
         , a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg Shift)
+            , style [ ( "font-size", intoRem 20 ) ]
             ]
             [ Icons.fast_forward colorDerivatives.consoleText 20 ]
 
@@ -159,6 +163,7 @@ buttons queue isPlaying =
         , a
             [ cssClass ConsoleButton
             , onClick (TopLevel.QueueMsg ToggleShuffle)
+            , style [ ( "font-size", intoRem 18 ) ]
             ]
             [ Icons.shuffle colorDerivatives.consoleText 18
             , span

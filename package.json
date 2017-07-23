@@ -3,7 +3,7 @@
   "devDependencies": {
     "autoprefixer": "^7.1.2",
     "browserify": "^14.1.0",
-    "elm-css": "^0.6.0",
+    "elm-css": "^0.6.1",
     "elm-doc-test": "^2.2.3",
     "elm-test": "^0.18.2",
     "postcss-cli": "^4.1.0"

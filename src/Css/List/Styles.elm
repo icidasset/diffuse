@@ -1,7 +1,7 @@
 module List.Styles exposing (..)
 
 import Css exposing (..)
-import Css.Elements exposing (a, label, li, span)
+import Css.Elements exposing (a, label, li, span, svg)
 import Traits exposing (basem, cssColor, gr)
 import Variables exposing (colorDerivatives)
 
@@ -46,6 +46,10 @@ styles =
                 , fontSize (pct 87.5)
                 , marginRight (gr 2)
                 ]
+            , svg
+                [ height (Css.em 1.225)
+                , width (Css.em 1.225)
+                ]
             ]
         ]
 
@@ -54,6 +58,7 @@ styles =
     ------------------------------------------------------
     , class ListActions
         [ displayFlex
+        , lineHeight zero
         , children
             [ a
                 [ cursor pointer
