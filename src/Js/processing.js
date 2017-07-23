@@ -3,6 +3,10 @@
 // > Override jsmediatags
 //
 
+jsmediatags.Config.setXhrTimeoutInSec(5 * 60);
+// max request duration: 5 minutes
+
+
 function getTags(urlGET, urlHEAD) {
   const fakeURL           = "THIS_WONT_BE_USED_ANYWAYS";
 

@@ -139,10 +139,10 @@ update msg model =
                 publicError =
                     case err of
                         NetworkError ->
-                            "Are you sure you're connected to cyberspace?!"
+                            "Cannot connect to this source"
 
                         Timeout ->
-                            "The server for this source type did not respond."
+                            "Source did not respond (timeout)"
 
                         BadStatus response ->
                             Processing.decodeError ctx.source response.body
