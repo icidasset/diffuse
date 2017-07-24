@@ -47,6 +47,7 @@ styles =
         [ border3 (px 1) solid (cssColorOpac 0.05 colors.base00)
         , displayFlex
         , left (pct 50)
+        , marginTop (gr 3)
         , position absolute
         , top (pct 50)
         , transform (translate2 (pct -50) (pct -50))

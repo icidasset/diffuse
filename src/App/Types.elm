@@ -11,6 +11,7 @@ import Window
 -- Children
 
 import Console.Types as Console
+import Equalizer.Types as Equalizer
 import Queue.Types as Queue
 import Routing.Types as Routing
 import Sources.Types as Sources
@@ -29,6 +30,7 @@ type Msg
     | SetTimestamp Time
       -- Children
     | ConsoleMsg Console.Msg
+    | EqualizerMsg Equalizer.Msg
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
     | SourcesMsg Sources.Msg
@@ -67,6 +69,7 @@ type alias Model =
     -- Children
     ------------------------------------
     , console : Console.Model
+    , equalizer : Equalizer.Model
     , queue : Queue.Model
     , routing : Routing.Model
     , sources : Sources.Model
