@@ -11,6 +11,7 @@ import Variables exposing (..)
 
 import ContextMenu.Styles as ContextMenu
 import Console.Styles as Console
+import Equalizer.Styles as Equalizer
 import Form.Styles as Form
 import List.Styles as List
 import Navigation.Styles as Navigation
@@ -23,6 +24,7 @@ styles =
     stylesLocal
         |> List.append ContextMenu.styles
         |> List.append Console.styles
+        |> List.append Equalizer.styles
         |> List.append Form.styles
         |> List.append List.styles
         |> List.append Navigation.styles
@@ -276,7 +278,6 @@ stylesLocal =
         , position absolute
         , right zero
         , top zero
-        , zIndex (int -1)
         ]
 
     ------------------------------------------------------

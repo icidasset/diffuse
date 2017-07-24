@@ -64,7 +64,10 @@ navigation : Maybe String -> Bool -> Html TopLevel.Msg
 navigation searchTerm favouritesOnly =
     div
         [ cssClass TracksNavigation ]
-        [ Html.map
+        [ --
+          -- Part 1
+          --
+          Html.map
             TopLevel.TracksMsg
             (Html.form
                 [ onSubmit (Search searchTerm) ]
@@ -123,8 +126,15 @@ navigation searchTerm favouritesOnly =
                     )
                 ]
             )
+
+        --
+        -- Part 2
+        --
         , Navigation.insideCustom
-            [ ( Material.Icons.Av.featured_play_list colorDerivatives.text 16
+            [ ( Material.Icons.Av.equalizer colorDerivatives.text 16
+              , TopLevel.RoutingMsg (GoToUrl "/eq")
+              )
+            , ( Material.Icons.Av.featured_play_list colorDerivatives.text 16
               , TopLevel.ShowViewMenu
               )
             ]
