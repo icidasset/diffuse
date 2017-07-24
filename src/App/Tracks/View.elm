@@ -132,7 +132,7 @@ navigation searchTerm favouritesOnly =
         --
         , Navigation.insideCustom
             [ ( Material.Icons.Av.equalizer colorDerivatives.text 16
-              , TopLevel.RoutingMsg (GoToUrl "/eq")
+              , TopLevel.RoutingMsg (GoToUrl "/equalizer")
               )
             , ( Material.Icons.Av.featured_play_list colorDerivatives.text 16
               , TopLevel.ShowViewMenu

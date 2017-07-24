@@ -2,13 +2,14 @@ module Equalizer.Styles exposing (..)
 
 import Color
 import Css exposing (..)
-import Css.Elements exposing (div)
+import Css.Elements exposing (div, h1, svg)
 import Traits exposing (..)
 import Variables exposing (colors, colorDerivatives)
 
 
 type Classes
     = Equalizer
+    | EqualizerContainer
     | KnobColumn
     | KnobLabel
     | KnobLayerA
@@ -43,14 +44,33 @@ knobOpac =
 
 styles : List Snippet
 styles =
-    [ class Equalizer
+    [ class EqualizerContainer
+        [ alignItems center
+        , displayFlex
+        , height (pct 100)
+        , justifyContent center
+        , position relative
+
+        -- TODO: http://package.elm-lang.org/packages/rtfeldman/elm-css/9.1.0/Css#calc
+        , property "height" ("calc(100% - " ++ (.value (gr 7)) ++ " - 1px)")
+
+        --
+        , descendants
+            [ h1
+                [ left (gr 4)
+                , position absolute
+                , top zero
+                ]
+            ]
+        ]
+
+    --
+    -- EQ
+    --
+    , class Equalizer
         [ border3 (px 1) solid (cssColorOpac 0.05 colors.base00)
         , displayFlex
-        , left (pct 50)
-        , marginTop (gr 3)
-        , position absolute
-        , top (pct 50)
-        , transform (translate2 (pct -50) (pct -50))
+        , marginTop (gr -1)
         ]
 
     --
@@ -116,21 +136,19 @@ styles =
         , zIndex (int 2)
 
         --
-        , (children << List.singleton << div)
-            [ borderLeft3 (px 1) solid (cssColorOpac knobOpac knobColor)
-            , borderRight3 (px 1) solid (cssColorOpac knobOpac knobColor)
-            , height (px 8)
-            , left zero
-            , marginTop (px -4)
-            , position absolute
-            , right zero
-            , top (pct 50)
-
-            --
-            , nthChild "2" [ transform <| rotate (deg (36 * 1)) ]
-            , nthChild "3" [ transform <| rotate (deg (36 * 2)) ]
-            , nthChild "4" [ transform <| rotate (deg (36 * 3)) ]
-            , nthChild "5" [ transform <| rotate (deg (36 * 4)) ]
+        , descendants
+            [ svg
+                [ fill transparent
+                , height (px (knobSize - 9))
+                , left (pct 50)
+                , position absolute
+                , property "stroke" (cssColorOpac knobOpac knobColor |> .value)
+                , property "stroke-linejoin" "miter"
+                , property "stroke-width" "7px"
+                , top (pct 50)
+                , transforms [ rotate (deg 90), translate2 (pct -50) (pct 50) ]
+                , width (px (knobSize - 9))
+                ]
             ]
         ]
 
