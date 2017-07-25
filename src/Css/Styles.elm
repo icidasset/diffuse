@@ -257,7 +257,8 @@ stylesLocal =
         , color (cssColor colors.base0B)
         , displayFlex
         , fontWeight (int 700)
-        , padding2 (px 10) (gr 2)
+        , lineHeight (int 1)
+        , padding2 (gr 2) (gr 2)
 
         --
         , descendants

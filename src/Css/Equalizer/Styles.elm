@@ -10,6 +10,7 @@ import Variables exposing (colors, colorDerivatives)
 type Classes
     = Equalizer
     | EqualizerContainer
+    | InsulationForEqualizer
     | KnobColumn
     | KnobLabel
     | KnobLayerA
@@ -47,12 +48,9 @@ styles =
     [ class EqualizerContainer
         [ alignItems center
         , displayFlex
-        , height (pct 100)
+        , flex (int 1)
         , justifyContent center
         , position relative
-
-        -- TODO: http://package.elm-lang.org/packages/rtfeldman/elm-css/9.1.0/Css#calc
-        , property "height" ("calc(100% - " ++ (.value (gr 7)) ++ " - 1px)")
 
         --
         , descendants
@@ -62,6 +60,10 @@ styles =
                 , top zero
                 ]
             ]
+        ]
+    , class InsulationForEqualizer
+        [ displayFlex
+        , flexDirection column
         ]
 
     --

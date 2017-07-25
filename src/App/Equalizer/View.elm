@@ -29,7 +29,11 @@ import Styles exposing (Classes(..))
 entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     div
-        [ cssClass InsulationContent ]
+        [ Html.Attributes.classList
+            [ ( toString InsulationContent, True )
+            , ( toString InsulationForEqualizer, True )
+            ]
+        ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
