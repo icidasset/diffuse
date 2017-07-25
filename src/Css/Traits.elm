@@ -29,6 +29,15 @@ gr number =
 
 
 -- Css / Queries
+--
+-- iPhone6 : MediaQuery
+-- iPhone6 =
+--     MediaQuery "screen and (min-width: 480px)"
+--
+--
+-- tablet : MediaQuery
+-- tablet =
+--     MediaQuery "screen and (min-width: 700px)"
 
 
 querySmall : List Snippet -> Snippet
@@ -71,3 +80,18 @@ cssColor theColor =
             Color.toRgb theColor
     in
         Css.rgba values.red values.green values.blue values.alpha
+
+
+cssColorOpac : Float -> Color.Color -> Css.Color
+cssColorOpac num clr =
+    clr
+        |> colorOpac num
+        |> cssColor
+
+
+colorOpac : Float -> Color.Color -> Color.Color
+colorOpac num clr =
+    clr
+        |> Color.toRgb
+        |> (\c -> { c | alpha = num })
+        |> (\c -> Color.rgba c.red c.green c.blue c.alpha)

@@ -46,31 +46,39 @@ document.body.appendChild(audioElementsContainer);
 let volume,
     low,
     mid,
-    hi;
+    high;
 
 // volume
 volume = context.createGain();
 volume.gain.value = 1;
 
 // biquad filters
-low = context.createBiquadFilter();
-mid = context.createBiquadFilter();
-hi = context.createBiquadFilter();
+low   = context.createBiquadFilter();
+mid   = context.createBiquadFilter();
+high  = context.createBiquadFilter();
 
-low.type = "lowshelf";
-mid.type = "peaking";
-hi.type = "highshelf";
+low.type    = "lowshelf";
+mid.type    = "peaking";
+high.type   = "highshelf";
 
-low.frequency.value = 250;
-mid.frequency.value = 2750;
-mid.Q.value = 1;
-hi.frequency.value = 8000;
+low.frequency.value   = 250;
+mid.frequency.value   = 2750;
+mid.Q.value           = 1;
+high.frequency.value  = 8000;
 
 // connect them nodes
 volume.connect(low);
 low.connect(mid);
-mid.connect(hi);
-hi.connect(context.destination);
+mid.connect(high);
+high.connect(context.destination);
+
+
+function determineNodeGainValue(knobType, value) {
+  switch (knobType) {
+    case "Volume"   : return value;
+    default         : return value < 0 ? value * 50 : value * 15;
+  }
+}
 
 
 

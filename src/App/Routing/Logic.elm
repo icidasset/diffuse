@@ -33,6 +33,9 @@ pageToParentHref page =
         About ->
             "/about"
 
+        Equalizer ->
+            "/equalizer"
+
         Queue _ ->
             "/queue"
 
@@ -62,6 +65,7 @@ route =
 
         -- Other
         , map About (s "about")
+        , map Equalizer (s "equalizer")
         , map Settings (s "settings")
         , map Index top
         ]

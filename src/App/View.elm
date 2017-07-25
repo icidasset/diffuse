@@ -16,11 +16,13 @@ import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
 import Traits exposing (intoRem)
 import Types exposing (..)
 import Utils exposing (..)
+import Variables exposing (colorDerivatives)
 
 
 -- Children
 
 import Console.View as Console
+import Equalizer.View as Equalizer
 import Queue.View as Queue
 import Settings.View as Settings
 import Sources.View as Sources
@@ -79,6 +81,11 @@ entry model =
 
                 -- # Needs authentication
                 --
+                Equalizer ->
+                    authenticated
+                        [ Equalizer.entry model ]
+                        model
+
                 Index ->
                     authenticated
                         [ Tracks.entry model ]
@@ -182,8 +189,8 @@ unauthenticatedNavigation : Page -> Html Msg
 unauthenticatedNavigation currentPage =
     Navigation.outside
         currentPage
-        [ ( Material.Icons.Action.home navColor 16, "/" )
-        , ( Material.Icons.Action.info navColor 16, "/about" )
+        [ ( Material.Icons.Action.home colorDerivatives.text 16, "/" )
+        , ( Material.Icons.Action.info colorDerivatives.text 16, "/about" )
         ]
 
 
@@ -238,11 +245,6 @@ blockstackLogo =
 
 
 -- Shared
-
-
-navColor : Color.Color
-navColor =
-    Color.rgba 0 0 0 0.4
 
 
 contextMenu : Maybe ContextMenu -> Html Msg

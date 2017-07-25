@@ -1,5 +1,6 @@
 module Navigation.Styles exposing (..)
 
+import Color
 import Color.Manipulate
 import Css exposing (..)
 import Css.Elements exposing (a, label, span, svg)
@@ -90,7 +91,10 @@ styles =
     -- Inside
     ------------------------------------------------------
     , class InsideNavigation
-        [ borderBottom3 (px 1) solid (hex "#eee")
+        [ backgroundColor (cssColor Color.white)
+        , borderBottom3 (px 1) solid (hex "#eee")
+        , position relative
+        , zIndex (int 1)
 
         --
         , descendants

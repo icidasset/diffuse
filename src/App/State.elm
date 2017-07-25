@@ -16,6 +16,7 @@ import Window
 -- Children
 
 import Console.State as Console
+import Equalizer.State as Equalizer
 import Queue.State as Queue
 import Routing.State as Routing
 import Sources.State as Sources
@@ -51,6 +52,7 @@ initialModel flags location =
     -- Children
     ------------------------------------
     , console = Console.initialModel
+    , equalizer = Equalizer.initialModel flags
     , queue = Queue.initialModel flags
     , routing = Routing.initialModel location
     , sources = Sources.initialModel flags
@@ -66,6 +68,7 @@ initialCommands flags _ =
 
         -- Children
         , Console.initialCommands
+        , Equalizer.initialCommands
         , Queue.initialCommands
         , Routing.initialCommands
         , Sources.initialCommands
@@ -130,6 +133,10 @@ update msg model =
         ConsoleMsg sub ->
             Console.update sub model.console
                 |> mapModel (\x -> { model | console = x })
+
+        EqualizerMsg sub ->
+            Equalizer.update sub model.equalizer
+                |> mapModel (\x -> { model | equalizer = x })
 
         QueueMsg sub ->
             Queue.update sub model.queue
@@ -293,6 +300,7 @@ subscriptions model =
 
         -- Children
         , Sub.map ConsoleMsg <| Console.subscriptions model.console
+        , Sub.map EqualizerMsg <| Equalizer.subscriptions model.equalizer
         , Sub.map QueueMsg <| Queue.subscriptions model.queue
         , Sub.map SourcesMsg <| Sources.subscriptions model.sources
         , Sub.map TracksMsg <| Tracks.subscriptions model.tracks
