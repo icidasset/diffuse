@@ -88,7 +88,8 @@ stylesLocal =
 
         --
         , property "-webkit-font-smoothing" "antialiased"
-        , property "-moz-font-smoothing" "grayscale"
+        , property "-moz-osx-font-smoothing" "grayscale"
+        , property "font-smooth" "always"
         ]
 
     ------------------------------------------------------
@@ -139,6 +140,7 @@ stylesLocal =
         , flex (int 1)
         , margin3 (gr 10) auto zero
         , maxWidth insulationWidth
+        , overflow hidden
         , position relative
         , width (pct 100)
         ]
