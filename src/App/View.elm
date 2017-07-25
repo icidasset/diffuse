@@ -16,7 +16,7 @@ import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
 import Traits exposing (intoRem)
 import Types exposing (..)
 import Utils exposing (..)
-import Variables exposing (colorDerivatives)
+import Variables exposing (colors, colorDerivatives)
 
 
 -- Children
@@ -189,8 +189,8 @@ unauthenticatedNavigation : Page -> Html Msg
 unauthenticatedNavigation currentPage =
     Navigation.outside
         currentPage
-        [ ( Material.Icons.Action.home colorDerivatives.text 16, "/" )
-        , ( Material.Icons.Action.info colorDerivatives.text 16, "/about" )
+        [ ( Material.Icons.Action.home colors.base05 16, "/" )
+        , ( Material.Icons.Action.info colors.base05 16, "/about" )
         ]
 
 
