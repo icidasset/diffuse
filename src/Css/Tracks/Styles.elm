@@ -46,6 +46,7 @@ styles =
         , textAlign center
         , top (pct 50)
         , transform (translate2 (pct -50) (pct -50))
+        , zIndex (int 3)
         ]
     , class NoTracksFoundUnderline
         [ borderBottom3 (px 2) solid currentColor

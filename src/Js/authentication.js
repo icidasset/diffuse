@@ -77,14 +77,37 @@ M.LOCAL = {
   // Data
 
   getData() {
-    return Promise.resolve(
-      JSON.parse(localStorage.getItem(VERSION_KEY) || "{}")
-    );
+    this.schema = {
+      favourites: 'artist,title',
+      sources: 'id,data,enabled,service',
+      tracks: 'id,path,sourceId,tags'
+    };
+
+    this.db = new Dexie(VERSION_KEY);
+    this.db.version(1).stores(this.schema);
+
+    return Promise.all([
+      this.db.favourites.toArray(),
+      this.db.sources.toArray(),
+      this.db.tracks.toArray()
+
+    ]).then(x => {
+      return { favourites: x[0], sources: x[1], tracks: x[2] };
+
+    });
   },
 
   storeData(data) {
-    return Promise.resolve(
-      localStorage.setItem(VERSION_KEY, JSON.stringify(data))
+    const errHandler = err => console.error(err);
+
+    return Object.keys(data).map(
+      key => {
+        const items = (data[key] || []).slice();
+        return _ => this.db[key].bulkPut(items);
+      }
+    ).reduce(
+      (acc, fn) => acc.then(fn).catch(errHandler),
+      Promise.resolve()
     );
   },
 
