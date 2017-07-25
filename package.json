@@ -12,6 +12,7 @@
     "1-liners": "^0.4.0",
     "blockstack": "^0.9.1",
     "dexie": "^1.5.1",
+    "dexie-batch": "^0.2.1",
     "elasticlunr": "^0.9.5",
     "jsmediatags": "^3.6.2",
     "surge": "^0.19.0"

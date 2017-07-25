@@ -89,7 +89,17 @@ M.LOCAL = {
     return Promise.all([
       this.db.favourites.toArray(),
       this.db.sources.toArray(),
-      this.db.tracks.toArray()
+
+      // load tracks in batches
+      this.db.tracks.count()
+        .then(n => new DexieBatch({ batchSize: 1000, limit: n }))
+        .then(b => {
+          let tracks = [];
+          let tracksCol = this.db.tracks.toCollection();
+
+          return b.eachBatch(tracksCol, batch => tracks = tracks.concat(batch))
+                  .then(_ => tracks);
+        })
 
     ]).then(x => {
       return { favourites: x[0], sources: x[1], tracks: x[2] };
