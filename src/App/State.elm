@@ -52,7 +52,7 @@ initialModel flags location =
     -- Children
     ------------------------------------
     , console = Console.initialModel
-    , equalizer = Equalizer.initialModel
+    , equalizer = Equalizer.initialModel flags
     , queue = Queue.initialModel flags
     , routing = Routing.initialModel location
     , sources = Sources.initialModel flags

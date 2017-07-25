@@ -18,14 +18,21 @@ type Msg
 
 
 type alias Model =
+    InternalModel Settings
+
+
+type alias InternalModel extension =
+    { extension
+        | activeKnob : Maybe Knob
+        , startingMousePosition : Mouse.Position
+    }
+
+
+type alias Settings =
     { low : Float
     , mid : Float
     , high : Float
     , volume : Float
-
-    -- Knob interactions
-    , activeKnob : Maybe Knob
-    , startingMousePosition : Mouse.Position
     }
 
 
@@ -38,3 +45,9 @@ type Knob
     | Mid
     | High
     | Volume
+
+
+type alias KnobWithValue =
+    { knob : String
+    , value : Float
+    }

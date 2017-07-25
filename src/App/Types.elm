@@ -97,7 +97,8 @@ type alias ProgramFlags =
 
 
 type alias Settings =
-    { queue : Queue.Settings
+    { equalizer : Equalizer.Settings
+    , queue : Queue.Settings
     , tracks : Tracks.Settings
     }
 

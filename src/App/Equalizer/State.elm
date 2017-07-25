@@ -1,5 +1,6 @@
 module Equalizer.State exposing (..)
 
+import Equalizer.Ports exposing (..)
 import Equalizer.Types exposing (..)
 import Mouse
 import Navigation
@@ -9,12 +10,12 @@ import Types as TopLevel
 -- 💧
 
 
-initialModel : Model
-initialModel =
-    { low = 0
-    , mid = 0
-    , high = 0
-    , volume = 1
+initialModel : TopLevel.ProgramFlags -> Model
+initialModel flags =
+    { low = flags.settings.equalizer.low
+    , mid = flags.settings.equalizer.mid
+    , high = flags.settings.equalizer.high
+    , volume = flags.settings.equalizer.volume
 
     -- Knob interactions
     , activeKnob = Nothing
@@ -69,7 +70,7 @@ update msg model =
                         |> min maxAngle
 
                 value =
-                    if distance >= 15 then
+                    if distance > 10 then
                         case model.activeKnob of
                             Just Volume ->
                                 Just ( Volume, (maxAngle + angle) / (maxAngle * 2) )
@@ -81,48 +82,81 @@ update msg model =
                                 Nothing
                     else
                         Nothing
+
+                newModel =
+                    case value of
+                        Just ( Low, v ) ->
+                            { model | low = v }
+
+                        Just ( Mid, v ) ->
+                            { model | mid = v }
+
+                        Just ( High, v ) ->
+                            { model | high = v }
+
+                        Just ( Volume, v ) ->
+                            { model | volume = v }
+
+                        Nothing ->
+                            model
             in
                 case value of
-                    Just ( Low, v ) ->
-                        (!) { model | low = v } []
-
-                    Just ( Mid, v ) ->
-                        (!) { model | mid = v } []
-
-                    Just ( High, v ) ->
-                        (!) { model | high = v } []
-
-                    Just ( Volume, v ) ->
-                        (!) { model | volume = v } []
+                    Just ( knobType, v ) ->
+                        (!) newModel [ adjustKnob knobType v ]
 
                     Nothing ->
-                        (!) model []
+                        (!) newModel []
 
         ------------------------------------
         -- Deactivate
         ------------------------------------
         DeactivateKnob ->
-            (!) { model | activeKnob = Nothing } []
+            (!)
+                { model | activeKnob = Nothing }
+                [ storeSettings model ]
 
         ------------------------------------
         -- Reset
         ------------------------------------
         ResetKnob Low ->
-            (!) { model | low = 0 } []
+            reset { model | low = 0 } Low 0
 
         ResetKnob Mid ->
-            (!) { model | mid = 0 } []
+            reset { model | mid = 0 } Mid 0
 
         ResetKnob High ->
-            (!) { model | high = 0 } []
+            reset { model | high = 0 } High 0
 
         ResetKnob Volume ->
-            (!) { model | volume = 0.5 } []
+            reset { model | volume = 0.5 } Volume 0.5
+
+
+adjustKnob : Knob -> Float -> Cmd TopLevel.Msg
+adjustKnob knobType value =
+    adjustEqualizerSetting
+        { knob = toString knobType
+        , value = value
+        }
 
 
 maxAngle : Float
 maxAngle =
     135
+
+
+reset : Model -> Knob -> Float -> ( Model, Cmd TopLevel.Msg )
+reset newModel knobType value =
+    (!) newModel [ adjustKnob knobType value, storeSettings newModel ]
+
+
+storeSettings : Model -> Cmd TopLevel.Msg
+storeSettings model =
+    storeEqualizerSettings
+        { low = model.low
+        , mid = model.mid
+        , high = model.high
+        , volume = model.volume
+        }
 
 
 

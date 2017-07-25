@@ -31,12 +31,17 @@ function initialize(params) {
   const app = Elm.App.embed(node, flags);
 
   initializePorts(app, flags);
+  initializeSettings(flags);
 }
 
 
 function initializeFlags(params) {
   return {
     settings: {
+      equalizer: Object.assign(
+        { low: 0, mid: 0, high: 0, volume: 1 },
+        loadSettings("equalizer")
+      ),
       queue: Object.assign(
         { repeat: false, shuffle: false },
         loadSettings("queue")
@@ -53,6 +58,18 @@ function initializeFlags(params) {
     sources: params.sources || null,
     tracks: params.tracks || null
   };
+}
+
+
+function initializeSettings(flags) {
+  const eq = flags.settings.equalizer;
+
+  // > Equalizer
+
+  low.gain.value      = determineNodeGainValue("Low", eq.low);
+  mid.gain.value      = determineNodeGainValue("Mid", eq.mid);
+  high.gain.value     = determineNodeGainValue("High", eq.high);
+  volume.gain.value   = determineNodeGainValue("Volume", eq.volume);
 }
 
 
@@ -113,6 +130,21 @@ function initializePorts(app, flags) {
     }
   });
 
+  // > Equalizer
+
+  app.ports.adjustEqualizerSetting.subscribe(e => {
+    let node;
+
+    switch (e.knob) {
+      case "Low"      : node = low; break;
+      case "Mid"      : node = mid; break;
+      case "High"     : node = high; break;
+      case "Volume"   : node = volume; break;
+    }
+
+    node.gain.value = determineNodeGainValue(e.knob, e.value);
+  });
+
   // > Processing
 
   app.ports.requestTags.subscribe(distantContext => {
@@ -148,6 +180,7 @@ function initializePorts(app, flags) {
   app.ports.storeTracks.subscribe(v => storeData("tracks", v));
   app.ports.storeFavourites.subscribe(v => storeData("favourites", v));
 
+  app.ports.storeEqualizerSettings.subscribe(s => saveSettings("equalizer", s));
   app.ports.storeQueueSettings.subscribe(s => saveSettings("queue", s));
   app.ports.storeTracksSettings.subscribe(s => saveSettings("tracks", s));
 
