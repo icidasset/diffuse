@@ -3,7 +3,7 @@ module Form.Styles exposing (..)
 import Css exposing (..)
 import Css.Elements exposing (form, label, input, select, svg)
 import Form.Mixins exposing (..)
-import Traits exposing (cssColor, gr, headerFont)
+import Traits exposing (cssColor, gr)
 import Variables exposing (colorDerivatives)
 
 

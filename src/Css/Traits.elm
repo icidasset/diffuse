@@ -64,11 +64,6 @@ defaultFont =
     mixin [ fontFamilies [ "Overpass", "sans-serif" ] ]
 
 
-headerFont : Mixin
-headerFont =
-    mixin [ fontFamilies [ "Montserrat", "sans-serif" ] ]
-
-
 
 -- Css / Colors
 
