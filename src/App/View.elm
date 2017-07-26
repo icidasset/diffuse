@@ -2,9 +2,10 @@ module View exposing (entry)
 
 import ContextMenu.Styles as CTS
 import Color
+import Equalizer.Touch
 import Html exposing (..)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, on)
 import Html.Lazy
 import Material.Icons.Action
 import Material.Icons.Alert
@@ -36,7 +37,20 @@ import Tracks.View as Tracks
 entry : Model -> Html Msg
 entry model =
     div
-        [ onClick ClickAway ]
+        (-- ++ Equalizer Events
+         -- TODO: Find a way to make these into subscriptions
+         --       (like with the mouse events)
+         case model.equalizer.activeKnob of
+            Just _ ->
+                [ onClick ClickAway
+                , on "touchmove" Equalizer.Touch.move
+                , on "touchend" Equalizer.Touch.end
+                ]
+
+            Nothing ->
+                [ onClick ClickAway
+                ]
+        )
         [ --
           -- {override} Loading
           --

@@ -70,8 +70,9 @@ styles =
     -- EQ
     --
     , class Equalizer
-        [ border3 (px 1) solid (cssColorOpac 0.05 colors.base00)
-        , displayFlex
+        [ displayFlex
+        , flexWrap wrap
+        , justifyContent center
         , marginTop (gr -1)
         ]
 
@@ -80,14 +81,11 @@ styles =
     --
     , class KnobColumn
         [ alignItems center
-        , borderRight3 (px 1) solid (cssColorOpac 0.05 colors.base00)
+        , border3 (px 1) solid (hex "#E6EAEB")
         , displayFlex
         , flexDirection column
+        , margin4 (px -1) zero zero (px -1)
         , padding3 (gr 3) (gr 8) (gr 2)
-
-        --
-        , lastChild
-            [ borderRight zero ]
         ]
 
     --

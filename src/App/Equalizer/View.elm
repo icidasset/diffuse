@@ -1,6 +1,7 @@
 module Equalizer.View exposing (entry)
 
 import Equalizer.State exposing (maxAngle)
+import Equalizer.Touch
 import Equalizer.Types exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
@@ -119,6 +120,12 @@ knob_ knobType value =
                 , stopPropagation = True
                 }
                 (Decode.map (ActivateKnob knobType) Mouse.position)
+            , onWithOptions
+                "touchstart"
+                { preventDefault = True
+                , stopPropagation = True
+                }
+                (Equalizer.Touch.start knobType)
             ]
             [ div
                 [ cssClass KnobLayerA ]

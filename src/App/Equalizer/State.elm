@@ -4,6 +4,7 @@ import Equalizer.Ports exposing (..)
 import Equalizer.Types exposing (..)
 import Mouse
 import Navigation
+import Response.Ext exposing (do)
 import Types as TopLevel
 
 
@@ -110,10 +111,21 @@ update msg model =
         ------------------------------------
         -- Deactivate
         ------------------------------------
-        DeactivateKnob ->
-            (!)
-                { model | activeKnob = Nothing }
-                [ storeSettings model ]
+        DeactivateKnob mousePos ->
+            if mousePos == model.startingMousePosition then
+                (!)
+                    { model | activeKnob = Nothing }
+                    [ case model.activeKnob of
+                        Just k ->
+                            do (TopLevel.EqualizerMsg <| ResetKnob k)
+
+                        Nothing ->
+                            Cmd.none
+                    ]
+            else
+                (!)
+                    { model | activeKnob = Nothing }
+                    [ storeSettings model ]
 
         ------------------------------------
         -- Reset
@@ -169,7 +181,7 @@ subscriptions model =
         Just _ ->
             Sub.batch
                 [ Mouse.moves AdjustKnob
-                , Mouse.ups (always DeactivateKnob)
+                , Mouse.ups DeactivateKnob
                 ]
 
         Nothing ->

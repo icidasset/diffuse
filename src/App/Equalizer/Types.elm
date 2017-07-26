@@ -9,7 +9,7 @@ import Mouse
 type Msg
     = ActivateKnob Knob Mouse.Position
     | AdjustKnob Mouse.Position
-    | DeactivateKnob
+    | DeactivateKnob Mouse.Position
     | ResetKnob Knob
 
 
