@@ -7,7 +7,7 @@
  */
 
 
-const VERSION_KEY = "ongaku-ryoho-v1_0.json";
+const VERSION_KEY = "ongaku-ryoho-v1_0_1.json";
 const METHOD_KEY  = "authMethod";
 const METHODS     = { LOCAL: "LOCAL", BLOCKSTACK: "BLOCKSTACK" };
 const M           = {};
@@ -77,14 +77,12 @@ M.LOCAL = {
   // Data
 
   getData() {
-    this.schema = {
-      favourites: 'artist,title',
-      sources: 'id,data,enabled,service',
-      tracks: 'id,path,sourceId,tags'
-    };
-
     this.db = new Dexie(VERSION_KEY);
-    this.db.version(1).stores(this.schema);
+    this.db.version(1).stores({
+      favourites: '++, artist, title',
+      sources: 'id, data, enabled, service',
+      tracks: 'id, path, sourceId, tags'
+    });
 
     return Promise.all([
       this.db.favourites.toArray(),
@@ -110,15 +108,23 @@ M.LOCAL = {
   storeData(data) {
     const errHandler = err => console.error(err);
 
-    return Object.keys(data).map(
-      key => {
-        const items = (data[key] || []).slice();
-        return _ => this.db[key].bulkPut(items);
-      }
-    ).reduce(
-      (acc, fn) => acc.then(fn).catch(errHandler),
-      Promise.resolve()
-    );
+    Promise.all([
+      this.db.favourites.clear(),
+      this.db.sources.clear(),
+      this.db.tracks.clear()
+
+    ]).then(_ => {
+      return Object.keys(data).map(
+        key => {
+          const items = (data[key] || []).slice();
+          return _ => this.db[key].bulkPut(items);
+        }
+      ).reduce(
+        (acc, fn) => acc.then(fn).catch(errHandler),
+        Promise.resolve()
+      );
+
+    });
   },
 
   userData() {
