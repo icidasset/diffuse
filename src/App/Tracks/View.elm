@@ -198,13 +198,13 @@ msgNoSources : Html TopLevel.Msg
 msgNoSources =
     a
         [ cssClass Important
-        , href "/sources/new"
+        , href "/sources"
         , onWithOptions
             "click"
             { stopPropagation = False
             , preventDefault = True
             }
-            ("/sources/new"
+            ("/sources"
                 |> GoToUrl
                 |> RoutingMsg
                 |> Decode.succeed
