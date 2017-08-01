@@ -136,7 +136,7 @@ type Msg
     | ToggleFavourite String
     | ToggleFavouritesOnly
       -- UI
-    | IdentifyActiveTrack (Maybe Track)
+    | SetActiveTrackId (Maybe Track)
     | ScrollThroughTable ScrollPos
     | ScrollToActiveTrack Track
 
@@ -151,7 +151,8 @@ type alias Model =
 
 type alias InternalModel extension =
     { extension
-        | collection : Collection
+        | activeTrackId : Maybe TrackId
+        , collection : Collection
         , enabledSourceIds : List SourceId
         , exposedStep : Int
         , favourites : List Favourite

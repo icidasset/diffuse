@@ -174,7 +174,7 @@ update msg model =
                 -- Identify
                 , maybeQueueItem
                     |> Maybe.map .track
-                    |> Tracks.Types.IdentifyActiveTrack
+                    |> Tracks.Types.SetActiveTrackId
                     |> TracksMsg
                     |> do
                 ]

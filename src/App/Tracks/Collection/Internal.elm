@@ -48,7 +48,7 @@ identify ( model, collection ) =
     let
         ( identifiedUnsorted, missingFavourites ) =
             List.foldl
-                (identifier model.favourites)
+                (identifier model.favourites model.activeTrackId)
                 ( [], model.favourites )
                 collection.untouched
     in
@@ -61,10 +61,11 @@ identify ( model, collection ) =
 
 identifier :
     List Favourite
+    -> Maybe TrackId
     -> Track
     -> ( List IdentifiedTrack, List Favourite )
     -> ( List IdentifiedTrack, List Favourite )
-identifier favourites track ( acc, missingFavourites ) =
+identifier favourites activeTrackId track ( acc, missingFavourites ) =
     let
         lartist =
             String.toLower track.tags.artist
@@ -72,15 +73,20 @@ identifier favourites track ( acc, missingFavourites ) =
         ltitle =
             String.toLower track.tags.title
 
+        isNowPlaying =
+            Just track.id == activeTrackId
+
         idx =
             List.findIndex (Favourites.matcher lartist ltitle) missingFavourites
     in
         case idx of
+            -- A favourite
+            --
             Just i ->
                 ( acc
                     ++ [ ( { isFavourite = True
                            , isMissing = False
-                           , isNowPlaying = False
+                           , isNowPlaying = isNowPlaying
                            }
                          , track
                          )
@@ -88,11 +94,13 @@ identifier favourites track ( acc, missingFavourites ) =
                 , List.removeAt i missingFavourites
                 )
 
+            -- Not a favourite
+            --
             Nothing ->
                 ( acc
                     ++ [ ( { isFavourite = False
                            , isMissing = False
-                           , isNowPlaying = False
+                           , isNowPlaying = isNowPlaying
                            }
                          , track
                          )

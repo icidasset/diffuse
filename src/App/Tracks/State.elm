@@ -22,7 +22,8 @@ import Users.Ports
 
 initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
-    { collection = emptyCollection
+    { activeTrackId = Nothing
+    , collection = emptyCollection
     , enabledSourceIds = decodeEnabledSourceIds flags
     , exposedStep = 1
     , favourites = decodeFavourites (Maybe.withDefault [] flags.favourites)
@@ -212,7 +213,7 @@ update msg model =
         ------------------------------------
         -- Identify the active track
         --
-        IdentifyActiveTrack maybeTrack ->
+        SetActiveTrackId maybeTrack ->
             let
                 mapFn =
                     case maybeTrack of
@@ -222,7 +223,7 @@ update msg model =
                         Nothing ->
                             \( i, t ) -> ( { i | isNowPlaying = False }, t )
             in
-                model
+                { model | activeTrackId = Maybe.map .id maybeTrack }
                     |> Collection.makeParcel
                     |> Collection.remap (List.map mapFn)
                     |> Collection.set
