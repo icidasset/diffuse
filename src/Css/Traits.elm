@@ -59,9 +59,9 @@ queryLarge =
 -- Css / Mixins
 
 
-defaultFont : Mixin
+defaultFont : Style
 defaultFont =
-    mixin [ fontFamilies [ "Overpass", "sans-serif" ] ]
+    batch [ fontFamilies [ "Overpass", "sans-serif" ] ]
 
 
 

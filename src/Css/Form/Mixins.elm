@@ -6,16 +6,16 @@ import Traits exposing (cssColor, defaultFont, gr)
 import Variables exposing (borderRadiuses, colorDerivatives)
 
 
-boxStyles : Mixin
+boxStyles : Style
 boxStyles =
-    mixin
+    batch
         [ marginBottom (gr 6)
         ]
 
 
-inputStyles : Mixin
+inputStyles : Style
 inputStyles =
-    mixin
+    batch
         [ defaultFont
 
         --
@@ -36,9 +36,9 @@ inputStyles =
         ]
 
 
-singleLineInputStyles : Mixin
+singleLineInputStyles : Style
 singleLineInputStyles =
-    mixin
+    batch
         [ height (gr 7)
         , lineHeight (gr 7)
         , padding2 zero (gr 2)

@@ -180,7 +180,7 @@ styles =
     --
     , let
         pseudo =
-            mixin
+            batch
                 [ backgroundColor (cssColorOpac (knobOpac + 0.1) knobColor)
                 , bottom zero
                 , height (px 9)

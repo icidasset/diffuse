@@ -28,11 +28,11 @@
         "evancz/url-parser": "2.0.1 <= v < 3.0.0",
         "justinmimbs/elm-date-extra": "2.0.3 <= v < 3.0.0",
         "lukewestby/elm-string-interpolate": "1.0.1 <= v < 2.0.0",
-        "rtfeldman/elm-css": "8.0.0 <= v < 10.0.0",
+        "rtfeldman/elm-css": "9.1.0 <= v < 10.0.0",
         "rtfeldman/elm-css-helpers": "2.1.0 <= v < 3.0.0",
         "rtfeldman/elm-css-util": "1.0.2 <= v < 2.0.0",
         "rtfeldman/hex": "1.0.0 <= v < 2.0.0",
-        "scottcorgan/elm-css-normalize": "1.1.7 <= v < 2.0.0",
+        "scottcorgan/elm-css-normalize": "1.1.8 <= v < 2.0.0",
         "spisemisu/elm-sha": "1.0.5 <= v < 1.0.6",
         "spisemisu/elm-utf8": "1.0.1 <= v < 1.0.2",
         "truqu/elm-base64": "1.0.5 <= v < 1.0.6"
