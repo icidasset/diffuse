@@ -145,7 +145,8 @@ styles =
                 , width (gr 4)
                 ]
             , (th << toa << descendants << toa << svg)
-                [ position absolute
+                [ fontSize (Css.rem 1)
+                , position absolute
                 , right (gr 1)
                 , top (pct 50)
                 , transform (translateY (pct -50))
