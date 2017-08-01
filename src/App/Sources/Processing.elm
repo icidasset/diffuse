@@ -4,9 +4,7 @@ module Sources.Processing
         , takeTreeStep
         , takeTagsStep
           --
-        , decodeError
         , findTagsContextSource
-        , makeTrackUrl
         , tracksFromTagsContext
         )
 
@@ -31,14 +29,9 @@ import List.Extra as List exposing (remove)
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
 import Sources.Ports as Ports
+import Sources.Services as Services
 import Sources.Types exposing (..)
 import Tracks.Types exposing (TagUrls, Track, makeTrack)
-
-
--- Services
-
-import Sources.Services.AmazonS3 as AmazonS3
-import Sources.Services.Ipfs as Ipfs
 
 
 -- Settings
@@ -57,7 +50,7 @@ tagsBatchSize =
 
 
 
--- {public} Steps
+-- {public} 1st step
 
 
 takeFirstStep : Date -> Source -> Cmd Msg
@@ -72,45 +65,19 @@ takeFirstStep currentDate source =
         makeTree initialContext currentDate
 
 
-takeTreeStep : ProcessingContext -> String -> List Track -> CmdWithTimestamp
+
+-- {public} 2nd step
+
+
+takeTreeStep : ProcessingContext -> String -> List Track -> Date -> Cmd Msg
 takeTreeStep context response associatedTracks currentDate =
-    let
-        newContext =
-            handleTreeResponse context response
-    in
-        case newContext.treeMarker of
-            TheBeginning ->
-                Cmd.none
+    context
+        |> handleTreeResponse response
+        |> intoTreeCommand associatedTracks currentDate
 
-            InProgress _ ->
-                makeTree newContext currentDate
 
-            TheEnd ->
-                let
-                    filteredFiles =
-                        case newContext.source.service of
-                            AmazonS3 ->
-                                AmazonS3.postProcessTree newContext.filePaths
 
-                            Ipfs ->
-                                Ipfs.postProcessTree newContext.filePaths
-
-                    postContext =
-                        { newContext | filePaths = filteredFiles }
-
-                    ( pathsLeft, pathsToRemove, _ ) =
-                        separateTree postContext associatedTracks
-                in
-                    Cmd.batch
-                        [ postContext
-                            |> selectNonExisting pathsLeft
-                            |> processingContextToTagsContext
-                            |> ProcessTagsStep
-                            |> do
-                        , pathsToRemove
-                            |> ProcessTreeStepRemoveTracks context.source.id
-                            |> do
-                        ]
+-- {public} 3rd step
 
 
 takeTagsStep : Date -> ProcessingContextForTags -> Source -> Maybe (Cmd Msg)
@@ -136,16 +103,11 @@ takeTagsStep currentDate tagsCtx source =
 -- Tree
 
 
-handleTreeResponse : ProcessingContext -> String -> ProcessingContext
-handleTreeResponse context response =
+handleTreeResponse : String -> ProcessingContext -> ProcessingContext
+handleTreeResponse response context =
     let
         parsingFunc =
-            case context.source.service of
-                AmazonS3 ->
-                    AmazonS3.parseTreeResponse
-
-                Ipfs ->
-                    Ipfs.parseTreeResponse
+            Services.parseTreeResponse context.source.service
 
         parsedResponse =
             parsingFunc response context.treeMarker
@@ -156,18 +118,54 @@ handleTreeResponse context response =
         }
 
 
+intoTreeCommand : List Track -> Date -> ProcessingContext -> Cmd Msg
+intoTreeCommand associatedTracks currentDate context =
+    case context.treeMarker of
+        TheBeginning ->
+            Cmd.none
+
+        -- Still busy building the tree,
+        -- carry on.
+        --
+        InProgress _ ->
+            makeTree context currentDate
+
+        -- The tree's been build,
+        -- let's continue to the next step.
+        --
+        TheEnd ->
+            let
+                filteredFiles =
+                    Services.postProcessTree context.source.service context.filePaths
+
+                postContext =
+                    { context | filePaths = filteredFiles }
+
+                ( pathsAlreadyExist, pathsToRemove, _ ) =
+                    separateTree postContext associatedTracks
+            in
+                Cmd.batch
+                    [ -- Get tags from tracks
+                      postContext
+                        |> selectNonExisting pathsAlreadyExist
+                        |> processingContextToTagsContext
+                        |> ProcessTagsStep
+                        |> do
+
+                    -- Remove tracks
+                    , pathsToRemove
+                        |> ProcessTreeStepRemoveTracks context.source.id
+                        |> do
+                    ]
+
+
 makeTree : ProcessingContext -> CmdWithTimestamp
 makeTree context =
-    let
-        fn =
-            case context.source.service of
-                AmazonS3 ->
-                    AmazonS3.makeTree
-
-                Ipfs ->
-                    Ipfs.makeTree
-    in
-        fn context.source.data context.treeMarker (ProcessTreeStep context)
+    Services.makeTree
+        context.source.service
+        context.source.data
+        context.treeMarker
+        (ProcessTreeStep context)
 
 
 separateTree : ProcessingContext -> List Track -> ( List String, List String, List String )
@@ -187,30 +185,6 @@ separateTree context tracks =
         tracks
 
 
-
--- Tags
-
-
-makeTrackUrls : Date -> Source -> List String -> List TagUrls
-makeTrackUrls currentDate source filePaths =
-    let
-        maker =
-            case source.service of
-                AmazonS3 ->
-                    AmazonS3.makeTrackUrl
-
-                Ipfs ->
-                    Ipfs.makeTrackUrl
-
-        mapFn =
-            \path ->
-                { getUrl = maker currentDate source.data Get path
-                , headUrl = maker currentDate source.data Head path
-                }
-    in
-        List.map mapFn filePaths
-
-
 selectNonExisting : List String -> ProcessingContext -> ProcessingContext
 selectNonExisting existingPaths context =
     let
@@ -223,32 +197,31 @@ selectNonExisting existingPaths context =
 
 
 
--- {Public} Utils
+-- Tags
 
 
-decodeError : Source -> String -> String
-decodeError source =
-    case source.service of
-        AmazonS3 ->
-            AmazonS3.parseErrorResponse
+makeTrackUrls : Date -> Source -> List String -> List TagUrls
+makeTrackUrls currentDate source filePaths =
+    let
+        maker =
+            Services.makeTrackUrl source.service
 
-        Ipfs ->
-            Ipfs.parseErrorResponse
+        mapFn =
+            \path ->
+                { getUrl = maker currentDate source.data Get path
+                , headUrl = maker currentDate source.data Head path
+                }
+    in
+        List.map mapFn filePaths
+
+
+
+-- {public} Utils
 
 
 findTagsContextSource : ProcessingContextForTags -> List Source -> Maybe Source
 findTagsContextSource tagsContext =
     List.find (.id >> (==) tagsContext.sourceId)
-
-
-makeTrackUrl : Date -> Source -> String -> String
-makeTrackUrl currentDate source filePath =
-    case source.service of
-        AmazonS3 ->
-            AmazonS3.makeTrackUrl currentDate source.data Get filePath
-
-        Ipfs ->
-            Ipfs.makeTrackUrl currentDate source.data Get filePath
 
 
 tracksFromTagsContext : ProcessingContextForTags -> List Track
@@ -261,7 +234,7 @@ tracksFromTagsContext context =
 
 
 
--- {Private} Utils
+-- {private} Utils
 
 
 processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags

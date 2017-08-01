@@ -120,16 +120,3 @@ type alias Model =
 type Page
     = Index
     | New
-
-
-
--- 🌱
-
-
-makeSource : Service -> SourceData -> Source
-makeSource service data =
-    { id = "change_me_please"
-    , data = data
-    , enabled = True
-    , service = service
-    }

@@ -10,16 +10,11 @@ import Navigation
 import Response.Ext exposing (do)
 import Sources.Ports as Ports
 import Sources.Processing as Processing
+import Sources.Services as Services exposing (makeSource)
 import Sources.Types exposing (..)
 import Sources.Utils exposing (..)
 import Tracks.Types exposing (emptyTrack)
 import Types as TopLevel
-
-
--- Services
-
-import Sources.Services.AmazonS3 as AmazonS3
-import Sources.Services.Ipfs as Ipfs
 
 
 -- 💧
@@ -42,7 +37,7 @@ initialCommands =
 
 initialSource : Source
 initialSource =
-    makeSource AmazonS3 AmazonS3.initialData
+    makeSource AmazonS3 (Services.initialData AmazonS3)
 
 
 
@@ -134,6 +129,9 @@ update msg model =
                     [ Processing.takeTreeStep ctx resp associatedTracks model.timestamp ]
                     []
 
+        --
+        -- Error
+        --
         ProcessTreeStep ctx (Err err) ->
             let
                 publicError =
@@ -145,7 +143,7 @@ update msg model =
                             "Source did not respond (timeout)"
 
                         BadStatus response ->
-                            Processing.decodeError ctx.source response.body
+                            Services.parseErrorResponse ctx.source.service response.body
 
                         _ ->
                             toString err
@@ -158,6 +156,9 @@ update msg model =
                     [ do ProcessNextInLine ]
                     []
 
+        --
+        -- Remove tracks
+        --
         ProcessTreeStepRemoveTracks sourceId filePaths ->
             ($)
                 model
@@ -212,6 +213,9 @@ update msg model =
         ------------------------------------
         -- Forms
         ------------------------------------
+        --
+        -- Set
+        --
         SetNewSourceProperty source key value ->
             let
                 newSource =
@@ -219,21 +223,22 @@ update msg model =
             in
                 (!) { model | newSource = newSource } []
 
+        --
+        -- Change
+        --
         SetNewSourceType typeString ->
             let
+                service =
+                    Services.keyToType typeString
+
                 newSource =
-                    case typeString of
-                        "AmazonS3" ->
-                            makeSource AmazonS3 AmazonS3.initialData
-
-                        "Ipfs" ->
-                            makeSource Ipfs Ipfs.initialData
-
-                        _ ->
-                            initialSource
+                    makeSource service (Services.initialData service)
             in
                 (!) { model | newSource = newSource } []
 
+        --
+        -- Submit
+        --
         SubmitNewSourceForm ->
             let
                 ns =
@@ -243,7 +248,7 @@ update msg model =
                     { ns | data = Dict.map (always String.trim) ns.data }
 
                 newCollection =
-                    setProperSourceId model newSource :: model.collection
+                    (setProperSourceId model newSource) :: model.collection
             in
                 ($)
                     { model

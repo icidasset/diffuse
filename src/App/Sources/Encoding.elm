@@ -6,6 +6,7 @@ module Sources.Encoding exposing (..)
 import Dict
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Sources.Services as Services
 import Sources.Types exposing (..)
 
 
@@ -54,17 +55,4 @@ decoder =
 
 serviceDecoder : Decode.Decoder Service
 serviceDecoder =
-    Decode.map serviceStringToType Decode.string
-
-
-serviceStringToType : String -> Service
-serviceStringToType str =
-    case str of
-        "AmazonS3" ->
-            AmazonS3
-
-        "Ipfs" ->
-            Ipfs
-
-        _ ->
-            AmazonS3
+    Decode.map Services.keyToType Decode.string

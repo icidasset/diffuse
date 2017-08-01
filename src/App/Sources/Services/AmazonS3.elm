@@ -12,10 +12,10 @@ import Date exposing (Date)
 import Dict
 import Http
 import Regex
+import Sources.Pick
 import Sources.Services.AmazonS3.Parser as Parser
 import Sources.Services.AmazonS3.Presign exposing (..)
 import Sources.Types exposing (..)
-import Sources.Utils
 import Time
 
 
@@ -155,4 +155,4 @@ parseErrorResponse =
 -}
 postProcessTree : List String -> List String
 postProcessTree =
-    Sources.Utils.selectMusicFiles
+    Sources.Pick.selectMusicFiles

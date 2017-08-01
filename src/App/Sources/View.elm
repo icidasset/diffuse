@@ -17,6 +17,7 @@ import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Navigation.View as Navigation
 import Routing.Types exposing (Msg(..))
+import Sources.Services as Services
 import Sources.Types as Sources exposing (..)
 import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass)
@@ -28,12 +29,6 @@ import Variables exposing (colorDerivatives)
 import Form.Styles as FormStyles
 import List.Styles exposing (Classes(..))
 import Styles exposing (Classes(Button, ContentBox, InsulationContent, Intro))
-
-
--- Services
-
-import Sources.Services.AmazonS3 as AmazonS3
-import Sources.Services.Ipfs as Ipfs
 
 
 -- 🍯
@@ -289,9 +284,7 @@ pageNewForm newSource =
                             ]
                             [ text labe ]
                     )
-                    [ ( "AmazonS3", "Amazon S3" )
-                    , ( "Ipfs", "IPFS" )
-                    ]
+                    (Services.labels)
                 )
             , Icons.expand_more (Color.greyscale 0.325) 20
             ]
@@ -350,9 +343,4 @@ propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
 
 renderSourceProperties : Source -> List (Html Sources.Msg)
 renderSourceProperties source =
-    case source.service of
-        AmazonS3 ->
-            List.map (propertyRenderer source) AmazonS3.properties
-
-        Ipfs ->
-            List.map (propertyRenderer source) Ipfs.properties
+    List.map (propertyRenderer source) (Services.properties source.service)

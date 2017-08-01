@@ -2,7 +2,6 @@ module Sources.Utils exposing (..)
 
 import Date
 import Maybe.Extra as Maybe
-import Regex
 import Response.Ext exposing (do)
 import Sources.Encoding
 import Sources.Types exposing (..)
@@ -59,17 +58,3 @@ updateEnabledSourceIds collection =
         |> Tracks.Types.SetEnabledSourceIds
         |> TopLevel.TracksMsg
         |> do
-
-
-
--- 🌱
-
-
-isMusicFile : String -> Bool
-isMusicFile =
-    Regex.contains (Regex.regex "\\.(mp3|mp4|m4a)$")
-
-
-selectMusicFiles : List String -> List String
-selectMusicFiles =
-    List.filter isMusicFile

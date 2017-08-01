@@ -4,7 +4,8 @@ import Date exposing (Date)
 import List.Extra as List
 import Queue.Types exposing (..)
 import Sources.Processing
-import Sources.Types exposing (Source)
+import Sources.Services
+import Sources.Types exposing (HttpMethod(..), Source)
 import Tracks.Types exposing (Track)
 import Types as TopLevel exposing (Illumination)
 import Utils
@@ -47,4 +48,9 @@ findSource wantedSourceId source =
 
 makeTrackUrl : Date -> Track -> Source -> String
 makeTrackUrl timestamp track source =
-    Sources.Processing.makeTrackUrl timestamp source track.path
+    Sources.Services.makeTrackUrl
+        source.service
+        timestamp
+        source.data
+        Get
+        track.path
