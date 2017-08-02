@@ -6,7 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed
-import Html.Lazy exposing (lazy, lazy3)
+import Html.Lazy exposing (lazy, lazy2, lazy3)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Action as Icons
@@ -20,7 +20,7 @@ import Routing.Types exposing (Msg(..))
 import Sources.Services as Services
 import Sources.Types as Sources exposing (..)
 import Types as TopLevel exposing (Model, Msg(..))
-import Utils exposing (cssClass)
+import Utils exposing (..)
 import Variables exposing (colorDerivatives)
 
 
@@ -28,7 +28,7 @@ import Variables exposing (colorDerivatives)
 
 import Form.Styles as FormStyles
 import List.Styles exposing (Classes(..))
-import Styles exposing (Classes(Button, ContentBox, InsulationContent, Intro))
+import Styles exposing (Classes(..))
 
 
 -- 🍯
@@ -45,7 +45,9 @@ entry page model =
                 model.sources.processingErrors
 
         New ->
-            lazy pageNew model.sources.newSource
+            lazy
+                pageNew
+                model.sources.form
 
 
 
@@ -192,56 +194,231 @@ renderSource index ( source, isProcessing, processingError ) =
 -- {Page} New
 
 
-pageNew : Source -> Html TopLevel.Msg
-pageNew newSource =
+pageNew : Sources.Form -> Html TopLevel.Msg
+pageNew sForm =
     div
-        [ cssClass InsulationContent ]
-        [ ------------------------------------
-          -- Navigation
-          ------------------------------------
-          Navigation.inside
-            [ ( span
-                    []
-                    [ Icons.list colorDerivatives.text 16
-                    , label [] [ text "Go to index" ]
-                    ]
-              , "/sources"
-              )
+        [ cssClasses
+            [ InsulationContent
+            , InsulationFlexContent
             ]
-
-        ------------------------------------
-        -- Form
-        ------------------------------------
-        , Html.map SourcesMsg (pageNewForm newSource)
         ]
+        (case sForm of
+            NewForm step source ->
+                [ ------------------------------------
+                  -- Navigation
+                  ------------------------------------
+                  Navigation.insideCustom
+                    (case step of
+                        1 ->
+                            [ ( span
+                                    []
+                                    [ Icons.list colorDerivatives.text 16
+                                    , label [] [ text "" ]
+                                    ]
+                              , RoutingMsg (GoToUrl "/sources")
+                              )
+                            ]
+
+                        _ ->
+                            [ ( span
+                                    []
+                                    [ Icons.arrow_back colorDerivatives.text 16
+                                    , label [] [ text "Take a step back" ]
+                                    ]
+                              , SourcesMsg (AssignFormStep (step - 1))
+                              )
+                            ]
+                    )
+
+                ------------------------------------
+                -- Form
+                ------------------------------------
+                , Html.map
+                    SourcesMsg
+                    (pageNewForm step source)
+                ]
+
+            _ ->
+                [ text "Cannot use this model.form on this page" ]
+        )
 
 
-pageNewForm : Source -> Html Sources.Msg
-pageNewForm newSource =
+pageNewForm : Int -> Source -> Html Sources.Msg
+pageNewForm step source =
     Html.form
-        [ cssClass ContentBox
-        , onSubmit Sources.SubmitNewSourceForm
-        ]
-        [ -- Title
-          --
-          h1
-            []
-            [ text "New source" ]
+        [ cssClasses
+            [ InsulationContent
+            , InsulationFlexContent
+            , InsulationCentered
+            ]
+        , style
+            [ ( "position", "relative" )
+            , ( "text-align", "center" )
+            ]
+        , onSubmit
+            (case step of
+                1 ->
+                    Sources.AssignFormStep 2
 
-        -- Intro
-        --
-        , p
-            [ cssClass Styles.Intro ]
-            [ text "Choose a type of source, fill in its credentials and add it."
+                2 ->
+                    Sources.AssignFormStep 3
+
+                3 ->
+                    Sources.SubmitForm
+
+                _ ->
+                    Sources.AssignFormStep 1
+            )
+        ]
+        [ div
+            [ cssClasses
+                [ InsulationFlexContent ]
+            , style
+                [ ( "position", "relative" )
+                , ( "width", "100%" )
+                , ( "z-index", "9" )
+                ]
+            ]
+            [ div
+                [ cssClasses
+                    [ InsulationContent
+                    , InsulationCentered
+                    , ContentBox
+                    ]
+                , style
+                    [ ( "padding-top", "2.25rem" )
+                    ]
+                ]
+                [ case step of
+                    1 ->
+                        pageNewStep1 source step
+
+                    2 ->
+                        pageNewStep2 source step
+
+                    3 ->
+                        pageNewStep3 source step
+
+                    _ ->
+                        text ""
+                ]
+            ]
+        , div
+            [ cssClass LogoBackdrop ]
+            []
+        ]
+
+
+pageNewStep1 : Source -> Int -> Html Sources.Msg
+pageNewStep1 source step =
+    div
+        []
+        [ h2
+            []
+            [ text "Where is your music stored?" ]
+        , div
+            [ cssClass FormStyles.SelectBox
+            , style
+                [ ( "max-width", "350px" )
+                , ( "width", "100%" )
+                ]
+            ]
+            [ select
+                [ onInput AssignFormService ]
+                (List.map
+                    (\( typStr, labe ) ->
+                        option
+                            [ selected <| (toString source.service) == typStr
+                            , value typStr
+                            ]
+                            [ text labe ]
+                    )
+                    (Services.labels)
+                )
+            , Icons.expand_more (Color.greyscale 0.325) 20
+            ]
+        , button
+            [ cssClass Button, type_ "submit" ]
+            [ Icons.arrow_forward Color.black 16 ]
+        ]
+
+
+pageNewStep2 : Source -> Int -> Html Sources.Msg
+pageNewStep2 source step =
+    div
+        []
+        [ h3
+            []
+            [ text "Where exactly?" ]
+        , div
+            [ cssClasses
+                [ Columns ]
+            , style
+                [ ( "text-align", "left" ) ]
+            ]
+            (renderSourceProperties source)
+        , br
+            []
+            []
+        , br
+            []
+            []
+        , button
+            [ cssClass Button, type_ "submit" ]
+            [ Icons.arrow_forward Color.black 16 ]
+        ]
+
+
+pageNewStep3 : Source -> Int -> Html Sources.Msg
+pageNewStep3 source step =
+    div
+        []
+        [ h2
+            []
+            [ text "One last thing" ]
+        , div
+            [ style
+                [ ( "margin", "0 auto" )
+                , ( "max-width", "420px" )
+                , ( "width", "100%" )
+                ]
+            ]
+            [ label
+                []
+                [ text "What are we going to call this source?" ]
             , br
                 []
                 []
+            , div
+                [ cssClass FormStyles.InputBox ]
+                [ input
+                    [ name "name"
+                    , onInput (Sources.AssignFormProperty "name")
+                    , placeholder
+                        (source.service
+                            |> Services.properties
+                            |> List.reverse
+                            |> List.head
+                            |> Maybe.map (\( _, l, _, _ ) -> l)
+                            |> Maybe.withDefault "Label"
+                        )
+                    , required True
+                    , type_ "text"
+                    , value
+                        (source.data
+                            |> Dict.get "name"
+                            |> Maybe.withDefault ""
+                        )
+                    ]
+                    []
+                ]
+            ]
+        , div
+            [ cssClass Styles.Intro ]
+            [ Icons.warning colorDerivatives.text 16
             , strong
                 []
-                [ text """
-                    Make sure CORS is enabled for IPFS and Amazon S3 repositories.
-                  """
-                ]
+                [ text "Make sure CORS is enabled" ]
             , br
                 []
                 []
@@ -251,58 +428,10 @@ pageNewForm newSource =
                 , target "blank"
                 ]
                 [ text "here" ]
-            , text "."
-            , br
-                []
-                []
-            , br
-                []
-                []
-            , Icons.warning colorDerivatives.text 16
-            , text "In order to use IPFS you currently must use "
-            , a [ href "https://github.com/icidasset/go-ipfs" ] [ text "my fork" ]
-            , text ", I'm still waiting for "
-            , a [ href "https://github.com/ipfs/go-ipfs/pull/4073" ] [ text "my pull-request" ]
-            , text " to be merged."
             ]
-
-        -- Select the type of the source
-        --
-        , label
-            []
-            [ text "Source type/service" ]
-        , div
-            [ cssClass FormStyles.SelectBox ]
-            [ select
-                [ onInput SetNewSourceType
-                ]
-                (List.map
-                    (\( typStr, labe ) ->
-                        option
-                            [ selected <| (toString newSource.service) == typStr
-                            , value typStr
-                            ]
-                            [ text labe ]
-                    )
-                    (Services.labels)
-                )
-            , Icons.expand_more (Color.greyscale 0.325) 20
-            ]
-
-        -- Source properties
-        --
-        , div
-            []
-            (renderSourceProperties newSource)
-
-        -- Submit button
-        --
-        , div
-            []
-            [ button
-                [ type_ "submit" ]
-                [ text "Create source" ]
-            ]
+        , button
+            [ cssClass Button, type_ "submit" ]
+            [ text "Add source" ]
         ]
 
 
@@ -321,7 +450,7 @@ propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
             [ cssClass FormStyles.InputBox ]
             [ input
                 [ name propKey
-                , onInput (Sources.SetNewSourceProperty source propKey)
+                , onInput (Sources.AssignFormProperty propKey)
                 , placeholder propPlaceholder
                 , required True
                 , type_
@@ -343,4 +472,9 @@ propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
 
 renderSourceProperties : Source -> List (Html Sources.Msg)
 renderSourceProperties source =
-    List.map (propertyRenderer source) (Services.properties source.service)
+    source.service
+        |> Services.properties
+        |> List.reverse
+        |> List.drop 1
+        |> List.reverse
+        |> List.map (propertyRenderer source)

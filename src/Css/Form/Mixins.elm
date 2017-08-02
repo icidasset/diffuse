@@ -9,7 +9,7 @@ import Variables exposing (borderRadiuses, colorDerivatives)
 boxStyles : Style
 boxStyles =
     batch
-        [ marginBottom (gr 6)
+        [ margin3 zero auto (gr 6)
         ]
 
 
@@ -30,8 +30,7 @@ inputStyles =
 
         --
         , focus
-            [ borderColor (cssColor colorDerivatives.focusBorder)
-            , outline none
+            [ outline none
             ]
         ]
 

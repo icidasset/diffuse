@@ -22,7 +22,7 @@ import Sources.Types exposing (..)
 
 defaults =
     { gateway = "http://localhost:8080"
-    , name = "IPFS source"
+    , name = "Music from IPFS"
     }
 
 

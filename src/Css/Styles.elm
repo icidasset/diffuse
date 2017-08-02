@@ -47,10 +47,13 @@ type Classes
     | BackgroundImage
     | Basic
     | Button
+    | Columns
     | ContentBox
     | Important
     | Insulation
+    | InsulationCentered
     | InsulationContent
+    | InsulationFlexContent
     | InTheMiddle
     | Intro
     | LogoBackdrop
@@ -144,10 +147,18 @@ stylesLocal =
         , position relative
         , width (pct 100)
         ]
+    , class InsulationCentered
+        [ alignItems center
+        , justifyContent center
+        ]
     , class InsulationContent
         [ flex (int 1)
         , overflowX hidden
         , overflowY auto
+        ]
+    , class InsulationFlexContent
+        [ displayFlex
+        , flexDirection column
         ]
 
     ------------------------------------------------------
@@ -188,6 +199,18 @@ stylesLocal =
         , marginTop (px -1)
         , padding3 (basem 4) (basem 10) (basem 3)
         , textTransform uppercase
+        ]
+    , h2
+        [ fontSize (Css.rem 1.4)
+        , headerFont
+        , margin3 (gr -2) zero (gr 4)
+        , textAlign center
+        ]
+    , h3
+        [ fontSize (Css.rem 1.4)
+        , headerFont
+        , margin3 (gr -2) zero (gr 6)
+        , textAlign left
         ]
     , a
         [ color inherit
@@ -249,12 +272,11 @@ stylesLocal =
         , border3
             (px 2)
             solid
-            (colors.base0B
-                |> Color.Manipulate.fadeOut 0.575
+            (colors.base08
                 |> cssColor
             )
         , borderRadius (px 3)
-        , color (cssColor colors.base0B)
+        , color (cssColor colors.base08)
         , displayFlex
         , fontWeight (int 700)
         , lineHeight (int 1)
@@ -277,7 +299,7 @@ stylesLocal =
         , backgroundSize cover
         , bottom zero
         , left zero
-        , opacity (num 0.075)
+        , opacity (num 0.05)
         , position absolute
         , right zero
         , top zero
@@ -288,7 +310,7 @@ stylesLocal =
     ------------------------------------------------------
     , (each [ class Button, button ])
         [ backgroundColor transparent
-        , border3 (px 1) solid (cssColor colorDerivatives.success)
+        , border3 (px 2) solid (cssColor colorDerivatives.success)
         , borderRadius borderRadiuses.smallElements
         , boxSizing contentBox
         , color (cssColor colorDerivatives.success)
@@ -296,7 +318,7 @@ stylesLocal =
         , display inlineBlock
         , fontFamily inherit
         , fontSize (Css.rem 0.95)
-        , fontWeight (int 600)
+        , fontWeight (int 700)
         , height (gr 6)
         , lineHeight (gr 6)
         , padding3 (px 1) (gr 2) zero
@@ -304,6 +326,18 @@ stylesLocal =
         --
         , focus
             [ outline none
+            ]
+
+        --
+        , descendants
+            [ svg
+                [ fontSize (Css.em 1.2)
+                , marginTop (px -2)
+                , verticalAlign middle
+                ]
+            , selector "g"
+                [ fill currentColor
+                ]
             ]
         ]
 
@@ -358,5 +392,20 @@ stylesLocal =
         , top zero
         , width (vw 100)
         , zIndex (int 900)
+        ]
+
+    ------------------------------------------------------
+    -- Columns
+    ------------------------------------------------------
+    , class Columns
+        [ property "columns" "2"
+        , property "column-gap" (.value (gr 8))
+
+        --
+        , children
+            [ div
+                [ property "break-inside" "avoid"
+                ]
+            ]
         ]
     ]

@@ -3,7 +3,7 @@ module Form.Styles exposing (..)
 import Css exposing (..)
 import Css.Elements exposing (form, label, input, select, svg)
 import Form.Mixins exposing (..)
-import Traits exposing (cssColor, gr)
+import Traits exposing (basem, cssColor, cssColorOpac, gr)
 import Variables exposing (colorDerivatives)
 
 
@@ -58,7 +58,8 @@ formStyles =
         --
         , descendants
             [ svg
-                [ position absolute
+                [ fontSize (basem 20)
+                , position absolute
                 , property "pointer-events" "none"
                 , right (gr 2)
                 , top (pct 50)
@@ -79,6 +80,11 @@ formStyles =
         , borderBottom3 (px 1) solid (cssColor colorDerivatives.inputBorder)
         , borderRadius zero
         , padding zero
+
+        --
+        , pseudoElement "placeholder"
+            [ color (cssColorOpac 0.375 colorDerivatives.text)
+            ]
         ]
     , class InputBox
         [ boxStyles

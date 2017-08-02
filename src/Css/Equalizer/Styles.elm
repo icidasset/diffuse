@@ -10,7 +10,6 @@ import Variables exposing (colors, colorDerivatives)
 type Classes
     = Equalizer
     | EqualizerContainer
-    | InsulationForEqualizer
     | KnobColumn
     | KnobLabel
     | KnobLayerA
@@ -60,10 +59,6 @@ styles =
                 , top zero
                 ]
             ]
-        ]
-    , class InsulationForEqualizer
-        [ displayFlex
-        , flexDirection column
         ]
 
     --

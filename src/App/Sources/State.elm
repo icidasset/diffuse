@@ -24,7 +24,7 @@ initialModel : TopLevel.ProgramFlags -> Model
 initialModel flags =
     { collection = decodeSources flags
     , isProcessing = Nothing
-    , newSource = initialSource
+    , form = NewForm 1 initialSource
     , processingErrors = []
     , timestamp = Date.fromTime 0
     }
@@ -214,35 +214,68 @@ update msg model =
         -- Forms
         ------------------------------------
         --
-        -- Set
+        -- Assign
         --
-        SetNewSourceProperty source key value ->
+        AssignFormProperty key value ->
             let
-                newSource =
-                    { source | data = Dict.insert key value source.data }
+                updateSource =
+                    \source ->
+                        { source | data = Dict.insert key value source.data }
+
+                updatedForm =
+                    case model.form of
+                        NewForm step source ->
+                            NewForm step (updateSource source)
+
+                        EditForm source ->
+                            EditForm (updateSource source)
             in
-                (!) { model | newSource = newSource } []
+                (!) { model | form = updatedForm } []
 
         --
-        -- Change
-        --
-        SetNewSourceType typeString ->
+        AssignFormService serviceKey ->
             let
                 service =
-                    Services.keyToType typeString
+                    Services.keyToType serviceKey
 
                 newSource =
                     makeSource service (Services.initialData service)
+
+                updatedForm =
+                    case model.form of
+                        NewForm step _ ->
+                            NewForm step newSource
+
+                        EditForm _ ->
+                            EditForm newSource
             in
-                (!) { model | newSource = newSource } []
+                (!) { model | form = updatedForm } []
+
+        --
+        AssignFormStep newStep ->
+            let
+                updatedForm =
+                    case model.form of
+                        NewForm _ source ->
+                            NewForm newStep source
+
+                        EditForm source ->
+                            EditForm source
+            in
+                (!) { model | form = updatedForm } []
 
         --
         -- Submit
         --
-        SubmitNewSourceForm ->
+        SubmitForm ->
             let
                 ns =
-                    model.newSource
+                    case model.form of
+                        NewForm _ source ->
+                            source
+
+                        EditForm source ->
+                            source
 
                 newSource =
                     { ns | data = Dict.map (always String.trim) ns.data }
@@ -253,11 +286,18 @@ update msg model =
                 ($)
                     { model
                         | collection = newCollection
-                        , newSource = initialSource
+                        , form = NewForm 1 initialSource
                     }
                     []
                     [ do TopLevel.ProcessSources
-                    , Navigation.newUrl "/"
+                    , Navigation.newUrl
+                        (case List.length model.collection of
+                            0 ->
+                                "/"
+
+                            _ ->
+                                "/sources"
+                        )
                     , updateEnabledSourceIds newCollection
                     , storeSources newCollection
                     ]

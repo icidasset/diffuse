@@ -204,7 +204,7 @@ msgNoSources =
             { stopPropagation = False
             , preventDefault = True
             }
-            ("/sources"
+            ("/sources/new"
                 |> GoToUrl
                 |> RoutingMsg
                 |> Decode.succeed

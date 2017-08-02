@@ -25,7 +25,7 @@ import Time
 
 defaults =
     { directoryPath = "/"
-    , name = "Amazon S3 source"
+    , name = "Music from Amazon S3"
     , region = "eu-west-1"
     }
 

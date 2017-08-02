@@ -64,6 +64,11 @@ defaultFont =
     batch [ fontFamilies [ "Overpass", "sans-serif" ] ]
 
 
+headerFont : Style
+headerFont =
+    batch [ fontFamilies [ "Montserrat", "sans-serif" ] ]
+
+
 
 -- Css / Colors
 

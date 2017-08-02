@@ -93,9 +93,10 @@ type Msg
       -- CRUD
     | Destroy SourceId
       -- Forms
-    | SetNewSourceProperty Source String String
-    | SetNewSourceType String
-    | SubmitNewSourceForm
+    | AssignFormProperty String String
+    | AssignFormService String
+    | AssignFormStep Int
+    | SubmitForm
       -- Other
     | ToggleSource Source
 
@@ -106,8 +107,8 @@ type Msg
 
 type alias Model =
     { collection : List Source
+    , form : Form
     , isProcessing : IsProcessing
-    , newSource : Source
     , processingErrors : List ( SourceId, String )
     , timestamp : Date
     }
@@ -115,6 +116,11 @@ type alias Model =
 
 
 -- Other Types
+
+
+type Form
+    = NewForm Int Source
+    | EditForm Source
 
 
 type Page
