@@ -274,7 +274,8 @@ pageNewForm step source =
             [ cssClasses
                 [ InsulationFlexContent ]
             , style
-                [ ( "position", "relative" )
+                [ ( "overflow", "hidden" )
+                , ( "position", "relative" )
                 , ( "width", "100%" )
                 , ( "z-index", "9" )
                 ]
@@ -283,24 +284,27 @@ pageNewForm step source =
                 [ cssClasses
                     [ InsulationContent
                     , InsulationCentered
-                    , ContentBox
-                    ]
-                , style
-                    [ ( "padding-top", "2.25rem" )
                     ]
                 ]
-                [ case step of
-                    1 ->
-                        pageNewStep1 source step
+                [ div
+                    [ cssClasses
+                        [ ContentBox ]
+                    , style
+                        [ ( "padding-top", "2.25rem" ) ]
+                    ]
+                    [ case step of
+                        1 ->
+                            pageNewStep1 source step
 
-                    2 ->
-                        pageNewStep2 source step
+                        2 ->
+                            pageNewStep2 source step
 
-                    3 ->
-                        pageNewStep3 source step
+                        3 ->
+                            pageNewStep3 source step
 
-                    _ ->
-                        text ""
+                        _ ->
+                            text ""
+                    ]
                 ]
             ]
         , div
@@ -357,9 +361,6 @@ pageNewStep2 source step =
                 [ ( "text-align", "left" ) ]
             ]
             (renderSourceProperties source)
-        , br
-            []
-            []
         , br
             []
             []

@@ -9,7 +9,8 @@ import Variables exposing (borderRadiuses, colorDerivatives)
 boxStyles : Style
 boxStyles =
     batch
-        [ margin3 zero auto (gr 6)
+        [ margin2 zero auto
+        , paddingBottom (gr 6)
         ]
 
 

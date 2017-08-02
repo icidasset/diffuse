@@ -404,7 +404,9 @@ stylesLocal =
         --
         , children
             [ div
-                [ property "break-inside" "avoid"
+                [ property "-webkit-column-break-inside" "avoid"
+                , property "break-inside" "avoid"
+                , property "page-break-inside" "avoid"
                 ]
             ]
         ]

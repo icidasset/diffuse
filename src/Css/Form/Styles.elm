@@ -61,8 +61,9 @@ formStyles =
                 [ fontSize (basem 20)
                 , position absolute
                 , property "pointer-events" "none"
+                , property "top" "27.5%"
+                , property "top" ("calc((100% - " ++ .value (gr 6) ++ ") / 2)")
                 , right (gr 2)
-                , top (pct 50)
                 , transforms [ translateY <| pct -50 ]
                 ]
             ]
