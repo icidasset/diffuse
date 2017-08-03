@@ -193,7 +193,7 @@ stylesLocal =
         , borderBottomRightRadius (px 4)
         , color (rgb 255 255 255)
         , display Css.table
-        , fontSize (gr 2)
+        , fontSize (Css.rem 0.725)
         , fontWeight (int 700)
         , letterSpacing (Css.em 0.0125)
         , marginBottom (gr 3)
