@@ -218,7 +218,7 @@ authButton authMethod =
             Local ->
                 [ span
                     [ style [ ( "fontSize", intoRem 17 ) ] ]
-                    [ Material.Icons.Action.lock_outline Color.white 17 ]
+                    [ Material.Icons.Action.lock Color.white 17 ]
                 , text "Sign in anonymously"
                 ]
 

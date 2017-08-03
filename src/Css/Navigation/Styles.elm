@@ -53,6 +53,9 @@ styles =
                 [ height (Css.em 1.475)
                 , width (Css.em 1.475)
                 ]
+            , selector "g"
+                [ fill currentColor
+                ]
             , class ActiveLink
                 [ colorDerivatives.text
                     |> Color.Manipulate.fadeOut 0.9

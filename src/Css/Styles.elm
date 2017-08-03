@@ -1,5 +1,6 @@
 module Styles exposing (..)
 
+import Color
 import Color.Manipulate
 import Css exposing (..)
 import Css.Elements exposing (..)
@@ -271,33 +272,45 @@ stylesLocal =
     ------------------------------------------------------
     , class AuthenticationButton
         [ alignItems center
-        , backgroundColor (rgba 0 0 0 0.45)
-        , borderRadius borderRadiuses.smallElements
-        , boxShadow4 (px 0) (px 0) (px 20) (rgba 255 255 255 0.05)
+        , border3 (px 1) solid (cssColorOpac 0.235 Color.white)
+        , borderBottomWidth zero
         , color (hex "#fff")
         , cursor pointer
         , displayFlex
-        , fontSize (Css.rem 0.95)
+        , fontSize (Css.rem 0.9)
         , height (px 22)
         , lineHeight (gr 3)
-        , marginBottom (gr 2)
-        , padding2 (gr 2) (gr 3)
-        , property "padding-top" "calc(.75rem + 1px)"
-        , width (px 220)
+        , padding2 (basem 15) (gr 3)
+        , property "padding-top" ("calc(" ++ .value (basem 15) ++ " + 1px)")
+        , width (basem 260)
 
         --
+        , firstChild
+            [ borderRadius4
+                borderRadiuses.smallElements
+                borderRadiuses.smallElements
+                zero
+                zero
+            ]
         , lastChild
-            [ marginBottom zero
+            [ borderBottomWidth (px 1)
+            , borderRadius4
+                zero
+                zero
+                borderRadiuses.smallElements
+                borderRadiuses.smallElements
+            ]
+        , hover
+            [ backgroundColor (cssColorOpac 0.25 Color.black)
             ]
 
         --
-        , descendants
+        , children
             [ span
-                [ lineHeight (Css.rem 1)
-                ]
-            , svg
-                [ marginRight (gr 1)
-                , transform none
+                [ lineHeight (Css.rem 1) ]
+            , (span << List.singleton << children << List.singleton << svg)
+                [ marginRight (gr 2)
+                , transform (translateY (px 1))
                 , width (basem 22)
                 ]
             ]
