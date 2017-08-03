@@ -161,7 +161,9 @@ authenticated children model =
             [ cssClass Shell ]
             [ -- Navigation
               --
-              Html.Lazy.lazy authenticatedNavigation model.routing.currentPage
+              Html.Lazy.lazy
+                authenticatedNavigation
+                model.routing.currentPage
 
             -- Page
             --

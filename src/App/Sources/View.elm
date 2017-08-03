@@ -62,21 +62,31 @@ pageIndex sources isProcessing processingErrors =
           -- Navigation
           ------------------------------------
           Navigation.insideCustom
-            [ ( span
+            (List.concat
+                [ -- Add
+                  [ ( span
+                        []
+                        [ Icons.add colorDerivatives.text 16
+                        , label [] [ text "Add a new source" ]
+                        ]
+                    , RoutingMsg (GoToUrl "/sources/new")
+                    )
+                  ]
+
+                -- Other
+                , if List.isEmpty sources then
                     []
-                    [ Icons.add_circle_outline colorDerivatives.text 16
-                    , label [] [ text "Add a new source" ]
+                  else
+                    [ ( span
+                            []
+                            [ Icons.sync colorDerivatives.text 16
+                            , label [] [ text "Process sources" ]
+                            ]
+                      , TopLevel.ProcessSources
+                      )
                     ]
-              , RoutingMsg (GoToUrl "/sources/new")
-              )
-            , ( span
-                    []
-                    [ Icons.cloud_queue colorDerivatives.text 16
-                    , label [] [ text "Process sources" ]
-                    ]
-              , TopLevel.ProcessSources
-              )
-            ]
+                ]
+            )
 
         ------------------------------------
         -- List
@@ -86,15 +96,18 @@ pageIndex sources isProcessing processingErrors =
             [ h1
                 []
                 [ text "Sources" ]
-            , p
-                [ cssClass Intro ]
-                [ text """
-                    A source is a place where your music is stored.
-                    By connecting a source, the application will scan it
-                    and keep a list of all the music in it. It will not
-                    copy anything.
-                  """
-                ]
+            , if List.isEmpty sources then
+                text ""
+              else
+                p
+                    [ cssClass Intro ]
+                    [ text """
+                        A source is a place where your music is stored.
+                        By connecting a source, the application will scan it
+                        and keep a list of all the music in it. It will not
+                        copy anything.
+                      """
+                    ]
 
             -- Check if sources are processing
             -- and if they have processing errors
@@ -114,11 +127,24 @@ pageIndex sources isProcessing processingErrors =
                         )
                         sources
               in
-                -- Render list
-                Html.Keyed.node
-                    "ul"
-                    [ cssClass ListWithActions ]
-                    (List.indexedMap renderSource sourcesWithContext)
+                if List.isEmpty sources then
+                    -- No sources atm
+                    div
+                        [ cssClass EmptyState ]
+                        [ Icons.add Color.black 16
+                        , div
+                            []
+                            [ text "No sources have been added yet,"
+                            , br [] []
+                            , text "add one to get started."
+                            ]
+                        ]
+                else
+                    -- Render list
+                    Html.Keyed.node
+                        "ul"
+                        [ cssClass ListWithActions ]
+                        (List.indexedMap renderSource sourcesWithContext)
             ]
         ]
 

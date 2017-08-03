@@ -191,7 +191,7 @@ content resultant ( sortBy, sortDirection, isProcessing, sources ) =
 
 msgProcessing : Html TopLevel.Msg
 msgProcessing =
-    text "Processing Tracks ..."
+    text "Processing Tracks"
 
 
 msgNoSources : Html TopLevel.Msg

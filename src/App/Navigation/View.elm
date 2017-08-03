@@ -69,10 +69,19 @@ itemViewWithActiveLink activeHref ( itemLabel, itemHref ) =
         , onClickPreventDefault (RoutingMsg <| Routing.GoToUrl itemHref)
 
         --
-        , if itemHref == activeHref then
-            cssClass ActiveLink
-          else
-            cssClass NonActiveLink
+        , let
+            baseHref =
+                itemHref
+                    |> String.dropLeft 1
+                    |> String.split "/"
+                    |> List.head
+                    |> Maybe.withDefault (String.dropLeft 1 itemHref)
+                    |> String.append "/"
+          in
+            if baseHref == activeHref then
+                cssClass ActiveLink
+            else
+                cssClass NonActiveLink
         ]
         [ span
             []

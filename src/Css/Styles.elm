@@ -49,6 +49,7 @@ type Classes
     | Button
     | Columns
     | ContentBox
+    | EmptyState
     | Important
     | Insulation
     | InsulationCentered
@@ -106,7 +107,7 @@ stylesLocal =
         , backgroundSize cover
 
         -- For: 1.jpg
-        --, backgroundPosition2 (pct 50) (pct 19)
+        -- , backgroundPosition2 (pct 50) (pct 19)
         -- , backgroundSize (pct 110)
         --
         , backgroundRepeat noRepeat
@@ -225,88 +226,7 @@ stylesLocal =
         ]
 
     ------------------------------------------------------
-    -- <🎃> Basic wrapper
-    ------------------------------------------------------
-    , class Basic
-        [ color (hex "#fff")
-        , lineHeight (num 1.5)
-        , textAlign center
-
-        --
-        , descendants
-            [ svg
-                [ display inlineBlock
-                , marginRight (gr 1)
-                , transform (translateY (px 2))
-                ]
-            ]
-        ]
-
-    ------------------------------------------------------
-    -- <🎃> Intro
-    ------------------------------------------------------
-    , class Intro
-        [ fontSize (Css.em 0.9)
-        , lineHeight (num 1.6)
-        , marginBottom (gr 6)
-        , marginTop (gr 4)
-        , opacity (num 0.475)
-
-        --
-        , descendants
-            [ a
-                [ borderBottom3 (px 2) solid (cssColor colors.base0A)
-                ]
-            , svg
-                [ marginRight (gr 1)
-                , verticalAlign middle
-                ]
-            ]
-        ]
-
-    ------------------------------------------------------
-    -- <🎃> Important text
-    ------------------------------------------------------
-    , class Important
-        [ alignItems center
-        , border3
-            (px 2)
-            solid
-            (colors.base08
-                |> cssColor
-            )
-        , borderRadius (px 3)
-        , color (cssColor colors.base08)
-        , displayFlex
-        , fontWeight (int 700)
-        , lineHeight (int 1)
-        , padding2 (gr 2) (gr 2)
-
-        --
-        , descendants
-            [ selector "svg g"
-                [ fill currentColor ]
-            ]
-        ]
-
-    ------------------------------------------------------
-    -- <🎃> Logo backdrop
-    ------------------------------------------------------
-    , class LogoBackdrop
-        [ backgroundImage (url "/images/icon.svg")
-        , backgroundPosition2 (px -124) (pct 53.75)
-        , backgroundRepeat noRepeat
-        , backgroundSize cover
-        , bottom zero
-        , left zero
-        , opacity (num 0.05)
-        , position absolute
-        , right zero
-        , top zero
-        ]
-
-    ------------------------------------------------------
-    -- Buttons
+    -- <🎃> Buttons
     ------------------------------------------------------
     , (each [ class Button, button ])
         [ backgroundColor transparent
@@ -341,6 +261,11 @@ stylesLocal =
             ]
         ]
 
+    --                          --
+    --                          --
+    --  OTHER BASIC COMPONENTS  --
+    --                          --
+    --                          --
     ------------------------------------------------------
     -- Authentication button
     ------------------------------------------------------
@@ -379,19 +304,21 @@ stylesLocal =
         ]
 
     ------------------------------------------------------
-    -- Overlay
+    -- Basic wrapper
     ------------------------------------------------------
-    , class Overlay
-        [ backgroundColor (rgba 0 0 0 0.25)
-        , height (vh 100)
-        , left zero
-        , opacity zero
-        , position fixed
-        , property "pointer-events" "none"
-        , property "transition" "opacity 1s ease"
-        , top zero
-        , width (vw 100)
-        , zIndex (int 900)
+    , class Basic
+        [ color (hex "#fff")
+        , lineHeight (num 1.5)
+        , textAlign center
+
+        --
+        , descendants
+            [ svg
+                [ display inlineBlock
+                , marginRight (gr 1)
+                , transform (translateY (px 2))
+                ]
+            ]
         ]
 
     ------------------------------------------------------
@@ -409,5 +336,110 @@ stylesLocal =
                 , property "page-break-inside" "avoid"
                 ]
             ]
+        ]
+
+    ------------------------------------------------------
+    -- Empty state
+    ------------------------------------------------------
+    , class EmptyState
+        [ color (cssColor colors.base06)
+        , fontWeight (int 600)
+        , left (pct 50)
+        , lineHeight (num 1.45)
+        , marginTop (gr 3)
+        , position absolute
+        , textAlign center
+        , top (pct 50)
+        , transform (translate2 (pct -50) (pct -50))
+
+        --
+        , descendants
+            [ svg
+                [ fontSize (basem 64)
+                , marginBottom (gr 1)
+                ]
+            , selector "g"
+                [ fill currentColor
+                ]
+            ]
+        ]
+
+    ------------------------------------------------------
+    -- Important text
+    ------------------------------------------------------
+    , class Important
+        [ alignItems center
+        , border3
+            (px 2)
+            solid
+            (colors.base08
+                |> cssColor
+            )
+        , borderRadius (px 3)
+        , color (cssColor colors.base08)
+        , displayFlex
+        , fontWeight (int 700)
+        , lineHeight (int 1)
+        , padding2 (gr 2) (gr 2)
+
+        --
+        , descendants
+            [ selector "svg g"
+                [ fill currentColor ]
+            ]
+        ]
+
+    ------------------------------------------------------
+    -- Intro
+    ------------------------------------------------------
+    , class Intro
+        [ fontSize (Css.em 0.9)
+        , lineHeight (num 1.6)
+        , marginBottom (gr 6)
+        , marginTop (gr 4)
+        , opacity (num 0.475)
+
+        --
+        , descendants
+            [ a
+                [ borderBottom3 (px 2) solid (cssColor colors.base0A)
+                ]
+            , svg
+                [ marginRight (gr 1)
+                , verticalAlign middle
+                ]
+            ]
+        ]
+
+    ------------------------------------------------------
+    -- Logo backdrop
+    ------------------------------------------------------
+    , class LogoBackdrop
+        [ backgroundImage (url "/images/icon.svg")
+        , backgroundPosition2 (px -124) (pct 53.75)
+        , backgroundRepeat noRepeat
+        , backgroundSize cover
+        , bottom zero
+        , left zero
+        , opacity (num 0.05)
+        , position absolute
+        , right zero
+        , top zero
+        ]
+
+    ------------------------------------------------------
+    -- Overlay
+    ------------------------------------------------------
+    , class Overlay
+        [ backgroundColor (rgba 0 0 0 0.25)
+        , height (vh 100)
+        , left zero
+        , opacity zero
+        , position fixed
+        , property "pointer-events" "none"
+        , property "transition" "opacity 1s ease"
+        , top zero
+        , width (vw 100)
+        , zIndex (int 900)
         ]
     ]

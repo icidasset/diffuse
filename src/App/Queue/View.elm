@@ -8,6 +8,7 @@ import Html.Keyed
 import Html.Lazy exposing (lazy, lazy2)
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
+import Material.Icons.Image as Icons
 import Navigation.View as Navigation
 import Queue.Types as Queue exposing (Item, Page(..))
 import Routing.Types
@@ -19,7 +20,7 @@ import Variables exposing (colorDerivatives)
 -- Styles
 
 import List.Styles exposing (Classes(..))
-import Styles exposing (Classes(Button, ContentBox, InsulationContent, Intro))
+import Styles exposing (Classes(..))
 
 
 -- Helpers
@@ -80,9 +81,16 @@ pageIndex futureItems shuffled =
                 []
                 [ text "Up next" ]
             , if List.isEmpty futureItems then
-                p
-                    [ cssClass Intro ]
-                    [ text "No tracks available." ]
+                div
+                    [ cssClass EmptyState ]
+                    [ Icons.music_note Color.black 16
+                    , div
+                        []
+                        [ text "Nothing here yet,"
+                        , br [] []
+                        , text "add some music first."
+                        ]
+                    ]
               else
                 Html.Keyed.node
                     "ul"
@@ -142,9 +150,16 @@ pageHistory pastItems =
                 []
                 [ text "History" ]
             , if List.isEmpty pastItems then
-                p
-                    [ cssClass Intro ]
-                    [ text "No tracks have been played yet." ]
+                div
+                    [ cssClass EmptyState ]
+                    [ Icons.music_note Color.black 16
+                    , div
+                        []
+                        [ text "Nothing here yet,"
+                        , br [] []
+                        , text "play some music first."
+                        ]
+                    ]
               else
                 Html.Keyed.node
                     "ul"

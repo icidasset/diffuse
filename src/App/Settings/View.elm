@@ -2,7 +2,8 @@ module Settings.View exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Material.Icons.Action
+import Material.Icons.Action as Icons
+import Material.Icons.Image as Icons
 import Navigation.View as Navigation
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
@@ -27,7 +28,7 @@ entry model =
           Navigation.insideCustom
             [ ( span
                     []
-                    [ Material.Icons.Action.exit_to_app colorDerivatives.text 16
+                    [ Icons.exit_to_app colorDerivatives.text 16
                     , label [] [ text "Sign out" ]
                     ]
               , SignOut
@@ -42,11 +43,13 @@ entry model =
             [ h1
                 []
                 [ text "Settings" ]
-            , p
-                [ cssClass Intro ]
-                [ text """
-                    Not much to see here yet.
-                  """
+            , div
+                [ cssClass EmptyState ]
+                [ Icons.panorama_wide_angle colorDerivatives.text 16
+                , div
+                    []
+                    [ text "Coming soon"
+                    ]
                 ]
             ]
         ]
