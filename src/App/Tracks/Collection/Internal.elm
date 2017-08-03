@@ -46,11 +46,16 @@ initialize tracks ( model, collection ) =
 identify : Parcel -> Parcel
 identify ( model, collection ) =
     let
+        enabledOnly =
+            List.filter
+                (\t -> List.member t.sourceId model.enabledSourceIds)
+                collection.untouched
+
         ( identifiedUnsorted, missingFavourites ) =
             List.foldl
                 (identifier model.favourites model.activeTrackId)
                 ( [], model.favourites )
-                collection.untouched
+                enabledOnly
     in
         identifiedUnsorted
             |> List.append (List.map makeMissingFavouriteTrack missingFavourites)
@@ -149,11 +154,8 @@ harvest ( model, collection ) =
                     collection.identified
 
         filters =
-            [ -- Enabled sources only
-              Tuple.second >> .sourceId >> (\id -> List.member id model.enabledSourceIds)
-
-            -- Favourites / Missing
-            , if model.favouritesOnly then
+            [ -- Favourites / Missing
+              if model.favouritesOnly then
                 Tuple.first >> .isFavourite >> (==) True
               else
                 Tuple.first >> .isMissing >> (==) False

@@ -88,7 +88,7 @@ update msg model =
             model
                 |> (\m -> { m | enabledSourceIds = ids })
                 |> Collection.makeParcel
-                |> Collection.reharvest
+                |> Collection.reidentify
                 |> Collection.set
 
         -- # Sort
