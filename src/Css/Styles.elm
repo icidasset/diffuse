@@ -272,37 +272,20 @@ stylesLocal =
     ------------------------------------------------------
     , class AuthenticationButton
         [ alignItems center
-        , border3 (px 1) solid (cssColorOpac 0.235 Color.white)
-        , borderBottomWidth zero
-        , color (hex "#fff")
+        , borderBottom3 (px 1) solid (cssColor colors.base07)
+        , color (cssColor colorDerivatives.text)
         , cursor pointer
         , displayFlex
         , fontSize (Css.rem 0.9)
         , height (px 22)
         , lineHeight (gr 3)
-        , padding2 (basem 15) (gr 3)
+        , padding2 (basem 15) zero
         , property "padding-top" ("calc(" ++ .value (basem 15) ++ " + 1px)")
         , width (basem 260)
 
         --
-        , firstChild
-            [ borderRadius4
-                borderRadiuses.smallElements
-                borderRadiuses.smallElements
-                zero
-                zero
-            ]
         , lastChild
-            [ borderBottomWidth (px 1)
-            , borderRadius4
-                zero
-                zero
-                borderRadiuses.smallElements
-                borderRadiuses.smallElements
-            ]
-        , hover
-            [ backgroundColor (cssColorOpac 0.25 Color.black)
-            ]
+            [ borderBottomWidth zero ]
 
         --
         , children
@@ -313,6 +296,10 @@ stylesLocal =
                 , transform (translateY (px 1))
                 , width (basem 22)
                 ]
+            ]
+        , descendants
+            [ selector "g"
+                [ fill currentColor ]
             ]
         ]
 
