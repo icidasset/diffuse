@@ -1,9 +1,10 @@
 module List.Styles exposing (..)
 
+import Color
 import Css exposing (..)
 import Css.Elements exposing (a, label, li, span, svg)
-import Traits exposing (basem, cssColor, gr)
-import Variables exposing (colorDerivatives)
+import Traits exposing (basem, cssColor, cssColorOpac, gr)
+import Variables exposing (colors, colorDerivatives)
 
 
 type Classes
@@ -24,6 +25,7 @@ styles =
       ------------------------------------------------------
       class ListWithActions
         [ fontSize (basem 13)
+        , fontWeight (int 600)
         , listStyle none
         , margin zero
         , padding zero
@@ -32,19 +34,31 @@ styles =
         , descendants
             [ li
                 [ alignItems center
-                , borderBottom3 (px 1) dashed (cssColor colorDerivatives.subtleBorder)
+                , borderBottom3 (px 1) solid (cssColor <| Color.rgb 248 248 248)
                 , borderTop3 (px 1) solid transparent
                 , displayFlex
                 , padding2 (gr 2) zero
                 ]
             , label
                 [ flex (int 1)
+                , overflow hidden
+                , textOverflow ellipsis
+                , whiteSpace noWrap
                 ]
             , Css.Elements.small
-                [ color (hex "#afafaf")
+                [ backgroundColor (cssColorOpac 0.425 colors.base06)
+                , borderRadius (px 2)
+                , color (cssColor Color.white)
                 , display inlineBlock
-                , fontSize (pct 87.5)
-                , marginRight (gr 2)
+                , fontSize (Css.rem 0.675)
+                , lineHeight (int 1)
+                , marginRight (gr 3)
+                , marginTop (basem -3)
+                , overflow hidden
+                , padding3 (em 0.3) (em 0) (em 0.25)
+                , textAlign center
+                , verticalAlign middle
+                , width (em 1.6)
                 ]
             , svg
                 [ height (Css.em 1.225)
@@ -72,6 +86,6 @@ styles =
             ]
         ]
     , class SubtleListItem
-        [ color (hex "#777")
+        [ color (cssColor colors.base04)
         ]
     ]

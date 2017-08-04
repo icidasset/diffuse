@@ -191,7 +191,7 @@ renderItem index ( item, actions ) =
             [ rel key ]
             [ label
                 []
-                [ small [] [ text (toString (index + 1) ++ ".") ]
+                [ small [] [ text (toString (index + 1)) ]
                 , if item.manualEntry == True then
                     span [] [ text itemLabel ]
                   else
