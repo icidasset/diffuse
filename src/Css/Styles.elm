@@ -140,6 +140,7 @@ stylesLocal =
     ------------------------------------------------------
     , class Insulation
         [ backgroundColor (hex "#fff")
+        , borderRadius (px 3)
         , boxShadow4 (px 0) (px 2) (px 4) (rgba 0 0 0 0.2)
         , displayFlex
         , flex (int 1)
@@ -190,8 +191,8 @@ stylesLocal =
     ------------------------------------------------------
     , h1
         [ backgroundColor (cssColor colors.base06)
-        , borderBottomLeftRadius (px 4)
-        , borderBottomRightRadius (px 4)
+        , borderBottomLeftRadius (px 3)
+        , borderBottomRightRadius (px 3)
         , color (rgb 255 255 255)
         , display Css.table
         , fontSize (Css.rem 0.725)
