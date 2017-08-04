@@ -46,7 +46,7 @@ styles =
                 , whiteSpace noWrap
                 ]
             , Css.Elements.small
-                [ backgroundColor (cssColorOpac 0.425 colors.base06)
+                [ backgroundColor (cssColorOpac 0.325 colors.base06)
                 , borderRadius (px 2)
                 , color (cssColor Color.white)
                 , display inlineBlock

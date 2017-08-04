@@ -96,8 +96,6 @@ styles =
     , class InsideNavigation
         [ backgroundColor (cssColor Color.white)
         , borderBottom3 (px 1) solid (hex "#eee")
-        , position relative
-        , zIndex (int 1)
 
         --
         , descendants
