@@ -24,7 +24,8 @@ type Classes
 styles : List Snippet
 styles =
     [ class TracksContainer
-        [ displayFlex
+        [ borderRadius (px 3)
+        , displayFlex
         , flexDirection column
         , overflow hidden
         , width (pct 100)
