@@ -81,13 +81,16 @@ identifier favourites activeTrackId track ( acc, missingFavourites ) =
         isNowPlaying =
             Just track.id == activeTrackId
 
-        idx =
-            List.findIndex (Favourites.matcher lartist ltitle) missingFavourites
+        favouriteMatcher =
+            Favourites.matcher lartist ltitle
+
+        isFavourite =
+            List.any favouriteMatcher favourites
     in
-        case idx of
+        case isFavourite of
             -- A favourite
             --
-            Just i ->
+            True ->
                 ( acc
                     ++ [ ( { isFavourite = True
                            , isMissing = False
@@ -96,12 +99,17 @@ identifier favourites activeTrackId track ( acc, missingFavourites ) =
                          , track
                          )
                        ]
-                , List.removeAt i missingFavourites
+                , case List.findIndex favouriteMatcher missingFavourites of
+                    Just i ->
+                        List.removeAt i missingFavourites
+
+                    Nothing ->
+                        missingFavourites
                 )
 
             -- Not a favourite
             --
-            Nothing ->
+            False ->
                 ( acc
                     ++ [ ( { isFavourite = False
                            , isMissing = False
