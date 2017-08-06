@@ -2,7 +2,7 @@ module Tracks.Styles exposing (..)
 
 import Css exposing (..)
 import Css.Elements exposing (..)
-import Traits exposing (cssColor, gr)
+import Traits exposing (..)
 import Variables exposing (colors, colorDerivatives)
 
 
@@ -31,11 +31,12 @@ styles =
         , width (pct 100)
         ]
     , class TracksChild
-        [ flex (int 1)
+        [ disableSelect
+        , flex (int 1)
         , overflowX hidden
         , overflowY scroll
-        , property "user-select" "none"
         , position relative
+        , property "-webkit-overflow-scrolling" "touch"
         , zIndex (int 2)
         ]
     , class NoTracksFound
@@ -122,6 +123,7 @@ styles =
     , class TracksTable
         [ borderCollapse collapse
         , color (hex "#444")
+        , disableSelect
         , width (pct 100)
 
         --

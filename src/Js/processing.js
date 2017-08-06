@@ -30,9 +30,9 @@ function getTags(urlGET, urlHEAD) {
     }
   };
 
-  fileReader._makeXHRRequest = function(method, ...args) {
+  fileReader._makeXHRRequest = function(method, range, callbacks) {
     this._url = method.toUpperCase() === "HEAD" ? urlHEAD : urlGET;
-    return makeXHRRequest.call(this, method, ...args);
+    return makeXHRRequest.call(this, method, range, callbacks);
   };
 
   // Get tags

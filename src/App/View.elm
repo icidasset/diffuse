@@ -7,6 +7,7 @@ import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, on)
 import Html.Lazy
+import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Alert
 import Navigation.View as Navigation
@@ -43,12 +44,14 @@ entry model =
          case model.equalizer.activeKnob of
             Just _ ->
                 [ onClick ClickAway
+                , on "tap" (Decode.succeed ClickAway)
                 , on "touchmove" Equalizer.Touch.move
                 , on "touchend" Equalizer.Touch.end
                 ]
 
             Nothing ->
                 [ onClick ClickAway
+                , on "tap" (Decode.succeed ClickAway)
                 ]
         )
         [ --

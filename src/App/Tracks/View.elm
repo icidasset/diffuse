@@ -266,13 +266,31 @@ tracksTable tracks activeSortBy sortDirection =
             , Html.Keyed.node
                 "tbody"
                 [ on "dblclick" playTrack
+                , on "dbltap" playTrack
+
+                --
                 , on "click" toggleFavourite
+                , on "tap" toggleFavourite
+
+                --
                 , onWithOptions
                     "contextmenu"
                     { stopPropagation = True
                     , preventDefault = True
                     }
                     showContextMenu
+                , onWithOptions
+                    "longtap"
+                    { stopPropagation = True
+                    , preventDefault = True
+                    }
+                    showContextMenuOnTouch
+                , onWithOptions
+                    "touchend"
+                    { stopPropagation = False
+                    , preventDefault = True
+                    }
+                    (Decode.succeed TopLevel.NoOp)
                 ]
                 (List.indexedMap tracksTableItem tracks)
             ]
@@ -337,6 +355,18 @@ showContextMenuDecoder =
         |> Decode.andThen (\x -> Decode.andThen (Decode.succeed << (,) x) mousePositionDecoder)
 
 
+showContextMenuOnTouch : Decode.Decoder TopLevel.Msg
+showContextMenuOnTouch =
+    Decode.map TopLevel.ShowTrackContextMenu showContextMenuOnTouchDecoder
+
+
+showContextMenuOnTouchDecoder : Decode.Decoder ( String, Mouse.Position )
+showContextMenuOnTouchDecoder =
+    presentTrackDecoder
+        |> Decode.andThen (always trackRelDecoder)
+        |> Decode.andThen (\x -> Decode.andThen (Decode.succeed << (,) x) touchPositionDecoder)
+
+
 
 -- Events {2}
 
@@ -375,6 +405,14 @@ mousePositionDecoder =
         Mouse.Position
         (Decode.field "pageX" Decode.int)
         (Decode.field "pageY" Decode.int)
+
+
+touchPositionDecoder : Decode.Decoder Mouse.Position
+touchPositionDecoder =
+    Decode.map2
+        Mouse.Position
+        (Decode.at [ "x" ] Decode.int)
+        (Decode.at [ "y" ] Decode.int)
 
 
 sortBy : SortBy -> TopLevel.Msg

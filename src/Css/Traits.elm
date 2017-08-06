@@ -69,6 +69,14 @@ headerFont =
     batch [ fontFamilies [ "Montserrat", "sans-serif" ] ]
 
 
+disableSelect : Style
+disableSelect =
+    batch
+        [ property "-webkit-user-select" "none"
+        , property "user-select" "none"
+        ]
+
+
 
 -- Css / Colors
 

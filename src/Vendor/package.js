@@ -3,5 +3,6 @@ window.XhrFileReader = require("jsmediatags/build2/XhrFileReader");
 
 window._ = require("1-liners");
 window.blockstack = require("blockstack");
+window.tocca = require("tocca");
 window.Dexie = require("dexie");
 window.DexieBatch = require("dexie-batch");

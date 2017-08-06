@@ -146,6 +146,7 @@ stylesLocal =
         , flex (int 1)
         , margin3 (gr 10) auto zero
         , maxWidth insulationWidth
+        , minHeight (px 218)
         , overflow hidden
         , position relative
         , width (pct 100)
