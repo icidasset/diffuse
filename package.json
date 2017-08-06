@@ -6,7 +6,8 @@
     "elm-css": "^0.6.1",
     "elm-doc-test": "^2.2.3",
     "elm-test": "^0.18.2",
-    "postcss-cli": "^4.1.0"
+    "postcss-cli": "^4.1.0",
+    "surge": "^0.19.0"
   },
   "dependencies": {
     "1-liners": "^0.4.0",

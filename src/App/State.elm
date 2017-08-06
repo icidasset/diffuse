@@ -4,6 +4,7 @@ import Date
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
+import Ports
 import Response exposing (..)
 import Response.Ext exposing (do)
 import Task
@@ -41,6 +42,7 @@ initialModel : ProgramFlags -> Navigation.Location -> Model
 initialModel flags location =
     { authenticatedUser = flags.user
     , contextMenu = Nothing
+    , isTouchDevice = False
     , showLoadingScreen = True
 
     ------------------------------------
@@ -100,6 +102,11 @@ update msg model =
         HideLoadingScreen ->
             (!)
                 { model | showLoadingScreen = False }
+                []
+
+        SetIsTouchDevice bool ->
+            (!)
+                { model | isTouchDevice = bool }
                 []
 
         SignOut ->
@@ -297,6 +304,9 @@ subscriptions model =
     Sub.batch
         [ -- Time
           Time.every (1 * Time.minute) SetTimestamp
+
+        -- Ports
+        , Ports.setIsTouchDevice SetIsTouchDevice
 
         -- Children
         , Sub.map ConsoleMsg <| Console.subscriptions model.console

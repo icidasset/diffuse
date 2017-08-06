@@ -42,6 +42,7 @@ entry model =
             , model.tracks.sortDirection
             , model.sources.isProcessing
             , model.sources.collection
+            , model.isTouchDevice
             )
         ]
 
@@ -143,9 +144,9 @@ navigation searchTerm favouritesOnly =
 
 content :
     List IdentifiedTrack
-    -> ( SortBy, SortDirection, IsProcessing, List Source )
+    -> ( SortBy, SortDirection, IsProcessing, List Source, Bool )
     -> Html TopLevel.Msg
-content resultant ( sortBy, sortDirection, isProcessing, sources ) =
+content resultant ( sortBy, sortDirection, isProcessing, sources, isTouchDevice ) =
     div
         [ cssClass TracksChild
         , onScroll (ScrollThroughTable >> TopLevel.TracksMsg)
@@ -181,7 +182,7 @@ content resultant ( sortBy, sortDirection, isProcessing, sources ) =
                     []
                 ]
           else
-            tracksTable resultant sortBy sortDirection
+            tracksTable resultant sortBy sortDirection isTouchDevice
         ]
 
 
@@ -234,8 +235,8 @@ msgNoTracks =
 -- Content views
 
 
-tracksTable : List IdentifiedTrack -> SortBy -> SortDirection -> Html TopLevel.Msg
-tracksTable tracks activeSortBy sortDirection =
+tracksTable : List IdentifiedTrack -> SortBy -> SortDirection -> Bool -> Html TopLevel.Msg
+tracksTable tracks activeSortBy sortDirection isTouchDevice =
     let
         sortIcon =
             (if sortDirection == Desc then
@@ -265,33 +266,35 @@ tracksTable tracks activeSortBy sortDirection =
                 ]
             , Html.Keyed.node
                 "tbody"
-                [ on "dblclick" playTrack
-                , on "dbltap" playTrack
-
-                --
-                , on "click" toggleFavourite
-                , on "tap" toggleFavourite
-
-                --
-                , onWithOptions
-                    "contextmenu"
-                    { stopPropagation = True
-                    , preventDefault = True
-                    }
-                    showContextMenu
-                , onWithOptions
-                    "longtap"
-                    { stopPropagation = True
-                    , preventDefault = True
-                    }
-                    showContextMenuOnTouch
-                , onWithOptions
-                    "touchend"
-                    { stopPropagation = False
-                    , preventDefault = True
-                    }
-                    (Decode.succeed TopLevel.NoOp)
-                ]
+                (if isTouchDevice then
+                    -- Touch devices
+                    [ on "dbltap" playTrack
+                    , on "tap" toggleFavourite
+                    , onWithOptions
+                        "longtap"
+                        { stopPropagation = True
+                        , preventDefault = True
+                        }
+                        showContextMenuOnTouch
+                    , onWithOptions
+                        "touchend"
+                        { stopPropagation = False
+                        , preventDefault = True
+                        }
+                        (Decode.succeed TopLevel.NoOp)
+                    ]
+                 else
+                    -- Non-Touch devices
+                    [ on "dblclick" playTrack
+                    , on "click" toggleFavourite
+                    , onWithOptions
+                        "contextmenu"
+                        { stopPropagation = True
+                        , preventDefault = True
+                        }
+                        showContextMenu
+                    ]
+                )
                 (List.indexedMap tracksTableItem tracks)
             ]
 

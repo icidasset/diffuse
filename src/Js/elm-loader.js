@@ -32,6 +32,7 @@ function initialize(params) {
 
   initializePorts(app, flags);
   initializeSettings(flags);
+  initializeTouchDetection(app);
 }
 
 
@@ -211,6 +212,14 @@ function initializePorts(app, flags) {
   search.postMessage({
     action: "update_search_index",
     data: flags.tracks
+  });
+}
+
+
+function initializeTouchDetection(app) {
+  window.addEventListener("touchstart", function onFirstTouch() {
+    app.ports.setIsTouchDevice.send(true);
+    window.removeEventListener('touchstart', onFirstTouch, false);
   });
 }
 

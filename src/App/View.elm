@@ -43,15 +43,20 @@ entry model =
          --       (like with the mouse events)
          case model.equalizer.activeKnob of
             Just _ ->
-                [ onClick ClickAway
-                , on "tap" (Decode.succeed ClickAway)
-                , on "touchmove" Equalizer.Touch.move
-                , on "touchend" Equalizer.Touch.end
-                ]
+                (if model.isTouchDevice then
+                    [ on "tap" (Decode.succeed ClickAway)
+                    , on "touchmove" Equalizer.Touch.move
+                    , on "touchend" Equalizer.Touch.end
+                    ]
+                 else
+                    [ onClick ClickAway ]
+                )
 
             Nothing ->
-                [ onClick ClickAway
-                , on "tap" (Decode.succeed ClickAway)
+                [ if model.isTouchDevice then
+                    on "tap" (Decode.succeed ClickAway)
+                  else
+                    onClick ClickAway
                 ]
         )
         [ --

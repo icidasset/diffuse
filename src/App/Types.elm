@@ -25,6 +25,7 @@ type Msg
     = Authenticate AuthMethod
     | ClickAway
     | HideLoadingScreen
+    | SetIsTouchDevice Bool
     | SignOut
       -- Time
     | SetTimestamp Time
@@ -58,6 +59,7 @@ type Msg
 type alias Model =
     { authenticatedUser : Maybe User
     , contextMenu : Maybe ContextMenu
+    , isTouchDevice : Bool
     , showLoadingScreen : Bool
 
     ------------------------------------
