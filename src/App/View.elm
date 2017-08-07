@@ -90,17 +90,6 @@ entry model =
                             ]
                         ]
 
-                About ->
-                    unauthenticated
-                        [ p
-                            []
-                            [ strong [] [ text "Ongaku Ryoho." ]
-                            , br [] []
-                            , text "A music player that connects to your cloud/distributed storage."
-                            ]
-                        ]
-                        model
-
                 -- # Needs authentication
                 --
                 Equalizer ->
@@ -216,8 +205,8 @@ unauthenticated children model =
 
 unauthenticatedNavigation : Page -> Html Msg
 unauthenticatedNavigation currentPage =
-    Navigation.outside
-        currentPage
+    Navigation.outsideOutgoing
+        "/"
         [ ( Material.Icons.Action.home colors.base05 16, "/" )
         , ( Material.Icons.Action.info colors.base05 16, "/about" )
         ]

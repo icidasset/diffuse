@@ -451,7 +451,7 @@ pageNewStep3 source step =
                 []
             , text "You can find the instructions over "
             , a
-                [ href "https://gist.github.com/icidasset/c1883d594574a958ae4b4a5a91db1070#cors"
+                [ href "/about#CORS"
                 , target "blank"
                 ]
                 [ text "here" ]

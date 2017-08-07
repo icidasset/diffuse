@@ -24,6 +24,13 @@ outside currentPage items =
             (List.map (itemViewWithActiveLink currentHref) items)
 
 
+outsideOutgoing : String -> List ( Label, String ) -> Html Msg
+outsideOutgoing activeHref items =
+    div
+        [ cssClass OutsideNavigation ]
+        (List.map (itemViewOutgoing activeHref) items)
+
+
 inside : List ( Label, String ) -> Html Msg
 inside items =
     div
@@ -93,6 +100,21 @@ itemViewCustom : ( Label, Msg ) -> Html Msg
 itemViewCustom ( itemLabel, msg ) =
     a
         [ onClickPreventDefault msg ]
+        [ span
+            []
+            [ itemLabel ]
+        ]
+
+
+itemViewOutgoing : String -> ( Label, String ) -> Html Msg
+itemViewOutgoing activeHref ( itemLabel, itemHref ) =
+    a
+        [ href itemHref
+        , if itemHref == activeHref then
+            cssClass ActiveLink
+          else
+            cssClass NonActiveLink
+        ]
         [ span
             []
             [ itemLabel ]

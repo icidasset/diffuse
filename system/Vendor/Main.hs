@@ -1,6 +1,7 @@
 module Main where
 
 import Flow
+import Protolude
 import Shikensu
 import Shikensu.Contrib
 import Shikensu.Contrib.IO as Shikensu

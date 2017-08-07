@@ -1,13 +1,13 @@
 {
-    "name": "Ongaku Ryoho",
+    "name": "",
     "icons": [
         {
-            "src": "/favicons/android-chrome-192x192.png?v=69k2bWaL75",
+            "src": "/favicons/android-chrome-192x192.png?v=almjmW9Pop",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "/favicons/android-chrome-512x512.png?v=69k2bWaL75",
+            "src": "/favicons/android-chrome-512x512.png?v=almjmW9Pop",
             "sizes": "512x512",
             "type": "image/png"
         }

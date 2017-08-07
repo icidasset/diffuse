@@ -8,6 +8,7 @@ import Network.Wai
 import Network.Wai.Application.Static
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors
+import Protolude
 import System.Directory (doesFileExist)
 
 import qualified Data.Binary.Builder as Builder (empty, putStringUtf8)
