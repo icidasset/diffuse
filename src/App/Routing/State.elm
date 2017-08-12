@@ -15,9 +15,14 @@ initialModel location =
     { currentPage = Logic.locationToPage location }
 
 
-initialCommands : Cmd TopLevel.Msg
-initialCommands =
-    Cmd.none
+initialCommands : Navigation.Location -> Cmd TopLevel.Msg
+initialCommands location =
+    -- Trigger routing-transitions
+    location
+        |> Logic.locationToPage
+        |> SetPage
+        |> TopLevel.RoutingMsg
+        |> do
 
 
 
@@ -28,14 +33,11 @@ update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
         GoToPage page ->
-            let
-                cmd =
-                    if model.currentPage == Index then
-                        do TopLevel.RecalibrateTracks
-                    else
-                        Cmd.none
-            in
-                (,) { model | currentPage = page } cmd
+            (!)
+                model
+                [ Navigation.newUrl (Logic.pageToHref page) ]
 
-        GoToUrl url ->
-            (,) model (Navigation.newUrl url)
+        SetPage page ->
+            (!)
+                { model | currentPage = page }
+                []

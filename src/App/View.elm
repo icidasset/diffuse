@@ -32,6 +32,12 @@ import Spinner.View as Spinner
 import Tracks.View as Tracks
 
 
+-- Children, Pt. 2
+
+import Queue.Types
+import Sources.Types
+
+
 -- 🍯
 
 
@@ -181,10 +187,10 @@ authenticatedNavigation : Page -> Html Msg
 authenticatedNavigation currentPage =
     Navigation.outside
         currentPage
-        [ ( text "Tracks", "/" )
-        , ( text "Queue", "/queue" )
-        , ( text "Sources", "/sources" )
-        , ( text "Settings", "/settings" )
+        [ ( text "Tracks", Routing.Types.Index )
+        , ( text "Queue", Routing.Types.Queue Queue.Types.Index )
+        , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
+        , ( text "Settings", Routing.Types.Settings )
         ]
 
 
@@ -206,7 +212,7 @@ unauthenticated children model =
 unauthenticatedNavigation : Page -> Html Msg
 unauthenticatedNavigation currentPage =
     Navigation.outsideOutgoing
-        "/"
+        currentPage
         [ ( Material.Icons.Action.home colors.base05 16, "/" )
         , ( Material.Icons.Action.info colors.base05 16, "/about" )
         ]

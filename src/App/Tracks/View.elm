@@ -14,7 +14,7 @@ import Material.Icons.Navigation
 import Material.Icons.Toggle
 import Mouse
 import Navigation.View as Navigation
-import Routing.Types exposing (Msg(..))
+import Routing.Types
 import Sources.Types exposing (IsProcessing, Source)
 import Styles exposing (Classes(Button, ContentBox, Important, LogoBackdrop))
 import Tracks.Styles exposing (..)
@@ -133,7 +133,9 @@ navigation searchTerm favouritesOnly =
         --
         , Navigation.insideCustom
             [ ( Material.Icons.Av.equalizer colorDerivatives.text 16
-              , TopLevel.RoutingMsg (GoToUrl "/equalizer")
+              , Routing.Types.Equalizer
+                    |> Routing.Types.GoToPage
+                    |> RoutingMsg
               )
             , ( Material.Icons.Av.featured_play_list colorDerivatives.text 16
               , TopLevel.ShowViewMenu
@@ -205,8 +207,9 @@ msgNoSources =
             { stopPropagation = False
             , preventDefault = True
             }
-            ("/sources/new"
-                |> GoToUrl
+            (Sources.Types.New
+                |> Routing.Types.Sources
+                |> Routing.Types.GoToPage
                 |> RoutingMsg
                 |> Decode.succeed
             )

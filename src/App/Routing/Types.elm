@@ -6,7 +6,7 @@ import Sources.Types as Sources
 
 type Msg
     = GoToPage Page
-    | GoToUrl String
+    | SetPage Page
 
 
 type alias Model =

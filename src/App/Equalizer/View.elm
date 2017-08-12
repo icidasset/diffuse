@@ -10,6 +10,7 @@ import Json.Decode as Decode
 import Material.Icons.Navigation as Icons
 import Mouse
 import Navigation.View as Navigation
+import Routing.Types
 import Svg exposing (Svg, svg, polygon)
 import Svg.Attributes exposing (height, points, viewBox, width)
 import Traits exposing (gr)
@@ -44,7 +45,7 @@ entry model =
                     [ Icons.arrow_back colorDerivatives.text 16
                     , label [] [ text "Tracks" ]
                     ]
-              , "/"
+              , Routing.Types.Index
               )
             ]
 

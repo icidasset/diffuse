@@ -1,4 +1,4 @@
-module Routing.Logic exposing (locationToMessage, locationToPage, pageToParentHref)
+module Routing.Logic exposing (locationToMessage, locationToPage, isSameBase, pageToHref)
 
 import Navigation
 import Queue.Types as Queue
@@ -13,7 +13,7 @@ locationToMessage : Navigation.Location -> Msg
 locationToMessage location =
     location
         |> locationToPage
-        |> GoToPage
+        |> SetPage
 
 
 {-| Parse the location and return a `Page`.
@@ -25,25 +25,62 @@ locationToPage location =
         |> Maybe.withDefault (ErrorScreen "Page not found.")
 
 
-{-| Href to `Page`.
+{-| Base `Page`.
 -}
-pageToParentHref : Page -> String
-pageToParentHref page =
+isSameBase : Page -> Page -> Bool
+isSameBase a b =
+    case a of
+        Queue _ ->
+            case b of
+                Queue _ ->
+                    True
+
+                _ ->
+                    False
+
+        Sources _ ->
+            case b of
+                Sources _ ->
+                    True
+
+                _ ->
+                    False
+
+        _ ->
+            a == b
+
+
+{-| `Page` to `href`.
+-}
+pageToHref : Page -> String
+pageToHref page =
     case page of
         Equalizer ->
             "/equalizer"
 
-        Queue _ ->
+        ErrorScreen _ ->
+            "/"
+
+        Index ->
+            "/"
+
+        Queue Queue.Index ->
             "/queue"
+
+        Queue Queue.History ->
+            "/queue/history"
 
         Settings ->
             "/settings"
 
-        Sources _ ->
+        Sources Sources.Index ->
             "/sources"
 
-        _ ->
-            "/"
+        Sources (Sources.Edit sourceId) ->
+            "/sources/edit/" ++ sourceId
+
+        Sources Sources.New ->
+            "/sources/new"
 
 
 
@@ -54,6 +91,7 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map (Sources Sources.Index) (s "sources")
+        , map (\x -> Sources (Sources.Edit x)) (s "sources" </> s "edit" </> string)
         , map (Sources Sources.New) (s "sources" </> s "new")
 
         -- Queue

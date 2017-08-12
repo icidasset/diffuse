@@ -4,9 +4,10 @@ import Color
 import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
 import Html.Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3)
+import Json.Decode as Decode
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Action as Icons
@@ -15,8 +16,9 @@ import Material.Icons.File as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
+import Mouse
 import Navigation.View as Navigation
-import Routing.Types exposing (Msg(..))
+import Routing.Types
 import Sources.Services as Services
 import Sources.Types as Sources exposing (..)
 import Types as TopLevel exposing (Model, Msg(..))
@@ -37,6 +39,11 @@ import Styles exposing (Classes(..))
 entry : Sources.Page -> TopLevel.Model -> Html TopLevel.Msg
 entry page model =
     case page of
+        Edit _ ->
+            lazy
+                pageEdit
+                model.sources.form
+
         Index ->
             lazy3
                 pageIndex
@@ -69,7 +76,10 @@ pageIndex sources isProcessing processingErrors =
                         [ Icons.add colorDerivatives.text 16
                         , label [] [ text "Add a new source" ]
                         ]
-                    , RoutingMsg (GoToUrl "/sources/new")
+                    , Sources.New
+                        |> Routing.Types.Sources
+                        |> Routing.Types.GoToPage
+                        |> RoutingMsg
                     )
                   ]
 
@@ -201,16 +211,17 @@ renderSource index ( source, isProcessing, processingError ) =
                         Icons.not_interested colorDerivatives.text 16
                     ]
 
-                -- Delete
+                -- Settings
                 --
                 , a
-                    [ title "Remove"
-                    , source.id
-                        |> Sources.Destroy
-                        |> TopLevel.SourcesMsg
-                        |> onClick
+                    [ onWithOptions
+                        "click"
+                        { stopPropagation = True
+                        , preventDefault = True
+                        }
+                        (Decode.map (TopLevel.ShowSourceMenu source.id) Mouse.position)
                     ]
-                    [ Icons.remove_circle_outline colorDerivatives.text 16 ]
+                    [ Icons.settings colorDerivatives.text 16 ]
                 ]
             ]
         )
@@ -241,7 +252,10 @@ pageNew sForm =
                                     [ Icons.list colorDerivatives.text 16
                                     , label [] [ text "" ]
                                     ]
-                              , RoutingMsg (GoToUrl "/sources")
+                              , Sources.Index
+                                    |> Routing.Types.Sources
+                                    |> Routing.Types.GoToPage
+                                    |> RoutingMsg
                               )
                             ]
 
@@ -271,72 +285,33 @@ pageNew sForm =
 
 pageNewForm : Int -> Source -> Html Sources.Msg
 pageNewForm step source =
-    Html.form
-        [ cssClasses
-            [ InsulationContent
-            , InsulationFlexContent
-            , InsulationCentered
-            ]
-        , style
-            [ ( "position", "relative" )
-            , ( "text-align", "center" )
-            ]
-        , onSubmit
-            (case step of
-                1 ->
-                    Sources.AssignFormStep 2
+    formNode
+        (case step of
+            1 ->
+                Sources.AssignFormStep 2
 
-                2 ->
-                    Sources.AssignFormStep 3
+            2 ->
+                Sources.AssignFormStep 3
 
-                3 ->
-                    Sources.SubmitForm
+            3 ->
+                Sources.SubmitForm
 
-                _ ->
-                    Sources.AssignFormStep 1
-            )
-        ]
-        [ div
-            [ cssClasses
-                [ InsulationFlexContent ]
-            , style
-                [ ( "overflow", "hidden" )
-                , ( "position", "relative" )
-                , ( "width", "100%" )
-                , ( "z-index", "9" )
-                ]
-            ]
-            [ div
-                [ cssClasses
-                    [ InsulationContent
-                    , InsulationCentered
-                    ]
-                ]
-                [ div
-                    [ cssClasses
-                        [ ContentBox ]
-                    , style
-                        [ ( "padding-top", "2.25rem" ) ]
-                    ]
-                    [ case step of
-                        1 ->
-                            pageNewStep1 source step
+            _ ->
+                Sources.AssignFormStep 1
+        )
+        (case step of
+            1 ->
+                pageNewStep1 source step
 
-                        2 ->
-                            pageNewStep2 source step
+            2 ->
+                pageNewStep2 source step
 
-                        3 ->
-                            pageNewStep3 source step
+            3 ->
+                pageNewStep3 source step
 
-                        _ ->
-                            text ""
-                    ]
-                ]
-            ]
-        , div
-            [ cssClass LogoBackdrop ]
-            []
-        ]
+            _ ->
+                text ""
+        )
 
 
 pageNewStep1 : Source -> Int -> Html Sources.Msg
@@ -416,29 +391,7 @@ pageNewStep3 source step =
             , br
                 []
                 []
-            , div
-                [ cssClass FormStyles.InputBox ]
-                [ input
-                    [ name "name"
-                    , onInput (Sources.AssignFormProperty "name")
-                    , placeholder
-                        (source.service
-                            |> Services.properties
-                            |> List.reverse
-                            |> List.head
-                            |> Maybe.map (\( _, l, _, _ ) -> l)
-                            |> Maybe.withDefault "Label"
-                        )
-                    , required True
-                    , type_ "text"
-                    , value
-                        (source.data
-                            |> Dict.get "name"
-                            |> Maybe.withDefault ""
-                        )
-                    ]
-                    []
-                ]
+            , labelBox source
             ]
         , div
             [ cssClass Styles.Intro ]
@@ -459,6 +412,126 @@ pageNewStep3 source step =
         , button
             [ cssClass Button, type_ "submit" ]
             [ text "Add source" ]
+        ]
+
+
+
+-- {Page} Edit
+
+
+pageEdit : Sources.Form -> Html TopLevel.Msg
+pageEdit sForm =
+    div
+        [ cssClasses
+            [ InsulationContent
+            , InsulationFlexContent
+            ]
+        ]
+        (case sForm of
+            EditForm source ->
+                [ ------------------------------------
+                  -- Navigation
+                  ------------------------------------
+                  Navigation.insideCustom
+                    [ ( span
+                            []
+                            [ Icons.list colorDerivatives.text 16
+                            , label [] [ text "" ]
+                            ]
+                      , Sources.Index
+                            |> Routing.Types.Sources
+                            |> Routing.Types.GoToPage
+                            |> RoutingMsg
+                      )
+                    ]
+
+                ------------------------------------
+                -- Form
+                ------------------------------------
+                , Html.map
+                    SourcesMsg
+                    (formNode
+                        Sources.SubmitForm
+                        (div
+                            []
+                            [ h3
+                                []
+                                [ text "Edit source" ]
+                            , div
+                                [ cssClasses
+                                    [ Columns ]
+                                , style
+                                    [ ( "text-align", "left" ) ]
+                                ]
+                                (List.concat
+                                    [ renderSourceProperties source
+                                    , [ label
+                                            []
+                                            [ text "Name" ]
+                                      , labelBox source
+                                      ]
+                                    ]
+                                )
+                            , br
+                                []
+                                []
+                            , button
+                                [ cssClass Button, type_ "submit" ]
+                                [ text "Save" ]
+                            ]
+                        )
+                    )
+                ]
+
+            _ ->
+                [ text "Cannot use this model.form on this page" ]
+        )
+
+
+
+-- Forms
+
+
+formNode : Sources.Msg -> Html Sources.Msg -> Html Sources.Msg
+formNode submitMsg childNode =
+    Html.form
+        [ cssClasses
+            [ InsulationContent
+            , InsulationFlexContent
+            , InsulationCentered
+            ]
+        , style
+            [ ( "position", "relative" )
+            , ( "text-align", "center" )
+            ]
+        , onSubmit submitMsg
+        ]
+        [ div
+            [ cssClasses
+                [ InsulationFlexContent ]
+            , style
+                [ ( "overflow", "hidden" )
+                , ( "position", "relative" )
+                , ( "width", "100%" )
+                , ( "z-index", "9" )
+                ]
+            ]
+            [ div
+                [ cssClasses
+                    [ InsulationContent
+                    , InsulationCentered
+                    ]
+                ]
+                [ div
+                    [ cssClasses [ ContentBox ]
+                    , style [ ( "padding-top", "2.25rem" ) ]
+                    ]
+                    [ childNode ]
+                ]
+            ]
+        , div
+            [ cssClass LogoBackdrop ]
+            []
         ]
 
 
@@ -505,3 +578,30 @@ renderSourceProperties source =
         |> List.drop 1
         |> List.reverse
         |> List.map (propertyRenderer source)
+
+
+labelBox : Source -> Html Sources.Msg
+labelBox source =
+    div
+        [ cssClass FormStyles.InputBox ]
+        [ input
+            [ name "name"
+            , onInput (Sources.AssignFormProperty "name")
+            , placeholder
+                (source.service
+                    |> Services.properties
+                    |> List.reverse
+                    |> List.head
+                    |> Maybe.map (\( _, l, _, _ ) -> l)
+                    |> Maybe.withDefault "Label"
+                )
+            , required True
+            , type_ "text"
+            , value
+                (source.data
+                    |> Dict.get "name"
+                    |> Maybe.withDefault ""
+                )
+            ]
+            []
+        ]

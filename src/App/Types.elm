@@ -44,10 +44,12 @@ type Msg
     | ResetQueue
     | PlayTrack String
     | ProcessSources
+    | ToggleFavourite String
+      -- Children, Pt. 3
+    | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
     | ShowViewMenu
     | ShowViewMenuWithWindow Window.Size
-    | ToggleFavourite String
       -- Other
     | NoOp
 

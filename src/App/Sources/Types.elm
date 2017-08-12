@@ -124,5 +124,6 @@ type Form
 
 
 type Page
-    = Index
+    = Edit SourceId
+    | Index
     | New

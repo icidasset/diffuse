@@ -61,7 +61,10 @@ pageIndex futureItems shuffled =
                     [ Icons.queue_music colorDerivatives.text 16
                     , label [] [ text "History" ]
                     ]
-              , RoutingMsg (Routing.Types.GoToUrl "/queue/history")
+              , History
+                    |> Routing.Types.Queue
+                    |> Routing.Types.GoToPage
+                    |> RoutingMsg
               )
             , ( span
                     []
@@ -137,7 +140,7 @@ pageHistory pastItems =
                     [ Icons.queue_music colorDerivatives.text 16
                     , label [] [ text "Up next" ]
                     ]
-              , "/queue"
+              , Routing.Types.Queue Index
               )
             ]
 

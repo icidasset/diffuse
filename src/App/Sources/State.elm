@@ -277,11 +277,18 @@ update msg model =
                         EditForm source ->
                             source
 
-                newSource =
+                source =
                     { ns | data = Dict.map (always String.trim) ns.data }
 
                 newCollection =
-                    (setProperSourceId model newSource) :: model.collection
+                    case model.form of
+                        NewForm _ _ ->
+                            (setProperSourceId model source) :: model.collection
+
+                        EditForm _ ->
+                            model.collection
+                                |> List.filter (.id >> (/=) source.id)
+                                |> List.append [ source ]
             in
                 ($)
                     { model
@@ -318,6 +325,22 @@ update msg model =
                     [ updateEnabledSourceIds newCollection
                     , storeSources newCollection
                     ]
+
+
+editForm : Model -> SourceId -> Model
+editForm model sourceId =
+    let
+        source =
+            model.collection
+                |> List.find (.id >> (==) sourceId)
+                |> Maybe.withDefault initialSource
+    in
+        { model | form = EditForm source }
+
+
+newForm : Model -> Model
+newForm model =
+    { model | form = NewForm 1 initialSource }
 
 
 
