@@ -46,19 +46,13 @@ styles =
                 , whiteSpace noWrap
                 ]
             , Css.Elements.small
-                [ backgroundColor (cssColorOpac 0.325 colors.base06)
-                , borderRadius (px 2)
-                , color (cssColor Color.white)
-                , display inlineBlock
+                [ color (cssColor colors.base05)
                 , fontSize (Css.rem 0.675)
-                , lineHeight (int 1)
                 , marginRight (gr 3)
-                , marginTop (basem -3)
-                , overflow hidden
-                , padding3 (em 0.3) (em 0) (em 0.25)
-                , textAlign center
-                , verticalAlign middle
-                , width (em 1.6)
+
+                --
+                , after
+                    [ property "content" "'.'" ]
                 ]
             , svg
                 [ height (Css.em 1.225)
@@ -86,6 +80,6 @@ styles =
             ]
         ]
     , class SubtleListItem
-        [ color (cssColor colors.base04)
+        [ color (cssColor colors.base05)
         ]
     ]
