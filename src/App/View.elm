@@ -141,6 +141,25 @@ entry model =
                     style []
             ]
             []
+
+        --
+        -- Background image
+        --
+        , div
+            [ cssClass BackgroundImage
+            , style
+                [ ( "background-image"
+                  , "url(images/Background/" ++ model.settings.backgroundImage ++ ")"
+                  )
+                , case model.settings.backgroundImage of
+                    "1.jpg" ->
+                        ( "background-position", "center 30%" )
+
+                    _ ->
+                        ( "background-position", "center bottom" )
+                ]
+            ]
+            []
         ]
 
 

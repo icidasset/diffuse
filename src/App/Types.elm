@@ -14,6 +14,7 @@ import Console.Types as Console
 import Equalizer.Types as Equalizer
 import Queue.Types as Queue
 import Routing.Types as Routing
+import Settings.Types as Settings
 import Sources.Types as Sources
 import Tracks.Types as Tracks
 
@@ -34,6 +35,7 @@ type Msg
     | EqualizerMsg Equalizer.Msg
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
+    | SettingsMsg Settings.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
       -- Children, Pt. 2
@@ -76,6 +78,7 @@ type alias Model =
     , equalizer : Equalizer.Model
     , queue : Queue.Model
     , routing : Routing.Model
+    , settings : Settings.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
     }
@@ -101,7 +104,8 @@ type alias ProgramFlags =
 
 
 type alias Settings =
-    { equalizer : Equalizer.Settings
+    { application : Settings.Model
+    , equalizer : Equalizer.Settings
     , queue : Queue.Settings
     , tracks : Tracks.Settings
     }

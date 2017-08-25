@@ -20,6 +20,7 @@ import Console.State as Console
 import Equalizer.State as Equalizer
 import Queue.State as Queue
 import Routing.State as Routing
+import Settings.State as Settings
 import Sources.State as Sources
 import Tracks.State as Tracks
 
@@ -59,6 +60,7 @@ initialModel flags location =
     , equalizer = Equalizer.initialModel flags
     , queue = Queue.initialModel flags
     , routing = Routing.initialModel location
+    , settings = Settings.initialModel flags
     , sources = Sources.initialModel flags
     , tracks = Tracks.initialModel flags
     }
@@ -155,6 +157,10 @@ update msg model =
             Routing.update sub model.routing
                 |> mapModel (\x -> { model | routing = x })
                 |> handleRouteTransitions sub model
+
+        SettingsMsg sub ->
+            Settings.update sub model.settings
+                |> mapModel (\x -> { model | settings = x })
 
         SourcesMsg sub ->
             Sources.update sub model.sources

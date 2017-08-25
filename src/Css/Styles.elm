@@ -83,7 +83,8 @@ stylesLocal =
     -- <body>
     ------------------------------------------------------
     , body
-        [ backgroundColor (hex "#000")
+        [ backgroundColor (hex "#02070E")
+        , backgroundImage (url "/images/ep_naturalblack_pattern.jpg")
         , color (cssColor colorDerivatives.text)
         , defaultFont
         , fontSize (Css.rem 1)
@@ -103,8 +104,7 @@ stylesLocal =
     -- > Not on the <body> for a reason.
     ------------------------------------------------------
     , class BackgroundImage
-        [ backgroundImage (url "images/Background/4.jpg")
-        , backgroundPosition bottom
+        [ backgroundPosition bottom
         , backgroundSize cover
 
         -- For: 1.jpg

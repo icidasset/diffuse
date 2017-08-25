@@ -39,6 +39,10 @@ function initialize(params) {
 function initializeFlags(params) {
   return {
     settings: {
+      application: Object.assign(
+        { backgroundImage: "4.jpg" },
+        loadSettings("application")
+      ),
       equalizer: Object.assign(
         { low: 0, mid: 0, high: 0, volume: 1 },
         loadSettings("equalizer")
@@ -181,6 +185,7 @@ function initializePorts(app, flags) {
   app.ports.storeTracks.subscribe(v => storeData("tracks", v));
   app.ports.storeFavourites.subscribe(v => storeData("favourites", v));
 
+  app.ports.storeApplicationSettings.subscribe(s => saveSettings("application", s));
   app.ports.storeEqualizerSettings.subscribe(s => saveSettings("equalizer", s));
   app.ports.storeQueueSettings.subscribe(s => saveSettings("queue", s));
   app.ports.storeTracksSettings.subscribe(s => saveSettings("tracks", s));
