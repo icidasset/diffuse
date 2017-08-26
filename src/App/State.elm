@@ -91,7 +91,7 @@ update msg model =
     case msg of
         Authenticate method ->
             (!)
-                model
+                { model | showLoadingScreen = True }
                 [ method
                     |> toString
                     |> String.toUpper

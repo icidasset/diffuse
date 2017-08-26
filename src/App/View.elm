@@ -14,7 +14,7 @@ import Navigation.View as Navigation
 import Routing.Types exposing (Page(..))
 import Styles exposing (..)
 import Svg exposing (Svg, g, path, svg)
-import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
+import Svg.Attributes exposing (d, fill, fillOpacity, fillRule, height, viewBox, width)
 import Traits exposing (intoRem)
 import Types exposing (..)
 import Utils exposing (..)
@@ -179,6 +179,7 @@ authenticated children model =
                     ]
                 ]
                 [ authButton Blockstack
+                , authButton Ipns
                 , authButton Local
                 ]
             ]
@@ -242,18 +243,25 @@ authButton authMethod =
     a
         [ cssClass AuthenticationButton, onClick (Authenticate authMethod) ]
         (case authMethod of
-            Local ->
-                [ span
-                    [ style [ ( "fontSize", intoRem 17 ) ] ]
-                    [ Material.Icons.Action.lock Color.white 17 ]
-                , text "Sign in anonymously"
-                ]
-
             Blockstack ->
                 [ span
                     [ style [ ( "fontSize", intoRem 22 ) ] ]
                     [ blockstackLogo ]
                 , text "Sign in with Blockstack"
+                ]
+
+            Ipns ->
+                [ span
+                    [ style [ ( "fontSize", intoRem 17 ) ] ]
+                    [ ipfsLogo ]
+                , text "Sign in with IPFS"
+                ]
+
+            Local ->
+                [ span
+                    [ style [ ( "fontSize", intoRem 17 ) ] ]
+                    [ Material.Icons.Action.lock Color.white 17 ]
+                , text "Sign in anonymously"
                 ]
         )
 
@@ -280,6 +288,73 @@ blockstackLogo =
             , path
                 [ d "M172.762461,205.432902 C149.648477,205.432902 130.910891,186.75581 130.910891,163.716451 C130.910891,140.677091 149.648477,122 172.762461,122 C195.876445,122 214.614031,140.677091 214.614031,163.716451 C214.614031,186.75581 195.876445,205.432902 172.762461,205.432902 Z M340.16874,205.432902 C317.054756,205.432902 298.31717,186.75581 298.31717,163.716451 C298.31717,140.677091 317.054756,122 340.16874,122 C363.282724,122 382.02031,140.677091 382.02031,163.716451 C382.02031,186.75581 363.282724,205.432902 340.16874,205.432902 Z M340.16874,372.298705 C317.054756,372.298705 298.31717,353.621614 298.31717,330.582254 C298.31717,307.542894 317.054756,288.865803 340.16874,288.865803 C363.282724,288.865803 382.02031,307.542894 382.02031,330.582254 C382.02031,353.621614 363.282724,372.298705 340.16874,372.298705 Z M172.762461,372.298705 C149.648477,372.298705 130.910891,353.621614 130.910891,330.582254 C130.910891,307.542894 149.648477,288.865803 172.762461,288.865803 C195.876445,288.865803 214.614031,307.542894 214.614031,330.582254 C214.614031,353.621614 195.876445,372.298705 172.762461,372.298705 Z"
                 , fill "#270F34"
+                ]
+                []
+            ]
+        ]
+
+
+ipfsLogo : Svg Msg
+ipfsLogo =
+    Svg.svg
+        [ height "22"
+        , viewBox "0 0 512 512"
+        , width "22"
+        ]
+        [ Svg.defs
+            []
+            [ Svg.linearGradient
+                [ Svg.Attributes.id "b"
+                , Svg.Attributes.y2 "771.51"
+                , Svg.Attributes.gradientUnits "userSpaceOnUse"
+                , Svg.Attributes.x2 "527.72"
+                , Svg.Attributes.y1 "771.51"
+                , Svg.Attributes.x1 "84.315"
+                ]
+                []
+            , Svg.linearGradient
+                [ Svg.Attributes.id "a"
+                , Svg.Attributes.y2 "771.48"
+                , Svg.Attributes.gradientUnits "userSpaceOnUse"
+                , Svg.Attributes.x2 "512.36"
+                , Svg.Attributes.y1 "771.48"
+                , Svg.Attributes.x1 "99.675"
+                ]
+                [ Svg.stop
+                    [ Svg.Attributes.stopColor "#322230"
+                    , Svg.Attributes.offset "0"
+                    ]
+                    []
+                ]
+            ]
+        , g
+            [ Svg.Attributes.transform "translate(-50.017 -515.51)" ]
+            [ path
+                [ d "m84.315 899.51 221.7 128 221.7-128v-256l-221.7-127.99-221.7 128z"
+                , fill "url(#b)"
+                ]
+                []
+            , path
+                [ d "m283.13 546.35-160.74 92.806c0.32126 2.8543 0.32125 5.7352 0 8.5894l160.75 92.806c13.554-10.001 32.043-10.001 45.597 0l160.75-92.807c-0.32126-2.8543-0.32293-5.7338-0.001-8.588l-160.74-92.806c-13.554 10.001-32.044 10.001-45.599 0zm221.79 127.03-160.92 93.84c1.884 16.739-7.3611 32.751-22.799 39.489l0.18062 184.58c2.6325 1.1489 5.1267 2.5886 7.438 4.294l160.75-92.805c-1.884-16.739 7.3611-32.752 22.799-39.49v-185.61c-2.6325-1.1489-5.1281-2.5886-7.4394-4.294zm-397.81 1.0315c-2.3112 1.7054-4.8054 3.1465-7.438 4.2954v185.61c15.438 6.7378 24.683 22.75 22.799 39.489l160.74 92.806c2.3112-1.7054 4.8069-3.1465 7.4394-4.2954v-185.61c-15.438-6.7378-24.683-22.75-22.799-39.489l-160.74-92.81z"
+                , fill "url(#a)"
+                ]
+                []
+            ]
+        , g
+            [ Svg.Attributes.transform "translate(0 -196.66)" ]
+            [ path
+                [ d "m256 708.66 221.7-128v-256l-221.7 128v256z"
+                , fillOpacity ".25098"
+                ]
+                []
+            , path
+                [ d "m256 708.66v-256l-221.7-128v256l221.7 128z"
+                , fillOpacity ".039216"
+                ]
+                []
+            , path
+                [ d "m34.298 324.66 221.7 128 221.7-128-221.7-128-221.7 128z"
+                , fillOpacity ".13018"
                 ]
                 []
             ]

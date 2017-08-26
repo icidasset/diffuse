@@ -9,7 +9,9 @@ const search  = new Worker("/search.js");
 
 
 if (state.auth.isSignedIn()) {
-  state.auth.getData().then(keepDataInContainer).then(initialize).catch(console.error);
+  state.auth.getData()
+    .then(keepDataInContainer)
+    .then(initialize);
 
 } else if (state.auth.isSigningIn()) {
   state.auth.handleSignInProcess();

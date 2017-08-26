@@ -130,6 +130,7 @@ type alias ContextMenuItems =
 type AuthMethod
     = Local
     | Blockstack
+    | Ipns
 
 
 type alias User =

@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "1-liners": "^0.4.0",
+    "aes-js": "^3.1.0",
     "blockstack": "^0.9.1",
     "dexie": "^1.5.1",
     "dexie-batch": "^0.2.1",
     "elasticlunr": "^0.9.5",
+    "js-sha256": "^0.6.0",
     "jsmediatags": "^3.6.2",
     "tocca": "^2.0.1"
   }
