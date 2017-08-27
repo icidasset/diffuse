@@ -206,7 +206,7 @@ renderSource index ( source, isProcessing, processingError ) =
                         title "Disabled (click to enable)"
                     ]
                     [ if source.enabled then
-                        Icons.check_circle colorDerivatives.text 16
+                        Icons.check colorDerivatives.text 16
                       else
                         Icons.not_interested colorDerivatives.text 16
                     ]

@@ -45,7 +45,15 @@ entry model =
         ------------------------------------
         , div
             [ cssClass ContentBox ]
-            [ h1 [] [ text "Settings" ]
+            [ h1
+                []
+                [ text "Settings" ]
+            , p
+                [ cssClass Intro ]
+                [ text """
+                    Changes are automatically saved.
+                  """
+                ]
             , Html.map SettingsMsg (theForm model)
             ]
         ]
@@ -55,7 +63,7 @@ theForm : Model -> Html Settings.Types.Msg
 theForm model =
     Html.form
         [ style
-            [ ( "max-width", "350px" ) ]
+            [ ( "max-width", "230px" ) ]
         ]
         [ label
             []
