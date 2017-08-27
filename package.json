@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "1-liners": "^0.4.0",
-    "blockstack": "^0.9.1",
+    "blockstack": "^0.9.4",
     "dexie": "^1.5.1",
     "dexie-batch": "^0.2.1",
     "elasticlunr": "^0.9.5",
