@@ -7,7 +7,8 @@
  */
 
 
-const VERSION_KEY = "ongaku-ryoho-v1_0_1.json";
+const STABLE_KEY  = "ongaku-ryoho.json";
+const VERSION_KEY = "ongaku-ryoho-v1_0_2.json";
 const METHOD_KEY  = "authMethod";
 const METHODS     = { LOCAL: "LOCAL", BLOCKSTACK: "BLOCKSTACK" };
 const M           = {};
@@ -80,12 +81,14 @@ M.LOCAL = {
     this.db = new Dexie(VERSION_KEY);
     this.db.version(1).stores({
       favourites: '++, artist, title',
+      settings: '++, obj',
       sources: 'id, data, enabled, service',
       tracks: 'id, path, sourceId, tags'
     });
 
     return Promise.all([
       this.db.favourites.toArray(),
+      this.db.settings.toArray(),
       this.db.sources.toArray(),
 
       // load tracks in batches
@@ -100,7 +103,12 @@ M.LOCAL = {
         })
 
     ]).then(x => {
-      return { favourites: x[0], sources: x[1], tracks: x[2] };
+      let settings;
+
+      settings = x[1];
+      settings = settings ? settings[0] && settings[0].obj : null;
+
+      return { favourites: x[0], settings: settings, sources: x[2], tracks: x[3] };
 
     });
   },
@@ -110,13 +118,15 @@ M.LOCAL = {
 
     Promise.all([
       this.db.favourites.clear(),
+      this.db.settings.clear(),
       this.db.sources.clear(),
       this.db.tracks.clear()
 
     ]).then(_ => {
       return Object.keys(data).map(
         key => {
-          const items = (data[key] || []).slice();
+          const dk = data[key];
+          const items = (self._.isPlainObject(dk) ? [{ obj: dk }] : (dk || [])).slice();
           return _ => this.db[key].bulkPut(items);
         }
       ).reduce(
@@ -172,13 +182,13 @@ M.BLOCKSTACK = {
 
   getData() {
     return blockstack
-      .getFile(VERSION_KEY)
+      .getFile(STABLE_KEY)
       .then(data => JSON.parse(data || "{}"));
   },
 
   storeData(data) {
     return blockstack.putFile(
-      VERSION_KEY,
+      STABLE_KEY,
       JSON.stringify(data)
     );
   },

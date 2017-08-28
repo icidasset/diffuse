@@ -15,7 +15,7 @@
     "dexie": "^1.5.1",
     "dexie-batch": "^0.2.1",
     "elasticlunr": "^0.9.5",
-    "jsmediatags": "^3.6.2",
+    "jsmediatags": "^3.7.0",
     "tocca": "^2.0.1"
   }
 }
