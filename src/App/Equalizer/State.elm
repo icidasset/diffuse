@@ -11,22 +11,17 @@ import Types as TopLevel
 -- 💧
 
 
-initialModel : TopLevel.ProgramFlags -> Model
-initialModel flags =
-    { low = flags.settings.equalizer.low
-    , mid = flags.settings.equalizer.mid
-    , high = flags.settings.equalizer.high
-    , volume = flags.settings.equalizer.volume
+initialModel : Model
+initialModel =
+    { low = 0
+    , mid = 0
+    , high = 0
+    , volume = 1
 
     -- Knob interactions
     , activeKnob = Nothing
     , startingMousePosition = { x = 0, y = 0 }
     }
-
-
-initialCommands : Cmd TopLevel.Msg
-initialCommands =
-    Cmd.none
 
 
 
@@ -125,7 +120,7 @@ update msg model =
             else
                 (!)
                     { model | activeKnob = Nothing }
-                    [ storeSettings model ]
+                    [ do TopLevel.StoreUserData ]
 
         ------------------------------------
         -- Reset
@@ -151,6 +146,16 @@ adjustKnob knobType value =
         }
 
 
+adjustAllKnobs : Model -> Cmd TopLevel.Msg
+adjustAllKnobs model =
+    Cmd.batch
+        [ adjustKnob Low model.low
+        , adjustKnob Mid model.mid
+        , adjustKnob High model.high
+        , adjustKnob Volume model.volume
+        ]
+
+
 maxAngle : Float
 maxAngle =
     135
@@ -158,17 +163,7 @@ maxAngle =
 
 reset : Model -> Knob -> Float -> ( Model, Cmd TopLevel.Msg )
 reset newModel knobType value =
-    (!) newModel [ adjustKnob knobType value, storeSettings newModel ]
-
-
-storeSettings : Model -> Cmd TopLevel.Msg
-storeSettings model =
-    storeEqualizerSettings
-        { low = model.low
-        , mid = model.mid
-        , high = model.high
-        , volume = model.volume
-        }
+    (!) newModel [ adjustKnob knobType value, do TopLevel.StoreUserData ]
 
 
 

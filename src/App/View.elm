@@ -1,5 +1,6 @@
 module View exposing (entry)
 
+import Authentication.Types exposing (Method(..))
 import ContextMenu.Styles as CTS
 import Color
 import Equalizer.Touch
@@ -82,10 +83,10 @@ entry model =
                 ErrorScreen err ->
                     div
                         [ cssClass Shell ]
-                        [ if model.authenticatedUser == Nothing then
-                            unauthenticatedNavigation model.routing.currentPage
-                          else
+                        [ if model.authentication.signedIn then
                             authenticatedNavigation model.routing.currentPage
+                          else
+                            unauthenticatedNavigation model.routing.currentPage
                         , div
                             [ cssClasses [ InTheMiddle, Basic ] ]
                             [ p
@@ -169,21 +170,7 @@ entry model =
 
 authenticated : List (Html Msg) -> Model -> Html Msg
 authenticated children model =
-    if model.authenticatedUser == Nothing then
-        unauthenticated
-            [ div
-                [ style
-                    [ ( "background-color", "white" )
-                    , ( "border-radius", "4px" )
-                    , ( "padding", ".375rem 1.5rem" )
-                    ]
-                ]
-                [ authButton Blockstack
-                , authButton Local
-                ]
-            ]
-            model
-    else
+    if model.authentication.signedIn then
         div
             [ cssClass Shell ]
             [ -- Navigation
@@ -200,6 +187,20 @@ authenticated children model =
             --
             , Console.entry model
             ]
+    else
+        unauthenticated
+            [ div
+                [ style
+                    [ ( "background-color", "white" )
+                    , ( "border-radius", "4px" )
+                    , ( "padding", ".375rem 1.5rem" )
+                    ]
+                ]
+                [ authButton Blockstack
+                , authButton Local
+                ]
+            ]
+            model
 
 
 authenticatedNavigation : Page -> Html Msg
@@ -237,10 +238,15 @@ unauthenticatedNavigation currentPage =
         ]
 
 
-authButton : AuthMethod -> Html Msg
+authButton : Authentication.Types.Method -> Html Msg
 authButton authMethod =
     a
-        [ cssClass AuthenticationButton, onClick (Authenticate authMethod) ]
+        [ cssClass AuthenticationButton
+        , authMethod
+            |> Authentication.Types.SignIn
+            |> AuthenticationMsg
+            |> onClick
+        ]
         (case authMethod of
             Local ->
                 [ span

@@ -9,7 +9,7 @@ import Queue.Types exposing (EngineItem, Settings)
 port activeQueueItemChanged : Maybe EngineItem -> Cmd msg
 
 
-port storeQueueSettings : Settings -> Cmd msg
+port toggleRepeat : Bool -> Cmd msg
 
 
 

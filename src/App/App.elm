@@ -7,9 +7,9 @@ import Types exposing (..)
 import View
 
 
-main : Program ProgramFlags Model Msg
+main : Program Never Model Msg
 main =
-    Navigation.programWithFlags
+    Navigation.program
         router
         { init = init
         , view = View.entry
@@ -18,11 +18,15 @@ main =
         }
 
 
-init : ProgramFlags -> Navigation.Location -> ( Model, Cmd Msg )
-init flags location =
-    ( State.initialModel flags location
-    , State.initialCommands flags location
-    )
+init : Navigation.Location -> ( Model, Cmd Msg )
+init location =
+    let
+        initialPage =
+            Routing.Logic.locationToPage location
+    in
+        ( State.initialModel initialPage
+        , State.initialCommands initialPage
+        )
 
 
 router : Navigation.Location -> Msg

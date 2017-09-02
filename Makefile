@@ -14,8 +14,17 @@ all: dev
 
 
 #
+# Setup tasks
+#
+
+elm-install:
+	$(NODE_BIN)/elm-install
+
+
+#
 # Build tasks
 #
+
 build: clean vendor system elm css
 	@echo "> Build completed ⚡"
 
@@ -53,6 +62,7 @@ vendor:
 #
 # Dev tasks
 #
+
 dev: build
 	@make -j watch_wo_build server
 
@@ -77,7 +87,7 @@ watch_wo_build:
 
 
 watch_elm:
-	@watchexec -p -w $(SRC_DIR)/App --filter *.elm -- make elm
+	@watchexec -p -w $(SRC_DIR)/App -- make elm
 
 
 watch_css:

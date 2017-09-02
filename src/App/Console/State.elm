@@ -16,11 +16,6 @@ initialModel =
     }
 
 
-initialCommands : Cmd TopLevel.Msg
-initialCommands =
-    Cmd.none
-
-
 
 -- 🔥
 

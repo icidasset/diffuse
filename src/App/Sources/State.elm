@@ -20,19 +20,14 @@ import Types as TopLevel
 -- 💧
 
 
-initialModel : TopLevel.ProgramFlags -> Model
-initialModel flags =
-    { collection = decodeSources flags
+initialModel : Model
+initialModel =
+    { collection = []
     , isProcessing = Nothing
     , form = NewForm 1 initialSource
     , processingErrors = []
     , timestamp = Date.fromTime 0
     }
-
-
-initialCommands : Cmd TopLevel.Msg
-initialCommands =
-    Cmd.none
 
 
 initialSource : Source
@@ -207,7 +202,7 @@ update msg model =
                         |> TopLevel.TracksMsg
                         |> do
                     , updateEnabledSourceIds newCollection
-                    , storeSources newCollection
+                    , do TopLevel.StoreUserData
                     ]
 
         ------------------------------------
@@ -306,7 +301,7 @@ update msg model =
                                 "/sources"
                         )
                     , updateEnabledSourceIds newCollection
-                    , storeSources newCollection
+                    , do TopLevel.StoreUserData
                     ]
 
         ------------------------------------
@@ -323,7 +318,7 @@ update msg model =
                 (!)
                     { model | collection = newCollection }
                     [ updateEnabledSourceIds newCollection
-                    , storeSources newCollection
+                    , do TopLevel.StoreUserData
                     ]
 
 

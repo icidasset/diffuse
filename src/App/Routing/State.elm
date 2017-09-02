@@ -10,16 +10,16 @@ import Types as TopLevel
 -- 💧
 
 
-initialModel : Navigation.Location -> Model
-initialModel location =
-    { currentPage = Logic.locationToPage location }
+initialModel : Page -> Model
+initialModel initialPage =
+    { currentPage = initialPage
+    }
 
 
-initialCommands : Navigation.Location -> Cmd TopLevel.Msg
-initialCommands location =
+initialCommands : Page -> Cmd TopLevel.Msg
+initialCommands initialPage =
     -- Trigger routing-transitions
-    location
-        |> Logic.locationToPage
+    initialPage
         |> SetPage
         |> TopLevel.RoutingMsg
         |> do
