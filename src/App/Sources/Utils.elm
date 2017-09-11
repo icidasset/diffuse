@@ -3,25 +3,11 @@ module Sources.Utils exposing (..)
 import Date
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
-import Sources.Encoding
 import Sources.Types exposing (..)
 import Tracks.Types
 import Time
 import Types as TopLevel exposing (Illumination)
-import Users.Ports
 import Utils
-
-
--- 💧
-
-
-decodeSources : TopLevel.ProgramFlags -> List Source
-decodeSources flags =
-    flags.sources
-        |> Maybe.withDefault []
-        |> List.map Sources.Encoding.decode
-        |> Maybe.values
-
 
 
 -- 🔥
@@ -30,6 +16,13 @@ decodeSources flags =
 ($) : Illumination Model Msg
 ($) =
     Utils.illuminate TopLevel.SourcesMsg
+
+
+pickEnableSourceIds : List Source -> List SourceId
+pickEnableSourceIds collection =
+    collection
+        |> List.filter (.enabled >> (==) True)
+        |> List.map .id
 
 
 setProperSourceId : Model -> Source -> Source
@@ -45,16 +38,10 @@ setProperSourceId model source =
     }
 
 
-storeSources : List Source -> Cmd TopLevel.Msg
-storeSources =
-    List.map Sources.Encoding.encode >> Users.Ports.storeSources
-
-
 updateEnabledSourceIds : List Source -> Cmd TopLevel.Msg
 updateEnabledSourceIds collection =
     collection
-        |> List.filter (.enabled >> (==) True)
-        |> List.map .id
+        |> pickEnableSourceIds
         |> Tracks.Types.SetEnabledSourceIds
         |> TopLevel.TracksMsg
         |> do

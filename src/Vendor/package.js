@@ -1,8 +1,10 @@
-window.jsmediatags = require("jsmediatags");
-window.XhrFileReader = require("jsmediatags/build2/XhrFileReader");
+self.jsmediatags = require("jsmediatags");
+self.XhrFileReader = require("jsmediatags/build2/XhrFileReader");
 
-window._ = require("1-liners");
-window.blockstack = require("blockstack");
-window.tocca = require("tocca");
-window.Dexie = require("dexie");
-window.DexieBatch = require("dexie-batch");
+self._ = require("1-liners");
+self.blockstack = require("blockstack");
+self.elasticlunr = require("elasticlunr");
+
+if (self.document) {
+  self.tocca = require("tocca");
+}

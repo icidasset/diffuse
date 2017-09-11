@@ -122,9 +122,9 @@ type Msg
     | Reharvest
     | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
-      -- Collection Pt. 1
-    | InitialCollection (List Json.Value)
-      -- Collection Pt. 2
+      -- Collection, Pt. 1
+    | InitialCollection Parcel
+      -- Collection, Pt. 2
     | Add (List Track)
     | Remove SourceId
     | RemoveByPath SourceId (List String)

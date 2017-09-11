@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Date exposing (Date)
+import Dict exposing (Dict)
 import Json.Encode
 import Mouse
 import Svg exposing (Svg)
@@ -10,6 +11,7 @@ import Window
 
 -- Children
 
+import Authentication.Types as Authentication
 import Console.Types as Console
 import Equalizer.Types as Equalizer
 import Queue.Types as Queue
@@ -23,14 +25,20 @@ import Tracks.Types as Tracks
 
 
 type Msg
-    = Authenticate AuthMethod
-    | ClickAway
-    | HideLoadingScreen
+    = ClickAway
+    | Reset
     | SetIsTouchDevice Bool
-    | SignOut
+      -- Loading
+    | HideLoadingScreen
+    | ShowLoadingScreen
+      -- User layer
+    | DidStoreUserData (Result String ())
+    | ImportUserData String
+    | StoreUserData
       -- Time
     | SetTimestamp Time
       -- Children
+    | AuthenticationMsg Authentication.Msg
     | ConsoleMsg Console.Msg
     | EqualizerMsg Equalizer.Msg
     | QueueMsg Queue.Msg
@@ -61,8 +69,7 @@ type Msg
 
 
 type alias Model =
-    { authenticatedUser : Maybe User
-    , contextMenu : Maybe ContextMenu
+    { contextMenu : Maybe ContextMenu
     , isTouchDevice : Bool
     , showLoadingScreen : Bool
 
@@ -74,6 +81,7 @@ type alias Model =
     ------------------------------------
     -- Children
     ------------------------------------
+    , authentication : Authentication.Model
     , console : Console.Model
     , equalizer : Equalizer.Model
     , queue : Queue.Model
@@ -81,33 +89,6 @@ type alias Model =
     , settings : Settings.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
-    }
-
-
-
--- Flags
-
-
-type alias ProgramFlags =
-    { settings : Settings
-    , user : Maybe User
-
-    -- Data
-    , favourites : Maybe (List Json.Encode.Value)
-    , sources : Maybe (List Json.Encode.Value)
-    , tracks : Maybe (List Json.Encode.Value)
-    }
-
-
-
--- Settings
-
-
-type alias Settings =
-    { application : Settings.Model
-    , equalizer : Equalizer.Settings
-    , queue : Queue.Settings
-    , tracks : Tracks.Settings
     }
 
 
@@ -125,16 +106,6 @@ type alias ContextMenuItems =
 
 
 -- Other
-
-
-type AuthMethod
-    = Local
-    | Blockstack
-
-
-type alias User =
-    { displayName : String
-    }
 
 
 type alias Illumination model childMsg =

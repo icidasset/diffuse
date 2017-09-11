@@ -18,8 +18,7 @@ parseTreeResponse response _ =
         decodedXml =
             response
                 |> Xml.decode
-                |> Result.toMaybe
-                |> Maybe.withDefault Xml.null
+                |> Result.withDefault Xml.null
 
         filePaths =
             decodedXml
@@ -36,9 +35,8 @@ parseTreeResponse response _ =
             if isTruncated == "true" then
                 decodedXml
                     |> tag "NextContinuationToken" string
-                    |> Result.toMaybe
-                    |> Maybe.map InProgress
-                    |> Maybe.withDefault TheEnd
+                    |> Result.map InProgress
+                    |> Result.withDefault TheEnd
             else
                 TheEnd
     in
@@ -57,8 +55,7 @@ parseErrorResponse response =
         decodedXml =
             response
                 |> Xml.decode
-                |> Result.toMaybe
-                |> Maybe.withDefault Xml.null
+                |> Result.withDefault Xml.null
     in
         decodedXml
             |> tags "Error"

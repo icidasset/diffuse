@@ -14,48 +14,24 @@ import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
-import Users.Ports
 
 
 -- 💧
 
 
-initialModel : TopLevel.ProgramFlags -> Model
-initialModel flags =
+initialModel : Model
+initialModel =
     { activeTrackId = Nothing
     , collection = emptyCollection
-    , enabledSourceIds = decodeEnabledSourceIds flags
+    , enabledSourceIds = []
     , exposedStep = 1
-    , favourites = decodeFavourites (Maybe.withDefault [] flags.favourites)
-    , favouritesOnly = flags.settings.tracks.favouritesOnly
+    , favourites = []
+    , favouritesOnly = False
     , searchResults = Nothing
-    , searchTerm = flags.settings.tracks.searchTerm
+    , searchTerm = Nothing
     , sortBy = Artist
     , sortDirection = Asc
     }
-
-
-initialCommands : Maybe (List Json.Value) -> Cmd TopLevel.Msg
-initialCommands maybeEncodedTracks =
-    let
-        encodedTracks =
-            Maybe.withDefault [] maybeEncodedTracks
-    in
-        Cmd.batch
-            [ -- Don't block the UI
-              encodedTracks
-                |> InitialCollection
-                |> TopLevel.TracksMsg
-                |> doDelayed (Time.millisecond * 250)
-
-            -- Fill queue
-            , TopLevel.FillQueue
-                |> doDelayed (Time.millisecond * 500)
-
-            -- Hide loader
-            , TopLevel.HideLoadingScreen
-                |> doDelayed (Time.millisecond * 500)
-            ]
 
 
 
@@ -113,10 +89,9 @@ update msg model =
         ------------------------------------
         -- # Initial Collection
         --
-        InitialCollection encodedTracks ->
-            model
-                |> Collection.makeParcel
-                |> Collection.add (decodeTracks encodedTracks)
+        InitialCollection parcel ->
+            parcel
+                |> Collection.reidentify
                 |> Collection.setWithoutConsequences
                 |> Response.andAlso search
 
@@ -260,11 +235,6 @@ toggleFavourite model ( i, t ) =
         newFavourites =
             Favourites.toggleInList model.favourites ( i, t )
 
-        storeFavourites =
-            newFavourites
-                |> List.map Tracks.Encoding.encodeFavourite
-                |> Users.Ports.storeFavourites
-
         effect =
             if model.favouritesOnly then
                 remap (Favourites.toggleInCollection t) >> reharvest
@@ -275,7 +245,7 @@ toggleFavourite model ( i, t ) =
             |> makeParcel
             |> effect
             |> set
-            |> addCmd storeFavourites
+            |> addCmd (do TopLevel.StoreUserData)
 
 
 scrollToIndex : Model -> Int -> ( Model, Cmd TopLevel.Msg )
@@ -325,18 +295,11 @@ subscriptions _ =
 -- Utils
 
 
-{-| Store settings via port.
--}
 storeSettings : Model -> Cmd TopLevel.Msg
-storeSettings model =
-    Ports.storeTracksSettings
-        { favouritesOnly = model.favouritesOnly
-        , searchTerm = model.searchTerm
-        }
+storeSettings _ =
+    do TopLevel.StoreUserData
 
 
-{-| Search
--}
 search : Model -> Cmd TopLevel.Msg
 search model =
     model.searchTerm

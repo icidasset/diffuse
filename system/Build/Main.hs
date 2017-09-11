@@ -93,5 +93,15 @@ flow (Info, dict) =
 flow (Images, dict) = prefixDirname "images/" dict
 flow (Favicons, dict) = prefixDirname "favicons/" dict
 flow (Fonts, dict) = prefixDirname "fonts/" dict
+flow (Javascript, dict) = List.map lowerCasePath dict
 flow (Blockstack, dict) = dict
-flow (Javascript, dict) = dict
+
+
+lowerCasePath :: Definition -> Definition
+lowerCasePath def =
+    forkDefinition
+        ( def
+            |> localPath
+            |> List.map Char.toLower
+        )
+        def

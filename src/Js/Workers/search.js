@@ -1,4 +1,4 @@
-importScripts("vendor/search.js");
+importScripts("/vendor/package.js");
 
 
 let index;

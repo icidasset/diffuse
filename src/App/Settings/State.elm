@@ -1,16 +1,17 @@
 module Settings.State exposing (..)
 
-import Settings.Ports as Ports
+import Response.Ext exposing (do)
 import Settings.Types exposing (..)
-import Types as TopLevel exposing (ProgramFlags)
+import Types as TopLevel
 
 
 -- 💧
 
 
-initialModel : ProgramFlags -> Model
-initialModel flags =
-    flags.settings.application
+initialModel : Model
+initialModel =
+    { backgroundImage = "4.jpg"
+    }
 
 
 
@@ -21,10 +22,6 @@ update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
         SetBackgroundImage filename ->
-            let
-                newModel =
-                    { model | backgroundImage = filename }
-            in
-                (!)
-                    newModel
-                    [ Ports.storeApplicationSettings newModel ]
+            (!)
+                { model | backgroundImage = filename }
+                [ do TopLevel.StoreUserData ]

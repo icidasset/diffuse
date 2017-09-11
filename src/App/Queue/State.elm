@@ -12,21 +12,16 @@ import Types as TopLevel
 -- 💧
 
 
-initialModel : TopLevel.ProgramFlags -> Model
-initialModel flags =
+initialModel : Model
+initialModel =
     { activeItem = Nothing
     , future = []
     , past = []
 
     -- Settings
-    , repeat = flags.settings.queue.repeat
-    , shuffle = flags.settings.queue.shuffle
+    , repeat = False
+    , shuffle = False
     }
-
-
-initialCommands : Cmd TopLevel.Msg
-initialCommands =
-    Cmd.none
 
 
 
@@ -234,12 +229,12 @@ update msg model =
         ToggleRepeat ->
             model
                 |> (\m -> { m | repeat = not model.repeat })
-                |> (\m -> ($) m [] [ storeSettings m ])
+                |> (\m -> ($) m [] [ Ports.toggleRepeat m.repeat, do TopLevel.StoreUserData ])
 
         ToggleShuffle ->
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
-                |> (\m -> ($) m [ do Reset ] [ storeSettings m ])
+                |> (\m -> ($) m [ do Reset ] [ do TopLevel.StoreUserData ])
 
 
 
@@ -250,17 +245,3 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.activeQueueItemEnded (\() -> Shift) ]
-
-
-
--- Utils
-
-
-{-| Store settings via port.
--}
-storeSettings : Model -> Cmd TopLevel.Msg
-storeSettings model =
-    Ports.storeQueueSettings
-        { repeat = model.repeat
-        , shuffle = model.shuffle
-        }

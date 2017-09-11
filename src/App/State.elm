@@ -1,21 +1,23 @@
 module State exposing (..)
 
+import Authentication.Method
+import Authentication.UserData
 import Date
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
 import Ports
 import Response exposing (..)
-import Response.Ext exposing (do)
+import Response.Ext as Response exposing (do, doDelayed)
 import Task
 import Time
 import Types exposing (..)
-import Users.Ports
 import Window
 
 
 -- Children
 
+import Authentication.State as Authentication
 import Console.State as Console
 import Equalizer.State as Equalizer
 import Queue.State as Queue
@@ -34,6 +36,8 @@ import Routing.Types as RT
 import Sources.ContextMenu
 import Sources.Types
 import Tracks.ContextMenu
+import Tracks.Encoding
+import Tracks.Ports
 import Tracks.Types
 import Tracks.Utils
 
@@ -41,10 +45,9 @@ import Tracks.Utils
 -- 💧
 
 
-initialModel : ProgramFlags -> Navigation.Location -> Model
-initialModel flags location =
-    { authenticatedUser = flags.user
-    , contextMenu = Nothing
+initialModel : RT.Page -> Model
+initialModel initialPage =
+    { contextMenu = Nothing
     , isTouchDevice = False
     , showLoadingScreen = True
 
@@ -56,29 +59,31 @@ initialModel flags location =
     ------------------------------------
     -- Children
     ------------------------------------
+    , authentication = Authentication.initialModel
     , console = Console.initialModel
-    , equalizer = Equalizer.initialModel flags
-    , queue = Queue.initialModel flags
-    , routing = Routing.initialModel location
-    , settings = Settings.initialModel flags
-    , sources = Sources.initialModel flags
-    , tracks = Tracks.initialModel flags
+    , equalizer = Equalizer.initialModel
+    , queue = Queue.initialModel
+    , routing = Routing.initialModel initialPage
+    , settings = Settings.initialModel
+    , sources = Sources.initialModel
+    , tracks = Tracks.initialModel
     }
 
 
-initialCommands : ProgramFlags -> Navigation.Location -> Cmd Msg
-initialCommands flags location =
+initialCommands : RT.Page -> Cmd Msg
+initialCommands initialPage =
     Cmd.batch
         [ -- Time
           Task.perform SetTimestamp Time.now
 
+        -- Authentication boot sequence
+        -- 1. Which authentication method are we using?
+        -- 2. > Am I signed in?
+        --    | Or are we in the process of signing in?
+        , Authentication.initialCommands
+
         -- Children
-        , Console.initialCommands
-        , Equalizer.initialCommands
-        , Queue.initialCommands
-        , Routing.initialCommands location
-        , Sources.initialCommands
-        , Tracks.initialCommands flags.tracks
+        , Routing.initialCommands initialPage
         ]
 
 
@@ -89,35 +94,80 @@ initialCommands flags location =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Authenticate method ->
-            (!)
-                model
-                [ method
-                    |> toString
-                    |> String.toUpper
-                    |> Users.Ports.authenticate
-                ]
-
         ClickAway ->
-            (!)
-                { model | contextMenu = Nothing }
-                []
+            (!) { model | contextMenu = Nothing } []
 
         HideLoadingScreen ->
+            (!) { model | showLoadingScreen = False } []
+
+        ShowLoadingScreen ->
+            (!) { model | showLoadingScreen = True } []
+
+        Reset ->
             (!)
-                { model | showLoadingScreen = False }
-                []
+                (initialModel model.routing.currentPage)
+                [ initialCommands model.routing.currentPage ]
 
         SetIsTouchDevice bool ->
-            (!)
-                { model | isTouchDevice = bool }
-                []
+            (!) { model | isTouchDevice = bool } []
 
-        SignOut ->
+        ------------------------------------
+        -- User layer
+        ------------------------------------
+        ImportUserData json ->
+            let
+                newModel =
+                    Authentication.UserData.inwards json model
+
+                encodedTracks =
+                    List.map Tracks.Encoding.encodeTrack newModel.tracks.collection.untouched
+            in
+                (!)
+                    newModel
+                    [ Tracks.Ports.updateSearchIndex encodedTracks
+                    , Queue.Ports.toggleRepeat newModel.queue.repeat
+                    , Equalizer.adjustAllKnobs newModel.equalizer
+
+                    -- Tracks
+                    , ( newModel.tracks
+                      , newModel.tracks.collection
+                      )
+                        |> Tracks.Types.InitialCollection
+                        |> TracksMsg
+                        |> doDelayed (Time.millisecond * 250)
+
+                    --
+                    , doDelayed (Time.millisecond * 500) FillQueue
+                    , doDelayed (Time.millisecond * 500) HideLoadingScreen
+                    ]
+
+        StoreUserData ->
             (!)
-                { model | authenticatedUser = Nothing }
-                [ Users.Ports.deauthenticate ()
-                , Navigation.modifyUrl "/"
+                model
+                [ case model.authentication.method of
+                    Just method ->
+                        model
+                            |> Authentication.UserData.outwards
+                            |> Authentication.Method.storeData method
+                            |> Task.attempt DidStoreUserData
+
+                    Nothing ->
+                        Cmd.none
+                ]
+
+        DidStoreUserData (Ok _) ->
+            -- Carry on
+            (!) model []
+
+        DidStoreUserData (Err err) ->
+            (!)
+                model
+                [ err
+                    |> String.append "User data storage error: "
+                    |> RT.ErrorScreen
+                    |> RT.SetPage
+                    |> RoutingMsg
+                    |> do
                 ]
 
         ------------------------------------
@@ -141,6 +191,10 @@ update msg model =
         ------------------------------------
         -- Children
         ------------------------------------
+        AuthenticationMsg sub ->
+            Authentication.update sub model.authentication
+                |> mapModel (\x -> { model | authentication = x })
+
         ConsoleMsg sub ->
             Console.update sub model.console
                 |> mapModel (\x -> { model | console = x })

@@ -1,5 +1,6 @@
 module Settings.View exposing (..)
 
+import Authentication.Types as Authentication
 import Color
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -36,7 +37,7 @@ entry model =
                     [ Icons.exit_to_app colorDerivatives.text 16
                     , label [] [ text "Sign out" ]
                     ]
-              , SignOut
+              , AuthenticationMsg Authentication.SignOut
               )
             ]
 

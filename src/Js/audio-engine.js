@@ -216,9 +216,7 @@ function audioTimeUpdateEvent(event) {
 
 
 function audioEndEvent(event) {
-  const queueSettings = loadSettings("queue");
-
-  if (queueSettings && queueSettings.repeat) {
+  if (this.repeat) {
     event.target.play();
   } else {
     this.elm.ports.activeQueueItemEnded.send(null);

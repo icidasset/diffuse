@@ -1,1 +1,0 @@
-self.elasticlunr = require("elasticlunr");
