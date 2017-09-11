@@ -1,6 +1,6 @@
 module Settings.View exposing (..)
 
-import Authentication.Types as Authentication
+import Authentication.Types as Authentication exposing (Method(..))
 import Color
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -51,9 +51,16 @@ entry model =
                 [ text "Settings" ]
             , p
                 [ cssClass Intro ]
-                [ text """
-                    Changes are automatically saved.
-                  """
+                [ text "Changes are automatically saved."
+                , br [] []
+                , text "PS. You are using the "
+                , case Maybe.withDefault Local model.authentication.method of
+                    Blockstack ->
+                        text "Blockstack"
+
+                    Local ->
+                        text "anonymous"
+                , text " authentication mode."
                 ]
             , Html.map SettingsMsg (theForm model)
             ]
