@@ -176,13 +176,13 @@ styles =
             -- <tbody> Favourites
             , selector "td[data-favourite]"
                 [ color (hex "#dedede")
-                , fontFamilies [ "Material Icons" ]
+                , fontFamilies [ "'or-favourites'" ]
                 , property "text-overflow" "initial"
-                , before [ property "content" "'favorite_border'" ]
+                , before [ property "content" "\"f\"" ]
                 ]
             , selector "td[data-favourite=\"t\"]"
                 [ color (cssColor colors.base08)
-                , before [ property "content" "'favorite'" ]
+                , before [ property "content" "'t'" ]
                 ]
 
             -- <tbody> Modifiers
