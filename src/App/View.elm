@@ -150,7 +150,7 @@ entry model =
             [ cssClass BackgroundImage
             , style
                 [ ( "background-image"
-                  , "url(images/Background/" ++ model.settings.backgroundImage ++ ")"
+                  , "url(/images/Background/" ++ model.settings.backgroundImage ++ ")"
                   )
                 , case model.settings.backgroundImage of
                     "1.jpg" ->
