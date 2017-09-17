@@ -11,6 +11,7 @@ import Window
 
 -- Children
 
+import Abroad.Types as Abroad
 import Authentication.Types as Authentication
 import Console.Types as Console
 import Equalizer.Types as Equalizer
@@ -38,6 +39,7 @@ type Msg
       -- Time
     | SetTimestamp Time
       -- Children
+    | AbroadMsg Abroad.Msg
     | AuthenticationMsg Authentication.Msg
     | ConsoleMsg Console.Msg
     | EqualizerMsg Equalizer.Msg
@@ -81,6 +83,7 @@ type alias Model =
     ------------------------------------
     -- Children
     ------------------------------------
+    , abroad : Abroad.Model
     , authentication : Authentication.Model
     , console : Console.Model
     , equalizer : Equalizer.Model

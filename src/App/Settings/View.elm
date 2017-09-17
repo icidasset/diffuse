@@ -6,9 +6,11 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
 import Material.Icons.Action as Icons
+import Material.Icons.Communication as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Image as Icons
 import Navigation.View as Navigation
+import Routing.Types exposing (Page(..))
 import Settings.Types
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
@@ -33,6 +35,13 @@ entry model =
           ------------------------------------
           Navigation.insideCustom
             [ ( span
+                    []
+                    [ Icons.import_export colorDerivatives.text 16
+                    , label [] [ text "Import / Export" ]
+                    ]
+              , RoutingMsg (Routing.Types.GoToPage Abroad)
+              )
+            , ( span
                     []
                     [ Icons.exit_to_app colorDerivatives.text 16
                     , label [] [ text "Sign out" ]

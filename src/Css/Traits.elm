@@ -2,6 +2,7 @@ module Traits exposing (..)
 
 import Color
 import Css exposing (..)
+import Css.Media exposing (..)
 import Variables exposing (baseFontSize)
 
 
@@ -29,30 +30,16 @@ gr number =
 
 
 -- Css / Queries
---
--- iPhone6 : MediaQuery
--- iPhone6 =
---     MediaQuery "screen and (min-width: 480px)"
---
---
--- tablet : MediaQuery
--- tablet =
---     MediaQuery "screen and (min-width: 700px)"
 
 
-querySmall : List Snippet -> Snippet
-querySmall =
-    mediaQuery "screen and (min-width: 480px)"
+iPhone6 : MediaQuery
+iPhone6 =
+    only screen [ Css.Media.minWidth (px 480) ]
 
 
-queryMedium : List Snippet -> Snippet
-queryMedium =
-    mediaQuery "screen and (min-width: 768px)"
-
-
-queryLarge : List Snippet -> Snippet
-queryLarge =
-    mediaQuery "screen and (min-width: 1024px)"
+tablet : MediaQuery
+tablet =
+    only screen [ Css.Media.minWidth (px 700) ]
 
 
 

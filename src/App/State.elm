@@ -17,6 +17,7 @@ import Window
 
 -- Children
 
+import Abroad.State as Abroad
 import Authentication.State as Authentication
 import Console.State as Console
 import Equalizer.State as Equalizer
@@ -59,6 +60,7 @@ initialModel initialPage =
     ------------------------------------
     -- Children
     ------------------------------------
+    , abroad = Abroad.initialModel
     , authentication = Authentication.initialModel
     , console = Console.initialModel
     , equalizer = Equalizer.initialModel
@@ -191,6 +193,10 @@ update msg model =
         ------------------------------------
         -- Children
         ------------------------------------
+        AbroadMsg sub ->
+            Abroad.update sub model.abroad
+                |> mapModel (\x -> { model | abroad = x })
+
         AuthenticationMsg sub ->
             Authentication.update sub model.authentication
                 |> mapModel (\x -> { model | authentication = x })

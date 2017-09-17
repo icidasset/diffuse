@@ -10,7 +10,7 @@ A music player which connects to your cloud/distributed storage.
 
 - Loads of `Elm`
 - A moderate amount of `Haskell` for the build system and static server
-- A tiny bit of `Node` (for making a separate css file and autoprefixer for production)
+- A tiny bit of `Node` (autoprefixer, browserify vendor js, etc.)
 - Blockstack
 
 
@@ -24,6 +24,7 @@ brew install elm
 brew install nodejs
 
 npm install
+make elm-install
 ```
 
 
