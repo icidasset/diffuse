@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Date exposing (Date)
+import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Json.Encode
 import Mouse
@@ -37,6 +38,8 @@ type Msg
     | ImportUserData String
     | StoreUserData
       -- Time
+    | DebounceStoreUserData
+    | DebounceCallbackStoreUserData Debounce.Msg
     | SetTimestamp Time
       -- Children
     | AbroadMsg Abroad.Msg
@@ -78,6 +81,7 @@ type alias Model =
     ------------------------------------
     -- Time
     ------------------------------------
+    , storageDebounce : Debounce ()
     , timestamp : Date
 
     ------------------------------------

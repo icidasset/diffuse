@@ -3,6 +3,7 @@ module State exposing (..)
 import Authentication.Method
 import Authentication.UserData
 import Date
+import Debounce
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
@@ -55,6 +56,7 @@ initialModel initialPage =
     ------------------------------------
     -- Time
     ------------------------------------
+    , storageDebounce = Debounce.init
     , timestamp = Date.fromTime 0
 
     ------------------------------------
@@ -175,6 +177,26 @@ update msg model =
         ------------------------------------
         -- Time
         ------------------------------------
+        DebounceStoreUserData ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.push debounceStoreUserDataConfig () model.storageDebounce
+            in
+                (!)
+                    { model | storageDebounce = debounce }
+                    [ cmd ]
+
+        DebounceCallbackStoreUserData msg ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceStoreUserDataConfig
+                        (Debounce.takeLast (always <| do StoreUserData))
+                        msg
+                        model.storageDebounce
+            in
+                { model | storageDebounce = debounce } ! [ cmd ]
+
         SetTimestamp time ->
             let
                 stamp =
@@ -370,6 +392,17 @@ update msg model =
         ------------------------------------
         NoOp ->
             (!) model []
+
+
+
+-- 🔥 / Debounce configurations
+
+
+debounceStoreUserDataConfig : Debounce.Config Msg
+debounceStoreUserDataConfig =
+    { strategy = Debounce.later (5 * Time.second)
+    , transform = DebounceCallbackStoreUserData
+    }
 
 
 

@@ -28,6 +28,7 @@
         "etaque/elm-response": "3.0.0 <= v < 4.0.0",
         "evancz/url-parser": "2.0.1 <= v < 3.0.0",
         "fredcy/localstorage": "1.0.0 <= v < 2.0.0",
+        "jinjor/elm-debounce": "2.1.0 <= v < 2.2.0",
         "justinmimbs/elm-date-extra": "2.0.3 <= v < 3.0.0",
         "lukewestby/elm-string-interpolate": "1.0.1 <= v < 2.0.0",
         "rtfeldman/elm-css": "11.1.0 <= v < 12.0.0",

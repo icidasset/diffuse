@@ -297,7 +297,7 @@ subscriptions _ =
 
 storeSettings : Model -> Cmd TopLevel.Msg
 storeSettings _ =
-    do TopLevel.StoreUserData
+    do TopLevel.DebounceStoreUserData
 
 
 search : Model -> Cmd TopLevel.Msg

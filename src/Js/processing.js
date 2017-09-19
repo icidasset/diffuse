@@ -74,9 +74,13 @@ function pickTags(tagsFromJsmediatags) {
     title: tags.title && tags.title.length ? tags.title : "Unknown",
     genre: tags.genre && tags.genre.length ? tags.genre : null,
     year: tags.year && tags.year.length ? getYear(tags.year) : null,
-    picture: tags.picture ? pictureDataUri(tags.picture) : null
+    picture: null
   };
 }
+
+
+//
+// Pictures (NOTE: disabled for now, slows down the app a lot)
 
 
 function pictureDataUri(rawPicture) {
