@@ -229,12 +229,17 @@ update msg model =
         ToggleRepeat ->
             model
                 |> (\m -> { m | repeat = not model.repeat })
-                |> (\m -> ($) m [] [ Ports.toggleRepeat m.repeat, do TopLevel.StoreUserData ])
+                |> (\m -> ($) m [] [ Ports.toggleRepeat m.repeat, storeUserData ])
 
         ToggleShuffle ->
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
-                |> (\m -> ($) m [ do Reset ] [ do TopLevel.StoreUserData ])
+                |> (\m -> ($) m [ do Reset ] [ storeUserData ])
+
+
+storeUserData : Cmd TopLevel.Msg
+storeUserData =
+    do TopLevel.DebounceStoreUserData
 
 
 

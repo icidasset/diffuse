@@ -134,17 +134,17 @@ update msg model =
         -- > Step 1, set search term
         SetSearchTerm "" ->
             { model | searchTerm = Nothing }
-                |> Response.withAlso storeSettings
+                |> Response.withAlso storeUserData
 
         SetSearchTerm value ->
             { model | searchTerm = Just value }
-                |> Response.withAlso storeSettings
+                |> Response.withAlso storeUserData
 
         -- > Step 2, perform search
         Search (Just term) ->
             { model | searchTerm = Just term }
                 |> Response.withCmd (Ports.performSearch term)
-                |> Response.andAlso storeSettings
+                |> Response.andAlso storeUserData
 
         Search Nothing ->
             { model | searchResults = Nothing, searchTerm = Nothing }
@@ -152,7 +152,7 @@ update msg model =
                 |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
-                |> Response.andAlso storeSettings
+                |> Response.andAlso storeUserData
 
         -- > Step 3, receive search results
         ReceiveSearchResults trackIds ->
@@ -181,7 +181,7 @@ update msg model =
                 |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
-                |> Response.andAlso storeSettings
+                |> Response.andAlso storeUserData
 
         ------------------------------------
         -- UI
@@ -295,8 +295,8 @@ subscriptions _ =
 -- Utils
 
 
-storeSettings : Model -> Cmd TopLevel.Msg
-storeSettings _ =
+storeUserData : Model -> Cmd TopLevel.Msg
+storeUserData _ =
     do TopLevel.DebounceStoreUserData
 
 
