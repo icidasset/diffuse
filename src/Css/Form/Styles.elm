@@ -90,4 +90,16 @@ formStyles =
     , class InputBox
         [ boxStyles
         ]
+
+    ------------------------------------------------------
+    -- File input
+    ------------------------------------------------------
+    , selector "input[type='file']"
+        [ height (px 0.1)
+        , opacity zero
+        , overflow hidden
+        , position absolute
+        , width (px 0.1)
+        , zIndex (int -1)
+        ]
     ]

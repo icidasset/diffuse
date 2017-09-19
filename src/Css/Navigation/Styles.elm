@@ -4,7 +4,8 @@ import Color
 import Color.Manipulate
 import Css exposing (..)
 import Css.Elements exposing (a, label, span, svg)
-import Traits exposing (cssColor, gr)
+import Css.Media exposing (withMedia)
+import Traits exposing (..)
 import Variables exposing (colorDerivatives, insulationWidth)
 
 
@@ -45,6 +46,10 @@ styles =
                 , marginRight (gr 4)
 
                 --
+                , withMedia [ iPhone6 ] [ marginRight (gr 6) ]
+                , withMedia [ tablet ] [ marginRight (gr 9) ]
+
+                --
                 , lastChild
                     [ marginRight zero
                     ]
@@ -65,27 +70,6 @@ styles =
                     |> Color.Manipulate.fadeOut 0.45
                     |> cssColor
                     |> color
-                ]
-            ]
-        ]
-
-    -- TODO: https://github.com/rtfeldman/elm-css/pull/281
-    --
-    , mediaQuery "screen and ( min-width: 375px )"
-        [ class OutsideNavigation
-            [ descendants
-                [ a
-                    [ marginRight (gr 6)
-                    ]
-                ]
-            ]
-        ]
-    , mediaQuery "screen and ( min-width: 700px )"
-        [ class OutsideNavigation
-            [ descendants
-                [ a
-                    [ marginRight (gr 9)
-                    ]
                 ]
             ]
         ]

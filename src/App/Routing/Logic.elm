@@ -55,6 +55,9 @@ isSameBase a b =
 pageToHref : Page -> String
 pageToHref page =
     case page of
+        Abroad ->
+            "/import-export"
+
         Equalizer ->
             "/equalizer"
 
@@ -99,6 +102,7 @@ route =
         , map (Queue Queue.History) (s "queue" </> s "history")
 
         -- Other
+        , map Abroad (s "import-export")
         , map Equalizer (s "equalizer")
         , map Settings (s "settings")
         , map Index top

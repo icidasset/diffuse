@@ -24,6 +24,7 @@ import Variables exposing (colors, colorDerivatives)
 
 -- Children
 
+import Abroad.View as Abroad
 import Console.View as Console
 import Equalizer.View as Equalizer
 import Queue.View as Queue
@@ -99,6 +100,11 @@ entry model =
 
                 -- # Needs authentication
                 --
+                Abroad ->
+                    authenticated
+                        [ Abroad.entry model ]
+                        model
+
                 Equalizer ->
                     authenticated
                         [ Equalizer.entry model ]

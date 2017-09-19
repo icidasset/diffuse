@@ -4,6 +4,7 @@ import Color
 import Color.Manipulate
 import Css exposing (..)
 import Css.Elements exposing (..)
+import Css.Media exposing (withMedia)
 import Traits exposing (..)
 import Variables exposing (..)
 
@@ -48,6 +49,8 @@ type Classes
     | BackgroundImage
     | Basic
     | Button
+    | ButtonSmall
+    | ButtonSubtle
     | Columns
     | ContentBox
     | EmptyState
@@ -70,13 +73,7 @@ stylesLocal =
       ------------------------------------------------------
       html
         [ fontSize (px 14)
-        ]
-
-    --
-    , mediaQuery "screen and ( min-width: 700px )"
-        [ html
-            [ fontSize (px baseFontSize)
-            ]
+        , withMedia [ tablet ] [ fontSize (px baseFontSize) ]
         ]
 
     ------------------------------------------------------
@@ -233,7 +230,7 @@ stylesLocal =
     ------------------------------------------------------
     , (each [ class Button, button ])
         [ backgroundColor transparent
-        , border3 (px 2) solid (cssColor colorDerivatives.success)
+        , border3 (px 2) solid currentColor
         , borderRadius borderRadiuses.smallElements
         , boxSizing contentBox
         , color (cssColor colorDerivatives.success)
@@ -245,6 +242,7 @@ stylesLocal =
         , height (gr 6)
         , lineHeight (gr 6)
         , padding3 (px 1) (gr 2) zero
+        , textTransform none
 
         --
         , focus
@@ -262,6 +260,26 @@ stylesLocal =
                 [ fill currentColor
                 ]
             ]
+
+        --
+        , adjacentSiblings
+            [ (each [ class Button, button ])
+                [ marginLeft (gr 1)
+                ]
+            ]
+        ]
+
+    -- Additional button styles
+    --
+    , class ButtonSmall
+        [ fontSize (Css.rem 0.85)
+        , height (gr 5)
+        , lineHeight (gr 5)
+        , padding3 (px 1) (px 8) zero
+        ]
+    , class ButtonSubtle
+        [ color (cssColor colors.base05)
+        , fontWeight (int 600)
         ]
 
     --                          --

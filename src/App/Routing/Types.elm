@@ -14,7 +14,8 @@ type alias Model =
 
 
 type Page
-    = Equalizer
+    = Abroad
+    | Equalizer
     | ErrorScreen String
     | Index
     | Queue Queue.Page
