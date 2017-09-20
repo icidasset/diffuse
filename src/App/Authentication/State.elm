@@ -165,7 +165,14 @@ update msg model =
 
                     ModifyUrl ->
                         Navigation.modifyUrl "/"
-                , after
+                , case model.method of
+                    Just method ->
+                        Task.attempt
+                            (DidGetData >> TopLevel.AuthenticationMsg)
+                            (Authentication.Method.getData method)
+
+                    Nothing ->
+                        after
                 ]
 
         ------------------------------------
