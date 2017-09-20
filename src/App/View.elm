@@ -46,7 +46,7 @@ import Sources.Types
 entry : Model -> Html Msg
 entry model =
     div
-        (-- ++ Equalizer Events
+        (-- Global mouse/touch events ++ Equalizer events
          -- TODO: Find a way to make these into subscriptions
          --       (like with the mouse events)
          case model.equalizer.activeKnob of
@@ -67,17 +67,17 @@ entry model =
                     onClick ClickAway
                 ]
         )
-        [ --
-          -- {override} Loading
-          --
-          if model.showLoadingScreen then
+        [ if model.showLoadingScreen then
+            ------------------------------------
+            -- {override} Loading
+            ------------------------------------
             div
                 [ cssClass InTheMiddle ]
                 [ Spinner.entry ]
-            --
-            -- Default
-            --
           else
+            ------------------------------------
+            -- Default
+            ------------------------------------
             case model.routing.currentPage of
                 -- # Doesn't need authentication
                 --

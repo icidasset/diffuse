@@ -80,13 +80,8 @@ initialCommands initialPage =
         [ -- Time
           Task.perform SetTimestamp Time.now
 
-        -- Authentication boot sequence
-        -- 1. Which authentication method are we using?
-        -- 2. > Am I signed in?
-        --    | Or are we in the process of signing in?
-        , Authentication.initialCommands
-
         -- Children
+        , Authentication.initialCommands
         , Routing.initialCommands initialPage
         ]
 
@@ -430,9 +425,9 @@ subscriptions model =
 handleRouteTransitions : RT.Msg -> Model -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 handleRouteTransitions routingMsg oldModel response =
     response
-        --
+        ------------------------------------
         -- Commands
-        --
+        ------------------------------------
         |> Tuple.mapSecond
             (\cmd ->
                 case oldModel.routing.currentPage of
@@ -442,12 +437,16 @@ handleRouteTransitions routingMsg oldModel response =
                     _ ->
                         cmd
             )
-        --
+        ------------------------------------
         -- Model
-        --
-        |> Response.mapModel
+        ------------------------------------
+        |> Tuple.mapFirst
             (\model ->
                 case routingMsg of
+                    --
+                    -- When we are going to edit a source,
+                    -- set the `form` attribute.
+                    --
                     RT.SetPage (RT.Sources (Sources.Types.Edit sourceId)) ->
                         let
                             sources =
@@ -455,6 +454,10 @@ handleRouteTransitions routingMsg oldModel response =
                         in
                             { model | sources = sources }
 
+                    --
+                    -- When we are going to create a source,
+                    -- set the `form` attribute.
+                    --
                     RT.SetPage (RT.Sources Sources.Types.New) ->
                         case model.sources.form of
                             Sources.Types.EditForm _ ->
@@ -463,6 +466,9 @@ handleRouteTransitions routingMsg oldModel response =
                             _ ->
                                 model
 
+                    --
+                    -- Default
+                    --
                     _ ->
                         model
             )
