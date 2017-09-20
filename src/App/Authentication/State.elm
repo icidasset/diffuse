@@ -158,7 +158,7 @@ update msg model =
 
         DidHandleSignInProcess consequence ->
             (!)
-                model
+                { model | signedIn = True }
                 [ case consequence of
                     KeepUrl ->
                         Cmd.none
