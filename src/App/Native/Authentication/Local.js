@@ -1,6 +1,5 @@
 const _icidasset$ongaku_ryoho$Native_Authentication_Local = (() => {
 
-  const KEY = "ongaku-ryoho_" + location.hostname + ".json";
   const ID = "authenticationMethod.LOCAL";
 
   const nativeBinding = _elm_lang$core$Native_Scheduler.nativeBinding;
@@ -10,21 +9,28 @@ const _icidasset$ongaku_ryoho$Native_Authentication_Local = (() => {
   const Nothing = _elm_lang$core$Maybe$Nothing;
 
 
-  // indexedDB
-
-  const indexedDB =
-    window.indexedDB ||
-    window.webkitIndexedDB ||
-    window.mozIndexedDB ||
-    window.msIndexedDB;
-
-  let db;
-
-
   // Utils
 
   function native(fn) {
     return nativeBinding(callback => callback(succeed(fn())));
+  }
+
+
+  function doWork(reqs) {
+    const timeoutId = setTimeout(_ => {
+      reqs.callback(fail("Failed to reach web worker"));
+    }, 60000);
+
+    // Wait for response from worker,
+    // have timeout as fallback.
+    const patchedHandler = event => {
+      worker.removeEventListener("message", patchedHandler);
+      clearTimeout(timeoutId);
+      reqs.handler(event);
+    };
+
+    worker.addEventListener("message", patchedHandler);
+    worker.postMessage({ action: reqs.action, data: reqs.data });
   }
 
 
@@ -34,29 +40,14 @@ const _icidasset$ongaku_ryoho$Native_Authentication_Local = (() => {
   return {
 
     construct: nativeBinding(callback => {
-      let idx;
-
-      // worker
       worker = new Worker("/workers/authentication/local.js");
+      worker.onmessage = event => {
+        worker.onmessage = null;
 
-      // early return if already setup
-      if (db) {
-        callback(succeed());
-        return;
-      }
-
-      idx = indexedDB.open(KEY, 1);
-      idx.onupgradeneeded = event => {
-        event.target.result.createObjectStore(KEY);
-      };
-
-      idx.onsuccess = () => {
-        db = idx.result;
-        callback(succeed());
-      };
-
-      idx.onerror = () => {
-        callback(fail());
+        switch (event.data.action) {
+          case "CONSTRUCT_SUCCESS": return callback(succeed());
+          case "CONSTRUCT_FAILURE": return callback(fail());
+        }
       };
     }),
 
@@ -89,56 +80,46 @@ const _icidasset$ongaku_ryoho$Native_Authentication_Local = (() => {
     }),
 
 
-    // Data
+    // GET DATA
 
     getData: nativeBinding(callback => {
-      if (db) {
-        const tra = db.transaction([KEY], "readwrite");
-        const req = tra.objectStore(KEY).get(KEY);
+      const handler = event => {
+        switch (event.data.action) {
+          case "GET_SUCCESS":   return event.data.data
+                                    ? callback(succeed( Just(event.data.data) ))
+                                    : callback(succeed( Nothing ));
 
-        req.onsuccess = _ => {
-          if (req.result) {
-            const blob = req.result;
-            const reader = new FileReader();
+          case "GET_FAILURE":   return callback(fail("Failed to get data"));
+          default:              return callback(fail("Unavailable"));
+        }
+      };
 
-            reader.addEventListener("loadend", e => {
-              callback(succeed(Just(e.srcElement.result)));
-            });
-
-            reader.readAsText(blob);
-
-          } else {
-            callback(succeed(Nothing));
-
-          }
-        };
-
-        req.onerror = _ => {
-          return callback(fail("Transaction error"));
-        };
-
-      } else {
-        callback(fail("Unavailable"));
-
-      }
+      doWork({
+        action: "GET",
+        data: null,
+        callback: callback,
+        handler: handler
+      });
     }),
 
-    storeData(json) {
-      return nativeBinding(callback => {
-        if (db) {
-          const blob = new Blob([json], { type: "application/json" });
-          const tra = db.transaction([KEY], "readwrite");
-          const req = tra.objectStore(KEY).put(blob, KEY);
+    // STORE DATA
 
-          req.onsuccess = () => callback(succeed());
-          req.onerror = () => callback(fail("Could not store data"));
-
-        } else {
-          callback(fail("Unavailable"));
-
+    storeData(json) { return nativeBinding(callback => {
+      const handler = event => {
+        switch (event.data.action) {
+          case "SET_SUCCESS":   return callback(succeed());
+          case "SET_FAILURE":   return callback(fail("Failed to store data"));
+          default:              return callback(fail("Unavailable"));
         }
+      };
+
+      doWork({
+        action: "SET",
+        data: json,
+        callback: callback,
+        handler: handler
       });
-    }
+    })}
 
   };
 
