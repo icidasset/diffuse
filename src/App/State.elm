@@ -34,7 +34,8 @@ import Tracks.State as Tracks
 import Queue.Ports
 import Queue.Types
 import Queue.Utils
-import Routing.Types as RT
+import Routing.Transitions
+import Routing.Types exposing (Page(..))
 import Sources.ContextMenu
 import Sources.Types
 import Tracks.ContextMenu
@@ -47,7 +48,7 @@ import Tracks.Utils
 -- 💧
 
 
-initialModel : RT.Page -> Model
+initialModel : Page -> Model
 initialModel initialPage =
     { contextMenu = Nothing
     , isTouchDevice = False
@@ -74,7 +75,7 @@ initialModel initialPage =
     }
 
 
-initialCommands : RT.Page -> Cmd Msg
+initialCommands : Page -> Cmd Msg
 initialCommands initialPage =
     Cmd.batch
         [ -- Time
@@ -163,8 +164,8 @@ update msg model =
                 model
                 [ err
                     |> String.append "User data storage error: "
-                    |> RT.ErrorScreen
-                    |> RT.SetPage
+                    |> Routing.Types.ErrorScreen
+                    |> Routing.Types.SetPage
                     |> RoutingMsg
                     |> do
                 ]
@@ -233,7 +234,7 @@ update msg model =
         RoutingMsg sub ->
             Routing.update sub model.routing
                 |> mapModel (\x -> { model | routing = x })
-                |> handleRouteTransitions sub model
+                |> Routing.Transitions.transition sub model
 
         SettingsMsg sub ->
             Settings.update sub model.settings
@@ -272,38 +273,12 @@ update msg model =
                     |> do
                 ]
 
-        CleanQueue ->
-            (!)
-                model
-                [ model.tracks.collection.harvested
-                    |> List.map Tracks.Utils.unindentify
-                    |> Queue.Types.Clean
-                    |> QueueMsg
-                    |> do
-                ]
-
         FillQueue ->
             (!)
                 model
                 [ model.tracks.collection.harvested
                     |> List.map Tracks.Utils.unindentify
                     |> Queue.Types.Fill model.timestamp
-                    |> QueueMsg
-                    |> do
-                ]
-
-        RecalibrateTracks ->
-            (!)
-                model
-                [ Tracks.Types.Recalibrate
-                    |> TracksMsg
-                    |> do
-                ]
-
-        ResetQueue ->
-            (!)
-                model
-                [ Queue.Types.Reset
                     |> QueueMsg
                     |> do
                 ]
@@ -341,7 +316,7 @@ update msg model =
                 ]
 
         ------------------------------------
-        -- Children, Pt. 3
+        -- Context Menu
         ------------------------------------
         ShowSourceMenu sourceId mousePos ->
             (!)
@@ -420,55 +395,3 @@ subscriptions model =
         , Sub.map SourcesMsg <| Sources.subscriptions model.sources
         , Sub.map TracksMsg <| Tracks.subscriptions model.tracks
         ]
-
-
-handleRouteTransitions : RT.Msg -> Model -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
-handleRouteTransitions routingMsg oldModel response =
-    response
-        ------------------------------------
-        -- Commands
-        ------------------------------------
-        |> Tuple.mapSecond
-            (\cmd ->
-                case oldModel.routing.currentPage of
-                    RT.Index ->
-                        Cmd.batch [ cmd, do RecalibrateTracks ]
-
-                    _ ->
-                        cmd
-            )
-        ------------------------------------
-        -- Model
-        ------------------------------------
-        |> Tuple.mapFirst
-            (\model ->
-                case routingMsg of
-                    --
-                    -- When we are going to edit a source,
-                    -- set the `form` attribute.
-                    --
-                    RT.SetPage (RT.Sources (Sources.Types.Edit sourceId)) ->
-                        let
-                            sources =
-                                Sources.editForm model.sources sourceId
-                        in
-                            { model | sources = sources }
-
-                    --
-                    -- When we are going to create a source,
-                    -- set the `form` attribute.
-                    --
-                    RT.SetPage (RT.Sources Sources.Types.New) ->
-                        case model.sources.form of
-                            Sources.Types.EditForm _ ->
-                                { model | sources = Sources.newForm model.sources }
-
-                            _ ->
-                                model
-
-                    --
-                    -- Default
-                    --
-                    _ ->
-                        model
-            )

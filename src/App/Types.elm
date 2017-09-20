@@ -53,14 +53,11 @@ type Msg
     | TracksMsg Tracks.Msg
       -- Children, Pt. 2
     | ActiveQueueItemChanged (Maybe Queue.Item)
-    | CleanQueue
     | FillQueue
-    | RecalibrateTracks
-    | ResetQueue
     | PlayTrack String
     | ProcessSources
     | ToggleFavourite String
-      -- Children, Pt. 3
+      -- Context Menu
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
     | ShowViewMenu

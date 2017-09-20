@@ -1,5 +1,6 @@
 module Tracks.Collection.Responses exposing (..)
 
+import Queue.Types
 import Response.Ext exposing (do)
 import Tracks.Encoding
 import Tracks.Ports as Ports
@@ -33,7 +34,7 @@ harvestingConsequences : Collection -> Collection -> Model -> Cmd TopLevel.Msg
 harvestingConsequences oldCollection newCollection _ =
     case oldCollection.harvested /= newCollection.harvested of
         True ->
-            do TopLevel.ResetQueue
+            do (TopLevel.QueueMsg Queue.Types.Reset)
 
         False ->
             Cmd.none
