@@ -1,9 +1,9 @@
 module Main where
 
 import Flow
-import Protolude
+import Protolude hiding (list)
 import Renderers
-import Shikensu
+import Shikensu hiding (list)
 import Shikensu.Contrib
 import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities (lsequence)
@@ -20,13 +20,13 @@ main :: IO Dictionary
 main =
     sequences
         |> fmap (List.concatMap flow)
-        |> fmap (write "./build")
+        |> fmap (Shikensu.write "../build")
         |> Monad.join
 
 
-process :: [[Char]] -> IO Dictionary
-process patterns =
-    Shikensu.listRelativeF "./" patterns >>= Shikensu.read
+list :: [Char] -> IO Dictionary
+list pattern =
+    Shikensu.listRelativeF "./src" [pattern] >>= Shikensu.read
 
 
 
@@ -46,14 +46,14 @@ data Sequence
 sequences :: IO [( Sequence, Dictionary )]
 sequences =
     lsequence
-        [ ( Pages,          process ["src/Static/Html/**/*.html"]       )
-        , ( Info,           process ["src/Static/Info/**/*.*"]          )
+        [ ( Pages,          list "Static/Html/**/*.html"    )
+        , ( Info,           list "Static/Info/**/*.*"       )
 
-        , ( Images,         process ["src/Static/Images/**/*.*"]        )
-        , ( Favicons,       process ["src/Static/Favicons/**/*.*"]      )
-        , ( Fonts,          process ["src/Static/Fonts/**/*.*"]         )
-        , ( Blockstack,     process ["src/Static/Blockstack/**/*"]      )
-        , ( Javascript,     process ["src/Js/**/*.js"]                  )
+        , ( Images,         list "Static/Images/**/*.*"     )
+        , ( Favicons,       list "Static/Favicons/**/*.*"   )
+        , ( Fonts,          list "Static/Fonts/**/*.*"      )
+        , ( Blockstack,     list "Static/Blockstack/**/*"   )
+        , ( Javascript,     list "Js/**/*.js"               )
         ]
 
 
@@ -75,9 +75,6 @@ flow (Info, dict) =
 
         css =
             List.filter (\def -> extname def == ".css") dict
-
-        append =
-            \a b -> List.concat [ a, b ]
     in
         dict
             |> exclude "Layout.html"
@@ -90,16 +87,25 @@ flow (Info, dict) =
             |> prefixDirname "about/"
 
 
-flow (Images, dict) = prefixDirname "images/" dict
-flow (Favicons, dict) = prefixDirname "favicons/" dict
-flow (Fonts, dict) = prefixDirname "fonts/" dict
-flow (Javascript, dict) = List.map lowerCasePath dict
-flow (Blockstack, dict) = dict
+flow (Images, dict)         = prefixDirname "images/" dict
+flow (Favicons, dict)       = prefixDirname "favicons/" dict
+flow (Fonts, dict)          = prefixDirname "fonts/" dict
+flow (Javascript, dict)     = List.map lowerCasePath dict
+flow (Blockstack, dict)     = dict
+
+
+
+-- Utilities
+
+
+append :: Dictionary -> Dictionary -> Dictionary
+append a b =
+    List.concat [ a, b ]
 
 
 lowerCasePath :: Definition -> Definition
 lowerCasePath def =
-    forkDefinition
+    Shikensu.forkDefinition
         ( def
             |> localPath
             |> List.map Char.toLower
