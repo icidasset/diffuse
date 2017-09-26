@@ -9,6 +9,7 @@ default-extensions:
 
 
 dependencies:
+  - aeson == 1.1.*
   - base >= 4.7 && < 5
   - binary == 0.8.*
   - bytestring == 0.10.*
@@ -20,6 +21,7 @@ dependencies:
   - protolude == 0.1.*
   - shikensu == 0.3.*
   - text == 1.*
+  - unordered-containers == 0.2.*
   - wai == 3.2.*
   - wai-app-static == 3.1.*
   - wai-cors == 0.2.*

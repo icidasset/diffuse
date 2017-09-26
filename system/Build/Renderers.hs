@@ -5,7 +5,6 @@ import Protolude
 import Shikensu
 
 import qualified CMark
-import qualified Data.ByteString as ByteString
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 
@@ -13,15 +12,9 @@ import qualified Data.Text.Encoding as Text
 -- Layouts
 
 
-layoutRenderer :: Maybe ByteString -> Definition -> Maybe ByteString
-layoutRenderer maybeLayout def =
-    let
-        layout =
-            maybeLayout
-                |> fromMaybe ByteString.empty
-                |> Text.decodeUtf8
-    in
-        content def
+layoutRenderer :: Text -> Definition -> Maybe ByteString
+layoutRenderer layout def =
+    content def
             |> fmap Text.decodeUtf8
             |> fmap (\text -> Text.replace "<placeholder />" text layout)
             |> fmap Text.encodeUtf8

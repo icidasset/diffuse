@@ -32,8 +32,11 @@ make elm-install
 ## How to run
 
 ```shell
-# make a static `./build`
+# build + server + watch
 make
+
+# make a static `./build`
+make build
 
 # run the static server
 make server

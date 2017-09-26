@@ -6,11 +6,14 @@ import Renderers
 import Shikensu hiding (list)
 import Shikensu.Contrib
 import Shikensu.Contrib.IO as Shikensu
-import Shikensu.Utilities (lsequence)
+import Shikensu.Utilities
 
 import qualified Control.Monad as Monad (join)
+import qualified Data.Aeson as Aeson (Object, Value, toJSON)
 import qualified Data.Char as Char
+import qualified Data.HashMap.Strict as HashMap (fromList)
 import qualified Data.List as List
+import qualified Data.Text.IO as Text
 
 
 -- | (• ◡•)| (❍ᴥ❍ʋ)
@@ -18,10 +21,16 @@ import qualified Data.List as List
 
 main :: IO Dictionary
 main =
-    sequences
-        |> fmap (List.concatMap flow)
-        |> fmap (Shikensu.write "../build")
-        |> Monad.join
+    do
+        de <- dependencies
+        se <- sequences
+
+        -- Execute flows
+        -- & reduce to a single dictionary
+        let dictionary = List.concatMap (flow de) se
+
+        -- Write to disk
+        write "../build" dictionary
 
 
 list :: [Char] -> IO Dictionary
@@ -38,7 +47,8 @@ data Sequence
     | Favicons
     | Fonts
     | Images
-    | Info
+    | InfoCss
+    | InfoPages
     | Javascript
     | Pages
 
@@ -46,13 +56,20 @@ data Sequence
 sequences :: IO [( Sequence, Dictionary )]
 sequences =
     lsequence
-        [ ( Pages,          list "Static/Html/**/*.html"    )
-        , ( Info,           list "Static/Info/**/*.*"       )
+        [ -- Pages
+          ( Pages,          list "Static/Html/**/*.html"    )
 
+          -- Info / About
+        , ( InfoPages,      list "Static/Info/**/*.md"      )
+        , ( InfoCss,        list "Static/Info/**/*.css"     )
+
+          -- Assets
         , ( Images,         list "Static/Images/**/*.*"     )
         , ( Favicons,       list "Static/Favicons/**/*.*"   )
         , ( Fonts,          list "Static/Fonts/**/*.*"      )
         , ( Blockstack,     list "Static/Blockstack/**/*"   )
+
+          -- Js
         , ( Javascript,     list "Js/**/*.js"               )
         ]
 
@@ -61,37 +78,49 @@ sequences =
 -- Flows
 
 
-flow :: (Sequence, Dictionary) -> Dictionary
-flow (Pages, dict) =
+flow :: Dependencies -> (Sequence, Dictionary) -> Dictionary
+flow _ (Pages, dict) =
     dict
         |> rename "Proxy.html" "200.html"
         |> clone "200.html" "index.html"
 
 
-flow (Info, dict) =
-    let
-        layout =
-            List.find (\def -> basename def == "Layout") dict >>= content
-
-        css =
-            List.filter (\def -> extname def == ".css") dict
-    in
-        dict
-            |> exclude "Layout.html"
-            |> exclude "Info.css"
-            |> renderContent markdownRenderer
-            |> renderContent (layoutRenderer layout)
-            |> append css
-            |> rename "Info.md" "index.html"
-            |> rename "Info.css" "about.css"
-            |> prefixDirname "about/"
+flow deps (InfoPages, dict) =
+    dict
+        |> renderContent markdownRenderer
+        |> renderContent (layoutRenderer $ deps !~> "infoLayout")
+        |> rename "Info.md" "index.html"
+        |> prefixDirname "about/"
 
 
-flow (Images, dict)         = prefixDirname "images/" dict
-flow (Favicons, dict)       = prefixDirname "favicons/" dict
-flow (Fonts, dict)          = prefixDirname "fonts/" dict
-flow (Javascript, dict)     = List.map lowerCasePath dict
-flow (Blockstack, dict)     = dict
+flow _ (InfoCss, dict) =
+    dict
+        |> rename "Info.css" "about.css"
+        |> prefixDirname "about/"
+
+
+flow _ (Images, dict)         = prefixDirname "images/" dict
+flow _ (Favicons, dict)       = prefixDirname "favicons/" dict
+flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
+flow _ (Blockstack, dict)     = dict
+flow _ (Javascript, dict)     = List.map lowerCasePath dict
+
+
+
+-- Additional IO
+-- Flow dependencies
+
+
+type Dependencies = Aeson.Object
+
+
+dependencies :: IO Dependencies
+dependencies = do
+    infoLayout <- Text.readFile "src/Static/Info/Layout.html"
+
+    return $ HashMap.fromList
+        [ ("infoLayout", Aeson.toJSON infoLayout)
+        ]
 
 
 
