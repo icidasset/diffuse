@@ -141,7 +141,7 @@ intoTreeCommand associatedTracks currentDate context =
                 postContext =
                     { context | filePaths = filteredFiles }
 
-                ( pathsAlreadyExist, pathsToRemove, _ ) =
+                ( pathsAlreadyExist, pathsToRemove ) =
                     separateTree postContext associatedTracks
             in
                 Cmd.batch
@@ -168,21 +168,25 @@ makeTree context =
         (ProcessTreeStep context)
 
 
-separateTree : ProcessingContext -> List Track -> ( List String, List String, List String )
+separateTree : ProcessingContext -> List Track -> ( List String, List String )
 separateTree context tracks =
-    List.foldr
-        (\track ( left, toRemove, srcOfTruth ) ->
-            let
-                path =
-                    track.path
-            in
-                if List.member path srcOfTruth then
-                    ( path :: left, toRemove, remove path srcOfTruth )
-                else
-                    ( left, path :: toRemove, srcOfTruth )
-        )
-        ( [], [], context.filePaths )
-        tracks
+    let
+        srcOfTruth =
+            context.filePaths
+    in
+        List.foldr
+            (\track ( left, toRemove ) ->
+                let
+                    path =
+                        track.path
+                in
+                    if List.member path srcOfTruth then
+                        ( path :: left, toRemove )
+                    else
+                        ( left, path :: toRemove )
+            )
+            ( [], [] )
+            tracks
 
 
 selectNonExisting : List String -> ProcessingContext -> ProcessingContext
