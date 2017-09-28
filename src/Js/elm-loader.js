@@ -94,11 +94,8 @@ app.ports.requestTags.subscribe(distantContext => {
     );
 
   }, initialPromise).then(col => {
-    context.receivedTags = _.compose(
-      x => _.map(pickTags, x),
-      x => _.filter(_.isObject, x)
-    )(
-      col
+    context.receivedTags = col.map(
+      x => x ? pickTags(x) : null
     );
 
     app.ports.receiveTags.send(context);
