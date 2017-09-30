@@ -57,7 +57,8 @@ entry model =
                 ]
             , Html.form
                 [ onSubmit (AbroadMsg UploadFiles) ]
-                [ -- Import
+                [ --
+                  -- Import
                   --
                   p
                     []
@@ -77,11 +78,14 @@ entry model =
                         , cssClasses [ Button, ButtonSmall, ButtonSubtle ]
                         ]
                         [ text "Choose file" ]
-                    , button
-                        [ cssClasses [ Button, ButtonSmall ]
-                        , type_ "submit"
-                        ]
-                        [ text "Import" ]
+                    , if List.isEmpty model.abroad.files then
+                        text ""
+                      else
+                        button
+                            [ cssClasses [ Button, ButtonSmall ]
+                            , type_ "submit"
+                            ]
+                            [ text "Import" ]
                     , em
                         [ style
                             [ ( "display", "block" )
@@ -104,6 +108,7 @@ entry model =
                         ]
                     ]
 
+                --
                 -- Export
                 --
                 , p
