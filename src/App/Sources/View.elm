@@ -16,6 +16,7 @@ import Material.Icons.File as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
+import Maybe.Extra
 import Mouse
 import Navigation.View as Navigation
 import Routing.Types
@@ -30,6 +31,7 @@ import Variables exposing (colorDerivatives)
 
 import Form.Styles as FormStyles
 import List.Styles exposing (Classes(..))
+import Navigation.Styles exposing (Classes(..))
 import Styles exposing (Classes(..))
 
 
@@ -86,6 +88,15 @@ pageIndex sources isProcessing processingErrors =
                 -- Other
                 , if List.isEmpty sources then
                     []
+                  else if Maybe.Extra.isJust isProcessing then
+                    [ ( span
+                            [ cssClass ActiveLink ]
+                            [ Icons.sync colorDerivatives.text 16
+                            , label [] [ text "Processing sources ..." ]
+                            ]
+                      , TopLevel.NoOp
+                      )
+                    ]
                   else
                     [ ( span
                             []

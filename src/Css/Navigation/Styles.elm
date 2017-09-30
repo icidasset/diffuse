@@ -6,7 +6,7 @@ import Css exposing (..)
 import Css.Elements exposing (a, label, span, svg)
 import Css.Media exposing (withMedia)
 import Traits exposing (..)
-import Variables exposing (colorDerivatives, insulationWidth)
+import Variables exposing (colors, colorDerivatives, insulationWidth)
 
 
 type Classes
@@ -116,6 +116,12 @@ styles =
                 --
                 , adjacentSiblings
                     [ label [ marginLeft (gr 1) ] ]
+                ]
+            , selector "g"
+                [ fill currentColor
+                ]
+            , class ActiveLink
+                [ color (cssColor colors.base0D)
                 ]
             ]
         ]
