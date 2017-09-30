@@ -6,7 +6,7 @@ import Css exposing (..)
 import Css.Elements exposing (a, label, span, svg)
 import Css.Media exposing (withMedia)
 import Traits exposing (..)
-import Variables exposing (colors, colorDerivatives, insulationWidth)
+import Variables exposing (colorDerivatives, insulationWidth)
 
 
 type Classes
@@ -121,7 +121,7 @@ styles =
                 [ fill currentColor
                 ]
             , class ActiveLink
-                [ color (cssColor colors.base0D)
+                [ opacity (num 0.575)
                 ]
             ]
         ]
