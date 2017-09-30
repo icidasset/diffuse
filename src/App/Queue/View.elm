@@ -9,6 +9,7 @@ import Html.Lazy exposing (lazy, lazy2)
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
+import Material.Icons.Navigation as Icons
 import Navigation.View as Navigation
 import Queue.Types as Queue exposing (Item, Page(..))
 import Routing.Types
@@ -56,7 +57,12 @@ pageIndex futureItems shuffled =
           -- Navigation
           ------------------------------------
           Navigation.insideCustom
-            [ ( span
+            [ ( Icons.arrow_back colorDerivatives.text 16
+              , Routing.Types.Index
+                    |> Routing.Types.GoToPage
+                    |> RoutingMsg
+              )
+            , ( span
                     []
                     [ Icons.queue_music colorDerivatives.text 16
                     , label [] [ text "History" ]
@@ -136,6 +142,13 @@ pageHistory pastItems =
           ------------------------------------
           Navigation.inside
             [ ( span
+                    []
+                    [ Icons.arrow_back colorDerivatives.text 16
+                    , label [] [ text "Tracks" ]
+                    ]
+              , Routing.Types.Index
+              )
+            , ( span
                     []
                     [ Icons.queue_music colorDerivatives.text 16
                     , label [] [ text "Up next" ]

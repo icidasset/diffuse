@@ -94,6 +94,7 @@ makeSource : Service -> SourceData -> Source
 makeSource service data =
     { id = "change_me_please"
     , data = data
+    , directoryPlaylists = True
     , enabled = True
     , service = service
     }

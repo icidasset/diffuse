@@ -1,5 +1,6 @@
 module Routing.Types exposing (..)
 
+import Playlists.Types as Playlists
 import Queue.Types as Queue
 import Sources.Types as Sources
 
@@ -18,6 +19,7 @@ type Page
     | Equalizer
     | ErrorScreen String
     | Index
+    | Playlists Playlists.Page
     | Queue Queue.Page
     | Settings
     | Sources Sources.Page

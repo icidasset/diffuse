@@ -213,6 +213,26 @@ stylesLocal =
         , margin3 (gr -2) zero (gr 6)
         , textAlign left
         ]
+    , h4
+        [ color (cssColor colors.base06)
+        , fontSize (Css.rem 0.75)
+        , fontWeight (int 500)
+        , headerFont
+        , textTransform uppercase
+
+        --
+        , descendants
+            [ svg
+                [ display inlineBlock
+                , marginRight (px 8)
+                , transform (translateY (px -1))
+                , verticalAlign middle
+                ]
+            , selector "g"
+                [ fill currentColor
+                ]
+            ]
+        ]
     , a
         [ color inherit
         , textDecoration none

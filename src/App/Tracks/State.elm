@@ -3,8 +3,10 @@ module Tracks.State exposing (..)
 import Dom.Scroll
 import Json.Encode as Json
 import List.Extra as List
+import Playlists.Types exposing (Playlist)
 import Response
 import Response.Ext as Response exposing (..)
+import Routing.Types
 import Task
 import Time
 import Tracks.Collection as Collection exposing (..)
@@ -29,6 +31,7 @@ initialModel =
     , favouritesOnly = False
     , searchResults = Nothing
     , searchTerm = Nothing
+    , selectedPlaylist = Nothing
     , sortBy = Artist
     , sortDirection = Asc
     }
@@ -174,7 +177,7 @@ update msg model =
                 |> Maybe.map (toggleFavourite model)
                 |> Maybe.withDefault ((,) model Cmd.none)
 
-        -- Filter collection by favourites only {toggle}
+        -- > Filter collection by favourites only {toggle}
         ToggleFavouritesOnly ->
             { model | favouritesOnly = not model.favouritesOnly }
                 |> Collection.makeParcel
@@ -184,9 +187,21 @@ update msg model =
                 |> Response.andAlso storeUserData
 
         ------------------------------------
+        -- Playlists
+        ------------------------------------
+        -- > Remove selected playlist
+        TogglePlaylist playlist ->
+            { model | selectedPlaylist = togglePlaylist model playlist }
+                |> Collection.makeParcel
+                |> Collection.reharvest
+                |> Collection.set
+                |> Response.andAlso storeUserData
+                |> Response.andAlso gotoIndexPage
+
+        ------------------------------------
         -- UI
         ------------------------------------
-        -- Identify the active track
+        -- > Identify the active track
         --
         SetActiveTrackId maybeTrack ->
             let
@@ -203,7 +218,7 @@ update msg model =
                     |> Collection.remap (List.map mapFn)
                     |> Collection.set
 
-        -- Table-scroll event handler
+        -- > Table-scroll event handler
         --
         ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
             case scrolledHeight >= (contentHeight - containerHeight - 50) of
@@ -216,7 +231,7 @@ update msg model =
                 False ->
                     Response.withNone model
 
-        -- Scroll to the active track
+        -- > Scroll to the active track
         --
         ScrollToActiveTrack track ->
             model.collection.harvested
@@ -246,6 +261,19 @@ toggleFavourite model ( i, t ) =
             |> effect
             |> set
             |> addCmd (do TopLevel.StoreUserData)
+
+
+togglePlaylist : Model -> Playlist -> Maybe Playlist
+togglePlaylist model playlist =
+    case model.selectedPlaylist of
+        Just selectedPlaylist ->
+            if selectedPlaylist == playlist then
+                Nothing
+            else
+                Just playlist
+
+        Nothing ->
+            Just playlist
 
 
 scrollToIndex : Model -> Int -> ( Model, Cmd TopLevel.Msg )
@@ -293,6 +321,14 @@ subscriptions _ =
 
 
 -- Utils
+
+
+gotoIndexPage : Model -> Cmd TopLevel.Msg
+gotoIndexPage model =
+    Routing.Types.Index
+        |> Routing.Types.GoToPage
+        |> TopLevel.RoutingMsg
+        |> do
 
 
 storeUserData : Model -> Cmd TopLevel.Msg

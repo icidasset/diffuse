@@ -27,6 +27,7 @@ import Variables exposing (colors, colorDerivatives)
 import Abroad.View as Abroad
 import Console.View as Console
 import Equalizer.View as Equalizer
+import Playlists.View as Playlists
 import Queue.View as Queue
 import Settings.View as Settings
 import Sources.View as Sources
@@ -113,6 +114,11 @@ entry model =
                 Index ->
                     authenticated
                         [ Tracks.entry model ]
+                        model
+
+                Playlists playlistsPage ->
+                    authenticated
+                        [ Playlists.entry playlistsPage model ]
                         model
 
                 Queue queuePage ->
@@ -214,7 +220,6 @@ authenticatedNavigation currentPage =
     Navigation.outside
         currentPage
         [ ( text "Tracks", Routing.Types.Index )
-        , ( text "Queue", Routing.Types.Queue Queue.Types.Index )
         , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
         , ( text "Settings", Routing.Types.Settings )
         ]

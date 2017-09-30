@@ -76,6 +76,15 @@
 
 @font-face {
   font-family: 'Montserrat';
+  src: url('montserrat/montserrat-semibold.woff2') format('woff2'),
+       url('montserrat/montserrat-semibold.woff') format('woff');
+       font-weight: 500;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'Montserrat';
   src: url('montserrat/montserrat-bold.woff2') format('woff2'),
        url('montserrat/montserrat-bold.woff') format('woff');
        font-weight: 700;

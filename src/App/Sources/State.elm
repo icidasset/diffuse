@@ -201,8 +201,7 @@ update msg model =
                         |> Tracks.Types.Remove
                         |> TopLevel.TracksMsg
                         |> do
-                    , updateEnabledSourceIds newCollection
-                    , do TopLevel.StoreUserData
+                    , sourcesHaveUpdated newCollection
                     ]
 
         ------------------------------------
@@ -300,8 +299,7 @@ update msg model =
                             _ ->
                                 "/sources"
                         )
-                    , updateEnabledSourceIds newCollection
-                    , do TopLevel.StoreUserData
+                    , sourcesHaveUpdated newCollection
                     ]
 
         ------------------------------------
@@ -317,9 +315,7 @@ update msg model =
             in
                 (!)
                     { model | collection = newCollection }
-                    [ updateEnabledSourceIds newCollection
-                    , do TopLevel.StoreUserData
-                    ]
+                    [ sourcesHaveUpdated newCollection ]
 
 
 editForm : Model -> SourceId -> Model

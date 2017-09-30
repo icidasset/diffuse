@@ -26,6 +26,7 @@ type alias SourceId =
 type alias Source =
     { id : SourceId
     , data : SourceData
+    , directoryPlaylists : Bool
     , enabled : Bool
     , service : Service
     }

@@ -22,6 +22,7 @@ import Abroad.State as Abroad
 import Authentication.State as Authentication
 import Console.State as Console
 import Equalizer.State as Equalizer
+import Playlists.State as Playlists
 import Queue.State as Queue
 import Routing.State as Routing
 import Settings.State as Settings
@@ -31,6 +32,8 @@ import Tracks.State as Tracks
 
 -- Children, Pt. 2
 
+import Playlists.Types
+import Playlists.Utils
 import Queue.Ports
 import Queue.Types
 import Queue.Utils
@@ -67,6 +70,7 @@ initialModel initialPage =
     , authentication = Authentication.initialModel
     , console = Console.initialModel
     , equalizer = Equalizer.initialModel
+    , playlists = Playlists.initialModel
     , queue = Queue.initialModel
     , routing = Routing.initialModel initialPage
     , settings = Settings.initialModel
@@ -114,7 +118,7 @@ update msg model =
         ------------------------------------
         -- User layer
         ------------------------------------
-        ImportUserData json ->
+        ImportUserData json options ->
             let
                 newModel =
                     Authentication.UserData.inwards json model
@@ -137,8 +141,15 @@ update msg model =
                         |> doDelayed (Time.millisecond * 250)
 
                     --
+                    , do AutoGeneratePlaylists
                     , doDelayed (Time.millisecond * 500) FillQueue
                     , doDelayed (Time.millisecond * 500) HideLoadingScreen
+
+                    --
+                    , if options.store then
+                        do StoreUserData
+                      else
+                        Cmd.none
                     ]
 
         StoreUserData ->
@@ -231,6 +242,10 @@ update msg model =
             Queue.update sub model.queue
                 |> mapModel (\x -> { model | queue = x })
 
+        PlaylistsMsg sub ->
+            Playlists.update sub model.playlists
+                |> mapModel (\x -> { model | playlists = x })
+
         RoutingMsg sub ->
             Routing.update sub model.routing
                 |> mapModel (\x -> { model | routing = x })
@@ -272,6 +287,15 @@ update msg model =
                     |> TracksMsg
                     |> do
                 ]
+
+        AutoGeneratePlaylists ->
+            model.playlists
+                |> Playlists.update
+                    (model.tracks.collection.untouched
+                        |> Playlists.Utils.autoGenerate model.sources.collection
+                        |> Playlists.Types.SetCollection
+                    )
+                |> mapModel (\x -> { model | playlists = x })
 
         FillQueue ->
             (!)
@@ -337,26 +361,6 @@ update msg model =
                     { model | contextMenu = contextMenu }
                     []
 
-        ShowViewMenu ->
-            (!)
-                { model | contextMenu = Nothing }
-                [ case model.contextMenu of
-                    Just _ ->
-                        Cmd.none
-
-                    Nothing ->
-                        Task.perform ShowViewMenuWithWindow Window.size
-                ]
-
-        ShowViewMenuWithWindow windowSize ->
-            { x = windowSize.width // 2
-            , y = windowSize.height // 2
-            }
-                |> Tracks.ContextMenu.viewMenu
-                |> Just
-                |> (\c -> { model | contextMenu = c })
-                |> (\m -> ( m, Cmd.none ))
-
         ------------------------------------
         -- Other
         ------------------------------------
@@ -370,7 +374,7 @@ update msg model =
 
 debounceStoreUserDataConfig : Debounce.Config Msg
 debounceStoreUserDataConfig =
-    { strategy = Debounce.later (5 * Time.second)
+    { strategy = Debounce.later (3 * Time.second)
     , transform = DebounceCallbackStoreUserData
     }
 

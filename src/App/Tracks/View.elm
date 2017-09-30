@@ -14,6 +14,8 @@ import Material.Icons.Navigation
 import Material.Icons.Toggle
 import Mouse
 import Navigation.View as Navigation
+import Playlists.Types exposing (Playlist)
+import Queue.Types
 import Routing.Types
 import Sources.Types exposing (IsProcessing, Source)
 import Styles exposing (Classes(Button, ContentBox, Important, LogoBackdrop))
@@ -31,10 +33,11 @@ entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     div
         [ entryClasses model.tracks.favouritesOnly ]
-        [ lazy2
+        [ lazy3
             navigation
             model.tracks.searchTerm
             model.tracks.favouritesOnly
+            model.tracks.selectedPlaylist
         , lazy2
             content
             model.tracks.collection.exposed
@@ -61,84 +64,112 @@ entryClasses favouritesOnly =
 -- Views
 
 
-navigation : Maybe String -> Bool -> Html TopLevel.Msg
-navigation searchTerm favouritesOnly =
+navigation : Maybe String -> Bool -> Maybe Playlist -> Html TopLevel.Msg
+navigation searchTerm favouritesOnly maybeSelectedPlaylist =
     div
         [ cssClass TracksNavigation ]
         [ --
           -- Part 1
           --
-          Html.map
-            TopLevel.TracksMsg
-            (Html.form
-                [ onSubmit (Search searchTerm) ]
-                [ -- Input
-                  input
-                    [ onBlur (Search searchTerm)
-                    , onInput SetSearchTerm
-                    , placeholder "Search"
-                    , value (Maybe.withDefault "" searchTerm)
-                    ]
-                    []
-
-                -- Search icon
-                , span
-                    [ cssClass TracksNavigationIcon ]
-                    [ Material.Icons.Action.search
-                        (Color.rgb 205 205 205)
-                        16
-                    ]
-
-                -- Clear icon
-                , span
-                    [ cssClass TracksNavigationIcon
-                    , onClick (Search Nothing)
-                    , title "Clear search"
-                    ]
-                    (case searchTerm of
-                        Just _ ->
-                            [ Material.Icons.Content.clear
-                                (Color.rgb 205 205 205)
-                                16
-                            ]
-
-                        Nothing ->
-                            []
-                    )
-
-                -- Favourites-only icon
-                , span
-                    [ cssClass TracksNavigationIcon
-                    , onClick ToggleFavouritesOnly
-                    , title "Toggle favourites-only"
-                    ]
-                    (case favouritesOnly of
-                        True ->
-                            [ Material.Icons.Action.favorite
-                                colors.base08
-                                16
-                            ]
-
-                        False ->
-                            [ Material.Icons.Action.favorite_border
-                                (Color.rgb 205 205 205)
-                                16
-                            ]
-                    )
+          Html.form
+            [ onSubmit (TracksMsg <| Search searchTerm) ]
+            [ -- Input
+              input
+                [ onBlur (TracksMsg <| Search searchTerm)
+                , onInput (TracksMsg << SetSearchTerm)
+                , placeholder "Search"
+                , value (Maybe.withDefault "" searchTerm)
                 ]
-            )
+                []
+
+            -- Search icon
+            , a
+                [ cssClass TracksNavigationIcon
+                , style [ ( "cursor", "default" ) ]
+                ]
+                [ Material.Icons.Action.search
+                    (Color.rgb 205 205 205)
+                    16
+                ]
+
+            -- Playlist icon
+            , a
+                [ cssClass TracksNavigationIcon
+                , case maybeSelectedPlaylist of
+                    Just _ ->
+                        title "Playlists (activated)"
+
+                    Nothing ->
+                        title "Playlists"
+                , Playlists.Types.Index
+                    |> Routing.Types.Playlists
+                    |> Routing.Types.GoToPage
+                    |> RoutingMsg
+                    |> onClick
+                ]
+                [ case maybeSelectedPlaylist of
+                    Just _ ->
+                        Material.Icons.Av.album colors.base08 16
+
+                    Nothing ->
+                        Material.Icons.Av.album (Color.rgb 205 205 205) 16
+                ]
+
+            -- Favourites-only icon
+            , a
+                [ cssClass TracksNavigationIcon
+                , onClick (TracksMsg <| ToggleFavouritesOnly)
+                , title "Toggle favourites-only"
+                ]
+                (case favouritesOnly of
+                    True ->
+                        [ Material.Icons.Action.favorite
+                            colors.base08
+                            16
+                        ]
+
+                    False ->
+                        [ Material.Icons.Action.favorite_border
+                            (Color.rgb 205 205 205)
+                            16
+                        ]
+                )
+
+            -- Clear icon
+            , case searchTerm of
+                Just _ ->
+                    a
+                        [ cssClass TracksNavigationIcon
+                        , onClick (TracksMsg <| Search Nothing)
+                        , title "Clear search"
+                        ]
+                        [ Material.Icons.Content.clear
+                            (Color.rgb 205 205 205)
+                            16
+                        ]
+
+                Nothing ->
+                    text ""
+            ]
 
         --
         -- Part 2
         --
         , Navigation.insideCustom
-            [ ( Material.Icons.Av.equalizer colorDerivatives.text 16
+            [ ( span
+                    [ title "Equalizer" ]
+                    [ Material.Icons.Av.equalizer colorDerivatives.text 16 ]
               , Routing.Types.Equalizer
                     |> Routing.Types.GoToPage
                     |> RoutingMsg
               )
-            , ( Material.Icons.Av.featured_play_list colorDerivatives.text 16
-              , TopLevel.ShowViewMenu
+            , ( span
+                    [ title "Queue" ]
+                    [ Material.Icons.Av.queue_play_next colorDerivatives.text 16 ]
+              , Queue.Types.Index
+                    |> Routing.Types.Queue
+                    |> Routing.Types.GoToPage
+                    |> RoutingMsg
               )
             ]
         ]

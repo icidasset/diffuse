@@ -45,3 +45,11 @@ updateEnabledSourceIds collection =
         |> Tracks.Types.SetEnabledSourceIds
         |> TopLevel.TracksMsg
         |> do
+
+
+sourcesHaveUpdated : List Source -> Cmd TopLevel.Msg
+sourcesHaveUpdated updatedCollection =
+    Cmd.batch
+        [ updateEnabledSourceIds updatedCollection
+        , do TopLevel.StoreUserData
+        ]

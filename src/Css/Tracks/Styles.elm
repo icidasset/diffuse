@@ -14,6 +14,7 @@ type Classes
     | TracksChild
     | TracksNavigation
     | TracksNavigationIcon
+    | TracksNavigationIcons
     | TracksTable
 
 
@@ -88,32 +89,33 @@ styles =
             , selector "input::placeholder"
                 [ color (rgb 205 205 205)
                 ]
-            , class TracksNavigationIcon
-                [ lineHeight zero
-                , marginTop (px 1)
-                , position absolute
-                , top (pct 50)
-                , transform (translateY (pct -50))
-                , zIndex (int 0)
+            ]
+        ]
+    , class TracksNavigationIcon
+        [ cursor pointer
+        , lineHeight zero
+        , marginTop (px 1)
+        , position absolute
+        , top (pct 50)
+        , transform (translateY (pct -50))
+        , zIndex (int 0)
 
-                -- Search icon
-                , nthOfType "1"
-                    [ left (gr 2) ]
+        -- Search icon
+        , nthOfType "1"
+            [ left (gr 2) ]
 
-                -- Clear icon
-                , nthOfType "2"
-                    [ cursor pointer
-                    , right (gr 6)
-                    , zIndex (int 2)
-                    ]
-
-                -- Favourites-only icon
-                , nthOfType "3"
-                    [ cursor pointer
-                    , right (gr 2)
-                    , zIndex (int 2)
-                    ]
-                ]
+        -- Other icons
+        , nthOfType "2"
+            [ right (gr 2)
+            , zIndex (int 2)
+            ]
+        , nthOfType "3"
+            [ right (gr 6)
+            , zIndex (int 2)
+            ]
+        , nthOfType "4"
+            [ right (gr 10)
+            , zIndex (int 2)
             ]
         ]
 

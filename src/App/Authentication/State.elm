@@ -118,7 +118,7 @@ update msg model =
         -- Step 4a
         ------------------------------------
         DidGetData (Ok (Just json)) ->
-            (!) model [ do (TopLevel.ImportUserData json) ]
+            (!) model [ do (TopLevel.ImportUserData json { store = False }) ]
 
         DidGetData (Ok Nothing) ->
             -- The user has no data yet,
