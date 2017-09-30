@@ -138,7 +138,7 @@ makeMissingFavouriteTrack fav =
     in
         (,)
             { isFavourite = True, isMissing = True, isNowPlaying = False }
-            { tags = tags, id = "<missing>", path = "<missing>", sourceId = "<missing>" }
+            { tags = tags, id = missingId, path = missingId, sourceId = missingId }
 
 
 
