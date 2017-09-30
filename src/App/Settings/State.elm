@@ -10,7 +10,7 @@ import Types as TopLevel
 
 initialModel : Model
 initialModel =
-    { backgroundImage = "4.jpg"
+    { backgroundImage = "7.jpg"
     }
 
 

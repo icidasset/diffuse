@@ -109,8 +109,8 @@ backgroundImages =
     [ ( "1.jpg", "Option 1" )
     , ( "2.jpg", "Option 2" )
     , ( "3.jpg", "Option 3" )
-    , ( "4.jpg", "Option 4 (default)" )
+    , ( "4.jpg", "Option 4" )
     , ( "5.jpg", "Option 5" )
     , ( "6.jpg", "Option 6" )
-    , ( "7.jpg", "Option 7" )
+    , ( "7.jpg", "Option 7 (default)" )
     ]

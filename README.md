@@ -2,7 +2,7 @@
 
 A music player which connects to your cloud/distributed storage.
 
-![](http://icidasset-public.s3.amazonaws.com/Screen%20Shot%202017-06-12%20at%207.33.13%20PM.png)
+![](http://icidasset-public.s3.amazonaws.com/ongakuryoho.jpg)
 
 
 
