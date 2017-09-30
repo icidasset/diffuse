@@ -79,9 +79,7 @@ entry model =
 theForm : Model -> Html Settings.Types.Msg
 theForm model =
     Html.form
-        [ style
-            [ ( "max-width", "230px" ) ]
-        ]
+        [ cssClass FormStyles.HalfWidthForm ]
         [ label
             []
             [ text "Background image" ]

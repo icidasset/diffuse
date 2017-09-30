@@ -355,6 +355,9 @@ stylesLocal =
                 , property "break-inside" "avoid"
                 , property "page-break-inside" "avoid"
                 ]
+            , p
+                [ margin zero
+                ]
             ]
         ]
 

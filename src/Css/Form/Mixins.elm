@@ -21,8 +21,9 @@ inputStyles =
 
         --
         , backgroundColor transparent
-        , border3 (px 1) solid (cssColor colorDerivatives.inputBorder)
-        , borderRadius borderRadiuses.smallElements
+        , border zero
+        , borderBottom3 (px 1) solid (cssColor colorDerivatives.inputBorder)
+        , borderRadius zero
         , boxSizing borderBox
         , color (cssColor colorDerivatives.text)
         , display block
@@ -41,5 +42,5 @@ singleLineInputStyles =
     batch
         [ height (gr 7)
         , lineHeight (gr 7)
-        , padding2 zero (gr 2)
+        , padding zero
         ]

@@ -2,13 +2,15 @@ module Form.Styles exposing (..)
 
 import Css exposing (..)
 import Css.Elements exposing (form, label, input, select, svg)
+import Css.Media exposing (withMedia)
 import Form.Mixins exposing (..)
-import Traits exposing (basem, cssColor, cssColorOpac, gr)
+import Traits exposing (..)
 import Variables exposing (colorDerivatives)
 
 
 type Classes
-    = InputBox
+    = HalfWidthForm
+    | InputBox
     | SelectBox
 
 
@@ -20,6 +22,17 @@ styles : List Snippet
 styles =
     [ form
         [ descendants formStyles ]
+
+    ------------------------------------------------------
+    -- Wrappers 🎁
+    ------------------------------------------------------
+    , class HalfWidthForm
+        [ -- This kind of form should have a width of 50% on
+          -- tablet screens or bigger
+          withMedia
+            [ tablet ]
+            [ width (pct 50) ]
+        ]
     ]
 
 
@@ -63,7 +76,7 @@ formStyles =
                 , property "pointer-events" "none"
                 , property "top" "27.5%"
                 , property "top" ("calc((100% - " ++ .value (gr 6) ++ ") / 2)")
-                , right (gr 2)
+                , right zero
                 , transforms [ translateY <| pct -50 ]
                 ]
             ]
@@ -75,12 +88,6 @@ formStyles =
     , input
         [ inputStyles
         , singleLineInputStyles
-
-        --
-        , border zero
-        , borderBottom3 (px 1) solid (cssColor colorDerivatives.inputBorder)
-        , borderRadius zero
-        , padding zero
 
         --
         , pseudoElement "placeholder"

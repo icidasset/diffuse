@@ -56,84 +56,107 @@ entry model =
                   """
                 ]
             , Html.form
-                [ onSubmit (AbroadMsg UploadFiles) ]
-                [ --
-                  -- Import
-                  --
-                  p
-                    []
-                    [ label
-                        []
-                        [ text "Import" ]
-                    , input
-                        [ type_ "file"
-                        , name "fileInput"
-                        , id "fileInput"
-                        , accept ".json"
-                        , onFileChange (SetFiles >> AbroadMsg)
-                        ]
-                        []
-                    , label
-                        [ for "fileInput"
-                        , cssClasses [ Button, ButtonSmall, ButtonSubtle ]
-                        ]
-                        [ text "Choose file" ]
-                    , if List.isEmpty model.abroad.files then
-                        text ""
-                      else
-                        button
-                            [ cssClasses [ Button, ButtonSmall ]
-                            , type_ "submit"
-                            ]
-                            [ text "Import" ]
-                    , em
-                        [ style
-                            [ ( "display", "block" )
-                            , ( "font-size", "0.8em" )
-                            , ( "margin-top", ".375rem" )
-                            ]
-                        ]
-                        [ case model.abroad.importMessage of
-                            Ok msg ->
-                                span
-                                    []
-                                    [ text msg ]
-
-                            Err msg ->
-                                span
-                                    [ style
-                                        [ ( "color", colorToCssRgb colorDerivatives.error ) ]
-                                    ]
-                                    [ text msg ]
-                        ]
-                    ]
-
-                --
-                -- Export
-                --
-                , p
-                    []
-                    [ label
-                        []
-                        [ text "Export" ]
-                    , let
-                        js =
-                            interpolate
-                                """
-                                var a = this;
-                                var json = JSON.stringify({0}, null, 4);
-                                var file = new Blob([json], { type: "application/json" });
-                                a.href = window.URL.createObjectURL(file);
-                                a.download = "ongaku-ryoho.json";
-                                """
-                                [ Authentication.UserData.outwards model ]
-                      in
-                        a
-                            [ cssClasses [ Button, ButtonSmall ]
-                            , attribute "onclick" js
-                            ]
-                            [ text "Export" ]
-                    ]
+                [ onSubmit (AbroadMsg UploadFiles)
+                ]
+                [ importView model
+                , exportView model
                 ]
             ]
+        ]
+
+
+
+-- Import
+
+
+importView : Model -> Html TopLevel.Msg
+importView model =
+    p
+        []
+        [ label
+            []
+            [ text "Import" ]
+        , input
+            [ type_ "file"
+            , name "fileInput"
+            , id "fileInput"
+            , accept ".json"
+            , onFileChange (SetFiles >> AbroadMsg)
+            ]
+            []
+        , label
+            [ for "fileInput"
+            , cssClasses [ Button, ButtonSubtle ]
+            ]
+            [ text "Choose file" ]
+        , if List.isEmpty model.abroad.files then
+            text ""
+          else
+            button
+                [ cssClasses [ Button ]
+                , type_ "submit"
+                ]
+                [ text "Import" ]
+        , em
+            [ style
+                [ ( "display", "block" )
+                , ( "font-size", "0.8em" )
+                , ( "margin-top", ".375rem" )
+                ]
+            ]
+            [ case model.abroad.importMessage of
+                Ok "" ->
+                    if List.isEmpty model.abroad.files == False then
+                        span
+                            []
+                            [ text "Click on the "
+                            , strong [] [ text "import" ]
+                            , text " button to confirm."
+                            ]
+                    else
+                        text ""
+
+                Ok msg ->
+                    span
+                        []
+                        [ text msg ]
+
+                Err msg ->
+                    span
+                        [ style
+                            [ ( "color", colorToCssRgb colorDerivatives.error ) ]
+                        ]
+                        [ text msg ]
+            ]
+        ]
+
+
+
+-- Export
+
+
+exportView : Model -> Html TopLevel.Msg
+exportView model =
+    p
+        []
+        [ label
+            []
+            [ text "Export" ]
+        , let
+            js =
+                interpolate
+                    """
+                    var a = this;
+                    var json = JSON.stringify({0}, null, 4);
+                    var file = new Blob([json], { type: "application/json" });
+                    a.href = window.URL.createObjectURL(file);
+                    a.download = "ongaku-ryoho.json";
+                    """
+                    [ Authentication.UserData.outwards model ]
+          in
+            a
+                [ cssClasses [ Button ]
+                , attribute "onclick" js
+                ]
+                [ text "Export" ]
         ]
