@@ -19,6 +19,7 @@ styles =
         [ backgroundColor (rgb 255 255 255)
         , disableSelect
         , fontSize (Css.rem 0.8)
+        , minWidth (px 170)
         , position absolute
         , property "box-shadow" "0 1px 3px 0 rgba(0, 0, 0, 0.225), 0 3px 15px 0 rgba(0, 0, 0, 0.1)"
         , transform (translate2 (pct -50) (pct -50))
