@@ -8,6 +8,7 @@ import Types as TopLevel
 
 -- Children, Pt. 1
 
+import Playlists.Encoding as Playlists
 import Sources.Encoding as Sources
 import Tracks.Encoding as Tracks
 
@@ -117,9 +118,17 @@ importTracks pre ( data, obj ) =
             , favourites =
                 Maybe.withDefault [] data.favourites
             , favouritesOnly =
-                coder "favouritesOnly" Decode.bool pre.favouritesOnly
+                coder "favouritesOnly"
+                    Decode.bool
+                    pre.favouritesOnly
             , searchTerm =
-                coder "searchTerm" (Decode.maybe Decode.string) pre.searchTerm
+                coder "searchTerm"
+                    (Decode.maybe Decode.string)
+                    pre.searchTerm
+            , selectedPlaylist =
+                coder "selectedPlaylist"
+                    (Decode.maybe Playlists.playlistDecoder)
+                    pre.selectedPlaylist
         }
 
 
@@ -241,6 +250,14 @@ encodeSettings model =
                   , case model.tracks.searchTerm of
                         Just string ->
                             Encode.string string
+
+                        Nothing ->
+                            Encode.null
+                  )
+                , ( "selectedPlaylist"
+                  , case model.tracks.selectedPlaylist of
+                        Just playlist ->
+                            Playlists.encodePlaylist playlist
 
                         Nothing ->
                             Encode.null

@@ -18,6 +18,7 @@ encode source =
     Encode.object
         [ ( "id", Encode.string source.id )
         , ( "data", encodeData source.data )
+        , ( "directoryPlaylists", Encode.bool source.directoryPlaylists )
         , ( "enabled", Encode.bool source.enabled )
         , ( "service", Encode.string (toString source.service) )
         ]
@@ -43,9 +44,13 @@ decode value =
 
 decoder : Decode.Decoder Source
 decoder =
-    Decode.map4 Source
+    Decode.map5 Source
         (Decode.field "id" Decode.string)
         (Decode.field "data" (Decode.dict Decode.string))
+        (Decode.field "directoryPlaylists" Decode.bool
+            |> Decode.maybe
+            |> Decode.map (Maybe.withDefault True)
+        )
         (Decode.field "enabled" Decode.bool
             |> Decode.maybe
             |> Decode.map (Maybe.withDefault True)

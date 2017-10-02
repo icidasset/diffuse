@@ -258,11 +258,7 @@ pageNew sForm =
                   Navigation.insideCustom
                     (case step of
                         1 ->
-                            [ ( span
-                                    []
-                                    [ Icons.list colorDerivatives.text 16
-                                    , label [] [ text "" ]
-                                    ]
+                            [ ( Icons.arrow_back colorDerivatives.text 16
                               , Sources.Index
                                     |> Routing.Types.Sources
                                     |> Routing.Types.GoToPage
@@ -444,11 +440,7 @@ pageEdit sForm =
                   -- Navigation
                   ------------------------------------
                   Navigation.insideCustom
-                    [ ( span
-                            []
-                            [ Icons.list colorDerivatives.text 16
-                            , label [] [ text "" ]
-                            ]
+                    [ ( Icons.arrow_back colorDerivatives.text 16
                       , Sources.Index
                             |> Routing.Types.Sources
                             |> Routing.Types.GoToPage

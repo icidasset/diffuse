@@ -16,6 +16,7 @@ import Abroad.Types as Abroad
 import Authentication.Types as Authentication
 import Console.Types as Console
 import Equalizer.Types as Equalizer
+import Playlists.Types as Playlists
 import Queue.Types as Queue
 import Routing.Types as Routing
 import Settings.Types as Settings
@@ -35,7 +36,7 @@ type Msg
     | ShowLoadingScreen
       -- User layer
     | DidStoreUserData (Result String ())
-    | ImportUserData String
+    | ImportUserData String ImportUserDataOptions
     | StoreUserData
       -- Time
     | DebounceStoreUserData
@@ -46,6 +47,7 @@ type Msg
     | AuthenticationMsg Authentication.Msg
     | ConsoleMsg Console.Msg
     | EqualizerMsg Equalizer.Msg
+    | PlaylistsMsg Playlists.Msg
     | QueueMsg Queue.Msg
     | RoutingMsg Routing.Msg
     | SettingsMsg Settings.Msg
@@ -53,6 +55,7 @@ type Msg
     | TracksMsg Tracks.Msg
       -- Children, Pt. 2
     | ActiveQueueItemChanged (Maybe Queue.Item)
+    | AutoGeneratePlaylists
     | FillQueue
     | PlayTrack String
     | ProcessSources
@@ -60,8 +63,6 @@ type Msg
       -- Context Menu
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
-    | ShowViewMenu
-    | ShowViewMenuWithWindow Window.Size
       -- Other
     | NoOp
 
@@ -88,6 +89,7 @@ type alias Model =
     , authentication : Authentication.Model
     , console : Console.Model
     , equalizer : Equalizer.Model
+    , playlists : Playlists.Model
     , queue : Queue.Model
     , routing : Routing.Model
     , settings : Settings.Model
@@ -114,3 +116,8 @@ type alias ContextMenuItems =
 
 type alias Illumination model childMsg =
     model -> List (Cmd childMsg) -> List (Cmd Msg) -> ( model, Cmd Msg )
+
+
+type alias ImportUserDataOptions =
+    { store : Bool
+    }

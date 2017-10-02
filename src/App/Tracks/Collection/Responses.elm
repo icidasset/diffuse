@@ -19,9 +19,10 @@ globalConsequences oldCollection newCollection model =
                     List.map Tracks.Encoding.encodeTrack newCollection.untouched
             in
                 Cmd.batch
-                    [ do TopLevel.StoreUserData
-                    , Ports.updateSearchIndex encodedTracks
+                    [ Ports.updateSearchIndex encodedTracks
+                    , do (TopLevel.AutoGeneratePlaylists)
                     , do (TopLevel.TracksMsg (Search model.searchTerm))
+                    , do (TopLevel.StoreUserData)
                     ]
 
         False ->

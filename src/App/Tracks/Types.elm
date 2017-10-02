@@ -3,6 +3,7 @@ module Tracks.Types exposing (..)
 import Base64
 import Json.Encode as Json
 import Mouse
+import Playlists.Types exposing (Playlist)
 import Regex exposing (HowMany(..), regex)
 
 
@@ -135,6 +136,8 @@ type Msg
       -- Favourites
     | ToggleFavourite String
     | ToggleFavouritesOnly
+      -- Playlists
+    | TogglePlaylist Playlist
       -- UI
     | SetActiveTrackId (Maybe Track)
     | ScrollThroughTable ScrollPos
@@ -165,6 +168,7 @@ type alias InternalModel extension =
 type alias Settings =
     { favouritesOnly : Bool -- Whether or not to only show favourites in the UI
     , searchTerm : Maybe String
+    , selectedPlaylist : Maybe Playlist
     }
 
 

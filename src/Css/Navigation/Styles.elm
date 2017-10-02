@@ -44,6 +44,7 @@ styles =
             [ a
                 [ display inlineBlock
                 , marginRight (gr 4)
+                , paddingBottom (px 1)
 
                 --
                 , withMedia [ iPhone6 ] [ marginRight (gr 6) ]
@@ -70,6 +71,7 @@ styles =
                     |> Color.Manipulate.fadeOut 0.45
                     |> cssColor
                     |> color
+                , paddingBottom zero
                 ]
             ]
         ]

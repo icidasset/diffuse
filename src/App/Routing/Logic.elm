@@ -1,6 +1,7 @@
 module Routing.Logic exposing (locationToMessage, locationToPage, isSameBase, pageToHref)
 
 import Navigation
+import Playlists.Types as Playlists
 import Queue.Types as Queue
 import Routing.Types exposing (..)
 import Sources.Types as Sources
@@ -30,9 +31,26 @@ locationToPage location =
 isSameBase : Page -> Page -> Bool
 isSameBase a b =
     case a of
+        --
+        -- Nested, Pt. 1
+        --
+        Playlists _ ->
+            case b of
+                Playlists _ ->
+                    True
+
+                Index ->
+                    True
+
+                _ ->
+                    False
+
         Queue _ ->
             case b of
                 Queue _ ->
+                    True
+
+                Index ->
                     True
 
                 _ ->
@@ -46,6 +64,28 @@ isSameBase a b =
                 _ ->
                     False
 
+        --
+        -- Nested, Pt. 2
+        --
+        Abroad ->
+            case b of
+                Settings ->
+                    True
+
+                _ ->
+                    False
+
+        Equalizer ->
+            case b of
+                Index ->
+                    True
+
+                _ ->
+                    False
+
+        --
+        -- Fallback
+        --
         _ ->
             a == b
 
@@ -66,6 +106,12 @@ pageToHref page =
 
         Index ->
             "/"
+
+        Playlists Playlists.Index ->
+            "/playlists"
+
+        Playlists Playlists.New ->
+            "/playlists/new"
 
         Queue Queue.Index ->
             "/queue"
@@ -94,8 +140,12 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map (Sources Sources.Index) (s "sources")
-        , map (\x -> Sources (Sources.Edit x)) (s "sources" </> s "edit" </> string)
+        , map (Sources.Edit >> Sources) (s "sources" </> s "edit" </> string)
         , map (Sources Sources.New) (s "sources" </> s "new")
+
+        -- Playlists
+        , map (Playlists Playlists.Index) (s "playlists")
+        , map (Playlists Playlists.New) (s "playlists" </> s "new")
 
         -- Queue
         , map (Queue Queue.Index) (s "queue")

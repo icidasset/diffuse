@@ -40,11 +40,7 @@ entry model =
           -- Navigation
           ------------------------------------
           Navigation.inside
-            [ ( span
-                    []
-                    [ Icons.arrow_back colorDerivatives.text 16
-                    , label [] [ text "Tracks" ]
-                    ]
+            [ ( Icons.arrow_back colorDerivatives.text 16
               , Routing.Types.Index
               )
             ]
