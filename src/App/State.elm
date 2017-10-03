@@ -138,6 +138,14 @@ update msg model =
                         |> Tracks.Types.InitialCollection
                         |> TracksMsg
                         |> do
+
+                    --
+                    , case newModel.tracks.searchTerm of
+                        Just _ ->
+                            Cmd.none
+
+                        Nothing ->
+                            doDelayed (Time.millisecond * 250) HideLoadingScreen
                     ]
 
         StoreUserData ->
