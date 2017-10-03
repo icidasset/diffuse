@@ -159,6 +159,7 @@ type alias InternalModel extension =
         , enabledSourceIds : List SourceId
         , exposedStep : Int
         , favourites : List Favourite
+        , initialImportPerformed : Bool
         , searchResults : Maybe (List TrackId)
         , sortBy : SortBy
         , sortDirection : SortDirection

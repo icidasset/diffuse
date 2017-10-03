@@ -36,7 +36,7 @@ type Msg
     | ShowLoadingScreen
       -- User layer
     | DidStoreUserData (Result String ())
-    | ImportUserData String ImportUserDataOptions
+    | ImportUserData String
     | StoreUserData
       -- Time
     | DebounceStoreUserData
@@ -116,8 +116,3 @@ type alias ContextMenuItems =
 
 type alias Illumination model childMsg =
     model -> List (Cmd childMsg) -> List (Cmd Msg) -> ( model, Cmd Msg )
-
-
-type alias ImportUserDataOptions =
-    { store : Bool
-    }

@@ -90,16 +90,6 @@ partial =
 -- 🌱 / Responses
 
 
-setWithoutConsequences : Parcel -> ( Model, Cmd TopLevel.Msg )
-setWithoutConsequences ( model, newCollection ) =
-    ( { model | collection = newCollection }
-      --
-      -- Consequences
-      --
-    , Cmd.none
-    )
-
-
 set : Parcel -> ( Model, Cmd TopLevel.Msg )
 set ( model, newCollection ) =
     ( { model | collection = newCollection }

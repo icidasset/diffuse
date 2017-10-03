@@ -118,38 +118,26 @@ update msg model =
         ------------------------------------
         -- User layer
         ------------------------------------
-        ImportUserData json options ->
+        ImportUserData json ->
             let
                 newModel =
                     Authentication.UserData.inwards json model
 
-                encodedTracks =
-                    List.map Tracks.Encoding.encodeTrack newModel.tracks.collection.untouched
+                tracks =
+                    newModel.tracks
             in
                 (!)
                     newModel
-                    [ Tracks.Ports.updateSearchIndex encodedTracks
-                    , Queue.Ports.toggleRepeat newModel.queue.repeat
+                    [ Queue.Ports.toggleRepeat newModel.queue.repeat
                     , Equalizer.adjustAllKnobs newModel.equalizer
 
-                    -- Tracks
-                    , ( newModel.tracks
-                      , newModel.tracks.collection
+                    --
+                    , ( { tracks | collection = Tracks.Types.emptyCollection }
+                      , tracks.collection
                       )
                         |> Tracks.Types.InitialCollection
                         |> TracksMsg
-                        |> doDelayed (Time.millisecond * 250)
-
-                    --
-                    , do AutoGeneratePlaylists
-                    , doDelayed (Time.millisecond * 500) FillQueue
-                    , doDelayed (Time.millisecond * 500) HideLoadingScreen
-
-                    --
-                    , if options.store then
-                        do StoreUserData
-                      else
-                        Cmd.none
+                        |> do
                     ]
 
         StoreUserData ->
@@ -202,7 +190,9 @@ update msg model =
                         msg
                         model.storageDebounce
             in
-                { model | storageDebounce = debounce } ! [ cmd ]
+                (!)
+                    { model | storageDebounce = debounce }
+                    [ cmd ]
 
         SetTimestamp time ->
             let
@@ -343,9 +333,13 @@ update msg model =
         -- Context Menu
         ------------------------------------
         ShowSourceMenu sourceId mousePos ->
-            (!)
-                { model | contextMenu = Just (Sources.ContextMenu.listMenu sourceId mousePos) }
-                []
+            let
+                contextMenu =
+                    mousePos
+                        |> Sources.ContextMenu.listMenu sourceId
+                        |> Just
+            in
+                (!) { model | contextMenu = contextMenu } []
 
         ShowTrackContextMenu ( index, mousePos ) ->
             let
@@ -357,9 +351,7 @@ update msg model =
                         |> Maybe.map Tracks.ContextMenu.trackMenu
                         |> Maybe.map (\fn -> fn mousePos)
             in
-                (!)
-                    { model | contextMenu = contextMenu }
-                    []
+                (!) { model | contextMenu = contextMenu } []
 
         ------------------------------------
         -- Other

@@ -29,6 +29,7 @@ initialModel =
     , exposedStep = 1
     , favourites = []
     , favouritesOnly = False
+    , initialImportPerformed = False
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedPlaylist = Nothing
@@ -95,7 +96,7 @@ update msg model =
         InitialCollection parcel ->
             parcel
                 |> Collection.reidentify
-                |> Collection.setWithoutConsequences
+                |> Collection.set
                 |> Response.andAlso search
 
         ------------------------------------
@@ -164,6 +165,7 @@ update msg model =
                 |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
+                |> initialImport
 
         ------------------------------------
         -- Favourites
@@ -242,6 +244,18 @@ update msg model =
 
 
 -- 🔥 / Functions
+
+
+initialImport : ( Model, Cmd TopLevel.Msg ) -> ( Model, Cmd TopLevel.Msg )
+initialImport ( model, command ) =
+    if model.initialImportPerformed == False then
+        (!)
+            { model | initialImportPerformed = True }
+            [ command, do TopLevel.HideLoadingScreen ]
+    else
+        (,)
+            model
+            command
 
 
 toggleFavourite : Model -> IdentifiedTrack -> ( Model, Cmd TopLevel.Msg )

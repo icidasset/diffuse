@@ -1,7 +1,8 @@
 module Tracks.Collection.Responses exposing (..)
 
 import Queue.Types
-import Response.Ext exposing (do)
+import Response.Ext exposing (do, doDelayed)
+import Time
 import Tracks.Encoding
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
@@ -17,12 +18,20 @@ globalConsequences oldCollection newCollection model =
             let
                 encodedTracks =
                     List.map Tracks.Encoding.encodeTrack newCollection.untouched
+
+                search =
+                    TopLevel.TracksMsg (Search model.searchTerm)
             in
                 Cmd.batch
                     [ Ports.updateSearchIndex encodedTracks
-                    , do (TopLevel.AutoGeneratePlaylists)
-                    , do (TopLevel.TracksMsg (Search model.searchTerm))
-                    , do (TopLevel.StoreUserData)
+                    , do TopLevel.AutoGeneratePlaylists
+                    , do search
+
+                    -- Store data
+                    , if model.initialImportPerformed then
+                        do TopLevel.StoreUserData
+                      else
+                        Cmd.none
                     ]
 
         False ->

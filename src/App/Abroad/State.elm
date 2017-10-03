@@ -41,7 +41,7 @@ update msg model =
         ReadFile (Ok str) ->
             (!)
                 { model | importMessage = Ok "Imported data successfully" }
-                [ do (TopLevel.ImportUserData str { store = True }) ]
+                [ do (TopLevel.ImportUserData str) ]
 
         ReadFile (Err err) ->
             (!)
