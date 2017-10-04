@@ -101,6 +101,9 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
 
                     Nothing ->
                         title "Playlists"
+
+                --
+                --
                 , Playlists.Types.Index
                     |> Routing.Types.Playlists
                     |> Routing.Types.GoToPage
