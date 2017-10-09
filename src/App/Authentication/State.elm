@@ -214,7 +214,7 @@ update msg model =
                         model
                         []
 
-                Ok x ->
+                Ok _ ->
                     handleError model "Invalid response from SignIn"
 
                 Err err ->
