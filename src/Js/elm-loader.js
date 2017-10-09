@@ -1,5 +1,9 @@
 //
+// Elm loader
 // | (• ◡•)| (❍ᴥ❍ʋ)
+//
+// The bit where we launch the Elm app,
+// and connect the other bits to it.
 
 let app, node;
 
@@ -7,6 +11,46 @@ node = document.getElementById("elm-container");
 node.innerHTML = "";
 
 app = Elm.App.embed(node);
+
+
+
+//
+// > Authentication
+
+app.ports.authenticationEvent.subscribe(event => {
+  let funcName, method;
+  let report = app.ports.authenticationEventResult.send;
+
+  switch (event.tag) {
+
+    case "METHOD_GET":
+    case "METHOD_SET":
+    case "METHOD_UNSET":
+      // Call function on the METHOD object.
+      // For example: METHOD_GET -> METHOD.get()
+      funcName = camelcase(event.tag.replace(/^\w+_/, ""));
+
+      report({
+        tag:    event.tag,
+        data:   AUTH_SYSTEM.METHOD[funcName](event.data),
+        error:  null
+      });
+
+      break;
+
+    default:
+      // Perform action on the active authentication method.
+      // For example: CONSTRUCT -> LOCAL.construct()
+      method    = AUTH_SYSTEM.METHOD.get();
+      funcName  = camelcase(event.tag);
+
+      AUTH_SYSTEM[method][funcName]().then(
+        data => report({ tag: event.tag, data: data, error: null }),
+        err  => report({ tag: event.tag, data: null, error: err.toString() })
+      );
+
+  }
+});
 
 
 

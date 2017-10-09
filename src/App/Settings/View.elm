@@ -46,7 +46,7 @@ entry model =
                     [ Icons.exit_to_app colorDerivatives.text 16
                     , label [] [ text "Sign out" ]
                     ]
-              , AuthenticationMsg Authentication.SignOut
+              , AuthenticationMsg Authentication.PerformSignOut
               )
             ]
 

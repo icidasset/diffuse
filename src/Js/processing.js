@@ -1,3 +1,9 @@
+//
+// Processing
+// (◡ ‿ ◡ ✿)
+//
+// This code is responsible for extracting metadata out of files.
+
 const tagSet = ["album", "artist", "disc", "genre", "nr", "picture", "title", "year"];
 
 

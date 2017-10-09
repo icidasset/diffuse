@@ -254,7 +254,7 @@ authButton authMethod =
     a
         [ cssClass AuthenticationButton
         , authMethod
-            |> Authentication.Types.SignIn
+            |> Authentication.Types.PerformSignIn
             |> AuthenticationMsg
             |> onClick
         ]
