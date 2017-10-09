@@ -117,7 +117,7 @@ update msg model =
             (!) { model | isTouchDevice = bool } []
 
         ------------------------------------
-        -- User layer
+        -- Data in
         ------------------------------------
         ImportUserData json ->
             let
@@ -149,6 +149,9 @@ update msg model =
                             doDelayed (Time.millisecond * 250) HideLoadingScreen
                     ]
 
+        ------------------------------------
+        -- Data out
+        ------------------------------------
         StoreUserData ->
             (!)
                 model
@@ -160,23 +163,8 @@ update msg model =
                     )
                 ]
 
-        DidStoreUserData (Ok _) ->
-            -- Carry on
-            (!) model []
-
-        DidStoreUserData (Err err) ->
-            (!)
-                model
-                [ err
-                    |> String.append "User data storage error: "
-                    |> Routing.Types.ErrorScreen
-                    |> Routing.Types.SetPage
-                    |> RoutingMsg
-                    |> do
-                ]
-
         ------------------------------------
-        -- User layer / Debounced
+        -- Data out / Debounced
         ------------------------------------
         DebounceStoreUserData ->
             let
@@ -375,7 +363,7 @@ update msg model =
 
 debounceStoreUserDataConfig : Debounce.Config Msg
 debounceStoreUserDataConfig =
-    { strategy = Debounce.later (3 * Time.second)
+    { strategy = Debounce.later (2.5 * Time.second)
     , transform = DebounceCallbackStoreUserData
     }
 

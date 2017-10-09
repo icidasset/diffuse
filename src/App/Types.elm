@@ -35,7 +35,6 @@ type Msg
     | HideLoadingScreen
     | ShowLoadingScreen
       -- User layer
-    | DidStoreUserData (Result String ())
     | ImportUserData String
     | StoreUserData
       -- Time

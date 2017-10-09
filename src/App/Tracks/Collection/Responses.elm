@@ -29,7 +29,7 @@ globalConsequences oldCollection newCollection model =
 
                     -- Store data
                     , if model.initialImportPerformed then
-                        do TopLevel.StoreUserData
+                        do TopLevel.DebounceStoreUserData
                       else
                         Cmd.none
                     ]

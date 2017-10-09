@@ -276,7 +276,7 @@ toggleFavourite model ( i, t ) =
             |> makeParcel
             |> effect
             |> set
-            |> addCmd (do TopLevel.StoreUserData)
+            |> addCmd (do TopLevel.DebounceStoreUserData)
 
 
 togglePlaylist : Model -> Playlist -> Maybe Playlist
@@ -353,8 +353,11 @@ processSources _ =
 
 
 storeUserData : Model -> Cmd TopLevel.Msg
-storeUserData _ =
-    do TopLevel.DebounceStoreUserData
+storeUserData model =
+    if model.initialImportPerformed then
+        do TopLevel.DebounceStoreUserData
+    else
+        Cmd.none
 
 
 search : Model -> Cmd TopLevel.Msg

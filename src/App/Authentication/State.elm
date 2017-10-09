@@ -257,8 +257,11 @@ update msg model =
         ------------------------------------
         -- Data storage
         ------------------------------------
-        Incoming StoreData _ ->
+        Incoming StoreData (Ok _) ->
             (!) model []
+
+        Incoming StoreData (Err err) ->
+            handleError model ("Data storage error: " ++ err)
 
 
 

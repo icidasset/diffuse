@@ -24,4 +24,4 @@ update msg model =
         SetBackgroundImage filename ->
             (!)
                 { model | backgroundImage = filename }
-                [ do TopLevel.StoreUserData ]
+                [ do TopLevel.DebounceStoreUserData ]

@@ -120,7 +120,7 @@ update msg model =
             else
                 (!)
                     { model | activeKnob = Nothing }
-                    [ do TopLevel.StoreUserData ]
+                    [ do TopLevel.DebounceStoreUserData ]
 
         ------------------------------------
         -- Reset
@@ -163,7 +163,7 @@ maxAngle =
 
 reset : Model -> Knob -> Float -> ( Model, Cmd TopLevel.Msg )
 reset newModel knobType value =
-    (!) newModel [ adjustKnob knobType value, do TopLevel.StoreUserData ]
+    (!) newModel [ adjustKnob knobType value, do TopLevel.DebounceStoreUserData ]
 
 
 

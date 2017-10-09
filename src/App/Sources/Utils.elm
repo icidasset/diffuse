@@ -51,5 +51,5 @@ sourcesHaveUpdated : List Source -> Cmd TopLevel.Msg
 sourcesHaveUpdated updatedCollection =
     Cmd.batch
         [ updateEnabledSourceIds updatedCollection
-        , do TopLevel.StoreUserData
+        , do TopLevel.DebounceStoreUserData
         ]
