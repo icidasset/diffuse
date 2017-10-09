@@ -17,9 +17,11 @@ type alias Model =
 type Page
     = Abroad
     | Equalizer
-    | ErrorScreen String
     | Index
     | Playlists Playlists.Page
     | Queue Queue.Page
     | Settings
     | Sources Sources.Page
+      -- Screens
+    | ErrorScreen String
+    | MessageScreen String

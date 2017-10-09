@@ -85,10 +85,7 @@ entry model =
                 ErrorScreen err ->
                     div
                         [ cssClass Shell ]
-                        [ if model.authentication.signedIn then
-                            authenticatedNavigation model.routing.currentPage
-                          else
-                            unauthenticatedNavigation model.routing.currentPage
+                        [ mainNav model
                         , div
                             [ cssClasses [ InTheMiddle, Basic ] ]
                             [ p
@@ -97,6 +94,31 @@ entry model =
                                 , strong [] [ text err ]
                                 ]
                             ]
+                        ]
+
+                MessageScreen message ->
+                    div
+                        [ cssClass Shell ]
+                        [ mainNav model
+                        , let
+                            parts =
+                                String.split "\n" message
+                          in
+                            div
+                                [ cssClasses [ InTheMiddle, Basic ] ]
+                                [ p
+                                    []
+                                    (List.map
+                                        (\part ->
+                                            em
+                                                []
+                                                [ text part
+                                                , br [] []
+                                                ]
+                                        )
+                                        parts
+                                    )
+                                ]
                         ]
 
                 -- # Needs authentication
@@ -325,3 +347,11 @@ contextMenu maybeContextMenu =
 
         _ ->
             text ""
+
+
+mainNav : Model -> Html Msg
+mainNav model =
+    if model.authentication.signedIn then
+        authenticatedNavigation model.routing.currentPage
+    else
+        unauthenticatedNavigation model.routing.currentPage

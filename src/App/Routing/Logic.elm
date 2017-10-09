@@ -101,9 +101,6 @@ pageToHref page =
         Equalizer ->
             "/equalizer"
 
-        ErrorScreen _ ->
-            "/"
-
         Index ->
             "/"
 
@@ -130,6 +127,15 @@ pageToHref page =
 
         Sources Sources.New ->
             "/sources/new"
+
+        ------------------------------------
+        -- Screens
+        ------------------------------------
+        ErrorScreen _ ->
+            "/"
+
+        MessageScreen _ ->
+            "/"
 
 
 

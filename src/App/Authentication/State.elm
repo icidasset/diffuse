@@ -212,7 +212,9 @@ update msg model =
                 Ok "Redirect" ->
                     (!)
                         model
-                        []
+                        [ displayMessage "Redirecting ...\nA new tab or window might open."
+                        , afterwards
+                        ]
 
                 Ok _ ->
                     handleError model "Invalid response from SignIn"
@@ -277,6 +279,15 @@ displayError : String -> Cmd TopLevel.Msg
 displayError error =
     error
         |> ErrorScreen
+        |> Routing.Types.SetPage
+        |> TopLevel.RoutingMsg
+        |> do
+
+
+displayMessage : String -> Cmd TopLevel.Msg
+displayMessage message =
+    message
+        |> MessageScreen
         |> Routing.Types.SetPage
         |> TopLevel.RoutingMsg
         |> do

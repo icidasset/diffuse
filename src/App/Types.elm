@@ -37,9 +37,9 @@ type Msg
       -- User layer
     | ImportUserData String
     | StoreUserData
-      -- Time
     | DebounceStoreUserData
     | DebounceCallbackStoreUserData Debounce.Msg
+      -- Time
     | SetTimestamp Time
       -- Children
     | AbroadMsg Abroad.Msg
