@@ -1,14 +1,10 @@
 module Authentication.Types exposing (..)
 
 import Json.Encode
-import LocalStorage
 
 
 -- Settings Types
 
-import Equalizer.Types as Equalizer
-import Queue.Types as Queue
-import Settings.Types as Settings
 import Sources.Types as Sources
 import Tracks.Types as Tracks
 
@@ -17,16 +13,9 @@ import Tracks.Types as Tracks
 
 
 type Msg
-    = DidGetData (Result String (Maybe String))
-    | DidGetMethod (Result LocalStorage.Error (Maybe Method))
-    | DidGetIsSignedIn Bool
-    | DidGetIsSigningIn Bool
-    | DidConstruct (Result () ())
-    | DidSignIn SignInConsequence
-    | DidHandleSignInProcess SignInProcessConsequence
-      --
-    | SignIn Method
-    | SignOut
+    = Incoming OutgoingMsg IncomingResult
+    | PerformSignIn Method
+    | PerformSignOut
 
 
 
@@ -40,22 +29,44 @@ type alias Model =
 
 
 
+-- Talking to the outside world
+
+
+type OutgoingMsg
+    = MethodGet
+    | MethodSet
+    | MethodUnset
+      --
+    | Construct
+    | Deconstruct
+    | IsSignedIn
+    | IsSigningIn
+    | HandleSignInProcess
+    | SignIn
+    | SignOut
+    | GetData
+    | StoreData
+
+
+type alias OutgoingEvent =
+    { tag : OutgoingMsg, data : Maybe Json.Encode.Value }
+
+
+type alias OutsideEvent =
+    { tag : String, data : Json.Encode.Value, error : Maybe String }
+
+
+type alias IncomingResult =
+    Result String Json.Encode.Value
+
+
+
 -- Other
 
 
 type Method
     = Blockstack
     | Local
-
-
-type SignInConsequence
-    = None
-    | Redirect
-
-
-type SignInProcessConsequence
-    = KeepUrl
-    | ModifyUrl
 
 
 type alias UserData =

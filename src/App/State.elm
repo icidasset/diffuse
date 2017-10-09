@@ -1,9 +1,8 @@
 module State exposing (..)
 
-import Authentication.Method
-import Authentication.UserData
 import Date
 import Debounce
+import Json.Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
@@ -32,6 +31,8 @@ import Tracks.State as Tracks
 
 -- Children, Pt. 2
 
+import Authentication.Types
+import Authentication.UserData
 import Playlists.Types
 import Playlists.Utils
 import Queue.Ports
@@ -151,15 +152,12 @@ update msg model =
         StoreUserData ->
             (!)
                 model
-                [ case model.authentication.method of
-                    Just method ->
-                        model
-                            |> Authentication.UserData.outwards
-                            |> Authentication.Method.storeData method
-                            |> Task.attempt DidStoreUserData
-
-                    Nothing ->
-                        Cmd.none
+                [ Authentication.issueWithData
+                    Authentication.Types.StoreData
+                    (model
+                        |> Authentication.UserData.outwards
+                        |> Json.Encode.string
+                    )
                 ]
 
         DidStoreUserData (Ok _) ->
@@ -393,6 +391,7 @@ subscriptions model =
         , Ports.setIsTouchDevice SetIsTouchDevice
 
         -- Children
+        , Sub.map AuthenticationMsg <| Authentication.subscriptions model.authentication
         , Sub.map ConsoleMsg <| Console.subscriptions model.console
         , Sub.map EqualizerMsg <| Equalizer.subscriptions model.equalizer
         , Sub.map QueueMsg <| Queue.subscriptions model.queue

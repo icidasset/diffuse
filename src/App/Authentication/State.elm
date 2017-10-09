@@ -1,20 +1,16 @@
 module Authentication.State exposing (..)
 
-import Authentication.Method
+import Authentication.Transformers as Transformers
+import Authentication.Ports as Ports
 import Authentication.Types exposing (..)
 import Dict
 import Equalizer.State as Equalizer
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import Navigation
 import Queue.Ports
-import Response.Ext exposing (do, doDelayed)
+import Response.Ext exposing (do)
 import Routing.Types exposing (Page(..))
-import Task exposing (Task)
-import Time
-import Tracks.Encoding
-import Tracks.Ports
-import Tracks.Types
 import Types as TopLevel
 
 
@@ -31,10 +27,7 @@ initialModel =
 initialCommands : Cmd TopLevel.Msg
 initialCommands =
     Cmd.batch
-        [ Task.attempt
-            (DidGetMethod >> TopLevel.AuthenticationMsg)
-            (Authentication.Method.get)
-        ]
+        [ issue MethodGet ]
 
 
 
@@ -47,195 +40,287 @@ update msg model =
         ------------------------------------
         -- Step 1
         ------------------------------------
-        DidGetMethod (Ok m) ->
-            (!)
-                { model | method = m }
-                [ case m of
-                    Just method ->
-                        Task.attempt
-                            (DidConstruct >> TopLevel.AuthenticationMsg)
-                            (Authentication.Method.construct method)
+        Incoming MethodGet (Ok result) ->
+            case decodeValue (maybe string) result of
+                -- 🚀
+                --
+                Ok (Just m) ->
+                    (!)
+                        { model | method = Just (Transformers.stringToMethod m) }
+                        [ issue Construct ]
 
-                    Nothing ->
-                        after
-                ]
+                -- First time authenticating,
+                -- so no data yet.
+                Ok Nothing ->
+                    (!)
+                        model
+                        [ afterwards ]
 
-        DidGetMethod (Err _) ->
-            -- Do nothing, the user has not used the application before.
-            -- So they haven't signed in yet.
-            (!)
-                model
-                [ after ]
+                -- ⚠️
+                --
+                Err err ->
+                    handleError model err
+
+        --
+        -- Error
+        --
+        Incoming MethodGet (Err err) ->
+            handleError model err
 
         ------------------------------------
         -- Step 2
         ------------------------------------
-        DidConstruct (Ok _) ->
-            (!)
-                model
-                [ case model.method of
-                    Just method ->
-                        Task.perform
-                            (DidGetIsSignedIn >> TopLevel.AuthenticationMsg)
-                            (Authentication.Method.isSignedIn method)
+        Incoming Construct (Ok _) ->
+            (!) model [ issue IsSignedIn ]
 
-                    Nothing ->
-                        after
-                ]
-
-        DidConstruct (Err e) ->
-            (!)
-                model
-                [ "Your browser does not support this authentication method"
-                    |> ErrorScreen
-                    |> Routing.Types.SetPage
-                    |> TopLevel.RoutingMsg
-                    |> do
-                ]
+        Incoming Construct (Err _) ->
+            handleError model "Your browser does not support this authentication method"
 
         ------------------------------------
         -- Step 3
         ------------------------------------
-        DidGetIsSignedIn isSignedIn ->
-            (!)
-                { model | signedIn = isSignedIn }
-                [ case model.method of
-                    Just method ->
-                        if isSignedIn then
-                            Task.attempt
-                                (DidGetData >> TopLevel.AuthenticationMsg)
-                                (Authentication.Method.getData method)
-                        else
-                            Task.perform
-                                (DidGetIsSigningIn >> TopLevel.AuthenticationMsg)
-                                (Authentication.Method.isSigningIn method)
+        Incoming IsSignedIn (Ok result) ->
+            case decodeValue bool result of
+                -- Yes
+                --
+                Ok True ->
+                    (!) { model | signedIn = True } [ issue GetData ]
 
-                    Nothing ->
-                        after
-                ]
+                -- No
+                --
+                Ok False ->
+                    (!) { model | signedIn = False } [ issue IsSigningIn ]
+
+                -- ?
+                --
+                Err err ->
+                    handleError model err
+
+        --
+        -- Error
+        --
+        Incoming IsSignedIn (Err err) ->
+            handleError model err
 
         ------------------------------------
         -- Step 4a
         ------------------------------------
-        DidGetData (Ok (Just json)) ->
-            (!) model [ do (TopLevel.ImportUserData json) ]
-
-        DidGetData (Ok Nothing) ->
-            -- The user has no data yet,
-            -- so nothing to do here.
-            (!) model [ after ]
-
-        DidGetData (Err _) ->
+        Incoming GetData (Ok result) ->
             (!)
                 model
-                [ "Failed to retrieve the data from the selected authentication method"
-                    |> ErrorScreen
-                    |> Routing.Types.SetPage
-                    |> TopLevel.RoutingMsg
-                    |> do
+                [ case decodeValue (maybe string) result of
+                    Ok (Just json) ->
+                        do (TopLevel.ImportUserData json)
+
+                    Ok Nothing ->
+                        afterwards
+
+                    Err err ->
+                        displayError err
                 ]
+
+        --
+        -- Error
+        --
+        Incoming GetData (Err _) ->
+            handleError
+                model
+                "Failed to retrieve the data from the selected authentication method"
 
         ------------------------------------
         -- Step 4b
         ------------------------------------
-        DidGetIsSigningIn True ->
+        Incoming IsSigningIn (Ok result) ->
             (!)
                 model
-                [ case model.method of
-                    Just method ->
-                        Task.perform
-                            (DidHandleSignInProcess >> TopLevel.AuthenticationMsg)
-                            (Authentication.Method.handleSignInProcess method)
+                [ case decodeValue bool result of
+                    Ok True ->
+                        issue HandleSignInProcess
 
-                    Nothing ->
-                        after
+                    Ok False ->
+                        afterwards
+
+                    Err err ->
+                        displayError err
                 ]
 
-        DidGetIsSigningIn False ->
-            (!)
-                model
-                [ after ]
+        --
+        -- Error
+        --
+        Incoming IsSigningIn (Err err) ->
+            handleError model err
 
-        DidHandleSignInProcess consequence ->
+        ------------------------------------
+        -- Step 4b.1
+        ------------------------------------
+        Incoming HandleSignInProcess (Ok result) ->
             (!)
                 { model | signedIn = True }
-                [ case consequence of
-                    KeepUrl ->
+                [ issue GetData
+                , case decodeValue string result of
+                    Ok "KeepUrl" ->
                         Cmd.none
 
-                    ModifyUrl ->
+                    Ok "ModifyUrl" ->
                         Navigation.modifyUrl "/"
-                , case model.method of
-                    Just method ->
-                        Task.attempt
-                            (DidGetData >> TopLevel.AuthenticationMsg)
-                            (Authentication.Method.getData method)
 
-                    Nothing ->
-                        after
+                    Ok _ ->
+                        displayError "Invalid response from HandleSignInProcess"
+
+                    Err err ->
+                        displayError err
                 ]
+
+        --
+        -- Error
+        --
+        Incoming HandleSignInProcess (Err err) ->
+            handleError model err
 
         ------------------------------------
         -- Sign in
         ------------------------------------
-        SignIn method ->
+        PerformSignIn method ->
             (!)
                 { model | method = Just method }
-                [ Task.attempt
-                    (always TopLevel.NoOp)
-                    (Authentication.Method.set method)
+                [ do TopLevel.ShowLoadingScreen
 
-                -- Sign in
-                , Task.perform
-                    (DidSignIn >> TopLevel.AuthenticationMsg)
-                    (Authentication.Method.signIn method)
-
-                -- Show loading screen
-                , TopLevel.ShowLoadingScreen
-                    |> do
+                -- Set method
+                , method
+                    |> Transformers.methodToString
+                    |> Encode.string
+                    |> issueWithData MethodSet
                 ]
 
-        DidSignIn consequence ->
-            case consequence of
-                None ->
+        ------------------------------------
+        -- Sign in / Events
+        ------------------------------------
+        Incoming MethodSet (Ok _) ->
+            (!) model [ issue SignIn ]
+
+        Incoming MethodSet (Err err) ->
+            handleError model err
+
+        Incoming SignIn (Ok result) ->
+            -- Handle SignIn consequence
+            case decodeValue string result of
+                Ok "None" ->
                     (!)
                         { model | signedIn = True }
-                        [ case model.method of
-                            Just method ->
-                                Task.attempt
-                                    (DidConstruct >> TopLevel.AuthenticationMsg)
-                                    (Authentication.Method.construct method)
+                        [ issue Construct ]
 
-                            Nothing ->
-                                Cmd.none
-                        ]
+                Ok "Redirect" ->
+                    (!)
+                        model
+                        []
 
-                Redirect ->
-                    (!) model []
+                Ok x ->
+                    handleError model "Invalid response from SignIn"
+
+                Err err ->
+                    handleError model err
+
+        Incoming SignIn (Err err) ->
+            handleError model err
 
         ------------------------------------
         -- Sign out
         ------------------------------------
-        SignOut ->
+        PerformSignOut ->
             (!)
-                { model | method = Nothing, signedIn = False }
-                [ Task.attempt
-                    (always TopLevel.NoOp)
-                    (Authentication.Method.remove)
-                , case model.method of
-                    Just method ->
-                        Task.attempt
-                            (always TopLevel.NoOp)
-                            (Authentication.Method.deconstruct method)
-
-                    Nothing ->
-                        Cmd.none
-
-                -- Clear all data
-                , do TopLevel.Reset
+                { model | signedIn = False }
+                [ do TopLevel.ShowLoadingScreen
+                , issue SignOut
                 ]
 
+        ------------------------------------
+        -- Sign out / Events
+        ------------------------------------
+        Incoming SignOut (Ok _) ->
+            (!) model [ issue Deconstruct ]
 
-after : Cmd TopLevel.Msg
-after =
+        Incoming SignOut (Err err) ->
+            handleError model err
+
+        Incoming Deconstruct (Ok _) ->
+            (!) model [ issue MethodUnset ]
+
+        Incoming Deconstruct (Err err) ->
+            handleError model err
+
+        Incoming MethodUnset (Ok _) ->
+            (!) { model | method = Nothing } [ do TopLevel.Reset ]
+
+        Incoming MethodUnset (Err err) ->
+            handleError model err
+
+        ------------------------------------
+        -- Data storage
+        ------------------------------------
+        Incoming StoreData _ ->
+            (!) model []
+
+
+
+-- 🔥 / Utilities
+
+
+afterwards : Cmd TopLevel.Msg
+afterwards =
     do TopLevel.HideLoadingScreen
+
+
+displayError : String -> Cmd TopLevel.Msg
+displayError error =
+    error
+        |> ErrorScreen
+        |> Routing.Types.SetPage
+        |> TopLevel.RoutingMsg
+        |> do
+
+
+handleError : Model -> String -> ( Model, Cmd TopLevel.Msg )
+handleError model error =
+    (!)
+        model
+        [ afterwards
+        , displayError error
+        ]
+
+
+issue : OutgoingMsg -> Cmd TopLevel.Msg
+issue msg =
+    issueWithData msg Encode.null
+
+
+issueWithData : OutgoingMsg -> Encode.Value -> Cmd TopLevel.Msg
+issueWithData msg data =
+    Ports.authenticationEvent
+        { tag = Transformers.outgoingMessageToString msg
+        , data = data
+        , error = Nothing
+        }
+
+
+
+-- 🌱
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.batch
+        [ Ports.authenticationEventResult toMessage
+        ]
+
+
+toMessage : OutsideEvent -> Msg
+toMessage event =
+    Incoming
+        (Transformers.stringToOutgoingMessage event.tag)
+        (case event.error of
+            Just err ->
+                Err err
+
+            Nothing ->
+                Ok event.data
+        )

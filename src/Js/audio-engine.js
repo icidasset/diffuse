@@ -1,4 +1,12 @@
 //
+// Audio engine
+// ♪(´ε｀ )
+//
+// Creates audio elements and interacts with the Web Audio API.
+
+
+
+//
 // Audio context
 
 let context;
