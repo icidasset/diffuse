@@ -74,7 +74,9 @@ server:
 
 test:
 	@echo "> Run tests"
-	@$(NODE_BIN)/elm-doc-test && $(NODE_BIN)/elm-test tests/Doc/Main.elm
+	@$(NODE_BIN)/elm-doctest \
+		src/App/Sources/Crypto/Hex.elm \
+		src/App/Sources/Crypto/Hmac.elm
 
 
 watch: build

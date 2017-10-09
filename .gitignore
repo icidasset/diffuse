@@ -1,8 +1,8 @@
 .stack-work
 .DS_Store
+.tmp.js
 *.cabal
 /build
 deploy.sh
 elm-stuff
 node_modules
-tests/Doc

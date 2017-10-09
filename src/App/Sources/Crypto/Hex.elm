@@ -1,7 +1,7 @@
 module Sources.Crypto.Hex exposing (..)
 
 {-| Cryptography
-    – Hex
+||| – Hex
 -}
 
 import Char
@@ -23,6 +23,7 @@ import List.Extra
 
     >>> unicodeHexToUnicode "d83dde43"
     "Ø=ÞC"
+
 -}
 unicodeHexToUnicode : String -> String
 unicodeHexToUnicode input =
@@ -40,6 +41,7 @@ unicodeHexToUnicode input =
 
     >>> utf8HexToUnicode "f09f9983"
     "🙃"
+
 -}
 utf8HexToUnicode : String -> String
 utf8HexToUnicode input =
@@ -56,6 +58,7 @@ utf8HexToUnicode input =
 
     >>> utf16HexToUnicode "d83dde43"
     "🙃"
+
 -}
 utf16HexToUnicode : String -> String
 utf16HexToUnicode input =
@@ -73,6 +76,7 @@ utf16HexToUnicode input =
 
     >>> hexToUnicodeChar "00a5"
     '¥'
+
 -}
 hexToUnicodeChar : String -> Char
 hexToUnicodeChar input =
@@ -85,8 +89,6 @@ hexToUnicodeChar input =
 
 
 {-| Convert a Unicode string to a UTF-16 (kinda, depends on given padding) Hex string.
-
-    >>> import Char
 
     >>> unicodeToHex 2 "ÅsûªùÖ.hAè`"
     "c5738ffbaa1ff9d62e688841e89e608e"
@@ -101,13 +103,14 @@ hexToUnicodeChar input =
     "d83dde43"
 
     >>> let
-    ...     str =
-    ...         [0, 0, 0]
-    ...             |> List.map Char.fromCode
-    ...             |> String.fromList
-    ... in
-    ...     unicodeToHex 2 str
+    >>>     str =
+    >>>         [0, 0, 0]
+    >>>             |> List.map Char.fromCode
+    >>>             |> String.fromList
+    >>> in
+    >>>     unicodeToHex 2 str
     "000000"
+
 -}
 unicodeToHex : Int -> String -> String
 unicodeToHex padding input =
