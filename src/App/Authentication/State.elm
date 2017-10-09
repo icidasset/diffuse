@@ -49,8 +49,8 @@ update msg model =
                         { model | method = Just (Transformers.stringToMethod m) }
                         [ issue Construct ]
 
-                -- First time authenticating,
-                -- so no data yet.
+                -- No method set,
+                -- carry on.
                 Ok Nothing ->
                     (!)
                         model
