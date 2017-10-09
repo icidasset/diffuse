@@ -176,7 +176,7 @@ update msg model =
                 ]
 
         ------------------------------------
-        -- Time
+        -- User layer / Debounced
         ------------------------------------
         DebounceStoreUserData ->
             let
@@ -200,6 +200,9 @@ update msg model =
                     { model | storageDebounce = debounce }
                     [ cmd ]
 
+        ------------------------------------
+        -- Time
+        ------------------------------------
         SetTimestamp time ->
             let
                 stamp =

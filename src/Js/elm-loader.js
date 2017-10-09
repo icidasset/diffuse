@@ -44,7 +44,7 @@ app.ports.authenticationEvent.subscribe(event => {
       method    = AUTH_SYSTEM.METHOD.get();
       funcName  = camelcase(event.tag);
 
-      AUTH_SYSTEM[method][funcName]().then(
+      AUTH_SYSTEM[method][funcName](event.data).then(
         data => report({ tag: event.tag, data: data, error: null }),
         err  => report({ tag: event.tag, data: null, error: err.toString() })
       );

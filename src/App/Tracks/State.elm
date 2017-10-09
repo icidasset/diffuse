@@ -98,6 +98,7 @@ update msg model =
                 |> Collection.reidentify
                 |> Collection.set
                 |> Response.andAlso search
+                |> Response.andAlso processSources
 
         ------------------------------------
         -- Collection, Pt. 2
@@ -157,6 +158,7 @@ update msg model =
                 |> Collection.reharvest
                 |> Collection.set
                 |> Response.andAlso storeUserData
+                |> initialImport
 
         -- > Step 3, receive search results
         ReceiveSearchResults trackIds ->
@@ -334,7 +336,7 @@ subscriptions _ =
 
 
 
--- Utils
+-- Utilities
 
 
 gotoIndexPage : Model -> Cmd TopLevel.Msg
@@ -343,6 +345,11 @@ gotoIndexPage model =
         |> Routing.Types.GoToPage
         |> TopLevel.RoutingMsg
         |> do
+
+
+processSources : Model -> Cmd TopLevel.Msg
+processSources _ =
+    do TopLevel.ProcessSources
 
 
 storeUserData : Model -> Cmd TopLevel.Msg
