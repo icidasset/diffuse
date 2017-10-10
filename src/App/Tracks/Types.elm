@@ -228,7 +228,6 @@ makeTrack sourceId ( path, tags ) =
         in
             id
                 |> Base64.encode
-                |> Result.withDefault (id)
                 |> Regex.replace All (regex "=+$") (\_ -> "")
     , path = path
     , sourceId = sourceId

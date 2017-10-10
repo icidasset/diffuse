@@ -40,10 +40,9 @@
         "scottcorgan/elm-css-normalize": "1.1.9 <= v < 2.0.0",
         "spisemisu/elm-sha": "1.0.5 <= v < 1.0.6",
         "spisemisu/elm-utf8": "1.0.1 <= v < 1.0.2",
-        "truqu/elm-base64": "1.0.5 <= v < 1.0.6"
+        "truqu/elm-base64": "2.0.1 <= v < 3.0.0"
     },
     "dependency-sources": {
-        "fredcy/localstorage": "git@github.com:fredcy/localstorage",
         "simonh1000/file-reader": "git@github.com:simonh1000/file-reader"
     },
     "elm-version": "0.18.0 <= v < 0.19.0"

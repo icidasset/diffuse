@@ -1,5 +1,6 @@
 module Authentication.State exposing (..)
 
+import Authentication.Demo as Demo
 import Authentication.Transformers as Transformers
 import Authentication.Ports as Ports
 import Authentication.Types exposing (..)
@@ -113,7 +114,7 @@ update msg model =
                         do (TopLevel.ImportUserData json)
 
                     Ok Nothing ->
-                        afterwards
+                        do (TopLevel.ImportUserData Demo.data)
 
                     Err err ->
                         displayError err
