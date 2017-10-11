@@ -233,6 +233,7 @@ update msg model =
             (!)
                 { model | signedIn = False }
                 [ do TopLevel.ShowLoadingScreen
+                , do (TopLevel.ActiveQueueItemChanged Nothing)
                 , issue SignOut
                 ]
 
