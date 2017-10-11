@@ -382,6 +382,7 @@ subscriptions model =
         , Ports.setIsTouchDevice SetIsTouchDevice
 
         -- Children
+        , Sub.map AbroadMsg <| Abroad.subscriptions model.abroad
         , Sub.map AuthenticationMsg <| Authentication.subscriptions model.authentication
         , Sub.map ConsoleMsg <| Console.subscriptions model.console
         , Sub.map EqualizerMsg <| Equalizer.subscriptions model.equalizer

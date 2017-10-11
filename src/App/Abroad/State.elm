@@ -1,7 +1,9 @@
 module Abroad.State exposing (..)
 
+import Abroad.Ports as Ports
 import Abroad.Types exposing (..)
-import FileReader exposing (readAsTextFile)
+import Base64
+import Json.Decode
 import Response.Ext exposing (do)
 import Task
 import Types as TopLevel
@@ -12,7 +14,8 @@ import Types as TopLevel
 
 initialModel : Model
 initialModel =
-    { files = []
+    { fileContents = Nothing
+    , fileSelected = False
     , importMessage = Ok ""
     }
 
@@ -24,26 +27,32 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
-        SetFiles files ->
+        FileSelectedForImport ->
             (!)
-                { model | files = files, importMessage = Ok "" }
+                { model | fileSelected = True }
                 []
 
-        UploadFiles ->
-            model.files
-                |> List.map
-                    (.blob
-                        >> readAsTextFile
-                        >> Task.attempt (ReadFile >> TopLevel.AbroadMsg)
-                    )
-                |> (!) { model | importMessage = Ok "Importing ..." }
+        Import ->
+            (!)
+                { model | importMessage = Ok "Importing ..." }
+                [ Ports.importData Ports.importFileInputId ]
 
-        ReadFile (Ok str) ->
+        ImportFinished (Just json) ->
             (!)
                 { model | importMessage = Ok "Imported data successfully" }
-                [ do (TopLevel.ImportUserData str) ]
+                [ do (TopLevel.ImportUserData json) ]
 
-        ReadFile (Err err) ->
+        ImportFinished Nothing ->
             (!)
-                { model | importMessage = Err (toString err) }
+                { model | importMessage = Err "Import failed, could not read file" }
                 []
+
+
+
+-- 🌱
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.batch
+        [ Ports.importDataReady ImportFinished ]

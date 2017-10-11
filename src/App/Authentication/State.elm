@@ -324,8 +324,7 @@ issueWithData msg data =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Ports.authenticationEventResult toMessage
-        ]
+        [ Ports.authenticationEventResult toMessage ]
 
 
 toMessage : OutsideEvent -> Msg

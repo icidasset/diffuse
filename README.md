@@ -24,7 +24,6 @@ brew install elm
 brew install nodejs
 
 npm install
-make elm-install
 ```
 
 

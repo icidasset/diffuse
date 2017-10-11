@@ -3,7 +3,7 @@ module Authentication.Demo exposing (..)
 import Base64
 
 
-{-| Demo user data which is used on first sign-in (encode as base64).
+{-| Demo user data which is used on first sign-in (encoded as base64).
 -}
 data : String
 data =

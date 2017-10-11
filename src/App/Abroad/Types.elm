@@ -1,15 +1,12 @@
 module Abroad.Types exposing (..)
 
-import FileReader
-
-
 -- Messages
 
 
 type Msg
-    = UploadFiles
-    | ReadFile (Result FileReader.Error String)
-    | SetFiles (List FileReader.NativeFile)
+    = FileSelectedForImport
+    | Import
+    | ImportFinished (Maybe String)
 
 
 
@@ -17,6 +14,7 @@ type Msg
 
 
 type alias Model =
-    { files : List FileReader.NativeFile
+    { fileContents : Maybe String
+    , fileSelected : Bool
     , importMessage : Result String String
     }

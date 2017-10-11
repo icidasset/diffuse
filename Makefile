@@ -14,14 +14,6 @@ all: dev
 
 
 #
-# Setup tasks
-#
-
-elm-install:
-	$(NODE_BIN)/elm-install
-
-
-#
 # Build tasks
 #
 

@@ -15,6 +15,28 @@ app = Elm.App.embed(node);
 
 
 //
+// > Abroad
+
+app.ports.importData.subscribe(id => {
+  const node = document.getElementById(id);
+  if (node == null) return;
+
+  const file = node.files[0];
+  const reader = new FileReader();
+
+  reader.onload = event => {
+    const encodedJson = event.target.result.substr(29);
+    const json = atob(encodedJson);
+
+    app.ports.importDataReady.send(json);
+  };
+
+  reader.readAsDataURL(file);
+});
+
+
+
+//
 // > Authentication
 
 app.ports.authenticationEvent.subscribe(event => {

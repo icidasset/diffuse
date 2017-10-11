@@ -1,12 +1,13 @@
 module Abroad.View exposing (..)
 
+import Abroad.Ports
 import Abroad.Types exposing (Msg(..))
 import Authentication.UserData
 import Color.Convert exposing (colorToCssRgb)
-import FileReader exposing (onFileChange)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onSubmit)
+import Html.Events exposing (on, onSubmit)
+import Json.Decode
 import Material.Icons.Navigation as Icons
 import Navigation.View as Navigation
 import Routing.Types
@@ -52,7 +53,7 @@ entry model =
                   """
                 ]
             , Html.form
-                [ onSubmit (AbroadMsg UploadFiles)
+                [ onSubmit (AbroadMsg Import)
                 ]
                 [ importView model
                 , exportView model
@@ -72,27 +73,36 @@ importView model =
         [ label
             []
             [ text "Import" ]
+
+        -- Input
+        --
         , input
-            [ type_ "file"
-            , name "fileInput"
-            , id "fileInput"
-            , accept ".json"
-            , onFileChange (SetFiles >> AbroadMsg)
+            [ accept ".json"
+            , id Abroad.Ports.importFileInputId
+            , name Abroad.Ports.importFileInputId
+            , on "change" (Json.Decode.succeed <| AbroadMsg FileSelectedForImport)
+            , type_ "file"
             ]
             []
+
+        -- Label
+        --
         , label
-            [ for "fileInput"
+            [ for Abroad.Ports.importFileInputId
             , cssClasses [ Button, ButtonSubtle ]
             ]
             [ text "Choose file" ]
-        , if List.isEmpty model.abroad.files then
-            text ""
-          else
+        , if model.abroad.fileSelected then
             button
                 [ cssClasses [ Button ]
                 , type_ "submit"
                 ]
                 [ text "Import" ]
+          else
+            text ""
+
+        -- Message
+        --
         , em
             [ style
                 [ ( "display", "block" )
@@ -102,7 +112,7 @@ importView model =
             ]
             [ case model.abroad.importMessage of
                 Ok "" ->
-                    if List.isEmpty model.abroad.files == False then
+                    if model.abroad.fileSelected then
                         span
                             []
                             [ text "Click on the "
