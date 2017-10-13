@@ -148,7 +148,7 @@ function createAudioElement(environmentalContext, queueItem) {
   };
 
   // TODO: Throttle?
-  const timeupdateFunc = bind(audioTimeUpdateEvent);
+  const timeUpdateFunc = bind(audioTimeUpdateEvent);
 
   newNode = new window.Audio();
   newNode.setAttribute("crossorigin", "anonymous");
@@ -161,7 +161,9 @@ function createAudioElement(environmentalContext, queueItem) {
   newNode.volume = 1;
 
   newNode.addEventListener("error", audioErrorEvent);
-  newNode.addEventListener("timeupdate", timeupdateFunc);
+  newNode.addEventListener("stalled", audioStalledEvent);
+
+  newNode.addEventListener("timeupdate", timeUpdateFunc);
   newNode.addEventListener("ended", bind(audioEndEvent));
   newNode.addEventListener("play", bind(audioPlayEvent));
   newNode.addEventListener("pause", bind(audioPauseEvent));
@@ -211,6 +213,11 @@ function audioErrorEvent(event) {
     default:
       console.error("An unknown error occurred.");
   }
+}
+
+
+function audioStalledEvent(event) {
+  console.error(`Audio stalled for '${ audioElementTrackId(event.target) }'`);
 }
 
 
