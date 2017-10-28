@@ -46,7 +46,7 @@ nowPlaying activeItem =
                     [ text (item.track.tags.artist ++ " – " ++ item.track.tags.title) ]
 
             Nothing ->
-                text "Ongaku Ryoho"
+                text "Isotach"
         ]
 
 

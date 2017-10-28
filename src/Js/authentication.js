@@ -162,7 +162,7 @@ AUTH_SYSTEM.METHOD =
 
 (() => {
 
-  let KEY = "ongaku-ryoho.json";
+  let KEY = "isotach.json";
   let worker;
 
 

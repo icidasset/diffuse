@@ -1,5 +1,6 @@
 .stack-work
 .DS_Store
+.netlify
 .tmp.js
 *.cabal
 /build

@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "Ongaku Ryoho",
-    "repository": "https://github.com/icidasset/ongaku-ryoho.git",
+    "summary": "Isotach",
+    "repository": "https://github.com/icidasset/isotach.git",
     "license": "MIT",
     "source-directories": [
         "src/App",

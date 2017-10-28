@@ -1,7 +1,7 @@
 importScripts("/vendor/package.js");
 
 
-const KEY = "ongaku-ryoho_" + location.hostname + ".json";
+const KEY = location.hostname + ".json";
 
 
 //

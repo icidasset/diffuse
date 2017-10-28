@@ -1,8 +1,8 @@
-# Ongaku Ryoho
+# Isotach
 
 A music player which connects to your cloud/distributed storage.
 
-![](http://icidasset-public.s3.amazonaws.com/ongakuryoho.jpg)
+![](http://icidasset-public.s3.amazonaws.com/isotach.jpg)
 
 
 

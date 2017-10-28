@@ -6,7 +6,7 @@
 
 ## Which services does it use?
 
-Ongaku Ryoho uses two layers of services, these layers are:
+Isotach uses two layers of services, these layers are:
 
 1. User layer
 2. Music layer
@@ -35,7 +35,7 @@ This layer connects with the services the user has on which music can be found. 
 
 ## How does it work?
 
-Ongaku Ryoho locates all the music files on the given services, extracts the metadata and then stores it via the user layer (which was explained before).
+Isotach locates all the music files on the given services, extracts the metadata and then stores it via the user layer (which was explained before).
 
 
 <div id="CORS" />
