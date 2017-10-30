@@ -27,7 +27,7 @@ styles =
       ------------------------------------------------------
       class OutsideNavigation
         [ colorDerivatives.text
-            |> Color.Manipulate.fadeOut 0.675
+            |> Color.Manipulate.fadeOut 0.55
             |> cssColor
             |> color
         , fontSize (Css.rem 0.675)
@@ -64,11 +64,11 @@ styles =
                 ]
             , class ActiveLink
                 [ colorDerivatives.text
-                    |> Color.Manipulate.fadeOut 0.9
+                    |> Color.Manipulate.fadeOut 0.875
                     |> cssColor
                     |> borderBottom3 (px 1) solid
                 , colorDerivatives.text
-                    |> Color.Manipulate.fadeOut 0.45
+                    |> Color.Manipulate.fadeOut 0.275
                     |> cssColor
                     |> color
                 , paddingBottom zero
