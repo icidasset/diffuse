@@ -218,13 +218,28 @@ update msg model =
                         ]
 
                 Ok _ ->
-                    handleError model "Invalid response from SignIn"
+                    (!)
+                        model
+                        [ afterwards
+                        , displayError "Invalid response from SignIn"
+                        , issue MethodUnset
+                        ]
 
                 Err err ->
-                    handleError model err
+                    (!)
+                        model
+                        [ afterwards
+                        , displayError err
+                        , issue MethodUnset
+                        ]
 
         Incoming SignIn (Err err) ->
-            handleError model err
+            (!)
+                model
+                [ afterwards
+                , displayError err
+                , issue MethodUnset
+                ]
 
         ------------------------------------
         -- Sign out

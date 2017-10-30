@@ -321,6 +321,7 @@ stylesLocal =
         , lineHeight (gr 3)
         , padding2 (basem 15) zero
         , property "padding-top" ("calc(" ++ .value (basem 15) ++ " + 1px)")
+        , textAlign left
         , width (basem 260)
 
         --

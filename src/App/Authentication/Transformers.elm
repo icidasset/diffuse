@@ -16,6 +16,9 @@ stringToMethod str =
         "LOCAL" ->
             Local
 
+        "REMOTE_STORAGE" ->
+            RemoteStorage
+
         _ ->
             Debug.crash "Invalid authentication method"
 
@@ -28,6 +31,9 @@ methodToString method =
 
         Local ->
             "LOCAL"
+
+        RemoteStorage ->
+            "REMOTE_STORAGE"
 
 
 
