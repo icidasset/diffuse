@@ -49,16 +49,6 @@ function doWork(worker, requisites) {
 }
 
 
-function promised(fn) {
-  return () => new Promise(fn);
-}
-
-
-function resolved(fn) {
-  return () => Promise.resolve(fn.call(this));
-}
-
-
 
 //
 // > Method
@@ -86,41 +76,50 @@ AUTH_SYSTEM.METHOD =
 
   AUTH_SYSTEM.LOCAL = {
 
-    construct: () => (
-      construct("local").then(w => worker = w)
-    ),
+    construct() {
+      return construct("local").then(w => worker = w);
+    },
 
-    deconstruct: resolved(() => {
+
+    deconstruct() {
       worker.terminate();
       worker = null;
-    }),
+
+      return Promise.resolve();
+    },
+
 
     // In & Out
 
-    isSignedIn: resolved(
-      () => !!localStorage.getItem(ID)
-    ),
 
-    isSigningIn: resolved(
-      () => false
-    ),
+    isSignedIn:
+      () => Promise.resolve(!!localStorage.getItem(ID)),
 
-    handleSignInProcess: resolved(() => {
-      return "KeepUrl";
-    }),
 
-    signIn: resolved(() => {
+    isSigningIn:
+      () => Promise.resolve(false),
+
+
+    handleSignInProcess:
+      () => Promise.resolve("KeepUrl"),
+
+
+    signIn() {
       localStorage.setItem(ID, "t");
-      return "None";
-    }),
+      return Promise.resolve("None");
+    },
 
-    signOut: resolved(() => {
+
+    signOut() {
       localStorage.removeItem(ID);
-    }),
+      return Promise.resolve();
+    },
 
-    // Get data
 
-    getData: promised((resolve, reject) => {
+    // Data
+
+
+    getData: _ => new Promise((resolve, reject) => {
       const handler = event => {
         switch (event.data.action) {
           case "GET_SUCCESS":   return event.data.data
@@ -141,7 +140,6 @@ AUTH_SYSTEM.METHOD =
       });
     }),
 
-    // Store data
 
     storeData: json => new Promise((resolve, reject) => {
       const handler = event => {
@@ -178,58 +176,53 @@ AUTH_SYSTEM.METHOD =
 
   AUTH_SYSTEM.BLOCKSTACK = {
 
-    construct: () => (
-      construct("blockstack").then(w => worker = w)
-    ),
+    construct() {
+      return construct("blockstack").then(w => worker = w);
+    },
 
-    deconstruct: resolved(() => {
+
+    deconstruct() {
       worker.terminate();
       worker = null;
-    }),
+
+      return Promise.resolve();
+    },
+
 
     // In & Out
 
-    isSignedIn: resolved(
-      blockstack.isUserSignedIn
-    ),
 
-    isSigningIn: resolved(
-      blockstack.isSignInPending
-    ),
+    isSignedIn:
+      () => Promise.resolve(blockstack.isUserSignedIn()),
 
-    handleSignInProcess: promised((resolve, reject) => {
-      blockstack.handlePendingSignIn().then(
-        user  => resolve("ModifyUrl"),
-        err   => reject(err)
-      );
-    }),
 
-    signIn: resolved(() => {
+    isSigningIn:
+      () => Promise.resolve(blockstack.isSignInPending()),
+
+
+    handleSignInProcess:
+      () => blockstack.handlePendingSignIn().then(_ => "ModifyUrl"),
+
+
+    signIn() {
       blockstack.redirectToSignIn();
-      return "Redirect";
-    }),
+      return Promise.resolve("Redirect");
+    },
 
-    signOut: resolved(() => {
+
+    signOut() {
       blockstack.signUserOut();
-    }),
+      return Promise.resolve();
+    },
 
-    // Get data
 
-    getData: promised((resolve, reject) => {
-      blockstack.getFile(KEY).then(
-        resolve,
-        reject
-      );
-    }),
+    // Data
 
-    // Store data
 
-    storeData: json => new Promise((resolve, reject) => {
-      blockstack.putFile(KEY, json).then(
-        _    => resolve(),
-        err  => reject(err)
-      );
-    })
+    getData: _ => blockstack.getFile(KEY),
+
+
+    storeData: json => blockstack.putFile(KEY, json)
 
   }
 
@@ -242,73 +235,66 @@ AUTH_SYSTEM.METHOD =
 
 (() => {
 
-  const KEY = "isotach";
-
-  let isConstructed = false;
   let rs;
   let worker;
 
 
   function setInstance() {
-    if (!rs) {
-      rs = new RemoteStorage({ cache: false });
-      rs.access.claim(KEY, "rw");
-    }
+    if (rs) return;
+    rs = new RemoteStorage({ cache: false });
+    rs.access.claim("isotach", "rw");
   }
 
   function destroyInstance() {
-    if (rs) {
-      rs.disconnect();
-      rs = null;
-    }
+    if (!rs) return;
+    rs.disconnect();
+    rs = null;
   }
 
 
   AUTH_SYSTEM.REMOTE_STORAGE = {
 
-    construct: () => (
-      construct("remoteStorage").then(w => worker = w)
-    ),
+    construct() {
+      return construct("remoteStorage").then(w => worker = w);
+    },
 
-    deconstruct: resolved(() => {
+
+    deconstruct() {
       worker.terminate();
       worker = null;
-    }),
+
+      return Promise.resolve();
+    },
+
 
     // In & Out
 
-    isSignedIn: promised((resolve, reject) => {
-      let timeoutId;
 
+    isSignedIn: _ => new Promise((resolve, reject) => {
       setInstance();
 
-      rs.on(
-        "connected",
-        () => {
-          clearTimeout(timeoutId);
-          resolve(true);
-          rs.off("connected");
-        }
-      );
+      const timeoutId = setTimeout(() => {
+        resolve(false);
+        rs.off("connected");
+      }, 10000);
 
-      timeoutId = setTimeout(
-        () => {
-          resolve(false);
-          rs.off("connected");
-        },
-        10000
-      );
+      rs.on("connected", _ => {
+        clearTimeout(timeoutId);
+        resolve(true);
+        rs.off("connected");
+      });
     }),
 
-    isSigningIn: Promise.resolve(
-      false
-    ),
 
-    handleSignInProcess: Promise.resolve(
-      "KeepUrl"
-    ),
+    isSigningIn:
+      () => Promise.resolve(false),
 
-    signIn: promised((resolve, reject) => {
+
+    handleSignInProcess:
+      () => Promise.resolve("KeepUrl"),
+
+
+    signIn: _ => new Promise((resolve, reject) => {
       const userAddress = prompt(
         "Which user address would you like to use?"
       );
@@ -324,14 +310,19 @@ AUTH_SYSTEM.METHOD =
       rs.connect(userAddress);
     }),
 
-    signOut: resolved(() => {
+
+    signOut() {
       setInstance();
       destroyInstance();
-    }),
 
-    // Get data
+      return Promise.resolve();
+    },
 
-    getData: promised((resolve, reject) => {
+
+    // Data
+
+
+    getData: _ => new Promise((resolve, reject) => {
       const handler = event => {
         switch (event.data.action) {
           case "GET_SUCCESS":   return event.data.data
@@ -352,7 +343,6 @@ AUTH_SYSTEM.METHOD =
       });
     }),
 
-    // Store data
 
     storeData: json => new Promise((resolve, reject) => {
       const handler = event => {

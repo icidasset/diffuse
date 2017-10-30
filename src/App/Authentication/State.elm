@@ -249,6 +249,7 @@ update msg model =
                 { model | signedIn = False }
                 [ do TopLevel.ShowLoadingScreen
                 , do (TopLevel.ActiveQueueItemChanged Nothing)
+                , do (TopLevel.RoutingMsg <| Routing.Types.GoToPage Index)
                 , issue SignOut
                 ]
 

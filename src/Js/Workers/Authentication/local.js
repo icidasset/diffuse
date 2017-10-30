@@ -5,7 +5,7 @@ const KEY = location.hostname + ".json";
 
 
 //
-// Setup DB
+// Construct
 
 const indexedDB =
   self.indexedDB ||

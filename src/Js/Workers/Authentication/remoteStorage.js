@@ -2,15 +2,15 @@ importScripts("/vendor/package.js");
 
 
 const KEY       = "isotach";
-const rs        = new RemoteStorage({ cache: false });
 
+
+//
+// Construct
+
+const rs = new RemoteStorage({ cache: false });
+const client = rs.scope(`/${KEY}/`);
 
 rs.access.claim(KEY, "rw");
-
-
-const client    = rs.scope(`/${KEY}/`);
-
-
 self.postMessage({ action: "CONSTRUCT_SUCCESS" });
 
 
@@ -22,10 +22,8 @@ self.onmessage = event => {
   if (!rs.remote.connected) {
     rs.on("connected", () => tackle(event));
     rs.connect(event.data.data.userAddress, event.data.data.token);
-
   } else {
     tackle(event);
-
   }
 };
 
