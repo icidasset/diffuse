@@ -67,6 +67,7 @@ type alias IncomingResult =
 type Method
     = Blockstack
     | Local
+    | RemoteStorage
 
 
 type alias UserData =

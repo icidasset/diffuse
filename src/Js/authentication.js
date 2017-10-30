@@ -5,13 +5,31 @@
 // Different integrations for authentication:
 // 1. Local (indexedDB)
 // 2. Blockstack
+// 3. Remote Storage
 
 const AUTH_SYSTEM = {};
 
 
 
 //
-// > Utilities
+// 🖍 Utensils
+
+function construct(workerName) {
+  return new Promise((resolve, reject) => {
+    let worker;
+
+    worker = new Worker(`/workers/authentication/${workerName}.js`);
+    worker.onmessage = event => {
+      worker.onmessage = null;
+
+      switch (event.data.action) {
+        case "CONSTRUCT_SUCCESS": return resolve(worker);
+        case "CONSTRUCT_FAILURE": return reject();
+      }
+    };
+  });
+}
+
 
 function doWork(worker, requisites) {
   const timeoutId = setTimeout(_ => {
@@ -68,17 +86,9 @@ AUTH_SYSTEM.METHOD =
 
   AUTH_SYSTEM.LOCAL = {
 
-    construct: promised((resolve, reject) => {
-      worker = new Worker("/workers/authentication/local.js");
-      worker.onmessage = event => {
-        worker.onmessage = null;
-
-        switch (event.data.action) {
-          case "CONSTRUCT_SUCCESS": return resolve();
-          case "CONSTRUCT_FAILURE": return reject();
-        }
-      };
-    }),
+    construct: () => (
+      construct("local").then(w => worker = w)
+    ),
 
     deconstruct: resolved(() => {
       worker.terminate();
@@ -168,9 +178,9 @@ AUTH_SYSTEM.METHOD =
 
   AUTH_SYSTEM.BLOCKSTACK = {
 
-    construct: resolved(() => {
-      worker = new Worker("/workers/authentication/blockstack.js");
-    }),
+    construct: () => (
+      construct("blockstack").then(w => worker = w)
+    ),
 
     deconstruct: resolved(() => {
       worker.terminate();
@@ -219,6 +229,147 @@ AUTH_SYSTEM.METHOD =
         _    => resolve(),
         err  => reject(err)
       );
+    })
+
+  }
+
+})();
+
+
+
+//
+// 3. Remote Storage
+
+(() => {
+
+  const KEY = "isotach";
+
+  let isConstructed = false;
+  let rs;
+  let worker;
+
+
+  function setInstance() {
+    if (!rs) {
+      rs = new RemoteStorage({ cache: false });
+      rs.access.claim(KEY, "rw");
+    }
+  }
+
+  function destroyInstance() {
+    if (rs) {
+      rs.disconnect();
+      rs = null;
+    }
+  }
+
+
+  AUTH_SYSTEM.REMOTE_STORAGE = {
+
+    construct: () => (
+      construct("remoteStorage").then(w => worker = w)
+    ),
+
+    deconstruct: resolved(() => {
+      worker.terminate();
+      worker = null;
+    }),
+
+    // In & Out
+
+    isSignedIn: promised((resolve, reject) => {
+      let timeoutId;
+
+      setInstance();
+
+      rs.on(
+        "connected",
+        () => {
+          clearTimeout(timeoutId);
+          resolve(true);
+          rs.off("connected");
+        }
+      );
+
+      timeoutId = setTimeout(
+        () => {
+          resolve(false);
+          rs.off("connected");
+        },
+        10000
+      );
+    }),
+
+    isSigningIn: Promise.resolve(
+      false
+    ),
+
+    handleSignInProcess: Promise.resolve(
+      "KeepUrl"
+    ),
+
+    signIn: promised((resolve, reject) => {
+      const userAddress = prompt(
+        "Which user address would you like to use?"
+      );
+
+      if (!userAddress || userAddress.length === 0) {
+        return reject("You need to fill in a user address in order to use this service.");
+      }
+
+      setInstance();
+
+      rs.on("connected", _ => resolve("Redirect"));
+      rs.on("error", err => reject(err.message));
+      rs.connect(userAddress);
+    }),
+
+    signOut: resolved(() => {
+      setInstance();
+      destroyInstance();
+    }),
+
+    // Get data
+
+    getData: promised((resolve, reject) => {
+      const handler = event => {
+        switch (event.data.action) {
+          case "GET_SUCCESS":   return event.data.data
+                                    ? resolve( event.data.data )
+                                    : resolve( null );
+
+          case "GET_FAILURE":   return reject(`Failed to get data, ${event.data.data}.`);
+          default:              return reject("Unavailable");
+        }
+      };
+
+      doWork(worker, {
+        action: "GET",
+        data: { token: rs.remote.token, userAddress: rs.remote.userAddress },
+        resolve: resolve,
+        reject: reject,
+        handler: handler
+      });
+    }),
+
+    // Store data
+
+    storeData: json => new Promise((resolve, reject) => {
+      const handler = event => {
+        switch (event.data.action) {
+          case "SET_SUCCESS":   return resolve();
+          case "SET_FAILURE":   return reject(`Failed to store data, ${event.data.data}.`);
+          default:              return reject("Unavailable");
+        }
+      };
+
+      doWork(worker, {
+        action: "SET",
+        data: { json: json, token: rs.remote.token, userAddress: rs.remote.userAddress },
+        resolve: resolve,
+        reject: reject,
+        handler: handler
+      });
     })
 
   }

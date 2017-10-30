@@ -69,6 +69,9 @@ entry model =
 
                     Local ->
                         text "anonymous"
+
+                    RemoteStorage ->
+                        text "RemoteStorage"
                 , text " authentication mode."
                 ]
             , Html.map SettingsMsg (theForm model)
