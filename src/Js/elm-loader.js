@@ -37,46 +37,6 @@ app.ports.importData.subscribe(id => {
 
 
 //
-// > Authentication
-
-app.ports.authenticationEvent.subscribe(event => {
-  let funcName, method;
-  let report = app.ports.authenticationEventResult.send;
-
-  switch (event.tag) {
-
-    case "METHOD_GET":
-    case "METHOD_SET":
-    case "METHOD_UNSET":
-      // Call function on the METHOD object.
-      // For example: METHOD_GET -> METHOD.get()
-      funcName = camelcase(event.tag.replace(/^\w+_/, ""));
-
-      report({
-        tag:    event.tag,
-        data:   AUTH_SYSTEM.METHOD[funcName](event.data),
-        error:  null
-      });
-
-      break;
-
-    default:
-      // Perform action on the active authentication method.
-      // For example: CONSTRUCT -> LOCAL.construct()
-      method    = AUTH_SYSTEM.METHOD.get();
-      funcName  = camelcase(event.tag);
-
-      AUTH_SYSTEM[method][funcName](event.data).then(
-        data => report({ tag: event.tag, data: data, error: null }),
-        err  => report({ tag: event.tag, data: null, error: err.toString() })
-      );
-
-  }
-});
-
-
-
-//
 // > Audio
 
 const audioEnvironmentContext = {
@@ -119,6 +79,55 @@ app.ports.requestSeek.subscribe(percentage => {
   if (audio && !isNaN(audio.duration)) {
     audio.currentTime = audio.duration * percentage;
     if (audio.paused) audio.pause();
+  }
+});
+
+app.ports.requestUnstall.subscribe(_ => {
+  const audio = audioEnvironmentContext.audio;
+
+  if (audio) {
+    clearTimeout(audioEnvironmentContext.unstallTimeoutId);
+    unstallAudio(audio);
+  }
+});
+
+
+
+//
+// > Authentication
+
+app.ports.authenticationEvent.subscribe(event => {
+  let funcName, method;
+  let report = app.ports.authenticationEventResult.send;
+
+  switch (event.tag) {
+
+    case "METHOD_GET":
+    case "METHOD_SET":
+    case "METHOD_UNSET":
+      // Call function on the METHOD object.
+      // For example: METHOD_GET -> METHOD.get()
+      funcName = camelcase(event.tag.replace(/^\w+_/, ""));
+
+      report({
+        tag:    event.tag,
+        data:   AUTH_SYSTEM.METHOD[funcName](event.data),
+        error:  null
+      });
+
+      break;
+
+    default:
+      // Perform action on the active authentication method.
+      // For example: CONSTRUCT -> LOCAL.construct()
+      method    = AUTH_SYSTEM.METHOD.get();
+      funcName  = camelcase(event.tag);
+
+      AUTH_SYSTEM[method][funcName](event.data).then(
+        data => report({ tag: event.tag, data: data, error: null }),
+        err  => report({ tag: event.tag, data: null, error: err.toString() })
+      );
+
   }
 });
 

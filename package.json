@@ -1,19 +1,19 @@
 {
   "private": true,
   "devDependencies": {
-    "autoprefixer": "^7.1.4",
-    "browserify": "^14.4.0",
+    "autoprefixer": "^7.1.6",
+    "browserify": "^14.5.0",
     "elm-css": "^0.6.1",
     "netlify-cli": "^1.2.2",
     "postcss-cli": "^4.1.1"
   },
   "dependencies": {
     "1-liners": "^0.4.0",
-    "blockstack": "^0.10.2",
+    "blockstack": "^0.13.0",
     "camelcase": "^4.1.0",
     "elasticlunr": "^0.9.5",
-    "elm-doctest": "^0.3.5",
-    "jsmediatags": "^3.8.0",
+    "elm-doctest": "^0.3.6",
+    "jsmediatags": "^3.8.1",
     "remotestoragejs": "github:remotestorage/remotestorage.js#master",
     "tocca": "^2.0.1"
   }

@@ -25,7 +25,7 @@ entry : TopLevel.Model -> Html TopLevel.Msg
 entry model =
     div
         [ cssClass Console ]
-        [ lazy nowPlaying model.queue.activeItem
+        [ lazy2 nowPlaying model.queue.activeItem model.console.stalled
         , lazy progress model.queue.activeItem
         , lazy2 buttons model.queue model.console.isPlaying
         ]
@@ -35,19 +35,32 @@ entry model =
 -- Now playing
 
 
-nowPlaying : Maybe Queue.Types.Item -> Html TopLevel.Msg
-nowPlaying activeItem =
-    div
-        [ cssClass NowPlaying ]
-        [ case activeItem of
-            Just item ->
-                span
-                    [ onClick (TopLevel.TracksMsg (Tracks.Types.ScrollToActiveTrack item.track)) ]
-                    [ text (item.track.tags.artist ++ " – " ++ item.track.tags.title) ]
+nowPlaying : Maybe Queue.Types.Item -> Bool -> Html TopLevel.Msg
+nowPlaying activeItem stalled =
+    if stalled then
+        div
+            [ cssClass NowPlaying
+            , onClick (TopLevel.ConsoleMsg Unstall)
+            ]
+            [ case activeItem of
+                Just _ ->
+                    text "Your internet connection got interrupted, click to resume."
 
-            Nothing ->
-                text "Isotach"
-        ]
+                Nothing ->
+                    text "Isotach"
+            ]
+    else
+        div
+            [ cssClass NowPlaying ]
+            [ case activeItem of
+                Just item ->
+                    span
+                        [ onClick (TopLevel.TracksMsg (Tracks.Types.ScrollToActiveTrack item.track)) ]
+                        [ text (item.track.tags.artist ++ " – " ++ item.track.tags.title) ]
+
+                Nothing ->
+                    text "Isotach"
+            ]
 
 
 

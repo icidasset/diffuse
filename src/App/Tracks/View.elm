@@ -10,6 +10,7 @@ import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Av
 import Material.Icons.Content
+import Material.Icons.Editor
 import Material.Icons.Navigation
 import Material.Icons.Toggle
 import Mouse
@@ -112,10 +113,10 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
                 ]
                 [ case maybeSelectedPlaylist of
                     Just _ ->
-                        Material.Icons.Av.album colors.base08 16
+                        Material.Icons.Editor.format_list_numbered colors.base08 16
 
                     Nothing ->
-                        Material.Icons.Av.album (Color.rgb 205 205 205) 16
+                        Material.Icons.Editor.format_list_numbered (Color.rgb 205 205 205) 16
                 ]
 
             -- Favourites-only icon
@@ -168,7 +169,7 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
               )
             , ( span
                     [ title "Queue" ]
-                    [ Material.Icons.Av.queue_play_next colorDerivatives.text 16 ]
+                    [ Material.Icons.Av.queue colorDerivatives.text 16 ]
               , Queue.Types.Index
                     |> Routing.Types.Queue
                     |> Routing.Types.GoToPage

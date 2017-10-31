@@ -9,15 +9,18 @@ type Msg
     | Seek Float
     | SetDuration Float
     | SetIsPlaying Bool
+    | SetStalled Bool
+    | Unstall
 
 
 {-| Model.
 
     Notes:
     - `duration` is in seconds
-    - `progress` is a percentage, so the currentTime = duration * percentage
+
 -}
 type alias Model =
     { duration : Float
     , isPlaying : Bool
+    , stalled : Bool
     }

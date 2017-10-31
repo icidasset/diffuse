@@ -161,7 +161,7 @@ function createAudioElement(environmentalContext, queueItem) {
   newNode.volume = 1;
 
   newNode.addEventListener("error", audioErrorEvent);
-  newNode.addEventListener("stalled", audioStalledEvent);
+  newNode.addEventListener("stalled", bind(audioStalledEvent));
 
   newNode.addEventListener("timeupdate", timeUpdateFunc);
   newNode.addEventListener("ended", bind(audioEndEvent));
@@ -218,6 +218,12 @@ function audioErrorEvent(event) {
 
 function audioStalledEvent(event) {
   console.error(`Audio stalled for '${ audioElementTrackId(event.target) }'`);
+
+  this.elm.ports.setStalled.send(true);
+  this.unstallTimeoutId = setTimeout(() => {
+    this.elm.ports.setStalled.send(false);
+    unstallAudio(event.target);
+  }, 15000);
 }
 
 
@@ -258,6 +264,19 @@ function audioCanPlayEvent(event) {
     this.elm.ports.setDuration.send(event.target.duration || 0);
     lastSetDuration = event.target.duration;
   }
+}
+
+
+
+//
+// 🖍 Utensils
+//
+
+function unstallAudio(node) {
+  const time = node.currentTime;
+
+  node.load();
+  node.currentTime = time;
 }
 
 
