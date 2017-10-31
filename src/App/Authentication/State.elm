@@ -205,6 +205,11 @@ update msg model =
         Incoming SignIn (Ok result) ->
             -- Handle SignIn consequence
             case decodeValue string result of
+                Ok "GoBack" ->
+                    (!)
+                        model
+                        [ afterwards ]
+
                 Ok "None" ->
                     (!)
                         { model | signedIn = True }

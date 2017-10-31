@@ -300,7 +300,7 @@ AUTH_SYSTEM.METHOD =
       );
 
       if (!userAddress || userAddress.length === 0) {
-        return reject("You need to fill in a user address in order to use this service.");
+        return resolve("GoBack");
       }
 
       setInstance();
