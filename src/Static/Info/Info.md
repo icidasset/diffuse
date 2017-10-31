@@ -18,18 +18,19 @@ This layer will use a service to store data from a user, such as the user's favo
 
 You can choose between these services:
 
-- IndexedDB
-- Blockstack
-- IPNS (IPFS)
+- [Blockstack](https://blockstack.org/)
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(ie. anonymous mode)</small>
+- [RemoteStorage](remotestorage.io)
+- [IPNS (IPFS)](https://ipfs.io/) <small>(not yet)</small>
 
 
 ### Music layer
 
 This layer connects with the services the user has on which music can be found. No data is written to these services. You can combine all of the following services:
 
-- Blockstack Storage
-- IPFS
-- Amazon S3
+- [Amazon S3](https://aws.amazon.com/s3/)
+- [IPFS](https://ipfs.io/)
+- [Blockstack Storage](https://blockstack.org/) <small>(not yet)</small>
 
 
 
