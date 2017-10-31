@@ -459,13 +459,13 @@ stylesLocal =
     -- Logo backdrop
     ------------------------------------------------------
     , class LogoBackdrop
-        [ backgroundImage (url "/images/icon.svg")
+        [ backgroundImage (url "/images/icon-dark.svg")
         , backgroundPosition2 (px -124) (pct 53.75)
         , backgroundRepeat noRepeat
         , backgroundSize cover
         , bottom zero
         , left zero
-        , opacity (num 0.05)
+        , opacity (num 0.025)
         , position absolute
         , right zero
         , top zero
