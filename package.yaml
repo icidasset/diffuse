@@ -21,6 +21,7 @@ dependencies:
   - protolude == 0.1.*
   - shikensu == 0.3.*
   - text == 1.*
+  - time == 1.*
   - unordered-containers == 0.2.*
   - wai == 3.2.*
   - wai-app-static == 3.1.*

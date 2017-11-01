@@ -1,4 +1,16 @@
 importScripts("/vendor/service-cache.js");
+importScripts("/version.js");
+
+
+const KEY =
+  "isotach-" + self.VERSION;
+
+
+const exclude =
+  [ "_headers"
+  , "_redirects"
+  , "CORS"
+  ];
 
 
 //
@@ -8,8 +20,9 @@ self.addEventListener("install", event => {
   const promise = fetch("/tree.json")
     .then(response => response.json())
     .then(tree => {
-      const whatToCache = ["", ...tree].map(p => "/" + p);
-      return caches.open("isotach").then(c => c.addAll(whatToCache));
+      const filteredTree = tree.filter(t => !exclude.find(u => u === t));
+      const whatToCache = ["", ...filteredTree].map(p => "/" + p);
+      return caches.open(KEY).then(c => c.addAll(whatToCache));
     });
 
   event.waitUntil(promise);

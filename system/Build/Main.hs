@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Time.Clock.POSIX (getPOSIXTime)
 import Flow
 import Protolude hiding (list)
 import Renderers
@@ -14,6 +15,7 @@ import qualified Data.ByteString.Lazy as BSL (toStrict)
 import qualified Data.Char as Char
 import qualified Data.HashMap.Strict as HashMap (fromList)
 import qualified Data.List as List
+import qualified Data.Text.Encoding as Text (encodeUtf8)
 import qualified Data.Text.IO as Text
 
 
@@ -114,10 +116,11 @@ flow _ (InfoCss, dict) =
 
 
 {-| Javascript -}
-flow _ (Javascript, dict) =
+flow x (Javascript, dict) =
     dict
         |> List.map lowerCasePath
         |> rename "workers/service.js" "service-worker.js"
+        |> insertVersion (x !~> "timestamp")
 
 
 flow _ (CachePolyfill, dict) =
@@ -143,55 +146,64 @@ type Dependencies = Aeson.Object
 
 dependencies :: IO Dependencies
 dependencies = do
-    infoLayout <- Text.readFile "src/Static/Info/Layout.html"
+    infoLayout      <- Text.readFile "src/Static/Info/Layout.html"
+    timestamp       <- fmap show unixTime :: IO Text
 
     return $ HashMap.fromList
         [ ("infoLayout", Aeson.toJSON infoLayout)
+        , ("timestamp", Aeson.toJSON timestamp)
         ]
 
 
 
--- Tree
-
-
-excludeFromTree :: [[Char]]
-excludeFromTree =
-    [ "_headers"
-    , "_redirects"
-    , "CORS"
-    ]
+-- Insertions
 
 
 insertTree :: Dictionary -> Dictionary
 insertTree dict =
     let
-        treeFilter =
-            \l -> List.find ((==) l) excludeFromTree == Nothing
-
         treeContent =
             dict
-            |> List.map localPath
-            |> List.filter treeFilter
-            |> Aeson.encode
-            |> BSL.toStrict
-            |> Just
+                |> List.map localPath
+                |> Aeson.encode
+                |> BSL.toStrict
 
-        treeDef =
-            dict
-            |> List.head
-            |> forkDefinition "tree.json"
-            |> (\def -> def { content = treeContent })
+        defs =
+            case headMay dict of
+                Just def ->
+                    def
+                        |> forkDefinition "tree.json"
+                        |> setContent treeContent
+                        |> wrap
+
+                Nothing ->
+                    []
     in
-        dict <> [treeDef]
+        dict <> defs
+
+
+insertVersion :: Text -> Dictionary -> Dictionary
+insertVersion version dict =
+    let
+        versionContent =
+            Text.encodeUtf8 ("self.VERSION = \"" <> version <> "\";")
+
+        defs =
+            case headMay dict of
+                Just def ->
+                    def
+                        |> forkDefinition "version.js"
+                        |> setContent versionContent
+                        |> wrap
+
+                Nothing ->
+                    []
+    in
+        dict <> defs
 
 
 
 -- Utilities
-
-
-append :: Dictionary -> Dictionary -> Dictionary
-append a b =
-    List.concat [ a, b ]
 
 
 lowerCasePath :: Definition -> Definition
@@ -202,3 +214,18 @@ lowerCasePath def =
             |> List.map Char.toLower
         )
         def
+
+
+setContent :: ByteString -> Definition -> Definition
+setContent theContent definition =
+    definition { content = Just theContent }
+
+
+unixTime :: IO Int
+unixTime =
+    fmap floor getPOSIXTime
+
+
+wrap :: a -> [a]
+wrap a =
+    [a]
