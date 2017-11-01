@@ -197,7 +197,7 @@ function isActiveAudioElement(environmentalContext, node) {
 function audioErrorEvent(event) {
   console.error(`Audio error for '${ audioElementTrackId(event.target) }'`);
 
-  switch (e.target.error.code) {
+  switch (event.target.error.code) {
     case event.target.error.MEDIA_ERR_ABORTED:
       console.error("You aborted the audio playback.");
       break;

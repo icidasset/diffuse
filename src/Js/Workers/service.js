@@ -17,9 +17,20 @@ self.addEventListener("install", event => {
 
 
 self.addEventListener("fetch", event => {
-  const promise = caches
-    .match(event.request)
-    .then(r => r || fetch(event.request));
+  const isInternal =
+    !!event.request.url.match(new RegExp("^" + self.registration.scope));
 
-  event.respondWith(promise);
+  const response =
+    isInternal
+
+    // Cache internal requests
+    ? caches
+        .match(event.request)
+        .then(r => r || fetch(event.request))
+
+    // Enable CORS for outgoing requests
+    : fetch(new Request(event.request.url, { mode: "cors" }))
+
+  // Respond
+  event.respondWith(response);
 });
