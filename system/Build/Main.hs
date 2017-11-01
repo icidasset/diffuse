@@ -43,9 +43,9 @@ list pattern =
 
 
 data Sequence
-    = Blockstack
-    | Favicons
+    = Favicons
     | Fonts
+    | Hosting
     | Images
     | InfoCss
     | InfoPages
@@ -67,7 +67,7 @@ sequences =
         , ( Images,         list "Static/Images/**/*.*"     )
         , ( Favicons,       list "Static/Favicons/**/*.*"   )
         , ( Fonts,          list "Static/Fonts/**/*.*"      )
-        , ( Blockstack,     list "Static/Blockstack/**/*"   )
+        , ( Hosting,        list "Static/Hosting/**/*"      )
 
           -- Js
         , ( Javascript,     list "Js/**/*.js"               )
@@ -100,9 +100,9 @@ flow _ (InfoCss, dict) =
 
 
 flow _ (Images, dict)         = prefixDirname "images/" dict
-flow _ (Favicons, dict)       = prefixDirname "favicons/" dict
 flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
-flow _ (Blockstack, dict)     = dict
+flow _ (Favicons, dict)       = dict
+flow _ (Hosting, dict)        = dict
 flow _ (Javascript, dict)     = List.map lowerCasePath dict
 
 
