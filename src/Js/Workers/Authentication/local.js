@@ -56,18 +56,9 @@ function get() {
 
   req.onsuccess = _ => {
     if (req.result) {
-      const blob = req.result;
-      const reader = new FileReader();
-
-      reader.addEventListener("loadend", e => {
-        self.postMessage({ action: "GET_SUCCESS", data: e.srcElement.result });
-      });
-
-      reader.readAsText(blob);
-
+      self.postMessage({ action: "GET_SUCCESS", data: arrayBufToString(req.result) });
     } else {
       self.postMessage({ action: "GET_SUCCESS", data: null });
-
     }
   };
 
@@ -82,10 +73,31 @@ function get() {
 // Set
 
 function set(json) {
-  const blob = new Blob([json], { type: "application/json" });
+  const buf = stringToArrayBuf(json);
   const tra = db.transaction([KEY], "readwrite");
-  const req = tra.objectStore(KEY).put(blob, KEY);
+  const req = tra.objectStore(KEY).put(buf, KEY);
 
   req.onsuccess = () => self.postMessage({ action: "SET_SUCCESS" });
   req.onerror = () => self.postMessage({ action: "SET_FAILURE" });
+}
+
+
+
+//
+// 🖍 Utensils
+
+function arrayBufToString(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
+
+
+function stringToArrayBuf(str) {
+  const buf = new ArrayBuffer(str.length * 2);
+  const bufView = new Uint16Array(buf);
+
+  for (let i = 0; i < str.length; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+
+  return buf;
 }

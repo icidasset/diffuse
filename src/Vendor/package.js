@@ -5,7 +5,6 @@ self._ = require("1-liners");
 self.blockstack = require("blockstack");
 self.camelcase = require("camelcase");
 self.elasticlunr = require("elasticlunr");
-
 self.RemoteStorage = require("remotestoragejs");
 
 if (self.document) {
