@@ -9,7 +9,8 @@ import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities
 
 import qualified Control.Monad as Monad (join)
-import qualified Data.Aeson as Aeson (Object, Value, toJSON)
+import qualified Data.Aeson as Aeson (Object, Value, encode, toJSON)
+import qualified Data.ByteString.Lazy as BSL (toStrict)
 import qualified Data.Char as Char
 import qualified Data.HashMap.Strict as HashMap (fromList)
 import qualified Data.List as List
@@ -29,8 +30,11 @@ main =
         -- & reduce to a single dictionary
         let dictionary = List.concatMap (flow de) se
 
-        -- Write to disk
-        write "../build" dictionary
+        -- Make a file tree
+        -- and then write to disk
+        dictionary
+            |> insertTree
+            |> write "../build"
 
 
 list :: [Char] -> IO Dictionary
@@ -43,7 +47,8 @@ list pattern =
 
 
 data Sequence
-    = Favicons
+    = CachePolyfill
+    | Favicons
     | Fonts
     | Hosting
     | Images
@@ -71,7 +76,15 @@ sequences =
 
           -- Js
         , ( Javascript,     list "Js/**/*.js"               )
+        , ( CachePolyfill,  list serviceCachePolyfill       )
         ]
+
+
+{-| Path to the Service-Worker Cache polyfill.
+-}
+serviceCachePolyfill :: [Char]
+serviceCachePolyfill =
+    "../node_modules/serviceworker-cache-polyfill/index.js"
 
 
 
@@ -85,10 +98,11 @@ flow _ (Pages, dict) =
         |> clone "200.html" "index.html"
 
 
-flow deps (InfoPages, dict) =
+{-| Info -}
+flow x (InfoPages, dict) =
     dict
         |> renderContent markdownRenderer
-        |> renderContent (layoutRenderer $ deps !~> "infoLayout")
+        |> renderContent (layoutRenderer $ x !~> "infoLayout")
         |> rename "Info.md" "index.html"
         |> prefixDirname "about/"
 
@@ -99,11 +113,24 @@ flow _ (InfoCss, dict) =
         |> prefixDirname "about/"
 
 
+{-| Javascript -}
+flow _ (Javascript, dict) =
+    dict
+        |> List.map lowerCasePath
+        |> rename "workers/service.js" "service-worker.js"
+
+
+flow _ (CachePolyfill, dict) =
+    dict
+        |> rename "index.js" "service-cache.js"
+        |> prefixDirname "vendor/"
+
+
+{-| Other -}
 flow _ (Images, dict)         = prefixDirname "images/" dict
 flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
 flow _ (Favicons, dict)       = dict
 flow _ (Hosting, dict)        = dict
-flow _ (Javascript, dict)     = List.map lowerCasePath dict
 
 
 
@@ -121,6 +148,41 @@ dependencies = do
     return $ HashMap.fromList
         [ ("infoLayout", Aeson.toJSON infoLayout)
         ]
+
+
+
+-- Tree
+
+
+excludeFromTree :: [[Char]]
+excludeFromTree =
+    [ "_headers"
+    , "_redirects"
+    , "CORS"
+    ]
+
+
+insertTree :: Dictionary -> Dictionary
+insertTree dict =
+    let
+        treeFilter =
+            \l -> List.find ((==) l) excludeFromTree == Nothing
+
+        treeContent =
+            dict
+            |> List.map localPath
+            |> List.filter treeFilter
+            |> Aeson.encode
+            |> BSL.toStrict
+            |> Just
+
+        treeDef =
+            dict
+            |> List.head
+            |> forkDefinition "tree.json"
+            |> (\def -> def { content = treeContent })
+    in
+        dict <> [treeDef]
 
 
 

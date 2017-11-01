@@ -5,8 +5,7 @@
     "browserify": "^14.5.0",
     "elm-css": "^0.6.1",
     "netlify-cli": "^1.2.2",
-    "postcss-cli": "^4.1.1",
-    "text-encoding": "^0.6.4"
+    "postcss-cli": "^4.1.1"
   },
   "dependencies": {
     "1-liners": "^0.4.0",
@@ -16,6 +15,8 @@
     "elm-doctest": "^0.3.6",
     "jsmediatags": "^3.8.1",
     "remotestoragejs": "github:remotestorage/remotestorage.js#master",
+    "serviceworker-cache-polyfill": "^4.0.0",
+    "text-encoding": "^0.6.4",
     "tocca": "^2.0.1"
   }
 }
