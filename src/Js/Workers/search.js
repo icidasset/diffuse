@@ -1,7 +1,29 @@
+//
+// Search
+// (◡ ‿ ◡ ✿)
+//
+// This code is responsible for searching through a `Track` collection.
+
 importScripts("/vendor/package.js");
 
 
 let index;
+
+
+//
+// Incoming messages
+
+self.onmessage = event => {
+  switch (event.data.action) {
+    case "PERFORM_SEARCH":
+      performSearch(event.data.data);
+      break;
+
+    case "UPDATE_SEARCH_INDEX":
+      updateSearchIndex(event.data.data);
+      break;
+  }
+};
 
 
 
@@ -26,7 +48,7 @@ function performSearch(searchTerm) {
     .map(s => s.ref);
 
   self.postMessage({
-    action: "perform_search",
+    action: "PERFORM_SEARCH",
     data: results
   });
 }
@@ -51,20 +73,3 @@ function updateSearchIndex(input) {
       .forEach(t => i.addDoc(t));
   });
 }
-
-
-
-//
-// Incoming messages
-
-self.onmessage = event => {
-  switch (event.data.action) {
-    case "perform_search":
-      performSearch(event.data.data);
-      break;
-
-    case "update_search_index":
-      updateSearchIndex(event.data.data);
-      break;
-  }
-};

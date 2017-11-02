@@ -25,6 +25,7 @@ module Sources.Processing
 -}
 
 import Date exposing (Date)
+import Diff exposing (..)
 import List.Extra as List exposing (remove)
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
@@ -124,14 +125,14 @@ intoTreeCommand associatedTracks currentDate context =
         TheBeginning ->
             Cmd.none
 
-        -- Still busy building the tree,
+        -- Still building the tree,
         -- carry on.
         --
         InProgress _ ->
             makeTree context currentDate
 
         -- The tree's been build,
-        -- let's continue to the next step.
+        -- continue to the next step.
         --
         TheEnd ->
             let
@@ -141,19 +142,34 @@ intoTreeCommand associatedTracks currentDate context =
                 postContext =
                     { context | filePaths = filteredFiles }
 
-                ( pathsAlreadyExist, pathsToRemove ) =
-                    separateTree postContext associatedTracks
+                pathsSourceOfTruth =
+                    postContext.filePaths
+
+                pathsCurrent =
+                    List.map .path associatedTracks
+
+                ( pathsAdded, pathsRemoved ) =
+                    separate pathsCurrent pathsSourceOfTruth
+
+                -- Some kind of weird issue is causing items to be
+                -- in both `added` and `removed`, so we rerun the same
+                -- function again to get the proper results. TODO.
+                ( realPathsAdded, _ ) =
+                    separate pathsRemoved pathsAdded
+
+                ( _, realPathsRemoved ) =
+                    separate pathsAdded pathsRemoved
             in
                 Cmd.batch
                     [ -- Get tags from tracks
                       postContext
-                        |> selectNonExisting pathsAlreadyExist
+                        |> (\ctx -> { ctx | filePaths = realPathsAdded })
                         |> processingContextToTagsContext
                         |> ProcessTagsStep
                         |> do
 
                     -- Remove tracks
-                    , pathsToRemove
+                    , realPathsRemoved
                         |> ProcessTreeStepRemoveTracks context.source.id
                         |> do
                     ]
@@ -168,36 +184,26 @@ makeTree context =
         (ProcessTreeStep context)
 
 
-separateTree : ProcessingContext -> List Track -> ( List String, List String )
-separateTree context tracks =
+separate : List a -> List a -> ( List a, List a )
+separate current srcOfTruth =
     let
-        srcOfTruth =
-            context.filePaths
+        changes =
+            diff current srcOfTruth
     in
         List.foldr
-            (\track ( left, toRemove ) ->
-                let
-                    path =
-                        track.path
-                in
-                    if List.member path srcOfTruth then
-                        ( path :: left, toRemove )
-                    else
-                        ( left, path :: toRemove )
+            (\change set ->
+                case change of
+                    Added path ->
+                        Tuple.mapFirst ((::) path) set
+
+                    Removed path ->
+                        Tuple.mapSecond ((::) path) set
+
+                    NoChange _ ->
+                        set
             )
             ( [], [] )
-            tracks
-
-
-selectNonExisting : List String -> ProcessingContext -> ProcessingContext
-selectNonExisting existingPaths context =
-    let
-        notMember =
-            flip List.notMember
-    in
-        { context
-            | filePaths = List.filter (notMember existingPaths) context.filePaths
-        }
+            changes
 
 
 
@@ -238,7 +244,7 @@ tracksFromTagsContext context =
 
 
 
--- {private} Utils
+-- Utils
 
 
 processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags

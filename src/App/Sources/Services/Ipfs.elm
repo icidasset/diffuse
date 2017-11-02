@@ -84,10 +84,6 @@ makeTrackUrl currentDate srcData _ hash =
 
 
 {-| Create a directory tree.
-
-List all the tracks in the bucket.
-Or a specific directory in the bucket.
-
 -}
 makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
 makeTree srcData marker msg currentDate =
