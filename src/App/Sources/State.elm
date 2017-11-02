@@ -8,7 +8,6 @@ import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
 import Navigation
 import Response.Ext exposing (do)
-import Sources.Ports as Ports
 import Sources.Processing as Processing
 import Sources.Services as Services exposing (makeSource)
 import Sources.Types exposing (..)

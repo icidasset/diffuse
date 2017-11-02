@@ -10,7 +10,7 @@ import Types as TopLevel exposing (AlienEvent)
 
 initialModel : Model
 initialModel =
-    {}
+    { sourceProcessing = Sources.Processing.State.initialModel }
 
 
 initialCommand : Cmd Msg
@@ -27,9 +27,13 @@ update msg model =
     case msg of
         Extraterrestrial ProcessSources (Ok result) ->
             case decodeValue (dict string) result of
+                -- 🚀
+                --
                 Ok dict ->
                     (!) model []
 
+                -- ⚠️
+                --
                 Err _ ->
                     (!) model []
 

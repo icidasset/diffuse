@@ -1,4 +1,4 @@
-module Sources.Processing
+module Sources.Processing.Steps
     exposing
         ( takeFirstStep
         , takeTreeStep
