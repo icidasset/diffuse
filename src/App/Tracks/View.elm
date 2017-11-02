@@ -374,7 +374,7 @@ playTrackDecoder =
 
 toggleFavourite : Decode.Decoder TopLevel.Msg
 toggleFavourite =
-    Decode.map TopLevel.ToggleFavourite toggleFavouriteDecoder
+    Decode.map (ToggleFavourite >> TopLevel.TracksMsg) toggleFavouriteDecoder
 
 
 toggleFavouriteDecoder : Decode.Decoder String

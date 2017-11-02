@@ -16,8 +16,8 @@ initialModel initialPage =
     }
 
 
-initialCommands : Page -> Cmd TopLevel.Msg
-initialCommands initialPage =
+initialCommand : Page -> Cmd TopLevel.Msg
+initialCommand initialPage =
     -- Trigger routing-transitions
     initialPage
         |> SetPage

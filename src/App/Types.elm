@@ -58,7 +58,6 @@ type Msg
     | FillQueue
     | PlayTrack String
     | ProcessSources
-    | ToggleFavourite String
       -- Context Menu
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
@@ -111,6 +110,10 @@ type alias ContextMenuItems =
 
 
 -- Other
+
+
+type alias AlienEvent =
+    { tag : String, data : Json.Encode.Value, error : Maybe String }
 
 
 type alias Illumination model childMsg =

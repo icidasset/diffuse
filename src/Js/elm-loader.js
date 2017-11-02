@@ -150,25 +150,17 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
 
 
 //
-// > Processing
+// > Slave worker
+//   (ie. the Elm worker)
 
-const processor = new Worker("/workers/processing.js");
+const slave = new Worker("/workers/slave.js");
 
-app.ports.requestTags.subscribe(distantContext => {
-  const context = Object.assign({}, distantContext);
-
-  processor.postMessage({
-    action: "PROCESS_CONTEXT",
-    context: context
-  });
+app.ports.slaveEvent.subscribe(aura => {
+  slave.postMessage(aura);
 });
 
-processor.onmessage = event => {
-  switch (event.data.action) {
-    case "PROCESS_CONTEXT":
-      app.ports.receiveTags.send(event.data.context);
-      break;
-  }
+slave.onmessage = event => {
+  app.ports.slaveEventResult.send(event.data.aura);
 };
 
 

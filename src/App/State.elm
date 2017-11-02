@@ -41,6 +41,7 @@ import Queue.Utils
 import Routing.Transitions
 import Routing.Types exposing (Page(..))
 import Sources.ContextMenu
+import Sources.Encoding
 import Sources.Types
 import Tracks.ContextMenu
 import Tracks.Encoding
@@ -80,15 +81,15 @@ initialModel initialPage =
     }
 
 
-initialCommands : Page -> Cmd Msg
-initialCommands initialPage =
+initialCommand : Page -> Cmd Msg
+initialCommand initialPage =
     Cmd.batch
         [ -- Time
           Task.perform SetTimestamp Time.now
 
         -- Children
-        , Authentication.initialCommands
-        , Routing.initialCommands initialPage
+        , Authentication.initialCommand
+        , Routing.initialCommand initialPage
         ]
 
 
@@ -311,19 +312,28 @@ update msg model =
         ProcessSources ->
             (!)
                 model
-                [ model.tracks.collection.untouched
-                    |> Sources.Types.Process
-                    |> SourcesMsg
-                    |> do
-                ]
+                [ let
+                    tracks =
+                        List.map
+                            Tracks.Encoding.encodeTrack
+                            model.tracks.collection.untouched
 
-        ToggleFavourite index ->
-            (!)
-                model
-                [ index
-                    |> Tracks.Types.ToggleFavourite
-                    |> TracksMsg
-                    |> do
+                    sources =
+                        List.map
+                            Sources.Encoding.encode
+                            model.sources.collection
+
+                    data =
+                        Json.Encode.object
+                            [ ( "tracks", tracks )
+                            , ( "sources", sources )
+                            ]
+                  in
+                    Ports.slaveEvent
+                        { tag = "PROCESS_SOURCES"
+                        , data = data
+                        , error = Nothing
+                        }
                 ]
 
         ------------------------------------
@@ -380,6 +390,7 @@ subscriptions model =
 
         -- Ports
         , Ports.setIsTouchDevice SetIsTouchDevice
+        , Ports.slaveEventResult handleSlaveResult
 
         -- Children
         , Sub.map AbroadMsg <| Abroad.subscriptions model.abroad
@@ -390,3 +401,8 @@ subscriptions model =
         , Sub.map SourcesMsg <| Sources.subscriptions model.sources
         , Sub.map TracksMsg <| Tracks.subscriptions model.tracks
         ]
+
+
+handleSlaveResult : AlienEvent -> Msg
+handleSlaveResult _ =
+    NoOp

@@ -1,7 +1,8 @@
 module Authentication.State exposing (..)
 
 import Authentication.Demo as Demo
-import Authentication.Transformers as Transformers
+import Authentication.Events as Events exposing (..)
+import Authentication.Translations as Translations
 import Authentication.Ports as Ports
 import Authentication.Types exposing (..)
 import Dict
@@ -12,7 +13,7 @@ import Navigation
 import Queue.Ports
 import Response.Ext exposing (do)
 import Routing.Types exposing (Page(..))
-import Types as TopLevel
+import Types as TopLevel exposing (AlienEvent)
 
 
 -- 💧
@@ -25,8 +26,8 @@ initialModel =
     }
 
 
-initialCommands : Cmd TopLevel.Msg
-initialCommands =
+initialCommand : Cmd TopLevel.Msg
+initialCommand =
     Cmd.batch
         [ issue MethodGet ]
 
@@ -41,13 +42,13 @@ update msg model =
         ------------------------------------
         -- Step 1
         ------------------------------------
-        Incoming MethodGet (Ok result) ->
+        Extraterrestrial MethodGet (Ok result) ->
             case decodeValue (maybe string) result of
                 -- 🚀
                 --
                 Ok (Just m) ->
                     (!)
-                        { model | method = Just (Transformers.stringToMethod m) }
+                        { model | method = Just (Translations.stringToMethod m) }
                         [ issue Construct ]
 
                 -- No method set,
@@ -65,22 +66,22 @@ update msg model =
         --
         -- Error
         --
-        Incoming MethodGet (Err err) ->
+        Extraterrestrial MethodGet (Err err) ->
             handleError model err
 
         ------------------------------------
         -- Step 2
         ------------------------------------
-        Incoming Construct (Ok _) ->
+        Extraterrestrial Construct (Ok _) ->
             (!) model [ issue IsSignedIn ]
 
-        Incoming Construct (Err _) ->
+        Extraterrestrial Construct (Err _) ->
             handleError model "Your browser does not support this authentication method"
 
         ------------------------------------
         -- Step 3
         ------------------------------------
-        Incoming IsSignedIn (Ok result) ->
+        Extraterrestrial IsSignedIn (Ok result) ->
             case decodeValue bool result of
                 -- Yes
                 --
@@ -100,13 +101,13 @@ update msg model =
         --
         -- Error
         --
-        Incoming IsSignedIn (Err err) ->
+        Extraterrestrial IsSignedIn (Err err) ->
             handleError model err
 
         ------------------------------------
         -- Step 4a
         ------------------------------------
-        Incoming GetData (Ok result) ->
+        Extraterrestrial GetData (Ok result) ->
             (!)
                 model
                 [ case decodeValue (maybe string) result of
@@ -123,7 +124,7 @@ update msg model =
         --
         -- Error
         --
-        Incoming GetData (Err _) ->
+        Extraterrestrial GetData (Err _) ->
             handleError
                 model
                 "Failed to retrieve the data from the selected authentication method"
@@ -131,7 +132,7 @@ update msg model =
         ------------------------------------
         -- Step 4b
         ------------------------------------
-        Incoming IsSigningIn (Ok result) ->
+        Extraterrestrial IsSigningIn (Ok result) ->
             (!)
                 model
                 [ case decodeValue bool result of
@@ -148,13 +149,13 @@ update msg model =
         --
         -- Error
         --
-        Incoming IsSigningIn (Err err) ->
+        Extraterrestrial IsSigningIn (Err err) ->
             handleError model err
 
         ------------------------------------
         -- Step 4b.1
         ------------------------------------
-        Incoming HandleSignInProcess (Ok result) ->
+        Extraterrestrial HandleSignInProcess (Ok result) ->
             (!)
                 { model | signedIn = True }
                 [ issue GetData
@@ -175,7 +176,7 @@ update msg model =
         --
         -- Error
         --
-        Incoming HandleSignInProcess (Err err) ->
+        Extraterrestrial HandleSignInProcess (Err err) ->
             handleError model err
 
         ------------------------------------
@@ -188,7 +189,7 @@ update msg model =
 
                 -- Set method
                 , method
-                    |> Transformers.methodToString
+                    |> Translations.methodToString
                     |> Encode.string
                     |> issueWithData MethodSet
                 ]
@@ -196,13 +197,13 @@ update msg model =
         ------------------------------------
         -- Sign in / Events
         ------------------------------------
-        Incoming MethodSet (Ok _) ->
+        Extraterrestrial MethodSet (Ok _) ->
             (!) model [ issue SignIn ]
 
-        Incoming MethodSet (Err err) ->
+        Extraterrestrial MethodSet (Err err) ->
             handleError model err
 
-        Incoming SignIn (Ok result) ->
+        Extraterrestrial SignIn (Ok result) ->
             -- Handle SignIn consequence
             case decodeValue string result of
                 Ok "GoBack" ->
@@ -238,7 +239,7 @@ update msg model =
                         , issue MethodUnset
                         ]
 
-        Incoming SignIn (Err err) ->
+        Extraterrestrial SignIn (Err err) ->
             (!)
                 model
                 [ afterwards
@@ -261,31 +262,31 @@ update msg model =
         ------------------------------------
         -- Sign out / Events
         ------------------------------------
-        Incoming SignOut (Ok _) ->
+        Extraterrestrial SignOut (Ok _) ->
             (!) model [ issue Deconstruct ]
 
-        Incoming SignOut (Err err) ->
+        Extraterrestrial SignOut (Err err) ->
             handleError model err
 
-        Incoming Deconstruct (Ok _) ->
+        Extraterrestrial Deconstruct (Ok _) ->
             (!) model [ issue MethodUnset ]
 
-        Incoming Deconstruct (Err err) ->
+        Extraterrestrial Deconstruct (Err err) ->
             handleError model err
 
-        Incoming MethodUnset (Ok _) ->
+        Extraterrestrial MethodUnset (Ok _) ->
             (!) { model | method = Nothing } [ do TopLevel.Reset ]
 
-        Incoming MethodUnset (Err err) ->
+        Extraterrestrial MethodUnset (Err err) ->
             handleError model err
 
         ------------------------------------
         -- Data storage
         ------------------------------------
-        Incoming StoreData (Ok _) ->
+        Extraterrestrial StoreData (Ok _) ->
             (!) model []
 
-        Incoming StoreData (Err err) ->
+        Extraterrestrial StoreData (Err err) ->
             handleError model ("Data storage error: " ++ err)
 
 
@@ -325,20 +326,6 @@ handleError model error =
         ]
 
 
-issue : OutgoingMsg -> Cmd TopLevel.Msg
-issue msg =
-    issueWithData msg Encode.null
-
-
-issueWithData : OutgoingMsg -> Encode.Value -> Cmd TopLevel.Msg
-issueWithData msg data =
-    Ports.authenticationEvent
-        { tag = Transformers.outgoingMessageToString msg
-        , data = data
-        , error = Nothing
-        }
-
-
 
 -- 🌱
 
@@ -346,13 +333,13 @@ issueWithData msg data =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Ports.authenticationEventResult toMessage ]
+        [ Ports.authenticationEventResult handleAlienEvent ]
 
 
-toMessage : OutsideEvent -> Msg
-toMessage event =
-    Incoming
-        (Transformers.stringToOutgoingMessage event.tag)
+handleAlienEvent : AlienEvent -> Msg
+handleAlienEvent event =
+    Extraterrestrial
+        (Translations.stringToAlienMessage event.tag)
         (case event.error of
             Just err ->
                 Err err

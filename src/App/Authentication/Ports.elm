@@ -1,16 +1,16 @@
 port module Authentication.Ports exposing (..)
 
-import Authentication.Types exposing (..)
+import Types exposing (AlienEvent)
 
 
 -- 💡
 
 
-port authenticationEvent : OutsideEvent -> Cmd msg
+port authenticationEvent : AlienEvent -> Cmd msg
 
 
 
 -- 🚽
 
 
-port authenticationEventResult : (OutsideEvent -> msg) -> Sub msg
+port authenticationEventResult : (AlienEvent -> msg) -> Sub msg

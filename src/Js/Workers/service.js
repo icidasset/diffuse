@@ -1,8 +1,8 @@
 //
-// Service
+// Service worker
 // (◡ ‿ ◡ ✿)
 //
-// This code is responsible for caching the application
+// This worker is responsible for caching the application
 // so it can be used offline.
 
 importScripts("/vendor/service-cache.js");
