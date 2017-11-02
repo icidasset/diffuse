@@ -25,13 +25,11 @@ app.ports.importData.subscribe(id => {
   const reader = new FileReader();
 
   reader.onload = event => {
-    const encodedJson = event.target.result.substr(29);
-    const json = atob(encodedJson);
-
+    const json = event.target.result;
     app.ports.importDataReady.send(json);
   };
 
-  reader.readAsDataURL(file);
+  reader.readAsText(file);
 });
 
 
