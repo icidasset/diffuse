@@ -4,7 +4,53 @@
 //
 // This code is responsible for extracting metadata out of files.
 
+importScripts("/vendor/package.js");
+
+
 const tagSet = ["album", "artist", "disc", "genre", "nr", "picture", "title", "year"];
+
+
+//
+// Incoming messages
+
+self.onmessage = event => {
+  switch (event.data.action) {
+    case "PROCESS_CONTEXT":
+      processContext(event.data.context);
+      break;
+  }
+};
+
+
+//
+// Contexts
+//
+
+function processContext(context) {
+  const initialPromise = Promise.resolve([]);
+
+  return context.urlsForTags.reduce((accumulator, urls) => {
+    return accumulator.then(col =>
+      getTags(urls.getUrl, urls.headUrl)
+        .then(r => col.concat(r))
+        .catch(e => {
+          console.error(e);
+          return col.concat(null);
+        })
+    );
+
+  }, initialPromise).then(col => {
+    context.receivedTags = col.map(
+      x => x ? pickTags(x) : null
+    );
+
+    self.postMessage({
+      action: "PROCESS_CONTEXT",
+      context: context
+    });
+
+  });
+}
 
 
 //
@@ -87,7 +133,6 @@ function pickTags(tagsFromJsmediatags) {
 
 //
 // Pictures (NOTE: disabled for now, slows down the app a lot)
-
 
 function pictureDataUri(rawPicture) {
   const binary = rawPicture.data.reduce((str, code) => str + String.fromCharCode(code), "");

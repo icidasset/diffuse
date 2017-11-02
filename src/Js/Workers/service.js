@@ -1,3 +1,10 @@
+//
+// Service
+// (◡ ‿ ◡ ✿)
+//
+// This code is responsible for caching the application
+// so it can be used offline.
+
 importScripts("/vendor/service-cache.js");
 importScripts("/version.js");
 

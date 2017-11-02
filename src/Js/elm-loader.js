@@ -154,29 +154,24 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
 //
 // > Processing
 
+const processor = new Worker("/workers/processing.js");
+
 app.ports.requestTags.subscribe(distantContext => {
   const context = Object.assign({}, distantContext);
-  const initialPromise = Promise.resolve([]);
 
-  return context.urlsForTags.reduce((accumulator, urls) => {
-    return accumulator.then(col =>
-      getTags(urls.getUrl, urls.headUrl)
-        .then(r => col.concat(r))
-        .catch(e => {
-          console.error(e);
-          return col.concat(null);
-        })
-    );
-
-  }, initialPromise).then(col => {
-    context.receivedTags = col.map(
-      x => x ? pickTags(x) : null
-    );
-
-    app.ports.receiveTags.send(context);
-
+  processor.postMessage({
+    action: "PROCESS_CONTEXT",
+    context: context
   });
 });
+
+processor.onmessage = event => {
+  switch (event.data.action) {
+    case "PROCESS_CONTEXT":
+      app.ports.receiveTags.send(event.data.context);
+      break;
+  }
+};
 
 
 
@@ -196,21 +191,21 @@ const search = new Worker("/workers/search.js");
 
 app.ports.performSearch.subscribe(searchTerm => {
   search.postMessage({
-    action: "perform_search",
+    action: "PERFORM_SEARCH",
     data: searchTerm
   });
 });
 
 app.ports.updateSearchIndex.subscribe(tracksJSON => {
   search.postMessage({
-    action: "update_search_index",
+    action: "UPDATE_SEARCH_INDEX",
     data: tracksJSON
   });
 });
 
 search.onmessage = event => {
   switch (event.data.action) {
-    case "perform_search":
+    case "PERFORM_SEARCH":
       app.ports.receiveSearchResults.send(event.data.data);
       break;
   }
