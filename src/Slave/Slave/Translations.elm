@@ -9,10 +9,15 @@ import Slave.Types exposing (AlienMsg)
 stringToAlienMessage : String -> AlienMsg
 stringToAlienMessage str =
     case str of
+        "PROCESS_SOURCES" ->
+            ProcessSources
+
         _ ->
             Debug.crash "Invalid AlienMsg"
 
 
 alienMessageToString : AlienMsg -> String
 alienMessageToString msg =
-    toString msg
+    case msg of
+        ProcessSources ->
+            "PROCESS_SOURCES"

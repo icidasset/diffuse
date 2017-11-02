@@ -1,5 +1,6 @@
 module Slave.State exposing (..)
 
+import Json.Decode as Decode exposing (..)
 import Slave.Translations as Translations
 import Types as TopLevel exposing (AlienEvent)
 
@@ -24,8 +25,16 @@ initialCommand =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Extraterrestrial ProcessSources ->
-            model ! []
+        Extraterrestrial ProcessSources (Ok result) ->
+            case decodeValue (dict string) result of
+                Ok dict ->
+                    (!) model []
+
+                Err _ ->
+                    (!) model []
+
+        Extraterrestrial ProcessSources (Err _) ->
+            (!) model []
 
 
 

@@ -15,7 +15,6 @@ const app = Elm.Slave.worker();
 // Incoming messages
 
 self.onmessage = event => {
-  console.log(event.data.aura);
   app.ports.incoming.send(event.data.aura);
 };
 
@@ -24,4 +23,15 @@ self.onmessage = event => {
 //
 // Slave ports
 
-// app.processTags
+app.ports.outgoing.subscribe(aura => {
+  switch (aura.action) {
+    case "GET_TAGS":
+      // TODO
+      // nextAura = Object.assign({}, aura, { data: ... });
+      // app.ports.incoming.send(nextAura);
+      break;
+
+    default:
+      self.postMessage(aura);
+  }
+});

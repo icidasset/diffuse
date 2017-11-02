@@ -14,7 +14,7 @@ issue msg =
 
 issueWithData : AlienMsg -> Encode.Value -> Cmd TopLevel.Msg
 issueWithData msg data =
-    Ports.authenticationEvent
+    Ports.outgoing
         { tag = Translations.alienMessageToString msg
         , data = data
         , error = Nothing
