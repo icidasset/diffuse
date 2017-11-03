@@ -138,7 +138,7 @@ pageIndex sources isProcessing processingErrors =
                         (\s ->
                             ( s
                             , isProcessing
-                                |> Maybe.andThen (List.find (Tuple.first >> .id >> (==) s.id))
+                                |> Maybe.andThen (List.find (.id >> (==) s.id))
                                 |> Maybe.map (always True)
                                 |> Maybe.withDefault False
                             , processingErrors

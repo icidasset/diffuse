@@ -1,5 +1,6 @@
 module Sources.Types exposing (..)
 
+import Date exposing (Date)
 import Dict exposing (Dict)
 import Tracks.Types exposing (..)
 
@@ -52,6 +53,9 @@ type Msg
 type alias Model =
     { collection : List Source
     , form : Form
+    , isProcessing : IsProcessing
+    , processingErrors : List ( SourceId, String ) -- TODO
+    , timestamp : Date
     }
 
 
@@ -68,3 +72,7 @@ type Page
     = Edit SourceId
     | Index
     | New
+
+
+type alias IsProcessing =
+    Maybe (List Source)

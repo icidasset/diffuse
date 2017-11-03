@@ -1,7 +1,7 @@
 module Sources.Processing.Utils exposing (..)
 
-import Slave.Types exposing (..)
-import Sources.Processing.Types
+import Slave.Types exposing (Illumination)
+import Sources.Processing.Types exposing (..)
 import Utils
 
 
@@ -10,4 +10,4 @@ import Utils
 
 ($) : Illumination Model Msg
 ($) =
-    Utils.illuminate SourceProcessingMsg
+    Utils.illuminate Slave.Types.SourceProcessingMsg

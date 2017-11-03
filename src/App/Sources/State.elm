@@ -1,17 +1,14 @@
 module Sources.State exposing (..)
 
+import Date
 import Dict
-import Http exposing (Error(..))
 import List.Extra as List
-import Maybe.Ext as Maybe
-import Maybe.Extra as Maybe
 import Navigation
 import Response.Ext exposing (do)
-import Sources.Processing as Processing
 import Sources.Services as Services exposing (makeSource)
 import Sources.Types exposing (..)
 import Sources.Utils exposing (..)
-import Tracks.Types exposing (emptyTrack)
+import Tracks.Types
 import Types as TopLevel
 
 
@@ -22,6 +19,9 @@ initialModel : Model
 initialModel =
     { collection = []
     , form = NewForm 1 initialSource
+    , isProcessing = Nothing
+    , processingErrors = []
+    , timestamp = Date.fromTime 0
     }
 
 

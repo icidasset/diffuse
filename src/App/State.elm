@@ -2,7 +2,7 @@ module State exposing (..)
 
 import Date
 import Debounce
-import Json.Encode
+import Json.Encode as Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
@@ -10,6 +10,7 @@ import Ports
 import Response exposing (..)
 import Response.Ext as Response exposing (do, doDelayed)
 import Slave.Translations
+import Slave.Types
 import Task
 import Time
 import Types exposing (..)
@@ -32,6 +33,7 @@ import Tracks.State as Tracks
 
 -- Children, Pt. 2
 
+import Authentication.Events
 import Authentication.Types
 import Authentication.UserData
 import Playlists.Types
@@ -113,7 +115,7 @@ update msg model =
         Reset ->
             (!)
                 (initialModel model.routing.currentPage)
-                [ initialCommands model.routing.currentPage ]
+                [ initialCommand model.routing.currentPage ]
 
         SetIsTouchDevice bool ->
             (!) { model | isTouchDevice = bool } []
@@ -157,11 +159,11 @@ update msg model =
         StoreUserData ->
             (!)
                 model
-                [ Authentication.issueWithData
+                [ Authentication.Events.issueWithData
                     Authentication.Types.StoreData
                     (model
                         |> Authentication.UserData.outwards
-                        |> Json.Encode.string
+                        |> Encode.string
                     )
                 ]
 
@@ -321,36 +323,48 @@ update msg model =
                 ]
 
         ProcessSources ->
-            (!)
-                model
-                [ let
-                    tracks =
-                        List.map
-                            Tracks.Encoding.encodeTrack
-                            model.tracks.collection.untouched
+            let
+                tracks =
+                    List.map
+                        Tracks.Encoding.encodeTrack
+                        model.tracks.collection.untouched
 
-                    sources =
-                        List.map
-                            Sources.Encoding.encode
-                            model.sources.collection
+                sources =
+                    List.map
+                        Sources.Encoding.encode
+                        model.sources.collection
 
-                    data =
-                        Json.Encode.object
-                            [ ( "tracks", tracks )
-                            , ( "sources", sources )
-                            ]
-                  in
-                    Ports.slaveEvent
+                data =
+                    Encode.object
+                        [ ( "tracks", Encode.list tracks )
+                        , ( "sources", Encode.list sources )
+                        ]
+
+                sourcesModel =
+                    model.sources
+
+                isProcessing =
+                    Just model.sources.collection
+            in
+                (!)
+                    { model
+                        | sources =
+                            { sourcesModel | isProcessing = isProcessing }
+                    }
+                    [ Ports.slaveEvent
                         { tag = "PROCESS_SOURCES"
                         , data = data
                         , error = Nothing
                         }
-                ]
+                    ]
 
         ------------------------------------
         -- Slave events
         ------------------------------------
-        Extraterrestrial RemoveTracksByPath (Ok result) ->
+        --
+        -- Tracks
+        --
+        Extraterrestrial Slave.Types.AddTracks (Ok result) ->
             -- TODO
             -- filePaths
             --     |> Tracks.Types.RemoveByPath sourceId
@@ -358,9 +372,23 @@ update msg model =
             --     |> do
             ( model, Cmd.none )
 
-        Extraterrestrial RemoveTracksByPath (Ok result) ->
+        Extraterrestrial Slave.Types.AddTracks (Err _) ->
             ( model, Cmd.none )
 
+        Extraterrestrial Slave.Types.RemoveTracksByPath (Ok result) ->
+            -- TODO
+            -- filePaths
+            --     |> Tracks.Types.RemoveByPath sourceId
+            --     |> TopLevel.TracksMsg
+            --     |> do
+            ( model, Cmd.none )
+
+        Extraterrestrial Slave.Types.RemoveTracksByPath (Err _) ->
+            ( model, Cmd.none )
+
+        --
+        -- Ignore other
+        --
         Extraterrestrial _ _ ->
             ( model, Cmd.none )
 
@@ -432,7 +460,7 @@ subscriptions model =
 
 
 handleSlaveResult : AlienEvent -> Msg
-handleSlaveResult _ =
+handleSlaveResult event =
     Extraterrestrial
         (Slave.Translations.stringToAlienMessage event.tag)
         (case event.error of

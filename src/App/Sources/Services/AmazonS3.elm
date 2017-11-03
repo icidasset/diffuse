@@ -15,7 +15,8 @@ import Regex
 import Sources.Pick
 import Sources.Services.AmazonS3.Parser as Parser
 import Sources.Services.AmazonS3.Presign exposing (..)
-import Sources.Types exposing (..)
+import Sources.Processing.Types exposing (..)
+import Sources.Types exposing (SourceData)
 import Time
 
 

@@ -1,12 +1,18 @@
-module Sources.Processing.State exposing (update)
+module Sources.Processing.State exposing (..)
 
 import Date
 import Json.Encode as Encode
+import Http exposing (Error(..))
+import Maybe.Ext as Maybe
+import Maybe.Extra as Maybe
+import Response.Ext exposing (do)
 import Slave.Events exposing (..)
+import Slave.Types as Slave exposing (AlienMsg(..))
 import Sources.Processing.Ports as Ports
 import Sources.Processing.Steps as Steps
+import Sources.Processing.Types exposing (..)
 import Sources.Processing.Utils exposing (..)
-import Slave.Types as Slave
+import Sources.Services as Services
 import Tracks.Encoding
 
 
@@ -128,7 +134,7 @@ update msg model =
                 ($)
                     { model
                         | errors =
-                            ( ctx.source.id, publicError ) :: model.errors
+                            ( context.source.id, publicError ) :: model.errors
                     }
                     [ do NextInLine ]
                     []
@@ -169,7 +175,7 @@ update msg model =
                         )
 
                 cmd =
-                    model.isProcessing
+                    model.status
                         |> Maybe.map (List.map Tuple.first)
                         |> Maybe.andThen (Steps.findTagsContextSource tagsContext)
                         |> Maybe.andThen (Steps.takeTagsStep model.timestamp tagsContext)

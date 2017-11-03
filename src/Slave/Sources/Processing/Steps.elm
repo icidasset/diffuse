@@ -26,6 +26,7 @@ module Sources.Processing.Steps
 
 import Date exposing (Date)
 import Diff exposing (..)
+import List.Extra as List
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
 import Sources.Services as Services

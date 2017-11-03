@@ -5,6 +5,7 @@ import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Json.Encode
 import Mouse
+import Slave.Types
 import Svg exposing (Svg)
 import Time exposing (Time)
 import Window
@@ -58,6 +59,8 @@ type Msg
     | FillQueue
     | PlayTrack String
     | ProcessSources
+      -- Slave events
+    | Extraterrestrial Slave.Types.AlienMsg Slave.Types.AlienResult
       -- Context Menu
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )

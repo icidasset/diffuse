@@ -13,6 +13,7 @@ import Dict
 import Http
 import Sources.Services.Ipfs.Marker as Marker
 import Sources.Services.Ipfs.Parser as Parser
+import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (..)
 
 

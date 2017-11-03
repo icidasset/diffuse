@@ -1,5 +1,10 @@
 module Slave.Types exposing (..)
 
+import Date exposing (Date)
+import Json.Encode
+import Time exposing (Time)
+
+
 -- Children
 
 import Sources.Processing.Types
@@ -15,7 +20,17 @@ type Msg
     | SourceProcessingMsg Sources.Processing.Types.Msg
       --
       -- Time
-    | SetTimestamp
+    | SetTimestamp Time
+
+
+
+-- Model
+
+
+type alias Model =
+    { sourceProcessing : Sources.Processing.Types.Model
+    , timestamp : Date
+    }
 
 
 
@@ -32,3 +47,11 @@ type AlienMsg
 
 type alias AlienResult =
     Result String Json.Encode.Value
+
+
+
+-- Other
+
+
+type alias Illumination model childMsg =
+    model -> List (Cmd childMsg) -> List (Cmd Msg) -> ( model, Cmd Msg )

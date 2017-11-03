@@ -1,5 +1,6 @@
 module Slave exposing (main)
 
+import Slave.Types exposing (..)
 import Slave.State as State
 
 

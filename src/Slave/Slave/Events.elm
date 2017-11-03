@@ -4,15 +4,14 @@ import Json.Encode as Encode
 import Slave.Ports as Ports
 import Slave.Translations as Translations
 import Slave.Types exposing (..)
-import Types as TopLevel
 
 
-issue : AlienMsg -> Cmd TopLevel.Msg
+issue : AlienMsg -> Cmd Msg
 issue msg =
     issueWithData msg Encode.null
 
 
-issueWithData : AlienMsg -> Encode.Value -> Cmd TopLevel.Msg
+issueWithData : AlienMsg -> Encode.Value -> Cmd Msg
 issueWithData msg data =
     Ports.outgoing
         { tag = Translations.alienMessageToString msg

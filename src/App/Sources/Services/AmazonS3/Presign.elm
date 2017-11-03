@@ -8,7 +8,8 @@ import Http
 import SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
-import Sources.Types exposing (HttpMethod, SourceData)
+import Sources.Processing.Types exposing (HttpMethod)
+import Sources.Types exposing (SourceData)
 import Time exposing (Time)
 import Utils
 
