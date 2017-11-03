@@ -9,6 +9,7 @@ import Navigation
 import Ports
 import Response exposing (..)
 import Response.Ext as Response exposing (do, doDelayed)
+import Slave.Translations
 import Task
 import Time
 import Types exposing (..)
@@ -211,44 +212,54 @@ update msg model =
         -- Children
         ------------------------------------
         AbroadMsg sub ->
-            Abroad.update sub model.abroad
+            model.abroad
+                |> Abroad.update sub
                 |> mapModel (\x -> { model | abroad = x })
 
         AuthenticationMsg sub ->
-            Authentication.update sub model.authentication
+            model.authentication
+                |> Authentication.update sub
                 |> mapModel (\x -> { model | authentication = x })
 
         ConsoleMsg sub ->
-            Console.update sub model.console
+            model.console
+                |> Console.update sub
                 |> mapModel (\x -> { model | console = x })
 
         EqualizerMsg sub ->
-            Equalizer.update sub model.equalizer
+            model.equalizer
+                |> Equalizer.update sub
                 |> mapModel (\x -> { model | equalizer = x })
 
         QueueMsg sub ->
-            Queue.update sub model.queue
+            model.queue
+                |> Queue.update sub
                 |> mapModel (\x -> { model | queue = x })
 
         PlaylistsMsg sub ->
-            Playlists.update sub model.playlists
+            model.playlists
+                |> Playlists.update sub
                 |> mapModel (\x -> { model | playlists = x })
 
         RoutingMsg sub ->
-            Routing.update sub model.routing
+            model.routing
+                |> Routing.update sub
                 |> mapModel (\x -> { model | routing = x })
                 |> Routing.Transitions.transition sub model
 
         SettingsMsg sub ->
-            Settings.update sub model.settings
+            model.settings
+                |> Settings.update sub
                 |> mapModel (\x -> { model | settings = x })
 
         SourcesMsg sub ->
-            Sources.update sub model.sources
+            model.sources
+                |> Sources.update sub
                 |> mapModel (\x -> { model | sources = x })
 
         TracksMsg sub ->
-            Tracks.update sub model.tracks
+            model.tracks
+                |> Tracks.update sub
                 |> mapModel (\x -> { model | tracks = x })
 
         ------------------------------------
@@ -337,6 +348,23 @@ update msg model =
                 ]
 
         ------------------------------------
+        -- Slave events
+        ------------------------------------
+        Extraterrestrial RemoveTracksByPath (Ok result) ->
+            -- TODO
+            -- filePaths
+            --     |> Tracks.Types.RemoveByPath sourceId
+            --     |> TopLevel.TracksMsg
+            --     |> do
+            ( model, Cmd.none )
+
+        Extraterrestrial RemoveTracksByPath (Ok result) ->
+            ( model, Cmd.none )
+
+        Extraterrestrial _ _ ->
+            ( model, Cmd.none )
+
+        ------------------------------------
         -- Context Menu
         ------------------------------------
         ShowSourceMenu sourceId mousePos ->
@@ -364,7 +392,7 @@ update msg model =
         -- Other
         ------------------------------------
         NoOp ->
-            (!) model []
+            ( model, Cmd.none )
 
 
 
@@ -405,4 +433,12 @@ subscriptions model =
 
 handleSlaveResult : AlienEvent -> Msg
 handleSlaveResult _ =
-    NoOp
+    Extraterrestrial
+        (Slave.Translations.stringToAlienMessage event.tag)
+        (case event.error of
+            Just err ->
+                Err err
+
+            Nothing ->
+                Ok event.data
+        )

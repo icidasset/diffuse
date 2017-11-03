@@ -5,6 +5,7 @@
 // This worker is responsible for executing CPU-heavy tasks with the help of Elm.
 
 importScripts("/vendor/package.js");
+importScripts("/lib/processing.js");
 importScripts("/slave.js");
 
 
@@ -24,14 +25,10 @@ self.onmessage = event => {
 // Slave ports
 
 app.ports.outgoing.subscribe(aura => {
-  switch (aura.action) {
-    case "GET_TAGS":
-      // TODO
-      // nextAura = Object.assign({}, aura, { data: ... });
-      // app.ports.incoming.send(nextAura);
-      break;
+  self.postMessage(aura);
+});
 
-    default:
-      self.postMessage(aura);
-  }
+
+app.ports.requestTags.subscribe(context => {
+  processContext(context).then(app.ports.receiveTags.send);
 });

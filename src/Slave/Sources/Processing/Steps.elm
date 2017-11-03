@@ -26,12 +26,11 @@ module Sources.Processing.Steps
 
 import Date exposing (Date)
 import Diff exposing (..)
-import List.Extra as List exposing (remove)
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
-import Sources.Ports as Ports
 import Sources.Services as Services
-import Sources.Types exposing (..)
+import Sources.Processing.Types exposing (..)
+import Sources.Types exposing (Source)
 import Tracks.Types exposing (TagUrls, Track, makeTrack)
 
 
@@ -70,7 +69,7 @@ takeFirstStep currentDate source =
 -- {public} 2nd step
 
 
-takeTreeStep : ProcessingContext -> String -> List Track -> Date -> Cmd Msg
+takeTreeStep : Context -> String -> List Track -> Date -> Cmd Msg
 takeTreeStep context response associatedTracks currentDate =
     context
         |> handleTreeResponse response
@@ -81,7 +80,7 @@ takeTreeStep context response associatedTracks currentDate =
 -- {public} 3rd step
 
 
-takeTagsStep : Date -> ProcessingContextForTags -> Source -> Maybe (Cmd Msg)
+takeTagsStep : Date -> ContextForTags -> Source -> Maybe (Cmd Msg)
 takeTagsStep currentDate tagsCtx source =
     let
         ( filesToProcess, nextFiles ) =
@@ -97,14 +96,14 @@ takeTagsStep currentDate tagsCtx source =
     in
         filesToProcess
             |> List.head
-            |> Maybe.map (always (Ports.requestTags newTagsCtx))
+            |> Maybe.map (always (getTags newTagsCtx))
 
 
 
 -- Tree
 
 
-handleTreeResponse : String -> ProcessingContext -> ProcessingContext
+handleTreeResponse : String -> Context -> Context
 handleTreeResponse response context =
     let
         parsingFunc =
@@ -119,7 +118,7 @@ handleTreeResponse response context =
         }
 
 
-intoTreeCommand : List Track -> Date -> ProcessingContext -> Cmd Msg
+intoTreeCommand : List Track -> Date -> Context -> Cmd Msg
 intoTreeCommand associatedTracks currentDate context =
     case context.treeMarker of
         TheBeginning ->
@@ -164,24 +163,24 @@ intoTreeCommand associatedTracks currentDate context =
                     [ -- Get tags from tracks
                       postContext
                         |> (\ctx -> { ctx | filePaths = realPathsAdded })
-                        |> processingContextToTagsContext
-                        |> ProcessTagsStep
+                        |> contextToTagsContext
+                        |> TagsStep
                         |> do
 
                     -- Remove tracks
                     , realPathsRemoved
-                        |> ProcessTreeStepRemoveTracks context.source.id
+                        |> TreeStepRemoveTracks context.source.id
                         |> do
                     ]
 
 
-makeTree : ProcessingContext -> CmdWithTimestamp
+makeTree : Context -> Date -> Cmd Msg
 makeTree context =
     Services.makeTree
         context.source.service
         context.source.data
         context.treeMarker
-        (ProcessTreeStep context)
+        (TreeStep context)
 
 
 separate : List a -> List a -> ( List a, List a )
@@ -210,6 +209,12 @@ separate current srcOfTruth =
 -- Tags
 
 
+getTags : ContextForTags -> Cmd Msg
+getTags contextForTags =
+    -- TODO
+    Cmd.none
+
+
 makeTrackUrls : Date -> Source -> List String -> List TagUrls
 makeTrackUrls currentDate source filePaths =
     let
@@ -229,12 +234,12 @@ makeTrackUrls currentDate source filePaths =
 -- {public} Utils
 
 
-findTagsContextSource : ProcessingContextForTags -> List Source -> Maybe Source
+findTagsContextSource : ContextForTags -> List Source -> Maybe Source
 findTagsContextSource tagsContext =
     List.find (.id >> (==) tagsContext.sourceId)
 
 
-tracksFromTagsContext : ProcessingContextForTags -> List Track
+tracksFromTagsContext : ContextForTags -> List Track
 tracksFromTagsContext context =
     context.receivedTags
         |> List.zip context.receivedFilePaths
@@ -247,8 +252,8 @@ tracksFromTagsContext context =
 -- Utils
 
 
-processingContextToTagsContext : ProcessingContext -> ProcessingContextForTags
-processingContextToTagsContext context =
+contextToTagsContext : Context -> ContextForTags
+contextToTagsContext context =
     { nextFilePaths = context.filePaths
     , receivedFilePaths = []
     , receivedTags = []

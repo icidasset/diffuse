@@ -13,6 +13,9 @@ type Msg
       --
       -- Children
     | SourceProcessingMsg Sources.Processing.Types.Msg
+      --
+      -- Time
+    | SetTimestamp
 
 
 
@@ -20,7 +23,11 @@ type Msg
 
 
 type AlienMsg
-    = ProcessSources
+    = -- Tracks
+      AddTracks
+    | RemoveTracksByPath
+      -- Other
+    | ProcessSources
 
 
 type alias AlienResult =
