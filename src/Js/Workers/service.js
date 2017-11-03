@@ -17,6 +17,7 @@ const exclude =
   [ "_headers"
   , "_redirects"
   , "CORS"
+  , "version.js"
   ];
 
 
@@ -38,13 +39,10 @@ self.addEventListener("install", event => {
 
 self.addEventListener("fetch", event => {
   const isInternal =
-    !!event.request.url.match(new RegExp("^" + self.registration.scope));
+    !!event.request.url.match(new RegExp("^" + self.location.origin));
 
   if (isInternal) {
-    event.respondWith(
-      caches
-        .match(event.request)
-        .then(r => r || fetch(event.request))
-    );
+    const promise = fetch(event.request).catch(_ => caches.match(event.request));
+    event.respondWith(promise);
   }
 });
