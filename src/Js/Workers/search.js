@@ -1,8 +1,8 @@
 //
-// Search
+// Search worker
 // (◡ ‿ ◡ ✿)
 //
-// This code is responsible for searching through a `Track` collection.
+// This worker is responsible for searching through a `Track` collection.
 
 importScripts("/vendor/package.js");
 

@@ -25,7 +25,7 @@ init location =
             Routing.Logic.locationToPage location
     in
         ( State.initialModel initialPage
-        , State.initialCommands initialPage
+        , State.initialCommand initialPage
         )
 
 

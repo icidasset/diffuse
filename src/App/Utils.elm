@@ -8,8 +8,11 @@ import Html exposing (Attribute)
 import Html.CssHelpers exposing (..)
 import Http
 import Regex exposing (regex, HowMany(All))
+import Response.Ext exposing (do)
+import Routing.Types exposing (Page(..))
 import Svg
 import Svg.Attributes
+import Types as TopLevel
 
 
 -- Css
@@ -67,6 +70,28 @@ encodeUri x =
 makeQueryParam : ( String, String ) -> String
 makeQueryParam ( a, b ) =
     encodeUri a ++ "=" ++ encodeUri b
+
+
+
+-- Display
+
+
+displayError : String -> Cmd TopLevel.Msg
+displayError error =
+    error
+        |> ErrorScreen
+        |> Routing.Types.SetPage
+        |> TopLevel.RoutingMsg
+        |> do
+
+
+displayMessage : String -> Cmd TopLevel.Msg
+displayMessage message =
+    message
+        |> MessageScreen
+        |> Routing.Types.SetPage
+        |> TopLevel.RoutingMsg
+        |> do
 
 
 

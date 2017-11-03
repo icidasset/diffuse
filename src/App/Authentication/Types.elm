@@ -13,7 +13,7 @@ import Tracks.Types as Tracks
 
 
 type Msg
-    = Incoming OutgoingMsg IncomingResult
+    = Extraterrestrial AlienMsg AlienResult
     | PerformSignIn Method
     | PerformSignOut
 
@@ -32,7 +32,7 @@ type alias Model =
 -- Talking to the outside world
 
 
-type OutgoingMsg
+type AlienMsg
     = MethodGet
     | MethodSet
     | MethodUnset
@@ -48,15 +48,7 @@ type OutgoingMsg
     | StoreData
 
 
-type alias OutgoingEvent =
-    { tag : OutgoingMsg, data : Maybe Json.Encode.Value }
-
-
-type alias OutsideEvent =
-    { tag : String, data : Json.Encode.Value, error : Maybe String }
-
-
-type alias IncomingResult =
+type alias AlienResult =
     Result String Json.Encode.Value
 
 

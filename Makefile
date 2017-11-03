@@ -39,6 +39,7 @@ css:
 elm:
 	@echo "> Compiling Elm"
 	@elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes
+	@elm-make $(SRC_DIR)/Slave/Slave.elm --output $(BUILD_DIR)/slave.js --yes
 
 
 system:
@@ -77,11 +78,15 @@ watch: build
 
 watch_wo_build:
 	@echo "> Watching"
-	@make -j watch_elm watch_css watch_system
+	@make -j watch_elm_app watch_elm_slave watch_css watch_system
 
 
-watch_elm:
+watch_elm_app:
 	@watchexec -p -w $(SRC_DIR)/App -- make elm
+
+
+watch_elm_slave:
+	@watchexec -p -w $(SRC_DIR)/Slave -- make elm
 
 
 watch_css:

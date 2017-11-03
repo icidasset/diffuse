@@ -150,30 +150,6 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
 
 
 //
-// > Processing
-
-const processor = new Worker("/workers/processing.js");
-
-app.ports.requestTags.subscribe(distantContext => {
-  const context = Object.assign({}, distantContext);
-
-  processor.postMessage({
-    action: "PROCESS_CONTEXT",
-    context: context
-  });
-});
-
-processor.onmessage = event => {
-  switch (event.data.action) {
-    case "PROCESS_CONTEXT":
-      app.ports.receiveTags.send(event.data.context);
-      break;
-  }
-};
-
-
-
-//
 // > Queue
 
 app.ports.toggleRepeat.subscribe(bool => {
@@ -207,6 +183,22 @@ search.onmessage = event => {
       app.ports.receiveSearchResults.send(event.data.data);
       break;
   }
+};
+
+
+
+//
+// > Slave worker
+//   (ie. the Elm worker)
+
+const slave = new Worker("/workers/slave.js");
+
+app.ports.slaveEvent.subscribe(aura => {
+  slave.postMessage(aura);
+});
+
+slave.onmessage = event => {
+  app.ports.slaveEventResult.send(event.data);
 };
 
 

@@ -1,4 +1,4 @@
-module Authentication.Transformers exposing (..)
+module Authentication.Translations exposing (..)
 
 import Authentication.Types exposing (..)
 import String.Extra
@@ -37,11 +37,11 @@ methodToString method =
 
 
 
--- Outgoing messages
+-- Alien messages
 
 
-stringToOutgoingMessage : String -> OutgoingMsg
-stringToOutgoingMessage str =
+stringToAlienMessage : String -> AlienMsg
+stringToAlienMessage str =
     case str of
         "METHOD_GET" ->
             MethodGet
@@ -80,11 +80,11 @@ stringToOutgoingMessage str =
             StoreData
 
         _ ->
-            Debug.crash "Invalid OutgoingMsg"
+            Debug.crash "Invalid AlienMsg"
 
 
-outgoingMessageToString : OutgoingMsg -> String
-outgoingMessageToString msg =
+alienMessageToString : AlienMsg -> String
+alienMessageToString msg =
     msg
         |> toString
         |> String.Extra.underscored

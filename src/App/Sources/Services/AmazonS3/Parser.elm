@@ -2,7 +2,7 @@ module Sources.Services.AmazonS3.Parser exposing (parseTreeResponse, parseErrorR
 
 import List.Extra
 import Regex exposing (HowMany(All), regex)
-import Sources.Types exposing (Marker(..), ParsedResponse)
+import Sources.Processing.Types exposing (Marker(..), ParsedResponse)
 import Xml
 import Xml.Encode as Xml
 import Xml.Decode as Xml

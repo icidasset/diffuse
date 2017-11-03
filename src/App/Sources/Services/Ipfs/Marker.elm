@@ -18,7 +18,7 @@ How it works:
 
 -}
 
-import Sources.Types exposing (Marker(..))
+import Sources.Processing.Types exposing (Marker(..))
 
 
 separator : String

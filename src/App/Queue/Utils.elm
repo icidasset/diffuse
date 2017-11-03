@@ -3,9 +3,9 @@ module Queue.Utils exposing (($), makeItem, makeEngineItem)
 import Date exposing (Date)
 import List.Extra as List
 import Queue.Types exposing (..)
-import Sources.Processing
+import Sources.Processing.Types exposing (HttpMethod(..))
 import Sources.Services
-import Sources.Types exposing (HttpMethod(..), Source)
+import Sources.Types exposing (Source)
 import Tracks.Types exposing (Track)
 import Types as TopLevel exposing (Illumination)
 import Utils

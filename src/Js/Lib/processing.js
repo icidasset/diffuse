@@ -1,30 +1,15 @@
 //
 // Processing
-// (◡ ‿ ◡ ✿)
+// ♪(´ε｀ )
 //
-// This code is responsible for extracting metadata out of files.
-
-importScripts("/vendor/package.js");
+// Audio processing, getting metadata, etc.
 
 
 const tagSet = ["album", "artist", "disc", "genre", "nr", "picture", "title", "year"];
 
 
 //
-// Incoming messages
-
-self.onmessage = event => {
-  switch (event.data.action) {
-    case "PROCESS_CONTEXT":
-      processContext(event.data.context);
-      break;
-  }
-};
-
-
-//
 // Contexts
-//
 
 function processContext(context) {
   const initialPromise = Promise.resolve([]);
@@ -44,19 +29,16 @@ function processContext(context) {
       x => x ? pickTags(x) : null
     );
 
-    self.postMessage({
-      action: "PROCESS_CONTEXT",
-      context: context
-    });
+    return context;
 
   });
 }
 
 
+
 //
 // Tag reader
 // > Override jsmediatags
-//
 
 jsmediatags.Config.setXhrTimeoutInSec(5 * 60);
 // max request duration: 5 minutes
@@ -109,6 +91,7 @@ function getTags(urlGET, urlHEAD) {
 }
 
 
+
 //
 // Get the tags we need
 
@@ -131,6 +114,7 @@ function pickTags(tagsFromJsmediatags) {
 }
 
 
+
 //
 // Pictures (NOTE: disabled for now, slows down the app a lot)
 
@@ -138,6 +122,7 @@ function pictureDataUri(rawPicture) {
   const binary = rawPicture.data.reduce((str, code) => str + String.fromCharCode(code), "");
   return "data:" + rawPicture.format + ";base64," + window.btoa(binary);
 }
+
 
 
 //

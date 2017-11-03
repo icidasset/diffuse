@@ -2,16 +2,22 @@ module State exposing (..)
 
 import Date
 import Debounce
-import Json.Encode
+import Dict
+import Dict.Ext as Dict
+import Json.Decode as Decode exposing (..)
+import Json.Encode as Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
 import Ports
 import Response exposing (..)
 import Response.Ext as Response exposing (do, doDelayed)
+import Slave.Translations
+import Slave.Types exposing (AlienMsg(..))
 import Task
 import Time
 import Types exposing (..)
+import Utils exposing (displayError, displayMessage)
 import Window
 
 
@@ -31,6 +37,7 @@ import Tracks.State as Tracks
 
 -- Children, Pt. 2
 
+import Authentication.Events
 import Authentication.Types
 import Authentication.UserData
 import Playlists.Types
@@ -41,6 +48,7 @@ import Queue.Utils
 import Routing.Transitions
 import Routing.Types exposing (Page(..))
 import Sources.ContextMenu
+import Sources.Encoding
 import Sources.Types
 import Tracks.ContextMenu
 import Tracks.Encoding
@@ -80,15 +88,15 @@ initialModel initialPage =
     }
 
 
-initialCommands : Page -> Cmd Msg
-initialCommands initialPage =
+initialCommand : Page -> Cmd Msg
+initialCommand initialPage =
     Cmd.batch
         [ -- Time
           Task.perform SetTimestamp Time.now
 
         -- Children
-        , Authentication.initialCommands
-        , Routing.initialCommands initialPage
+        , Authentication.initialCommand
+        , Routing.initialCommand initialPage
         ]
 
 
@@ -111,7 +119,7 @@ update msg model =
         Reset ->
             (!)
                 (initialModel model.routing.currentPage)
-                [ initialCommands model.routing.currentPage ]
+                [ initialCommand model.routing.currentPage ]
 
         SetIsTouchDevice bool ->
             (!) { model | isTouchDevice = bool } []
@@ -155,11 +163,11 @@ update msg model =
         StoreUserData ->
             (!)
                 model
-                [ Authentication.issueWithData
+                [ Authentication.Events.issueWithData
                     Authentication.Types.StoreData
                     (model
                         |> Authentication.UserData.outwards
-                        |> Json.Encode.string
+                        |> Encode.string
                     )
                 ]
 
@@ -210,44 +218,54 @@ update msg model =
         -- Children
         ------------------------------------
         AbroadMsg sub ->
-            Abroad.update sub model.abroad
+            model.abroad
+                |> Abroad.update sub
                 |> mapModel (\x -> { model | abroad = x })
 
         AuthenticationMsg sub ->
-            Authentication.update sub model.authentication
+            model.authentication
+                |> Authentication.update sub
                 |> mapModel (\x -> { model | authentication = x })
 
         ConsoleMsg sub ->
-            Console.update sub model.console
+            model.console
+                |> Console.update sub
                 |> mapModel (\x -> { model | console = x })
 
         EqualizerMsg sub ->
-            Equalizer.update sub model.equalizer
+            model.equalizer
+                |> Equalizer.update sub
                 |> mapModel (\x -> { model | equalizer = x })
 
         QueueMsg sub ->
-            Queue.update sub model.queue
+            model.queue
+                |> Queue.update sub
                 |> mapModel (\x -> { model | queue = x })
 
         PlaylistsMsg sub ->
-            Playlists.update sub model.playlists
+            model.playlists
+                |> Playlists.update sub
                 |> mapModel (\x -> { model | playlists = x })
 
         RoutingMsg sub ->
-            Routing.update sub model.routing
+            model.routing
+                |> Routing.update sub
                 |> mapModel (\x -> { model | routing = x })
                 |> Routing.Transitions.transition sub model
 
         SettingsMsg sub ->
-            Settings.update sub model.settings
+            model.settings
+                |> Settings.update sub
                 |> mapModel (\x -> { model | settings = x })
 
         SourcesMsg sub ->
-            Sources.update sub model.sources
+            model.sources
+                |> Sources.update sub
                 |> mapModel (\x -> { model | sources = x })
 
         TracksMsg sub ->
-            Tracks.update sub model.tracks
+            model.tracks
+                |> Tracks.update sub
                 |> mapModel (\x -> { model | tracks = x })
 
         ------------------------------------
@@ -308,23 +326,130 @@ update msg model =
                     |> Maybe.withDefault Cmd.none
                 ]
 
-        ProcessSources ->
+        Types.ProcessSources ->
+            let
+                tracks =
+                    List.map
+                        Tracks.Encoding.encodeTrack
+                        model.tracks.collection.untouched
+
+                sources =
+                    List.map
+                        Sources.Encoding.encode
+                        model.sources.collection
+
+                data =
+                    Encode.object
+                        [ ( "tracks", Encode.list tracks )
+                        , ( "sources", Encode.list sources )
+                        ]
+
+                sourcesModel =
+                    model.sources
+
+                isProcessing =
+                    Just model.sources.collection
+            in
+                (!)
+                    { model
+                        | sources =
+                            { sourcesModel
+                                | isProcessing = isProcessing
+                                , processingErrors = []
+                            }
+                    }
+                    [ Ports.slaveEvent
+                        { tag = "PROCESS_SOURCES"
+                        , data = data
+                        , error = Nothing
+                        }
+                    ]
+
+        ------------------------------------
+        -- Slave events
+        ------------------------------------
+        --
+        -- Sources
+        --
+        Extraterrestrial ProcessSourcesCompleted (Ok _) ->
+            model.sources
+                |> (\s -> { model | sources = { s | isProcessing = Nothing } })
+                |> (\m -> ( m, Cmd.none ))
+
+        Extraterrestrial ReportProcessingError (Ok result) ->
+            let
+                err =
+                    Result.withDefault
+                        Dict.empty
+                        (decodeValue (dict string) result)
+
+                errors =
+                    (::)
+                        ( Dict.fetch "sourceId" "BEEP" err, Dict.fetch "message" "BOOP" err )
+                        model.sources.processingErrors
+            in
+                model.sources
+                    |> (\s -> { model | sources = { s | processingErrors = errors } })
+                    |> (\m -> ( m, Cmd.none ))
+
+        --
+        -- Tracks
+        --
+        Extraterrestrial AddTracks (Ok result) ->
             (!)
                 model
-                [ model.tracks.collection.untouched
-                    |> Sources.Types.Process
-                    |> SourcesMsg
-                    |> do
+                [ case decodeValue (Decode.list Tracks.Encoding.trackDecoder) result of
+                    Ok tracks ->
+                        tracks
+                            |> Tracks.Types.Add
+                            |> TracksMsg
+                            |> do
+
+                    Err err ->
+                        displayError err
                 ]
 
-        ToggleFavourite index ->
+        Extraterrestrial RemoveTracksByPath (Ok result) ->
             (!)
                 model
-                [ index
-                    |> Tracks.Types.ToggleFavourite
-                    |> TracksMsg
-                    |> do
+                [ case decodeValue (dict value) result of
+                    Ok dictionary ->
+                        let
+                            filePaths =
+                                dictionary
+                                    |> Dict.fetch "filePaths" (Encode.list [])
+                                    |> Decode.decodeValue (list string)
+                                    |> Result.withDefault []
+
+                            nonExistantSid =
+                                "BEEP_BOOP"
+
+                            sourceId =
+                                dictionary
+                                    |> Dict.fetch "sourceId" (Encode.string nonExistantSid)
+                                    |> Decode.decodeValue string
+                                    |> Result.withDefault nonExistantSid
+                        in
+                            filePaths
+                                |> Tracks.Types.RemoveByPath sourceId
+                                |> TracksMsg
+                                |> do
+
+                    Err err ->
+                        displayError err
                 ]
+
+        --
+        -- Other things
+        --
+        Extraterrestrial ReportError (Err err) ->
+            ( model, displayError err )
+
+        --
+        -- Ignore other messages
+        --
+        Extraterrestrial _ _ ->
+            ( model, Cmd.none )
 
         ------------------------------------
         -- Context Menu
@@ -354,7 +479,7 @@ update msg model =
         -- Other
         ------------------------------------
         NoOp ->
-            (!) model []
+            ( model, Cmd.none )
 
 
 
@@ -380,6 +505,7 @@ subscriptions model =
 
         -- Ports
         , Ports.setIsTouchDevice SetIsTouchDevice
+        , Ports.slaveEventResult handleSlaveResult
 
         -- Children
         , Sub.map AbroadMsg <| Abroad.subscriptions model.abroad
@@ -390,3 +516,16 @@ subscriptions model =
         , Sub.map SourcesMsg <| Sources.subscriptions model.sources
         , Sub.map TracksMsg <| Tracks.subscriptions model.tracks
         ]
+
+
+handleSlaveResult : AlienEvent -> Msg
+handleSlaveResult event =
+    Extraterrestrial
+        (Slave.Translations.stringToAlienMessage event.tag)
+        (case event.error of
+            Just err ->
+                Err err
+
+            Nothing ->
+                Ok event.data
+        )

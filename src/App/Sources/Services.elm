@@ -4,6 +4,7 @@ module Sources.Services exposing (..)
 -}
 
 import Date exposing (Date)
+import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (..)
 
 
