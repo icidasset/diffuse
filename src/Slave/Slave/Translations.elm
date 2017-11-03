@@ -15,6 +15,9 @@ stringToAlienMessage str =
         "PROCESS_SOURCES" ->
             ProcessSources
 
+        "PROCESS_SOURCES_COMPLETED" ->
+            ProcessSourcesCompleted
+
         "REMOVE_TRACKS_BY_PATH" ->
             RemoveTracksByPath
 
@@ -30,6 +33,9 @@ alienMessageToString msg =
 
         ProcessSources ->
             "PROCESS_SOURCES"
+
+        ProcessSourcesCompleted ->
+            "PROCESS_SOURCES_COMPLETED"
 
         RemoveTracksByPath ->
             "REMOVE_TRACKS_BY_PATH"

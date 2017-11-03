@@ -38,11 +38,12 @@ type alias Model =
 
 
 type AlienMsg
-    = -- Tracks
-      AddTracks
+    = -- Sources
+      ProcessSources
+    | ProcessSourcesCompleted
+      -- Tracks
+    | AddTracks
     | RemoveTracksByPath
-      -- Other
-    | ProcessSources
 
 
 type alias AlienResult =

@@ -30,6 +30,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
 import Sources.Services as Services
+import Sources.Processing.Ports as Ports
 import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (Source)
 import Tracks.Types exposing (TagUrls, Track, makeTrack)
@@ -157,7 +158,7 @@ intoTreeCommand associatedTracks currentDate context =
                 ( realPathsAdded, _ ) =
                     separate pathsRemoved pathsAdded
 
-                ( _, realPathsRemoved ) =
+                ( realPathsRemoved, _ ) =
                     separate pathsAdded pathsRemoved
             in
                 Cmd.batch
@@ -211,9 +212,8 @@ separate current srcOfTruth =
 
 
 getTags : ContextForTags -> Cmd Msg
-getTags contextForTags =
-    -- TODO
-    Cmd.none
+getTags context =
+    Ports.requestTags context
 
 
 makeTrackUrls : Date -> Source -> List String -> List TagUrls

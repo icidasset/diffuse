@@ -94,7 +94,13 @@ update msg model =
                         |> Maybe.map Tuple.second
                         |> Maybe.withDefault Cmd.none
                     ]
-                    []
+                    (case maybe of
+                        Just _ ->
+                            []
+
+                        Nothing ->
+                            [ issue ProcessSourcesCompleted ]
+                    )
 
         {- Phase 1, `makeTree`.
            ie. make a file list/tree.
@@ -166,13 +172,18 @@ update msg model =
         TagsStep tagsContext ->
             let
                 insert =
-                    issueWithData
-                        AddTracks
-                        (tagsContext
-                            |> Steps.tracksFromTagsContext
-                            |> List.map Tracks.Encoding.encodeTrack
-                            |> Encode.list
-                        )
+                    case tagsContext.receivedFilePaths of
+                        [] ->
+                            Cmd.none
+
+                        _ ->
+                            issueWithData
+                                AddTracks
+                                (tagsContext
+                                    |> Steps.tracksFromTagsContext
+                                    |> List.map Tracks.Encoding.encodeTrack
+                                    |> Encode.list
+                                )
 
                 cmd =
                     model.status

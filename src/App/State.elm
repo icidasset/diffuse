@@ -2,6 +2,7 @@ module State exposing (..)
 
 import Date
 import Debounce
+import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -10,7 +11,7 @@ import Ports
 import Response exposing (..)
 import Response.Ext as Response exposing (do, doDelayed)
 import Slave.Translations
-import Slave.Types
+import Slave.Types exposing (AlienMsg(..))
 import Task
 import Time
 import Types exposing (..)
@@ -322,7 +323,7 @@ update msg model =
                     |> Maybe.withDefault Cmd.none
                 ]
 
-        ProcessSources ->
+        Types.ProcessSources ->
             let
                 tracks =
                     List.map
@@ -362,28 +363,41 @@ update msg model =
         -- Slave events
         ------------------------------------
         --
+        -- Sources
+        --
+        Extraterrestrial ProcessSourcesCompleted (Ok _) ->
+            let
+                sources =
+                    model.sources
+            in
+                (!)
+                    { model | sources = { sources | isProcessing = Nothing } }
+                    []
+
+        --
         -- Tracks
         --
-        Extraterrestrial Slave.Types.AddTracks (Ok result) ->
+        Extraterrestrial AddTracks (Ok result) ->
+            (!)
+                model
+                [ case decodeValue (Decode.list Tracks.Encoding.trackDecoder) result of
+                    Ok tracks ->
+                        tracks
+                            |> Tracks.Types.Add
+                            |> TracksMsg
+                            |> do
+
+                    Err err ->
+                        -- TODO
+                        Cmd.none
+                ]
+
+        Extraterrestrial RemoveTracksByPath (Ok result) ->
             -- TODO
             -- filePaths
             --     |> Tracks.Types.RemoveByPath sourceId
             --     |> TopLevel.TracksMsg
             --     |> do
-            ( model, Cmd.none )
-
-        Extraterrestrial Slave.Types.AddTracks (Err _) ->
-            ( model, Cmd.none )
-
-        Extraterrestrial Slave.Types.RemoveTracksByPath (Ok result) ->
-            -- TODO
-            -- filePaths
-            --     |> Tracks.Types.RemoveByPath sourceId
-            --     |> TopLevel.TracksMsg
-            --     |> do
-            ( model, Cmd.none )
-
-        Extraterrestrial Slave.Types.RemoveTracksByPath (Err _) ->
             ( model, Cmd.none )
 
         --

@@ -150,22 +150,6 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
 
 
 //
-// > Slave worker
-//   (ie. the Elm worker)
-
-const slave = new Worker("/workers/slave.js");
-
-app.ports.slaveEvent.subscribe(aura => {
-  slave.postMessage(aura);
-});
-
-slave.onmessage = event => {
-  app.ports.slaveEventResult.send(event.data.aura);
-};
-
-
-
-//
 // > Queue
 
 app.ports.toggleRepeat.subscribe(bool => {
@@ -199,6 +183,22 @@ search.onmessage = event => {
       app.ports.receiveSearchResults.send(event.data.data);
       break;
   }
+};
+
+
+
+//
+// > Slave worker
+//   (ie. the Elm worker)
+
+const slave = new Worker("/workers/slave.js");
+
+app.ports.slaveEvent.subscribe(aura => {
+  slave.postMessage(aura);
+});
+
+slave.onmessage = event => {
+  app.ports.slaveEventResult.send(event.data);
 };
 
 

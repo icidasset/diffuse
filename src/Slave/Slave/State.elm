@@ -3,6 +3,7 @@ module Slave.State exposing (..)
 import Date
 import Dict.Ext as Dict
 import Json.Decode as Decode exposing (..)
+import Json.Encode as Encode
 import Response exposing (..)
 import Response.Ext as Response exposing (do)
 import Slave.Ports as Ports
@@ -53,7 +54,7 @@ update msg model =
         -- Process sources
         --
         Extraterrestrial ProcessSources (Ok result) ->
-            case decodeValue (dict string) result of
+            case decodeValue (dict value) result of
                 -- 🚀
                 --
                 Ok dict ->
@@ -62,14 +63,14 @@ update msg model =
                         [ let
                             sources =
                                 dict
-                                    |> Dict.fetch "sources" "[]"
-                                    |> Decode.decodeString (Decode.list Sources.Encoding.decoder)
+                                    |> Dict.fetch "sources" (Encode.list [])
+                                    |> Decode.decodeValue (Decode.list Sources.Encoding.decoder)
                                     |> Result.withDefault []
 
                             tracks =
                                 dict
-                                    |> Dict.fetch "tracks" "[]"
-                                    |> Decode.decodeString (Decode.list trackDecoder)
+                                    |> Dict.fetch "tracks" (Encode.list [])
+                                    |> Decode.decodeValue (Decode.list trackDecoder)
                                     |> Result.withDefault []
                           in
                             tracks
@@ -80,10 +81,12 @@ update msg model =
 
                 -- ⚠️
                 --
-                Err _ ->
+                Err err ->
+                    -- TODO
                     (!) model []
 
         Extraterrestrial ProcessSources (Err _) ->
+            -- TODO
             (!) model []
 
         --
@@ -124,13 +127,18 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
+subscriptions model =
     Sub.batch
         [ -- Time
           Time.every (1 * Time.minute) SetTimestamp
 
         -- Talking to the outside world
         , Ports.incoming handleAlienEvent
+
+        -- Children
+        , model.sourceProcessing
+            |> Sources.Processing.State.subscriptions
+            |> Sub.map SourceProcessingMsg
         ]
 
 

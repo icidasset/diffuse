@@ -16,7 +16,7 @@ const app = Elm.Slave.worker();
 // Incoming messages
 
 self.onmessage = event => {
-  app.ports.incoming.send(event.data.aura);
+  app.ports.incoming.send(event.data);
 };
 
 
