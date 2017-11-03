@@ -2,6 +2,7 @@ module State exposing (..)
 
 import Date
 import Debounce
+import Dict
 import Dict.Ext as Dict
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
@@ -352,7 +353,10 @@ update msg model =
                 (!)
                     { model
                         | sources =
-                            { sourcesModel | isProcessing = isProcessing }
+                            { sourcesModel
+                                | isProcessing = isProcessing
+                                , processingErrors = []
+                            }
                     }
                     [ Ports.slaveEvent
                         { tag = "PROCESS_SOURCES"
@@ -368,13 +372,25 @@ update msg model =
         -- Sources
         --
         Extraterrestrial ProcessSourcesCompleted (Ok _) ->
+            model.sources
+                |> (\s -> { model | sources = { s | isProcessing = Nothing } })
+                |> (\m -> ( m, Cmd.none ))
+
+        Extraterrestrial ReportProcessingError (Ok result) ->
             let
-                sources =
-                    model.sources
+                err =
+                    Result.withDefault
+                        Dict.empty
+                        (decodeValue (dict string) result)
+
+                errors =
+                    (::)
+                        ( Dict.fetch "sourceId" "BEEP" err, Dict.fetch "message" "BOOP" err )
+                        model.sources.processingErrors
             in
-                (!)
-                    { model | sources = { sources | isProcessing = Nothing } }
-                    []
+                model.sources
+                    |> (\s -> { model | sources = { s | processingErrors = errors } })
+                    |> (\m -> ( m, Cmd.none ))
 
         --
         -- Tracks

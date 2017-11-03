@@ -24,6 +24,9 @@ stringToAlienMessage str =
         "REPORT_ERROR" ->
             ReportError
 
+        "REPORT_PROCESSING_ERROR" ->
+            ReportProcessingError
+
         _ ->
             Debug.crash "Invalid AlienMsg"
 
@@ -45,3 +48,6 @@ alienMessageToString msg =
 
         ReportError ->
             "REPORT_ERROR"
+
+        ReportProcessingError ->
+            "REPORT_PROCESSING_ERROR"

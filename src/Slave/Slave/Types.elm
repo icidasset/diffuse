@@ -41,6 +41,7 @@ type AlienMsg
     = -- Sources
       ProcessSources
     | ProcessSourcesCompleted
+    | ReportProcessingError
       -- Tracks
     | AddTracks
     | RemoveTracksByPath

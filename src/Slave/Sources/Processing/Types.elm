@@ -23,8 +23,7 @@ type Msg
 
 
 type alias Model =
-    { errors : List ( SourceId, String )
-    , status : Status
+    { status : Status
     , timestamp : Date
     }
 

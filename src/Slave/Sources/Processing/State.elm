@@ -21,8 +21,7 @@ import Tracks.Encoding
 
 initialModel : Model
 initialModel =
-    { errors = []
-    , status = Nothing
+    { status = Nothing
     , timestamp = Date.fromTime 0
     }
 
@@ -61,14 +60,9 @@ update msg model =
                         |> Maybe.map (Steps.takeFirstStep model.timestamp)
                         |> Maybe.preferSecond (Maybe.map (always Cmd.none) model.status)
                         |> Maybe.withDefault Cmd.none
-
-                errors =
-                    model.status
-                        |> Maybe.map (\_ -> model.errors)
-                        |> Maybe.withDefault []
             in
                 ($)
-                    { model | status = status, errors = errors }
+                    { model | status = status }
                     [ command ]
                     []
 
@@ -136,14 +130,17 @@ update msg model =
 
                         _ ->
                             toString err
+
+                data =
+                    Encode.object
+                        [ ( "sourceId", Encode.string context.source.id )
+                        , ( "message", Encode.string publicError )
+                        ]
             in
                 ($)
-                    { model
-                        | errors =
-                            ( context.source.id, publicError ) :: model.errors
-                    }
+                    model
                     [ do NextInLine ]
-                    []
+                    [ issueWithData ReportProcessingError data ]
 
         --
         -- Remove tracks
