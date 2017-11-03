@@ -18,3 +18,12 @@ issueWithData msg data =
         , data = data
         , error = Nothing
         }
+
+
+reportError : String -> Cmd Msg
+reportError err =
+    Ports.outgoing
+        { tag = Translations.alienMessageToString ReportError
+        , data = Encode.null
+        , error = Just err
+        }

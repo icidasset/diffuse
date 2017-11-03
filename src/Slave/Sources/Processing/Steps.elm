@@ -170,9 +170,12 @@ intoTreeCommand associatedTracks currentDate context =
                         |> do
 
                     -- Remove tracks
-                    , realPathsRemoved
-                        |> TreeStepRemoveTracks context.source.id
-                        |> do
+                    , if not (List.isEmpty realPathsRemoved) then
+                        realPathsRemoved
+                            |> TreeStepRemoveTracks context.source.id
+                            |> do
+                      else
+                        Cmd.none
                     ]
 
 

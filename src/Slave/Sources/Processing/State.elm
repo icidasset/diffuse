@@ -171,9 +171,12 @@ update msg model =
         -}
         TagsStep tagsContext ->
             let
+                validReceivedTags =
+                    List.filter Maybe.isJust tagsContext.receivedTags
+
                 insert =
-                    case tagsContext.receivedFilePaths of
-                        [] ->
+                    case List.length validReceivedTags of
+                        0 ->
                             Cmd.none
 
                         _ ->

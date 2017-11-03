@@ -25,13 +25,3 @@ trackMenu identifiedTrack =
               , QueueMsg (Queue.Types.InjectLast track)
               )
             ]
-
-
-viewMenu : Mouse.Position -> ContextMenu
-viewMenu =
-    ContextMenu
-        [ ( Icons.grid_on (Color.rgb 65 50 63) 16
-          , "Switch to Grid view (TODO)"
-          , NoOp
-          )
-        ]

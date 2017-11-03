@@ -14,6 +14,7 @@ import Queue.Ports
 import Response.Ext exposing (do)
 import Routing.Types exposing (Page(..))
 import Types as TopLevel exposing (AlienEvent)
+import Utils exposing (displayError, displayMessage)
 
 
 -- 💧
@@ -297,24 +298,6 @@ update msg model =
 afterwards : Cmd TopLevel.Msg
 afterwards =
     do TopLevel.HideLoadingScreen
-
-
-displayError : String -> Cmd TopLevel.Msg
-displayError error =
-    error
-        |> ErrorScreen
-        |> Routing.Types.SetPage
-        |> TopLevel.RoutingMsg
-        |> do
-
-
-displayMessage : String -> Cmd TopLevel.Msg
-displayMessage message =
-    message
-        |> MessageScreen
-        |> Routing.Types.SetPage
-        |> TopLevel.RoutingMsg
-        |> do
 
 
 handleError : Model -> String -> ( Model, Cmd TopLevel.Msg )

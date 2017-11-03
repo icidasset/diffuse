@@ -44,6 +44,8 @@ type AlienMsg
       -- Tracks
     | AddTracks
     | RemoveTracksByPath
+      -- Other
+    | ReportError
 
 
 type alias AlienResult =

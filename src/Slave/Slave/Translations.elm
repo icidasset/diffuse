@@ -21,6 +21,9 @@ stringToAlienMessage str =
         "REMOVE_TRACKS_BY_PATH" ->
             RemoveTracksByPath
 
+        "REPORT_ERROR" ->
+            ReportError
+
         _ ->
             Debug.crash "Invalid AlienMsg"
 
@@ -39,3 +42,6 @@ alienMessageToString msg =
 
         RemoveTracksByPath ->
             "REMOVE_TRACKS_BY_PATH"
+
+        ReportError ->
+            "REPORT_ERROR"

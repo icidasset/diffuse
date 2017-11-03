@@ -6,6 +6,7 @@ import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import Response exposing (..)
 import Response.Ext as Response exposing (do)
+import Slave.Events as Events exposing (reportError)
 import Slave.Ports as Ports
 import Slave.Translations as Translations
 import Slave.Types exposing (..)
@@ -57,18 +58,18 @@ update msg model =
             case decodeValue (dict value) result of
                 -- 🚀
                 --
-                Ok dict ->
+                Ok dictionary ->
                     (!)
                         model
                         [ let
                             sources =
-                                dict
+                                dictionary
                                     |> Dict.fetch "sources" (Encode.list [])
                                     |> Decode.decodeValue (Decode.list Sources.Encoding.decoder)
                                     |> Result.withDefault []
 
                             tracks =
-                                dict
+                                dictionary
                                     |> Dict.fetch "tracks" (Encode.list [])
                                     |> Decode.decodeValue (Decode.list trackDecoder)
                                     |> Result.withDefault []
@@ -82,12 +83,10 @@ update msg model =
                 -- ⚠️
                 --
                 Err err ->
-                    -- TODO
-                    (!) model []
+                    (!) model [ reportError err ]
 
-        Extraterrestrial ProcessSources (Err _) ->
-            -- TODO
-            (!) model []
+        Extraterrestrial ProcessSources (Err err) ->
+            (!) model [ reportError err ]
 
         --
         -- Ignore other

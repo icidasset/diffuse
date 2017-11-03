@@ -2,6 +2,7 @@ module State exposing (..)
 
 import Date
 import Debounce
+import Dict.Ext as Dict
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import List.Extra as List
@@ -15,6 +16,7 @@ import Slave.Types exposing (AlienMsg(..))
 import Task
 import Time
 import Types exposing (..)
+import Utils exposing (displayError, displayMessage)
 import Window
 
 
@@ -388,20 +390,47 @@ update msg model =
                             |> do
 
                     Err err ->
-                        -- TODO
-                        Cmd.none
+                        displayError err
                 ]
 
         Extraterrestrial RemoveTracksByPath (Ok result) ->
-            -- TODO
-            -- filePaths
-            --     |> Tracks.Types.RemoveByPath sourceId
-            --     |> TopLevel.TracksMsg
-            --     |> do
-            ( model, Cmd.none )
+            (!)
+                model
+                [ case decodeValue (dict value) result of
+                    Ok dictionary ->
+                        let
+                            filePaths =
+                                dictionary
+                                    |> Dict.fetch "filePaths" (Encode.list [])
+                                    |> Decode.decodeValue (list string)
+                                    |> Result.withDefault []
+
+                            nonExistantSid =
+                                "BEEP_BOOP"
+
+                            sourceId =
+                                dictionary
+                                    |> Dict.fetch "sourceId" (Encode.string nonExistantSid)
+                                    |> Decode.decodeValue string
+                                    |> Result.withDefault nonExistantSid
+                        in
+                            filePaths
+                                |> Tracks.Types.RemoveByPath sourceId
+                                |> TracksMsg
+                                |> do
+
+                    Err err ->
+                        displayError err
+                ]
 
         --
-        -- Ignore other
+        -- Other things
+        --
+        Extraterrestrial ReportError (Err err) ->
+            ( model, displayError err )
+
+        --
+        -- Ignore other messages
         --
         Extraterrestrial _ _ ->
             ( model, Cmd.none )
