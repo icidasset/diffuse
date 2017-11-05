@@ -25,7 +25,8 @@ const exclude =
 // Construct
 
 self.addEventListener("install", event => {
-  const promise = fetch("/tree.json")
+  const promise = removeAllCaches()
+    .then(_ => fetch("/tree.json"))
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t));
@@ -41,8 +42,26 @@ self.addEventListener("fetch", event => {
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin));
 
-  if (isInternal) {
-    const promise = fetch(event.request).catch(_ => caches.match(event.request));
+  const isOffline =
+    !self.navigator.onLine;
+
+  if (isInternal && isOffline) {
+    const promise = caches
+      .match(event.request)
+      .then(r => r || fetch(event.request));
+
     event.respondWith(promise);
   }
 });
+
+
+
+//
+// Install
+
+function removeAllCaches() {
+  return caches.keys().then(keys => {
+    const promises = keys.map(k => caches.delete(k));
+    return Promise.all(promises);
+  });
+}
