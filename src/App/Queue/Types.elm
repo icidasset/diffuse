@@ -39,6 +39,7 @@ type alias InternalModel extension =
     { extension
         | activeItem : Maybe Item
         , future : List Item
+        , ignored : List Item
         , past : List Item
     }
 

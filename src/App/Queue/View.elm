@@ -75,9 +75,16 @@ pageIndex futureItems shuffled =
             , ( span
                     []
                     [ Icons.clear colorDerivatives.text 16
-                    , label [] [ text "Clear" ]
+                    , label [] [ text "Clear all" ]
                     ]
               , QueueMsg (Queue.Clear)
+              )
+            , ( span
+                    []
+                    [ Icons.clear colorDerivatives.text 16
+                    , label [] [ text "Clear ignored" ]
+                    ]
+              , QueueMsg (Queue.Reset)
               )
             ]
 
@@ -116,16 +123,13 @@ futureActions : Bool -> Int -> Item -> ItemWithActions
 futureActions shuffled index item =
     (,)
         item
-        [ if item.manualEntry || shuffled then
-            a
-                [ index
-                    |> Queue.RemoveItem
-                    |> TopLevel.QueueMsg
-                    |> onClick
-                ]
-                [ Icons.remove_circle_outline (Color.grayscale 0.175) 16 ]
-          else
-            text ""
+        [ a
+            [ index
+                |> Queue.RemoveItem
+                |> TopLevel.QueueMsg
+                |> onClick
+            ]
+            [ Icons.remove_circle_outline (Color.grayscale 0.175) 16 ]
         ]
 
 

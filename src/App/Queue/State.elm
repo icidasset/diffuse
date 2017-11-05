@@ -1,11 +1,13 @@
 module Queue.State exposing (..)
 
+import Date exposing (Date)
 import List.Extra as List
 import Response.Ext exposing (do)
 import Queue.Fill as Fill
 import Queue.Ports as Ports
 import Queue.Types as Types exposing (..)
 import Queue.Utils exposing (..)
+import Tracks.Types exposing (Track)
 import Types as TopLevel
 
 
@@ -17,6 +19,7 @@ initialModel =
     { activeItem = Nothing
     , future = []
     , past = []
+    , ignored = []
 
     -- Settings
     , repeat = False
@@ -72,11 +75,10 @@ update msg model =
                 (!)
                     { model
                         | future =
-                            List.concat
-                                [ List.take manualItems cleanedFuture
-                                , [ item ]
-                                , List.drop manualItems cleanedFuture
-                                ]
+                            []
+                                ++ List.take manualItems cleanedFuture
+                                ++ [ item ]
+                                ++ List.drop manualItems cleanedFuture
                     }
                     [ do TopLevel.FillQueue ]
 
@@ -84,14 +86,27 @@ update msg model =
         -- > Remove an item from the queue.
         --
         RemoveItem index ->
-            ($)
-                { model
-                    | future =
-                        model.future
-                            |> List.removeAt index
-                }
-                []
-                [ do TopLevel.FillQueue ]
+            let
+                maybeItem =
+                    List.getAt index model.future
+
+                newFuture =
+                    List.removeAt index model.future
+
+                newIgnored =
+                    case maybeItem of
+                        Just item ->
+                            if item.manualEntry then
+                                model.ignored
+                            else
+                                item :: model.ignored
+
+                        Nothing ->
+                            model.ignored
+            in
+                (!)
+                    { model | future = newFuture, ignored = newIgnored }
+                    [ do TopLevel.FillQueue ]
 
         ------------------------------------
         -- Position
@@ -162,16 +177,14 @@ update msg model =
         --
         Fill timestamp tracks ->
             let
-                newFuture =
-                    case model.shuffle of
-                        False ->
-                            Fill.ordered model tracks
-
-                        True ->
-                            Fill.shuffled model timestamp tracks
+                nonMissingTracks =
+                    nonMissingTracksOnly tracks
             in
                 (!)
-                    { model | future = newFuture }
+                    (model
+                        |> checkIgnored (nonMissingTracksOnly tracks)
+                        |> fill timestamp nonMissingTracks
+                    )
                     []
 
         -- # Clear
@@ -179,7 +192,7 @@ update msg model =
         --
         Clear ->
             (!)
-                { model | future = [] }
+                { model | future = [], ignored = [] }
                 [ do TopLevel.FillQueue ]
 
         -- # Clean
@@ -207,7 +220,7 @@ update msg model =
                     List.filter (.manualEntry >> (==) True) model.future
             in
                 (!)
-                    { model | future = newFuture }
+                    { model | future = newFuture, ignored = [] }
                     [ do TopLevel.FillQueue ]
 
         ------------------------------------
@@ -240,6 +253,30 @@ update msg model =
 storeUserData : Cmd TopLevel.Msg
 storeUserData =
     do TopLevel.DebounceStoreUserData
+
+
+nonMissingTracksOnly : List Track -> List Track
+nonMissingTracksOnly =
+    List.filter (.id >> (/=) Tracks.Types.missingId)
+
+
+checkIgnored : List Track -> Model -> Model
+checkIgnored tracks model =
+    -- Empty the ignored list when we are ignoring all the tracks
+    if List.length model.ignored == List.length tracks then
+        { model | ignored = [] }
+    else
+        model
+
+
+fill : Date -> List Track -> Model -> Model
+fill timestamp nonMissingTracks model =
+    case model.shuffle of
+        False ->
+            { model | future = Fill.ordered timestamp nonMissingTracks model }
+
+        True ->
+            { model | future = Fill.shuffled timestamp nonMissingTracks model }
 
 
 
