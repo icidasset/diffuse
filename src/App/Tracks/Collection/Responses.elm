@@ -42,9 +42,19 @@ globalConsequences oldCollection newCollection model =
 -}
 harvestingConsequences : Collection -> Collection -> Model -> Cmd TopLevel.Msg
 harvestingConsequences oldCollection newCollection _ =
-    case oldCollection.harvested /= newCollection.harvested of
-        True ->
-            do (TopLevel.QueueMsg Queue.Types.Reset)
+    let
+        mod =
+            Tuple.second >> .id
 
-        False ->
-            Cmd.none
+        old =
+            List.map mod oldCollection.harvested
+
+        new =
+            List.map mod newCollection.harvested
+    in
+        case old /= new of
+            True ->
+                do (TopLevel.QueueMsg Queue.Types.Reset)
+
+            False ->
+                Cmd.none
