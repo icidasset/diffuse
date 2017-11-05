@@ -5,6 +5,8 @@ import Sources.Types exposing (Source)
 import Tracks.Types exposing (Track)
 
 
+{-| Auto-generate directory playlists.
+-}
 autoGenerate : List Source -> List Track -> List Playlist
 autoGenerate sources tracks =
     let

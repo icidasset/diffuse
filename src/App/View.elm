@@ -109,13 +109,7 @@ entry model =
                                 [ p
                                     []
                                     (List.map
-                                        (\part ->
-                                            em
-                                                []
-                                                [ text part
-                                                , br [] []
-                                                ]
-                                        )
+                                        (\part -> em [] [ text part, br [] [] ])
                                         parts
                                     )
                                 ]

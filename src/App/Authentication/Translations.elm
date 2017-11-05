@@ -1,7 +1,6 @@
 module Authentication.Translations exposing (..)
 
 import Authentication.Types exposing (..)
-import String.Extra
 
 
 -- Methods
@@ -21,19 +20,6 @@ stringToMethod str =
 
         _ ->
             Debug.crash "Invalid authentication method"
-
-
-methodToString : Method -> String
-methodToString method =
-    case method of
-        Blockstack ->
-            "BLOCKSTACK"
-
-        Local ->
-            "LOCAL"
-
-        RemoteStorage ->
-            "REMOTE_STORAGE"
 
 
 
@@ -81,11 +67,3 @@ stringToAlienMessage str =
 
         _ ->
             Debug.crash "Invalid AlienMsg"
-
-
-alienMessageToString : AlienMsg -> String
-alienMessageToString msg =
-    msg
-        |> toString
-        |> String.Extra.underscored
-        |> String.toUpper

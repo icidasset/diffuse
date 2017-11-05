@@ -29,25 +29,3 @@ stringToAlienMessage str =
 
         _ ->
             Debug.crash "Invalid AlienMsg"
-
-
-alienMessageToString : AlienMsg -> String
-alienMessageToString msg =
-    case msg of
-        AddTracks ->
-            "ADD_TRACKS"
-
-        ProcessSources ->
-            "PROCESS_SOURCES"
-
-        ProcessSourcesCompleted ->
-            "PROCESS_SOURCES_COMPLETED"
-
-        RemoveTracksByPath ->
-            "REMOVE_TRACKS_BY_PATH"
-
-        ReportError ->
-            "REPORT_ERROR"
-
-        ReportProcessingError ->
-            "REPORT_PROCESSING_ERROR"

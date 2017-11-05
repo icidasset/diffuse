@@ -1,6 +1,6 @@
 module Console.Types exposing (..)
 
--- Types
+-- Messages
 
 
 type Msg

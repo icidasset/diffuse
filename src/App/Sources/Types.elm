@@ -60,18 +60,22 @@ type alias Model =
 
 
 
--- Other Types
-
-
-type Form
-    = NewForm Int Source
-    | EditForm Source
+-- Pages
 
 
 type Page
     = Edit SourceId
     | Index
     | New
+
+
+
+-- Other Types
+
+
+type Form
+    = NewForm Int Source
+    | EditForm Source
 
 
 type alias IsProcessing =

@@ -10,6 +10,7 @@ import Http
 import Regex exposing (regex, HowMany(All))
 import Response.Ext exposing (do)
 import Routing.Types exposing (Page(..))
+import String.Extra
 import Svg
 import Svg.Attributes
 import Types as TopLevel
@@ -92,6 +93,18 @@ displayMessage message =
         |> Routing.Types.SetPage
         |> TopLevel.RoutingMsg
         |> do
+
+
+
+-- Translations
+
+
+messageToString : a -> String
+messageToString msg =
+    msg
+        |> toString
+        |> String.Extra.underscored
+        |> String.toUpper
 
 
 

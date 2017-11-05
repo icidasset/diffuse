@@ -4,6 +4,7 @@ import Json.Encode as Encode
 import Slave.Ports as Ports
 import Slave.Translations as Translations
 import Slave.Types exposing (..)
+import Utils
 
 
 issue : AlienMsg -> Cmd Msg
@@ -14,7 +15,7 @@ issue msg =
 issueWithData : AlienMsg -> Encode.Value -> Cmd Msg
 issueWithData msg data =
     Ports.outgoing
-        { tag = Translations.alienMessageToString msg
+        { tag = Utils.messageToString msg
         , data = data
         , error = Nothing
         }
@@ -23,7 +24,7 @@ issueWithData msg data =
 reportError : String -> Cmd Msg
 reportError err =
     Ports.outgoing
-        { tag = Translations.alienMessageToString ReportError
+        { tag = Utils.messageToString ReportError
         , data = Encode.null
         , error = Just err
         }

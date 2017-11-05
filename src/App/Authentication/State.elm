@@ -5,12 +5,9 @@ import Authentication.Events as Events exposing (..)
 import Authentication.Translations as Translations
 import Authentication.Ports as Ports
 import Authentication.Types exposing (..)
-import Dict
-import Equalizer.State as Equalizer
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import Navigation
-import Queue.Ports
 import Response.Ext exposing (do)
 import Routing.Types exposing (Page(..))
 import Types as TopLevel exposing (AlienEvent)
@@ -190,7 +187,7 @@ update msg model =
 
                 -- Set method
                 , method
-                    |> Translations.methodToString
+                    |> Utils.messageToString
                     |> Encode.string
                     |> issueWithData MethodSet
                 ]
