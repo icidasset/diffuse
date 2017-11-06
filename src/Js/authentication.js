@@ -296,7 +296,7 @@ AUTH_SYSTEM.METHOD =
 
     signIn: _ => new Promise((resolve, reject) => {
       const userAddress = prompt(
-        "Which user address would you like to use?"
+        "What's your user address?"
       );
 
       if (!userAddress || userAddress.length === 0) {
