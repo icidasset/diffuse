@@ -30,7 +30,7 @@ self.addEventListener("install", event => {
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t));
-      const whatToCache = ["", ...filteredTree].map(p => "/" + p);
+      const whatToCache = [""].concat(filteredTree).map(p => "/" + p);
       return caches.open(KEY).then(c => c.addAll(whatToCache));
     });
 
