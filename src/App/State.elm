@@ -60,9 +60,10 @@ import Tracks.Utils
 -- 💧
 
 
-initialModel : Page -> Model
-initialModel initialPage =
+initialModel : ProgramFlags -> Page -> Model
+initialModel flags initialPage =
     { contextMenu = Nothing
+    , isHTTPS = flags.isHTTPS
     , isTouchDevice = False
     , showLoadingScreen = True
 
@@ -88,8 +89,8 @@ initialModel initialPage =
     }
 
 
-initialCommand : Page -> Cmd Msg
-initialCommand initialPage =
+initialCommand : ProgramFlags -> Page -> Cmd Msg
+initialCommand _ initialPage =
     Cmd.batch
         [ -- Time
           Task.perform SetTimestamp Time.now
@@ -117,9 +118,13 @@ update msg model =
             (!) { model | showLoadingScreen = True } []
 
         Reset ->
-            (!)
-                (initialModel model.routing.currentPage)
-                [ initialCommand model.routing.currentPage ]
+            let
+                flags =
+                    { isHTTPS = model.isHTTPS }
+            in
+                (!)
+                    (initialModel flags model.routing.currentPage)
+                    [ initialCommand flags model.routing.currentPage ]
 
         SetIsTouchDevice bool ->
             (!) { model | isTouchDevice = bool } []

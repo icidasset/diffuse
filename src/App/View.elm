@@ -224,9 +224,9 @@ authenticated children model =
                     , ( "padding", ".375rem 1.5rem" )
                     ]
                 ]
-                [ authButton Blockstack
-                , authButton RemoteStorage
-                , authButton Local
+                [ authButton model.isHTTPS Blockstack
+                , authButton model.isHTTPS RemoteStorage
+                , authButton model.isHTTPS Local
                 ]
             ]
             model
@@ -266,8 +266,8 @@ unauthenticatedNavigation currentPage =
         ]
 
 
-authButton : Authentication.Types.Method -> Html Msg
-authButton authMethod =
+authButton : Bool -> Authentication.Types.Method -> Html Msg
+authButton isHTTPS authMethod =
     a
         [ cssClass AuthenticationButton
         , authMethod
@@ -287,7 +287,15 @@ authButton authMethod =
                 [ span
                     [ style [ ( "fontSize", intoRem 22 ) ] ]
                     [ blockstackLogo ]
-                , text "Sign in with Blockstack"
+                , span
+                    (case isHTTPS of
+                        True ->
+                            [ style [ ( "textDecoration", "line-through" ) ] ]
+
+                        False ->
+                            []
+                    )
+                    [ text "Sign in with Blockstack" ]
                 ]
 
             RemoteStorage ->

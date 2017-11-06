@@ -10,7 +10,10 @@ let app, node;
 node = document.getElementById("elm-container");
 node.innerHTML = "";
 
-app = Elm.App.embed(node);
+app = Elm.App.embed(
+  node,
+  { isHTTPS: location.protocol === "https:" }
+);
 
 
 

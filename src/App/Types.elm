@@ -74,6 +74,7 @@ type Msg
 
 type alias Model =
     { contextMenu : Maybe ContextMenu
+    , isHTTPS : Bool
     , isTouchDevice : Bool
     , showLoadingScreen : Bool
 
@@ -121,3 +122,7 @@ type alias AlienEvent =
 
 type alias Illumination model childMsg =
     model -> List (Cmd childMsg) -> List (Cmd Msg) -> ( model, Cmd Msg )
+
+
+type alias ProgramFlags =
+    { isHTTPS : Bool }
