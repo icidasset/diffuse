@@ -1,7 +1,9 @@
 module Sources.Services.AmazonS3.Parser exposing (parseTreeResponse, parseErrorResponse)
 
 import List.Extra
+import Maybe.Extra as Maybe
 import Regex exposing (HowMany(All), regex)
+import Sources.Crypto.Hex
 import Sources.Processing.Types exposing (Marker(..), ParsedResponse)
 import Xml
 import Xml.Encode as Xml
@@ -75,7 +77,7 @@ replace needle replacement haystack =
     Regex.replace All (regex needle) (always replacement) haystack
 
 
-{-| Unescape these codes specific to XML.
+{-| Unescape the "HTML entities".
 -}
 unescape : String -> String
 unescape =
@@ -84,3 +86,14 @@ unescape =
         >> replace "&lt;" "<"
         >> replace "&gt;" ">"
         >> replace "&amp;" "&"
+        >> Regex.replace All (regex "&#x(\\w+);") hexEntityToUnicode
+
+
+hexEntityToUnicode : Regex.Match -> String
+hexEntityToUnicode match =
+    match.submatches
+        |> List.head
+        |> Maybe.join
+        |> Maybe.map Sources.Crypto.Hex.hexToUnicodeChar
+        |> Maybe.map String.fromChar
+        |> Maybe.withDefault ""
