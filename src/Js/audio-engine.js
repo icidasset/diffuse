@@ -288,8 +288,13 @@ function unstallAudio(node) {
 let progressBarNode;
 
 function setProgressBarWidth(float) {
-  if (!progressBarNode) progressBarNode = document.querySelector(".ProgressBarValue");
-  if (progressBarNode) progressBarNode.style.width = (float * 100).toString() + "%";
+  if (!progressBarNode || !progressBarNode.offsetParent) {
+    progressBarNode = document.querySelector(".ProgressBarValue");
+  }
+
+  if (progressBarNode) {
+    progressBarNode.style.width = (float * 100).toString() + "%";
+  }
 }
 
 
