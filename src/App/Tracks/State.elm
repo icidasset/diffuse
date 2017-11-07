@@ -53,6 +53,7 @@ update msg model =
                 |> Collection.recalibrate
                 |> Collection.reexpose
                 |> Collection.set
+                |> Response.addCmd recalibrationEffect
 
         -- # Reharvest
         --
@@ -109,7 +110,6 @@ update msg model =
         Add additionalTracks ->
             model
                 |> Collection.makeParcel
-                |> Collection.recalibrate
                 |> Collection.add additionalTracks
                 |> Collection.set
 
@@ -154,7 +154,6 @@ update msg model =
         Search Nothing ->
             { model | searchResults = Nothing, searchTerm = Nothing }
                 |> Collection.makeParcel
-                |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
                 |> Response.andAlso storeUserData
@@ -164,7 +163,6 @@ update msg model =
         ReceiveSearchResults trackIds ->
             { model | searchResults = Just trackIds }
                 |> Collection.makeParcel
-                |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
                 |> initialImport
@@ -185,7 +183,6 @@ update msg model =
         ToggleFavouritesOnly ->
             { model | favouritesOnly = not model.favouritesOnly }
                 |> Collection.makeParcel
-                |> Collection.recalibrate
                 |> Collection.reharvest
                 |> Collection.set
                 |> Response.andAlso storeUserData

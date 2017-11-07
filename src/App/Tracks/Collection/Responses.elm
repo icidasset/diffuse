@@ -54,7 +54,10 @@ harvestingConsequences oldCollection newCollection _ =
     in
         case old /= new of
             True ->
-                do (TopLevel.QueueMsg Queue.Types.Reset)
+                Cmd.batch
+                    [ do (TopLevel.QueueMsg Queue.Types.Reset)
+                    , do (TopLevel.TracksMsg Tracks.Types.Recalibrate)
+                    ]
 
             False ->
                 Cmd.none
