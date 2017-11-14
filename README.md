@@ -22,8 +22,10 @@ A music player which connects to your cloud/distributed storage.
 brew install haskell-stack
 brew install elm
 brew install nodejs
+brew install watchexec
 
 npm install
+stack setup
 ```
 
 
@@ -44,6 +46,5 @@ make server
 make test
 
 # watch and build
-brew install watchexec
 make watch
 ```
