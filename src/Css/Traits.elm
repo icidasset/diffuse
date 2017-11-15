@@ -28,6 +28,11 @@ gr number =
     Css.rem (0.375 * (toFloat number))
 
 
+grs : Int -> String
+grs =
+    gr >> .value
+
+
 
 -- Css / Queries
 

@@ -153,6 +153,23 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
 
 
 //
+// > Notifications
+
+
+app.ports.fadeInNotifications.subscribe(_ => {
+  setTimeout(
+    () => document.querySelectorAll(".notification:not(.is-shown)").forEach(node => {
+      window.getComputedStyle(node).opacity;
+      node.classList.add("is-shown");
+      node.style.opacity = 0.95;
+    }),
+    50
+  )
+});
+
+
+
+//
 // > Queue
 
 app.ports.toggleRepeat.subscribe(bool => {

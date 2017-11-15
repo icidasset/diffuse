@@ -18,10 +18,10 @@ trackMenu identifiedTrack =
         ContextMenu
             [ ( Icons.queue_play_next (Color.rgb 65 50 63) 16
               , "Play next"
-              , QueueMsg (Queue.Types.InjectFirst track)
+              , QueueMsg (Queue.Types.InjectFirst track { showNotification = True })
               )
             , ( Icons.add_to_queue (Color.rgb 65 50 63) 16
               , "Add to queue"
-              , QueueMsg (Queue.Types.InjectLast track)
+              , QueueMsg (Queue.Types.InjectLast track { showNotification = True })
               )
             ]

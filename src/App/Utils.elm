@@ -7,6 +7,7 @@ import Hex
 import Html exposing (Attribute)
 import Html.CssHelpers exposing (..)
 import Http
+import Notifications.Types exposing (Notification(..))
 import Regex exposing (regex, HowMany(All))
 import Response.Ext exposing (do)
 import Routing.Types exposing (Page(..))
@@ -80,9 +81,8 @@ makeQueryParam ( a, b ) =
 displayError : String -> Cmd TopLevel.Msg
 displayError error =
     error
-        |> ErrorScreen
-        |> Routing.Types.SetPage
-        |> TopLevel.RoutingMsg
+        |> Error
+        |> TopLevel.ShowNotification
         |> do
 
 

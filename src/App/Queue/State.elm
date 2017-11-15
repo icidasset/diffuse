@@ -2,11 +2,13 @@ module Queue.State exposing (..)
 
 import Date exposing (Date)
 import List.Extra as List
+import Notifications.Types as Notification
 import Response.Ext exposing (do)
 import Queue.Fill as Fill
 import Queue.Ports as Ports
 import Queue.Types as Types exposing (..)
 import Queue.Utils exposing (..)
+import String.Interpolate exposing (interpolate)
 import Tracks.Types exposing (Track)
 import Types as TopLevel
 
@@ -37,7 +39,7 @@ update msg model =
         -- # InjectFirst
         -- > Add an item in front of the queue.
         --
-        InjectFirst track ->
+        InjectFirst track options ->
             let
                 item =
                     { manualEntry = True
@@ -51,13 +53,24 @@ update msg model =
                     { model
                         | future = item :: cleanedFuture
                     }
-                    [ do TopLevel.FillQueue ]
+                    [ do TopLevel.FillQueue
+
+                    -- Notification (if requested)
+                    , if options.showNotification then
+                        [ track.tags.title ]
+                            |> interpolate "**{0}** will be played next"
+                            |> Notification.Message
+                            |> TopLevel.ShowNotification
+                            |> do
+                      else
+                        Cmd.none
+                    ]
 
         -- # InjectLast
         -- > Add an item after the last manual entry
         --   (ie. after the last injected item).
         --
-        InjectLast track ->
+        InjectLast track options ->
             let
                 item =
                     { manualEntry = True
@@ -80,7 +93,18 @@ update msg model =
                                 ++ [ item ]
                                 ++ List.drop manualItems cleanedFuture
                     }
-                    [ do TopLevel.FillQueue ]
+                    [ do TopLevel.FillQueue
+
+                    -- Notification (if requested)
+                    , if options.showNotification then
+                        [ track.tags.title ]
+                            |> interpolate "**{0}** was added to the queue"
+                            |> Notification.Message
+                            |> TopLevel.ShowNotification
+                            |> do
+                      else
+                        Cmd.none
+                    ]
 
         -- # RemoveItem Int
         -- > Remove an item from the queue.
@@ -229,7 +253,7 @@ update msg model =
         InjectFirstAndPlay track ->
             let
                 ( a, b ) =
-                    update (InjectFirst track) model
+                    update (InjectFirst track { showNotification = False }) model
 
                 ( c, d ) =
                     update (Shift) a

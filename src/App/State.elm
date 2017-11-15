@@ -9,6 +9,9 @@ import Json.Encode as Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
+import Notifications
+import Notifications.Config
+import Notifications.Types as Notification
 import Ports
 import Response exposing (..)
 import Response.Ext as Response exposing (do, doDelayed)
@@ -16,6 +19,7 @@ import Slave.Translations
 import Slave.Types exposing (AlienMsg(..))
 import Task
 import Time
+import Toasty
 import Types exposing (..)
 import Utils exposing (displayError, displayMessage)
 import Window
@@ -66,6 +70,7 @@ initialModel flags initialPage =
     , isHTTPS = flags.isHTTPS
     , isTouchDevice = False
     , showLoadingScreen = True
+    , toasties = Toasty.initialState
 
     ------------------------------------
     -- Time
@@ -128,6 +133,9 @@ update msg model =
 
         SetIsTouchDevice bool ->
             (!) { model | isTouchDevice = bool } []
+
+        ToastyMsg sub ->
+            Toasty.update Notifications.Config.config ToastyMsg sub model
 
         ------------------------------------
         -- Data in
@@ -455,6 +463,12 @@ update msg model =
         --
         Extraterrestrial _ _ ->
             ( model, Cmd.none )
+
+        ------------------------------------
+        -- Notifications
+        ------------------------------------
+        ShowNotification notification ->
+            Notifications.add notification ( model, Cmd.none )
 
         ------------------------------------
         -- Context Menu

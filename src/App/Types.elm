@@ -5,8 +5,10 @@ import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Json.Encode
 import Mouse
+import Notifications.Types exposing (Notification)
 import Slave.Types
 import Svg exposing (Svg)
+import Toasty
 import Time exposing (Time)
 import Window
 
@@ -32,6 +34,7 @@ type Msg
     = ClickAway
     | Reset
     | SetIsTouchDevice Bool
+    | ToastyMsg (Toasty.Msg Notification)
       -- Loading
     | HideLoadingScreen
     | ShowLoadingScreen
@@ -61,6 +64,8 @@ type Msg
     | ProcessSources
       -- Slave events
     | Extraterrestrial Slave.Types.AlienMsg Slave.Types.AlienResult
+      -- Notifications
+    | ShowNotification Notification
       -- Context Menu
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
@@ -77,6 +82,7 @@ type alias Model =
     , isHTTPS : Bool
     , isTouchDevice : Bool
     , showLoadingScreen : Bool
+    , toasties : Toasty.Stack Notification
 
     ------------------------------------
     -- Time

@@ -6,6 +6,9 @@ import Types exposing (AlienEvent)
 -- 💡
 
 
+port fadeInNotifications : () -> Cmd msg
+
+
 port slaveEvent : AlienEvent -> Cmd msg
 
 

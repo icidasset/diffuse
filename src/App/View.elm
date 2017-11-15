@@ -12,10 +12,13 @@ import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Alert
 import Navigation.View as Navigation
+import Notifications.Config
+import Notifications.View
 import Routing.Types exposing (Page(..))
 import Styles exposing (..)
 import Svg exposing (Svg, g, path, svg)
 import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
+import Toasty
 import Traits exposing (intoRem)
 import Types exposing (..)
 import Utils exposing (..)
@@ -47,27 +50,7 @@ import Sources.Types
 entry : Model -> Html Msg
 entry model =
     div
-        (-- Global mouse/touch events ++ Equalizer events
-         -- TODO: Find a way to make these into subscriptions
-         --       (like with the mouse events)
-         case model.equalizer.activeKnob of
-            Just _ ->
-                (if model.isTouchDevice then
-                    [ on "tap" (Decode.succeed ClickAway)
-                    , on "touchmove" Equalizer.Touch.move
-                    , on "touchend" Equalizer.Touch.end
-                    ]
-                 else
-                    [ onClick ClickAway ]
-                )
-
-            Nothing ->
-                [ if model.isTouchDevice then
-                    on "tap" (Decode.succeed ClickAway)
-                  else
-                    onClick ClickAway
-                ]
-        )
+        (rootAttributes model)
         [ if model.showLoadingScreen then
             ------------------------------------
             -- {override} Loading
@@ -80,7 +63,7 @@ entry model =
             -- Default
             ------------------------------------
             case model.routing.currentPage of
-                -- # Doesn't need authentication
+                -- # Doesn't require authentication
                 --
                 ErrorScreen err ->
                     div
@@ -115,7 +98,7 @@ entry model =
                                 ]
                         ]
 
-                -- # Needs authentication
+                -- # Requires authentication
                 --
                 Abroad ->
                     authenticated
@@ -158,6 +141,15 @@ entry model =
         , Html.Lazy.lazy contextMenu model.contextMenu
 
         --
+        -- Notifications
+        --
+        , Toasty.view
+            Notifications.Config.config
+            Notifications.View.entry
+            ToastyMsg
+            model.toasties
+
+        --
         -- Overlay
         --
         , div
@@ -190,6 +182,31 @@ entry model =
             ]
             []
         ]
+
+
+{-| Global mouse/touch events ++ Equalizer events
+TODO: Find a way to make these into subscriptions
+(like with the mouse events)
+-}
+rootAttributes : Model -> List (Attribute Msg)
+rootAttributes model =
+    case model.equalizer.activeKnob of
+        Just _ ->
+            (if model.isTouchDevice then
+                [ on "tap" (Decode.succeed ClickAway)
+                , on "touchmove" Equalizer.Touch.move
+                , on "touchend" Equalizer.Touch.end
+                ]
+             else
+                [ onClick ClickAway ]
+            )
+
+        Nothing ->
+            [ if model.isTouchDevice then
+                on "tap" (Decode.succeed ClickAway)
+              else
+                onClick ClickAway
+            ]
 
 
 

@@ -9,8 +9,8 @@ import Tracks.Types exposing (Track, TrackId)
 
 
 type Msg
-    = InjectFirst Track
-    | InjectLast Track
+    = InjectFirst Track InjectOptions
+    | InjectLast Track InjectOptions
     | RemoveItem Int
       -- Position
     | Rewind
@@ -73,3 +73,11 @@ type alias EngineItem =
 type Page
     = Index
     | History
+
+
+
+-- Other
+
+
+type alias InjectOptions =
+    { showNotification : Bool }
