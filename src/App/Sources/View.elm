@@ -8,6 +8,7 @@ import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
 import Html.Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Json.Decode as Decode
+import Layouts exposing (centeredForm)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Action as Icons
@@ -292,7 +293,7 @@ pageNew sForm =
 
 pageNewForm : Int -> Source -> Html Sources.Msg
 pageNewForm step source =
-    formNode
+    centeredForm
         (case step of
             1 ->
                 Sources.AssignFormStep 2
@@ -453,7 +454,7 @@ pageEdit sForm =
                 ------------------------------------
                 , Html.map
                     SourcesMsg
-                    (formNode
+                    (centeredForm
                         Sources.SubmitForm
                         (div
                             []
@@ -489,53 +490,6 @@ pageEdit sForm =
             _ ->
                 [ text "Cannot use this model.form on this page" ]
         )
-
-
-
--- Forms
-
-
-formNode : Sources.Msg -> Html Sources.Msg -> Html Sources.Msg
-formNode submitMsg childNode =
-    Html.form
-        [ cssClasses
-            [ InsulationContent
-            , InsulationFlexContent
-            , InsulationCentered
-            ]
-        , style
-            [ ( "position", "relative" )
-            , ( "text-align", "center" )
-            ]
-        , onSubmit submitMsg
-        ]
-        [ div
-            [ cssClasses
-                [ InsulationFlexContent ]
-            , style
-                [ ( "overflow", "hidden" )
-                , ( "position", "relative" )
-                , ( "width", "100%" )
-                , ( "z-index", "9" )
-                ]
-            ]
-            [ div
-                [ cssClasses
-                    [ InsulationContent
-                    , InsulationCentered
-                    ]
-                ]
-                [ div
-                    [ cssClasses [ ContentBox ]
-                    , style [ ( "padding-top", "2.25rem" ) ]
-                    ]
-                    [ childNode ]
-                ]
-            ]
-        , div
-            [ cssClass LogoBackdrop ]
-            []
-        ]
 
 
 

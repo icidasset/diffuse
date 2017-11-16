@@ -5,6 +5,7 @@ import Json.Encode
 
 -- Settings Types
 
+import Playlists.Types as Playlists
 import Sources.Types as Sources
 import Tracks.Types as Tracks
 
@@ -64,6 +65,7 @@ type Method
 
 type alias UserData =
     { favourites : Maybe (List Tracks.Favourite)
+    , playlists : Maybe (List Playlists.Playlist)
     , settings : Maybe Json.Encode.Value
     , sources : Maybe (List Sources.Source)
     , tracks : Maybe (List Tracks.Track)

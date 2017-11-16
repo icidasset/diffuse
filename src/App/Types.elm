@@ -34,7 +34,6 @@ type Msg
     = ClickAway
     | Reset
     | SetIsTouchDevice Bool
-    | ToastyMsg (Toasty.Msg Notification)
       -- Loading
     | HideLoadingScreen
     | ShowLoadingScreen
@@ -69,6 +68,8 @@ type Msg
       -- Context Menu
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
+      -- Libraries
+    | ToastyMsg (Toasty.Msg Notification)
       -- Other
     | NoOp
 

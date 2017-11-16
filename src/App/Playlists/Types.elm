@@ -16,6 +16,11 @@ type alias Playlist =
 
 type Msg
     = SetCollection (List Playlist)
+      -- Creation
+    | Create
+    | SetNewPlaylistName String
+      -- Removal
+    | Remove String
 
 
 
@@ -24,6 +29,7 @@ type Msg
 
 type alias Model =
     { collection : List Playlist
+    , newPlaylist : Playlist
     }
 
 
