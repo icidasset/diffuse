@@ -105,11 +105,19 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
 
                 --
                 --
-                , Playlists.Types.Index
-                    |> Routing.Types.Playlists
-                    |> Routing.Types.GoToPage
-                    |> RoutingMsg
-                    |> onClick
+                , case maybeSelectedPlaylist of
+                    Just playlist ->
+                        playlist
+                            |> TogglePlaylist
+                            |> TracksMsg
+                            |> onClick
+
+                    Nothing ->
+                        Playlists.Types.Index
+                            |> Routing.Types.Playlists
+                            |> Routing.Types.GoToPage
+                            |> RoutingMsg
+                            |> onClick
                 ]
                 [ case maybeSelectedPlaylist of
                     Just _ ->
