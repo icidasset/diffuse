@@ -183,8 +183,8 @@ harvest ( model, collection ) =
                                     |> (==) playlist.name
 
                         False ->
-                            -- TODO
-                            always True
+                            \( _, t ) ->
+                                List.member t.id playlist.tracks
 
                 Nothing ->
                     always True
