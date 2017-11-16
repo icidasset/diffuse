@@ -4,9 +4,10 @@ import Color
 import Color.Convert
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick, onInput, onWithOptions)
 import Html.Keyed
 import Html.Lazy exposing (..)
+import Json.Decode
 import Layouts exposing (centeredForm)
 import Material.Icons.Content as Icons
 import Material.Icons.File as Icons
@@ -152,10 +153,22 @@ renderPlaylist maybeSelectedPlaylist playlist =
                     text ""
                   else
                     a
-                        [ playlist.name |> Remove |> TopLevel.PlaylistsMsg |> onClick ]
+                        [ playlist.name
+                            |> Remove
+                            |> TopLevel.PlaylistsMsg
+                            |> Json.Decode.succeed
+                            |> onWithOptions "click" removeEventOptions
+                        ]
                         [ Icons.remove_circle_outline (Color.grayscale 0.175) 16 ]
                 ]
             ]
+
+
+removeEventOptions : Html.Events.Options
+removeEventOptions =
+    { stopPropagation = True
+    , preventDefault = True
+    }
 
 
 
