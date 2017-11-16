@@ -1,11 +1,13 @@
 module Queue.View exposing (..)
 
 import Color
+import Color.Convert exposing (colorToCssRgb)
 import Html exposing (..)
-import Html.Attributes exposing (rel)
+import Html.Attributes exposing (rel, style)
 import Html.Events exposing (onClick)
 import Html.Keyed
-import Html.Lazy exposing (lazy, lazy2)
+import Html.Lazy exposing (lazy, lazy2, lazy3)
+import Html5.DragDrop as DragDrop
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
@@ -15,7 +17,7 @@ import Queue.Types as Queue exposing (Item, Page(..))
 import Routing.Types
 import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass)
-import Variables exposing (colorDerivatives)
+import Variables exposing (colors, colorDerivatives)
 
 
 -- Styles
@@ -39,7 +41,7 @@ entry : Queue.Page -> TopLevel.Model -> Html TopLevel.Msg
 entry page model =
     case page of
         Index ->
-            lazy2 pageIndex model.queue.future model.queue.shuffle
+            lazy3 pageIndex model.queue.future model.queue.shuffle model.queue.dnd
 
         History ->
             lazy pageHistory model.queue.past
@@ -49,8 +51,8 @@ entry page model =
 -- {Page} index
 
 
-pageIndex : List Item -> Bool -> Html TopLevel.Msg
-pageIndex futureItems shuffled =
+pageIndex : List Item -> Bool -> DragDrop.Model Int Int -> Html TopLevel.Msg
+pageIndex futureItems shuffled dnd =
     div
         [ cssClass InsulationContent ]
         [ ------------------------------------
@@ -108,13 +110,16 @@ pageIndex futureItems shuffled =
                         ]
                     ]
               else
-                Html.Keyed.node
-                    "ul"
-                    [ cssClass ListWithActions ]
-                    (futureItems
-                        |> List.indexedMap (futureActions shuffled)
-                        |> List.indexedMap renderItem
-                    )
+                let
+                    dropTarget =
+                        DragDrop.getDropId dnd
+                in
+                    ul
+                        [ cssClass ListWithActions ]
+                        (futureItems
+                            |> List.indexedMap (futureActions shuffled)
+                            |> List.indexedMap (renderDraggableItem dropTarget)
+                        )
             ]
         ]
 
@@ -177,8 +182,7 @@ pageHistory pastItems =
                         ]
                     ]
               else
-                Html.Keyed.node
-                    "ul"
+                ul
                     [ cssClass ListWithActions ]
                     (pastItems
                         |> List.reverse
@@ -193,28 +197,56 @@ pageHistory pastItems =
 -- Child views
 
 
-renderItem : Int -> ItemWithActions -> ( String, Html TopLevel.Msg )
+renderItem : Int -> ItemWithActions -> Html TopLevel.Msg
 renderItem index ( item, actions ) =
-    let
-        key =
-            toString index
+    li
+        [ rel (toString index) ]
+        [ itemLabel index item
+        , span [ cssClass ListActions ] (actions)
+        ]
 
-        itemLabel =
+
+renderDraggableItem : Maybe Int -> Int -> ItemWithActions -> Html TopLevel.Msg
+renderDraggableItem maybeDropTarget index ( item, actions ) =
+    let
+        styles =
+            case maybeDropTarget of
+                Just dropTarget ->
+                    if index == dropTarget then
+                        dropTargetStyles
+                    else
+                        []
+
+                Nothing ->
+                    []
+    in
+        li
+            ([ rel (toString index), cssClass DraggableListItem ]
+                ++ DragDrop.draggable (TopLevel.QueueMsg << Queue.DragDropMsg) index
+                ++ DragDrop.droppable (TopLevel.QueueMsg << Queue.DragDropMsg) index
+                ++ List.singleton (style styles)
+            )
+            [ itemLabel index item
+            , span [ cssClass ListActions ] (actions)
+            ]
+
+
+itemLabel : Int -> Item -> Html Msg
+itemLabel index item =
+    let
+        lbl =
             item.track.tags.artist ++ " – " ++ item.track.tags.title
     in
-        ( key
-        , li
-            [ rel key ]
-            [ label
-                []
-                [ small [] [ text (toString (index + 1)) ]
-                , if item.manualEntry == True then
-                    span [] [ text itemLabel ]
-                  else
-                    span [ cssClass SubtleListItem ] [ text itemLabel ]
-                ]
-            , span
-                [ cssClass ListActions ]
-                (actions)
+        label
+            []
+            [ small [] [ index + 1 |> toString |> text ]
+            , if item.manualEntry == True then
+                span [] [ text lbl ]
+              else
+                span [ cssClass SubtleListItem ] [ text lbl ]
             ]
-        )
+
+
+dropTargetStyles : List ( String, String )
+dropTargetStyles =
+    [ ( "border-top", "1px solid " ++ colorToCssRgb colors.base06 ) ]

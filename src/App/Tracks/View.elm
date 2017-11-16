@@ -339,22 +339,18 @@ tracksTable tracks activeSortBy sortDirection isTouchDevice =
 
 tracksTableItem : Int -> IdentifiedTrack -> ( String, Html TopLevel.Msg )
 tracksTableItem index ( identifiers, track ) =
-    let
-        key =
-            toString index
-    in
-        ( key
-        , tr
-            [ rel key
-            , attribute "data-missing" (boolToAttr identifiers.isMissing)
-            , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
-            ]
-            [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
-            , td [] [ text track.tags.title ]
-            , td [] [ text track.tags.artist ]
-            , td [] [ text track.tags.album ]
-            ]
-        )
+    ( track.id
+    , tr
+        [ rel (toString index)
+        , attribute "data-missing" (boolToAttr identifiers.isMissing)
+        , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
+        ]
+        [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
+        , td [] [ text track.tags.title ]
+        , td [] [ text track.tags.artist ]
+        , td [] [ text track.tags.album ]
+        ]
+    )
 
 
 

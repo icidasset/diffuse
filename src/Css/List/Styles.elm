@@ -10,6 +10,7 @@ import Variables exposing (colors, colorDerivatives)
 type Classes
     = ListWithActions
       -- Children
+    | DraggableListItem
     | ListActions
     | SubtleListItem
 
@@ -64,6 +65,10 @@ styles =
     ------------------------------------------------------
     -- Children
     ------------------------------------------------------
+    , class DraggableListItem
+        [ cursor move
+        , descendants [ label [ property "pointer-events" "none" ] ]
+        ]
     , class ListActions
         [ displayFlex
         , lineHeight zero
