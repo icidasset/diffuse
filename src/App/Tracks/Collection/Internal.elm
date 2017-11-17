@@ -10,6 +10,8 @@ module Tracks.Collection.Internal
         )
 
 import List.Extra as List
+import Maybe.Extra as Maybe
+import Playlists.Types exposing (PlaylistTrack)
 import Tracks.Favourites as Favourites
 import Tracks.Sorting as Sorting
 import Tracks.Types exposing (..)
@@ -51,14 +53,20 @@ identify ( model, collection ) =
                 (\t -> List.member t.sourceId model.enabledSourceIds)
                 collection.untouched
 
-        ( identifiedUnsorted, missingFavourites ) =
-            List.foldl
+        playlistTracks =
+            model.selectedPlaylist
+                |> Maybe.map .tracks
+                |> Maybe.withDefault []
+
+        ( identifiedUnsorted, missingFavourites, missingPlaylistTracks ) =
+            List.foldr
                 (identifier model.favourites model.activeTrackId)
-                ( [], model.favourites )
+                ( [], model.favourites, playlistTracks )
                 enabledOnly
     in
         identifiedUnsorted
             |> List.append (List.map makeMissingFavouriteTrack missingFavourites)
+            |> List.append (List.map makeMissingPlaylistTrack missingPlaylistTracks)
             |> Sorting.sort model.sortBy model.sortDirection
             |> (\x -> { collection | identified = x })
             |> (\x -> (,) model x)
@@ -68,10 +76,13 @@ identifier :
     List Favourite
     -> Maybe TrackId
     -> Track
-    -> ( List IdentifiedTrack, List Favourite )
-    -> ( List IdentifiedTrack, List Favourite )
-identifier favourites activeTrackId track ( acc, missingFavourites ) =
+    -> ( List IdentifiedTrack, List Favourite, List PlaylistTrack )
+    -> ( List IdentifiedTrack, List Favourite, List PlaylistTrack )
+identifier favourites activeTrackId track ( acc, missingFavourites, missingPlaylistTracks ) =
     let
+        lalbum =
+            String.toLower track.tags.album
+
         lartist =
             String.toLower track.tags.artist
 
@@ -86,39 +97,46 @@ identifier favourites activeTrackId track ( acc, missingFavourites ) =
 
         isFavourite =
             List.any favouriteMatcher favourites
+
+        identifiedTrack =
+            (,)
+                { isFavourite = False
+                , isMissing = False
+                , isNowPlaying = isNowPlaying
+                }
+                track
+
+        missingPlaylistTracks_ =
+            List.filterNot
+                (\{ album, artist, title } ->
+                    (lalbum == String.toLower album)
+                        && (lartist == String.toLower artist)
+                        && (ltitle == String.toLower title)
+                )
+                missingPlaylistTracks
     in
         case isFavourite of
             -- A favourite
             --
             True ->
-                ( acc
-                    ++ [ ( { isFavourite = True
-                           , isMissing = False
-                           , isNowPlaying = isNowPlaying
-                           }
-                         , track
-                         )
-                       ]
-                , case List.findIndex favouriteMatcher missingFavourites of
-                    Just i ->
-                        List.removeAt i missingFavourites
-
-                    Nothing ->
-                        missingFavourites
+                ( identifiedTrack
+                    |> Tuple.mapFirst (\i -> { i | isFavourite = True })
+                    |> (flip (::)) acc
+                  --
+                , if isFavourite then
+                    List.filterNot favouriteMatcher missingFavourites
+                  else
+                    missingFavourites
+                  --
+                , missingPlaylistTracks_
                 )
 
             -- Not a favourite
             --
             False ->
-                ( acc
-                    ++ [ ( { isFavourite = False
-                           , isMissing = False
-                           , isNowPlaying = isNowPlaying
-                           }
-                         , track
-                         )
-                       ]
+                ( identifiedTrack :: acc
                 , missingFavourites
+                , missingPlaylistTracks_
                 )
 
 
@@ -138,6 +156,25 @@ makeMissingFavouriteTrack fav =
     in
         (,)
             { isFavourite = True, isMissing = True, isNowPlaying = False }
+            { tags = tags, id = missingId, path = missingId, sourceId = missingId }
+
+
+makeMissingPlaylistTrack : PlaylistTrack -> IdentifiedTrack
+makeMissingPlaylistTrack playlistTrack =
+    let
+        tags =
+            { disc = 1
+            , nr = 0
+            , artist = playlistTrack.artist
+            , title = playlistTrack.title
+            , album = playlistTrack.album
+            , genre = Nothing
+            , picture = Nothing
+            , year = Nothing
+            }
+    in
+        (,)
+            { isFavourite = False, isMissing = True, isNowPlaying = False }
             { tags = tags, id = missingId, path = missingId, sourceId = missingId }
 
 
@@ -166,6 +203,8 @@ harvest ( model, collection ) =
               -- Favourites / Missing
               if model.favouritesOnly then
                 Tuple.first >> .isFavourite >> (==) True
+              else if Maybe.isJust model.selectedPlaylist then
+                always True
               else
                 Tuple.first >> .isMissing >> (==) False
 
@@ -184,7 +223,12 @@ harvest ( model, collection ) =
 
                         False ->
                             \( _, t ) ->
-                                List.member t.id playlist.tracks
+                                List.member
+                                    { album = t.tags.album
+                                    , artist = t.tags.artist
+                                    , title = t.tags.title
+                                    }
+                                    playlist.tracks
 
                 Nothing ->
                     always True
