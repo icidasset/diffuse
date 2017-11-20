@@ -1,5 +1,6 @@
 module Alfred.System exposing (..)
 
+import List.Extra as List
 import Response.Ext exposing (do)
 import Types exposing (Alfred)
 
@@ -17,9 +18,9 @@ calculateResults searchTerm alfred =
                 | searchTerm =
                     Just searchTerm
                 , results =
-                    List.filter
-                        (String.toLower >> String.contains lowerSearchTerm)
-                        alfred.index
+                    alfred.index
+                        |> List.filter (String.toLower >> String.contains lowerSearchTerm)
+                        |> List.sort
             }
         else
             { alfred
@@ -28,10 +29,10 @@ calculateResults searchTerm alfred =
             }
 
 
-runAction : Alfred -> ( Alfred, Cmd Types.Msg )
-runAction alfred =
+runAction : Int -> Alfred -> ( Alfred, Cmd Types.Msg )
+runAction index alfred =
     ( alfred
     , alfred.results
-        |> List.head
+        |> List.getAt index
         |> alfred.action alfred.searchTerm
     )

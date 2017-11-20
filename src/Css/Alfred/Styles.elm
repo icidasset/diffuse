@@ -75,9 +75,10 @@ styles =
         [ backgroundColor (rgba 0 0 0 0.75)
         , borderRadius (px 3)
         , color (cssColor Color.white)
+        , fontSize (Css.rem 0.925)
         , listStyle none
         , margin3 (gr 1) zero zero
-        , maxHeight (vh 52.5)
+        , maxHeight (vh 49.5)
         , overflowX hidden
         , overflowY scroll
         , padding zero
@@ -116,7 +117,12 @@ inputStyles =
 resultStyles : List Style
 resultStyles =
     [ borderBottom3 (px 1) solid (rgba 255 255 255 0.15)
-    , padding2 (gr 1) (gr 3)
+    , cursor pointer
+    , lineHeight (num 1.2)
+    , overflow hidden
+    , padding2 (gr 2) (gr 3)
+    , textOverflow ellipsis
+    , whiteSpace noWrap
 
     --
     , lastChild

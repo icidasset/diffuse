@@ -2,7 +2,7 @@ module Alfred.View exposing (entry)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput, onSubmit, onWithOptions)
+import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
 import Json.Decode as Json
 import Types as TopLevel
 import Utils exposing (cssClass)
@@ -28,7 +28,7 @@ entry context =
           ------------------------------------
           Html.form
             [ cssClass AlfredInput
-            , onSubmit TopLevel.RunAlfredAction
+            , onSubmit (TopLevel.RunAlfredAction 0)
             ]
             [ input
                 [ type_ "text"
@@ -51,7 +51,7 @@ entry context =
         ------------------------------------
         , ul
             [ cssClass AlfredResults ]
-            (List.map resultView context.results)
+            (List.indexedMap resultView context.results)
         ]
 
 
@@ -66,8 +66,8 @@ eventOptions =
 -- Result
 
 
-resultView : String -> Html TopLevel.Msg
-resultView result =
+resultView : Int -> String -> Html TopLevel.Msg
+resultView idx result =
     li
-        []
+        [ idx |> TopLevel.RunAlfredAction |> onClick ]
         [ text result ]

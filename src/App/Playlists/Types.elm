@@ -39,6 +39,7 @@ type Msg
 
 type alias Model =
     { collection : List Playlist
+    , lastModifiedPlaylist : Maybe String
     , newPlaylist : Playlist
     }
 

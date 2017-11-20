@@ -12,12 +12,16 @@ import Types as TopLevel exposing (Alfred)
 
 create : List Track -> List Playlist -> Alfred
 create tracks playlists =
-    { action = action (List.map Playlists.Utils.playlistTrackFromTrack tracks)
-    , index = List.map .name playlists
-    , message = "Choose or create a playlist to add these tracks to."
-    , results = []
-    , searchTerm = Nothing
-    }
+    let
+        playlistNames =
+            List.map .name playlists
+    in
+        { action = tracks |> List.map Playlists.Utils.playlistTrackFromTrack |> action
+        , index = playlistNames
+        , message = "Choose or create a playlist to add these tracks to."
+        , results = []
+        , searchTerm = Nothing
+        }
 
 
 

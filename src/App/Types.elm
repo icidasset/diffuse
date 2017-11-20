@@ -40,7 +40,7 @@ type Msg
     | CalculateAlfredResults String
     | HideAlfred
     | RequestAssistanceForPlaylists (List Tracks.Track)
-    | RunAlfredAction
+    | RunAlfredAction Int
       -- Context Menu
     | HideContextMenu
     | ShowSourceMenu String Mouse.Position

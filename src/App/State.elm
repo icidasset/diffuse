@@ -157,9 +157,9 @@ update msg model =
             in
                 (!) { model | alfred = Just alfred } []
 
-        RunAlfredAction ->
+        RunAlfredAction index ->
             model.alfred
-                |> Maybe.map (Alfred.System.runAction)
+                |> Maybe.map (Alfred.System.runAction index)
                 |> Maybe.map (Tuple.mapFirst <| \a -> { model | alfred = Just a })
                 |> Maybe.withDefault ( model, Cmd.none )
 
@@ -180,12 +180,15 @@ update msg model =
 
         ShowTrackContextMenu ( index, mousePos ) ->
             let
+                lastModPlay =
+                    model.playlists.lastModifiedPlaylist
+
                 contextMenu =
                     index
                         |> String.toInt
                         |> Result.toMaybe
                         |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection.exposed)
-                        |> Maybe.map Tracks.ContextMenu.trackMenu
+                        |> Maybe.map (Tracks.ContextMenu.trackMenu lastModPlay)
                         |> Maybe.map (\fn -> fn mousePos)
             in
                 (!) { model | contextMenu = contextMenu } []
