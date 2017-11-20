@@ -449,10 +449,12 @@ notifications =
 overlay : Maybe Alfred -> Maybe ContextMenu -> Html Msg
 overlay maybeAlfred maybeContextMenu =
     div
-        [ cssClass Overlay
-        , if Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu then
-            style [ ( "opacity", "1" ) ]
-          else
-            style []
-        ]
+        (if Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu then
+            [ cssClasses [ Overlay, OverlayWithCursor ]
+            , style [ ( "opacity", "1" ) ]
+            ]
+         else
+            [ cssClass Overlay
+            ]
+        )
         []

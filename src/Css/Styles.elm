@@ -65,6 +65,7 @@ type Classes
     | Intro
     | LogoBackdrop
     | Overlay
+    | OverlayWithCursor
     | Shell
 
 
@@ -487,5 +488,9 @@ stylesLocal =
         , top zero
         , width (vw 100)
         , zIndex (int 900)
+        ]
+    , class OverlayWithCursor
+        [ cursor pointer
+        , property "pointer-events" "auto"
         ]
     ]
