@@ -32,18 +32,34 @@ import Tracks.Types as Tracks
 
 type Msg
     = ClickAway
+    | DoAll (List Msg)
+    | NoOp
     | Reset
     | SetIsTouchDevice Bool
+      -- Alfred
+    | CalculateAlfredResults String
+    | HideAlfred
+    | RequestAssistanceForPlaylists (List Tracks.Track)
+    | RunAlfredAction
+      -- Context Menu
+    | HideContextMenu
+    | ShowSourceMenu String Mouse.Position
+    | ShowTrackContextMenu ( String, Mouse.Position )
+      -- Libraries
+    | ToastyMsg (Toasty.Msg Notification)
       -- Loading
     | HideLoadingScreen
     | ShowLoadingScreen
+      -- Notifications
+    | ShowNotification Notification
+      -- Time
+    | SetTimestamp Time
       -- User layer
     | ImportUserData String
     | StoreUserData
     | DebounceStoreUserData
     | DebounceCallbackStoreUserData Debounce.Msg
-      -- Time
-    | SetTimestamp Time
+      --
       -- Children
     | AbroadMsg Abroad.Msg
     | AuthenticationMsg Authentication.Msg
@@ -55,23 +71,16 @@ type Msg
     | SettingsMsg Settings.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
+      --
       -- Children, Pt. 2
     | ActiveQueueItemChanged (Maybe Queue.Item)
     | AutoGeneratePlaylists
     | FillQueue
     | PlayTrack String
     | ProcessSources
+      --
       -- Slave events
     | Extraterrestrial Slave.Types.AlienMsg Slave.Types.AlienResult
-      -- Notifications
-    | ShowNotification Notification
-      -- Context Menu
-    | ShowSourceMenu String Mouse.Position
-    | ShowTrackContextMenu ( String, Mouse.Position )
-      -- Libraries
-    | ToastyMsg (Toasty.Msg Notification)
-      -- Other
-    | NoOp
 
 
 
@@ -79,7 +88,9 @@ type Msg
 
 
 type alias Model =
-    { contextMenu : Maybe ContextMenu
+    { alfred : Maybe Alfred
+    , contextMenu : Maybe ContextMenu
+    , isDevelopmentEnvironment : Bool
     , isHTTPS : Bool
     , isTouchDevice : Bool
     , showLoadingScreen : Bool
@@ -120,6 +131,19 @@ type alias ContextMenuItems =
 
 
 
+-- Alfred
+
+
+type alias Alfred =
+    { action : Maybe String -> Maybe String -> Cmd Msg
+    , index : List String
+    , message : String
+    , results : List String
+    , searchTerm : Maybe String
+    }
+
+
+
 -- Other
 
 
@@ -132,4 +156,4 @@ type alias Illumination model childMsg =
 
 
 type alias ProgramFlags =
-    { isHTTPS : Bool }
+    { isDevelopmentEnvironment : Bool, isHTTPS : Bool }

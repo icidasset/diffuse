@@ -11,6 +11,7 @@ import Variables exposing (..)
 
 -- Children
 
+import Alfred.Styles as Alfred
 import ContextMenu.Styles as ContextMenu
 import Console.Styles as Console
 import Equalizer.Styles as Equalizer
@@ -24,6 +25,7 @@ import Tracks.Styles as Tracks
 styles : List Snippet
 styles =
     stylesLocal
+        |> List.append Alfred.styles
         |> List.append ContextMenu.styles
         |> List.append Console.styles
         |> List.append Equalizer.styles

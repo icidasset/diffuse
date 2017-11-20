@@ -207,7 +207,7 @@ pageNew =
 pageNewForm : Html Playlists.Msg
 pageNewForm =
     centeredForm
-        Create
+        CreateFromForm
         (div
             []
             [ h2

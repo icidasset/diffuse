@@ -1,6 +1,6 @@
 module Playlists.Utils exposing (..)
 
-import Playlists.Types exposing (Playlist)
+import Playlists.Types exposing (Playlist, PlaylistTrack)
 import Sources.Types exposing (Source)
 import Tracks.Types exposing (Track)
 
@@ -46,3 +46,13 @@ autoGenerate sources tracks =
                 }
             )
             playlistNames
+
+
+{-| Create a `PlaylistTrack` from a `Track`.
+-}
+playlistTrackFromTrack : Track -> PlaylistTrack
+playlistTrackFromTrack track =
+    { album = track.tags.album
+    , artist = track.tags.artist
+    , title = track.tags.title
+    }

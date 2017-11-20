@@ -94,12 +94,17 @@ update msg model =
         ------------------------------------
         -- # Initial Collection
         --
-        InitialCollection parcel ->
+        InitialCollection shouldProcessSources parcel ->
             parcel
                 |> Collection.reidentify
                 |> Collection.set
                 |> Response.andAlso search
-                |> Response.andAlso processSources
+                |> Response.andAlso
+                    (if shouldProcessSources then
+                        processSources
+                     else
+                        always Cmd.none
+                    )
 
         ------------------------------------
         -- Collection, Pt. 2

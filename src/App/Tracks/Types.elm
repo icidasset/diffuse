@@ -124,7 +124,7 @@ type Msg
     | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
       -- Collection, Pt. 1
-    | InitialCollection Parcel
+    | InitialCollection Bool Parcel
       -- Collection, Pt. 2
     | Add (List Track)
     | Remove SourceId

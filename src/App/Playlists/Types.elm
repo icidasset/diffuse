@@ -23,8 +23,11 @@ type alias PlaylistTrack =
 
 type Msg
     = SetCollection (List Playlist)
+      -- Addition
+    | AddToPlaylist String (List PlaylistTrack)
       -- Creation
-    | Create
+    | CreateFromForm
+    | CreateWithTracks String (List PlaylistTrack)
     | SetNewPlaylistName String
       -- Removal
     | Remove String

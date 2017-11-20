@@ -1,12 +1,13 @@
 module View exposing (entry)
 
+import Alfred.View
 import Authentication.Types exposing (Method(..))
 import ContextMenu.Styles as CTS
 import Color
 import Equalizer.Touch
 import Html exposing (..)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick, on)
+import Html.Events exposing (onClick, onWithOptions, on)
 import Html.Lazy
 import Json.Decode as Decode
 import Material.Icons.Action
@@ -63,10 +64,11 @@ entry model =
             currentPage model
 
         --
+        , Html.Lazy.lazy alfred model.alfred
         , Html.Lazy.lazy backgroundImage model.settings.backgroundImage
         , Html.Lazy.lazy contextMenu model.contextMenu
         , Html.Lazy.lazy notifications model.toasties
-        , Html.Lazy.lazy overlay model.contextMenu
+        , Html.Lazy.lazy2 overlay model.alfred model.contextMenu
         ]
 
 
@@ -193,9 +195,10 @@ authenticated children model =
             [ cssClass Shell ]
             [ -- Navigation
               --
-              Html.Lazy.lazy
+              Html.Lazy.lazy2
                 authenticatedNavigation
                 model.routing.currentPage
+                model.alfred
 
             -- Page
             --
@@ -222,14 +225,26 @@ authenticated children model =
             model
 
 
-authenticatedNavigation : Page -> Html Msg
-authenticatedNavigation currentPage =
-    Navigation.outside
-        currentPage
-        [ ( text "Tracks", Routing.Types.Index )
-        , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
-        , ( text "Settings", Routing.Types.Settings )
-        ]
+authenticatedNavigation : Page -> Maybe Alfred -> Html Msg
+authenticatedNavigation currentPage maybeAlfred =
+    let
+        styles =
+            case maybeAlfred of
+                Just _ ->
+                    [ ( "visibility", "hidden" ) ]
+
+                Nothing ->
+                    []
+    in
+        div
+            [ style styles ]
+            [ Navigation.outside
+                currentPage
+                [ ( text "Tracks", Routing.Types.Index )
+                , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
+                , ( text "Settings", Routing.Types.Settings )
+                ]
+            ]
 
 
 
@@ -353,6 +368,16 @@ remoteStorageLogo =
 -- Shared
 
 
+alfred : Maybe Alfred -> Html Msg
+alfred maybe =
+    case maybe of
+        Just context ->
+            Alfred.View.entry context
+
+        Nothing ->
+            text ""
+
+
 backgroundImage : String -> Html Msg
 backgroundImage img =
     div
@@ -378,13 +403,19 @@ contextMenu maybeContextMenu =
         Just (ContextMenu items mousePos) ->
             div
                 [ cssClass CTS.ContextMenu
+                , onWithOptions "click" contextMenuEventOptions (Decode.succeed NoOp)
+                , onWithOptions "tap" contextMenuEventOptions (Decode.succeed NoOp)
                 , style
                     [ ( "left", toString mousePos.x ++ "px" )
                     , ( "top", toString mousePos.y ++ "px" )
                     ]
                 ]
                 (List.map
-                    (\( icon, label, msg ) -> a [ onClick msg ] [ icon, text label ])
+                    (\( icon, label, msg ) ->
+                        a
+                            [ onClick (DoAll [ msg, HideContextMenu ]) ]
+                            [ icon, text label ]
+                    )
                     items
                 )
 
@@ -392,10 +423,17 @@ contextMenu maybeContextMenu =
             text ""
 
 
+contextMenuEventOptions : Html.Events.Options
+contextMenuEventOptions =
+    { preventDefault = True
+    , stopPropagation = True
+    }
+
+
 mainNav : Model -> Html Msg
 mainNav model =
     if model.authentication.signedIn then
-        authenticatedNavigation model.routing.currentPage
+        authenticatedNavigation model.routing.currentPage model.alfred
     else
         unauthenticatedNavigation model.routing.currentPage
 
@@ -408,15 +446,13 @@ notifications =
         ToastyMsg
 
 
-overlay : Maybe ContextMenu -> Html Msg
-overlay contextMenu =
+overlay : Maybe Alfred -> Maybe ContextMenu -> Html Msg
+overlay maybeAlfred maybeContextMenu =
     div
         [ cssClass Overlay
-        , case Maybe.combine [ contextMenu ] of
-            Just _ ->
-                style [ ( "opacity", "1" ) ]
-
-            Nothing ->
-                style []
+        , if Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu then
+            style [ ( "opacity", "1" ) ]
+          else
+            style []
         ]
         []
