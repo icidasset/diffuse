@@ -35,7 +35,7 @@ playlistActions track maybeLastModifiedPlaylist =
     case maybeLastModifiedPlaylist of
         Just playlistName ->
             [ ( Icons.format_list_numbered colorDerivatives.text 16
-              , "Add to the `" ++ playlistName ++ "` playlist"
+              , "Add to \"" ++ playlistName ++ "\""
               , track
                     |> List.singleton
                     |> List.map Playlists.Utils.playlistTrackFromTrack

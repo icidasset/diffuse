@@ -84,8 +84,14 @@ styles =
         , padding zero
 
         --
-        , descendants
-            [ li resultStyles ]
+        , [ li resultStyles ]
+            |> descendants
+
+        --
+        , [ li resultOnHoverStyles ]
+            |> descendants
+            |> List.singleton
+            |> hover
         ]
     ]
 
@@ -105,8 +111,7 @@ inputStyles =
 
     --
     , focus
-        [ outline zero
-        ]
+        [ outline zero ]
     ]
 
 
@@ -125,6 +130,17 @@ resultStyles =
     , whiteSpace noWrap
 
     --
+    , firstChild
+        [ fontWeight bold ]
+
+    --
     , lastChild
         [ borderBottomWidth zero ]
+    ]
+
+
+resultOnHoverStyles : List Style
+resultOnHoverStyles =
+    [ firstChild [ fontWeight normal ]
+    , hover [ fontWeight bold ]
     ]
