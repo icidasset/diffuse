@@ -28,12 +28,12 @@ entry context =
           ------------------------------------
           Html.form
             [ cssClass AlfredInput
-            , onSubmit (TopLevel.RunAlfredAction 0)
+            , onSubmit (TopLevel.RunAlfredAction context.focus)
             ]
             [ input
                 [ type_ "text"
                 , onInput TopLevel.CalculateAlfredResults
-                , placeholder "Search"
+                , placeholder "Type to search"
                 , autofocus True
                 ]
                 []
@@ -51,7 +51,7 @@ entry context =
         ------------------------------------
         , ul
             [ cssClass AlfredResults ]
-            (List.indexedMap resultView context.results)
+            (List.indexedMap (resultView context.focus) context.results)
         ]
 
 
@@ -66,8 +66,15 @@ eventOptions =
 -- Result
 
 
-resultView : Int -> String -> Html TopLevel.Msg
-resultView idx result =
+resultView : Int -> Int -> String -> Html TopLevel.Msg
+resultView focus idx result =
     li
-        [ idx |> TopLevel.RunAlfredAction |> onClick ]
+        [ idx |> TopLevel.RunAlfredAction |> onClick
+        , style
+            [ if focus == idx then
+                ( "font-weight", "bold" )
+              else
+                ( "font-weight", "normal" )
+            ]
+        ]
         [ text result ]

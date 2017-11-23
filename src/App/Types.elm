@@ -3,6 +3,7 @@ module Types exposing (..)
 import Date exposing (Date)
 import Debounce exposing (Debounce)
 import Dict exposing (Dict)
+import Keyboard.Extra as Keyboard
 import Json.Encode
 import Mouse
 import Notifications.Types exposing (Notification)
@@ -45,6 +46,8 @@ type Msg
     | HideContextMenu
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
+      -- Keyboard
+    | KeydownMsg Keyboard.Key
       -- Libraries
     | ToastyMsg (Toasty.Msg Notification)
       -- Loading
@@ -136,6 +139,7 @@ type alias ContextMenuItems =
 
 type alias Alfred =
     { action : Maybe String -> Maybe String -> Cmd Msg
+    , focus : Int
     , index : List String
     , message : String
     , results : List String

@@ -7,6 +7,7 @@ import Dict
 import Dict.Ext as Dict
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
+import Keyboard.Extra as Keyboard
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Navigation
@@ -192,6 +193,37 @@ update msg model =
                         |> Maybe.map (\fn -> fn mousePos)
             in
                 (!) { model | contextMenu = contextMenu } []
+
+        ------------------------------------
+        -- Keyboard
+        ------------------------------------
+        KeydownMsg Keyboard.ArrowDown ->
+            case model.alfred of
+                Just context ->
+                    context
+                        |> (\c -> { c | focus = min (List.length c.results) (c.focus + 1) })
+                        |> (\c -> { model | alfred = Just c })
+                        |> Response.withCmd Cmd.none
+
+                Nothing ->
+                    (,) model Cmd.none
+
+        KeydownMsg Keyboard.ArrowUp ->
+            case model.alfred of
+                Just context ->
+                    context
+                        |> (\c -> { c | focus = max 0 (c.focus - 1) })
+                        |> (\c -> { model | alfred = Just c })
+                        |> Response.withCmd Cmd.none
+
+                Nothing ->
+                    (,) model Cmd.none
+
+        KeydownMsg Keyboard.Escape ->
+            (!) model [ do ClickAway ]
+
+        KeydownMsg _ ->
+            (,) model Cmd.none
 
         ------------------------------------
         -- Libraries
@@ -581,6 +613,9 @@ subscriptions model =
     Sub.batch
         [ -- Time
           Time.every (1 * Time.minute) SetTimestamp
+
+        -- Keyboard
+        , Keyboard.downs KeydownMsg
 
         -- Ports
         , Ports.setIsTouchDevice SetIsTouchDevice

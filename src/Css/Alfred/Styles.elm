@@ -106,6 +106,7 @@ inputStyles =
     , borderWidth zero
     , fontSize (Css.rem 1.5)
     , height auto
+    , letterSpacing (em -0.0175)
     , lineHeight (int 1)
     , padding2 (gr 3) (gr 3)
 
@@ -130,10 +131,6 @@ resultStyles =
     , whiteSpace noWrap
 
     --
-    , firstChild
-        [ fontWeight bold ]
-
-    --
     , lastChild
         [ borderBottomWidth zero ]
     ]
@@ -141,6 +138,6 @@ resultStyles =
 
 resultOnHoverStyles : List Style
 resultOnHoverStyles =
-    [ firstChild [ fontWeight normal ]
-    , hover [ fontWeight bold ]
+    [ important (fontWeight normal)
+    , hover [ important (fontWeight bold) ]
     ]

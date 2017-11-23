@@ -17,6 +17,7 @@ create tracks playlists =
             List.map .name playlists
     in
         { action = tracks |> List.map Playlists.Utils.playlistTrackFromTrack |> action
+        , focus = 0
         , index = playlistNames
         , message = "Choose or create a playlist to add these tracks to."
         , results = []
