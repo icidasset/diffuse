@@ -138,6 +138,12 @@ resultStyles =
 
 resultOnHoverStyles : List Style
 resultOnHoverStyles =
-    [ important (fontWeight normal)
-    , hover [ important (fontWeight bold) ]
+    [ important (color inherit)
+    , important (fontWeight normal)
+
+    --
+    , hover
+        [ important (color <| cssColor colors.base0B)
+        , important (fontWeight bold)
+        ]
     ]

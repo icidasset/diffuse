@@ -1,11 +1,13 @@
 module Alfred.View exposing (entry)
 
+import Color.Convert
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
 import Json.Decode as Json
 import Types as TopLevel
 import Utils exposing (cssClass)
+import Variables exposing (colors)
 
 
 -- Styles
@@ -71,10 +73,12 @@ resultView focus idx result =
     li
         [ idx |> TopLevel.RunAlfredAction |> onClick
         , style
-            [ if focus == idx then
-                ( "font-weight", "bold" )
-              else
-                ( "font-weight", "normal" )
-            ]
+            (if focus == idx then
+                [ ( "color", Color.Convert.colorToCssRgb colors.base0B )
+                , ( "font-weight", "bold" )
+                ]
+             else
+                []
+            )
         ]
         [ text result ]
