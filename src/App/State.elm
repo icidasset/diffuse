@@ -212,7 +212,7 @@ update msg model =
             case model.alfred of
                 Just context ->
                     context
-                        |> (\c -> { c | focus = min (List.length c.results) (c.focus + 1) })
+                        |> (\c -> { c | focus = min (List.length c.results - 1) (c.focus + 1) })
                         |> (\c -> { model | alfred = Just c })
                         |> Response.withCmd Cmd.none
 
