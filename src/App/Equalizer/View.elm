@@ -9,6 +9,7 @@ import Html.Events exposing (..)
 import Json.Decode as Decode
 import Material.Icons.Navigation as Icons
 import Mouse
+import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types
 import Svg exposing (Svg, svg, polygon)
@@ -40,7 +41,8 @@ entry model =
           -- Navigation
           ------------------------------------
           Navigation.inside
-            [ ( Icons.arrow_back colorDerivatives.text 16
+            [ ( Icon Icons.arrow_back
+              , Label (Hidden "Go back")
               , Routing.Types.Index
               )
             ]

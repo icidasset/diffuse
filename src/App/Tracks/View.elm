@@ -14,6 +14,7 @@ import Material.Icons.Editor
 import Material.Icons.Navigation
 import Material.Icons.Toggle
 import Mouse
+import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Playlists.Types exposing (Playlist)
 import Queue.Types
@@ -168,16 +169,14 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
         -- Part 2
         --
         , Navigation.insideCustom
-            [ ( span
-                    [ title "Equalizer" ]
-                    [ Material.Icons.Av.equalizer colorDerivatives.text 16 ]
+            [ ( Icon Material.Icons.Av.equalizer
+              , Label (Hidden "Equalizer")
               , Routing.Types.Equalizer
                     |> Routing.Types.GoToPage
                     |> RoutingMsg
               )
-            , ( span
-                    [ title "Queue" ]
-                    [ Material.Icons.Av.queue colorDerivatives.text 16 ]
+            , ( Icon Material.Icons.Av.queue
+              , Label (Hidden "Queue")
               , Queue.Types.Index
                     |> Routing.Types.Queue
                     |> Routing.Types.GoToPage

@@ -25,6 +25,10 @@ trackMenu model index lastModifiedPlaylist identifiedTrack =
         --
         , case model.selectedPlaylist of
             -- Playlist actions, when in a playlist.
+            -- TODO:
+            -- Removing by index won't actually work
+            -- when using search and favourites only ...
+            --
             Just selectedPlaylist ->
                 [ ( Icons.format_list_numbered colorDerivatives.text 16
                   , "Remove from playlist"

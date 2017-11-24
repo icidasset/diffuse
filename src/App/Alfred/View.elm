@@ -3,7 +3,8 @@ module Alfred.View exposing (entry)
 import Color.Convert
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
+import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events.Extra exposing (onClickPreventDefaultAndStopPropagation)
 import Json.Decode as Json
 import Types as TopLevel
 import Utils exposing (cssClass)
@@ -22,8 +23,7 @@ entry : TopLevel.Alfred -> Html TopLevel.Msg
 entry context =
     div
         [ cssClass Alfred
-        , onWithOptions "click" eventOptions (Json.succeed TopLevel.NoOp)
-        , onWithOptions "tap" eventOptions (Json.succeed TopLevel.NoOp)
+        , onClickPreventDefaultAndStopPropagation TopLevel.NoOp
         ]
         [ ------------------------------------
           -- Input
@@ -55,13 +55,6 @@ entry context =
             [ cssClass AlfredResults ]
             (List.indexedMap (resultView context.focus) context.results)
         ]
-
-
-eventOptions : Html.Events.Options
-eventOptions =
-    { preventDefault = True
-    , stopPropagation = True
-    }
 
 
 

@@ -227,9 +227,11 @@ stylesLocal =
         , descendants
             [ svg
                 [ display inlineBlock
+                , height (Css.em 1.1)
                 , marginRight (px 8)
                 , transform (translateY (px -1))
                 , verticalAlign middle
+                , width (Css.em 1.1)
                 ]
             , selector "g"
                 [ fill currentColor

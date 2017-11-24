@@ -19,6 +19,7 @@ import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Maybe.Extra
 import Mouse
+import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types
 import Sources.Services as Services
@@ -74,11 +75,9 @@ pageIndex sources isProcessing processingErrors =
           Navigation.insideCustom
             (List.concat
                 [ -- Add
-                  [ ( span
-                        []
-                        [ Icons.add colorDerivatives.text 16
-                        , label [] [ text "Add a new source" ]
-                        ]
+                  [ ( Icon Icons.add
+                    , Label (Shown "Add a new source")
+                      --
                     , Sources.New
                         |> Routing.Types.Sources
                         |> Routing.Types.GoToPage
@@ -90,20 +89,14 @@ pageIndex sources isProcessing processingErrors =
                 , if List.isEmpty sources then
                     []
                   else if Maybe.Extra.isJust isProcessing then
-                    [ ( span
-                            [ cssClass ActiveLink ]
-                            [ Icons.sync colorDerivatives.text 16
-                            , label [] [ text "Processing sources ..." ]
-                            ]
+                    [ ( Icon Icons.sync
+                      , Label (Shown "Processing sources ...")
                       , TopLevel.NoOp
                       )
                     ]
                   else
-                    [ ( span
-                            []
-                            [ Icons.sync colorDerivatives.text 16
-                            , label [] [ text "Process sources" ]
-                            ]
+                    [ ( Icon Icons.sync
+                      , Label (Shown "Process sources")
                       , TopLevel.ProcessSources
                       )
                     ]
@@ -259,7 +252,9 @@ pageNew sForm =
                   Navigation.insideCustom
                     (case step of
                         1 ->
-                            [ ( Icons.arrow_back colorDerivatives.text 16
+                            [ ( Icon Icons.arrow_back
+                              , Label (Hidden "Go back")
+                                --
                               , Sources.Index
                                     |> Routing.Types.Sources
                                     |> Routing.Types.GoToPage
@@ -268,11 +263,9 @@ pageNew sForm =
                             ]
 
                         _ ->
-                            [ ( span
-                                    []
-                                    [ Icons.arrow_back colorDerivatives.text 16
-                                    , label [] [ text "Take a step back" ]
-                                    ]
+                            [ ( Icon Icons.arrow_back
+                              , Label (Shown "Take a step back")
+                                --
                               , SourcesMsg (AssignFormStep (step - 1))
                               )
                             ]
@@ -441,7 +434,9 @@ pageEdit sForm =
                   -- Navigation
                   ------------------------------------
                   Navigation.insideCustom
-                    [ ( Icons.arrow_back colorDerivatives.text 16
+                    [ ( Icon Icons.arrow_back
+                      , Label (Hidden "Go back")
+                        --
                       , Sources.Index
                             |> Routing.Types.Sources
                             |> Routing.Types.GoToPage

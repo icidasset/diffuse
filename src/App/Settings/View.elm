@@ -9,6 +9,7 @@ import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Image as Icons
+import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(..))
 import Settings.Types
@@ -34,18 +35,14 @@ entry model =
           -- Navigation
           ------------------------------------
           Navigation.insideCustom
-            [ ( span
-                    []
-                    [ Icons.import_export colorDerivatives.text 16
-                    , label [] [ text "Import / Export" ]
-                    ]
+            [ ( Icon Icons.import_export
+              , Label (Shown "Import / Export")
+                --
               , RoutingMsg (Routing.Types.GoToPage Abroad)
               )
-            , ( span
-                    []
-                    [ Icons.exit_to_app colorDerivatives.text 16
-                    , label [] [ text "Sign out" ]
-                    ]
+            , ( Icon Icons.exit_to_app
+              , Label (Shown "Sign out")
+                --
               , AuthenticationMsg Authentication.PerformSignOut
               )
             ]
