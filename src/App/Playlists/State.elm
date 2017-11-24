@@ -127,6 +127,23 @@ update msg model =
                     { model | collection = newCollection, lastModifiedPlaylist = lastMod }
                     [ do TopLevel.DebounceStoreUserData ]
 
+        RemoveTrackByIndex playlistName trackIndex ->
+            let
+                newCollection =
+                    List.updateIf
+                        (.name >> (==) playlistName)
+                        (\p -> { p | tracks = List.removeAt trackIndex p.tracks })
+                        model.collection
+
+                lastMod =
+                    Just playlistName
+            in
+                (!)
+                    { model | collection = newCollection, lastModifiedPlaylist = lastMod }
+                    [ do TopLevel.CheckSelectedPlaylist
+                    , do TopLevel.DebounceStoreUserData
+                    ]
+
 
 
 -- Lenses

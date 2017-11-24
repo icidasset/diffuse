@@ -13,14 +13,34 @@ import Types exposing (..)
 import Variables exposing (colorDerivatives)
 
 
-trackMenu : Maybe String -> IdentifiedTrack -> Mouse.Position -> ContextMenu
-trackMenu maybeLastModifiedPlaylist identifiedTrack =
+trackMenu : Tracks.Types.Model -> Int -> Maybe String -> IdentifiedTrack -> Mouse.Position -> ContextMenu
+trackMenu model index lastModifiedPlaylist identifiedTrack =
     let
         track =
             Tuple.second identifiedTrack
     in
         [ queueActions track
-        , playlistActions track maybeLastModifiedPlaylist
+
+        --
+        --
+        , case model.selectedPlaylist of
+            -- Playlist actions, when in a playlist.
+            Just selectedPlaylist ->
+                [ ( Icons.format_list_numbered colorDerivatives.text 16
+                  , "Remove from playlist"
+                  , index
+                        |> RemoveTrackByIndex selectedPlaylist.name
+                        |> PlaylistsMsg
+                  )
+                , ( Icons.format_list_numbered colorDerivatives.text 16
+                  , "Add to another playlist"
+                  , RequestAssistanceForPlaylists [ track ]
+                  )
+                ]
+
+            Nothing ->
+                -- Playlist actions, default.
+                defaultPlaylistActions track lastModifiedPlaylist
         ]
             |> List.concat
             |> ContextMenu
@@ -30,9 +50,9 @@ trackMenu maybeLastModifiedPlaylist identifiedTrack =
 -- Actions
 
 
-playlistActions : Track -> Maybe String -> ContextMenuItems
-playlistActions track maybeLastModifiedPlaylist =
-    case maybeLastModifiedPlaylist of
+defaultPlaylistActions : Track -> Maybe String -> ContextMenuItems
+defaultPlaylistActions track lastModifiedPlaylist =
+    case lastModifiedPlaylist of
         Just playlistName ->
             [ ( Icons.format_list_numbered colorDerivatives.text 16
               , "Add to \"" ++ playlistName ++ "\""

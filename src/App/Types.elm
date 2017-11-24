@@ -78,6 +78,7 @@ type Msg
       -- Children, Pt. 2
     | ActiveQueueItemChanged (Maybe Queue.Item)
     | AutoGeneratePlaylists
+    | CheckSelectedPlaylist
     | FillQueue
     | PlayTrack String
     | ProcessSources

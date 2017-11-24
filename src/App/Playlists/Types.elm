@@ -31,6 +31,7 @@ type Msg
     | SetNewPlaylistName String
       -- Removal
     | Remove String
+    | RemoveTrackByIndex String Int
 
 
 
