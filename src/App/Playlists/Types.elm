@@ -17,6 +17,15 @@ type alias PlaylistTrack =
     }
 
 
+type alias IdentifiedPlaylistTrack =
+    ( Identifiers, PlaylistTrack )
+
+
+type alias Identifiers =
+    { index : Int
+    }
+
+
 
 -- Messages
 

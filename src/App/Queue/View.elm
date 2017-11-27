@@ -229,8 +229,11 @@ renderDraggableItem maybeDropTarget index ( item, actions ) =
 itemLabel : Int -> Item -> Html Msg
 itemLabel index item =
     let
+        track =
+            Tuple.second item.identifiedTrack
+
         lbl =
-            item.track.tags.artist ++ " – " ++ item.track.tags.title
+            track.tags.artist ++ " – " ++ track.tags.title
     in
         label
             []

@@ -32,6 +32,11 @@ getIdentifiers =
     Tuple.first
 
 
+identifiedId : IdentifiedTrack -> TrackId
+identifiedId =
+    unindentify >> .id
+
+
 unindentify : IdentifiedTrack -> Track
 unindentify =
     Tuple.second

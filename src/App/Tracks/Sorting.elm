@@ -15,6 +15,9 @@ sort property direction =
                 Artist ->
                     sortByArtist
 
+                PlaylistIndex ->
+                    sortByPlaylistIndex
+
                 Title ->
                     sortByTitle
 
@@ -65,6 +68,15 @@ sortByTitle ( _, a ) ( _, b ) =
         |> andThenCompare (.tags >> .title >> low) a b
         |> andThenCompare (.tags >> .artist >> low) a b
         |> andThenCompare (.tags >> .album >> low) a b
+
+
+
+-- {by} Playlist index
+
+
+sortByPlaylistIndex : IdentifiedTrack -> IdentifiedTrack -> Order
+sortByPlaylistIndex ( a, _ ) ( b, _ ) =
+    andThenCompare (.indexInPlaylist >> Maybe.withDefault 0) a b EQ
 
 
 

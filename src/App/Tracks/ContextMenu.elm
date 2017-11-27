@@ -13,26 +13,26 @@ import Types exposing (..)
 import Variables exposing (colorDerivatives)
 
 
-trackMenu : Tracks.Types.Model -> Int -> Maybe String -> IdentifiedTrack -> Mouse.Position -> ContextMenu
-trackMenu model index lastModifiedPlaylist identifiedTrack =
+trackMenu : Tracks.Types.Model -> Maybe String -> IdentifiedTrack -> Mouse.Position -> ContextMenu
+trackMenu model lastModifiedPlaylist identifiedTrack =
     let
         track =
             Tuple.second identifiedTrack
     in
-        [ queueActions track
+        [ queueActions identifiedTrack
 
         --
         --
         , case model.selectedPlaylist of
             -- Playlist actions, when in a playlist.
-            -- TODO:
-            -- Removing by index won't actually work
-            -- when using search and favourites only ...
             --
             Just selectedPlaylist ->
                 [ ( Icons.format_list_numbered colorDerivatives.text 16
                   , "Remove from playlist"
-                  , index
+                  , identifiedTrack
+                        |> Tuple.first
+                        |> .indexInPlaylist
+                        |> Maybe.withDefault 0
                         |> RemoveTrackByIndex selectedPlaylist.name
                         |> PlaylistsMsg
                   )
@@ -80,14 +80,14 @@ defaultPlaylistActions track lastModifiedPlaylist =
             ]
 
 
-queueActions : Track -> ContextMenuItems
-queueActions track =
+queueActions : IdentifiedTrack -> ContextMenuItems
+queueActions identifiedTrack =
     [ ( Icons.queue_play_next colorDerivatives.text 16
       , "Play next"
-      , QueueMsg (Queue.Types.InjectFirst track { showNotification = True })
+      , QueueMsg (Queue.Types.InjectFirst identifiedTrack { showNotification = True })
       )
     , ( Icons.add_to_queue colorDerivatives.text 16
       , "Add to queue"
-      , QueueMsg (Queue.Types.InjectLast track { showNotification = True })
+      , QueueMsg (Queue.Types.InjectLast identifiedTrack { showNotification = True })
       )
     ]

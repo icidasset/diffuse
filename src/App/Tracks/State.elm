@@ -23,7 +23,7 @@ import Types as TopLevel
 
 initialModel : Model
 initialModel =
-    { activeTrackId = Nothing
+    { activeIdentifiedTrack = Nothing
     , collection = emptyCollection
     , enabledSourceIds = []
     , exposedStep = 1
@@ -61,6 +61,14 @@ update msg model =
             model
                 |> Collection.makeParcel
                 |> Collection.reharvest
+                |> Collection.set
+
+        -- # Reidentify
+        --
+        Reindentify ->
+            model
+                |> Collection.makeParcel
+                |> Collection.reidentify
                 |> Collection.set
 
         -- # SetEnabledSourceIds
@@ -199,7 +207,7 @@ update msg model =
         TogglePlaylist playlist ->
             { model | selectedPlaylist = togglePlaylist model playlist }
                 |> Collection.makeParcel
-                |> Collection.reharvest
+                |> Collection.reidentify
                 |> Collection.set
                 |> Response.andAlso storeUserData
                 |> Response.andAlso gotoIndexPage
@@ -209,17 +217,17 @@ update msg model =
         ------------------------------------
         -- > Identify the active track
         --
-        SetActiveTrackId maybeTrack ->
+        SetActiveIdentifiedTrack maybeIdentifiedTrack ->
             let
                 mapFn =
-                    case maybeTrack of
-                        Just track ->
+                    case maybeIdentifiedTrack of
+                        Just ( _, track ) ->
                             \( i, t ) -> ( { i | isNowPlaying = t == track }, t )
 
                         Nothing ->
                             \( i, t ) -> ( { i | isNowPlaying = False }, t )
             in
-                { model | activeTrackId = Maybe.map .id maybeTrack }
+                { model | activeIdentifiedTrack = maybeIdentifiedTrack }
                     |> Collection.makeParcel
                     |> Collection.remap (List.map mapFn)
                     |> Collection.set

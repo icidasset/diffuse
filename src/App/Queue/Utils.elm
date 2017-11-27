@@ -6,7 +6,8 @@ import Queue.Types exposing (..)
 import Sources.Processing.Types exposing (HttpMethod(..))
 import Sources.Services
 import Sources.Types exposing (Source)
-import Tracks.Types exposing (Track)
+import Tracks.Types exposing (IdentifiedTrack, Track)
+import Tracks.Utils
 import Types as TopLevel exposing (Illumination)
 import Utils
 
@@ -19,8 +20,8 @@ import Utils
     Utils.illuminate TopLevel.QueueMsg
 
 
-makeEngineItem : Date -> List Source -> Track -> EngineItem
-makeEngineItem timestamp sources track =
+makeEngineItem : Date -> List Source -> IdentifiedTrack -> EngineItem
+makeEngineItem timestamp sources ( _, track ) =
     { track = track
     , url =
         sources
@@ -30,10 +31,10 @@ makeEngineItem timestamp sources track =
     }
 
 
-makeItem : Bool -> Track -> Item
-makeItem isManualEntry track =
+makeItem : Bool -> IdentifiedTrack -> Item
+makeItem isManualEntry identifiedTrack =
     { manualEntry = isManualEntry
-    , track = track
+    , identifiedTrack = identifiedTrack
     }
 
 

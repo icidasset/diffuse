@@ -56,3 +56,19 @@ playlistTrackFromTrack track =
     , artist = track.tags.artist
     , title = track.tags.title
     }
+
+
+
+-- Matchers
+
+
+playlistTrackMatcher : PlaylistTrack -> PlaylistTrack -> Bool
+playlistTrackMatcher a b =
+    a.album == b.album && a.artist == b.artist && a.title == b.title
+
+
+trackWithPlaylistTrackMatcher : Track -> PlaylistTrack -> Bool
+trackWithPlaylistTrackMatcher track =
+    track
+        |> playlistTrackFromTrack
+        |> playlistTrackMatcher

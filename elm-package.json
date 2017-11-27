@@ -11,6 +11,7 @@
     ],
     "exposed-modules": [],
     "dependencies": {
+        "Chadtech/elm-bool-extra": "1.2.1 <= v < 2.0.0",
         "eeue56/elm-xml": "2.2.0 <= v < 3.0.0",
         "elm-community/html-extra": "2.2.0 <= v < 3.0.0",
         "elm-community/list-extra": "6.1.0 <= v < 7.0.0",

@@ -197,7 +197,7 @@ update msg model =
                         Just index ->
                             model.tracks.collection.exposed
                                 |> List.getAt index
-                                |> Maybe.map (trackMenu index lastModPlay)
+                                |> Maybe.map (trackMenu lastModPlay)
                                 |> Maybe.map (\fn -> fn mousePos)
 
                         Nothing ->
@@ -416,7 +416,7 @@ update msg model =
                 [ -- `activeQueueItemChanged` port
                   maybeQueueItem
                     |> Maybe.map
-                        .track
+                        .identifiedTrack
                     |> Maybe.map
                         (Queue.Utils.makeEngineItem
                             model.timestamp
@@ -426,8 +426,8 @@ update msg model =
 
                 -- Identify
                 , maybeQueueItem
-                    |> Maybe.map .track
-                    |> Tracks.Types.SetActiveTrackId
+                    |> Maybe.map .identifiedTrack
+                    |> Tracks.Types.SetActiveIdentifiedTrack
                     |> TracksMsg
                     |> do
                 ]
@@ -471,7 +471,7 @@ update msg model =
                             model.tracks
 
                         commandsWhenChange =
-                            [ do (TracksMsg Tracks.Types.Reharvest)
+                            [ do (TracksMsg Tracks.Types.Reindentify)
                             , do (DebounceStoreUserData)
                             ]
                     in
@@ -501,7 +501,6 @@ update msg model =
             (!)
                 model
                 [ model.tracks.collection.harvested
-                    |> List.map Tracks.Utils.unindentify
                     |> Queue.Types.Fill model.timestamp
                     |> QueueMsg
                     |> do
@@ -516,7 +515,6 @@ update msg model =
                     |> String.toInt
                     |> Result.toMaybe
                     |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection.exposed)
-                    |> Maybe.map Tracks.Utils.unindentify
                     |> Maybe.map Queue.Types.InjectFirstAndPlay
                     |> Maybe.map QueueMsg
                     |> Maybe.map do
