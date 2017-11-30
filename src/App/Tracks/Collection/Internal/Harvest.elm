@@ -17,12 +17,12 @@ harvest ( model, collection ) =
                     []
 
                 Just trackIds ->
-                    collection.identified
+                    collection.arranged
                         |> List.foldl harvester ( [], trackIds )
                         |> Tuple.first
 
                 Nothing ->
-                    collection.identified
+                    collection.arranged
 
         filters =
             [ --

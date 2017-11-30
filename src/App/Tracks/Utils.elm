@@ -40,3 +40,12 @@ identifiedId =
 unindentify : IdentifiedTrack -> Track
 unindentify =
     Tuple.second
+
+
+
+-- Now playing
+
+
+isNowPlaying : IdentifiedTrack -> IdentifiedTrack -> Bool
+isNowPlaying ( a, b ) ( x, y ) =
+    a.indexInPlaylist == x.indexInPlaylist && b == y

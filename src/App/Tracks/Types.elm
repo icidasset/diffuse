@@ -106,6 +106,9 @@ type alias Collection =
     -- `Track`s with `Identifiers`
     , identified : List IdentifiedTrack
 
+    -- TODO
+    , arranged : List IdentifiedTrack
+
     -- Filtered by search results, favourites, etc.
     , harvested : List IdentifiedTrack
 
@@ -123,9 +126,9 @@ type alias Parcel =
 
 
 type Msg
-    = Recalibrate
+    = Rearrange
+    | Recalibrate
     | Reharvest
-    | Reidentify
     | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
       -- Collection, Pt. 1
@@ -219,6 +222,7 @@ emptyCollection : Collection
 emptyCollection =
     { untouched = []
     , identified = []
+    , arranged = []
     , harvested = []
     , exposed = []
     }

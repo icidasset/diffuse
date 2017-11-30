@@ -5,6 +5,7 @@ module Tracks.Collection.Internal
         , partial
         , initialize
         , identify
+        , arrange
         , harvest
         , expose
         )
@@ -14,6 +15,7 @@ import Tracks.Types exposing (Parcel, Track)
 
 -- Internal imports
 
+import Tracks.Collection.Internal.Arrange as Internal
 import Tracks.Collection.Internal.Expose as Internal
 import Tracks.Collection.Internal.Harvest as Internal
 import Tracks.Collection.Internal.Identify as Internal
@@ -24,7 +26,7 @@ import Tracks.Collection.Internal.Identify as Internal
 
 build : List Track -> Parcel -> Parcel
 build tracks =
-    initialize tracks >> identify >> harvest >> expose
+    initialize tracks >> identify >> arrange >> harvest >> expose
 
 
 buildf : Parcel -> List Track -> Parcel
@@ -53,6 +55,11 @@ partial =
 identify : Parcel -> Parcel
 identify =
     Internal.identify
+
+
+arrange : Parcel -> Parcel
+arrange =
+    Internal.arrange
 
 
 harvest : Parcel -> Parcel

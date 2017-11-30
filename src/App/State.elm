@@ -471,7 +471,7 @@ update msg model =
                             model.tracks
 
                         commandsWhenChange =
-                            [ do (TracksMsg Tracks.Types.Reidentify)
+                            [ do (TracksMsg Tracks.Types.Rearrange)
                             , do (DebounceStoreUserData)
                             ]
                     in

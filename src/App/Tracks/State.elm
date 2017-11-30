@@ -45,6 +45,14 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
+        -- # Rearrange
+        --
+        Rearrange ->
+            model
+                |> Collection.makeParcel
+                |> Collection.rearrange
+                |> Collection.set
+
         -- # Recalibrate
         --
         Recalibrate ->
@@ -61,14 +69,6 @@ update msg model =
             model
                 |> Collection.makeParcel
                 |> Collection.reharvest
-                |> Collection.set
-
-        -- # Reidentify
-        --
-        Reidentify ->
-            model
-                |> Collection.makeParcel
-                |> Collection.reidentify
                 |> Collection.set
 
         -- # SetEnabledSourceIds
@@ -94,7 +94,7 @@ update msg model =
             in
                 { model | sortBy = property, sortDirection = sortDir }
                     |> Collection.makeParcel
-                    |> Collection.reidentify
+                    |> Collection.rearrange
                     |> Collection.set
 
         ------------------------------------
@@ -222,11 +222,11 @@ update msg model =
             let
                 mapFn =
                     case maybeIdentifiedTrack of
-                        Just ( _, track ) ->
-                            \( i, t ) -> ( { i | isNowPlaying = t == track }, t )
+                        Just a ->
+                            \( i, t ) -> (,) { i | isNowPlaying = isNowPlaying a ( i, t ) } t
 
                         Nothing ->
-                            \( i, t ) -> ( { i | isNowPlaying = False }, t )
+                            \( i, t ) -> (,) { i | isNowPlaying = False } t
             in
                 { model | activeIdentifiedTrack = maybeIdentifiedTrack }
                     |> Collection.makeParcel
