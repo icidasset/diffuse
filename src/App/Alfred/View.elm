@@ -6,6 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Events.Extra exposing (onClickPreventDefaultAndStopPropagation)
 import Json.Decode as Json
+import Traits exposing (grs)
 import Types as TopLevel
 import Utils exposing (cssClass)
 import Variables exposing (colors)
@@ -67,8 +68,8 @@ resultView focus idx result =
         [ idx |> TopLevel.RunAlfredAction |> onClick
         , style
             (if focus == idx then
-                [ ( "color", Color.Convert.colorToCssRgb colors.base0B )
-                , ( "font-weight", "bold" )
+                [ ( "font-weight", "bold" )
+                , ( "padding-left", grs 4 )
                 ]
              else
                 []

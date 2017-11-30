@@ -127,6 +127,7 @@ resultStyles =
     , lineHeight (num 1.2)
     , overflow hidden
     , padding2 (gr 2) (gr 3)
+    , property "transition" "padding-left 150ms ease"
     , textOverflow ellipsis
     , whiteSpace noWrap
 
@@ -138,12 +139,12 @@ resultStyles =
 
 resultOnHoverStyles : List Style
 resultOnHoverStyles =
-    [ important (color inherit)
-    , important (fontWeight normal)
+    [ important (fontWeight normal)
+    , important (paddingLeft <| gr 3)
 
     --
     , hover
-        [ important (color <| cssColor colors.base0B)
-        , important (fontWeight bold)
+        [ important (fontWeight bold)
+        , important (paddingLeft <| gr 4)
         ]
     ]
