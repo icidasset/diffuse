@@ -125,7 +125,7 @@ type alias Parcel =
 type Msg
     = Recalibrate
     | Reharvest
-    | Reindentify
+    | Reidentify
     | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
       -- Collection, Pt. 1

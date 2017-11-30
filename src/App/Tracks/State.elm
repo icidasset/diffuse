@@ -65,7 +65,7 @@ update msg model =
 
         -- # Reidentify
         --
-        Reindentify ->
+        Reidentify ->
             model
                 |> Collection.makeParcel
                 |> Collection.reidentify
@@ -203,11 +203,12 @@ update msg model =
         ------------------------------------
         -- Playlists
         ------------------------------------
-        -- > Remove selected playlist
+        -- > Toggle selected playlist
+        --
         TogglePlaylist playlist ->
             { model | selectedPlaylist = togglePlaylist model playlist }
                 |> Collection.makeParcel
-                |> Collection.reidentify
+                |> Collection.redoBasedOnPlaylist model.selectedPlaylist
                 |> Collection.set
                 |> Response.andAlso storeUserData
                 |> Response.andAlso gotoIndexPage
