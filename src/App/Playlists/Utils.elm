@@ -1,6 +1,6 @@
 module Playlists.Utils exposing (..)
 
-import Playlists.Types exposing (Playlist, PlaylistTrack)
+import Playlists.Types exposing (..)
 import Sources.Types exposing (Source)
 import Tracks.Types exposing (Track)
 
@@ -72,3 +72,8 @@ trackWithPlaylistTrackMatcher track =
     track
         |> playlistTrackFromTrack
         |> playlistTrackMatcher
+
+
+trackWithIdentifiedPlaylistTrackMatcher : Track -> IdentifiedPlaylistTrack -> Bool
+trackWithIdentifiedPlaylistTrackMatcher track =
+    Tuple.second >> trackWithPlaylistTrackMatcher track
