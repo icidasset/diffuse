@@ -60,8 +60,33 @@ entry model =
           --
           if model.showLoadingScreen then
             loadingScreen
+          else if
+            requiresAuthentication
+                model.routing.currentPage
+                model.authentication.signedIn
+          then
+            loginScreen model
           else
-            currentPage model
+            div
+                [ cssClass Shell ]
+                [ mainNav model
+
+                -- Main
+                , if model.authentication.signedIn then
+                    div
+                        [ cssClass Insulation ]
+                        [ Tracks.entry model
+                        , currentPage model
+                        ]
+                  else
+                    currentPage model
+
+                -- Console
+                , if model.authentication.signedIn then
+                    Console.entry model
+                  else
+                    text ""
+                ]
 
         --
         , Html.Lazy.lazy alfred model.alfred
@@ -97,13 +122,17 @@ rootAttributes model =
             ]
 
 
-{-| Loading screen
--}
-loadingScreen : Html Msg
-loadingScreen =
-    div
-        [ cssClass InTheMiddle ]
-        [ Spinner.entry ]
+requiresAuthentication : Page -> Bool -> Bool
+requiresAuthentication page isSignedIn =
+    case page of
+        ErrorScreen _ ->
+            False
+
+        MessageScreen _ ->
+            False
+
+        _ ->
+            not isSignedIn
 
 
 {-| Render current page
@@ -115,114 +144,96 @@ currentPage model =
         --
         ErrorScreen err ->
             div
-                [ cssClass Shell ]
-                [ mainNav model
-                , div
-                    [ cssClasses [ InTheMiddle, Basic ] ]
-                    [ p
-                        []
-                        [ Material.Icons.Alert.error Color.white 14
-                        , strong [] [ text err ]
-                        ]
+                [ cssClasses [ InTheMiddle, Basic ] ]
+                [ p
+                    []
+                    [ Material.Icons.Alert.error Color.white 14
+                    , strong [] [ text err ]
                     ]
                 ]
 
         MessageScreen message ->
-            div
-                [ cssClass Shell ]
-                [ mainNav model
-                , let
-                    parts =
-                        String.split "\n" message
-                  in
-                    div
-                        [ cssClasses [ InTheMiddle, Basic ] ]
-                        [ p
-                            []
-                            (List.map
-                                (\part -> em [] [ text part, br [] [] ])
-                                parts
-                            )
-                        ]
-                ]
+            let
+                parts =
+                    String.split "\n" message
+            in
+                div
+                    [ cssClasses [ InTheMiddle, Basic ] ]
+                    [ p
+                        []
+                        (List.map
+                            (\part -> em [] [ text part, br [] [] ])
+                            parts
+                        )
+                    ]
 
         -- # Requires authentication
         --
         Abroad ->
-            authenticated
+            div
+                [ cssClass Insulation ]
                 [ Abroad.entry model ]
-                model
 
         Equalizer ->
-            authenticated
+            div
+                [ cssClass Insulation ]
                 [ Equalizer.entry model ]
-                model
 
         Index ->
-            authenticated
-                [ Tracks.entry model ]
-                model
+            text ""
 
         Playlists playlistsPage ->
-            authenticated
+            div
+                [ cssClass Insulation ]
                 [ Playlists.entry playlistsPage model ]
-                model
 
         Queue queuePage ->
-            authenticated
+            div
+                [ cssClass Insulation ]
                 [ Queue.entry queuePage model ]
-                model
 
         Settings ->
-            authenticated
+            div
+                [ cssClass Insulation ]
                 [ Settings.entry model ]
-                model
 
         Sources sourcePage ->
-            authenticated
+            div
+                [ cssClass Insulation ]
                 [ Sources.entry sourcePage model ]
-                model
+
+
+
+-- Screens
+
+
+loadingScreen : Html Msg
+loadingScreen =
+    div
+        [ cssClass InTheMiddle ]
+        [ Spinner.entry ]
+
+
+loginScreen : Model -> Html Msg
+loginScreen model =
+    div
+        [ cssClasses [ InTheMiddle, Basic ] ]
+        [ div
+            [ style
+                [ ( "background-color", "white" )
+                , ( "border-radius", "4px" )
+                , ( "padding", ".375rem 1.5rem" )
+                ]
+            ]
+            [ authButton model.isHTTPS Blockstack
+            , authButton model.isHTTPS RemoteStorage
+            , authButton model.isHTTPS Local
+            ]
+        ]
 
 
 
 -- Authenticated bits
-
-
-authenticated : List (Html Msg) -> Model -> Html Msg
-authenticated children model =
-    if model.authentication.signedIn then
-        div
-            [ cssClass Shell ]
-            [ -- Navigation
-              --
-              Html.Lazy.lazy2
-                authenticatedNavigation
-                model.routing.currentPage
-                model.alfred
-
-            -- Page
-            --
-            , div [ cssClass Insulation ] children
-
-            -- Console
-            --
-            , Console.entry model
-            ]
-    else
-        unauthenticated
-            [ div
-                [ style
-                    [ ( "background-color", "white" )
-                    , ( "border-radius", "4px" )
-                    , ( "padding", ".375rem 1.5rem" )
-                    ]
-                ]
-                [ authButton model.isHTTPS Blockstack
-                , authButton model.isHTTPS RemoteStorage
-                , authButton model.isHTTPS Local
-                ]
-            ]
-            model
 
 
 authenticatedNavigation : Page -> Maybe Alfred -> Html Msg
@@ -249,17 +260,6 @@ authenticatedNavigation currentPage maybeAlfred =
 
 
 -- Unauthenticated bits
-
-
-unauthenticated : List (Html Msg) -> Model -> Html Msg
-unauthenticated children model =
-    div
-        [ cssClass Shell ]
-        [ unauthenticatedNavigation model.routing.currentPage
-        , div
-            [ cssClasses [ InTheMiddle, Basic ] ]
-            children
-        ]
 
 
 unauthenticatedNavigation : Page -> Html Msg

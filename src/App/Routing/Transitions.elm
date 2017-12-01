@@ -1,6 +1,7 @@
 module Routing.Transitions exposing (..)
 
-import Response.Ext exposing (do)
+import Response
+import Response.Ext as Response exposing (do)
 import Routing.Types exposing (..)
 import Sources.State as Sources
 import Sources.Types
@@ -27,30 +28,7 @@ transition routingMsg oldModel response =
                 _ ->
                     identity
     in
-        response
-            |> Tuple.mapFirst modelMapFn
-            |> Tuple.mapSecond (mapCmd oldModel.routing.currentPage)
-
-
-
--- Commands
-
-
-{-| Map the command based on the current page.
--}
-mapCmd : Page -> Cmd TopLevel.Msg -> Cmd TopLevel.Msg
-mapCmd currentPage cmd =
-    case currentPage of
-        Index ->
-            Cmd.batch
-                [ cmd
-                , Tracks.Types.Recalibrate
-                    |> TracksMsg
-                    |> do
-                ]
-
-        _ ->
-            cmd
+        Response.mapModel modelMapFn response
 
 
 

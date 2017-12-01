@@ -150,6 +150,20 @@ stylesLocal =
         , overflow hidden
         , position relative
         , width (pct 100)
+
+        -- Nested insulation
+        , children
+            [ class Insulation
+                [ bottom zero
+                , left zero
+                , margin zero
+                , overflow visible
+                , position absolute
+                , right zero
+                , top zero
+                , zIndex (int 9)
+                ]
+            ]
         ]
     , class InsulationCentered
         [ alignItems center
