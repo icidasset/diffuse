@@ -35,7 +35,7 @@ ordered _ rawTracks model =
         case focus of
             Just item ->
                 tracks
-                    |> List.findIndex ((==) item.identifiedTrack)
+                    |> List.findIndex (indexFinder item.identifiedTrack)
                     |> Maybe.map (\idx -> List.drop (idx + 1) tracks)
                     |> Maybe.withDefault tracks
                     |> List.take remaining
@@ -46,7 +46,7 @@ ordered _ rawTracks model =
 
                                 n =
                                     tracks
-                                        |> List.findIndex ((==) item.identifiedTrack)
+                                        |> List.findIndex (indexFinder item.identifiedTrack)
                                         |> Maybe.withDefault (List.length tracks)
                             in
                                 a ++ List.take (min n actualRemaining) tracks
@@ -231,6 +231,11 @@ purifyTracksListReducer identifiedTrack ( collection, ignored ) =
 
 
 -- Utils
+
+
+indexFinder : IdentifiedTrack -> IdentifiedTrack -> Bool
+indexFinder =
+    Tracks.Utils.isNowPlaying
 
 
 itemTrackId : Item -> String
