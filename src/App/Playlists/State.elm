@@ -1,9 +1,11 @@
 module Playlists.State exposing (..)
 
 import List.Extra as List
+import Notifications.Types as Notification
 import Playlists.Types exposing (..)
 import Response.Ext exposing (do)
 import Routing.Types
+import String.Interpolate exposing (interpolate)
 import Types as TopLevel
 import Utils exposing (displayError)
 
@@ -42,7 +44,9 @@ update msg model =
             in
                 (!)
                     { model | collection = newCollection, lastModifiedPlaylist = Just name }
-                    [ do TopLevel.DebounceStoreUserData ]
+                    [ do TopLevel.DebounceStoreUserData
+                    , addedNotification tracks name
+                    ]
 
         ------------------------------------
         -- Creation
@@ -93,7 +97,9 @@ update msg model =
             in
                 (!)
                     { model | collection = newCollection, lastModifiedPlaylist = Just name }
-                    [ do TopLevel.DebounceStoreUserData ]
+                    [ do TopLevel.DebounceStoreUserData
+                    , addedNotification tracks name
+                    ]
 
         SetNewPlaylistName name ->
             let
@@ -146,4 +152,25 @@ update msg model =
 
 
 
--- Lenses
+-- Notifications
+
+
+addedNotification : List PlaylistTrack -> String -> Cmd TopLevel.Msg
+addedNotification tracks playlistName =
+    if List.length tracks == 1 then
+        case List.head tracks of
+            Just track ->
+                [ track.title, playlistName ]
+                    |> interpolate "**{0}** was added to the **{1}** playlist"
+                    |> Notification.Message
+                    |> TopLevel.ShowNotification
+                    |> do
+
+            Nothing ->
+                Cmd.none
+    else
+        [ playlistName ]
+            |> interpolate "Tracks were added to the **{0}** playlist"
+            |> Notification.Message
+            |> TopLevel.ShowNotification
+            |> do
