@@ -9,7 +9,7 @@ import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import Navigation
 import Response.Ext exposing (do)
-import Routing.Types exposing (Page(..))
+import Routing.Types exposing (Page(Index))
 import Types as TopLevel exposing (AlienEvent)
 import Utils exposing (displayError, displayMessage)
 

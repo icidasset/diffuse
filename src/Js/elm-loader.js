@@ -12,7 +12,9 @@ node.innerHTML = "";
 
 app = Elm.App.embed(
   node,
-  { isHTTPS: location.protocol === "https:" }
+  { isDevelopmentEnvironment: location.hostname === "localhost"
+  , isHTTPS: location.protocol === "https:"
+  }
 );
 
 

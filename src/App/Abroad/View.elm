@@ -9,6 +9,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (on, onSubmit)
 import Json.Decode
 import Material.Icons.Navigation as Icons
+import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types
 import String.Interpolate exposing (interpolate)
@@ -33,7 +34,8 @@ entry model =
           -- Navigation
           ------------------------------------
           Navigation.inside
-            [ ( Icons.arrow_back colorDerivatives.text 16
+            [ ( Icon Icons.arrow_back
+              , Label (Hidden "Go back")
               , Routing.Types.Settings
               )
             ]

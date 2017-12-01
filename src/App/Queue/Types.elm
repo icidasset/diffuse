@@ -3,26 +3,26 @@ module Queue.Types exposing (..)
 import Date exposing (Date)
 import Html5.DragDrop as DragDrop
 import Sources.Types exposing (Source)
-import Tracks.Types exposing (Track, TrackId)
+import Tracks.Types exposing (IdentifiedTrack, Track, TrackId)
 
 
 -- Messages
 
 
 type Msg
-    = InjectFirst Track InjectOptions
-    | InjectLast Track InjectOptions
+    = InjectFirst IdentifiedTrack InjectOptions
+    | InjectLast IdentifiedTrack InjectOptions
     | RemoveItem Int
       -- Position
     | Rewind
     | Shift
       -- Contents
-    | Fill Date (List Track)
+    | Fill Date (List IdentifiedTrack)
     | Clear
-    | Clean (List Track)
+    | Clean (List IdentifiedTrack)
     | Reset
       -- Combos
-    | InjectFirstAndPlay Track
+    | InjectFirstAndPlay IdentifiedTrack
       -- Settings
     | ToggleRepeat
     | ToggleShuffle
@@ -60,7 +60,7 @@ type alias Settings =
 
 type alias Item =
     { manualEntry : Bool
-    , track : Track
+    , identifiedTrack : IdentifiedTrack
     }
 
 

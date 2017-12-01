@@ -12,12 +12,13 @@ import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
+import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Queue.Types as Queue exposing (Item, Page(..))
 import Routing.Types
 import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (cssClass)
-import Variables exposing (colors, colorDerivatives)
+import Variables exposing (colors)
 
 
 -- Styles
@@ -59,33 +60,29 @@ pageIndex futureItems shuffled dnd =
           -- Navigation
           ------------------------------------
           Navigation.insideCustom
-            [ ( Icons.arrow_back colorDerivatives.text 16
+            [ ( Icon Icons.arrow_back
+              , Label (Hidden "Go back")
+                --
               , Routing.Types.Index
                     |> Routing.Types.GoToPage
                     |> RoutingMsg
               )
-            , ( span
-                    []
-                    [ Icons.queue_music colorDerivatives.text 16
-                    , label [] [ text "History" ]
-                    ]
+            , ( Icon Icons.queue_music
+              , Label (Shown "History")
+                --
               , History
                     |> Routing.Types.Queue
                     |> Routing.Types.GoToPage
                     |> RoutingMsg
               )
-            , ( span
-                    []
-                    [ Icons.clear colorDerivatives.text 16
-                    , label [] [ text "Clear all" ]
-                    ]
+            , ( Icon Icons.clear
+              , Label (Shown "Clear all")
+                --
               , QueueMsg (Queue.Clear)
               )
-            , ( span
-                    []
-                    [ Icons.clear colorDerivatives.text 16
-                    , label [] [ text "Clear ignored" ]
-                    ]
+            , ( Icon Icons.clear
+              , Label (Shown "Clear ignored")
+                --
               , QueueMsg (Queue.Reset)
               )
             ]
@@ -150,14 +147,12 @@ pageHistory pastItems =
           -- Navigation
           ------------------------------------
           Navigation.inside
-            [ ( Icons.arrow_back colorDerivatives.text 16
+            [ ( Icon Icons.arrow_back
+              , Label (Hidden "Go back")
               , Routing.Types.Index
               )
-            , ( span
-                    []
-                    [ Icons.queue_music colorDerivatives.text 16
-                    , label [] [ text "Up next" ]
-                    ]
+            , ( Icon Icons.queue_music
+              , Label (Shown "Up next")
               , Routing.Types.Queue Index
               )
             ]
@@ -234,8 +229,11 @@ renderDraggableItem maybeDropTarget index ( item, actions ) =
 itemLabel : Int -> Item -> Html Msg
 itemLabel index item =
     let
+        track =
+            Tuple.second item.identifiedTrack
+
         lbl =
-            item.track.tags.artist ++ " – " ++ item.track.tags.title
+            track.tags.artist ++ " – " ++ track.tags.title
     in
         label
             []

@@ -12,6 +12,7 @@ import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue.Types exposing (Msg(..))
 import Tracks.Types
+import Tracks.Utils
 import Traits exposing (intoRem)
 import Types as TopLevel
 import Utils exposing (..)
@@ -54,9 +55,17 @@ nowPlaying activeItem stalled =
             [ cssClass NowPlaying ]
             [ case activeItem of
                 Just item ->
-                    span
-                        [ onClick (TopLevel.TracksMsg (Tracks.Types.ScrollToActiveTrack item.track)) ]
-                        [ text (item.track.tags.artist ++ " – " ++ item.track.tags.title) ]
+                    let
+                        track =
+                            Tracks.Utils.unindentify item.identifiedTrack
+                    in
+                        span
+                            [ track
+                                |> Tracks.Types.ScrollToActiveTrack
+                                |> TopLevel.TracksMsg
+                                |> onClick
+                            ]
+                            [ text (track.tags.artist ++ " – " ++ track.tags.title) ]
 
                 Nothing ->
                     text "Isotach"

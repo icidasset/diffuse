@@ -8,6 +8,7 @@ import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
 import Html.Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Json.Decode as Decode
+import Layouts exposing (centeredForm)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Action as Icons
@@ -18,6 +19,7 @@ import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Maybe.Extra
 import Mouse
+import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types
 import Sources.Services as Services
@@ -73,11 +75,9 @@ pageIndex sources isProcessing processingErrors =
           Navigation.insideCustom
             (List.concat
                 [ -- Add
-                  [ ( span
-                        []
-                        [ Icons.add colorDerivatives.text 16
-                        , label [] [ text "Add a new source" ]
-                        ]
+                  [ ( Icon Icons.add
+                    , Label (Shown "Add a new source")
+                      --
                     , Sources.New
                         |> Routing.Types.Sources
                         |> Routing.Types.GoToPage
@@ -89,20 +89,14 @@ pageIndex sources isProcessing processingErrors =
                 , if List.isEmpty sources then
                     []
                   else if Maybe.Extra.isJust isProcessing then
-                    [ ( span
-                            [ cssClass ActiveLink ]
-                            [ Icons.sync colorDerivatives.text 16
-                            , label [] [ text "Processing sources ..." ]
-                            ]
+                    [ ( Icon Icons.sync
+                      , Label (Shown "Processing sources ...")
                       , TopLevel.NoOp
                       )
                     ]
                   else
-                    [ ( span
-                            []
-                            [ Icons.sync colorDerivatives.text 16
-                            , label [] [ text "Process sources" ]
-                            ]
+                    [ ( Icon Icons.sync
+                      , Label (Shown "Process sources")
                       , TopLevel.ProcessSources
                       )
                     ]
@@ -258,7 +252,9 @@ pageNew sForm =
                   Navigation.insideCustom
                     (case step of
                         1 ->
-                            [ ( Icons.arrow_back colorDerivatives.text 16
+                            [ ( Icon Icons.arrow_back
+                              , Label (Hidden "Go back")
+                                --
                               , Sources.Index
                                     |> Routing.Types.Sources
                                     |> Routing.Types.GoToPage
@@ -267,11 +263,9 @@ pageNew sForm =
                             ]
 
                         _ ->
-                            [ ( span
-                                    []
-                                    [ Icons.arrow_back colorDerivatives.text 16
-                                    , label [] [ text "Take a step back" ]
-                                    ]
+                            [ ( Icon Icons.arrow_back
+                              , Label (Shown "Take a step back")
+                                --
                               , SourcesMsg (AssignFormStep (step - 1))
                               )
                             ]
@@ -292,7 +286,7 @@ pageNew sForm =
 
 pageNewForm : Int -> Source -> Html Sources.Msg
 pageNewForm step source =
-    formNode
+    centeredForm
         (case step of
             1 ->
                 Sources.AssignFormStep 2
@@ -440,7 +434,9 @@ pageEdit sForm =
                   -- Navigation
                   ------------------------------------
                   Navigation.insideCustom
-                    [ ( Icons.arrow_back colorDerivatives.text 16
+                    [ ( Icon Icons.arrow_back
+                      , Label (Hidden "Go back")
+                        --
                       , Sources.Index
                             |> Routing.Types.Sources
                             |> Routing.Types.GoToPage
@@ -453,7 +449,7 @@ pageEdit sForm =
                 ------------------------------------
                 , Html.map
                     SourcesMsg
-                    (formNode
+                    (centeredForm
                         Sources.SubmitForm
                         (div
                             []
@@ -489,53 +485,6 @@ pageEdit sForm =
             _ ->
                 [ text "Cannot use this model.form on this page" ]
         )
-
-
-
--- Forms
-
-
-formNode : Sources.Msg -> Html Sources.Msg -> Html Sources.Msg
-formNode submitMsg childNode =
-    Html.form
-        [ cssClasses
-            [ InsulationContent
-            , InsulationFlexContent
-            , InsulationCentered
-            ]
-        , style
-            [ ( "position", "relative" )
-            , ( "text-align", "center" )
-            ]
-        , onSubmit submitMsg
-        ]
-        [ div
-            [ cssClasses
-                [ InsulationFlexContent ]
-            , style
-                [ ( "overflow", "hidden" )
-                , ( "position", "relative" )
-                , ( "width", "100%" )
-                , ( "z-index", "9" )
-                ]
-            ]
-            [ div
-                [ cssClasses
-                    [ InsulationContent
-                    , InsulationCentered
-                    ]
-                ]
-                [ div
-                    [ cssClasses [ ContentBox ]
-                    , style [ ( "padding-top", "2.25rem" ) ]
-                    ]
-                    [ childNode ]
-                ]
-            ]
-        , div
-            [ cssClass LogoBackdrop ]
-            []
-        ]
 
 
 

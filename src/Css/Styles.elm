@@ -11,6 +11,7 @@ import Variables exposing (..)
 
 -- Children
 
+import Alfred.Styles as Alfred
 import ContextMenu.Styles as ContextMenu
 import Console.Styles as Console
 import Equalizer.Styles as Equalizer
@@ -24,6 +25,7 @@ import Tracks.Styles as Tracks
 styles : List Snippet
 styles =
     stylesLocal
+        |> List.append Alfred.styles
         |> List.append ContextMenu.styles
         |> List.append Console.styles
         |> List.append Equalizer.styles
@@ -63,6 +65,7 @@ type Classes
     | Intro
     | LogoBackdrop
     | Overlay
+    | OverlayWithCursor
     | Shell
 
 
@@ -147,6 +150,20 @@ stylesLocal =
         , overflow hidden
         , position relative
         , width (pct 100)
+
+        -- Nested insulation
+        , children
+            [ class Insulation
+                [ bottom zero
+                , left zero
+                , margin zero
+                , overflow visible
+                , position absolute
+                , right zero
+                , top zero
+                , zIndex (int 9)
+                ]
+            ]
         ]
     , class InsulationCentered
         [ alignItems center
@@ -224,9 +241,11 @@ stylesLocal =
         , descendants
             [ svg
                 [ display inlineBlock
+                , height (Css.em 1.1)
                 , marginRight (px 8)
                 , transform (translateY (px -1))
                 , verticalAlign middle
+                , width (Css.em 1.1)
                 ]
             , selector "g"
                 [ fill currentColor
@@ -485,5 +504,9 @@ stylesLocal =
         , top zero
         , width (vw 100)
         , zIndex (int 900)
+        ]
+    , class OverlayWithCursor
+        [ cursor pointer
+        , property "pointer-events" "auto"
         ]
     ]

@@ -1,18 +1,21 @@
 module View exposing (entry)
 
+import Alfred.View
 import Authentication.Types exposing (Method(..))
 import ContextMenu.Styles as CTS
 import Color
 import Equalizer.Touch
 import Html exposing (..)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick, on)
+import Html.Events exposing (onClick, onWithOptions, on)
 import Html.Lazy
 import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Alert
+import Maybe.Extra as Maybe
 import Navigation.View as Navigation
 import Notifications.Config
+import Notifications.Types exposing (Notification)
 import Notifications.View
 import Routing.Types exposing (Page(..))
 import Styles exposing (..)
@@ -51,136 +54,46 @@ entry : Model -> Html Msg
 entry model =
     div
         (rootAttributes model)
-        [ if model.showLoadingScreen then
-            ------------------------------------
-            -- {override} Loading
-            ------------------------------------
-            div
-                [ cssClass InTheMiddle ]
-                [ Spinner.entry ]
+        [ --
+          -- Current page,
+          -- or loading screen.
+          --
+          if model.showLoadingScreen then
+            loadingScreen
+          else if
+            requiresAuthentication
+                model.routing.currentPage
+                model.authentication.signedIn
+          then
+            loginScreen model
           else
-            ------------------------------------
-            -- Default
-            ------------------------------------
-            case model.routing.currentPage of
-                -- # Doesn't require authentication
-                --
-                ErrorScreen err ->
+            div
+                [ cssClass Shell ]
+                [ mainNav model
+
+                -- Main
+                , if model.authentication.signedIn then
                     div
-                        [ cssClass Shell ]
-                        [ mainNav model
-                        , div
-                            [ cssClasses [ InTheMiddle, Basic ] ]
-                            [ p
-                                []
-                                [ Material.Icons.Alert.error Color.white 14
-                                , strong [] [ text err ]
-                                ]
-                            ]
+                        [ cssClass Insulation ]
+                        [ Tracks.entry model
+                        , currentPage model
                         ]
+                  else
+                    currentPage model
 
-                MessageScreen message ->
-                    div
-                        [ cssClass Shell ]
-                        [ mainNav model
-                        , let
-                            parts =
-                                String.split "\n" message
-                          in
-                            div
-                                [ cssClasses [ InTheMiddle, Basic ] ]
-                                [ p
-                                    []
-                                    (List.map
-                                        (\part -> em [] [ text part, br [] [] ])
-                                        parts
-                                    )
-                                ]
-                        ]
-
-                -- # Requires authentication
-                --
-                Abroad ->
-                    authenticated
-                        [ Abroad.entry model ]
-                        model
-
-                Equalizer ->
-                    authenticated
-                        [ Equalizer.entry model ]
-                        model
-
-                Index ->
-                    authenticated
-                        [ Tracks.entry model ]
-                        model
-
-                Playlists playlistsPage ->
-                    authenticated
-                        [ Playlists.entry playlistsPage model ]
-                        model
-
-                Queue queuePage ->
-                    authenticated
-                        [ Queue.entry queuePage model ]
-                        model
-
-                Settings ->
-                    authenticated
-                        [ Settings.entry model ]
-                        model
-
-                Sources sourcePage ->
-                    authenticated
-                        [ Sources.entry sourcePage model ]
-                        model
-
-        --
-        -- Context menu
-        --
-        , Html.Lazy.lazy contextMenu model.contextMenu
-
-        --
-        -- Notifications
-        --
-        , Toasty.view
-            Notifications.Config.config
-            Notifications.View.entry
-            ToastyMsg
-            model.toasties
-
-        --
-        -- Overlay
-        --
-        , div
-            [ cssClass Overlay
-            , case model.contextMenu of
-                Just _ ->
-                    style [ ( "opacity", "1" ) ]
-
-                Nothing ->
-                    style []
-            ]
-            []
-
-        --
-        -- Background image
-        --
-        , div
-            [ cssClass BackgroundImage
-            , style
-                [ ( "background-image"
-                  , "url(/images/Background/" ++ model.settings.backgroundImage ++ ")"
-                  )
-                , case model.settings.backgroundImage of
-                    "1.jpg" ->
-                        ( "background-position", "center 30%" )
-
-                    _ ->
-                        ( "background-position", "center bottom" )
+                -- Console
+                , if model.authentication.signedIn then
+                    Console.entry model
+                  else
+                    text ""
                 ]
-            ]
-            []
+
+        --
+        , Html.Lazy.lazy alfred model.alfred
+        , Html.Lazy.lazy backgroundImage model.settings.backgroundImage
+        , Html.Lazy.lazy contextMenu model.contextMenu
+        , Html.Lazy.lazy notifications model.toasties
+        , Html.Lazy.lazy2 overlay model.alfred model.contextMenu
         ]
 
 
@@ -209,69 +122,144 @@ rootAttributes model =
             ]
 
 
+requiresAuthentication : Page -> Bool -> Bool
+requiresAuthentication page isSignedIn =
+    case page of
+        ErrorScreen _ ->
+            False
+
+        MessageScreen _ ->
+            False
+
+        _ ->
+            not isSignedIn
+
+
+{-| Render current page
+-}
+currentPage : Model -> Html Msg
+currentPage model =
+    case model.routing.currentPage of
+        -- # Doesn't require authentication
+        --
+        ErrorScreen err ->
+            div
+                [ cssClasses [ InTheMiddle, Basic ] ]
+                [ p
+                    []
+                    [ Material.Icons.Alert.error Color.white 14
+                    , strong [] [ text err ]
+                    ]
+                ]
+
+        MessageScreen message ->
+            let
+                parts =
+                    String.split "\n" message
+            in
+                div
+                    [ cssClasses [ InTheMiddle, Basic ] ]
+                    [ p
+                        []
+                        (List.map
+                            (\part -> em [] [ text part, br [] [] ])
+                            parts
+                        )
+                    ]
+
+        -- # Requires authentication
+        --
+        Abroad ->
+            div
+                [ cssClass Insulation ]
+                [ Abroad.entry model ]
+
+        Equalizer ->
+            div
+                [ cssClass Insulation ]
+                [ Equalizer.entry model ]
+
+        Index ->
+            text ""
+
+        Playlists playlistsPage ->
+            div
+                [ cssClass Insulation ]
+                [ Playlists.entry playlistsPage model ]
+
+        Queue queuePage ->
+            div
+                [ cssClass Insulation ]
+                [ Queue.entry queuePage model ]
+
+        Settings ->
+            div
+                [ cssClass Insulation ]
+                [ Settings.entry model ]
+
+        Sources sourcePage ->
+            div
+                [ cssClass Insulation ]
+                [ Sources.entry sourcePage model ]
+
+
+
+-- Screens
+
+
+loadingScreen : Html Msg
+loadingScreen =
+    div
+        [ cssClass InTheMiddle ]
+        [ Spinner.entry ]
+
+
+loginScreen : Model -> Html Msg
+loginScreen model =
+    div
+        [ cssClasses [ InTheMiddle, Basic ] ]
+        [ div
+            [ style
+                [ ( "background-color", "white" )
+                , ( "border-radius", "4px" )
+                , ( "padding", ".375rem 1.5rem" )
+                ]
+            ]
+            [ authButton model.isHTTPS Blockstack
+            , authButton model.isHTTPS RemoteStorage
+            , authButton model.isHTTPS Local
+            ]
+        ]
+
+
 
 -- Authenticated bits
 
 
-authenticated : List (Html Msg) -> Model -> Html Msg
-authenticated children model =
-    if model.authentication.signedIn then
+authenticatedNavigation : Page -> Maybe Alfred -> Html Msg
+authenticatedNavigation currentPage maybeAlfred =
+    let
+        styles =
+            case maybeAlfred of
+                Just _ ->
+                    [ ( "visibility", "hidden" ) ]
+
+                Nothing ->
+                    []
+    in
         div
-            [ cssClass Shell ]
-            [ -- Navigation
-              --
-              Html.Lazy.lazy
-                authenticatedNavigation
-                model.routing.currentPage
-
-            -- Page
-            --
-            , div [ cssClass Insulation ] children
-
-            -- Console
-            --
-            , Console.entry model
-            ]
-    else
-        unauthenticated
-            [ div
-                [ style
-                    [ ( "background-color", "white" )
-                    , ( "border-radius", "4px" )
-                    , ( "padding", ".375rem 1.5rem" )
-                    ]
-                ]
-                [ authButton model.isHTTPS Blockstack
-                , authButton model.isHTTPS RemoteStorage
-                , authButton model.isHTTPS Local
+            [ style styles ]
+            [ Navigation.outside
+                currentPage
+                [ ( text "Tracks", Routing.Types.Index )
+                , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
+                , ( text "Settings", Routing.Types.Settings )
                 ]
             ]
-            model
-
-
-authenticatedNavigation : Page -> Html Msg
-authenticatedNavigation currentPage =
-    Navigation.outside
-        currentPage
-        [ ( text "Tracks", Routing.Types.Index )
-        , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
-        , ( text "Settings", Routing.Types.Settings )
-        ]
 
 
 
 -- Unauthenticated bits
-
-
-unauthenticated : List (Html Msg) -> Model -> Html Msg
-unauthenticated children model =
-    div
-        [ cssClass Shell ]
-        [ unauthenticatedNavigation model.routing.currentPage
-        , div
-            [ cssClasses [ InTheMiddle, Basic ] ]
-            children
-        ]
 
 
 unauthenticatedNavigation : Page -> Html Msg
@@ -380,19 +368,54 @@ remoteStorageLogo =
 -- Shared
 
 
+alfred : Maybe Alfred -> Html Msg
+alfred maybe =
+    case maybe of
+        Just context ->
+            Alfred.View.entry context
+
+        Nothing ->
+            text ""
+
+
+backgroundImage : String -> Html Msg
+backgroundImage img =
+    div
+        [ cssClass BackgroundImage
+        , style
+            [ ( "background-image"
+              , "url(/images/Background/" ++ img ++ ")"
+              )
+            , case img of
+                "1.jpg" ->
+                    ( "background-position", "center 30%" )
+
+                _ ->
+                    ( "background-position", "center bottom" )
+            ]
+        ]
+        []
+
+
 contextMenu : Maybe ContextMenu -> Html Msg
 contextMenu maybeContextMenu =
     case maybeContextMenu of
         Just (ContextMenu items mousePos) ->
             div
                 [ cssClass CTS.ContextMenu
+                , onWithOptions "click" contextMenuEventOptions (Decode.succeed NoOp)
+                , onWithOptions "tap" contextMenuEventOptions (Decode.succeed NoOp)
                 , style
                     [ ( "left", toString mousePos.x ++ "px" )
                     , ( "top", toString mousePos.y ++ "px" )
                     ]
                 ]
                 (List.map
-                    (\( icon, label, msg ) -> a [ onClick msg ] [ icon, text label ])
+                    (\( icon, label, msg ) ->
+                        a
+                            [ onClick (DoAll [ msg, HideContextMenu ]) ]
+                            [ icon, text label ]
+                    )
                     items
                 )
 
@@ -400,9 +423,38 @@ contextMenu maybeContextMenu =
             text ""
 
 
+contextMenuEventOptions : Html.Events.Options
+contextMenuEventOptions =
+    { preventDefault = True
+    , stopPropagation = True
+    }
+
+
 mainNav : Model -> Html Msg
 mainNav model =
     if model.authentication.signedIn then
-        authenticatedNavigation model.routing.currentPage
+        authenticatedNavigation model.routing.currentPage model.alfred
     else
         unauthenticatedNavigation model.routing.currentPage
+
+
+notifications : Toasty.Stack Notification -> Html Msg
+notifications =
+    Toasty.view
+        Notifications.Config.config
+        Notifications.View.entry
+        ToastyMsg
+
+
+overlay : Maybe Alfred -> Maybe ContextMenu -> Html Msg
+overlay maybeAlfred maybeContextMenu =
+    div
+        (if Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu then
+            [ cssClasses [ Overlay, OverlayWithCursor ]
+            , style [ ( "opacity", "1" ) ]
+            ]
+         else
+            [ cssClass Overlay
+            ]
+        )
+        []

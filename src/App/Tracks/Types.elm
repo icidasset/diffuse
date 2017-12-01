@@ -64,6 +64,9 @@ type alias Identifiers =
     { isFavourite : Bool
     , isMissing : Bool
     , isNowPlaying : Bool
+
+    --
+    , indexInPlaylist : Maybe Int
     }
 
 
@@ -84,6 +87,7 @@ type alias Favourite =
 type SortBy
     = Artist
     | Album
+    | PlaylistIndex
     | Title
 
 
@@ -102,6 +106,9 @@ type alias Collection =
     -- `Track`s with `Identifiers`
     , identified : List IdentifiedTrack
 
+    -- TODO
+    , arranged : List IdentifiedTrack
+
     -- Filtered by search results, favourites, etc.
     , harvested : List IdentifiedTrack
 
@@ -119,12 +126,13 @@ type alias Parcel =
 
 
 type Msg
-    = Recalibrate
+    = Rearrange
+    | Recalibrate
     | Reharvest
     | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
       -- Collection, Pt. 1
-    | InitialCollection Parcel
+    | InitialCollection Bool Parcel
       -- Collection, Pt. 2
     | Add (List Track)
     | Remove SourceId
@@ -139,7 +147,7 @@ type Msg
       -- Playlists
     | TogglePlaylist Playlist
       -- UI
-    | SetActiveTrackId (Maybe Track)
+    | SetActiveIdentifiedTrack (Maybe IdentifiedTrack)
     | ScrollThroughTable ScrollPos
     | ScrollToActiveTrack Track
 
@@ -154,7 +162,7 @@ type alias Model =
 
 type alias InternalModel extension =
     { extension
-        | activeTrackId : Maybe TrackId
+        | activeIdentifiedTrack : Maybe IdentifiedTrack
         , collection : Collection
         , enabledSourceIds : List SourceId
         , exposedStep : Int
@@ -214,6 +222,7 @@ emptyCollection : Collection
 emptyCollection =
     { untouched = []
     , identified = []
+    , arranged = []
     , harvested = []
     , exposed = []
     }

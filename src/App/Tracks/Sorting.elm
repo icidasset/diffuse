@@ -5,7 +5,7 @@ import Tracks.Types exposing (..)
 
 
 sort : SortBy -> SortDirection -> List IdentifiedTrack -> List IdentifiedTrack
-sort property direction =
+sort property direction list =
     let
         sortFn =
             case property of
@@ -14,6 +14,9 @@ sort property direction =
 
                 Artist ->
                     sortByArtist
+
+                PlaylistIndex ->
+                    sortByPlaylistIndex
 
                 Title ->
                     sortByTitle
@@ -24,7 +27,9 @@ sort property direction =
             else
                 identity
     in
-        List.sortWith sortFn >> dirFn
+        list
+            |> List.sortWith sortFn
+            |> dirFn
 
 
 
@@ -34,11 +39,11 @@ sort property direction =
 sortByAlbum : IdentifiedTrack -> IdentifiedTrack -> Order
 sortByAlbum ( _, a ) ( _, b ) =
     EQ
-        |> andThenCompare (.tags >> .album >> low) a b
-        |> andThenCompare (.tags >> .disc) a b
-        |> andThenCompare (.tags >> .nr) a b
-        |> andThenCompare (.tags >> .artist >> low) a b
-        |> andThenCompare (.tags >> .title >> low) a b
+        |> andThenCompare album a b
+        |> andThenCompare disc a b
+        |> andThenCompare nr a b
+        |> andThenCompare artist a b
+        |> andThenCompare title a b
 
 
 
@@ -48,11 +53,11 @@ sortByAlbum ( _, a ) ( _, b ) =
 sortByArtist : IdentifiedTrack -> IdentifiedTrack -> Order
 sortByArtist ( _, a ) ( _, b ) =
     EQ
-        |> andThenCompare (.tags >> .artist >> low) a b
-        |> andThenCompare (.tags >> .album >> low) a b
-        |> andThenCompare (.tags >> .disc) a b
-        |> andThenCompare (.tags >> .nr) a b
-        |> andThenCompare (.tags >> .title >> low) a b
+        |> andThenCompare artist a b
+        |> andThenCompare album a b
+        |> andThenCompare disc a b
+        |> andThenCompare nr a b
+        |> andThenCompare title a b
 
 
 
@@ -62,9 +67,47 @@ sortByArtist ( _, a ) ( _, b ) =
 sortByTitle : IdentifiedTrack -> IdentifiedTrack -> Order
 sortByTitle ( _, a ) ( _, b ) =
     EQ
-        |> andThenCompare (.tags >> .title >> low) a b
-        |> andThenCompare (.tags >> .artist >> low) a b
-        |> andThenCompare (.tags >> .album >> low) a b
+        |> andThenCompare title a b
+        |> andThenCompare artist a b
+        |> andThenCompare album a b
+
+
+
+-- {by} Playlist index
+
+
+sortByPlaylistIndex : IdentifiedTrack -> IdentifiedTrack -> Order
+sortByPlaylistIndex ( a, _ ) ( b, _ ) =
+    andThenCompare (.indexInPlaylist >> Maybe.withDefault 0) a b EQ
+
+
+
+-- Tags
+
+
+album : Track -> String
+album =
+    .tags >> .album >> low
+
+
+artist : Track -> String
+artist =
+    .tags >> .artist >> low
+
+
+title : Track -> String
+title =
+    .tags >> .title >> low
+
+
+disc : Track -> Int
+disc =
+    .tags >> .disc
+
+
+nr : Track -> Int
+nr =
+    .tags >> .nr
 
 
 

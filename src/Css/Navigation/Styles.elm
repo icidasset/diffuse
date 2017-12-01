@@ -6,13 +6,15 @@ import Css exposing (..)
 import Css.Elements exposing (a, label, span, svg)
 import Css.Media exposing (withMedia)
 import Traits exposing (..)
-import Variables exposing (colorDerivatives, insulationWidth)
+import Variables exposing (colors, colorDerivatives, insulationWidth)
 
 
 type Classes
     = ActiveLink
+    | FlexLink
     | InsideNavigation
     | NonActiveLink
+    | NonFlexLink
     | OutsideNavigation
 
 
@@ -82,6 +84,8 @@ styles =
     , class InsideNavigation
         [ backgroundColor (cssColor Color.white)
         , borderBottom3 (px 1) solid (hex "#eee")
+        , color (cssColor colors.base02)
+        , displayFlex
 
         --
         , descendants
@@ -95,6 +99,8 @@ styles =
                 , letterSpacing (Css.em -0.0125)
                 , lineHeight (gr 7)
                 , padding2 zero (gr 3)
+                , textAlign center
+                , whiteSpace noWrap
 
                 --
                 , lastChild
@@ -120,11 +126,11 @@ styles =
                     [ label [ marginLeft (gr 1) ] ]
                 ]
             , selector "g"
-                [ fill currentColor
-                ]
+                [ fill currentColor ]
+            , class FlexLink
+                [ flex (num 1) ]
             , class ActiveLink
-                [ opacity (num 0.575)
-                ]
+                [ opacity (num 0.575) ]
             ]
         ]
     ]

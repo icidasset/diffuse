@@ -23,7 +23,7 @@ import Types as TopLevel
 
 initialModel : Model
 initialModel =
-    { activeTrackId = Nothing
+    { activeIdentifiedTrack = Nothing
     , collection = emptyCollection
     , enabledSourceIds = []
     , exposedStep = 1
@@ -45,6 +45,14 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
+        -- # Rearrange
+        --
+        Rearrange ->
+            model
+                |> Collection.makeParcel
+                |> Collection.rearrange
+                |> Collection.set
+
         -- # Recalibrate
         --
         Recalibrate ->
@@ -86,7 +94,7 @@ update msg model =
             in
                 { model | sortBy = property, sortDirection = sortDir }
                     |> Collection.makeParcel
-                    |> Collection.reidentify
+                    |> Collection.rearrange
                     |> Collection.set
 
         ------------------------------------
@@ -94,12 +102,17 @@ update msg model =
         ------------------------------------
         -- # Initial Collection
         --
-        InitialCollection parcel ->
+        InitialCollection shouldProcessSources parcel ->
             parcel
                 |> Collection.reidentify
                 |> Collection.set
                 |> Response.andAlso search
-                |> Response.andAlso processSources
+                |> Response.andAlso
+                    (if shouldProcessSources then
+                        processSources
+                     else
+                        always Cmd.none
+                    )
 
         ------------------------------------
         -- Collection, Pt. 2
@@ -190,11 +203,12 @@ update msg model =
         ------------------------------------
         -- Playlists
         ------------------------------------
-        -- > Remove selected playlist
+        -- > Toggle selected playlist
+        --
         TogglePlaylist playlist ->
             { model | selectedPlaylist = togglePlaylist model playlist }
                 |> Collection.makeParcel
-                |> Collection.reharvest
+                |> Collection.redoBasedOnPlaylist model.selectedPlaylist
                 |> Collection.set
                 |> Response.andAlso storeUserData
                 |> Response.andAlso gotoIndexPage
@@ -204,17 +218,17 @@ update msg model =
         ------------------------------------
         -- > Identify the active track
         --
-        SetActiveTrackId maybeTrack ->
+        SetActiveIdentifiedTrack maybeIdentifiedTrack ->
             let
                 mapFn =
-                    case maybeTrack of
-                        Just track ->
-                            \( i, t ) -> ( { i | isNowPlaying = t == track }, t )
+                    case maybeIdentifiedTrack of
+                        Just a ->
+                            \( i, t ) -> (,) { i | isNowPlaying = isNowPlaying a ( i, t ) } t
 
                         Nothing ->
-                            \( i, t ) -> ( { i | isNowPlaying = False }, t )
+                            \( i, t ) -> (,) { i | isNowPlaying = False } t
             in
-                { model | activeTrackId = Maybe.map .id maybeTrack }
+                { model | activeIdentifiedTrack = maybeIdentifiedTrack }
                     |> Collection.makeParcel
                     |> Collection.remap (List.map mapFn)
                     |> Collection.set

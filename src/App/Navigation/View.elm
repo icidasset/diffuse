@@ -1,40 +1,42 @@
 module Navigation.View exposing (..)
 
 import Html exposing (Html, a, div, span, text)
-import Html.Attributes exposing (href)
+import Html.Attributes exposing (href, title)
 import Html.Events.Extra exposing (onClickPreventDefault)
 import Navigation.Styles exposing (..)
+import Navigation.Types exposing (..)
 import Routing.Logic exposing (isSameBase, pageToHref)
 import Routing.Types as Routing
 import Types exposing (Model, Msg(RoutingMsg))
 import Utils exposing (cssClass)
+import Variables exposing (colorDerivatives)
 
 
 -- 🍯
 
 
-outside : Routing.Page -> List ( Label, Routing.Page ) -> Html Msg
+outside : Routing.Page -> List ( Html Msg, Routing.Page ) -> Html Msg
 outside currentPage items =
     div
         [ cssClass OutsideNavigation ]
         (List.map (itemViewWithActiveLink currentPage) items)
 
 
-outsideOutgoing : Routing.Page -> List ( Label, String ) -> Html Msg
+outsideOutgoing : Routing.Page -> List ( Html Msg, String ) -> Html Msg
 outsideOutgoing currentPage items =
     div
         [ cssClass OutsideNavigation ]
         (List.map (itemViewOutgoing <| pageToHref currentPage) items)
 
 
-inside : List ( Label, Routing.Page ) -> Html Msg
+inside : List ( Icon Msg, Label, Routing.Page ) -> Html Msg
 inside items =
     div
         [ cssClass InsideNavigation ]
         (List.map itemView items)
 
 
-insideCustom : List ( Label, Msg ) -> Html Msg
+insideCustom : List ( Icon Msg, Label, Msg ) -> Html Msg
 insideCustom items =
     div
         [ cssClass InsideNavigation ]
@@ -42,30 +44,75 @@ insideCustom items =
 
 
 
--- Utility types
-
-
-type alias Label =
-    Html Msg
-
-
-
 -- Items
 
 
-itemView : ( Label, Routing.Page ) -> Html Msg
-itemView ( itemLabel, itemPage ) =
-    a
-        [ href (pageToHref itemPage)
-        , onClickPreventDefault (RoutingMsg <| Routing.GoToPage itemPage)
-        ]
-        [ span
-            []
-            [ itemLabel ]
-        ]
+itemView : ( Icon Msg, Label, Routing.Page ) -> Html Msg
+itemView ( icon, label, itemPage ) =
+    itemPage
+        |> Routing.GoToPage
+        |> RoutingMsg
+        |> (,,) icon label
+        |> itemViewCustom
 
 
-itemViewWithActiveLink : Routing.Page -> ( Label, Routing.Page ) -> Html Msg
+itemViewCustom : ( Icon Msg, Label, Msg ) -> Html Msg
+itemViewCustom ( Icon icon, Label label, msg ) =
+    let
+        maybeHref =
+            case msg of
+                RoutingMsg (Routing.GoToPage page) ->
+                    Just (pageToHref page)
+
+                _ ->
+                    Nothing
+
+        baseAttr =
+            [ onClickPreventDefault msg
+
+            --
+            , case label of
+                Hidden _ ->
+                    cssClass NonFlexLink
+
+                Shown _ ->
+                    cssClass FlexLink
+
+            --
+            , case label of
+                Hidden l ->
+                    title l
+
+                Shown _ ->
+                    title ""
+            ]
+    in
+        a
+            (case maybeHref of
+                Just it ->
+                    href it :: baseAttr
+
+                Nothing ->
+                    baseAttr
+            )
+            [ span
+                []
+                [ icon colorDerivatives.text 16
+                , case label of
+                    Hidden _ ->
+                        Html.text ""
+
+                    Shown l ->
+                        Html.label [] [ text l ]
+                ]
+            ]
+
+
+
+-- Items, Pt 2.
+
+
+itemViewWithActiveLink : Routing.Page -> ( Html Msg, Routing.Page ) -> Html Msg
 itemViewWithActiveLink currentPage ( itemLabel, itemPage ) =
     a
         [ href (pageToHref itemPage)
@@ -83,17 +130,7 @@ itemViewWithActiveLink currentPage ( itemLabel, itemPage ) =
         ]
 
 
-itemViewCustom : ( Label, Msg ) -> Html Msg
-itemViewCustom ( itemLabel, msg ) =
-    a
-        [ onClickPreventDefault msg ]
-        [ span
-            []
-            [ itemLabel ]
-        ]
-
-
-itemViewOutgoing : String -> ( Label, String ) -> Html Msg
+itemViewOutgoing : String -> ( Html Msg, String ) -> Html Msg
 itemViewOutgoing activeHref ( itemLabel, itemHref ) =
     a
         [ href itemHref
