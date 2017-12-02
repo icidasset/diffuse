@@ -18,7 +18,6 @@ module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
 
 import Bitwise
 import Char
-import SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Types exposing (..)
 import Sources.Crypto.Utils exposing (..)

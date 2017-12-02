@@ -1,7 +1,6 @@
 module Alfred.System exposing (..)
 
 import List.Extra as List
-import Response.Ext exposing (do)
 import Types exposing (Alfred)
 
 

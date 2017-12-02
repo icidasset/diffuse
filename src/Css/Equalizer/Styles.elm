@@ -2,9 +2,9 @@ module Equalizer.Styles exposing (..)
 
 import Color
 import Css exposing (..)
-import Css.Elements exposing (div, h1, svg)
+import Css.Elements exposing (h1, svg)
 import Traits exposing (..)
-import Variables exposing (colors, colorDerivatives)
+import Variables exposing (colors)
 
 
 type Classes

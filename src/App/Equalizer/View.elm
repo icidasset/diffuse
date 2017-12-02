@@ -14,10 +14,8 @@ import Navigation.View as Navigation
 import Routing.Types
 import Svg exposing (Svg, svg, polygon)
 import Svg.Attributes exposing (height, points, viewBox, width)
-import Traits exposing (gr)
 import Types as TopLevel
 import Utils exposing (..)
-import Variables exposing (colorDerivatives)
 
 
 -- Styles
@@ -150,13 +148,6 @@ knobLabel lbl =
 
 
 -- Helpers
-
-
-backdropOffset : String
-backdropOffset =
-    (gr 7)
-        |> .value
-        |> (\r -> "calc(" ++ r ++ " + 1px)")
 
 
 decagonSvg : Svg msg

@@ -1,6 +1,5 @@
 module Tracks.ContextMenu exposing (..)
 
-import Color
 import Material.Icons.Av as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Editor as Icons

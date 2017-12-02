@@ -1,16 +1,13 @@
 module Tracks.State exposing (..)
 
 import Dom.Scroll
-import Json.Encode as Json
 import List.Extra as List
 import Playlists.Types exposing (Playlist)
 import Response
 import Response.Ext as Response exposing (..)
 import Routing.Types
 import Task
-import Time
 import Tracks.Collection as Collection exposing (..)
-import Tracks.Encoding
 import Tracks.Favourites as Favourites
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
@@ -351,7 +348,7 @@ subscriptions _ =
 
 
 gotoIndexPage : Model -> Cmd TopLevel.Msg
-gotoIndexPage model =
+gotoIndexPage _ =
     Routing.Types.Index
         |> Routing.Types.GoToPage
         |> TopLevel.RoutingMsg

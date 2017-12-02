@@ -1,7 +1,6 @@
 module Sources.Utils exposing (..)
 
 import Date
-import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
 import Sources.Types exposing (..)
 import Tracks.Types

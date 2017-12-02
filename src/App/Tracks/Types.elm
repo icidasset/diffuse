@@ -1,8 +1,6 @@
 module Tracks.Types exposing (..)
 
 import Base64
-import Json.Encode as Json
-import Mouse
 import Playlists.Types exposing (Playlist)
 import Regex exposing (HowMany(..), regex)
 

@@ -1,7 +1,7 @@
 module Authentication.State exposing (..)
 
 import Authentication.Demo as Demo
-import Authentication.Events as Events exposing (..)
+import Authentication.Events exposing (..)
 import Authentication.Translations as Translations
 import Authentication.Ports as Ports
 import Authentication.Types exposing (..)

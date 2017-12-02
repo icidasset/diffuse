@@ -1,7 +1,6 @@
 module Authentication.Events exposing (..)
 
 import Authentication.Ports as Ports
-import Authentication.Translations as Translations
 import Authentication.Types exposing (..)
 import Json.Encode as Encode
 import Types as TopLevel

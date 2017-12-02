@@ -2,8 +2,7 @@ module Sources.Processing.Types exposing (..)
 
 import Date exposing (Date)
 import Http
-import Json.Encode
-import Sources.Types exposing (Service, Source)
+import Sources.Types exposing (Source)
 import Tracks.Types exposing (..)
 
 

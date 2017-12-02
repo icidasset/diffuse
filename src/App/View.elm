@@ -19,13 +19,13 @@ import Notifications.Types exposing (Notification)
 import Notifications.View
 import Routing.Types exposing (Page(..))
 import Styles exposing (..)
-import Svg exposing (Svg, g, path, svg)
+import Svg exposing (Svg, g, path)
 import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
 import Toasty
 import Traits exposing (intoRem)
 import Types exposing (..)
 import Utils exposing (..)
-import Variables exposing (colors, colorDerivatives)
+import Variables exposing (colors)
 
 
 -- Children
@@ -43,7 +43,6 @@ import Tracks.View as Tracks
 
 -- Children, Pt. 2
 
-import Queue.Types
 import Sources.Types
 
 

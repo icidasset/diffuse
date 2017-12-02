@@ -15,7 +15,6 @@ import Routing.Types exposing (Page(..))
 import Settings.Types
 import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
-import Variables exposing (colorDerivatives)
 
 
 -- Styles

@@ -1,6 +1,6 @@
 port module Queue.Ports exposing (..)
 
-import Queue.Types exposing (EngineItem, Settings)
+import Queue.Types exposing (EngineItem)
 
 
 -- 💡

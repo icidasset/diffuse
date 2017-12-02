@@ -4,9 +4,9 @@ import Color
 import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
+import Html.Events exposing (onClick, onInput, onWithOptions)
 import Html.Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3)
+import Html.Lazy exposing (lazy, lazy3)
 import Json.Decode as Decode
 import Layouts exposing (centeredForm)
 import List.Extra as List
@@ -24,7 +24,7 @@ import Navigation.View as Navigation
 import Routing.Types
 import Sources.Services as Services
 import Sources.Types as Sources exposing (..)
-import Types as TopLevel exposing (Model, Msg(..))
+import Types as TopLevel exposing (Msg(..))
 import Utils exposing (..)
 import Variables exposing (colorDerivatives)
 
@@ -302,21 +302,21 @@ pageNewForm step source =
         )
         (case step of
             1 ->
-                pageNewStep1 source step
+                pageNewStep1 source
 
             2 ->
-                pageNewStep2 source step
+                pageNewStep2 source
 
             3 ->
-                pageNewStep3 source step
+                pageNewStep3 source
 
             _ ->
                 text ""
         )
 
 
-pageNewStep1 : Source -> Int -> Html Sources.Msg
-pageNewStep1 source step =
+pageNewStep1 : Source -> Html Sources.Msg
+pageNewStep1 source =
     div
         []
         [ h2
@@ -349,8 +349,8 @@ pageNewStep1 source step =
         ]
 
 
-pageNewStep2 : Source -> Int -> Html Sources.Msg
-pageNewStep2 source step =
+pageNewStep2 : Source -> Html Sources.Msg
+pageNewStep2 source =
     div
         []
         [ h3
@@ -372,8 +372,8 @@ pageNewStep2 source step =
         ]
 
 
-pageNewStep3 : Source -> Int -> Html Sources.Msg
-pageNewStep3 source step =
+pageNewStep3 : Source -> Html Sources.Msg
+pageNewStep3 source =
     div
         []
         [ h2

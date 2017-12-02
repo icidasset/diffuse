@@ -62,7 +62,7 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentDate srcData _ hash =
+makeTrackUrl _ srcData _ hash =
     let
         gateway =
             srcData
@@ -87,7 +87,7 @@ makeTrackUrl currentDate srcData _ hash =
 {-| Create a directory tree.
 -}
 makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
-makeTree srcData marker msg currentDate =
+makeTree srcData marker msg _ =
     let
         gateway =
             srcData
@@ -104,7 +104,7 @@ makeTree srcData marker msg currentDate =
 
         hash =
             case marker of
-                InProgress progress ->
+                InProgress _ ->
                     marker
                         |> Marker.takeOne
                         |> Maybe.withDefault "MISSING_HASH"

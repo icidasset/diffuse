@@ -5,7 +5,6 @@ import Color.Convert
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onWithOptions)
-import Html.Keyed
 import Html.Lazy exposing (..)
 import Json.Decode
 import Layouts exposing (centeredForm)

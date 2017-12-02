@@ -70,14 +70,10 @@ importEqualizer pre ( _, obj ) =
 
 
 importPlaylists : Playlists.Types.Model -> Bundle -> Playlists.Types.Model
-importPlaylists pre ( data, obj ) =
-    let
-        coder =
-            decodeSetting obj "playlists"
-    in
-        { pre
-            | collection = Maybe.withDefault [] data.playlists
-        }
+importPlaylists pre ( data, _ ) =
+    { pre
+        | collection = Maybe.withDefault [] data.playlists
+    }
 
 
 importQueue : Queue.Types.Model -> Bundle -> Queue.Types.Model
@@ -104,14 +100,10 @@ importSettings pre ( _, obj ) =
 
 
 importSources : Sources.Types.Model -> Bundle -> Sources.Types.Model
-importSources pre ( data, obj ) =
-    let
-        coder =
-            decodeSetting obj "sources"
-    in
-        { pre
-            | collection = Maybe.withDefault [] data.sources
-        }
+importSources pre ( data, _ ) =
+    { pre
+        | collection = Maybe.withDefault [] data.sources
+    }
 
 
 importTracks : Tracks.Types.Model -> Bundle -> Tracks.Types.Model

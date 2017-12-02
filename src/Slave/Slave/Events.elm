@@ -2,7 +2,6 @@ module Slave.Events exposing (..)
 
 import Json.Encode as Encode
 import Slave.Ports as Ports
-import Slave.Translations as Translations
 import Slave.Types exposing (..)
 import Utils
 

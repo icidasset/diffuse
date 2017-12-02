@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit, onWithOptions)
 import Html.Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3)
+import Html.Lazy exposing (lazy2, lazy3)
 import Json.Decode as Decode
 import List.Extra as List
 import Material.Icons.Action
@@ -13,7 +13,6 @@ import Material.Icons.Av
 import Material.Icons.Content
 import Material.Icons.Editor
 import Material.Icons.Navigation
-import Material.Icons.Toggle
 import Maybe.Extra as Maybe
 import Mouse
 import Navigation.Types exposing (..)
@@ -23,12 +22,12 @@ import Playlists.Utils exposing (..)
 import Queue.Types
 import Routing.Types
 import Sources.Types exposing (IsProcessing, Source)
-import Styles exposing (Classes(Button, ContentBox, Important, LogoBackdrop))
+import Styles exposing (Classes(Important, LogoBackdrop))
 import Tracks.Styles exposing (..)
 import Tracks.Types exposing (..)
-import Types as TopLevel exposing (Model, Msg(..))
+import Types as TopLevel exposing (Msg(..))
 import Utils exposing (cssClass, cssClasses)
-import Variables exposing (colorDerivatives, colors)
+import Variables exposing (colors)
 
 
 -- 🍯

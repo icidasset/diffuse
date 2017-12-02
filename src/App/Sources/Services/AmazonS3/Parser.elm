@@ -1,6 +1,5 @@
 module Sources.Services.AmazonS3.Parser exposing (parseTreeResponse, parseErrorResponse)
 
-import List.Extra
 import Maybe.Extra as Maybe
 import Regex exposing (HowMany(All), regex)
 import Sources.Crypto.Hex

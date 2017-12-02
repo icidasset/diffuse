@@ -3,7 +3,6 @@ module Equalizer.State exposing (..)
 import Equalizer.Ports exposing (..)
 import Equalizer.Types exposing (..)
 import Mouse
-import Navigation
 import Response.Ext exposing (do)
 import Types as TopLevel
 

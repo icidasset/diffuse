@@ -7,7 +7,6 @@ import Sources.Processing.Types exposing (HttpMethod(..))
 import Sources.Services
 import Sources.Types exposing (Source)
 import Tracks.Types exposing (IdentifiedTrack, Track)
-import Tracks.Utils
 import Types as TopLevel exposing (Illumination)
 import Utils
 

@@ -1,7 +1,7 @@
 module Notifications.View exposing (entry)
 
 import Color.Convert
-import Html exposing (Html, div, text)
+import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Markdown
 import Notifications.Types exposing (Notification(..))

@@ -7,7 +7,7 @@ import Navigation.Styles exposing (..)
 import Navigation.Types exposing (..)
 import Routing.Logic exposing (isSameBase, pageToHref)
 import Routing.Types as Routing
-import Types exposing (Model, Msg(RoutingMsg))
+import Types exposing (Msg(RoutingMsg))
 import Utils exposing (cssClass)
 import Variables exposing (colorDerivatives)
 

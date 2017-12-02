@@ -1,6 +1,5 @@
 module Tracks.Sorting exposing (sort)
 
-import Char
 import Tracks.Types exposing (..)
 
 

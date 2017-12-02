@@ -4,7 +4,6 @@ import Date exposing (Date)
 import Date.Extra
 import Dict
 import Dict.Ext as Dict
-import Http
 import SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
@@ -25,7 +24,7 @@ presignedUrl :
 presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
     let
         aws =
-            Dict.map (\k v -> String.trim v) srcData
+            Dict.map (\_ v -> String.trim v) srcData
 
         region =
             Dict.fetchUnknown "region" aws

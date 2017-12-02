@@ -2,8 +2,7 @@ module Queue.Types exposing (..)
 
 import Date exposing (Date)
 import Html5.DragDrop as DragDrop
-import Sources.Types exposing (Source)
-import Tracks.Types exposing (IdentifiedTrack, Track, TrackId)
+import Tracks.Types exposing (IdentifiedTrack, Track)
 
 
 -- Messages

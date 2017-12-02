@@ -1,15 +1,12 @@
 module Alfred.View exposing (entry)
 
-import Color.Convert
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Events.Extra exposing (onClickPreventDefaultAndStopPropagation)
-import Json.Decode as Json
 import Traits exposing (grs)
 import Types as TopLevel
 import Utils exposing (cssClass)
-import Variables exposing (colors)
 
 
 -- Styles

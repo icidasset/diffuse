@@ -3,8 +3,8 @@ module List.Styles exposing (..)
 import Color
 import Css exposing (..)
 import Css.Elements exposing (a, label, li, span, svg)
-import Traits exposing (basem, cssColor, cssColorOpac, gr)
-import Variables exposing (colors, colorDerivatives)
+import Traits exposing (basem, cssColor, gr)
+import Variables exposing (colors)
 
 
 type Classes

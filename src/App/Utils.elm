@@ -2,7 +2,6 @@ module Utils exposing (..)
 
 import Char
 import Css.Helpers exposing (identifierToString)
-import Dict
 import Hex
 import Html exposing (Attribute)
 import Html.CssHelpers exposing (..)

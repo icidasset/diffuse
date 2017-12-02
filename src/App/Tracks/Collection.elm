@@ -2,7 +2,7 @@ module Tracks.Collection exposing (..)
 
 import List.Extra as List
 import Playlists.Types exposing (Playlist)
-import Tracks.Collection.Internal exposing (build, buildf, identify, arrange, harvest, expose)
+import Tracks.Collection.Internal exposing (buildf, identify, arrange, harvest, expose)
 import Tracks.Collection.Responses exposing (..)
 import Tracks.Types exposing (..)
 import Types as TopLevel

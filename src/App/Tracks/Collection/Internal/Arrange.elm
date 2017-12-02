@@ -1,7 +1,7 @@
 module Tracks.Collection.Internal.Arrange exposing (arrange)
 
 import List.Ext as List
-import List.Extra as List exposing ((!!))
+import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists.Types exposing (..)
 import Playlists.Utils exposing (..)

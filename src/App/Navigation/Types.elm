@@ -1,7 +1,6 @@
 module Navigation.Types exposing (..)
 
 import Color exposing (Color)
-import Html exposing (Html)
 import Svg exposing (Svg)
 
 

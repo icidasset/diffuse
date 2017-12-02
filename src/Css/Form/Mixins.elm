@@ -3,7 +3,7 @@ module Form.Mixins exposing (..)
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Traits exposing (cssColor, defaultFont, gr)
-import Variables exposing (borderRadiuses, colorDerivatives)
+import Variables exposing (colorDerivatives)
 
 
 boxStyles : Style

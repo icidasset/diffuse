@@ -2,7 +2,6 @@ module Types exposing (..)
 
 import Date exposing (Date)
 import Debounce exposing (Debounce)
-import Dict exposing (Dict)
 import Keyboard.Extra as Keyboard
 import Json.Encode
 import Mouse
@@ -11,7 +10,6 @@ import Slave.Types
 import Svg exposing (Svg)
 import Toasty
 import Time exposing (Time)
-import Window
 
 
 -- Children

@@ -1,8 +1,7 @@
 module Tracks.Collection.Responses exposing (..)
 
 import Queue.Types
-import Response.Ext exposing (do, doDelayed)
-import Time
+import Response.Ext exposing (do)
 import Tracks.Encoding
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)

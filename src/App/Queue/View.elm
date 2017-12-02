@@ -5,8 +5,7 @@ import Color.Convert exposing (colorToCssRgb)
 import Html exposing (..)
 import Html.Attributes exposing (rel, style)
 import Html.Events exposing (onClick)
-import Html.Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3)
+import Html.Lazy exposing (lazy, lazy3)
 import Html5.DragDrop as DragDrop
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
@@ -16,7 +15,7 @@ import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Queue.Types as Queue exposing (Item, Page(..))
 import Routing.Types
-import Types as TopLevel exposing (Model, Msg(..))
+import Types as TopLevel exposing (Msg(..))
 import Utils exposing (cssClass)
 import Variables exposing (colors)
 
@@ -122,7 +121,7 @@ pageIndex futureItems shuffled dnd =
 
 
 futureActions : Bool -> Int -> Item -> ItemWithActions
-futureActions shuffled index item =
+futureActions _ index item =
     (,)
         item
         [ a

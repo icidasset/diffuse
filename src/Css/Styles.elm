@@ -1,7 +1,5 @@
 module Styles exposing (..)
 
-import Color
-import Color.Manipulate
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Css.Media exposing (withMedia)

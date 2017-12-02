@@ -1,6 +1,5 @@
 module Console.View exposing (entry)
 
-import Console.Ports
 import Console.Types exposing (Msg(..))
 import Console.Styles exposing (..)
 import Html exposing (..)
