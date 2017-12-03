@@ -64,7 +64,11 @@ entry model =
                 model.routing.currentPage
                 model.authentication.signedIn
           then
-            loginScreen model
+            div
+                [ cssClass Shell ]
+                [ mainNav model
+                , loginScreen model
+                ]
           else
             div
                 [ cssClass Shell ]
