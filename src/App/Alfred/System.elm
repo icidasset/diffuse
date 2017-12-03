@@ -24,7 +24,7 @@ calculateResults searchTerm alfred =
         else
             { alfred
                 | searchTerm = Nothing
-                , results = []
+                , results = alfred.index
             }
 
 

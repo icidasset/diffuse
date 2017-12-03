@@ -12,6 +12,7 @@ import Material.Icons.Action
 import Material.Icons.Av
 import Material.Icons.Content
 import Material.Icons.Editor
+import Material.Icons.Image
 import Material.Icons.Navigation
 import Maybe.Extra as Maybe
 import Mouse
@@ -97,40 +98,6 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
                     16
                 ]
 
-            -- Playlist icon
-            , a
-                [ cssClass TracksNavigationIcon
-                , case maybeSelectedPlaylist of
-                    Just _ ->
-                        title "Playlists (activated)"
-
-                    Nothing ->
-                        title "Playlists"
-
-                --
-                --
-                , case maybeSelectedPlaylist of
-                    Just playlist ->
-                        playlist
-                            |> TogglePlaylist
-                            |> TracksMsg
-                            |> onClick
-
-                    Nothing ->
-                        Playlists.Types.Index
-                            |> Routing.Types.Playlists
-                            |> Routing.Types.GoToPage
-                            |> RoutingMsg
-                            |> onClick
-                ]
-                [ case maybeSelectedPlaylist of
-                    Just _ ->
-                        Material.Icons.Editor.format_list_numbered colors.base08 16
-
-                    Nothing ->
-                        Material.Icons.Editor.format_list_numbered (Color.rgb 205 205 205) 16
-                ]
-
             -- Favourites-only icon
             , a
                 [ cssClass TracksNavigationIcon
@@ -152,36 +119,56 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
                 )
 
             -- Clear icon
-            , case searchTerm of
-                Just _ ->
-                    a
-                        [ cssClass TracksNavigationIcon
-                        , onClick (TracksMsg <| Search Nothing)
-                        , title "Clear search"
-                        ]
-                        [ Material.Icons.Content.clear
-                            (Color.rgb 205 205 205)
-                            16
-                        ]
+            , if Maybe.isJust searchTerm then
+                a
+                    [ cssClass TracksNavigationIcon
+                    , title "Clear search"
+                    , onClick (TracksMsg <| Search Nothing)
+                    ]
+                    [ Material.Icons.Content.clear
+                        (Color.rgb 205 205 205)
+                        16
+                    ]
+              else if Maybe.isJust maybeSelectedPlaylist then
+                a
+                    [ cssClass TracksNavigationIcon
+                    , title "Deactivate playlist"
 
-                Nothing ->
-                    text ""
+                    --
+                    , maybeSelectedPlaylist
+                        |> Maybe.map (TogglePlaylist >> TracksMsg)
+                        |> Maybe.withDefault NoOp
+                        |> onClick
+                    ]
+                    [ Material.Icons.Content.clear
+                        colors.base08
+                        16
+                    ]
+              else
+                text ""
             ]
 
         --
         -- Part 2
         --
         , Navigation.insideCustom
-            [ ( Icon Material.Icons.Av.equalizer
-              , Label (Hidden "Equalizer")
-              , Routing.Types.Equalizer
+            [ ( Icon Material.Icons.Editor.format_list_numbered
+              , Label (Hidden "Playlists")
+              , Playlists.Types.Index
+                    |> Routing.Types.Playlists
                     |> Routing.Types.GoToPage
                     |> RoutingMsg
               )
-            , ( Icon Material.Icons.Av.queue
+            , ( Icon Material.Icons.Action.event_seat
               , Label (Hidden "Queue")
               , Queue.Types.Index
                     |> Routing.Types.Queue
+                    |> Routing.Types.GoToPage
+                    |> RoutingMsg
+              )
+            , ( Icon Material.Icons.Av.equalizer
+              , Label (Hidden "Equalizer")
+              , Routing.Types.Equalizer
                     |> Routing.Types.GoToPage
                     |> RoutingMsg
               )

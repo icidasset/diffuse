@@ -1,5 +1,6 @@
 module Tracks.Styles exposing (..)
 
+import Color
 import Css exposing (..)
 import Css.Elements exposing (..)
 import Traits exposing (..)
@@ -160,10 +161,31 @@ styles =
             --
             -- <tbody>
             --
-            , tr [ cursor pointer ]
-            , (tr << toa << nthChild "2n" << toa << descendants << toa << td)
-                [ backgroundColor (hex "#fcfcfc")
+            , tbody
+                [ before
+                    [ color (cssColor Color.white)
+                    , display block
+                    , fontSize (px 0)
+                    , lineHeight (gr 1)
+                    , property "content" "'x'"
+                    ]
+                , after
+                    [ color (cssColor Color.white)
+                    , display block
+                    , fontSize (px 0)
+                    , lineHeight (gr 1)
+                    , property "content" "'x'"
+                    ]
                 ]
+
+            --
+            , tr
+                [ (cursor pointer)
+                , (nthChild "2n" << toa << children << toa << td)
+                    [ backgroundColor (hex "#fcfcfc") ]
+                ]
+
+            --
             , td
                 [ fontSize (Traits.basem 12)
                 , lineHeight (num 1.6)
@@ -175,47 +197,45 @@ styles =
                 , whiteSpace noWrap
                 ]
 
+            -- <tbody> Modifiers
+            , selector "tr[data-missing=\"t\"]"
+                [ color (hex "#8f8f8f")
+                ]
+            , selector "tr[data-nowplaying=\"t\"] > td"
+                [ backgroundColor (cssColor colors.base0D)
+                , color (cssColor Color.white)
+                ]
+            , selector "tr[data-nowplaying=\"t\"] > td[data-favourite=\"f\"]"
+                [ color (rgba 255 255 255 0.4)
+                ]
+
             -- <tbody> Favourites
-            , selector "td[data-favourite]"
+            , selector "tr > td[data-favourite]"
                 [ color (hex "#dedede")
                 , fontFamilies [ "'or-favourites'" ]
                 , property "text-overflow" "initial"
                 , before [ property "content" "\"f\"" ]
                 ]
-            , selector "td[data-favourite=\"t\"]"
+            , selector "tr > td[data-favourite=\"t\"]"
                 [ color (cssColor colors.base08)
                 , before [ property "content" "'t'" ]
                 ]
-
-            -- <tbody> Modifiers
-            , selector "tr[data-missing=\"t\"]"
-                [ color (hex "#8f8f8f")
-                ]
-            , selector "tr[data-nowplaying=\"t\"]"
-                [ color (cssColor colors.base0B)
-                ]
-            , selector "tr[data-nowplaying=\"t\"] td[data-favourite=\"t\"]"
-                [ color (cssColor colors.base0B)
-                ]
-
-            -- <tbody> Add some extra space on top
-            , (tr << toa << firstChild << toa << descendants << toa << td)
-                [ paddingTop (gr 2)
-                ]
-
-            -- <tbody> And on the bottom
-            , (tr << toa << lastChild << toa << descendants << toa << td)
-                [ paddingBottom (gr 2)
-                ]
             ]
         ]
+
+    --
     , (class FavouritesOnly
         << toa
         << descendants
         << toa
-        << selector "td[data-favourite]"
+        << class TracksTable
+        << toa
+        << descendants
       )
-        [ color (hex "#dedede")
+        [ selector "tr > td[data-favourite]"
+            [ color (hex "#dedede") ]
+        , selector "tr[data-nowplaying=\"t\"] > td[data-favourite=\"t\"]"
+            [ color (hex "#ffffff") ]
         ]
     ]
 

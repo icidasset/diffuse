@@ -7,7 +7,7 @@ import Html.Attributes exposing (rel, style)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy3)
 import Html5.DragDrop as DragDrop
-import Material.Icons.Av as Icons
+import Material.Icons.Action as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
@@ -66,7 +66,7 @@ pageIndex futureItems shuffled dnd =
                     |> Routing.Types.GoToPage
                     |> RoutingMsg
               )
-            , ( Icon Icons.queue_music
+            , ( Icon Icons.event_seat
               , Label (Shown "History")
                 --
               , History
@@ -150,7 +150,7 @@ pageHistory pastItems =
               , Label (Hidden "Go back")
               , Routing.Types.Index
               )
-            , ( Icon Icons.queue_music
+            , ( Icon Icons.event_seat
               , Label (Shown "Up next")
               , Routing.Types.Queue Index
               )

@@ -41,9 +41,9 @@ styles =
                     ]
                 ]
             , svg
-                [ marginRight (gr 1)
+                [ marginRight (gr 2)
                 , marginTop (px -2)
-                , paddingRight (px 1)
+                , opacity (num 0.5)
                 , verticalAlign middle
                 ]
             ]

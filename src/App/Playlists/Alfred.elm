@@ -20,7 +20,7 @@ create tracks playlists =
         , focus = 0
         , index = playlistNames
         , message = "Choose or create a playlist to add these tracks to."
-        , results = []
+        , results = playlistNames
         , searchTerm = Nothing
         }
 
