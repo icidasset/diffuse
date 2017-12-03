@@ -49,9 +49,12 @@ entry context =
         ------------------------------------
         -- Results
         ------------------------------------
-        , ul
-            [ cssClass AlfredResults ]
-            (List.indexedMap (resultView context.focus) context.results)
+        , if List.length context.results > 0 then
+            ul
+                [ cssClass AlfredResults ]
+                (List.indexedMap (resultView context.focus) context.results)
+          else
+            text ""
         ]
 
 

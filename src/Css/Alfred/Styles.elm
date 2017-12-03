@@ -3,7 +3,7 @@ module Alfred.Styles exposing (..)
 import Color
 import Css exposing (..)
 import Css.Elements exposing (input, li)
-import Traits exposing (cssColor, gr)
+import Traits exposing (basem, cssColor, gr)
 import Variables exposing (..)
 
 
@@ -30,7 +30,7 @@ styles =
         , maxWidth (px 500)
         , padding2 zero (gr 3)
         , position fixed
-        , top (pct 17.5)
+        , top (basem 149)
         , transform (translate2 (pct -50) (gr -7))
         , width (pct 100)
         , zIndex (int 901)
@@ -105,10 +105,9 @@ inputStyles =
     [ backgroundColor transparent
     , borderWidth zero
     , fontSize (Css.rem 1.5)
-    , height auto
+    , height (Css.rem 4.5)
     , letterSpacing (em -0.0175)
-    , lineHeight (int 1)
-    , padding2 (gr 3) (gr 3)
+    , padding2 zero (gr 3)
 
     --
     , focus
