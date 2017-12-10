@@ -166,14 +166,14 @@ styles =
                     [ color (cssColor Color.white)
                     , display block
                     , fontSize (px 0)
-                    , lineHeight (gr 1)
+                    , lineHeight (px 2)
                     , property "content" "'x'"
                     ]
                 , after
                     [ color (cssColor Color.white)
                     , display block
                     , fontSize (px 0)
-                    , lineHeight (gr 1)
+                    , lineHeight (px 2)
                     , property "content" "'x'"
                     ]
                 ]
@@ -191,8 +191,7 @@ styles =
                 , lineHeight (num 1.6)
                 , maxWidth zero
                 , overflow hidden
-                , padding2 (gr 1) (gr 2)
-                , property "padding-bottom" "calc(.375rem + 1px)"
+                , property "padding" "calc(.375rem + 1px) .75rem"
                 , textOverflow ellipsis
                 , whiteSpace noWrap
                 ]
@@ -214,11 +213,21 @@ styles =
                 [ color (hex "#dedede")
                 , fontFamilies [ "'or-favourites'" ]
                 , property "text-overflow" "initial"
-                , before [ property "content" "\"f\"" ]
+
+                --
+                , before
+                    [ property "content" "\"f\""
+                    , position relative
+                    , top (px 1)
+                    ]
                 ]
             , selector "tr > td[data-favourite=\"t\"]"
                 [ color (cssColor colors.base08)
-                , before [ property "content" "'t'" ]
+
+                --
+                , before
+                    [ property "content" "'t'"
+                    ]
                 ]
             ]
         ]

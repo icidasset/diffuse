@@ -313,7 +313,7 @@ scrollToIndex model idx =
                 model.exposedStep
 
         scrollTask =
-            (7 + 5 + idx * 32)
+            (9 + idx * 33)
                 |> toFloat
                 |> Dom.Scroll.toY "tracks"
 
