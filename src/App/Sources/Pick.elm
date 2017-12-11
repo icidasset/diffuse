@@ -1,13 +1,24 @@
-module Sources.Pick exposing (..)
+module Sources.Pick exposing (isMusicFile, selectMusicFiles)
 
 import Regex
 
 
 isMusicFile : String -> Bool
 isMusicFile =
-    Regex.contains (Regex.regex "\\.(mp3|mp4|m4a)$")
+    Regex.contains musicFileRegex
 
 
 selectMusicFiles : List String -> List String
 selectMusicFiles =
     List.filter isMusicFile
+
+
+
+-- Private
+
+
+musicFileRegex : Regex.Regex
+musicFileRegex =
+    "\\.(mp3|mp4|m4a|flac)$"
+        |> Regex.regex
+        |> Regex.caseInsensitive
