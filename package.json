@@ -14,7 +14,7 @@
     "elasticlunr": "^0.9.5",
     "elm-doctest": "^0.3.6",
     "jsmediatags": "^3.8.1",
-    "remotestoragejs": "^1.0.1",
+    "remotestoragejs": "^1.0.2",
     "serviceworker-cache-polyfill": "^4.0.0",
     "text-encoding": "^0.6.4",
     "tocca": "^2.0.1"

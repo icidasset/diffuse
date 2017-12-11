@@ -8,9 +8,11 @@ const KEY = "isotach";
 // Construct
 
 const rs = new RemoteStorage({ cache: false });
-const client = rs.scope(`/${KEY}/`);
 
 rs.access.claim(KEY, "rw");
+
+const client = rs.scope(`/${KEY}/`);
+
 self.postMessage({ action: "CONSTRUCT_SUCCESS" });
 
 
