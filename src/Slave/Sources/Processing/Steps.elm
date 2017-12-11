@@ -25,10 +25,10 @@ module Sources.Processing.Steps
 -}
 
 import Date exposing (Date)
-import Diff exposing (..)
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
+import Set
 import Sources.Services as Services
 import Sources.Processing.Ports as Ports
 import Sources.Processing.Types exposing (..)
@@ -151,27 +151,18 @@ intoTreeCommand associatedTracks currentDate context =
 
                 ( pathsAdded, pathsRemoved ) =
                     separate pathsCurrent pathsSourceOfTruth
-
-                -- Some kind of weird issue is causing items to be
-                -- in both `added` and `removed`, so we rerun the same
-                -- function again to get the proper results. TODO.
-                ( realPathsAdded, _ ) =
-                    separate pathsRemoved pathsAdded
-
-                ( realPathsRemoved, _ ) =
-                    separate pathsAdded pathsRemoved
             in
                 Cmd.batch
                     [ -- Get tags from tracks
                       postContext
-                        |> (\ctx -> { ctx | filePaths = realPathsAdded })
+                        |> (\ctx -> { ctx | filePaths = pathsAdded })
                         |> contextToTagsContext
                         |> TagsStep
                         |> do
 
                     -- Remove tracks
-                    , if not (List.isEmpty realPathsRemoved) then
-                        realPathsRemoved
+                    , if not (List.isEmpty pathsRemoved) then
+                        pathsRemoved
                             |> TreeStepRemoveTracks context.source.id
                             |> do
                       else
@@ -188,26 +179,20 @@ makeTree context =
         (TreeStep context)
 
 
-separate : List a -> List a -> ( List a, List a )
+separate : List String -> List String -> ( List String, List String )
 separate current srcOfTruth =
     let
-        changes =
-            diff current srcOfTruth
+        setCurrent =
+            Set.fromList current
+
+        setSrcOfTruth =
+            Set.fromList srcOfTruth
     in
-        List.foldr
-            (\change set ->
-                case change of
-                    Added path ->
-                        Tuple.mapFirst ((::) path) set
-
-                    Removed path ->
-                        Tuple.mapSecond ((::) path) set
-
-                    NoChange _ ->
-                        set
-            )
-            ( [], [] )
-            changes
+        (,)
+            -- Added
+            (Set.diff setSrcOfTruth setCurrent |> Set.toList)
+            -- Removed
+            (Set.diff setCurrent setSrcOfTruth |> Set.toList)
 
 
 
