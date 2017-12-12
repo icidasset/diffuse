@@ -2,7 +2,7 @@
 
 A music player which connects to your cloud/distributed storage.
 
-![](http://icidasset-public.s3.amazonaws.com/isotach.jpg)
+![](https://icidasset-public.s3.amazonaws.com/isotach.jpg)
 
 
 
