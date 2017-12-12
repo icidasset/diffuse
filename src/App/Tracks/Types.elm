@@ -62,8 +62,10 @@ type alias Identifiers =
     { isFavourite : Bool
     , isMissing : Bool
     , isNowPlaying : Bool
+    , isSelected : Bool
 
     --
+    , indexInList : Int
     , indexInPlaylist : Maybe Int
     }
 
@@ -104,7 +106,7 @@ type alias Collection =
     -- `Track`s with `Identifiers`
     , identified : List IdentifiedTrack
 
-    -- TODO
+    -- Sorted and filtered by playlist (if not auto-generated)
     , arranged : List IdentifiedTrack
 
     -- Filtered by search results, favourites, etc.
@@ -126,6 +128,7 @@ type alias Parcel =
 type Msg
     = Rearrange
     | Recalibrate
+    | Reexpose
     | Reharvest
     | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
@@ -145,6 +148,8 @@ type Msg
       -- Playlists
     | TogglePlaylist Playlist
       -- UI
+    | ApplyTrackSelection Bool Int
+    | ApplyTrackSelectionUsingContextMenu Int
     | SetActiveIdentifiedTrack (Maybe IdentifiedTrack)
     | ScrollThroughTable ScrollPos
     | ScrollToActiveTrack Track
@@ -167,6 +172,7 @@ type alias InternalModel extension =
         , favourites : List Favourite
         , initialImportPerformed : Bool
         , searchResults : Maybe (List TrackId)
+        , selectedTrackIndexes : List Int
         , sortBy : SortBy
         , sortDirection : SortDirection
     }
@@ -214,6 +220,19 @@ emptyTrack =
     , sourceId = ""
     , tags = emptyTags
     }
+
+
+emptyIdentifiedTrack : IdentifiedTrack
+emptyIdentifiedTrack =
+    (,)
+        { isFavourite = False
+        , isMissing = False
+        , isNowPlaying = False
+        , isSelected = False
+        , indexInList = 0
+        , indexInPlaylist = Nothing
+        }
+        emptyTrack
 
 
 emptyCollection : Collection

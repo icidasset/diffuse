@@ -8,6 +8,7 @@ import Dict.Ext as Dict
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import Keyboard.Extra as Keyboard
+import Lazy
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
@@ -56,6 +57,7 @@ import Sources.Encoding
 import Tracks.ContextMenu
 import Tracks.Encoding
 import Tracks.Types
+import Tracks.View
 
 
 -- 💧
@@ -65,6 +67,7 @@ initialModel : ProgramFlags -> Page -> Model
 initialModel flags initialPage =
     { alfred = Nothing
     , contextMenu = Nothing
+    , holdingShiftKey = False
     , isDevelopmentEnvironment = flags.isDevelopmentEnvironment
     , isHTTPS = flags.isHTTPS
     , isTouchDevice = False
@@ -72,6 +75,11 @@ initialModel flags initialPage =
     , storageDebounce = Debounce.init
     , timestamp = Date.fromTime 0
     , toasties = Toasty.initialState
+
+    ------------------------------------
+    -- Lazy view-pieces
+    ------------------------------------
+    , lazyTracksTableAttr = Tracks.View.tracksTableWrapperAttrLazy False
 
     ------------------------------------
     -- Children
@@ -129,7 +137,12 @@ update msg model =
                     [ initialCommand flags model.routing.currentPage ]
 
         SetIsTouchDevice bool ->
-            (!) { model | isTouchDevice = bool } []
+            (!)
+                { model
+                    | isTouchDevice = bool
+                    , lazyTracksTableAttr = Tracks.View.tracksTableWrapperAttrLazy bool
+                }
+                []
 
         ------------------------------------
         -- Alfred
@@ -174,33 +187,47 @@ update msg model =
                 (!) { model | contextMenu = contextMenu } []
 
         ShowTrackContextMenu ( indexStr, mousePos ) ->
-            let
-                lastModPlay =
-                    model.playlists.lastModifiedPlaylist
+            case String.toInt indexStr of
+                Ok index ->
+                    let
+                        trackMenu =
+                            Tracks.ContextMenu.trackMenu
+                                model.tracks
+                                model.playlists.lastModifiedPlaylist
 
-                maybeIndex =
-                    indexStr
-                        |> String.toInt
-                        |> Result.toMaybe
+                        ( newTracksModel, tracksCmd ) =
+                            Tracks.update
+                                (Tracks.Types.ApplyTrackSelectionUsingContextMenu index)
+                                (model.tracks)
 
-                trackMenu =
-                    Tracks.ContextMenu.trackMenu model.tracks
+                        tracks =
+                            List.map
+                                (\idx ->
+                                    model.tracks.collection.exposed
+                                        |> List.getAt idx
+                                        |> Maybe.withDefault Tracks.Types.emptyIdentifiedTrack
+                                )
+                                newTracksModel.selectedTrackIndexes
 
-                contextMenu =
-                    case maybeIndex of
-                        Just index ->
-                            model.tracks.collection.exposed
-                                |> List.getAt index
-                                |> Maybe.map (trackMenu lastModPlay)
-                                |> Maybe.map (\fn -> fn mousePos)
+                        contextMenu =
+                            Tracks.ContextMenu.trackMenu
+                                model.tracks
+                                model.playlists.lastModifiedPlaylist
+                                tracks
+                                mousePos
+                    in
+                        (!)
+                            { model
+                                | contextMenu = Just contextMenu
+                                , tracks = newTracksModel
+                            }
+                            [ tracksCmd ]
 
-                        Nothing ->
-                            Nothing
-            in
-                (!) { model | contextMenu = contextMenu } []
+                Err _ ->
+                    (!) model []
 
         ------------------------------------
-        -- Keyboard
+        -- Keyboard (Down)
         ------------------------------------
         KeydownMsg Keyboard.ArrowDown ->
             case model.alfred of
@@ -227,7 +254,19 @@ update msg model =
         KeydownMsg Keyboard.Escape ->
             (!) model [ do ClickAway ]
 
+        KeydownMsg Keyboard.Shift ->
+            (!) { model | holdingShiftKey = True } []
+
         KeydownMsg _ ->
+            (,) model Cmd.none
+
+        ------------------------------------
+        -- Keyboard (Up)
+        ------------------------------------
+        KeyupMsg Keyboard.Shift ->
+            (!) { model | holdingShiftKey = False } []
+
+        KeyupMsg _ ->
             (,) model Cmd.none
 
         ------------------------------------
@@ -404,6 +443,17 @@ update msg model =
         ------------------------------------
         -- Children, Pt. 2
         ------------------------------------
+        ApplyTrackSelection trackIndex ->
+            (!)
+                model
+                [ trackIndex
+                    |> String.toInt
+                    |> Result.toMaybe
+                    |> Maybe.map (Tracks.Types.ApplyTrackSelection model.holdingShiftKey)
+                    |> Maybe.map (TracksMsg >> do)
+                    |> Maybe.withDefault Cmd.none
+                ]
+
         ActiveQueueItemChanged maybeQueueItem ->
             (!)
                 model
@@ -666,6 +716,7 @@ subscriptions model =
 
         -- Keyboard
         , Keyboard.downs KeydownMsg
+        , Keyboard.ups KeyupMsg
 
         -- Ports
         , Ports.setIsTouchDevice SetIsTouchDevice

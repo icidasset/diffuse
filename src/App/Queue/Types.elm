@@ -10,7 +10,7 @@ import Tracks.Types exposing (IdentifiedTrack, Track)
 
 type Msg
     = InjectFirst IdentifiedTrack InjectOptions
-    | InjectLast IdentifiedTrack InjectOptions
+    | InjectLast (List IdentifiedTrack) InjectOptions
     | RemoveItem Int
       -- Position
     | Rewind

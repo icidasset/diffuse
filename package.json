@@ -4,6 +4,7 @@
     "autoprefixer": "^7.1.6",
     "browserify": "^14.5.0",
     "elm-css": "^0.6.1",
+    "elm-doctest": "^0.3.6",
     "netlify-cli": "^1.2.2",
     "postcss-cli": "^4.1.1"
   },
@@ -12,7 +13,6 @@
     "blockstack": "^0.13.5",
     "camelcase": "^4.1.0",
     "elasticlunr": "^0.9.5",
-    "elm-doctest": "^0.3.6",
     "jsmediatags": "^3.8.1",
     "remotestoragejs": "^1.0.2",
     "serviceworker-cache-polyfill": "^4.0.0",

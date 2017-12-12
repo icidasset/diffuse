@@ -133,12 +133,27 @@ update msg model =
                     { model | collection = newCollection, lastModifiedPlaylist = lastMod }
                     [ do TopLevel.DebounceStoreUserData ]
 
-        RemoveTrackByIndex playlistName trackIndex ->
+        RemoveTracksByIndex playlistName trackIndexes ->
             let
                 newCollection =
                     List.updateIf
                         (.name >> (==) playlistName)
-                        (\p -> { p | tracks = List.removeAt trackIndex p.tracks })
+                        (\p ->
+                            let
+                                newTracks : List PlaylistTrack
+                                newTracks =
+                                    List.indexedFoldr
+                                        (\idx t acc ->
+                                            if List.notMember idx trackIndexes then
+                                                t :: acc
+                                            else
+                                                acc
+                                        )
+                                        []
+                                        p.tracks
+                            in
+                                { p | tracks = newTracks }
+                        )
                         model.collection
 
                 lastMod =

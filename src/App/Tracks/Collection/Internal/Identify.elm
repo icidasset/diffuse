@@ -65,10 +65,12 @@ stepTwo favourites nowPlaying track ( acc, remainingFavourites ) =
 
         identifiedTrack =
             (,)
-                { indexInPlaylist = Nothing
+                { indexInList = 0
+                , indexInPlaylist = Nothing
                 , isFavourite = isFav
                 , isMissing = False
                 , isNowPlaying = isNP
+                , isSelected = False
                 }
                 track
     in
@@ -124,10 +126,12 @@ makeMissingFavouriteTrack fav =
             }
     in
         (,)
-            { indexInPlaylist = Nothing
+            { indexInList = 0
+            , indexInPlaylist = Nothing
             , isFavourite = True
             , isMissing = True
             , isNowPlaying = False
+            , isSelected = False
             }
             { tags = tags
             , id = missingId

@@ -67,9 +67,11 @@ harvest ( model, collection ) =
                     True
                     filters
     in
-        (,)
-            model
-            { collection | harvested = List.filter theFilter harvested }
+        harvested
+            |> List.filter theFilter
+            |> List.indexedMap (\idx tup -> Tuple.mapFirst (\i -> { i | indexInList = idx }) tup)
+            |> (\h -> { collection | harvested = h })
+            |> (,) model
 
 
 harvester :

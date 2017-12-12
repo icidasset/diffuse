@@ -153,7 +153,6 @@ function createAudioElement(environmentalContext, queueItem) {
     if (is) fn.call(environmentalContext, event);
   };
 
-  // TODO: Throttle?
   const timeUpdateFunc = bind(audioTimeUpdateEvent);
 
   newNode = new window.Audio();

@@ -6,10 +6,12 @@ import Playlists.Types exposing (Playlist)
 import Response
 import Response.Ext as Response exposing (..)
 import Routing.Types
+import Routing.Utils exposing (goTo)
 import Task
 import Tracks.Collection as Collection exposing (..)
 import Tracks.Favourites as Favourites
 import Tracks.Ports as Ports
+import Tracks.Selecting as Selecting
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
@@ -30,6 +32,7 @@ initialModel =
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedPlaylist = Nothing
+    , selectedTrackIndexes = []
     , sortBy = Artist
     , sortDirection = Asc
     }
@@ -58,7 +61,16 @@ update msg model =
                 |> Collection.recalibrate
                 |> Collection.reexpose
                 |> Collection.set
+                |> Response.mapModel (\m -> { m | selectedTrackIndexes = [] })
                 |> Response.addCmd recalibrationEffect
+
+        -- # Reexpose
+        --
+        Reexpose ->
+            model
+                |> Collection.makeParcel
+                |> Collection.reexpose
+                |> Collection.set
 
         -- # Reharvest
         --
@@ -208,11 +220,47 @@ update msg model =
                 |> Collection.redoBasedOnPlaylist model.selectedPlaylist
                 |> Collection.set
                 |> Response.andAlso storeUserData
-                |> Response.andAlso gotoIndexPage
+                |> Response.addCmd (goTo Routing.Types.Index)
 
         ------------------------------------
         -- UI
         ------------------------------------
+        -- > Apply track selection
+        --
+        ApplyTrackSelection holdingShiftKey trackIndex ->
+            let
+                newSelection : List Int
+                newSelection =
+                    Selecting.inTable
+                        { alreadySelected = model.selectedTrackIndexes
+                        , holdingShiftKey = holdingShiftKey
+                        , targetTrackIndex = trackIndex
+                        }
+            in
+                { model | selectedTrackIndexes = newSelection }
+                    |> Collection.makeParcel
+                    |> Collection.redoSelection
+                    |> Collection.reexpose
+                    |> Collection.set
+
+        -- > Apply track selection using context menu
+        --
+        ApplyTrackSelectionUsingContextMenu trackIndex ->
+            let
+                newSelection : List Int
+                newSelection =
+                    Selecting.rightClickInTable
+                        { alreadySelected = model.selectedTrackIndexes
+                        , holdingShiftKey = False
+                        , targetTrackIndex = trackIndex
+                        }
+            in
+                { model | selectedTrackIndexes = newSelection }
+                    |> Collection.makeParcel
+                    |> Collection.redoSelection
+                    |> Collection.reexpose
+                    |> Collection.set
+
         -- > Identify the active track
         --
         SetActiveIdentifiedTrack maybeIdentifiedTrack ->
@@ -233,7 +281,7 @@ update msg model =
         -- > Table-scroll event handler
         --
         ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
-            case scrolledHeight >= (contentHeight - containerHeight - 50) of
+            case scrolledHeight >= (contentHeight - containerHeight - 150) of
                 True ->
                     { model | exposedStep = model.exposedStep + 1 }
                         |> Collection.makeParcel
@@ -319,7 +367,7 @@ scrollToIndex model idx =
 
         exposedCmd =
             if not isExposed then
-                do (TopLevel.TracksMsg Reharvest)
+                do (TopLevel.TracksMsg Reexpose)
             else
                 Cmd.none
 
@@ -345,14 +393,6 @@ subscriptions _ =
 
 
 -- Utilities
-
-
-gotoIndexPage : Model -> Cmd TopLevel.Msg
-gotoIndexPage _ =
-    Routing.Types.Index
-        |> Routing.Types.GoToPage
-        |> TopLevel.RoutingMsg
-        |> do
 
 
 processSources : Model -> Cmd TopLevel.Msg

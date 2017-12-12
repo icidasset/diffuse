@@ -212,6 +212,7 @@ styles =
             , selector "tr > td[data-favourite]"
                 [ color (hex "#dedede")
                 , fontFamilies [ "'or-favourites'" ]
+                , position relative
                 , property "text-overflow" "initial"
 
                 --
@@ -228,6 +229,19 @@ styles =
                 , before
                     [ property "content" "'t'"
                     ]
+                ]
+
+            -- <tbody> Selected
+            , selector "tr[data-selected=\"t\"] > td[data-favourite]:after"
+                [ backgroundColor (cssColor colors.base08)
+                , borderRadius (pct 50)
+                , height (px 5)
+                , position absolute
+                , property "content" "''"
+                , right (px 0)
+                , top (pct 50)
+                , transform (translateY <| pct -50)
+                , width (px 5)
                 ]
             ]
         ]

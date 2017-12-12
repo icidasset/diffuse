@@ -2,8 +2,10 @@ module Types exposing (..)
 
 import Date exposing (Date)
 import Debounce exposing (Debounce)
-import Keyboard.Extra as Keyboard
+import Html
 import Json.Encode
+import Keyboard.Extra as Keyboard
+import Lazy exposing (Lazy)
 import Mouse
 import Notifications.Types exposing (Notification)
 import Slave.Types
@@ -46,6 +48,7 @@ type Msg
     | ShowTrackContextMenu ( String, Mouse.Position )
       -- Keyboard
     | KeydownMsg Keyboard.Key
+    | KeyupMsg Keyboard.Key
       -- Libraries
     | ToastyMsg (Toasty.Msg Notification)
       -- Loading
@@ -74,6 +77,7 @@ type Msg
     | TracksMsg Tracks.Msg
       --
       -- Children, Pt. 2
+    | ApplyTrackSelection String
     | ActiveQueueItemChanged (Maybe Queue.Item)
     | AutoGeneratePlaylists
     | CheckSelectedPlaylist
@@ -92,11 +96,17 @@ type Msg
 type alias Model =
     { alfred : Maybe Alfred
     , contextMenu : Maybe ContextMenu
+    , holdingShiftKey : Bool
     , isDevelopmentEnvironment : Bool
     , isHTTPS : Bool
     , isTouchDevice : Bool
     , showLoadingScreen : Bool
     , toasties : Toasty.Stack Notification
+
+    ------------------------------------
+    -- Lazy view-pieces
+    ------------------------------------
+    , lazyTracksTableAttr : LazyAttributeList
 
     ------------------------------------
     -- Time
@@ -156,6 +166,10 @@ type alias AlienEvent =
 
 type alias Illumination model childMsg =
     model -> List (Cmd childMsg) -> List (Cmd Msg) -> ( model, Cmd Msg )
+
+
+type alias LazyAttributeList =
+    Lazy (List (Html.Attribute Msg))
 
 
 type alias ProgramFlags =

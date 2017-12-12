@@ -155,10 +155,12 @@ makeMissingPlaylistTrack ( identifiers, playlistTrack ) =
             }
     in
         (,)
-            { indexInPlaylist = Just identifiers.index
+            { indexInList = 0
+            , indexInPlaylist = Just identifiers.index
             , isFavourite = False
             , isMissing = True
             , isNowPlaying = False
+            , isSelected = False
             }
             { tags = tags
             , id = missingId
