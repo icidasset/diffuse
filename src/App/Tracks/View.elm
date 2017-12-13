@@ -201,7 +201,7 @@ content resultant ( sortBy, sortDirection, playlist, isProcessing, sources, lazy
 
 scrollHandler : ScrollPos -> TopLevel.Msg
 scrollHandler =
-    ScrollThroughTable >> TopLevel.TracksMsg
+    ScrollThroughTableDebounced >> TopLevel.TracksMsg
 
 
 

@@ -1,6 +1,7 @@
 module Tracks.Types exposing (..)
 
 import Base64
+import Debounce exposing (Debounce)
 import Playlists.Types exposing (Playlist)
 import Regex exposing (HowMany(..), regex)
 
@@ -152,6 +153,8 @@ type Msg
     | ApplyTrackSelectionUsingContextMenu Int
     | SetActiveIdentifiedTrack (Maybe IdentifiedTrack)
     | ScrollThroughTable ScrollPos
+    | ScrollThroughTableDebounced ScrollPos
+    | ScrollThroughTableDebounceCallback Debounce.Msg
     | ScrollToActiveTrack Track
 
 
@@ -171,6 +174,7 @@ type alias InternalModel extension =
         , exposedStep : Int
         , favourites : List Favourite
         , initialImportPerformed : Bool
+        , scrollDebounce : Debounce ScrollPos
         , searchResults : Maybe (List TrackId)
         , selectedTrackIndexes : List Int
         , sortBy : SortBy

@@ -1,5 +1,6 @@
 module Tracks.State exposing (..)
 
+import Debounce
 import Dom.Scroll
 import List.Extra as List
 import Playlists.Types exposing (Playlist)
@@ -8,6 +9,7 @@ import Response.Ext as Response exposing (..)
 import Routing.Types
 import Routing.Utils exposing (goTo)
 import Task
+import Time
 import Tracks.Collection as Collection exposing (..)
 import Tracks.Favourites as Favourites
 import Tracks.Ports as Ports
@@ -29,6 +31,7 @@ initialModel =
     , favourites = []
     , favouritesOnly = False
     , initialImportPerformed = False
+    , scrollDebounce = Debounce.init
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedPlaylist = Nothing
@@ -281,7 +284,7 @@ update msg model =
         -- > Table-scroll event handler
         --
         ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
-            case scrolledHeight >= (contentHeight - containerHeight - 150) of
+            case scrolledHeight >= (contentHeight - containerHeight - trackHeight * 25) of
                 True ->
                     { model | exposedStep = model.exposedStep + 1 }
                         |> Collection.makeParcel
@@ -290,6 +293,30 @@ update msg model =
 
                 False ->
                     Response.withNone model
+
+        ScrollThroughTableDebounced scrollPos ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.push debounceScrollConfig scrollPos model.scrollDebounce
+            in
+                ($)
+                    { model | scrollDebounce = debounce }
+                    [ cmd ]
+                    []
+
+        ScrollThroughTableDebounceCallback debounceMsg ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceScrollConfig
+                        (Debounce.takeLast (ScrollThroughTable >> do))
+                        debounceMsg
+                        model.scrollDebounce
+            in
+                ($)
+                    { model | scrollDebounce = debounce }
+                    [ cmd ]
+                    []
 
         -- > Scroll to the active track
         --
@@ -361,7 +388,7 @@ scrollToIndex model idx =
                 model.exposedStep
 
         scrollTask =
-            (9 + idx * 33)
+            (9 + idx * trackHeight)
                 |> toFloat
                 |> Dom.Scroll.toY "tracks"
 
@@ -382,6 +409,17 @@ scrollToIndex model idx =
 
 
 
+-- 🔥 / Debounce configurations
+
+
+debounceScrollConfig : Debounce.Config Msg
+debounceScrollConfig =
+    { strategy = Debounce.soon (125 * Time.millisecond)
+    , transform = ScrollThroughTableDebounceCallback
+    }
+
+
+
 -- 🌱
 
 
@@ -389,6 +427,15 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveSearchResults ReceiveSearchResults ]
+
+
+
+-- Constants
+
+
+trackHeight : Int
+trackHeight =
+    33
 
 
 

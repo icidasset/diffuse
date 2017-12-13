@@ -380,13 +380,13 @@ update msg model =
                     { model | storageDebounce = debounce }
                     [ cmd ]
 
-        DebounceCallbackStoreUserData msg ->
+        DebounceCallbackStoreUserData debounceMsg ->
             let
                 ( debounce, cmd ) =
                     Debounce.update
                         debounceStoreUserDataConfig
                         (Debounce.takeLast (always <| do StoreUserData))
-                        msg
+                        debounceMsg
                         model.storageDebounce
             in
                 (!)

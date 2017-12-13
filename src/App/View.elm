@@ -436,9 +436,9 @@ contextMenuEventOptions =
 mainNav : Model -> Html Msg
 mainNav model =
     if model.authentication.signedIn then
-        authenticatedNavigation model.routing.currentPage model.alfred
+        Html.Lazy.lazy2 authenticatedNavigation model.routing.currentPage model.alfred
     else
-        unauthenticatedNavigation model.routing.currentPage
+        Html.Lazy.lazy unauthenticatedNavigation model.routing.currentPage
 
 
 notifications : Toasty.Stack Notification -> Html Msg
