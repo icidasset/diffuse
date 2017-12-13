@@ -433,8 +433,7 @@ tracksTableWrapperAttr isTouchDevice =
     else
         -- Non-Touch devices
         [ on "dblclick" playTrack
-        , on "click" toggleFavourite
-        , on "click" (Decode.map TopLevel.ApplyTrackSelection playTrackDecoder)
+        , on "click" (Decode.oneOf [ toggleFavourite, selectTrack ])
         , onWithOptions
             "contextmenu"
             { stopPropagation = True
@@ -451,6 +450,11 @@ tracksTableWrapperAttr isTouchDevice =
 playTrack : Decode.Decoder TopLevel.Msg
 playTrack =
     Decode.map TopLevel.PlayTrack playTrackDecoder
+
+
+selectTrack : Decode.Decoder TopLevel.Msg
+selectTrack =
+    Decode.map TopLevel.ApplyTrackSelection playTrackDecoder
 
 
 playTrackDecoder : Decode.Decoder String
