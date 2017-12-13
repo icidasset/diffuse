@@ -2,8 +2,9 @@ module Alfred.View exposing (entry)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
 import Html.Events.Extra exposing (onClickPreventDefaultAndStopPropagation)
+import Json.Decode
 import Traits exposing (grs)
 import Types as TopLevel
 import Utils exposing (cssClass)
@@ -22,6 +23,7 @@ entry context =
     div
         [ cssClass Alfred
         , onClickPreventDefaultAndStopPropagation TopLevel.NoOp
+        , onWithOptions "tap" tapOptions (Json.Decode.succeed TopLevel.NoOp)
         ]
         [ ------------------------------------
           -- Input
@@ -56,6 +58,13 @@ entry context =
           else
             text ""
         ]
+
+
+tapOptions : Html.Events.Options
+tapOptions =
+    { preventDefault = True
+    , stopPropagation = True
+    }
 
 
 

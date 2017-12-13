@@ -32,8 +32,11 @@ styles =
                 , cursor pointer
                 , display block
                 , lineHeight (num 1.35)
+                , overflow hidden
                 , padding2 (gr 2) (gr 3)
                 , paddingRight (gr 5)
+                , textOverflow ellipsis
+                , whiteSpace noWrap
 
                 --
                 , lastChild

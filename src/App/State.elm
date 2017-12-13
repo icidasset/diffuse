@@ -196,9 +196,12 @@ update msg model =
                                 model.playlists.lastModifiedPlaylist
 
                         ( newTracksModel, tracksCmd ) =
-                            Tracks.update
-                                (Tracks.Types.ApplyTrackSelectionUsingContextMenu index)
-                                (model.tracks)
+                            if model.isTouchDevice then
+                                (,) model.tracks Cmd.none
+                            else
+                                Tracks.update
+                                    (Tracks.Types.ApplyTrackSelectionUsingContextMenu index)
+                                    (model.tracks)
 
                         tracks =
                             List.map
@@ -207,7 +210,11 @@ update msg model =
                                         |> List.getAt idx
                                         |> Maybe.withDefault Tracks.Types.emptyIdentifiedTrack
                                 )
-                                newTracksModel.selectedTrackIndexes
+                                (if model.isTouchDevice then
+                                    [ index ]
+                                 else
+                                    newTracksModel.selectedTrackIndexes
+                                )
 
                         contextMenu =
                             Tracks.ContextMenu.trackMenu
