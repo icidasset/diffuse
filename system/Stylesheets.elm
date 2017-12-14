@@ -3,7 +3,7 @@ port module Stylesheets exposing (..)
 import Css
 import Css.File exposing (CssFileStructure, CssCompilerProgram)
 import Css.Normalize
-import Styles
+import StylesOld
 
 
 -- Ports
@@ -20,10 +20,10 @@ fileStructure : CssFileStructure
 fileStructure =
     let
         css =
-            Css.File.compile [ Css.Normalize.css, Css.stylesheet Styles.styles ]
+            Css.File.compile [ Css.Normalize.css, Css.stylesheet StylesOld.styles ]
 
         cssWithKeyframes =
-            { css | css = String.concat [ css.css, Styles.keyframes ] }
+            { css | css = String.concat [ css.css, StylesOld.keyframes ] }
     in
         Css.File.toFileStructure
             [ ( "application.css", cssWithKeyframes ) ]

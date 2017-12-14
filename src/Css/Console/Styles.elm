@@ -28,7 +28,7 @@ styles : List Snippet
 styles =
     [ class Console
         [ margin3 (px 1) auto zero
-        , maxWidth insulationWidth
+        , maxWidth (px insulationWidth)
         , width (pct 100)
         ]
 

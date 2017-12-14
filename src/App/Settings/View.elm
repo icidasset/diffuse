@@ -20,7 +20,7 @@ import Utils exposing (cssClass)
 -- Styles
 
 import Form.Styles as FormStyles
-import Styles exposing (Classes(..))
+import StylesOld exposing (Classes(..))
 
 
 -- 🍯

@@ -21,7 +21,7 @@ import Utils exposing (..)
 -- Styles
 
 import Equalizer.Styles exposing (Classes(..))
-import Styles exposing (Classes(..))
+import StylesOld exposing (Classes(..))
 
 
 -- 🍯

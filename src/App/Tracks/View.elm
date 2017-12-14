@@ -24,7 +24,7 @@ import Playlists.Utils exposing (..)
 import Queue.Types
 import Routing.Types
 import Sources.Types exposing (IsProcessing, Source)
-import Styles exposing (Classes(Important, LogoBackdrop))
+import StylesOld exposing (Classes(Important, LogoBackdrop))
 import Tracks.Styles exposing (..)
 import Tracks.Types exposing (..)
 import Types as TopLevel exposing (LazyAttributeList, Msg(..))

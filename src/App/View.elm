@@ -18,14 +18,22 @@ import Notifications.Config
 import Notifications.Types exposing (Notification)
 import Notifications.View
 import Routing.Types exposing (Page(..))
-import Styles exposing (..)
+import StylesOld
 import Svg exposing (Svg, g, path)
 import Svg.Attributes exposing (d, fill, fillRule, height, viewBox, width)
 import Toasty
 import Traits exposing (intoRem)
 import Types exposing (..)
 import Utils exposing (..)
-import Variables exposing (colors)
+import Variables exposing (colors, scaled)
+
+
+-- Styles
+
+import Element exposing (Element, column, empty, el, html, layout, screen)
+import Element.Attributes exposing (inlineStyle, paddingXY)
+import Element.Ext as Element
+import Styles exposing (..)
 
 
 -- Children
@@ -46,88 +54,118 @@ import Tracks.View as Tracks
 import Sources.Types
 
 
+-- ⚗️
+
+
+type alias Node =
+    Element Styles Variations Msg
+
+
+type alias Attr =
+    Element.Attribute Variations Msg
+
+
+
 -- 🍯
 
 
 entry : Model -> Html Msg
 entry model =
-    div
-        (rootAttributes model)
-        [ --
-          -- Current page,
-          -- or loading screen.
-          --
-          if model.showLoadingScreen then
-            loadingScreen
-          else if
-            requiresAuthentication
-                model.routing.currentPage
-                model.authentication.signedIn
-          then
-            div
-                [ cssClass Shell ]
-                [ mainNav model
-                , loginScreen model
+    [ entryNodes model
+    , entryLazyNodes model
+    ]
+        |> List.concat
+        |> column Root (entryAttributes model)
+        |> layout Styles.styles
+
+
+entryNodes : Model -> List Node
+entryNodes model =
+    if model.showLoadingScreen then
+        ------------------------------------
+        -- {1} Loading
+        ------------------------------------
+        [ loadingScreen
+        ]
+    else if requiresAuthentication model then
+        ------------------------------------
+        -- {2} Authentication is required
+        ------------------------------------
+        [ mainNav model
+        , loginScreen model
+        ]
+    else
+        ------------------------------------
+        -- {3} Otherwise
+        ------------------------------------
+        [ mainNav model
+
+        -- Main
+        --
+        , if model.authentication.signedIn then
+            column Insulation
+                []
+                [ html (Tracks.entry model)
+                , currentPage model
                 ]
           else
-            div
-                [ cssClass Shell ]
-                [ mainNav model
+            currentPage model
 
-                -- Main
-                , if model.authentication.signedIn then
-                    div
-                        [ cssClass Insulation ]
-                        [ Tracks.entry model
-                        , currentPage model
-                        ]
-                  else
-                    currentPage model
-
-                -- Console
-                , if model.authentication.signedIn then
-                    Console.entry model
-                  else
-                    text ""
-                ]
-
+        -- Console
         --
-        , Html.Lazy.lazy alfred model.alfred
-        , Html.Lazy.lazy backgroundImage model.settings.backgroundImage
-        , Html.Lazy.lazy contextMenu model.contextMenu
-        , Html.Lazy.lazy notifications model.toasties
-        , Html.Lazy.lazy2 overlay model.alfred model.contextMenu
+        , if model.authentication.signedIn then
+            html (Console.entry model)
+          else
+            empty
         ]
 
 
-{-| Global mouse/touch events ++ Equalizer events
+entryLazyNodes : Model -> List Node
+entryLazyNodes model =
+    [ Element.lazy alfred model.alfred
+    , Element.lazy backgroundImage model.settings.backgroundImage
+    , Element.lazy contextMenu model.contextMenu
+    , Element.lazy notifications model.toasties
+    , Element.lazy2 overlay model.alfred model.contextMenu
+    ]
+
+
+{-| Global mouse/touch events & Equalizer events
+
 TODO: Find a way to make these into subscriptions
 (like with the mouse events)
+
 -}
-rootAttributes : Model -> List (Attribute Msg)
-rootAttributes model =
-    case model.equalizer.activeKnob of
-        Just _ ->
-            (if model.isTouchDevice then
-                [ on "tap" (Decode.succeed ClickAway)
-                , on "touchmove" Equalizer.Touch.move
-                , on "touchend" Equalizer.Touch.end
-                ]
-             else
-                [ onClick ClickAway ]
-            )
+entryAttributes : Model -> List Attr
+entryAttributes model =
+    -- TODO
+    -- case model.equalizer.activeKnob of
+    --     Just _ ->
+    --         (if model.isTouchDevice then
+    --             [ on "tap" (Decode.succeed ClickAway)
+    --             , on "touchmove" Equalizer.Touch.move
+    --             , on "touchend" Equalizer.Touch.end
+    --             ]
+    --          else
+    --             [ onClick ClickAway ]
+    --         )
+    --
+    --     Nothing ->
+    --         [ if model.isTouchDevice then
+    --             on "tap" (Decode.succeed ClickAway)
+    --           else
+    --             onClick ClickAway
+    --         ]
+    [ paddingXY (scaled 2) 0 ]
 
-        Nothing ->
-            [ if model.isTouchDevice then
-                on "tap" (Decode.succeed ClickAway)
-              else
-                onClick ClickAway
-            ]
 
 
-requiresAuthentication : Page -> Bool -> Bool
-requiresAuthentication page isSignedIn =
-    case page of
+-- 🐝
+
+
+requiresAuthentication : Model -> Bool
+requiresAuthentication model =
+    case model.routing.currentPage of
         ErrorScreen _ ->
             False
 
@@ -135,19 +173,25 @@ requiresAuthentication page isSignedIn =
             False
 
         _ ->
-            not isSignedIn
+            not model.authentication.signedIn
 
 
 {-| Render current page
 -}
-currentPage : Model -> Html Msg
+currentPage : Model -> Node
 currentPage model =
+    -- TODO
+    html (currentPage_ model)
+
+
+currentPage_ : Model -> Html Msg
+currentPage_ model =
     case model.routing.currentPage of
         -- # Doesn't require authentication
         --
         ErrorScreen err ->
             div
-                [ cssClasses [ InTheMiddle, Basic ] ]
+                [{- cssClasses [ InTheMiddle, Basic ] -}]
                 [ p
                     []
                     [ Material.Icons.Alert.error Color.white 14
@@ -161,7 +205,7 @@ currentPage model =
                     String.split "\n" message
             in
                 div
-                    [ cssClasses [ InTheMiddle, Basic ] ]
+                    [{- cssClasses [ InTheMiddle, Basic ] -}]
                     [ p
                         []
                         (List.map
@@ -210,112 +254,122 @@ currentPage model =
 -- Screens
 
 
-loadingScreen : Html Msg
+loadingScreen : Node
 loadingScreen =
-    div
-        [ cssClass InTheMiddle ]
-        [ Spinner.entry ]
+    -- TODO
+    -- div
+    --     [ cssClass InTheMiddle ]
+    --     [ Spinner.entry ]
+    empty
 
 
-loginScreen : Model -> Html Msg
+loginScreen : Model -> Node
 loginScreen model =
-    div
-        [ cssClasses [ InTheMiddle, Basic ] ]
-        [ div
-            [ style
-                [ ( "background-color", "white" )
-                , ( "border-radius", "4px" )
-                , ( "padding", ".375rem 1.5rem" )
-                ]
-            ]
-            [ authButton model.isHTTPS Blockstack
-            , authButton model.isHTTPS RemoteStorage
-            , authButton model.isHTTPS Local
-            ]
-        ]
+    -- TODO
+    -- div
+    --     [ cssClasses [ InTheMiddle, Basic ] ]
+    --     [ div
+    --         [ style
+    --             [ ( "background-color", "white" )
+    --             , ( "border-radius", "4px" )
+    --             , ( "padding", ".375rem 1.5rem" )
+    --             ]
+    --         ]
+    --         [ authButton model.isHTTPS Blockstack
+    --         , authButton model.isHTTPS RemoteStorage
+    --         , authButton model.isHTTPS Local
+    --         ]
+    --     ]
+    empty
 
 
 
 -- Authenticated bits
 
 
-authenticatedNavigation : Page -> Maybe Alfred -> Html Msg
+authenticatedNavigation : Page -> Maybe Alfred -> Node
 authenticatedNavigation currentPage maybeAlfred =
-    let
-        styles =
-            case maybeAlfred of
-                Just _ ->
-                    [ ( "visibility", "hidden" ) ]
-
-                Nothing ->
-                    []
-    in
-        div
-            [ style styles ]
-            [ Navigation.outside
-                currentPage
-                [ ( text "Tracks", Routing.Types.Index )
-                , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
-                , ( text "Settings", Routing.Types.Settings )
-                ]
-            ]
+    -- TODO
+    -- let
+    --     styles =
+    --         case maybeAlfred of
+    --             Just _ ->
+    --                 [ ( "visibility", "hidden" ) ]
+    --
+    --             Nothing ->
+    --                 []
+    -- in
+    --     div
+    --         [ style styles ]
+    --         [ Navigation.outside
+    --             currentPage
+    --             [ ( text "Tracks", Routing.Types.Index )
+    --             , ( text "Sources", Routing.Types.Sources Sources.Types.Index )
+    --             , ( text "Settings", Routing.Types.Settings )
+    --             ]
+    --         ]
+    empty
 
 
 
 -- Unauthenticated bits
 
 
-unauthenticatedNavigation : Page -> Html Msg
+unauthenticatedNavigation : Page -> Node
 unauthenticatedNavigation currentPage =
-    Navigation.outsideOutgoing
-        currentPage
-        [ ( Material.Icons.Action.home colors.base05 16, "/" )
-        , ( Material.Icons.Action.info colors.base05 16, "/about" )
-        ]
+    -- TODO
+    -- Navigation.outsideOutgoing
+    --     currentPage
+    --     [ ( Material.Icons.Action.home colors.base05 16, "/" )
+    --     , ( Material.Icons.Action.info colors.base05 16, "/about" )
+    --     ]
+    empty
 
 
-authButton : Bool -> Authentication.Types.Method -> Html Msg
+authButton : Bool -> Authentication.Types.Method -> Node
 authButton isHTTPS authMethod =
-    a
-        [ cssClass AuthenticationButton
-        , authMethod
-            |> Authentication.Types.PerformSignIn
-            |> AuthenticationMsg
-            |> onClick
-        ]
-        (case authMethod of
-            Local ->
-                [ span
-                    [ style [ ( "fontSize", intoRem 17 ) ] ]
-                    [ Material.Icons.Action.lock Color.white 17 ]
-                , text "Sign in anonymously"
-                ]
+    -- TODO
+    -- a
+    --     [ cssClass AuthenticationButton
+    --     , authMethod
+    --         |> Authentication.Types.PerformSignIn
+    --         |> AuthenticationMsg
+    --         |> onClick
+    --     ]
+    --     (case authMethod of
+    --         Local ->
+    --             [ span
+    --                 [ style [ ( "fontSize", intoRem 17 ) ] ]
+    --                 [ Material.Icons.Action.lock Color.white 17 ]
+    --             , text "Sign in anonymously"
+    --             ]
+    --
+    --         Blockstack ->
+    --             [ span
+    --                 [ style [ ( "fontSize", intoRem 22 ) ] ]
+    --                 [ blockstackLogo ]
+    --             , span
+    --                 (case isHTTPS of
+    --                     True ->
+    --                         [ style [ ( "textDecoration", "line-through" ) ] ]
+    --
+    --                     False ->
+    --                         []
+    --                 )
+    --                 [ text "Sign in with Blockstack" ]
+    --             ]
+    --
+    --         RemoteStorage ->
+    --             [ span
+    --                 [ style [ ( "fontSize", intoRem 17 ) ] ]
+    --                 [ remoteStorageLogo ]
+    --             , text "Sign in with Remote Storage"
+    --             ]
+    --     )
+    empty
 
-            Blockstack ->
-                [ span
-                    [ style [ ( "fontSize", intoRem 22 ) ] ]
-                    [ blockstackLogo ]
-                , span
-                    (case isHTTPS of
-                        True ->
-                            [ style [ ( "textDecoration", "line-through" ) ] ]
 
-                        False ->
-                            []
-                    )
-                    [ text "Sign in with Blockstack" ]
-                ]
-
-            RemoteStorage ->
-                [ span
-                    [ style [ ( "fontSize", intoRem 17 ) ] ]
-                    [ remoteStorageLogo ]
-                , text "Sign in with Remote Storage"
-                ]
-        )
-
-
-blockstackLogo : Svg Msg
+blockstackLogo : Svg msg
 blockstackLogo =
     Svg.svg
         [ height "22"
@@ -343,7 +397,7 @@ blockstackLogo =
         ]
 
 
-remoteStorageLogo : Svg Msg
+remoteStorageLogo : Svg msg
 remoteStorageLogo =
     Svg.svg
         [ height "0.739008in"
@@ -371,59 +425,64 @@ remoteStorageLogo =
 -- Shared
 
 
-alfred : Maybe Alfred -> Html Msg
+alfred : Maybe Alfred -> Node
 alfred maybe =
     case maybe of
         Just context ->
-            Alfred.View.entry context
+            html <| Alfred.View.entry context
 
         Nothing ->
-            text ""
+            empty
 
 
-backgroundImage : String -> Html Msg
+backgroundImage : String -> Node
 backgroundImage img =
-    div
-        [ cssClass BackgroundImage
-        , style
-            [ ( "background-image"
-              , "url(/images/Background/" ++ img ++ ")"
-              )
-            , case img of
-                "1.jpg" ->
-                    ( "background-position", "center 30%" )
-
-                _ ->
-                    ( "background-position", "center bottom" )
-            ]
-        ]
-        []
+    empty
+        |> el Zed [ inlineStyle (backgroundImageStyles img) ]
+        |> screen
 
 
-contextMenu : Maybe ContextMenu -> Html Msg
-contextMenu maybeContextMenu =
-    case maybeContextMenu of
-        Just (ContextMenu items mousePos) ->
-            div
-                [ cssClass CTS.ContextMenu
-                , onWithOptions "click" contextMenuEventOptions (Decode.succeed NoOp)
-                , onWithOptions "tap" contextMenuEventOptions (Decode.succeed NoOp)
-                , style
-                    [ ( "left", toString mousePos.x ++ "px" )
-                    , ( "top", toString mousePos.y ++ "px" )
-                    ]
-                ]
-                (List.map
-                    (\( icon, label, msg ) ->
-                        a
-                            [ onClick (DoAll [ msg, HideContextMenu ]) ]
-                            [ icon, text label ]
-                    )
-                    items
-                )
+backgroundImageStyles : String -> List ( String, String )
+backgroundImageStyles img =
+    [ ( "background-image", "url(/images/Background/" ++ img ++ ")" )
+    , ( "background-size", "cover" )
+
+    --
+    , case img of
+        "1.jpg" ->
+            ( "background-position", "center 30%" )
 
         _ ->
-            text ""
+            ( "background-position", "center bottom" )
+    ]
+
+
+contextMenu : Maybe ContextMenu -> Node
+contextMenu maybeContextMenu =
+    -- TODO
+    -- case maybeContextMenu of
+    --     Just (ContextMenu items mousePos) ->
+    --         div
+    --             [ cssClass CTS.ContextMenu
+    --             , onWithOptions "click" contextMenuEventOptions (Decode.succeed NoOp)
+    --             , onWithOptions "tap" contextMenuEventOptions (Decode.succeed NoOp)
+    --             , style
+    --                 [ ( "left", toString mousePos.x ++ "px" )
+    --                 , ( "top", toString mousePos.y ++ "px" )
+    --                 ]
+    --             ]
+    --             (List.map
+    --                 (\( icon, label, msg ) ->
+    --                     a
+    --                         [ onClick (DoAll [ msg, HideContextMenu ]) ]
+    --                         [ icon, text label ]
+    --                 )
+    --                 items
+    --             )
+    --
+    --     _ ->
+    --         empty
+    empty
 
 
 contextMenuEventOptions : Html.Events.Options
@@ -433,31 +492,36 @@ contextMenuEventOptions =
     }
 
 
-mainNav : Model -> Html Msg
+mainNav : Model -> Node
 mainNav model =
     if model.authentication.signedIn then
-        Html.Lazy.lazy2 authenticatedNavigation model.routing.currentPage model.alfred
+        Element.lazy2 authenticatedNavigation model.routing.currentPage model.alfred
     else
-        Html.Lazy.lazy unauthenticatedNavigation model.routing.currentPage
+        Element.lazy unauthenticatedNavigation model.routing.currentPage
 
 
-notifications : Toasty.Stack Notification -> Html Msg
-notifications =
-    Toasty.view
-        Notifications.Config.config
-        Notifications.View.entry
-        ToastyMsg
-
-
-overlay : Maybe Alfred -> Maybe ContextMenu -> Html Msg
-overlay maybeAlfred maybeContextMenu =
-    div
-        (if Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu then
-            [ cssClasses [ Overlay, OverlayWithCursor ]
-            , style [ ( "opacity", "1" ) ]
-            ]
-         else
-            [ cssClass Overlay
-            ]
+notifications : Toasty.Stack Notification -> Node
+notifications stack =
+    html
+        (Toasty.view
+            Notifications.Config.config
+            Notifications.View.entry
+            ToastyMsg
+            stack
         )
-        []
+
+
+overlay : Maybe Alfred -> Maybe ContextMenu -> Node
+overlay maybeAlfred maybeContextMenu =
+    -- TODO
+    -- div
+    --     (if Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu then
+    --         [ cssClasses [ Overlay, OverlayWithCursor ]
+    --         , style [ ( "opacity", "1" ) ]
+    --         ]
+    --      else
+    --         [ cssClass Overlay
+    --         ]
+    --     )
+    --     []
+    empty

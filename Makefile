@@ -90,7 +90,7 @@ watch_elm_slave:
 
 
 watch_css:
-	@watchexec -p -w $(SRC_DIR)/Css --filter *.elm -- make elm css
+	@watchexec -p -w $(SRC_DIR)/Css --filter *.elm -- make elm
 
 
 watch_system:

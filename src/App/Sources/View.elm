@@ -34,7 +34,7 @@ import Variables exposing (colorDerivatives)
 import Form.Styles as FormStyles
 import List.Styles exposing (Classes(..))
 import Navigation.Styles exposing (Classes(..))
-import Styles exposing (Classes(..))
+import StylesOld exposing (Classes(..))
 
 
 -- 🍯
@@ -395,7 +395,7 @@ pageNewStep3 source =
             , labelBox source
             ]
         , div
-            [ cssClass Styles.Intro ]
+            [ cssClass StylesOld.Intro ]
             [ Icons.warning colorDerivatives.text 16
             , strong
                 []

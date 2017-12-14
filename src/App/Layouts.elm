@@ -8,7 +8,7 @@ import Utils exposing (cssClass, cssClasses)
 
 -- Styles
 
-import Styles exposing (Classes(..))
+import StylesOld exposing (Classes(..))
 
 
 -- 🍯
