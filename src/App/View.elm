@@ -1,6 +1,7 @@
 module View exposing (entry)
 
 import Equalizer.Touch
+import Html exposing (Html)
 import Html.Attributes
 import Json.Decode as Decode
 import Material.Icons.Action
@@ -8,13 +9,6 @@ import Material.Icons.Alert
 import Maybe.Extra as Maybe
 import Svg.Elements
 import Types exposing (..)
-
-
--- TODO: Remove as much as possible
-
-import ContextMenu.StylesOld as CTS
-import Html exposing (Html, br, em, div, p, strong)
-import StylesOld
 
 
 -- Elements & Styles
@@ -41,6 +35,7 @@ import Toasty
 import Alfred.View as Alfred
 import Abroad.View as Abroad
 import Console.View as Console
+import ContextMenu.View as ContextMenu
 import Equalizer.View as Equalizer
 import Navigation.View as Navigation
 import Notifications.View as Notifications
@@ -137,9 +132,9 @@ entryLazyNodes : Model -> List Node
 entryLazyNodes model =
     [ Element.lazy alfred model.alfred
     , Element.lazy backgroundImage model.settings.backgroundImage
-    , Element.lazy contextMenu model.contextMenu
     , Element.lazy notifications model.toasties
     , Element.lazy2 overlay model.alfred model.contextMenu
+    , Element.lazy ContextMenu.entry model.contextMenu
     ]
 
 
@@ -190,8 +185,6 @@ requiresAuthentication model =
             not model.authentication.signedIn
 
 
-{-| Render current page
--}
 currentPage : InsulationOptions -> Model -> Node
 currentPage insulationOptions model =
     case model.routing.currentPage of
@@ -299,45 +292,7 @@ messageScreen message =
 
 
 
--- Authenticated bits
-
-
-authenticatedNavigation : Page -> Maybe Alfred -> Node
-authenticatedNavigation currentPage maybeAlfred =
-    let
-        styles =
-            case maybeAlfred of
-                Just _ ->
-                    [ ( "visibility", "hidden" ) ]
-
-                Nothing ->
-                    []
-    in
-        el
-            Zed
-            [ inlineStyle styles ]
-            (Navigation.outside
-                currentPage
-                [ ( Html.text "Tracks", Routing.Types.Index )
-                , ( Html.text "Sources", Routing.Types.Sources Sources.Types.Index )
-                , ( Html.text "Settings", Routing.Types.Settings )
-                ]
-                |> html
-            )
-
-
-
--- Unauthenticated bits
-
-
-unauthenticatedNavigation : Page -> Node
-unauthenticatedNavigation currentPage =
-    Navigation.outsideOutgoing
-        currentPage
-        [ ( Material.Icons.Action.home colors.base05 16, "/" )
-        , ( Material.Icons.Action.info colors.base05 16, "/about" )
-        ]
-        |> html
+-- Authentication
 
 
 authButton : Bool -> Authentication.Types.Method -> Node
@@ -388,6 +343,40 @@ authButtonInterior ( icon, label ) =
         |> List.singleton
         |> List.append [ text label ]
         |> List.reverse
+
+
+authenticatedNavigation : Page -> Maybe Alfred -> Node
+authenticatedNavigation currentPage maybeAlfred =
+    let
+        styles =
+            case maybeAlfred of
+                Just _ ->
+                    [ ( "visibility", "hidden" ) ]
+
+                Nothing ->
+                    []
+    in
+        el
+            Zed
+            [ inlineStyle styles ]
+            (Navigation.outside
+                currentPage
+                [ ( Html.text "Tracks", Routing.Types.Index )
+                , ( Html.text "Sources", Routing.Types.Sources Sources.Types.Index )
+                , ( Html.text "Settings", Routing.Types.Settings )
+                ]
+                |> html
+            )
+
+
+unauthenticatedNavigation : Page -> Node
+unauthenticatedNavigation currentPage =
+    Navigation.outsideOutgoing
+        currentPage
+        [ ( Material.Icons.Action.home colors.base05 16, "/" )
+        , ( Material.Icons.Action.info colors.base05 16, "/about" )
+        ]
+        |> html
 
 
 
@@ -464,40 +453,6 @@ backgroundImageStyles img =
     ]
 
 
-contextMenu : Maybe ContextMenu -> Node
-contextMenu maybeContextMenu =
-    -- TODO
-    -- case maybeContextMenu of
-    --     Just (ContextMenu items mousePos) ->
-    --         div
-    --             [ cssClass CTS.ContextMenu
-    --             , onWithOptions "click" contextMenuEventOptions (Decode.succeed NoOp)
-    --             , onWithOptions "tap" contextMenuEventOptions (Decode.succeed NoOp)
-    --             , style
-    --                 [ ( "left", toString mousePos.x ++ "px" )
-    --                 , ( "top", toString mousePos.y ++ "px" )
-    --                 ]
-    --             ]
-    --             (List.map
-    --                 (\( icon, label, msg ) ->
-    --                     a
-    --                         [ onClick (DoAll [ msg, HideContextMenu ]) ]
-    --                         [ icon, text label ]
-    --                 )
-    --                 items
-    --             )
-    --
-    --     _ ->
-    --         empty
-    empty
-
-
-contextMenuEventOptions =
-    { preventDefault = True
-    , stopPropagation = True
-    }
-
-
 mainNav : Model -> Node
 mainNav model =
     el
@@ -520,12 +475,13 @@ mainNav model =
 
 
 notifications : Toasty.Stack Notification -> Node
-notifications =
-    Toasty.view
-        Notifications.Config.config
-        Notifications.entry
-        ToastyMsg
-        >> html
+notifications stack =
+    stack
+        |> Toasty.view
+            Notifications.Config.config
+            Notifications.entry
+            ToastyMsg
+        |> html
 
 
 overlay : Maybe Alfred -> Maybe ContextMenu -> Node

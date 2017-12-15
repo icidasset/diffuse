@@ -70,79 +70,12 @@ type Classes
 stylesLocal : List Snippet
 stylesLocal =
     [ ------------------------------------------------------
-      -- <html> ✅
+      -- Content box
+      --
+      -- > Just a box with some padding and stuff.
+      --   Mainly used for containing text elements.
       ------------------------------------------------------
-      html
-        [ fontSize (px 14)
-        , withMedia [ tablet ] [ fontSize (px baseFontSize) ]
-        ]
-
-    ------------------------------------------------------
-    -- Insulation
-    --
-    -- > Main wrapper used for the layout with the music
-    --   controls visible.
-    ------------------------------------------------------
-    , class Insulation
-        [ backgroundColor (hex "#fff")
-        , borderRadius (px 3)
-        , boxShadow4 (px 0) (px 2) (px 4) (rgba 0 0 0 0.2)
-        , displayFlex
-        , flex (int 1)
-        , margin3 (gr 10) auto zero
-        , maxWidth (px insulationWidth)
-        , minHeight (px 218)
-        , overflow hidden
-        , position relative
-        , width (pct 100)
-
-        -- Nested insulation
-        , children
-            [ class Insulation
-                [ bottom zero
-                , left zero
-                , margin zero
-                , overflow visible
-                , position absolute
-                , right zero
-                , top zero
-                , zIndex (int 9)
-                ]
-            ]
-        ]
-    , class InsulationCentered
-        [ alignItems center
-        , justifyContent center
-        ]
-    , class InsulationContent
-        [ flex (int 1)
-        , overflowX hidden
-        , overflowY auto
-        ]
-    , class InsulationFlexContent
-        [ displayFlex
-        , flexDirection column
-        ]
-
-    ------------------------------------------------------
-    -- In the middle
-    --
-    -- > Vertically and horizontally center stuff.
-    ------------------------------------------------------
-    , class InTheMiddle
-        [ alignItems center
-        , displayFlex
-        , height (vh 100)
-        , justifyContent center
-        ]
-
-    ------------------------------------------------------
-    -- Content box
-    --
-    -- > Just a box with some padding and stuff.
-    --   Mainly used for containing text elements.
-    ------------------------------------------------------
-    , class ContentBox
+      class ContentBox
         [ padding3 zero (gr 4) (gr 6)
         ]
 
@@ -267,24 +200,6 @@ stylesLocal =
     --  OTHER BASIC COMPONENTS  --
     --                          --
     --                          --
-    ------------------------------------------------------
-    -- Basic wrapper
-    ------------------------------------------------------
-    , class Basic
-        [ color (hex "#fff")
-        , lineHeight (num 1.5)
-        , textAlign center
-
-        --
-        , descendants
-            [ svg
-                [ display inlineBlock
-                , marginRight (gr 1)
-                , transform (translateY (px 2))
-                ]
-            ]
-        ]
-
     ------------------------------------------------------
     -- Columns
     ------------------------------------------------------

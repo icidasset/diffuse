@@ -1,7 +1,6 @@
 module Variables exposing (..)
 
 import Color exposing (Color, rgb, rgba)
-import Color.Manipulate exposing (..)
 import Style exposing (Font)
 import Style.Font as Font
 import Style.Scale as Scale
