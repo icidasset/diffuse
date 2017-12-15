@@ -34,12 +34,9 @@ styles =
             |> color
         , fontSize (Css.rem 0.675)
         , letterSpacing (Css.em 0.0625)
-        , margin3 (gr 7) auto zero
-        , maxWidth (px insulationWidth)
         , textAlign center
         , textTransform uppercase
         , whiteSpace noWrap
-        , width (pct 100)
 
         --
         , descendants

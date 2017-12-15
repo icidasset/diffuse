@@ -70,42 +70,11 @@ type Classes
 stylesLocal : List Snippet
 stylesLocal =
     [ ------------------------------------------------------
-      -- <html>
+      -- <html> ✅
       ------------------------------------------------------
       html
         [ fontSize (px 14)
         , withMedia [ tablet ] [ fontSize (px baseFontSize) ]
-        ]
-
-    ------------------------------------------------------
-    -- <body>
-    ------------------------------------------------------
-    , body
-        [ backgroundColor (hex "#02070E")
-        , backgroundImage (url "/images/ep_naturalblack_pattern.jpg")
-        , color (cssColor colorDerivatives.text)
-        , Traits.defaultFont
-        , fontSize (Css.rem 1)
-        , lineHeight (Css.num 1.75)
-        , overflow hidden
-        , textRendering optimizeLegibility
-
-        --
-        , property "-webkit-font-smoothing" "antialiased"
-        , property "-moz-osx-font-smoothing" "grayscale"
-        , property "font-smooth" "always"
-        ]
-
-    ------------------------------------------------------
-    -- Shell
-    --
-    -- > Surrounding node
-    ------------------------------------------------------
-    , class Shell
-        [ displayFlex
-        , flexDirection column
-        , height (vh 100)
-        , padding2 zero (gr 3)
         ]
 
     ------------------------------------------------------
@@ -235,10 +204,6 @@ stylesLocal =
     , label
         [ cursor inherit
         ]
-    , svg
-        [ height (Css.em 1)
-        , width (Css.em 1)
-        ]
 
     ------------------------------------------------------
     -- <🎃> Buttons
@@ -302,43 +267,6 @@ stylesLocal =
     --  OTHER BASIC COMPONENTS  --
     --                          --
     --                          --
-    ------------------------------------------------------
-    -- Authentication button
-    ------------------------------------------------------
-    , class AuthenticationButton
-        [ alignItems center
-        , borderBottom3 (px 1) solid (cssColor colors.base07)
-        , color (cssColor colorDerivatives.text)
-        , cursor pointer
-        , displayFlex
-        , fontSize (Css.rem 0.9)
-        , height (px 22)
-        , lineHeight (gr 3)
-        , padding2 (basem 15) zero
-        , property "padding-top" ("calc(" ++ .value (basem 15) ++ " + 1px)")
-        , textAlign left
-        , width (basem 260)
-
-        --
-        , lastChild
-            [ borderBottomWidth zero ]
-
-        --
-        , children
-            [ span
-                [ lineHeight (Css.rem 1) ]
-            , (span << List.singleton << children << List.singleton << svg)
-                [ marginRight (gr 2)
-                , transform (translateY (px 1))
-                , width (basem 22)
-                ]
-            ]
-        , descendants
-            [ selector "g"
-                [ fill currentColor ]
-            ]
-        ]
-
     ------------------------------------------------------
     -- Basic wrapper
     ------------------------------------------------------
@@ -464,25 +392,5 @@ stylesLocal =
         , position absolute
         , right zero
         , top zero
-        ]
-
-    ------------------------------------------------------
-    -- Overlay
-    ------------------------------------------------------
-    , class Overlay
-        [ backgroundColor (rgba 0 0 0 0.25)
-        , height (vh 100)
-        , left zero
-        , opacity zero
-        , position fixed
-        , property "pointer-events" "none"
-        , property "transition" "opacity 1s ease"
-        , top zero
-        , width (vw 100)
-        , zIndex (int 900)
-        ]
-    , class OverlayWithCursor
-        [ cursor pointer
-        , property "pointer-events" "auto"
         ]
     ]
