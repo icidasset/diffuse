@@ -10,7 +10,7 @@ import Variables exposing (..)
 -- Children
 
 import Alfred.Styles as Alfred
-import ContextMenu.Styles as ContextMenu
+import ContextMenu.StylesOld as ContextMenu
 import Console.Styles as Console
 import Equalizer.Styles as Equalizer
 import Form.Styles as Form

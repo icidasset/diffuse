@@ -2,7 +2,8 @@ module Element.Ext exposing (lazy, lazy2, lazy3)
 
 import Element exposing (Element)
 import Html.Lazy
-import Styles exposing (..)
+import Styles exposing (Styles, styles)
+import Variations exposing (Variations)
 
 
 type alias El msg =

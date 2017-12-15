@@ -1,54 +1,25 @@
-module ContextMenu.Styles exposing (..)
+module ContextMenu.Styles exposing (Styles(..), styles)
 
-import Css exposing (..)
-import Css.Elements exposing (a, svg)
-import Traits exposing (..)
-
-
-type Classes
-    = ContextMenu
+import Style exposing (..)
+import Variations exposing (Variations)
 
 
+-- 🍯
 
--- 🦄
 
-
-styles : List Snippet
+styles : List (Style Styles Variations)
 styles =
-    [ class ContextMenu
-        [ backgroundColor (rgb 255 255 255)
-        , disableSelect
-        , fontSize (Css.rem 0.8)
-        , minWidth (px 170)
-        , position absolute
-        , property "box-shadow" "0 1px 3px 0 rgba(0, 0, 0, 0.225), 0 3px 15px 0 rgba(0, 0, 0, 0.1)"
-        , transform (translate2 (pct -50) (pct -50))
-        , zIndex (int 1000)
-
-        --
-        , descendants
-            [ a
-                [ borderBottom3 (px 1) solid (rgba 0 0 0 0.075)
-                , cursor pointer
-                , display block
-                , lineHeight (num 1.35)
-                , overflow hidden
-                , padding2 (gr 2) (gr 3)
-                , paddingRight (gr 5)
-                , textOverflow ellipsis
-                , whiteSpace noWrap
-
-                --
-                , lastChild
-                    [ borderBottom zero
-                    ]
-                ]
-            , svg
-                [ marginRight (gr 2)
-                , marginTop (px -2)
-                , opacity (num 0.5)
-                , verticalAlign middle
-                ]
-            ]
-        ]
+    [ -----------------------------------
+      -- Container
+      -----------------------------------
+      style Container
+        []
     ]
+
+
+
+-- Types
+
+
+type Styles
+    = Container

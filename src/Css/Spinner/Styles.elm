@@ -24,8 +24,6 @@ styles =
             |> List.singleton
             |> interpolate "spinnerRotator {0}s linear infinite"
             |> property "animation"
-        , height (px 29)
-        , width (px 29)
         ]
     , class SpinnerCircle
         [ property "animation" circleAnimation
