@@ -18,6 +18,32 @@ import Variations exposing (Variations)
 -- Children
 
 import ContextMenu.Styles as ContextMenu
+import Navigation.Styles as Navigation
+
+
+-- ⚗️
+
+
+type Styles
+    = -- 🚀
+      Root
+      -- Basics
+    | Message
+    | WithoutLineHeight
+      -- Buttons
+    | AuthenticationButton
+      -- Containers
+    | AuthenticationOptions
+    | Insulation
+    | NestedInsulation
+      -- Decorations
+    | Overlay
+      -- 🌳
+    | ContextMenu ContextMenu.Styles
+    | Navigation Navigation.Styles
+      -- 💀
+    | Zed
+
 
 
 -- 🍯
@@ -37,31 +63,8 @@ styles =
 
         --
         , Sheet.mixChild ContextMenu ContextMenu.styles
+        , Sheet.mixChild Navigation Navigation.styles
         ]
-
-
-
--- Types
-
-
-type Styles
-    = -- 🚀
-      Root
-      -- Basics
-    | Message
-    | WithoutLineHeight
-      -- Buttons
-    | AuthenticationButton
-      -- Containers
-    | AuthenticationOptions
-    | Insulation
-    | NestedInsulation
-      -- Decorations
-    | Overlay
-      -- 🌳
-    | ContextMenu ContextMenu.Styles
-      -- 💀
-    | Zed
 
 
 

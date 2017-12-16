@@ -2,6 +2,7 @@ module Types exposing (..)
 
 import Date exposing (Date)
 import Debounce exposing (Debounce)
+import Element exposing (Element)
 import Html
 import Json.Encode
 import Keyboard.Extra as Keyboard
@@ -9,9 +10,11 @@ import Lazy exposing (Lazy)
 import Mouse
 import Notifications.Types exposing (Notification)
 import Slave.Types
+import Styles exposing (Styles)
 import Svg exposing (Svg)
 import Toasty
 import Time exposing (Time)
+import Variations exposing (Variations)
 
 
 -- Children
@@ -154,6 +157,18 @@ type alias Alfred =
     , results : List String
     , searchTerm : Maybe String
     }
+
+
+
+-- Elements
+
+
+type alias Node =
+    Element Styles Variations Msg
+
+
+type alias Attr =
+    Element.Attribute Variations Msg
 
 
 

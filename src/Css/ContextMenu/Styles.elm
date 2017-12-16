@@ -9,6 +9,15 @@ import Variables exposing (scaled)
 import Variations exposing (Variations)
 
 
+-- ⚗️
+
+
+type Styles
+    = Container
+    | Item
+
+
+
 -- 🍯
 
 
@@ -37,12 +46,3 @@ styles =
         , pseudo "last-child" [ Border.bottom 0 ]
         ]
     ]
-
-
-
--- Types
-
-
-type Styles
-    = Container
-    | Item

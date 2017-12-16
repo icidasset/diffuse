@@ -4,6 +4,9 @@ import Color exposing (Color)
 import Svg exposing (Svg)
 
 
+-- ⚗️
+
+
 type Icon msg
     = Icon (Color -> Int -> Svg msg)
 

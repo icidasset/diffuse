@@ -1,6 +1,7 @@
 module Variables exposing (..)
 
 import Color exposing (Color, rgb, rgba)
+import Element.Attributes exposing (Length)
 import Style exposing (Font)
 import Style.Font as Font
 import Style.Scale as Scale
@@ -12,6 +13,11 @@ import Style.Scale as Scale
 scaled : Int -> Float
 scaled =
     Scale.modular 16 1.125
+
+
+scaledPx : Int -> Length
+scaledPx =
+    scaled >> Element.Attributes.px
 
 
 

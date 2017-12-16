@@ -6,8 +6,15 @@ import Styles exposing (Styles, styles)
 import Variations exposing (Variations)
 
 
+-- ⚗️
+
+
 type alias El msg =
     Element Styles Variations msg
+
+
+
+-- 🍯
 
 
 {-| Temporary lazy functions for `style-elements`.

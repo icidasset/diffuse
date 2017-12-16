@@ -1,64 +1,126 @@
-module Navigation.View exposing (..)
+module Navigation.View exposing (outside, outsideOutgoing, inside, insideCustom)
 
-import Html exposing (Html, a, div, span, text)
-import Html.Attributes exposing (href, title)
-import Html.Events.Extra exposing (onClickPreventDefault)
-import Navigation.Styles exposing (..)
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Events exposing (onWithOptions)
+import Element.Events.Ext exposing (preventDefaultOptions)
+import Json.Decode
+import Navigation.Styles exposing (Styles(..))
 import Navigation.Types exposing (..)
 import Routing.Logic exposing (isSameBase, pageToHref)
 import Routing.Types as Routing
-import Types exposing (Msg(RoutingMsg))
-import Utils exposing (cssClass)
-import Variables exposing (colorDerivatives)
+import Styles exposing (Styles(Navigation, Zed))
+import Types exposing (Msg(RoutingMsg), Node)
+import Variables exposing (colorDerivatives, scaled, scaledPx)
+
+
+-- TODO
+
+import Html exposing (Html)
 
 
 -- 🍯
 
 
-outside : Routing.Page -> List ( Html Msg, Routing.Page ) -> Html Msg
+outside : Routing.Page -> List ( String, Routing.Page ) -> Node
 outside currentPage items =
-    div
-        [ cssClass OutsideNavigation ]
-        (List.map (itemViewWithActiveLink currentPage) items)
+    let
+        mapFn =
+            outsideView currentPage
+    in
+        row
+            (Navigation Outside)
+            [ center, spacing (scaled 8), width fill ]
+            (List.map mapFn items)
 
 
-outsideOutgoing : Routing.Page -> List ( Html Msg, String ) -> Html Msg
+outsideOutgoing : Routing.Page -> List ( Icon Msg, String ) -> Node
 outsideOutgoing currentPage items =
-    div
-        [ cssClass OutsideNavigation ]
-        (List.map (itemViewOutgoing <| pageToHref currentPage) items)
+    let
+        mapFn =
+            currentPage
+                |> pageToHref
+                |> outsideOutgoingView
+    in
+        row
+            (Navigation Outside)
+            [ center, spacing (scaled 8), width fill ]
+            (List.map mapFn items)
 
 
 inside : List ( Icon Msg, Label, Routing.Page ) -> Html Msg
 inside items =
-    div
-        [ cssClass InsideNavigation ]
-        (List.map itemView items)
+    items
+        |> List.map insideView
+        |> row (Navigation Inside) []
+        |> toHtml Styles.styles
 
 
 insideCustom : List ( Icon Msg, Label, Msg ) -> Html Msg
 insideCustom items =
-    div
-        [ cssClass InsideNavigation ]
-        (List.map itemViewCustom items)
+    items
+        |> List.map insideViewCustom
+        |> row (Navigation Inside) []
+        |> toHtml Styles.styles
 
 
 
--- Items
+-- Outside
 
 
-itemView : ( Icon Msg, Label, Routing.Page ) -> Html Msg
-itemView ( icon, label, itemPage ) =
+outsideView : Routing.Page -> ( String, Routing.Page ) -> Node
+outsideView currentPage ( itemLabel, itemPage ) =
+    let
+        style =
+            if isSameBase currentPage itemPage then
+                Navigation OutsideItemActivated
+            else
+                Navigation OutsideItem
+    in
+        itemLabel
+            |> text
+            |> el style
+                [ itemPage
+                    |> Routing.GoToPage
+                    |> RoutingMsg
+                    |> Json.Decode.succeed
+                    |> onWithOptions "click" preventDefaultOptions
+                ]
+            |> link (pageToHref itemPage)
+
+
+outsideOutgoingView : String -> ( Icon Msg, String ) -> Node
+outsideOutgoingView activeHref ( Icon icon, itemHref ) =
+    let
+        style =
+            if itemHref == activeHref then
+                Navigation OutsideItemActivated
+            else
+                Navigation OutsideItem
+    in
+        icon colorDerivatives.text 16
+            |> html
+            |> el style []
+            |> link itemHref
+
+
+
+-- Inside
+
+
+insideView : ( Icon Msg, Label, Routing.Page ) -> Node
+insideView ( icon, label, itemPage ) =
     itemPage
         |> Routing.GoToPage
         |> RoutingMsg
         |> (,,) icon label
-        |> itemViewCustom
+        |> insideViewCustom
 
 
-itemViewCustom : ( Icon Msg, Label, Msg ) -> Html Msg
-itemViewCustom ( Icon icon, Label label, msg ) =
+insideViewCustom : ( Icon Msg, Label, Msg ) -> Node
+insideViewCustom ( Icon icon, Label label, msg ) =
     let
+        maybeHref : Maybe String
         maybeHref =
             case msg of
                 RoutingMsg (Routing.GoToPage page) ->
@@ -67,79 +129,60 @@ itemViewCustom ( Icon icon, Label label, msg ) =
                 _ ->
                     Nothing
 
-        baseAttr =
-            [ onClickPreventDefault msg
+        attributes : List (Attribute variations Msg)
+        attributes =
+            [ onWithOptions "click" preventDefaultOptions (Json.Decode.succeed msg)
 
-            --
-            , case label of
-                Hidden _ ->
-                    cssClass NonFlexLink
-
-                Shown _ ->
-                    cssClass FlexLink
-
-            --
+            -- Title
             , case label of
                 Hidden l ->
-                    title l
+                    attribute "title" l
 
                 Shown _ ->
-                    title ""
-            ]
-    in
-        a
-            (case maybeHref of
-                Just it ->
-                    href it :: baseAttr
+                    attribute "title" ""
 
-                Nothing ->
-                    baseAttr
-            )
-            [ span
-                []
-                [ icon colorDerivatives.text 16
+            -- Width
+            , case label of
+                Hidden _ ->
+                    width content
+
+                Shown _ ->
+                    width fill
+            ]
+
+        node : Node
+        node =
+            row
+                Zed
+                [ height (scaledPx 9)
+                , center
+                , moveDown 1
+                , paddingXY (scaled 2) 0
+                , verticalCenter
+                , width fill
+
+                -- Spacing
                 , case label of
                     Hidden _ ->
-                        Html.text ""
+                        spacing 0
 
                     Shown l ->
-                        Html.label [] [ text l ]
+                        spacing (scaled -2)
                 ]
-            ]
+                [ html (icon colorDerivatives.text 16)
 
+                -- Label
+                , case label of
+                    Hidden _ ->
+                        empty
 
+                    Shown l ->
+                        text l
+                ]
+    in
+        case maybeHref of
+            Just href ->
+                el (Navigation InsideItem) attributes (link href node)
 
--- Items, Pt 2.
-
-
-itemViewWithActiveLink : Routing.Page -> ( Html Msg, Routing.Page ) -> Html Msg
-itemViewWithActiveLink currentPage ( itemLabel, itemPage ) =
-    a
-        [ href (pageToHref itemPage)
-        , onClickPreventDefault (RoutingMsg <| Routing.GoToPage itemPage)
-
-        --
-        , if isSameBase currentPage itemPage then
-            cssClass ActiveLink
-          else
-            cssClass NonActiveLink
-        ]
-        [ span
-            []
-            [ itemLabel ]
-        ]
-
-
-itemViewOutgoing : String -> ( Html Msg, String ) -> Html Msg
-itemViewOutgoing activeHref ( itemLabel, itemHref ) =
-    a
-        [ href itemHref
-        , if itemHref == activeHref then
-            cssClass ActiveLink
-          else
-            cssClass NonActiveLink
-        ]
-        [ span
-            []
-            [ itemLabel ]
-        ]
+            Nothing ->
+                el (Navigation InsideItem) attributes node

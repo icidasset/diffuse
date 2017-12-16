@@ -2,7 +2,6 @@ module View exposing (entry)
 
 import Equalizer.Touch
 import Html exposing (Html)
-import Html.Attributes
 import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Alert
@@ -49,19 +48,12 @@ import Tracks.View as Tracks
 -- Children, Pt. 2
 
 import Authentication.Types exposing (Method(..))
+import Navigation.Types exposing (Icon(..))
 import Routing.Types exposing (Page(..))
 import Sources.Types
 
 
 -- ⚗️
-
-
-type alias Node =
-    Element Styles Variations Msg
-
-
-type alias Attr =
-    Element.Attribute Variations Msg
 
 
 type alias InsulationOptions =
@@ -361,11 +353,10 @@ authenticatedNavigation currentPage maybeAlfred =
             [ inlineStyle styles ]
             (Navigation.outside
                 currentPage
-                [ ( Html.text "Tracks", Routing.Types.Index )
-                , ( Html.text "Sources", Routing.Types.Sources Sources.Types.Index )
-                , ( Html.text "Settings", Routing.Types.Settings )
+                [ ( "Tracks", Routing.Types.Index )
+                , ( "Sources", Routing.Types.Sources Sources.Types.Index )
+                , ( "Settings", Routing.Types.Settings )
                 ]
-                |> html
             )
 
 
@@ -373,10 +364,9 @@ unauthenticatedNavigation : Page -> Node
 unauthenticatedNavigation currentPage =
     Navigation.outsideOutgoing
         currentPage
-        [ ( Material.Icons.Action.home colors.base05 16, "/" )
-        , ( Material.Icons.Action.info colors.base05 16, "/about" )
+        [ ( Icon Material.Icons.Action.home, "/" )
+        , ( Icon Material.Icons.Action.info, "/about" )
         ]
-        |> html
 
 
 
@@ -426,21 +416,18 @@ alfred maybe =
 
 backgroundImage : String -> Node
 backgroundImage img =
-    el Zed
-        [ inlineStyle (backgroundImageStyles img)
-        , height fill
-        , width fill
-        ]
-        empty
+    el Zed [ inlineStyle (backgroundImageStyles img) ] empty
 
 
 backgroundImageStyles : String -> List ( String, String )
 backgroundImageStyles img =
     [ ( "background-image", "url(/images/Background/" ++ img ++ ")" )
     , ( "background-size", "cover" )
-    , ( "left", "0" )
+    , ( "bottom", "-1px" )
+    , ( "left", "-1px" )
     , ( "position", "fixed" )
-    , ( "top", "0" )
+    , ( "right", "-1px" )
+    , ( "top", "-1px" )
     , ( "z-index", "-10" )
 
     --
@@ -459,7 +446,7 @@ mainNav model =
         Zed
         [ center
         , paddingBottom (scaled 12)
-        , paddingTop (scaled 10)
+        , paddingTop (scaled 9)
         , width fill
         ]
         (if model.authentication.signedIn then

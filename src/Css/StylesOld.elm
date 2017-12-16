@@ -14,7 +14,6 @@ import Console.Styles as Console
 import Equalizer.Styles as Equalizer
 import Form.Styles as Form
 import List.Styles as List
-import Navigation.Styles as Navigation
 import Tracks.Styles as Tracks
 
 
@@ -26,7 +25,6 @@ styles =
         |> List.append Equalizer.styles
         |> List.append Form.styles
         |> List.append List.styles
-        |> List.append Navigation.styles
         |> List.append Tracks.styles
 
 
@@ -90,7 +88,9 @@ stylesLocal =
         , marginBottom (gr 3)
         , marginTop (px -1)
         , padding3 (basem 4) (basem 10) (basem 3)
+        , position relative
         , textTransform uppercase
+        , zIndex (int 1)
         ]
     , h2
         [ fontSize (Css.rem 1.4)
