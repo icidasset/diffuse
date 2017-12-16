@@ -7,7 +7,7 @@ import Style.Border as Border
 import Style.Color as Color
 import Style.Font as Font
 import Variables exposing (colors, colorDerivatives, scaled)
-import Variations exposing (Variations)
+import Variations exposing (Variations(Active))
 
 
 -- ⚗️
@@ -18,7 +18,6 @@ type Styles
     | InsideItem
     | Outside
     | OutsideItem
-    | OutsideItemActivated
 
 
 
@@ -48,14 +47,15 @@ outside =
       -- Item
       -----------------------------------
       style OutsideItem
-        [ opacity 0.55 ]
-    , -----------------------------------
-      -- Active item
-      -----------------------------------
-      style OutsideItemActivated
-        [ Border.bottom 1
-        , Color.border (Color.Manipulate.fadeOut 0.875 colorDerivatives.text)
-        , Color.text (Color.Manipulate.fadeOut 0.275 colorDerivatives.text)
+        [ opacity 0.55
+
+        -- Active version
+        , variation Active
+            [ Border.bottom 1
+            , Color.border (Color.Manipulate.fadeOut 0.875 colorDerivatives.text)
+            , Color.text (Color.Manipulate.fadeOut 0.275 colorDerivatives.text)
+            , opacity 1
+            ]
         ]
     ]
 

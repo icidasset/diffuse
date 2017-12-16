@@ -86,4 +86,4 @@ headerFont =
 
 insulationWidth : Float
 insulationWidth =
-    834
+    840

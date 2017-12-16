@@ -12,6 +12,7 @@ import Routing.Types as Routing
 import Styles exposing (Styles(Navigation, Zed))
 import Types exposing (Msg(RoutingMsg), Node)
 import Variables exposing (colorDerivatives, scaled, scaledPx)
+import Variations exposing (Variations(Active))
 
 
 -- TODO
@@ -70,38 +71,28 @@ insideCustom items =
 
 outsideView : Routing.Page -> ( String, Routing.Page ) -> Node
 outsideView currentPage ( itemLabel, itemPage ) =
-    let
-        style =
-            if isSameBase currentPage itemPage then
-                Navigation OutsideItemActivated
-            else
-                Navigation OutsideItem
-    in
-        itemLabel
-            |> text
-            |> el style
-                [ itemPage
-                    |> Routing.GoToPage
-                    |> RoutingMsg
-                    |> Json.Decode.succeed
-                    |> onWithOptions "click" preventDefaultOptions
-                ]
-            |> link (pageToHref itemPage)
+    itemLabel
+        |> text
+        |> el
+            (Navigation OutsideItem)
+            [ vary Active (isSameBase currentPage itemPage)
+
+            -- Events
+            , itemPage
+                |> Routing.GoToPage
+                |> RoutingMsg
+                |> Json.Decode.succeed
+                |> onWithOptions "click" preventDefaultOptions
+            ]
+        |> link (pageToHref itemPage)
 
 
 outsideOutgoingView : String -> ( Icon Msg, String ) -> Node
 outsideOutgoingView activeHref ( Icon icon, itemHref ) =
-    let
-        style =
-            if itemHref == activeHref then
-                Navigation OutsideItemActivated
-            else
-                Navigation OutsideItem
-    in
-        icon colorDerivatives.text 16
-            |> html
-            |> el style []
-            |> link itemHref
+    icon colorDerivatives.text 16
+        |> html
+        |> el (Navigation OutsideItem) [ vary Active (itemHref == activeHref) ]
+        |> link itemHref
 
 
 
