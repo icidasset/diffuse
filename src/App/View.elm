@@ -495,7 +495,9 @@ overlay a b =
     in
         el
             Overlay
-            [ overlayPositioning
+            [ height fill
+            , width fill
+            , overlayPositioning
                 |> List.append additionalStyles
                 |> inlineStyle
             ]

@@ -6,9 +6,10 @@ import Element.Attributes exposing (..)
 import Element.Events exposing (onClick, onWithOptions)
 import Json.Decode
 import Mouse exposing (Position)
-import Styles
+import Styles exposing (Styles(..))
 import Svg exposing (Svg)
 import Types exposing (ContextMenu, Msg(..))
+import Variables exposing (scaled)
 import Variations exposing (Variations)
 
 
@@ -60,12 +61,18 @@ itemView : ( Svg Msg, String, Msg ) -> Element Styles.Styles Variations Msg
 itemView ( icon, label, msg ) =
     row
         (Styles.ContextMenu Item)
-        [ HideContextMenu
+        [ paddingXY (scaled 1) (scaled -3)
+        , paddingRight (scaled 6)
+        , spacing (scaled -3)
+        , verticalCenter
+
+        -- Events
+        , HideContextMenu
             |> List.singleton
             |> List.append [ msg ]
             |> DoAll
             |> onClick
         ]
-        [ html icon
+        [ el WithoutLineHeight [] (html icon)
         , text label
         ]

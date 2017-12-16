@@ -29,14 +29,14 @@ trackMenu model lastModifiedPlaylist identifiedTracks =
                     defaultPlaylistActions tracks lastModifiedPlaylist
                 else
                     -- Playlist actions, when in a playlist.
-                    [ ( Icons.format_list_numbered colorDerivatives.text 16
+                    [ ( Icons.format_list_numbered colorDerivatives.text 14
                       , "Remove from playlist"
                       , identifiedTracks
                             |> List.map (Tuple.first >> .indexInPlaylist >> Maybe.withDefault 0)
                             |> RemoveTracksByIndex selectedPlaylist.name
                             |> PlaylistsMsg
                       )
-                    , ( Icons.format_list_numbered colorDerivatives.text 16
+                    , ( Icons.format_list_numbered colorDerivatives.text 14
                       , "Add to another playlist"
                       , RequestAssistanceForPlaylists tracks
                       )
@@ -58,21 +58,21 @@ defaultPlaylistActions : List Track -> Maybe String -> ContextMenuItems
 defaultPlaylistActions tracks lastModifiedPlaylist =
     case lastModifiedPlaylist of
         Just playlistName ->
-            [ ( Icons.format_list_numbered colorDerivatives.text 16
+            [ ( Icons.format_list_numbered colorDerivatives.text 14
               , "Add to \"" ++ playlistName ++ "\""
               , tracks
                     |> List.map Playlists.Utils.playlistTrackFromTrack
                     |> AddToPlaylist playlistName
                     |> PlaylistsMsg
               )
-            , ( Icons.format_list_numbered colorDerivatives.text 16
+            , ( Icons.format_list_numbered colorDerivatives.text 14
               , "Add to another playlist"
               , RequestAssistanceForPlaylists tracks
               )
             ]
 
         Nothing ->
-            [ ( Icons.format_list_numbered colorDerivatives.text 16
+            [ ( Icons.format_list_numbered colorDerivatives.text 14
               , "Add to playlist"
               , RequestAssistanceForPlaylists tracks
               )
@@ -83,18 +83,18 @@ queueActions : List IdentifiedTrack -> ContextMenuItems
 queueActions identifiedTracks =
     case identifiedTracks of
         [ a ] ->
-            [ ( Icons.event_seat colorDerivatives.text 16
+            [ ( Icons.event_seat colorDerivatives.text 14
               , "Play next"
               , QueueMsg (Queue.Types.InjectFirst a { showNotification = True })
               )
-            , ( Icons.event_seat colorDerivatives.text 16
+            , ( Icons.event_seat colorDerivatives.text 14
               , "Add to queue"
               , QueueMsg (Queue.Types.InjectLast [ a ] { showNotification = True })
               )
             ]
 
         list ->
-            [ ( Icons.event_seat colorDerivatives.text 16
+            [ ( Icons.event_seat colorDerivatives.text 14
               , "Add to queue"
               , QueueMsg (Queue.Types.InjectLast list { showNotification = True })
               )

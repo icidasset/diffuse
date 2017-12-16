@@ -20,17 +20,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
   <!-- Styles -->
-  <link rel="stylesheet" href="/fonts/fonts.css" />
+  <link rel="stylesheet" href="/index.css" />
+  <link rel="stylesheet" href="/fonts.css" />
   <link rel="stylesheet" href="/application.css" />
-
-  <style>
-    body {
-      background-color: #02070E;
-      background-image: url("/images/ep_naturalblack_pattern.jpg");
-      overflow-x: hidden;
-      overflow-y: auto;
-    }
-  </style>
 
   <!-- Preload some assets -->
   <link rel="preload" href="/fonts/montserrat/montserrat-bold.woff" as="font" crossorigin="anonymous" />
@@ -44,8 +36,8 @@
 
   <div id="elm-container" style="height: 100%;">
     <noscript>
-      <div class="Shell">
-        <p style="color: white; font-weight: bold;">
+      <div class="in-the-middle message">
+        <p>
           Damn it, this application needs Javascript in order to operate.
         </p>
       </div>
@@ -58,7 +50,7 @@
   <script>
     // insert loader
     document.getElementById("elm-container").innerHTML =
-      '<div class="InTheMiddle"><svg class="Spinner" height="29px" width="29px" viewbox="0 0 30 30"><circle class="SpinnerCircle" cx="15" cy="15" fill="none" r="14" stroke-linecap="round" stroke-width="2"></circle></svg></div>';
+      '<div class="in-the-middle"><svg class="spinner" height="29" width="29" viewbox="0 0 30 30"><circle class="spinner-circle" cx="15" cy="15" fill="none" r="14" stroke-linecap="round" stroke-width="2"></circle></svg></div>';
   </script>
 
   <script src="/vendor/package.js"></script>

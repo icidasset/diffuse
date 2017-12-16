@@ -10,13 +10,11 @@ import Variables exposing (..)
 -- Children
 
 import Alfred.Styles as Alfred
-import ContextMenu.StylesOld as ContextMenu
 import Console.Styles as Console
 import Equalizer.Styles as Equalizer
 import Form.Styles as Form
 import List.Styles as List
 import Navigation.Styles as Navigation
-import Spinner.Styles as Spinner
 import Tracks.Styles as Tracks
 
 
@@ -24,20 +22,18 @@ styles : List Snippet
 styles =
     stylesLocal
         |> List.append Alfred.styles
-        |> List.append ContextMenu.styles
         |> List.append Console.styles
         |> List.append Equalizer.styles
         |> List.append Form.styles
         |> List.append List.styles
         |> List.append Navigation.styles
-        |> List.append Spinner.styles
         |> List.append Tracks.styles
 
 
 keyframes : String
 keyframes =
     String.concat
-        [ Spinner.keyframes ]
+        []
 
 
 

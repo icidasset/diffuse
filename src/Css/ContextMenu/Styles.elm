@@ -31,6 +31,10 @@ styles =
       style Item
         [ Border.bottom 1
         , Color.border (rgba 0 0 0 0.075)
+
+        --
+        , cursor "pointer"
+        , pseudo "last-child" [ Border.bottom 0 ]
         ]
     ]
 

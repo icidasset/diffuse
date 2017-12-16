@@ -1,6 +1,5 @@
 module Svg.Elements exposing (..)
 
-import Spinner.Styles exposing (..)
 import Html.Attributes
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -71,13 +70,13 @@ remoteStorageLogo =
 spinner : Svg msg
 spinner =
     svg
-        [ cssSvgClass Spinner
+        [ class "spinner"
         , height "29"
         , viewBox "0 0 30 30"
         , width "29"
         ]
         [ circle
-            [ cssSvgClass SpinnerCircle
+            [ class "spinner-circle"
             , cx "15"
             , cy "15"
             , fill "none"

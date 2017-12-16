@@ -8,6 +8,9 @@ import Toasty
 import Types exposing (Model, Msg(ToastyMsg))
 
 
+-- Operations
+
+
 add : Notification -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 add notification grp =
     grp
