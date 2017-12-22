@@ -31,7 +31,7 @@ import Variables exposing (colorDerivatives)
 
 -- Styles
 
-import Form.Styles as FormStyles
+import Form.StylesOld as FormStyles
 import List.Styles exposing (Classes(..))
 import StylesOld exposing (Classes(..))
 

@@ -7,4 +7,6 @@ import Variations exposing (Variations)
 
 mixChild : (child -> parent) -> List (Style child Variations) -> Style parent Variations
 mixChild class styles =
-    Sheet.merge (Sheet.map class identity styles)
+    styles
+        |> Sheet.map class identity
+        |> Sheet.merge

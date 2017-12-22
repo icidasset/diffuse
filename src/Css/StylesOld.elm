@@ -12,7 +12,7 @@ import Variables exposing (..)
 import Alfred.Styles as Alfred
 import Console.Styles as Console
 import Equalizer.Styles as Equalizer
-import Form.Styles as Form
+import Form.StylesOld as Form
 import List.Styles as List
 import Tracks.Styles as Tracks
 

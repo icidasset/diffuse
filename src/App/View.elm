@@ -133,7 +133,7 @@ entryLazyNodes model =
 {-| Global mouse/touch events & Equalizer events.
 
 TODO:
-Find a way to make these into subscriptions.
+Find a way to make these equalizer events into subscriptions.
 Like we did with the mouse events.
 
 -}
@@ -222,7 +222,6 @@ currentPage insulationOptions model =
         Settings ->
             model
                 |> Settings.entry
-                |> html
                 |> insulate insulationOptions
 
         Sources sourcePage ->

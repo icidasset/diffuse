@@ -2,8 +2,8 @@ module Settings.View exposing (..)
 
 import Authentication.Types as Authentication exposing (Method(..))
 import Color
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, div, label, option, select)
+import Html.Attributes exposing (selected, value)
 import Html.Events exposing (onInput)
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
@@ -13,27 +13,35 @@ import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(..))
 import Settings.Types
-import Types exposing (Model, Msg(..))
+import Types exposing (Model, Msg(..), Node)
 import Utils exposing (cssClass)
+
+
+-- Elements
+
+import Element exposing (..)
+import Element.Attributes exposing (..)
 
 
 -- Styles
 
-import Form.Styles as FormStyles
+import Form.StylesOld as FormStyles
 import StylesOld exposing (Classes(..))
+import Styles exposing (Styles(..))
 
 
 -- 🍯
 
 
-entry : Model -> Html Msg
+entry : Model -> Node
 entry model =
-    div
-        [ cssClass InsulationContent ]
+    column
+        Zed
+        []
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideCustom
+          Navigation.insideCustomNew
             [ ( Icon Icons.import_export
               , Label (Shown "Import / Export")
                 --
@@ -49,15 +57,18 @@ entry model =
         ------------------------------------
         -- Content
         ------------------------------------
-        , div
-            [ cssClass ContentBox ]
+        , column
+            Zed
+            []
             [ h1
+                Zed
                 []
-                [ text "Settings" ]
-            , p
-                [ cssClass Intro ]
+                (text "Settings")
+            , paragraph
+                Zed
+                []
                 [ text "Changes are automatically saved."
-                , br [] []
+                , html (Html.br [] [])
                 , text "PS. You are using the "
                 , case Maybe.withDefault Local model.authentication.method of
                     Blockstack ->
@@ -70,7 +81,10 @@ entry model =
                         text "RemoteStorage"
                 , text " authentication mode."
                 ]
-            , Html.map SettingsMsg (theForm model)
+            , model
+                |> theForm
+                |> Html.map SettingsMsg
+                |> html
             ]
         ]
 
@@ -81,7 +95,7 @@ theForm model =
         [ cssClass FormStyles.HalfWidthForm ]
         [ label
             []
-            [ text "Background image" ]
+            [ Html.text "Background image" ]
         , div
             [ cssClass FormStyles.SelectBox ]
             [ select
@@ -92,7 +106,7 @@ theForm model =
                             [ selected (val == model.settings.backgroundImage)
                             , value val
                             ]
-                            [ text lbl ]
+                            [ Html.text lbl ]
                     )
                     backgroundImages
                 )
