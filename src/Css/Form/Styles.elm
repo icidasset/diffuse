@@ -1,6 +1,8 @@
 module Form.Styles exposing (Styles(..), styles)
 
 import Style exposing (..)
+import Style.Font as Font
+import Variables exposing (scaled)
 import Variations exposing (Variations)
 
 
@@ -28,10 +30,14 @@ styles =
       -- Label
       -----------------------------------
       style Label
-        []
+        [ Font.size (scaled -3)
+        , Font.uppercase
+        , Font.weight 700
+        ]
     , -----------------------------------
       -- Select
       -----------------------------------
       style Select
-        []
+        [ Font.size (scaled -1)
+        ]
     ]

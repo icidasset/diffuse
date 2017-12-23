@@ -17,6 +17,8 @@ import Element exposing (..)
 import Element.Attributes exposing (..)
 import Element.Events exposing (on, onClick)
 import Element.Ext as Element
+import Element.Input as Input
+import Element.Types exposing (Attr, Node)
 import Styles exposing (..)
 import Variables exposing (colors, colorDerivatives, insulationWidth, scaled)
 import Variations exposing (Variations)
@@ -50,6 +52,7 @@ import Tracks.View as Tracks
 import Authentication.Types exposing (Method(..))
 import Navigation.Types exposing (Icon(..))
 import Routing.Types exposing (Page(..))
+import Settings.Types
 import Sources.Types
 
 
@@ -413,9 +416,15 @@ alfred maybe =
             empty
 
 
-backgroundImage : String -> Node
-backgroundImage img =
-    el Zed [ inlineStyle (backgroundImageStyles img) ] empty
+backgroundImage : Input.SelectWith String Settings.Types.Msg -> Node
+backgroundImage selectWithImg =
+    let
+        img =
+            selectWithImg
+                |> Input.selected
+                |> Maybe.withDefault "7.jpg"
+    in
+        el Zed [ inlineStyle (backgroundImageStyles img) ] empty
 
 
 backgroundImageStyles : String -> List ( String, String )

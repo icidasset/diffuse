@@ -18,6 +18,7 @@ import Variations exposing (Variations)
 -- Children
 
 import ContextMenu.Styles as ContextMenu
+import Form.Styles as Form
 import Navigation.Styles as Navigation
 
 
@@ -28,6 +29,7 @@ type Styles
     = -- 🚀
       Root
       -- Basics
+    | Intro
     | Message
     | WithoutLineHeight
       -- Buttons
@@ -38,8 +40,11 @@ type Styles
     | NestedInsulation
       -- Decorations
     | Overlay
+      -- Headings
+    | H1
       -- 🌳
     | ContextMenu ContextMenu.Styles
+    | Form Form.Styles
     | Navigation Navigation.Styles
       -- 💀
     | Zed
@@ -60,9 +65,11 @@ styles =
         , Sheet.mix buttons
         , Sheet.mix containers
         , Sheet.mix decorations
+        , Sheet.mix headings
 
         --
         , Sheet.mixChild ContextMenu ContextMenu.styles
+        , Sheet.mixChild Form Form.styles
         , Sheet.mixChild Navigation Navigation.styles
         ]
 
@@ -113,6 +120,15 @@ zed =
 basics : List (Style Styles Variations)
 basics =
     [ -----------------------------------
+      -- Intro
+      -----------------------------------
+      style Intro
+        [ Font.size (scaled -1)
+
+        --
+        , opacity 0.475
+        ]
+    , -----------------------------------
       -- Message
       -----------------------------------
       style Message [ Color.text Color.white ]
@@ -206,5 +222,27 @@ decorations =
           }
             |> List.singleton
             |> Transition.transitions
+        ]
+    ]
+
+
+
+-- Headings
+
+
+headings : List (Style Styles Variations)
+headings =
+    [ -----------------------------------
+      -- H1
+      -----------------------------------
+      style H1
+        [ Border.roundBottomLeft 3
+        , Border.roundBottomRight 3
+        , Color.background colors.base06
+        , Color.text Color.white
+        , Font.letterSpacing 0.25
+        , Font.size (scaled -3)
+        , Font.uppercase
+        , Font.weight 700
         ]
     ]

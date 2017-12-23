@@ -1,6 +1,7 @@
 module Authentication.UserData exposing (..)
 
 import Authentication.Types exposing (..)
+import Element.Input as Input
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Types as TopLevel
@@ -95,7 +96,11 @@ importSettings pre ( _, obj ) =
             decodeSetting obj "application"
     in
         { pre
-            | backgroundImage = coder "backgroundImage" Decode.string pre.backgroundImage
+            | backgroundImage =
+                pre.backgroundImage
+                    |> Input.selected
+                    |> coder "backgroundImage" (Decode.maybe Decode.string)
+                    |> (\x -> Input.dropMenu x Settings.Types.SelectBackgroundImage)
         }
 
 
@@ -240,7 +245,14 @@ encodeSettings model =
     let
         application =
             Encode.object
-                [ ( "backgroundImage", Encode.string model.settings.backgroundImage )
+                [ ( "backgroundImage"
+                  , case Input.selected model.settings.backgroundImage of
+                        Just v ->
+                            Encode.string v
+
+                        Nothing ->
+                            Encode.null
+                  )
                 ]
 
         equalizer =

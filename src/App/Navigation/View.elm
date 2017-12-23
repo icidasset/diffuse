@@ -4,13 +4,14 @@ import Element exposing (..)
 import Element.Attributes exposing (..)
 import Element.Events exposing (onWithOptions)
 import Element.Events.Ext exposing (preventDefaultOptions)
+import Element.Types exposing (Node)
 import Json.Decode
 import Navigation.Styles exposing (Styles(..))
 import Navigation.Types exposing (..)
 import Routing.Logic exposing (isSameBase, pageToHref)
 import Routing.Types as Routing
 import Styles exposing (Styles(Navigation, Zed))
-import Types exposing (Msg(RoutingMsg), Node)
+import Types exposing (Msg(RoutingMsg))
 import Variables exposing (colorDerivatives, scaled, scaledPx)
 import Variations exposing (Variations(Active))
 

@@ -5,6 +5,7 @@ import Color
 import Html exposing (Html, div, label, option, select)
 import Html.Attributes exposing (selected, value)
 import Html.Events exposing (onInput)
+import Layouts
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Material.Icons.Navigation as Icons
@@ -13,20 +14,23 @@ import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(..))
 import Settings.Types
-import Types exposing (Model, Msg(..), Node)
+import Types exposing (Model, Msg(..))
 import Utils exposing (cssClass)
+import Variables exposing (scaled)
 
 
 -- Elements
 
 import Element exposing (..)
 import Element.Attributes exposing (..)
+import Element.Input as Input
+import Element.Types exposing (Node)
 
 
 -- Styles
 
+import Form.Styles
 import Form.StylesOld as FormStyles
-import StylesOld exposing (Classes(..))
 import Styles exposing (Styles(..))
 
 
@@ -59,14 +63,9 @@ entry model =
         ------------------------------------
         , column
             Zed
-            []
-            [ h1
-                Zed
-                []
-                (text "Settings")
-            , paragraph
-                Zed
-                []
+            [ paddingXY (scaled 4) 0 ]
+            [ Layouts.h1 "Settings"
+            , Layouts.intro
                 [ text "Changes are automatically saved."
                 , html (Html.br [] [])
                 , text "PS. You are using the "
@@ -83,35 +82,39 @@ entry model =
                 ]
             , model
                 |> theForm
-                |> Html.map SettingsMsg
-                |> html
+                |> Element.map SettingsMsg
             ]
         ]
 
 
-theForm : Model -> Html Settings.Types.Msg
+theForm : Model -> Element Styles variations Settings.Types.Msg
 theForm model =
-    Html.form
-        [ cssClass FormStyles.HalfWidthForm ]
-        [ label
-            []
-            [ Html.text "Background image" ]
-        , div
-            [ cssClass FormStyles.SelectBox ]
-            [ select
-                [ onInput Settings.Types.SetBackgroundImage ]
-                (List.map
-                    (\( val, lbl ) ->
-                        option
-                            [ selected (val == model.settings.backgroundImage)
-                            , value val
-                            ]
-                            [ Html.text lbl ]
-                    )
-                    backgroundImages
-                )
-            , Icons.expand_more (Color.greyscale 0.325) 20
+    column
+        Zed
+        [ width (percent 50) ]
+        [ -----------------------------------
+          -- Background image
+          -----------------------------------
+          Input.select (Styles.Form Form.Styles.Select)
+            [ padding 10
+            , spacing 20
             ]
+            { label =
+                "Background image"
+                    |> text
+                    |> el (Styles.Form Form.Styles.Label) []
+                    |> Input.labelAbove
+            , with = model.settings.backgroundImage
+            , max = 1
+            , options = []
+            , menu =
+                Input.menu (Styles.Form Form.Styles.Select)
+                    []
+                    (List.map
+                        (\( v, l ) -> Input.choice v (text l))
+                        backgroundImages
+                    )
+            }
         ]
 
 

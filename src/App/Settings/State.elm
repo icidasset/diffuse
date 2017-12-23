@@ -1,5 +1,6 @@
 module Settings.State exposing (..)
 
+import Element.Input as Input
 import Response.Ext exposing (do)
 import Settings.Types exposing (..)
 import Types as TopLevel
@@ -10,7 +11,7 @@ import Types as TopLevel
 
 initialModel : Model
 initialModel =
-    { backgroundImage = "7.jpg"
+    { backgroundImage = Input.dropMenu (Just "7.jpg") SelectBackgroundImage
     }
 
 
@@ -21,7 +22,7 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
-        SetBackgroundImage filename ->
+        SelectBackgroundImage selectMsg ->
             (!)
-                { model | backgroundImage = filename }
+                { model | backgroundImage = Input.updateSelection selectMsg model.backgroundImage }
                 [ do TopLevel.DebounceStoreUserData ]

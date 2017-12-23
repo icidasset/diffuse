@@ -9,7 +9,7 @@ import Variables exposing (..)
 
 -- Children
 
-import Alfred.Styles as Alfred
+import Alfred.StylesOld as Alfred
 import Console.Styles as Console
 import Equalizer.Styles as Equalizer
 import Form.StylesOld as Form
@@ -76,22 +76,22 @@ stylesLocal =
     ------------------------------------------------------
     -- <🎃>
     ------------------------------------------------------
-    , h1
-        [ backgroundColor (cssColor colors.base06)
-        , borderBottomLeftRadius (px 3)
-        , borderBottomRightRadius (px 3)
-        , color (rgb 255 255 255)
-        , display Css.table
-        , fontSize (Css.rem 0.725)
-        , fontWeight (int 700)
-        , letterSpacing (Css.em 0.0125)
-        , marginBottom (gr 3)
-        , marginTop (px -1)
-        , padding3 (basem 4) (basem 10) (basem 3)
-        , position relative
-        , textTransform uppercase
-        , zIndex (int 1)
-        ]
+    -- , h1
+    --     [ backgroundColor (cssColor colors.base06)
+    --     , borderBottomLeftRadius (px 3)
+    --     , borderBottomRightRadius (px 3)
+    --     , color (rgb 255 255 255)
+    --     , display Css.table
+    --     , fontSize (Css.rem 0.725)
+    --     , fontWeight (int 700)
+    --     , letterSpacing (Css.em 0.0125)
+    --     , marginBottom (gr 3)
+    --     , marginTop (px -1)
+    --     , padding3 (basem 4) (basem 10) (basem 3)
+    --     , position relative
+    --     , textTransform uppercase
+    --     , zIndex (int 1)
+    --     ]
     , h2
         [ fontSize (Css.rem 1.4)
         , Traits.headerFont

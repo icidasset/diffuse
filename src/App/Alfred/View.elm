@@ -12,7 +12,7 @@ import Utils exposing (cssClass)
 
 -- Styles
 
-import Alfred.Styles exposing (Classes(..))
+import Alfred.StylesOld exposing (Classes(..))
 
 
 -- 🍯

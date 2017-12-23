@@ -1,4 +1,4 @@
-module Alfred.Styles exposing (..)
+module Alfred.StylesOld exposing (..)
 
 import Color
 import Css exposing (..)
