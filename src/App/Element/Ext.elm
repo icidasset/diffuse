@@ -1,6 +1,7 @@
-module Element.Ext exposing (lazy, lazy2, lazy3)
+module Element.Ext exposing (lazy, lazy2, lazy3, lineBreak)
 
 import Element exposing (Element)
+import Html
 import Html.Lazy
 import Styles exposing (Styles, styles)
 import Variations exposing (Variations)
@@ -32,3 +33,10 @@ lazy2 fn a b =
 lazy3 : (a -> b -> c -> El msg) -> a -> b -> c -> El msg
 lazy3 fn a b c =
     Element.html <| Html.Lazy.lazy3 (\x y z -> z |> fn x y |> Element.toHtml styles) a b c
+
+
+{-| Line break.
+-}
+lineBreak : Element styles variations msg
+lineBreak =
+    Element.html (Html.br [] [])

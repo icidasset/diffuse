@@ -4,9 +4,9 @@ import Abroad.Ports
 import Abroad.Types exposing (Msg(..))
 import Authentication.UserData
 import Color.Convert exposing (colorToCssRgb)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (on, onSubmit)
+import Html
+import Html.Attributes
+import Html.Events
 import Json.Decode
 import Material.Icons.Navigation as Icons
 import Navigation.Types exposing (..)
@@ -15,25 +15,35 @@ import Routing.Types
 import String.Interpolate exposing (interpolate)
 import Types as TopLevel exposing (Model, Msg(..))
 import Utils exposing (..)
-import Variables exposing (colorDerivatives)
+import Variables exposing (colorDerivatives, scaled)
+
+
+-- Elements
+
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Events exposing (onClick)
+import Element.Types exposing (Node)
+import Layouts exposing (btn, lbl)
 
 
 -- Styles
 
-import StylesOld exposing (Classes(..))
+import Styles exposing (Styles(..))
 
 
 -- 🍯
 
 
-entry : Model -> Html TopLevel.Msg
+entry : Model -> Node
 entry model =
-    div
-        [ cssClass InsulationContent ]
+    column
+        Zed
+        []
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.inside
+          Navigation.insideNew
             [ ( Icon Icons.arrow_back
               , Label (Hidden "Go back")
               , Routing.Types.Settings
@@ -43,20 +53,18 @@ entry model =
         ------------------------------------
         -- Content
         ------------------------------------
-        , div
-            [ cssClass ContentBox ]
-            [ h1
-                []
-                [ text "Import / Export" ]
-            , p
-                [ cssClass Intro ]
+        , column
+            Zed
+            [ paddingXY (scaled 4) 0 ]
+            [ Layouts.h1 "Import / Export"
+            , Layouts.intro
                 [ text """
                     All your data will be replaced when you import something.
                   """
                 ]
-            , Html.form
-                [ onSubmit (AbroadMsg Import)
-                ]
+            , column
+                Zed
+                [ spacingXY 0 (scaled 1) ]
                 [ importView model
                 , exportView model
                 ]
@@ -68,74 +76,88 @@ entry model =
 -- Import
 
 
-importView : Model -> Html TopLevel.Msg
+importView : Model -> Node
 importView model =
-    p
-        []
-        [ label
+    column
+        Zed
+        [ spacing (scaled -10) ]
+        [ lbl "Import"
+
+        --
+        , row
+            Zed
             []
-            [ text "Import" ]
+            [ -- Input
+              --
+              Html.input
+                [ Html.Attributes.accept ".json"
+                , Html.Attributes.id Abroad.Ports.importFileInputId
+                , Html.Attributes.name Abroad.Ports.importFileInputId
+                , Html.Attributes.type_ "file"
 
-        -- Input
-        --
-        , input
-            [ accept ".json"
-            , id Abroad.Ports.importFileInputId
-            , name Abroad.Ports.importFileInputId
-            , on "change" (Json.Decode.succeed <| AbroadMsg FileSelectedForImport)
-            , type_ "file"
-            ]
-            []
+                --
+                , Html.Events.on "change" (Json.Decode.succeed <| AbroadMsg FileSelectedForImport)
 
-        -- Label
-        --
-        , label
-            [ for Abroad.Ports.importFileInputId
-            , cssClasses [ Button, ButtonSubtle ]
-            ]
-            [ text "Choose file" ]
-        , if model.abroad.fileSelected then
-            button
-                [ cssClasses [ Button ]
-                , type_ "submit"
+                --
+                , Html.Attributes.style
+                    [ ( "height", "0.1px" )
+                    , ( "opacity", "0" )
+                    , ( "overflow", "hidden" )
+                    , ( "position", "absolute" )
+                    , ( "width", "0.1px" )
+                    , ( "z-index", "-1" )
+                    ]
                 ]
-                [ text "Import" ]
-          else
-            text ""
+                []
+                |> html
 
-        -- Message
-        --
-        , em
-            [ style
-                [ ( "display", "block" )
-                , ( "font-size", "0.8em" )
-                , ( "margin-top", ".375rem" )
-                ]
+            -- Button 1
+            --
+            , let
+                margin =
+                    toString (scaled -8) ++ "px"
+              in
+                Html.label
+                    [ Html.Attributes.for Abroad.Ports.importFileInputId
+                    , Html.Attributes.style [ ( "margin-right", margin ) ]
+                    ]
+                    [ text "Choose file"
+                        |> btn SubtleButton []
+                        |> toHtml Styles.styles
+                    ]
+                    |> html
+
+            -- Button 2
+            --
+            , if model.abroad.fileSelected then
+                btn Button [ onClick (AbroadMsg Import) ] (text "Import")
+              else
+                empty
             ]
-            [ case model.abroad.importMessage of
+
+        --
+        , el
+            InlineMessage
+            [ paddingTop (scaled -10) ]
+            (case model.abroad.importMessage of
                 Ok "" ->
                     if model.abroad.fileSelected then
-                        span
+                        paragraph
+                            Zed
                             []
                             [ text "Click on the "
-                            , strong [] [ text "import" ]
+                            , bold "import"
                             , text " button to confirm."
                             ]
                     else
-                        text ""
+                        empty
 
                 Ok msg ->
-                    span
-                        []
-                        [ text msg ]
+                    text msg
 
                 Err msg ->
-                    span
-                        [ style
-                            [ ( "color", colorToCssRgb colorDerivatives.error ) ]
-                        ]
-                        [ text msg ]
-            ]
+                    el Faulty [] (text msg)
+            )
         ]
 
 
@@ -143,13 +165,12 @@ importView model =
 -- Export
 
 
-exportView : Model -> Html TopLevel.Msg
+exportView : Model -> Node
 exportView model =
-    p
-        []
-        [ label
-            []
-            [ text "Export" ]
+    column
+        Zed
+        [ spacing (scaled -10) ]
+        [ lbl "Export"
         , let
             js =
                 interpolate
@@ -162,9 +183,11 @@ exportView model =
                     """
                     [ Authentication.UserData.outwards model ]
           in
-            a
-                [ cssClasses [ Button ]
-                , attribute "onclick" js
-                ]
-                [ text "Export" ]
+            Html.a
+                [ Html.Attributes.attribute "onclick" js ]
+                [ Html.text "Export" ]
+                |> html
+                |> btn Button []
+                |> el Zed [ inlineStyle [ ( "display", "inline-block" ) ] ]
+                |> el Zed []
         ]

@@ -2,7 +2,7 @@ module Layouts exposing (..)
 
 import Element exposing (el, text)
 import Element.Attributes exposing (..)
-import Element.Types exposing (Node)
+import Element.Types exposing (Attr, Node)
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onSubmit)
@@ -12,7 +12,8 @@ import Variables exposing (scaled)
 
 -- Styles
 
-import Styles exposing (Styles(H1, Zed))
+import Form.Styles
+import Styles exposing (Styles(Form, H1, Zed))
 import StylesOld exposing (Classes(..))
 
 
@@ -66,6 +67,17 @@ centeredForm submitMsg childNode =
 -- 🍯
 
 
+btn : Styles -> List Attr -> Node -> Node
+btn buttonStyles additionalAttributes buttonChild =
+    el
+        buttonStyles
+        (List.append
+            [ paddingXY (scaled -5) (scaled -10) ]
+            (additionalAttributes)
+        )
+        buttonChild
+
+
 h1 : String -> Node
 h1 label =
     Element.h1
@@ -86,3 +98,8 @@ intro children =
         Styles.Intro
         [ paddingBottom (scaled 7), paddingTop (scaled 4) ]
         children
+
+
+lbl : String -> Node
+lbl theLabel =
+    el (Form Form.Styles.Label) [] (text theLabel)

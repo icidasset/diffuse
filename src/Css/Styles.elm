@@ -29,11 +29,15 @@ type Styles
     = -- 🚀
       Root
       -- Basics
+    | Faulty
+    | InlineMessage
     | Intro
     | Message
     | WithoutLineHeight
       -- Buttons
     | AuthenticationButton
+    | Button
+    | SubtleButton
       -- Containers
     | AuthenticationOptions
     | Insulation
@@ -119,23 +123,11 @@ zed =
 
 basics : List (Style Styles Variations)
 basics =
-    [ -----------------------------------
-      -- Intro
-      -----------------------------------
-      style Intro
-        [ Font.size (scaled -1)
-
-        --
-        , opacity 0.475
-        ]
-    , -----------------------------------
-      -- Message
-      -----------------------------------
-      style Message [ Color.text Color.white ]
-    , -----------------------------------
-      -- Without line-height
-      -----------------------------------
-      style WithoutLineHeight [ Font.lineHeight 0 ]
+    [ style Faulty [ Color.text colorDerivatives.error ]
+    , style InlineMessage [ Font.italic, Font.size (scaled -2) ]
+    , style Intro [ Font.size (scaled -1), opacity 0.475 ]
+    , style Message [ Color.text Color.white ]
+    , style WithoutLineHeight [ Font.lineHeight 0 ]
     ]
 
 
@@ -145,20 +137,49 @@ basics =
 
 buttons : List (Style Styles Variations)
 buttons =
-    [ -----------------------------------
-      -- Authentication button
-      -----------------------------------
-      style AuthenticationButton
-        [ Border.bottom 1
-        , Color.border colors.base07
-        , Color.text colorDerivatives.text
-        , Font.size (scaled -1)
+    let
+        default =
+            [ Border.all 2
+            , Border.rounded 3
+            , Font.size (scaled -1)
+            , Font.weight 700
 
-        --
-        , cursor "pointer"
-        , pseudo "last-child" [ Border.bottom 0 ]
+            --
+            , cursor "pointer"
+            ]
+    in
+        [ -----------------------------------
+          -- Authentication button
+          -----------------------------------
+          style AuthenticationButton
+            [ Border.bottom 1
+            , Color.border colors.base07
+            , Color.text colorDerivatives.text
+            , Font.size (scaled -1)
+
+            --
+            , cursor "pointer"
+            , pseudo "last-child" [ Border.bottom 0 ]
+            ]
+        , -----------------------------------
+          -- Standard Button
+          -----------------------------------
+          List.append
+            (default)
+            [ Color.border colorDerivatives.success
+            , Color.text colorDerivatives.success
+            ]
+            |> style Button
+        , -----------------------------------
+          -- Subtle Button
+          -----------------------------------
+          List.append
+            (default)
+            [ Color.border colors.base05
+            , Color.text colors.base05
+            ]
+            |> style SubtleButton
         ]
-    ]
 
 
 

@@ -198,7 +198,6 @@ currentPage insulationOptions model =
         Abroad ->
             model
                 |> Abroad.entry
-                |> html
                 |> insulate insulationOptions
 
         Equalizer ->

@@ -1,21 +1,14 @@
 module Settings.View exposing (..)
 
 import Authentication.Types as Authentication exposing (Method(..))
-import Color
-import Html exposing (Html, div, label, option, select)
-import Html.Attributes exposing (selected, value)
-import Html.Events exposing (onInput)
 import Layouts
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
-import Material.Icons.Navigation as Icons
-import Material.Icons.Image as Icons
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
-import Routing.Types exposing (Page(..))
+import Routing.Types exposing (Page(Abroad))
 import Settings.Types
 import Types exposing (Model, Msg(..))
-import Utils exposing (cssClass)
 import Variables exposing (scaled)
 
 
@@ -23,6 +16,7 @@ import Variables exposing (scaled)
 
 import Element exposing (..)
 import Element.Attributes exposing (..)
+import Element.Ext
 import Element.Input as Input
 import Element.Types exposing (Node)
 
@@ -30,7 +24,6 @@ import Element.Types exposing (Node)
 -- Styles
 
 import Form.Styles
-import Form.StylesOld as FormStyles
 import Styles exposing (Styles(..))
 
 
@@ -67,7 +60,7 @@ entry model =
             [ Layouts.h1 "Settings"
             , Layouts.intro
                 [ text "Changes are automatically saved."
-                , html (Html.br [] [])
+                , Element.Ext.lineBreak
                 , text "PS. You are using the "
                 , case Maybe.withDefault Local model.authentication.method of
                     Blockstack ->
@@ -95,18 +88,24 @@ theForm model =
         [ -----------------------------------
           -- Background image
           -----------------------------------
-          Input.select (Styles.Form Form.Styles.Select)
-            [ padding 10
-            , spacing 20
+          Input.select (Styles.Form Form.Styles.Input)
+            [ paddingXY 0 (scaled -5)
+            , spacingXY 0 (scaled -10)
             ]
-            { label =
+            { max = 1
+            , options = []
+            , with = model.settings.backgroundImage
+
+            -- Label
+            --
+            , label =
                 "Background image"
                     |> text
                     |> el (Styles.Form Form.Styles.Label) []
                     |> Input.labelAbove
-            , with = model.settings.backgroundImage
-            , max = 1
-            , options = []
+
+            -- Menu
+            --
             , menu =
                 Input.menu (Styles.Form Form.Styles.Select)
                     []
