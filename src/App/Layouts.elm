@@ -1,13 +1,17 @@
 module Layouts exposing (..)
 
-import Element exposing (el, text)
+import Color
+import Color.Convert
+import Element exposing (el, html, row, text)
 import Element.Attributes exposing (..)
 import Element.Types exposing (Attr, Node)
-import Html exposing (Html, div)
-import Html.Attributes exposing (style)
+import Html exposing (Html, div, option)
+import Html.Attributes exposing (selected, style, value)
 import Html.Events exposing (onSubmit)
+import Material.Icons.Navigation as Icons
+import Types as TopLevel
 import Utils exposing (cssClass, cssClasses)
-import Variables exposing (scaled)
+import Variables exposing (colorDerivatives, scaled)
 
 
 -- Styles
@@ -103,3 +107,43 @@ intro children =
 lbl : String -> Node
 lbl theLabel =
     el (Form Form.Styles.Label) [] (text theLabel)
+
+
+select : List ( String, String ) -> String -> (String -> TopLevel.Msg) -> Node
+select options selectedValue onInputMsg =
+    Element.within
+        [ 20
+            |> Icons.expand_more (Color.greyscale 0.325)
+            |> html
+            |> el Zed
+                [ alignRight
+                , inlineStyle [ ( "line-height", "0" ), ( "pointer-events", "none" ) ]
+                , verticalCenter
+                ]
+        ]
+        (Html.select
+            [ Html.Events.onInput onInputMsg
+            , Html.Attributes.style
+                [ ( "-moz-appearance", "none" )
+                , ( "-webkit-appearance", "none" )
+                , ( "appearance", "none" )
+                , ( "background", "transparent" )
+                , ( "border", "0" )
+                , ( "color", Color.Convert.colorToCssRgb colorDerivatives.text )
+                , ( "font-family", "Overpass, sans-serif" )
+                , ( "font-size", (toString <| scaled 0) ++ "px" )
+                , ( "padding", (toString <| scaled -3) ++ "px 0" )
+                , ( "width", "100%" )
+                ]
+            ]
+            (List.map
+                (\( val, lbl ) ->
+                    option
+                        [ selected (val == selectedValue), value val ]
+                        [ Html.text lbl ]
+                )
+                options
+            )
+            |> html
+            |> el (Form Form.Styles.Input) []
+        )

@@ -3,7 +3,6 @@ module Abroad.View exposing (..)
 import Abroad.Ports
 import Abroad.Types exposing (Msg(..))
 import Authentication.UserData
-import Color.Convert exposing (colorToCssRgb)
 import Html
 import Html.Attributes
 import Html.Events
@@ -14,21 +13,16 @@ import Navigation.View as Navigation
 import Routing.Types
 import String.Interpolate exposing (interpolate)
 import Types as TopLevel exposing (Model, Msg(..))
-import Utils exposing (..)
-import Variables exposing (colorDerivatives, scaled)
+import Variables exposing (scaled)
 
 
--- Elements
+-- Elements & Styles
 
 import Element exposing (..)
 import Element.Attributes exposing (..)
 import Element.Events exposing (onClick)
 import Element.Types exposing (Node)
 import Layouts exposing (btn, lbl)
-
-
--- Styles
-
 import Styles exposing (Styles(..))
 
 

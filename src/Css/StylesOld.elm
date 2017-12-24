@@ -64,35 +64,9 @@ type Classes
 stylesLocal : List Snippet
 stylesLocal =
     [ ------------------------------------------------------
-      -- Content box
-      --
-      -- > Just a box with some padding and stuff.
-      --   Mainly used for containing text elements.
+      -- <🎃>
       ------------------------------------------------------
-      class ContentBox
-        [ padding3 zero (gr 4) (gr 6)
-        ]
-
-    ------------------------------------------------------
-    -- <🎃>
-    ------------------------------------------------------
-    -- , h1
-    --     [ backgroundColor (cssColor colors.base06)
-    --     , borderBottomLeftRadius (px 3)
-    --     , borderBottomRightRadius (px 3)
-    --     , color (rgb 255 255 255)
-    --     , display Css.table
-    --     , fontSize (Css.rem 0.725)
-    --     , fontWeight (int 700)
-    --     , letterSpacing (Css.em 0.0125)
-    --     , marginBottom (gr 3)
-    --     , marginTop (px -1)
-    --     , padding3 (basem 4) (basem 10) (basem 3)
-    --     , position relative
-    --     , textTransform uppercase
-    --     , zIndex (int 1)
-    --     ]
-    , h2
+      h2
         [ fontSize (Css.rem 1.4)
         , Traits.headerFont
         , margin3 (gr -2) zero (gr 4)
@@ -125,70 +99,6 @@ stylesLocal =
                 [ fill currentColor
                 ]
             ]
-        ]
-    , a
-        [ color inherit
-        , textDecoration none
-        ]
-    , label
-        [ cursor inherit
-        ]
-
-    ------------------------------------------------------
-    -- <🎃> Buttons
-    ------------------------------------------------------
-    , (each [ class Button, button ])
-        [ backgroundColor transparent
-        , border3 (px 2) solid currentColor
-        , borderRadius (px 3)
-        , boxSizing contentBox
-        , color (cssColor colorDerivatives.success)
-        , cursor pointer
-        , display inlineBlock
-        , fontFamily inherit
-        , fontSize (Css.rem 0.95)
-        , fontWeight (int 700)
-        , height (gr 6)
-        , lineHeight (gr 6)
-        , padding3 (px 1) (gr 2) zero
-        , textTransform none
-
-        --
-        , focus
-            [ outline none
-            ]
-
-        --
-        , descendants
-            [ svg
-                [ fontSize (Css.em 1.2)
-                , marginTop (px -2)
-                , verticalAlign middle
-                ]
-            , selector "g"
-                [ fill currentColor
-                ]
-            ]
-
-        --
-        , adjacentSiblings
-            [ (each [ class Button, button ])
-                [ marginLeft (gr 1)
-                ]
-            ]
-        ]
-
-    -- Additional button styles
-    --
-    , class ButtonSmall
-        [ fontSize (Css.rem 0.85)
-        , height (gr 5)
-        , lineHeight (gr 5)
-        , padding3 (px 1) (px 8) zero
-        ]
-    , class ButtonSubtle
-        [ color (cssColor colors.base05)
-        , fontWeight (int 600)
         ]
 
     --                          --
@@ -264,28 +174,6 @@ stylesLocal =
         , descendants
             [ selector "svg g"
                 [ fill currentColor ]
-            ]
-        ]
-
-    ------------------------------------------------------
-    -- Intro
-    ------------------------------------------------------
-    , class Intro
-        [ fontSize (Css.em 0.9)
-        , lineHeight (num 1.6)
-        , marginBottom (gr 6)
-        , marginTop (gr 4)
-        , opacity (num 0.475)
-
-        --
-        , descendants
-            [ a
-                [ borderBottom3 (px 2) solid (cssColor colors.base0A)
-                ]
-            , svg
-                [ marginRight (gr 1)
-                , verticalAlign middle
-                ]
             ]
         ]
 

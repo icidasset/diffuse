@@ -1,14 +1,13 @@
 module Settings.View exposing (..)
 
 import Authentication.Types as Authentication exposing (Method(..))
-import Layouts
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(Abroad))
-import Settings.Types
-import Types exposing (Model, Msg(..))
+import Settings.Types exposing (Msg(..))
+import Types as TopLevel exposing (Model, Msg(..))
 import Variables exposing (scaled)
 
 
@@ -19,6 +18,7 @@ import Element.Attributes exposing (..)
 import Element.Ext
 import Element.Input as Input
 import Element.Types exposing (Node)
+import Layouts
 
 
 -- Styles
@@ -73,47 +73,23 @@ entry model =
                         text "RemoteStorage"
                 , text " authentication mode."
                 ]
-            , model
-                |> theForm
-                |> Element.map SettingsMsg
+
+            --
+            , theForm model
             ]
         ]
 
 
-theForm : Model -> Element Styles variations Settings.Types.Msg
+theForm : Model -> Node
 theForm model =
     column
         Zed
-        [ width (percent 50) ]
+        [ spacing (scaled -10), width (percent 50) ]
         [ -----------------------------------
           -- Background image
           -----------------------------------
-          Input.select (Styles.Form Form.Styles.Input)
-            [ paddingXY 0 (scaled -5)
-            , spacingXY 0 (scaled -10)
-            ]
-            { max = 1
-            , options = []
-            , with = model.settings.backgroundImage
-
-            -- Label
-            --
-            , label =
-                "Background image"
-                    |> text
-                    |> el (Styles.Form Form.Styles.Label) []
-                    |> Input.labelAbove
-
-            -- Menu
-            --
-            , menu =
-                Input.menu (Styles.Form Form.Styles.Select)
-                    []
-                    (List.map
-                        (\( v, l ) -> Input.choice v (text l))
-                        backgroundImages
-                    )
-            }
+          Layouts.lbl "Background Image"
+        , Layouts.select backgroundImages model.settings.backgroundImage backgroundImageMsg
         ]
 
 
@@ -127,3 +103,8 @@ backgroundImages =
     , ( "6.jpg", "Option 6" )
     , ( "7.jpg", "Option 7 (default)" )
     ]
+
+
+backgroundImageMsg : String -> TopLevel.Msg
+backgroundImageMsg =
+    SetBackgroundImage >> SettingsMsg

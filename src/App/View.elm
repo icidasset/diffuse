@@ -415,15 +415,9 @@ alfred maybe =
             empty
 
 
-backgroundImage : Input.SelectWith String Settings.Types.Msg -> Node
-backgroundImage selectWithImg =
-    let
-        img =
-            selectWithImg
-                |> Input.selected
-                |> Maybe.withDefault "7.jpg"
-    in
-        el Zed [ inlineStyle (backgroundImageStyles img) ] empty
+backgroundImage : String -> Node
+backgroundImage img =
+    el Zed [ inlineStyle (backgroundImageStyles img) ] empty
 
 
 backgroundImageStyles : String -> List ( String, String )

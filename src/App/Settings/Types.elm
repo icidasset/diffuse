@@ -1,13 +1,10 @@
 module Settings.Types exposing (..)
 
-import Element.Input as Input
-
-
 -- Messages
 
 
 type Msg
-    = SelectBackgroundImage (Input.SelectMsg String)
+    = SetBackgroundImage String
 
 
 
@@ -15,5 +12,5 @@ type Msg
 
 
 type alias Model =
-    { backgroundImage : Input.SelectWith String Msg
+    { backgroundImage : String
     }
