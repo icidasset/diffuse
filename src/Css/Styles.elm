@@ -17,6 +17,7 @@ import Variations exposing (Variations)
 
 -- Children
 
+import Alfred.Styles as Alfred
 import ContextMenu.Styles as ContextMenu
 import Form.Styles as Form
 import Navigation.Styles as Navigation
@@ -47,6 +48,7 @@ type Styles
       -- Headings
     | H1
       -- 🌳
+    | Alfred Alfred.Styles
     | ContextMenu ContextMenu.Styles
     | Form Form.Styles
     | Navigation Navigation.Styles
@@ -72,6 +74,7 @@ styles =
         , Sheet.mix headings
 
         --
+        , Sheet.mixChild Alfred Alfred.styles
         , Sheet.mixChild ContextMenu ContextMenu.styles
         , Sheet.mixChild Form Form.styles
         , Sheet.mixChild Navigation Navigation.styles

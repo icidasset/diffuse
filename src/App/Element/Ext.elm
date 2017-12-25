@@ -1,9 +1,13 @@
-module Element.Ext exposing (lazy, lazy2, lazy3, lineBreak)
+module Element.Ext exposing (lazy, lazy2, lazy3, lineBreak, onEnterKey)
 
 import Element exposing (Element)
+import Element.Events exposing (on)
 import Html
 import Html.Lazy
+import Keyboard.Extra exposing (Key, targetKey)
+import Json.Decode as Json
 import Styles exposing (Styles, styles)
+import Types as TopLevel
 import Variations exposing (Variations)
 
 
@@ -40,3 +44,20 @@ lazy3 fn a b c =
 lineBreak : Element styles variations msg
 lineBreak =
     Element.html (Html.br [] [])
+
+
+{-| Event binding for the `Enter` key.
+-}
+onEnterKey : TopLevel.Msg -> Element.Attribute variations TopLevel.Msg
+onEnterKey msg =
+    on "keydown" (Json.map (ifEnterKey msg) targetKey)
+
+
+ifEnterKey : TopLevel.Msg -> Key -> TopLevel.Msg
+ifEnterKey msg key =
+    case key of
+        Keyboard.Extra.Enter ->
+            msg
+
+        _ ->
+            TopLevel.NoOp

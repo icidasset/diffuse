@@ -409,7 +409,7 @@ alfred : Maybe Alfred -> Node
 alfred maybe =
     case maybe of
         Just context ->
-            html (Alfred.entry context)
+            Alfred.entry context
 
         Nothing ->
             empty
