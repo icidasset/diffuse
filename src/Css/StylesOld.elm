@@ -10,7 +10,6 @@ import Variables exposing (..)
 -- Children
 
 import Console.Styles as Console
-import Equalizer.Styles as Equalizer
 import Form.StylesOld as Form
 import List.Styles as List
 import Tracks.Styles as Tracks
@@ -20,7 +19,6 @@ styles : List Snippet
 styles =
     stylesLocal
         |> List.append Console.styles
-        |> List.append Equalizer.styles
         |> List.append Form.styles
         |> List.append List.styles
         |> List.append Tracks.styles

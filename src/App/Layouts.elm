@@ -109,6 +109,11 @@ lbl theLabel =
     el (Form Form.Styles.Label) [] (text theLabel)
 
 
+logoBackdrop : Node
+logoBackdrop =
+    Element.empty
+
+
 select : List ( String, String ) -> String -> (String -> TopLevel.Msg) -> Node
 select options selectedValue onInputMsg =
     Element.within

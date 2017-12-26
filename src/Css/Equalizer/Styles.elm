@@ -1,26 +1,36 @@
-module Equalizer.Styles exposing (..)
+module Equalizer.Styles exposing (Styles(..), styles, knobColor, knobOpacity, knobSize)
 
 import Color
-import Css exposing (..)
-import Css.Elements exposing (h1, svg)
-import Traits exposing (..)
-import Variables exposing (colors)
+import Color.Ext as Color
+import Style exposing (..)
+import Style.Border as Border
+import Style.Color as Color
+import Style.Font as Font
+import Style.Shadow as Shadow
+import Variables exposing (colors, scaled)
+import Variations exposing (Variations)
 
 
-type Classes
-    = Equalizer
-    | EqualizerContainer
-    | KnobColumn
-    | KnobLabel
-    | KnobLayerA
-    | KnobLayerB
-    | KnobLayerC
-    | KnobLines
+-- ⚗️
+
+
+type Styles
+    = Column
     | Knob
+    | KnobLabel
+    | LayerA
+    | LayerB
+    | Line
+    | Wrapper
 
 
 
 -- Variables
+
+
+borderColor : Color.Color
+borderColor =
+    Color.rgba 0 0 0 0.1
 
 
 knobColor : Color.Color
@@ -28,181 +38,90 @@ knobColor =
     colors.base03
 
 
+knobOpacity : Float
+knobOpacity =
+    0.7
+
+
 knobSize : Float
 knobSize =
     36
 
 
-knobOpac : Float
-knobOpac =
-    0.7
+
+-- 🍯
 
 
-
--- 🦄
-
-
-styles : List Snippet
+styles : List (Style Styles Variations)
 styles =
-    [ class EqualizerContainer
-        [ alignItems center
-        , displayFlex
-        , flex (int 1)
-        , justifyContent center
-        , position relative
+    [ -----------------------------------
+      -- Column
+      -----------------------------------
+      style Column
+        [ Border.right 1
+        , Color.border borderColor
 
         --
-        , descendants
-            [ h1
-                [ left (gr 4)
-                , position absolute
-                , top zero
-                ]
-            ]
+        , pseudo "last-child" [ Border.right 0 ]
         ]
-
-    --
-    -- EQ
-    --
-    , class Equalizer
-        [ displayFlex
-        , flexWrap wrap
-        , justifyContent center
-        , marginTop (gr -1)
-        ]
-
-    --
-    -- Knob Column
-    --
-    , class KnobColumn
-        [ alignItems center
-        , border3 (px 1) solid (hex "#E6EAEB")
-        , displayFlex
-        , flexDirection column
-        , margin4 (px -1) zero zero (px -1)
-        , padding3 (gr 3) (gr 8) (gr 2)
-        ]
-
-    --
-    -- Knob Label
-    --
-    , class KnobLabel
-        [ color (cssColorOpac 0.4 Color.black)
-        , fontSize (Css.rem 0.525)
-        , fontWeight (int 700)
-        , letterSpacing (Css.em 0.05)
-        , lineHeight (num 1.45)
-        , marginTop (gr 2)
-        , textTransform uppercase
-        ]
-
-    --
-    -- Knob
-    --
-    , class Knob
-        [ borderRadius (pct 50)
-        , boxShadow6 inset (px 0) (px 0) (px 5) (px 1) (cssColorOpac (knobOpac - 0.35) knobColor)
-        , cursor pointer
-        , height (px knobSize)
-        , position relative
-        , width (px knobSize)
-        ]
-
-    --
-    , each
-        [ class KnobLayerA, class KnobLayerB, class KnobLayerC ]
-        [ borderRadius (pct 50), position absolute ]
-
-    --
-    , class KnobLayerA
-        [ bottom (px 3)
-        , left (px 3)
-        , right (px 3)
-        , top (px 3)
-        , zIndex (int 1)
-        ]
-
-    --
-    , class KnobLayerB
-        [ bottom (px 5)
-        , left (px 5)
-        , right (px 5)
-        , top (px 5)
-        , zIndex (int 2)
+    , -----------------------------------
+      -- Knob
+      -----------------------------------
+      style Knob
+        [ Border.rounded (knobSize / 2)
+        , Shadow.inset
+            { offset = ( 0, 0 )
+            , size = 1
+            , blur = 5
+            , color = Color.setAlpha (knobOpacity - 0.35) knobColor
+            }
 
         --
-        , descendants
-            [ svg
-                [ fill transparent
-                , height (px (knobSize - 9))
-                , left (pct 50)
-                , position absolute
-                , property "stroke" (cssColorOpac knobOpac knobColor |> .value)
-                , property "stroke-linejoin" "miter"
-                , property "stroke-width" "7px"
-                , top (pct 50)
-                , transforms [ rotate (deg 90), translate2 (pct -50) (pct 50) ]
-                , width (px (knobSize - 9))
-                ]
-            ]
+        , cursor "pointer"
         ]
-
-    --
-    , class KnobLayerC
-        [ bottom (px 8)
-        , left (px 8)
-        , right (px 8)
-        , top (px 8)
-        , zIndex (int 3)
+    , -----------------------------------
+      -- Knob label
+      -----------------------------------
+      style KnobLabel
+        [ Color.text (Color.rgba 0 0 0 0.4)
+        , Font.center
+        , Font.letterSpacing 0.25
+        , Font.size (scaled -5)
+        , Font.uppercase
+        , Font.weight 700
+        ]
+    , -----------------------------------
+      -- Layers
+      -----------------------------------
+      style LayerA
+        [ Shadow.box
+            { offset = ( 0, 0 )
+            , size = 1
+            , blur = 3
+            , color = Color.setAlpha (knobOpacity + 0.3) knobColor
+            }
 
         --
-        , boxShadow5 (px 0) (px 0) (px 3) (px 1) (cssColorOpac (knobOpac + 0.3) knobColor)
-
-        --
-        , after
-            [ backgroundColor (cssColorOpac (knobOpac + 0.1) knobColor)
-            , height (px 9)
-            , left (pct 50)
-            , position absolute
-            , property "content" "''"
-            , top zero
-            , transform (translateX (pct -50))
-            , width (px 2)
-            , zIndex (int 4)
-            ]
+        , prop "border-radius" "50%"
         ]
-
-    --
-    , let
-        pseudo =
-            batch
-                [ backgroundColor (cssColorOpac (knobOpac + 0.1) knobColor)
-                , bottom zero
-                , height (px 9)
-                , position absolute
-                , property "content" "''"
-                , width (px 1)
-                ]
-      in
-        class KnobLines
-            [ bottom (px -2)
-            , left (px 1)
-            , position absolute
-            , right (px 1)
-            , zIndex (int 0)
-
-            --
-            , before
-                [ pseudo
-                , left zero
-                , transform (rotate <| deg 45)
-                ]
-
-            --
-            , after
-                [ pseudo
-                , right zero
-                , transform (rotate <| deg -45)
-                ]
-            ]
+    , style LayerB
+        [ knobColor
+            |> Color.setAlpha (knobOpacity + 0.1)
+            |> Color.background
+        ]
+    , -----------------------------------
+      -- Line
+      -----------------------------------
+      style Line
+        [ knobColor
+            |> Color.setAlpha (knobOpacity + 0.1)
+            |> Color.background
+        ]
+    , -----------------------------------
+      -- Wrapper
+      -----------------------------------
+      style Wrapper
+        [ Border.all 1
+        , Color.border borderColor
+        ]
     ]

@@ -200,10 +200,9 @@ currentPage insulationOptions model =
                 |> Abroad.entry
                 |> insulate insulationOptions
 
-        Equalizer ->
+        Routing.Types.Equalizer ->
             model
                 |> Equalizer.entry
-                |> html
                 |> insulate insulationOptions
 
         Index ->
