@@ -45,6 +45,7 @@ type Styles
     | Insulation
     | NestedInsulation
       -- Decorations
+    | LogoBackdrop
     | Overlay
       -- Headings
     | H1
@@ -233,13 +234,26 @@ containers =
 decorations : List (Style Styles Variations)
 decorations =
     [ -----------------------------------
+      -- Logo backdrop
+      -----------------------------------
+      style LogoBackdrop
+        [ Style.opacity 0.025
+        , Style.prop "background-position" "-124px 53.75% !important"
+
+        --
+        , Background.imageWith
+            { src = "/images/icon-dark.svg"
+            , position = ( 0, 0 )
+            , repeat = Background.space
+            , size = Background.cover
+            }
+        ]
+    , -----------------------------------
       -- Overlay
       -----------------------------------
       style Overlay
         [ Color.background (rgba 0 0 0 0.25)
-
-        --
-        , opacity 0
+        , Style.opacity 0
 
         -- Transitions
         , { delay = 0

@@ -2,7 +2,7 @@ module Layouts exposing (..)
 
 import Color
 import Color.Convert
-import Element exposing (el, html, row, text)
+import Element exposing (el, empty, html, row, text)
 import Element.Attributes exposing (..)
 import Element.Types exposing (Attr, Node)
 import Html exposing (Html, div, option)
@@ -111,7 +111,10 @@ lbl theLabel =
 
 logoBackdrop : Node
 logoBackdrop =
-    Element.empty
+    el
+        Styles.LogoBackdrop
+        [ height fill, width fill ]
+        empty
 
 
 select : List ( String, String ) -> String -> (String -> TopLevel.Msg) -> Node

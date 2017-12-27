@@ -30,7 +30,7 @@ type Styles
 
 borderColor : Color.Color
 borderColor =
-    Color.rgba 0 0 0 0.1
+    Color.rgba 0 0 0 0.075
 
 
 knobColor : Color.Color
@@ -69,15 +69,15 @@ styles =
       -----------------------------------
       style Knob
         [ Border.rounded (knobSize / 2)
+        , Style.cursor "pointer"
+
+        --
         , Shadow.inset
             { offset = ( 0, 0 )
             , size = 1
             , blur = 5
             , color = Color.setAlpha (knobOpacity - 0.35) knobColor
             }
-
-        --
-        , cursor "pointer"
         ]
     , -----------------------------------
       -- Knob label
@@ -86,7 +86,7 @@ styles =
         [ Color.text (Color.rgba 0 0 0 0.4)
         , Font.center
         , Font.letterSpacing 0.25
-        , Font.size (scaled -5)
+        , Font.size 8.5
         , Font.uppercase
         , Font.weight 700
         ]
@@ -94,15 +94,15 @@ styles =
       -- Layers
       -----------------------------------
       style LayerA
-        [ Shadow.box
-            { offset = ( 0, 0 )
-            , size = 1
-            , blur = 3
-            , color = Color.setAlpha (knobOpacity + 0.3) knobColor
-            }
+        [ prop "border-radius" "50%"
 
         --
-        , prop "border-radius" "50%"
+        , Shadow.box
+            { offset = ( 0, 0 )
+            , size = 1
+            , blur = 6
+            , color = Color.setAlpha (knobOpacity + 0.3) knobColor
+            }
         ]
     , style LayerB
         [ knobColor

@@ -54,46 +54,34 @@ entry model =
         ------------------------------------
         -- Content
         ------------------------------------
-        , column
-            Zed
-            [ height fill, paddingXY (scaled 4) 0 ]
-            [ Layouts.h1 "EQ"
-            , Layouts.logoBackdrop
-            , row
-                (Equalizer Wrapper)
-                [ spread ]
-                [ column
-                    (Equalizer Column)
-                    [ paddingXY (scaled 10) (scaled -2) ]
-                    [ knob Volume model.equalizer.volume
-                    , knobLines
-                    , knobLabel "Volume"
-                    ]
-                , column
-                    (Equalizer Column)
-                    [ paddingXY (scaled 10) (scaled -2) ]
-                    [ knob Low model.equalizer.low
-                    , knobLines
-                    , knobLabel "Low"
-                    ]
-                , column
-                    (Equalizer Column)
-                    [ paddingXY (scaled 10) (scaled -2) ]
-                    [ knob Mid model.equalizer.mid
-                    , knobLines
-                    , knobLabel "Mid"
-                    ]
-                , column
-                    (Equalizer Column)
-                    [ paddingXY (scaled 10) (scaled -2) ]
-                    [ knob High model.equalizer.high
-                    , knobLines
-                    , knobLabel "High"
-                    ]
-                ]
-                |> el Zed [ center, verticalCenter ]
-                |> el Zed [ height fill ]
+        , within
+            [ Layouts.logoBackdrop
+            , Layouts.h1 "EQ" |> el Zed [ moveRight (scaled 4) ]
+            , content model
             ]
+            (el
+                Zed
+                [ height fill, width fill ]
+                empty
+            )
+        ]
+
+
+content : TopLevel.Model -> Node
+content model =
+    column
+        Zed
+        [ height fill, width fill ]
+        [ row
+            (Equalizer Wrapper)
+            [ spread ]
+            [ knob Volume model.equalizer.volume
+            , knob Low model.equalizer.low
+            , knob Mid model.equalizer.mid
+            , knob High model.equalizer.high
+            ]
+            |> el Zed [ center, verticalCenter ]
+            |> el Zed [ height fill ]
         ]
 
 
@@ -103,9 +91,17 @@ entry model =
 
 knob : Knob -> Float -> Node
 knob knobType value =
-    value
-        |> knob_ knobType
-        |> Element.map TopLevel.EqualizerMsg
+    column
+        (Equalizer Column)
+        [ paddingXY (scaled 10) (scaled -3)
+        , paddingTop (scaled 1)
+        ]
+        [ value
+            |> knob_ knobType
+            |> Element.map TopLevel.EqualizerMsg
+        , knobLines
+        , knobLabel (toString knobType)
+        ]
 
 
 knob_ : Knob -> Float -> Element Styles.Styles Variations Msg
@@ -178,7 +174,7 @@ knobLabel : String -> Node
 knobLabel lbl =
     el
         (Equalizer KnobLabel)
-        []
+        [ paddingTop (scaled -25) ]
         (text lbl)
 
 
