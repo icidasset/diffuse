@@ -43,10 +43,11 @@ outside =
         , Font.size 10.75
         , Font.uppercase
         ]
-    , -----------------------------------
-      -- Item
-      -----------------------------------
-      style OutsideItem
+
+    -----------------------------------
+    -- Item
+    -----------------------------------
+    , style OutsideItem
         [ opacity 0.55
 
         -- Active version
@@ -74,10 +75,11 @@ inside =
         , Color.background white
         , Color.border colorDerivatives.subtleBorder
         ]
-    , -----------------------------------
-      -- Item
-      -----------------------------------
-      style InsideItem
+
+    -----------------------------------
+    -- Item
+    -----------------------------------
+    , style InsideItem
         [ Border.right 1
         , Color.border colorDerivatives.subtleBorder
         , Color.text colors.base02

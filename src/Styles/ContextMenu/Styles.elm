@@ -34,10 +34,11 @@ styles =
         , prop "box-shadow" "0 1px 3px 0 rgba(0, 0, 0, 0.225), 0 3px 15px 0 rgba(0, 0, 0, 0.1)"
         , prop "transform" "translate(-50%, -50%)"
         ]
-    , -----------------------------------
-      -- Item
-      -----------------------------------
-      style Item
+
+    -----------------------------------
+    -- Item
+    -----------------------------------
+    , style Item
         [ Border.bottom 1
         , Color.border (rgba 0 0 0 0.075)
 

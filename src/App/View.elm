@@ -117,7 +117,7 @@ entryNodes model =
         -- Console
         --
         , if model.authentication.signedIn then
-            html (Console.entry model)
+            Console.entry model
           else
             empty
         ]

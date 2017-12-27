@@ -31,10 +31,11 @@ styles =
         , Color.border colorDerivatives.inputBorder
         , Font.size (scaled -1)
         ]
-    , -----------------------------------
-      -- Label
-      -----------------------------------
-      style Label
+
+    -----------------------------------
+    -- Label
+    -----------------------------------
+    , style Label
         [ Font.size (scaled -3)
         , Font.uppercase
         , Font.weight 700

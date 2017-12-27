@@ -64,10 +64,11 @@ styles =
         --
         , pseudo "last-child" [ Border.right 0 ]
         ]
-    , -----------------------------------
-      -- Knob
-      -----------------------------------
-      style Knob
+
+    -----------------------------------
+    -- Knob
+    -----------------------------------
+    , style Knob
         [ Border.rounded (knobSize / 2)
         , Style.cursor "pointer"
 
@@ -79,10 +80,11 @@ styles =
             , color = Color.setAlpha (knobOpacity - 0.35) knobColor
             }
         ]
-    , -----------------------------------
-      -- Knob label
-      -----------------------------------
-      style KnobLabel
+
+    -----------------------------------
+    -- Knob label
+    -----------------------------------
+    , style KnobLabel
         [ Color.text (Color.rgba 0 0 0 0.4)
         , Font.center
         , Font.letterSpacing 0.25
@@ -90,10 +92,11 @@ styles =
         , Font.uppercase
         , Font.weight 700
         ]
-    , -----------------------------------
-      -- Layers
-      -----------------------------------
-      style LayerA
+
+    -----------------------------------
+    -- Layers
+    -----------------------------------
+    , style LayerA
         [ prop "border-radius" "50%"
 
         --
@@ -109,18 +112,20 @@ styles =
             |> Color.setAlpha (knobOpacity + 0.1)
             |> Color.background
         ]
-    , -----------------------------------
-      -- Line
-      -----------------------------------
-      style Line
+
+    -----------------------------------
+    -- Line
+    -----------------------------------
+    , style Line
         [ knobColor
             |> Color.setAlpha (knobOpacity + 0.1)
             |> Color.background
         ]
-    , -----------------------------------
-      -- Wrapper
-      -----------------------------------
-      style Wrapper
+
+    -----------------------------------
+    -- Wrapper
+    -----------------------------------
+    , style Wrapper
         [ Border.all 1
         , Color.border borderColor
         ]

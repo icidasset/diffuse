@@ -31,10 +31,11 @@ styles =
       -----------------------------------
       style Container
         [ Color.text Color.white ]
-    , -----------------------------------
-      -- Input
-      -----------------------------------
-      style Input
+
+    -----------------------------------
+    -- Input
+    -----------------------------------
+    , style Input
         [ Border.rounded 3
         , Color.background Color.white
         , Color.placeholder (Color.greyscale 0.25)
@@ -46,26 +47,29 @@ styles =
             "box-shadow"
             "0 1px 3px 0 rgba(0, 0, 0, 0.225), 0 3px 15px 0 rgba(0, 0, 0, 0.1) !important"
         ]
-    , -----------------------------------
-      -- Message
-      -----------------------------------
-      style Message
+
+    -----------------------------------
+    -- Message
+    -----------------------------------
+    , style Message
         [ Font.italic
         , Font.size (scaled 0)
         ]
-    , -----------------------------------
-      -- Results
-      -----------------------------------
-      style Results
+
+    -----------------------------------
+    -- Results
+    -----------------------------------
+    , style Results
         [ Border.rounded 3
         , Color.background (Color.rgba 0 0 0 0.75)
         , Color.text Color.white
         , Font.size (scaled -1)
         ]
-    , -----------------------------------
-      -- Result item
-      -----------------------------------
-      let
+
+    -----------------------------------
+    -- Result item
+    -----------------------------------
+    , let
         activeItemStyles =
             [ Font.bold
             , scaled 2

@@ -18,6 +18,7 @@ import Variations exposing (Variations)
 -- Children
 
 import Alfred.Styles as Alfred
+import Console.Styles as Console
 import ContextMenu.Styles as ContextMenu
 import Equalizer.Styles as Equalizer
 import Form.Styles as Form
@@ -51,6 +52,7 @@ type Styles
     | H1
       -- 🌳
     | Alfred Alfred.Styles
+    | Console Console.Styles
     | ContextMenu ContextMenu.Styles
     | Equalizer Equalizer.Styles
     | Form Form.Styles
@@ -78,6 +80,7 @@ styles =
 
         --
         , Sheet.mixChild Alfred Alfred.styles
+        , Sheet.mixChild Console Console.styles
         , Sheet.mixChild ContextMenu ContextMenu.styles
         , Sheet.mixChild Equalizer Equalizer.styles
         , Sheet.mixChild Form Form.styles
@@ -168,19 +171,21 @@ buttons =
             , cursor "pointer"
             , pseudo "last-child" [ Border.bottom 0 ]
             ]
-        , -----------------------------------
-          -- Standard Button
-          -----------------------------------
-          List.append
+
+        -----------------------------------
+        -- Standard Button
+        -----------------------------------
+        , List.append
             (default)
             [ Color.border colorDerivatives.success
             , Color.text colorDerivatives.success
             ]
             |> style Button
-        , -----------------------------------
-          -- Subtle Button
-          -----------------------------------
-          List.append
+
+        -----------------------------------
+        -- Subtle Button
+        -----------------------------------
+        , List.append
             (default)
             [ Color.border colors.base05
             , Color.text colors.base05
@@ -202,10 +207,11 @@ containers =
         [ Border.rounded 4
         , Color.background white
         ]
-    , -----------------------------------
-      -- Insulation
-      -----------------------------------
-      style Insulation
+
+    -----------------------------------
+    -- Insulation
+    -----------------------------------
+    , style Insulation
         [ Border.rounded 3
         , Color.background white
 
@@ -217,10 +223,11 @@ containers =
             , color = rgba 0 0 0 0.2
             }
         ]
-    , -----------------------------------
-      -- Nested insulation
-      -----------------------------------
-      style NestedInsulation
+
+    -----------------------------------
+    -- Nested insulation
+    -----------------------------------
+    , style NestedInsulation
         [ Border.rounded 3
         , Color.background white
         ]
@@ -248,10 +255,11 @@ decorations =
             , size = Background.cover
             }
         ]
-    , -----------------------------------
-      -- Overlay
-      -----------------------------------
-      style Overlay
+
+    -----------------------------------
+    -- Overlay
+    -----------------------------------
+    , style Overlay
         [ Color.background (rgba 0 0 0 0.25)
         , Style.opacity 0
 

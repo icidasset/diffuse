@@ -5,8 +5,9 @@
     "license": "MIT",
     "source-directories": [
         "src/App",
-        "src/Css",
+        "src/Ext",
         "src/Slave",
+        "src/Styles",
         "system"
     ],
     "exposed-modules": [],
