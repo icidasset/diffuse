@@ -20,6 +20,11 @@ scaledPx =
     scaled >> Element.Attributes.px
 
 
+scaledStr : Int -> String
+scaledStr =
+    scaled >> toString >> (\s -> s ++ "px")
+
+
 
 -- Colors
 

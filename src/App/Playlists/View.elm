@@ -23,7 +23,7 @@ import Element.Events exposing (onClick, onInput, onWithOptions)
 import Element.Ext exposing (..)
 import Element.Input as Input
 import Element.Types exposing (Node)
-import Layouts exposing (btn, logoBackdrop)
+import Layouts exposing (btn, logoBackdrop, takeOver)
 import Variables exposing (colorDerivatives, colors, scaled)
 import Variations exposing (Variations(..))
 
@@ -223,34 +223,30 @@ removeEventOptions =
 
 pageNew : Node
 pageNew =
-    let
-        takeOver =
-            el Zed [ height fill, width fill ]
-    in
-        column
-            Zed
-            [ height fill ]
-            [ ------------------------------------
-              -- Navigation
-              ------------------------------------
-              Navigation.insideCustomNew
-                [ ( Icon Icons.arrow_back
-                  , Label (Hidden "Go back")
-                    --
-                  , Index
-                        |> Routing.Types.Playlists
-                        |> Routing.Types.GoToPage
-                        |> RoutingMsg
-                  )
-                ]
-
-            ------------------------------------
-            -- Form
-            ------------------------------------
-            , within
-                [ logoBackdrop, takeOver pageNewForm ]
-                (takeOver empty)
+    column
+        Zed
+        [ height fill ]
+        [ ------------------------------------
+          -- Navigation
+          ------------------------------------
+          Navigation.insideCustomNew
+            [ ( Icon Icons.arrow_back
+              , Label (Hidden "Go back")
+                --
+              , Index
+                    |> Routing.Types.Playlists
+                    |> Routing.Types.GoToPage
+                    |> RoutingMsg
+              )
             ]
+
+        ------------------------------------
+        -- Form
+        ------------------------------------
+        , within
+            [ logoBackdrop, takeOver pageNewForm ]
+            (takeOver empty)
+        ]
 
 
 pageNewForm : Node

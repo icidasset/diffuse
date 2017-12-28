@@ -111,6 +111,7 @@ entryNodes model =
                 model
                     |> Tracks.entry
                     |> html
+                    |> el Zed [ height fill, clipX, yScrollbar ]
                     |> insulate unnested
                     |> within [ currentPage nested model ]
 
@@ -226,7 +227,6 @@ currentPage insulationOptions model =
         Sources sourcePage ->
             model
                 |> Sources.entry sourcePage
-                |> html
                 |> insulate insulationOptions
 
 
@@ -379,12 +379,18 @@ insulate insulationOptions node =
          else
             Insulation
         )
-        [ clip
-        , center
-        , height fill
-        , maxWidth (px insulationWidth)
-        , width fill
-        ]
+        ((++)
+            [ center
+            , height fill
+            , maxWidth (px insulationWidth)
+            , width fill
+            ]
+            (if insulationOptions.nested then
+                [ clipX, yScrollbar ]
+             else
+                [ clip ]
+            )
+        )
         node
 
 

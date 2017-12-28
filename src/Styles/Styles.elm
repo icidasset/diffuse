@@ -45,6 +45,8 @@ type Styles
     | SubtleButton
       -- Containers
     | AuthenticationOptions
+    | Columns
+    | ColumnsChild
     | EmptyState
     | Insulation
     | NestedInsulation
@@ -217,6 +219,19 @@ containers =
       style AuthenticationOptions
         [ Border.rounded 4
         , Color.background white
+        ]
+
+    -----------------------------------
+    -- Columns
+    -----------------------------------
+    , style Columns
+        [ prop "columns" "2"
+        , prop "column-gap" (scaledStr 10)
+        ]
+    , style ColumnsChild
+        [ prop "-webkit-column-break-inside" "avoid"
+        , prop "break-inside" "avoid"
+        , prop "page-break-inside" "avoid"
         ]
 
     -----------------------------------

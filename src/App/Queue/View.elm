@@ -22,7 +22,7 @@ import Element.Events exposing (onClick)
 import Element.Ext exposing (..)
 import Element.Input as Input
 import Element.Types exposing (Node)
-import Layouts
+import Layouts exposing (listItemActions)
 import Variables exposing (scaled)
 import Variations exposing (Variations(..))
 
@@ -203,7 +203,7 @@ renderItem index ( item, actions ) =
         , vary Subtle (not item.manualEntry)
         ]
         [ itemLabel index item
-        , row WithoutLineHeight [] actions
+        , listItemActions actions
         ]
 
 

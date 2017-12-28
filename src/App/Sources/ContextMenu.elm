@@ -7,6 +7,7 @@ import Mouse
 import Routing.Types
 import Sources.Types exposing (..)
 import Types exposing (..)
+import Variables exposing (colorDerivatives)
 
 
 listMenu : SourceId -> Mouse.Position -> ContextMenu
@@ -14,7 +15,7 @@ listMenu sourceId =
     ContextMenu
         [ -- Edit
           --
-          ( Icons.mode_edit (Color.black) 16
+          ( Icons.mode_edit colorDerivatives.text 16
           , "Edit"
           , Edit sourceId
                 |> Routing.Types.Sources
@@ -24,7 +25,7 @@ listMenu sourceId =
 
         -- Delete
         --
-        , ( Icons.delete (Color.black) 16
+        , ( Icons.delete colorDerivatives.text 16
           , "Remove"
           , Destroy sourceId
                 |> SourcesMsg

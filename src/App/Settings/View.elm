@@ -89,7 +89,7 @@ theForm model =
           -- Background image
           -----------------------------------
           Layouts.lbl "Background Image"
-        , Layouts.select backgroundImages model.settings.backgroundImage backgroundImageMsg
+        , Layouts.select backgroundImageMsg model.settings.backgroundImage backgroundImages
         ]
 
 

@@ -87,6 +87,13 @@ listItem additionalAttr =
         )
 
 
+listItemActions : List Node -> Node
+listItemActions =
+    row
+        WithoutLineHeight
+        [ spacingXY (scaled -8) 0, verticalCenter ]
+
+
 logoBackdrop : Node
 logoBackdrop =
     el
@@ -95,8 +102,8 @@ logoBackdrop =
         empty
 
 
-select : List ( String, String ) -> String -> (String -> TopLevel.Msg) -> Node
-select options selectedValue onInputMsg =
+select : (String -> TopLevel.Msg) -> String -> List ( String, String ) -> Node
+select onInputMsg selectedValue options =
     within
         [ 20
             |> Icons.expand_more (Color.greyscale 0.325)
@@ -133,5 +140,10 @@ select options selectedValue onInputMsg =
                 options
             )
             |> html
-            |> el (Form Input) []
+            |> el (Form Input) [ width fill ]
         )
+
+
+takeOver : Node -> Node
+takeOver =
+    el Zed [ height fill, width fill ]

@@ -4,6 +4,11 @@ body {
   overflow: hidden;
 }
 
+a[href] {
+  color: inherit;
+  text-decoration: none;
+}
+
 .in-the-middle {
   left: 50%;
   position: fixed;
