@@ -1,7 +1,6 @@
 module Queue.State exposing (..)
 
 import Date exposing (Date)
-import Html5.DragDrop as DragDrop
 import List.Extra as List
 import Notifications.Types as Notification
 import Response.Ext exposing (do)
@@ -21,7 +20,6 @@ import Types as TopLevel
 initialModel : Model
 initialModel =
     { activeItem = Nothing
-    , dnd = DragDrop.init
     , future = []
     , past = []
     , ignored = []
@@ -291,44 +289,6 @@ update msg model =
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
                 |> (\m -> ($) m [ do Reset ] [ storeUserData ])
-
-        ------------------------------------
-        -- Libraries
-        ------------------------------------
-        DragDropMsg sub ->
-            let
-                ( dnd, result ) =
-                    DragDrop.update sub model.dnd
-
-                newModel =
-                    { model | dnd = dnd }
-            in
-                case result of
-                    Just ( sourceIdx, targetIdx ) ->
-                        let
-                            future =
-                                model.future
-
-                            newFuture =
-                                if targetIdx <= sourceIdx then
-                                    []
-                                        ++ (future |> List.take targetIdx)
-                                        ++ (future |> List.drop sourceIdx |> List.take 1)
-                                        ++ (future |> List.take sourceIdx |> List.drop targetIdx)
-                                        ++ (future |> List.drop sourceIdx |> List.drop 1)
-                                else
-                                    []
-                                        ++ (future |> List.take sourceIdx)
-                                        ++ (future |> List.take targetIdx |> List.drop sourceIdx |> List.drop 1)
-                                        ++ (future |> List.drop sourceIdx |> List.take 1)
-                                        ++ (future |> List.drop targetIdx)
-                        in
-                            (!)
-                                { newModel | future = newFuture }
-                                []
-
-                    Nothing ->
-                        (!) newModel []
 
 
 storeUserData : Cmd TopLevel.Msg

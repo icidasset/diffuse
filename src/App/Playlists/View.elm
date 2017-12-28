@@ -161,9 +161,9 @@ renderPlaylist maybeSelectedPlaylist playlist =
         isSelected =
             Just playlist == maybeSelectedPlaylist
     in
-        row
-            (List Item)
-            [ verticalCenter
+        Layouts.listItem
+            [ vary Clickable True
+            , verticalCenter
 
             --
             , playlist
@@ -175,11 +175,12 @@ renderPlaylist maybeSelectedPlaylist playlist =
               -- Label
               ------------------------------------
               el
-                Zed
-                [ paddingXY 0 (scaled -3)
-                , vary Selected isSelected
-                , width fill
-                ]
+                (if isSelected then
+                    Selected
+                 else
+                    Zed
+                )
+                [ width fill ]
                 (text playlist.name)
 
             ------------------------------------

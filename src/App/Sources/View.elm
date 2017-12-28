@@ -28,13 +28,6 @@ import Utils exposing (..)
 import Variables exposing (colorDerivatives)
 
 
--- Styles
-
-import Form.StylesOld as FormStyles
-import List.StylesOld exposing (Classes(..))
-import StylesOld exposing (Classes(..))
-
-
 -- 🍯
 
 

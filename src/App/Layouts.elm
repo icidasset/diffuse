@@ -1,6 +1,6 @@
 module Layouts exposing (..)
 
-import Color
+import Color exposing (Color)
 import Color.Convert
 import Element exposing (..)
 import Element.Attributes exposing (..)
@@ -9,14 +9,15 @@ import Html
 import Html.Attributes
 import Html.Events
 import Material.Icons.Navigation as Icons
+import Svg
 import Types as TopLevel
-import Utils exposing (cssClass, cssClasses)
-import Variables exposing (colorDerivatives, scaled)
+import Variables exposing (colorDerivatives, colors, scaled)
 
 
 -- Styles
 
 import Form.Styles exposing (Styles(..))
+import List.Styles exposing (Styles(..))
 import Styles exposing (Styles(..))
 
 
@@ -32,6 +33,21 @@ btn buttonStyles additionalAttributes buttonChild =
             (additionalAttributes)
         )
         buttonChild
+
+
+emptyState : (Color -> Int -> Svg.Svg TopLevel.Msg) -> List Node -> Node
+emptyState icon textNodes =
+    [ 64
+        |> icon colors.base06
+        |> html
+    , column
+        Zed
+        []
+        textNodes
+    ]
+        |> column EmptyState [ center, spacingXY 0 (scaled 1) ]
+        |> el Zed [ center, verticalCenter ]
+        |> el Zed [ height fill, width fill ]
 
 
 h1 : String -> Node
@@ -59,6 +75,16 @@ intro children =
 lbl : String -> Node
 lbl theLabel =
     el (Form Label) [] (text theLabel)
+
+
+listItem : List Attr -> List Node -> Node
+listItem additionalAttr =
+    row
+        (List Item)
+        ((++)
+            [ paddingXY 0 (scaled -2), verticalCenter ]
+            additionalAttr
+        )
 
 
 logoBackdrop : Node

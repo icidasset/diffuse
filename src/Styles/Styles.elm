@@ -37,6 +37,7 @@ type Styles
     | InlineMessage
     | Intro
     | Message
+    | Selected
     | WithoutLineHeight
       -- Buttons
     | AuthenticationButton
@@ -44,6 +45,7 @@ type Styles
     | SubtleButton
       -- Containers
     | AuthenticationOptions
+    | EmptyState
     | Insulation
     | NestedInsulation
       -- Decorations
@@ -145,6 +147,7 @@ basics =
     , style InlineMessage [ Font.italic, Font.size (scaled -2) ]
     , style Intro [ Font.size (scaled -1), opacity 0.475 ]
     , style Message [ Color.text Color.white ]
+    , style Selected [ Color.text colors.base08 ]
     , style WithoutLineHeight [ Font.lineHeight 0 ]
     ]
 
@@ -214,6 +217,16 @@ containers =
       style AuthenticationOptions
         [ Border.rounded 4
         , Color.background white
+        ]
+
+    -----------------------------------
+    -- Empty state
+    -----------------------------------
+    , style EmptyState
+        [ Color.text colors.base06
+        , Font.center
+        , Font.lineHeight 1.45
+        , Font.weight 600
         ]
 
     -----------------------------------

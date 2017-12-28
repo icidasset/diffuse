@@ -4,8 +4,11 @@ module Variations exposing (..)
 
 
 type Variations
-    = Default
-    | Active
+    = Active
+    | Clickable
+    | Default
+    | Draggable
+    | DropTarget
     | On
     | OnAlt
-    | Selected
+    | Subtle

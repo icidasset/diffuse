@@ -34,7 +34,7 @@
         "justinmimbs/elm-date-extra": "2.0.3 <= v < 3.0.0",
         "lukewestby/elm-string-interpolate": "1.0.1 <= v < 2.0.0",
         "mdgriffith/style-elements": "4.2.1 <= v < 5.0.0",
-        "norpan/elm-html5-drag-drop": "1.1.0 <= v < 2.0.0",
+        "mpizenberg/elm-pointer-events": "1.0.5 <= v < 2.0.0",
         "ohanhi/keyboard-extra": "3.0.4 <= v < 4.0.0",
         "pablen/toasty": "1.0.4 <= v < 2.0.0",
         "pablohirafuji/elm-markdown": "2.0.4 <= v < 3.0.0",

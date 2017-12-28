@@ -216,7 +216,6 @@ currentPage insulationOptions model =
         Queue queuePage ->
             model
                 |> Queue.entry queuePage
-                |> html
                 |> insulate insulationOptions
 
         Settings ->
