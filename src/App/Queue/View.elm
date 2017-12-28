@@ -22,7 +22,7 @@ import Variables exposing (colors)
 
 -- Styles
 
-import List.Styles exposing (Classes(..))
+import List.StylesOld exposing (Classes(..))
 import StylesOld exposing (Classes(..))
 
 

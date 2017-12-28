@@ -6,7 +6,7 @@ import Style.Border as Border
 import Style.Color as Color
 import Style.Font as Font
 import Variables exposing (colorDerivatives, scaled)
-import Variations exposing (Variations)
+import Variations exposing (Variations(..))
 
 
 -- ⚗️
@@ -55,6 +55,10 @@ styles =
     , style ButtonLight
         [ Border.rounded (lightHeight / 2)
         , Color.background (Color.rgba 255 255 255 0.25)
+
+        --
+        , variation On [ Color.background (Color.rgb 157 174 255) ]
+        , variation OnAlt [ Color.background (Color.rgb 198 254 153) ]
         ]
 
     -----------------------------------

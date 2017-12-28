@@ -208,8 +208,7 @@ buttons queue isPlaying =
                 , width (px 17)
 
                 --
-                , vary Extended isPlaying
-                , vary On isPlaying
+                , vary OnAlt isPlaying
                 ]
                 empty
 
@@ -281,9 +280,8 @@ buttonSpacing =
 decodeClickLocation : (Float -> msg) -> Decode.Decoder msg
 decodeClickLocation message =
     Decode.map message
-        (Decode.map3
-            (\a b c -> (a - b) / c)
-            (Decode.at [ "pageX" ] Decode.float)
-            (Decode.at [ "currentTarget", "offsetLeft" ] Decode.float)
+        (Decode.map2
+            (\a b -> a / b)
+            (Decode.at [ "offsetX" ] Decode.float)
             (Decode.at [ "currentTarget", "clientWidth" ] Decode.float)
         )

@@ -22,6 +22,7 @@ import Console.Styles as Console
 import ContextMenu.Styles as ContextMenu
 import Equalizer.Styles as Equalizer
 import Form.Styles as Form
+import List.Styles as List
 import Navigation.Styles as Navigation
 
 
@@ -50,12 +51,18 @@ type Styles
     | Overlay
       -- Headings
     | H1
+    | H2
+    | H3
+    | H4
+    | H5
+    | H6
       -- 🌳
     | Alfred Alfred.Styles
     | Console Console.Styles
     | ContextMenu ContextMenu.Styles
     | Equalizer Equalizer.Styles
     | Form Form.Styles
+    | List List.Styles
     | Navigation Navigation.Styles
       -- 💀
     | Zed
@@ -84,6 +91,7 @@ styles =
         , Sheet.mixChild ContextMenu ContextMenu.styles
         , Sheet.mixChild Equalizer Equalizer.styles
         , Sheet.mixChild Form Form.styles
+        , Sheet.mixChild List List.styles
         , Sheet.mixChild Navigation Navigation.styles
         ]
 
@@ -293,5 +301,26 @@ headings =
         , Font.size (scaled -3)
         , Font.uppercase
         , Font.weight 700
+        ]
+
+    -----------------------------------
+    -- H2
+    -----------------------------------
+    , style H2
+        [ Font.center
+        , Font.size (scaled 4)
+        , Font.typeface [ headerFont, Font.sansSerif ]
+        , Font.weight 700
+        ]
+
+    -----------------------------------
+    -- H4
+    -----------------------------------
+    , style H4
+        [ Color.text colors.base06
+        , Font.size (scaled -2)
+        , Font.typeface [ headerFont, Font.sansSerif ]
+        , Font.uppercase
+        , Font.weight 500
         ]
     ]

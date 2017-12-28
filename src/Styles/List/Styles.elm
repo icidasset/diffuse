@@ -1,90 +1,45 @@
-module List.Styles exposing (..)
+module List.Styles exposing (Styles(..), styles)
 
 import Color
-import Css exposing (..)
-import Css.Elements exposing (a, label, li, span, svg)
-import Traits exposing (basem, cssColor, gr)
-import Variables exposing (colors)
+import Style exposing (..)
+import Style.Border as Border
+import Style.Color as Color
+import Style.Font as Font
+import Variables exposing (colorDerivatives, colors, scaled)
+import Variations exposing (Variations(..))
 
 
-type Classes
-    = ListWithActions
-      -- Children
-    | DraggableListItem
-    | ListActions
-    | SubtleListItem
+-- ⚗️
+
+
+type Styles
+    = Container
+    | Item
 
 
 
--- 🦄
+-- 🍯
 
 
-styles : List Snippet
+styles : List (Style Styles Variations)
 styles =
-    [ ------------------------------------------------------
-      -- List with actions
-      ------------------------------------------------------
-      class ListWithActions
-        [ fontSize (basem 13)
-        , fontWeight (int 600)
-        , listStyle none
-        , margin zero
-        , padding zero
+    [ -----------------------------------
+      -- Container
+      -----------------------------------
+      style Container
+        [ Font.size (scaled -2)
+        , Font.weight 600
+        ]
+
+    -----------------------------------
+    -- Item
+    -----------------------------------
+    , style Item
+        [ Border.bottom 1
+        , Color.border (Color.rgb 248 248 248)
+        , Style.cursor "pointer"
 
         --
-        , descendants
-            [ li
-                [ alignItems center
-                , borderBottom3 (px 1) solid (cssColor <| Color.rgb 248 248 248)
-                , borderTop3 (px 1) solid transparent
-                , displayFlex
-                , padding2 (gr 2) zero
-                ]
-            , label
-                [ flex (int 1)
-                , overflow hidden
-                , textOverflow ellipsis
-                , whiteSpace noWrap
-                ]
-            , Css.Elements.small
-                [ color (cssColor colors.base05)
-                , fontSize (Css.rem 0.675)
-                , marginRight (gr 3)
-
-                --
-                , after
-                    [ property "content" "'.'" ]
-                ]
-            , svg
-                [ height (Css.em 1.225)
-                , width (Css.em 1.225)
-                ]
-            ]
-        ]
-
-    ------------------------------------------------------
-    -- Children
-    ------------------------------------------------------
-    , class DraggableListItem
-        [ cursor move
-        , descendants [ label [ property "pointer-events" "none" ] ]
-        ]
-    , class ListActions
-        [ displayFlex
-        , lineHeight zero
-        , children
-            [ a
-                [ cursor pointer
-                , display inlineBlock
-                , marginLeft (px 6)
-                ]
-            , span
-                [ display inlineBlock
-                , marginLeft (px 6)
-                ]
-            ]
-        ]
-    , class SubtleListItem
-        [ color (cssColor colors.base05)
+        , variation Selected [ Color.text colors.base08 ]
         ]
     ]

@@ -2,12 +2,12 @@ module Layouts exposing (..)
 
 import Color
 import Color.Convert
-import Element exposing (el, empty, html, row, text)
+import Element exposing (..)
 import Element.Attributes exposing (..)
 import Element.Types exposing (Attr, Node)
-import Html exposing (Html, div, option)
-import Html.Attributes exposing (selected, style, value)
-import Html.Events exposing (onSubmit)
+import Html
+import Html.Attributes
+import Html.Events
 import Material.Icons.Navigation as Icons
 import Types as TopLevel
 import Utils exposing (cssClass, cssClasses)
@@ -16,62 +16,14 @@ import Variables exposing (colorDerivatives, scaled)
 
 -- Styles
 
-import Form.Styles
-import Styles exposing (Styles(Form, H1, Zed))
-import StylesOld exposing (Classes(..))
-
-
--- 🍯 / Old
-
-
-centeredForm : msg -> Html msg -> Html msg
-centeredForm submitMsg childNode =
-    Html.form
-        [ cssClasses
-            [ InsulationContent
-            , InsulationFlexContent
-            , InsulationCentered
-            ]
-        , style
-            [ ( "position", "relative" )
-            , ( "text-align", "center" )
-            ]
-        , onSubmit submitMsg
-        ]
-        [ div
-            [ cssClasses
-                [ InsulationFlexContent ]
-            , style
-                [ ( "overflow", "hidden" )
-                , ( "position", "relative" )
-                , ( "width", "100%" )
-                , ( "z-index", "9" )
-                ]
-            ]
-            [ div
-                [ cssClasses
-                    [ InsulationContent
-                    , InsulationCentered
-                    ]
-                ]
-                [ div
-                    [ cssClasses [ ContentBox ]
-                    , style [ ( "padding-top", "2.25rem" ) ]
-                    ]
-                    [ childNode ]
-                ]
-            ]
-        , div
-            [ cssClass LogoBackdrop ]
-            []
-        ]
-
+import Form.Styles exposing (Styles(..))
+import Styles exposing (Styles(..))
 
 
 -- 🍯
 
 
-btn : Styles -> List Attr -> Node -> Node
+btn : Styles.Styles -> List Attr -> Node -> Node
 btn buttonStyles additionalAttributes buttonChild =
     el
         buttonStyles
@@ -98,28 +50,28 @@ h1 label =
 
 intro : List Node -> Node
 intro children =
-    Element.paragraph
-        Styles.Intro
+    paragraph
+        Intro
         [ paddingBottom (scaled 7), paddingTop (scaled 4) ]
         children
 
 
 lbl : String -> Node
 lbl theLabel =
-    el (Form Form.Styles.Label) [] (text theLabel)
+    el (Form Label) [] (text theLabel)
 
 
 logoBackdrop : Node
 logoBackdrop =
     el
-        Styles.LogoBackdrop
+        LogoBackdrop
         [ height fill, width fill ]
         empty
 
 
 select : List ( String, String ) -> String -> (String -> TopLevel.Msg) -> Node
 select options selectedValue onInputMsg =
-    Element.within
+    within
         [ 20
             |> Icons.expand_more (Color.greyscale 0.325)
             |> html
@@ -146,12 +98,14 @@ select options selectedValue onInputMsg =
             ]
             (List.map
                 (\( val, lbl ) ->
-                    option
-                        [ selected (val == selectedValue), value val ]
+                    Html.option
+                        [ Html.Attributes.selected (val == selectedValue)
+                        , Html.Attributes.value val
+                        ]
                         [ Html.text lbl ]
                 )
                 options
             )
             |> html
-            |> el (Form Form.Styles.Input) []
+            |> el (Form Input) []
         )

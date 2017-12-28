@@ -9,16 +9,12 @@ import Variables exposing (..)
 
 -- Children
 
-import Form.StylesOld as Form
-import List.Styles as List
 import Tracks.Styles as Tracks
 
 
 styles : List Snippet
 styles =
     stylesLocal
-        |> List.append Form.styles
-        |> List.append List.styles
         |> List.append Tracks.styles
 
 
@@ -60,39 +56,11 @@ stylesLocal =
     [ ------------------------------------------------------
       -- <🎃>
       ------------------------------------------------------
-      h2
-        [ fontSize (Css.rem 1.4)
-        , Traits.headerFont
-        , margin3 (gr -2) zero (gr 4)
-        , textAlign center
-        ]
-    , h3
+      h3
         [ fontSize (Css.rem 1.4)
         , Traits.headerFont
         , margin3 (gr -2) zero (gr 6)
         , textAlign left
-        ]
-    , h4
-        [ color (cssColor colors.base06)
-        , fontSize (Css.rem 0.75)
-        , fontWeight (int 500)
-        , Traits.headerFont
-        , textTransform uppercase
-
-        --
-        , descendants
-            [ svg
-                [ display inlineBlock
-                , height (Css.em 1.1)
-                , marginRight (px 8)
-                , transform (translateY (px -1))
-                , verticalAlign middle
-                , width (Css.em 1.1)
-                ]
-            , selector "g"
-                [ fill currentColor
-                ]
-            ]
         ]
 
     --                          --
@@ -169,21 +137,5 @@ stylesLocal =
             [ selector "svg g"
                 [ fill currentColor ]
             ]
-        ]
-
-    ------------------------------------------------------
-    -- Logo backdrop
-    ------------------------------------------------------
-    , class LogoBackdrop
-        [ backgroundImage (url "/images/icon-dark.svg")
-        , backgroundPosition2 (px -124) (pct 53.75)
-        , backgroundRepeat noRepeat
-        , backgroundSize cover
-        , bottom zero
-        , left zero
-        , opacity (num 0.025)
-        , position absolute
-        , right zero
-        , top zero
         ]
     ]

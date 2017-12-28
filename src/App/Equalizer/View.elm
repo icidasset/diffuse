@@ -69,20 +69,16 @@ entry model =
 
 content : TopLevel.Model -> Node
 content model =
-    column
-        Zed
-        [ height fill, width fill ]
-        [ row
-            (Equalizer Wrapper)
-            [ spread ]
-            [ knob Volume model.equalizer.volume
-            , knob Low model.equalizer.low
-            , knob Mid model.equalizer.mid
-            , knob High model.equalizer.high
-            ]
-            |> el Zed [ center, verticalCenter ]
-            |> el Zed [ height fill ]
+    row
+        (Equalizer Wrapper)
+        [ spread ]
+        [ knob Volume model.equalizer.volume
+        , knob Low model.equalizer.low
+        , knob Mid model.equalizer.mid
+        , knob High model.equalizer.high
         ]
+        |> el Zed [ center, verticalCenter ]
+        |> el Zed [ height fill, width fill ]
 
 
 

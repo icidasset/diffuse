@@ -211,7 +211,6 @@ currentPage insulationOptions model =
         Playlists playlistsPage ->
             model
                 |> Playlists.entry playlistsPage
-                |> html
                 |> insulate insulationOptions
 
         Queue queuePage ->
