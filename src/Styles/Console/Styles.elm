@@ -1,4 +1,4 @@
-module Console.Styles exposing (Styles(..), styles)
+module Console.Styles exposing (Styles(..), styles, lightHeight)
 
 import Color
 import Style exposing (..)
@@ -24,6 +24,15 @@ type Styles
 
 
 
+-- Variables
+
+
+lightHeight : Float
+lightHeight =
+    4
+
+
+
 -- 🍯
 
 
@@ -44,7 +53,7 @@ styles =
 
     --
     , style ButtonLight
-        [ Border.rounded 2
+        [ Border.rounded (lightHeight / 2)
         , Color.background (Color.rgba 255 255 255 0.25)
         ]
 

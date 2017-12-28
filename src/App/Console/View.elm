@@ -111,7 +111,10 @@ progress _ =
             [ height (px 3) ]
             (el
                 (Console ProgressBarValue)
-                [ class "progressBarValue", height (px 3) ]
+                [ class "progressBarValue"
+                , height (px 3)
+                , width (px 0)
+                ]
                 empty
             )
         )
@@ -152,9 +155,9 @@ buttons queue isPlaying =
             ]
             [ el
                 (Console ButtonLight)
-                [ height (px 4)
+                [ height (px lightHeight)
                 , vary On queue.repeat
-                , width (px 4)
+                , width (px lightHeight)
                 ]
                 empty
 
@@ -162,7 +165,7 @@ buttons queue isPlaying =
             , 18
                 |> Icons.repeat colorDerivatives.consoleText
                 |> html
-                |> el Zed []
+                |> el Zed [ moveDown 1 ]
             ]
 
         ------------------------------------
@@ -170,10 +173,16 @@ buttons queue isPlaying =
         ------------------------------------
         , column
             (Console Button)
-            [ buttonPadding, onClick (TopLevel.QueueMsg Rewind) ]
-            [ 20
+            [ buttonPadding
+            , buttonSpacing
+            , center
+            , onClick (TopLevel.QueueMsg Rewind)
+            ]
+            [ el Zed [ height (px lightHeight) ] empty
+            , 20
                 |> Icons.fast_rewind colorDerivatives.consoleText
                 |> html
+                |> el Zed [ moveDown 1 ]
             ]
 
         ------------------------------------
@@ -195,7 +204,7 @@ buttons queue isPlaying =
             ]
             [ el
                 (Console ButtonLight)
-                [ height (px 4)
+                [ height (px lightHeight)
                 , width (px 17)
 
                 --
@@ -216,10 +225,16 @@ buttons queue isPlaying =
         ------------------------------------
         , column
             (Console Button)
-            [ buttonPadding, onClick (TopLevel.QueueMsg Shift) ]
-            [ 20
+            [ buttonPadding
+            , buttonSpacing
+            , center
+            , onClick (TopLevel.QueueMsg Shift)
+            ]
+            [ el Zed [ height (px lightHeight) ] empty
+            , 20
                 |> Icons.fast_forward colorDerivatives.consoleText
                 |> html
+                |> el Zed [ moveDown 1 ]
             ]
 
         ------------------------------------
@@ -234,9 +249,9 @@ buttons queue isPlaying =
             ]
             [ el
                 (Console ButtonLight)
-                [ height (px 4)
+                [ height (px lightHeight)
                 , vary On queue.shuffle
-                , width (px 4)
+                , width (px lightHeight)
                 ]
                 empty
 
@@ -244,7 +259,7 @@ buttons queue isPlaying =
             , 18
                 |> Icons.shuffle colorDerivatives.consoleText
                 |> html
-                |> el Zed []
+                |> el Zed [ moveDown 1 ]
             ]
         ]
 
