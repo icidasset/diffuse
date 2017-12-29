@@ -3,7 +3,6 @@ module Svg.Elements exposing (..)
 import Html.Attributes
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Utils exposing (cssSvgClass)
 
 
 -- Logos

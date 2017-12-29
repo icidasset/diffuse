@@ -78,7 +78,7 @@ pageIndex sources isProcessing processingErrors =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideCustomNew <|
+          Navigation.insideCustom <|
             (++)
                 -- Add
                 --
@@ -264,7 +264,7 @@ pageNew sForm =
                 [ ------------------------------------
                   -- Navigation
                   ------------------------------------
-                  Navigation.insideCustomNew
+                  Navigation.insideCustom
                     (case step of
                         1 ->
                             [ ( Icon Icons.arrow_back
@@ -410,8 +410,9 @@ pageNewStep3 source =
             , Input.text
                 (Form Input)
                 [ center
+                , inputBottomPadding
+                , inputTopPadding
                 , maxWidth (px 420)
-                , paddingXY 0 (scaled -5)
                 , width fill
                 ]
                 { onChange =
@@ -477,7 +478,7 @@ pageEdit sForm =
                 [ ------------------------------------
                   -- Navigation
                   ------------------------------------
-                  Navigation.insideCustomNew
+                  Navigation.insideCustom
                     [ ( Icon Icons.arrow_back
                       , Label (Hidden "Go back")
                         --
@@ -550,11 +551,12 @@ propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
         [ lbl propLabel
 
         --
-        , Input.text
+        , input
             (Form Input)
             [ center
+            , inputBottomPadding
+            , inputTopPadding
             , maxWidth (px 420)
-            , paddingXY 0 (scaled -5)
             , width fill
             ]
             { onChange =

@@ -23,7 +23,7 @@ import Element.Events exposing (onClick, onInput, onWithOptions)
 import Element.Ext exposing (..)
 import Element.Input as Input
 import Element.Types exposing (Node)
-import Layouts exposing (btn, logoBackdrop, takeOver)
+import Layouts exposing (btn, inputBottomPadding, inputTopPadding, logoBackdrop, takeOver)
 import Variables exposing (colorDerivatives, colors, scaled)
 import Variations exposing (Variations(..))
 
@@ -63,7 +63,7 @@ pageIndex playlists maybeSelectedPlaylist =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideCustomNew
+          Navigation.insideCustom
             [ ( Icon Icons.arrow_back
               , Label (Hidden "Go back")
                 --
@@ -229,7 +229,7 @@ pageNew =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideCustomNew
+          Navigation.insideCustom
             [ ( Icon Icons.arrow_back
               , Label (Hidden "Go back")
                 --
@@ -269,8 +269,9 @@ pageNewForm =
         , Input.text
             (Form Input)
             [ center
+            , inputBottomPadding
+            , inputTopPadding
             , maxWidth (px 420)
-            , paddingXY 0 (scaled -5)
             , width fill
             ]
             { onChange = PlaylistsMsg << SetNewPlaylistName

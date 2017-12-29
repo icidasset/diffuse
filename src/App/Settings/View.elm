@@ -38,7 +38,7 @@ entry model =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideCustomNew
+          Navigation.insideCustom
             [ ( Icon Icons.import_export
               , Label (Shown "Import / Export")
                 --

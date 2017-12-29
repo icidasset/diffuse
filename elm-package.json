@@ -7,8 +7,7 @@
         "src/App",
         "src/Ext",
         "src/Slave",
-        "src/Styles",
-        "system"
+        "src/Styles"
     ],
     "exposed-modules": [],
     "dependencies": {
@@ -38,11 +37,7 @@
         "ohanhi/keyboard-extra": "3.0.4 <= v < 4.0.0",
         "pablen/toasty": "1.0.4 <= v < 2.0.0",
         "pablohirafuji/elm-markdown": "2.0.4 <= v < 3.0.0",
-        "rtfeldman/elm-css": "11.1.0 <= v < 12.0.0",
-        "rtfeldman/elm-css-helpers": "2.1.0 <= v < 3.0.0",
-        "rtfeldman/elm-css-util": "1.0.2 <= v < 2.0.0",
         "rtfeldman/hex": "1.0.0 <= v < 2.0.0",
-        "scottcorgan/elm-css-normalize": "1.1.9 <= v < 2.0.0",
         "spisemisu/elm-sha": "1.0.5 <= v < 1.0.6",
         "spisemisu/elm-utf8": "1.0.1 <= v < 1.0.2",
         "truqu/elm-base64": "2.0.1 <= v < 3.0.0"

@@ -1,4 +1,4 @@
-module Navigation.View exposing (outside, outsideOutgoing, insideNew, insideCustomNew, inside, insideCustom)
+module Navigation.View exposing (outside, outsideOutgoing, inside, insideCustom)
 
 import Element exposing (..)
 import Element.Attributes exposing (..)
@@ -14,11 +14,6 @@ import Styles exposing (Styles(Navigation, Zed))
 import Types exposing (Msg(RoutingMsg))
 import Variables exposing (colorDerivatives, scaled, scaledPx)
 import Variations exposing (Variations(Active))
-
-
--- TODO
-
-import Html exposing (Html)
 
 
 -- 🍯
@@ -50,34 +45,18 @@ outsideOutgoing currentPage items =
             (List.map mapFn items)
 
 
-insideNew : List ( Icon Msg, Label, Routing.Page ) -> Node
-insideNew items =
-    items
-        |> List.map insideView
-        |> row (Navigation Inside) []
-
-
-inside : List ( Icon Msg, Label, Routing.Page ) -> Html Msg
+inside : List ( Icon Msg, Label, Routing.Page ) -> Node
 inside items =
     items
         |> List.map insideView
         |> row (Navigation Inside) []
-        |> toHtml Styles.styles
 
 
-insideCustomNew : List ( Icon Msg, Label, Msg ) -> Node
-insideCustomNew items =
-    items
-        |> List.map insideViewCustom
-        |> row (Navigation Inside) []
-
-
-insideCustom : List ( Icon Msg, Label, Msg ) -> Html Msg
+insideCustom : List ( Icon Msg, Label, Msg ) -> Node
 insideCustom items =
     items
         |> List.map insideViewCustom
         |> row (Navigation Inside) []
-        |> toHtml Styles.styles
 
 
 

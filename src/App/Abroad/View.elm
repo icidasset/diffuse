@@ -37,7 +37,7 @@ entry model =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideNew
+          Navigation.inside
             [ ( Icon Icons.arrow_back
               , Label (Hidden "Go back")
               , Routing.Types.Settings

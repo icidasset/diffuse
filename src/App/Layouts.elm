@@ -4,6 +4,7 @@ import Color exposing (Color)
 import Color.Convert
 import Element exposing (..)
 import Element.Attributes exposing (..)
+import Element.Input as Input
 import Element.Types exposing (Attr, Node)
 import Html
 import Html.Attributes
@@ -62,6 +63,16 @@ h1 label =
         , paddingTop (scaled -10)
         ]
         (text label)
+
+
+inputBottomPadding : Attr
+inputBottomPadding =
+    paddingBottom ((scaled -5) - 1)
+
+
+inputTopPadding : Attr
+inputTopPadding =
+    paddingTop ((scaled -5) + 1)
 
 
 intro : List Node -> Node

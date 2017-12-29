@@ -8,7 +8,6 @@ import Maybe.Extra as Maybe
 import Queue.Types exposing (Msg(..))
 import Tracks.Types
 import Tracks.Utils
-import Traits exposing (intoRem)
 import Types as TopLevel
 import Utils exposing (..)
 import Variables exposing (colorDerivatives, scaled)

@@ -24,6 +24,7 @@ import Equalizer.Styles as Equalizer
 import Form.Styles as Form
 import List.Styles as List
 import Navigation.Styles as Navigation
+import Tracks.Styles as Tracks
 
 
 -- ⚗️
@@ -68,6 +69,7 @@ type Styles
     | Form Form.Styles
     | List List.Styles
     | Navigation Navigation.Styles
+    | Tracks Tracks.Styles
       -- 💀
     | Zed
 
@@ -97,6 +99,7 @@ styles =
         , Sheet.mixChild Form Form.styles
         , Sheet.mixChild List List.styles
         , Sheet.mixChild Navigation Navigation.styles
+        , Sheet.mixChild Tracks Tracks.styles
         ]
 
 

@@ -10,7 +10,6 @@ import Navigation.View as Navigation
 import Queue.Types as Queue exposing (Page(..))
 import Routing.Types
 import Types as TopLevel exposing (Msg(..))
-import Utils exposing (cssClass)
 import Variables exposing (colors)
 
 
@@ -68,7 +67,7 @@ pageIndex futureItems shuffled =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideCustomNew
+          Navigation.insideCustom
             [ ( Icon Icons.arrow_back
               , Label (Hidden "Go back")
                 --
@@ -153,7 +152,7 @@ pageHistory pastItems =
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideNew
+          Navigation.inside
             [ ( Icon Icons.arrow_back
               , Label (Hidden "Go back")
               , Routing.Types.Index

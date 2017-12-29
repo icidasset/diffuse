@@ -1,38 +1,14 @@
 module Utils exposing (..)
 
 import Char
-import Css.Helpers exposing (identifierToString)
 import Hex
-import Html exposing (Attribute)
-import Html.CssHelpers exposing (..)
 import Http
 import Notifications.Types exposing (Notification(..))
 import Regex exposing (regex, HowMany(All))
 import Response.Ext exposing (do)
 import Routing.Types exposing (Page(..))
 import String.Extra
-import Svg
-import Svg.Attributes
 import Types as TopLevel
-
-
--- Css
-
-
-cssClasses : List class -> Attribute msg
-cssClasses =
-    .class (withNamespace "")
-
-
-cssClass : class -> Attribute msg
-cssClass class =
-    cssClasses [ class ]
-
-
-cssSvgClass : class -> Svg.Attribute msg
-cssSvgClass class =
-    Svg.Attributes.class (identifierToString "" class)
-
 
 
 -- URL stuff
