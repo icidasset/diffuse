@@ -229,7 +229,10 @@ containers =
         , prop "column-gap" (scaledStr 10)
         ]
     , style ColumnsChild
-        [ prop "-webkit-column-break-inside" "avoid"
+        [ prop "display" "block !important"
+
+        --
+        , prop "-webkit-column-break-inside" "avoid"
         , prop "break-inside" "avoid"
         , prop "page-break-inside" "avoid"
         ]
@@ -337,6 +340,15 @@ headings =
     , style H2
         [ Font.center
         , Font.size (scaled 4)
+        , Font.typeface [ headerFont, Font.sansSerif ]
+        , Font.weight 700
+        ]
+
+    -----------------------------------
+    -- H3
+    -----------------------------------
+    , style H3
+        [ Font.size (scaled 4)
         , Font.typeface [ headerFont, Font.sansSerif ]
         , Font.weight 700
         ]

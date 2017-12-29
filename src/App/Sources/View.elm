@@ -49,10 +49,9 @@ entry : Sources.Page -> TopLevel.Model -> Node
 entry page model =
     case page of
         Edit _ ->
-            -- lazy
-            --     pageEdit
-            --     model.sources.form
-            empty
+            -- TODO: Use Element.Lazy once it's available
+            pageEdit
+                model.sources.form
 
         Index ->
             -- TODO: Use Element.Lazy once it's available
@@ -68,7 +67,7 @@ entry page model =
 
 
 
--- {Page} index
+-- {Page} Index
 
 
 pageIndex : List Source -> IsProcessing -> List ( SourceId, String ) -> Node
@@ -309,8 +308,9 @@ pageNewForm step source =
         2 ->
             pageNewStep2 source
 
-        -- 3 ->
-        --     pageNewStep3 source
+        3 ->
+            pageNewStep3 source
+
         _ ->
             empty
 
@@ -356,8 +356,7 @@ pageNewStep2 source =
             SourcesMsg (Sources.AssignFormStep 3)
     in
         column Zed
-            [ center
-            , height fill
+            [ height fill
             , onEnterKey msg
             , paddingXY (scaled 4) 0
             , spacing (scaled 8)
@@ -365,23 +364,20 @@ pageNewStep2 source =
             , width fill
             ]
             [ h3
-                H2
+                H3
                 []
                 (text "Where exactly?")
 
             --
-            , column
+            , paragraph
                 Columns
-                [ inlineStyle [ ( "display", "block" ) ]
-                , spacing (scaled 10)
-                , width fill
-                ]
+                [ width fill ]
                 (renderSourceProperties source)
 
             --
             , btn
                 Button
-                [ onClick msg ]
+                [ center, onClick msg ]
                 (18
                     |> Icons.arrow_forward colorDerivatives.success
                     |> html
@@ -390,121 +386,155 @@ pageNewStep2 source =
             ]
 
 
+pageNewStep3 : Source -> Node
+pageNewStep3 source =
+    let
+        msg =
+            SourcesMsg Sources.SubmitForm
+    in
+        column Zed
+            [ center
+            , height fill
+            , onEnterKey msg
+            , paddingXY (scaled 4) 0
+            , spacing (scaled 6)
+            , verticalCenter
+            , width fill
+            ]
+            [ h2 H2 [] (text "One last thing")
 
--- pageNewStep3 : Source -> Html Sources.Msg
--- pageNewStep3 source =
---     div
---         []
---         [ h2
---             []
---             [ text "One last thing" ]
---         , div
---             [ style
---                 [ ( "margin", "0 auto" )
---                 , ( "max-width", "420px" )
---                 , ( "width", "100%" )
---                 ]
---             ]
---             [ label
---                 []
---                 [ text "What are we going to call this source?" ]
---             , br
---                 []
---                 []
---             , labelBox source
---             ]
---         , div
---             [ cssClass StylesOld.Intro ]
---             [ Icons.warning colorDerivatives.text 16
---             , strong
---                 []
---                 [ text "Make sure CORS is enabled" ]
---             , br
---                 []
---                 []
---             , text "You can find the instructions over "
---             , a
---                 [ href "/about#CORS"
---                 , target "blank"
---                 ]
---                 [ text "here" ]
---             ]
---         , button
---             [ cssClass Button, type_ "submit" ]
---             [ text "Add source" ]
---         ]
---
---
--- *** {Page} Edit
---
---
--- pageEdit : Sources.Form -> Html TopLevel.Msg
--- pageEdit sForm =
---     div
---         [ cssClasses
---             [ InsulationContent
---             , InsulationFlexContent
---             ]
---         ]
---         (case sForm of
---             EditForm source ->
---                 [ ------------------------------------
---                   -- Navigation
---                   ------------------------------------
---                   Navigation.insideCustom
---                     [ ( Icon Icons.arrow_back
---                       , Label (Hidden "Go back")
---                         --
---                       , Sources.Index
---                             |> Routing.Types.Sources
---                             |> Routing.Types.GoToPage
---                             |> RoutingMsg
---                       )
---                     ]
---
---                 ------------------------------------
---                 -- Form
---                 ------------------------------------
---                 , Html.map
---                     SourcesMsg
---                     (centeredForm
---                         Sources.SubmitForm
---                         (div
---                             []
---                             [ h3
---                                 []
---                                 [ text "Edit source" ]
---                             , div
---                                 [ cssClasses
---                                     [ Columns ]
---                                 , style
---                                     [ ( "text-align", "left" ) ]
---                                 ]
---                                 (List.concat
---                                     [ renderSourceProperties source
---                                     , [ label
---                                             []
---                                             [ text "Name" ]
---                                       , labelBox source
---                                       ]
---                                     ]
---                                 )
---                             , br
---                                 []
---                                 []
---                             , button
---                                 [ cssClass Button, type_ "submit" ]
---                                 [ text "Save" ]
---                             ]
---                         )
---                     )
---                 ]
---
---             _ ->
---                 [ text "Cannot use this model.form on this page" ]
---         )
---
---
+            --
+            , lbl "What are we going to call this source?"
+
+            --
+            , Input.text
+                (Form Input)
+                [ center
+                , maxWidth (px 420)
+                , paddingXY 0 (scaled -5)
+                , width fill
+                ]
+                { onChange =
+                    SourcesMsg << Sources.AssignFormProperty "name"
+                , value =
+                    source.data
+                        |> Dict.get "name"
+                        |> Maybe.withDefault ""
+                , label =
+                    Input.placeholder
+                        { text =
+                            source.service
+                                |> Services.properties
+                                |> List.reverse
+                                |> List.head
+                                |> Maybe.map (\( _, l, _, _ ) -> l)
+                                |> Maybe.withDefault "Label"
+                        , label =
+                            Input.hiddenLabel "name"
+                        }
+                , options = []
+                }
+
+            --
+            , paragraph
+                Intro
+                [ inlineStyle
+                    [ ( "text-align", "center" ) ]
+                , paddingBottom (scaled -4)
+                , paddingTop (scaled 4)
+                ]
+                [ 14
+                    |> Icons.warning colorDerivatives.text
+                    |> html
+                    |> el Zed [ moveDown 2, paddingRight (scaled -8) ]
+
+                --
+                , bold "Make sure CORS is enabled"
+                , lineBreak
+                , text "You can find the instructions over "
+                , link "/about#CORS" (text "here")
+                ]
+
+            --
+            , btn
+                Button
+                [ onClick msg ]
+                (text "Add source")
+            ]
+
+
+
+-- {Page} Edit
+
+
+pageEdit : Sources.Form -> Node
+pageEdit sForm =
+    column
+        Zed
+        [ height fill ]
+        (case sForm of
+            EditForm source ->
+                [ ------------------------------------
+                  -- Navigation
+                  ------------------------------------
+                  Navigation.insideCustomNew
+                    [ ( Icon Icons.arrow_back
+                      , Label (Hidden "Go back")
+                        --
+                      , Sources.Index
+                            |> Routing.Types.Sources
+                            |> Routing.Types.GoToPage
+                            |> RoutingMsg
+                      )
+                    ]
+
+                ------------------------------------
+                -- Form
+                ------------------------------------
+                , within
+                    [ logoBackdrop, takeOver (pageEditForm source) ]
+                    (takeOver empty)
+                ]
+
+            _ ->
+                [ text "Cannot use this model.form on this page" ]
+        )
+
+
+pageEditForm : Source -> Node
+pageEditForm source =
+    let
+        msg =
+            SourcesMsg Sources.SubmitForm
+    in
+        column Zed
+            [ height fill
+            , onEnterKey msg
+            , paddingXY (scaled 4) 0
+            , spacing (scaled 8)
+            , verticalCenter
+            , width fill
+            ]
+            [ h3
+                H3
+                []
+                (text "Edit source")
+
+            --
+            , paragraph
+                Columns
+                [ width fill ]
+                (renderSourceProperties source)
+
+            --
+            , btn
+                Button
+                [ center, onClick msg ]
+                (text "Save")
+            ]
+
+
+
 -- Properties
 
 
@@ -541,8 +571,8 @@ propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
             , options = []
             }
         ]
-            |> column Zed []
-            |> el ColumnsChild []
+            |> column Zed [ inlineStyle [ ( "display", "block" ) ] ]
+            |> el ColumnsChild [ paddingXY 0 (scaled 1) ]
 
 
 renderSourceProperties : Source -> List Node
@@ -553,31 +583,3 @@ renderSourceProperties source =
         |> List.drop 1
         |> List.reverse
         |> List.map (propertyRenderer source)
-
-
-
--- labelBox : Source -> Html Sources.Msg
--- labelBox source =
---     div
---         [ cssClass FormStyles.InputBox ]
---         [ input
---             [ name "name"
---             , onInput (Sources.AssignFormProperty "name")
---             , placeholder
---                 (source.service
---                     |> Services.properties
---                     |> List.reverse
---                     |> List.head
---                     |> Maybe.map (\( _, l, _, _ ) -> l)
---                     |> Maybe.withDefault "Label"
---                 )
---             , required True
---             , type_ "text"
---             , value
---                 (source.data
---                     |> Dict.get "name"
---                     |> Maybe.withDefault ""
---                 )
---             ]
---             []
---         ]
