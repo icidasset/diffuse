@@ -14,6 +14,7 @@ import Tracks.Collection as Collection exposing (..)
 import Tracks.Favourites as Favourites
 import Tracks.Ports as Ports
 import Tracks.Selecting as Selecting
+import Tracks.Styles exposing (trackHeight)
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
@@ -427,15 +428,6 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveSearchResults ReceiveSearchResults ]
-
-
-
--- Constants
-
-
-trackHeight : Int
-trackHeight =
-    33
 
 
 

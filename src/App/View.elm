@@ -110,7 +110,6 @@ entryNodes model =
             _ ->
                 model
                     |> Tracks.entry
-                    |> el Zed [ height fill, clipX, yScrollbar ]
                     |> insulate unnested
                     |> within [ currentPage nested model ]
 

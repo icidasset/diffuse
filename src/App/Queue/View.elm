@@ -63,7 +63,7 @@ pageIndex : List Queue.Item -> Bool -> Node
 pageIndex futureItems shuffled =
     column
         Zed
-        []
+        [ height fill ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
@@ -100,7 +100,7 @@ pageIndex futureItems shuffled =
         ------------------------------------
         , column
             Zed
-            [ paddingXY (scaled 4) 0 ]
+            [ height fill, paddingXY (scaled 4) 0 ]
             [ Layouts.h1 "Up next"
 
             --

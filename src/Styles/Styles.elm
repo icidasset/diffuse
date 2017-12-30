@@ -43,6 +43,7 @@ type Styles
       -- Buttons
     | AuthenticationButton
     | Button
+    | ImportantButton
     | SubtleButton
       -- Containers
     | AuthenticationOptions
@@ -189,7 +190,18 @@ buttons =
             ]
 
         -----------------------------------
-        -- Standard Button
+        -- Important button
+        -----------------------------------
+        , List.append
+            (default)
+            [ Color.border colors.base08
+            , Color.text colors.base08
+            , Style.opacity 0.75
+            ]
+            |> style ImportantButton
+
+        -----------------------------------
+        -- Standard button
         -----------------------------------
         , List.append
             (default)
@@ -199,7 +211,7 @@ buttons =
             |> style Button
 
         -----------------------------------
-        -- Subtle Button
+        -- Subtle button
         -----------------------------------
         , List.append
             (default)

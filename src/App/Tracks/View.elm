@@ -1,8 +1,7 @@
-module Tracks.View exposing (entry, tracksTableWrapperAttrLazy)
+module Tracks.View exposing (entry)
 
 import Color
 import Json.Decode as Decode
-import Lazy exposing (Lazy)
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Mouse
@@ -14,25 +13,26 @@ import Queue.Types
 import Routing.Types
 import Sources.Types exposing (IsProcessing, Source)
 import Tracks.Types exposing (..)
-import Types as TopLevel exposing (LazyAttributeList, Msg(..))
+import Types as TopLevel exposing (Msg(..))
 
 
 -- Elements
 
 import Element exposing (..)
 import Element.Attributes exposing (..)
-import Element.Events exposing (on, onBlur, onClick)
+import Element.Events exposing (..)
 import Element.Ext exposing (..)
 import Element.Input as Input
+import Element.Keyed as Keyed
 import Element.Types exposing (..)
-import Layouts exposing (inputBottomPadding, inputTopPadding)
-import Variables exposing (colorDerivatives, colors, scaled)
+import Layouts exposing (..)
+import Variables exposing (colorDerivatives, colors, scaled, scaledStr)
 import Variations exposing (Variations(..))
 
 
 -- Html
 
-import Html
+import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Html.Keyed
@@ -52,7 +52,7 @@ import Material.Icons.Navigation
 -- Styles
 
 import Styles exposing (Styles(..))
-import Tracks.Styles exposing (Styles(ClickableAction), iconColor)
+import Tracks.Styles exposing (Styles(..), iconColor, trackHeight)
 
 
 -- 🍯
@@ -62,12 +62,22 @@ entry : TopLevel.Model -> Node
 entry model =
     column
         Zed
-        []
+        [ height fill ]
         [ lazy3
             navigation
             model.tracks.searchTerm
             model.tracks.favouritesOnly
             model.tracks.selectedPlaylist
+        , -- TODO: Use Element.Lazy once it's available
+          content
+            model.tracks.collection.exposed
+            ( model.tracks.sortBy
+            , model.tracks.sortDirection
+            , model.tracks.selectedPlaylist
+            , model.tracks.favouritesOnly
+            , model.sources.isProcessing
+            , model.sources.collection
+            )
         ]
 
 
@@ -78,7 +88,7 @@ entry model =
 navigation : Maybe String -> Bool -> Maybe Playlist -> Node
 navigation searchTerm favouritesOnly maybeSelectedPlaylist =
     row
-        Zed
+        (Tracks Tracks.Styles.Navigation)
         []
         [ -----------------------------------
           -- Part 1
@@ -117,7 +127,7 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
                     el
                         (Tracks ClickableAction)
                         [ attribute "title" "Clear search"
-                        , onClick (TracksMsg <| Search Nothing)
+                        , onClick (TracksMsg <| Tracks.Types.Search Nothing)
                         ]
                         (16
                             |> Material.Icons.Content.clear iconColor
@@ -162,7 +172,7 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
                 (Tracks Tracks.Styles.Search)
                 [ inputBottomPadding
                 , inputTopPadding
-                , onBlur (TracksMsg <| Search searchTerm)
+                , onBlur (TracksMsg <| Tracks.Types.Search searchTerm)
                 , paddingLeft ((scaled -3) + 16 + (scaled -3))
                 , width fill
                 ]
@@ -205,20 +215,184 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
         ]
 
 
-
---
-
-
-tracksTableWrapperAttrLazy : Bool -> TopLevel.LazyAttributeList
-tracksTableWrapperAttrLazy _ =
-    Lazy.lazy
-        (let
-            a : List (Html.Attribute TopLevel.Msg)
-            a =
-                []
-         in
-            always a
+content :
+    List IdentifiedTrack
+    -> ( SortBy, SortDirection, Maybe Playlist, Bool, IsProcessing, List Source )
+    -> Node
+content resultant ( sortBy, sortDirection, playlist, favouritesOnly, isProcessing, sources ) =
+    el
+        Zed
+        [ attribute "data-favourites-only" (boolToAttr favouritesOnly)
+        , clip
+        , height fill
+        ]
+        (if List.isEmpty resultant then
+            noTracksFound sources isProcessing
+         else
+            defaultTable resultant sortBy sortDirection
         )
+
+
+scrollHandler : ScrollPos -> TopLevel.Msg
+scrollHandler =
+    ScrollThroughTableDebounced >> TopLevel.TracksMsg
+
+
+
+-- Content messages
+
+
+msgProcessing : Node
+msgProcessing =
+    el (Tracks Placeholder) [] (text "Processing Tracks")
+
+
+msgNoSources : Node
+msgNoSources =
+    row
+        Zed
+        [ onWithOptions
+            "click"
+            { stopPropagation = False
+            , preventDefault = True
+            }
+            (Sources.Types.New
+                |> Routing.Types.Sources
+                |> Routing.Types.GoToPage
+                |> RoutingMsg
+                |> Decode.succeed
+            )
+        , spacing (scaled -8)
+        ]
+        [ el
+            WithoutLineHeight
+            [ moveDown 1, verticalCenter ]
+            (15
+                |> Material.Icons.Content.add colors.base08
+                |> html
+            )
+        , text "Add some music"
+        ]
+        |> el ImportantButton [ paddingXY (scaled -5) (scaled -6) ]
+        |> link "/sources"
+
+
+msgNoTracks : Node
+msgNoTracks =
+    el (Tracks Placeholder) [] (text "No tracks found")
+
+
+
+-- Content views, Pt. 1
+
+
+noTracksFound : List Source -> IsProcessing -> Node
+noTracksFound sources isProcessing =
+    within
+        [ logoBackdrop
+        , el
+            Zed
+            [ center, verticalCenter ]
+            (case isProcessing of
+                Just _ ->
+                    msgProcessing
+
+                Nothing ->
+                    case List.length sources of
+                        0 ->
+                            msgNoSources
+
+                        _ ->
+                            msgNoTracks
+            )
+        ]
+        (el
+            Zed
+            [ height fill, width fill ]
+            empty
+        )
+
+
+
+-- Content views, Pt. 2
+
+
+defaultTable : List IdentifiedTrack -> SortBy -> SortDirection -> Node
+defaultTable tracks activeSortBy sortDirection =
+    column
+        (Tracks Table)
+        [ clipX
+        , height fill
+        , id "tracks"
+        , inlineStyle [ ( "border-radius", "3px" ) ]
+        , onScroll scrollHandler
+        , yScrollbar
+        ]
+        [ tracks
+            |> List.map defaultTableItem
+            |> Html.Keyed.ol [ Html.Attributes.class "tracks__table " ]
+            |> html
+        ]
+
+
+defaultTableItem : IdentifiedTrack -> ( String, Html TopLevel.Msg )
+defaultTableItem ( identifiers, track ) =
+    ( track.id
+    , Html.li
+        [ Html.Attributes.rel
+            (toString identifiers.indexInList)
+
+        -----------------------------------
+        -- Classes
+        -----------------------------------
+        , Html.Attributes.classList
+            [ ( "tracks__tableRow", True )
+            , ( "tracks__tableRow--alt", identifiers.indexInList % 2 == 1 )
+            , ( "tracks__tableRow--isMissing", identifiers.isMissing )
+            , ( "tracks__tableRow--isNotMissing", not identifiers.isMissing )
+            , ( "tracks__tableRow--isNowPlaying", identifiers.isNowPlaying )
+            ]
+        ]
+        [ -----------------------------------
+          -- Favourite column
+          -----------------------------------
+          Html.div
+            [ Html.Attributes.classList
+                [ ( "tracks__tableFavouriteColumn", True )
+                , ( "tracks__tableFavouriteColumn--isNowPlaying", identifiers.isNowPlaying )
+                , ( "tracks__tableFavouriteColumn--isFavourite", identifiers.isFavourite )
+                ]
+            ]
+            [ if identifiers.isFavourite then
+                Html.text "t"
+              else
+                Html.text "f"
+            ]
+
+        -----------------------------------
+        -- Other columns
+        -----------------------------------
+        , Html.div
+            [ Html.Attributes.class "tracks__tableOtherColumns"
+            , Html.Attributes.style [ ( "width", "37.5%" ) ]
+            ]
+            [ Html.text track.tags.title ]
+
+        --
+        , Html.div
+            [ Html.Attributes.class "tracks__tableOtherColumns"
+            , Html.Attributes.style [ ( "width", "29.0%" ) ]
+            ]
+            [ Html.text track.tags.artist ]
+
+        --
+        , Html.div
+            [ Html.Attributes.class "tracks__tableOtherColumns"
+            , Html.Attributes.style [ ( "width", "29.0%" ) ]
+            ]
+            [ Html.text track.tags.album ]
+        ]
+    )
 
 
 
