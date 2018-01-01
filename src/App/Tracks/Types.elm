@@ -141,6 +141,8 @@ type Msg
     | RemoveByPath SourceId (List String)
       -- Search
     | ClearSearch
+    | DebouncedSearch
+    | DebouncedSearchCallback Debounce.Msg
     | ReceiveSearchResults (List SourceId)
     | Search (Maybe String)
     | SetSearchTerm String
@@ -177,6 +179,7 @@ type alias InternalModel extension =
         , initialImportPerformed : Bool
         , scrollDebounce : Debounce ScrollPos
         , searchCounter : Int
+        , searchDebounce : Debounce ()
         , searchResults : Maybe (List TrackId)
         , selectedTrackIndexes : List Int
         , sortBy : SortBy

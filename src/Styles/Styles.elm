@@ -118,7 +118,7 @@ root =
 
         -- Font smoothing
         , prop "-webkit-font-smoothing" "antialiased"
-        , prop "-moz-font-smoothing" "grayscale"
+        , prop "-moz-osx-font-smoothing" "grayscale"
         , prop "font-smooth" "always"
 
         -- Text rendering

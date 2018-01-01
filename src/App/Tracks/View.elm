@@ -175,6 +175,7 @@ navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
                 (Tracks Tracks.Styles.Search)
                 [ inputBottomPadding
                 , inputTopPadding
+                , onBlur (TracksMsg DebouncedSearch)
                 , onEnterKey (TracksMsg <| Tracks.Types.Search searchTerm)
                 , paddingLeft (scaled -3 + 16 + scaled -3)
                 , width fill

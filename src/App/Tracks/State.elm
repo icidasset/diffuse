@@ -34,6 +34,7 @@ initialModel =
     , initialImportPerformed = False
     , scrollDebounce = Debounce.init
     , searchCounter = 0
+    , searchDebounce = Debounce.init
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedPlaylist = Nothing
@@ -190,6 +191,35 @@ update msg model =
                 |> Collection.set
                 |> Response.andAlso storeUserData
                 |> initialImport
+
+        DebouncedSearch ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.push debounceSearchConfig () model.searchDebounce
+            in
+                ($)
+                    { model | searchDebounce = debounce }
+                    [ cmd ]
+                    []
+
+        DebouncedSearchCallback debounceMsg ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceSearchConfig
+                        (model.searchTerm
+                            |> Search
+                            |> do
+                            |> always
+                            |> Debounce.takeLast
+                        )
+                        debounceMsg
+                        model.searchDebounce
+            in
+                ($)
+                    { model | searchDebounce = debounce }
+                    [ cmd ]
+                    []
 
         -- > Step 3, receive search results
         ReceiveSearchResults trackIds ->
@@ -423,6 +453,13 @@ debounceScrollConfig : Debounce.Config Msg
 debounceScrollConfig =
     { strategy = Debounce.soon (125 * Time.millisecond)
     , transform = ScrollThroughTableDebounceCallback
+    }
+
+
+debounceSearchConfig : Debounce.Config Msg
+debounceSearchConfig =
+    { strategy = Debounce.later (250 * Time.millisecond)
+    , transform = DebouncedSearchCallback
     }
 
 
