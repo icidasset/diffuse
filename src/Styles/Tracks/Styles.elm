@@ -16,11 +16,13 @@ import Variations exposing (Variations)
 
 type Styles
     = ClickableAction
+    | Container
     | Navigation
     | Placeholder
     | Search
     | Table
     | TableHeader
+    | TableHeaderColumn
 
 
 
@@ -52,10 +54,18 @@ styles =
         ]
 
     -----------------------------------
+    -- Container
+    -----------------------------------
+    , style Container
+        [ Style.prop "z-index" "0"
+        ]
+
+    -----------------------------------
     -- Navigation
     -----------------------------------
     , style Navigation
-        [ Shadow.box
+        [ Style.prop "z-index" "10"
+        , Shadow.box
             { offset = ( 0, 0 )
             , size = 1
             , blur = 10
@@ -104,5 +114,24 @@ styles =
         , prop "-moz-user-select" "none"
         , prop "-ms-user-select" "none"
         , prop "user-select" "none"
+        ]
+
+    -----------------------------------
+    -- Table header
+    -----------------------------------
+    , style TableHeader
+        [ Font.lineHeight 2
+        , Font.size 10.5
+        , Font.weight 700
+        , Style.prop "z-index" "11"
+        ]
+
+    --
+    , style TableHeaderColumn
+        [ Border.bottom 1
+        , Border.left 1
+        , Color.background Color.white
+        , Color.border colorDerivatives.subtleBorder
+        , Color.text (Color.rgb 207 207 207)
         ]
     ]

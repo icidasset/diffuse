@@ -58,10 +58,11 @@
   display: table-cell;
   font-family: "or-favourites";
   height: 33px;
+  width: 4.5%;
 
   /* 16 * (1.125 ^ x) */
   padding-left: 12.642px;
-  padding-right: 6.236px;
+  padding-right: 9.98872px;
 }
 
 
@@ -93,8 +94,8 @@
   display: table-cell;
   height: 33px;
   overflow: hidden;
-  padding-left: 6.236px;
-  padding-right: 6.236px;
+  padding-left: 9.98872px;
+  padding-right: 9.98872px;
   text-overflow: ellipsis;
 }
 

@@ -33,6 +33,7 @@ initialModel =
     , favouritesOnly = False
     , initialImportPerformed = False
     , scrollDebounce = Debounce.init
+    , searchCounter = 0
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedPlaylist = Nothing
@@ -170,6 +171,11 @@ update msg model =
         SetSearchTerm value ->
             { model | searchTerm = Just value }
                 |> Response.withAlso storeUserData
+
+        ClearSearch ->
+            update
+                (Search Nothing)
+                { model | searchCounter = model.searchCounter + 1 }
 
         -- > Step 2, perform search
         Search (Just term) ->
