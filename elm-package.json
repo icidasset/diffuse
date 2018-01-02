@@ -11,6 +11,7 @@
     ],
     "exposed-modules": [],
     "dependencies": {
+        "FabienHenon/elm-infinite-list-view": "2.0.0 <= v < 3.0.0",
         "eeue56/elm-xml": "2.2.0 <= v < 3.0.0",
         "elm-community/html-extra": "2.2.0 <= v < 3.0.0",
         "elm-community/list-extra": "6.1.0 <= v < 7.0.0",

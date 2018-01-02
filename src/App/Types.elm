@@ -101,6 +101,7 @@ type alias Model =
     , isDevelopmentEnvironment : Bool
     , isHTTPS : Bool
     , isTouchDevice : Bool
+    , screenHeight : Int
     , showLoadingScreen : Bool
     , toasties : Toasty.Stack Notification
 
@@ -165,4 +166,4 @@ type alias Illumination model childMsg =
 
 
 type alias ProgramFlags =
-    { isDevelopmentEnvironment : Bool, isHTTPS : Bool }
+    { isDevelopmentEnvironment : Bool, isHTTPS : Bool, screenHeight : Int }

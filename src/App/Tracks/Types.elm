@@ -2,6 +2,7 @@ module Tracks.Types exposing (..)
 
 import Base64
 import Debounce exposing (Debounce)
+import InfiniteList
 import Playlists.Types exposing (Playlist)
 import Regex exposing (HowMany(..), regex)
 
@@ -154,10 +155,8 @@ type Msg
       -- UI
     | ApplyTrackSelection Bool Int
     | ApplyTrackSelectionUsingContextMenu Int
+    | InfiniteListMsg InfiniteList.Model
     | SetActiveIdentifiedTrack (Maybe IdentifiedTrack)
-    | ScrollThroughTable ScrollPos
-    | ScrollThroughTableDebounced ScrollPos
-    | ScrollThroughTableDebounceCallback Debounce.Msg
     | ScrollToActiveTrack Track
 
 
@@ -176,8 +175,8 @@ type alias InternalModel extension =
         , enabledSourceIds : List SourceId
         , exposedStep : Int
         , favourites : List Favourite
+        , infiniteList : InfiniteList.Model
         , initialImportPerformed : Bool
-        , scrollDebounce : Debounce ScrollPos
         , searchCounter : Int
         , searchDebounce : Debounce ()
         , searchResults : Maybe (List TrackId)
@@ -191,17 +190,6 @@ type alias Settings =
     { favouritesOnly : Bool -- Whether or not to only show favourites in the UI
     , searchTerm : Maybe String
     , selectedPlaylist : Maybe Playlist
-    }
-
-
-
--- Other
-
-
-type alias ScrollPos =
-    { scrolledHeight : Int
-    , contentHeight : Int
-    , containerHeight : Int
     }
 
 

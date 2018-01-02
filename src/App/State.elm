@@ -70,6 +70,7 @@ initialModel flags initialPage =
     , isDevelopmentEnvironment = flags.isDevelopmentEnvironment
     , isHTTPS = flags.isHTTPS
     , isTouchDevice = False
+    , screenHeight = flags.screenHeight
     , showLoadingScreen = True
     , storageDebounce = Debounce.init
     , timestamp = Date.fromTime 0
@@ -124,6 +125,7 @@ update msg model =
                 flags =
                     { isDevelopmentEnvironment = model.isDevelopmentEnvironment
                     , isHTTPS = model.isHTTPS
+                    , screenHeight = model.screenHeight
                     }
             in
                 (!)

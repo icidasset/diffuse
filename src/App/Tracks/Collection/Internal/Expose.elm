@@ -15,4 +15,4 @@ expose : Parcel -> Parcel
 expose ( model, collection ) =
     (,)
         model
-        { collection | exposed = List.take (model.exposedStep * partial) collection.harvested }
+        { collection | exposed = collection.harvested }

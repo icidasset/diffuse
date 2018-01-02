@@ -2,6 +2,7 @@ module Tracks.State exposing (..)
 
 import Debounce
 import Dom.Scroll
+import InfiniteList
 import List.Extra as List
 import Playlists.Types exposing (Playlist)
 import Response
@@ -31,8 +32,8 @@ initialModel =
     , exposedStep = 1
     , favourites = []
     , favouritesOnly = False
+    , infiniteList = InfiniteList.init
     , initialImportPerformed = False
-    , scrollDebounce = Debounce.init
     , searchCounter = 0
     , searchDebounce = Debounce.init
     , searchResults = Nothing
@@ -301,6 +302,11 @@ update msg model =
                     |> Collection.reexpose
                     |> Collection.set
 
+        -- > Infinite list
+        --
+        InfiniteListMsg infiniteList ->
+            (!) { model | infiniteList = infiniteList } []
+
         -- > Identify the active track
         --
         SetActiveIdentifiedTrack maybeIdentifiedTrack ->
@@ -317,43 +323,6 @@ update msg model =
                     |> Collection.makeParcel
                     |> Collection.remap (List.map mapFn)
                     |> Collection.set
-
-        -- > Table-scroll event handler
-        --
-        ScrollThroughTable { scrolledHeight, contentHeight, containerHeight } ->
-            case scrolledHeight >= (contentHeight - containerHeight - trackHeight * 25) of
-                True ->
-                    { model | exposedStep = model.exposedStep + 1 }
-                        |> Collection.makeParcel
-                        |> Collection.reexpose
-                        |> Collection.set
-
-                False ->
-                    Response.withNone model
-
-        ScrollThroughTableDebounced scrollPos ->
-            let
-                ( debounce, cmd ) =
-                    Debounce.push debounceScrollConfig scrollPos model.scrollDebounce
-            in
-                ($)
-                    { model | scrollDebounce = debounce }
-                    [ cmd ]
-                    []
-
-        ScrollThroughTableDebounceCallback debounceMsg ->
-            let
-                ( debounce, cmd ) =
-                    Debounce.update
-                        debounceScrollConfig
-                        (Debounce.takeLast (ScrollThroughTable >> do))
-                        debounceMsg
-                        model.scrollDebounce
-            in
-                ($)
-                    { model | scrollDebounce = debounce }
-                    [ cmd ]
-                    []
 
         -- > Scroll to the active track
         --
@@ -447,13 +416,6 @@ scrollToIndex model idx =
 
 
 -- 🔥 / Debounce configurations
-
-
-debounceScrollConfig : Debounce.Config Msg
-debounceScrollConfig =
-    { strategy = Debounce.soon (125 * Time.millisecond)
-    , transform = ScrollThroughTableDebounceCallback
-    }
 
 
 debounceSearchConfig : Debounce.Config Msg
