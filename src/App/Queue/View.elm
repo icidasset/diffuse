@@ -223,7 +223,7 @@ renderDraggableItem draggingOver index ( item, actions ) =
 
         attrs =
             [ attribute "rel" (toString index)
-            , attribute "touch-action" "none"
+            , attribute "touch-action" "pan-y"
             , vary Draggable True
             , vary DraggingOver isDraggingOver
             , vary Subtle (not item.manualEntry)

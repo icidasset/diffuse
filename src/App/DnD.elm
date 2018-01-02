@@ -30,7 +30,10 @@ type Model subject
 
 itemHooks : (Msg subject -> wrap) -> subject -> List (Element.Attribute variation wrap)
 itemHooks wrap subject =
-    [ on "pointerdown" (Decode.succeed <| wrap <| Start subject)
+    [ on "mousedown" (Decode.succeed <| wrap <| Start subject)
+    , on "longtap" (Decode.succeed <| wrap <| Start subject)
+
+    --
     , on "pointerup" (Decode.succeed <| wrap <| Drop subject)
     , on "pointerout" (Decode.succeed <| wrap <| Out subject)
     , on "pointerover" (Decode.succeed <| wrap <| Over subject)
