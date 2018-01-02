@@ -149,7 +149,10 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
     case "Volume"   : node = volume; break;
   }
 
-  node.gain.value = determineNodeGainValue(e.knob, e.value);
+  node.gain.setValueAtTime(
+    determineNodeGainValue(e.knob, e.value),
+    context.currentTime
+  );
 });
 
 
