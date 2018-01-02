@@ -113,9 +113,6 @@ type alias Collection =
 
     -- Filtered by search results, favourites, etc.
     , harvested : List IdentifiedTrack
-
-    -- Partial rendering of the harvested collection in the UI
-    , exposed : List IdentifiedTrack
     }
 
 
@@ -130,7 +127,6 @@ type alias Parcel =
 type Msg
     = Rearrange
     | Recalibrate
-    | Reexpose
     | Reharvest
     | SetEnabledSourceIds (List SourceId)
     | SortBy SortBy
@@ -173,7 +169,6 @@ type alias InternalModel extension =
         | activeIdentifiedTrack : Maybe IdentifiedTrack
         , collection : Collection
         , enabledSourceIds : List SourceId
-        , exposedStep : Int
         , favourites : List Favourite
         , infiniteList : InfiniteList.Model
         , initialImportPerformed : Bool
@@ -238,7 +233,6 @@ emptyCollection =
     , identified = []
     , arranged = []
     , harvested = []
-    , exposed = []
     }
 
 

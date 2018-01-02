@@ -29,7 +29,6 @@ initialModel =
     { activeIdentifiedTrack = Nothing
     , collection = emptyCollection
     , enabledSourceIds = []
-    , exposedStep = 1
     , favourites = []
     , favouritesOnly = False
     , infiniteList = InfiniteList.init
@@ -63,21 +62,8 @@ update msg model =
         -- # Recalibrate
         --
         Recalibrate ->
-            model
-                |> Collection.makeParcel
-                |> Collection.recalibrate
-                |> Collection.reexpose
-                |> Collection.set
-                |> Response.mapModel (\m -> { m | selectedTrackIndexes = [] })
-                |> Response.addCmd recalibrationEffect
-
-        -- # Reexpose
-        --
-        Reexpose ->
-            model
-                |> Collection.makeParcel
-                |> Collection.reexpose
-                |> Collection.set
+            -1
+                |> scrollToIndex model
 
         -- # Reharvest
         --
@@ -238,7 +224,7 @@ update msg model =
             index
                 |> String.toInt
                 |> Result.toMaybe
-                |> Maybe.andThen (\idx -> List.getAt idx model.collection.exposed)
+                |> Maybe.andThen (\idx -> List.getAt idx model.collection.harvested)
                 |> Maybe.map (toggleFavourite model)
                 |> Maybe.withDefault ((,) model Cmd.none)
 
@@ -281,7 +267,6 @@ update msg model =
                 { model | selectedTrackIndexes = newSelection }
                     |> Collection.makeParcel
                     |> Collection.redoSelection
-                    |> Collection.reexpose
                     |> Collection.set
 
         -- > Apply track selection using context menu
@@ -299,7 +284,6 @@ update msg model =
                 { model | selectedTrackIndexes = newSelection }
                     |> Collection.makeParcel
                     |> Collection.redoSelection
-                    |> Collection.reexpose
                     |> Collection.set
 
         -- > Infinite list
@@ -383,35 +367,13 @@ togglePlaylist model playlist =
 
 scrollToIndex : Model -> Int -> ( Model, Cmd TopLevel.Msg )
 scrollToIndex model idx =
-    let
-        isExposed =
-            (idx + 1) <= List.length model.collection.exposed
-
-        newExposedStep =
-            if not isExposed then
-                ceiling (toFloat idx / toFloat Collection.partial)
-            else
-                model.exposedStep
-
-        scrollTask =
-            (9 + idx * trackHeight)
-                |> toFloat
-                |> Dom.Scroll.toY "tracks"
-
-        exposedCmd =
-            if not isExposed then
-                do (TopLevel.TracksMsg Reexpose)
-            else
-                Cmd.none
-
-        cmd =
-            Cmd.batch
-                [ exposedCmd
-                , Task.attempt (always TopLevel.NoOp) scrollTask
-                ]
-    in
-        { model | exposedStep = newExposedStep }
-            |> Response.withCmd cmd
+    (!)
+        model
+        [ (9 + idx * trackHeight)
+            |> toFloat
+            |> Dom.Scroll.toY "tracks"
+            |> Task.attempt (always TopLevel.NoOp)
+        ]
 
 
 

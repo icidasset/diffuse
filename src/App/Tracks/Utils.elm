@@ -15,14 +15,6 @@ import Utils
     Utils.illuminate TopLevel.TracksMsg
 
 
-{-| Scroll tracks to top.
-This should happen in combination with recalibration.
--}
-recalibrationEffect : Cmd TopLevel.Msg
-recalibrationEffect =
-    Task.attempt (always TopLevel.NoOp) (Dom.Scroll.toTop "tracks")
-
-
 
 -- 🌱
 

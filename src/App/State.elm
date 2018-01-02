@@ -199,7 +199,7 @@ update msg model =
                         tracks =
                             List.map
                                 (\idx ->
-                                    model.tracks.collection.exposed
+                                    model.tracks.collection.harvested
                                         |> List.getAt idx
                                         |> Maybe.withDefault Tracks.Types.emptyIdentifiedTrack
                                 )
@@ -558,7 +558,7 @@ update msg model =
                 [ index
                     |> String.toInt
                     |> Result.toMaybe
-                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection.exposed)
+                    |> Maybe.andThen (\idx -> List.getAt idx model.tracks.collection.harvested)
                     |> Maybe.map Queue.Types.InjectFirstAndPlay
                     |> Maybe.map QueueMsg
                     |> Maybe.map do

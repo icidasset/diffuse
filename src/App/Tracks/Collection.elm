@@ -2,7 +2,7 @@ module Tracks.Collection exposing (..)
 
 import List.Extra as List
 import Playlists.Types exposing (Playlist)
-import Tracks.Collection.Internal exposing (buildf, identify, arrange, harvest, expose)
+import Tracks.Collection.Internal exposing (buildf, identify, arrange, harvest)
 import Tracks.Collection.Responses exposing (..)
 import Tracks.Types exposing (..)
 import Types as TopLevel
@@ -22,27 +22,17 @@ makeParcel model =
 
 reidentify : Parcel -> Parcel
 reidentify =
-    identify >> arrange >> harvest >> expose
+    identify >> arrange >> harvest
 
 
 rearrange : Parcel -> Parcel
 rearrange =
-    arrange >> harvest >> expose
+    arrange >> harvest
 
 
 reharvest : Parcel -> Parcel
 reharvest =
-    harvest >> expose
-
-
-reexpose : Parcel -> Parcel
-reexpose =
-    expose
-
-
-recalibrate : Parcel -> Parcel
-recalibrate parcel =
-    Tuple.mapFirst (\model -> { model | exposedStep = 1 }) parcel
+    harvest
 
 
 remap : (List IdentifiedTrack -> List IdentifiedTrack) -> Parcel -> Parcel
@@ -53,7 +43,6 @@ remap mapFn ( model, collection ) =
             | identified = mapFn collection.identified
             , arranged = mapFn collection.arranged
             , harvested = mapFn collection.harvested
-            , exposed = mapFn collection.exposed
         }
 
 
@@ -130,11 +119,6 @@ removeByPath sourceId paths ( model, collection ) =
                     False
             )
         |> buildf ( model, collection )
-
-
-partial : Int
-partial =
-    Tracks.Collection.Internal.partial
 
 
 

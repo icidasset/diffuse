@@ -73,7 +73,7 @@ entry model =
             model.tracks.selectedPlaylist
         , -- TODO: Use Element.Lazy once it's available
           content
-            model.tracks.collection.exposed
+            model.tracks.collection.harvested
             ( model.tracks.sortBy
             , model.tracks.sortDirection
             , model.tracks.selectedPlaylist
