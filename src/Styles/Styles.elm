@@ -284,6 +284,7 @@ containers =
     , style NestedInsulation
         [ Border.rounded 3
         , Color.background white
+        , Style.prop "-webkit-overflow-scrolling" "touch"
         ]
     ]
 

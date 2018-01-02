@@ -114,6 +114,9 @@ styles =
         , prop "-moz-user-select" "none"
         , prop "-ms-user-select" "none"
         , prop "user-select" "none"
+
+        --
+        , prop "-webkit-overflow-scrolling" "touch"
         ]
 
     -----------------------------------
