@@ -1,6 +1,7 @@
 module Queue.State exposing (..)
 
 import Date exposing (Date)
+import DnD
 import List.Extra as List
 import Notifications.Types as Notification
 import Response.Ext exposing (do)
@@ -27,6 +28,9 @@ initialModel =
     -- Settings
     , repeat = False
     , shuffle = False
+
+    -- UI
+    , itemDnD = DnD.initial
     }
 
 
@@ -289,6 +293,38 @@ update msg model =
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
                 |> (\m -> ($) m [ do Reset ] [ storeUserData ])
+
+        ------------------------------------
+        -- UI
+        ------------------------------------
+        DragItemMsg sub ->
+            let
+                dnd =
+                    DnD.update sub model.itemDnD
+
+                future =
+                    model.future
+
+                newFuture =
+                    case dnd of
+                        DnD.Dropped { origin, target } ->
+                            if target <= origin then
+                                []
+                                    ++ (future |> List.take target)
+                                    ++ (future |> List.drop origin |> List.take 1)
+                                    ++ (future |> List.take origin |> List.drop target)
+                                    ++ (future |> List.drop origin |> List.drop 1)
+                            else
+                                []
+                                    ++ (future |> List.take origin)
+                                    ++ (future |> List.take target |> List.drop origin |> List.drop 1)
+                                    ++ (future |> List.drop origin |> List.take 1)
+                                    ++ (future |> List.drop target)
+
+                        _ ->
+                            model.future
+            in
+                (!) { model | future = newFuture, itemDnD = dnd } []
 
 
 storeUserData : Cmd TopLevel.Msg

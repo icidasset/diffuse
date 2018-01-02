@@ -11,6 +11,7 @@
     "camelcase": "^4.1.0",
     "elasticlunr": "^0.9.5",
     "jsmediatags": "^3.8.1",
+    "pepjs": "^0.4.3",
     "remotestoragejs": "^1.0.2",
     "serviceworker-cache-polyfill": "^4.0.0",
     "text-encoding": "^0.6.4",

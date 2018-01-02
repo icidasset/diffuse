@@ -8,7 +8,7 @@ type Variations
     | Clickable
     | Default
     | Draggable
-    | DropTarget
+    | DraggingOver
     | On
     | OnAlt
     | Subtle

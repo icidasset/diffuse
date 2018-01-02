@@ -1,6 +1,7 @@
 module Queue.Types exposing (..)
 
 import Date exposing (Date)
+import DnD
 import Tracks.Types exposing (IdentifiedTrack, Track)
 
 
@@ -24,6 +25,8 @@ type Msg
       -- Settings
     | ToggleRepeat
     | ToggleShuffle
+      -- UI
+    | DragItemMsg (DnD.Msg Int)
 
 
 
@@ -40,6 +43,9 @@ type alias InternalModel extension =
         , future : List Item
         , ignored : List Item
         , past : List Item
+
+        -- UI
+        , itemDnD : DnD.Model Int
     }
 
 

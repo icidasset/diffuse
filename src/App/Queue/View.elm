@@ -1,13 +1,14 @@
 module Queue.View exposing (..)
 
 import Color
+import DnD
 import Material.Icons.Action as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
-import Queue.Types as Queue exposing (Page(..))
+import Queue.Types as Queue exposing (Msg(DragItemMsg), Page(..))
 import Routing.Types
 import Types as TopLevel exposing (Msg(..))
 import Variables exposing (colors)
@@ -48,7 +49,7 @@ entry page model =
     case page of
         Index ->
             -- TODO: Use Element.Lazy once it's available
-            pageIndex model.queue.future model.queue.shuffle
+            pageIndex model.queue.future model.queue.shuffle model.queue.itemDnD
 
         History ->
             -- TODO: Use Element.Lazy once it's available
@@ -59,8 +60,8 @@ entry page model =
 -- {Page} index
 
 
-pageIndex : List Queue.Item -> Bool -> Node
-pageIndex futureItems shuffled =
+pageIndex : List Queue.Item -> Bool -> DnD.Model Int -> Node
+pageIndex futureItems shuffled itemDnD =
     column
         Zed
         [ height fill ]
@@ -113,10 +114,16 @@ pageIndex futureItems shuffled =
               else
                 column
                     (List Container)
-                    [ paddingTop (scaled 1) ]
+                    (List.append
+                        [ paddingTop (scaled 1) ]
+                        (List.map
+                            (Element.Attributes.map QueueMsg)
+                            (DnD.containerHooks DragItemMsg)
+                        )
+                    )
                     (futureItems
                         |> List.indexedMap (futureActions shuffled)
-                        |> List.indexedMap renderItem
+                        |> List.indexedMap (renderDraggableItem <| DnD.overSubject itemDnD)
                     )
             ]
         ]
@@ -206,25 +213,33 @@ renderItem index ( item, actions ) =
         ]
 
 
+renderDraggableItem : Maybe Int -> Int -> ItemWithActions -> Node
+renderDraggableItem draggingOver index ( item, actions ) =
+    let
+        isDraggingOver =
+            draggingOver
+                |> Maybe.map ((==) index)
+                |> Maybe.withDefault False
 
--- TODO
---
--- renderDraggableItem : Maybe Int -> Int -> ItemWithActions -> Node
--- renderDraggableItem maybeDropTarget index ( item, actions ) =
---     let
---         isDropTarget =
---             maybeDropTarget
---                 |> Maybe.map ((==) index)
---                 |> Maybe.withDefault False
---     in
---         Layouts.listItem
---             [ attribute "rel" (toString index)
---             , vary Draggable False
---             , vary DropTarget isDropTarget
---             ]
---             [ itemLabel index item
---             , row WithoutLineHeight [] actions
---             ]
+        attrs =
+            [ attribute "rel" (toString index)
+            , attribute "touch-action" "none"
+            , vary Draggable True
+            , vary DraggingOver isDraggingOver
+            , vary Subtle (not item.manualEntry)
+            ]
+    in
+        Layouts.listItem
+            (List.append
+                (index
+                    |> DnD.itemHooks DragItemMsg
+                    |> List.map (Element.Attributes.map QueueMsg)
+                )
+                attrs
+            )
+            [ itemLabel index item
+            , listItemActions actions
+            ]
 
 
 itemLabel : Int -> Queue.Item -> Node

@@ -44,7 +44,7 @@ styles =
         --
         , variation Clickable [ Style.cursor "pointer" ]
         , variation Draggable [ Style.cursor "move" ]
-        , variation DropTarget [ Style.prop "border-top" draggedBorder ]
+        , variation DraggingOver [ Style.prop "border-top" draggedBorder ]
         , variation Subtle [ Color.text colors.base05 ]
         ]
 
