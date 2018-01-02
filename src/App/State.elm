@@ -8,7 +8,6 @@ import Dict.Ext as Dict
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import Keyboard.Extra as Keyboard
-import Lazy
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
@@ -77,11 +76,6 @@ initialModel flags initialPage =
     , toasties = Toasty.initialState
 
     ------------------------------------
-    -- Lazy view-pieces
-    ------------------------------------
-    , lazyTracksTableAttr = Tracks.View.tracksTableWrapperAttrLazy False
-
-    ------------------------------------
     -- Children
     ------------------------------------
     , abroad = Abroad.initialModel
@@ -138,10 +132,7 @@ update msg model =
 
         SetIsTouchDevice bool ->
             (!)
-                { model
-                    | isTouchDevice = bool
-                    , lazyTracksTableAttr = Tracks.View.tracksTableWrapperAttrLazy bool
-                }
+                { model | isTouchDevice = bool }
                 []
 
         ------------------------------------

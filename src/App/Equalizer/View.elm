@@ -1,11 +1,10 @@
 module Equalizer.View exposing (entry)
 
+import Color.Convert exposing (colorToCssRgba)
+import Color.Ext exposing (..)
 import Equalizer.State exposing (maxAngle)
 import Equalizer.Touch
 import Equalizer.Types exposing (..)
-import Html exposing (..)
-import Html.Attributes exposing (style)
-import Html.Events exposing (..)
 import Json.Decode as Decode
 import Material.Icons.Navigation as Icons
 import Mouse
@@ -13,28 +12,35 @@ import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types
 import Svg exposing (Svg, svg, polygon)
-import Svg.Attributes exposing (height, points, viewBox, width)
+import Svg.Attributes
 import Types as TopLevel
-import Utils exposing (..)
+import Variables exposing (scaled)
+
+
+-- Elements
+
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Events exposing (..)
+import Element.Types exposing (Node)
+import Layouts
+import Variations exposing (Variations)
 
 
 -- Styles
 
-import Equalizer.Styles exposing (Classes(..))
-import Styles exposing (Classes(..))
+import Equalizer.Styles exposing (..)
+import Styles exposing (Styles(Equalizer, Zed))
 
 
 -- 🍯
 
 
-entry : TopLevel.Model -> Html TopLevel.Msg
+entry : TopLevel.Model -> Node
 entry model =
-    div
-        [ cssClasses
-            [ InsulationContent
-            , InsulationFlexContent
-            ]
-        ]
+    column
+        Zed
+        [ height fill ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
@@ -48,51 +54,53 @@ entry model =
         ------------------------------------
         -- Content
         ------------------------------------
-        , div
-            [ cssClass EqualizerContainer ]
-            [ h1
-                []
-                [ text "EQ" ]
-            , div
-                [ cssClass LogoBackdrop ]
-                []
-            , div
-                [ cssClass Equalizer ]
-                [ div
-                    [ cssClass KnobColumn ]
-                    [ knob Volume model.equalizer.volume
-                    , knobLabel "Volume"
-                    ]
-                , div
-                    [ cssClass KnobColumn ]
-                    [ knob Low model.equalizer.low
-                    , knobLabel "Low"
-                    ]
-                , div
-                    [ cssClass KnobColumn ]
-                    [ knob Mid model.equalizer.mid
-                    , knobLabel "Mid"
-                    ]
-                , div
-                    [ cssClass KnobColumn ]
-                    [ knob High model.equalizer.high
-                    , knobLabel "High"
-                    ]
-                ]
+        , within
+            [ Layouts.logoBackdrop
+            , Layouts.h1 "EQ" |> el Zed [ moveRight (scaled 4) ]
+            , content model
             ]
+            (el
+                Zed
+                [ height fill, width fill ]
+                empty
+            )
         ]
+
+
+content : TopLevel.Model -> Node
+content model =
+    row
+        (Equalizer Wrapper)
+        [ spread ]
+        [ knob Volume model.equalizer.volume
+        , knob Low model.equalizer.low
+        , knob Mid model.equalizer.mid
+        , knob High model.equalizer.high
+        ]
+        |> el Zed [ center, verticalCenter ]
+        |> el Zed [ height fill, width fill ]
 
 
 
 -- Knobs
 
 
-knob : Knob -> Float -> Html TopLevel.Msg
+knob : Knob -> Float -> Node
 knob knobType value =
-    Html.map TopLevel.EqualizerMsg (knob_ knobType value)
+    column
+        (Equalizer Column)
+        [ paddingXY (scaled 10) (scaled -3)
+        , paddingTop (scaled 1)
+        ]
+        [ value
+            |> knob_ knobType
+            |> Element.map TopLevel.EqualizerMsg
+        , knobLines
+        , knobLabel (toString knobType)
+        ]
 
 
-knob_ : Knob -> Float -> Html Msg
+knob_ : Knob -> Float -> Element Styles.Styles Variations Msg
 knob_ knobType value =
     let
         angle =
@@ -104,46 +112,110 @@ knob_ knobType value =
                     value * maxAngle
 
         styles =
-            [ ( "transform", "rotate(" ++ (toString angle) ++ "deg)" )
+            [ ( "-webkit-transform", "rotate(" ++ (toString angle) ++ "deg)" )
+            , ( "transform", "rotate(" ++ (toString angle) ++ "deg)" )
             ]
+
+        activateKnob =
+            Decode.map (ActivateKnob knobType) Mouse.position
     in
-        div
-            [ cssClass Knob
-            , onDoubleClick
-                (ResetKnob knobType)
-            , onWithOptions
-                "mousedown"
-                { preventDefault = True
-                , stopPropagation = True
-                }
-                (Decode.map (ActivateKnob knobType) Mouse.position)
-            , onWithOptions
-                "touchstart"
-                { preventDefault = True
-                , stopPropagation = True
-                }
-                (Equalizer.Touch.start knobType)
+        within
+            [ -- Decagon
+              --
+              el
+                Zed
+                [ height fill, padding 4, width fill ]
+                (html decagonSvg)
+
+            -- Layer A
+            --
+            , el
+                Zed
+                [ height fill, padding 8, width fill ]
+                (el
+                    (Equalizer LayerA)
+                    [ height fill, width fill ]
+                    empty
+                )
+
+            -- Layer B
+            --
+            , el
+                Zed
+                [ height fill, padding 8, width fill ]
+                (el
+                    (Equalizer LayerB)
+                    [ height (px 9), center, width (px 2) ]
+                    empty
+                )
             ]
-            [ div
-                [ cssClass KnobLayerA ]
-                []
-            , div
-                [ cssClass KnobLayerB, style styles ]
-                [ decagonSvg ]
-            , div
-                [ cssClass KnobLayerC, style styles ]
-                []
-            , div
-                [ cssClass KnobLines ]
-                []
-            ]
+            (el
+                (Equalizer Knob)
+                [ height (px knobSize)
+                , width (px knobSize)
+
+                --
+                , inlineStyle styles
+
+                --
+                , onDoubleClick (ResetKnob knobType)
+                , onWithOptions "mousedown" preventAndStop activateKnob
+                , onWithOptions "touchstart" preventAndStop (Equalizer.Touch.start knobType)
+                ]
+                empty
+            )
 
 
-knobLabel : String -> Html TopLevel.Msg
+knobLabel : String -> Node
 knobLabel lbl =
-    div
-        [ cssClass KnobLabel ]
-        [ text lbl ]
+    el
+        (Equalizer KnobLabel)
+        [ paddingTop (scaled -25) ]
+        (text lbl)
+
+
+knobLines : Node
+knobLines =
+    row
+        Zed
+        [ center ]
+        [ -- Left
+          --
+          el
+            (Equalizer Line)
+            [ height (px 9)
+            , width (px 1)
+
+            --
+            , moveLeft 17
+            , moveUp 8
+
+            --
+            , inlineStyle
+                [ ( "-webkit-transform", "rotate(45deg)" )
+                , ( "transform", "rotate(45deg)" )
+                ]
+            ]
+            empty
+        , -- Right
+          --
+          el
+            (Equalizer Line)
+            [ height (px 9)
+            , width (px 1)
+
+            --
+            , moveRight 17
+            , moveUp 8
+
+            --
+            , inlineStyle
+                [ ( "-webkit-transform", "rotate(-45deg)" )
+                , ( "transform", "rotate(-45deg)" )
+                ]
+            ]
+            empty
+        ]
 
 
 
@@ -153,8 +225,23 @@ knobLabel lbl =
 decagonSvg : Svg msg
 decagonSvg =
     svg
-        [ height "200", viewBox "0 0 200 200", width "200" ]
+        [ Svg.Attributes.fill "transparent"
+        , Svg.Attributes.height "200"
+        , Svg.Attributes.stroke (knobColor |> setAlpha knobOpacity |> colorToCssRgba)
+        , Svg.Attributes.strokeLinejoin "miter"
+        , Svg.Attributes.strokeWidth "7px"
+        , Svg.Attributes.style "height: 100%; width: 100%;"
+        , Svg.Attributes.viewBox "0 0 200 200"
+        , Svg.Attributes.width "200"
+        ]
         [ polygon
-            [ points "129.665631459995,191.301425564335 70.3343685400051,191.301425564335 22.3343685400051,156.427384220077 4,100 22.334368540005,43.5726157799226 70.334368540005,8.69857443566526 129.665631459995,8.69857443566525 177.665631459995,43.5726157799226 196,100 177.665631459995,156.427384220077" ]
+            [ Svg.Attributes.points "129.665631459995,191.301425564335 70.3343685400051,191.301425564335 22.3343685400051,156.427384220077 4,100 22.334368540005,43.5726157799226 70.334368540005,8.69857443566526 129.665631459995,8.69857443566525 177.665631459995,43.5726157799226 196,100 177.665631459995,156.427384220077" ]
             []
         ]
+
+
+preventAndStop : Options
+preventAndStop =
+    { preventDefault = True
+    , stopPropagation = True
+    }

@@ -1,7 +1,7 @@
 module Queue.State exposing (..)
 
 import Date exposing (Date)
-import Html5.DragDrop as DragDrop
+import DnD
 import List.Extra as List
 import Notifications.Types as Notification
 import Response.Ext exposing (do)
@@ -21,7 +21,6 @@ import Types as TopLevel
 initialModel : Model
 initialModel =
     { activeItem = Nothing
-    , dnd = DragDrop.init
     , future = []
     , past = []
     , ignored = []
@@ -29,6 +28,9 @@ initialModel =
     -- Settings
     , repeat = False
     , shuffle = False
+
+    -- UI
+    , itemDnD = DnD.initial
     }
 
 
@@ -293,42 +295,36 @@ update msg model =
                 |> (\m -> ($) m [ do Reset ] [ storeUserData ])
 
         ------------------------------------
-        -- Libraries
+        -- UI
         ------------------------------------
-        DragDropMsg sub ->
+        DragItemMsg sub ->
             let
-                ( dnd, result ) =
-                    DragDrop.update sub model.dnd
+                dnd =
+                    DnD.update sub model.itemDnD
 
-                newModel =
-                    { model | dnd = dnd }
-            in
-                case result of
-                    Just ( sourceIdx, targetIdx ) ->
-                        let
-                            future =
-                                model.future
+                future =
+                    model.future
 
-                            newFuture =
-                                if targetIdx <= sourceIdx then
-                                    []
-                                        ++ (future |> List.take targetIdx)
-                                        ++ (future |> List.drop sourceIdx |> List.take 1)
-                                        ++ (future |> List.take sourceIdx |> List.drop targetIdx)
-                                        ++ (future |> List.drop sourceIdx |> List.drop 1)
-                                else
-                                    []
-                                        ++ (future |> List.take sourceIdx)
-                                        ++ (future |> List.take targetIdx |> List.drop sourceIdx |> List.drop 1)
-                                        ++ (future |> List.drop sourceIdx |> List.take 1)
-                                        ++ (future |> List.drop targetIdx)
-                        in
-                            (!)
-                                { newModel | future = newFuture }
+                newFuture =
+                    case dnd of
+                        DnD.Dropped { origin, target } ->
+                            if target <= origin then
                                 []
+                                    ++ (future |> List.take target)
+                                    ++ (future |> List.drop origin |> List.take 1)
+                                    ++ (future |> List.take origin |> List.drop target)
+                                    ++ (future |> List.drop origin |> List.drop 1)
+                            else
+                                []
+                                    ++ (future |> List.take origin)
+                                    ++ (future |> List.take target |> List.drop origin |> List.drop 1)
+                                    ++ (future |> List.drop origin |> List.take 1)
+                                    ++ (future |> List.drop target)
 
-                    Nothing ->
-                        (!) newModel []
+                        _ ->
+                            model.future
+            in
+                (!) { model | future = newFuture, itemDnD = dnd } []
 
 
 storeUserData : Cmd TopLevel.Msg

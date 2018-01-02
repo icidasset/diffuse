@@ -294,7 +294,7 @@ let progressBarNode;
 
 function setProgressBarWidth(float) {
   if (!progressBarNode || !progressBarNode.offsetParent) {
-    progressBarNode = document.querySelector(".ProgressBarValue");
+    progressBarNode = document.querySelector(".progressBarValue");
   }
 
   if (progressBarNode) {

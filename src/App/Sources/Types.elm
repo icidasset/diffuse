@@ -54,7 +54,7 @@ type alias Model =
     { collection : List Source
     , form : Form
     , isProcessing : IsProcessing
-    , processingErrors : List ( SourceId, String ) -- TODO
+    , processingErrors : List ( SourceId, String )
     , timestamp : Date
     }
 

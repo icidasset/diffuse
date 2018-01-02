@@ -1,67 +1,102 @@
 module Alfred.View exposing (entry)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit, onWithOptions)
-import Html.Events.Extra exposing (onClickPreventDefaultAndStopPropagation)
-import Json.Decode
-import Traits exposing (grs)
+import Json.Decode as Json
 import Types as TopLevel
-import Utils exposing (cssClass)
+
+
+-- Elements
+
+import Element exposing (column, el, empty, italic, text)
+import Element.Attributes exposing (..)
+import Element.Events exposing (..)
+import Element.Ext exposing (onEnterKey)
+import Element.Input exposing (focusOnLoad, hiddenLabel, placeholder, search)
+import Element.Types exposing (Node)
+import Variables exposing (scaled)
+import Variations exposing (Variations(..))
 
 
 -- Styles
 
-import Alfred.Styles exposing (Classes(..))
+import Alfred.Styles exposing (Styles(..))
+import Styles exposing (Styles(Alfred, Zed))
 
 
 -- 🍯
 
 
-entry : TopLevel.Alfred -> Html TopLevel.Msg
+entry : TopLevel.Alfred -> Node
 entry context =
-    div
-        [ cssClass Alfred
-        , onClickPreventDefaultAndStopPropagation TopLevel.NoOp
-        , onWithOptions "tap" tapOptions (Json.Decode.succeed TopLevel.NoOp)
+    column
+        (Alfred Container)
+        [ onEnterKey (TopLevel.RunAlfredAction context.focus)
+
+        --
+        , center
+        , height fill
+        , width fill
+
+        --
+        , inlineStyle
+            [ ( "left", "0" )
+            , ( "position", "fixed" )
+            , ( "top", "0" )
+            , ( "z-index", "901" )
+            ]
         ]
         [ ------------------------------------
+          -- Message
+          ------------------------------------
+          el
+            (Alfred Message)
+            [ paddingBottom (scaled 5), paddingTop (scaled 10) ]
+            (text context.message)
+        , ------------------------------------
           -- Input
           ------------------------------------
-          Html.form
-            [ cssClass AlfredInput
-            , onSubmit (TopLevel.RunAlfredAction context.focus)
+          el
+            Zed
+            [ maxWidth (px 500)
+            , onWithOptions "click" stopHerePlease (Json.succeed TopLevel.NoOp)
+            , onWithOptions "tap" stopHerePlease (Json.succeed TopLevel.NoOp)
+            , width fill
             ]
-            [ input
-                [ type_ "text"
-                , onInput TopLevel.CalculateAlfredResults
-                , placeholder "Type to search"
-                , autofocus True
+            (search
+                (Alfred Input)
+                [ paddingXY (scaled 1) (scaled 0)
+                , paddingBottom (scaled -1)
                 ]
-                []
-            ]
-
-        ------------------------------------
-        -- Message
-        ------------------------------------
-        , div
-            [ cssClass AlfredMessage ]
-            [ text context.message ]
+                { onChange = TopLevel.CalculateAlfredResults
+                , value = ""
+                , label = placeholder { text = "Type to search", label = hiddenLabel "Search" }
+                , options = [ focusOnLoad ]
+                }
+            )
 
         ------------------------------------
         -- Results
         ------------------------------------
         , if List.length context.results > 0 then
-            ul
-                [ cssClass AlfredResults ]
-                (List.indexedMap (resultView context.focus) context.results)
+            el
+                Zed
+                [ maxWidth (px 500)
+                , paddingTop (scaled -8)
+                , width fill
+                ]
+                (column
+                    (Alfred Results)
+                    [ onWithOptions "click" stopHerePlease (Json.succeed TopLevel.NoOp)
+                    , onWithOptions "tap" stopHerePlease (Json.succeed TopLevel.NoOp)
+                    ]
+                    (List.indexedMap (resultView context.focus) context.results)
+                )
           else
-            text ""
+            empty
         ]
 
 
-tapOptions : Html.Events.Options
-tapOptions =
+stopHerePlease : Element.Events.Options
+stopHerePlease =
     { preventDefault = True
     , stopPropagation = True
     }
@@ -71,17 +106,12 @@ tapOptions =
 -- Result
 
 
-resultView : Int -> Int -> String -> Html TopLevel.Msg
+resultView : Int -> Int -> String -> Node
 resultView focus idx result =
-    li
+    el
+        (Alfred ResultItem)
         [ idx |> TopLevel.RunAlfredAction |> onClick
-        , style
-            (if focus == idx then
-                [ ( "font-weight", "bold" )
-                , ( "padding-left", grs 4 )
-                ]
-             else
-                []
-            )
+        , paddingXY (scaled -2) (scaled -5)
+        , vary Active (focus == idx)
         ]
-        [ text result ]
+        (text result)

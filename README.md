@@ -10,7 +10,7 @@ A music player which connects to your cloud/distributed storage.
 
 - Loads of `Elm`
 - A moderate amount of `Haskell` for the build system and static server
-- A tiny bit of `Node` (autoprefixer, browserify vendor js, etc.)
+- A tiny bit of `Node` (browserify vendor js & doc tests)
 - Blockstack
 
 

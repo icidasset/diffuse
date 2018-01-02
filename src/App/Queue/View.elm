@@ -1,60 +1,70 @@
 module Queue.View exposing (..)
 
 import Color
-import Color.Convert exposing (colorToCssRgb)
-import Html exposing (..)
-import Html.Attributes exposing (rel, style)
-import Html.Events exposing (onClick)
-import Html.Lazy exposing (lazy, lazy3)
-import Html5.DragDrop as DragDrop
+import DnD
 import Material.Icons.Action as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
-import Queue.Types as Queue exposing (Item, Page(..))
+import Queue.Types as Queue exposing (Msg(DragItemMsg), Page(..))
 import Routing.Types
 import Types as TopLevel exposing (Msg(..))
-import Utils exposing (cssClass)
 import Variables exposing (colors)
+
+
+-- Elements
+
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Events exposing (onClick)
+import Element.Ext exposing (..)
+import Element.Input as Input
+import Element.Types exposing (Node)
+import Layouts exposing (listItemActions)
+import Variables exposing (scaled)
+import Variations exposing (Variations(..))
 
 
 -- Styles
 
-import List.Styles exposing (Classes(..))
-import Styles exposing (Classes(..))
+import List.Styles exposing (Styles(..))
+import Styles exposing (Styles(..))
 
 
 -- Helpers
 
 
 type alias ItemWithActions =
-    ( Item, List (Html Msg) )
+    ( Queue.Item, List Node )
 
 
 
 -- 🍯
 
 
-entry : Queue.Page -> TopLevel.Model -> Html TopLevel.Msg
+entry : Queue.Page -> TopLevel.Model -> Node
 entry page model =
     case page of
         Index ->
-            lazy3 pageIndex model.queue.future model.queue.shuffle model.queue.dnd
+            -- TODO: Use Element.Lazy once it's available
+            pageIndex model.queue.future model.queue.shuffle model.queue.itemDnD
 
         History ->
-            lazy pageHistory model.queue.past
+            -- TODO: Use Element.Lazy once it's available
+            pageHistory model.queue.past
 
 
 
 -- {Page} index
 
 
-pageIndex : List Item -> Bool -> DragDrop.Model Int Int -> Html TopLevel.Msg
-pageIndex futureItems shuffled dnd =
-    div
-        [ cssClass InsulationContent ]
+pageIndex : List Queue.Item -> Bool -> DnD.Model Int -> Node
+pageIndex futureItems shuffled itemDnD =
+    column
+        Zed
+        [ height fill ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
@@ -89,48 +99,51 @@ pageIndex futureItems shuffled dnd =
         ------------------------------------
         -- List
         ------------------------------------
-        , div
-            [ cssClass ContentBox ]
-            [ h1
-                []
-                [ text "Up next" ]
+        , column
+            Zed
+            [ height fill, paddingXY (scaled 4) 0 ]
+            [ Layouts.h1 "Up next"
+
+            --
             , if List.isEmpty futureItems then
-                div
-                    [ cssClass EmptyState ]
-                    [ Icons.music_note Color.black 16
-                    , div
-                        []
-                        [ text "Nothing here yet,"
-                        , br [] []
-                        , text "add some music first."
-                        ]
+                Layouts.emptyState
+                    Icons.music_note
+                    [ text "Nothing here yet,"
+                    , text "add some music first."
                     ]
               else
-                let
-                    dropTarget =
-                        DragDrop.getDropId dnd
-                in
-                    ul
-                        [ cssClass ListWithActions ]
-                        (futureItems
-                            |> List.indexedMap (futureActions shuffled)
-                            |> List.indexedMap (renderDraggableItem dropTarget)
+                column
+                    (List Container)
+                    (List.append
+                        [ paddingTop (scaled 1) ]
+                        (List.map
+                            (Element.Attributes.map QueueMsg)
+                            (DnD.containerHooks DragItemMsg)
                         )
+                    )
+                    (futureItems
+                        |> List.indexedMap (futureActions shuffled)
+                        |> List.indexedMap (renderDraggableItem <| DnD.overSubject itemDnD)
+                    )
             ]
         ]
 
 
-futureActions : Bool -> Int -> Item -> ItemWithActions
+futureActions : Bool -> Int -> Queue.Item -> ItemWithActions
 futureActions _ index item =
     (,)
         item
-        [ a
+        [ el
+            WithoutLineHeight
             [ index
                 |> Queue.RemoveItem
                 |> TopLevel.QueueMsg
                 |> onClick
             ]
-            [ Icons.remove_circle_outline (Color.grayscale 0.175) 16 ]
+            (16
+                |> Icons.remove_circle_outline (Color.grayscale 0.175)
+                |> html
+            )
         ]
 
 
@@ -138,10 +151,11 @@ futureActions _ index item =
 -- {Page} history
 
 
-pageHistory : List Item -> Html TopLevel.Msg
+pageHistory : List Queue.Item -> Node
 pageHistory pastItems =
-    div
-        [ cssClass InsulationContent ]
+    column
+        Zed
+        [ height fill ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
@@ -159,25 +173,22 @@ pageHistory pastItems =
         ------------------------------------
         -- List
         ------------------------------------
-        , div
-            [ cssClass ContentBox ]
-            [ h1
-                []
-                [ text "History" ]
+        , column
+            Zed
+            [ height fill, paddingXY (scaled 4) 0 ]
+            [ Layouts.h1 "History"
+
+            --
             , if List.isEmpty pastItems then
-                div
-                    [ cssClass EmptyState ]
-                    [ Icons.music_note Color.black 16
-                    , div
-                        []
-                        [ text "Nothing here yet,"
-                        , br [] []
-                        , text "play some music first."
-                        ]
+                Layouts.emptyState
+                    Icons.music_note
+                    [ text "Nothing here yet,"
+                    , text "play some music first."
                     ]
               else
-                ul
-                    [ cssClass ListWithActions ]
+                column
+                    (List Container)
+                    [ paddingTop (scaled 1) ]
                     (pastItems
                         |> List.reverse
                         |> List.map (\item -> ( item, [] ))
@@ -191,41 +202,47 @@ pageHistory pastItems =
 -- Child views
 
 
-renderItem : Int -> ItemWithActions -> Html TopLevel.Msg
+renderItem : Int -> ItemWithActions -> Node
 renderItem index ( item, actions ) =
-    li
-        [ rel (toString index) ]
+    Layouts.listItem
+        [ attribute "rel" (toString index)
+        , vary Subtle (not item.manualEntry)
+        ]
         [ itemLabel index item
-        , span [ cssClass ListActions ] (actions)
+        , listItemActions actions
         ]
 
 
-renderDraggableItem : Maybe Int -> Int -> ItemWithActions -> Html TopLevel.Msg
-renderDraggableItem maybeDropTarget index ( item, actions ) =
+renderDraggableItem : Maybe Int -> Int -> ItemWithActions -> Node
+renderDraggableItem draggingOver index ( item, actions ) =
     let
-        styles =
-            case maybeDropTarget of
-                Just dropTarget ->
-                    if index == dropTarget then
-                        dropTargetStyles
-                    else
-                        []
+        isDraggingOver =
+            draggingOver
+                |> Maybe.map ((==) index)
+                |> Maybe.withDefault False
 
-                Nothing ->
-                    []
+        attrs =
+            [ attribute "rel" (toString index)
+            , attribute "touch-action" "none"
+            , vary Draggable True
+            , vary DraggingOver isDraggingOver
+            , vary Subtle (not item.manualEntry)
+            ]
     in
-        li
-            ([ rel (toString index), cssClass DraggableListItem ]
-                ++ DragDrop.draggable (TopLevel.QueueMsg << Queue.DragDropMsg) index
-                ++ DragDrop.droppable (TopLevel.QueueMsg << Queue.DragDropMsg) index
-                ++ List.singleton (style styles)
+        Layouts.listItem
+            (List.append
+                (index
+                    |> DnD.itemHooks DragItemMsg
+                    |> List.map (Element.Attributes.map QueueMsg)
+                )
+                attrs
             )
             [ itemLabel index item
-            , span [ cssClass ListActions ] (actions)
+            , listItemActions actions
             ]
 
 
-itemLabel : Int -> Item -> Html Msg
+itemLabel : Int -> Queue.Item -> Node
 itemLabel index item =
     let
         track =
@@ -234,16 +251,19 @@ itemLabel index item =
         lbl =
             track.tags.artist ++ " – " ++ track.tags.title
     in
-        label
-            []
-            [ small [] [ index + 1 |> toString |> text ]
-            , if item.manualEntry == True then
-                span [] [ text lbl ]
-              else
-                span [ cssClass SubtleListItem ] [ text lbl ]
+        row
+            Zed
+            [ width fill ]
+            [ el
+                (List Prefix)
+                [ paddingRight (scaled 1) ]
+                (index
+                    |> (+) 1
+                    |> toString
+                    |> (\s -> s ++ ".")
+                    |> text
+                )
+
+            --
+            , el Zed [ width fill ] (text lbl)
             ]
-
-
-dropTargetStyles : List ( String, String )
-dropTargetStyles =
-    [ ( "border-top", "1px solid " ++ colorToCssRgb colors.base06 ) ]

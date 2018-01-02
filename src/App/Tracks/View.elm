@@ -1,20 +1,8 @@
-module Tracks.View exposing (entry, tracksTableWrapperAttrLazy)
+module Tracks.View exposing (entry)
 
 import Color
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit, onWithOptions)
-import Html.Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Json.Decode as Decode
-import Lazy exposing (Lazy)
 import List.Extra as List
-import Material.Icons.Action
-import Material.Icons.Av
-import Material.Icons.Content
-import Material.Icons.Editor
-import Material.Icons.Image
-import Material.Icons.Navigation
 import Maybe.Extra as Maybe
 import Mouse
 import Navigation.Types exposing (..)
@@ -24,134 +12,189 @@ import Playlists.Utils exposing (..)
 import Queue.Types
 import Routing.Types
 import Sources.Types exposing (IsProcessing, Source)
-import Styles exposing (Classes(Important, LogoBackdrop))
-import Tracks.Styles exposing (..)
 import Tracks.Types exposing (..)
-import Types as TopLevel exposing (LazyAttributeList, Msg(..))
-import Utils exposing (cssClass, cssClasses)
-import Variables exposing (colors)
+import Types as TopLevel exposing (Msg(..))
+
+
+-- Elements
+
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Events exposing (..)
+import Element.Ext exposing (..)
+import Element.Input as Input
+import Element.Keyed as Keyed
+import Element.Types exposing (..)
+import Layouts exposing (..)
+import Variables exposing (colorDerivatives, colors, scaled, scaledStr)
+import Variations exposing (Variations(..))
+
+
+-- Html
+
+import Html exposing (Html)
+import Html.Attributes
+import Html.Events
+import Html.Keyed
+import Html.Lazy
+
+
+-- Icons
+
+import Material.Icons.Action
+import Material.Icons.Av
+import Material.Icons.Content
+import Material.Icons.Editor
+import Material.Icons.Image
+import Material.Icons.Navigation
+
+
+-- Styles
+
+import Styles exposing (Styles(..))
+import Tracks.Styles exposing (Styles(..), iconColor, trackHeight)
 
 
 -- 🍯
 
 
-entry : TopLevel.Model -> Html TopLevel.Msg
+entry : TopLevel.Model -> Node
 entry model =
-    div
-        [ entryClasses model.tracks.favouritesOnly ]
+    column
+        (Tracks Container)
+        [ height fill ]
         [ lazy3
             navigation
-            model.tracks.searchTerm
+            ( model.tracks.searchTerm
+            , model.tracks.searchCounter
+            )
             model.tracks.favouritesOnly
             model.tracks.selectedPlaylist
-        , lazy2
-            content
+        , -- TODO: Use Element.Lazy once it's available
+          content
             model.tracks.collection.exposed
             ( model.tracks.sortBy
             , model.tracks.sortDirection
             , model.tracks.selectedPlaylist
+            , model.tracks.favouritesOnly
             , model.sources.isProcessing
             , model.sources.collection
-            , model.lazyTracksTableAttr
+            , model.isTouchDevice
             )
         ]
-
-
-entryClasses : Bool -> Attribute TopLevel.Msg
-entryClasses favouritesOnly =
-    case favouritesOnly of
-        True ->
-            cssClasses [ TracksContainer, FavouritesOnly ]
-
-        False ->
-            cssClasses [ TracksContainer ]
 
 
 
 -- Views
 
 
-navigation : Maybe String -> Bool -> Maybe Playlist -> Html TopLevel.Msg
-navigation searchTerm favouritesOnly maybeSelectedPlaylist =
-    div
-        [ cssClass TracksNavigation ]
-        [ --
+navigation : ( Maybe String, Int ) -> Bool -> Maybe Playlist -> Node
+navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
+    row
+        (Tracks Tracks.Styles.Navigation)
+        []
+        [ -----------------------------------
           -- Part 1
-          --
-          Html.form
-            [ onSubmit (TracksMsg <| Search searchTerm) ]
-            [ -- Input
-              input
-                [ onBlur (TracksMsg <| Search searchTerm)
-                , onInput (TracksMsg << SetSearchTerm)
-                , placeholder "Search"
-                , value (Maybe.withDefault "" searchTerm)
+          -----------------------------------
+          within
+            [ -- Search icon
+              --
+              row
+                Zed
+                [ height fill
+                , spacing (scaled -8)
+                , verticalCenter
                 ]
-                []
-
-            -- Search icon
-            , a
-                [ cssClass TracksNavigationIcon
-                , style [ ( "cursor", "default" ) ]
-                ]
-                [ Material.Icons.Action.search
-                    (Color.rgb 205 205 205)
-                    16
+                [ el
+                    WithoutLineHeight
+                    [ moveRight 2, paddingLeft (scaled -3) ]
+                    (16
+                        |> Material.Icons.Action.search iconColor
+                        |> html
+                    )
                 ]
 
-            -- Favourites-only icon
-            , a
-                [ cssClass TracksNavigationIcon
-                , onClick (TracksMsg <| ToggleFavouritesOnly)
-                , title "Toggle favourites-only"
+            -- Other icons
+            --
+            , row
+                Zed
+                [ alignRight
+                , height fill
+                , spacing (scaled -8)
+                , verticalCenter
+                , width fill
                 ]
-                (case favouritesOnly of
-                    True ->
-                        [ Material.Icons.Action.favorite
-                            colors.base08
-                            16
+                [ -- 1.
+                  --
+                  if Maybe.isJust searchTerm then
+                    el
+                        (Tracks ClickableAction)
+                        [ attribute "title" "Clear search"
+                        , onClick (TracksMsg <| Tracks.Types.ClearSearch)
                         ]
+                        (16
+                            |> Material.Icons.Content.clear iconColor
+                            |> html
+                        )
+                  else if Maybe.isJust maybeSelectedPlaylist then
+                    el
+                        (Tracks ClickableAction)
+                        [ attribute "title" "Deactivate playlist"
 
-                    False ->
-                        [ Material.Icons.Action.favorite_border
-                            (Color.rgb 205 205 205)
-                            16
+                        --
+                        , maybeSelectedPlaylist
+                            |> Maybe.map (TogglePlaylist >> TracksMsg)
+                            |> Maybe.withDefault NoOp
+                            |> onClick
                         ]
-                )
+                        (16
+                            |> Material.Icons.Content.clear colors.base08
+                            |> html
+                        )
+                  else
+                    empty
 
-            -- Clear icon
-            , if Maybe.isJust searchTerm then
-                a
-                    [ cssClass TracksNavigationIcon
-                    , title "Clear search"
-                    , onClick (TracksMsg <| Search Nothing)
+                -- 2.
+                --
+                , el
+                    (Tracks ClickableAction)
+                    [ attribute "title" "Toggle favourites-only"
+                    , onClick (TracksMsg ToggleFavouritesOnly)
+                    , paddingRight (scaled 1)
                     ]
-                    [ Material.Icons.Content.clear
-                        (Color.rgb 205 205 205)
-                        16
-                    ]
-              else if Maybe.isJust maybeSelectedPlaylist then
-                a
-                    [ cssClass TracksNavigationIcon
-                    , title "Deactivate playlist"
+                    (case favouritesOnly of
+                        True ->
+                            html (Material.Icons.Action.favorite colors.base08 16)
 
-                    --
-                    , maybeSelectedPlaylist
-                        |> Maybe.map (TogglePlaylist >> TracksMsg)
-                        |> Maybe.withDefault NoOp
-                        |> onClick
-                    ]
-                    [ Material.Icons.Content.clear
-                        colors.base08
-                        16
-                    ]
-              else
-                text ""
+                        False ->
+                            html (Material.Icons.Action.favorite_border iconColor 16)
+                    )
+                ]
             ]
+            (Input.text
+                (Tracks Tracks.Styles.Search)
+                [ inputBottomPadding
+                , inputTopPadding
+                , onBlur (TracksMsg DebouncedSearch)
+                , onEnterKey (TracksMsg <| Tracks.Types.Search searchTerm)
+                , paddingLeft (scaled -3 + 16 + scaled -3)
+                , width fill
+                ]
+                { onChange = TracksMsg << SetSearchTerm
+                , value = Maybe.withDefault "" searchTerm
+                , label =
+                    Input.placeholder
+                        { text = "Search"
+                        , label = Input.hiddenLabel "search"
+                        }
+                , options =
+                    [ Input.textKey (toString searchCounter) ]
+                }
+            )
 
-        --
+        -----------------------------------
         -- Part 2
-        --
+        -----------------------------------
         , Navigation.insideCustom
             [ ( Icon Material.Icons.Editor.format_list_numbered
               , Label (Hidden "Playlists")
@@ -179,24 +222,25 @@ navigation searchTerm favouritesOnly maybeSelectedPlaylist =
 
 content :
     List IdentifiedTrack
-    -> ( SortBy, SortDirection, Maybe Playlist, IsProcessing, List Source, LazyAttributeList )
-    -> Html TopLevel.Msg
-content resultant ( sortBy, sortDirection, playlist, isProcessing, sources, lazyTracksTableAttr ) =
-    div
-        [ cssClass TracksChild
-        , onScroll scrollHandler
-        , id "tracks"
+    -> ( SortBy, SortDirection, Maybe Playlist, Bool, IsProcessing, List Source, Bool )
+    -> Node
+content resultant ( sortBy, sortDirection, playlist, favouritesOnly, isProcessing, sources, isTouchDevice ) =
+    el
+        Zed
+        [ attribute "data-favourites-only" (boolToAttr favouritesOnly)
+        , clip
+        , height fill
         ]
-        [ if List.isEmpty resultant then
+        (if List.isEmpty resultant then
             noTracksFound sources isProcessing
-          else
+         else
             case Maybe.map .autoGenerated playlist of
                 Just False ->
-                    tracksTablePlaylist lazyTracksTableAttr resultant
+                    playlistTable resultant isTouchDevice
 
                 _ ->
-                    tracksTableDefault lazyTracksTableAttr resultant sortBy sortDirection
-        ]
+                    defaultTable resultant sortBy sortDirection isTouchDevice
+        )
 
 
 scrollHandler : ScrollPos -> TopLevel.Msg
@@ -208,17 +252,16 @@ scrollHandler =
 -- Content messages
 
 
-msgProcessing : Html TopLevel.Msg
+msgProcessing : Node
 msgProcessing =
-    text "Processing Tracks"
+    el (Tracks Placeholder) [] (text "Processing Tracks")
 
 
-msgNoSources : Html TopLevel.Msg
+msgNoSources : Node
 msgNoSources =
-    a
-        [ cssClass Important
-        , href "/sources"
-        , onWithOptions
+    row
+        Zed
+        [ onWithOptions
             "click"
             { stopPropagation = False
             , preventDefault = True
@@ -229,46 +272,38 @@ msgNoSources =
                 |> RoutingMsg
                 |> Decode.succeed
             )
+        , spacing (scaled -8)
         ]
-        [ span
-            [ style
-                [ ( "margin-right", "0.375rem" )
-                , ( "position", "relative" )
-                , ( "top", "2px" )
-                ]
-            ]
-            [ Material.Icons.Content.add
-                (Color.rgb 185 182 176)
-                15
-            ]
+        [ el
+            WithoutLineHeight
+            [ moveDown 1, verticalCenter ]
+            (15
+                |> Material.Icons.Content.add colors.base08
+                |> html
+            )
         , text "Add some music"
         ]
+        |> el ImportantButton [ paddingXY (scaled -5) (scaled -6) ]
+        |> link "/sources"
 
 
-msgNoTracks : Html TopLevel.Msg
+msgNoTracks : Node
 msgNoTracks =
-    text "No tracks found"
+    el (Tracks Placeholder) [] (text "No tracks found")
 
 
 
--- Content views, Pt. 1
+-- Content views, Part 1
 
 
-noTracksFound : List Source -> IsProcessing -> Html TopLevel.Msg
+noTracksFound : List Source -> IsProcessing -> Node
 noTracksFound sources isProcessing =
-    div
-        []
-        [ div
-            [ cssClasses
-                (case List.length sources of
-                    0 ->
-                        [ NoTracksFound ]
-
-                    _ ->
-                        [ NoTracksFound, NoTracksFoundUnderline ]
-                )
-            ]
-            [ case isProcessing of
+    within
+        [ logoBackdrop
+        , el
+            Zed
+            [ center, verticalCenter ]
+            (case isProcessing of
                 Just _ ->
                     msgProcessing
 
@@ -279,151 +314,73 @@ noTracksFound sources isProcessing =
 
                         _ ->
                             msgNoTracks
-            ]
-        , div
-            [ cssClass LogoBackdrop ]
-            []
-        ]
-
-
-
--- Content views, Pt. 2
-
-
-tracksTableDefault : LazyAttributeList -> List IdentifiedTrack -> SortBy -> SortDirection -> Html TopLevel.Msg
-tracksTableDefault lazyTracksTableAttr tracks activeSortBy sortDirection =
-    table
-        [ cssClass TracksTable ]
-        [ Html.Lazy.lazy2 tracksTableDefaultHeader activeSortBy sortDirection
-        , Html.Keyed.node
-            "tbody"
-            (Lazy.force lazyTracksTableAttr)
-            (List.map tracksTableItemDefault tracks)
-        ]
-
-
-tracksTableDefaultHeader : SortBy -> SortDirection -> Html TopLevel.Msg
-tracksTableDefaultHeader activeSortBy sortDirection =
-    let
-        sortIcon =
-            (if sortDirection == Desc then
-                Material.Icons.Navigation.expand_less
-             else
-                Material.Icons.Navigation.expand_more
             )
-                (Color.rgb 207 207 207)
-                16
-    in
-        thead
-            []
-            [ th
-                [ style [ ( "width", "4.50%" ) ] ]
-                []
-            , th
-                [ style [ ( "width", "37.5%" ) ], onClick (sortBy Title) ]
-                [ text "Title", maybeShowSortIcon activeSortBy Title sortIcon ]
-            , th
-                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Artist) ]
-                [ text "Artist", maybeShowSortIcon activeSortBy Artist sortIcon ]
-            , th
-                [ style [ ( "width", "29.0%" ) ], onClick (sortBy Album) ]
-                [ text "Album", maybeShowSortIcon activeSortBy Album sortIcon ]
-            ]
+        ]
+        (el
+            Zed
+            [ height fill, width fill ]
+            empty
+        )
 
 
-tracksTablePlaylist : LazyAttributeList -> List IdentifiedTrack -> Html TopLevel.Msg
-tracksTablePlaylist lazyTracksTableAttr tracks =
-    table
-        [ cssClass TracksTable ]
-        [ Html.map never trackTablePlaylistHeader
-        , Html.Keyed.node
-            "tbody"
-            (Lazy.force lazyTracksTableAttr)
-            (List.map tracksTableItemPlaylist tracks)
+
+-- Content views, Part 2.1
+
+
+defaultTable : List IdentifiedTrack -> SortBy -> SortDirection -> Bool -> Node
+defaultTable tracks activeSortBy sortDirection isTouchDevice =
+    column
+        (Tracks Table)
+        [ clipX
+        , height fill
+        , id "tracks"
+        , inlineStyle [ ( "border-radius", "3px" ) ]
+        , onScroll scrollHandler
+        , yScrollbar
+        ]
+        [ defaultTableHeader activeSortBy sortDirection
+        , tracks
+            |> List.map defaultTableItem
+            |> Html.Keyed.ol (tableAttr isTouchDevice)
+            |> html
         ]
 
 
-trackTablePlaylistHeader : Html Never
-trackTablePlaylistHeader =
-    thead
-        []
-        [ th
-            [ style [ ( "width", "4.50%" ) ] ]
-            []
-        , th
-            [ style [ ( "width", "6.00%" ) ] ]
-            [ text "#" ]
-        , th
-            [ style [ ( "width", "36.5%" ) ] ]
-            [ text "Title" ]
-        , th
-            [ style [ ( "width", "28.0%" ) ] ]
-            [ text "Artist" ]
-        , th
-            [ style [ ( "width", "28.0%" ) ] ]
-            [ text "Album" ]
+playlistTable : List IdentifiedTrack -> Bool -> Node
+playlistTable tracks isTouchDevice =
+    column
+        (Tracks Table)
+        [ clipX
+        , height fill
+        , id "tracks"
+        , inlineStyle [ ( "border-radius", "3px" ) ]
+        , onScroll scrollHandler
+        , yScrollbar
+        ]
+        [ playlistTableHeader
+        , tracks
+            |> List.map playlisTableItem
+            |> Html.Keyed.ol (tableAttr isTouchDevice)
+            |> html
         ]
 
 
-tracksTableItemDefault : IdentifiedTrack -> ( String, Html TopLevel.Msg )
-tracksTableItemDefault ( identifiers, track ) =
-    ( track.id
-    , tr
-        [ rel (toString identifiers.indexInList)
-        , attribute "data-missing" (boolToAttr identifiers.isMissing)
-        , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
-        , attribute "data-selected" (boolToAttr identifiers.isSelected)
-        ]
-        [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
-        , td [] [ text track.tags.title ]
-        , td [] [ text track.tags.artist ]
-        , td [] [ text track.tags.album ]
-        ]
-    )
-
-
-tracksTableItemPlaylist : IdentifiedTrack -> ( String, Html TopLevel.Msg )
-tracksTableItemPlaylist ( identifiers, track ) =
-    ( track.id
-    , tr
-        [ rel (toString identifiers.indexInList)
-        , attribute "data-missing" (boolToAttr identifiers.isMissing)
-        , attribute "data-nowplaying" (boolToAttr identifiers.isNowPlaying)
-        , attribute "data-selected" (boolToAttr identifiers.isSelected)
-        ]
-        [ td [ attribute "data-favourite" (boolToAttr identifiers.isFavourite) ] []
-        , td []
-            [ identifiers.indexInPlaylist
-                |> Maybe.withDefault 0
-                |> (+) 1
-                |> toString
-                |> text
-            ]
-        , td [] [ text track.tags.title ]
-        , td [] [ text track.tags.artist ]
-        , td [] [ text track.tags.album ]
-        ]
-    )
-
-
-tracksTableWrapperAttrLazy : Bool -> Lazy (List (Attribute TopLevel.Msg))
-tracksTableWrapperAttrLazy isTouchDevice =
-    Lazy.lazy (always <| tracksTableWrapperAttr isTouchDevice)
-
-
-tracksTableWrapperAttr : Bool -> List (Attribute TopLevel.Msg)
-tracksTableWrapperAttr isTouchDevice =
+tableAttr : Bool -> List (Html.Attribute TopLevel.Msg)
+tableAttr isTouchDevice =
     if isTouchDevice then
         -- Touch devices
-        [ on "dbltap" playTrack
-        , on "tap" toggleFavourite
-        , onWithOptions
+        [ Html.Attributes.class "tracks__table"
+
+        --
+        , Html.Events.on "dbltap" playTrack
+        , Html.Events.on "tap" toggleFavourite
+        , Html.Events.onWithOptions
             "longtap"
             { stopPropagation = True
             , preventDefault = True
             }
             showContextMenuOnTouch
-        , onWithOptions
+        , Html.Events.onWithOptions
             "touchend"
             { stopPropagation = False
             , preventDefault = True
@@ -432,15 +389,199 @@ tracksTableWrapperAttr isTouchDevice =
         ]
     else
         -- Non-Touch devices
-        [ on "dblclick" playTrack
-        , on "click" (Decode.oneOf [ toggleFavourite, selectTrack ])
-        , onWithOptions
+        [ Html.Attributes.class "tracks__table"
+
+        --
+        , Html.Events.on "dblclick" playTrack
+        , Html.Events.on "click" (Decode.oneOf [ toggleFavourite, selectTrack ])
+        , Html.Events.onWithOptions
             "contextmenu"
             { stopPropagation = True
             , preventDefault = True
             }
             showContextMenu
         ]
+
+
+
+-- Content views, Part 2.2
+
+
+defaultTableHeader : SortBy -> SortDirection -> Node
+defaultTableHeader activeSortBy sortDirection =
+    let
+        sortIcon =
+            (if sortDirection == Desc then
+                Material.Icons.Navigation.expand_less
+             else
+                Material.Icons.Navigation.expand_more
+            )
+                (Color.rgb 207 207 207)
+                15
+    in
+        row
+            (Tracks TableHeader)
+            []
+            [ tableHeaderColumn "" "4.50%" First Nothing
+
+            --
+            , Just Title
+                |> tableHeaderColumn "Title" "37.5%" Between
+                |> within [ maybeShowSortIcon activeSortBy Title sortIcon ]
+
+            --
+            , Just Artist
+                |> tableHeaderColumn "Artist" "29.0%" Between
+                |> within [ maybeShowSortIcon activeSortBy Artist sortIcon ]
+
+            --
+            , Just Album
+                |> tableHeaderColumn "Album" "29.0%" Last
+                |> within [ maybeShowSortIcon activeSortBy Album sortIcon ]
+            ]
+
+
+playlistTableHeader : Node
+playlistTableHeader =
+    row
+        (Tracks TableHeader)
+        []
+        [ tableHeaderColumn "" "4.50%" First Nothing
+        , tableHeaderColumn "#" "6.00%" Between Nothing
+        , tableHeaderColumn "Title" "36.5%" Between Nothing
+        , tableHeaderColumn "Artist" "28.0%" Between Nothing
+        , tableHeaderColumn "Album" "28.0%" Last Nothing
+        ]
+
+
+type Pos
+    = First
+    | Between
+    | Last
+
+
+tableHeaderColumn :
+    String
+    -> String
+    -> Pos
+    -> Maybe SortBy
+    -> Node
+tableHeaderColumn txt width pos maybeSortBy =
+    let
+        cursor =
+            maybeSortBy
+                |> Maybe.map (always "pointer")
+                |> Maybe.withDefault "default"
+
+        node =
+            el
+                (Tracks TableHeaderColumn)
+                [ inlineStyle [ ( "cursor", cursor ), ( "width", width ) ]
+                , onClick (maybeSortBy |> Maybe.map sortBy |> Maybe.withDefault TopLevel.NoOp)
+                , paddingLeft
+                    (if pos == First then
+                        scaled -2
+                     else
+                        scaled -4
+                    )
+                , paddingRight
+                    (if pos == Last then
+                        scaled -2
+                     else
+                        scaled -4
+                    )
+                , paddingTop 1
+                ]
+                (text txt)
+    in
+        node
+
+
+
+-- Content views, Part 2.3
+
+
+defaultTableItem : IdentifiedTrack -> ( String, Html TopLevel.Msg )
+defaultTableItem ( identifiers, track ) =
+    ( track.id
+    , Html.li
+        [ tableItemClasses identifiers
+        , tableItemIdentity identifiers
+        ]
+        [ favouriteColumn identifiers
+        , otherColumn "37.5%" track.tags.title
+        , otherColumn "29.0%" track.tags.artist
+        , otherColumn "29.0%" track.tags.album
+        ]
+    )
+
+
+playlisTableItem : IdentifiedTrack -> ( String, Html TopLevel.Msg )
+playlisTableItem ( identifiers, track ) =
+    let
+        nr =
+            identifiers.indexInPlaylist
+                |> Maybe.withDefault 0
+                |> (+) 1
+                |> toString
+    in
+        ( track.id
+        , Html.li
+            [ tableItemClasses identifiers
+            , tableItemIdentity identifiers
+            ]
+            [ favouriteColumn identifiers
+            , otherColumn "6.00%" nr
+            , otherColumn "36.5%" track.tags.title
+            , otherColumn "28.0%" track.tags.artist
+            , otherColumn "28.0%" track.tags.album
+            ]
+        )
+
+
+tableItemClasses : Identifiers -> Html.Attribute TopLevel.Msg
+tableItemClasses identifiers =
+    Html.Attributes.classList
+        [ ( "tracks__tableRow", True )
+        , ( "tracks__tableRow--alt", identifiers.indexInList % 2 == 1 )
+        , ( "tracks__tableRow--isMissing", identifiers.isMissing )
+        , ( "tracks__tableRow--isNotMissing", not identifiers.isMissing )
+        , ( "tracks__tableRow--isNowPlaying", identifiers.isNowPlaying )
+        ]
+
+
+tableItemIdentity : Identifiers -> Html.Attribute TopLevel.Msg
+tableItemIdentity identifiers =
+    if identifiers.isMissing then
+        Html.Attributes.attribute "data-missing" "t"
+    else
+        Html.Attributes.rel (toString identifiers.indexInList)
+
+
+favouriteColumn : Identifiers -> Html TopLevel.Msg
+favouriteColumn identifiers =
+    Html.div
+        [ Html.Attributes.attribute "data-favourite" (boolToAttr identifiers.isFavourite)
+        , Html.Attributes.classList
+            [ ( "tracks__tableFavouriteColumn", True )
+            , ( "tracks__tableFavouriteColumn--isNowPlaying", identifiers.isNowPlaying )
+            , ( "tracks__tableFavouriteColumn--isFavourite", identifiers.isFavourite )
+            ]
+        ]
+        [ if identifiers.isFavourite then
+            Html.text "t"
+          else
+            Html.text "f"
+        ]
+
+
+otherColumn : String -> String -> Html TopLevel.Msg
+otherColumn width t =
+    Html.div
+        [ Html.Attributes.class "tracks__tableOtherColumns"
+        , Html.Attributes.style [ ( "width", width ) ]
+        ]
+        [ Html.text t ]
 
 
 
@@ -459,8 +600,7 @@ selectTrack =
 
 playTrackDecoder : Decode.Decoder String
 playTrackDecoder =
-    presentTrackDecoder
-        |> Decode.andThen (always trackRelDecoder)
+    trackRelDecoder
 
 
 toggleFavourite : Decode.Decoder TopLevel.Msg
@@ -482,9 +622,9 @@ showContextMenu =
 
 showContextMenuDecoder : Decode.Decoder ( String, Mouse.Position )
 showContextMenuDecoder =
-    presentTrackDecoder
-        |> Decode.andThen (always trackRelDecoder)
-        |> Decode.andThen (\x -> Decode.andThen (Decode.succeed << (,) x) mousePositionDecoder)
+    Decode.andThen
+        (\x -> Decode.andThen (Decode.succeed << (,) x) mousePositionDecoder)
+        trackRelDecoder
 
 
 showContextMenuOnTouch : Decode.Decoder TopLevel.Msg
@@ -494,29 +634,13 @@ showContextMenuOnTouch =
 
 showContextMenuOnTouchDecoder : Decode.Decoder ( String, Mouse.Position )
 showContextMenuOnTouchDecoder =
-    presentTrackDecoder
-        |> Decode.andThen (always trackRelDecoder)
-        |> Decode.andThen (\x -> Decode.andThen (Decode.succeed << (,) x) touchPositionDecoder)
+    Decode.andThen
+        (\x -> Decode.andThen (Decode.succeed << (,) x) touchPositionDecoder)
+        trackRelDecoder
 
 
 
 -- Events {2}
-
-
-presentTrackDecoder : Decode.Decoder String
-presentTrackDecoder =
-    Decode.andThen
-        (\missingValue ->
-            if missingValue == "f" then
-                Decode.succeed "Track is present"
-            else
-                Decode.fail "Track is missing, invalid operation"
-        )
-        (Decode.oneOf
-            [ Decode.at [ "target", "parentNode", "attributes", "data-missing", "value" ] Decode.string
-            , Decode.at [ "target", "attributes", "data-missing", "value" ] Decode.string
-            ]
-        )
 
 
 trackRelDecoder : Decode.Decoder String
@@ -556,7 +680,7 @@ sortBy =
 -- Scrolling
 
 
-onScroll : (ScrollPos -> msg) -> Attribute msg
+onScroll : (ScrollPos -> TopLevel.Msg) -> Attr
 onScroll msg =
     on "scroll" (Decode.map msg decodeScrollPosition)
 
@@ -574,12 +698,12 @@ decodeScrollPosition =
 -- Helpers
 
 
-maybeShowSortIcon : SortBy -> SortBy -> Html TopLevel.Msg -> Html TopLevel.Msg
+maybeShowSortIcon : SortBy -> SortBy -> Html TopLevel.Msg -> Node
 maybeShowSortIcon activeSortBy targetSortBy sortIcon =
     if targetSortBy == activeSortBy then
-        sortIcon
+        el WithoutLineHeight [ alignRight, moveLeft 6, verticalCenter ] (html sortIcon)
     else
-        text ""
+        empty
 
 
 boolToAttr : Bool -> String

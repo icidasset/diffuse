@@ -1,35 +1,40 @@
 module Settings.View exposing (..)
 
 import Authentication.Types as Authentication exposing (Method(..))
-import Color
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
-import Material.Icons.Navigation as Icons
-import Material.Icons.Image as Icons
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
-import Routing.Types exposing (Page(..))
-import Settings.Types
-import Types exposing (Model, Msg(..))
-import Utils exposing (cssClass)
+import Routing.Types exposing (Page(Abroad))
+import Settings.Types exposing (Msg(..))
+import Types as TopLevel exposing (Model, Msg(..))
+import Variables exposing (scaled)
+
+
+-- Elements
+
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Ext
+import Element.Input as Input
+import Element.Types exposing (Node)
+import Layouts
 
 
 -- Styles
 
-import Form.Styles as FormStyles
-import Styles exposing (Classes(..))
+import Form.Styles
+import Styles exposing (Styles(..))
 
 
 -- 🍯
 
 
-entry : Model -> Html Msg
+entry : Model -> Node
 entry model =
-    div
-        [ cssClass InsulationContent ]
+    column
+        Zed
+        []
         [ ------------------------------------
           -- Navigation
           ------------------------------------
@@ -49,15 +54,13 @@ entry model =
         ------------------------------------
         -- Content
         ------------------------------------
-        , div
-            [ cssClass ContentBox ]
-            [ h1
-                []
-                [ text "Settings" ]
-            , p
-                [ cssClass Intro ]
+        , column
+            Zed
+            [ paddingXY (scaled 4) 0 ]
+            [ Layouts.h1 "Settings"
+            , Layouts.intro
                 [ text "Changes are automatically saved."
-                , br [] []
+                , Element.Ext.lineBreak
                 , text "PS. You are using the "
                 , case Maybe.withDefault Local model.authentication.method of
                     Blockstack ->
@@ -70,34 +73,23 @@ entry model =
                         text "RemoteStorage"
                 , text " authentication mode."
                 ]
-            , Html.map SettingsMsg (theForm model)
+
+            --
+            , theForm model
             ]
         ]
 
 
-theForm : Model -> Html Settings.Types.Msg
+theForm : Model -> Node
 theForm model =
-    Html.form
-        [ cssClass FormStyles.HalfWidthForm ]
-        [ label
-            []
-            [ text "Background image" ]
-        , div
-            [ cssClass FormStyles.SelectBox ]
-            [ select
-                [ onInput Settings.Types.SetBackgroundImage ]
-                (List.map
-                    (\( val, lbl ) ->
-                        option
-                            [ selected (val == model.settings.backgroundImage)
-                            , value val
-                            ]
-                            [ text lbl ]
-                    )
-                    backgroundImages
-                )
-            , Icons.expand_more (Color.greyscale 0.325) 20
-            ]
+    column
+        Zed
+        [ spacing (scaled -10), width (percent 50) ]
+        [ -----------------------------------
+          -- Background image
+          -----------------------------------
+          Layouts.lbl "Background Image"
+        , Layouts.select backgroundImageMsg model.settings.backgroundImage backgroundImages
         ]
 
 
@@ -111,3 +103,8 @@ backgroundImages =
     , ( "6.jpg", "Option 6" )
     , ( "7.jpg", "Option 7 (default)" )
     ]
+
+
+backgroundImageMsg : String -> TopLevel.Msg
+backgroundImageMsg =
+    SetBackgroundImage >> SettingsMsg

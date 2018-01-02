@@ -2,13 +2,7 @@ module Sources.View exposing (..)
 
 import Color
 import Dict
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onWithOptions)
-import Html.Keyed
-import Html.Lazy exposing (lazy, lazy3)
 import Json.Decode as Decode
-import Layouts exposing (centeredForm)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Action as Icons
@@ -25,97 +19,112 @@ import Routing.Types
 import Sources.Services as Services
 import Sources.Types as Sources exposing (..)
 import Types as TopLevel exposing (Msg(..))
-import Utils exposing (..)
-import Variables exposing (colorDerivatives)
+
+
+-- Elements
+
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Events exposing (onClick, onInput, onWithOptions)
+import Element.Ext exposing (..)
+import Element.Keyed
+import Element.Input as Input
+import Element.Types exposing (Node)
+import Layouts exposing (..)
+import Variables exposing (colorDerivatives, colors, scaled)
+import Variations exposing (Variations(..))
 
 
 -- Styles
 
-import Form.Styles as FormStyles
-import List.Styles exposing (Classes(..))
-import Navigation.Styles exposing (Classes(..))
-import Styles exposing (Classes(..))
+import Form.Styles exposing (Styles(Input))
+import List.Styles exposing (Styles(..))
+import Styles exposing (Styles(..))
 
 
 -- 🍯
 
 
-entry : Sources.Page -> TopLevel.Model -> Html TopLevel.Msg
+entry : Sources.Page -> TopLevel.Model -> Node
 entry page model =
     case page of
         Edit _ ->
-            lazy
-                pageEdit
+            -- TODO: Use Element.Lazy once it's available
+            pageEdit
                 model.sources.form
 
         Index ->
-            lazy3
-                pageIndex
+            -- TODO: Use Element.Lazy once it's available
+            pageIndex
                 model.sources.collection
                 model.sources.isProcessing
                 model.sources.processingErrors
 
         New ->
-            lazy
-                pageNew
+            -- TODO: Use Element.Lazy once it's available
+            pageNew
                 model.sources.form
 
 
 
--- {Page} index
+-- {Page} Index
 
 
-pageIndex : List Source -> IsProcessing -> List ( SourceId, String ) -> Html TopLevel.Msg
+pageIndex : List Source -> IsProcessing -> List ( SourceId, String ) -> Node
 pageIndex sources isProcessing processingErrors =
-    div
-        [ cssClass InsulationContent ]
+    column
+        Zed
+        [ height fill ]
         [ ------------------------------------
           -- Navigation
           ------------------------------------
-          Navigation.insideCustom
-            (List.concat
-                [ -- Add
-                  [ ( Icon Icons.add
-                    , Label (Shown "Add a new source")
-                      --
-                    , Sources.New
+          Navigation.insideCustom <|
+            (++)
+                -- Add
+                --
+                [ ( Icon Icons.add
+                  , Label (Shown "Add a new source")
+                    --
+                  , Sources.New
                         |> Routing.Types.Sources
                         |> Routing.Types.GoToPage
                         |> RoutingMsg
-                    )
-                  ]
-
+                  )
+                ]
                 -- Other
-                , if List.isEmpty sources then
+                --
+                (if List.isEmpty sources then
                     []
-                  else if Maybe.Extra.isJust isProcessing then
+                 else if Maybe.Extra.isJust isProcessing then
                     [ ( Icon Icons.sync
                       , Label (Shown "Processing sources ...")
                       , TopLevel.NoOp
                       )
                     ]
-                  else
+                 else
                     [ ( Icon Icons.sync
                       , Label (Shown "Process sources")
                       , TopLevel.ProcessSources
                       )
                     ]
-                ]
-            )
+                )
 
         ------------------------------------
         -- List
         ------------------------------------
-        , div
-            [ cssClass ContentBox ]
-            [ h1
-                []
-                [ text "Sources" ]
+        , column
+            Zed
+            [ height fill
+            , paddingXY (scaled 4) 0
+            ]
+            [ Layouts.h1 "Sources"
+
+            -- Lists
+            --
             , if List.isEmpty sources then
-                text ""
+                empty
               else
-                p
-                    [ cssClass Intro ]
+                Layouts.intro
                     [ text """
                         A source is a place where your music is stored.
                         By connecting a source, the application will scan it
@@ -144,89 +153,98 @@ pageIndex sources isProcessing processingErrors =
               in
                 if List.isEmpty sources then
                     -- No sources atm
-                    div
-                        [ cssClass EmptyState ]
-                        [ Icons.add Color.black 16
-                        , div
-                            []
-                            [ text "No sources have been added yet,"
-                            , br [] []
-                            , text "add one to get started."
-                            ]
+                    Layouts.emptyState
+                        Icons.add
+                        [ text "No sources have been added yet,"
+                        , text "add one to get started."
                         ]
                 else
                     -- Render list
-                    Html.Keyed.node
-                        "ul"
-                        [ cssClass ListWithActions ]
+                    Element.Keyed.column
+                        (List Container)
+                        []
                         (List.indexedMap renderSource sourcesWithContext)
             ]
         ]
 
 
-renderSource : Int -> ( Source, Bool, Maybe String ) -> ( String, Html TopLevel.Msg )
+renderSource : Int -> ( Source, Bool, Maybe String ) -> ( String, Node )
 renderSource index ( source, isProcessing, processingError ) =
     let
         key =
             toString index
     in
         ( key
-        , li
-            [ rel key ]
-            [ label
-                []
-                [ source.data
+        , listItem
+            [ attribute "rel" key ]
+            [ el
+                Zed
+                [ width fill ]
+                (source.data
                     |> Dict.get "name"
                     |> Maybe.withDefault source.id
                     |> text
-                ]
-            , span
-                [ cssClass ListActions ]
+                )
+            , listItemActions
                 [ -- Processing error
                   --
                   case processingError of
                     Just err ->
-                        span [ title err ] [ Icons.error_outline colorDerivatives.error 16 ]
+                        el
+                            WithoutLineHeight
+                            [ attribute "title" err ]
+                            (16 |> Icons.error_outline colorDerivatives.error |> html)
 
                     Nothing ->
-                        text ""
+                        empty
 
                 -- Is processing
                 --
                 , if isProcessing == True then
-                    span [ title "Processing …" ] [ Icons.sync colorDerivatives.text 16 ]
+                    el
+                        WithoutLineHeight
+                        [ attribute "title" "Processing …" ]
+                        (16 |> Icons.sync colorDerivatives.text |> html)
                   else
-                    text ""
+                    empty
 
                 -- Enabled/Disabled
                 --
-                , a
+                , el
+                    WithoutLineHeight
                     [ source
                         |> ToggleSource
                         |> SourcesMsg
                         |> onClick
+
+                    --
                     , if source.enabled then
-                        title "Enabled (click to disable)"
+                        attribute "title" "Enabled (click to disable)"
                       else
-                        title "Disabled (click to enable)"
+                        attribute "title" "Disabled (click to enable)"
                     ]
-                    [ if source.enabled then
-                        Icons.check colorDerivatives.text 16
-                      else
-                        Icons.not_interested colorDerivatives.text 16
-                    ]
+                    (if source.enabled then
+                        html (Icons.check colorDerivatives.text 16)
+                     else
+                        html (Icons.not_interested colorDerivatives.text 16)
+                    )
 
                 -- Settings
                 --
-                , a
-                    [ onWithOptions
-                        "click"
-                        { stopPropagation = True
-                        , preventDefault = True
-                        }
-                        (Decode.map (TopLevel.ShowSourceMenu source.id) Mouse.position)
+                , el
+                    WithoutLineHeight
+                    [ Mouse.position
+                        |> Decode.map (TopLevel.ShowSourceMenu source.id)
+                        |> onWithOptions
+                            "click"
+                            { stopPropagation = True
+                            , preventDefault = True
+                            }
                     ]
-                    [ Icons.settings colorDerivatives.text 16 ]
+                    (16
+                        |> Icons.settings colorDerivatives.text
+                        |> html
+                    )
                 ]
             ]
         )
@@ -236,14 +254,11 @@ renderSource index ( source, isProcessing, processingError ) =
 -- {Page} New
 
 
-pageNew : Sources.Form -> Html TopLevel.Msg
+pageNew : Sources.Form -> Node
 pageNew sForm =
-    div
-        [ cssClasses
-            [ InsulationContent
-            , InsulationFlexContent
-            ]
-        ]
+    column
+        Zed
+        [ height fill ]
         (case sForm of
             NewForm step source ->
                 [ ------------------------------------
@@ -274,9 +289,9 @@ pageNew sForm =
                 ------------------------------------
                 -- Form
                 ------------------------------------
-                , Html.map
-                    SourcesMsg
-                    (pageNewForm step source)
+                , within
+                    [ logoBackdrop, takeOver (pageNewForm step source) ]
+                    (takeOver empty)
                 ]
 
             _ ->
@@ -284,150 +299,180 @@ pageNew sForm =
         )
 
 
-pageNewForm : Int -> Source -> Html Sources.Msg
+pageNewForm : Int -> Source -> Node
 pageNewForm step source =
-    centeredForm
-        (case step of
-            1 ->
-                Sources.AssignFormStep 2
+    case step of
+        1 ->
+            pageNewStep1 source
 
-            2 ->
-                Sources.AssignFormStep 3
+        2 ->
+            pageNewStep2 source
 
-            3 ->
-                Sources.SubmitForm
+        3 ->
+            pageNewStep3 source
 
-            _ ->
-                Sources.AssignFormStep 1
-        )
-        (case step of
-            1 ->
-                pageNewStep1 source
-
-            2 ->
-                pageNewStep2 source
-
-            3 ->
-                pageNewStep3 source
-
-            _ ->
-                text ""
-        )
+        _ ->
+            empty
 
 
-pageNewStep1 : Source -> Html Sources.Msg
+pageNewStep1 : Source -> Node
 pageNewStep1 source =
-    div
-        []
-        [ h2
-            []
-            [ text "Where is your music stored?" ]
-        , div
-            [ cssClass FormStyles.SelectBox
-            , style
-                [ ( "max-width", "350px" )
-                , ( "width", "100%" )
-                ]
+    let
+        msg =
+            SourcesMsg (Sources.AssignFormStep 2)
+    in
+        column Zed
+            [ center
+            , height fill
+            , onEnterKey msg
+            , paddingXY (scaled 4) 0
+            , spacing (scaled 8)
+            , verticalCenter
+            , width fill
             ]
-            [ select
-                [ onInput AssignFormService ]
-                (List.map
-                    (\( typStr, labe ) ->
-                        option
-                            [ selected <| (toString source.service) == typStr
-                            , value typStr
-                            ]
-                            [ text labe ]
-                    )
-                    (Services.labels)
+            [ h2 H2 [] (text "Where is your music stored?")
+
+            --
+            , Services.labels
+                |> select (AssignFormService >> SourcesMsg) (toString source.service)
+                |> el Zed [ maxWidth (px 350), width fill ]
+
+            --
+            , btn
+                Button
+                [ onClick msg ]
+                (18
+                    |> Icons.arrow_forward colorDerivatives.success
+                    |> html
+                    |> el WithoutLineHeight [ padding (scaled -15) ]
                 )
-            , Icons.expand_more (Color.greyscale 0.325) 20
             ]
-        , button
-            [ cssClass Button, type_ "submit" ]
-            [ Icons.arrow_forward Color.black 16 ]
-        ]
 
 
-pageNewStep2 : Source -> Html Sources.Msg
+pageNewStep2 : Source -> Node
 pageNewStep2 source =
-    div
-        []
-        [ h3
-            []
-            [ text "Where exactly?" ]
-        , div
-            [ cssClasses
-                [ Columns ]
-            , style
-                [ ( "text-align", "left" ) ]
+    let
+        msg =
+            SourcesMsg (Sources.AssignFormStep 3)
+    in
+        column Zed
+            [ height fill
+            , onEnterKey msg
+            , paddingXY (scaled 4) 0
+            , spacing (scaled 8)
+            , verticalCenter
+            , width fill
             ]
-            (renderSourceProperties source)
-        , br
-            []
-            []
-        , button
-            [ cssClass Button, type_ "submit" ]
-            [ Icons.arrow_forward Color.black 16 ]
-        ]
+            [ h3
+                H3
+                []
+                (text "Where exactly?")
+
+            --
+            , paragraph
+                Columns
+                [ width fill ]
+                (renderSourceProperties source)
+
+            --
+            , btn
+                Button
+                [ center, onClick msg ]
+                (18
+                    |> Icons.arrow_forward colorDerivatives.success
+                    |> html
+                    |> el WithoutLineHeight [ padding (scaled -15) ]
+                )
+            ]
 
 
-pageNewStep3 : Source -> Html Sources.Msg
+pageNewStep3 : Source -> Node
 pageNewStep3 source =
-    div
-        []
-        [ h2
-            []
-            [ text "One last thing" ]
-        , div
-            [ style
-                [ ( "margin", "0 auto" )
-                , ( "max-width", "420px" )
-                , ( "width", "100%" )
+    let
+        msg =
+            SourcesMsg Sources.SubmitForm
+    in
+        column Zed
+            [ center
+            , height fill
+            , onEnterKey msg
+            , paddingXY (scaled 4) 0
+            , spacing (scaled 6)
+            , verticalCenter
+            , width fill
+            ]
+            [ h2 H2 [] (text "One last thing")
+
+            --
+            , lbl "What are we going to call this source?"
+
+            --
+            , Input.text
+                (Form Input)
+                [ center
+                , inputBottomPadding
+                , inputTopPadding
+                , maxWidth (px 420)
+                , width fill
                 ]
-            ]
-            [ label
-                []
-                [ text "What are we going to call this source?" ]
-            , br
-                []
-                []
-            , labelBox source
-            ]
-        , div
-            [ cssClass Styles.Intro ]
-            [ Icons.warning colorDerivatives.text 16
-            , strong
-                []
-                [ text "Make sure CORS is enabled" ]
-            , br
-                []
-                []
-            , text "You can find the instructions over "
-            , a
-                [ href "/about#CORS"
-                , target "blank"
+                { onChange =
+                    SourcesMsg << Sources.AssignFormProperty "name"
+                , value =
+                    source.data
+                        |> Dict.get "name"
+                        |> Maybe.withDefault ""
+                , label =
+                    Input.placeholder
+                        { text =
+                            source.service
+                                |> Services.properties
+                                |> List.reverse
+                                |> List.head
+                                |> Maybe.map (\( _, l, _, _ ) -> l)
+                                |> Maybe.withDefault "Label"
+                        , label =
+                            Input.hiddenLabel "name"
+                        }
+                , options = []
+                }
+
+            --
+            , paragraph
+                Intro
+                [ inlineStyle
+                    [ ( "text-align", "center" ) ]
+                , paddingBottom (scaled -4)
+                , paddingTop (scaled 4)
                 ]
-                [ text "here" ]
+                [ 14
+                    |> Icons.warning colorDerivatives.text
+                    |> html
+                    |> el Zed [ moveDown 2, paddingRight (scaled -8) ]
+
+                --
+                , bold "Make sure CORS is enabled"
+                , lineBreak
+                , text "You can find the instructions over "
+                , link "/about#CORS" (text "here")
+                ]
+
+            --
+            , btn
+                Button
+                [ onClick msg ]
+                (text "Add source")
             ]
-        , button
-            [ cssClass Button, type_ "submit" ]
-            [ text "Add source" ]
-        ]
 
 
 
 -- {Page} Edit
 
 
-pageEdit : Sources.Form -> Html TopLevel.Msg
+pageEdit : Sources.Form -> Node
 pageEdit sForm =
-    div
-        [ cssClasses
-            [ InsulationContent
-            , InsulationFlexContent
-            ]
-        ]
+    column
+        Zed
+        [ height fill ]
         (case sForm of
             EditForm source ->
                 [ ------------------------------------
@@ -447,39 +492,9 @@ pageEdit sForm =
                 ------------------------------------
                 -- Form
                 ------------------------------------
-                , Html.map
-                    SourcesMsg
-                    (centeredForm
-                        Sources.SubmitForm
-                        (div
-                            []
-                            [ h3
-                                []
-                                [ text "Edit source" ]
-                            , div
-                                [ cssClasses
-                                    [ Columns ]
-                                , style
-                                    [ ( "text-align", "left" ) ]
-                                ]
-                                (List.concat
-                                    [ renderSourceProperties source
-                                    , [ label
-                                            []
-                                            [ text "Name" ]
-                                      , labelBox source
-                                      ]
-                                    ]
-                                )
-                            , br
-                                []
-                                []
-                            , button
-                                [ cssClass Button, type_ "submit" ]
-                                [ text "Save" ]
-                            ]
-                        )
-                    )
+                , within
+                    [ logoBackdrop, takeOver (pageEditForm source) ]
+                    (takeOver empty)
                 ]
 
             _ ->
@@ -487,42 +502,82 @@ pageEdit sForm =
         )
 
 
+pageEditForm : Source -> Node
+pageEditForm source =
+    let
+        msg =
+            SourcesMsg Sources.SubmitForm
+    in
+        column Zed
+            [ height fill
+            , onEnterKey msg
+            , paddingXY (scaled 4) 0
+            , spacing (scaled 8)
+            , verticalCenter
+            , width fill
+            ]
+            [ h3
+                H3
+                []
+                (text "Edit source")
+
+            --
+            , paragraph
+                Columns
+                [ width fill ]
+                (renderSourceProperties source)
+
+            --
+            , btn
+                Button
+                [ center, onClick msg ]
+                (text "Save")
+            ]
+
+
 
 -- Properties
 
 
-propertyRenderer : Source -> ( String, String, String, Bool ) -> Html Sources.Msg
+propertyRenderer : Source -> ( String, String, String, Bool ) -> Node
 propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
-    div
-        []
-        [ label
-            []
-            [ text propLabel ]
-        , div
-            [ cssClass FormStyles.InputBox ]
-            [ input
-                [ name propKey
-                , onInput (Sources.AssignFormProperty propKey)
-                , placeholder propPlaceholder
-                , required True
-                , type_
-                    (if isPassword then
-                        "password"
-                     else
-                        "text"
-                    )
-                , value
-                    (source.data
-                        |> Dict.get propKey
-                        |> Maybe.withDefault ""
-                    )
-                ]
-                []
+    let
+        input =
+            if isPassword then
+                Input.newPassword
+            else
+                Input.text
+    in
+        [ lbl propLabel
+
+        --
+        , input
+            (Form Input)
+            [ center
+            , inputBottomPadding
+            , inputTopPadding
+            , maxWidth (px 420)
+            , width fill
             ]
+            { onChange =
+                SourcesMsg << Sources.AssignFormProperty propKey
+            , value =
+                source.data
+                    |> Dict.get propKey
+                    |> Maybe.withDefault ""
+            , label =
+                Input.placeholder
+                    { text = propPlaceholder
+                    , label = Input.hiddenLabel propKey
+                    }
+            , options = []
+            }
         ]
+            |> column Zed [ inlineStyle [ ( "display", "block" ) ] ]
+            |> el ColumnsChild [ paddingXY 0 (scaled 1) ]
 
 
-renderSourceProperties : Source -> List (Html Sources.Msg)
+renderSourceProperties : Source -> List Node
 renderSourceProperties source =
     source.service
         |> Services.properties
@@ -530,30 +585,3 @@ renderSourceProperties source =
         |> List.drop 1
         |> List.reverse
         |> List.map (propertyRenderer source)
-
-
-labelBox : Source -> Html Sources.Msg
-labelBox source =
-    div
-        [ cssClass FormStyles.InputBox ]
-        [ input
-            [ name "name"
-            , onInput (Sources.AssignFormProperty "name")
-            , placeholder
-                (source.service
-                    |> Services.properties
-                    |> List.reverse
-                    |> List.head
-                    |> Maybe.map (\( _, l, _, _ ) -> l)
-                    |> Maybe.withDefault "Label"
-                )
-            , required True
-            , type_ "text"
-            , value
-                (source.data
-                    |> Dict.get "name"
-                    |> Maybe.withDefault ""
-                )
-            ]
-            []
-        ]

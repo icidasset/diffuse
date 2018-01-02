@@ -2,6 +2,7 @@ module Types exposing (..)
 
 import Date exposing (Date)
 import Debounce exposing (Debounce)
+import Element exposing (Element)
 import Html
 import Json.Encode
 import Keyboard.Extra as Keyboard
@@ -104,11 +105,6 @@ type alias Model =
     , toasties : Toasty.Stack Notification
 
     ------------------------------------
-    -- Lazy view-pieces
-    ------------------------------------
-    , lazyTracksTableAttr : LazyAttributeList
-
-    ------------------------------------
     -- Time
     ------------------------------------
     , storageDebounce : Debounce ()
@@ -166,10 +162,6 @@ type alias AlienEvent =
 
 type alias Illumination model childMsg =
     model -> List (Cmd childMsg) -> List (Cmd Msg) -> ( model, Cmd Msg )
-
-
-type alias LazyAttributeList =
-    Lazy (List (Html.Attribute Msg))
 
 
 type alias ProgramFlags =

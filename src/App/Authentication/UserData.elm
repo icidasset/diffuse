@@ -1,6 +1,7 @@
 module Authentication.UserData exposing (..)
 
 import Authentication.Types exposing (..)
+import Element.Input as Input
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Types as TopLevel

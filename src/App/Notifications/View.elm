@@ -9,6 +9,9 @@ import Types exposing (Msg)
 import Variables exposing (colors)
 
 
+-- 🍯
+
+
 entry : Notification -> Html Msg
 entry notification =
     let

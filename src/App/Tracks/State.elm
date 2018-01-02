@@ -14,6 +14,7 @@ import Tracks.Collection as Collection exposing (..)
 import Tracks.Favourites as Favourites
 import Tracks.Ports as Ports
 import Tracks.Selecting as Selecting
+import Tracks.Styles exposing (trackHeight)
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
@@ -32,6 +33,8 @@ initialModel =
     , favouritesOnly = False
     , initialImportPerformed = False
     , scrollDebounce = Debounce.init
+    , searchCounter = 0
+    , searchDebounce = Debounce.init
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedPlaylist = Nothing
@@ -170,6 +173,11 @@ update msg model =
             { model | searchTerm = Just value }
                 |> Response.withAlso storeUserData
 
+        ClearSearch ->
+            update
+                (Search Nothing)
+                { model | searchCounter = model.searchCounter + 1 }
+
         -- > Step 2, perform search
         Search (Just term) ->
             { model | searchTerm = Just term }
@@ -183,6 +191,35 @@ update msg model =
                 |> Collection.set
                 |> Response.andAlso storeUserData
                 |> initialImport
+
+        DebouncedSearch ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.push debounceSearchConfig () model.searchDebounce
+            in
+                ($)
+                    { model | searchDebounce = debounce }
+                    [ cmd ]
+                    []
+
+        DebouncedSearchCallback debounceMsg ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceSearchConfig
+                        (model.searchTerm
+                            |> Search
+                            |> do
+                            |> always
+                            |> Debounce.takeLast
+                        )
+                        debounceMsg
+                        model.searchDebounce
+            in
+                ($)
+                    { model | searchDebounce = debounce }
+                    [ cmd ]
+                    []
 
         -- > Step 3, receive search results
         ReceiveSearchResults trackIds ->
@@ -419,6 +456,13 @@ debounceScrollConfig =
     }
 
 
+debounceSearchConfig : Debounce.Config Msg
+debounceSearchConfig =
+    { strategy = Debounce.later (250 * Time.millisecond)
+    , transform = DebouncedSearchCallback
+    }
+
+
 
 -- 🌱
 
@@ -427,15 +471,6 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveSearchResults ReceiveSearchResults ]
-
-
-
--- Constants
-
-
-trackHeight : Int
-trackHeight =
-    33
 
 
 

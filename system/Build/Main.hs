@@ -50,6 +50,7 @@ list pattern =
 
 data Sequence
     = CachePolyfill
+    | Css
     | Favicons
     | Fonts
     | Hosting
@@ -71,6 +72,7 @@ sequences =
         , ( InfoCss,        list "Static/Info/**/*.css"     )
 
           -- Assets
+        , ( Css,            list "Static/Css/**/*.css"      )
         , ( Images,         list "Static/Images/**/*.*"     )
         , ( Favicons,       list "Static/Favicons/**/*.*"   )
         , ( Fonts,          list "Static/Fonts/**/*.*"      )
@@ -96,8 +98,14 @@ serviceCachePolyfill =
 flow :: Dependencies -> (Sequence, Dictionary) -> Dictionary
 flow _ (Pages, dict) =
     dict
-        |> rename "Proxy.html" "200.html"
-        |> clone "200.html" "index.html"
+        |> rename "Proxy.html" "index.html"
+        |> clone "index.html" "200.html"
+
+
+flow _ (Css, dict) =
+    dict
+        |> rename "Proxy.css" "index.css"
+        |> map lowerCasePath
 
 
 {-| Info -}
@@ -118,7 +126,7 @@ flow _ (InfoCss, dict) =
 {-| Javascript -}
 flow x (Javascript, dict) =
     dict
-        |> List.map lowerCasePath
+        |> map lowerCasePath
         |> rename "workers/service.js" "service-worker.js"
         |> insertVersion (x !~> "timestamp")
 
