@@ -58,6 +58,8 @@
   display: table-cell;
   font-family: "or-favourites";
   height: 33px;
+  position: relative;
+  top: 1px;
   width: 4.5%;
 
   /* 16 * (1.125 ^ x) */

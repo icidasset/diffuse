@@ -45,9 +45,15 @@ entry model =
         (column
             (Console Container)
             [ center, width fill ]
-            [ el Zed [] <| lazy2 nowPlaying model.queue.activeItem model.console.stalled
-            , el Zed [ width fill ] <| lazy progress model.queue.activeItem
-            , el Zed [] <| lazy2 buttons model.queue model.console.isPlaying
+            [ el Zed
+                []
+                (lazy2 nowPlaying model.queue.activeItem model.console.stalled)
+            , el Zed
+                [ width fill ]
+                (lazy progress model.queue.activeItem)
+            , el Zed
+                [ center, maxWidth (px 432), width fill ]
+                (lazy2 buttons model.queue model.console.isPlaying)
             ]
         )
 
@@ -140,7 +146,8 @@ buttons queue isPlaying =
     row
         Zed
         [ paddingXY 0 (scaled 1)
-        , spacing (scaled 11)
+        , spread
+        , width fill
         ]
         [ ------------------------------------
           -- Repeat

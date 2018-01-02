@@ -381,6 +381,7 @@ insulate insulationOptions node =
             [ center
             , height fill
             , maxWidth (px insulationWidth)
+            , minHeight (px 218)
             , width fill
             ]
             (if insulationOptions.nested then
