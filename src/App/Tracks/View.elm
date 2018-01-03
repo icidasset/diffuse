@@ -23,6 +23,7 @@ import Types as TopLevel exposing (Msg(..))
 import Element exposing (..)
 import Element.Attributes exposing (..)
 import Element.Events exposing (..)
+import Element.Events.Ext exposing (..)
 import Element.Ext exposing (..)
 import Element.Input as Input
 import Element.Keyed as Keyed
@@ -123,15 +124,7 @@ navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
                     el
                         (Tracks ClickableAction)
                         [ attribute "title" "Clear search"
-
-                        --
-                        , Tracks.Types.ClearSearch
-                            |> TracksMsg
-                            |> Decode.succeed
-                            |> onWithOptions "click"
-                                { stopPropagation = True
-                                , preventDefault = True
-                                }
+                        , onClickStop (TracksMsg Tracks.Types.ClearSearch)
                         ]
                         (16
                             |> Material.Icons.Content.clear iconColor
@@ -146,11 +139,7 @@ navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
                         , maybeSelectedPlaylist
                             |> Maybe.map (TogglePlaylist >> TracksMsg)
                             |> Maybe.withDefault NoOp
-                            |> Decode.succeed
-                            |> onWithOptions "click"
-                                { stopPropagation = True
-                                , preventDefault = True
-                                }
+                            |> onClickStop
                         ]
                         (16
                             |> Material.Icons.Content.clear colors.base08
@@ -164,7 +153,7 @@ navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
                 , el
                     (Tracks ClickableAction)
                     [ attribute "title" "Toggle favourites-only"
-                    , onClick (TracksMsg ToggleFavouritesOnly)
+                    , onClickStop (TracksMsg ToggleFavouritesOnly)
                     , paddingRight (scaled 1)
                     ]
                     (case favouritesOnly of
@@ -270,16 +259,11 @@ msgNoSources : Node
 msgNoSources =
     row
         Zed
-        [ onWithOptions
-            "click"
-            { stopPropagation = False
-            , preventDefault = True
-            }
+        [ onClickPrevent
             (Sources.Types.New
                 |> Routing.Types.Sources
                 |> Routing.Types.GoToPage
                 |> RoutingMsg
-                |> Decode.succeed
             )
         , spacing (scaled -8)
         ]
