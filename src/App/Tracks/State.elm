@@ -2,9 +2,11 @@ module Tracks.State exposing (..)
 
 import Debounce
 import Dom.Scroll
+import DnD
 import InfiniteList
 import List.Extra as List
-import Playlists.Types exposing (Playlist)
+import List.Ext as List
+import Playlists.Types exposing (Msg(UpdatePlaylist), Playlist)
 import Response
 import Response.Ext as Response exposing (..)
 import Routing.Types
@@ -28,6 +30,7 @@ initialModel : Model
 initialModel =
     { activeIdentifiedTrack = Nothing
     , collection = emptyCollection
+    , dnd = DnD.initial
     , enabledSourceIds = []
     , favourites = []
     , favouritesOnly = False
@@ -48,7 +51,7 @@ initialModel =
 -- 🔥
 
 
-update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
+update : Tracks.Types.Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
         -- # Rearrange
@@ -286,6 +289,45 @@ update msg model =
                     |> Collection.redoSelection
                     |> Collection.set
 
+        -- > Drag n' Drop
+        --
+        DnDMsg sub ->
+            let
+                dnd =
+                    DnD.update sub model.dnd
+
+                selectedPlaylist =
+                    case dnd of
+                        DnD.Dropped { origin, target } ->
+                            case model.selectedPlaylist of
+                                Just playlist ->
+                                    playlist.tracks
+                                        |> List.move { from = origin, to = target }
+                                        |> (\t -> { playlist | tracks = t })
+                                        |> Just
+
+                                Nothing ->
+                                    Nothing
+
+                        _ ->
+                            model.selectedPlaylist
+            in
+                (!)
+                    { model | dnd = dnd, selectedPlaylist = selectedPlaylist }
+                    [ if selectedPlaylist /= model.selectedPlaylist then
+                        case selectedPlaylist of
+                            Just playlist ->
+                                Cmd.batch
+                                    [ do (TopLevel.TracksMsg Rearrange)
+                                    , do (TopLevel.PlaylistsMsg <| UpdatePlaylist playlist)
+                                    ]
+
+                            Nothing ->
+                                Cmd.none
+                      else
+                        Cmd.none
+                    ]
+
         -- > Infinite list
         --
         InfiniteListMsg infiniteList ->
@@ -380,7 +422,7 @@ scrollToIndex model idx =
 -- 🔥 / Debounce configurations
 
 
-debounceSearchConfig : Debounce.Config Msg
+debounceSearchConfig : Debounce.Config Tracks.Types.Msg
 debounceSearchConfig =
     { strategy = Debounce.later (250 * Time.millisecond)
     , transform = DebouncedSearchCallback
@@ -391,7 +433,7 @@ debounceSearchConfig =
 -- 🌱
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model -> Sub Tracks.Types.Msg
 subscriptions _ =
     Sub.batch
         [ Ports.receiveSearchResults ReceiveSearchResults ]

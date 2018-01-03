@@ -14,7 +14,9 @@ create : List Track -> List Playlist -> Alfred
 create tracks playlists =
     let
         playlistNames =
-            List.map .name playlists
+            playlists
+                |> List.map .name
+                |> List.sort
     in
         { action = tracks |> List.map Playlists.Utils.playlistTrackFromTrack |> action
         , focus = 0

@@ -38,6 +38,8 @@ type Msg
     | CreateFromForm
     | CreateWithTracks String (List PlaylistTrack)
     | SetNewPlaylistName String
+      -- Modification
+    | UpdatePlaylist Playlist
       -- Removal
     | Remove String
     | RemoveTracksByIndex String (List Int)

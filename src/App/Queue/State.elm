@@ -3,6 +3,7 @@ module Queue.State exposing (..)
 import Date exposing (Date)
 import DnD
 import List.Extra as List
+import List.Ext as List
 import Notifications.Types as Notification
 import Response.Ext exposing (do)
 import Queue.Fill as Fill
@@ -308,18 +309,7 @@ update msg model =
                 newFuture =
                     case dnd of
                         DnD.Dropped { origin, target } ->
-                            if target <= origin then
-                                []
-                                    ++ (future |> List.take target)
-                                    ++ (future |> List.drop origin |> List.take 1)
-                                    ++ (future |> List.take origin |> List.drop target)
-                                    ++ (future |> List.drop origin |> List.drop 1)
-                            else
-                                []
-                                    ++ (future |> List.take origin)
-                                    ++ (future |> List.take target |> List.drop origin |> List.drop 1)
-                                    ++ (future |> List.drop origin |> List.take 1)
-                                    ++ (future |> List.drop target)
+                            List.move { from = origin, to = target } future
 
                         _ ->
                             model.future

@@ -114,6 +114,23 @@ update msg model =
                     []
 
         ------------------------------------
+        -- Modification
+        ------------------------------------
+        UpdatePlaylist playlist ->
+            let
+                name =
+                    playlist.name
+
+                newCollection =
+                    model.collection
+                        |> List.filter (.name >> (/=) name)
+                        |> List.append [ playlist ]
+            in
+                (!)
+                    { model | collection = newCollection, lastModifiedPlaylist = Just name }
+                    [ do TopLevel.DebounceStoreUserData ]
+
+        ------------------------------------
         -- Removal
         ------------------------------------
         Remove name ->

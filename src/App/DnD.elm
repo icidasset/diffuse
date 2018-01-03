@@ -1,8 +1,8 @@
 module DnD exposing (..)
 
-import Element
-import Element.Attributes exposing (attribute)
-import Element.Events exposing (on)
+import Html
+import Html.Attributes exposing (attribute)
+import Html.Events exposing (on)
 import Json.Decode as Decode
 
 
@@ -28,7 +28,7 @@ type Model subject
 --🎒
 
 
-itemHooks : (Msg subject -> wrap) -> subject -> List (Element.Attribute variation wrap)
+itemHooks : (Msg subject -> wrap) -> subject -> List (Html.Attribute wrap)
 itemHooks wrap subject =
     [ on "mousedown" (Decode.succeed <| wrap <| Start subject)
     , on "longtap" (Decode.succeed <| wrap <| Start subject)
@@ -44,7 +44,7 @@ itemHooks wrap subject =
     ]
 
 
-containerHooks : (Msg subject -> wrap) -> List (Element.Attribute variation wrap)
+containerHooks : (Msg subject -> wrap) -> List (Html.Attribute wrap)
 containerHooks wrap =
     [ on "pointerup" (Decode.succeed <| wrap <| End)
     ]

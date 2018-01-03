@@ -2,6 +2,7 @@ module Tracks.Types exposing (..)
 
 import Base64
 import Debounce exposing (Debounce)
+import DnD
 import InfiniteList
 import Playlists.Types exposing (Playlist)
 import Regex exposing (HowMany(..), regex)
@@ -151,6 +152,7 @@ type Msg
       -- UI
     | ApplyTrackSelection Bool Int
     | ApplyTrackSelectionUsingContextMenu Int
+    | DnDMsg (DnD.Msg Int)
     | InfiniteListMsg InfiniteList.Model
     | SetActiveIdentifiedTrack (Maybe IdentifiedTrack)
     | ScrollToActiveTrack Track
@@ -168,6 +170,7 @@ type alias InternalModel extension =
     { extension
         | activeIdentifiedTrack : Maybe IdentifiedTrack
         , collection : Collection
+        , dnd : DnD.Model Int
         , enabledSourceIds : List SourceId
         , favourites : List Favourite
         , infiniteList : InfiniteList.Model

@@ -117,8 +117,8 @@ pageIndex futureItems shuffled itemDnD =
                     (List.append
                         [ paddingTop (scaled 1) ]
                         (List.map
-                            (Element.Attributes.map QueueMsg)
-                            (DnD.containerHooks DragItemMsg)
+                            (Element.Attributes.toAttr)
+                            (DnD.containerHooks <| QueueMsg << DragItemMsg)
                         )
                     )
                     (futureItems
@@ -232,8 +232,8 @@ renderDraggableItem draggingOver index ( item, actions ) =
         Layouts.listItem
             (List.append
                 (index
-                    |> DnD.itemHooks DragItemMsg
-                    |> List.map (Element.Attributes.map QueueMsg)
+                    |> DnD.itemHooks (QueueMsg << DragItemMsg)
+                    |> List.map Element.Attributes.toAttr
                 )
                 attrs
             )
