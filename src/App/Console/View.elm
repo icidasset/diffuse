@@ -78,7 +78,7 @@ nowPlaying activeItem stalled =
     else
         el
             (Console NowPlaying)
-            [ paddingBottom (scaled -2), paddingTop (scaled 2) ]
+            [ paddingBottom (scaled -1), paddingTop (scaled 3) ]
             (case activeItem of
                 Just item ->
                     let

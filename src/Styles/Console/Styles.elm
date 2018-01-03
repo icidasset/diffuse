@@ -72,7 +72,7 @@ styles =
     -----------------------------------
     , style NowPlaying
         [ Font.italic
-        , Font.size (scaled -1)
+        , Font.size 13
         ]
 
     -----------------------------------
