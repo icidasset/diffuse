@@ -1,0 +1,1 @@
+self.electron = require("electron");

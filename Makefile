@@ -1,4 +1,4 @@
-.PHONY: build system
+.PHONY: build electron system
 
 
 # Variables
@@ -6,6 +6,7 @@
 NODE_BIN=./node_modules/.bin
 SRC_DIR=./src
 BUILD_DIR=./build
+ELECTRON_DIST_DIR=./dist
 
 
 # Default task
@@ -17,13 +18,24 @@ all: dev
 # Build tasks
 #
 
-build: clean vendor system elm
+build: clean elm system vendor electron
 	@echo "> Build completed ⚡"
 
 
 clean:
 	@echo "> Cleaning Build Directory"
+	@rm -rf $(ELECTRON_DIST_DIR)
 	@rm -rf $(BUILD_DIR)
+
+
+electron:
+	@echo "> Copying Electron Script"
+	@cp -r ./electron $(BUILD_DIR)
+	@cp ./package.json $(BUILD_DIR)/package.json
+
+
+electron-dist: build
+	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --dir --mac
 
 
 elm:
@@ -47,11 +59,19 @@ vendor:
 #
 
 dev: build
-	@make -j watch_wo_build server
+	@make -j watch-wo-build server
+
+
+electron-dev: build
+	@make -j watch-wo-build electron-dev-server
+
+
+electron-dev-server:
+	@ENV=DEV $(NODE_BIN)/electron $(BUILD_DIR)/electron/index.js
 
 
 server:
-	@echo "> Booting up web server"
+	@echo "> Booting up web server on port 5000"
 	@stack build && stack exec server
 
 
@@ -66,12 +86,12 @@ watch: build
 	@make watch_wo_build
 
 
-watch_wo_build:
+watch-wo-build:
 	@echo "> Watching"
-	@make -j watch_elm watch_system
+	@make -j watch-elm watch-system
 
 
-watch_elm:
+watch-elm:
 	@watchexec -p \
 		-w $(SRC_DIR)/App \
 		-w $(SRC_DIR)/Ext \
@@ -80,5 +100,5 @@ watch_elm:
 		-- make elm
 
 
-watch_system:
+watch-system:
 	@watchexec -p --ignore *.elm -- make system

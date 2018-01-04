@@ -57,6 +57,11 @@
 
   <script src="/vendor/package.js"></script>
 
+  <script>
+    var __module__ = self.module;
+    self.module = undefined;
+  </script>
+
   <script src="/application.js"></script>
   <script src="/audio-engine.js"></script>
   <script src="/authentication.js"></script>
@@ -64,8 +69,8 @@
   <script src="/elm-loader.js"></script>
 
   <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js");
+    if (__module__ !== undefined && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
     }
   </script>
 

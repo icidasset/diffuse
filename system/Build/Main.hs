@@ -58,6 +58,7 @@ data Sequence
     | InfoCss
     | InfoPages
     | Javascript
+    | Manifest
     | Pages
 
 
@@ -77,6 +78,7 @@ sequences =
         , ( Favicons,       list "Static/Favicons/**/*.*"   )
         , ( Fonts,          list "Static/Fonts/**/*.*"      )
         , ( Hosting,        list "Static/Hosting/**/*"      )
+        , ( Manifest,       list "Static/manifest.json"     )
 
           -- Js
         , ( Javascript,     list "Js/**/*.js"               )
@@ -106,6 +108,10 @@ flow _ (Css, dict) =
     dict
         |> rename "Proxy.css" "index.css"
         |> map lowerCasePath
+
+
+flow _ (Manifest, dict) =
+    dict
 
 
 {-| Info -}

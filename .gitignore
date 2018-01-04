@@ -4,6 +4,7 @@
 .tmp.js
 *.cabal
 /build
+/dist
 deploy.sh
 elm-stuff
 node_modules

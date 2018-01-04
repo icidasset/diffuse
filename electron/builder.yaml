@@ -1,0 +1,11 @@
+appId: "isotach"
+asar: false
+
+
+mac:
+  category: "music"
+
+
+directories:
+  app: "build"
+  buildResources: "build-resources"

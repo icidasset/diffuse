@@ -1,8 +1,9 @@
 {
   "name": "Isotach",
   "short_name": "Isotach",
-  "start_url": "/",
   "description": "A music player which connects to your cloud/distributed storage",
+  "version": "1.0.0",
+  "author": "Steven Vandevelde <icid.asset@gmail.com>",
   "icons": [
     {
       "src": "https://isotach.io/android-chrome-192x192.png?v=QEMQNvk7E3",
@@ -15,6 +16,7 @@
       "type": "image/png"
     }
   ],
+  "start_url": "/",
   "theme_color": "#080108",
   "background_color": "#080108",
   "display": "standalone"
