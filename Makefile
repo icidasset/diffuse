@@ -32,6 +32,11 @@ electron:
 	@echo "> Copying Electron Script"
 	@cp -r ./electron $(BUILD_DIR)
 	@cp ./package.json $(BUILD_DIR)/package.json
+	@echo "> Creating icons"
+	@mkdir -p $(BUILD_DIR)/resources
+	@convert $(SRC_DIR)/Static/Images/icon.png -background transparent -gravity center -extent 1152x1152 $(BUILD_DIR)/resources/icon.png
+	@makeicns -in $(BUILD_DIR)/resources/icon.png -out $(BUILD_DIR)/resources/icon.icns
+	@convert $(BUILD_DIR)/resources/icon.png -define icon:auto-resize=256 $(BUILD_DIR)/resources/icon.ico
 
 
 electron-dist: build

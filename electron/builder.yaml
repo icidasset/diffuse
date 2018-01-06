@@ -1,5 +1,4 @@
 appId: "isotach"
-asar: false
 
 
 mac:
@@ -8,4 +7,4 @@ mac:
 
 directories:
   app: "build"
-  buildResources: "build-resources"
+  buildResources: "build/resources"

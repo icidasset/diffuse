@@ -26,6 +26,11 @@ brew install watchexec
 
 npm install
 stack setup
+
+# Other dependencies
+# 1. For building the Electron version
+brew install makeicns
+brew install imagemagick
 ```
 
 
