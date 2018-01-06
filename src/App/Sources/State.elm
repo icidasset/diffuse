@@ -5,6 +5,7 @@ import Dict
 import List.Extra as List
 import Navigation
 import Response.Ext exposing (do)
+import Sources.Ports as Ports
 import Sources.Services as Services exposing (makeSource)
 import Sources.Types exposing (..)
 import Sources.Utils exposing (..)
@@ -110,6 +111,32 @@ update msg model =
                 (!) { model | form = updatedForm } []
 
         --
+        -- Local path
+        --
+        RequestLocalPath ->
+            (!)
+                model
+                [ Ports.requestLocalPath () ]
+
+        ReceiveLocalPath maybePath ->
+            case maybePath of
+                Just path ->
+                    (!)
+                        model
+                        [ path
+                            |> AssignFormProperty "localPath"
+                            |> TopLevel.SourcesMsg
+                            |> do
+                        , 3
+                            |> AssignFormStep
+                            |> TopLevel.SourcesMsg
+                            |> do
+                        ]
+
+                Nothing ->
+                    (!) model []
+
+        --
         -- Submit
         --
         SubmitForm ->
@@ -191,4 +218,5 @@ newForm model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Sub.batch
+        [ Ports.receiveLocalPath ReceiveLocalPath ]

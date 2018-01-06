@@ -13,6 +13,7 @@ node.innerHTML = "";
 app = Elm.App.embed(
   node,
   { isDevelopmentEnvironment: location.hostname === "localhost"
+  , isElectron: !!self.electron
   , isHTTPS: location.protocol === "https:"
   , screenHeight: window.screen.height || window.outerHeight
   }
@@ -226,6 +227,19 @@ app.ports.slaveEvent.subscribe(aura => {
 slave.onmessage = event => {
   app.ports.slaveEventResult.send(event.data);
 };
+
+
+
+//
+// > Sources
+
+app.ports.requestLocalPath.subscribe(_ => {
+  const lpath = electron.remote.dialog.showOpenDialog({
+    properties: [ "openDirectory" ]
+  });
+
+  app.ports.receiveLocalPath.send((lpath && lpath[0]) || null);
+});
 
 
 

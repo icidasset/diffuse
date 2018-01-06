@@ -68,6 +68,7 @@ initialModel flags initialPage =
     , contextMenu = Nothing
     , holdingShiftKey = False
     , isDevelopmentEnvironment = flags.isDevelopmentEnvironment
+    , isElectron = flags.isElectron
     , isHTTPS = flags.isHTTPS
     , isTouchDevice = False
     , screenHeight = flags.screenHeight
@@ -124,6 +125,7 @@ update msg model =
             let
                 flags =
                     { isDevelopmentEnvironment = model.isDevelopmentEnvironment
+                    , isElectron = model.isElectron
                     , isHTTPS = model.isHTTPS
                     , screenHeight = model.screenHeight
                     }
@@ -591,20 +593,25 @@ update msg model =
                 isProcessing =
                     Just model.sources.collection
             in
-                (!)
-                    { model
-                        | sources =
-                            { sourcesModel
-                                | isProcessing = isProcessing
-                                , processingErrors = []
-                            }
-                    }
-                    [ Ports.slaveEvent
-                        { tag = "PROCESS_SOURCES"
-                        , data = data
-                        , error = Nothing
+                if List.isEmpty sources then
+                    (!)
+                        model
+                        []
+                else
+                    (!)
+                        { model
+                            | sources =
+                                { sourcesModel
+                                    | isProcessing = isProcessing
+                                    , processingErrors = []
+                                }
                         }
-                    ]
+                        [ Ports.slaveEvent
+                            { tag = "PROCESS_SOURCES"
+                            , data = data
+                            , error = Nothing
+                            }
+                        ]
 
         ------------------------------------
         -- Slave events

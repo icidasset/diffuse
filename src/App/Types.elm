@@ -99,6 +99,7 @@ type alias Model =
     , contextMenu : Maybe ContextMenu
     , holdingShiftKey : Bool
     , isDevelopmentEnvironment : Bool
+    , isElectron : Bool
     , isHTTPS : Bool
     , isTouchDevice : Bool
     , screenHeight : Int
@@ -166,4 +167,8 @@ type alias Illumination model childMsg =
 
 
 type alias ProgramFlags =
-    { isDevelopmentEnvironment : Bool, isHTTPS : Bool, screenHeight : Int }
+    { isDevelopmentEnvironment : Bool
+    , isElectron : Bool
+    , isHTTPS : Bool
+    , screenHeight : Int
+    }

@@ -11,6 +11,7 @@ import Tracks.Types exposing (..)
 type Service
     = AmazonS3
     | Ipfs
+    | Local
 
 
 type alias SourceData =
@@ -41,6 +42,8 @@ type Msg
     | AssignFormProperty String String
     | AssignFormService String
     | AssignFormStep Int
+    | ReceiveLocalPath (Maybe String)
+    | RequestLocalPath
     | SubmitForm
       -- Other
     | ToggleSource Source

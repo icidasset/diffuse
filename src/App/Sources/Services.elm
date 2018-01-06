@@ -12,6 +12,7 @@ import Sources.Types exposing (..)
 
 import Sources.Services.AmazonS3 as AmazonS3
 import Sources.Services.Ipfs as Ipfs
+import Sources.Services.Local as Local
 
 
 -- Functions implemented by services
@@ -26,6 +27,9 @@ initialData service =
         Ipfs ->
             Ipfs.initialData
 
+        Local ->
+            Local.initialData
+
 
 makeTrackUrl : Service -> Date -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl service =
@@ -35,6 +39,9 @@ makeTrackUrl service =
 
         Ipfs ->
             Ipfs.makeTrackUrl
+
+        Local ->
+            Local.makeTrackUrl
 
 
 makeTree : Service -> SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
@@ -46,6 +53,9 @@ makeTree service =
         Ipfs ->
             Ipfs.makeTree
 
+        Local ->
+            Local.makeTree
+
 
 parseErrorResponse : Service -> String -> String
 parseErrorResponse service =
@@ -55,6 +65,9 @@ parseErrorResponse service =
 
         Ipfs ->
             Ipfs.parseErrorResponse
+
+        Local ->
+            Local.parseErrorResponse
 
 
 parseTreeResponse : Service -> String -> Marker -> ParsedResponse Marker
@@ -66,6 +79,9 @@ parseTreeResponse service =
         Ipfs ->
             Ipfs.parseTreeResponse
 
+        Local ->
+            Local.parseTreeResponse
+
 
 postProcessTree : Service -> List String -> List String
 postProcessTree service =
@@ -76,6 +92,9 @@ postProcessTree service =
         Ipfs ->
             Ipfs.postProcessTree
 
+        Local ->
+            Local.postProcessTree
+
 
 properties : Service -> List ( String, String, String, Bool )
 properties service =
@@ -85,6 +104,9 @@ properties service =
 
         Ipfs ->
             Ipfs.properties
+
+        Local ->
+            Local.properties
 
 
 
@@ -110,6 +132,9 @@ keyToType str =
         "Ipfs" ->
             Ipfs
 
+        "Local" ->
+            Local
+
         _ ->
             Debug.crash "Invalid Service type string"
 
@@ -123,14 +148,24 @@ typeToKey service =
         Ipfs ->
             "Ipfs"
 
+        Local ->
+            "Local"
+
 
 {-| Service labels.
 
 Maps a service key to a label.
 
 -}
-labels : List ( String, String )
-labels =
-    [ ( typeToKey AmazonS3, "Amazon S3" )
-    , ( typeToKey Ipfs, "IPFS" )
-    ]
+labels : Bool -> List ( String, String )
+labels isElectron =
+    let
+        default =
+            [ ( typeToKey AmazonS3, "Amazon S3" )
+            , ( typeToKey Ipfs, "IPFS" )
+            ]
+    in
+        if isElectron then
+            List.append default [ ( typeToKey Local, "Locally" ) ]
+        else
+            default

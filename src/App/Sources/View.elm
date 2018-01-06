@@ -64,6 +64,7 @@ entry page model =
             -- TODO: Use Element.Lazy once it's available
             pageNew
                 model.sources.form
+                model.isElectron
 
 
 
@@ -254,8 +255,8 @@ renderSource index ( source, isProcessing, processingError ) =
 -- {Page} New
 
 
-pageNew : Sources.Form -> Node
-pageNew sForm =
+pageNew : Sources.Form -> Bool -> Node
+pageNew sForm isElectron =
     column
         Zed
         [ height fill ]
@@ -278,19 +279,28 @@ pageNew sForm =
                             ]
 
                         _ ->
-                            [ ( Icon Icons.arrow_back
-                              , Label (Shown "Take a step back")
-                                --
-                              , SourcesMsg (AssignFormStep (step - 1))
-                              )
-                            ]
+                            let
+                                newStep =
+                                    case source.service of
+                                        Local ->
+                                            1
+
+                                        _ ->
+                                            step - 1
+                            in
+                                [ ( Icon Icons.arrow_back
+                                  , Label (Shown "Take a step back")
+                                    --
+                                  , SourcesMsg (AssignFormStep newStep)
+                                  )
+                                ]
                     )
 
                 ------------------------------------
                 -- Form
                 ------------------------------------
                 , within
-                    [ logoBackdrop, takeOver (pageNewForm step source) ]
+                    [ logoBackdrop, takeOver (pageNewForm step source isElectron) ]
                     (takeOver empty)
                 ]
 
@@ -299,11 +309,11 @@ pageNew sForm =
         )
 
 
-pageNewForm : Int -> Source -> Node
-pageNewForm step source =
+pageNewForm : Int -> Source -> Bool -> Node
+pageNewForm step source isElectron =
     case step of
         1 ->
-            pageNewStep1 source
+            pageNewStep1 source isElectron
 
         2 ->
             pageNewStep2 source
@@ -315,8 +325,8 @@ pageNewForm step source =
             empty
 
 
-pageNewStep1 : Source -> Node
-pageNewStep1 source =
+pageNewStep1 : Source -> Bool -> Node
+pageNewStep1 source isElectron =
     let
         msg =
             SourcesMsg (Sources.AssignFormStep 2)
@@ -333,14 +343,20 @@ pageNewStep1 source =
             [ h2 H2 [] (text "Where is your music stored?")
 
             --
-            , Services.labels
+            , Services.labels isElectron
                 |> select (AssignFormService >> SourcesMsg) (toString source.service)
                 |> el Zed [ maxWidth (px 350), width fill ]
 
             --
             , btn
                 Button
-                [ onClick msg ]
+                [ case source.service of
+                    Local ->
+                        onClick (SourcesMsg RequestLocalPath)
+
+                    _ ->
+                        onClick msg
+                ]
                 (18
                     |> Icons.arrow_forward colorDerivatives.success
                     |> html

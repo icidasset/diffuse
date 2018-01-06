@@ -29,7 +29,7 @@ main =
 
 browserify :: Definition -> IO Definition
 browserify def =
-    readProcess "./node_modules/.bin/browserify" [ (workspacePath def) ] ""
+    readProcess "./node_modules/.bin/browserify" [ workspacePath def ] ""
         |> fmap (Text.pack)
         |> fmap (Text.encodeUtf8)
         |> fmap (\c -> def { content = Just c })

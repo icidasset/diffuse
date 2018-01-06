@@ -1,7 +1,7 @@
 {
   "name": "Isotach",
   "description": "A music player which connects to your cloud/distributed storage",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha",
   "author": "Steven Vandevelde <icid.asset@gmail.com>",
   "main": "electron/index.js",
   "devDependencies": {
@@ -16,8 +16,10 @@
     "blockstack": "^0.13.5",
     "camelcase": "^4.1.0",
     "elasticlunr": "^0.9.5",
+    "expand-home-dir": "0.0.3",
+    "express": "^4.16.2",
+    "globby": "^7.1.1",
     "jsmediatags": "^3.8.1",
-    "node-static": "^0.7.10",
     "pepjs": "^0.4.3",
     "remotestoragejs": "^1.0.2",
     "serviceworker-cache-polyfill": "^4.0.0",

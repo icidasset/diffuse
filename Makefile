@@ -24,8 +24,8 @@ build: clean elm system vendor electron
 
 clean:
 	@echo "> Cleaning Build Directory"
-	@rm -rf $(ELECTRON_DIST_DIR)
-	@rm -rf $(BUILD_DIR)
+	@rm -rf $(ELECTRON_DIST_DIR) || true
+	@rm -rf $(BUILD_DIR) || true
 
 
 electron:
@@ -35,7 +35,7 @@ electron:
 
 
 electron-dist: build
-	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --dir --mac
+	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac
 
 
 elm:

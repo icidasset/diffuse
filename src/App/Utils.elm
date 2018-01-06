@@ -21,8 +21,8 @@ Also covers the following characters: `! * ' ( )`
 
 -}
 encodeUri : String -> String
-encodeUri x =
-    x
+encodeUri uri =
+    uri
         |> Http.encodeUri
         |> Regex.replace All
             (regex "[!*'()]")

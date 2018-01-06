@@ -58,14 +58,17 @@
   <script src="/vendor/package.js"></script>
 
   <script>
+    // Fix for loading Elm in an Electron environment
     var __module__ = self.module;
     self.module = undefined;
+
+    // Load Electron toolset
+    var electron = self.require && self.require("electron");
   </script>
 
   <script src="/application.js"></script>
   <script src="/audio-engine.js"></script>
   <script src="/authentication.js"></script>
-
   <script src="/elm-loader.js"></script>
 
   <script>
