@@ -261,7 +261,12 @@ loginScreen model =
             (column
                 AuthenticationOptions
                 [ paddingXY (scaled 5) (scaled -8) ]
-                [ authButton model.isHTTPS Blockstack
+                [ if not model.isElectron then
+                    authButton model.isHTTPS Blockstack
+                  else
+                    empty
+
+                --
                 , authButton model.isHTTPS RemoteStorage
                 , authButton model.isHTTPS Local
                 ]

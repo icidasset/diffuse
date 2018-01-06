@@ -6,7 +6,7 @@
 NODE_BIN=./node_modules/.bin
 SRC_DIR=./src
 BUILD_DIR=./build
-ELECTRON_DIST_DIR=./dist
+DIST_DIR=./dist
 
 
 # Default task
@@ -24,8 +24,12 @@ build: clean elm system vendor electron
 
 clean:
 	@echo "> Cleaning Build Directory"
-	@rm -rf $(ELECTRON_DIST_DIR) || true
 	@rm -rf $(BUILD_DIR) || true
+
+
+clean-dist:
+	@echo "> Cleaning Dist Directory"
+	@rm -rf $(DIST_DIR) || true
 
 
 electron:
@@ -35,11 +39,11 @@ electron:
 	@echo "> Creating icons"
 	@mkdir -p $(BUILD_DIR)/resources
 	@convert $(SRC_DIR)/Static/Images/icon.png -background transparent -gravity center -extent 1152x1152 $(BUILD_DIR)/resources/icon.png
-	@makeicns -in $(BUILD_DIR)/resources/icon.png -out $(BUILD_DIR)/resources/icon.icns
+	@makeicns -in $(BUILD_DIR)/resources/icon.png -out $(BUILD_DIR)/resources/icon.icns 2>/dev/null
 	@convert $(BUILD_DIR)/resources/icon.png -define icon:auto-resize=256 $(BUILD_DIR)/resources/icon.ico
 
 
-electron-dist: build
+electron-dist: build clean-dist
 	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac
 
 

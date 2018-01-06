@@ -19,6 +19,8 @@ function createWindow() {
   if (win) return
 
   win = new BrowserWindow({
+    backgroundColor: "#02070E",
+    center: true,
     titleBarStyle: "hiddenInset",
     webPreferences: {}
   })
@@ -36,4 +38,4 @@ function createWindow() {
 
 app.on("ready", createWindow)
 app.on("activate", createWindow)
-app.on("window-all-closed", () => process.platform !== "darwin" && app.quit())
+app.on("window-all-closed", app.quit)
