@@ -214,6 +214,30 @@ search.onmessage = event => {
 
 
 //
+// > Shortcuts
+
+if (self.electron) {
+  electron.ipcRenderer.send("register-shortcuts");
+
+  // Next
+  electron.ipcRenderer.on("media-next-track", _ => {
+    app.ports.shortcutNext.send(null);
+  });
+
+  // Play & Pause
+  electron.ipcRenderer.on("media-play-pause", _ => {
+    app.ports.shortcutPlayPause.send(null);
+  });
+
+  // Previous
+  electron.ipcRenderer.on("media-previous-track", _ => {
+    app.ports.shortcutPrevious.send(null);
+  });
+}
+
+
+
+//
 // > Slave worker
 //   (ie. the Elm worker)
 

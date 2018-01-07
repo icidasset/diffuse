@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron")
+const { app, globalShortcut, ipcMain, BrowserWindow } = require("electron")
 const server = require("./server")
 
 
@@ -39,3 +39,27 @@ function createWindow() {
 app.on("ready", createWindow)
 app.on("activate", createWindow)
 app.on("window-all-closed", app.quit)
+
+
+
+// Shortcuts
+
+
+ipcMain.on("register-shortcuts", event => {
+  globalShortcut.register("MediaNextTrack", _ => {
+    event.sender.send("media-next-track")
+  })
+
+  globalShortcut.register("MediaPlayPause", _ => {
+    event.sender.send("media-play-pause")
+  })
+
+  globalShortcut.register("MediaPreviousTrack", _ => {
+    event.sender.send("media-previous-track")
+  })
+})
+
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll()
+})

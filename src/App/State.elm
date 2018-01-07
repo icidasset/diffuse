@@ -43,6 +43,7 @@ import Tracks.State as Tracks
 import Authentication.Events
 import Authentication.Types
 import Authentication.UserData
+import Console.Types
 import Playlists.Alfred
 import Playlists.Types
 import Playlists.Utils
@@ -724,6 +725,21 @@ subscriptions model =
         -- Keyboard
         , Keyboard.downs KeydownMsg
         , Keyboard.ups KeyupMsg
+
+        -- Shortcuts
+        , Ports.shortcutPlayPause
+            (\_ ->
+                if model.console.isPlaying then
+                    ConsoleMsg Console.Types.RequestPause
+                else if Maybe.isNothing model.queue.activeItem then
+                    QueueMsg Queue.Types.Shift
+                else
+                    ConsoleMsg Console.Types.RequestPlay
+            )
+
+        --
+        , Ports.shortcutNext (\_ -> QueueMsg Queue.Types.Shift)
+        , Ports.shortcutPrevious (\_ -> QueueMsg Queue.Types.Rewind)
 
         -- Ports
         , Ports.setIsTouchDevice SetIsTouchDevice
