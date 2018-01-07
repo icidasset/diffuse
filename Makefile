@@ -44,7 +44,7 @@ electron:
 
 
 electron-dist: build clean-dist
-	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac
+	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac --linux --win
 
 
 elm:
