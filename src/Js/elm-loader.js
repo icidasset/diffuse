@@ -162,7 +162,6 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
 //
 // > Notifications
 
-
 app.ports.fadeInNotifications.subscribe(_ => {
   setTimeout(
     () => document.querySelectorAll(".notification:not(.is-shown)").forEach(node => {

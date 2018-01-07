@@ -72,7 +72,7 @@
   <script src="/elm-loader.js"></script>
 
   <script>
-    if (__module__ !== undefined && "serviceWorker" in navigator) {
+    if (location.protocol === "https:" && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js");
     }
   </script>
