@@ -22,6 +22,7 @@ import Variables exposing (scaled)
 import Element exposing (..)
 import Element.Attributes exposing (..)
 import Element.Events exposing (..)
+import Element.Ext exposing (..)
 import Element.Types exposing (Node)
 import Layouts
 import Variations exposing (Variations)
@@ -57,7 +58,11 @@ entry model =
         , within
             [ Layouts.logoBackdrop
             , Layouts.h1 "EQ" |> el Zed [ moveRight (scaled 4) ]
-            , content model
+
+            --
+            , model.equalizer
+                |> lazySpread content
+                |> el Zed [ height fill, width fill ]
             ]
             (el
                 Zed
@@ -67,15 +72,15 @@ entry model =
         ]
 
 
-content : TopLevel.Model -> Node
-content model =
+content : Model -> Node
+content eq =
     row
         (Equalizer Wrapper)
         [ spread ]
-        [ knob Volume model.equalizer.volume
-        , knob Low model.equalizer.low
-        , knob Mid model.equalizer.mid
-        , knob High model.equalizer.high
+        [ knob Volume eq.volume
+        , knob Low eq.low
+        , knob Mid eq.mid
+        , knob High eq.high
         ]
         |> el Zed [ center, verticalCenter ]
         |> el Zed [ height fill, width fill ]

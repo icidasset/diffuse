@@ -28,6 +28,9 @@ a[href] {
   width: 90%;
 }
 
+.strechin-and-chillin,
+.strechin-and-chillin > div { height: 100%; }
+
 
 
 /**

@@ -69,24 +69,28 @@ outsideView currentPage ( itemLabel, itemPage ) =
         |> text
         |> el
             (Navigation OutsideItem)
-            [ vary Active (isSameBase currentPage itemPage)
-
-            -- Events
-            , itemPage
+            [ vary Active (isSameBase currentPage itemPage) ]
+        |> link
+            (pageToHref itemPage)
+        |> el
+            Zed
+            [ itemPage
                 |> Routing.GoToPage
                 |> RoutingMsg
                 |> Json.Decode.succeed
                 |> onWithOptions "click" preventDefaultOptions
             ]
-        |> link (pageToHref itemPage)
 
 
 outsideOutgoingView : String -> ( Icon Msg, String ) -> Node
 outsideOutgoingView activeHref ( Icon icon, itemHref ) =
     icon colorDerivatives.text 16
         |> html
-        |> el (Navigation OutsideItem) [ vary Active (itemHref == activeHref) ]
-        |> link itemHref
+        |> el
+            (Navigation OutsideItem)
+            [ vary Active (itemHref == activeHref) ]
+        |> link
+            itemHref
 
 
 
@@ -116,7 +120,10 @@ insideViewCustom ( Icon icon, Label label, msg ) =
 
         attributes : List (Attribute variations Msg)
         attributes =
-            [ onWithOptions "click" preventDefaultOptions (Json.Decode.succeed msg)
+            [ onWithOptions
+                "click"
+                preventDefaultOptions
+                (Json.Decode.succeed msg)
 
             -- Title
             , case label of

@@ -48,7 +48,9 @@ entry page model =
                 model.tracks.selectedPlaylist
 
         New ->
-            pageNew
+            lazySpread
+                pageNew
+                ()
 
 
 
@@ -221,8 +223,8 @@ removeEventOptions =
 -- {Page} new
 
 
-pageNew : Node
-pageNew =
+pageNew : () -> Node
+pageNew _ =
     column
         Zed
         [ height fill ]

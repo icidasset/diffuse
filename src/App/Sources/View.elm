@@ -49,20 +49,20 @@ entry : Sources.Page -> TopLevel.Model -> Node
 entry page model =
     case page of
         Edit _ ->
-            -- TODO: Use Element.Lazy once it's available
-            pageEdit
+            lazySpread
+                pageEdit
                 model.sources.form
 
         Index ->
-            -- TODO: Use Element.Lazy once it's available
-            pageIndex
+            lazySpread3
+                pageIndex
                 model.sources.collection
                 model.sources.isProcessing
                 model.sources.processingErrors
 
         New ->
-            -- TODO: Use Element.Lazy once it's available
-            pageNew
+            lazySpread2
+                pageNew
                 model.sources.form
                 model.isElectron
 

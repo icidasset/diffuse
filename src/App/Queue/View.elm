@@ -48,12 +48,16 @@ entry : Queue.Page -> TopLevel.Model -> Node
 entry page model =
     case page of
         Index ->
-            -- TODO: Use Element.Lazy once it's available
-            pageIndex model.queue.future model.queue.shuffle model.queue.itemDnD
+            lazySpread3
+                pageIndex
+                model.queue.future
+                model.queue.shuffle
+                model.queue.itemDnD
 
         History ->
-            -- TODO: Use Element.Lazy once it's available
-            pageHistory model.queue.past
+            lazySpread
+                pageHistory
+                model.queue.past
 
 
 
