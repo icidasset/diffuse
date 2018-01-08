@@ -350,6 +350,32 @@ update msg model =
                             doDelayed (Time.millisecond * 250) HideLoadingScreen
                     ]
 
+        InsertDemoContent json ->
+            let
+                demoModel =
+                    Authentication.UserData.inwards json model
+
+                ( demoTracks, demoTracksCol ) =
+                    ( demoModel.tracks
+                    , demoModel.tracks.collection
+                    )
+
+                demoTracksEmpty =
+                    { demoTracks | collection = Tracks.Types.emptyCollection }
+            in
+                (!)
+                    { model
+                        | sources = demoModel.sources
+                        , tracks = demoTracks
+                    }
+                    [ ( demoTracksEmpty
+                      , demoTracksCol
+                      )
+                        |> Tracks.Types.InitialCollection True
+                        |> TracksMsg
+                        |> do
+                    ]
+
         --
         -- Data out
         --

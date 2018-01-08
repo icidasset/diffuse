@@ -61,6 +61,7 @@ type Msg
     | SetTimestamp Time
       -- User layer
     | ImportUserData String
+    | InsertDemoContent String
     | StoreUserData
     | DebounceStoreUserData
     | DebounceCallbackStoreUserData Debounce.Msg

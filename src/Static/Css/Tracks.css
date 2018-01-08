@@ -93,6 +93,11 @@
 }
 
 
+.tracks__tableRow--isMissing .tracks__tableFavouriteColumn {
+  cursor: pointer;
+}
+
+
 
 /* 🏓  –  Table  –  Columns  –  Other */
 
