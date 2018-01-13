@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "1-liners": "^0.4.0",
-    "blockstack": "^0.13.5",
+    "blockstack": "^0.15.0",
     "camelcase": "^4.1.0",
     "elasticlunr": "^0.9.5",
     "expand-home-dir": "0.0.3",
