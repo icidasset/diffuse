@@ -262,13 +262,13 @@ loginScreen model =
                 AuthenticationOptions
                 [ paddingXY (scaled 5) (scaled -8) ]
                 [ if not model.isElectron then
-                    authButton model.isHTTPS Blockstack
+                    authButton Blockstack
                   else
                     empty
 
                 --
-                , authButton model.isHTTPS RemoteStorage
-                , authButton model.isHTTPS Local
+                , authButton RemoteStorage
+                , authButton Local
                 ]
             )
         )
@@ -288,8 +288,8 @@ messageScreen message =
 -- Authentication
 
 
-authButton : Bool -> Authentication.Types.Method -> Node
-authButton isHTTPS authMethod =
+authButton : Authentication.Types.Method -> Node
+authButton authMethod =
     el
         AuthenticationButton
         [ minWidth (px 260)
