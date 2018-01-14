@@ -32,6 +32,11 @@ initialCommand initialPage =
 update : Msg -> Model -> ( Model, Cmd TopLevel.Msg )
 update msg model =
     case msg of
+        RedirectTo url ->
+            (!)
+                model
+                [ Navigation.load url ]
+
         GoToPage page ->
             (!)
                 model

@@ -10,6 +10,7 @@ import Tracks.Types exposing (..)
 
 type Service
     = AmazonS3
+    | Dropbox
     | Ipfs
     | Local
 
@@ -70,6 +71,7 @@ type Page
     = Edit SourceId
     | Index
     | New
+    | NewThroughRedirect Service String
 
 
 

@@ -15,8 +15,13 @@ function processContext(context) {
   const initialPromise = Promise.resolve([]);
 
   return context.urlsForTags.reduce((accumulator, urls) => {
+    let getUrl;
+    let headUrl;
+
     return accumulator.then(col =>
-      getTags(urls.getUrl, urls.headUrl)
+      transformUrl(urls.getUrl)
+        .then(url => { getUrl = url; return transformUrl(urls.headUrl) })
+        .then(url => { headUrl = url; return getTags(getUrl, headUrl) })
         .then(r => col.concat(r))
         .catch(e => {
           console.error(e);

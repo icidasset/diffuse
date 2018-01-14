@@ -15,8 +15,9 @@ import Maybe.Extra
 import Mouse
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
-import Routing.Types
+import Routing.Types exposing (Msg(RedirectTo))
 import Sources.Services as Services
+import Sources.Services.Dropbox as Dropbox
 import Sources.Types as Sources exposing (..)
 import Types as TopLevel exposing (Msg(..))
 
@@ -61,6 +62,12 @@ entry page model =
                 model.sources.processingErrors
 
         New ->
+            lazySpread2
+                pageNew
+                model.sources.form
+                model.isElectron
+
+        NewThroughRedirect service hash ->
             lazySpread2
                 pageNew
                 model.sources.form
@@ -369,7 +376,12 @@ pageNewStep2 : Source -> Node
 pageNewStep2 source =
     let
         msg =
-            SourcesMsg (Sources.AssignFormStep 3)
+            case source.service of
+                Dropbox ->
+                    RoutingMsg (RedirectTo <| Dropbox.authorizationUrl source.data)
+
+                _ ->
+                    SourcesMsg (Sources.AssignFormStep 3)
     in
         column Zed
             [ height fill
@@ -597,7 +609,10 @@ renderSourceProperties : Source -> List Node
 renderSourceProperties source =
     source.service
         |> Services.properties
-        |> List.reverse
-        |> List.drop 1
-        |> List.reverse
+        |> List.filter (\( k, _, _, _ ) -> List.notMember k sourcePropertiesToIgnore)
         |> List.map (propertyRenderer source)
+
+
+sourcePropertiesToIgnore : List String
+sourcePropertiesToIgnore =
+    [ "accessToken", "name" ]

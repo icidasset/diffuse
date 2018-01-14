@@ -138,9 +138,12 @@ function insertTrack(environmentalContext, queueItem) {
   // Create audio node
   let audioNode;
 
-  audioNode = createAudioElement(environmentalContext, queueItem);
-  audioNode.context = context.createMediaElementSource(audioNode);
-  audioNode.context.connect(volume);
+  transformUrl(queueItem.url).then(url => {
+    queueItem = Object.assign({}, queueItem, { url: url });
+    audioNode = createAudioElement(environmentalContext, queueItem);
+    audioNode.context = context.createMediaElementSource(audioNode);
+    audioNode.context.connect(volume);
+  });
 }
 
 

@@ -4,6 +4,7 @@ import Navigation
 import Playlists.Types as Playlists
 import Queue.Types as Queue
 import Routing.Types exposing (..)
+import Sources.Services
 import Sources.Types as Sources
 import UrlParser exposing (..)
 
@@ -21,9 +22,22 @@ locationToMessage location =
 -}
 locationToPage : Navigation.Location -> Page
 locationToPage location =
-    location
-        |> UrlParser.parsePath route
-        |> Maybe.withDefault (ErrorScreen "Page not found.")
+    let
+        page =
+            location
+                |> UrlParser.parsePath route
+                |> Maybe.withDefault (ErrorScreen "Page not found.")
+    in
+        case page of
+            Sources (Sources.NewThroughRedirect service _) ->
+                location
+                    |> UrlParser.parseHash string
+                    |> Maybe.withDefault "unparsableHash"
+                    |> Sources.NewThroughRedirect service
+                    |> Sources
+
+            _ ->
+                page
 
 
 {-| Base `Page`.
@@ -128,6 +142,9 @@ pageToHref page =
         Sources Sources.New ->
             "/sources/new"
 
+        Sources (Sources.NewThroughRedirect service _) ->
+            "/sources/new/" ++ (service |> Sources.Services.typeToKey |> String.toLower)
+
         ------------------------------------
         -- Screens
         ------------------------------------
@@ -146,8 +163,13 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map (Sources Sources.Index) (s "sources")
-        , map (Sources.Edit >> Sources) (s "sources" </> s "edit" </> string)
+        , map (Sources << Sources.Edit) (s "sources" </> s "edit" </> string)
         , map (Sources Sources.New) (s "sources" </> s "new")
+
+        -- Sources ~ Services
+        , map
+            (Sources <| Sources.NewThroughRedirect Sources.Dropbox "")
+            (s "sources" </> s "new" </> s "dropbox")
 
         -- Playlists
         , map (Playlists Playlists.Index) (s "playlists")
