@@ -38,8 +38,8 @@ Will be used for the forms.
 -}
 properties : List ( String, String, String, Bool )
 properties =
-    [ ( "accessToken", "Access Token", "...", False )
-    , ( "appKey", "App key", defaults.appKey, True )
+    [ ( "accessToken", "Access Token", "...", True )
+    , ( "appKey", "App key", defaults.appKey, False )
     , ( "directoryPath", "Directory", defaults.directoryPath, False )
     , ( "name", "Label", defaults.name, False )
     ]
