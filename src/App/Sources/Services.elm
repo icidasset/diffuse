@@ -3,11 +3,7 @@ module Sources.Services exposing (..)
 {-| Service functions used in other modules.
 -}
 
-import Base64
 import Date exposing (Date)
-import Dict
-import Dict.Ext as Dict
-import Http
 import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (..)
 
