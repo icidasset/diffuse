@@ -103,6 +103,7 @@ type alias Model =
     , isElectron : Bool
     , isHTTPS : Bool
     , isTouchDevice : Bool
+    , origin : String
     , screenHeight : Int
     , showLoadingScreen : Bool
     , toasties : Toasty.Stack Notification

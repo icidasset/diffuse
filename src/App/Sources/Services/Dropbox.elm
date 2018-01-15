@@ -59,8 +59,8 @@ initialData =
 
 {-| Authorization url.
 -}
-authorizationUrl : SourceData -> String
-authorizationUrl sourceData =
+authorizationUrl : String -> SourceData -> String
+authorizationUrl origin sourceData =
     let
         encodeData data =
             data
@@ -76,7 +76,7 @@ authorizationUrl sourceData =
     in
         [ ( "response_type", "token" )
         , ( "client_id", Dict.fetch "appKey" "unknown" sourceData )
-        , ( "redirect_uri", "http://localhost:5000/sources/new/dropbox" )
+        , ( "redirect_uri", origin ++ "/sources/new/dropbox" )
         , ( "state", state )
         ]
             |> List.map makeQueryParam
@@ -141,31 +141,37 @@ Or a specific directory in the bucket.
 makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
 makeTree srcData marker msg currentDate =
     let
-        directoryPath =
-            srcData
-                |> Dict.get "directoryPath"
-                |> Maybe.withDefault defaults.directoryPath
-                |> String.trim
-                |> Regex.replace Regex.All (Regex.regex "(^\\/|\\/$)") (\_ -> "")
-                |> (\d ->
-                        if String.isEmpty d then
-                            "/"
-                        else
-                            "/" ++ d ++ "/"
-                   )
-
         accessToken =
             Dict.fetch "accessToken" "" srcData
 
         body =
-            [ ( "path", Json.Encode.string directoryPath )
-            , ( "recursive", Json.Encode.bool True )
-            ]
+            (case marker of
+                TheBeginning ->
+                    [ ( "limit", Json.Encode.int 2000 )
+                    , ( "path", Json.Encode.string (getProperDirectoryPath srcData) )
+                    , ( "recursive", Json.Encode.bool True )
+                    ]
+
+                InProgress cursor ->
+                    [ ( "cursor", Json.Encode.string cursor )
+                    ]
+
+                TheEnd ->
+                    []
+            )
                 |> Json.Encode.object
                 |> Http.jsonBody
 
         url =
-            "https://api.dropboxapi.com/2/files/list_folder"
+            case marker of
+                TheBeginning ->
+                    "https://api.dropboxapi.com/2/files/list_folder"
+
+                InProgress _ ->
+                    "https://api.dropboxapi.com/2/files/list_folder/continue"
+
+                TheEnd ->
+                    ""
     in
         { method = "POST"
         , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
@@ -177,6 +183,21 @@ makeTree srcData marker msg currentDate =
         }
             |> Http.request
             |> Http.send msg
+
+
+getProperDirectoryPath : SourceData -> String
+getProperDirectoryPath srcData =
+    srcData
+        |> Dict.get "directoryPath"
+        |> Maybe.withDefault defaults.directoryPath
+        |> String.trim
+        |> Regex.replace Regex.All (Regex.regex "(^\\/|\\/$)") (\_ -> "")
+        |> (\d ->
+                if String.isEmpty d then
+                    ""
+                else
+                    "/" ++ d ++ "/"
+           )
 
 
 {-| Re-export parser functions.

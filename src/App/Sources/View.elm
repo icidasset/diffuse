@@ -64,15 +64,17 @@ entry page model =
                 model.sources.processingErrors
 
         New ->
-            lazySpread2
+            lazySpread3
                 pageNew
                 model.sources.form
+                model.origin
                 model.isElectron
 
         NewThroughRedirect service hash ->
-            lazySpread2
+            lazySpread3
                 pageNew
                 model.sources.form
+                model.origin
                 model.isElectron
 
 
@@ -264,8 +266,8 @@ renderSource index ( source, isProcessing, processingError ) =
 -- {Page} New
 
 
-pageNew : Sources.Form -> Bool -> Node
-pageNew sForm isElectron =
+pageNew : Sources.Form -> String -> Bool -> Node
+pageNew sForm origin isElectron =
     column
         Zed
         [ height fill ]
@@ -309,7 +311,7 @@ pageNew sForm isElectron =
                 -- Form
                 ------------------------------------
                 , within
-                    [ logoBackdrop, takeOver (pageNewForm step source isElectron) ]
+                    [ logoBackdrop, takeOver (pageNewForm step source origin isElectron) ]
                     (takeOver empty)
                 ]
 
@@ -318,14 +320,14 @@ pageNew sForm isElectron =
         )
 
 
-pageNewForm : Int -> Source -> Bool -> Node
-pageNewForm step source isElectron =
+pageNewForm : Int -> Source -> String -> Bool -> Node
+pageNewForm step source origin isElectron =
     case step of
         1 ->
             pageNewStep1 source isElectron
 
         2 ->
-            pageNewStep2 source
+            pageNewStep2 source origin
 
         3 ->
             pageNewStep3 source
@@ -374,13 +376,13 @@ pageNewStep1 source isElectron =
             ]
 
 
-pageNewStep2 : Source -> Node
-pageNewStep2 source =
+pageNewStep2 : Source -> String -> Node
+pageNewStep2 source origin =
     let
         msg =
             case source.service of
                 Dropbox ->
-                    RoutingMsg (RedirectTo <| Dropbox.authorizationUrl source.data)
+                    RoutingMsg (RedirectTo <| Dropbox.authorizationUrl origin source.data)
 
                 _ ->
                     SourcesMsg (Sources.AssignFormStep 3)

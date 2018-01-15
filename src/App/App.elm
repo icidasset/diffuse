@@ -23,8 +23,11 @@ init flags location =
     let
         initialPage =
             Routing.Logic.locationToPage location
+
+        origin =
+            location.origin
     in
-        ( State.initialModel flags initialPage
+        ( State.initialModel flags initialPage origin
         , State.initialCommand flags initialPage
         )
 

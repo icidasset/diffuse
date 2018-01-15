@@ -63,8 +63,8 @@ import Tracks.View
 -- 💧
 
 
-initialModel : ProgramFlags -> Page -> Model
-initialModel flags initialPage =
+initialModel : ProgramFlags -> Page -> String -> Model
+initialModel flags initialPage origin =
     { alfred = Nothing
     , contextMenu = Nothing
     , holdingShiftKey = False
@@ -72,6 +72,7 @@ initialModel flags initialPage =
     , isElectron = flags.isElectron
     , isHTTPS = flags.isHTTPS
     , isTouchDevice = False
+    , origin = origin
     , screenHeight = flags.screenHeight
     , showLoadingScreen = True
     , storageDebounce = Debounce.init
@@ -132,7 +133,7 @@ update msg model =
                     }
             in
                 (!)
-                    (initialModel flags model.routing.currentPage)
+                    (initialModel flags model.routing.currentPage model.origin)
                     [ initialCommand flags model.routing.currentPage ]
 
         SetIsTouchDevice bool ->
