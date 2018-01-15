@@ -11,6 +11,7 @@ import Sources.Types exposing (..)
 -- Services
 
 import Sources.Services.AmazonS3 as AmazonS3
+import Sources.Services.Dropbox as Dropbox
 import Sources.Services.Ipfs as Ipfs
 import Sources.Services.Local as Local
 
@@ -23,6 +24,9 @@ initialData service =
     case service of
         AmazonS3 ->
             AmazonS3.initialData
+
+        Dropbox ->
+            Dropbox.initialData
 
         Ipfs ->
             Ipfs.initialData
@@ -37,6 +41,9 @@ makeTrackUrl service =
         AmazonS3 ->
             AmazonS3.makeTrackUrl
 
+        Dropbox ->
+            Dropbox.makeTrackUrl
+
         Ipfs ->
             Ipfs.makeTrackUrl
 
@@ -49,6 +56,9 @@ makeTree service =
     case service of
         AmazonS3 ->
             AmazonS3.makeTree
+
+        Dropbox ->
+            Dropbox.makeTree
 
         Ipfs ->
             Ipfs.makeTree
@@ -63,6 +73,9 @@ parseErrorResponse service =
         AmazonS3 ->
             AmazonS3.parseErrorResponse
 
+        Dropbox ->
+            Dropbox.parseErrorResponse
+
         Ipfs ->
             Ipfs.parseErrorResponse
 
@@ -75,6 +88,9 @@ parseTreeResponse service =
     case service of
         AmazonS3 ->
             AmazonS3.parseTreeResponse
+
+        Dropbox ->
+            Dropbox.parseTreeResponse
 
         Ipfs ->
             Ipfs.parseTreeResponse
@@ -89,6 +105,9 @@ postProcessTree service =
         AmazonS3 ->
             AmazonS3.postProcessTree
 
+        Dropbox ->
+            Dropbox.postProcessTree
+
         Ipfs ->
             Ipfs.postProcessTree
 
@@ -101,6 +120,9 @@ properties service =
     case service of
         AmazonS3 ->
             AmazonS3.properties
+
+        Dropbox ->
+            Dropbox.properties
 
         Ipfs ->
             Ipfs.properties
@@ -129,6 +151,9 @@ keyToType str =
         "AmazonS3" ->
             AmazonS3
 
+        "Dropbox" ->
+            Dropbox
+
         "Ipfs" ->
             Ipfs
 
@@ -144,6 +169,9 @@ typeToKey service =
     case service of
         AmazonS3 ->
             "AmazonS3"
+
+        Dropbox ->
+            "Dropbox"
 
         Ipfs ->
             "Ipfs"
@@ -162,6 +190,7 @@ labels isElectron =
     let
         default =
             [ ( typeToKey AmazonS3, "Amazon S3" )
+            , ( typeToKey Dropbox, "Dropbox" )
             , ( typeToKey Ipfs, "IPFS" )
             ]
     in
@@ -169,3 +198,16 @@ labels isElectron =
             List.append default [ ( typeToKey Local, "Locally" ) ]
         else
             default
+
+
+{-| Build a `NewForm` from a redirect with a hash.
+Example use-case: Dropbox
+-}
+newFormThroughRedirect : Service -> String -> Form
+newFormThroughRedirect service hash =
+    case service of
+        Dropbox ->
+            NewForm 3 (makeSource Dropbox <| Dropbox.authorizationSourceData hash)
+
+        _ ->
+            NewForm 3 (makeSource service <| initialData service)

@@ -3,6 +3,7 @@ module Routing.Transitions exposing (..)
 import Response
 import Routing.Types exposing (..)
 import Sources.State as Sources
+import Sources.Services
 import Sources.Types
 import Types as TopLevel exposing (Msg(..))
 
@@ -60,6 +61,16 @@ mapModel nextPage model =
 
                 _ ->
                     model
+
+        Sources (Sources.Types.NewThroughRedirect service hash) ->
+            let
+                sources =
+                    model.sources
+
+                form =
+                    Sources.Services.newFormThroughRedirect service hash
+            in
+                { model | sources = { sources | form = form } }
 
         --
         -- Default

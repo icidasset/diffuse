@@ -1,3 +1,9 @@
+//
+// Browser support
+// (づ￣ ³￣)づ
+//
+//
+
 var supported = true;
 
 

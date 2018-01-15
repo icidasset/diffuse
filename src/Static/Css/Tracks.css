@@ -10,7 +10,7 @@
 .tracks__table {
   display: table;
   list-style: none;
-  margin: 5px 0;
+  margin: 5px 0 !important;
   padding: 0;
   table-layout: fixed;
   white-space: nowrap;

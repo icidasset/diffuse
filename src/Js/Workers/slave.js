@@ -6,6 +6,7 @@
 
 importScripts("/vendor/package.js");
 importScripts("/lib/processing.js");
+importScripts("/lib/urls.js");
 importScripts("/slave.js");
 
 

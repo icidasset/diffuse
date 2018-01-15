@@ -10,6 +10,7 @@ import Sources.Types as Sources
 
 type Msg
     = GoToPage Page
+    | RedirectTo String
     | SetPage Page
 
 
