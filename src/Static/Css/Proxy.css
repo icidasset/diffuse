@@ -9,6 +9,10 @@ a[href] {
   text-decoration: none;
 }
 
+a[href].is-styled-link {
+  border-bottom: 2px solid rgb(254, 196, 24);
+}
+
 .in-the-middle {
   left: 50%;
   position: fixed;

@@ -2,6 +2,8 @@ module Sources.View exposing (..)
 
 import Color
 import Dict
+import Html
+import Html.Attributes
 import Json.Decode as Decode
 import List.Extra as List
 import Material.Icons.Alert as Icons
@@ -481,7 +483,14 @@ pageNewStep3 source =
                 , bold "Make sure CORS is enabled"
                 , lineBreak
                 , text "You can find the instructions over "
-                , link "/about#CORS" (text "here")
+                , html
+                    (Html.a
+                        [ Html.Attributes.class "is-styled-link"
+                        , Html.Attributes.href "/about#CORS"
+                        , Html.Attributes.type_ "blank"
+                        ]
+                        [ Html.text "here" ]
+                    )
                 ]
 
             --
