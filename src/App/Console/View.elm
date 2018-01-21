@@ -67,7 +67,10 @@ nowPlaying activeItem stalled =
     if stalled then
         el
             (Console NowPlaying)
-            [ onClick (TopLevel.ConsoleMsg Unstall) ]
+            [ onClick (TopLevel.ConsoleMsg Unstall)
+            , paddingBottom (scaled -1)
+            , paddingTop (scaled 3)
+            ]
             (case activeItem of
                 Just _ ->
                     text "Your internet connection got interrupted, click to resume."
@@ -78,7 +81,9 @@ nowPlaying activeItem stalled =
     else
         el
             (Console NowPlaying)
-            [ paddingBottom (scaled -1), paddingTop (scaled 3) ]
+            [ paddingBottom (scaled -1)
+            , paddingTop (scaled 3)
+            ]
             (case activeItem of
                 Just item ->
                     let
