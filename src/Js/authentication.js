@@ -271,17 +271,31 @@ AUTH_SYSTEM.METHOD =
 
 
     isSignedIn: _ => new Promise((resolve, reject) => {
+      let h;
+
+      // RemoteStorage checks for the "access_token" param in the hash,
+      // some other services that we use also use this.
+      // So for the situations where RemoteStorage should not check
+      // this param, make the hash empty and then after RemoteStorage
+      // is set up, reset the hash to what it was before.
+      if (location.pathname.startsWith("/sources/new/")) {
+        h = location.hash;
+        location.hash = "";
+      }
+
       setInstance();
 
       const timeoutId = setTimeout(() => {
-        resolve(false);
         rs.off("connected");
+        if (h) location.hash = h;
+        resolve(false);
       }, 10000);
 
       rs.on("connected", _ => {
         clearTimeout(timeoutId);
-        resolve(true);
         rs.off("connected");
+        if (h) location.hash = h;
+        resolve(true);
       });
     }),
 
