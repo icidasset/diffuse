@@ -12,6 +12,7 @@ html {
 }
 
 body {
+  background: white;
   color: #322230;
   font-family: Overpass, sans-serif;
   margin: 0 1.125rem 4.5rem;
