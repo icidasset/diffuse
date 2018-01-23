@@ -6,7 +6,7 @@
   "main": "electron/index.js",
   "devDependencies": {
     "browserify": "^14.5.0",
-    "electron": "^1.7.10",
+    "electron": "^1.7.11",
     "electron-builder": "^19.52.1",
     "elm-doctest": "^0.3.6",
     "netlify-cli": "^1.2.2"
