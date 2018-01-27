@@ -24,6 +24,7 @@
     "remotestoragejs": "^1.0.2",
     "serviceworker-cache-polyfill": "^4.0.0",
     "text-encoding": "^0.6.4",
-    "tocca": "^2.0.1"
+    "tocca": "^2.0.1",
+    "x0popup": "^0.3.3"
   }
 }

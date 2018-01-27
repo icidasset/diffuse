@@ -82,3 +82,88 @@ a[href].is-styled-link {
     transform: rotate(450deg);
   }
 }
+
+
+
+/**
+ ** Prompt
+ **
+ */
+
+.x0p {
+  color: white;
+  font-size: 16px;
+  height: auto !important;
+  left: 50%;
+  line-height: 1.25em;
+  max-height: auto !important;
+  position: absolute;
+  top: 50%;
+  z-index: 9999;
+
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: true;
+}
+
+
+.x0p-overlay {
+  background: rgba(0, 0, 0, 0.125);
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 9998;
+}
+
+
+.x0p .title {
+  font-family: "Montserrat", Overpass, sans-serif;
+  margin-bottom: 1.563em;
+  margin-top: 60.5px;
+  text-align: center;
+}
+
+
+#x0p-input {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.425);
+  box-sizing: border-box;
+  color: white;
+  font-family: Overpass, sans-serif;
+  font-size: 1.25em;
+  padding: 0.512em 0;
+  width: 100%;
+}
+
+
+#x0p-input::placeholder {
+  color: rgba(255, 255, 255, 0.475);
+}
+
+
+#x0p-input:focus {
+  border-bottom-color: rgb(254, 196, 24);
+  outline: 0;
+}
+
+
+#x0p-buttons {
+  margin-top: 1.563em;
+}
+
+
+#x0p-buttons button {
+  background: transparent;
+  border: 0;
+  color: white;
+  cursor: pointer;
+  font-size: 1em;
+  font-family: Overpass, sans-serif;
+  font-weight: 600;
+}

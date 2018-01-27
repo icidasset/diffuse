@@ -10,5 +10,6 @@ self.RemoteStorage = require("remotestoragejs");
 
 if (self.document) {
   self.tocca = require("tocca");
+  self.x0p = require("x0popup");
   require("pepjs");
 }

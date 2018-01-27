@@ -49,6 +49,22 @@ function doWork(worker, requisites) {
 }
 
 
+function prompt(question) {
+  setTimeout(() => node.querySelector(".spinner").style.visibility = "hidden", 0);
+
+  return x0p({
+    inputPlaceholder: "example@5apps.com",
+    maxWidth: "95vw",
+    title: question,
+    type: "input",
+    width: "358px"
+  }).then(data => {
+    node.querySelector(".spinner").style.visibility = "visible";
+    return data;
+  });
+}
+
+
 
 //
 // > Method
@@ -309,19 +325,21 @@ AUTH_SYSTEM.METHOD =
 
 
     signIn: _ => new Promise((resolve, reject) => {
-      const userAddress = prompt(
+      prompt(
         "What's your user address?"
-      );
 
-      if (!userAddress || userAddress.length === 0) {
-        return resolve("GoBack");
-      }
+      ).then(data => {
+        if (data.button === "cancel" || data.text.length === 0) {
+          return resolve("GoBack");
+        }
 
-      setInstance();
+        setInstance();
 
-      rs.on("connected", _ => resolve("Redirect"));
-      rs.on("error", err => reject(err.message));
-      rs.connect(userAddress);
+        rs.on("connected", _ => resolve("Redirect"));
+        rs.on("error", err => reject(err.message));
+        rs.connect(data.text);
+
+      });
     }),
 
 

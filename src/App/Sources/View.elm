@@ -489,7 +489,7 @@ pageNewStep3 source =
                     (Html.a
                         [ Html.Attributes.class "is-styled-link"
                         , Html.Attributes.href "/about#CORS"
-                        , Html.Attributes.type_ "blank"
+                        , Html.Attributes.target "_blank"
                         ]
                         [ Html.text "here" ]
                     )
