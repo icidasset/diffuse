@@ -8,7 +8,7 @@ A music player which connects to your cloud/distributed storage.
 
 
 
-### Dependencies
+## Dependencies
 
 - Loads of `Elm`
 - A moderate amount of `Haskell` for the build system and static server
@@ -16,7 +16,7 @@ A music player which connects to your cloud/distributed storage.
 
 
 
-### Development
+## Development
 
 ```shell
 # This assumes that you are using macOS
@@ -35,7 +35,7 @@ brew install makeicns
 brew install imagemagick
 ```
 
-#### How to run
+### How to run
 
 ```shell
 # build + server + watch
