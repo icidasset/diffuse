@@ -4,17 +4,19 @@ A music player which connects to your cloud/distributed storage.
 
 ![](https://icidasset-public.s3.amazonaws.com/isotach.jpg)
 
+📍 Available at [https://isotach.io/](https://isotach.io/)
 
 
-## Dependencies
+
+### Dependencies
 
 - Loads of `Elm`
 - A moderate amount of `Haskell` for the build system and static server
 - A tiny bit of `Node` (browserify vendor js & doc tests)
-- Blockstack
 
 
-### Setup
+
+### Development
 
 ```shell
 # This assumes that you are using macOS
@@ -33,9 +35,7 @@ brew install makeicns
 brew install imagemagick
 ```
 
-
-
-## How to run
+#### How to run
 
 ```shell
 # build + server + watch
@@ -44,12 +44,6 @@ make
 # make a static `./build`
 make build
 
-# run the static server
-make server
-
 # run tests
 make test
-
-# watch and build
-make watch
 ```
