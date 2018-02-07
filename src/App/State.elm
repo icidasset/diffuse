@@ -131,9 +131,17 @@ update msg model =
                     , isHTTPS = model.isHTTPS
                     , screenHeight = model.screenHeight
                     }
+
+                initModel =
+                    initialModel flags model.routing.currentPage model.origin
+
+                newModel =
+                    initModel.settings
+                        |> (\s -> { s | loadedBackdrop = model.settings.loadedBackdrop })
+                        |> (\s -> { initModel | settings = s })
             in
                 (!)
-                    (initialModel flags model.routing.currentPage model.origin)
+                    newModel
                     [ initialCommand flags model.routing.currentPage ]
 
         SetIsTouchDevice bool ->

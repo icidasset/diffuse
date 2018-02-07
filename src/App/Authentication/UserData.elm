@@ -96,7 +96,7 @@ importSettings pre ( _, obj ) =
             decodeSetting obj "application"
     in
         { pre
-            | backgroundImage = coder "backgroundImage" Decode.string pre.backgroundImage
+            | chosenBackdrop = coder "backgroundImage" Decode.string pre.chosenBackdrop
         }
 
 
@@ -241,7 +241,7 @@ encodeSettings model =
     let
         application =
             Encode.object
-                [ ( "backgroundImage", Encode.string model.settings.backgroundImage )
+                [ ( "backgroundImage", Encode.string model.settings.chosenBackdrop )
                 ]
 
         equalizer =

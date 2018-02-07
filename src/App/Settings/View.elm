@@ -89,7 +89,7 @@ theForm model =
           -- Background image
           -----------------------------------
           Layouts.lbl "Background Image"
-        , Layouts.select backgroundImageMsg model.settings.backgroundImage backgroundImages
+        , Layouts.select backgroundImageMsg model.settings.chosenBackdrop backgroundImages
         ]
 
 
@@ -107,4 +107,4 @@ backgroundImages =
 
 backgroundImageMsg : String -> TopLevel.Msg
 backgroundImageMsg =
-    SetBackgroundImage >> SettingsMsg
+    SetChosenBackdrop >> SettingsMsg

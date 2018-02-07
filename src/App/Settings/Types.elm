@@ -4,7 +4,8 @@ module Settings.Types exposing (..)
 
 
 type Msg
-    = SetBackgroundImage String
+    = SetChosenBackdrop String
+    | SetLoadedBackdrop String
 
 
 
@@ -12,5 +13,10 @@ type Msg
 
 
 type alias Model =
-    { backgroundImage : String
+    { chosenBackdrop : String
+    , loadedBackdrop : LoadedBackdrop
     }
+
+
+type alias LoadedBackdrop =
+    { previous : Maybe String, current : Maybe String }

@@ -2,6 +2,9 @@ module View exposing (entry)
 
 import Equalizer.Touch
 import Html exposing (Html)
+import Html.Attributes
+import Html.Events
+import Html.Lazy
 import Json.Decode as Decode
 import Material.Icons.Action
 import Material.Icons.Alert
@@ -124,12 +127,17 @@ entryNodes model =
 
 entryLazyNodes : Model -> List Node
 entryLazyNodes model =
-    [ Element.lazy alfred model.alfred
-    , Element.lazy backgroundImage model.settings.backgroundImage
-    , Element.lazy notifications model.toasties
-    , Element.lazy2 overlay model.alfred model.contextMenu
-    , Element.lazy ContextMenu.entry model.contextMenu
-    ]
+    let
+        s =
+            model.settings
+    in
+        [ Element.lazy alfred model.alfred
+        , Element.lazy backdropChosen s.chosenBackdrop
+        , Element.lazy backdropLoaded s.loadedBackdrop
+        , Element.lazy notifications model.toasties
+        , Element.lazy2 overlay model.alfred model.contextMenu
+        , Element.lazy ContextMenu.entry model.contextMenu
+        ]
 
 
 {-| Global mouse/touch events & Equalizer events.
@@ -422,30 +430,97 @@ alfred maybe =
             empty
 
 
-backgroundImage : String -> Node
-backgroundImage img =
-    el Zed [ inlineStyle (backgroundImageStyles img) ] empty
+backdropChosen : String -> Node
+backdropChosen chosenBackdrop =
+    let
+        loadingImageDecoder =
+            Settings.Types.SetLoadedBackdrop chosenBackdrop
+                |> SettingsMsg
+                |> Decode.succeed
+    in
+        Html.img
+            [ Html.Attributes.style loadingImageStyles
+            , Html.Attributes.src ("/images/Background/" ++ chosenBackdrop)
+            , Html.Events.on "load" loadingImageDecoder
+            ]
+            []
+            |> html
 
 
-backgroundImageStyles : String -> List ( String, String )
-backgroundImageStyles img =
-    [ ( "background-image", "url(/images/Background/" ++ img ++ ")" )
-    , ( "background-size", "cover" )
-    , ( "bottom", "-1px" )
-    , ( "left", "-1px" )
-    , ( "position", "fixed" )
-    , ( "right", "-1px" )
-    , ( "top", "-1px" )
-    , ( "z-index", "-10" )
-
+backdropLoaded : Settings.Types.LoadedBackdrop -> Node
+backdropLoaded { previous, current } =
+    -- TODO: Fade in new background image
     --
-    , case img of
-        "1.jpg" ->
-            ( "background-position", "center 30%" )
+    column
+        Zed
+        []
+        [ el
+            Zed
+            [ inlineStyle (backgroundImageStyles False previous) ]
+            empty
+        , el
+            Zed
+            [ inlineStyle (backgroundImageStyles False current) ]
+            empty
+        ]
 
-        _ ->
-            ( "background-position", "center bottom" )
+
+loadingImageStyles : List ( String, String )
+loadingImageStyles =
+    [ ( "height", "1px" )
+    , ( "left", "100%" )
+    , ( "opacity", "0.00001" )
+    , ( "overflow", "hidden" )
+    , ( "position", "fixed" )
+    , ( "top", "100%" )
+    , ( "transform", "translate(-1px, -1px)" )
+    , ( "width", "1px" )
+    , ( "z-index", "-10000" )
     ]
+
+
+backgroundImageStyles : Bool -> Maybe String -> List ( String, String )
+backgroundImageStyles animate loadedBackdrop =
+    let
+        img =
+            loadedBackdrop
+                |> Maybe.map (\i -> "url(/images/Background/" ++ i ++ ")")
+                |> Maybe.withDefault "none"
+    in
+        [ ( "animation"
+          , if animate then
+                "1s linear 2.5s forwards fadeIn"
+            else
+                "none"
+          )
+        , ( "background-image", img )
+        , ( "background-size", "cover" )
+        , ( "bottom", "-1px" )
+        , ( "left", "-1px" )
+        , ( "opacity"
+          , if animate then
+                "0"
+            else
+                "1"
+          )
+        , ( "position", "fixed" )
+        , ( "right", "-1px" )
+        , ( "top", "-1px" )
+        , ( "z-index"
+          , if animate then
+                "-9"
+            else
+                "-10"
+          )
+
+        --
+        , case loadedBackdrop of
+            Just "1.jpg" ->
+                ( "background-position", "center 30%" )
+
+            _ ->
+                ( "background-position", "center bottom" )
+        ]
 
 
 mainNav : Model -> Node
