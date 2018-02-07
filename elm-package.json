@@ -5,7 +5,7 @@
     "license": "MIT",
     "source-directories": [
         "src/App",
-        "src/Ext",
+        "src/Lib",
         "src/Slave",
         "src/Styles"
     ],

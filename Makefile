@@ -103,7 +103,7 @@ watch-wo-build:
 watch-elm:
 	@watchexec -p \
 		-w $(SRC_DIR)/App \
-		-w $(SRC_DIR)/Ext \
+		-w $(SRC_DIR)/Lib \
 		-w $(SRC_DIR)/Slave \
 		-w $(SRC_DIR)/Styles \
 		-- make elm
