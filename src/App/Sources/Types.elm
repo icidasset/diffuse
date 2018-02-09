@@ -85,3 +85,7 @@ type Form
 
 type alias IsProcessing =
     Maybe (List Source)
+
+
+type alias ViabilityDependencies =
+    { isElectron : Bool }

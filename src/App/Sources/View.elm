@@ -1,6 +1,7 @@
 module Sources.View exposing (..)
 
 import Color
+import Color.Convert
 import Dict
 import Html
 import Html.Attributes
@@ -21,6 +22,7 @@ import Routing.Types exposing (Msg(RedirectTo))
 import Sources.Services as Services
 import Sources.Services.Dropbox as Dropbox
 import Sources.Types as Sources exposing (..)
+import Sources.Utils exposing (isViable)
 import Types as TopLevel exposing (Msg(..))
 
 
@@ -60,8 +62,8 @@ entry page model =
             lazySpread3
                 pageIndex
                 model.sources.collection
-                model.sources.isProcessing
-                model.sources.processingErrors
+                ( model.sources.isProcessing, model.sources.processingErrors )
+                { isElectron = model.isElectron }
 
         New ->
             lazySpread3
@@ -82,8 +84,12 @@ entry page model =
 -- {Page} Index
 
 
-pageIndex : List Source -> IsProcessing -> List ( SourceId, String ) -> Node
-pageIndex sources isProcessing processingErrors =
+pageIndex :
+    List Source
+    -> ( IsProcessing, List ( SourceId, String ) )
+    -> ViabilityDependencies
+    -> Node
+pageIndex sources ( isProcessing, processingErrors ) viabilityDependencies =
     column
         Zed
         [ height fill ]
@@ -152,6 +158,8 @@ pageIndex sources isProcessing processingErrors =
                     List.map
                         (\s ->
                             ( s
+                            , s
+                                |> isViable viabilityDependencies
                             , isProcessing
                                 |> Maybe.andThen (List.find (.id >> (==) s.id))
                                 |> Maybe.map (always True)
@@ -180,15 +188,22 @@ pageIndex sources isProcessing processingErrors =
         ]
 
 
-renderSource : Int -> ( Source, Bool, Maybe String ) -> ( String, Node )
-renderSource index ( source, isProcessing, processingError ) =
+renderSource : Int -> ( Source, Bool, Bool, Maybe String ) -> ( String, Node )
+renderSource index ( source, sourceIsViable, isProcessing, processingError ) =
     let
         key =
             toString index
     in
         ( key
         , listItem
-            [ attribute "rel" key ]
+            [ attribute "rel" key
+            , inlineStyle
+                (if sourceIsViable then
+                    []
+                 else
+                    [ ( "color", Color.Convert.colorToCssRgb colors.base04 ) ]
+                )
+            ]
             [ el
                 Zed
                 [ width fill ]
@@ -222,24 +237,33 @@ renderSource index ( source, isProcessing, processingError ) =
 
                 -- Enabled/Disabled
                 --
-                , el
-                    WithoutLineHeight
-                    [ source
-                        |> ToggleSource
-                        |> SourcesMsg
-                        |> onClick
+                , if not sourceIsViable then
+                    el
+                        WithoutLineHeight
+                        [ attribute "title" "Disabled (not available on this platform)" ]
+                        (16
+                            |> Icons.not_interested colors.base04
+                            |> html
+                        )
+                  else
+                    el
+                        WithoutLineHeight
+                        [ source
+                            |> ToggleSource
+                            |> SourcesMsg
+                            |> onClick
 
-                    --
-                    , if source.enabled then
-                        attribute "title" "Enabled (click to disable)"
-                      else
-                        attribute "title" "Disabled (click to enable)"
-                    ]
-                    (if source.enabled then
-                        html (Icons.check colorDerivatives.text 16)
-                     else
-                        html (Icons.not_interested colorDerivatives.text 16)
-                    )
+                        --
+                        , if source.enabled then
+                            attribute "title" "Enabled (click to disable)"
+                          else
+                            attribute "title" "Disabled (click to enable)"
+                        ]
+                        (if source.enabled then
+                            html (Icons.check colorDerivatives.text 16)
+                         else
+                            html (Icons.not_interested colorDerivatives.text 16)
+                        )
 
                 -- Settings
                 --

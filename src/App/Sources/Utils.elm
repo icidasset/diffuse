@@ -37,18 +37,25 @@ setProperSourceId model source =
     }
 
 
-updateEnabledSourceIds : List Source -> Cmd TopLevel.Msg
-updateEnabledSourceIds collection =
-    collection
-        |> pickEnableSourceIds
-        |> Tracks.Types.SetEnabledSourceIds
-        |> TopLevel.TracksMsg
-        |> do
+
+-- Viability
 
 
-sourcesHaveUpdated : List Source -> Cmd TopLevel.Msg
-sourcesHaveUpdated updatedCollection =
-    Cmd.batch
-        [ updateEnabledSourceIds updatedCollection
-        , do TopLevel.DebounceStoreUserData
-        ]
+isViable : ViabilityDependencies -> Source -> Bool
+isViable deps source =
+    case source.service of
+        Sources.Types.Local ->
+            deps.isElectron
+
+        _ ->
+            True
+
+
+{-| Some types of sources are only usable on certain platforms.
+Therefor in some situations we need to filter out the unusable ones.
+-}
+viableSourcesOnly : TopLevel.Model -> List Source -> List Source
+viableSourcesOnly model =
+    { isElectron = model.isElectron }
+        |> isViable
+        |> List.filter

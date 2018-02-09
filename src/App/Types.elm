@@ -86,6 +86,7 @@ type Msg
     | FillQueue
     | PlayTrack String
     | ProcessSources
+    | SetEnabledSourceIds (List Sources.Source)
       --
       -- Slave events
     | Extraterrestrial Slave.Types.AlienMsg Slave.Types.AlienResult

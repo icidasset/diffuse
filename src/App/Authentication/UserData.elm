@@ -21,7 +21,7 @@ import Playlists.Types
 import Queue.Types
 import Settings.Types
 import Sources.Types
-import Sources.Utils exposing (pickEnableSourceIds)
+import Sources.Utils exposing (pickEnableSourceIds, viableSourcesOnly)
 import Tracks.Types
 
 
@@ -49,7 +49,7 @@ inwards json model =
             |> (\m -> { m | queue = importQueue m.queue bundle })
             |> (\m -> { m | settings = importSettings m.settings bundle })
             |> (\m -> { m | sources = importSources m.sources bundle })
-            |> (\m -> { m | tracks = importTracks m.tracks bundle })
+            |> (\m -> { m | tracks = importTracks m.tracks bundle model })
 
 
 
@@ -107,8 +107,8 @@ importSources pre ( data, _ ) =
     }
 
 
-importTracks : Tracks.Types.Model -> Bundle -> Tracks.Types.Model
-importTracks pre ( data, obj ) =
+importTracks : Tracks.Types.Model -> Bundle -> TopLevel.Model -> Tracks.Types.Model
+importTracks pre ( data, obj ) model =
     let
         coder =
             decodeSetting obj "tracks"
@@ -120,7 +120,9 @@ importTracks pre ( data, obj ) =
             | collection =
                 Maybe.withDefault [] data.tracks |> (\l -> { col | untouched = l })
             , enabledSourceIds =
-                Maybe.withDefault [] data.sources |> pickEnableSourceIds
+                Maybe.withDefault [] data.sources
+                    |> viableSourcesOnly model
+                    |> pickEnableSourceIds
             , favourites =
                 Maybe.withDefault [] data.favourites
             , favouritesOnly =

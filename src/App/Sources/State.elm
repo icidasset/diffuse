@@ -196,6 +196,10 @@ update msg model =
                     [ sourcesHaveUpdated newCollection ]
 
 
+
+-- 🔥 / Forms
+
+
 editForm : Model -> SourceId -> Model
 editForm model sourceId =
     let
@@ -210,6 +214,18 @@ editForm model sourceId =
 newForm : Model -> Model
 newForm model =
     { model | form = NewForm 1 initialSource }
+
+
+
+-- 🔥 / Other
+
+
+sourcesHaveUpdated : List Source -> Cmd TopLevel.Msg
+sourcesHaveUpdated updatedCollection =
+    Cmd.batch
+        [ do (TopLevel.SetEnabledSourceIds updatedCollection)
+        , do (TopLevel.DebounceStoreUserData)
+        ]
 
 
 
