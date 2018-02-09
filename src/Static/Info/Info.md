@@ -46,14 +46,6 @@ Isotach locates all the music files on the given services, extracts the metadata
 
 There's only one thing you need to do yourself so that your service will work with the application, and that's setting up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) (Cross-Origin Resource Sharing). Here are the instructions you'll need for each service:
 
-#### IPFS
-
-```shell
-ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
-ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
-ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["X-Requested-With", "Range", "Content-Range"]'
-```
-
 #### Amazon S3
 
 ```xml
@@ -73,4 +65,20 @@ ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["X-Request
     <AllowedHeader>Range</AllowedHeader>
 </CORSRule>
 </CORSConfiguration>
+```
+
+#### Dropbox
+
+_Not necessary._
+
+#### Locally
+
+_Not necessary._
+
+#### IPFS
+
+```shell
+ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
+ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
+ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["X-Requested-With", "Range", "Content-Range"]'
 ```
