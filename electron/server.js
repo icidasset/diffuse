@@ -15,7 +15,9 @@ app.get("/local/tree", makeLocalTree)
 
 app.use(express.static(buildDirectory))
 app.use(function(req, res, next) {
-  res.sendFile(`${buildDirectory}/index.html`)
+  if (req.is("html")) {
+    res.sendFile(`${buildDirectory}/index.html`)
+  }
 })
 
 

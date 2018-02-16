@@ -271,7 +271,7 @@ AUTH_SYSTEM.METHOD =
   AUTH_SYSTEM.REMOTE_STORAGE = {
 
     construct() {
-      return construct("remoteStorage").then(w => worker = w);
+      return construct("remote-storage").then(w => worker = w);
     },
 
 

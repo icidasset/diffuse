@@ -1,4 +1,4 @@
-const { app, globalShortcut, ipcMain, BrowserWindow } = require("electron")
+const { app, globalShortcut, ipcMain, shell, BrowserWindow, Menu } = require("electron")
 const server = require("./server")
 
 
@@ -33,6 +33,8 @@ function createWindow() {
     win.webContents.openDevTools()
     win.webContents.session.clearCache(_ => null)
   }
+
+  Menu.setApplicationMenu(menu)
 }
 
 
@@ -63,3 +65,65 @@ ipcMain.on("register-shortcuts", event => {
 app.on("will-quit", () => {
   globalShortcut.unregisterAll()
 })
+
+
+
+// Menu
+
+
+const menuTemplate = [
+  {
+    label: "Edit",
+    submenu: [
+      { role: "undo" },
+      { role: "redo" },
+      { type: "separator" },
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "delete" },
+      { role: "selectall" }
+    ]
+  },
+  {
+    label: "View",
+    submenu: [
+      { role: "reload" },
+      { role: "forcereload" },
+      { role: "toggledevtools" },
+      { type: "separator" },
+      { role: "togglefullscreen" }
+    ]
+  },
+  {
+    role: "window",
+    submenu: [
+      { role: "minimize" },
+      { role: "close" }
+    ]
+  },
+  {
+    role: "help",
+    submenu: [
+      {
+        label: "Report an issue",
+        click() { shell.openExternal("https://github.com/icidasset/isotach/issues") }
+      }
+    ]
+  }
+]
+
+
+if (process.platform === "darwin") {
+   menuTemplate.unshift({
+     label: app.getName(),
+     submenu: [
+       { role: "hide" },
+       { role: "unhide" },
+       { role: "quit" }
+     ]
+   })
+}
+
+
+const menu = Menu.buildFromTemplate(menuTemplate)
