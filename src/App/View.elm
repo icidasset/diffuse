@@ -518,6 +518,9 @@ backgroundImageStyles animate loadedBackdrop =
             Just "1.jpg" ->
                 ( "background-position", "center 30%" )
 
+            Just "9.jpg" ->
+                ( "background-position", "center 68%" )
+
             _ ->
                 ( "background-position", "center bottom" )
         ]
