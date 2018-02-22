@@ -159,16 +159,17 @@ function createAudioElement(environmentalContext, queueItem) {
   const timeUpdateFunc = bind(audioTimeUpdateEvent);
 
   newNode = new window.Audio();
-  newNode.setAttribute("crossorigin", "anonymous");
   newNode.setAttribute("crossOrigin", "anonymous");
+  newNode.setAttribute("crossorigin", "anonymous");
   newNode.setAttribute("preload", "none");
   newNode.setAttribute("src", queueItem.url);
   newNode.setAttribute("rel", queueItem.track.id);
   newNode.setAttribute("data-timestamp", timestampInMilliseconds);
 
+  newNode.crossorigin = "anonymous";
   newNode.volume = 1;
 
-  newNode.addEventListener("error", audioErrorEvent);
+  newNode.addEventListener("error", bind(audioErrorEvent));
   newNode.addEventListener("stalled", bind(audioStalledEvent));
 
   newNode.addEventListener("timeupdate", timeUpdateFunc);
@@ -214,6 +215,13 @@ function audioErrorEvent(event) {
       break;
     case event.target.error.MEDIA_ERR_DECODE:
       console.error("The audio playback was aborted due to a corruption problem or because the video used features your browser did not support.");
+
+      // If this error happens at the end of the track, skip to the next.
+      // NOTE: Weird issue with Chrome
+      if (event.target.duration && (event.target.currentTime / event.target.duration) > 0.975) {
+        console.log("Moving on to the next track.");
+        this.elm.ports.activeQueueItemEnded.send(null);
+      }
       break;
     case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
       console.error("The audio not be loaded, either because the server or network failed or because the format is not supported.");
