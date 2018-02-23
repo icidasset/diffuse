@@ -9,6 +9,7 @@ import Material.Icons.Navigation as Icons
 import Material.Icons.Social as Icons
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
+import Notifications.Types exposing (..)
 import Playlists.Types as Playlists exposing (..)
 import Routing.Types
 import Tracks.Types
@@ -50,7 +51,7 @@ entry page model =
         New ->
             lazySpread
                 pageNew
-                ()
+                model.playlists.newPlaylist
 
 
 
@@ -223,8 +224,8 @@ removeEventOptions =
 -- {Page} new
 
 
-pageNew : () -> Node
-pageNew _ =
+pageNew : Playlist -> Node
+pageNew newPlaylist =
     column
         Zed
         [ height fill ]
@@ -246,50 +247,57 @@ pageNew _ =
         -- Form
         ------------------------------------
         , within
-            [ logoBackdrop, takeOver pageNewForm ]
+            [ logoBackdrop, takeOver (pageNewForm newPlaylist) ]
             (takeOver empty)
         ]
 
 
-pageNewForm : Node
-pageNewForm =
-    column Zed
-        [ center
-        , height fill
-        , onEnterKey (PlaylistsMsg CreateFromForm)
-        , spacing (scaled 8)
-        , verticalCenter
-        , width fill
-        ]
-        [ h2
-            H2
-            []
-            (text "Name your playlist")
-
-        -- Input
-        --
-        , Input.text
-            (Form Input)
+pageNewForm : Playlist -> Node
+pageNewForm newPlaylist =
+    let
+        msg =
+            if String.isEmpty newPlaylist.name then
+                ShowNotification (Error "Can't have a playlist without a name, can we now?")
+            else
+                PlaylistsMsg CreateFromForm
+    in
+        column Zed
             [ center
-            , inputBottomPadding
-            , inputTopPadding
-            , maxWidth (px 420)
+            , height fill
+            , onEnterKey msg
+            , spacing (scaled 8)
+            , verticalCenter
             , width fill
             ]
-            { onChange = PlaylistsMsg << SetNewPlaylistName
-            , value = ""
-            , label =
-                Input.placeholder
-                    { text = "The Classics"
-                    , label = Input.hiddenLabel "Name"
-                    }
-            , options = []
-            }
+            [ h2
+                H2
+                []
+                (text "Name your playlist")
 
-        -- Submit button
-        --
-        , btn
-            Button
-            [ onClick (PlaylistsMsg CreateFromForm) ]
-            (text "Create playlist")
-        ]
+            -- Input
+            --
+            , Input.text
+                (Form Input)
+                [ center
+                , inputBottomPadding
+                , inputTopPadding
+                , maxWidth (px 420)
+                , width fill
+                ]
+                { onChange = PlaylistsMsg << SetNewPlaylistName
+                , value = ""
+                , label =
+                    Input.placeholder
+                        { text = "The Classics"
+                        , label = Input.hiddenLabel "Name"
+                        }
+                , options = []
+                }
+
+            -- Submit button
+            --
+            , btn
+                Button
+                [ onClick msg ]
+                (text "Create playlist")
+            ]

@@ -18,6 +18,7 @@ import Maybe.Extra
 import Mouse
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
+import Notifications.Types
 import Routing.Types exposing (Msg(RedirectTo))
 import Sources.Services as Services
 import Sources.Services.Dropbox as Dropbox
@@ -409,7 +410,12 @@ pageNewStep2 source origin =
                     RoutingMsg (RedirectTo <| Dropbox.authorizationUrl origin source.data)
 
                 _ ->
-                    SourcesMsg (Sources.AssignFormStep 3)
+                    if validateProperties source then
+                        SourcesMsg (Sources.AssignFormStep 3)
+                    else
+                        "I need more data in order to continue"
+                            |> Notifications.Types.Error
+                            |> ShowNotification
     in
         column Zed
             [ height fill
@@ -446,7 +452,12 @@ pageNewStep3 : Source -> Node
 pageNewStep3 source =
     let
         msg =
-            SourcesMsg Sources.SubmitForm
+            if validateProperties source then
+                SourcesMsg Sources.SubmitForm
+            else
+                "I need more data in order to continue"
+                    |> Notifications.Types.Error
+                    |> ShowNotification
     in
         column Zed
             [ center
@@ -569,7 +580,12 @@ pageEditForm : Source -> Node
 pageEditForm source =
     let
         msg =
-            SourcesMsg Sources.SubmitForm
+            if validateProperties source then
+                SourcesMsg Sources.SubmitForm
+            else
+                "I need more data in order to continue"
+                    |> Notifications.Types.Error
+                    |> ShowNotification
     in
         column Zed
             [ height fill
@@ -644,10 +660,23 @@ renderSourceProperties : Source -> List Node
 renderSourceProperties source =
     source.service
         |> Services.properties
-        |> List.filter (\( k, _, _, _ ) -> List.notMember k sourcePropertiesToIgnore)
+        |> List.filter sourcePropertiesFilterer
         |> List.map (propertyRenderer source)
 
 
 sourcePropertiesToIgnore : List String
 sourcePropertiesToIgnore =
     [ "accessToken", "name" ]
+
+
+sourcePropertiesFilterer : ( String, a, b, c ) -> Bool
+sourcePropertiesFilterer ( k, _, _, _ ) =
+    List.notMember k sourcePropertiesToIgnore
+
+
+validateProperties : Source -> Bool
+validateProperties source =
+    source.data
+        |> Dict.toList
+        |> List.filter (\( k, _ ) -> k /= "directoryPath")
+        |> List.all (\( _, v ) -> not <| String.isEmpty v)
