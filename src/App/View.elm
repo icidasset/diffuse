@@ -92,8 +92,7 @@ entryNodes model =
         ------------------------------------
         -- {2} Authentication is required
         ------------------------------------
-        [ mainNav model
-        , loginScreen model
+        [ loginScreen model
         ]
     else
         ------------------------------------
@@ -260,26 +259,50 @@ loadingScreen =
 
 loginScreen : Model -> Node
 loginScreen model =
-    el
+    column
         Zed
-        [ height fill ]
-        (el
-            Zed
-            [ center, verticalCenter ]
-            (column
-                AuthenticationOptions
-                [ paddingXY (scaled 5) (scaled -8) ]
-                [ if not model.isElectron then
-                    authButton Blockstack
-                  else
-                    empty
+        [ height fill
+        , center
+        , verticalCenter
+        ]
+        [ el
+            LogoFull
+            [ height (percent 45)
+            , width (px 190)
+            ]
+            empty
 
-                --
-                , authButton RemoteStorage
-                , authButton Local
+        --
+        , column
+            AuthenticationOptions
+            [ paddingXY (scaled 5) (scaled -8) ]
+            [ if not model.isElectron then
+                authButton Blockstack
+              else
+                empty
+
+            --
+            , authButton RemoteStorage
+            , authButton Local
+            ]
+
+        --
+        , el Zed [ height fill ] empty
+
+        --
+        , let
+            styles =
+                [ ( "color", "white" )
+                , ( "opacity", "0.5" )
+                , ( "font-size", "0.9em" )
                 ]
-            )
-        )
+          in
+            "What is this exactly?"
+                |> italic
+                |> link "/about"
+                |> el Zed [ inlineStyle styles ]
+                |> el Zed [ paddingBottom (scaled 0) ]
+        ]
 
 
 messageScreen : String -> Node

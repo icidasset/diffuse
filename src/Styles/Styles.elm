@@ -1,6 +1,7 @@
 module Styles exposing (Styles(..), styles)
 
 import Color exposing (..)
+import Element.Attributes
 import Style exposing (..)
 import Style.Background as Background
 import Style.Border as Border
@@ -54,6 +55,7 @@ type Styles
     | NestedInsulation
       -- Decorations
     | LogoBackdrop
+    | LogoFull
     | Overlay
       -- Headings
     | H1
@@ -325,6 +327,22 @@ decorations =
             , Style.prop "transform-origin" "left top"
             , Style.prop "width" "100%"
             ]
+        ]
+
+    -----------------------------------
+    -- Logo full
+    -----------------------------------
+    , style LogoFull
+        [ Background.imageWith
+            { src = "/images/diffuse-light.svg"
+            , position = ( 0, 0 )
+            , repeat = Background.noRepeat
+            , size = Background.contain
+            }
+
+        --
+        , Style.prop "background-position" "center"
+        , Style.prop "background-size" "contain"
         ]
 
     -----------------------------------
