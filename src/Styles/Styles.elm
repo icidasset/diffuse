@@ -301,7 +301,7 @@ decorations =
       -- Logo backdrop
       -----------------------------------
       style LogoBackdrop
-        [ Style.opacity 0.0225
+        [ Style.opacity 0.025
         , Style.prop "overflow" "hidden"
 
         --
