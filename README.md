@@ -1,10 +1,10 @@
-# Isotach
+# Diffuse
 
 A music player which connects to your cloud/distributed storage.
 
-![](https://icidasset-public.s3.amazonaws.com/isotach.jpg)
+![](https://icidasset-public.s3.amazonaws.com/diffuse.jpg)
 
-📍 Available at [https://isotach.io/](https://isotach.io/)
+📍 Available at [https://diffuse.is/](https://diffuse.is/)
 
 
 

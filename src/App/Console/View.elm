@@ -76,7 +76,7 @@ nowPlaying activeItem stalled =
                     text "Your internet connection got interrupted, click to resume."
 
                 Nothing ->
-                    text "Isotach"
+                    text "Diffuse"
             )
     else
         el
@@ -103,7 +103,7 @@ nowPlaying activeItem stalled =
                             (text t)
 
                 Nothing ->
-                    text "Isotach"
+                    text "Diffuse"
             )
 
 

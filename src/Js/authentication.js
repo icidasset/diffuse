@@ -186,7 +186,7 @@ AUTH_SYSTEM.METHOD =
 
 (() => {
 
-  let KEY = "isotach.json";
+  let KEY = "diffuse.json";
   let worker;
 
 
@@ -258,7 +258,7 @@ AUTH_SYSTEM.METHOD =
   function setInstance() {
     if (rs) return;
     rs = new RemoteStorage({ cache: false });
-    rs.access.claim("isotach", "rw");
+    rs.access.claim("diffuse", "rw");
   }
 
   function destroyInstance() {

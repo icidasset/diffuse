@@ -107,7 +107,7 @@ const menuTemplate = [
     submenu: [
       {
         label: "Report an issue",
-        click() { shell.openExternal("https://github.com/icidasset/isotach/issues") }
+        click() { shell.openExternal("https://github.com/icidasset/diffuse/issues") }
       }
     ]
   }

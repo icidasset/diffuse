@@ -1,7 +1,7 @@
 importScripts("/vendor/package.js");
 
 
-const KEY = "isotach";
+const KEY = "diffuse";
 
 
 //

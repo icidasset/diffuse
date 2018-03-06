@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "Isotach",
-    "repository": "https://github.com/icidasset/isotach.git",
+    "summary": "Diffuse",
+    "repository": "https://github.com/icidasset/diffuse.git",
     "license": "MIT",
     "source-directories": [
         "src/App",

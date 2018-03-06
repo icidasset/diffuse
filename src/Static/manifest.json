@@ -1,23 +1,23 @@
 {
-  "name": "Isotach",
-  "short_name": "Isotach",
+  "name": "Diffuse",
+  "short_name": "Diffuse",
   "description": "A music player which connects to your cloud/distributed storage",
   "version": "1.0.0",
   "author": "Steven Vandevelde <icid.asset@gmail.com>",
   "icons": [
     {
-      "src": "https://isotach.io/android-chrome-192x192.png?v=QEMQNvk7E3",
+      "src": "https://diffuse.io/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://isotach.io/android-chrome-512x512.png?v=QEMQNvk7E3",
+      "src": "https://diffuse.io/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ],
   "start_url": "/",
-  "theme_color": "#080108",
-  "background_color": "#080108",
+  "theme_color": "#1E191A",
+  "background_color": "#1E191A",
   "display": "standalone"
 }

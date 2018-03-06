@@ -173,7 +173,7 @@ exportView model =
                     var json = JSON.stringify({0}, null, 4);
                     var file = new Blob([json], { type: "application/json" });
                     a.href = window.URL.createObjectURL(file);
-                    a.download = "isotach.json";
+                    a.download = "diffuse.json";
                     """
                     [ Authentication.UserData.outwards model ]
           in

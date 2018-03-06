@@ -10,7 +10,7 @@ importScripts("/version.js");
 
 
 const KEY =
-  "isotach-" + self.VERSION;
+  "diffuse-" + self.VERSION;
 
 
 const exclude =

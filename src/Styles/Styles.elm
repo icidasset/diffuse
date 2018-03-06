@@ -299,16 +299,32 @@ decorations =
       -- Logo backdrop
       -----------------------------------
       style LogoBackdrop
-        [ Style.opacity 0.025
-        , Style.prop "background-position" "-124px 53.75% !important"
+        [ Style.opacity 0.0225
+        , Style.prop "overflow" "hidden"
 
         --
-        , Background.imageWith
-            { src = "/images/icon-dark.svg"
-            , position = ( 0, 0 )
-            , repeat = Background.space
-            , size = Background.cover
-            }
+        , pseudo "after"
+            [ Style.prop "background-position" "-43.5% 98px !important"
+
+            --
+            , Background.imageWith
+                { src = "/images/diffuse__icon-dark.svg"
+                , position = ( 0, 0 )
+                , repeat = Background.space
+                , size = Background.cover
+                }
+
+            --
+            , Style.prop "content" "''"
+            , Style.prop "height" "0"
+            , Style.prop "left" "100%"
+            , Style.prop "padding-top" "100%"
+            , Style.prop "position" "absolute"
+            , Style.prop "top" "0"
+            , Style.prop "transform" "rotate(90deg)"
+            , Style.prop "transform-origin" "left top"
+            , Style.prop "width" "100%"
+            ]
         ]
 
     -----------------------------------

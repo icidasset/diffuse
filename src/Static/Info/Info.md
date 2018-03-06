@@ -6,7 +6,7 @@
 
 ## Which services does it use?
 
-Isotach uses two layers of services, these layers are:
+Diffuse uses two layers of services, these layers are:
 
 1. User layer
 2. Music layer
@@ -37,7 +37,7 @@ This layer connects with the services the user has on which music can be found. 
 
 ## How does it work?
 
-Isotach locates all the music files on the given services, extracts the metadata and then stores it via the user layer (which was explained before).
+Diffuse locates all the music files on the given services, extracts the metadata and then stores it via the user layer (which was explained before).
 
 
 <div id="CORS" />
