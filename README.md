@@ -4,7 +4,7 @@ A music player which connects to your cloud/distributed storage.
 
 ![](https://icidasset-public.s3.amazonaws.com/diffuse.jpg)
 
-📍 Available at [https://diffuse.is/](https://diffuse.is/)
+📍 Available at [https://diffuse.sh/](https://diffuse.sh/)
 
 
 
