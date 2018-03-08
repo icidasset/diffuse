@@ -1,4 +1,4 @@
-# Diffuse
+<strong><img src="src/Static/Images/diffuse-dark.svg" alt="Diffuse" width="158" /></strong>
 
 A music player which connects to your cloud/distributed storage.
 
