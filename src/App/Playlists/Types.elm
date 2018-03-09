@@ -40,6 +40,7 @@ type Msg
     | SetNewPlaylistName String
       -- Modification
     | UpdatePlaylist Playlist
+    | UpdatePlaylistName Playlist
       -- Removal
     | Remove String
     | RemoveTracksByIndex String (List Int)
@@ -61,5 +62,6 @@ type alias Model =
 
 
 type Page
-    = Index
+    = Edit String
+    | Index
     | New

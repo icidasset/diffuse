@@ -1,5 +1,7 @@
 module Routing.Transitions exposing (..)
 
+import Http
+import Playlists.Types
 import Response
 import Routing.Types exposing (..)
 import Sources.State as Sources
@@ -39,6 +41,26 @@ transition routingMsg oldModel response =
 mapModel : Page -> TopLevel.Model -> TopLevel.Model
 mapModel nextPage model =
     case nextPage of
+        --
+        -- When we are going to edit a source,
+        -- set the `newPlaylist` attribute.
+        --
+        Playlists (Playlists.Types.Edit encodedPlaylistName) ->
+            let
+                playlists =
+                    model.playlists
+
+                newPlaylist =
+                    playlists.newPlaylist
+
+                updatedNewPlaylist =
+                    encodedPlaylistName
+                        |> Http.decodeUri
+                        |> Maybe.withDefault ""
+                        |> (\n -> { newPlaylist | name = n })
+            in
+                { model | playlists = { playlists | newPlaylist = updatedNewPlaylist } }
+
         --
         -- When we are going to edit a source,
         -- set the `form` attribute.

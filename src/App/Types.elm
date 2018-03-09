@@ -45,6 +45,7 @@ type Msg
     | RunAlfredAction Int
       -- Context Menu
     | HideContextMenu
+    | ShowPlaylistMenu String Mouse.Position
     | ShowSourceMenu String Mouse.Position
     | ShowTrackContextMenu ( String, Mouse.Position )
       -- Keyboard

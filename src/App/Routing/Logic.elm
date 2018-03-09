@@ -1,5 +1,6 @@
 module Routing.Logic exposing (locationToMessage, locationToPage, isSameBase, pageToHref)
 
+import Http
 import Navigation
 import Playlists.Types as Playlists
 import Queue.Types as Queue
@@ -124,6 +125,9 @@ pageToHref page =
         Playlists Playlists.New ->
             "/playlists/new"
 
+        Playlists (Playlists.Edit name) ->
+            "/playlists/edit/" ++ Http.encodeUri name
+
         Queue Queue.Index ->
             "/queue"
 
@@ -136,11 +140,11 @@ pageToHref page =
         Sources Sources.Index ->
             "/sources"
 
-        Sources (Sources.Edit sourceId) ->
-            "/sources/edit/" ++ sourceId
-
         Sources Sources.New ->
             "/sources/new"
+
+        Sources (Sources.Edit sourceId) ->
+            "/sources/edit/" ++ sourceId
 
         Sources (Sources.NewThroughRedirect service _) ->
             "/sources/new/" ++ (service |> Sources.Services.typeToKey |> String.toLower)
@@ -163,8 +167,8 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map (Sources Sources.Index) (s "sources")
-        , map (Sources << Sources.Edit) (s "sources" </> s "edit" </> string)
         , map (Sources Sources.New) (s "sources" </> s "new")
+        , map (Sources << Sources.Edit) (s "sources" </> s "edit" </> string)
 
         -- Sources ~ Services
         , map
@@ -174,6 +178,7 @@ route =
         -- Playlists
         , map (Playlists Playlists.Index) (s "playlists")
         , map (Playlists Playlists.New) (s "playlists" </> s "new")
+        , map (Playlists << Playlists.Edit) (s "playlists" </> s "edit" </> string)
 
         -- Queue
         , map (Queue Queue.Index) (s "queue")

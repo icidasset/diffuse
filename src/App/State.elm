@@ -46,6 +46,7 @@ import Authentication.UserData
 import Console.Types
 import Playlists.Alfred
 import Playlists.AutoGenerate
+import Playlists.ContextMenu
 import Playlists.Types
 import Queue.Ports
 import Queue.Types
@@ -183,6 +184,15 @@ update msg model =
         ------------------------------------
         HideContextMenu ->
             (!) { model | contextMenu = Nothing } []
+
+        ShowPlaylistMenu playlistName mousePos ->
+            let
+                contextMenu =
+                    mousePos
+                        |> Playlists.ContextMenu.listMenu playlistName
+                        |> Just
+            in
+                (!) { model | contextMenu = contextMenu } []
 
         ShowSourceMenu sourceId mousePos ->
             let
