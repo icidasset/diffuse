@@ -325,7 +325,7 @@ decorations =
             , Style.prop "top" "0"
             , Style.prop "transform" "rotate(90deg)"
             , Style.prop "transform-origin" "left top"
-            , Style.prop "width" "100%"
+            , Style.prop "width" "105vh"
             ]
         ]
 
