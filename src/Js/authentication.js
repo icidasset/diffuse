@@ -75,12 +75,7 @@ const CACHE = {
 
 function afterCacheRetrieval(data) {
   CACHE.isFetching = false;
-
-  app.ports.authenticationEventResult.send({
-    tag: "GET_DATA",
-    data: data,
-    error: null
-  });
+  app.ports.syncCompleted.send(data);
 }
 
 function cache(json, cacheKey) {
@@ -100,10 +95,12 @@ function deconstructCache() {
 }
 
 function retrieveCache(cacheKey) {
-  CACHE.isFetching = true;
-
   return AUTH_SYSTEM.LOCAL.getData(cacheKey).then(cache => {
-    if (!cache) { CACHE.isFetching = false; }
+    if (cache) {
+      CACHE.isFetching = true;
+      app.ports.syncStarted.send(null);
+    }
+
     return cache;
   });
 }
