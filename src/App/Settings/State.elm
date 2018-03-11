@@ -11,10 +11,15 @@ import Types as TopLevel
 
 initialModel : Model
 initialModel =
-    { chosenBackdrop = "7.jpg"
+    { chosenBackdrop = Nothing
     , fadeInLastBackdrop = True
     , loadedBackdrops = []
     }
+
+
+defaultBackdrop : String
+defaultBackdrop =
+    "7.jpg"
 
 
 
@@ -26,8 +31,16 @@ update msg model =
     case msg of
         SetChosenBackdrop filename ->
             (!)
-                { model | chosenBackdrop = filename }
+                { model | chosenBackdrop = Just filename }
                 [ do TopLevel.DebounceStoreUserData ]
+
+        SetDefaultBackdropIfNecessary ->
+            case model.chosenBackdrop of
+                Just _ ->
+                    (!) model []
+
+                Nothing ->
+                    (!) { model | chosenBackdrop = Just defaultBackdrop } []
 
         SetLoadedBackdrop filename ->
             (!)

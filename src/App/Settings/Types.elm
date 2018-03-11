@@ -5,6 +5,7 @@ module Settings.Types exposing (..)
 
 type Msg
     = SetChosenBackdrop String
+    | SetDefaultBackdropIfNecessary
     | SetLoadedBackdrop String
 
 
@@ -13,7 +14,7 @@ type Msg
 
 
 type alias Model =
-    { chosenBackdrop : String
+    { chosenBackdrop : Maybe String
     , fadeInLastBackdrop : Bool
     , loadedBackdrops : List String
     }

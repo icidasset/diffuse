@@ -462,21 +462,26 @@ alfred maybe =
             empty
 
 
-backdropChosen : String -> Node
-backdropChosen chosenBackdrop =
-    let
-        loadingImageDecoder =
-            Settings.Types.SetLoadedBackdrop chosenBackdrop
-                |> SettingsMsg
-                |> Decode.succeed
-    in
-        Html.img
-            [ Html.Attributes.style loadingImageStyles
-            , Html.Attributes.src ("/images/Background/" ++ chosenBackdrop)
-            , Html.Events.on "load" loadingImageDecoder
-            ]
-            []
-            |> html
+backdropChosen : Maybe String -> Node
+backdropChosen maybeChosenBackdrop =
+    case maybeChosenBackdrop of
+        Just chosenBackdrop ->
+            let
+                loadingImageDecoder =
+                    Settings.Types.SetLoadedBackdrop chosenBackdrop
+                        |> SettingsMsg
+                        |> Decode.succeed
+            in
+                Html.img
+                    [ Html.Attributes.style loadingImageStyles
+                    , Html.Attributes.src ("/images/Background/" ++ chosenBackdrop)
+                    , Html.Events.on "load" loadingImageDecoder
+                    ]
+                    []
+                    |> html
+
+        Nothing ->
+            empty
 
 
 backdropLoaded : List String -> Bool -> Node

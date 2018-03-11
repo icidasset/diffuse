@@ -9,6 +9,7 @@ import Json.Encode as Encode
 import Navigation
 import Response.Ext exposing (do)
 import Routing.Types exposing (Page(Index))
+import Settings.Types as Settings
 import Types as TopLevel exposing (AlienEvent)
 import Utils exposing (displayError, displayMessage)
 
@@ -293,7 +294,10 @@ update msg model =
 
 afterwards : Cmd TopLevel.Msg
 afterwards =
-    do TopLevel.HideLoadingScreen
+    Cmd.batch
+        [ do TopLevel.HideLoadingScreen
+        , do (TopLevel.SettingsMsg Settings.SetDefaultBackdropIfNecessary)
+        ]
 
 
 handleError : Model -> String -> ( Model, Cmd TopLevel.Msg )

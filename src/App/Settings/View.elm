@@ -6,6 +6,7 @@ import Material.Icons.Communication as Icons
 import Navigation.Types exposing (..)
 import Navigation.View as Navigation
 import Routing.Types exposing (Page(Abroad))
+import Settings.State exposing (defaultBackdrop)
 import Settings.Types exposing (Msg(..))
 import Types as TopLevel exposing (Model, Msg(..))
 import Variables exposing (scaled)
@@ -82,15 +83,19 @@ entry model =
 
 theForm : Model -> Node
 theForm model =
-    column
-        Zed
-        [ spacing (scaled -10), width (percent 50) ]
-        [ -----------------------------------
-          -- Background image
-          -----------------------------------
-          Layouts.lbl "Background Image"
-        , Layouts.select backgroundImageMsg model.settings.chosenBackdrop backgroundImages
-        ]
+    let
+        chosenBackdrop =
+            Maybe.withDefault defaultBackdrop model.settings.chosenBackdrop
+    in
+        column
+            Zed
+            [ spacing (scaled -10), width (percent 50) ]
+            [ -----------------------------------
+              -- Background image
+              -----------------------------------
+              Layouts.lbl "Background Image"
+            , Layouts.select backgroundImageMsg chosenBackdrop backgroundImages
+            ]
 
 
 backgroundImages : List ( String, String )

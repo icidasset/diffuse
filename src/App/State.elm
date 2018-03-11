@@ -402,15 +402,18 @@ update msg model =
         -- Data out
         --
         StoreUserData ->
-            (!)
-                model
-                [ Authentication.Events.issueWithData
-                    Authentication.Types.StoreData
-                    (model
-                        |> Authentication.UserData.outwards
-                        |> Encode.string
-                    )
-                ]
+            if model.authentication.signedIn then
+                (!)
+                    model
+                    [ Authentication.Events.issueWithData
+                        Authentication.Types.StoreData
+                        (model
+                            |> Authentication.UserData.outwards
+                            |> Encode.string
+                        )
+                    ]
+            else
+                (!) model []
 
         --
         -- Data out / Debounced

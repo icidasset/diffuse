@@ -94,9 +94,12 @@ importSettings pre ( _, obj ) =
     let
         coder =
             decodeSetting obj "application"
+
+        maybeString =
+            Decode.maybe Decode.string
     in
         { pre
-            | chosenBackdrop = coder "backgroundImage" Decode.string pre.chosenBackdrop
+            | chosenBackdrop = coder "backgroundImage" maybeString pre.chosenBackdrop
             , fadeInLastBackdrop = False
         }
 
@@ -244,7 +247,11 @@ encodeSettings model =
     let
         application =
             Encode.object
-                [ ( "backgroundImage", Encode.string model.settings.chosenBackdrop )
+                [ ( "backgroundImage"
+                  , model.settings.chosenBackdrop
+                        |> Maybe.map Encode.string
+                        |> Maybe.withDefault Encode.null
+                  )
                 ]
 
         equalizer =
