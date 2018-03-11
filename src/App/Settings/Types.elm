@@ -14,9 +14,6 @@ type Msg
 
 type alias Model =
     { chosenBackdrop : String
-    , loadedBackdrop : LoadedBackdrop
+    , fadeInLastBackdrop : Bool
+    , loadedBackdrops : List String
     }
-
-
-type alias LoadedBackdrop =
-    { previous : Maybe String, current : Maybe String }

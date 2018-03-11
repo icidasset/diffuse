@@ -72,12 +72,21 @@ type alias InsulationOptions =
 
 entry : Model -> Html Msg
 entry model =
-    [ entryNodes model
+    [ entryNodesWrapped model
     , entryLazyNodes model
     ]
         |> List.concat
         |> column Root (entryAttributes model)
         |> viewport Styles.styles
+
+
+entryNodesWrapped : Model -> List Node
+entryNodesWrapped model =
+    [ column
+        Zed
+        [ height fill ]
+        (entryNodes model)
+    ]
 
 
 entryNodes : Model -> List Node
@@ -132,7 +141,7 @@ entryLazyNodes model =
     in
         [ Element.lazy alfred model.alfred
         , Element.lazy backdropChosen s.chosenBackdrop
-        , Element.lazy backdropLoaded s.loadedBackdrop
+        , Element.lazy2 backdropLoaded s.loadedBackdrops s.fadeInLastBackdrop
         , Element.lazy notifications model.toasties
         , Element.lazy2 overlay model.alfred model.contextMenu
         , Element.lazy ContextMenu.entry model.contextMenu
@@ -470,22 +479,22 @@ backdropChosen chosenBackdrop =
             |> html
 
 
-backdropLoaded : Settings.Types.LoadedBackdrop -> Node
-backdropLoaded { previous, current } =
-    -- TODO: Fade in new background image
-    --
-    column
-        Zed
-        []
-        [ el
-            Zed
-            [ inlineStyle (backgroundImageStyles False previous) ]
-            empty
-        , el
-            Zed
-            [ inlineStyle (backgroundImageStyles False current) ]
-            empty
-        ]
+backdropLoaded : List String -> Bool -> Node
+backdropLoaded loaded fadeInLastBackdrop =
+    let
+        amount =
+            List.length loaded
+
+        indexedMapFn idx item =
+            el
+                Zed
+                [ item
+                    |> backgroundImageStyles fadeInLastBackdrop (idx + 1 < amount)
+                    |> inlineStyle
+                ]
+                empty
+    in
+        column Zed [] (List.indexedMap indexedMapFn loaded)
 
 
 loadingImageStyles : List ( String, String )
@@ -502,17 +511,15 @@ loadingImageStyles =
     ]
 
 
-backgroundImageStyles : Bool -> Maybe String -> List ( String, String )
-backgroundImageStyles animate loadedBackdrop =
+backgroundImageStyles : Bool -> Bool -> String -> List ( String, String )
+backgroundImageStyles fadeInLastBackdrop isPrevious loadedBackdrop =
     let
         img =
-            loadedBackdrop
-                |> Maybe.map (\i -> "url(/images/Background/" ++ i ++ ")")
-                |> Maybe.withDefault "none"
+            "url(/images/Background/" ++ loadedBackdrop ++ ")"
     in
         [ ( "animation"
-          , if animate then
-                "1s linear 2.5s forwards fadeIn"
+          , if not isPrevious && fadeInLastBackdrop then
+                "900ms linear 50ms forwards fadeIn"
             else
                 "none"
           )
@@ -521,27 +528,22 @@ backgroundImageStyles animate loadedBackdrop =
         , ( "bottom", "-1px" )
         , ( "left", "-1px" )
         , ( "opacity"
-          , if animate then
-                "0"
-            else
+          , if isPrevious || not fadeInLastBackdrop then
                 "1"
+            else
+                "0"
           )
         , ( "position", "fixed" )
         , ( "right", "-1px" )
         , ( "top", "-1px" )
         , ( "z-index"
-          , if animate then
-                "-9"
-            else
-                "-10"
+          , "-9"
           )
-
-        --
         , case loadedBackdrop of
-            Just "1.jpg" ->
+            "1.jpg" ->
                 ( "background-position", "center 30%" )
 
-            Just "9.jpg" ->
+            "9.jpg" ->
                 ( "background-position", "center 68%" )
 
             _ ->

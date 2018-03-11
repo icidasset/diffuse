@@ -140,7 +140,8 @@ update msg model =
 
                 newModel =
                     initModel.settings
-                        |> (\s -> { s | loadedBackdrop = model.settings.loadedBackdrop })
+                        |> (\s -> { s | fadeInLastBackdrop = False })
+                        |> (\s -> { s | loadedBackdrops = model.settings.loadedBackdrops })
                         |> (\s -> { initModel | settings = s })
             in
                 (!)
@@ -428,7 +429,11 @@ update msg model =
                 ( debounce, cmd ) =
                     Debounce.update
                         debounceStoreUserDataConfig
-                        (Debounce.takeLast (always <| do StoreUserData))
+                        (StoreUserData
+                            |> do
+                            |> always
+                            |> Debounce.takeLast
+                        )
                         debounceMsg
                         model.storageDebounce
             in
@@ -768,7 +773,7 @@ update msg model =
 
 
 
--- 🔥 / Debounce configurations
+-- 🔥  ~  Debounce configurations
 
 
 debounceStoreUserDataConfig : Debounce.Config Msg

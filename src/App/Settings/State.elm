@@ -1,5 +1,6 @@
 module Settings.State exposing (..)
 
+import List.Extra as List
 import Response.Ext exposing (do)
 import Settings.Types exposing (..)
 import Types as TopLevel
@@ -11,7 +12,8 @@ import Types as TopLevel
 initialModel : Model
 initialModel =
     { chosenBackdrop = "7.jpg"
-    , loadedBackdrop = { previous = Nothing, current = Nothing }
+    , fadeInLastBackdrop = True
+    , loadedBackdrops = []
     }
 
 
@@ -29,7 +31,10 @@ update msg model =
 
         SetLoadedBackdrop filename ->
             (!)
-                { model | loadedBackdrop = loadBackdrop model.loadedBackdrop filename }
+                { model
+                    | fadeInLastBackdrop = True
+                    , loadedBackdrops = loadBackdrop model.loadedBackdrops filename
+                }
                 []
 
 
@@ -37,18 +42,14 @@ update msg model =
 -- 🔥  ~  Loaded backdrop
 
 
-loadBackdrop : LoadedBackdrop -> String -> LoadedBackdrop
+loadBackdrop : List String -> String -> List String
 loadBackdrop state backdrop =
-    let
-        prev =
-            case state.current of
-                Just x ->
-                    if x == backdrop then
-                        state.previous
-                    else
-                        state.current
+    case List.last state of
+        Just lastBackdrop ->
+            if backdrop /= lastBackdrop then
+                state ++ [ backdrop ]
+            else
+                state
 
-                Nothing ->
-                    state.current
-    in
-        { previous = prev, current = Just backdrop }
+        Nothing ->
+            [ backdrop ]

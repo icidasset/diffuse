@@ -97,6 +97,7 @@ importSettings pre ( _, obj ) =
     in
         { pre
             | chosenBackdrop = coder "backgroundImage" Decode.string pre.chosenBackdrop
+            , fadeInLastBackdrop = False
         }
 
 
