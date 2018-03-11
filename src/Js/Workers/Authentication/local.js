@@ -40,7 +40,7 @@ self.onmessage = event => {
   if (!db) return self.postMessage({ action: "NO_DB" });
 
   switch (event.data.action) {
-    case "GET": return get();
+    case "GET": return get(event.data.data);
     case "SET": return set(event.data.data);
   }
 };
@@ -50,9 +50,10 @@ self.onmessage = event => {
 //
 // Get
 
-function get() {
+function get(data) {
+  const key = data.cacheKey ? data.cacheKey : KEY;
   const tra = db.transaction([KEY], "readwrite");
-  const req = tra.objectStore(KEY).get(KEY);
+  const req = tra.objectStore(KEY).get(key);
 
   req.onsuccess = _ => {
     if (req.result) {
@@ -72,10 +73,13 @@ function get() {
 //
 // Set
 
-function set(json) {
-  const buf = stringToArrayBuf(json);
+function set(data) {
+  const jso = data.json
+  const key = data.cacheKey ? data.cacheKey : KEY;
+
+  const buf = stringToArrayBuf(jso);
   const tra = db.transaction([KEY], "readwrite");
-  const req = tra.objectStore(KEY).put(buf, KEY);
+  const req = tra.objectStore(KEY).put(buf, key);
 
   req.onsuccess = () => self.postMessage({ action: "SET_SUCCESS" });
   req.onerror = () => self.postMessage({ action: "SET_FAILURE" });
