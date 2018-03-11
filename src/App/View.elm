@@ -519,7 +519,7 @@ backgroundImageStyles fadeInLastBackdrop isPrevious loadedBackdrop =
     in
         [ ( "animation"
           , if not isPrevious && fadeInLastBackdrop then
-                "900ms linear 50ms forwards fadeIn"
+                "2s ease-in 50ms forwards fadeIn"
             else
                 "none"
           )
