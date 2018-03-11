@@ -12,6 +12,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
 import Notifications.Config
+import Notifications.Types
 import Ports
 import Response exposing (..)
 import Response.Ext as Response exposing (do, doDelayed)
@@ -416,6 +417,27 @@ update msg model =
                 (!) model []
 
         --
+        -- Data syncing
+        -- (ie. dealing with caching)
+        --
+        SyncCompleted result ->
+            result
+                |> Ok
+                |> Authentication.Types.Extraterrestrial Authentication.Types.GetData
+                |> AuthenticationMsg
+                |> do
+                |> List.singleton
+                |> (!) model
+
+        SyncStarted ->
+            "⚡️ Syncing data"
+                |> Notifications.Types.Message
+                |> ShowNotification
+                |> do
+                |> List.singleton
+                |> (!) model
+
+        --
         -- Data out / Debounced
         --
         DebounceStoreUserData ->
@@ -818,6 +840,8 @@ subscriptions model =
         -- Ports
         , Ports.setIsTouchDevice SetIsTouchDevice
         , Ports.slaveEventResult handleSlaveResult
+        , Ports.syncCompleted SyncCompleted
+        , Ports.syncStarted (\_ -> SyncStarted)
 
         -- Children
         , Sub.map AbroadMsg <| Abroad.subscriptions model.abroad

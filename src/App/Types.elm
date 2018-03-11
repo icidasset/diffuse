@@ -64,6 +64,8 @@ type Msg
     | ImportUserData String
     | InsertDemoContent String
     | StoreUserData
+    | SyncCompleted Json.Encode.Value
+    | SyncStarted
     | DebounceStoreUserData
     | DebounceCallbackStoreUserData Debounce.Msg
       --

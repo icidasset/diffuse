@@ -67,6 +67,47 @@ function prompt(question) {
 
 
 //
+// 📦 Caching
+
+const CACHE = {
+  isFetching: false
+};
+
+function afterCacheRetrieval(data) {
+  CACHE.isFetching = false;
+  app.ports.syncCompleted.send(data);
+}
+
+function cache(json, cacheKey) {
+  return AUTH_SYSTEM.LOCAL.storeData(json, cacheKey);
+}
+
+function cacheIsBusy() {
+  return CACHE.isFetching;
+}
+
+function constructCache() {
+  return AUTH_SYSTEM.LOCAL.construct();
+}
+
+function deconstructCache() {
+  return AUTH_SYSTEM.LOCAL.deconstruct();
+}
+
+function retrieveCache(cacheKey) {
+  return AUTH_SYSTEM.LOCAL.getData(cacheKey).then(cache => {
+    if (cache) {
+      CACHE.isFetching = true;
+      app.ports.syncStarted.send(null);
+    }
+
+    return cache;
+  });
+}
+
+
+
+//
 // > Method
 
 const METHOD_KEY =
@@ -135,7 +176,7 @@ AUTH_SYSTEM.METHOD =
     // Data
 
 
-    getData: _ => new Promise((resolve, reject) => {
+    getData: (cacheKey = null) => new Promise((resolve, reject) => {
       const handler = event => {
         switch (event.data.action) {
           case "GET_SUCCESS":   return event.data.data
@@ -149,7 +190,7 @@ AUTH_SYSTEM.METHOD =
 
       doWork(worker, {
         action: "GET",
-        data: null,
+        data: { cacheKey: cacheKey },
         resolve: resolve,
         reject: reject,
         handler: handler
@@ -157,7 +198,7 @@ AUTH_SYSTEM.METHOD =
     }),
 
 
-    storeData: json => new Promise((resolve, reject) => {
+    storeData: (json, cacheKey = null) => new Promise((resolve, reject) => {
       const handler = event => {
         switch (event.data.action) {
           case "SET_SUCCESS":   return resolve();
@@ -168,7 +209,7 @@ AUTH_SYSTEM.METHOD =
 
       doWork(worker, {
         action: "SET",
-        data: json,
+        data: { cacheKey: cacheKey, json: json },
         resolve: resolve,
         reject: reject,
         handler: handler
@@ -251,6 +292,7 @@ AUTH_SYSTEM.METHOD =
 
 (() => {
 
+  let cacheKey = "remoteStorage";
   let rs;
   let worker;
 
@@ -271,13 +313,19 @@ AUTH_SYSTEM.METHOD =
   AUTH_SYSTEM.REMOTE_STORAGE = {
 
     construct() {
-      return construct("remote-storage").then(w => worker = w);
+      const key = "remote-storage";
+
+      return construct(key)
+        .then(w => worker = w)
+        .then(_ => constructCache(key));
     },
 
 
     deconstruct() {
       worker.terminate();
       worker = null;
+
+      deconstructCache();
 
       return Promise.resolve();
     },
@@ -355,23 +403,33 @@ AUTH_SYSTEM.METHOD =
 
 
     getData: _ => new Promise((resolve, reject) => {
-      const handler = event => {
+      const handler = callback => event => {
         switch (event.data.action) {
           case "GET_SUCCESS":   return event.data.data
-                                    ? resolve( event.data.data )
-                                    : resolve( null );
+                                    ? callback( event.data.data )
+                                    : callback( null );
 
           case "GET_FAILURE":   return reject(`Failed to get data, ${event.data.data}.`);
           default:              return reject("Unavailable");
         }
       };
 
-      doWork(worker, {
-        action: "GET",
-        data: { token: rs.remote.token, userAddress: rs.remote.userAddress },
-        resolve: resolve,
-        reject: reject,
-        handler: handler
+      retrieveCache(cacheKey).then(cacheData => {
+        const handlerWithCallback = cacheData
+          ? handler(afterCacheRetrieval)
+          : handler(resolve);
+
+        doWork(worker, {
+          action: "GET",
+          data: { token: rs.remote.token, userAddress: rs.remote.userAddress },
+          resolve: resolve,
+          reject: reject,
+          handler: handlerWithCallback
+        });
+
+        if (cacheData) {
+          resolve(cacheData);
+        }
       });
     }),
 
@@ -385,12 +443,18 @@ AUTH_SYSTEM.METHOD =
         }
       };
 
-      doWork(worker, {
-        action: "SET",
-        data: { json: json, token: rs.remote.token, userAddress: rs.remote.userAddress },
-        resolve: resolve,
-        reject: reject,
-        handler: handler
+      if (cacheIsBusy()) {
+        return resolve();
+      }
+
+      cache(json, cacheKey).then(_ => {
+        doWork(worker, {
+          action: "SET",
+          data: { json: json, token: rs.remote.token, userAddress: rs.remote.userAddress },
+          resolve: resolve,
+          reject: reject,
+          handler: handler
+        });
       });
     })
 
