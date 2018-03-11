@@ -5,26 +5,26 @@
   "author": "Steven Vandevelde <icid.asset@gmail.com>",
   "main": "electron/index.js",
   "devDependencies": {
-    "browserify": "^14.5.0",
-    "electron": "^1.7.11",
-    "electron-builder": "^19.52.1",
+    "browserify": "^16.1.1",
+    "electron": "^1.8.3",
+    "electron-builder": "^20.4.1",
     "elm-doctest": "^0.3.6",
     "netlify-cli": "^1.2.2"
   },
   "dependencies": {
     "1-liners": "^0.4.0",
-    "blockstack": "^0.15.0",
+    "blockstack": "^0.16.0",
     "camelcase": "^4.1.0",
     "elasticlunr": "^0.9.5",
     "expand-home-dir": "0.0.3",
     "express": "^4.16.2",
-    "globby": "^7.1.1",
+    "globby": "^8.0.1",
     "jsmediatags": "^3.8.1",
     "pepjs": "^0.4.3",
     "remotestoragejs": "^1.0.2",
     "serviceworker-cache-polyfill": "^4.0.0",
     "text-encoding": "^0.6.4",
-    "tocca": "^2.0.1",
+    "tocca": "^2.0.3",
     "x0popup": "^0.3.3"
   }
 }
