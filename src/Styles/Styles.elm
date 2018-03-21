@@ -382,6 +382,7 @@ headings =
         , Font.size (scaled -3)
         , Font.uppercase
         , Font.weight 700
+        , Style.prop "align-self" "left"
         ]
 
     -----------------------------------
