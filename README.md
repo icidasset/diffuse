@@ -9,6 +9,13 @@ A music player which connects to your cloud/distributed storage.
 
 
 
+## Versions
+
+🌍 [Web](https://diffuse.sh/)  
+🖥 [Native](https://github.com/icidasset/diffuse/releases)  
+
+
+
 ## Dependencies
 
 - Loads of `Elm`
