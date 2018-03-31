@@ -1,20 +1,20 @@
-module Sources.Services.AmazonS3 exposing (..)
+module Sources.Services.AzureBlob exposing (..)
 
-{-| Amazon S3 Service.
+{-| Microsoft Azure Blob Service.
 
 Resources:
 
-  - <http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html>
+  - <https://docs.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api>
+  - <https://docs.microsoft.com/en-us/rest/api/storageservices/constructing-a-service-sas>
 
 -}
 
 import Date exposing (Date)
 import Dict
 import Http
-import Regex
 import Sources.Pick
-import Sources.Services.AmazonS3.Parser as Parser
-import Sources.Services.AmazonS3.Presign exposing (..)
+import Sources.Services.Azure.Authorization exposing (..)
+import Sources.Services.Azure.BlobParser as Parser
 import Sources.Services.Utils exposing (cleanPath)
 import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (SourceData)
@@ -27,8 +27,7 @@ import Time
 
 defaults =
     { directoryPath = "/"
-    , name = "Music from Amazon S3"
-    , region = "eu-west-1"
+    , name = "Music from Azure Blob Storage"
     }
 
 
@@ -40,11 +39,10 @@ Will be used for the forms.
 -}
 properties : List ( String, String, String, Bool )
 properties =
-    [ ( "accessKey", "Access key", "Fv6EWfLfCcMo", True )
-    , ( "secretKey", "Secret key", "qeNcqiMpgqC8", True )
-    , ( "bucketName", "Bucket name", "music", False )
-    , ( "region", "Region", defaults.region, False )
-    , ( "directoryPath", "Directory", defaults.directoryPath, False )
+    [ ( "accountName", "Account name", "myaccount", False )
+    , ( "accountKey", "Account key", "MXFPDkaN4KBT", True )
+    , ( "container", "Container", "music", False )
+    , ( "directoryPath", "Directory (aka. Prefix)", defaults.directoryPath, False )
     , ( "name", "Label", defaults.name, False )
     ]
 
@@ -54,12 +52,11 @@ properties =
 initialData : SourceData
 initialData =
     Dict.fromList
-        [ ( "accessKey", "" )
-        , ( "bucketName", "" )
+        [ ( "accountName", "" )
+        , ( "accountKey", "" )
+        , ( "container", "" )
         , ( "directoryPath", defaults.directoryPath )
         , ( "name", defaults.name )
-        , ( "region", defaults.region )
-        , ( "secretKey", "" )
         ]
 
 
@@ -75,7 +72,7 @@ We need this to play the track.
 -}
 makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl currentDate srcData method pathToFile =
-    presignedUrl method (Time.second * 86400) [] currentDate srcData pathToFile
+    presignedUrl Blob Read Get 24 currentDate srcData pathToFile
 
 
 
@@ -84,8 +81,8 @@ makeTrackUrl currentDate srcData method pathToFile =
 
 {-| Create a directory tree.
 
-List all the tracks in the bucket.
-Or a specific directory in the bucket.
+List all the tracks in the container.
+Or a specific directory in the container.
 
 -}
 makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
@@ -98,9 +95,7 @@ makeTree srcData marker msg currentDate =
                 |> cleanPath
 
         initialParams =
-            [ ( "list-type", "2" )
-            , ( "max-keys", "1000" )
-            ]
+            []
 
         prefix =
             if String.length directoryPath > 0 then
@@ -111,7 +106,7 @@ makeTree srcData marker msg currentDate =
         continuation =
             case marker of
                 InProgress s ->
-                    [ ( "continuation-token", s ) ]
+                    [ ( "marker", s ) ]
 
                 _ ->
                     []
@@ -120,7 +115,7 @@ makeTree srcData marker msg currentDate =
             initialParams ++ prefix ++ continuation
 
         url =
-            presignedUrl Get (Time.second * 60 * 5) params currentDate srcData "/"
+            presignedUrl Blob List Get 1 currentDate srcData directoryPath
     in
         url
             |> Http.getString

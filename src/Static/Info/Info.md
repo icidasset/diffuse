@@ -82,3 +82,16 @@ ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
 ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
 ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["X-Requested-With", "Range", "Content-Range"]'
 ```
+
+#### Microsoft Azure Storage
+
+```xml
+<Cors>
+  <CorsRule>
+    <AllowedOrigins>*</AllowedOrigins>
+    <AllowedMethods>HEAD,GET</AllowedMethods>
+    <AllowedHeaders>If-Modified-Since,Origin,Range</AllowedHeaders>
+    <ExposedHeaders>Accept-Ranges,Content-Encoding,Content-Length,Content-Range</ExposedHeaders>
+</CorsRule>
+<Cors>
+```

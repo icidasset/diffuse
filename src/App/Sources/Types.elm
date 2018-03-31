@@ -10,6 +10,7 @@ import Tracks.Types exposing (..)
 
 type Service
     = AmazonS3
+    | AzureBlob
     | Dropbox
     | Ipfs
     | Local
