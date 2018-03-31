@@ -12,7 +12,11 @@ A music player which connects to your cloud/distributed storage.
 ## Versions
 
 🌍 [Web](https://diffuse.sh/)  
+Chrome, Firefox, Safari & Edge.
+
 🖥 [Native](https://github.com/icidasset/diffuse/releases)  
+MacOS, Linux & Windows.  
+<small>Unique features: Add music from local filesystem & media-keys support.</small>
 
 
 
