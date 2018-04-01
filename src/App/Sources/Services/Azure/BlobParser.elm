@@ -1,4 +1,4 @@
-module Sources.Services.AmazonS3.Parser exposing (parseTreeResponse, parseErrorResponse)
+module Sources.Services.Azure.BlobParser exposing (parseTreeResponse, parseErrorResponse)
 
 import Sources.Processing.Types exposing (Marker(..), ParsedResponse)
 import Sources.Services.Utils exposing (unescapeXmlEntities)
@@ -21,19 +21,22 @@ parseTreeResponse response _ =
 
         filePaths =
             decodedXml
-                |> tags "Contents"
-                |> collect (tag "Key" string)
+                |> tag "Blobs" (identity >> Ok)
+                |> Result.withDefault Xml.null
+                |> tags "Blob"
+                |> collect (tag "Name" string)
                 |> List.map unescapeXmlEntities
 
         isTruncated =
             decodedXml
-                |> tag "IsTruncated" string
-                |> Result.withDefault ""
+                |> tag "NextMarker" string
+                |> Result.map (String.isEmpty >> not)
+                |> Result.withDefault False
 
         marker =
-            if isTruncated == "true" then
+            if isTruncated then
                 decodedXml
-                    |> tag "NextContinuationToken" string
+                    |> tag "NextMarker" string
                     |> Result.map InProgress
                     |> Result.withDefault TheEnd
             else
