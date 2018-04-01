@@ -1,6 +1,14 @@
-module Sources.Services.Azure.Authorization exposing (Computation(..), StorageMethod(..), presignedUrl)
+module Sources.Services.Azure.Authorization exposing (..)
+
+{-| Resources:
+
+  - <https://docs.microsoft.com/en-us/rest/api/storageservices/constructing-an-account-sas#account-sas-example>
+  - <https://docs.microsoft.com/en-us/rest/api/storageservices/Constructing-a-Service-SAS?redirectedfrom=MSDN>
+
+-}
 
 import Base64
+import BinaryBase64
 import Date exposing (Date)
 import Date.Extra
 import Dict
@@ -8,6 +16,7 @@ import Dict.Ext as Dict
 import SHA
 import Sources.Crypto.Hex as Hex
 import Sources.Crypto.Hmac as Hmac
+import Sources.Crypto.Utils as Utils
 import Sources.Processing.Types exposing (HttpMethod)
 import Sources.Types exposing (SourceData)
 import Sources.Services.Utils as Utils
@@ -69,96 +78,32 @@ presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcDat
                 |> Date.Extra.add Date.Extra.Hour hoursToLive
                 |> Date.Extra.toUtcFormattedString "y-MM-ddTHH:mmZ"
 
-        --
-        comp =
-            case computation of
-                List ->
-                    "list"
-
-                Read ->
-                    ""
-
+        -- {var} Other
         permissions =
             case computation of
                 List ->
-                    "rl"
+                    "l"
 
                 Read ->
                     "r"
-
-        resource =
-            case storageMethod of
-                Blob ->
-                    case computation of
-                        List ->
-                            "c"
-
-                        Read ->
-                            "b"
-
-                File ->
-                    -- TODO
-                    -- "s" for share
-                    -- "f" for file
-                    ""
 
         resourceType =
             storageMethod
                 |> toString
                 |> String.toLower
 
-        version =
-            "2017-07-29"
-
         -- Signature
-        canonicalizedResource =
-            String.join ""
-                [ "/"
-                , resourceType
-                , "/"
-                , accountName
-                , "/"
-                , container
-                , filePath
-                ]
-
-        signatureMessage =
-            -- signedpermissions + "\n" +
-            -- signedstart + "\n" +
-            -- signedexpiry + "\n" +
-            -- canonicalizedresource + "\n" +
-            -- signedidentifier + "\n" +
-            -- signedip + "\n" +
-            -- signedprotocol + "\n" +
-            -- signedversion + "\n" +
-            -- rscc + "\n" +
-            -- rscd + "\n" +
-            -- rsce + "\n" +
-            -- rscl + "\n" +
-            -- rsct
-            [ permissions
-            , ""
-            , expiryTime
-            , canonicalizedResource
-            , ""
-            , ""
-            , ""
-            , version
-            , ""
-            , ""
-            , ""
-            , ""
-            , ""
-            ]
-                |> Debug.log "signatureMessage"
-                |> String.join "\n"
-
-        signature =
-            accountKey
-                |> Base64.decode
-                |> Result.withDefault ""
-                |> Hmac.encrypt64 SHA.sha256sum signatureMessage
-                |> Base64.encode
+        signatureStuff =
+            { accountKey = accountKey
+            , accountName = accountName
+            , expiryTime = expiryTime
+            , permissions = permissions
+            , protocol = "https"
+            , resources = "co"
+            , services = "bf"
+            , startTime = ""
+            , version = "2015-04-05"
+            }
     in
         String.concat
             [ "https://"
@@ -168,16 +113,80 @@ presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcDat
             , ".core.windows.net/"
             , container
             , filePath
-            , "?comp="
-            , Utils.encodeUri comp
+
+            -- Start query params
+            , case computation of
+                List ->
+                    "?restype=container&comp=list"
+
+                Read ->
+                    "?"
+
+            -- Signature things
             , "&sv="
-            , Utils.encodeUri version
-            , "&se="
-            , Utils.encodeUri expiryTime
+            , Utils.encodeUri signatureStuff.version
+            , "&ss="
+            , Utils.encodeUri signatureStuff.services
+            , "&srt="
+            , Utils.encodeUri signatureStuff.resources
             , "&sp="
-            , Utils.encodeUri permissions
-            , "&sr="
-            , Utils.encodeUri resource
+            , Utils.encodeUri signatureStuff.permissions
+            , "&se="
+            , Utils.encodeUri signatureStuff.expiryTime
+            , "&spr="
+            , Utils.encodeUri signatureStuff.protocol
             , "&sig="
-            , Utils.encodeUri signature
+            , Utils.encodeUri (makeSignature signatureStuff)
             ]
+
+
+
+-- Signature
+
+
+type alias SignatureDependencies =
+    { accountKey : String
+    , accountName : String
+    , expiryTime : String
+    , permissions : String
+    , protocol : String
+    , resources : String
+    , services : String
+    , startTime : String
+    , version : String
+    }
+
+
+makeSignature : SignatureDependencies -> String
+makeSignature { accountKey, accountName, expiryTime, permissions, protocol, resources, services, startTime, version } =
+    let
+        message =
+            -- accountname + "\n" +
+            -- signedpermissions + "\n" +
+            -- signedservice + "\n" +
+            -- signedresourcetype + "\n" +
+            -- signedstart + "\n" +
+            -- signedexpiry + "\n" +
+            -- signedIP + "\n" +
+            -- signedProtocol + "\n" +
+            -- signedversion + "\n"
+            [ accountName
+            , permissions
+            , services
+            , resources
+            , startTime
+            , expiryTime
+            , ""
+            , protocol
+            , version
+            ]
+                |> String.join "\n"
+                |> (\str -> str ++ "\n")
+    in
+        accountKey
+            |> BinaryBase64.decode
+            |> Result.withDefault []
+            |> Utils.byteArrayToString
+            |> Hmac.encrypt64 SHA.sha256sum message
+            |> Utils.stringToByteArray
+            |> BinaryBase64.encode

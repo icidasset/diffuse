@@ -21,8 +21,7 @@ parseTreeResponse response _ =
 
         filePaths =
             decodedXml
-                |> tag "Blobs" string
-                |> Result.andThen Xml.decode
+                |> tag "Blobs" (identity >> Ok)
                 |> Result.withDefault Xml.null
                 |> tags "Blob"
                 |> collect (tag "Name" string)
