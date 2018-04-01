@@ -20,6 +20,25 @@ MacOS, Linux & Windows.
 
 
 
+## Integrations
+
+[More info](https://diffuse.sh/about/)
+
+#### User layer
+
+- [Blockstack](https://blockstack.org/)
+- [RemoteStorage](remotestorage.io)
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(ie. anonymous mode)</small>
+
+#### Music layer
+
+- [Amazon S3](https://aws.amazon.com/s3/)
+- [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
+- [Dropbox](https://dropbox.com/)
+- [IPFS](https://ipfs.io/)
+
+
+
 ## Dependencies
 
 - Loads of `Elm`
