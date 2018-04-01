@@ -57,7 +57,7 @@ h1 label =
         H1
         [ inlineStyle [ ( "display", "table" ) ]
         , moveUp 1
-        , paddingBottom (scaled -14)
+        , paddingBottom (scaled -17)
         , paddingLeft (scaled -4)
         , paddingRight (scaled -4)
         , paddingTop (scaled -10)
