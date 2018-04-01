@@ -172,6 +172,12 @@ type alias SignatureDependencies =
     }
 
 
+{-| Make a signature.
+
+    >>> makeSignature { accountKey = "93K17Co74T2lDHk2rA+wmb/avIAS6u6lPnZrk2hyT+9+aov82qNhrcXSNGZCzm9mjd4d75/oxxOr6r1JVpgTLA==", accountName = "tsmatsuzsttest0001", expiryTime = "2016-07-08T04:41:20Z", permissions = "rwdlacup", protocol = "https", resources = "sco", services = "bfqt", startTime = "2016-06-29T04:41:20Z", version = "2015-04-05" }
+    "+XuDjuLE1Sv/FrJTLz8YjsaDukWNTKX7e8G8Ew+5aps="
+
+-}
 makeSignature : SignatureDependencies -> String
 makeSignature { accountKey, accountName, expiryTime, permissions, protocol, resources, services, startTime, version } =
     let
