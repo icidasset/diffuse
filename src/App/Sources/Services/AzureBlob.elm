@@ -5,7 +5,6 @@ module Sources.Services.AzureBlob exposing (..)
 Resources:
 
   - <https://docs.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api>
-  - <https://docs.microsoft.com/en-us/rest/api/storageservices/constructing-a-service-sas>
 
 -}
 
@@ -72,7 +71,7 @@ We need this to play the track.
 -}
 makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl currentDate srcData method pathToFile =
-    presignedUrl Blob Read Get 24 currentDate srcData pathToFile
+    presignedUrl Blob Read Get 24 currentDate srcData pathToFile []
 
 
 
@@ -115,7 +114,7 @@ makeTree srcData marker msg currentDate =
             initialParams ++ prefix ++ continuation
 
         url =
-            presignedUrl Blob List Get 1 currentDate srcData directoryPath
+            presignedUrl Blob List Get 1 currentDate srcData "" params
     in
         url
             |> Http.getString

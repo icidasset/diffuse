@@ -48,8 +48,9 @@ presignedUrl :
     -> Date
     -> SourceData
     -> String
+    -> List ( String, String )
     -> String
-presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcData pathToFile =
+presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcData pathToFile params =
     let
         azure =
             Dict.map (\_ v -> String.trim v) srcData
@@ -92,6 +93,14 @@ presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcDat
                 |> toString
                 |> String.toLower
 
+        resType =
+            case storageMethod of
+                Blob ->
+                    "container"
+
+                File ->
+                    "directory"
+
         -- Signature
         signatureStuff =
             { accountKey = accountKey
@@ -102,7 +111,7 @@ presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcDat
             , resources = "co"
             , services = "bf"
             , startTime = ""
-            , version = "2015-04-05"
+            , version = "2017-04-17"
             }
     in
         String.concat
@@ -115,12 +124,18 @@ presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcDat
             , filePath
 
             -- Start query params
+            , "?"
+            , params
+                |> List.map Utils.makeQueryParam
+                |> String.join "&"
+
+            -- Query params for certain requests
             , case computation of
                 List ->
-                    "?restype=container&comp=list"
+                    "&restype=" ++ resType ++ "&comp=list"
 
-                Read ->
-                    "?"
+                _ ->
+                    ""
 
             -- Signature things
             , "&sv="
