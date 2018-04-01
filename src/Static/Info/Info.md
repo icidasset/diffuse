@@ -29,6 +29,7 @@ You can choose between these services:
 This layer connects with the services the user has on which music can be found. No data is written to these services. You can combine all of the following services:
 
 - [Amazon S3](https://aws.amazon.com/s3/)
+- [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
 - [IPFS](https://ipfs.io/)
 - [Dropbox](https://dropbox.com/)
 - [Blockstack Storage](https://blockstack.org/) <small>(not yet)</small>
