@@ -146,9 +146,15 @@ pageIndex sources ( isProcessing, processingErrors ) viabilityDependencies =
                 Layouts.intro
                     [ text """
                         A source is a place where your music is stored.
+                      """
+                    , html (Html.br [] [])
+                    , text """
                         By connecting a source, the application will scan it
-                        and keep a list of all the music in it. It will not
-                        copy anything.
+                        and keep a list of all the music in it.
+                      """
+                    , html (Html.br [] [])
+                    , text """
+                        It will not copy anything.
                       """
                     ]
 

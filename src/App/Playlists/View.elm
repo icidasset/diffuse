@@ -2,6 +2,7 @@ module Playlists.View exposing (..)
 
 import Color
 import Color.Convert
+import Html
 import Http
 import Json.Decode as Decode
 import List.Extra as List
@@ -118,6 +119,11 @@ pageIndex playlists maybeSelectedPlaylist =
             Zed
             [ paddingXY (scaled 4) 0 ]
             [ Layouts.h1 "Playlists"
+            , Layouts.intro
+                [ text "Playlists are not tied to the sources of its tracks."
+                , html (Html.br [] [])
+                , text "Same goes for favourites."
+                ]
 
             -- Lists
             --
@@ -136,6 +142,7 @@ pageIndex playlists maybeSelectedPlaylist =
                     [ -- Yours
                       --
                       listTitle
+                        { isFirst = True }
                         [ 13
                             |> Icons.person colors.base06
                             |> html
@@ -151,6 +158,7 @@ pageIndex playlists maybeSelectedPlaylist =
                     -- Computed
                     --
                     , listTitle
+                        { isFirst = False }
                         [ 13
                             |> Icons.folder colors.base06
                             |> html
@@ -174,12 +182,17 @@ list =
         []
 
 
-listTitle : List Node -> Node
-listTitle =
+listTitle : { isFirst : Bool } -> List Node -> Node
+listTitle { isFirst } =
     row
         H4
         [ paddingBottom (scaled -6)
-        , paddingTop (scaled 6)
+        , paddingTop
+            (if isFirst then
+                0
+             else
+                scaled 6
+            )
         , spacingXY (scaled -5) 0
         , verticalCenter
         ]
