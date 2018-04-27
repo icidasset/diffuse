@@ -3,9 +3,7 @@ module State exposing (..)
 import Alfred.System
 import Date
 import Debounce
-import Dict
-import Dict.Ext as Dict
-import Json.Decode as Decode exposing (..)
+import Extraterrestrial
 import Json.Encode as Encode
 import Keyboard.Extra as Keyboard
 import List.Extra as List
@@ -768,72 +766,19 @@ update msg model =
         -- Sources
         --
         Extraterrestrial ProcessSourcesCompleted (Ok _) ->
-            model.sources
-                |> (\s -> { model | sources = { s | isProcessing = Nothing } })
-                |> (\m -> ( m, Cmd.none ))
+            Extraterrestrial.processSourcesCompleted model
 
         Extraterrestrial ReportProcessingError (Ok result) ->
-            let
-                err =
-                    Result.withDefault
-                        Dict.empty
-                        (decodeValue (dict string) result)
-
-                errors =
-                    (::)
-                        ( Dict.fetch "sourceId" "BEEP" err, Dict.fetch "message" "BOOP" err )
-                        model.sources.processingErrors
-            in
-                model.sources
-                    |> (\s -> { model | sources = { s | processingErrors = errors } })
-                    |> (\m -> ( m, Cmd.none ))
+            Extraterrestrial.reportProcessingError model result
 
         --
         -- Tracks
         --
         Extraterrestrial AddTracks (Ok result) ->
-            (!)
-                model
-                [ case decodeValue (Decode.list Tracks.Encoding.trackDecoder) result of
-                    Ok tracks ->
-                        tracks
-                            |> Tracks.Types.Add
-                            |> TracksMsg
-                            |> do
-
-                    Err err ->
-                        displayError err
-                ]
+            Extraterrestrial.addTracks model result
 
         Extraterrestrial RemoveTracksByPath (Ok result) ->
-            (!)
-                model
-                [ case decodeValue (dict value) result of
-                    Ok dictionary ->
-                        let
-                            filePaths =
-                                dictionary
-                                    |> Dict.fetch "filePaths" (Encode.list [])
-                                    |> Decode.decodeValue (list string)
-                                    |> Result.withDefault []
-
-                            nonExistantSid =
-                                "BEEP_BOOP"
-
-                            sourceId =
-                                dictionary
-                                    |> Dict.fetch "sourceId" (Encode.string nonExistantSid)
-                                    |> Decode.decodeValue string
-                                    |> Result.withDefault nonExistantSid
-                        in
-                            filePaths
-                                |> Tracks.Types.RemoveByPath sourceId
-                                |> TracksMsg
-                                |> do
-
-                    Err err ->
-                        displayError err
-                ]
+            Extraterrestrial.removeTracksByPath model result
 
         --
         -- Other things

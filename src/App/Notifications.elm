@@ -1,5 +1,8 @@
 module Notifications exposing (..)
 
+{-| Operations on notifications.
+-}
+
 import Notifications.Config exposing (config)
 import Notifications.Types exposing (Notification)
 import Ports
