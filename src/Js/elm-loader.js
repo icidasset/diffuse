@@ -137,6 +137,25 @@ app.ports.authenticationEvent.subscribe(event => {
 });
 
 
+const LOCAL_USER_DATA_KEY = "additional-userdata";
+
+
+app.ports.clearLocalUserData.subscribe(_ => {
+  self.localStorage.removeItem(LOCAL_USER_DATA_KEY);
+});
+
+
+app.ports.retrieveLocalUserData.subscribe(_ => {
+  const data = self.localStorage.getItem(LOCAL_USER_DATA_KEY);
+  app.ports.retrievedLocalUserData.send(data);
+});
+
+
+app.ports.storeLocalUserData.subscribe(data => {
+  self.localStorage.setItem(LOCAL_USER_DATA_KEY, data);
+});
+
+
 
 //
 // > Equalizer

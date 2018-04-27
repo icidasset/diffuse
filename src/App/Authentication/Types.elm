@@ -17,6 +17,11 @@ type Msg
     = Extraterrestrial AlienMsg AlienResult
     | PerformSignIn Method
     | PerformSignOut
+      -- Local User Data
+    | ClearLocalUserData
+    | RetrieveLocalUserData
+    | RetrievedLocalUserData (Maybe String)
+    | StoreLocalUserData String
 
 
 
@@ -69,4 +74,9 @@ type alias UserData =
     , settings : Maybe Json.Encode.Value
     , sources : Maybe (List Sources.Source)
     , tracks : Maybe (List Tracks.Track)
+    }
+
+
+type alias AdditionalUserData =
+    { settings : Maybe Json.Encode.Value
     }

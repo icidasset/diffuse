@@ -79,9 +79,14 @@ initialModel flags initialPage origin =
     , origin = origin
     , screenHeight = flags.screenHeight
     , showLoadingScreen = True
-    , storageDebounce = Debounce.init
-    , timestamp = Date.fromTime 0
     , toasties = Toasty.initialState
+
+    ------------------------------------
+    -- Time
+    ------------------------------------
+    , ludStorageDebounce = Debounce.init
+    , udStorageDebounce = Debounce.init
+    , timestamp = Date.fromTime 0
 
     ------------------------------------
     -- Children
@@ -353,11 +358,7 @@ update msg model =
             in
                 (!)
                     newModel
-                    [ Queue.Ports.toggleRepeat newModel.queue.repeat
-                    , Equalizer.adjustAllKnobs newModel.equalizer
-
-                    --
-                    , ( { tracks | collection = Tracks.Types.emptyCollection }
+                    [ ( { tracks | collection = Tracks.Types.emptyCollection }
                       , tracks.collection
                       )
                         |> Tracks.Types.InitialCollection processSources
@@ -371,6 +372,17 @@ update msg model =
 
                         Nothing ->
                             doDelayed (Time.millisecond * 250) HideLoadingScreen
+                    ]
+
+        ImportLocalUserData json ->
+            let
+                newModel =
+                    Authentication.UserData.inwardsAdditional json model
+            in
+                (!)
+                    newModel
+                    [ Queue.Ports.toggleRepeat newModel.queue.repeat
+                    , Equalizer.adjustAllKnobs newModel.equalizer
                     ]
 
         InsertDemoContent json ->
@@ -416,6 +428,19 @@ update msg model =
             else
                 (!) model []
 
+        StoreLocalUserData ->
+            if model.authentication.signedIn then
+                (!)
+                    model
+                    [ model
+                        |> Authentication.UserData.outwardsAdditional
+                        |> Authentication.Types.StoreLocalUserData
+                        |> AuthenticationMsg
+                        |> do
+                    ]
+            else
+                (!) model []
+
         --
         -- Data syncing
         -- (ie. dealing with caching)
@@ -443,10 +468,10 @@ update msg model =
         DebounceStoreUserData ->
             let
                 ( debounce, cmd ) =
-                    Debounce.push debounceStoreUserDataConfig () model.storageDebounce
+                    Debounce.push debounceStoreUserDataConfig () model.udStorageDebounce
             in
                 (!)
-                    { model | storageDebounce = debounce }
+                    { model | udStorageDebounce = debounce }
                     [ cmd ]
 
         DebounceCallbackStoreUserData debounceMsg ->
@@ -460,10 +485,36 @@ update msg model =
                             |> Debounce.takeLast
                         )
                         debounceMsg
-                        model.storageDebounce
+                        model.udStorageDebounce
             in
                 (!)
-                    { model | storageDebounce = debounce }
+                    { model | udStorageDebounce = debounce }
+                    [ cmd ]
+
+        DebounceStoreLocalUserData ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.push debounceStoreLocalUserDataConfig () model.ludStorageDebounce
+            in
+                (!)
+                    { model | ludStorageDebounce = debounce }
+                    [ cmd ]
+
+        DebounceCallbackStoreLocalUserData debounceMsg ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceStoreLocalUserDataConfig
+                        (StoreLocalUserData
+                            |> do
+                            |> always
+                            |> Debounce.takeLast
+                        )
+                        debounceMsg
+                        model.ludStorageDebounce
+            in
+                (!)
+                    { model | ludStorageDebounce = debounce }
                     [ cmd ]
 
         ------------------------------------
@@ -805,6 +856,13 @@ debounceStoreUserDataConfig : Debounce.Config Msg
 debounceStoreUserDataConfig =
     { strategy = Debounce.later (2.5 * Time.second)
     , transform = DebounceCallbackStoreUserData
+    }
+
+
+debounceStoreLocalUserDataConfig : Debounce.Config Msg
+debounceStoreLocalUserDataConfig =
+    { strategy = Debounce.later (1 * Time.second)
+    , transform = DebounceCallbackStoreLocalUserData
     }
 
 

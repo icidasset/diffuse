@@ -44,30 +44,35 @@ inwards json model =
             )
     in
         model
-            |> (\m -> { m | equalizer = importEqualizer m.equalizer bundle })
             |> (\m -> { m | playlists = importPlaylists m.playlists bundle })
-            |> (\m -> { m | queue = importQueue m.queue bundle })
             |> (\m -> { m | settings = importSettings m.settings bundle })
             |> (\m -> { m | sources = importSources m.sources bundle })
             |> (\m -> { m | tracks = importTracks m.tracks bundle model })
 
 
+type alias AdditionalBundle =
+    ( AdditionalUserData, Decode.Value )
 
---
 
-
-importEqualizer : Equalizer.Types.Model -> Bundle -> Equalizer.Types.Model
-importEqualizer pre ( _, obj ) =
+inwardsAdditional : String -> TopLevel.Model -> TopLevel.Model
+inwardsAdditional json model =
     let
-        coder =
-            decodeSetting obj "equalizer"
+        data =
+            Result.withDefault emptyAdditionalUserData (decodeAdditional json)
+
+        bundle =
+            ( data
+            , data.settings |> Maybe.withDefault Encode.null
+            )
     in
-        { pre
-            | low = coder "low" Decode.float pre.low
-            , mid = coder "mid" Decode.float pre.mid
-            , high = coder "high" Decode.float pre.high
-            , volume = coder "volume" Decode.float pre.volume
-        }
+        model
+            |> (\m -> { m | equalizer = importEqualizer m.equalizer bundle })
+            |> (\m -> { m | queue = importQueue m.queue bundle })
+            |> (\m -> { m | tracks = importTracksAdditional m.tracks bundle model })
+
+
+
+-- 🌖 {1}
 
 
 importPlaylists : Playlists.Types.Model -> Bundle -> Playlists.Types.Model
@@ -75,18 +80,6 @@ importPlaylists pre ( data, _ ) =
     { pre
         | collection = Maybe.withDefault [] data.playlists
     }
-
-
-importQueue : Queue.Types.Model -> Bundle -> Queue.Types.Model
-importQueue pre ( _, obj ) =
-    let
-        coder =
-            decodeSetting obj "queue"
-    in
-        { pre
-            | repeat = coder "repeat" Decode.bool pre.repeat
-            , shuffle = coder "shuffle" Decode.bool pre.shuffle
-        }
 
 
 importSettings : Settings.Types.Model -> Bundle -> Settings.Types.Model
@@ -145,6 +138,61 @@ importTracks pre ( data, obj ) model =
 
 
 
+-- 🌖 {2}
+
+
+importEqualizer : Equalizer.Types.Model -> AdditionalBundle -> Equalizer.Types.Model
+importEqualizer pre ( _, obj ) =
+    let
+        coder =
+            decodeSetting obj "equalizer"
+    in
+        { pre
+            | low = coder "low" Decode.float pre.low
+            , mid = coder "mid" Decode.float pre.mid
+            , high = coder "high" Decode.float pre.high
+            , volume = coder "volume" Decode.float pre.volume
+        }
+
+
+importQueue : Queue.Types.Model -> AdditionalBundle -> Queue.Types.Model
+importQueue pre ( _, obj ) =
+    let
+        coder =
+            decodeSetting obj "queue"
+    in
+        { pre
+            | repeat = coder "repeat" Decode.bool pre.repeat
+            , shuffle = coder "shuffle" Decode.bool pre.shuffle
+        }
+
+
+importTracksAdditional : Tracks.Types.Model -> AdditionalBundle -> TopLevel.Model -> Tracks.Types.Model
+importTracksAdditional pre ( data, obj ) model =
+    let
+        coder =
+            decodeSetting obj "tracks"
+
+        col =
+            pre.collection
+    in
+        { pre
+            | favouritesOnly =
+                coder "favouritesOnly"
+                    Decode.bool
+                    pre.favouritesOnly
+            , searchTerm =
+                coder "searchTerm"
+                    (Decode.maybe Decode.string)
+                    pre.searchTerm
+            , selectedPlaylist =
+                coder "selectedPlaylist"
+                    (Decode.maybe Playlists.decoder)
+                    pre.selectedPlaylist
+        }
+
+
+
 --
 
 
@@ -155,6 +203,12 @@ emptyUserData =
     , settings = Nothing
     , sources = Nothing
     , tracks = Nothing
+    }
+
+
+emptyAdditionalUserData : AdditionalUserData
+emptyAdditionalUserData =
+    { settings = Nothing
     }
 
 
@@ -178,6 +232,18 @@ decoder =
         (Decode.maybe <| Decode.field "tracks" <| Decode.list Tracks.trackDecoder)
 
 
+decodeAdditional : String -> Result String AdditionalUserData
+decodeAdditional =
+    Decode.decodeString additionalDecoder
+
+
+additionalDecoder : Decode.Decoder AdditionalUserData
+additionalDecoder =
+    Decode.map
+        AdditionalUserData
+        (Decode.maybe <| Decode.field "settings" Decode.value)
+
+
 decodeSetting : Decode.Value -> String -> String -> Decode.Decoder x -> x -> x
 decodeSetting value a b decoder fallback =
     let
@@ -199,6 +265,11 @@ decodeSetting value a b decoder fallback =
 outwards : TopLevel.Model -> String
 outwards =
     encode
+
+
+outwardsAdditional : TopLevel.Model -> String
+outwardsAdditional =
+    encodeAdditional
 
 
 
@@ -242,18 +313,9 @@ encode model =
             |> Encode.encode 4
 
 
-encodeSettings : TopLevel.Model -> Encode.Value
-encodeSettings model =
+encodeAdditional : TopLevel.Model -> String
+encodeAdditional model =
     let
-        application =
-            Encode.object
-                [ ( "backgroundImage"
-                  , model.settings.chosenBackdrop
-                        |> Maybe.map Encode.string
-                        |> Maybe.withDefault Encode.null
-                  )
-                ]
-
         equalizer =
             Encode.object
                 [ ( "low", Encode.float model.equalizer.low )
@@ -289,9 +351,29 @@ encodeSettings model =
                   )
                 ]
     in
+        [ ( "equalizer", equalizer )
+        , ( "queue", queue )
+        , ( "tracks", tracks )
+        ]
+            |> Encode.object
+            |> (,) "settings"
+            |> List.singleton
+            |> Encode.object
+            |> Encode.encode 4
+
+
+encodeSettings : TopLevel.Model -> Encode.Value
+encodeSettings model =
+    let
+        application =
+            Encode.object
+                [ ( "backgroundImage"
+                  , model.settings.chosenBackdrop
+                        |> Maybe.map Encode.string
+                        |> Maybe.withDefault Encode.null
+                  )
+                ]
+    in
         Encode.object
             [ ( "application", application )
-            , ( "equalizer", equalizer )
-            , ( "queue", queue )
-            , ( "tracks", tracks )
             ]

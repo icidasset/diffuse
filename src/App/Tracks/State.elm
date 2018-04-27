@@ -157,11 +157,11 @@ update msg model =
         -- > Step 1, set search term
         SetSearchTerm "" ->
             { model | searchTerm = Nothing }
-                |> Response.withAlso storeUserData
+                |> Response.withAlso storeAdditionalUserData
 
         SetSearchTerm value ->
             { model | searchTerm = Just value }
-                |> Response.withAlso storeUserData
+                |> Response.withAlso storeAdditionalUserData
 
         ClearSearch ->
             update
@@ -172,14 +172,14 @@ update msg model =
         Search (Just term) ->
             { model | searchTerm = Just term }
                 |> Response.withCmd (Ports.performSearch term)
-                |> Response.andAlso storeUserData
+                |> Response.andAlso storeAdditionalUserData
 
         Search Nothing ->
             { model | searchResults = Nothing, searchTerm = Nothing }
                 |> Collection.makeParcel
                 |> Collection.reharvest
                 |> Collection.set
-                |> Response.andAlso storeUserData
+                |> Response.andAlso storeAdditionalUserData
                 |> initialImport
 
         DebouncedSearch ->
@@ -237,7 +237,7 @@ update msg model =
                 |> Collection.makeParcel
                 |> Collection.reharvest
                 |> Collection.set
-                |> Response.andAlso storeUserData
+                |> Response.andAlso storeAdditionalUserData
 
         ------------------------------------
         -- Playlists
@@ -249,7 +249,7 @@ update msg model =
                 |> Collection.makeParcel
                 |> Collection.redoBasedOnPlaylist model.selectedPlaylist
                 |> Collection.set
-                |> Response.andAlso storeUserData
+                |> Response.andAlso storeAdditionalUserData
                 |> Response.addCmd (goTo Routing.Types.Index)
 
         ------------------------------------
@@ -448,10 +448,10 @@ processSources _ =
     do TopLevel.ProcessSources
 
 
-storeUserData : Model -> Cmd TopLevel.Msg
-storeUserData model =
+storeAdditionalUserData : Model -> Cmd TopLevel.Msg
+storeAdditionalUserData model =
     if model.initialImportPerformed then
-        do TopLevel.DebounceStoreUserData
+        do TopLevel.DebounceStoreLocalUserData
     else
         Cmd.none
 

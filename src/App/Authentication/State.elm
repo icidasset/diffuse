@@ -27,7 +27,9 @@ initialModel =
 initialCommand : Cmd TopLevel.Msg
 initialCommand =
     Cmd.batch
-        [ issue MethodGet ]
+        [ issue MethodGet
+        , do (TopLevel.AuthenticationMsg RetrieveLocalUserData)
+        ]
 
 
 
@@ -287,6 +289,21 @@ update msg model =
         Extraterrestrial StoreData (Err err) ->
             handleError model ("Data storage error: " ++ err)
 
+        ClearLocalUserData ->
+            (!) model [ Ports.clearLocalUserData () ]
+
+        RetrieveLocalUserData ->
+            (!) model [ Ports.retrieveLocalUserData () ]
+
+        RetrievedLocalUserData (Just json) ->
+            (!) model [ do (TopLevel.ImportLocalUserData json) ]
+
+        RetrievedLocalUserData Nothing ->
+            (!) model []
+
+        StoreLocalUserData json ->
+            (!) model [ Ports.storeLocalUserData json ]
+
 
 
 -- 🔥 / Utilities
@@ -316,7 +333,9 @@ handleError model error =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Ports.authenticationEventResult handleAlienEvent ]
+        [ Ports.authenticationEventResult handleAlienEvent
+        , Ports.retrievedLocalUserData RetrievedLocalUserData
+        ]
 
 
 handleAlienEvent : AlienEvent -> Msg

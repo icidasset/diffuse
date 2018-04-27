@@ -288,12 +288,12 @@ update msg model =
         ToggleRepeat ->
             model
                 |> (\m -> { m | repeat = not model.repeat })
-                |> (\m -> ($) m [] [ Ports.toggleRepeat m.repeat, storeUserData ])
+                |> (\m -> ($) m [] [ Ports.toggleRepeat m.repeat, storeAdditionalUserData ])
 
         ToggleShuffle ->
             model
                 |> (\m -> { m | shuffle = not model.shuffle })
-                |> (\m -> ($) m [ do Reset ] [ storeUserData ])
+                |> (\m -> ($) m [ do Reset ] [ storeAdditionalUserData ])
 
         ------------------------------------
         -- UI
@@ -317,9 +317,9 @@ update msg model =
                 (!) { model | future = newFuture, itemDnD = dnd } []
 
 
-storeUserData : Cmd TopLevel.Msg
-storeUserData =
-    do TopLevel.DebounceStoreUserData
+storeAdditionalUserData : Cmd TopLevel.Msg
+storeAdditionalUserData =
+    do TopLevel.DebounceStoreLocalUserData
 
 
 nonMissingTracksOnly : List IdentifiedTrack -> List IdentifiedTrack

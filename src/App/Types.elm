@@ -62,12 +62,16 @@ type Msg
     | SetTimestamp Time
       -- User layer
     | ImportUserData String
+    | ImportLocalUserData String
     | InsertDemoContent String
     | StoreUserData
+    | StoreLocalUserData
     | SyncCompleted Json.Encode.Value
     | SyncStarted
     | DebounceStoreUserData
     | DebounceCallbackStoreUserData Debounce.Msg
+    | DebounceStoreLocalUserData
+    | DebounceCallbackStoreLocalUserData Debounce.Msg
       --
       -- Children
     | AbroadMsg Abroad.Msg
@@ -115,7 +119,8 @@ type alias Model =
     ------------------------------------
     -- Time
     ------------------------------------
-    , storageDebounce : Debounce ()
+    , ludStorageDebounce : Debounce ()
+    , udStorageDebounce : Debounce ()
     , timestamp : Date
 
     ------------------------------------
