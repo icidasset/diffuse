@@ -52,6 +52,7 @@ import Tracks.View as Tracks
 
 -- Children, Pt. 2
 
+import Alfred.Types exposing (Alfred)
 import Authentication.Types exposing (Method(..))
 import Navigation.Types exposing (Icon(..))
 import Routing.Types exposing (Page(..))
@@ -139,11 +140,11 @@ entryLazyNodes model =
         s =
             model.settings
     in
-        [ Element.lazy alfred model.alfred
+        [ Element.lazy alfred model.alfred.instance
         , Element.lazy backdropChosen s.chosenBackdrop
         , Element.lazy2 backdropLoaded s.loadedBackdrops s.fadeInLastBackdrop
         , Element.lazy notifications model.toasties
-        , Element.lazy2 overlay model.alfred model.contextMenu
+        , Element.lazy2 overlay model.alfred.instance model.contextMenu
         , Element.lazy ContextMenu.entry model.contextMenu
         ]
 
@@ -378,7 +379,7 @@ authButtonInterior ( icon, label ) =
         |> List.reverse
 
 
-authenticatedNavigation : Page -> Maybe Alfred -> Node
+authenticatedNavigation : Page -> Maybe (Alfred Msg) -> Node
 authenticatedNavigation currentPage maybeAlfred =
     let
         styles =
@@ -452,7 +453,7 @@ unnested =
 -- Shared
 
 
-alfred : Maybe Alfred -> Node
+alfred : Maybe (Alfred Msg) -> Node
 alfred maybe =
     case maybe of
         Just context ->
@@ -569,7 +570,7 @@ mainNav model =
             Element.lazy2
                 authenticatedNavigation
                 model.routing.currentPage
-                model.alfred
+                model.alfred.instance
          else
             Element.lazy
                 unauthenticatedNavigation
@@ -587,7 +588,7 @@ notifications stack =
         |> html
 
 
-overlay : Maybe Alfred -> Maybe ContextMenu -> Node
+overlay : Maybe (Alfred Msg) -> Maybe ContextMenu -> Node
 overlay a b =
     let
         additionalStyles =

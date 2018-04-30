@@ -1,16 +1,17 @@
 module Playlists.Alfred exposing (..)
 
+import Alfred.Types exposing (Alfred, Msg(..))
 import Playlists.Types exposing (Msg(..), Playlist, PlaylistTrack)
 import Playlists.Utils
 import Response.Ext exposing (do)
 import Tracks.Types exposing (Track)
-import Types as TopLevel exposing (Alfred)
+import Types as TopLevel
 
 
 -- 🍯
 
 
-create : List Track -> List Playlist -> Alfred
+create : List Track -> List Playlist -> Alfred TopLevel.Msg
 create tracks playlists =
     let
         playlistNames =
@@ -42,7 +43,8 @@ action tracks maybeSearchTerm maybeResult =
                     |> AddToPlaylist result
                     |> TopLevel.PlaylistsMsg
                     |> do
-                , TopLevel.HideAlfred
+                , Hide
+                    |> TopLevel.AlfredMsg
                     |> do
                 ]
 
@@ -57,7 +59,8 @@ action tracks maybeSearchTerm maybeResult =
                             |> CreateWithTracks searchTerm
                             |> TopLevel.PlaylistsMsg
                             |> do
-                        , TopLevel.HideAlfred
+                        , Hide
+                            |> TopLevel.AlfredMsg
                             |> do
                         ]
 

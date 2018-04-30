@@ -18,6 +18,7 @@ import Time exposing (Time)
 -- Children
 
 import Abroad.Types as Abroad
+import Alfred.Types as Alfred
 import Authentication.Types as Authentication
 import Console.Types as Console
 import Equalizer.Types as Equalizer
@@ -34,15 +35,11 @@ import Tracks.Types as Tracks
 
 type Msg
     = ClickAway
-    | DoAll (List Msg)
     | NoOp
     | Reset
     | SetIsTouchDevice Bool
       -- Alfred
-    | CalculateAlfredResults String
-    | HideAlfred
     | RequestAssistanceForPlaylists (List Tracks.Track)
-    | RunAlfredAction Int
       -- Context Menu
     | HideContextMenu
     | ShowPlaylistMenu String Mouse.Position
@@ -75,6 +72,7 @@ type Msg
       --
       -- Children
     | AbroadMsg Abroad.Msg
+    | AlfredMsg (Alfred.Msg Msg)
     | AuthenticationMsg Authentication.Msg
     | ConsoleMsg Console.Msg
     | EqualizerMsg Equalizer.Msg
@@ -104,8 +102,7 @@ type Msg
 
 
 type alias Model =
-    { alfred : Maybe Alfred
-    , contextMenu : Maybe ContextMenu
+    { contextMenu : Maybe ContextMenu
     , holdingShiftKey : Bool
     , isDevelopmentEnvironment : Bool
     , isElectron : Bool
@@ -127,6 +124,7 @@ type alias Model =
     -- Children
     ------------------------------------
     , abroad : Abroad.Model
+    , alfred : Alfred.Model Msg
     , authentication : Authentication.Model
     , console : Console.Model
     , equalizer : Equalizer.Model
@@ -149,20 +147,6 @@ type ContextMenu
 
 type alias ContextMenuItems =
     List ( Svg Msg, String, Msg )
-
-
-
--- Alfred
-
-
-type alias Alfred =
-    { action : Maybe String -> Maybe String -> Cmd Msg
-    , focus : Int
-    , index : List String
-    , message : String
-    , results : List String
-    , searchTerm : Maybe String
-    }
 
 
 

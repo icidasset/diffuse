@@ -38,7 +38,7 @@ attributes mousePos =
     [ minWidth (px 170)
 
     -- Events
-    , onWithOptions "click" eventOptions (Json.Decode.succeed NoOp)
+    , onWithOptions "click" eventOptions (Json.Decode.succeed HideContextMenu)
 
     -- Position
     , inlineStyle
@@ -67,11 +67,7 @@ itemView ( icon, label, msg ) =
         , verticalCenter
 
         -- Events
-        , HideContextMenu
-            |> List.singleton
-            |> List.append [ msg ]
-            |> DoAll
-            |> onClick
+        , onClick msg
         ]
         [ el WithoutLineHeight [] (html icon)
         , text label

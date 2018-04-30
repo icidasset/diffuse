@@ -1,7 +1,12 @@
 module Alfred.System exposing (..)
 
 import List.Extra as List
-import Types exposing (Alfred)
+import Alfred.Types
+import Types as TopLevel
+
+
+type alias Alfred =
+    Alfred.Types.Alfred TopLevel.Msg
 
 
 calculateResults : String -> Alfred -> Alfred
@@ -28,7 +33,7 @@ calculateResults searchTerm alfred =
             }
 
 
-runAction : Int -> Alfred -> ( Alfred, Cmd Types.Msg )
+runAction : Int -> Alfred -> ( Alfred, Cmd TopLevel.Msg )
 runAction index alfred =
     ( alfred
     , alfred.results
