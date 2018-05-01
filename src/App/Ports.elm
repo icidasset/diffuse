@@ -1,5 +1,12 @@
 port module Ports exposing (..)
 
+{-| In & Out.
+
+💡 Send a message to the javascript world.
+🚽 Receive a message from the javascript world.
+
+-}
+
 import Json.Encode
 import Types exposing (AlienEvent)
 
