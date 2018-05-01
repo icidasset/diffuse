@@ -10,7 +10,6 @@ import Lazy exposing (Lazy)
 import Mouse
 import Notifications.Types exposing (Notification)
 import Slave.Types
-import Svg exposing (Svg)
 import Toasty
 import Time exposing (Time)
 
@@ -21,6 +20,7 @@ import Abroad.Types as Abroad
 import Alfred.Types as Alfred
 import Authentication.Types as Authentication
 import Console.Types as Console
+import ContextMenu.Types as ContextMenu
 import Equalizer.Types as Equalizer
 import Playlists.Types as Playlists
 import Queue.Types as Queue
@@ -38,13 +38,6 @@ type Msg
     | NoOp
     | Reset
     | SetIsTouchDevice Bool
-      -- Alfred
-    | RequestAssistanceForPlaylists (List Tracks.Track)
-      -- Context Menu
-    | HideContextMenu
-    | ShowPlaylistMenu String Mouse.Position
-    | ShowSourceMenu String Mouse.Position
-    | ShowTrackContextMenu ( String, Mouse.Position )
       -- Keyboard
     | KeydownMsg Keyboard.Key
     | KeyupMsg Keyboard.Key
@@ -75,6 +68,7 @@ type Msg
     | AlfredMsg (Alfred.Msg Msg)
     | AuthenticationMsg Authentication.Msg
     | ConsoleMsg Console.Msg
+    | ContextMenuMsg ContextMenu.Msg
     | EqualizerMsg Equalizer.Msg
     | PlaylistsMsg Playlists.Msg
     | QueueMsg Queue.Msg
@@ -91,6 +85,8 @@ type Msg
     | FillQueue
     | PlayTrack String
     | ProcessSources
+    | RequestAssistanceForPlaylists (List Tracks.Track)
+    | ShowTrackContextMenu ( String, Mouse.Position )
     | SetEnabledSourceIds (List Sources.Source)
       --
       -- Slave events
@@ -102,8 +98,7 @@ type Msg
 
 
 type alias Model =
-    { contextMenu : Maybe ContextMenu
-    , holdingShiftKey : Bool
+    { holdingShiftKey : Bool
     , isDevelopmentEnvironment : Bool
     , isElectron : Bool
     , isHTTPS : Bool
@@ -127,6 +122,7 @@ type alias Model =
     , alfred : Alfred.Model Msg
     , authentication : Authentication.Model
     , console : Console.Model
+    , contextMenu : ContextMenu.Model Msg
     , equalizer : Equalizer.Model
     , playlists : Playlists.Model
     , queue : Queue.Model
@@ -135,18 +131,6 @@ type alias Model =
     , sources : Sources.Model
     , tracks : Tracks.Model
     }
-
-
-
--- Context Menu
-
-
-type ContextMenu
-    = ContextMenu ContextMenuItems Mouse.Position
-
-
-type alias ContextMenuItems =
-    List ( Svg Msg, String, Msg )
 
 
 

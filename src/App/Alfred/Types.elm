@@ -6,8 +6,8 @@ import Keyboard.Extra as Keyboard
 -- Messages
 
 
-type Msg parent
-    = Assign (Alfred parent)
+type Msg msg
+    = Assign (Alfred msg)
     | CalculateResults String
     | Hide
     | RunAction Int
@@ -19,8 +19,8 @@ type Msg parent
 -- Model
 
 
-type alias Model parentMsg =
-    { instance : Maybe (Alfred parentMsg)
+type alias Model msg =
+    { instance : Maybe (Alfred msg)
     }
 
 

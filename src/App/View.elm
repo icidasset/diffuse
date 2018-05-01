@@ -54,6 +54,7 @@ import Tracks.View as Tracks
 
 import Alfred.Types exposing (Alfred)
 import Authentication.Types exposing (Method(..))
+import ContextMenu.Types exposing (ContextMenu)
 import Navigation.Types exposing (Icon(..))
 import Routing.Types exposing (Page(..))
 import Settings.Types
@@ -144,8 +145,8 @@ entryLazyNodes model =
         , Element.lazy backdropChosen s.chosenBackdrop
         , Element.lazy2 backdropLoaded s.loadedBackdrops s.fadeInLastBackdrop
         , Element.lazy notifications model.toasties
-        , Element.lazy2 overlay model.alfred.instance model.contextMenu
-        , Element.lazy ContextMenu.entry model.contextMenu
+        , Element.lazy2 overlay model.alfred.instance model.contextMenu.instance
+        , Element.lazy ContextMenu.entry model.contextMenu.instance
         ]
 
 
@@ -588,7 +589,7 @@ notifications stack =
         |> html
 
 
-overlay : Maybe (Alfred Msg) -> Maybe ContextMenu -> Node
+overlay : Maybe (Alfred Msg) -> Maybe (ContextMenu Msg) -> Node
 overlay a b =
     let
         additionalStyles =

@@ -2,6 +2,7 @@ module Sources.View exposing (..)
 
 import Color
 import Color.Convert
+import ContextMenu.Types exposing (Msg(ShowSourceMenu))
 import Dict
 import Html
 import Html.Attributes
@@ -277,7 +278,8 @@ renderSource index ( source, sourceIsViable, isProcessing, processingError ) =
                 , el
                     WithoutLineHeight
                     [ Mouse.position
-                        |> Decode.map (TopLevel.ShowSourceMenu source.id)
+                        |> Decode.map (ShowSourceMenu source.id)
+                        |> Decode.map (TopLevel.ContextMenuMsg)
                         |> onWithOptions
                             "click"
                             { stopPropagation = True
