@@ -96,3 +96,14 @@ ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["X-Request
 </CorsRule>
 <Cors>
 ```
+
+
+<div id="UI" />
+
+### UI
+
+The user interface should be self explanatory, but there are a few "hidden" features:
+
+- You can select multiple tracks using the SHIFT key and then add that selection
+  to the queue or a playlist by right clicking on the selection (desktop only).
+- You can reorder playlist tracks with drag-and-drop.

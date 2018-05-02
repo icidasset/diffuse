@@ -620,6 +620,7 @@ tableItemClasses identifiers draggingOver =
         , ( "tracks__tableRow--isMissing", identifiers.isMissing )
         , ( "tracks__tableRow--isNotMissing", not identifiers.isMissing )
         , ( "tracks__tableRow--isNowPlaying", identifiers.isNowPlaying )
+        , ( "tracks__tableRow--isSelected", identifiers.isSelected )
         , ( "tracks__tableRow--draggingOver", draggingOver )
         ]
 
