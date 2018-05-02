@@ -25,12 +25,12 @@ type Model subject
 
 
 
---🎒
+-- 🎒
 
 
 itemHooks : (Msg subject -> wrap) -> subject -> List (Html.Attribute wrap)
 itemHooks wrap subject =
-    [ on "mousedown" (Decode.succeed <| wrap <| Start subject)
+    [ on "mousedown" (whenLeftMouseButton <| wrap <| Start subject)
     , on "longtap" (Decode.succeed <| wrap <| Start subject)
 
     --
@@ -48,6 +48,24 @@ containerHooks : (Msg subject -> wrap) -> List (Html.Attribute wrap)
 containerHooks wrap =
     [ on "pointerup" (Decode.succeed <| wrap <| End)
     ]
+
+
+whenLeftMouseButton : msg -> Decode.Decoder msg
+whenLeftMouseButton msg =
+    let
+        -- See the following link for the integer values:
+        -- https://developer.mozilla.org/en-US/docs/Web/Events/mousedown
+        buttonHandler int =
+            case int of
+                1 ->
+                    Decode.succeed msg
+
+                _ ->
+                    Decode.fail "The left-mouse button was not used"
+    in
+        Decode.int
+            |> Decode.field "buttons"
+            |> Decode.andThen buttonHandler
 
 
 

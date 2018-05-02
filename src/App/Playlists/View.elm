@@ -2,6 +2,7 @@ module Playlists.View exposing (..)
 
 import Color
 import Color.Convert
+import ContextMenu.Types exposing (Msg(ShowPlaylistMenu))
 import Html
 import Http
 import Json.Decode as Decode
@@ -237,7 +238,8 @@ renderPlaylist maybeSelectedPlaylist playlist =
                 el
                     WithoutLineHeight
                     [ Mouse.position
-                        |> Decode.map (TopLevel.ShowPlaylistMenu playlist.name)
+                        |> Decode.map (ShowPlaylistMenu playlist.name)
+                        |> Decode.map (TopLevel.ContextMenuMsg)
                         |> onWithOptions
                             "click"
                             { stopPropagation = True

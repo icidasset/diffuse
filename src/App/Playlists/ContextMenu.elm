@@ -1,16 +1,17 @@
 module Playlists.ContextMenu exposing (..)
 
 import Color
+import ContextMenu.Types exposing (..)
 import Material.Icons.Action as Icons
 import Material.Icons.Editor as Icons
 import Mouse
 import Playlists.Types exposing (..)
 import Routing.Types
-import Types exposing (..)
+import Types as TopLevel exposing (..)
 import Variables exposing (colorDerivatives)
 
 
-listMenu : String -> Mouse.Position -> ContextMenu
+listMenu : String -> Mouse.Position -> ContextMenu TopLevel.Msg
 listMenu playlistName =
     ContextMenu
         [ -- Edit

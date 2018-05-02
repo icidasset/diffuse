@@ -1,14 +1,16 @@
 module ContextMenu.View exposing (entry)
 
 import ContextMenu.Styles exposing (Styles(..))
+import ContextMenu.Types exposing (..)
 import Element exposing (..)
 import Element.Attributes exposing (..)
 import Element.Events exposing (onClick, onWithOptions)
+import Element.Types exposing (..)
 import Json.Decode
 import Mouse exposing (Position)
 import Styles exposing (Styles(..))
 import Svg exposing (Svg)
-import Types exposing (ContextMenu, Msg(..))
+import Types as TopLevel exposing (Msg(ContextMenuMsg))
 import Variables exposing (scaled)
 import Variations exposing (Variations)
 
@@ -16,10 +18,10 @@ import Variations exposing (Variations)
 -- 🍯
 
 
-entry : Maybe Types.ContextMenu -> Element Styles.Styles Variations Msg
+entry : Maybe (ContextMenu TopLevel.Msg) -> Node
 entry m =
     case m of
-        Just (Types.ContextMenu items mousePos) ->
+        Just (ContextMenu.Types.ContextMenu items mousePos) ->
             column
                 (Styles.ContextMenu Container)
                 (attributes mousePos)
@@ -33,12 +35,12 @@ entry m =
 -- 🐝
 
 
-attributes : Position -> List (Element.Attribute Variations Msg)
+attributes : Position -> List Attr
 attributes mousePos =
     [ minWidth (px 170)
 
     -- Events
-    , onWithOptions "click" eventOptions (Json.Decode.succeed NoOp)
+    , onWithOptions "click" eventOptions (Json.Decode.succeed <| ContextMenuMsg <| Hide)
 
     -- Position
     , inlineStyle
@@ -57,7 +59,7 @@ eventOptions =
     }
 
 
-itemView : ( Svg Msg, String, Msg ) -> Element Styles.Styles Variations Msg
+itemView : ( Svg TopLevel.Msg, String, TopLevel.Msg ) -> Node
 itemView ( icon, label, msg ) =
     row
         (Styles.ContextMenu Item)
@@ -67,11 +69,7 @@ itemView ( icon, label, msg ) =
         , verticalCenter
 
         -- Events
-        , HideContextMenu
-            |> List.singleton
-            |> List.append [ msg ]
-            |> DoAll
-            |> onClick
+        , onClick msg
         ]
         [ el WithoutLineHeight [] (html icon)
         , text label

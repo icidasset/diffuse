@@ -1,5 +1,6 @@
 module Alfred.View exposing (entry)
 
+import Alfred.Types as Types exposing (Msg(..))
 import Json.Decode as Json
 import Types as TopLevel
 
@@ -25,11 +26,14 @@ import Styles exposing (Styles(Alfred, Zed))
 -- 🍯
 
 
-entry : TopLevel.Alfred -> Node
+entry : Types.Alfred TopLevel.Msg -> Node
 entry context =
     column
         (Alfred Container)
-        [ onEnterKey (TopLevel.RunAlfredAction context.focus)
+        [ context.focus
+            |> RunAction
+            |> TopLevel.AlfredMsg
+            |> onEnterKey
 
         --
         , center
@@ -66,7 +70,7 @@ entry context =
                 [ paddingXY (scaled 1) (scaled 0)
                 , paddingBottom (scaled -1)
                 ]
-                { onChange = TopLevel.CalculateAlfredResults
+                { onChange = CalculateResults >> TopLevel.AlfredMsg
                 , value = ""
                 , label = placeholder { text = "Type to search", label = hiddenLabel "Search" }
                 , options = [ focusOnLoad ]
@@ -110,7 +114,7 @@ resultView : Int -> Int -> String -> Node
 resultView focus idx result =
     el
         (Alfred ResultItem)
-        [ idx |> TopLevel.RunAlfredAction |> onClick
+        [ idx |> RunAction |> TopLevel.AlfredMsg |> onClick
         , paddingXY (scaled -2) (scaled -5)
         , vary Active (focus == idx)
         ]

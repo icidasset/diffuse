@@ -1,5 +1,6 @@
 module Tracks.ContextMenu exposing (..)
 
+import ContextMenu.Types exposing (..)
 import Material.Icons.Action as Icons
 import Material.Icons.Editor as Icons
 import Mouse
@@ -8,11 +9,11 @@ import Playlists.Utils
 import Queue.Types
 import Tracks.Types exposing (..)
 import Tracks.Utils
-import Types exposing (..)
+import Types as TopLevel exposing (..)
 import Variables exposing (colorDerivatives)
 
 
-trackMenu : Tracks.Types.Model -> Maybe String -> List IdentifiedTrack -> Mouse.Position -> ContextMenu
+trackMenu : Tracks.Types.Model -> Maybe String -> List IdentifiedTrack -> Mouse.Position -> ContextMenu TopLevel.Msg
 trackMenu model lastModifiedPlaylist identifiedTracks =
     let
         tracks =
@@ -54,7 +55,7 @@ trackMenu model lastModifiedPlaylist identifiedTracks =
 -- Actions
 
 
-defaultPlaylistActions : List Track -> Maybe String -> ContextMenuItems
+defaultPlaylistActions : List Track -> Maybe String -> ContextMenuItems TopLevel.Msg
 defaultPlaylistActions tracks lastModifiedPlaylist =
     case lastModifiedPlaylist of
         Just playlistName ->
@@ -79,7 +80,7 @@ defaultPlaylistActions tracks lastModifiedPlaylist =
             ]
 
 
-queueActions : List IdentifiedTrack -> ContextMenuItems
+queueActions : List IdentifiedTrack -> ContextMenuItems TopLevel.Msg
 queueActions identifiedTracks =
     case identifiedTracks of
         [ a ] ->

@@ -1,5 +1,8 @@
 module Layouts exposing (..)
 
+{-| Prebuilt HTML structures and the like.
+-}
+
 import Color exposing (Color)
 import Color.Convert
 import Element exposing (..)
