@@ -113,6 +113,10 @@
   opacity: 0.25;
 }
 
+.tracks__tableRow--isSelected .tracks__tableFavouriteColumn--isFavourite {
+  opacity: 1;
+}
+
 
 
 /* 🏓  –  Table  –  Columns  –  Other */
