@@ -12,6 +12,7 @@ import Sources.Types exposing (..)
 
 import Sources.Services.AmazonS3 as AmazonS3
 import Sources.Services.AzureBlob as AzureBlob
+import Sources.Services.AzureFile as AzureFile
 import Sources.Services.Dropbox as Dropbox
 import Sources.Services.Ipfs as Ipfs
 import Sources.Services.Local as Local
@@ -28,6 +29,9 @@ initialData service =
 
         AzureBlob ->
             AzureBlob.initialData
+
+        AzureFile ->
+            AzureFile.initialData
 
         Dropbox ->
             Dropbox.initialData
@@ -48,6 +52,9 @@ makeTrackUrl service =
         AzureBlob ->
             AzureBlob.makeTrackUrl
 
+        AzureFile ->
+            AzureFile.makeTrackUrl
+
         Dropbox ->
             Dropbox.makeTrackUrl
 
@@ -66,6 +73,9 @@ makeTree service =
 
         AzureBlob ->
             AzureBlob.makeTree
+
+        AzureFile ->
+            AzureFile.makeTree
 
         Dropbox ->
             Dropbox.makeTree
@@ -86,6 +96,9 @@ parseErrorResponse service =
         AzureBlob ->
             AzureBlob.parseErrorResponse
 
+        AzureFile ->
+            AzureFile.parseErrorResponse
+
         Dropbox ->
             Dropbox.parseErrorResponse
 
@@ -104,6 +117,9 @@ parseTreeResponse service =
 
         AzureBlob ->
             AzureBlob.parseTreeResponse
+
+        AzureFile ->
+            AzureFile.parseTreeResponse
 
         Dropbox ->
             Dropbox.parseTreeResponse
@@ -124,6 +140,9 @@ postProcessTree service =
         AzureBlob ->
             AzureBlob.postProcessTree
 
+        AzureFile ->
+            AzureFile.postProcessTree
+
         Dropbox ->
             Dropbox.postProcessTree
 
@@ -142,6 +161,9 @@ properties service =
 
         AzureBlob ->
             AzureBlob.properties
+
+        AzureFile ->
+            AzureFile.properties
 
         Dropbox ->
             Dropbox.properties
@@ -176,6 +198,9 @@ keyToType str =
         "AzureBlob" ->
             AzureBlob
 
+        "AzureFile" ->
+            AzureFile
+
         "Dropbox" ->
             Dropbox
 
@@ -198,6 +223,9 @@ typeToKey service =
         AzureBlob ->
             "AzureBlob"
 
+        AzureFile ->
+            "AzureFile"
+
         Dropbox ->
             "Dropbox"
 
@@ -219,6 +247,7 @@ labels isElectron =
         default =
             [ ( typeToKey AmazonS3, "Amazon S3" )
             , ( typeToKey AzureBlob, "Azure Blob Storage" )
+            , ( typeToKey AzureFile, "Azure File Storage" )
             , ( typeToKey Dropbox, "Dropbox" )
             , ( typeToKey Ipfs, "IPFS" )
             ]

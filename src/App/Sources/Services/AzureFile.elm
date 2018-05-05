@@ -1,10 +1,10 @@
-module Sources.Services.AzureBlob exposing (..)
+module Sources.Services.AzureFile exposing (..)
 
-{-| Microsoft Azure Blob Service.
+{-| Microsoft Azure File Service.
 
 Resources:
 
-  - <https://docs.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api>
+  - <https://docs.microsoft.com/en-us/rest/api/storageservices/file-service-rest-api>
 
 -}
 
@@ -13,7 +13,8 @@ import Dict
 import Http
 import Sources.Pick
 import Sources.Services.Azure.Authorization exposing (..)
-import Sources.Services.Azure.BlobParser as Parser
+import Sources.Services.Azure.FileParser as Parser
+import Sources.Services.Azure.FileMarker as FileMarker exposing (MarkerItem(..))
 import Sources.Services.Utils exposing (cleanPath)
 import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (SourceData)
@@ -26,7 +27,7 @@ import Time
 
 defaults =
     { directoryPath = "/"
-    , name = "Music from Azure Blob Storage"
+    , name = "Music from Azure File Storage"
     }
 
 
@@ -40,7 +41,7 @@ properties : List ( String, String, String, Bool )
 properties =
     [ ( "accountName", "Account name", "myaccount", False )
     , ( "accountKey", "Account key", "MXFPDkaN4KBT", True )
-    , ( "container", "Container", "music", False )
+    , ( "container", "Share name", "music", False )
     , ( "directoryPath", "Directory (aka. Prefix)", defaults.directoryPath, False )
     , ( "name", "Label", defaults.name, False )
     ]
@@ -71,7 +72,7 @@ We need this to play the track.
 -}
 makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl currentDate srcData method pathToFile =
-    presignedUrl Blob Read Get 24 currentDate srcData pathToFile []
+    presignedUrl File Read Get 24 currentDate srcData pathToFile []
 
 
 
@@ -87,22 +88,25 @@ Or a specific directory in the container.
 makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
 makeTree srcData marker msg currentDate =
     let
-        directoryPath =
+        directoryPathFromSrcData =
             srcData
                 |> Dict.get "directoryPath"
                 |> Maybe.withDefault defaults.directoryPath
                 |> cleanPath
 
-        params =
-            case marker of
-                InProgress s ->
-                    [ ( "marker", s ) ]
+        ( directoryPath, params ) =
+            case FileMarker.takeOne marker of
+                Just (Directory directory) ->
+                    (,) directory []
+
+                Just (Param param) ->
+                    (,) param.directory [ ( "marker", param.marker ) ]
 
                 _ ->
-                    []
+                    (,) directoryPathFromSrcData []
 
         url =
-            presignedUrl Blob List Get 1 currentDate srcData directoryPath params
+            presignedUrl File List Get 1 currentDate srcData directoryPath params
     in
         url
             |> Http.getString
