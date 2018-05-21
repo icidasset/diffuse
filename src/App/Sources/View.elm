@@ -4,6 +4,7 @@ import Color
 import Color.Convert
 import ContextMenu.Types exposing (Msg(ShowSourceMenu))
 import Dict
+import Dict.Ext as Dict
 import Html
 import Html.Attributes
 import Json.Decode as Decode
@@ -23,6 +24,7 @@ import Notifications.Types
 import Routing.Types exposing (Msg(RedirectTo))
 import Sources.Services as Services
 import Sources.Services.Dropbox as Dropbox
+import Sources.Services.Google as Google
 import Sources.Types as Sources exposing (..)
 import Sources.Utils exposing (isViable)
 import Types as TopLevel exposing (Msg(..))
@@ -162,6 +164,11 @@ pageIndex sources ( isProcessing, processingErrors ) viabilityDependencies =
             -- Check if sources are processing
             -- and if they have processing errors
             , let
+                sortedSources =
+                    List.sortBy
+                        (\s -> Dict.fetch "name" "" s.data)
+                        sources
+
                 sourcesWithContext =
                     List.map
                         (\s ->
@@ -177,7 +184,7 @@ pageIndex sources ( isProcessing, processingErrors ) viabilityDependencies =
                                 |> Maybe.map (Tuple.second)
                             )
                         )
-                        sources
+                        sortedSources
               in
                 if List.isEmpty sources then
                     -- No sources atm
@@ -416,6 +423,9 @@ pageNewStep2 source origin =
             case source.service of
                 Dropbox ->
                     RoutingMsg (RedirectTo <| Dropbox.authorizationUrl origin source.data)
+
+                Google ->
+                    RoutingMsg (RedirectTo <| Google.authorizationUrl origin source.data)
 
                 _ ->
                     if validateProperties source then
@@ -674,7 +684,7 @@ renderSourceProperties source =
 
 sourcePropertiesToIgnore : List String
 sourcePropertiesToIgnore =
-    [ "accessToken", "name" ]
+    [ "accessToken", "authCode", "name", "refreshToken" ]
 
 
 sourcePropertiesFilterer : ( String, a, b, c ) -> Bool
@@ -686,5 +696,5 @@ validateProperties : Source -> Bool
 validateProperties source =
     source.data
         |> Dict.toList
-        |> List.filter (\( k, _ ) -> k /= "directoryPath")
+        |> List.filter (\( k, _ ) -> k /= "directoryPath" && k /= "folderId")
         |> List.all (\( _, v ) -> not <| String.isEmpty v)

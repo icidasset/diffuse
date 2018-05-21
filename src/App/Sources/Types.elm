@@ -13,6 +13,7 @@ type Service
     | AzureBlob
     | AzureFile
     | Dropbox
+    | Google
     | Ipfs
     | Local
 

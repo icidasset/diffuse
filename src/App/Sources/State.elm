@@ -2,6 +2,7 @@ module Sources.State exposing (..)
 
 import Date
 import Dict
+import Http
 import List.Extra as List
 import Navigation
 import Response.Ext exposing (do)
@@ -144,7 +145,7 @@ update msg model =
                 ns =
                     case model.form of
                         NewForm _ source ->
-                            source
+                            setProperSourceId model source
 
                         EditForm source ->
                             source
@@ -155,7 +156,7 @@ update msg model =
                 newCollection =
                     case model.form of
                         NewForm _ _ ->
-                            (setProperSourceId model source) :: model.collection
+                            source :: model.collection
 
                         EditForm _ ->
                             model.collection
@@ -169,6 +170,11 @@ update msg model =
                     }
                     []
                     [ do TopLevel.ProcessSources
+
+                    --
+                    , sourcesHaveUpdated newCollection
+
+                    -- Change the URL
                     , Navigation.newUrl
                         (case List.length model.collection of
                             0 ->
@@ -177,7 +183,6 @@ update msg model =
                             _ ->
                                 "/sources"
                         )
-                    , sourcesHaveUpdated newCollection
                     ]
 
         ------------------------------------

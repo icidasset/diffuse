@@ -1,13 +1,13 @@
 module Sources.Services.Dropbox.Parser exposing (parseTreeResponse, parseErrorResponse)
 
 import Json.Decode exposing (..)
-import Sources.Processing.Types exposing (Marker(..), ParsedResponse)
+import Sources.Processing.Types exposing (Marker(..), TreeAnswer)
 
 
 -- Tree
 
 
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse response _ =
     let
         hasMore =

@@ -53,7 +53,7 @@ presignedUrl :
 presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcData pathToFile params =
     let
         azure =
-            Dict.map (\_ v -> String.trim v) srcData
+            srcData
 
         accountName =
             Dict.fetchUnknown "accountName" azure

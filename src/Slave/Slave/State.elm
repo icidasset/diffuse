@@ -19,7 +19,7 @@ import Types exposing (AlienEvent)
 
 -- Children
 
-import Sources.Processing.State
+import Sources.Processing.State exposing (defaultOrigin)
 import Sources.Processing.Types
 
 
@@ -62,6 +62,12 @@ update msg model =
                     (!)
                         model
                         [ let
+                            origin =
+                                dictionary
+                                    |> Dict.fetch "origin" (Encode.string defaultOrigin)
+                                    |> Decode.decodeValue Decode.string
+                                    |> Result.withDefault ""
+
                             sources =
                                 dictionary
                                     |> Dict.fetch "sources" (Encode.list [])
@@ -75,7 +81,7 @@ update msg model =
                                     |> Result.withDefault []
                           in
                             tracks
-                                |> Sources.Processing.Types.Process sources
+                                |> Sources.Processing.Types.Process origin sources
                                 |> SourceProcessingMsg
                                 |> do
                         ]

@@ -639,8 +639,9 @@ update msg model =
 
                 data =
                     Encode.object
-                        [ ( "tracks", Encode.list tracks )
+                        [ ( "origin", Encode.string model.origin )
                         , ( "sources", Encode.list sources )
+                        , ( "tracks", Encode.list tracks )
                         ]
 
                 sourcesModel =
@@ -756,6 +757,9 @@ update msg model =
 
         Extraterrestrial ReportProcessingError (Ok result) ->
             Extraterrestrial.reportProcessingError model result
+
+        Extraterrestrial UpdateSourceData (Ok result) ->
+            Extraterrestrial.updateSourceData model result
 
         --
         -- Tracks

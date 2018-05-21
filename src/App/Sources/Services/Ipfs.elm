@@ -13,6 +13,7 @@ import Dict
 import Http
 import Sources.Services.Ipfs.Marker as Marker
 import Sources.Services.Ipfs.Parser as Parser
+import Sources.Services.Utils exposing (noPrep)
 import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (..)
 
@@ -53,31 +54,12 @@ initialData =
 
 
 
--- Track URL
+-- Preparation
 
 
-{-| Create a public url for a file.
-
-We need this to play the track.
-
--}
-makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ hash =
-    let
-        gateway =
-            srcData
-                |> Dict.get "gateway"
-                |> Maybe.withDefault defaults.gateway
-                |> String.foldr
-                    (\char acc ->
-                        if String.isEmpty acc && char == '/' then
-                            acc
-                        else
-                            String.cons char acc
-                    )
-                    ""
-    in
-        gateway ++ "/ipfs/" ++ hash
+prepare : String -> SourceData -> Marker -> Maybe (Http.Request String)
+prepare _ _ _ =
+    Nothing
 
 
 
@@ -86,8 +68,8 @@ makeTrackUrl _ srcData _ hash =
 
 {-| Create a directory tree.
 -}
-makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
-makeTree srcData marker msg _ =
+makeTree : SourceData -> Marker -> Date -> Http.Request String
+makeTree srcData marker _ =
     let
         gateway =
             srcData
@@ -117,14 +99,17 @@ makeTree srcData marker msg _ =
         url =
             gateway ++ "/api/v0/ls?arg=" ++ hash ++ "&encoding=json"
     in
-        url
-            |> Http.getString
-            |> Http.send msg
+        Http.getString url
 
 
 {-| Re-export parser functions.
 -}
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse =
+    noPrep
+
+
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse =
     Parser.parseTreeResponse
 
@@ -146,3 +131,31 @@ parseErrorResponse =
 postProcessTree : List String -> List String
 postProcessTree =
     identity
+
+
+
+-- Track URL
+
+
+{-| Create a public url for a file.
+
+We need this to play the track.
+
+-}
+makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl _ srcData _ hash =
+    let
+        gateway =
+            srcData
+                |> Dict.get "gateway"
+                |> Maybe.withDefault defaults.gateway
+                |> String.foldr
+                    (\char acc ->
+                        if String.isEmpty acc && char == '/' then
+                            acc
+                        else
+                            String.cons char acc
+                    )
+                    ""
+    in
+        gateway ++ "/ipfs/" ++ hash

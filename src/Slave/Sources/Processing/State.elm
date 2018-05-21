@@ -13,6 +13,7 @@ import Sources.Processing.Steps as Steps
 import Sources.Processing.Types exposing (..)
 import Sources.Processing.Utils exposing (..)
 import Sources.Services as Services
+import Sources.Types exposing (Service)
 import Tracks.Encoding
 
 
@@ -21,7 +22,8 @@ import Tracks.Encoding
 
 initialModel : Model
 initialModel =
-    { status = Nothing
+    { origin = defaultOrigin
+    , status = Nothing
     , timestamp = Date.fromTime 0
     }
 
@@ -37,7 +39,7 @@ update msg model =
            If there are no sources, do nothing.
            If there are sources, start processing the first source.
         -}
-        Process sources tracks ->
+        Process origin sources tracks ->
             let
                 processingData =
                     List.map
@@ -57,12 +59,12 @@ update msg model =
                 command =
                     sources
                         |> List.head
-                        |> Maybe.map (Steps.takeFirstStep model.timestamp)
+                        |> Maybe.map (Steps.takeFirstStep origin model.timestamp)
                         |> Maybe.preferSecond (Maybe.map (always Cmd.none) model.status)
                         |> Maybe.withDefault Cmd.none
             in
                 ($)
-                    { model | status = status }
+                    { model | origin = origin, status = status }
                     [ command ]
                     []
 
@@ -73,7 +75,7 @@ update msg model =
         NextInLine ->
             let
                 takeStep =
-                    Steps.takeFirstStep model.timestamp
+                    Steps.takeFirstStep model.origin model.timestamp
 
                 maybe =
                     model.status
@@ -96,7 +98,33 @@ update msg model =
                             [ issue ProcessSourcesCompleted ]
                     )
 
-        {- Phase 1, `makeTree`.
+        {- Phase 1, `prepare`.
+           ie. prepare for processing.
+        -}
+        PrepareStep context (Ok response) ->
+            let
+                ( processingCmd, topLevelCmd ) =
+                    Steps.takePrepareStep context response model.timestamp
+            in
+                ($)
+                    model
+                    [ processingCmd ]
+                    [ topLevelCmd ]
+
+        PrepareStep context (Err err) ->
+            let
+                data =
+                    Encode.object
+                        [ ( "sourceId", Encode.string context.source.id )
+                        , ( "message", Encode.string (publicError context.source.service err) )
+                        ]
+            in
+                ($)
+                    model
+                    [ do NextInLine ]
+                    [ issueWithData ReportProcessingError data ]
+
+        {- Phase 2, `makeTree`.
            ie. make a file list/tree.
         -}
         TreeStep context (Ok response) ->
@@ -106,9 +134,27 @@ update msg model =
                         |> Maybe.andThen List.head
                         |> Maybe.map Tuple.second
                         |> Maybe.withDefault []
+
+                -- The source data might have changed.
+                updatedStatus =
+                    case model.status of
+                        Just list ->
+                            Just
+                                (List.map
+                                    (\( s, tr ) ->
+                                        if s.id == context.source.id then
+                                            ( context.source, tr )
+                                        else
+                                            ( s, tr )
+                                    )
+                                    list
+                                )
+
+                        Nothing ->
+                            Nothing
             in
                 ($)
-                    model
+                    { model | status = updatedStatus }
                     [ Steps.takeTreeStep context response associatedTracks model.timestamp ]
                     []
 
@@ -117,24 +163,10 @@ update msg model =
         --
         TreeStep context (Err err) ->
             let
-                publicError =
-                    case err of
-                        NetworkError ->
-                            "Cannot connect to this source"
-
-                        Timeout ->
-                            "Source did not respond (timeout)"
-
-                        BadStatus response ->
-                            Services.parseErrorResponse context.source.service response.body
-
-                        _ ->
-                            toString err
-
                 data =
                     Encode.object
                         [ ( "sourceId", Encode.string context.source.id )
-                        , ( "message", Encode.string publicError )
+                        , ( "message", Encode.string (publicError context.source.service err) )
                         ]
             in
                 ($)
@@ -163,7 +195,7 @@ update msg model =
             in
                 (!) model [ issueWithData RemoveTracksByPath encodedData ]
 
-        {- Phase 2, `makeTags`.
+        {- Phase 3, `makeTags`.
            ie. get the tags for each file in the file list.
         -}
         TagsStep tagsContext ->
@@ -193,6 +225,35 @@ update msg model =
                         |> Maybe.withDefault (do NextInLine)
             in
                 ($) model [ cmd ] [ insert ]
+
+
+
+-- 🔥  ~  Constants
+
+
+defaultOrigin : String
+defaultOrigin =
+    "origin_not_defined"
+
+
+
+-- 🔥  ~  Error Handling
+
+
+publicError : Service -> Http.Error -> String
+publicError service err =
+    case err of
+        NetworkError ->
+            "Cannot connect to this source"
+
+        Timeout ->
+            "Source did not respond (timeout)"
+
+        BadStatus response ->
+            Services.parseErrorResponse service response.body
+
+        _ ->
+            toString err
 
 
 

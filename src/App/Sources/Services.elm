@@ -4,6 +4,7 @@ module Sources.Services exposing (..)
 -}
 
 import Date exposing (Date)
+import Http
 import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (..)
 
@@ -14,6 +15,7 @@ import Sources.Services.AmazonS3 as AmazonS3
 import Sources.Services.AzureBlob as AzureBlob
 import Sources.Services.AzureFile as AzureFile
 import Sources.Services.Dropbox as Dropbox
+import Sources.Services.Google as Google
 import Sources.Services.Ipfs as Ipfs
 import Sources.Services.Local as Local
 
@@ -35,6 +37,9 @@ initialData service =
 
         Dropbox ->
             Dropbox.initialData
+
+        Google ->
+            Google.initialData
 
         Ipfs ->
             Ipfs.initialData
@@ -58,6 +63,9 @@ makeTrackUrl service =
         Dropbox ->
             Dropbox.makeTrackUrl
 
+        Google ->
+            Google.makeTrackUrl
+
         Ipfs ->
             Ipfs.makeTrackUrl
 
@@ -65,7 +73,7 @@ makeTrackUrl service =
             Local.makeTrackUrl
 
 
-makeTree : Service -> SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
+makeTree : Service -> SourceData -> Marker -> Date -> Http.Request String
 makeTree service =
     case service of
         AmazonS3 ->
@@ -79,6 +87,9 @@ makeTree service =
 
         Dropbox ->
             Dropbox.makeTree
+
+        Google ->
+            Google.makeTree
 
         Ipfs ->
             Ipfs.makeTree
@@ -102,6 +113,9 @@ parseErrorResponse service =
         Dropbox ->
             Dropbox.parseErrorResponse
 
+        Google ->
+            Google.parseErrorResponse
+
         Ipfs ->
             Ipfs.parseErrorResponse
 
@@ -109,7 +123,32 @@ parseErrorResponse service =
             Local.parseErrorResponse
 
 
-parseTreeResponse : Service -> String -> Marker -> ParsedResponse Marker
+parsePreparationResponse : Service -> String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse service =
+    case service of
+        AmazonS3 ->
+            AmazonS3.parsePreparationResponse
+
+        AzureBlob ->
+            AzureBlob.parsePreparationResponse
+
+        AzureFile ->
+            AzureFile.parsePreparationResponse
+
+        Dropbox ->
+            Dropbox.parsePreparationResponse
+
+        Google ->
+            Google.parsePreparationResponse
+
+        Ipfs ->
+            Ipfs.parsePreparationResponse
+
+        Local ->
+            Local.parsePreparationResponse
+
+
+parseTreeResponse : Service -> String -> Marker -> TreeAnswer Marker
 parseTreeResponse service =
     case service of
         AmazonS3 ->
@@ -123,6 +162,9 @@ parseTreeResponse service =
 
         Dropbox ->
             Dropbox.parseTreeResponse
+
+        Google ->
+            Google.parseTreeResponse
 
         Ipfs ->
             Ipfs.parseTreeResponse
@@ -146,11 +188,39 @@ postProcessTree service =
         Dropbox ->
             Dropbox.postProcessTree
 
+        Google ->
+            Google.postProcessTree
+
         Ipfs ->
             Ipfs.postProcessTree
 
         Local ->
             Local.postProcessTree
+
+
+prepare : Service -> String -> SourceData -> Marker -> Maybe (Http.Request String)
+prepare service =
+    case service of
+        AmazonS3 ->
+            AmazonS3.prepare
+
+        AzureBlob ->
+            AzureBlob.prepare
+
+        AzureFile ->
+            AzureFile.prepare
+
+        Dropbox ->
+            Dropbox.prepare
+
+        Google ->
+            Google.prepare
+
+        Ipfs ->
+            Ipfs.prepare
+
+        Local ->
+            Local.prepare
 
 
 properties : Service -> List ( String, String, String, Bool )
@@ -167,6 +237,9 @@ properties service =
 
         Dropbox ->
             Dropbox.properties
+
+        Google ->
+            Google.properties
 
         Ipfs ->
             Ipfs.properties
@@ -204,6 +277,9 @@ keyToType str =
         "Dropbox" ->
             Dropbox
 
+        "Google" ->
+            Google
+
         "Ipfs" ->
             Ipfs
 
@@ -229,6 +305,9 @@ typeToKey service =
         Dropbox ->
             "Dropbox"
 
+        Google ->
+            "Google"
+
         Ipfs ->
             "Ipfs"
 
@@ -249,6 +328,7 @@ labels isElectron =
             , ( typeToKey AzureBlob, "Azure Blob Storage" )
             , ( typeToKey AzureFile, "Azure File Storage" )
             , ( typeToKey Dropbox, "Dropbox" )
+            , ( typeToKey Google, "Google Drive" )
             , ( typeToKey Ipfs, "IPFS" )
             ]
     in
@@ -259,13 +339,16 @@ labels isElectron =
 
 
 {-| Build a `NewForm` from a redirect with a hash.
-Example use-case: Dropbox
+Example use-case: OAuth
 -}
 newFormThroughRedirect : Service -> String -> Form
 newFormThroughRedirect service hash =
     case service of
         Dropbox ->
             NewForm 3 (makeSource Dropbox <| Dropbox.authorizationSourceData hash)
+
+        Google ->
+            NewForm 3 (makeSource Google <| Google.authorizationSourceData hash)
 
         _ ->
             NewForm 3 (makeSource service <| initialData service)

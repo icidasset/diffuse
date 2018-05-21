@@ -3,6 +3,8 @@ module Sources.Services.Utils exposing (..)
 import Maybe.Extra as Maybe
 import Regex exposing (HowMany(All), regex)
 import Sources.Crypto.Hex
+import Sources.Types exposing (SourceData)
+import Sources.Processing.Types exposing (..)
 
 
 {-| Clean a path.
@@ -33,6 +35,15 @@ cleanPath dirtyPath =
 replace : String -> String -> String -> String
 replace needle replacement haystack =
     Regex.replace All (regex needle) (always replacement) haystack
+
+
+
+-- Parsing
+
+
+noPrep : String -> SourceData -> Marker -> PrepationAnswer Marker
+noPrep _ srcData _ =
+    { sourceData = srcData, marker = TheEnd }
 
 
 

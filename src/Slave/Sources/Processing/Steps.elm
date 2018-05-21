@@ -1,6 +1,7 @@
 module Sources.Processing.Steps
     exposing
         ( takeFirstStep
+        , takePrepareStep
         , takeTreeStep
         , takeTagsStep
           --
@@ -25,10 +26,14 @@ module Sources.Processing.Steps
 -}
 
 import Date exposing (Date)
+import Http
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Response.Ext exposing (do)
 import Set
+import Slave.Events
+import Slave.Types exposing (AlienMsg(UpdateSourceData))
+import Sources.Encoding
 import Sources.Services as Services
 import Sources.Processing.Ports as Ports
 import Sources.Processing.Types exposing (..)
@@ -55,20 +60,33 @@ tagsBatchSize =
 -- {public} 1st step
 
 
-takeFirstStep : Date -> Source -> Cmd Msg
-takeFirstStep currentDate source =
+takeFirstStep : String -> Date -> Source -> Cmd Msg
+takeFirstStep origin currentDate source =
     let
         initialContext =
             { filePaths = []
+            , origin = origin
+            , preparationMarker = TheBeginning
             , source = source
             , treeMarker = TheBeginning
             }
     in
-        makeTree initialContext currentDate
+        prepare initialContext currentDate
 
 
 
 -- {public} 2nd step
+
+
+takePrepareStep : Context -> String -> Date -> ( Cmd Msg, Cmd Slave.Types.Msg )
+takePrepareStep context response currentDate =
+    context
+        |> handlePreparationResponse response
+        |> intoPreparationCommands currentDate
+
+
+
+-- {public} 3rd step
 
 
 takeTreeStep : Context -> String -> List Track -> Date -> Cmd Msg
@@ -79,7 +97,7 @@ takeTreeStep context response associatedTracks currentDate =
 
 
 
--- {public} 3rd step
+-- {public} 4th step
 
 
 takeTagsStep : Date -> ContextForTags -> Source -> Maybe (Cmd Msg)
@@ -99,6 +117,82 @@ takeTagsStep currentDate tagsCtx source =
         filesToProcess
             |> List.head
             |> Maybe.map (always (getTags newTagsCtx))
+
+
+
+-- Preparation
+
+
+handlePreparationResponse : String -> Context -> Context
+handlePreparationResponse response context =
+    let
+        answer =
+            Services.parsePreparationResponse
+                context.source.service
+                response
+                context.source.data
+                context.preparationMarker
+
+        source =
+            context.source
+    in
+        { context
+            | preparationMarker = answer.marker
+            , source = { source | data = answer.sourceData }
+        }
+
+
+intoPreparationCommands : Date -> Context -> ( Cmd Msg, Cmd Slave.Types.Msg )
+intoPreparationCommands currentDate context =
+    case context.preparationMarker of
+        TheBeginning ->
+            ( Cmd.none
+            , Cmd.none
+            )
+
+        -- Still preparing,
+        -- carry on.
+        InProgress _ ->
+            ( prepare context currentDate
+            , Cmd.none
+            )
+
+        -- The preparation is completed,
+        -- continue to the next step.
+        TheEnd ->
+            let
+                updatedSource =
+                    context.source
+
+                data =
+                    Sources.Encoding.encode updatedSource
+            in
+                ( -- Make a file tree, the next step.
+                  -- 🚀
+                  makeTree context currentDate
+                  -- Update source data in main `App`.
+                , Slave.Events.issueWithData UpdateSourceData data
+                )
+
+
+prepare : Context -> Date -> Cmd Msg
+prepare context currentDate =
+    let
+        maybePreparationRequest =
+            Services.prepare
+                context.source.service
+                context.origin
+                context.source.data
+                context.preparationMarker
+    in
+        case maybePreparationRequest of
+            Just request ->
+                Http.send (PrepareStep context) request
+
+            Nothing ->
+                -- Some services don't need to prepare for processing.
+                -- 🚀
+                makeTree context currentDate
 
 
 
@@ -153,7 +247,8 @@ intoTreeCommand associatedTracks currentDate context =
                     separate pathsCurrent pathsSourceOfTruth
             in
                 Cmd.batch
-                    [ -- Get tags from tracks
+                    [ -- Get tags from tracks, the next step.
+                      -- 🚀
                       postContext
                         |> (\ctx -> { ctx | filePaths = pathsAdded })
                         |> contextToTagsContext
@@ -171,12 +266,10 @@ intoTreeCommand associatedTracks currentDate context =
 
 
 makeTree : Context -> Date -> Cmd Msg
-makeTree context =
-    Services.makeTree
-        context.source.service
-        context.source.data
-        context.treeMarker
-        (TreeStep context)
+makeTree context currentDate =
+    currentDate
+        |> Services.makeTree context.source.service context.source.data context.treeMarker
+        |> Http.send (TreeStep context)
 
 
 separate : List String -> List String -> ( List String, List String )

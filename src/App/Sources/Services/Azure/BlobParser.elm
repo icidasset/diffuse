@@ -1,6 +1,6 @@
 module Sources.Services.Azure.BlobParser exposing (parseTreeResponse, parseErrorResponse)
 
-import Sources.Processing.Types exposing (Marker(..), ParsedResponse)
+import Sources.Processing.Types exposing (Marker(..), TreeAnswer)
 import Sources.Services.Utils exposing (unescapeXmlEntities)
 import Xml
 import Xml.Encode as Xml
@@ -11,7 +11,7 @@ import Xml.Query exposing (..)
 -- Tree
 
 
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse response _ =
     let
         decodedXml =

@@ -15,7 +15,7 @@ import Sources.Pick
 import Sources.Services.Azure.Authorization exposing (..)
 import Sources.Services.Azure.FileParser as Parser
 import Sources.Services.Azure.FileMarker as FileMarker exposing (MarkerItem(..))
-import Sources.Services.Utils exposing (cleanPath)
+import Sources.Services.Utils exposing (cleanPath, noPrep)
 import Sources.Processing.Types exposing (..)
 import Sources.Types exposing (SourceData)
 import Time
@@ -61,18 +61,12 @@ initialData =
 
 
 
--- Track URL
+-- Preparation
 
 
-{-| Create a public url for a file.
-
-We need this to play the track.
-(!) Creates a presigned url that's valid for 24 hours
-
--}
-makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentDate srcData method pathToFile =
-    presignedUrl File Read Get 24 currentDate srcData pathToFile []
+prepare : String -> SourceData -> Marker -> Maybe (Http.Request String)
+prepare _ _ _ =
+    Nothing
 
 
 
@@ -85,8 +79,8 @@ List all the tracks in the container.
 Or a specific directory in the container.
 
 -}
-makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
-makeTree srcData marker msg currentDate =
+makeTree : SourceData -> Marker -> Date -> Http.Request String
+makeTree srcData marker currentDate =
     let
         directoryPathFromSrcData =
             srcData
@@ -108,14 +102,17 @@ makeTree srcData marker msg currentDate =
         url =
             presignedUrl File List Get 1 currentDate srcData directoryPath params
     in
-        url
-            |> Http.getString
-            |> Http.send msg
+        Http.getString url
 
 
 {-| Re-export parser functions.
 -}
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse =
+    noPrep
+
+
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse =
     Parser.parseTreeResponse
 
@@ -137,3 +134,18 @@ parseErrorResponse =
 postProcessTree : List String -> List String
 postProcessTree =
     Sources.Pick.selectMusicFiles
+
+
+
+-- Track URL
+
+
+{-| Create a public url for a file.
+
+We need this to play the track.
+(!) Creates a presigned url that's valid for 24 hours
+
+-}
+makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl currentDate srcData method pathToFile =
+    presignedUrl File Read Get 24 currentDate srcData pathToFile []
