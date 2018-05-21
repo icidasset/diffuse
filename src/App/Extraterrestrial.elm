@@ -8,6 +8,7 @@ import Dict.Ext as Dict
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode
 import Response.Ext as Response exposing (do)
+import Sources.Encoding
 import Tracks.Encoding
 import Tracks.Types
 import Types as TopLevel exposing (Msg(TracksMsg))
@@ -20,6 +21,33 @@ type alias Response =
 
 
 -- Sources
+
+
+updateSourceData : TopLevel.Model -> Encode.Value -> Response
+updateSourceData model val =
+    let
+        maybeSource =
+            Sources.Encoding.decode val
+
+        newSourcesCollection =
+            case maybeSource of
+                Just source ->
+                    model.sources.collection
+                        |> List.filter (\s -> s.id /= source.id)
+                        |> List.append [ source ]
+
+                Nothing ->
+                    model.sources.collection
+
+        sourcesModel =
+            model.sources
+
+        newSourcesModel =
+            { sourcesModel | collection = newSourcesCollection }
+    in
+        (!)
+            { model | sources = newSourcesModel }
+            [ do (TopLevel.DebounceStoreUserData) ]
 
 
 processSourcesCompleted : TopLevel.Model -> Response

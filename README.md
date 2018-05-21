@@ -36,6 +36,7 @@ MacOS, Linux & Windows.
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
 - [Dropbox](https://dropbox.com/)
+- [Google Drive](https://drive.google.com/)
 - [IPFS](https://ipfs.io/)
 
 

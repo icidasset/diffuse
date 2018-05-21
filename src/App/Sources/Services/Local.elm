@@ -15,6 +15,7 @@ import Json.Encode
 import Slave.Events exposing (..)
 import Sources.Pick
 import Sources.Processing.Types exposing (..)
+import Sources.Services.Utils exposing (noPrep)
 import Sources.Types exposing (SourceData)
 import String.Ext as String
 import Time
@@ -55,24 +56,12 @@ initialData =
 
 
 
--- Track URL
+-- Preparation
 
 
-{-| Create a public url for a file.
-
-We need this to play the track.
-(!) Creates a presigned url that's valid for 24 hours
-
--}
-makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentDate srcData method pathToFile =
-    let
-        dir =
-            srcData
-                |> Dict.fetch "localPath" defaults.localPath
-                |> String.chop "/"
-    in
-        "http://127.0.0.1:44999/local/file?path=" ++ encodeUri (dir ++ "/" ++ pathToFile)
+prepare : String -> SourceData -> Marker -> Maybe (Http.Request String)
+prepare _ _ _ =
+    Nothing
 
 
 
@@ -85,8 +74,8 @@ List all the tracks in the bucket.
 Or a specific directory in the bucket.
 
 -}
-makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
-makeTree srcData marker msg currentDate =
+makeTree : SourceData -> Marker -> Date -> Http.Request String
+makeTree srcData marker currentDate =
     let
         dir =
             Dict.fetch "localPath" defaults.localPath srcData
@@ -94,14 +83,17 @@ makeTree srcData marker msg currentDate =
         url =
             "http://127.0.0.1:44999/local/tree?path=" ++ encodeUri dir
     in
-        url
-            |> Http.getString
-            |> Http.send msg
+        Http.getString url
 
 
 {-| Re-export parser functions.
 -}
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse =
+    noPrep
+
+
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse response _ =
     let
         paths =
@@ -131,3 +123,24 @@ parseErrorResponse =
 postProcessTree : List String -> List String
 postProcessTree =
     Sources.Pick.selectMusicFiles
+
+
+
+-- Track URL
+
+
+{-| Create a public url for a file.
+
+We need this to play the track.
+(!) Creates a presigned url that's valid for 24 hours
+
+-}
+makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl currentDate srcData method pathToFile =
+    let
+        dir =
+            srcData
+                |> Dict.fetch "localPath" defaults.localPath
+                |> String.chop "/"
+    in
+        "http://127.0.0.1:44999/local/file?path=" ++ encodeUri (dir ++ "/" ++ pathToFile)

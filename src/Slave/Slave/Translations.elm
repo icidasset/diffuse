@@ -27,5 +27,8 @@ stringToAlienMessage str =
         "REPORT_PROCESSING_ERROR" ->
             ReportProcessingError
 
+        "UPDATE_SOURCE_DATA" ->
+            UpdateSourceData
+
         _ ->
             Debug.crash "Invalid AlienMsg"

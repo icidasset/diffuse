@@ -3,13 +3,13 @@ module Sources.Services.Ipfs.Parser exposing (..)
 import Json.Decode exposing (..)
 import Sources.Pick exposing (isMusicFile)
 import Sources.Services.Ipfs.Marker as Marker
-import Sources.Processing.Types exposing (Marker(..), ParsedResponse)
+import Sources.Processing.Types exposing (Marker(..), TreeAnswer)
 
 
 -- Tree
 
 
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse response previousMarker =
     let
         links =

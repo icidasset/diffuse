@@ -24,7 +24,7 @@ presignedUrl :
 presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
     let
         aws =
-            Dict.map (\_ v -> String.trim v) srcData
+            srcData
 
         region =
             Dict.fetchUnknown "region" aws

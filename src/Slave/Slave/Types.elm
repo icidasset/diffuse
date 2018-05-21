@@ -42,6 +42,7 @@ type AlienMsg
       ProcessSources
     | ProcessSourcesCompleted
     | ReportProcessingError
+    | UpdateSourceData
       -- Tracks
     | AddTracks
     | RemoveTracksByPath

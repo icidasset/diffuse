@@ -31,11 +31,17 @@ locationToPage location =
     in
         case page of
             Sources (Sources.NewThroughRedirect service _) ->
-                location
-                    |> UrlParser.parseHash string
-                    |> Maybe.withDefault "unparsableHash"
-                    |> Sources.NewThroughRedirect service
-                    |> Sources
+                if String.isEmpty location.hash then
+                    location.search
+                        |> String.dropLeft 1
+                        |> Sources.NewThroughRedirect service
+                        |> Sources
+                else
+                    location
+                        |> UrlParser.parseHash string
+                        |> Maybe.withDefault "unparsableHash"
+                        |> Sources.NewThroughRedirect service
+                        |> Sources
 
             _ ->
                 page
@@ -174,6 +180,9 @@ route =
         , map
             (Sources <| Sources.NewThroughRedirect Sources.Dropbox "")
             (s "sources" </> s "new" </> s "dropbox")
+        , map
+            (Sources <| Sources.NewThroughRedirect Sources.Google "")
+            (s "sources" </> s "new" </> s "google")
 
         -- Playlists
         , map (Playlists Playlists.Index) (s "playlists")

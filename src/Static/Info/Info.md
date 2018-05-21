@@ -32,6 +32,7 @@ This layer connects with the services the user has on which music can be found. 
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
 - [Dropbox](https://dropbox.com/)
+- [Google Drive](https://drive.google.com/)
 - [IPFS](https://ipfs.io/)
 - [Blockstack Storage](https://blockstack.org/) <small>(not yet)</small>
 

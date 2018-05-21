@@ -2,7 +2,7 @@ module Sources.Processing.Types exposing (..)
 
 import Date exposing (Date)
 import Http
-import Sources.Types exposing (Source)
+import Sources.Types exposing (Source, SourceData)
 import Tracks.Types exposing (..)
 
 
@@ -10,9 +10,10 @@ import Tracks.Types exposing (..)
 
 
 type Msg
-    = Process (List Source) (List Track)
+    = Process String (List Source) (List Track)
     | NextInLine
-    | TreeStep Context TreeStepResult
+    | PrepareStep Context (Result Http.Error String)
+    | TreeStep Context (Result Http.Error String)
     | TreeStepRemoveTracks SourceId (List String)
     | TagsStep ContextForTags
 
@@ -22,18 +23,14 @@ type Msg
 
 
 type alias Model =
-    { status : Status
+    { origin : String
+    , status : Status
     , timestamp : Date
     }
 
 
 
--- Other
-
-
-type HttpMethod
-    = Get
-    | Head
+-- Markers & Responses
 
 
 type Marker
@@ -42,8 +39,26 @@ type Marker
     | TheEnd
 
 
+type alias PrepationAnswer marker =
+    { sourceData : SourceData
+    , marker : marker
+    }
+
+
+type alias TreeAnswer marker =
+    { filePaths : List String
+    , marker : marker
+    }
+
+
+
+-- Contexts
+
+
 type alias Context =
     { filePaths : List String
+    , origin : String
+    , preparationMarker : Marker
     , source : Source
     , treeMarker : Marker
     }
@@ -58,15 +73,14 @@ type alias ContextForTags =
     }
 
 
-type alias ParsedResponse marker =
-    { filePaths : List String
-    , marker : marker
-    }
+
+-- Other
+
+
+type HttpMethod
+    = Get
+    | Head
 
 
 type alias Status =
     Maybe (List ( Source, List Track ))
-
-
-type alias TreeStepResult =
-    Result Http.Error String

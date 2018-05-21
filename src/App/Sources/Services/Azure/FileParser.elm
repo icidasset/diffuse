@@ -1,7 +1,7 @@
 module Sources.Services.Azure.FileParser exposing (parseTreeResponse, parseErrorResponse)
 
 import Dict.Ext as Dict
-import Sources.Processing.Types exposing (Marker(..), ParsedResponse)
+import Sources.Processing.Types exposing (Marker(..), TreeAnswer)
 import Sources.Services.Azure.FileMarker as FileMarker exposing (MarkerItem(..))
 import Sources.Services.Utils exposing (cleanPath, unescapeXmlEntities)
 import Xml
@@ -13,7 +13,7 @@ import Xml.Query exposing (..)
 -- Tree
 
 
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse response previousMarker =
     let
         decodedXml =

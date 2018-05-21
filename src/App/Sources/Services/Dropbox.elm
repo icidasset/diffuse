@@ -14,6 +14,7 @@ import Regex
 import Sources.Pick
 import Sources.Processing.Types exposing (..)
 import Sources.Services.Dropbox.Parser as Parser
+import Sources.Services.Utils exposing (cleanPath, noPrep)
 import Sources.Types exposing (SourceData)
 import Time
 import Utils exposing (encodeUri, makeQueryParam)
@@ -55,6 +56,10 @@ initialData =
         , ( "directoryPath", defaults.directoryPath )
         , ( "name", defaults.name )
         ]
+
+
+
+-- Authorization Procedure
 
 
 {-| Authorization url.
@@ -115,17 +120,12 @@ authorizationSourceData hash =
 
 
 
--- Track URL
+-- Preparation
 
 
-{-| Create a public url for a file.
-
-We need this to play the track.
-
--}
-makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentDate srcData method pathToFile =
-    "dropbox://" ++ Dict.fetch "accessToken" "" srcData ++ "@" ++ pathToFile
+prepare : String -> SourceData -> Marker -> Maybe (Http.Request String)
+prepare _ _ _ =
+    Nothing
 
 
 
@@ -138,8 +138,8 @@ List all the tracks in the bucket.
 Or a specific directory in the bucket.
 
 -}
-makeTree : SourceData -> Marker -> (TreeStepResult -> msg) -> Date -> Cmd msg
-makeTree srcData marker msg currentDate =
+makeTree : SourceData -> Marker -> Date -> Http.Request String
+makeTree srcData marker currentDate =
     let
         accessToken =
             Dict.fetch "accessToken" "" srcData
@@ -173,36 +173,40 @@ makeTree srcData marker msg currentDate =
                 TheEnd ->
                     ""
     in
-        { method = "POST"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-        , url = url
-        , body = body
-        , expect = Http.expectString
-        , timeout = Nothing
-        , withCredentials = False
-        }
-            |> Http.request
-            |> Http.send msg
+        Http.request
+            { method = "POST"
+            , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+            , url = url
+            , body = body
+            , expect = Http.expectString
+            , timeout = Nothing
+            , withCredentials = False
+            }
 
 
 getProperDirectoryPath : SourceData -> String
 getProperDirectoryPath srcData =
-    srcData
-        |> Dict.get "directoryPath"
-        |> Maybe.withDefault defaults.directoryPath
-        |> String.trim
-        |> Regex.replace Regex.All (Regex.regex "(^\\/|\\/$)") (\_ -> "")
-        |> (\d ->
-                if String.isEmpty d then
-                    ""
-                else
-                    "/" ++ d ++ "/"
-           )
+    let
+        path =
+            srcData
+                |> Dict.get "directoryPath"
+                |> Maybe.withDefault defaults.directoryPath
+                |> cleanPath
+    in
+        if path == "" then
+            ""
+        else
+            "/" ++ path
 
 
 {-| Re-export parser functions.
 -}
-parseTreeResponse : String -> Marker -> ParsedResponse Marker
+parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse =
+    noPrep
+
+
+parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse =
     Parser.parseTreeResponse
 
@@ -224,3 +228,17 @@ parseErrorResponse =
 postProcessTree : List String -> List String
 postProcessTree =
     Sources.Pick.selectMusicFiles
+
+
+
+-- Track URL
+
+
+{-| Create a public url for a file.
+
+We need this to play the track.
+
+-}
+makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl currentDate srcData method pathToFile =
+    "dropbox://" ++ Dict.fetch "accessToken" "" srcData ++ "@" ++ pathToFile
