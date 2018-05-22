@@ -42,9 +42,16 @@ const mapTrack = track => ({
 //
 // Actions
 
+const FIELDS = {
+  album: { boost: 1 },
+  artist: { boost: 3, bool: "AND" },
+  title: { boost: 2 }
+};
+
+
 function performSearch(searchTerm) {
   const results = index
-    .search(searchTerm, { bool: "AND" })
+    .search(searchTerm, { bool: "OR", expand: true, fields: FIELDS })
     .map(s => s.ref);
 
   self.postMessage({
