@@ -15,6 +15,7 @@ app = Elm.App.embed(
   { isDevelopmentEnvironment: location.hostname === "localhost"
   , isElectron: !!self.electron
   , isHTTPS: location.protocol === "https:"
+  , isOnline: navigator.onLine
   , screenHeight: window.screen.height || window.outerHeight
   }
 );
@@ -191,6 +192,18 @@ app.ports.fadeInNotifications.subscribe(_ => {
     50
   )
 });
+
+
+
+//
+// > Offline
+
+window.addEventListener("online", onlineStatusChanged);
+window.addEventListener("offline", onlineStatusChanged);
+
+function onlineStatusChanged() {
+  app.ports.setIsOnline.send(navigator.onLine);
+}
 
 
 

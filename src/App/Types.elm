@@ -38,6 +38,7 @@ type Msg
     | NoOp
     | Reset
     | SetIsTouchDevice Bool
+    | SetIsOnline Bool
       -- Keyboard
     | KeydownMsg Keyboard.Key
     | KeyupMsg Keyboard.Key
@@ -102,6 +103,7 @@ type alias Model =
     , isDevelopmentEnvironment : Bool
     , isElectron : Bool
     , isHTTPS : Bool
+    , isOnline : Bool
     , isTouchDevice : Bool
     , origin : String
     , screenHeight : Int
@@ -149,5 +151,6 @@ type alias ProgramFlags =
     { isDevelopmentEnvironment : Bool
     , isElectron : Bool
     , isHTTPS : Bool
+    , isOnline : Bool
     , screenHeight : Int
     }

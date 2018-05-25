@@ -27,6 +27,9 @@ port slaveEvent : AlienEvent -> Cmd msg
 port setIsTouchDevice : (Bool -> msg) -> Sub msg
 
 
+port setIsOnline : (Bool -> msg) -> Sub msg
+
+
 port shortcutNext : (() -> msg) -> Sub msg
 
 

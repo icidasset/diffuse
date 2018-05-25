@@ -67,7 +67,7 @@ entry page model =
                 pageIndex
                 model.sources.collection
                 ( model.sources.isProcessing, model.sources.processingErrors )
-                { isElectron = model.isElectron }
+                { isElectron = model.isElectron, isOnline = model.isOnline }
 
         New ->
             lazySpread3

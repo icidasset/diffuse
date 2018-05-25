@@ -71,6 +71,7 @@ initialModel flags initialPage origin =
     , isDevelopmentEnvironment = flags.isDevelopmentEnvironment
     , isElectron = flags.isElectron
     , isHTTPS = flags.isHTTPS
+    , isOnline = flags.isOnline
     , isTouchDevice = False
     , origin = origin
     , screenHeight = flags.screenHeight
@@ -159,6 +160,7 @@ update msg model =
                     { isDevelopmentEnvironment = model.isDevelopmentEnvironment
                     , isElectron = model.isElectron
                     , isHTTPS = model.isHTTPS
+                    , isOnline = model.isOnline
                     , screenHeight = model.screenHeight
                     }
 
@@ -174,6 +176,25 @@ update msg model =
                 (!)
                     newModel
                     [ initialCommand flags model.routing.currentPage ]
+
+        -- Are we online or offline?
+        SetIsOnline bool ->
+            (!)
+                { model | isOnline = bool }
+                [ -- Show a notification when the status changes
+                  --
+                  (if bool == False then
+                    "😯 Your internet connection went missing"
+                   else
+                    "🚀 Aaand we're back"
+                  )
+                    |> Notifications.Types.Message
+                    |> ShowNotification
+                    |> do
+
+                -- Reset enabled-source ids
+                , do (SetEnabledSourceIds model.sources.collection)
+                ]
 
         -- We have a message for this because this value comes
         -- in through a port. The reason for this is that the
@@ -832,6 +853,7 @@ subscriptions model =
 
         -- Ports
         , Ports.setIsTouchDevice SetIsTouchDevice
+        , Ports.setIsOnline SetIsOnline
         , Ports.slaveEventResult handleSlaveResult
         , Ports.syncCompleted SyncCompleted
         , Ports.syncStarted (\_ -> SyncStarted)

@@ -48,7 +48,7 @@ isViable deps source =
             deps.isElectron
 
         _ ->
-            True
+            deps.isOnline
 
 
 {-| Some types of sources are only usable on certain platforms.
@@ -56,6 +56,8 @@ Therefor in some situations we need to filter out the unusable ones.
 -}
 viableSourcesOnly : TopLevel.Model -> List Source -> List Source
 viableSourcesOnly model =
-    { isElectron = model.isElectron }
+    { isElectron = model.isElectron
+    , isOnline = model.isOnline
+    }
         |> isViable
         |> List.filter

@@ -91,4 +91,6 @@ type alias IsProcessing =
 
 
 type alias ViabilityDependencies =
-    { isElectron : Bool }
+    { isElectron : Bool
+    , isOnline : Bool
+    }
