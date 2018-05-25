@@ -411,7 +411,7 @@ scrollToIndex : Model -> Int -> ( Model, Cmd TopLevel.Msg )
 scrollToIndex model idx =
     (!)
         model
-        [ (9 + idx * trackHeight)
+        [ (15 + idx * trackHeight)
             |> toFloat
             |> Dom.Scroll.toY "tracks"
             |> Task.attempt (always TopLevel.NoOp)

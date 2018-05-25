@@ -36,7 +36,7 @@ iconColor =
 
 trackHeight : Int
 trackHeight =
-    33
+    34
 
 
 
@@ -106,8 +106,8 @@ styles =
     -----------------------------------
     , style Table
         [ Color.text colors.base01
-        , Font.lineHeight ((toFloat trackHeight) / 12)
-        , Font.size 12
+        , Font.lineHeight ((toFloat trackHeight) / 12.5)
+        , Font.size 12.5
 
         --
         , prop "-webkit-user-select" "none"
