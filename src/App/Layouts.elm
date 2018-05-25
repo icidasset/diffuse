@@ -33,7 +33,7 @@ btn buttonStyles additionalAttributes buttonChild =
     el
         buttonStyles
         (List.append
-            [ paddingXY (scaled -5) (scaled -10) ]
+            [ paddingXY (scaled -4) (scaled -10) ]
             (additionalAttributes)
         )
         buttonChild
@@ -63,7 +63,7 @@ h1 label =
         , paddingBottom (scaled -17)
         , paddingLeft (scaled -4)
         , paddingRight (scaled -4)
-        , paddingTop (scaled -10)
+        , paddingTop (scaled -12)
         ]
         (text label)
 
@@ -137,7 +137,7 @@ select onInputMsg selectedValue options =
                 , ( "background", "transparent" )
                 , ( "border", "0" )
                 , ( "color", Color.Convert.colorToCssRgb colorDerivatives.text )
-                , ( "font-family", "Overpass, sans-serif" )
+                , ( "font-family", "\"Source Sans Pro\", sans-serif" )
                 , ( "font-size", (toString <| scaled 0) ++ "px" )
                 , ( "padding", (toString <| scaled -3) ++ "px 0" )
                 , ( "width", "100%" )

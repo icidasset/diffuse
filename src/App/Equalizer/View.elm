@@ -175,7 +175,7 @@ knobLabel : String -> Node
 knobLabel lbl =
     el
         (Equalizer KnobLabel)
-        [ paddingTop (scaled -25) ]
+        [ paddingTop (scaled -23) ]
         (text lbl)
 
 

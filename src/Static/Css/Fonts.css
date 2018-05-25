@@ -1,71 +1,53 @@
 @font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-light.woff2') format('woff2'),
-       url('fonts/overpass/overpass-light.woff') format('woff');
+  font-family: 'Source Sans Pro';
+  src: url('fonts/sourcesanspro/light.woff2') format('woff2'),
+       url('fonts/sourcesanspro/light.woff') format('woff');
        font-weight: 300;
        font-style: normal;
 }
 
 
 @font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-light-italic.woff2') format('woff2'),
-       url('fonts/overpass/overpass-light-italic.woff') format('woff');
+  font-family: 'Source Sans Pro';
+  src: url('fonts/sourcesanspro/light-italic.woff2') format('woff2'),
+       url('fonts/sourcesanspro/light-italic.woff') format('woff');
        font-weight: 300;
        font-style: italic;
 }
 
 
 @font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-regular.woff2') format('woff2'),
-       url('fonts/overpass/overpass-regular.woff') format('woff');
+  font-family: 'Source Sans Pro';
+  src: url('fonts/sourcesanspro/regular.woff2') format('woff2'),
+       url('fonts/sourcesanspro/regular.woff') format('woff');
        font-weight: 400;
        font-style: normal;
 }
 
 
 @font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-italic.woff2') format('woff2'),
-       url('fonts/overpass/overpass-italic.woff') format('woff');
+  font-family: 'Source Sans Pro';
+  src: url('fonts/sourcesanspro/italic.woff2') format('woff2'),
+       url('fonts/sourcesanspro/italic.woff') format('woff');
        font-weight: 400;
        font-style: italic;
 }
 
 
 @font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-semibold.woff2') format('woff2'),
-       url('fonts/overpass/overpass-semibold.woff') format('woff');
+  font-family: 'Source Sans Pro';
+  src: url('fonts/sourcesanspro/semibold.woff2') format('woff2'),
+       url('fonts/sourcesanspro/semibold.woff') format('woff');
        font-weight: 600;
        font-style: normal;
 }
 
 
 @font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-bold.woff2') format('woff2'),
-       url('fonts/overpass/overpass-bold.woff') format('woff');
+  font-family: 'Source Sans Pro';
+  src: url('fonts/sourcesanspro/bold.woff2') format('woff2'),
+       url('fonts/sourcesanspro/bold.woff') format('woff');
        font-weight: 700;
-       font-style: normal;
-}
-
-
-@font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-extrabold.woff2') format('woff2'),
-       url('fonts/overpass/overpass-extrabold.woff') format('woff');
-       font-weight: 800;
-       font-style: normal;
-}
-
-
-@font-face {
-  font-family: 'Overpass';
-  src: url('fonts/overpass/overpass-heavy.woff2') format('woff2'),
-       url('fonts/overpass/overpass-heavy.woff') format('woff');
-       font-weight: 900;
        font-style: normal;
 }
 
@@ -76,8 +58,8 @@
 
 @font-face {
   font-family: 'Montserrat';
-  src: url('fonts/montserrat/montserrat-semibold.woff2') format('woff2'),
-       url('fonts/montserrat/montserrat-semibold.woff') format('woff');
+  src: url('fonts/montserrat/semibold.woff2') format('woff2'),
+       url('fonts/montserrat/semibold.woff') format('woff');
        font-weight: 500;
        font-style: normal;
 }
@@ -85,8 +67,8 @@
 
 @font-face {
   font-family: 'Montserrat';
-  src: url('fonts/montserrat/montserrat-bold.woff2') format('woff2'),
-       url('fonts/montserrat/montserrat-bold.woff') format('woff');
+  src: url('fonts/montserrat/bold.woff2') format('woff2'),
+       url('fonts/montserrat/bold.woff') format('woff');
        font-weight: 700;
        font-style: normal;
 }

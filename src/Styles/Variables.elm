@@ -77,7 +77,7 @@ baseFontSize =
 
 defaultFont : Font
 defaultFont =
-    Font.font "Overpass"
+    Font.font "Source Sans Pro"
 
 
 headerFont : Font

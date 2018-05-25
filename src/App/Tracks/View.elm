@@ -286,7 +286,7 @@ msgNoSources amountOfFavourites =
         btnWithIcon icon btnStyles lbl =
             el
                 btnStyles
-                [ paddingXY (scaled -5) (scaled -6) ]
+                [ paddingXY (scaled -4) (scaled -6) ]
                 (row
                     Zed
                     [ spacing (scaled -8) ]

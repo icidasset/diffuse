@@ -39,9 +39,15 @@ outside =
       -- Container
       -----------------------------------
       style Outside
-        [ Font.letterSpacing 0.675
-        , Font.size 10.75
+        [ Font.letterSpacing 1
+        , Font.lineHeight 1.6
+        , Font.size 11.5
         , Font.uppercase
+
+        -- Font smoothing
+        , Style.prop "-webkit-font-smoothing" "subpixel-antialiased"
+        , Style.prop "-moz-osx-font-smoothing" "auto"
+        , Style.prop "font-smooth" "never"
         ]
 
     -----------------------------------

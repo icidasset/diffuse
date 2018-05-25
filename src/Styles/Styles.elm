@@ -261,7 +261,6 @@ containers =
         [ Color.text colors.base06
         , Font.center
         , Font.lineHeight 1.45
-        , Font.weight 600
         ]
 
     -----------------------------------
@@ -409,7 +408,7 @@ headings =
     -----------------------------------
     , style H4
         [ Color.text colors.base06
-        , Font.size (scaled -2)
+        , Font.size (scaled -3)
         , Font.typeface [ headerFont, Font.sansSerif ]
         , Font.uppercase
         , Font.weight 500

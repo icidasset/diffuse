@@ -105,7 +105,7 @@ styles =
     -- Table
     -----------------------------------
     , style Table
-        [ Color.text colors.base02
+        [ Color.text colors.base01
         , Font.lineHeight ((toFloat trackHeight) / 12)
         , Font.size 12
 
@@ -123,9 +123,10 @@ styles =
     -- Table header
     -----------------------------------
     , style TableHeader
-        [ Font.lineHeight 2
-        , Font.size 10.5
-        , Font.weight 700
+        [ Font.letterSpacing 0.125
+        , Font.lineHeight 2
+        , Font.size 10.75
+        , Font.weight 600
         , Style.prop "z-index" "11"
         ]
 

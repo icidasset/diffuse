@@ -46,9 +46,9 @@ styles =
 
     --
     , style ButtonLabel
-        [ Font.letterSpacing 3
-        , Font.size 12
-        , Font.weight 900
+        [ Font.letterSpacing 3.75
+        , Font.size 13
+        , Font.weight 700
         ]
 
     --
@@ -72,7 +72,7 @@ styles =
     -----------------------------------
     , style NowPlaying
         [ Font.italic
-        , Font.size 13
+        , Font.size 14
         ]
 
     -----------------------------------

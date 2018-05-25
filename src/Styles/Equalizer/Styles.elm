@@ -87,10 +87,11 @@ styles =
     , style KnobLabel
         [ Color.text (Color.rgba 0 0 0 0.4)
         , Font.center
-        , Font.letterSpacing 0.25
-        , Font.size 8.5
+        , Font.letterSpacing 0.375
+        , Font.lineHeight 1.6
+        , Font.size 9
         , Font.uppercase
-        , Font.weight 700
+        , Font.weight 600
         ]
 
     -----------------------------------
