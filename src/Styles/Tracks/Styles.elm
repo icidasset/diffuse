@@ -2,6 +2,7 @@ module Tracks.Styles exposing (Styles(..), styles, iconColor, trackHeight)
 
 import Color exposing (Color)
 import Color.Ext as Color
+import Color.Manipulate
 import Style exposing (..)
 import Style.Border as Border
 import Style.Color as Color
@@ -18,6 +19,7 @@ type Styles
     = ClickableAction
     | Container
     | Navigation
+    | NavigationTag
     | Placeholder
     | Search
     | Table
@@ -72,6 +74,15 @@ styles =
             , color = Color.rgba 0 0 0 0.05
             }
         ]
+    , style NavigationTag
+        [ Border.rounded 4
+        , Color.background colors.base02
+        , Color.text (Color.rgba 255 255 255 0.925)
+        , Font.lineHeight 1
+        , Font.size 11
+        , Font.weight 700
+        , Style.cursor "pointer"
+        ]
 
     -----------------------------------
     -- Placeholder
@@ -125,7 +136,7 @@ styles =
     , style TableHeader
         [ Font.letterSpacing 0.125
         , Font.lineHeight 2
-        , Font.size 10.75
+        , Font.size 11
         , Font.weight 600
         , Style.prop "z-index" "11"
         ]

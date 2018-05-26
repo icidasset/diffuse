@@ -143,21 +143,6 @@ navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
                             |> Material.Icons.Content.clear iconColor
                             |> html
                         )
-                  else if Maybe.isJust maybeSelectedPlaylist then
-                    el
-                        (Tracks ClickableAction)
-                        [ attribute "title" "Deactivate playlist"
-
-                        --
-                        , maybeSelectedPlaylist
-                            |> Maybe.map (TogglePlaylist >> TracksMsg)
-                            |> Maybe.withDefault NoOp
-                            |> onClickStop
-                        ]
-                        (16
-                            |> Material.Icons.Content.clear colors.base08
-                            |> html
-                        )
                   else
                     empty
 
@@ -167,7 +152,12 @@ navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
                     (Tracks ClickableAction)
                     [ attribute "title" "Toggle favourites-only"
                     , onClickStop (TracksMsg ToggleFavouritesOnly)
-                    , paddingRight (scaled 1)
+
+                    --
+                    , if Maybe.isJust maybeSelectedPlaylist then
+                        paddingRight (scaled -9)
+                      else
+                        paddingRight (scaled 1)
                     ]
                     (case favouritesOnly of
                         True ->
@@ -176,6 +166,36 @@ navigation ( searchTerm, searchCounter ) favouritesOnly maybeSelectedPlaylist =
                         False ->
                             html (Material.Icons.Action.favorite_border iconColor 16)
                     )
+
+                -- 3.
+                --
+                , if Maybe.isJust maybeSelectedPlaylist then
+                    el
+                        Zed
+                        [ maxWidth (percent 32.5)
+                        , paddingRight (scaled 1)
+                        ]
+                        (el
+                            (Tracks NavigationTag)
+                            [ attribute "title" "Deactivate playlist"
+
+                            --
+                            , paddingXY 5.5 4
+
+                            --
+                            , maybeSelectedPlaylist
+                                |> Maybe.map (TogglePlaylist >> TracksMsg)
+                                |> Maybe.withDefault NoOp
+                                |> onClickStop
+                            ]
+                            (maybeSelectedPlaylist
+                                |> Maybe.map .name
+                                |> Maybe.withDefault "♫"
+                                |> text
+                            )
+                        )
+                  else
+                    empty
                 ]
             ]
             (Input.text
