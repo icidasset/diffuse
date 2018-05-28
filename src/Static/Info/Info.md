@@ -21,7 +21,6 @@ You can choose between these services:
 - [Blockstack](https://blockstack.org/)
 - [RemoteStorage](remotestorage.io)
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(ie. anonymous mode)</small>
-- [IPNS (IPFS)](https://ipfs.io/) <small>(not yet)</small>
 
 
 ### Music layer
@@ -34,7 +33,7 @@ This layer connects with the services the user has on which music can be found. 
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
 - [IPFS](https://ipfs.io/)
-- [Blockstack Storage](https://blockstack.org/) <small>(not yet)</small>
+- [Blockstack Storage](https://blockstack.org/) <small>(not available yet)</small>
 
 
 
