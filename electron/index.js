@@ -1,5 +1,6 @@
-const { app, globalShortcut, ipcMain, shell, BrowserWindow, Menu } = require("electron")
+const electron = require("electron")
 const server = require("./server")
+const { app, globalShortcut, ipcMain, shell, BrowserWindow, Menu } = electron
 
 
 // Constants
@@ -25,7 +26,15 @@ function createWindow() {
     webPreferences: {}
   })
 
-  win.maximize()
+  const workArea = electron.screen.getPrimaryDisplay().workAreaSize
+
+  win.setBounds({
+    x: 10,
+    y: electron.screen.getMenuBarHeight() + 10,
+    height: workArea.height - 20,
+    width: workArea.width - 20,
+  })
+
   win.loadURL(URL)
   win.on("closed", () => win = null)
 
