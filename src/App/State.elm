@@ -148,6 +148,10 @@ update msg model =
             in
                 (!) { model | alfred = alfred, contextMenu = contextMenu } []
 
+        -- Copy some text to the clipboard
+        CopyToClipboard text ->
+            (!) model [ Ports.copyToClipboard text ]
+
         -- Sometimes you just wanna chill.
         NoOp ->
             (!) model []
@@ -752,6 +756,8 @@ update msg model =
                                 model.tracks
                                 model.playlists.lastModifiedPlaylist
                                 tracks
+                                model.sources.collection
+                                model.timestamp
                                 mousePos
 
                         contextMenu =

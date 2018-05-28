@@ -143,9 +143,9 @@ postProcessTree =
 {-| Create a public url for a file.
 
 We need this to play the track.
-(!) Creates a presigned url that's valid for 24 hours
+(!) Creates a presigned url that's valid for 48 hours
 
 -}
 makeTrackUrl : Date -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl currentDate srcData method pathToFile =
-    presignedUrl File Read Get 24 currentDate srcData pathToFile []
+    presignedUrl File Read Get 48 currentDate srcData pathToFile []

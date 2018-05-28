@@ -14,6 +14,9 @@ import Types exposing (AlienEvent)
 -- 💡
 
 
+port copyToClipboard : String -> Cmd msg
+
+
 port fadeInNotifications : () -> Cmd msg
 
 

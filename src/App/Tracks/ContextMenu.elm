@@ -1,27 +1,31 @@
 module Tracks.ContextMenu exposing (..)
 
 import ContextMenu.Types exposing (..)
+import Date exposing (Date)
 import Material.Icons.Action as Icons
+import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
 import Mouse
 import Playlists.Types exposing (Msg(..))
 import Playlists.Utils
 import Queue.Types
+import Queue.Utils
+import Sources.Types exposing (Source)
 import Tracks.Types exposing (..)
 import Tracks.Utils
 import Types as TopLevel exposing (..)
 import Variables exposing (colorDerivatives)
 
 
-trackMenu : Tracks.Types.Model -> Maybe String -> List IdentifiedTrack -> Mouse.Position -> ContextMenu TopLevel.Msg
-trackMenu model lastModifiedPlaylist identifiedTracks =
+trackMenu : Tracks.Types.Model -> Maybe String -> List IdentifiedTrack -> List Source -> Date -> Mouse.Position -> ContextMenu TopLevel.Msg
+trackMenu model lastModifiedPlaylist identifiedTracks sources timestamp =
     let
         tracks =
             List.map Tracks.Utils.unindentify identifiedTracks
     in
         [ queueActions identifiedTracks
 
-        --
+        -- Playlist actions
         --
         , case model.selectedPlaylist of
             Just selectedPlaylist ->
@@ -46,6 +50,22 @@ trackMenu model lastModifiedPlaylist identifiedTracks =
             Nothing ->
                 -- Playlist actions, default.
                 defaultPlaylistActions tracks lastModifiedPlaylist
+
+        -- Track URL
+        --
+        , if List.length identifiedTracks == 1 then
+            [ ( Icons.link colorDerivatives.text 14
+              , "Copy short-lived url"
+              , identifiedTracks
+                    |> List.head
+                    |> Maybe.map (Queue.Utils.makeEngineItem timestamp sources)
+                    |> Maybe.map .url
+                    |> Maybe.withDefault "<missing-track>"
+                    |> CopyToClipboard
+              )
+            ]
+          else
+            []
         ]
             |> List.concat
             |> ContextMenu

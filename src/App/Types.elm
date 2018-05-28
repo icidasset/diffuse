@@ -35,6 +35,7 @@ import Tracks.Types as Tracks
 
 type Msg
     = ClickAway
+    | CopyToClipboard String
     | NoOp
     | Reset
     | SetIsTouchDevice Bool
