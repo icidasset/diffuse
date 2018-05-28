@@ -8,3 +8,4 @@ mac:
 directories:
   app: "build"
   buildResources: "build/resources"
+  output: "build-electron"

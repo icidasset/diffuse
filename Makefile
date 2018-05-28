@@ -6,7 +6,7 @@
 NODE_BIN=./node_modules/.bin
 SRC_DIR=./src
 BUILD_DIR=./build
-DIST_DIR=./dist
+BUILD_ELECTRON_DIR=./build-electron
 
 
 # Default task
@@ -18,7 +18,7 @@ all: dev
 # Build tasks
 #
 
-build: clean elm system vendor electron
+build: clean elm system vendor electron-prep
 	@echo "> Build completed ⚡"
 
 
@@ -27,12 +27,12 @@ clean:
 	@rm -rf $(BUILD_DIR) || true
 
 
-clean-dist:
-	@echo "> Cleaning Dist Directory"
-	@rm -rf $(DIST_DIR) || true
+electron-clean:
+	@echo "> Cleaning Electron Directory"
+	@rm -rf $(BUILD_ELECTRON_DIR) || true
 
 
-electron:
+electron-prep:
 	@echo "> Copying Electron Script"
 	@cp -r ./electron $(BUILD_DIR)
 	@cp ./package.json $(BUILD_DIR)/package.json
@@ -43,7 +43,7 @@ electron:
 	@convert $(BUILD_DIR)/resources/icon.png -define icon:auto-resize=256 $(BUILD_DIR)/resources/icon.ico
 
 
-electron-dist: build clean-dist
+electron-build: build electron-clean
 	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac --linux --win
 
 

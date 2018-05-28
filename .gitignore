@@ -4,7 +4,7 @@
 .tmp.js
 *.cabal
 /build
-/dist
+/build-electron
 deploy.sh
 elm-stuff
 node_modules
