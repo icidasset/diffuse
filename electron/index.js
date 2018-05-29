@@ -26,11 +26,11 @@ function createWindow() {
     webPreferences: {}
   })
 
-  const workArea = electron.screen.getPrimaryDisplay().workAreaSize
+  const workArea = electron.screen.getPrimaryDisplay().workArea
 
   win.setBounds({
     x: 10,
-    y: electron.screen.getMenuBarHeight() + 10,
+    y: workArea.y + 10,
     height: workArea.height - 20,
     width: workArea.width - 20,
   })
