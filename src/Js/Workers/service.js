@@ -39,13 +39,17 @@ self.addEventListener("install", event => {
 
 
 self.addEventListener("fetch", event => {
+  const isNotLocal =
+    !event.request.url.match(new RegExp("^https?\:\/\/127.0.0.1")) &&
+    !event.request.url.match(new RegExp("^https?\:\/\/localhost"));
+
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin));
 
   const isOffline =
     !self.navigator.onLine;
 
-  if (isInternal && isOffline) {
+  if (isNotLocal && isInternal && isOffline) {
     const promise = caches
       .match(event.request)
       .then(r => r || fetch(event.request));
