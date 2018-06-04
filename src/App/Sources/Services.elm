@@ -5,7 +5,7 @@ module Sources.Services exposing (..)
 
 import Date exposing (Date)
 import Http
-import Sources.Processing.Types exposing (..)
+import Sources.Processing.Types as Processing exposing (..)
 import Sources.Types exposing (..)
 
 
@@ -73,7 +73,13 @@ makeTrackUrl service =
             Local.makeTrackUrl
 
 
-makeTree : Service -> SourceData -> Marker -> Date -> Http.Request String
+makeTree :
+    Service
+    -> SourceData
+    -> Marker
+    -> Date
+    -> (Result Http.Error String -> Processing.Msg)
+    -> Cmd Processing.Msg
 makeTree service =
     case service of
         AmazonS3 ->

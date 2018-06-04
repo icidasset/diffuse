@@ -195,8 +195,8 @@ List all the tracks in the bucket.
 Or a specific directory in the bucket.
 
 -}
-makeTree : SourceData -> Marker -> Date -> Http.Request String
-makeTree srcData marker currentDate =
+makeTree : SourceData -> Marker -> Date -> (Result Http.Error String -> Msg) -> Cmd Msg
+makeTree srcData marker currentDate resultMsg =
     let
         accessToken =
             Dict.fetch "accessToken" "" srcData
@@ -234,15 +234,16 @@ makeTree srcData marker currentDate =
                 |> List.map makeQueryParam
                 |> String.join "&"
     in
-        Http.request
-            { method = "GET"
-            , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-            , url = "https://www.googleapis.com/drive/v3/files?" ++ params
-            , body = Http.emptyBody
-            , expect = Http.expectString
-            , timeout = Nothing
-            , withCredentials = False
-            }
+        { method = "GET"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+        , url = "https://www.googleapis.com/drive/v3/files?" ++ params
+        , body = Http.emptyBody
+        , expect = Http.expectString
+        , timeout = Nothing
+        , withCredentials = False
+        }
+            |> Http.request
+            |> Http.send resultMsg
 
 
 {-| Re-export parser functions.

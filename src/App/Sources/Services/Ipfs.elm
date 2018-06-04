@@ -15,7 +15,7 @@ import Sources.Services.Ipfs.Marker as Marker
 import Sources.Services.Ipfs.Parser as Parser
 import Sources.Services.Utils exposing (noPrep)
 import Sources.Processing.Types exposing (..)
-import Sources.Types exposing (..)
+import Sources.Types exposing (SourceData)
 
 
 -- Properties
@@ -68,8 +68,8 @@ prepare _ _ _ =
 
 {-| Create a directory tree.
 -}
-makeTree : SourceData -> Marker -> Date -> Http.Request String
-makeTree srcData marker _ =
+makeTree : SourceData -> Marker -> Date -> (Result Http.Error String -> Msg) -> Cmd Msg
+makeTree srcData marker _ resultMsg =
     let
         gateway =
             srcData
@@ -99,7 +99,9 @@ makeTree srcData marker _ =
         url =
             gateway ++ "/api/v0/ls?arg=" ++ hash ++ "&encoding=json"
     in
-        Http.getString url
+        url
+            |> Http.getString
+            |> Http.send resultMsg
 
 
 {-| Re-export parser functions.

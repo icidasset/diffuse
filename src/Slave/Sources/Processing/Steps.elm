@@ -267,9 +267,12 @@ intoTreeCommand associatedTracks currentDate context =
 
 makeTree : Context -> Date -> Cmd Msg
 makeTree context currentDate =
-    currentDate
-        |> Services.makeTree context.source.service context.source.data context.treeMarker
-        |> Http.send (TreeStep context)
+    Services.makeTree
+        context.source.service
+        context.source.data
+        context.treeMarker
+        currentDate
+        (TreeStep context)
 
 
 separate : List String -> List String -> ( List String, List String )

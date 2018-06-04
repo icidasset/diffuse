@@ -74,8 +74,8 @@ List all the tracks in the bucket.
 Or a specific directory in the bucket.
 
 -}
-makeTree : SourceData -> Marker -> Date -> Http.Request String
-makeTree srcData marker currentDate =
+makeTree : SourceData -> Marker -> Date -> (Result Http.Error String -> Msg) -> Cmd Msg
+makeTree srcData marker currentDate resultMsg =
     let
         dir =
             Dict.fetch "localPath" defaults.localPath srcData
@@ -83,7 +83,9 @@ makeTree srcData marker currentDate =
         url =
             "http://127.0.0.1:44999/local/tree?path=" ++ encodeUri dir
     in
-        Http.getString url
+        url
+            |> Http.getString
+            |> Http.send resultMsg
 
 
 {-| Re-export parser functions.

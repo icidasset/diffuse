@@ -82,8 +82,8 @@ List all the tracks in the bucket.
 Or a specific directory in the bucket.
 
 -}
-makeTree : SourceData -> Marker -> Date -> Http.Request String
-makeTree srcData marker currentDate =
+makeTree : SourceData -> Marker -> Date -> (Result Http.Error String -> Msg) -> Cmd Msg
+makeTree srcData marker currentDate resultMsg =
     let
         directoryPath =
             srcData
@@ -116,7 +116,9 @@ makeTree srcData marker currentDate =
         url =
             presignedUrl Get (Time.second * 60 * 5) params currentDate srcData "/"
     in
-        Http.getString url
+        url
+            |> Http.getString
+            |> Http.send resultMsg
 
 
 {-| Re-export parser functions.

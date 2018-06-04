@@ -78,8 +78,8 @@ List all the tracks in the container.
 Or a specific directory in the container.
 
 -}
-makeTree : SourceData -> Marker -> Date -> Http.Request String
-makeTree srcData marker currentDate =
+makeTree : SourceData -> Marker -> Date -> (Result Http.Error String -> Msg) -> Cmd Msg
+makeTree srcData marker currentDate resultMsg =
     let
         directoryPath =
             srcData
@@ -98,7 +98,9 @@ makeTree srcData marker currentDate =
         url =
             presignedUrl Blob List Get 1 currentDate srcData directoryPath params
     in
-        Http.getString url
+        url
+            |> Http.getString
+            |> Http.send resultMsg
 
 
 {-| Re-export parser functions.
