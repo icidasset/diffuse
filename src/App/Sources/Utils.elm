@@ -47,6 +47,9 @@ isViable deps source =
         Sources.Types.Local ->
             deps.isElectron
 
+        Sources.Types.WebDav ->
+            deps.isElectron
+
         _ ->
             deps.isOnline
 

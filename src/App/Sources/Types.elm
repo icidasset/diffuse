@@ -16,6 +16,7 @@ type Service
     | Google
     | Ipfs
     | Local
+    | WebDav
 
 
 type alias SourceData =

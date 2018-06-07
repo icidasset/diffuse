@@ -22,6 +22,12 @@ import Time
 import Utils exposing (encodeUri)
 
 
+electronServerUrl : String
+electronServerUrl =
+    "http://127.0.0.1:44999"
+
+
+
 -- Properties
 -- 📟
 
@@ -81,7 +87,7 @@ makeTree srcData marker currentDate resultMsg =
             Dict.fetch "localPath" defaults.localPath srcData
 
         url =
-            "http://127.0.0.1:44999/local/tree?path=" ++ encodeUri dir
+            electronServerUrl ++ "/local/tree?path=" ++ encodeUri dir
     in
         url
             |> Http.getString
@@ -144,4 +150,4 @@ makeTrackUrl currentDate srcData method pathToFile =
                 |> Dict.fetch "localPath" defaults.localPath
                 |> String.chop "/"
     in
-        "http://127.0.0.1:44999/local/file?path=" ++ encodeUri (dir ++ "/" ++ pathToFile)
+        electronServerUrl ++ "/local/file?path=" ++ encodeUri (dir ++ "/" ++ pathToFile)

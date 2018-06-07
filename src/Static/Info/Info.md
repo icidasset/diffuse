@@ -98,6 +98,10 @@ ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["X-Request
 <Cors>
 ```
 
+#### WebDAV
+
+_Not necessary._
+
 
 <div id="UI" />
 

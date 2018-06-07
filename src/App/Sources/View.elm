@@ -696,5 +696,14 @@ validateProperties : Source -> Bool
 validateProperties source =
     source.data
         |> Dict.toList
-        |> List.filter (\( k, _ ) -> k /= "directoryPath" && k /= "folderId")
+        |> List.filter (\( k, _ ) -> List.member k sourcePropertiesNotToValidate == False)
         |> List.all (\( _, v ) -> not <| String.isEmpty v)
+
+
+sourcePropertiesNotToValidate : List String
+sourcePropertiesNotToValidate =
+    [ "directoryPath"
+    , "folderId"
+    , "password"
+    , "username"
+    ]
