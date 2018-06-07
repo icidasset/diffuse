@@ -22,6 +22,12 @@ import Time
 import Utils exposing (encodeUri)
 
 
+electronServerUrl : String
+electronServerUrl =
+    "http://127.0.0.1:44999"
+
+
+
 -- Properties
 -- 📟
 
@@ -74,16 +80,18 @@ List all the tracks in the bucket.
 Or a specific directory in the bucket.
 
 -}
-makeTree : SourceData -> Marker -> Date -> Http.Request String
-makeTree srcData marker currentDate =
+makeTree : SourceData -> Marker -> Date -> (Result Http.Error String -> Msg) -> Cmd Msg
+makeTree srcData marker currentDate resultMsg =
     let
         dir =
             Dict.fetch "localPath" defaults.localPath srcData
 
         url =
-            "http://127.0.0.1:44999/local/tree?path=" ++ encodeUri dir
+            electronServerUrl ++ "/local/tree?path=" ++ encodeUri dir
     in
-        Http.getString url
+        url
+            |> Http.getString
+            |> Http.send resultMsg
 
 
 {-| Re-export parser functions.
@@ -142,4 +150,4 @@ makeTrackUrl currentDate srcData method pathToFile =
                 |> Dict.fetch "localPath" defaults.localPath
                 |> String.chop "/"
     in
-        "http://127.0.0.1:44999/local/file?path=" ++ encodeUri (dir ++ "/" ++ pathToFile)
+        electronServerUrl ++ "/local/file?path=" ++ encodeUri (dir ++ "/" ++ pathToFile)

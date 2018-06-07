@@ -138,8 +138,8 @@ List all the tracks in the bucket.
 Or a specific directory in the bucket.
 
 -}
-makeTree : SourceData -> Marker -> Date -> Http.Request String
-makeTree srcData marker currentDate =
+makeTree : SourceData -> Marker -> Date -> (Result Http.Error String -> Msg) -> Cmd Msg
+makeTree srcData marker currentDate resultMsg =
     let
         accessToken =
             Dict.fetch "accessToken" "" srcData
@@ -173,15 +173,16 @@ makeTree srcData marker currentDate =
                 TheEnd ->
                     ""
     in
-        Http.request
-            { method = "POST"
-            , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-            , url = url
-            , body = body
-            , expect = Http.expectString
-            , timeout = Nothing
-            , withCredentials = False
-            }
+        { method = "POST"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+        , url = url
+        , body = body
+        , expect = Http.expectString
+        , timeout = Nothing
+        , withCredentials = False
+        }
+            |> Http.request
+            |> Http.send resultMsg
 
 
 getProperDirectoryPath : SourceData -> String

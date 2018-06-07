@@ -5,7 +5,7 @@ module Sources.Services exposing (..)
 
 import Date exposing (Date)
 import Http
-import Sources.Processing.Types exposing (..)
+import Sources.Processing.Types as Processing exposing (..)
 import Sources.Types exposing (..)
 
 
@@ -18,6 +18,7 @@ import Sources.Services.Dropbox as Dropbox
 import Sources.Services.Google as Google
 import Sources.Services.Ipfs as Ipfs
 import Sources.Services.Local as Local
+import Sources.Services.WebDav as WebDav
 
 
 -- Functions implemented by services
@@ -47,6 +48,9 @@ initialData service =
         Local ->
             Local.initialData
 
+        WebDav ->
+            WebDav.initialData
+
 
 makeTrackUrl : Service -> Date -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl service =
@@ -72,8 +76,17 @@ makeTrackUrl service =
         Local ->
             Local.makeTrackUrl
 
+        WebDav ->
+            WebDav.makeTrackUrl
 
-makeTree : Service -> SourceData -> Marker -> Date -> Http.Request String
+
+makeTree :
+    Service
+    -> SourceData
+    -> Marker
+    -> Date
+    -> (Result Http.Error String -> Processing.Msg)
+    -> Cmd Processing.Msg
 makeTree service =
     case service of
         AmazonS3 ->
@@ -96,6 +109,9 @@ makeTree service =
 
         Local ->
             Local.makeTree
+
+        WebDav ->
+            WebDav.makeTree
 
 
 parseErrorResponse : Service -> String -> String
@@ -122,6 +138,9 @@ parseErrorResponse service =
         Local ->
             Local.parseErrorResponse
 
+        WebDav ->
+            WebDav.parseErrorResponse
+
 
 parsePreparationResponse : Service -> String -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse service =
@@ -146,6 +165,9 @@ parsePreparationResponse service =
 
         Local ->
             Local.parsePreparationResponse
+
+        WebDav ->
+            WebDav.parsePreparationResponse
 
 
 parseTreeResponse : Service -> String -> Marker -> TreeAnswer Marker
@@ -172,6 +194,9 @@ parseTreeResponse service =
         Local ->
             Local.parseTreeResponse
 
+        WebDav ->
+            WebDav.parseTreeResponse
+
 
 postProcessTree : Service -> List String -> List String
 postProcessTree service =
@@ -196,6 +221,9 @@ postProcessTree service =
 
         Local ->
             Local.postProcessTree
+
+        WebDav ->
+            WebDav.postProcessTree
 
 
 prepare : Service -> String -> SourceData -> Marker -> Maybe (Http.Request String)
@@ -222,6 +250,9 @@ prepare service =
         Local ->
             Local.prepare
 
+        WebDav ->
+            WebDav.prepare
+
 
 properties : Service -> List ( String, String, String, Bool )
 properties service =
@@ -246,6 +277,9 @@ properties service =
 
         Local ->
             Local.properties
+
+        WebDav ->
+            WebDav.properties
 
 
 
@@ -286,6 +320,9 @@ keyToType str =
         "Local" ->
             Local
 
+        "WebDav" ->
+            WebDav
+
         _ ->
             Debug.crash "Invalid Service type string"
 
@@ -314,6 +351,9 @@ typeToKey service =
         Local ->
             "Local"
 
+        WebDav ->
+            "WebDav"
+
 
 {-| Service labels.
 
@@ -333,7 +373,11 @@ labels isElectron =
             ]
     in
         if isElectron then
-            List.append default [ ( typeToKey Local, "Locally" ) ]
+            List.append
+                default
+                [ ( typeToKey Local, "Locally" )
+                , ( typeToKey WebDav, "WebDAV" )
+                ]
         else
             default
 

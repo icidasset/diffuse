@@ -655,9 +655,9 @@ update msg model =
                         model.tracks.collection.untouched
 
                 sourcesCollection =
-                    viableSourcesOnly
-                        model
-                        model.sources.collection
+                    model.sources.collection
+                        |> viableSourcesOnly model
+                        |> List.filter (.enabled >> (==) True)
 
                 sources =
                     List.map Sources.Encoding.encode sourcesCollection

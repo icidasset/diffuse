@@ -23,7 +23,7 @@ import Sources.Processing.Types exposing (Marker(..))
 
 separator : String
 separator =
-    "/"
+    " ɑ "
 
 
 
