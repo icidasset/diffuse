@@ -16,7 +16,7 @@ Chrome, Firefox, Safari & Edge.
 
 🖥 [Native](https://github.com/icidasset/diffuse/releases)  
 MacOS, Linux & Windows.  
-<small>Unique features: Add music from local filesystem & media-keys support.</small>
+<small>Unique features: Add music from local filesystem, WebDAV & media-keys support.</small>
 
 
 
@@ -37,7 +37,19 @@ MacOS, Linux & Windows.
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
+- Local Filesystem <small>(native only)</small>
 - [IPFS](https://ipfs.io/)
+- [WebDAV](https://en.wikipedia.org/wiki/WebDAV) <small>(native only)</small>
+
+
+
+## Q&A
+
+
+__Why don't you support WebDAV on the web version?__  
+Most WebDAV servers aren't built according to the [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) specification.
+Which is a must-have for the web version, otherwise it doesn't work.
+The WebDAV version was built with [NextCloud](https://nextcloud.com/) in mind.
 
 
 
