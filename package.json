@@ -9,7 +9,7 @@
   "devDependencies": {
     "browserify": "^16.2.2",
     "electron": "^2.0.2",
-    "electron-builder": "^20.15.1",
+    "electron-builder": "20.14.7",
     "elm-doctest": "^0.3.7",
     "netlify-cli": "^1.2.2"
   },
