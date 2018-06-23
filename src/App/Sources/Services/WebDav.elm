@@ -205,6 +205,7 @@ makeTrackUrl _ srcData httpMethod filePath =
             , "/webdav/file?url="
             , { host = host, directory = filePath, removeHostPath = True }
                 |> properUrl
+                |> String.dropRight 1
                 |> Http.encodeUri
             , "&username="
             , Http.encodeUri username

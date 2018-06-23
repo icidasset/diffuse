@@ -8,6 +8,7 @@ type Msg
     | RequestPlay
     | Seek Float
     | SetDuration Float
+    | SetIsLoading Bool
     | SetIsPlaying Bool
     | SetStalled Bool
     | Unstall
@@ -21,6 +22,7 @@ type Msg
 -}
 type alias Model =
     { duration : Float
+    , isLoading : Bool
     , isPlaying : Bool
     , stalled : Bool
     }

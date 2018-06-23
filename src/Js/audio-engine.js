@@ -172,11 +172,15 @@ function createAudioElement(environmentalContext, queueItem) {
   newNode.addEventListener("error", bind(audioErrorEvent));
   newNode.addEventListener("stalled", bind(audioStalledEvent));
 
-  newNode.addEventListener("timeupdate", timeUpdateFunc);
-  newNode.addEventListener("ended", bind(audioEndEvent));
-  newNode.addEventListener("play", bind(audioPlayEvent));
-  newNode.addEventListener("pause", bind(audioPauseEvent));
   newNode.addEventListener("canplay", bind(audioCanPlayEvent));
+  newNode.addEventListener("ended", bind(audioEndEvent));
+  newNode.addEventListener("loadstart", bind(audioLoading));
+  newNode.addEventListener("loadeddata", bind(audioLoaded));
+  newNode.addEventListener("pause", bind(audioPauseEvent));
+  newNode.addEventListener("play", bind(audioPlayEvent));
+  newNode.addEventListener("seeking", bind(audioLoading));
+  newNode.addEventListener("seeked", bind(audioLoaded));
+  newNode.addEventListener("timeupdate", timeUpdateFunc);
 
   newNode.load();
 
@@ -233,17 +237,21 @@ function audioErrorEvent(event) {
 
 
 function audioStalledEvent(event) {
-  console.error(`Audio stalled for '${ audioElementTrackId(event.target) }'`);
+  this.stalledTimeoutId = setTimeout(() => {
+    console.error(`Audio stalled for '${ audioElementTrackId(event.target) }'`);
 
-  this.elm.ports.setStalled.send(true);
-  this.unstallTimeoutId = setTimeout(() => {
-    this.elm.ports.setStalled.send(false);
-    unstallAudio(event.target);
-  }, 15000);
+    this.elm.ports.setStalled.send(true);
+    this.unstallTimeoutId = setTimeout(() => {
+      this.elm.ports.setStalled.send(false);
+      unstallAudio(event.target);
+    }, 2500);
+  }, 60000);
 }
 
 
 function audioTimeUpdateEvent(event) {
+  clearTimeout(this.stalledTimeoutId);
+
   if (isNaN(event.target.duration) || isNaN(event.target.currentTime)) {
     setProgressBarWidth(0)
   } else if (event.target.duration > 0) {
@@ -258,6 +266,16 @@ function audioEndEvent(event) {
   } else {
     this.elm.ports.activeQueueItemEnded.send(null);
   }
+}
+
+
+function audioLoading() {
+  this.elm.ports.setIsLoading.send(true);
+}
+
+
+function audioLoaded() {
+  this.elm.ports.setIsLoading.send(false);
 }
 
 

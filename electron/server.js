@@ -1,9 +1,9 @@
 const express = require("express")
 const expandHomeDir = require("expand-home-dir")
-const fetch = require("node-fetch")
 const globby = require("globby")
+const https = require("https")
 const path = require("path")
-const sendSeekable = require("send-seekable")
+const request = require("request")
 
 const app = express()
 const buildDirectory = path.resolve(__dirname, "../")
@@ -11,8 +11,6 @@ const buildDirectory = path.resolve(__dirname, "../")
 
 // 🍯
 
-
-app.use(sendSeekable)
 
 app.get("/local/file", provideLocalFile)
 app.get("/local/tree", makeLocalTree)
@@ -53,30 +51,29 @@ function makeLocalTree(req, res) {
 
 
 function provideWebDavFile(req, res) {
-  fetch(
-    req.query.url,
-    {
-      method: req.method,
-      headers: Object.assign(
-        { "Range": req.headers.Range },
-        webDavHeaders(req.query)
-      )
-    }
-  ).then(r => req.method === "GET" ? r.buffer() : r.text()
-  ).then(r => req.method === "GET" ? res.sendSeekable(r) : res.send(r)
-  ).catch(_ => res.status(500).send("Request failed")
-  )
+  const headers = Object.assign({}, req.headers, webDavHeaders(req.query))
+
+  delete headers["accept-language"]
+  delete headers["host"]
+  delete headers["referrer"]
+  delete headers["user-agent"]
+
+  return request({
+    agentOptions: { rejectUnauthorized: false },
+    url: req.query.url,
+    method: req.query.method,
+    headers: headers,
+  }).pipe(res)
 }
 
 
 function makeWebDavTree(req, res) {
-  fetch(
-    req.query.url,
-    { method: "PROPFIND", headers: webDavHeaders(req.query) }
-  ).then(r => r.text()
-  ).then(r => res.send(r)
-  ).catch(_ => res.status(500).send("Request failed")
-  )
+  return request({
+    agentOptions: { rejectUnauthorized: false },
+    url: req.query.url,
+    method: "PROPFIND",
+    headers: webDavHeaders(req.query),
+  }).pipe(res)
 }
 
 

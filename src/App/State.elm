@@ -551,6 +551,14 @@ update msg model =
                     |> Tracks.Types.SetActiveIdentifiedTrack
                     |> TracksMsg
                     |> do
+
+                -- Console.isLoading
+                , case maybeQueueItem of
+                    Just _ ->
+                        do <| ConsoleMsg <| Console.Types.SetIsLoading True
+
+                    Nothing ->
+                        Cmd.none
                 ]
 
         -- Insert automatically-generated playlists.

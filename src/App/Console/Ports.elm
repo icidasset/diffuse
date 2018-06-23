@@ -22,6 +22,9 @@ port requestUnstall : () -> Cmd msg
 port setDuration : (Float -> msg) -> Sub msg
 
 
+port setIsLoading : (Bool -> msg) -> Sub msg
+
+
 port setIsPlaying : (Bool -> msg) -> Sub msg
 
 

@@ -11,6 +11,7 @@ import Types as TopLevel
 initialModel : Model
 initialModel =
     { duration = 0
+    , isLoading = False
     , isPlaying = False
     , stalled = False
     }
@@ -35,6 +36,9 @@ update msg model =
         SetDuration float ->
             (,) { model | duration = float } Cmd.none
 
+        SetIsLoading bool ->
+            (,) { model | isLoading = bool } Cmd.none
+
         SetIsPlaying bool ->
             (,) { model | isPlaying = bool } Cmd.none
 
@@ -53,6 +57,7 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.setDuration SetDuration
+        , Ports.setIsLoading SetIsLoading
         , Ports.setIsPlaying SetIsPlaying
         , Ports.setStalled SetStalled
         ]

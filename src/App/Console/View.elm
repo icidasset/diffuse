@@ -47,7 +47,12 @@ entry model =
             [ center, width fill ]
             [ el Zed
                 []
-                (lazy2 nowPlaying model.queue.activeItem model.console.stalled)
+                (lazy3
+                    nowPlaying
+                    model.queue.activeItem
+                    model.console.isLoading
+                    model.console.stalled
+                )
             , el Zed
                 [ width fill ]
                 (lazy progress model.queue.activeItem)
@@ -62,9 +67,22 @@ entry model =
 -- Now playing
 
 
-nowPlaying : Maybe Queue.Types.Item -> Bool -> Node
-nowPlaying activeItem stalled =
-    if stalled then
+nowPlaying : Maybe Queue.Types.Item -> Bool -> Bool -> Node
+nowPlaying activeItem isLoading stalled =
+    if isLoading then
+        el
+            (Console NowPlaying)
+            [ paddingBottom (scaled -1)
+            , paddingTop (scaled 3)
+            ]
+            (case activeItem of
+                Just _ ->
+                    text "Loading track …"
+
+                Nothing ->
+                    text "Diffuse"
+            )
+    else if stalled then
         el
             (Console NowPlaying)
             [ onClick (TopLevel.ConsoleMsg Unstall)
