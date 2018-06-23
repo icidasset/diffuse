@@ -77,7 +77,10 @@ function makeWebDavTree(req, res) {
     agentOptions: { rejectUnauthorized: false },
     url: req.query.url,
     method: "PROPFIND",
-    headers: webDavHeaders(req.query),
+    headers: Object.assign(
+      { depth: "1" },
+      webDavHeaders(req.query)
+    ),
   })
   .on("error", err => {
     res.status(500)
