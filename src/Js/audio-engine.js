@@ -270,11 +270,14 @@ function audioEndEvent(event) {
 
 
 function audioLoading() {
-  this.elm.ports.setIsLoading.send(true);
+  this.loadingTimeoutId = setTimeout(() => {
+    this.elm.ports.setIsLoading.send(true);
+  }, 1750);
 }
 
 
 function audioLoaded() {
+  clearTimeout(this.loadingTimeoutId);
   this.elm.ports.setIsLoading.send(false);
 }
 
