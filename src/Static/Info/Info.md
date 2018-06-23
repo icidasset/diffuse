@@ -2,6 +2,12 @@
 
 [Return to the application](/).
 
+#### Links
+
+🕸 [Web version](https://diffuse.sh/)  
+🖥 [Native version](https://github.com/icidasset/diffuse/releases)  
+⚗️ [Github repository](https://github.com/icidasset/diffuse)  
+
 
 
 ## Which services does it use?
@@ -32,8 +38,8 @@ This layer connects with the services the user has on which music can be found. 
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
-- Local Filesystem <small>(native only)</small>
 - [IPFS](https://ipfs.io/)
+- Local Filesystem <small>(native only)</small>
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV) <small>(native only)</small>
 
 
@@ -41,6 +47,13 @@ This layer connects with the services the user has on which music can be found. 
 ## How does it work?
 
 Diffuse locates all the music files on the given services, extracts the metadata and then stores it via the user layer (which was explained before).
+
+
+### Supported File Formats
+
+- MP3
+- MP4/M4A
+- FLAC
 
 
 <div id="CORS" />

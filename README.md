@@ -37,8 +37,8 @@ MacOS, Linux & Windows.
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
-- Local Filesystem <small>(native only)</small>
 - [IPFS](https://ipfs.io/)
+- Local Filesystem <small>(native only)</small>
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV) <small>(native only)</small>
 
 
