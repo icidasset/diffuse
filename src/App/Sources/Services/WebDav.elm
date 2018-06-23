@@ -117,14 +117,21 @@ makeTree srcData marker currentDate resultMsg =
                 , { host = host, directory = directory, removeHostPath = inProgress }
                     |> properUrl
                     |> Http.encodeUri
-                , "&username="
-                , Http.encodeUri username
-                , "&password="
-                , Http.encodeUri password
+                , "&auth="
+                , (username ++ ":" ++ password)
+                    |> Base64.encode
+                    |> String.append "Basic "
                 ]
     in
-        localUrl
-            |> Http.getString
+        { method = "PROPFIND"
+        , headers = []
+        , url = localUrl
+        , body = Http.emptyBody
+        , expect = Http.expectString
+        , timeout = Nothing
+        , withCredentials = False
+        }
+            |> Http.request
             |> Http.send resultMsg
 
 
@@ -207,8 +214,8 @@ makeTrackUrl _ srcData httpMethod filePath =
                 |> properUrl
                 |> String.dropRight 1
                 |> Http.encodeUri
-            , "&username="
-            , Http.encodeUri username
-            , "&password="
-            , Http.encodeUri password
+            , "&auth="
+            , (username ++ ":" ++ password)
+                |> Base64.encode
+                |> String.append "Basic "
             ]

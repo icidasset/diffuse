@@ -15,8 +15,8 @@ const buildDirectory = path.resolve(__dirname, "../")
 app.get("/local/file", provideLocalFile)
 app.get("/local/tree", makeLocalTree)
 
-app.get("/webdav/file", provideWebDavFile)
-app.get("/webdav/tree", makeWebDavTree)
+app.all("/webdav/file", webdavProxy)
+app.all("/webdav/tree", webdavProxy)
 
 app.use(express.static(buildDirectory))
 app.use(function(req, res, next) {
@@ -50,52 +50,15 @@ function makeLocalTree(req, res) {
 // WebDAV Service
 
 
-function provideWebDavFile(req, res) {
-  const headers = Object.assign({}, req.headers, webDavHeaders(req.query))
-
-  delete headers["accept-language"]
-  delete headers["host"]
-  delete headers["referrer"]
-  delete headers["user-agent"]
-
+function webdavProxy(req, res) {
   return request({
     agentOptions: { rejectUnauthorized: false },
     url: req.query.url,
-    method: req.query.method,
-    headers: headers,
+    method: req.method,
+    headers: Object.assign({}, req.headers, { authorization: req.query.auth })
   })
-  .on("error", err => {
-    res.status(500)
-    res.send(err.message)
-  })
+  .on("error", err => res.status(500).send(err.message))
   .pipe(res)
-}
-
-
-function makeWebDavTree(req, res) {
-  return request({
-    agentOptions: { rejectUnauthorized: false },
-    url: req.query.url,
-    method: "PROPFIND",
-    headers: Object.assign(
-      { depth: "1" },
-      webDavHeaders(req.query)
-    ),
-  })
-  .on("error", err => {
-    res.status(500)
-    res.send(err.message)
-  })
-  .pipe(res)
-}
-
-
-function webDavHeaders(query) {
-  return {
-    "Authorization": "Basic " + Buffer.from(
-      query.username + ":" + query.password
-    ).toString("base64")
-  }
 }
 
 
