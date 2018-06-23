@@ -63,7 +63,12 @@ function provideWebDavFile(req, res) {
     url: req.query.url,
     method: req.query.method,
     headers: headers,
-  }).pipe(res)
+  })
+  .on("error", err => {
+    res.status(500)
+    res.send(err.message)
+  })
+  .pipe(res)
 }
 
 
@@ -73,7 +78,12 @@ function makeWebDavTree(req, res) {
     url: req.query.url,
     method: "PROPFIND",
     headers: webDavHeaders(req.query),
-  }).pipe(res)
+  })
+  .on("error", err => {
+    res.status(500)
+    res.send(err.message)
+  })
+  .pipe(res)
 }
 
 
