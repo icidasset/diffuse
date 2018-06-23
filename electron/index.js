@@ -108,7 +108,8 @@ const menuTemplate = [
     role: "window",
     submenu: [
       { role: "minimize" },
-      { role: "close" }
+      { role: "close" },
+      { role: "front" }
     ]
   },
   {
@@ -127,6 +128,7 @@ if (process.platform === "darwin") {
    menuTemplate.unshift({
      label: app.getName(),
      submenu: [
+       { role: "about" },
        { role: "hide" },
        { role: "unhide" },
        { role: "quit" }
