@@ -4,11 +4,13 @@ import Date exposing (Date)
 import Date.Extra
 import Dict
 import Dict.Ext as Dict
+import Maybe.Extra as Maybe
 import SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
 import Sources.Processing.Types exposing (HttpMethod)
 import Sources.Types exposing (SourceData)
+import Sources.Services.Utils exposing (replace)
 import Time exposing (Time)
 import Utils
 
@@ -29,10 +31,36 @@ presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
         region =
             Dict.fetchUnknown "region" aws
 
+        bucketName =
+            Dict.fetchUnknown "bucketName" aws
+
+        customHost =
+            Dict.get "host" aws
+
         host =
-            Dict.fetchUnknown "bucketName" aws ++ ".s3.amazonaws.com"
+            case customHost of
+                Just h ->
+                    h
+                        |> replace "^http://" ""
+                        |> replace "^https://" ""
+                        |> replace "/$" ""
+
+                Nothing ->
+                    bucketName ++ ".s3.amazonaws.com"
+
+        protocol =
+            if String.contains "http://" (Maybe.withDefault "" customHost) then
+                "http://"
+            else
+                "https://"
 
         -- {var} Paths
+        filePathPrefix =
+            if Maybe.isJust customHost then
+                "/" ++ bucketName
+            else
+                ""
+
         filePath =
             (if String.startsWith "/" pathToFile then
                 pathToFile
@@ -42,6 +70,7 @@ presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
                 |> String.split "/"
                 |> List.map Utils.encodeUri
                 |> String.join "/"
+                |> String.append filePathPrefix
 
         -- {var} Time
         timestamp =
@@ -110,7 +139,7 @@ presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
                 |> unicodeToHex 2
     in
         String.concat
-            [ "https://"
+            [ protocol
             , host
             , filePath
             , "?"

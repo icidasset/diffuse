@@ -45,6 +45,7 @@ properties =
     , ( "bucketName", "Bucket name", "music", False )
     , ( "region", "Region", defaults.region, False )
     , ( "directoryPath", "Directory", defaults.directoryPath, False )
+    , ( "host", "Host (optional)", "http://127.0.0.1:9000", False )
     , ( "name", "Label", defaults.name, False )
     ]
 
@@ -57,6 +58,7 @@ initialData =
         [ ( "accessKey", "" )
         , ( "bucketName", "" )
         , ( "directoryPath", defaults.directoryPath )
+        , ( "host", "" )
         , ( "name", defaults.name )
         , ( "region", defaults.region )
         , ( "secretKey", "" )
