@@ -5,7 +5,7 @@ import Style exposing (..)
 import Style.Border as Border
 import Style.Color as Color
 import Style.Font as Font
-import Variables exposing (colorDerivatives, scaled)
+import Variables exposing (colorDerivatives, headerFont, scaled)
 import Variations exposing (Variations(..))
 
 
@@ -47,7 +47,8 @@ styles =
     --
     , style ButtonLabel
         [ Font.letterSpacing 3.75
-        , Font.size 13
+        , Font.size (scaled -3)
+        , Font.typeface [ headerFont, Font.sansSerif ]
         , Font.weight 700
         ]
 

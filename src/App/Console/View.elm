@@ -237,6 +237,7 @@ buttons queue isPlaying =
                 , width (px 17)
 
                 --
+                , moveLeft 1
                 , vary OnAlt isPlaying
                 ]
                 empty
@@ -244,7 +245,7 @@ buttons queue isPlaying =
             --
             , el
                 (Console ButtonLabel)
-                [ buttonPadding ]
+                [ buttonPadding, moveDown 2, moveRight 1 ]
                 (text "PLAY")
             ]
 
