@@ -124,7 +124,7 @@ makeTree srcData marker currentDate resultMsg =
                 ]
     in
         { method = "PROPFIND"
-        , headers = []
+        , headers = [ Http.header "Depth" "1" ]
         , url = localUrl
         , body = Http.emptyBody
         , expect = Http.expectString

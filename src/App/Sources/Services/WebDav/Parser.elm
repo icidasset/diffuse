@@ -1,14 +1,11 @@
 module Sources.Services.WebDav.Parser exposing (parseTreeResponse, parseErrorResponse)
 
 import Maybe.Extra as Maybe
+import Regex
 import Sources.Pick exposing (isMusicFile)
 import Sources.Processing.Types exposing (Marker(..), TreeAnswer)
 import Sources.Services.Utils exposing (unescapeXmlEntities)
 import Sources.Services.WebDav.Marker as Marker
-import Xml
-import Xml.Decode as Xml
-import Xml.Encode as Xml
-import Xml.Query exposing (..)
 
 
 -- Tree
@@ -17,35 +14,31 @@ import Xml.Query exposing (..)
 parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse response previousMarker =
     let
-        decodedXml =
+        responseTags =
             response
-                |> Xml.decode
-                |> Result.toMaybe
-                |> Maybe.map (tags "d:multistatus")
-                |> Maybe.andThen List.head
-                |> Maybe.withDefault Xml.null
+                |> Regex.replace Regex.All (Regex.regex docTag) (always "")
+                |> Regex.replace Regex.All (Regex.regex startRootTag) (always "")
+                |> Regex.replace Regex.All (Regex.regex endRootTag) (always "")
+                |> String.split "</d:response>"
+                |> List.drop 1
+                |> List.map (\s -> s ++ "</d:response>")
 
-        rootPlusResponses =
-            tags "d:response" decodedXml
-
-        responses =
-            List.drop 1 rootPlusResponses
+        ( rawDirs, rawFiles ) =
+            List.partition isDir responseTags
 
         dirs =
-            responses
-                |> List.filter isDir
-                |> collect (tag "d:href" string)
-                |> List.map unescapeXmlEntities
+            List.map getHref rawDirs
 
         files =
-            responses
+            rawFiles
                 |> List.filter isAudioFile
-                |> collect (tag "d:href" string)
-                |> List.map unescapeXmlEntities
+                |> List.map getHref
                 |> List.filter isMusicFile
     in
         { filePaths =
             files
+
+        -- files
         , marker =
             previousMarker
                 |> Marker.removeOne
@@ -53,29 +46,41 @@ parseTreeResponse response previousMarker =
         }
 
 
-isDir : Xml.Value -> Bool
-isDir val =
-    val
-        |> nested [ "d:propstat", "d:prop", "d:resourcetype", "d:collection" ]
-        |> Result.toMaybe
-        |> Maybe.isJust
+docTag : String
+docTag =
+    "\\s*" ++ Regex.escape "<?xml version=\"1.0\"?>" ++ "\\s*"
 
 
-isAudioFile : Xml.Value -> Bool
-isAudioFile val =
-    val
-        |> nested [ "d:propstat", "d:prop", "d:getcontenttype" ]
-        |> Result.andThen Xml.Query.string
-        |> Result.map (String.startsWith "audio/")
-        |> (==) (Ok True)
+startRootTag : String
+startRootTag =
+    "<d:multistatus[^>]*>"
 
 
-nested : List String -> Xml.Value -> Result String Xml.Value
-nested keys startingValue =
-    List.foldl
-        (\key acc -> Result.andThen (tag key Ok) acc)
-        (Ok startingValue)
-        keys
+endRootTag : String
+endRootTag =
+    Regex.escape "</d:multistatus>"
+
+
+getHref : String -> String
+getHref xmlString =
+    xmlString
+        |> Regex.find (Regex.AtMost 1) (Regex.regex "<d:href>([^<]+)</d:href>")
+        |> List.head
+        |> Maybe.map .submatches
+        |> Maybe.andThen List.head
+        |> Maybe.join
+        |> Maybe.map unescapeXmlEntities
+        |> Maybe.withDefault "invalidHref"
+
+
+isAudioFile : String -> Bool
+isAudioFile xmlString =
+    String.contains "<d:getcontenttype>audio/" xmlString
+
+
+isDir : String -> Bool
+isDir xmlString =
+    Regex.contains (Regex.regex "<d:collection\\s*/>") xmlString
 
 
 
