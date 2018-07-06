@@ -13,6 +13,11 @@ a[href].is-styled-link {
   border-bottom: 2px solid rgb(254, 196, 24);
 }
 
+select:focus,
+select:active {
+  outline: none;
+}
+
 .in-the-middle {
   left: 50%;
   position: fixed;
