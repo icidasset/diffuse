@@ -87,6 +87,9 @@ makeTree srcData marker currentDate resultMsg =
                 |> Maybe.withDefault defaults.directoryPath
                 |> cleanPath
 
+        baseParams =
+            [ ( "maxresults", "1000" ) ]
+
         params =
             case marker of
                 InProgress s ->
@@ -96,7 +99,7 @@ makeTree srcData marker currentDate resultMsg =
                     []
 
         url =
-            presignedUrl Blob List Get 1 currentDate srcData directoryPath params
+            presignedUrl Blob List Get 1 currentDate srcData directoryPath (baseParams ++ params)
     in
         url
             |> Http.getString

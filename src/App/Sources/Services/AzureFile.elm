@@ -88,6 +88,9 @@ makeTree srcData marker currentDate resultMsg =
                 |> Maybe.withDefault defaults.directoryPath
                 |> cleanPath
 
+        baseParams =
+            [ ( "maxresults", "1000" ) ]
+
         ( directoryPath, params ) =
             case FileMarker.takeOne marker of
                 Just (Directory directory) ->
@@ -100,7 +103,7 @@ makeTree srcData marker currentDate resultMsg =
                     (,) directoryPathFromSrcData []
 
         url =
-            presignedUrl File List Get 1 currentDate srcData directoryPath params
+            presignedUrl File List Get 1 currentDate srcData directoryPath (baseParams ++ params)
     in
         url
             |> Http.getString
