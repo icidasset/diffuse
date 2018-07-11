@@ -208,6 +208,6 @@ makeSignature { accountKey, accountName, expiryTime, permissions, protocol, reso
             |> BinaryBase64.decode
             |> Result.withDefault []
             |> Utils.byteArrayToString
-            |> Hmac.encrypt64 SHA.sha256sum message
+            |> Hmac.encrypt64 SHA.sha256 message
             |> Utils.stringToByteArray
             |> BinaryBase64.encode

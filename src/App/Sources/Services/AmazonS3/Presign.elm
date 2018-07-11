@@ -125,17 +125,17 @@ presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
                 [ "AWS4-HMAC-SHA256"
                 , timestamp
                 , String.join "/" [ date, region, "s3", "aws4_request" ]
-                , SHA.sha256sum request
+                , SHA.sha256 request
                 ]
 
         -- Signature
         signature =
             ("AWS4" ++ Dict.fetchUnknown "secretKey" aws)
-                |> Hmac.encrypt64 SHA.sha256sum date
-                |> Hmac.encrypt64 SHA.sha256sum region
-                |> Hmac.encrypt64 SHA.sha256sum "s3"
-                |> Hmac.encrypt64 SHA.sha256sum "aws4_request"
-                |> Hmac.encrypt64 SHA.sha256sum stringToSign
+                |> Hmac.encrypt64 SHA.sha256 date
+                |> Hmac.encrypt64 SHA.sha256 region
+                |> Hmac.encrypt64 SHA.sha256 "s3"
+                |> Hmac.encrypt64 SHA.sha256 "aws4_request"
+                |> Hmac.encrypt64 SHA.sha256 stringToSign
                 |> unicodeToHex 2
     in
         String.concat
