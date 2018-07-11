@@ -5,7 +5,7 @@ import Date.Extra
 import Dict
 import Dict.Ext as Dict
 import Maybe.Extra as Maybe
-import SHA
+import Crypto.Hash as SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
 import Sources.Processing.Types exposing (HttpMethod)
