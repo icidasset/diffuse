@@ -18,6 +18,7 @@ module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
 
 import Bitwise
 import Char
+import Crypto.HMAC exposing (Hash, sha256)
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Types exposing (..)
 import Sources.Crypto.Utils exposing (..)
@@ -26,60 +27,22 @@ import Sources.Crypto.Utils exposing (..)
 {-| HMAC encryption for hashing algorithms with a `blockSize` of 64.
 These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
 
-    >>> encrypt64 SHA.sha256sum "The quick brown fox jumps over the lazy dog" "key"
-    >>>     |> unicodeToHex 2
+    >>> encrypt64 sha256 "The quick brown fox jumps over the lazy dog" "key"
     "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
 
-    >>> encrypt64 SHA.sha256sum "" ""
-    >>>     |> unicodeToHex 2
+    >>> encrypt64 sha256 "" ""
     "b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad"
 
 -}
-encrypt64 : HashFunction -> String -> String -> String
-encrypt64 =
-    encrypt 64
+encrypt64 : Hash -> String -> String -> String
+encrypt64 hashFunction message key =
+    Crypto.HMAC.digest hashFunction key message
+
 
 
 {-| HMAC encryption for hashing algorithms with a `blockSize` of 128.
 These include: SHA-384, SHA-512, etc.
 -}
-encrypt128 : HashFunction -> String -> String -> String
-encrypt128 =
-    encrypt 128
-
-
-
--- Encrypt
-
-
-encrypt : Int -> HashFunction -> String -> String -> String
-encrypt blockSize hasher message key =
-    let
-        keySize =
-            String.length key
-
-        hash =
-            unicodeToHex 2
-                >> String.append "0x"
-                >> hasher
-                >> unicodeHexToUnicode
-
-        keyWithBlockSize =
-            if keySize > blockSize then
-                hash key
-            else if keySize < blockSize then
-                String.padRight blockSize (Char.fromCode 0) key
-            else
-                key
-
-        ( byteArrayOne, byteArrayTwo ) =
-            keyWithBlockSize
-                |> stringToByteArray
-                |> List.map (\k -> ( Bitwise.xor k 54, Bitwise.xor k 92 ))
-                |> List.unzip
-    in
-        message
-            |> String.append (byteArrayToString byteArrayOne)
-            |> hash
-            |> String.append (byteArrayToString byteArrayTwo)
-            |> hash
+encrypt128 : Hash -> String -> String -> String
+encrypt128 hashFunction message key =
+    Crypto.HMAC.digest hashFunction key message

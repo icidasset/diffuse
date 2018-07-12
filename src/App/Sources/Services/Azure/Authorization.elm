@@ -13,7 +13,7 @@ import Date exposing (Date)
 import Date.Extra
 import Dict
 import Dict.Ext as Dict
-import Crypto.Hash as SHA
+import Crypto.HMAC as SHA
 import Sources.Crypto.Hex as Hex
 import Sources.Crypto.Hmac as Hmac
 import Sources.Crypto.Utils as Utils
