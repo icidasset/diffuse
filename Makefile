@@ -18,7 +18,7 @@ all: dev
 # Build tasks
 #
 
-build: clean elm system vendor electron-prep
+build: clean elm system vendor
 	@echo "> Build completed ⚡"
 
 
@@ -43,7 +43,7 @@ electron-prep:
 	@convert $(BUILD_DIR)/resources/icon.png -define icon:auto-resize=256 $(BUILD_DIR)/resources/icon.ico
 
 
-electron-build: build electron-clean
+electron-build: build electron-clean electron-prep
 	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac --linux --win
 
 
@@ -71,7 +71,7 @@ dev: build
 	@make -j watch-wo-build server
 
 
-electron-dev: build
+electron-dev: build electron-prep
 	@make -j watch-wo-build electron-dev-server
 
 
