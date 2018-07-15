@@ -1,4 +1,4 @@
-module Element.Ext exposing (lineBreak, onEnterKey, lazy, lazy2, lazy3, lazySpread, lazySpread2, lazySpread3)
+module Element.Ext exposing (lazy, lazy2, lazy3, lazySpread, lazySpread2, lazySpread3, lineBreak, onEnterKey)
 
 import Element exposing (Element)
 import Element.Attributes
@@ -6,8 +6,8 @@ import Element.Events exposing (on)
 import Html
 import Html.Attributes
 import Html.Lazy
-import Keyboard.Extra exposing (Key, targetKey)
 import Json.Decode as Json
+import Keyboard.Extra exposing (Key, targetKey)
 import Styles exposing (Styles(Zed), styles)
 import Types as TopLevel
 import Variations exposing (Variations)

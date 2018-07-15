@@ -1,26 +1,17 @@
 module Alfred.View exposing (entry)
 
+import Alfred.Styles exposing (Styles(..))
 import Alfred.Types as Types exposing (Msg(..))
-import Json.Decode as Json
-import Types as TopLevel
-
-
--- Elements
-
 import Element exposing (column, el, empty, italic, text)
 import Element.Attributes exposing (..)
 import Element.Events exposing (..)
-import Element.Ext exposing (onEnterKey)
 import Element.Input exposing (focusOnLoad, hiddenLabel, placeholder, search)
 import Element.Types exposing (Node)
+import Json.Decode as Json
+import Styles exposing (Styles(Alfred, Zed))
+import Types as TopLevel
 import Variables exposing (scaled)
 import Variations exposing (Variations(..))
-
-
--- Styles
-
-import Alfred.Styles exposing (Styles(..))
-import Styles exposing (Styles(Alfred, Zed))
 
 
 -- 🍯
@@ -30,13 +21,7 @@ entry : Types.Alfred TopLevel.Msg -> Node
 entry context =
     column
         (Alfred Container)
-        [ context.focus
-            |> RunAction
-            |> TopLevel.AlfredMsg
-            |> onEnterKey
-
-        --
-        , center
+        [ center
         , height fill
         , width fill
 

@@ -2,8 +2,9 @@ module Alfred.State exposing (..)
 
 import Alfred.System
 import Alfred.Types exposing (..)
-import Response
 import Keyboard.Extra as Keyboard
+import Response
+import Response.Ext exposing (do)
 import Types as TopLevel
 
 
@@ -62,6 +63,14 @@ update msg model =
                         |> (\c -> { c | focus = max 0 (c.focus - 1) })
                         |> (\c -> { model | instance = Just c })
                         |> Response.withCmd Cmd.none
+
+                Nothing ->
+                    (,) model Cmd.none
+
+        KeydownMsg Keyboard.Enter ->
+            case model.instance of
+                Just context ->
+                    (,) model (do <| TopLevel.AlfredMsg <| RunAction context.focus)
 
                 Nothing ->
                     (,) model Cmd.none
