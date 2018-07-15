@@ -9,17 +9,17 @@ module Sources.Services.Azure.Authorization exposing (..)
 
 import Base64
 import BinaryBase64
+import Crypto.HMAC as Hmac
 import Date exposing (Date)
 import Date.Extra
 import Dict
 import Dict.Ext as Dict
-import Crypto.HMAC as SHA
 import Sources.Crypto.Hex as Hex
 import Sources.Crypto.Hmac as Hmac
 import Sources.Crypto.Utils as Utils
 import Sources.Processing.Types exposing (HttpMethod)
-import Sources.Types exposing (SourceData)
 import Sources.Services.Utils as Utils
+import Sources.Types exposing (SourceData)
 import Utils
 
 
@@ -114,45 +114,45 @@ presignedUrl storageMethod computation httpMethod hoursToLive currentDate srcDat
             , version = "2017-04-17"
             }
     in
-        String.concat
-            [ "https://"
-            , accountName
-            , "."
-            , resourceType
-            , ".core.windows.net/"
-            , container
-            , filePath
+    String.concat
+        [ "https://"
+        , accountName
+        , "."
+        , resourceType
+        , ".core.windows.net/"
+        , container
+        , filePath
 
-            -- Start query params
-            , "?"
-            , params
-                |> List.map Utils.makeQueryParam
-                |> String.join "&"
+        -- Start query params
+        , "?"
+        , params
+            |> List.map Utils.makeQueryParam
+            |> String.join "&"
 
-            -- Query params for certain requests
-            , case computation of
-                List ->
-                    "&restype=" ++ resType ++ "&comp=list"
+        -- Query params for certain requests
+        , case computation of
+            List ->
+                "&restype=" ++ resType ++ "&comp=list"
 
-                _ ->
-                    ""
+            _ ->
+                ""
 
-            -- Signature things
-            , "&sv="
-            , Utils.encodeUri signatureStuff.version
-            , "&ss="
-            , Utils.encodeUri signatureStuff.services
-            , "&srt="
-            , Utils.encodeUri signatureStuff.resources
-            , "&sp="
-            , Utils.encodeUri signatureStuff.permissions
-            , "&se="
-            , Utils.encodeUri signatureStuff.expiryTime
-            , "&spr="
-            , Utils.encodeUri signatureStuff.protocol
-            , "&sig="
-            , Utils.encodeUri (makeSignature signatureStuff)
-            ]
+        -- Signature things
+        , "&sv="
+        , Utils.encodeUri signatureStuff.version
+        , "&ss="
+        , Utils.encodeUri signatureStuff.services
+        , "&srt="
+        , Utils.encodeUri signatureStuff.resources
+        , "&sp="
+        , Utils.encodeUri signatureStuff.permissions
+        , "&se="
+        , Utils.encodeUri signatureStuff.expiryTime
+        , "&spr="
+        , Utils.encodeUri signatureStuff.protocol
+        , "&sig="
+        , Utils.encodeUri (makeSignature signatureStuff)
+        ]
 
 
 
@@ -204,10 +204,10 @@ makeSignature { accountKey, accountName, expiryTime, permissions, protocol, reso
                 |> String.join "\n"
                 |> (\str -> str ++ "\n")
     in
-        accountKey
-            |> BinaryBase64.decode
-            |> Result.withDefault []
-            |> Utils.byteArrayToString
-            |> Hmac.encrypt64 SHA.sha256 message
-            |> Utils.stringToByteArray
-            |> BinaryBase64.encode
+    accountKey
+        |> BinaryBase64.decode
+        |> Result.withDefault []
+        |> Utils.byteArrayToString
+        |> Hmac.encrypt64 Hmac.sha256 message
+        |> Utils.stringToByteArray
+        |> BinaryBase64.encode

@@ -1,4 +1,4 @@
-module Sources.Crypto.Hmac exposing (encrypt64, encrypt128)
+module Sources.Crypto.Hmac exposing (encrypt128, encrypt64)
 
 {-| Cryptography
 ||| – HMAC
@@ -28,21 +28,25 @@ import Sources.Crypto.Utils exposing (..)
 These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
 
     >>> encrypt64 sha256 "The quick brown fox jumps over the lazy dog" "key"
+    >>>     |> unicodeToHex 2
     "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
 
     >>> encrypt64 sha256 "" ""
+    >>>     |> unicodeToHex 2
     "b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad"
 
 -}
 encrypt64 : Hash -> String -> String -> String
 encrypt64 hashFunction message key =
-    Crypto.HMAC.digest hashFunction key message
-
+    message
+        |> stringToByteArray
+        |> Crypto.HMAC.digestBytes hashFunction (stringToByteArray key)
+        |> byteArrayToString
 
 
 {-| HMAC encryption for hashing algorithms with a `blockSize` of 128.
 These include: SHA-384, SHA-512, etc.
 -}
 encrypt128 : Hash -> String -> String -> String
-encrypt128 hashFunction message key =
-    Crypto.HMAC.digest hashFunction key message
+encrypt128 =
+    encrypt64
