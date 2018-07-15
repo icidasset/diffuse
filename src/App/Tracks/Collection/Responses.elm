@@ -1,7 +1,9 @@
 module Tracks.Collection.Responses exposing (..)
 
+import Dom.Scroll
 import Queue.Types
 import Response.Ext exposing (do)
+import Task
 import Tracks.Encoding
 import Tracks.Ports as Ports
 import Tracks.Types exposing (..)
@@ -21,17 +23,17 @@ globalConsequences oldCollection newCollection model =
                 search =
                     TopLevel.TracksMsg (Search model.searchTerm)
             in
-                Cmd.batch
-                    [ Ports.updateSearchIndex encodedTracks
-                    , do TopLevel.AutoGeneratePlaylists
-                    , do search
+            Cmd.batch
+                [ Ports.updateSearchIndex encodedTracks
+                , do TopLevel.AutoGeneratePlaylists
+                , do search
 
-                    -- Store data
-                    , if model.initialImportPerformed then
-                        do TopLevel.DebounceStoreUserData
-                      else
-                        Cmd.none
-                    ]
+                -- Store data
+                , if model.initialImportPerformed then
+                    do TopLevel.DebounceStoreUserData
+                  else
+                    Cmd.none
+                ]
 
         False ->
             Cmd.none
@@ -51,12 +53,15 @@ harvestingConsequences oldCollection newCollection _ =
         new =
             List.map mod newCollection.harvested
     in
-        case old /= new of
-            True ->
-                Cmd.batch
-                    [ do (TopLevel.QueueMsg Queue.Types.Reset)
-                    , do (TopLevel.TracksMsg Tracks.Types.Recalibrate)
-                    ]
+    case old /= new of
+        True ->
+            Cmd.batch
+                [ do (TopLevel.QueueMsg Queue.Types.Reset)
+                , do (TopLevel.TracksMsg Tracks.Types.Recalibrate)
+                , 1
+                    |> Dom.Scroll.toY "tracks"
+                    |> Task.attempt (always TopLevel.NoOp)
+                ]
 
-            False ->
-                Cmd.none
+        False ->
+            Cmd.none

@@ -1,4 +1,4 @@
-module Console.Styles exposing (Styles(..), styles, lightHeight)
+module Console.Styles exposing (Styles(..), lightHeight, styles)
 
 import Color
 import Style exposing (..)
