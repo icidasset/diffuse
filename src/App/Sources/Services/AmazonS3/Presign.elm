@@ -1,16 +1,17 @@
 module Sources.Services.AmazonS3.Presign exposing (presignedUrl)
 
+import Crypto.HMAC as Hmac
+import Crypto.Hash as Hash
 import Date exposing (Date)
 import Date.Extra
 import Dict
 import Dict.Ext as Dict
 import Maybe.Extra as Maybe
-import SHA
 import Sources.Crypto.Hex exposing (..)
 import Sources.Crypto.Hmac as Hmac
 import Sources.Processing.Types exposing (HttpMethod)
-import Sources.Types exposing (SourceData)
 import Sources.Services.Utils exposing (replace)
+import Sources.Types exposing (SourceData)
 import Time exposing (Time)
 import Utils
 
@@ -125,25 +126,25 @@ presignedUrl method lifeExpectancy extraParams currentDate srcData pathToFile =
                 [ "AWS4-HMAC-SHA256"
                 , timestamp
                 , String.join "/" [ date, region, "s3", "aws4_request" ]
-                , SHA.sha256sum request
+                , Hash.sha256 request
                 ]
 
         -- Signature
         signature =
             ("AWS4" ++ Dict.fetchUnknown "secretKey" aws)
-                |> Hmac.encrypt64 SHA.sha256sum date
-                |> Hmac.encrypt64 SHA.sha256sum region
-                |> Hmac.encrypt64 SHA.sha256sum "s3"
-                |> Hmac.encrypt64 SHA.sha256sum "aws4_request"
-                |> Hmac.encrypt64 SHA.sha256sum stringToSign
+                |> Hmac.encrypt64 Hmac.sha256 date
+                |> Hmac.encrypt64 Hmac.sha256 region
+                |> Hmac.encrypt64 Hmac.sha256 "s3"
+                |> Hmac.encrypt64 Hmac.sha256 "aws4_request"
+                |> Hmac.encrypt64 Hmac.sha256 stringToSign
                 |> unicodeToHex 2
     in
-        String.concat
-            [ protocol
-            , host
-            , filePath
-            , "?"
-            , queryString
-            , "&X-Amz-Signature="
-            , signature
-            ]
+    String.concat
+        [ protocol
+        , host
+        , filePath
+        , "?"
+        , queryString
+        , "&X-Amz-Signature="
+        , signature
+        ]
