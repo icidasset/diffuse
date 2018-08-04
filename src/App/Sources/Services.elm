@@ -3,14 +3,11 @@ module Sources.Services exposing (..)
 {-| Service functions used in other modules.
 -}
 
+-- Services
+
 import Date exposing (Date)
 import Http
 import Sources.Processing.Types as Processing exposing (..)
-import Sources.Types exposing (..)
-
-
--- Services
-
 import Sources.Services.AmazonS3 as AmazonS3
 import Sources.Services.AzureBlob as AzureBlob
 import Sources.Services.AzureFile as AzureFile
@@ -19,6 +16,8 @@ import Sources.Services.Google as Google
 import Sources.Services.Ipfs as Ipfs
 import Sources.Services.Local as Local
 import Sources.Services.WebDav as WebDav
+import Sources.Types exposing (..)
+
 
 
 -- Functions implemented by services
@@ -366,20 +365,24 @@ labels isElectron =
         default =
             [ ( typeToKey AmazonS3, "Amazon S3" )
             , ( typeToKey AzureBlob, "Azure Blob Storage" )
-            , ( typeToKey AzureFile, "Azure File Storage" )
             , ( typeToKey Dropbox, "Dropbox" )
             , ( typeToKey Google, "Google Drive" )
             , ( typeToKey Ipfs, "IPFS" )
+
+            -- Disabled
+            -- ========
+            -- ( typeToKey AzureFile, "Azure File Storage" ) (see issue #123)
             ]
     in
-        if isElectron then
-            List.append
-                default
-                [ ( typeToKey Local, "Locally" )
-                , ( typeToKey WebDav, "WebDAV" )
-                ]
-        else
+    if isElectron then
+        List.append
             default
+            [ ( typeToKey Local, "Locally" )
+            , ( typeToKey WebDav, "WebDAV" )
+            ]
+
+    else
+        default
 
 
 {-| Build a `NewForm` from a redirect with a hash.
