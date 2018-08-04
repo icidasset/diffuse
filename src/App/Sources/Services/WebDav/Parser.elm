@@ -1,11 +1,12 @@
-module Sources.Services.WebDav.Parser exposing (parseTreeResponse, parseErrorResponse)
+module Sources.Services.WebDav.Parser exposing (parseErrorResponse, parseTreeResponse)
 
 import Maybe.Extra as Maybe
-import Regex
+import Regex exposing (HowMany(..), Regex, regex)
 import Sources.Pick exposing (isMusicFile)
 import Sources.Processing.Types exposing (Marker(..), TreeAnswer)
 import Sources.Services.Utils exposing (unescapeXmlEntities)
 import Sources.Services.WebDav.Marker as Marker
+
 
 
 -- Tree
@@ -16,12 +17,12 @@ parseTreeResponse response previousMarker =
     let
         responseTags =
             response
-                |> Regex.replace Regex.All (Regex.regex docTag) (always "")
-                |> Regex.replace Regex.All (Regex.regex startRootTag) (always "")
-                |> Regex.replace Regex.All (Regex.regex endRootTag) (always "")
-                |> String.split "</d:response>"
+                |> Regex.replace All docTag (always "")
+                |> Regex.replace All startRootTag (always "")
+                |> Regex.replace All endRootTag (always "")
+                |> Regex.split All endResponseTag
                 |> List.drop 1
-                |> List.map (\s -> s ++ "</d:response>")
+                |> List.filter (Regex.contains startResponseTag)
 
         ( rawDirs, rawFiles ) =
             List.partition isDir responseTags
@@ -35,52 +36,37 @@ parseTreeResponse response previousMarker =
                 |> List.map getHref
                 |> List.filter isMusicFile
     in
-        { filePaths =
-            files
+    { filePaths =
+        files
 
-        -- files
-        , marker =
-            previousMarker
-                |> Marker.removeOne
-                |> Marker.concat dirs
-        }
-
-
-docTag : String
-docTag =
-    "\\s*" ++ Regex.escape "<?xml version=\"1.0\"?>" ++ "\\s*"
-
-
-startRootTag : String
-startRootTag =
-    "<d:multistatus[^>]*>"
-
-
-endRootTag : String
-endRootTag =
-    Regex.escape "</d:multistatus>"
+    -- files
+    , marker =
+        previousMarker
+            |> Marker.removeOne
+            |> Marker.concat dirs
+    }
 
 
 getHref : String -> String
 getHref xmlString =
     xmlString
-        |> Regex.find (Regex.AtMost 1) (Regex.regex "<d:href>([^<]+)</d:href>")
+        |> Regex.find (AtMost 1) hrefRegex
         |> List.head
         |> Maybe.map .submatches
         |> Maybe.andThen List.head
         |> Maybe.join
         |> Maybe.map unescapeXmlEntities
-        |> Maybe.withDefault "invalidHref"
+        |> Maybe.withDefault "INVALID_HREF"
 
 
 isAudioFile : String -> Bool
 isAudioFile xmlString =
-    String.contains "<d:getcontenttype>audio/" xmlString
+    Regex.contains audioFileRegex xmlString
 
 
 isDir : String -> Bool
 isDir xmlString =
-    Regex.contains (Regex.regex "<d:collection\\s*/>") xmlString
+    Regex.contains dirRegex xmlString
 
 
 
@@ -90,3 +76,55 @@ isDir xmlString =
 parseErrorResponse : String -> String
 parseErrorResponse =
     identity
+
+
+
+-- ⚗️
+--
+-- Regex (Tags)
+
+
+docTag : Regex
+docTag =
+    regex "\\s*<\\?xml[^\\?>]*\\?>\\s*"
+
+
+startRootTag : Regex
+startRootTag =
+    regex "<[dD]:multistatus[^>]*>"
+
+
+endRootTag : Regex
+endRootTag =
+    regex "</[dD]:multistatus>"
+
+
+startResponseTag : Regex
+startResponseTag =
+    regex "<[dD]:response>"
+
+
+endResponseTag : Regex
+endResponseTag =
+    regex "</[dD]:response>"
+
+
+
+-- ⚗️
+--
+-- Regex (Other)
+
+
+audioFileRegex : Regex
+audioFileRegex =
+    regex "<[dD]:getcontenttype>audio/"
+
+
+dirRegex : Regex
+dirRegex =
+    regex "<[dD]:collection[^/>]*/>"
+
+
+hrefRegex : Regex
+hrefRegex =
+    regex "<[dD]:href>([^<]+)</[dD]:href>"
