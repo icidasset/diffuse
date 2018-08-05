@@ -1,15 +1,15 @@
 module Tracks.State exposing (..)
 
 import Debounce
-import Dom.Scroll
 import DnD
+import Dom.Scroll
 import InfiniteList
-import List.Extra as List
 import List.Ext as List
+import List.Extra as List
 import Playlists.Types exposing (Msg(UpdatePlaylist), Playlist)
 import Response
 import Response.Ext as Response exposing (..)
-import Routing.Types
+import Routing.Types exposing (Msg(..), Page(..))
 import Routing.Utils exposing (goTo)
 import Task
 import Time
@@ -21,6 +21,7 @@ import Tracks.Styles exposing (trackHeight)
 import Tracks.Types exposing (..)
 import Tracks.Utils exposing (..)
 import Types as TopLevel
+
 
 
 -- 💧
@@ -92,15 +93,17 @@ update msg model =
                 sortDir =
                     if model.sortBy /= property then
                         Asc
+
                     else if model.sortDirection == Asc then
                         Desc
+
                     else
                         Asc
             in
-                { model | sortBy = property, sortDirection = sortDir }
-                    |> Collection.makeParcel
-                    |> Collection.rearrange
-                    |> Collection.set
+            { model | sortBy = property, sortDirection = sortDir }
+                |> Collection.makeParcel
+                |> Collection.rearrange
+                |> Collection.set
 
         ------------------------------------
         -- Collection, Pt. 1
@@ -115,6 +118,7 @@ update msg model =
                 |> Response.andAlso
                     (if shouldProcessSources then
                         processSources
+
                      else
                         always Cmd.none
                     )
@@ -187,10 +191,10 @@ update msg model =
                 ( debounce, cmd ) =
                     Debounce.push debounceSearchConfig () model.searchDebounce
             in
-                ($)
-                    { model | searchDebounce = debounce }
-                    [ cmd ]
-                    []
+            ($)
+                { model | searchDebounce = debounce }
+                [ cmd ]
+                []
 
         DebouncedSearchCallback debounceMsg ->
             let
@@ -206,10 +210,10 @@ update msg model =
                         debounceMsg
                         model.searchDebounce
             in
-                ($)
-                    { model | searchDebounce = debounce }
-                    [ cmd ]
-                    []
+            ($)
+                { model | searchDebounce = debounce }
+                [ cmd ]
+                []
 
         -- > Step 3, receive search results
         ReceiveSearchResults trackIds ->
@@ -267,10 +271,10 @@ update msg model =
                         , targetTrackIndex = trackIndex
                         }
             in
-                { model | selectedTrackIndexes = newSelection }
-                    |> Collection.makeParcel
-                    |> Collection.redoSelection
-                    |> Collection.set
+            { model | selectedTrackIndexes = newSelection }
+                |> Collection.makeParcel
+                |> Collection.redoSelection
+                |> Collection.set
 
         -- > Apply track selection using context menu
         --
@@ -284,10 +288,10 @@ update msg model =
                         , targetTrackIndex = trackIndex
                         }
             in
-                { model | selectedTrackIndexes = newSelection }
-                    |> Collection.makeParcel
-                    |> Collection.redoSelection
-                    |> Collection.set
+            { model | selectedTrackIndexes = newSelection }
+                |> Collection.makeParcel
+                |> Collection.redoSelection
+                |> Collection.set
 
         -- > Drag n' Drop
         --
@@ -312,21 +316,22 @@ update msg model =
                         _ ->
                             model.selectedPlaylist
             in
-                (!)
-                    { model | dnd = dnd, selectedPlaylist = selectedPlaylist }
-                    [ if selectedPlaylist /= model.selectedPlaylist then
-                        case selectedPlaylist of
-                            Just playlist ->
-                                Cmd.batch
-                                    [ do (TopLevel.TracksMsg Rearrange)
-                                    , do (TopLevel.PlaylistsMsg <| UpdatePlaylist playlist)
-                                    ]
+            (!)
+                { model | dnd = dnd, selectedPlaylist = selectedPlaylist }
+                [ if selectedPlaylist /= model.selectedPlaylist then
+                    case selectedPlaylist of
+                        Just playlist ->
+                            Cmd.batch
+                                [ do (TopLevel.TracksMsg Rearrange)
+                                , do (TopLevel.PlaylistsMsg <| UpdatePlaylist playlist)
+                                ]
 
-                            Nothing ->
-                                Cmd.none
-                      else
-                        Cmd.none
-                    ]
+                        Nothing ->
+                            Cmd.none
+
+                  else
+                    Cmd.none
+                ]
 
         -- > Infinite list
         --
@@ -345,17 +350,25 @@ update msg model =
                         Nothing ->
                             \( i, t ) -> (,) { i | isNowPlaying = False } t
             in
-                { model | activeIdentifiedTrack = maybeIdentifiedTrack }
-                    |> Collection.makeParcel
-                    |> Collection.remap (List.map mapFn)
-                    |> Collection.set
+            { model | activeIdentifiedTrack = maybeIdentifiedTrack }
+                |> Collection.makeParcel
+                |> Collection.remap (List.map mapFn)
+                |> Collection.set
 
         -- > Scroll to the active track
         --
         ScrollToActiveTrack track ->
             model.collection.harvested
                 |> List.findIndex (Tuple.second >> (==) track)
-                |> Maybe.map (scrollToIndex model)
+                |> Maybe.map
+                    (scrollToIndex model)
+                |> Maybe.map
+                    (Index
+                        |> GoToPage
+                        |> TopLevel.RoutingMsg
+                        |> do
+                        |> Response.addCmd
+                    )
                 |> Maybe.withDefault (Response.withNone model)
 
 
@@ -369,6 +382,7 @@ initialImport ( model, command ) =
         (!)
             { model | initialImportPerformed = True }
             [ command, do TopLevel.HideLoadingScreen ]
+
     else
         (,)
             model
@@ -384,14 +398,15 @@ toggleFavourite model ( i, t ) =
         effect =
             if model.favouritesOnly then
                 remap (Favourites.toggleInCollection t) >> reharvest
+
             else
                 remap (Favourites.toggleInCollection t)
     in
-        { model | favourites = newFavourites }
-            |> makeParcel
-            |> effect
-            |> set
-            |> addCmd (do TopLevel.DebounceStoreUserData)
+    { model | favourites = newFavourites }
+        |> makeParcel
+        |> effect
+        |> set
+        |> addCmd (do TopLevel.DebounceStoreUserData)
 
 
 togglePlaylist : Model -> Playlist -> Maybe Playlist
@@ -400,6 +415,7 @@ togglePlaylist model playlist =
         Just selectedPlaylist ->
             if selectedPlaylist == playlist then
                 Nothing
+
             else
                 Just playlist
 
@@ -452,6 +468,7 @@ storeAdditionalUserData : Model -> Cmd TopLevel.Msg
 storeAdditionalUserData model =
     if model.initialImportPerformed then
         do TopLevel.DebounceStoreLocalUserData
+
     else
         Cmd.none
 
