@@ -32,9 +32,9 @@ self.onmessage = event => {
 
 const mapTrack = track => ({
   id: track.id,
-  album: track.tags.album,
-  artist: track.tags.artist,
-  title: track.tags.title
+  album: [track.tags.album],
+  artist: [track.tags.artist],
+  title: [track.tags.title]
 });
 
 
@@ -42,16 +42,12 @@ const mapTrack = track => ({
 //
 // Actions
 
-const FIELDS = {
-  album: { boost: 1 },
-  artist: { boost: 3, bool: "AND" },
-  title: { boost: 2 }
-};
-
-
 function performSearch(searchTerm) {
+  const properSearchTerm = searchTerm
+    .replace(" *", "");
+
   const results = index
-    .search(searchTerm, { bool: "OR", expand: true, fields: FIELDS })
+    .search(properSearchTerm)
     .map(s => s.ref);
 
   self.postMessage({
@@ -66,17 +62,13 @@ function updateSearchIndex(input) {
     ? JSON.parse(input)
     : input;
 
-  index = elasticlunr(function() {
-    const i = this;
-
-    i.setRef("id");
-
-    i.addField("album");
-    i.addField("artist");
-    i.addField("title");
+  index = lunr(function() {
+    this.field("album");
+    this.field("artist");
+    this.field("title");
 
     (tracks || [])
       .map(mapTrack)
-      .forEach(t => i.addDoc(t));
+      .forEach(t => this.add(t));
   });
 }

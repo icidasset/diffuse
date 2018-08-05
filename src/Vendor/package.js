@@ -4,8 +4,8 @@ self.XhrFileReader = require("jsmediatags/build2/XhrFileReader");
 self._ = require("1-liners");
 self.blockstack = require("blockstack");
 self.camelcase = require("camelcase");
-self.elasticlunr = require("elasticlunr");
 self.encoding = require("text-encoding");
+self.lunr = require("lunr");
 self.RemoteStorage = require("remotestoragejs/release/remotestorage");
 
 if (self.document) {

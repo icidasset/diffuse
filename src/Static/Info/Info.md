@@ -125,3 +125,22 @@ The user interface should be self explanatory, but there are a few "hidden" feat
 - You can select multiple tracks using the SHIFT key and then add that selection
   to the queue or a playlist by right clicking on the selection (desktop only).
 - You can reorder playlist tracks with drag-and-drop.
+
+### Search
+
+Searching is powered by [lunr.js](https://lunrjs.com/), which means you can use all [these wildcards](https://lunrjs.com/guides/searching.html) and other stuff to refine your search. A few examples:
+
+```elm
+# "Parkway Drive" or "Iron Maiden".
+# The non-escaped space (ie. ` `, not `\ `) indicates a new term.
+Parkway\ Drive Iron\ Maiden
+
+# Show me every track of which the artist's name starts with 'park'.
+artist:park*
+
+# Show me every track from Parkway Drive's "Deep Blue" album.
+artist:Parkway\ Drive + album:Deep\ Blue
+
+# Show me every track from Parkway Drive but not their "Atlas" album.
+artist:Parkway\ Drive - album:Atlas
+```
