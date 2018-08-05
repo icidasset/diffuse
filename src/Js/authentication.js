@@ -49,11 +49,11 @@ function doWork(worker, requisites) {
 }
 
 
-function prompt(question) {
+function prompt(question, placeholder) {
   setTimeout(() => node.querySelector(".spinner").style.visibility = "hidden", 0);
 
   return x0p({
-    inputPlaceholder: "example@5apps.com",
+    inputPlaceholder: placeholder,
     maxWidth: "95vw",
     title: question,
     type: "input",
@@ -374,7 +374,8 @@ AUTH_SYSTEM.METHOD =
 
     signIn: _ => new Promise((resolve, reject) => {
       prompt(
-        "What's your user address?"
+        "What's your user address?",
+        "example@5apps.com"
 
       ).then(data => {
         if (data.button === "cancel" || data.text.length === 0) {
