@@ -28,7 +28,7 @@ import Variations exposing (Variations(..))
 -- Styles
 
 import Console.Styles exposing (..)
-import Styles exposing (Styles(Console, Zed))
+import Styles exposing (Styles(Console, WithPointer, Zed))
 
 
 -- 🍯
@@ -112,7 +112,7 @@ nowPlaying activeItem isLoading stalled =
                             track.tags.artist ++ " – " ++ track.tags.title
                     in
                         el
-                            Zed
+                            WithPointer
                             [ track
                                 |> Tracks.Types.ScrollToActiveTrack
                                 |> TopLevel.TracksMsg

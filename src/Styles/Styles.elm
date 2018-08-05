@@ -41,6 +41,7 @@ type Styles
     | Message
     | Selected
     | WithoutLineHeight
+    | WithPointer
       -- Buttons
     | AuthenticationButton
     | Button
@@ -157,6 +158,7 @@ basics =
     , style Message [ Color.text Color.white ]
     , style Selected [ Color.text colors.base08 ]
     , style WithoutLineHeight [ Font.lineHeight 0 ]
+    , style WithPointer [ cursor "pointer" ]
     ]
 
 
