@@ -8,7 +8,7 @@ var supported = true;
 
 
 //
-// Check if each test was succesfull
+// Check if each test was successful
 
 for (var feature in Modernizr) {
   if (typeof Modernizr[feature] === "boolean" && Modernizr[feature] == false) {
