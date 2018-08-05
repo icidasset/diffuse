@@ -165,7 +165,7 @@ select:active {
 
 
 #x0p-input:focus {
-  border-bottom-color: rgb(254, 196, 24);
+  border-bottom-color: rgba(255, 255, 255, 0.575);
   outline: 0;
 }
 
