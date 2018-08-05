@@ -43,12 +43,15 @@ const mapTrack = track => ({
 // Actions
 
 function performSearch(searchTerm) {
-  const properSearchTerm = searchTerm
-    .replace(" *", "");
+  let results = [];
 
-  const results = index
-    .search(properSearchTerm)
+  if (index) {
+    results = index
+    .search(
+      searchTerm.replace(" *", "")
+    )
     .map(s => s.ref);
+  }
 
   self.postMessage({
     action: "PERFORM_SEARCH",

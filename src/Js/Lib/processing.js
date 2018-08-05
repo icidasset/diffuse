@@ -100,11 +100,8 @@ function getTags(urlGET, urlHEAD) {
 //
 // Get the tags we need
 
-function pickTags(tagsFromJsmediatags) {
-  const tags = _.pick(
-    ["album", "artist", "disk", "genre", "picture", "title", "track", "year"],
-    tagsFromJsmediatags.tags
-  );
+function pickTags(jmt) {
+  const tags = jmt.tags;
 
   return {
     disc: (tags.disk ? parseInt(tags.disk.data.disk, 10) : 1) || 1,

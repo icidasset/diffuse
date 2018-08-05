@@ -14,7 +14,6 @@
     "netlify-cli": "^1.2.2"
   },
   "dependencies": {
-    "1-liners": "^0.4.0",
     "blockstack": "^17.2.0",
     "camelcase": "^5.0.0",
     "expand-home-dir": "0.0.3",
