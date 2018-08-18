@@ -59,7 +59,7 @@ system:
 
 
 vendor:
-	@echo "> Browserify vendor dependencies"
+	@echo "> Copy vendor dependencies"
 	@stack build && stack exec vendor
 
 

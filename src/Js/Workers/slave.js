@@ -4,7 +4,7 @@
 //
 // This worker is responsible for executing CPU-heavy tasks with the help of Elm.
 
-importScripts("/vendor/package.js");
+importScripts("/vendor/jsmediatags.js");
 importScripts("/lib/processing.js");
 importScripts("/lib/urls.js");
 importScripts("/slave.js");

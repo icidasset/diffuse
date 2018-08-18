@@ -1,4 +1,4 @@
-importScripts("/vendor/package.js");
+importScripts("/vendor/text-encoding.js");
 
 
 const KEY = location.hostname + ".json";
@@ -91,10 +91,10 @@ function set(data) {
 // 🖍 Utensils
 
 function arrayBufToString(buf) {
-  return new encoding.TextDecoder("utf-8").decode(new Uint8Array(buf));
+  return new TextDecoder("utf-8").decode(new Uint8Array(buf));
 }
 
 
 function stringToArrayBuf(str) {
-  return new encoding.TextEncoder().encode(str).buffer;
+  return new TextEncoder().encode(str).buffer;
 }

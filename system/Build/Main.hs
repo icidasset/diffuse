@@ -49,8 +49,7 @@ list pattern =
 
 
 data Sequence
-    = CachePolyfill
-    | Css
+    = Css
     | Favicons
     | Fonts
     | Hosting
@@ -82,15 +81,7 @@ sequences =
 
           -- Js
         , ( Javascript,     list "Js/**/*.js"               )
-        , ( CachePolyfill,  list serviceCachePolyfill       )
         ]
-
-
-{-| Path to the Service-Worker Cache polyfill.
--}
-serviceCachePolyfill :: [Char]
-serviceCachePolyfill =
-    "../node_modules/serviceworker-cache-polyfill/index.js"
 
 
 
@@ -135,12 +126,6 @@ flow x (Javascript, dict) =
         |> map lowerCasePath
         |> rename "workers/service.js" "service-worker.js"
         |> insertVersion (x !~> "timestamp")
-
-
-flow _ (CachePolyfill, dict) =
-    dict
-        |> rename "index.js" "service-cache.js"
-        |> prefixDirname "vendor/"
 
 
 {-| Other -}

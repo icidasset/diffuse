@@ -1,4 +1,4 @@
-importScripts("/vendor/package.js");
+importScripts("/vendor/blockstack.js");
 
 
 //

@@ -342,3 +342,15 @@ window.addEventListener("touchstart", function onFirstTouch() {
   app.ports.setIsTouchDevice.send(true);
   window.removeEventListener("touchstart", onFirstTouch, false);
 });
+
+
+
+//
+// 🛠
+
+function camelcase(text) {
+  return text.toLowerCase().replace(/^([A-Z])|[\s-_]+(\w)/g, (_, a, b) => {
+    if (b) return b.toUpperCase();
+    return a.toLowerCase();
+  });
+}

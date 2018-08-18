@@ -7,15 +7,12 @@
   "repository": "github:icidasset/diffuse",
   "license": "MIT",
   "devDependencies": {
-    "browserify": "^16.2.2",
     "electron": "^2.0.2",
     "electron-builder": "20.14.7",
-    "elm-doctest": "^0.3.7",
-    "netlify-cli": "^1.2.2"
+    "elm-doctest": "^0.3.7"
   },
   "dependencies": {
     "blockstack": "^17.2.0",
-    "camelcase": "^5.0.0",
     "expand-home-dir": "0.0.3",
     "express": "^4.16.3",
     "globby": "^8.0.1",

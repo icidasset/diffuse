@@ -1,4 +1,4 @@
-importScripts("/vendor/package.js");
+importScripts("/vendor/remotestorage.js");
 
 
 const KEY = "diffuse";
