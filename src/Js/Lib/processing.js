@@ -50,10 +50,12 @@ jsmediatags.Config.setXhrTimeoutInSec(5 * 60);
 
 
 function getTags(urlGET, urlHEAD) {
-  const fakeURL           = "THIS_WONT_BE_USED_ANYWAYS";
+  const reader            = new jsmediatags.Reader(urlGET);
 
-  const reader            = new jsmediatags.Reader(fakeURL);
-  const fileReader        = new XhrFileReader(fakeURL);
+  const FileReader        = reader._getFileReader();
+  const fileReader        = new FileReader(urlGET);
+
+
   const makeXHRRequest    = fileReader._makeXHRRequest;
   const setRequestHeader  = fileReader._setRequestHeader;
 
