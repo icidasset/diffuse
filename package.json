@@ -12,12 +12,12 @@
     "elm-doctest": "^0.3.7"
   },
   "dependencies": {
-    "blockstack": "^17.2.0",
+    "blockstack": "^18.0.4",
     "expand-home-dir": "0.0.3",
     "express": "^4.16.3",
     "globby": "^8.0.1",
     "jsmediatags": "^3.8.1",
-    "lunr": "^2.3.1",
+    "lunr": "^2.3.2",
     "pepjs": "^0.4.3",
     "remotestoragejs": "1.0.2",
     "request": "^2.87.0",
