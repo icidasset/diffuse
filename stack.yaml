@@ -1,2 +1,1 @@
-resolver: lts-9.0
-packages: ['.']
+resolver: nightly-2018-09-23

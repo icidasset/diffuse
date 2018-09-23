@@ -55,8 +55,7 @@ The WebDAV version was built with [NextCloud](https://nextcloud.com/) in mind.
 ## Dependencies
 
 - Loads of `Elm`
-- A moderate amount of `Haskell` for the build system and static server
-- A tiny bit of `Node` (browserify vendor js & doc tests)
+- A moderate amount of `Haskell`
 
 
 
@@ -67,16 +66,8 @@ The WebDAV version was built with [NextCloud](https://nextcloud.com/) in mind.
 
 brew install haskell-stack
 brew install elm
-brew install nodejs
-brew install watchexec
 
-npm install
 stack setup
-
-# Other dependencies
-# 1. For building the Electron version
-brew install makeicns
-brew install imagemagick
 ```
 
 ### How to run

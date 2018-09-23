@@ -1,12 +1,10 @@
-.PHONY: build electron system
+.PHONY: build system
 
 
 # Variables
 
-NODE_BIN=./node_modules/.bin
 SRC_DIR=./src
 BUILD_DIR=./build
-BUILD_ELECTRON_DIR=./build-electron
 
 
 # Default task
@@ -23,43 +21,23 @@ build: clean elm system vendor
 
 
 clean:
-	@echo "> Cleaning Build Directory"
+	@echo "> Cleaning build directory"
 	@rm -rf $(BUILD_DIR) || true
 
 
-electron-clean:
-	@echo "> Cleaning Electron Directory"
-	@rm -rf $(BUILD_ELECTRON_DIR) || true
-
-
-electron-prep:
-	@echo "> Copying Electron Script"
-	@cp -r ./electron $(BUILD_DIR)
-	@cp ./package.json $(BUILD_DIR)/package.json
-	@echo "> Creating icons"
-	@mkdir -p $(BUILD_DIR)/resources
-	@cp $(SRC_DIR)/Static/Images/icon.png $(BUILD_DIR)/resources/icon.png
-	@makeicns -in $(BUILD_DIR)/resources/icon.png -out $(BUILD_DIR)/resources/icon.icns 2>/dev/null
-	@convert $(BUILD_DIR)/resources/icon.png -define icon:auto-resize=256 $(BUILD_DIR)/resources/icon.ico
-
-
-electron-build: build electron-clean electron-prep
-	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac --linux --win
-
-
 elm:
-	@echo "> Compiling Elm"
-	@elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes
-	@elm-make $(SRC_DIR)/Slave/Slave.elm --output $(BUILD_DIR)/slave.js --yes
+	@echo "> Compiling Elm application"
+	@elm make $(SRC_DIR)/Applications/Brain.elm --output $(BUILD_DIR)/brain.js
+	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/application.js
 
 
 system:
-	@echo "> Compiling System"
+	@echo "> Compiling system"
 	@stack build && stack exec build
 
 
 vendor:
-	@echo "> Copy vendor dependencies"
+	@echo "> Copying vendor things"
 	@stack build && stack exec vendor
 
 
@@ -71,25 +49,9 @@ dev: build
 	@make -j watch-wo-build server
 
 
-electron-dev: build electron-prep
-	@make -j watch-wo-build electron-dev-server
-
-
-electron-dev-server:
-	@ENV=DEV $(NODE_BIN)/electron $(BUILD_DIR)/electron/index.js
-
-
 server:
 	@echo "> Booting up web server on port 5000"
-	@stack build && stack exec server
-
-
-test:
-	@echo "> Run tests"
-	@$(NODE_BIN)/elm-doctest \
-		src/App/Sources/Crypto/Hex.elm \
-		src/App/Sources/Crypto/Hmac.elm \
-		src/App/Sources/Services/Azure/Authorization.elm
+	@devd --port 5000 --all --crossdomain --quiet $(BUILD_DIR)
 
 
 watch: build
@@ -103,10 +65,8 @@ watch-wo-build:
 
 watch-elm:
 	@watchexec -p \
-		-w $(SRC_DIR)/App \
-		-w $(SRC_DIR)/Lib \
-		-w $(SRC_DIR)/Slave \
-		-w $(SRC_DIR)/Styles \
+		-w $(SRC_DIR)/Applications \
+		-w $(SRC_DIR)/Library \
 		-- make elm
 
 

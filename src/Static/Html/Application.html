@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8" />
+  <title>Diffuse</title>
+
+  <!-- Viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Favicons & Mobile -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#995b6c" />
+  <meta name="msapplication-TileColor" content="#995b6c" />
+  <meta name="theme-color" content="#995b6c" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/vendor/tachyons.css">
+
+  <link rel="stylesheet" href="/fonts.css">
+  <link rel="stylesheet" href="/application.css">
+
+</head>
+<body class="min-vh-100 overflow-hidden">
+
+
+  <div id="elm">
+    <!--
+
+      APPLICATION PLACEHOLDER
+      =======================
+
+      This `noscript` element will be shown if Javascript is disabled.
+
+    -->
+    <noscript>
+      <div class="f5 fixed fw6 lh-copy tc w-90 white" style="
+        left: 50%;
+        top: 50%;
+
+        -webkit-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+
+        font-family: 'Source Sans Pro', sans-serif;
+      ">
+        <p>
+          Damn it, this application needs Javascript in order to operate.
+        </p>
+      </div>
+    </noscript>
+  </div>
+
+
+
+  <!-- Insert loader -->
+  <script>
+    document.getElementById("elm").innerHTML =
+      '<div class="flex items-center justify-center min-vh-100"><svg class="spinner" height="29" width="29" viewbox="0 0 30 30"><circle class="spinner-circle" cx="15" cy="15" fill="none" r="14" stroke-linecap="round" stroke-width="2"></circle></svg></div>'
+  </script>
+
+
+
+  <!-- Scripts -->
+  <script src="application.js"></script>
+
+  <!-- Initialize Boot Procedure -->
+  <script src="index.js"></script>
+
+
+</body>
+</html>

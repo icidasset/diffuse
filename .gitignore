@@ -1,10 +1,8 @@
-.stack-work
 .DS_Store
 .netlify
 .tmp.js
 *.cabal
+/.stack-work
 /build
-/build-electron
-deploy.sh
-elm-stuff
-node_modules
+/elm-stuff
+/node_modules

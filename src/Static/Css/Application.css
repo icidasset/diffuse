@@ -1,0 +1,70 @@
+body {
+  background-color: #02070E;
+  background-image: url("/images/ep_naturalblack_pattern.jpg");
+  font-family: "Source Sans Pro", sans-serif;
+  text-rendering: optimizeLegibility;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smoothing: always;
+}
+
+
+
+/**
+ ** Backdrop
+ **
+ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+
+
+/**
+ ** Spinner
+ **
+ */
+
+.spinner {
+  animation: spinner-rotator 1.4s linear infinite;
+}
+
+
+.spinner-circle {
+  animation: spinner-dash 1.4s ease-in-out infinite,
+             spinner-colors 5.6s ease-in-out infinite;
+  stroke-dasharray: calc(30 * 2.875);
+  stroke-dashoffset: 0;
+  transform-origin: center;
+}
+
+
+@keyframes spinner-rotator {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(270deg); }
+}
+
+@keyframes spinner-colors {
+  0% { stroke: rgb(239, 97, 85); }
+  25% { stroke: rgb(254, 196, 24); }
+  50% { stroke: rgb(72, 182, 133); }
+  75% { stroke: rgb(6, 182, 239); }
+  100% { stroke: rgb(239, 97, 85); }
+}
+
+@keyframes spinner-dash {
+  0% {
+    stroke-dashoffset: calc(30 * 2.875);
+  }
+  50% {
+    stroke-dashoffset: calc((30 * 2.875) / 4);
+    transform: rotate(135deg);
+  }
+  100% {
+    stroke-dashoffset: calc(30 * 2.875);
+    transform: rotate(450deg);
+  }
+}

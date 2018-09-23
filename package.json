@@ -1,30 +1,8 @@
 {
-  "name": "Diffuse",
-  "description": "A music player which connects to your cloud/distributed storage",
-  "version": "1.0.2",
-  "author": "Steven Vandevelde <icid.asset@gmail.com>",
-  "main": "electron/index.js",
-  "repository": "github:icidasset/diffuse",
-  "license": "MIT",
-  "devDependencies": {
-    "electron": "^4.0.5",
-    "electron-builder": "20.38.5",
-    "elm-doctest": "^0.3.7",
-    "netlify-cli": "^2.2.3"
-  },
+  "private": true,
+  "depedencies": {},
   "dependencies": {
-    "blockstack": "^18.3.0",
-    "expand-home-dir": "0.0.3",
-    "express": "^4.16.4",
-    "globby": "^8.0.1",
-    "jsmediatags": "^3.8.1",
-    "lunr": "^2.3.5",
-    "pepjs": "^0.4.3",
-    "remotestoragejs": "1.0.2",
-    "request": "^2.87.0",
-    "serviceworker-cache-polyfill": "^4.0.0",
-    "text-encoding": "^0.7.0",
-    "tocca": "^2.0.3",
-    "x0popup": "^0.3.3"
+    "fast-text-encoding": "^1.0.0",
+    "tachyons": "^4.11.1"
   }
 }
