@@ -5,7 +5,7 @@
 // This worker is responsible for everything non-UI.
 
 importScripts("/brain.js")
-importScripts("/indexed_db.js")
+importScripts("/indexed-db.js")
 
 
 const app = Elm.Brain.init()

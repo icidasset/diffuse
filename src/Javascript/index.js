@@ -31,4 +31,53 @@ brain.onmessage = event => {
 // Audio
 // -----
 
-// TODO
+const orchestrion = {
+  activeQueueItem: null,
+  app: app,
+  repeat: false
+}
+
+
+// app.ports.activeQueueItemChanged.subscribe(item => {
+//   const timestampInMilliseconds = Date.now()
+//
+//   orchestrion.activeQueueItem = item
+//   orchestrion.audio = null
+//
+//   removeOlderAudioElements(timestampInMilliseconds)
+//
+//   if (item) {
+//     insertTrack(orchestrion, item)
+//   } else {
+//     app.ports.setIsPlaying.send(false)
+//     setProgressBarWidth(0)
+//   }
+// })
+//
+//
+// app.ports.play.subscribe(_ => {
+//   if (orchestrion.audio) orchestrion.audio.play()
+// })
+//
+//
+// app.ports.pause.subscribe(_ => {
+//   if (orchestrion.audio) orchestrion.audio.pause()
+// })
+//
+//
+// app.ports.seek.subscribe(percentage => {
+//   const audio = orchestrion.audio
+//
+//   if (audio && !isNaN(audio.duration)) {
+//     audio.currentTime = audio.duration * percentage
+//     if (audio.paused) audio.pause()
+//   }
+// })
+//
+//
+// app.ports.unstall.subscribe(_ => {
+//   if (orchestrion.audio) {
+//     clearTimeout(orchestrion.unstallTimeoutId)
+//     unstallAudio(orchestrion.audio)
+//   }
+// })
