@@ -7,6 +7,10 @@ type Method
     = Local
 
 
+
+-- ⚡️
+
+
 methodToString : Method -> String
 methodToString method =
     case method of
