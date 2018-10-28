@@ -1,6 +1,7 @@
 module UI.Authentication exposing (signInScreen)
 
 import Authentication
+import Chunky exposing (..)
 import Color
 import Html exposing (Html, a, button, div, em, img, span, text)
 import Html.Attributes exposing (href, src, style, width)
@@ -8,7 +9,6 @@ import Html.Events exposing (onClick)
 import Material.Icons.Action as Icons
 import Tachyons exposing (classes)
 import Tachyons.Classes as T
-import UI.Chunky exposing (..)
 import UI.Core
 import UI.Kit
 

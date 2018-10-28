@@ -1,4 +1,4 @@
-module UI.Chunky exposing (block, chunk, empty, raw, slab)
+module Chunky exposing (block, chunk, empty, raw, slab)
 
 {-| Chunks, blocks and slabs.
 

@@ -4,6 +4,7 @@ import Alien
 import Authentication
 import Browser
 import Browser.Navigation as Nav
+import Chunky exposing (..)
 import Color
 import Html exposing (Html, div, section)
 import Html.Attributes exposing (style)
@@ -16,7 +17,6 @@ import Svg.Elements
 import Tachyons.Classes as T
 import UI.Authentication
 import UI.Backdrop
-import UI.Chunky exposing (..)
 import UI.Core exposing (Flags, Model, Msg(..), Switch(..))
 import UI.Kit
 import UI.Navigation
