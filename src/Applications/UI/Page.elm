@@ -1,5 +1,6 @@
 module UI.Page exposing (Page(..), fromUrl, toString)
 
+import Sources
 import Url exposing (Url)
 import Url.Parser exposing (..)
 
@@ -10,6 +11,7 @@ import Url.Parser exposing (..)
 
 type Page
     = Index
+    | Sources Sources.Page
       --
     | NotFound
 
@@ -34,6 +36,12 @@ toString page =
         NotFound ->
             "/404"
 
+        -----------------------------------------
+        -- Sources
+        -----------------------------------------
+        Sources Sources.Index ->
+            "/sources"
+
 
 
 -- ⚗️
@@ -43,4 +51,8 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map Index top
+        , map NotFound (s "404")
+
+        -- Sources
+        , map (Sources Sources.Index) (s "sources")
         ]

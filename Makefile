@@ -51,7 +51,7 @@ dev: build
 
 server:
 	@echo "> Booting up web server on port 5000"
-	@devd --port 5000 --all --crossdomain --quiet $(BUILD_DIR)
+	@devd --port 5000 --all --crossdomain --quiet --notfound=index.html $(BUILD_DIR)
 
 
 watch: build

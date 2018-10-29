@@ -25,14 +25,17 @@ global items activePage =
         , T.tracked
         , T.ttu
         ]
-        (List.map (globalItem activePage) items)
+        (List.indexedMap (globalItem activePage <| List.length items) items)
 
 
-globalItem : Page -> ( Page, String ) -> Html Msg
-globalItem activePage ( page, label ) =
+globalItem : Page -> Int -> Int -> ( Page, String ) -> Html Msg
+globalItem activePage totalItems idx ( page, label ) =
     let
         isActivePage =
             page == activePage
+
+        isLastItem =
+            idx + 1 == totalItems
     in
     slab
         Html.a
@@ -47,6 +50,9 @@ globalItem activePage ( page, label ) =
         , T.lh_copy
         , T.no_underline
         , T.pt2
+
+        --
+        , ifThenElse isLastItem T.mr0 T.mr4
         ]
         [ text label ]
 
@@ -63,7 +69,3 @@ globalDefaultColor =
 
 globalBorderColor =
     "rgba(65, 50, 63, 0.125)"
-
-
-
--- Page

@@ -1,4 +1,4 @@
-module Track exposing (Collection, Favourite, IdentifiedTrack, Identifiers, Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, missingId)
+module Tracks exposing (Collection, Favourite, IdentifiedTrack, Identifiers, Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, missingId)
 
 -- 🌳
 

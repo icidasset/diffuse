@@ -6,13 +6,15 @@ import Browser
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Color
-import Html exposing (Html, div, section)
+import Html exposing (Html, div, section, text)
 import Html.Attributes exposing (style)
 import Html.Events
+import Html.Lazy
 import Json.Encode
 import Replying exposing (return)
 import Return2
 import Return3
+import Sources
 import Svg.Elements
 import Tachyons.Classes as T
 import UI.Authentication
@@ -23,6 +25,7 @@ import UI.Navigation
 import UI.Page as Page
 import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))
+import UI.Sources
 import Url exposing (Url)
 
 
@@ -233,22 +236,39 @@ root model =
 
 defaultScreen : Model -> List (Html Msg)
 defaultScreen model =
-    [ UI.Navigation.global
-        [ ( Page.Index, "Tracks" )
-        ]
+    [ Html.Lazy.lazy
+        (UI.Navigation.global
+            [ ( Page.Index, "Tracks" )
+            , ( Page.Sources Sources.Index, "Sources" )
+            ]
+        )
         model.page
 
+    -----------------------------------------
     -- Main
-    -- TODO
+    -----------------------------------------
     , chunk
         [ T.bg_white
         , T.br1
         , T.flex_grow_1
         , T.pa3
         ]
-        []
+        [ case model.page of
+            Page.Index ->
+                -- TODO: Tracks
+                empty
 
+            Page.NotFound ->
+                -- TODO
+                text "Page not found."
+
+            Page.Sources subPage ->
+                UI.Sources.view model subPage
+        ]
+
+    -----------------------------------------
     -- Controls
+    -----------------------------------------
     -- TODO
     , chunk
         [ T.h4 ]
