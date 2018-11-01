@@ -219,6 +219,7 @@ root model =
             , T.items_center
             , T.justify_center
             , T.min_vh_100
+            , T.ph3
             , T.relative
             , T.z_1
             ]
@@ -247,11 +248,13 @@ defaultScreen model =
     -----------------------------------------
     -- Main
     -----------------------------------------
-    , chunk
+    , block
+        [ style "max-width" (String.fromFloat UI.Kit.insulationWidth ++ "px") ]
         [ T.bg_white
         , T.br1
         , T.flex_grow_1
-        , T.pa3
+        , T.overflow_hidden
+        , T.w_100
         ]
         [ case model.page of
             Page.Index ->
