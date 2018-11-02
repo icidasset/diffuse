@@ -1,6 +1,10 @@
-module UI.Kit exposing (colorKit, colors, defaultFont, headerFont, insulationWidth)
+module UI.Kit exposing (canister, colorKit, colors, defaultFont, h1, headerFont, insulationWidth, intro)
 
+import Chunky exposing (..)
 import Color
+import Html exposing (Html)
+import Html.Attributes exposing (style)
+import Tachyons.Classes as T
 
 
 
@@ -65,3 +69,52 @@ headerFont =
 insulationWidth : Float
 insulationWidth =
     840
+
+
+
+-- Nodes
+
+
+canister : List (Html msg) -> Html msg
+canister children =
+    chunk
+        [ T.mh1, T.ph3 ]
+        children
+
+
+h1 : String -> Html msg
+h1 text =
+    slab
+        Html.h1
+        [ style "background-color" (Color.toCssString colorKit.base06)
+        , style "font-size" "11.25px"
+        , style "letter-spacing" "0.25px"
+        , style "top" "-1px"
+        ]
+        [ T.br2
+        , T.br__bottom
+        , T.dt
+        , T.fw7
+        , T.lh_copy
+        , T.ma0
+        , T.ph2
+        , T.pv1
+        , T.relative
+        , T.ttu
+        , T.white
+        ]
+        [ Html.text text ]
+
+
+intro : Html msg -> Html msg
+intro child =
+    slab
+        Html.p
+        [ style "color" (Color.toCssString colorKit.base05)
+        , style "line-height" "1.75em"
+        ]
+        [ T.f6
+        , T.mv3
+        , T.pv1
+        ]
+        [ child ]

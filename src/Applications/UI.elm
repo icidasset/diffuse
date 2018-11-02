@@ -25,6 +25,7 @@ import UI.Navigation
 import UI.Page as Page
 import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))
+import UI.Settings
 import UI.Sources
 import Url exposing (Url)
 
@@ -241,6 +242,7 @@ defaultScreen model =
         (UI.Navigation.global
             [ ( Page.Index, "Tracks" )
             , ( Page.Sources Sources.Index, "Sources" )
+            , ( Page.Settings, "Settings" )
             ]
         )
         model.page
@@ -251,7 +253,7 @@ defaultScreen model =
     , block
         [ style "max-width" (String.fromFloat UI.Kit.insulationWidth ++ "px") ]
         [ T.bg_white
-        , T.br1
+        , T.br2
         , T.flex_grow_1
         , T.overflow_hidden
         , T.w_100
@@ -264,6 +266,9 @@ defaultScreen model =
             Page.NotFound ->
                 -- TODO
                 text "Page not found."
+
+            Page.Settings ->
+                UI.Settings.view model
 
             Page.Sources subPage ->
                 UI.Sources.view model subPage

@@ -1,4 +1,4 @@
-module Chunky exposing (block, chunk, empty, raw, slab)
+module Chunky exposing (block, chunk, empty, lineBreak, raw, slab)
 
 {-| Chunks, blocks and slabs.
 
@@ -58,3 +58,8 @@ raw =
 empty : Html msg
 empty =
     Html.text ""
+
+
+lineBreak : Html msg
+lineBreak =
+    Html.br [] []

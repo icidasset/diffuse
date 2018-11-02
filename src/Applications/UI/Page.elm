@@ -11,6 +11,7 @@ import Url.Parser exposing (..)
 
 type Page
     = Index
+    | Settings
     | Sources Sources.Page
       --
     | NotFound
@@ -36,6 +37,9 @@ toString page =
         NotFound ->
             "/404"
 
+        Settings ->
+            "/settings"
+
         -----------------------------------------
         -- Sources
         -----------------------------------------
@@ -52,6 +56,7 @@ route =
     oneOf
         [ map Index top
         , map NotFound (s "404")
+        , map Settings (s "settings")
 
         -- Sources
         , map (Sources Sources.Index) (s "sources")

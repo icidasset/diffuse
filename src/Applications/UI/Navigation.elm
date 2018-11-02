@@ -104,8 +104,10 @@ globalBorderColor =
 local : List ( Icon Msg, Label, Action ) -> Page -> Html Msg
 local items activePage =
     block
-        [ style "font-size" "12.5px" ]
-        [ T.flex ]
+        [ style "font-size" "12.5px"
+        , style "border-bottom-color" localBorderColor
+        ]
+        [ T.bb, T.flex ]
         (items
             |> List.reverse
             |> List.indexedMap localItem
@@ -142,8 +144,9 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
         , style "border-right-color" localBorderColor
         , style "border-right-style" "solid"
         , style "border-right-width" (ifThenElse (idx == 0) "0" "1px")
-        , style "box-shadow" ("0 -1px 0 0 {{ }} inset" |> String.Format.value localBorderColor)
+        , style "border-top" "1px solid transparent"
         , style "color" localTextColor
+        , style "height" "43px"
         ]
         [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
 
@@ -155,7 +158,7 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
         , T.justify_center
         , T.lh_solid
         , T.no_underline
-        , T.pa3
+        , T.ph2
         ]
         [ icon UI.Kit.colors.text 16
 
