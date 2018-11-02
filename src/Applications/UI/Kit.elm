@@ -1,4 +1,4 @@
-module UI.Kit exposing (canister, colorKit, colors, defaultFont, h1, headerFont, insulationWidth, intro)
+module UI.Kit exposing (canister, colorKit, colors, defaultFont, h1, h2, headerFont, insulationWidth, intro)
 
 import Chunky exposing (..)
 import Color
@@ -102,6 +102,20 @@ h1 text =
         , T.relative
         , T.ttu
         , T.white
+        ]
+        [ Html.text text ]
+
+
+h2 : String -> Html msg
+h2 text =
+    slab
+        Html.h2
+        [ style "font-family" headerFont ]
+        [ T.f3
+        , T.fw7
+        , T.lh_title
+        , T.mb4
+        , T.mt0
         ]
         [ Html.text text ]
 

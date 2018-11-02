@@ -15,7 +15,7 @@ import UI.Page as Page
 -- 🗺
 
 
-view : UI.Core.Model -> Html UI.Core.Msg
+view : UI.Core.Model -> List (Html UI.Core.Msg)
 view =
     index
 
@@ -24,33 +24,31 @@ view =
 -- PAGES
 
 
-index : UI.Core.Model -> Html UI.Core.Msg
+index : UI.Core.Model -> List (Html UI.Core.Msg)
 index model =
-    chunk
-        []
-        [ -----------------------------------------
-          -- Navigation
-          -----------------------------------------
-          UI.Navigation.local
-            [ ( Icon Icons.import_export
-              , Label "Import / Export" Shown
-              , PerformMsg UI.Core.Bypass
-              )
-            , ( Icon Icons.exit_to_app
-              , Label "Sign out" Shown
-              , PerformMsg UI.Core.Bypass
-              )
-            ]
-            model.page
-
-        -----------------------------------------
-        -- Content
-        -----------------------------------------
-        , UI.Kit.canister
-            [ UI.Kit.h1 "Settings"
-            , [ text "Changes are automatically saved."
-              ]
-                |> Html.span []
-                |> UI.Kit.intro
-            ]
+    [ -----------------------------------------
+      -- Navigation
+      -----------------------------------------
+      UI.Navigation.local
+        [ ( Icon Icons.import_export
+          , Label "Import / Export" Shown
+          , PerformMsg UI.Core.Bypass
+          )
+        , ( Icon Icons.exit_to_app
+          , Label "Sign out" Shown
+          , PerformMsg UI.Core.Bypass
+          )
         ]
+        model.page
+
+    -----------------------------------------
+    -- Content
+    -----------------------------------------
+    , UI.Kit.canister
+        [ UI.Kit.h1 "Settings"
+        , [ text "Changes are automatically saved."
+          ]
+            |> Html.span []
+            |> UI.Kit.intro
+        ]
+    ]

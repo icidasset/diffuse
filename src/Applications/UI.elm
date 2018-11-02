@@ -254,25 +254,27 @@ defaultScreen model =
         [ style "max-width" (String.fromFloat UI.Kit.insulationWidth ++ "px") ]
         [ T.bg_white
         , T.br2
+        , T.flex
+        , T.flex_column
         , T.flex_grow_1
         , T.overflow_hidden
         , T.w_100
         ]
-        [ case model.page of
+        (case model.page of
             Page.Index ->
                 -- TODO: Tracks
-                empty
+                [ empty ]
 
             Page.NotFound ->
                 -- TODO
-                text "Page not found."
+                [ text "Page not found." ]
 
             Page.Settings ->
                 UI.Settings.view model
 
             Page.Sources subPage ->
                 UI.Sources.view model subPage
-        ]
+        )
 
     -----------------------------------------
     -- Controls

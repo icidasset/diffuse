@@ -46,6 +46,9 @@ toString page =
         Sources Sources.Index ->
             "/sources"
 
+        Sources (Sources.New _) ->
+            "/sources/new"
+
 
 
 -- ⚗️
@@ -60,4 +63,5 @@ route =
 
         -- Sources
         , map (Sources Sources.Index) (s "sources")
+        , map (Sources <| Sources.New Sources.newForm) (s "sources" </> s "new")
         ]

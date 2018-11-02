@@ -158,7 +158,8 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
         , T.justify_center
         , T.lh_solid
         , T.no_underline
-        , T.ph2
+        , T.outline_0
+        , T.ph3
         ]
         [ icon UI.Kit.colors.text 16
 
