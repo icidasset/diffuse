@@ -1,4 +1,4 @@
-module UI.Kit exposing (canister, colorKit, colors, defaultFont, h1, h2, headerFont, insulationWidth, intro)
+module UI.Kit exposing (canister, colorKit, colors, defaultFont, h1, h2, headerFont, insulationWidth, intro, logoBackdrop, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -75,11 +75,19 @@ insulationWidth =
 -- Nodes
 
 
+button : Html msg -> Html msg
+button child =
+    slab
+        Html.button
+        []
+        []
+        [ child ]
+
+
 canister : List (Html msg) -> Html msg
-canister children =
+canister =
     chunk
         [ T.mh1, T.ph3 ]
-        children
 
 
 h1 : String -> Html msg
@@ -132,3 +140,36 @@ intro child =
         , T.pv1
         ]
         [ child ]
+
+
+logoBackdrop : Html msg
+logoBackdrop =
+    block
+        [ style "background-image" "url(/images/diffuse__icon-dark.svg)"
+        , style "background-position" "-43.5% 98px"
+        , style "background-repeat" "no-repeat"
+        , style "background-size" "cover"
+        , style "height" "0"
+        , style "left" "100%"
+        , style "opacity" "0.025"
+        , style "padding-top" "100%"
+        , style "transform" "rotate(90deg)"
+        , style "transform-origin" "left top"
+        , style "width" "105vh"
+        ]
+        [ T.absolute, T.top_0 ]
+        []
+
+
+vessel : List (Html msg) -> Html msg
+vessel =
+    block
+        [ style "max-width" (String.fromFloat insulationWidth ++ "px") ]
+        [ T.bg_white
+        , T.br2
+        , T.flex
+        , T.flex_column
+        , T.flex_grow_1
+        , T.overflow_hidden
+        , T.w_100
+        ]

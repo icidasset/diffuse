@@ -8,7 +8,6 @@ import Chunky exposing (..)
 import Color
 import Html exposing (Html, div, section, text)
 import Html.Attributes exposing (style)
-import Html.Events
 import Html.Lazy
 import Json.Encode
 import Replying exposing (return)
@@ -63,6 +62,7 @@ init flags url key =
 
       -- Children
       , backdrop = UI.Backdrop.initialModel
+      , sources = UI.Sources.initialModel
       }
       -----------------------------------------
       -- Initial command
@@ -108,6 +108,16 @@ update msg model =
                 , update = UI.Backdrop.update
                 }
                 { model = model.backdrop
+                , msg = sub
+                }
+
+        SourcesMsg sub ->
+            updateChild
+                { mapCmd = SourcesMsg
+                , mapModel = \child -> { model | sources = child }
+                , update = UI.Sources.update
+                }
+                { model = model.sources
                 , msg = sub
                 }
 
@@ -198,34 +208,26 @@ translateAlienEvent event =
 view : Model -> Browser.Document Msg
 view model =
     { title = "Diffuse"
-    , body = [ root model ]
+    , body = [ body model ]
     }
 
 
-root : Model -> Html Msg
-root model =
-    section
-        [ style "color" (Color.toCssString UI.Kit.colors.text) ]
+body : Model -> Html Msg
+body model =
+    root
         [ -----------------------------------------
           -- Backdrop
           -----------------------------------------
-          Html.map BackdropMsg (UI.Backdrop.view model.backdrop)
+          model.backdrop
+            |> Html.Lazy.lazy UI.Backdrop.view
+            |> Html.map BackdropMsg
 
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , chunk
-            [ T.flex
-            , T.flex_column
-            , T.items_center
-            , T.justify_center
-            , T.min_vh_100
-            , T.ph3
-            , T.relative
-            , T.z_1
-            ]
+        , content
             (if model.isLoading then
-                [ Html.map never Svg.Elements.spinner ]
+                [ spinner ]
 
              else if model.isAuthenticated then
                 defaultScreen model
@@ -250,31 +252,22 @@ defaultScreen model =
     -----------------------------------------
     -- Main
     -----------------------------------------
-    , block
-        [ style "max-width" (String.fromFloat UI.Kit.insulationWidth ++ "px") ]
-        [ T.bg_white
-        , T.br2
-        , T.flex
-        , T.flex_column
-        , T.flex_grow_1
-        , T.overflow_hidden
-        , T.w_100
-        ]
-        (case model.page of
-            Page.Index ->
-                -- TODO: Tracks
-                [ empty ]
+    , case model.page of
+        Page.Index ->
+            -- TODO: Tracks
+            empty
 
-            Page.NotFound ->
-                -- TODO
-                [ text "Page not found." ]
+        Page.NotFound ->
+            -- TODO
+            text "Page not found."
 
-            Page.Settings ->
-                UI.Settings.view model
+        Page.Settings ->
+            UI.Settings.view model
 
-            Page.Sources subPage ->
-                UI.Sources.view model subPage
-        )
+        Page.Sources subPage ->
+            model.sources
+                |> Html.Lazy.lazy2 UI.Sources.view subPage
+                |> Html.map SourcesMsg
 
     -----------------------------------------
     -- Controls
@@ -284,3 +277,32 @@ defaultScreen model =
         [ T.h4 ]
         []
     ]
+
+
+
+-- 🗺  ~  Bits
+
+
+root : List (Html msg) -> Html msg
+root =
+    section
+        [ style "color" (Color.toCssString UI.Kit.colors.text) ]
+
+
+content : List (Html msg) -> Html msg
+content =
+    chunk
+        [ T.flex
+        , T.flex_column
+        , T.items_center
+        , T.justify_center
+        , T.min_vh_100
+        , T.ph3
+        , T.relative
+        , T.z_1
+        ]
+
+
+spinner : Html msg
+spinner =
+    Html.map never Svg.Elements.spinner

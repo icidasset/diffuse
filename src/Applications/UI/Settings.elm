@@ -15,9 +15,9 @@ import UI.Page as Page
 -- 🗺
 
 
-view : UI.Core.Model -> List (Html UI.Core.Msg)
+view : UI.Core.Model -> Html UI.Core.Msg
 view =
-    index
+    UI.Kit.vessel << index
 
 
 
@@ -39,7 +39,6 @@ index model =
           , PerformMsg UI.Core.Bypass
           )
         ]
-        model.page
 
     -----------------------------------------
     -- Content

@@ -7,6 +7,7 @@ import Browser.Navigation as Nav
 import Json.Encode as Json
 import UI.Backdrop
 import UI.Page exposing (Page)
+import UI.Sources
 import Url exposing (Url)
 
 
@@ -33,6 +34,7 @@ type alias Model =
     -- Children
     -----------------------------------------
     , backdrop : UI.Backdrop.Model
+    , sources : UI.Sources.Model
     }
 
 
@@ -48,6 +50,7 @@ type Msg
       -- Children
       -----------------------------------------
     | BackdropMsg UI.Backdrop.Msg
+    | SourcesMsg UI.Sources.Msg
       -----------------------------------------
       -- Brain
       -----------------------------------------

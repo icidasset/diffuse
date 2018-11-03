@@ -39,7 +39,7 @@ defaultService =
 
 type Page
     = Index
-    | New Form
+    | New
 
 
 

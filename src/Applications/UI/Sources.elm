@@ -1,37 +1,68 @@
-module UI.Sources exposing (view)
+module UI.Sources exposing (Model, Msg(..), initialModel, update, view)
 
 import Chunky exposing (..)
 import Html exposing (Html, text)
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
+import Replying exposing (R3D3)
 import Sources exposing (..)
 import Tachyons.Classes as T
-import UI.Core
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
+import UI.Reply exposing (Reply(..))
+
+
+
+-- 🌳
+
+
+type alias Model =
+    { form : Sources.Form }
+
+
+initialModel : Model
+initialModel =
+    { form = Sources.newForm
+    }
+
+
+
+-- 📣
+
+
+type Msg
+    = Bypass
+
+
+update : Msg -> Model -> R3D3 Model Msg Reply
+update msg model =
+    ( model
+    , Cmd.none
+    , Nothing
+    )
 
 
 
 -- 🗺
 
 
-view : UI.Core.Model -> Sources.Page -> List (Html UI.Core.Msg)
-view model page =
+view : Sources.Page -> Model -> Html Msg
+view page =
     case page of
         Index ->
-            index model
+            UI.Kit.vessel << index
 
-        New form ->
-            new form model
+        New ->
+            UI.Kit.vessel << new
 
 
 
 -- INDEX
 
 
-index : UI.Core.Model -> List (Html UI.Core.Msg)
+index : Model -> List (Html Msg)
 index model =
     [ -----------------------------------------
       -- Navigation
@@ -39,14 +70,13 @@ index model =
       UI.Navigation.local
         [ ( Icon Icons.add
           , Label "Add a new source" Shown
-          , GoToPage (Page.Sources <| New newForm)
+          , GoToPage (Page.Sources New)
           )
         , ( Icon Icons.sync
           , Label "Process sources" Shown
-          , PerformMsg UI.Core.Bypass
+          , PerformMsg Bypass
           )
         ]
-        model.page
 
     -----------------------------------------
     -- Content
@@ -69,18 +99,18 @@ index model =
 -- NEW
 
 
-new : Form -> UI.Core.Model -> List (Html UI.Core.Msg)
-new form =
-    case form.step of
+new : Model -> List (Html Msg)
+new model =
+    case model.form.step of
         Where ->
-            newWhere form
+            newWhere model.form
 
         _ ->
-            always [ empty ]
+            [ empty ]
 
 
-newWhere : Form -> UI.Core.Model -> List (Html UI.Core.Msg)
-newWhere { context } model =
+newWhere : Form -> List (Html Msg)
+newWhere { context } =
     [ -----------------------------------------
       -- Navigation
       -----------------------------------------
@@ -90,7 +120,6 @@ newWhere { context } model =
           , GoToPage (Page.Sources Sources.Index)
           )
         ]
-        model.page
 
     -----------------------------------------
     -- Content
@@ -100,8 +129,10 @@ newWhere { context } model =
         , T.flex_grow_1
         , T.items_center
         , T.justify_center
+        , T.overflow_hidden
         , T.relative
         ]
-        [ UI.Kit.h2 "Where is your music stored?"
+        [ UI.Kit.logoBackdrop
+        , UI.Kit.h2 "Where is your music stored?"
         ]
     ]

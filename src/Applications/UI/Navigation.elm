@@ -10,13 +10,17 @@ import List.Extra as List
 import String.Format
 import Svg exposing (Svg)
 import Tachyons.Classes as T
-import UI.Core exposing (Msg(..))
 import UI.Kit
 import UI.Page as Page exposing (Page)
 
 
 
 -- 🌳
+
+
+type Action msg
+    = GoToPage Page
+    | PerformMsg msg
 
 
 type Icon msg
@@ -32,16 +36,11 @@ type LabelType
     | Shown
 
 
-type Action
-    = GoToPage Page
-    | PerformMsg Msg
-
-
 
 -- Global
 
 
-global : List ( Page, String ) -> Page -> Html Msg
+global : List ( Page, String ) -> Page -> Html msg
 global items activePage =
     block
         [ style "font-size" "11.5px" ]
@@ -54,7 +53,7 @@ global items activePage =
         (List.indexedMap (globalItem activePage <| List.length items) items)
 
 
-globalItem : Page -> Int -> Int -> ( Page, String ) -> Html Msg
+globalItem : Page -> Int -> Int -> ( Page, String ) -> Html msg
 globalItem activePage totalItems idx ( page, label ) =
     let
         isActivePage =
@@ -101,8 +100,8 @@ globalBorderColor =
 -- Local
 
 
-local : List ( Icon Msg, Label, Action ) -> Page -> Html Msg
-local items activePage =
+local : List ( Icon msg, Label, Action msg ) -> Html msg
+local items =
     block
         [ style "font-size" "12.5px"
         , style "border-bottom-color" localBorderColor
@@ -115,7 +114,7 @@ local items activePage =
         )
 
 
-localItem : Int -> ( Icon Msg, Label, Action ) -> Html Msg
+localItem : Int -> ( Icon msg, Label, Action msg ) -> Html msg
 localItem idx ( Icon icon, Label labelText labelType, action ) =
     slab
         (case action of
