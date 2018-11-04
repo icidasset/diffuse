@@ -1,4 +1,4 @@
-module Chunky exposing (block, chunk, empty, lineBreak, raw, slab)
+module Chunky exposing (block, blocky, chunk, chunky, empty, lineBreak, raw, rawy, slab, slaby)
 
 {-| Chunks, blocks and slabs.
 
@@ -24,6 +24,16 @@ slab typ attributes classes children =
     typ (List.append [ Tachyons.classes classes ] attributes) children
 
 
+slaby :
+    (List (Html.Attribute msg) -> List (Html msg) -> Html msg)
+    -> List (Html.Attribute msg)
+    -> List String
+    -> Html msg
+    -> Html msg
+slaby a b c =
+    List.singleton >> slab a b c
+
+
 
 -- 2
 
@@ -31,6 +41,11 @@ slab typ attributes classes children =
 block : List (Html.Attribute msg) -> List String -> List (Html msg) -> Html msg
 block =
     slab Html.div
+
+
+blocky : List (Html.Attribute msg) -> List String -> Html msg -> Html msg
+blocky a b =
+    List.singleton >> block a b
 
 
 
@@ -42,6 +57,11 @@ chunk =
     block []
 
 
+chunky : List String -> Html msg -> Html msg
+chunky a =
+    List.singleton >> chunk a
+
+
 
 -- 4
 
@@ -49,6 +69,11 @@ chunk =
 raw : List (Html msg) -> Html msg
 raw =
     chunk []
+
+
+rawy : Html msg -> Html msg
+rawy =
+    List.singleton >> raw
 
 
 

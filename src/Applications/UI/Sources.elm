@@ -2,13 +2,14 @@ module UI.Sources exposing (Model, Msg(..), initialModel, update, view)
 
 import Chunky exposing (..)
 import Html exposing (Html, text)
+import Html.Attributes exposing (value)
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Replying exposing (R3D3)
 import Sources exposing (..)
 import Tachyons.Classes as T
-import UI.Kit
+import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Reply exposing (Reply(..))
@@ -127,12 +128,34 @@ newWhere { context } =
     , chunk
         [ T.flex
         , T.flex_grow_1
-        , T.items_center
-        , T.justify_center
         , T.overflow_hidden
         , T.relative
         ]
         [ UI.Kit.logoBackdrop
-        , UI.Kit.h2 "Where is your music stored?"
+        , chunk
+            [ T.flex
+            , T.flex_column
+            , T.flex_grow_1
+            , T.items_center
+            , T.justify_center
+            , T.relative
+            , T.z_1
+            ]
+            [ UI.Kit.h2 "Where is your music stored?"
+
+            --
+            , [ Html.option
+                    [ value "AmazonS3" ]
+                    [ text "Amazon S3" ]
+              ]
+                |> select (always Bypass)
+                |> chunky [ T.pv2, T.w_100 ]
+
+            --
+            , UI.Kit.button
+                WithIcon
+                Bypass
+                (Icons.arrow_forward UI.Kit.colorKit.base0B 17)
+            ]
         ]
     ]

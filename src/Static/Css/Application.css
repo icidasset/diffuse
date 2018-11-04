@@ -11,10 +11,9 @@ body {
 
 
 
-/**
- ** Backdrop
- **
- */
+/************
+ * Backdrop *
+ ************/
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -23,10 +22,9 @@ body {
 
 
 
-/**
- ** Spinner
- **
- */
+/***********
+ * Spinner *
+ ***********/
 
 .spinner {
   animation: spinner-rotator 1.4s linear infinite;

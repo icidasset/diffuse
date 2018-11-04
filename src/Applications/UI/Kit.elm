@@ -1,9 +1,11 @@
-module UI.Kit exposing (canister, colorKit, colors, defaultFont, h1, h2, headerFont, insulationWidth, intro, logoBackdrop, vessel)
+module UI.Kit exposing (ButtonType(..), button, canister, colorKit, colors, defaultFont, h1, h2, headerFont, insulationWidth, intro, logoBackdrop, select, vessel)
 
 import Chunky exposing (..)
 import Color
 import Html exposing (Html)
 import Html.Attributes exposing (style)
+import Html.Events exposing (onClick, onInput)
+import Material.Icons.Hardware as Icons
 import Tachyons.Classes as T
 
 
@@ -66,6 +68,11 @@ headerFont =
 -- Space properties
 
 
+borderRadius : String
+borderRadius =
+    T.br2
+
+
 insulationWidth : Float
 insulationWidth =
     840
@@ -75,13 +82,38 @@ insulationWidth =
 -- Nodes
 
 
-button : Html msg -> Html msg
-button child =
+type ButtonType
+    = WithIcon
+    | WithText
+
+
+button : ButtonType -> msg -> Html msg -> Html msg
+button buttonType msg child =
     slab
         Html.button
-        []
-        []
-        [ child ]
+        [ onClick msg
+
+        --
+        , style "border-color" (Color.toCssString colorKit.base0B)
+        ]
+        [ borderRadius
+        , T.bw1
+        , T.b__solid
+        , T.lh_solid
+        , T.ph3
+        , T.pv2
+        ]
+        [ case buttonType of
+            WithIcon ->
+                slab
+                    Html.span
+                    [ style "font-size" "0" ]
+                    [ T.dib, T.v_top ]
+                    [ child ]
+
+            WithText ->
+                child
+        ]
 
 
 canister : List (Html msg) -> Html msg
@@ -99,7 +131,7 @@ h1 text =
         , style "letter-spacing" "0.25px"
         , style "top" "-1px"
         ]
-        [ T.br2
+        [ borderRadius
         , T.br__bottom
         , T.dt
         , T.fw7
@@ -157,16 +189,57 @@ logoBackdrop =
         , style "transform-origin" "left top"
         , style "width" "105vh"
         ]
-        [ T.absolute, T.top_0 ]
+        [ T.absolute, T.top_0, T.z_0 ]
         []
+
+
+select : (String -> msg) -> List (Html msg) -> Html msg
+select inputHandler options =
+    block
+        [ style "border-bottom-color" (Color.toCssString colors.inputBorder)
+        , style "max-width" "360px"
+        ]
+        [ T.bb
+        , T.center
+        , T.mb4
+        , T.relative
+        , T.w_100
+        ]
+        [ slab
+            Html.select
+            [ onInput inputHandler
+            , style "color" (Color.toCssString colors.text)
+            ]
+            [ T.bn
+            , T.bg_transparent
+            , T.db
+            , T.f5
+            , T.input_reset
+            , T.lh_copy
+            , T.ma0
+            , T.outline_0
+            , T.pv2
+            , T.ph0
+            , T.w_100
+            ]
+            options
+        , block
+            [ style "font-size" "0"
+            , style "margin-top" "1px"
+            , style "top" "50%"
+            , style "transform" "translateY(-50%)"
+            ]
+            [ T.absolute, T.right_0 ]
+            [ Icons.keyboard_arrow_down colorKit.base05 20 ]
+        ]
 
 
 vessel : List (Html msg) -> Html msg
 vessel =
     block
         [ style "max-width" (String.fromFloat insulationWidth ++ "px") ]
-        [ T.bg_white
-        , T.br2
+        [ borderRadius
+        , T.bg_white
         , T.flex
         , T.flex_column
         , T.flex_grow_1
