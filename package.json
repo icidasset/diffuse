@@ -9,7 +9,8 @@
   "devDependencies": {
     "electron": "^2.0.2",
     "electron-builder": "20.14.7",
-    "elm-doctest": "^0.3.7"
+    "elm-doctest": "^0.3.7",
+    "netlify-cli": "^2.2.3"
   },
   "dependencies": {
     "blockstack": "^18.0.4",
@@ -17,7 +18,7 @@
     "express": "^4.16.3",
     "globby": "^8.0.1",
     "jsmediatags": "^3.8.1",
-    "lunr": "^2.3.2",
+    "lunr": "^2.3.5",
     "pepjs": "^0.4.3",
     "remotestoragejs": "1.0.2",
     "request": "^2.87.0",

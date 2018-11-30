@@ -32,9 +32,9 @@ self.onmessage = event => {
 
 const mapTrack = track => ({
   id: track.id,
-  album: [track.tags.album],
-  artist: [track.tags.artist],
-  title: [track.tags.title]
+  album: track.tags.album,
+  artist: track.tags.artist,
+  title: track.tags.title
 });
 
 

@@ -1,19 +1,32 @@
-module Sources.View exposing (..)
+module Sources.View exposing (entry, pageEdit, pageEditForm, pageIndex, pageNew, pageNewForm, pageNewStep1, pageNewStep2, pageNewStep3, propertyRenderer, renderSource, renderSourceProperties, sourcePropertiesFilterer, sourcePropertiesNotToValidate, sourcePropertiesToIgnore, validateProperties)
+
+-- Elements
+-- Styles
 
 import Color
 import Color.Convert
 import ContextMenu.Types exposing (Msg(ShowSourceMenu))
 import Dict
 import Dict.Ext as Dict
+import Element exposing (..)
+import Element.Attributes exposing (..)
+import Element.Events exposing (onClick, onInput, onWithOptions)
+import Element.Ext exposing (..)
+import Element.Input as Input
+import Element.Keyed
+import Element.Types exposing (Node)
+import Form.Styles exposing (Styles(Input))
 import Html
 import Html.Attributes
 import Json.Decode as Decode
+import Layouts exposing (..)
 import List.Extra as List
-import Material.Icons.Alert as Icons
+import List.Styles exposing (Styles(..))
 import Material.Icons.Action as Icons
+import Material.Icons.Alert as Icons
 import Material.Icons.Av as Icons
-import Material.Icons.File as Icons
 import Material.Icons.Content as Icons
+import Material.Icons.File as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Maybe.Extra
@@ -27,28 +40,11 @@ import Sources.Services.Dropbox as Dropbox
 import Sources.Services.Google as Google
 import Sources.Types as Sources exposing (..)
 import Sources.Utils exposing (isViable)
+import Styles exposing (Styles(..))
 import Types as TopLevel exposing (Msg(..))
-
-
--- Elements
-
-import Element exposing (..)
-import Element.Attributes exposing (..)
-import Element.Events exposing (onClick, onInput, onWithOptions)
-import Element.Ext exposing (..)
-import Element.Keyed
-import Element.Input as Input
-import Element.Types exposing (Node)
-import Layouts exposing (..)
 import Variables exposing (colorDerivatives, colors, scaled)
 import Variations exposing (Variations(..))
 
-
--- Styles
-
-import Form.Styles exposing (Styles(Input))
-import List.Styles exposing (Styles(..))
-import Styles exposing (Styles(..))
 
 
 -- 🍯
@@ -117,12 +113,14 @@ pageIndex sources ( isProcessing, processingErrors ) viabilityDependencies =
                 --
                 (if List.isEmpty sources then
                     []
+
                  else if Maybe.Extra.isJust isProcessing then
                     [ ( Icon Icons.sync
                       , Label (Shown "Processing sources ...")
                       , TopLevel.NoOp
                       )
                     ]
+
                  else
                     [ ( Icon Icons.sync
                       , Label (Shown "Process sources")
@@ -145,6 +143,7 @@ pageIndex sources ( isProcessing, processingErrors ) viabilityDependencies =
             --
             , if List.isEmpty sources then
                 empty
+
               else
                 Layouts.intro
                     [ text """
@@ -181,24 +180,25 @@ pageIndex sources ( isProcessing, processingErrors ) viabilityDependencies =
                                 |> Maybe.withDefault False
                             , processingErrors
                                 |> List.find (Tuple.first >> (==) s.id)
-                                |> Maybe.map (Tuple.second)
+                                |> Maybe.map Tuple.second
                             )
                         )
                         sortedSources
               in
-                if List.isEmpty sources then
-                    -- No sources atm
-                    Layouts.emptyState
-                        Icons.add
-                        [ text "No sources have been added yet,"
-                        , text "add one to get started."
-                        ]
-                else
-                    -- Render list
-                    Element.Keyed.column
-                        (List Container)
-                        []
-                        (List.indexedMap renderSource sourcesWithContext)
+              if List.isEmpty sources then
+                -- No sources atm
+                Layouts.emptyState
+                    Icons.add
+                    [ text "No sources have been added yet,"
+                    , text "add one to get started."
+                    ]
+
+              else
+                -- Render list
+                Element.Keyed.column
+                    (List Container)
+                    []
+                    (List.indexedMap renderSource sourcesWithContext)
             ]
         ]
 
@@ -209,97 +209,102 @@ renderSource index ( source, sourceIsViable, isProcessing, processingError ) =
         key =
             toString index
     in
-        ( key
-        , listItem
-            [ attribute "rel" key
-            , inlineStyle
-                (if sourceIsViable then
-                    []
-                 else
-                    [ ( "color", Color.Convert.colorToCssRgb colors.base04 ) ]
-                )
-            ]
-            [ el
-                Zed
-                [ width fill ]
-                (source.data
-                    |> Dict.get "name"
-                    |> Maybe.withDefault source.id
-                    |> text
-                )
-            , listItemActions
-                [ -- Processing error
-                  --
-                  case processingError of
-                    Just err ->
-                        el
-                            WithoutLineHeight
-                            [ attribute "title" err ]
-                            (16 |> Icons.error_outline colorDerivatives.error |> html)
+    ( key
+    , listItem
+        [ attribute "rel" key
+        , inlineStyle
+            (if sourceIsViable then
+                []
 
-                    Nothing ->
-                        empty
-
-                -- Is processing
-                --
-                , if isProcessing == True then
+             else
+                [ ( "color", Color.Convert.colorToCssRgb colors.base04 ) ]
+            )
+        ]
+        [ el
+            Zed
+            [ width fill ]
+            (source.data
+                |> Dict.get "name"
+                |> Maybe.withDefault source.id
+                |> text
+            )
+        , listItemActions
+            [ -- Processing error
+              --
+              case processingError of
+                Just err ->
                     el
                         WithoutLineHeight
-                        [ attribute "title" "Processing …" ]
-                        (16 |> Icons.sync colorDerivatives.text |> html)
-                  else
+                        [ attribute "title" err ]
+                        (16 |> Icons.error_outline colorDerivatives.error |> html)
+
+                Nothing ->
                     empty
 
-                -- Enabled/Disabled
-                --
-                , if not sourceIsViable then
-                    el
-                        WithoutLineHeight
-                        [ attribute "title" "Disabled (not available on this platform)" ]
-                        (16
-                            |> Icons.not_interested colors.base04
-                            |> html
-                        )
-                  else
-                    el
-                        WithoutLineHeight
-                        [ source
-                            |> ToggleSource
-                            |> SourcesMsg
-                            |> onClick
-
-                        --
-                        , if source.enabled then
-                            attribute "title" "Enabled (click to disable)"
-                          else
-                            attribute "title" "Disabled (click to enable)"
-                        ]
-                        (if source.enabled then
-                            html (Icons.check colorDerivatives.text 16)
-                         else
-                            html (Icons.not_interested colorDerivatives.text 16)
-                        )
-
-                -- Settings
-                --
-                , el
+            -- Is processing
+            --
+            , if isProcessing == True then
+                el
                     WithoutLineHeight
-                    [ Mouse.position
-                        |> Decode.map (ShowSourceMenu source.id)
-                        |> Decode.map (TopLevel.ContextMenuMsg)
-                        |> onWithOptions
-                            "click"
-                            { stopPropagation = True
-                            , preventDefault = True
-                            }
-                    ]
+                    [ attribute "title" "Processing …" ]
+                    (16 |> Icons.sync colorDerivatives.text |> html)
+
+              else
+                empty
+
+            -- Enabled/Disabled
+            --
+            , if not sourceIsViable then
+                el
+                    WithoutLineHeight
+                    [ attribute "title" "Disabled (not available on this platform)" ]
                     (16
-                        |> Icons.settings colorDerivatives.text
+                        |> Icons.not_interested colors.base04
                         |> html
                     )
+
+              else
+                el
+                    WithoutLineHeight
+                    [ source
+                        |> ToggleSource
+                        |> SourcesMsg
+                        |> onClick
+
+                    --
+                    , if source.enabled then
+                        attribute "title" "Enabled (click to disable)"
+
+                      else
+                        attribute "title" "Disabled (click to enable)"
+                    ]
+                    (if source.enabled then
+                        html (Icons.check colorDerivatives.text 16)
+
+                     else
+                        html (Icons.not_interested colorDerivatives.text 16)
+                    )
+
+            -- Settings
+            --
+            , el
+                WithoutLineHeight
+                [ Mouse.position
+                    |> Decode.map (ShowSourceMenu source.id)
+                    |> Decode.map TopLevel.ContextMenuMsg
+                    |> onWithOptions
+                        "click"
+                        { stopPropagation = True
+                        , preventDefault = True
+                        }
                 ]
+                (16
+                    |> Icons.settings colorDerivatives.text
+                    |> html
+                )
             ]
-        )
+        ]
+    )
 
 
 
@@ -339,12 +344,12 @@ pageNew sForm origin isElectron =
                                         _ ->
                                             step - 1
                             in
-                                [ ( Icon Icons.arrow_back
-                                  , Label (Shown "Take a step back")
-                                    --
-                                  , SourcesMsg (AssignFormStep newStep)
-                                  )
-                                ]
+                            [ ( Icon Icons.arrow_back
+                              , Label (Shown "Take a step back")
+                                --
+                              , SourcesMsg (AssignFormStep newStep)
+                              )
+                            ]
                     )
 
                 ------------------------------------
@@ -382,38 +387,38 @@ pageNewStep1 source isElectron =
         msg =
             SourcesMsg (Sources.AssignFormStep 2)
     in
-        column Zed
-            [ center
-            , height fill
-            , onEnterKey msg
-            , paddingXY (scaled 4) 0
-            , spacing (scaled 8)
-            , verticalCenter
-            , width fill
+    column Zed
+        [ center
+        , height fill
+        , onEnterKey msg
+        , paddingXY (scaled 4) 0
+        , spacing (scaled 8)
+        , verticalCenter
+        , width fill
+        ]
+        [ h2 H2 [] (text "Where is your music stored?")
+
+        --
+        , Services.labels isElectron
+            |> select (AssignFormService >> SourcesMsg) (toString source.service)
+            |> el Zed [ maxWidth (px 350), width fill ]
+
+        --
+        , btn
+            Button
+            [ case source.service of
+                Local ->
+                    onClick (SourcesMsg RequestLocalPath)
+
+                _ ->
+                    onClick msg
             ]
-            [ h2 H2 [] (text "Where is your music stored?")
-
-            --
-            , Services.labels isElectron
-                |> select (AssignFormService >> SourcesMsg) (toString source.service)
-                |> el Zed [ maxWidth (px 350), width fill ]
-
-            --
-            , btn
-                Button
-                [ case source.service of
-                    Local ->
-                        onClick (SourcesMsg RequestLocalPath)
-
-                    _ ->
-                        onClick msg
-                ]
-                (18
-                    |> Icons.arrow_forward colorDerivatives.success
-                    |> html
-                    |> el WithoutLineHeight [ padding (scaled -15) ]
-                )
-            ]
+            (18
+                |> Icons.arrow_forward colorDerivatives.success
+                |> html
+                |> el WithoutLineHeight [ padding (scaled -15) ]
+            )
+        ]
 
 
 pageNewStep2 : Source -> String -> Node
@@ -430,40 +435,41 @@ pageNewStep2 source origin =
                 _ ->
                     if validateProperties source then
                         SourcesMsg (Sources.AssignFormStep 3)
+
                     else
                         "I need more data in order to continue"
                             |> Notifications.Types.Error
                             |> ShowNotification
     in
-        column Zed
-            [ height fill
-            , onEnterKey msg
-            , paddingXY (scaled 4) 0
-            , spacing (scaled 8)
-            , verticalCenter
-            , width fill
-            ]
-            [ h3
-                H3
-                []
-                (text "Where exactly?")
+    column Zed
+        [ height fill
+        , onEnterKey msg
+        , paddingXY (scaled 4) 0
+        , spacing (scaled 8)
+        , verticalCenter
+        , width fill
+        ]
+        [ h3
+            H3
+            []
+            (text "Where exactly?")
 
-            --
-            , paragraph
-                Columns
-                [ width fill ]
-                (renderSourceProperties source)
+        --
+        , paragraph
+            Columns
+            [ width fill ]
+            (renderSourceProperties source)
 
-            --
-            , btn
-                Button
-                [ center, onClick msg ]
-                (18
-                    |> Icons.arrow_forward colorDerivatives.success
-                    |> html
-                    |> el WithoutLineHeight [ padding (scaled -15) ]
-                )
-            ]
+        --
+        , btn
+            Button
+            [ center, onClick msg ]
+            (18
+                |> Icons.arrow_forward colorDerivatives.success
+                |> html
+                |> el WithoutLineHeight [ padding (scaled -15) ]
+            )
+        ]
 
 
 pageNewStep3 : Source -> Node
@@ -472,88 +478,89 @@ pageNewStep3 source =
         msg =
             if validateProperties source then
                 SourcesMsg Sources.SubmitForm
+
             else
                 "I need more data in order to continue"
                     |> Notifications.Types.Error
                     |> ShowNotification
     in
-        column Zed
+    column Zed
+        [ center
+        , height fill
+        , onEnterKey msg
+        , paddingXY (scaled 4) 0
+        , spacing (scaled 6)
+        , verticalCenter
+        , width fill
+        ]
+        [ h2 H2 [] (text "One last thing")
+
+        --
+        , lbl "What are we going to call this source?"
+
+        --
+        , Input.text
+            (Form Input)
             [ center
-            , height fill
-            , onEnterKey msg
-            , paddingXY (scaled 4) 0
-            , spacing (scaled 6)
-            , verticalCenter
+            , inputBottomPadding
+            , inputTopPadding
+            , maxWidth (px 420)
             , width fill
             ]
-            [ h2 H2 [] (text "One last thing")
+            { onChange =
+                SourcesMsg << Sources.AssignFormProperty "name"
+            , value =
+                source.data
+                    |> Dict.get "name"
+                    |> Maybe.withDefault ""
+            , label =
+                Input.placeholder
+                    { text =
+                        source.service
+                            |> Services.properties
+                            |> List.reverse
+                            |> List.head
+                            |> Maybe.map (\( _, l, _, _ ) -> l)
+                            |> Maybe.withDefault "Label"
+                    , label =
+                        Input.hiddenLabel "name"
+                    }
+            , options = []
+            }
 
-            --
-            , lbl "What are we going to call this source?"
-
-            --
-            , Input.text
-                (Form Input)
-                [ center
-                , inputBottomPadding
-                , inputTopPadding
-                , maxWidth (px 420)
-                , width fill
-                ]
-                { onChange =
-                    SourcesMsg << Sources.AssignFormProperty "name"
-                , value =
-                    source.data
-                        |> Dict.get "name"
-                        |> Maybe.withDefault ""
-                , label =
-                    Input.placeholder
-                        { text =
-                            source.service
-                                |> Services.properties
-                                |> List.reverse
-                                |> List.head
-                                |> Maybe.map (\( _, l, _, _ ) -> l)
-                                |> Maybe.withDefault "Label"
-                        , label =
-                            Input.hiddenLabel "name"
-                        }
-                , options = []
-                }
-
-            --
-            , paragraph
-                Intro
-                [ inlineStyle
-                    [ ( "text-align", "center" ) ]
-                , paddingBottom (scaled -4)
-                , paddingTop (scaled 4)
-                ]
-                [ 14
-                    |> Icons.warning colorDerivatives.text
-                    |> html
-                    |> el Zed [ moveDown 2, paddingRight (scaled -8) ]
-
-                --
-                , bold "Make sure CORS is enabled"
-                , lineBreak
-                , text "You can find the instructions over "
-                , html
-                    (Html.a
-                        [ Html.Attributes.class "is-styled-link"
-                        , Html.Attributes.href "/about#CORS"
-                        , Html.Attributes.target "_blank"
-                        ]
-                        [ Html.text "here" ]
-                    )
-                ]
-
-            --
-            , btn
-                Button
-                [ onClick msg ]
-                (text "Add source")
+        --
+        , paragraph
+            Intro
+            [ inlineStyle
+                [ ( "text-align", "center" ) ]
+            , paddingBottom (scaled -4)
+            , paddingTop (scaled 4)
             ]
+            [ 14
+                |> Icons.warning colorDerivatives.text
+                |> html
+                |> el Zed [ moveDown 2, paddingRight (scaled -8) ]
+
+            --
+            , bold "Make sure CORS is enabled"
+            , lineBreak
+            , text "You can find the instructions over "
+            , html
+                (Html.a
+                    [ Html.Attributes.class "is-styled-link"
+                    , Html.Attributes.href "/about#CORS"
+                    , Html.Attributes.target "_blank"
+                    ]
+                    [ Html.text "here" ]
+                )
+            ]
+
+        --
+        , btn
+            Button
+            [ onClick msg ]
+            (text "Add source")
+        ]
 
 
 
@@ -600,36 +607,37 @@ pageEditForm source =
         msg =
             if validateProperties source then
                 SourcesMsg Sources.SubmitForm
+
             else
                 "I need more data in order to continue"
                     |> Notifications.Types.Error
                     |> ShowNotification
     in
-        column Zed
-            [ height fill
-            , onEnterKey msg
-            , paddingXY (scaled 4) 0
-            , spacing (scaled 8)
-            , verticalCenter
-            , width fill
-            ]
-            [ h3
-                H3
-                []
-                (text "Edit source")
+    column Zed
+        [ height fill
+        , onEnterKey msg
+        , paddingXY (scaled 4) 0
+        , spacing (scaled 8)
+        , verticalCenter
+        , width fill
+        ]
+        [ h3
+            H3
+            []
+            (text "Edit source")
 
-            --
-            , paragraph
-                Columns
-                [ width fill ]
-                (renderSourceProperties source)
+        --
+        , paragraph
+            Columns
+            [ width fill ]
+            (renderSourceProperties source)
 
-            --
-            , btn
-                Button
-                [ center, onClick msg ]
-                (text "Save")
-            ]
+        --
+        , btn
+            Button
+            [ center, onClick msg ]
+            (text "Save")
+        ]
 
 
 
@@ -642,36 +650,37 @@ propertyRenderer source ( propKey, propLabel, propPlaceholder, isPassword ) =
         input =
             if isPassword then
                 Input.newPassword
+
             else
                 Input.text
     in
-        [ lbl propLabel
+    [ lbl propLabel
 
-        --
-        , input
-            (Form Input)
-            [ center
-            , inputBottomPadding
-            , inputTopPadding
-            , maxWidth (px 420)
-            , width fill
-            ]
-            { onChange =
-                SourcesMsg << Sources.AssignFormProperty propKey
-            , value =
-                source.data
-                    |> Dict.get propKey
-                    |> Maybe.withDefault ""
-            , label =
-                Input.placeholder
-                    { text = propPlaceholder
-                    , label = Input.hiddenLabel propKey
-                    }
-            , options = []
-            }
+    --
+    , input
+        (Form Input)
+        [ center
+        , inputBottomPadding
+        , inputTopPadding
+        , maxWidth (px 420)
+        , width fill
         ]
-            |> column Zed [ inlineStyle [ ( "display", "block" ) ] ]
-            |> el ColumnsChild [ paddingXY 0 (scaled 1) ]
+        { onChange =
+            SourcesMsg << Sources.AssignFormProperty propKey
+        , value =
+            source.data
+                |> Dict.get propKey
+                |> Maybe.withDefault ""
+        , label =
+            Input.placeholder
+                { text = propPlaceholder
+                , label = Input.hiddenLabel propKey
+                }
+        , options = []
+        }
+    ]
+        |> column Zed [ inlineStyle [ ( "display", "block" ) ] ]
+        |> el ColumnsChild [ paddingXY 0 (scaled 1) ]
 
 
 renderSourceProperties : Source -> List Node
@@ -704,6 +713,7 @@ sourcePropertiesNotToValidate : List String
 sourcePropertiesNotToValidate =
     [ "directoryPath"
     , "folderId"
+    , "host"
     , "password"
     , "username"
     ]
