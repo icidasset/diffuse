@@ -49,6 +49,14 @@ dev: build
 	@make -j watch-wo-build server
 
 
+doc-tests:
+	@echo "> Running documentation tests"
+	@( cd src && \
+		find . -name "*.elm" -print0 | \
+		xargs -0 -n 1 sh -c 'elm-proofread -- $0 || exit 255; echo "\n\n"'
+	)
+
+
 server:
 	@echo "> Booting up web server on port 5000"
 	@devd --port 5000 --all --crossdomain --quiet --notfound=index.html $(BUILD_DIR)
