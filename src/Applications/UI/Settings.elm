@@ -36,7 +36,7 @@ index model =
           )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown
-          , PerformMsg UI.Core.Bypass
+          , PerformMsg UI.Core.SignOut
           )
         ]
 

@@ -102,6 +102,7 @@ button buttonType msg child =
         , T.bw1
         , T.lh_solid
         , T.ph3
+        , T.pointer
         , T.pv2
         ]
         [ case buttonType of

@@ -74,6 +74,7 @@ globalItem activePage totalItems idx ( page, label ) =
         , T.dib
         , T.lh_copy
         , T.no_underline
+        , T.pointer
         , T.pt2
 
         --
@@ -159,6 +160,7 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
         , T.lh_solid
         , T.no_underline
         , T.outline_0
+        , T.pointer
         , T.ph3
         ]
         [ icon UI.Kit.colors.text 16
