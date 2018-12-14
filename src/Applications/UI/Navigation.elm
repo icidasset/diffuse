@@ -150,6 +150,7 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
         [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
 
         --
+        , T.bg_transparent
         , T.bn
         , T.fw6
         , T.inline_flex

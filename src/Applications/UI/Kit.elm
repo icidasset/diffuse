@@ -97,8 +97,9 @@ button buttonType msg child =
         , style "border-color" (Color.toCssString colorKit.base0B)
         ]
         [ borderRadius
-        , T.bw1
         , T.b__solid
+        , T.bg_transparent
+        , T.bw1
         , T.lh_solid
         , T.ph3
         , T.pv2
