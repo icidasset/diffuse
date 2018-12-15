@@ -1,4 +1,4 @@
-module Sources exposing (Form, FormStep(..), Page(..), Service(..), Source, SourceData, defaultService, emptySource, newForm)
+module Sources exposing (Form, FormStep(..), Page(..), Property, Service(..), Source, SourceData, defaultService, emptySource, newForm)
 
 import Dict exposing (Dict)
 
@@ -20,8 +20,20 @@ type alias Source =
 -- PIECES
 
 
+type alias Property =
+    { prop : String
+    , labl : String
+    , plho : String
+    , pass : Bool
+    }
+
+
 type alias SourceData =
     Dict String String
+
+
+
+-- SERVICES
 
 
 type Service
