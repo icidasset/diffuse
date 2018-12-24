@@ -1,4 +1,4 @@
-module UI.Page exposing (Page(..), fromUrl, toString)
+module UI.Page exposing (Page(..), fromUrl, sameBase, toString)
 
 import Sources
 import Url exposing (Url)
@@ -48,6 +48,18 @@ toString page =
 
         Sources Sources.New ->
             "/sources/new"
+
+
+{-| Are the bases of these two pages the same?
+-}
+sameBase : Page -> Page -> Bool
+sameBase a b =
+    case ( a, b ) of
+        ( Sources _, Sources _ ) ->
+            True
+
+        _ ->
+            a == b
 
 
 

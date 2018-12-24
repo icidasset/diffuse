@@ -1,4 +1,4 @@
-module Sources exposing (Form, FormStep(..), Page(..), Property, Service(..), Source, SourceData, defaultService, emptySource, newForm)
+module Sources exposing (Page(..), Property, Service(..), Source, SourceData)
 
 import Dict exposing (Dict)
 
@@ -21,10 +21,10 @@ type alias Source =
 
 
 type alias Property =
-    { prop : String
-    , labl : String
-    , plho : String
-    , pass : Bool
+    { k : String -- Key
+    , l : String -- Label
+    , h : String -- Placeholder
+    , p : Bool -- Password?
     }
 
 
@@ -40,11 +40,6 @@ type Service
     = AmazonS3
 
 
-defaultService : Service
-defaultService =
-    AmazonS3
-
-
 
 -- PAGE
 
@@ -52,36 +47,3 @@ defaultService =
 type Page
     = Index
     | New
-
-
-
--- FORM
-
-
-type alias Form =
-    { step : FormStep, context : Source }
-
-
-type FormStep
-    = Where
-    | How
-    | By
-
-
-newForm : Form
-newForm =
-    { step = Where, context = emptySource }
-
-
-
--- ⚡️
-
-
-emptySource : Source
-emptySource =
-    { id = "CHANGE_ME_PLEASE"
-    , data = Dict.empty
-    , directoryPlaylists = True
-    , enabled = True
-    , service = defaultService
-    }

@@ -11,10 +11,10 @@ import String.Ext as String
 
 nameProperty : String -> Property
 nameProperty placeholder =
-    { prop = "name"
-    , labl = "Name"
-    , plho = placeholder
-    , pass = False
+    { k = "name"
+    , l = "Name"
+    , h = placeholder
+    , p = False
     }
 
 

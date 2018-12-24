@@ -11,6 +11,7 @@ import String.Format
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
+import UI.Kit.Classes as C
 import UI.Page as Page exposing (Page)
 
 
@@ -37,7 +38,7 @@ type LabelType
 
 
 
--- Global
+-- GLOBAL
 
 
 global : List ( Page, String ) -> Page -> Html msg
@@ -57,7 +58,7 @@ globalItem : Page -> Int -> Int -> ( Page, String ) -> Html msg
 globalItem activePage totalItems idx ( page, label ) =
     let
         isActivePage =
-            page == activePage
+            Page.sameBase page activePage
 
         isLastItem =
             idx + 1 == totalItems
@@ -70,7 +71,7 @@ globalItem activePage totalItems idx ( page, label ) =
         , style "color" (ifThenElse isActivePage globalActiveColor globalDefaultColor)
         , style "border-bottom-color" (ifThenElse isActivePage globalBorderColor "transparent")
         ]
-        [ T.bb
+        [ C.textFocus
         , T.dib
         , T.lh_copy
         , T.no_underline
@@ -78,6 +79,7 @@ globalItem activePage totalItems idx ( page, label ) =
         , T.pt2
 
         --
+        , ifThenElse isActivePage T.bb T.bn
         , ifThenElse isLastItem T.mr0 T.mr4
         ]
         [ text label ]
@@ -98,7 +100,7 @@ globalBorderColor =
 
 
 
--- Local
+-- LOCAL
 
 
 local : List ( Icon msg, Label, Action msg ) -> Html msg
@@ -141,25 +143,24 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
                 title ""
 
         --
+        , style "border-bottom" "1px solid transparent"
         , style "border-right-color" localBorderColor
         , style "border-right-style" "solid"
         , style "border-right-width" (ifThenElse (idx == 0) "0" "1px")
-        , style "border-top" "1px solid transparent"
+        , style "border-top" "2px solid transparent"
         , style "color" localTextColor
         , style "height" "43px"
         ]
         [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
-
-        --
+        , C.navFocus
         , T.bg_transparent
-        , T.bn
+        , T.bl_0
         , T.fw6
         , T.inline_flex
         , T.items_center
         , T.justify_center
         , T.lh_solid
         , T.no_underline
-        , T.outline_0
         , T.pointer
         , T.ph3
         ]

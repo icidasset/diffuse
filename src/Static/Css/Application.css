@@ -1,3 +1,10 @@
+:root {
+  --focus-color: black;
+  --placeholder-color: black;
+}
+
+
+
 body {
   background-color: #02070E;
   background-image: url("/images/ep_naturalblack_pattern.jpg");
@@ -8,6 +15,54 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-smoothing: always;
 }
+
+
+
+/************
+ * Focusing *
+ ************/
+
+.button-focus:focus,
+.input-focus:focus,
+.nav-focus:focus,
+.text-focus:focus {
+  outline: none;
+}
+
+.button-focus:focus:not(:active) {
+  border-color: var(--focus-color) !important;
+  color: var(--focus-color) !important;
+}
+
+.nav-focus:focus:not(:active) {
+  border-top-color: var(--focus-color) !important;
+}
+
+.input-focus:focus {
+  border-bottom-color: var(--focus-color) !important;
+}
+
+.text-focus:focus:not(:active) {
+  border-bottom-color: rgba(0, 0, 0, 0.475) !important;
+  color: black !important;
+}
+
+.button-focus:focus:not(:active) svg > g,
+.text-focus:focus:not(:active) svg > g {
+  fill: var(--focus-color) !important;
+}
+
+
+
+/***************
+ * Placeholder *
+ ***************/
+
+::-webkit-input-placeholder { color: var(--placeholder-color); opacity: 0.2; }
+::-moz-placeholder { color: var(--placeholder-color); opacity: 0.2; }
+:-ms-input-placeholder { color: var(--placeholder-color); opacity: 0.2; }
+:-moz-placeholder { color: var(--placeholder-color); opacity: 0.2; }
+::placeholder { color: var(--placeholder-color); opacity: 0.2; }
 
 
 

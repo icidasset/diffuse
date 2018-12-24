@@ -155,7 +155,7 @@ noCmd =
 
 
 
--- Json
+-- JSON
 
 
 decodeMethod : J.Value -> Maybe Method
@@ -167,7 +167,7 @@ decodeMethod json =
 
 
 
--- Termination
+-- TERMINATION
 
 
 type Termination

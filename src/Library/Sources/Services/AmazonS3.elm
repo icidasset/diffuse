@@ -25,7 +25,8 @@ import Time
 
 
 defaults =
-    { directoryPath = "/"
+    { bucketName = "music"
+    , directoryPath = "/"
     , name = "Music from Amazon S3"
     , region = "eu-west-1"
     }
@@ -35,15 +36,12 @@ defaults =
 -}
 properties : List Property
 properties =
-    [ { prop = "accessKey", labl = "Access key", plho = "Fv6EWfLfCcMo", pass = False }
-    , { prop = "secretKey", labl = "Secret key", plho = "qeNcqiMpgqC8", pass = True }
-    , { prop = "bucketName", labl = "Bucket name", plho = "music", pass = False }
-    , { prop = "region", labl = "Region", plho = defaults.region, pass = False }
-    , { prop = "directoryPath", labl = "Directory", plho = defaults.directoryPath, pass = False }
-    , { prop = "host", labl = "Host (optional)", plho = "http://127.0.0.1:9000", pass = False }
-
-    --
-    , nameProperty defaults.name
+    [ { k = "accessKey", l = "Access key", h = "Fv6EWfLfCcMo", p = True }
+    , { k = "secretKey", l = "Secret key", h = "qeNcqiMpgqC8", p = True }
+    , { k = "bucketName", l = "Bucket name", h = "music", p = False }
+    , { k = "region", l = "Region", h = defaults.region, p = False }
+    , { k = "directoryPath", l = "Directory", h = defaults.directoryPath, p = False }
+    , { k = "host", l = "Host (optional)", h = "http://127.0.0.1:9000", p = False }
     ]
 
 
@@ -53,7 +51,7 @@ initialData : SourceData
 initialData =
     Dict.fromList
         [ ( "accessKey", "" )
-        , ( "bucketName", "" )
+        , ( "bucketName", defaults.bucketName )
         , ( "directoryPath", defaults.directoryPath )
         , ( "host", "" )
         , ( "name", defaults.name )
