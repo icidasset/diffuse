@@ -21,4 +21,5 @@ Elm directories:
 
 🧠    Brain
 ⚡️    Functions
+🚯    Private
 ```

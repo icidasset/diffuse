@@ -205,7 +205,7 @@ h3 text =
         [ T.f4
         , T.fw7
         , T.lh_title
-        , T.mb5
+        , T.mb4
         ]
         [ Html.text text ]
 

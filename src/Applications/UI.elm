@@ -7,7 +7,7 @@ import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Color
 import Html exposing (Html, div, section, text)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (id, style)
 import Html.Lazy
 import Json.Encode
 import Replying exposing (return)
@@ -83,7 +83,12 @@ update msg model =
             , Cmd.none
             )
 
-        LoadUserData json ->
+        LoadEnclosedUserData json ->
+            ( model
+            , Cmd.none
+            )
+
+        LoadHypaethralUserData json ->
             ( { model | isAuthenticated = True, isLoading = False }
             , Cmd.none
             )
@@ -143,6 +148,11 @@ update msg model =
         -----------------------------------------
         -- URL
         -----------------------------------------
+        ChangeUrlUsingPage page ->
+            ( model
+            , Nav.pushUrl model.navKey (Page.toString page)
+            )
+
         LinkClicked urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
@@ -171,8 +181,14 @@ update msg model =
 translateReply : Reply -> Msg
 translateReply reply =
     case reply of
+        AddSourceToCollection source ->
+            SourcesMsg (UI.Sources.AddToCollection source)
+
         Chill ->
             Bypass
+
+        GoToPage page ->
+            ChangeUrlUsingPage page
 
 
 updateChild =
@@ -194,8 +210,11 @@ translateAlienEvent event =
         Just Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off
 
-        Just Alien.LoadUserData ->
-            LoadUserData event.data
+        Just Alien.LoadEnclosedUserData ->
+            LoadEnclosedUserData event.data
+
+        Just Alien.LoadHypaethralUserData ->
+            LoadHypaethralUserData event.data
 
         _ ->
             Bypass
@@ -286,7 +305,9 @@ defaultScreen model =
 root : List (Html msg) -> Html msg
 root =
     section
-        [ style "color" (Color.toCssString UI.Kit.colors.text) ]
+        [ id "diffuse"
+        , style "color" (Color.toCssString UI.Kit.colors.text)
+        ]
 
 
 content : List (Html msg) -> Html msg

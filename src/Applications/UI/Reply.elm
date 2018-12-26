@@ -1,7 +1,14 @@
 module UI.Reply exposing (Reply(..))
 
+import Sources exposing (Source)
+import UI.Page exposing (Page)
+
+
+
 -- 🌳
 
 
 type Reply
-    = Chill
+    = AddSourceToCollection Source
+    | Chill
+    | GoToPage Page

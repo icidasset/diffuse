@@ -4,8 +4,8 @@ module Brain.Authentication exposing (Model, Msg(..), initialCommand, initialMod
 
 Involves:
 
-    1. Local UserData (enable shuffle, EQ settings, etc.)
-    2. Remote UserData (sources, tracks, favourites, etc.)
+    1. Enclosed UserData (enable shuffle, EQ settings, ... ~> device)
+    2. Hypaethral UserData (sources, tracks, favourites, ... ~> account)
 
 Methods:
 
@@ -16,7 +16,7 @@ Methods:
 Steps:
 
     1. Get active method (if none, we're signed out)
-    2. Get data
+    2. Get unrestricted data
 
 -}
 
@@ -46,7 +46,10 @@ initialModel =
 
 initialCommand : Cmd Msg
 initialCommand =
-    do RetrieveMethod
+    Cmd.batch
+        [ do RetrieveMethod
+        , do RetrieveEnclosedData
+        ]
 
 
 
@@ -60,8 +63,13 @@ type Msg
     | RetrieveMethod
     | MethodRetrieved J.Value
       -- 2. Data
-    | RetrieveData
-    | DataRetrieved J.Value
+    | RetrieveHypaethralData
+    | HypaethralDataRetrieved J.Value
+      -- x. Data
+    | RetrieveEnclosedData
+    | EnclosedDataRetrieved J.Value
+    | SaveEnclosedData J.Value
+    | SaveHypaethralData J.Value
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -75,7 +83,7 @@ update msg model =
                 Just method ->
                     ( { model | method = Just method }
                     , Cmd.batch
-                        [ do RetrieveData
+                        [ do RetrieveHypaethralData
                         , json
                             |> Alien.broadcast Alien.AuthMethod
                             |> Ports.toCache
@@ -115,7 +123,7 @@ update msg model =
                 -- 🚀
                 Just method ->
                     ( { model | method = Just method }
-                    , do RetrieveData
+                    , do RetrieveHypaethralData
                     , Nothing
                     )
 
@@ -129,7 +137,7 @@ update msg model =
         -----------------------------------------
         -- # 2
         -----------------------------------------
-        RetrieveData ->
+        RetrieveHypaethralData ->
             ( model
             , case model.method of
                 -- 🚀
@@ -142,10 +150,46 @@ update msg model =
             , Nothing
             )
 
-        DataRetrieved json ->
+        HypaethralDataRetrieved json ->
             ( model
             , noCmd
             , terminate (Authenticated json)
+            )
+
+        -----------------------------------------
+        -- DATA
+        -----------------------------------------
+        RetrieveEnclosedData ->
+            ( model
+            , Ports.requestCache (Alien.trigger Alien.AuthEnclosedData)
+            , Nothing
+            )
+
+        EnclosedDataRetrieved json ->
+            ( model
+            , noCmd
+            , Just [ LoadEnclosedUserData json ]
+            )
+
+        SaveEnclosedData json ->
+            ( model
+            , json
+                |> Alien.broadcast Alien.AuthEnclosedData
+                |> Ports.toCache
+            , Nothing
+            )
+
+        SaveHypaethralData json ->
+            ( model
+            , case model.method of
+                -- 🚀
+                Just Local ->
+                    Ports.toCache (Alien.broadcast Alien.AuthAnonymous json)
+
+                -- ✋
+                Nothing ->
+                    Cmd.none
+            , Nothing
             )
 
 
@@ -179,7 +223,7 @@ terminate : Termination -> Maybe (List Reply)
 terminate t =
     case t of
         Authenticated json ->
-            Just [ LoadUserData json ]
+            Just [ LoadHypaethralUserData json ]
 
         NotAuthenticated ->
             Just [ HideLoadingScreen ]

@@ -16,6 +16,11 @@ type alias R3D3 model msg reply =
 -- ⚡️
 
 
+{-| Handle the state of a child.
+
+    NOTE: Replies are performed from left to right.
+
+-}
 updateChild :
     (msg -> model -> ( model, Cmd msg ))
     -> (reply -> msg)
@@ -34,6 +39,8 @@ updateChild update translateReply context data =
         |> reducto update translateReply
 
 
+{-| Convenience function for returning the standard ( model, Cmd msg ) tuple.
+-}
 return : model -> Cmd msg -> ( model, Cmd msg )
 return model msg =
     ( model, msg )

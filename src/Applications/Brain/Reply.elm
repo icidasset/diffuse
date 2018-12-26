@@ -11,4 +11,5 @@ type Reply
     = Chill
       -- UI
     | HideLoadingScreen
-    | LoadUserData Json.Value
+    | LoadEnclosedUserData Json.Value
+    | LoadHypaethralUserData Json.Value

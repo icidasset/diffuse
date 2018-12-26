@@ -81,3 +81,12 @@ const orchestrion = {
 //     unstallAudio(orchestrion.audio)
 //   }
 // })
+
+
+
+// Other
+// -----
+
+app.ports.removeFocus.subscribe(_ => {
+  if (document.activeElement) document.activeElement.blur()
+})

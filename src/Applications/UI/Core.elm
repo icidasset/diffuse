@@ -44,7 +44,8 @@ type alias Model =
 
 type Msg
     = Bypass
-    | LoadUserData Json.Value
+    | LoadEnclosedUserData Json.Value
+    | LoadHypaethralUserData Json.Value
     | ToggleLoadingScreen Switch
       -----------------------------------------
       -- Children
@@ -59,6 +60,7 @@ type Msg
       -----------------------------------------
       -- URL
       -----------------------------------------
+    | ChangeUrlUsingPage Page
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url
 

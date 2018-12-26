@@ -2,12 +2,15 @@ module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), initialModel, new
 
 import Chunky exposing (..)
 import Conditional exposing (..)
+import Dict
 import Dict.Ext as Dict
 import Html exposing (Html, strong, text)
 import Html.Attributes exposing (for, name, placeholder, type_, value)
+import Html.Events exposing (onInput)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
+import Replying exposing (R3D3)
 import Sources exposing (..)
 import Sources.Services as Services
 import Sources.Services.Common
@@ -15,6 +18,8 @@ import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
+import UI.Ports
+import UI.Reply exposing (Reply)
 
 
 
@@ -56,17 +61,26 @@ defaultService =
 
 
 type Msg
-    = SelectService String
+    = AddSource
+    | Bypass
+    | SelectService String
+    | SetData String String
     | TakeStep
     | TakeStepBackwards
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> R3D3 Model Msg Reply
 update msg model =
     ( -----------------------------------------
       -- Model
       -----------------------------------------
       case msg of
+        AddSource ->
+            model
+
+        Bypass ->
+            model
+
         SelectService serviceKey ->
             case Services.keyToType serviceKey of
                 Just service ->
@@ -81,6 +95,16 @@ update msg model =
                 Nothing ->
                     model
 
+        SetData key value ->
+            let
+                context =
+                    model.context
+
+                updatedData =
+                    Dict.insert key value context.data
+            in
+            { model | context = { context | data = updatedData } }
+
         TakeStep ->
             { model | step = takeStepForwards model.step }
 
@@ -89,7 +113,24 @@ update msg model =
       -----------------------------------------
       -- Command
       -----------------------------------------
-    , Cmd.none
+    , case msg of
+        TakeStepBackwards ->
+            UI.Ports.removeFocus ()
+
+        _ ->
+            Cmd.none
+      -----------------------------------------
+      -- Reply
+      -----------------------------------------
+    , case msg of
+        AddSource ->
+            Just
+                [ UI.Reply.GoToPage (Page.Sources Sources.Index)
+                , UI.Reply.AddSourceToCollection model.context
+                ]
+
+        _ ->
+            Nothing
     )
 
 
@@ -202,7 +243,7 @@ newHow { context } =
                 List.splitAt (ceiling dividingPoint) properties
           in
           chunk
-            [ T.flex ]
+            [ T.flex, T.pt3 ]
             [ chunk
                 [ T.flex_grow_1, T.pr3 ]
                 (List.map (renderProperty context) listA)
@@ -253,6 +294,7 @@ newBy { context } =
             [ T.flex, T.mt4, T.justify_center, T.w_100 ]
             [ UI.Kit.textField
                 [ name "name"
+                , onInput (SetData "name")
                 , value nameValue
                 ]
             ]
@@ -260,7 +302,7 @@ newBy { context } =
         -- Note
         -------
         , chunk
-            [ T.f6, T.flex, T.lh_title, T.mt5, T.o_50, T.tc ]
+            [ T.f6, T.flex, T.lh_title, T.mt4, T.o_50, T.tc ]
             [ slab
                 Html.span
                 []
@@ -271,7 +313,7 @@ newBy { context } =
                 [ text "Make sure CORS is enabled" ]
             ]
         , chunk
-            [ T.f6, T.lh_title, T.mb5, T.mt2, T.o_50, T.tc ]
+            [ T.f6, T.lh_title, T.mb4, T.mt2, T.o_50, T.tc ]
             [ text "You can find the instructions over "
             , UI.Kit.link { label = "here", url = "/about#CORS" }
             ]
@@ -280,7 +322,7 @@ newBy { context } =
         ---------
         , UI.Kit.button
             WithText
-            TakeStep
+            AddSource
             (text "Add source")
         ]
     ]
@@ -297,6 +339,7 @@ renderProperty context property =
         [ UI.Kit.label [ for property.k ] property.l
         , UI.Kit.textField
             [ name property.k
+            , onInput (SetData property.k)
             , placeholder property.h
             , type_ (ifThenElse property.p "password" "text")
             , value (Dict.fetch property.k "" context.data)

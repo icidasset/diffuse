@@ -20,13 +20,17 @@ type alias Event =
 
 type Tag
     = AuthAnonymous
+    | AuthEnclosedData
     | AuthMethod
       -- from UI
+    | SaveEnclosedUserData
+    | SaveHypaethralUserData
     | SignIn
     | SignOut
       -- to UI
     | HideLoadingScreen
-    | LoadUserData
+    | LoadEnclosedUserData
+    | LoadHypaethralUserData
 
 
 
@@ -66,9 +70,18 @@ tagToString tag =
         AuthMethod ->
             "AUTH_METHOD"
 
+        AuthEnclosedData ->
+            "AUTH_ENCLOSED_DATA"
+
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        SaveEnclosedUserData ->
+            "SAVE_ENCLOSED_USER_DATA"
+
+        SaveHypaethralUserData ->
+            "SAVE_HYPAETHRAL_USER_DATA"
+
         SignIn ->
             "SIGN_IN"
 
@@ -81,8 +94,11 @@ tagToString tag =
         HideLoadingScreen ->
             "HIDE_LOADING_SCREEN"
 
-        LoadUserData ->
-            "LOAD_USER_DATA"
+        LoadEnclosedUserData ->
+            "LOAD_ENCLOSED_USER_DATA"
+
+        LoadHypaethralUserData ->
+            "LOAD_HYPAETHRAL_USER_DATA"
 
 
 tagFromString : String -> Maybe Tag
@@ -94,9 +110,18 @@ tagFromString string =
         "AUTH_METHOD" ->
             Just AuthMethod
 
+        "AUTH_ENCLOSED_DATA" ->
+            Just AuthEnclosedData
+
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        "SAVE_ENCLOSED_USER_DATA" ->
+            Just SaveEnclosedUserData
+
+        "SAVE_HYPAETHRAL_USER_DATA" ->
+            Just SaveHypaethralUserData
+
         "SIGN_IN" ->
             Just SignIn
 
@@ -109,8 +134,11 @@ tagFromString string =
         "HIDE_LOADING_SCREEN" ->
             Just HideLoadingScreen
 
-        "LOAD_USER_DATA" ->
-            Just LoadUserData
+        "LOAD_ENCLOSED_USER_DATA" ->
+            Just LoadEnclosedUserData
+
+        "LOAD_HYPAETHRAL_USER_DATA" ->
+            Just LoadHypaethralUserData
 
         _ ->
             Nothing

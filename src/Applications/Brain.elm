@@ -81,14 +81,22 @@ translateReply reply =
         Chill ->
             Bypass
 
+        -----------------------------------------
+        -- To UI
+        -----------------------------------------
         HideLoadingScreen ->
             Alien.HideLoadingScreen
                 |> Alien.trigger
                 |> NotifyUI
 
-        LoadUserData data ->
+        LoadEnclosedUserData data ->
             data
-                |> Alien.broadcast Alien.LoadUserData
+                |> Alien.broadcast Alien.LoadEnclosedUserData
+                |> NotifyUI
+
+        LoadHypaethralUserData data ->
+            data
+                |> Alien.broadcast Alien.LoadHypaethralUserData
                 |> NotifyUI
 
 
@@ -112,10 +120,16 @@ translateAlienEvent : Alien.Event -> Msg
 translateAlienEvent event =
     case Alien.tagFromString event.tag of
         Just Alien.AuthAnonymous ->
-            AuthenticationMsg (Brain.Authentication.DataRetrieved event.data)
+            AuthenticationMsg (Brain.Authentication.HypaethralDataRetrieved event.data)
 
         Just Alien.AuthMethod ->
             AuthenticationMsg (Brain.Authentication.MethodRetrieved event.data)
+
+        Just Alien.SaveEnclosedUserData ->
+            AuthenticationMsg (Brain.Authentication.SaveEnclosedData event.data)
+
+        Just Alien.SaveHypaethralUserData ->
+            AuthenticationMsg (Brain.Authentication.SaveHypaethralData event.data)
 
         Just Alien.SignIn ->
             AuthenticationMsg (Brain.Authentication.PerformSignIn event.data)
