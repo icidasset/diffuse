@@ -8,7 +8,7 @@ import Chunky exposing (..)
 import Color
 import Color.Ext as Color
 import Css exposing (url)
-import Css.Global exposing (global)
+import Css.Global
 import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
 import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
@@ -173,7 +173,7 @@ update msg model =
                 | page = Page.fromUrl url
                 , url = url
               }
-            , Cmd.none
+            , Ports.removeFocus ()
             )
 
 
@@ -236,23 +236,9 @@ view model =
 
 body : Model -> Html Msg
 body model =
-    root
-        [ -----------------------------------------
-          -- Global
-          -----------------------------------------
-          global
-            [ Css.Global.body
-                [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.background)
-                , Css.backgroundImage (url "/images/ep_naturalblack_pattern.jpg")
-                , Css.fontFamilies UI.Kit.defaultFontFamilies
-                , Css.textRendering Css.optimizeLegibility
-
-                --
-                , Css.property "-webkit-font-smoothing" "antialiased"
-                , Css.property "-moz-osx-font-smoothing" "grayscale"
-                , Css.property "font-smoothing" "antialiased"
-                ]
-            ]
+    section
+        []
+        [ Css.Global.global globalCss
 
         -----------------------------------------
         -- Backdrop
@@ -266,7 +252,7 @@ body model =
         -----------------------------------------
         , content
             (if model.isLoading then
-                [ spinner ]
+                [ loadingAnimation ]
 
              else if model.isAuthenticated then
                 defaultScreen model
@@ -319,12 +305,6 @@ defaultScreen model =
 -- 🗺  ~  Bits
 
 
-root : List (Html msg) -> Html msg
-root =
-    section
-        [ style "color" (Color.toCssString UI.Kit.colors.text) ]
-
-
 content : List (Html msg) -> Html msg
 content =
     chunk
@@ -339,6 +319,31 @@ content =
         ]
 
 
-spinner : Html msg
-spinner =
+loadingAnimation : Html msg
+loadingAnimation =
     Html.map never Svg.Elements.spinner
+
+
+
+-- 🖼  ~  Global
+
+
+globalCss : List Css.Global.Snippet
+globalCss =
+    [ -----------------------------------------
+      -- Body
+      -----------------------------------------
+      Css.Global.body
+        [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.background)
+        , Css.backgroundImage (url "/images/ep_naturalblack_pattern.jpg")
+        , Css.color (Color.toElmCssColor UI.Kit.colors.text)
+        , Css.fontFamilies UI.Kit.defaultFontFamilies
+        , Css.textRendering Css.optimizeLegibility
+
+        -- Font smoothing
+        -----------------
+        , Css.property "-webkit-font-smoothing" "antialiased"
+        , Css.property "-moz-osx-font-smoothing" "grayscale"
+        , Css.property "font-smoothing" "antialiased"
+        ]
+    ]

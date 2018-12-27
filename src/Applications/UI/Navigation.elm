@@ -7,7 +7,7 @@ import Color.Manipulate
 import Conditional exposing (..)
 import Css exposing (px, solid, transparent, zero)
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, href, style, title)
+import Html.Styled.Attributes exposing (attribute, css, href, style, title)
 import Html.Styled.Events exposing (onClick)
 import List.Extra as List
 import String.Format
@@ -67,7 +67,8 @@ globalItem activePage totalItems idx ( page, label ) =
     in
     slab
         Html.a
-        [ css (globalItemStyles isActivePage)
+        [ attribute "data-keep-focus" "t"
+        , css (globalItemStyles isActivePage)
         , href (Page.toString page)
         ]
         [ T.dib

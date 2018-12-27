@@ -88,5 +88,6 @@ const orchestrion = {
 // -----
 
 app.ports.removeFocus.subscribe(_ => {
-  if (document.activeElement) document.activeElement.blur()
+  var n = document.activeElement
+  if (n && !n.dataset.keepFocus) n.blur()
 })

@@ -63,39 +63,54 @@ rgb =
 -- FOCUSING
 
 
+focusWhileNotActive : List Css.Style -> Css.Style
+focusWhileNotActive styles =
+    Css.batch
+        [ Css.outline none
+        , Css.pseudoClass "focus:not(:active)" styles
+        ]
+
+
+focus : List Css.Style -> Css.Style
+focus styles =
+    Css.batch
+        [ Css.outline none
+        , Css.focus styles
+        ]
+
+
+
+-- FOCUSING, Pt. II
+
+
 buttonFocus : Css.Style
 buttonFocus =
-    Css.pseudoClass "focus:not(:active)"
+    focusWhileNotActive
         [ Css.borderColor (Color.toElmCssColor colors.focus)
         , Css.color (Color.toElmCssColor colors.focus)
-        , Css.outline none
         , iconFocusStyle
         ]
 
 
 inputFocus : Css.Style
 inputFocus =
-    Css.focus
-        [ Css.borderBottomColor (Color.toElmCssColor colors.focus)
-        , Css.outline none
-        ]
+    focusWhileNotActive
+        [ Css.borderBottomColor (Color.toElmCssColor colors.focus) ]
 
 
 navFocus : Css.Style
 navFocus =
-    Css.focus
+    focusWhileNotActive
         [ Css.borderTopColor (Color.toElmCssColor colors.focus)
-        , Css.outline none
         , iconFocusStyle
         ]
 
 
 textFocus : Css.Style
 textFocus =
-    Css.focus
+    focus
         [ Css.borderBottomColor (Css.rgba 0 0 0 0.475)
         , Css.color (Color.toElmCssColor colors.focus)
-        , Css.outline none
         ]
 
 

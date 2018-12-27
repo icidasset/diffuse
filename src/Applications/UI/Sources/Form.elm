@@ -76,7 +76,7 @@ update msg model =
       -----------------------------------------
       case msg of
         AddSource ->
-            model
+            { model | step = Where, context = defaultContext }
 
         Bypass ->
             model
@@ -114,6 +114,9 @@ update msg model =
       -- Command
       -----------------------------------------
     , case msg of
+        TakeStep ->
+            UI.Ports.removeFocus ()
+
         TakeStepBackwards ->
             UI.Ports.removeFocus ()
 
