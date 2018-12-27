@@ -178,7 +178,7 @@ update msg model =
 
 
 
--- 📣  ~  Children & Replies
+-- 📣  |  Children & Replies
 
 
 translateReply : Reply -> Msg
@@ -302,7 +302,7 @@ defaultScreen model =
 
 
 
--- 🗺  ~  Bits
+-- 🗺  |  Bits
 
 
 content : List (Html msg) -> Html msg
@@ -325,7 +325,7 @@ loadingAnimation =
 
 
 
--- 🖼  ~  Global
+-- 🖼  |  Global
 
 
 globalCss : List Css.Global.Snippet

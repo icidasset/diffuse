@@ -18,7 +18,7 @@ type Page
 
 
 
--- ⚡️
+-- 🔱
 
 
 fromUrl : Url -> Page

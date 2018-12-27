@@ -72,7 +72,7 @@ update msg model =
 
 
 
--- 📣  ~  Children & Replies
+-- 📣  |  Children & Replies
 
 
 translateReply : Reply -> Msg

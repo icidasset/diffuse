@@ -8,7 +8,7 @@ type Method
 
 
 
--- ⚡️
+-- 🔱
 
 
 methodToString : Method -> String

@@ -13,7 +13,7 @@ type alias R3D3 model msg reply =
 
 
 
--- ⚡️
+-- 🔱
 
 
 {-| Handle the state of a child.
@@ -47,7 +47,7 @@ return model msg =
 
 
 
--- ⚡️  ~  TASKS
+-- 🔱  |  TASKS
 
 
 do : msg -> Cmd msg
@@ -57,7 +57,7 @@ do msg =
 
 
 -----------------------------------------
--- PRIVATE
+-- ㊙️
 -----------------------------------------
 
 
