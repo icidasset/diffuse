@@ -1,13 +1,15 @@
-module UI.Kit exposing (ButtonType(..), button, canister, centeredContent, colorKit, colors, defaultFont, h1, h2, h3, headerFont, insulationWidth, intro, label, link, logoBackdrop, select, textField, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, select, textField, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
-import Html exposing (Html)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick, onInput)
+import Color.Ext as Color
+import Css exposing (deg, em, none, num, pct, px, solid, url, zero)
+import Css.Global
+import Html.Styled as Html exposing (Html)
+import Html.Styled.Attributes exposing (css, href, style)
+import Html.Styled.Events exposing (onClick, onInput)
 import Material.Icons.Hardware as Icons
 import Tachyons.Classes as T
-import UI.Kit.Classes as C
 
 
 
@@ -41,11 +43,15 @@ colors =
     { errorBorder = colorKit.base08
     , inputBorder = rgb 225 225 225
     , subtleBorder = rgb 238 238 238
-    , -- States
-      success = colorKit.base0B
+
+    -- States
+    , success = colorKit.base0B
     , error = colorKit.base08
-    , -- Text
-      text = colorKit.base01
+
+    -- Other
+    , background = rgb 2 7 14
+    , focus = rgb 0 0 0
+    , text = colorKit.base01
     }
 
 
@@ -54,17 +60,67 @@ rgb =
 
 
 
+-- FOCUSING
+
+
+buttonFocus : Css.Style
+buttonFocus =
+    Css.pseudoClass "focus:not(:active)"
+        [ Css.borderColor (Color.toElmCssColor colors.focus)
+        , Css.color (Color.toElmCssColor colors.focus)
+        , Css.outline none
+        , iconFocusStyle
+        ]
+
+
+inputFocus : Css.Style
+inputFocus =
+    Css.focus
+        [ Css.borderBottomColor (Color.toElmCssColor colors.focus)
+        , Css.outline none
+        ]
+
+
+navFocus : Css.Style
+navFocus =
+    Css.focus
+        [ Css.borderTopColor (Color.toElmCssColor colors.focus)
+        , Css.outline none
+        , iconFocusStyle
+        ]
+
+
+textFocus : Css.Style
+textFocus =
+    Css.focus
+        [ Css.borderBottomColor (Css.rgba 0 0 0 0.475)
+        , Css.color (Color.toElmCssColor colors.focus)
+        , Css.outline none
+        ]
+
+
+
 -- FONTS
 
 
-defaultFont : String
-defaultFont =
-    "Source Sans Pro"
+defaultFontFamilies : List String
+defaultFontFamilies =
+    [ "Source Sans Pro", "sans-serif" ]
 
 
-headerFont : String
-headerFont =
-    "Montserrat"
+defaultFontStyles : List Css.Style
+defaultFontStyles =
+    [ Css.fontFamilies headerFontFamilies ]
+
+
+headerFontFamilies : List String
+headerFontFamilies =
+    [ "Montserrat", "Futura", "\"Trebuchet MS\"", "Arial", "sans-serif" ]
+
+
+headerFontStyles : List Css.Style
+headerFontStyles =
+    [ Css.fontFamilies headerFontFamilies ]
 
 
 
@@ -99,14 +155,10 @@ button : ButtonType -> msg -> Html msg -> Html msg
 button buttonType msg child =
     slab
         Html.button
-        [ onClick msg
-
-        --
-        , style "border-color" (Color.toCssString colorKit.accent)
-        , style "color" (Color.toCssString colorKit.accent)
+        [ css buttonStyles
+        , onClick msg
         ]
         [ borderRadius
-        , C.buttonFocus
         , T.b__solid
         , T.bg_transparent
         , T.bw1
@@ -163,11 +215,7 @@ h1 : String -> Html msg
 h1 text =
     slab
         Html.h1
-        [ style "background-color" (Color.toCssString colorKit.base06)
-        , style "font-size" "11.25px"
-        , style "letter-spacing" "0.25px"
-        , style "top" "-1px"
-        ]
+        [ css h1Styles ]
         [ borderRadius
         , T.br__bottom
         , T.dt
@@ -187,7 +235,7 @@ h2 : String -> Html msg
 h2 text =
     slab
         Html.h2
-        [ style "font-family" headerFont ]
+        [ css headerFontStyles ]
         [ T.f3
         , T.fw7
         , T.lh_title
@@ -201,7 +249,7 @@ h3 : String -> Html msg
 h3 text =
     slab
         Html.h2
-        [ style "font-family" headerFont ]
+        [ css headerFontStyles ]
         [ T.f4
         , T.fw7
         , T.lh_title
@@ -214,9 +262,7 @@ intro : Html msg -> Html msg
 intro child =
     slab
         Html.p
-        [ style "color" (Color.toCssString colorKit.base05)
-        , style "line-height" "1.75em"
-        ]
+        [ css introStyles ]
         [ T.f6
         , T.mv3
         , T.pv1
@@ -228,7 +274,7 @@ label : List (Html.Attribute msg) -> String -> Html msg
 label attributes t =
     slab
         Html.label
-        (style "font-size" "11.25px" :: attributes)
+        (css labelStyles :: attributes)
         [ T.db
         , T.fw7
         , T.o_90
@@ -241,36 +287,23 @@ link : { label : String, url : String } -> Html msg
 link params =
     slab
         Html.a
-        [ Html.Attributes.href params.url
-        , style "border-bottom" ("2px solid " ++ Color.toCssString colorKit.accent)
-        ]
+        [ css linkStyles, href params.url ]
         [ T.color_inherit, T.no_underline ]
         [ Html.text params.label ]
 
 
 logoBackdrop : Html msg
 logoBackdrop =
-    block
-        [ style "background-image" "url(/images/diffuse__icon-dark.svg)"
-        , style "background-position" "-43.5% 98px"
-        , style "background-repeat" "no-repeat"
-        , style "background-size" "cover"
-        , style "height" "0"
-        , style "left" "100%"
-        , style "opacity" "0.025"
-        , style "padding-top" "100%"
-        , style "transform" "rotate(90deg)"
-        , style "transform-origin" "left top"
-        , style "width" "105vh"
-        ]
+    brick
+        [ css logoBackdropStyles ]
         [ T.absolute, T.top_0, T.z_0 ]
         []
 
 
 select : (String -> msg) -> List (Html msg) -> Html msg
 select inputHandler options =
-    block
-        [ style "max-width" (String.fromFloat maxInputWidth ++ "px") ]
+    brick
+        [ css selectStyles.container ]
         [ T.center
         , T.mb4
         , T.relative
@@ -278,12 +311,8 @@ select inputHandler options =
         ]
         [ slab
             Html.select
-            [ onInput inputHandler
-            , style "border-bottom" ("1px solid " ++ Color.toCssString colors.inputBorder)
-            , style "color" (Color.toCssString colors.text)
-            ]
-            [ C.inputFocus
-            , T.bn
+            [ css selectStyles.field, onInput inputHandler ]
+            [ T.bn
             , T.bg_transparent
             , T.br0
             , T.db
@@ -297,14 +326,10 @@ select inputHandler options =
             , T.w_100
             ]
             options
-        , block
-            [ style "font-size" "0"
-            , style "margin-top" "1px"
-            , style "top" "50%"
-            , style "transform" "translateY(-50%)"
-            ]
+        , brick
+            [ css selectStyles.arrow ]
             [ T.absolute, T.right_0 ]
-            [ Icons.keyboard_arrow_down colorKit.base05 20 ]
+            [ Html.fromUnstyled (Icons.keyboard_arrow_down colorKit.base05 20) ]
         ]
 
 
@@ -312,15 +337,8 @@ textField : List (Html.Attribute msg) -> Html msg
 textField attributes =
     slab
         Html.input
-        (List.append
-            [ style "border-bottom" ("1px solid " ++ Color.toCssString colors.inputBorder)
-            , style "color" (Color.toCssString colors.text)
-            , style "max-width" (String.fromFloat maxInputWidth ++ "px")
-            ]
-            attributes
-        )
-        [ C.inputFocus
-        , T.bn
+        (css textFieldStyles :: attributes)
+        [ T.bn
         , T.bg_transparent
         , T.db
         , T.f6
@@ -334,8 +352,8 @@ textField attributes =
 
 vessel : List (Html msg) -> Html msg
 vessel =
-    block
-        [ style "max-width" (String.fromFloat insulationWidth ++ "px") ]
+    brick
+        [ css vesselStyles ]
         [ borderRadius
         , T.bg_white
         , T.flex
@@ -344,3 +362,103 @@ vessel =
         , T.overflow_hidden
         , T.w_100
         ]
+
+
+
+-----------------------------------------
+-- ㊙️
+-----------------------------------------
+
+
+buttonStyles : List Css.Style
+buttonStyles =
+    [ Css.borderColor (Color.toElmCssColor colorKit.accent)
+    , Css.color (Color.toElmCssColor colorKit.accent)
+    , buttonFocus
+    ]
+
+
+h1Styles : List Css.Style
+h1Styles =
+    [ Css.backgroundColor (Color.toElmCssColor colorKit.base06)
+    , Css.fontSize (px 11.25)
+    , Css.letterSpacing (px 0.25)
+    , Css.top (px -1)
+    ]
+
+
+introStyles : List Css.Style
+introStyles =
+    [ Css.color (Color.toElmCssColor colorKit.base05)
+    , Css.lineHeight (em 1.75)
+    ]
+
+
+labelStyles : List Css.Style
+labelStyles =
+    [ Css.fontSize (px 11.25) ]
+
+
+linkStyles : List Css.Style
+linkStyles =
+    [ Css.borderBottom3 (px 2) solid (Color.toElmCssColor colorKit.accent) ]
+
+
+logoBackdropStyles : List Css.Style
+logoBackdropStyles =
+    [ Css.backgroundImage (url "/images/diffuse__icon-dark.svg")
+    , Css.backgroundPosition2 (pct -43.5) (px 98)
+    , Css.backgroundRepeat Css.noRepeat
+    , Css.backgroundSize Css.cover
+    , Css.height zero
+    , Css.left (pct 100)
+    , Css.opacity (num 0.025)
+    , Css.paddingTop (pct 100)
+    , Css.property "transform-origin" "left top"
+    , Css.transform (Css.rotate (deg 90))
+    , Css.width (Css.vh 105)
+    ]
+
+
+selectStyles : { arrow : List Css.Style, container : List Css.Style, field : List Css.Style }
+selectStyles =
+    { arrow =
+        [ Css.fontSize (px 0)
+        , Css.marginTop (px 1)
+        , Css.top (pct 50)
+        , Css.transform (Css.translateY <| pct -50)
+        ]
+    , container =
+        [ Css.maxWidth (px maxInputWidth) ]
+    , field =
+        [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
+        , Css.color (Color.toElmCssColor colors.text)
+        , inputFocus
+        ]
+    }
+
+
+textFieldStyles : List Css.Style
+textFieldStyles =
+    [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
+    , Css.color (Color.toElmCssColor colors.text)
+    , Css.maxWidth (px maxInputWidth)
+    , inputFocus
+    ]
+
+
+vesselStyles : List Css.Style
+vesselStyles =
+    [ Css.maxWidth (px insulationWidth) ]
+
+
+
+-- ⚗️
+
+
+iconFocusStyle : Css.Style
+iconFocusStyle =
+    [ Css.fill (Color.toElmCssColor colors.focus) ]
+        |> Css.Global.selector "svg > g"
+        |> List.singleton
+        |> Css.Global.descendants

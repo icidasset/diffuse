@@ -1,7 +1,7 @@
 module UI.Settings exposing (view)
 
 import Chunky exposing (..)
-import Html exposing (Html, text)
+import Html.Styled as Html exposing (Html, text)
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Tachyons.Classes as T

@@ -1,14 +1,16 @@
 module UI.Backdrop exposing (Model, Msg(..), initialModel, update, view)
 
-import Html exposing (Html, div)
-import Html.Attributes exposing (src, style)
-import Html.Events exposing (on)
-import Html.Lazy
+import Chunky exposing (..)
+import Css exposing (..)
+import Html.Styled as Html exposing (Html, div)
+import Html.Styled.Attributes exposing (css, src, style)
+import Html.Styled.Events exposing (on)
+import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Replying exposing (R3D3)
 import Return3 as Return
-import Tachyons
-import Tachyons.Classes as Tachyons
+import Tachyons.Classes as T
+import UI.Animations
 import UI.Reply as Reply exposing (Reply)
 
 
@@ -64,21 +66,19 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div
-        [ Tachyons.classes
-            [ Tachyons.absolute__fill
-            , Tachyons.fixed
-            , Tachyons.z_0
-            ]
+    chunk
+        [ T.absolute__fill
+        , T.fixed
+        , T.z_0
         ]
-        [ Html.Lazy.lazy chosen model.chosen
-        , Html.Lazy.lazy2 loaded model.loaded model.fadeIn
+        [ Lazy.lazy chosen model.chosen
+        , Lazy.lazy2 loaded model.loaded model.fadeIn
         ]
 
 
 
 -----------------------------------------
--- PRIVATE
+-- ㊙️
 -----------------------------------------
 
 
@@ -90,20 +90,14 @@ chosen c =
                 |> Load
                 |> Json.Decode.succeed
     in
-    Html.img
-        [ style "height" "1px"
-        , style "left" "100%"
-        , style "opacity" "0.00001"
-        , style "overflow" "hidden"
-        , style "position" "fixed"
-        , style "top" "100%"
-        , style "transform" "translate(-1px, -1px)"
-        , style "width" "1px"
-        , style "z-index" "-10000"
-
-        --
-        , src ("/images/Background/" ++ c)
+    slab
+        Html.img
+        [ css chosenStyles
         , on "load" loadingDecoder
+        , src ("/images/Background/" ++ c)
+        ]
+        [ T.fixed
+        , T.overflow_hidden
         ]
         []
 
@@ -115,9 +109,7 @@ loaded list fadeIn =
             min (List.length list) 2
 
         indexedMapFn idx item =
-            div
-                (imageStyles fadeIn (idx + 1 < amount) item)
-                []
+            div [ css (imageStyles fadeIn (idx + 1 < amount) item) ] []
     in
     list
         |> List.reverse
@@ -127,45 +119,69 @@ loaded list fadeIn =
         |> div []
 
 
-imageStyles : Bool -> Bool -> String -> List (Html.Attribute Msg)
-imageStyles fadeIn isPrevious loadedBackdrop =
-    [ style
-        "animation"
-        (if not isPrevious && fadeIn then
-            "2s ease-in 50ms forwards fadeIn"
 
-         else
-            "none"
-        )
+-- 🖼
 
-    --
-    , style
-        "opacity"
-        (if isPrevious || not fadeIn then
-            "1"
 
-         else
-            "0"
-        )
-
-    --
-    , style "background-image" ("url(/images/Background/" ++ loadedBackdrop ++ ")")
-    , style "background-size" "cover"
-    , style "bottom" "-1px"
-    , style "left" "-1px"
-    , style "position" "fixed"
-    , style "right" "-1px"
-    , style "top" "-1px"
-    , style "z-index" "-9"
-
-    --
-    , case loadedBackdrop of
-        "1.jpg" ->
-            style "background-position" "center 30%"
-
-        "9.jpg" ->
-            style "background-position" "center 68%"
-
-        _ ->
-            style "background-position" "center bottom"
+chosenStyles : List Css.Style
+chosenStyles =
+    [ height (px 1)
+    , left (pct 100)
+    , opacity (num 0.00001)
+    , top (pct 100)
+    , transform (translate2 (px -1) (px -1))
+    , width (px 1)
+    , zIndex (int -10000)
     ]
+
+
+imageAnimation : List Css.Style
+imageAnimation =
+    [ animationName UI.Animations.fadeIn
+    , animationDuration (ms 2000)
+    , animationDelay (ms 50)
+    , property "animation-fill-mode" "forwards"
+    ]
+
+
+imageStyles : Bool -> Bool -> String -> List Css.Style
+imageStyles fadeIn isPrevious loadedBackdrop =
+    List.append
+        -- Animation
+        ------------
+        (if not isPrevious && fadeIn then
+            imageAnimation
+
+         else
+            []
+        )
+        [ -- Background
+          -------------
+          case loadedBackdrop of
+            "1.jpg" ->
+                property "background-position" "center 30%"
+
+            "9.jpg" ->
+                property "background-position" "center 68%"
+
+            _ ->
+                property "background-position" "center bottom"
+
+        -- Opacity
+        ----------
+        , if isPrevious || not fadeIn then
+            opacity (int 1)
+
+          else
+            opacity zero
+
+        --
+        , backgroundImage (url <| "/images/Background/" ++ loadedBackdrop)
+        , backgroundSize cover
+        , bottom (px -1)
+        , left (px -1)
+        , position fixed
+        , right (px -1)
+        , top (px -1)
+        , zIndex (int -9)
+        ]

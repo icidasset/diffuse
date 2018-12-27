@@ -3,11 +3,11 @@ module UI.Authentication exposing (signInScreen)
 import Authentication
 import Chunky exposing (..)
 import Color
-import Html exposing (Html, a, button, div, em, img, span, text)
-import Html.Attributes exposing (href, src, style, width)
-import Html.Events exposing (onClick)
+import Css exposing (backgroundColor, minWidth, px, transparent)
+import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
+import Html.Styled.Attributes exposing (css, href, src, style, width)
+import Html.Styled.Events exposing (onClick)
 import Material.Icons.Action as Icons
-import Tachyons exposing (classes)
 import Tachyons.Classes as T
 import UI.Core
 import UI.Kit
@@ -25,7 +25,7 @@ signInScreen =
         , T.vh_100
         , T.items_center
         ]
-        [ block
+        [ brick
             [ style "height" "45%" ]
             [ T.flex
             , T.items_center
@@ -38,7 +38,7 @@ signInScreen =
         -----------------------------------------
         -- Choices
         -----------------------------------------
-        , block
+        , brick
             []
             [ T.bg_white
             , T.br2
@@ -50,30 +50,26 @@ signInScreen =
                     "1px solid " ++ Color.toCssString UI.Kit.colors.subtleBorder
              in
              [ -- Local
-               button
-                [ classes
-                    [ T.b__none
-                    , T.f6
-                    , T.flex
-                    , T.items_center
-                    , T.lh_solid
-                    , T.pointer
-                    , T.pv3
-                    , T.tl
-                    ]
-
-                --
-                , style "background" "transparent"
-                , style "min-width" "260px"
-
-                --
+               --------
+               slab
+                button
+                [ css choiceButtonStyles
                 , onClick (UI.Core.SignIn Authentication.Local)
                 ]
+                [ T.b__none
+                , T.f6
+                , T.flex
+                , T.items_center
+                , T.lh_solid
+                , T.pointer
+                , T.pv3
+                , T.tl
+                ]
                 [ slab
-                    Html.span
+                    span
                     []
                     [ T.inline_flex, T.mr3 ]
-                    [ Icons.lock UI.Kit.colors.text 16 ]
+                    [ fromUnstyled (Icons.lock UI.Kit.colors.text 16) ]
                 , text "Sign in anonymously"
                 ]
              ]
@@ -90,13 +86,23 @@ signInScreen =
             , T.lh_solid
             , T.pb4
             ]
-            [ a
-                [ href "/about"
-                , classes
-                    [ T.no_underline
-                    , T.white_50
-                    ]
+            [ slab
+                a
+                [ href "/about" ]
+                [ T.no_underline
+                , T.white_50
                 ]
                 [ em [] [ text "What is this exactly?" ] ]
             ]
         ]
+
+
+
+-- 🖼
+
+
+choiceButtonStyles : List Css.Style
+choiceButtonStyles =
+    [ backgroundColor transparent
+    , minWidth (px 260)
+    ]

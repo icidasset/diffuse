@@ -25,22 +25,26 @@
             "icidasset/elm-sha": "1.0.0",
             "jorgengranseth/elm-string-format": "1.0.1",
             "justgage/tachyons-elm": "4.1.1",
+            "noahzgordon/elm-color-extra": "1.0.1",
+            "rtfeldman/elm-css": "16.0.0",
             "ryannhg/date-format": "2.3.0",
             "ymtszw/elm-xml-decode": "3.0.0"
         },
         "indirect": {
+            "Skinney/murmur3": "2.0.8",
             "elm/bytes": "1.0.7",
             "elm/file": "1.0.1",
             "elm/parser": "1.1.0",
+            "elm/random": "1.0.0",
             "elm/virtual-dom": "1.0.2",
+            "elm-explorations/test": "1.2.0",
+            "fredcy/elm-parseint": "2.0.1",
             "jinjor/elm-xml-parser": "2.0.0",
             "rtfeldman/elm-hex": "1.0.0"
         }
     },
     "test-dependencies": {
         "direct": {},
-        "indirect": {
-            "elm/random": "1.0.0"
-        }
+        "indirect": {}
     }
 }

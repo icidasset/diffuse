@@ -4,9 +4,9 @@ import Chunky exposing (..)
 import Conditional exposing (..)
 import Dict
 import Dict.Ext as Dict
-import Html exposing (Html, strong, text)
-import Html.Attributes exposing (for, name, placeholder, type_, value)
-import Html.Events exposing (onInput)
+import Html.Styled as Html exposing (Html, strong, text)
+import Html.Styled.Attributes exposing (for, name, placeholder, type_, value)
+import Html.Styled.Events exposing (onInput)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
@@ -201,7 +201,7 @@ newWhere { context } =
         , UI.Kit.button
             WithIcon
             TakeStep
-            (Icons.arrow_forward UI.Kit.colorKit.accent 17)
+            (Html.fromUnstyled <| Icons.arrow_forward UI.Kit.colorKit.accent 17)
         ]
     ]
 
@@ -259,7 +259,7 @@ newHow { context } =
             [ UI.Kit.button
                 WithIcon
                 TakeStep
-                (Icons.arrow_forward UI.Kit.colorKit.accent 17)
+                (Html.fromUnstyled <| Icons.arrow_forward UI.Kit.colorKit.accent 17)
             ]
         ]
     ]
@@ -307,7 +307,7 @@ newBy { context } =
                 Html.span
                 []
                 [ T.mr1 ]
-                [ Icons.warning UI.Kit.colors.text 16 ]
+                [ Html.fromUnstyled (Icons.warning UI.Kit.colors.text 16) ]
             , strong
                 []
                 [ text "Make sure CORS is enabled" ]

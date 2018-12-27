@@ -1,4 +1,4 @@
-module Chunky exposing (block, blocky, chunk, chunky, empty, lineBreak, raw, rawy, slab, slaby)
+module Chunky exposing (brick, bricky, chunk, chunky, empty, lineBreak, raw, rawy, slab, slaby)
 
 {-| Chunks, blocks and slabs.
 
@@ -6,7 +6,8 @@ Convenience functions to build UIs with Tachyons.
 
 -}
 
-import Html exposing (Html)
+import Html.Styled as Html exposing (Html)
+import Html.Styled.Attributes
 import Tachyons
 
 
@@ -21,7 +22,12 @@ slab :
     -> List (Html msg)
     -> Html msg
 slab typ attributes classes children =
-    typ (List.append [ Tachyons.classes classes ] attributes) children
+    typ
+        (List.append
+            [ Html.Styled.Attributes.fromUnstyled (Tachyons.classes classes) ]
+            attributes
+        )
+        children
 
 
 slaby :
@@ -38,14 +44,14 @@ slaby a b c =
 -- 2
 
 
-block : List (Html.Attribute msg) -> List String -> List (Html msg) -> Html msg
-block =
+brick : List (Html.Attribute msg) -> List String -> List (Html msg) -> Html msg
+brick =
     slab Html.div
 
 
-blocky : List (Html.Attribute msg) -> List String -> Html msg -> Html msg
-blocky a b =
-    List.singleton >> block a b
+bricky : List (Html.Attribute msg) -> List String -> Html msg -> Html msg
+bricky a b =
+    List.singleton >> brick a b
 
 
 
@@ -54,7 +60,7 @@ blocky a b =
 
 chunk : List String -> List (Html msg) -> Html msg
 chunk =
-    block []
+    brick []
 
 
 chunky : List String -> Html msg -> Html msg

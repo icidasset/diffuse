@@ -2,7 +2,7 @@ module UI.Sources exposing (Model, Msg(..), initialModel, update, view)
 
 import Chunky exposing (..)
 import Dict.Ext as Dict
-import Html exposing (Html, text)
+import Html.Styled as Html exposing (Html, text)
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons

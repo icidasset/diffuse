@@ -2,16 +2,18 @@ module UI.Navigation exposing (Action(..), Icon(..), Label(..), LabelType(..), g
 
 import Chunky exposing (..)
 import Color exposing (Color)
+import Color.Ext as Color
+import Color.Manipulate
 import Conditional exposing (..)
-import Html exposing (Html, text)
-import Html.Attributes exposing (href, style, title)
-import Html.Events exposing (onClick)
+import Css exposing (px, solid, transparent, zero)
+import Html.Styled as Html exposing (Html, text)
+import Html.Styled.Attributes exposing (css, href, style, title)
+import Html.Styled.Events exposing (onClick)
 import List.Extra as List
 import String.Format
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
-import UI.Kit.Classes as C
 import UI.Page as Page exposing (Page)
 
 
@@ -43,8 +45,8 @@ type LabelType
 
 global : List ( Page, String ) -> Page -> Html msg
 global items activePage =
-    block
-        [ style "font-size" "11.5px" ]
+    brick
+        [ css globalStyles ]
         [ T.f7
         , T.mb5
         , T.mt4
@@ -65,14 +67,10 @@ globalItem activePage totalItems idx ( page, label ) =
     in
     slab
         Html.a
-        [ href (Page.toString page)
-
-        --
-        , style "color" (ifThenElse isActivePage globalActiveColor globalDefaultColor)
-        , style "border-bottom-color" (ifThenElse isActivePage globalBorderColor "transparent")
+        [ css (globalItemStyles isActivePage)
+        , href (Page.toString page)
         ]
-        [ C.textFocus
-        , T.dib
+        [ T.dib
         , T.lh_copy
         , T.no_underline
         , T.pointer
@@ -85,18 +83,25 @@ globalItem activePage totalItems idx ( page, label ) =
         [ text label ]
 
 
-{-| TODO - Wait for avh4/elm-color v1.1.0
--}
-globalActiveColor =
-    "rgb(65, 50, 63)"
+globalColors : { active : Css.Color, border : Css.Color, default : Css.Color }
+globalColors =
+    { active = Color.toElmCssColor UI.Kit.colorKit.base01
+    , border = Color.toElmCssColor (Color.Manipulate.fadeOut 0.875 UI.Kit.colorKit.base01)
+    , default = Color.toElmCssColor (Color.Manipulate.fadeOut 0.275 UI.Kit.colorKit.base01)
+    }
 
 
-globalDefaultColor =
-    "rgba(65, 50, 63, 0.725)"
+globalStyles : List Css.Style
+globalStyles =
+    [ Css.fontSize (px 11.5) ]
 
 
-globalBorderColor =
-    "rgba(65, 50, 63, 0.125)"
+globalItemStyles : Bool -> List Css.Style
+globalItemStyles isActivePage =
+    [ Css.borderBottomColor (ifThenElse isActivePage globalColors.border <| Css.rgba 0 0 0 0)
+    , Css.color (ifThenElse isActivePage globalColors.active globalColors.default)
+    , UI.Kit.textFocus
+    ]
 
 
 
@@ -105,20 +110,18 @@ globalBorderColor =
 
 local : List ( Icon msg, Label, Action msg ) -> Html msg
 local items =
-    block
-        [ style "font-size" "12.5px"
-        , style "border-bottom-color" localBorderColor
-        ]
+    brick
+        [ css localStyles ]
         [ T.bb, T.flex ]
         (items
             |> List.reverse
-            |> List.indexedMap localItem
+            |> List.map localItem
             |> List.reverse
         )
 
 
-localItem : Int -> ( Icon msg, Label, Action msg ) -> Html msg
-localItem idx ( Icon icon, Label labelText labelType, action ) =
+localItem : ( Icon msg, Label, Action msg ) -> Html msg
+localItem ( Icon icon, Label labelText labelType, action ) =
     slab
         (case action of
             GoToPage _ ->
@@ -143,16 +146,9 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
                 title ""
 
         --
-        , style "border-bottom" "1px solid transparent"
-        , style "border-right-color" localBorderColor
-        , style "border-right-style" "solid"
-        , style "border-right-width" (ifThenElse (idx == 0) "0" "1px")
-        , style "border-top" "2px solid transparent"
-        , style "color" localTextColor
-        , style "height" "43px"
+        , css localItemStyles
         ]
         [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
-        , C.navFocus
         , T.bg_transparent
         , T.bl_0
         , T.fw6
@@ -164,7 +160,7 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
         , T.pointer
         , T.ph3
         ]
-        [ icon UI.Kit.colors.text 16
+        [ Html.fromUnstyled (icon UI.Kit.colors.text 16)
 
         --
         , case labelType of
@@ -180,11 +176,30 @@ localItem idx ( Icon icon, Label labelText labelType, action ) =
         ]
 
 
-localBorderColor : String
-localBorderColor =
-    Color.toCssString UI.Kit.colors.subtleBorder
+localColors : { border : Color, text : Color }
+localColors =
+    { border = UI.Kit.colors.subtleBorder
+    , text = UI.Kit.colors.text
+    }
 
 
-localTextColor : String
-localTextColor =
-    Color.toCssString UI.Kit.colors.text
+localStyles : List Css.Style
+localStyles =
+    [ Css.borderBottomColor (Color.toElmCssColor localColors.border)
+    , Css.fontSize (px 12.5)
+    ]
+
+
+localItemStyles : List Css.Style
+localItemStyles =
+    [ Css.borderBottom3 (px 1) solid transparent
+    , Css.borderRight3 (px 1) solid (Color.toElmCssColor localColors.border)
+    , Css.borderTop3 (px 2) solid transparent
+    , Css.color (Color.toElmCssColor localColors.text)
+    , Css.height (px 43)
+    , UI.Kit.navFocus
+
+    -- Last one
+    -----------
+    , Css.lastChild [ Css.borderRightWidth zero ]
+    ]

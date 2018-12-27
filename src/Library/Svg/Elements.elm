@@ -1,8 +1,8 @@
 module Svg.Elements exposing (blockstackLogo, remoteStorageLogo, spinner)
 
-import Html.Attributes
-import Svg exposing (..)
-import Svg.Attributes exposing (..)
+import Html.Styled.Attributes as Attributes
+import Svg.Styled as Svg exposing (..)
+import Svg.Styled.Attributes exposing (..)
 
 
 
@@ -42,16 +42,14 @@ blockstackLogo =
 remoteStorageLogo : Svg Never
 remoteStorageLogo =
     svg
-        [ height "17"
+        [ clipRule "evenodd"
+        , fillRule "evenodd"
+        , height "17"
+        , imageRendering "optimizeQuality"
+        , shapeRendering "geometricPrecision"
+        , textRendering "geometricPrecision"
         , viewBox "0 0 739 853"
         , width "17"
-
-        --
-        , Html.Attributes.style "shape-rendering" "geometricPrecision"
-        , Html.Attributes.style "text-rendering" "geometricPrecision"
-        , Html.Attributes.style "image-rendering" "optimizeQuality"
-        , Html.Attributes.style "clip-rule" "evenodd"
-        , Html.Attributes.style "fill-rule" "evenodd"
         ]
         [ polygon
             [ fill "#FF4B03"

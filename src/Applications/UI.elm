@@ -6,9 +6,12 @@ import Browser
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Color
-import Html exposing (Html, div, section, text)
-import Html.Attributes exposing (id, style)
-import Html.Lazy
+import Color.Ext as Color
+import Css exposing (url)
+import Css.Global exposing (global)
+import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
+import Html.Styled.Attributes exposing (id, style)
+import Html.Styled.Lazy as Lazy
 import Json.Encode
 import Replying exposing (return)
 import Return2
@@ -227,7 +230,7 @@ translateAlienEvent event =
 view : Model -> Browser.Document Msg
 view model =
     { title = "Diffuse"
-    , body = [ body model ]
+    , body = [ toUnstyled (body model) ]
     }
 
 
@@ -235,10 +238,27 @@ body : Model -> Html Msg
 body model =
     root
         [ -----------------------------------------
-          -- Backdrop
+          -- Global
           -----------------------------------------
-          model.backdrop
-            |> Html.Lazy.lazy UI.Backdrop.view
+          global
+            [ Css.Global.body
+                [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.background)
+                , Css.backgroundImage (url "/images/ep_naturalblack_pattern.jpg")
+                , Css.fontFamilies UI.Kit.defaultFontFamilies
+                , Css.textRendering Css.optimizeLegibility
+
+                --
+                , Css.property "-webkit-font-smoothing" "antialiased"
+                , Css.property "-moz-osx-font-smoothing" "grayscale"
+                , Css.property "font-smoothing" "antialiased"
+                ]
+            ]
+
+        -----------------------------------------
+        -- Backdrop
+        -----------------------------------------
+        , model.backdrop
+            |> Lazy.lazy UI.Backdrop.view
             |> Html.map BackdropMsg
 
         -----------------------------------------
@@ -259,7 +279,7 @@ body model =
 
 defaultScreen : Model -> List (Html Msg)
 defaultScreen model =
-    [ Html.Lazy.lazy
+    [ Lazy.lazy
         (UI.Navigation.global
             [ ( Page.Index, "Tracks" )
             , ( Page.Sources Sources.Index, "Sources" )
@@ -273,11 +293,9 @@ defaultScreen model =
     -----------------------------------------
     , case model.page of
         Page.Index ->
-            -- TODO: Tracks
             empty
 
         Page.NotFound ->
-            -- TODO
             text "Page not found."
 
         Page.Settings ->
@@ -285,13 +303,12 @@ defaultScreen model =
 
         Page.Sources subPage ->
             model.sources
-                |> Html.Lazy.lazy2 UI.Sources.view subPage
+                |> Lazy.lazy2 UI.Sources.view subPage
                 |> Html.map SourcesMsg
 
     -----------------------------------------
     -- Controls
     -----------------------------------------
-    -- TODO
     , chunk
         [ T.h4 ]
         []
@@ -305,9 +322,7 @@ defaultScreen model =
 root : List (Html msg) -> Html msg
 root =
     section
-        [ id "diffuse"
-        , style "color" (Color.toCssString UI.Kit.colors.text)
-        ]
+        [ style "color" (Color.toCssString UI.Kit.colors.text) ]
 
 
 content : List (Html msg) -> Html msg

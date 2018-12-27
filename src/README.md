@@ -20,6 +20,7 @@ Elm directories:
 🗺    Views
 
 🧠    Brain
-⚡️    Functions
-🚯    Private
+🔱    Functions
+🖼    Styles
+㊙️    Secret
 ```
