@@ -21,7 +21,7 @@ import Svg.Elements
 import Tachyons.Classes as T
 import UI.Authentication
 import UI.Backdrop
-import UI.Core exposing (Flags, Model, Msg(..), Switch(..))
+import UI.Core as Core exposing (Flags, Model, Msg(..), Switch(..))
 import UI.Kit
 import UI.Navigation
 import UI.Page as Page
@@ -29,6 +29,7 @@ import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings
 import UI.Sources
+import UI.UserData
 import Url exposing (Url)
 
 
@@ -93,6 +94,7 @@ update msg model =
 
         LoadHypaethralUserData json ->
             ( { model | isAuthenticated = True, isLoading = False }
+                |> UI.UserData.importHypaethral json
             , Cmd.none
             )
 
@@ -132,6 +134,24 @@ update msg model =
         -----------------------------------------
         -- Brain
         -----------------------------------------
+        NotifyBrain alienEvent ->
+            ( model
+            , Ports.toBrain alienEvent
+            )
+
+        Core.SaveEnclosedUserData ->
+            ( model
+            , Cmd.none
+            )
+
+        Core.SaveHypaethralUserData ->
+            ( model
+            , model
+                |> UI.UserData.exportHypaethral
+                |> Alien.broadcast Alien.SaveHypaethralUserData
+                |> Ports.toBrain
+            )
+
         SignIn method ->
             ( model
             , method
@@ -192,6 +212,12 @@ translateReply reply =
 
         GoToPage page ->
             ChangeUrlUsingPage page
+
+        Reply.SaveEnclosedUserData ->
+            Core.SaveEnclosedUserData
+
+        Reply.SaveHypaethralUserData ->
+            Core.SaveHypaethralUserData
 
 
 updateChild =

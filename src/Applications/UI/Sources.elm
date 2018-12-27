@@ -7,6 +7,7 @@ import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Replying exposing (R3D3)
+import Return2
 import Return3
 import Sources exposing (..)
 import Sources.Services as Services
@@ -67,7 +68,8 @@ update msg model =
                 |> List.singleton
                 |> List.append model.collection
                 |> (\c -> { model | collection = c })
-                |> Return3.withNothing
+                |> Return2.withNoCmd
+                |> Return3.withReply [ UI.Reply.SaveHypaethralUserData ]
 
         -----------------------------------------
         -- Children

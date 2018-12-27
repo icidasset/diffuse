@@ -12,3 +12,5 @@ type Reply
     = AddSourceToCollection Source
     | Chill
     | GoToPage Page
+    | SaveEnclosedUserData
+    | SaveHypaethralUserData

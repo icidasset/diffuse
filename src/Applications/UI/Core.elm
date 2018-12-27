@@ -55,6 +55,9 @@ type Msg
       -----------------------------------------
       -- Brain
       -----------------------------------------
+    | NotifyBrain Alien.Event
+    | SaveEnclosedUserData
+    | SaveHypaethralUserData
     | SignIn Authentication.Method
     | SignOut
       -----------------------------------------

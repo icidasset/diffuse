@@ -1,10 +1,23 @@
-module Authentication exposing (Method(..), methodFromString, methodToString)
+module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), methodFromString, methodToString)
+
+import Sources
+
+
 
 -- 🌳
 
 
 type Method
     = Local
+
+
+type alias EnclosedUserData =
+    {}
+
+
+type alias HypaethralUserData =
+    { sources : Maybe (List Sources.Source)
+    }
 
 
 
