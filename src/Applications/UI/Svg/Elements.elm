@@ -1,4 +1,4 @@
-module Svg.Elements exposing (blockstackLogo, remoteStorageLogo, spinner)
+module UI.Svg.Elements exposing (blockstackLogo, loading, remoteStorageLogo)
 
 import Html.Styled.Attributes as Attributes
 import Svg.Styled as Svg exposing (..)
@@ -6,7 +6,7 @@ import Svg.Styled.Attributes exposing (..)
 
 
 
--- Logos
+-- LOGOS
 
 
 blockstackLogo : Svg Never
@@ -60,19 +60,19 @@ remoteStorageLogo =
 
 
 
--- Spinner
+-- LOADING ANIMATION
 
 
-spinner : Svg Never
-spinner =
+loading : Svg Never
+loading =
     svg
-        [ class "spinner"
+        [ class "loading-animation"
         , height "29"
         , viewBox "0 0 30 30"
         , width "29"
         ]
         [ circle
-            [ class "spinner-circle"
+            [ class "loading-animation__circle"
             , cx "15"
             , cy "15"
             , fill "none"

@@ -17,7 +17,6 @@ import Replying exposing (return)
 import Return2
 import Return3
 import Sources
-import Svg.Elements
 import Tachyons.Classes as T
 import UI.Authentication
 import UI.Backdrop
@@ -29,6 +28,7 @@ import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings
 import UI.Sources
+import UI.Svg.Elements
 import UI.UserData
 import Url exposing (Url)
 
@@ -347,7 +347,7 @@ content =
 
 loadingAnimation : Html msg
 loadingAnimation =
-    Html.map never Svg.Elements.spinner
+    Html.map never UI.Svg.Elements.loading
 
 
 
@@ -360,9 +360,7 @@ globalCss =
       -- Body
       -----------------------------------------
       Css.Global.body
-        [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.background)
-        , Css.backgroundImage (url "/images/ep_naturalblack_pattern.jpg")
-        , Css.color (Color.toElmCssColor UI.Kit.colors.text)
+        [ Css.color (Color.toElmCssColor UI.Kit.colors.text)
         , Css.fontFamilies UI.Kit.defaultFontFamilies
         , Css.textRendering Css.optimizeLegibility
 
@@ -372,4 +370,20 @@ globalCss =
         , Css.property "-moz-osx-font-smoothing" "grayscale"
         , Css.property "font-smoothing" "antialiased"
         ]
+
+    -----------------------------------------
+    -- Placeholders
+    -----------------------------------------
+    , Css.Global.selector "::-webkit-input-placeholder" placeholderStyles
+    , Css.Global.selector "::-moz-placeholder" placeholderStyles
+    , Css.Global.selector ":-ms-input-placeholder" placeholderStyles
+    , Css.Global.selector ":-moz-placeholder" placeholderStyles
+    , Css.Global.selector "::placeholder" placeholderStyles
+    ]
+
+
+placeholderStyles : List Css.Style
+placeholderStyles =
+    [ Css.color (Css.rgb 0 0 0)
+    , Css.opacity (Css.num 0.2)
     ]

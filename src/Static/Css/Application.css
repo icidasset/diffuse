@@ -1,62 +1,54 @@
-:root {
-  --placeholder-color: black;
+body {
+  background-color: rgb(2, 7, 14);
+  background-image: url(/images/ep_naturalblack_pattern.jpg);
 }
-
-
-
-/***************
- * Placeholder *
- ***************/
-
-::-webkit-input-placeholder { color: var(--placeholder-color); opacity: 0.2; }
-::-moz-placeholder { color: var(--placeholder-color); opacity: 0.2; }
-:-ms-input-placeholder { color: var(--placeholder-color); opacity: 0.2; }
-:-moz-placeholder { color: var(--placeholder-color); opacity: 0.2; }
-::placeholder { color: var(--placeholder-color); opacity: 0.2; }
 
 
 
 /***********
- * Spinner *
+ * Loading *
  ***********/
 
-.spinner {
-  animation: spinner-rotator 1.4s linear infinite;
+.loading-animation {
+  animation: loading-rotator 2s linear infinite;
 }
 
 
-.spinner-circle {
-  animation: spinner-dash 1.4s ease-in-out infinite,
-             spinner-colors 5.6s ease-in-out infinite;
-  stroke-dasharray: calc(30 * 2.875);
+.loading-animation__circle {
+  animation: loading-dash 1.5s ease-in-out infinite,
+             loading-colors 6s ease-in-out infinite;
+  stroke-dasharray: 1, 86.25;
   stroke-dashoffset: 0;
   transform-origin: center;
 }
 
 
-@keyframes spinner-rotator {
+@keyframes loading-rotator {
   0% { transform: rotate(0deg); }
-  100% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
 }
 
-@keyframes spinner-colors {
-  0% { stroke: rgb(239, 97, 85); }
+
+@keyframes loading-colors {
+  0% { stroke: rgb(248, 164, 167); }
   25% { stroke: rgb(254, 196, 24); }
   50% { stroke: rgb(72, 182, 133); }
   75% { stroke: rgb(6, 182, 239); }
-  100% { stroke: rgb(239, 97, 85); }
+  100% { stroke: rgb(248, 164, 167); }
 }
 
-@keyframes spinner-dash {
+
+@keyframes loading-dash {
   0% {
-    stroke-dashoffset: calc(30 * 2.875);
+    stroke-dasharray: 1, 86.25;
+    stroke-dashoffset: 0;
   }
   50% {
-    stroke-dashoffset: calc((30 * 2.875) / 4);
-    transform: rotate(135deg);
+    stroke-dasharray: 64.6875, 86.25;
+    stroke-dashoffset: -21.5625;
   }
   100% {
-    stroke-dashoffset: calc(30 * 2.875);
-    transform: rotate(450deg);
+    stroke-dasharray: 64.6875, 86.25;
+    stroke-dashoffset: -86.25;
   }
 }
