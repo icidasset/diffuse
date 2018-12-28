@@ -23,6 +23,7 @@ type Tag
     | AuthEnclosedData
     | AuthMethod
       -- from UI
+    | ProcessSources
     | SaveEnclosedUserData
     | SaveHypaethralUserData
     | SignIn
@@ -31,6 +32,8 @@ type Tag
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
+    | ReportGenericError
+    | ReportSourceProcessingError
 
 
 
@@ -76,6 +79,9 @@ tagToString tag =
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        ProcessSources ->
+            "PROCESS_SOURCES"
+
         SaveEnclosedUserData ->
             "SAVE_ENCLOSED_USER_DATA"
 
@@ -100,6 +106,12 @@ tagToString tag =
         LoadHypaethralUserData ->
             "LOAD_HYPAETHRAL_USER_DATA"
 
+        ReportGenericError ->
+            "REPORT_GENERIC_ERROR"
+
+        ReportSourceProcessingError ->
+            "REPORT_SOURCE_PROCESSING_ERROR"
+
 
 tagFromString : String -> Maybe Tag
 tagFromString string =
@@ -116,6 +128,9 @@ tagFromString string =
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        "PROCESS_SOURCES" ->
+            Just ProcessSources
+
         "SAVE_ENCLOSED_USER_DATA" ->
             Just SaveEnclosedUserData
 
@@ -139,6 +154,12 @@ tagFromString string =
 
         "LOAD_HYPAETHRAL_USER_DATA" ->
             Just LoadHypaethralUserData
+
+        "REPORT_GENERIC_ERROR" ->
+            Just ReportGenericError
+
+        "REPORT_SOURCE_PROCESSING_ERROR" ->
+            Just ReportSourceProcessingError
 
         _ ->
             Nothing

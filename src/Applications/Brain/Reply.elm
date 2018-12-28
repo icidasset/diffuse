@@ -13,3 +13,4 @@ type Reply
     | HideLoadingScreen
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
+    | ReportSourceProcessingError Json.Value

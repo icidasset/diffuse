@@ -2,6 +2,7 @@ module Brain.Core exposing (Flags, Model, Msg(..))
 
 import Alien
 import Brain.Authentication
+import Brain.Sources.Processing
 
 
 
@@ -17,7 +18,9 @@ type alias Flags =
 
 
 type alias Model =
-    { authentication : Brain.Authentication.Model }
+    { authentication : Brain.Authentication.Model
+    , sourceProcessing : Brain.Sources.Processing.Model
+    }
 
 
 
@@ -31,3 +34,4 @@ type Msg
       -- Children
       -----------------------------------------
     | AuthenticationMsg Brain.Authentication.Msg
+    | SourceProcessingMsg Brain.Sources.Processing.Msg

@@ -1,7 +1,24 @@
-module Sources.Processing exposing (HttpMethod(..), Marker(..), PrepationAnswer, TreeAnswer, httpMethod)
+module Sources.Processing exposing (Arguments, Context, ContextForTags, HttpMethod(..), Marker(..), PrepationAnswer, Status(..), TreeAnswer, httpMethod)
 
 import Http
-import Sources exposing (SourceData)
+import Sources exposing (Source, SourceData)
+import Tracks exposing (Tags, Track)
+
+
+
+-- 🌳
+
+
+type Status
+    = Processing (List ( Source, List Track ))
+    | NotProcessing
+
+
+type alias Arguments =
+    { origin : String
+    , sources : List Source
+    , tracks : List Track
+    }
 
 
 
@@ -23,6 +40,28 @@ type alias PrepationAnswer marker =
 type alias TreeAnswer marker =
     { filePaths : List String
     , marker : marker
+    }
+
+
+
+-- CONTEXTS
+
+
+type alias Context =
+    { filePaths : List String
+    , origin : String
+    , preparationMarker : Marker
+    , source : Source
+    , treeMarker : Marker
+    }
+
+
+type alias ContextForTags =
+    { nextFilePaths : List String
+    , receivedFilePaths : List String
+    , receivedTags : List (Maybe Tags)
+    , sourceId : String
+    , urlsForTags : List String
     }
 
 
