@@ -3,6 +3,7 @@ module UI.Sources exposing (Model, Msg(..), initialModel, update, view)
 import Chunky exposing (..)
 import Dict.Ext as Dict
 import Html.Styled as Html exposing (Html, text)
+import Material.Icons.Action as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
@@ -47,6 +48,7 @@ type Msg
       -- Collection
       -----------------------------------------
     | AddToCollection Source
+    | RemoveFromCollection String
       -----------------------------------------
       -- Children
       -----------------------------------------
@@ -67,6 +69,13 @@ update msg model =
             source
                 |> List.singleton
                 |> List.append model.collection
+                |> (\c -> { model | collection = c })
+                |> Return2.withNoCmd
+                |> Return3.withReply [ UI.Reply.SaveHypaethralUserData ]
+
+        RemoveFromCollection sourceId ->
+            model.collection
+                |> List.filter (.id >> (/=) sourceId)
                 |> (\c -> { model | collection = c })
                 |> Return2.withNoCmd
                 |> Return3.withReply [ UI.Reply.SaveHypaethralUserData ]
@@ -137,7 +146,15 @@ index model =
         -- List
         -------
         , model.collection
-            |> List.map (\s -> { label = Dict.fetch "name" "" s.data, actions = [] })
+            |> List.map (\s -> { label = Dict.fetch "name" "" s.data, actions = sourceActions s })
             |> UI.List.view
         ]
+    ]
+
+
+sourceActions : Source -> List (UI.List.Action Msg)
+sourceActions source =
+    [ { icon = Icons.close
+      , msg = RemoveFromCollection source.id
+      }
     ]
