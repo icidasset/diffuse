@@ -1,5 +1,6 @@
 module Brain.Reply exposing (Reply(..))
 
+import Alien
 import Json.Encode as Json
 
 
@@ -10,7 +11,5 @@ import Json.Encode as Json
 type Reply
     = Chill
       -- UI
-    | HideLoadingScreen
-    | LoadEnclosedUserData Json.Value
-    | LoadHypaethralUserData Json.Value
-    | ReportSourceProcessingError Json.Value
+    | GiveUI Alien.Tag Json.Value
+    | NudgeUI Alien.Tag

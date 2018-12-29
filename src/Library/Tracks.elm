@@ -1,4 +1,10 @@
-module Tracks exposing (Collection, Favourite, IdentifiedTrack, Identifiers, Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, missingId)
+module Tracks exposing (Collection, Favourite, IdentifiedTrack, Identifiers, Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, makeTrack, missingId)
+
+import Base64
+import Bytes.Encode
+import String.Ext as String
+
+
 
 -- 🌳
 
@@ -120,6 +126,21 @@ emptyCollection =
     , identified = []
     , arranged = []
     , harvested = []
+    }
+
+
+makeTrack : String -> ( String, Tags ) -> Track
+makeTrack sourceId ( path, tags ) =
+    { id =
+        (sourceId ++ "//" ++ path)
+            |> Bytes.Encode.string
+            |> Bytes.Encode.encode
+            |> Base64.fromBytes
+            |> Maybe.map (String.chopEnd "=")
+            |> Maybe.withDefault missingId
+    , path = path
+    , sourceId = sourceId
+    , tags = tags
     }
 
 

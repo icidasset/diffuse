@@ -8,7 +8,7 @@ import Html.Styled.Events exposing (on)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Replying exposing (R3D3)
-import Return3 as Return
+import Return3
 import Tachyons.Classes as T
 import UI.Animations
 import UI.Reply as Reply exposing (Reply)
@@ -57,7 +57,7 @@ update msg model =
             [ backdrop ]
                 |> List.append model.loaded
                 |> (\list -> { model | loaded = list })
-                |> Return.withNothing
+                |> Return3.withNothing
 
 
 

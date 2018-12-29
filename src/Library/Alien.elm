@@ -33,7 +33,8 @@ type Tag
     | LoadEnclosedUserData
     | LoadHypaethralUserData
     | ReportGenericError
-    | ReportSourceProcessingError
+    | ReportProcessingError
+    | UpdateSourceData
 
 
 
@@ -109,8 +110,11 @@ tagToString tag =
         ReportGenericError ->
             "REPORT_GENERIC_ERROR"
 
-        ReportSourceProcessingError ->
-            "REPORT_SOURCE_PROCESSING_ERROR"
+        ReportProcessingError ->
+            "REPORT_PROCESSING_ERROR"
+
+        UpdateSourceData ->
+            "UPDATE_SOURCE_DATA"
 
 
 tagFromString : String -> Maybe Tag
@@ -158,8 +162,11 @@ tagFromString string =
         "REPORT_GENERIC_ERROR" ->
             Just ReportGenericError
 
-        "REPORT_SOURCE_PROCESSING_ERROR" ->
-            Just ReportSourceProcessingError
+        "REPORT_PROCESSING_ERROR" ->
+            Just ReportProcessingError
+
+        "UPDATE_SOURCE_DATA" ->
+            Just UpdateSourceData
 
         _ ->
             Nothing

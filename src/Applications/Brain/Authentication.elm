@@ -168,7 +168,7 @@ update msg model =
         EnclosedDataRetrieved json ->
             ( model
             , noCmd
-            , Just [ LoadEnclosedUserData json ]
+            , Just [ GiveUI Alien.LoadEnclosedUserData json ]
             )
 
         SaveEnclosedData json ->
@@ -223,7 +223,7 @@ terminate : Termination -> Maybe (List Reply)
 terminate t =
     case t of
         Authenticated json ->
-            Just [ LoadHypaethralUserData json ]
+            Just [ GiveUI Alien.LoadHypaethralUserData json ]
 
         NotAuthenticated ->
-            Just [ HideLoadingScreen ]
+            Just [ NudgeUI Alien.HideLoadingScreen ]

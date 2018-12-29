@@ -1,14 +1,15 @@
 module Brain exposing (main)
 
 import Alien
-import Brain.Authentication
+import Brain.Authentication as Authentication
 import Brain.Core exposing (..)
 import Brain.Ports
 import Brain.Reply as Reply exposing (Reply(..))
-import Brain.Sources.Processing
+import Brain.Sources.Processing as Processing
+import Brain.Sources.Processing.Common as Processing
 import Json.Decode
 import Replying exposing (return)
-import Sources.Processing.Encoding
+import Sources.Processing.Encoding as Processing
 
 
 
@@ -33,15 +34,15 @@ init flags =
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
-      { authentication = Brain.Authentication.initialModel
-      , sourceProcessing = Brain.Sources.Processing.initialModel
+      { authentication = Authentication.initialModel
+      , processing = Processing.initialModel
       }
       -----------------------------------------
       -- Initial command
       -----------------------------------------
     , Cmd.batch
-        [ Cmd.map AuthenticationMsg Brain.Authentication.initialCommand
-        , Cmd.map SourceProcessingMsg Brain.Sources.Processing.initialCommand
+        [ Cmd.map AuthenticationMsg Authentication.initialCommand
+        , Cmd.map ProcessingMsg Processing.initialCommand
         ]
     )
 
@@ -70,19 +71,19 @@ update msg model =
             updateChild
                 { mapCmd = AuthenticationMsg
                 , mapModel = \child -> { model | authentication = child }
-                , update = Brain.Authentication.update
+                , update = Authentication.update
                 }
                 { model = model.authentication
                 , msg = sub
                 }
 
-        SourceProcessingMsg sub ->
+        ProcessingMsg sub ->
             updateChild
-                { mapCmd = SourceProcessingMsg
-                , mapModel = \child -> { model | sourceProcessing = child }
-                , update = Brain.Sources.Processing.update
+                { mapCmd = ProcessingMsg
+                , mapModel = \child -> { model | processing = child }
+                , update = Processing.update
                 }
-                { model = model.sourceProcessing
+                { model = model.processing
                 , msg = sub
                 }
 
@@ -100,19 +101,11 @@ translateReply reply =
         -----------------------------------------
         -- To UI
         -----------------------------------------
-        HideLoadingScreen ->
-            Alien.HideLoadingScreen
-                |> Alien.trigger
-                |> NotifyUI
+        GiveUI tag data ->
+            NotifyUI (Alien.broadcast tag data)
 
-        LoadEnclosedUserData data ->
-            NotifyUI (Alien.broadcast Alien.LoadEnclosedUserData data)
-
-        LoadHypaethralUserData data ->
-            NotifyUI (Alien.broadcast Alien.LoadHypaethralUserData data)
-
-        ReportSourceProcessingError data ->
-            NotifyUI (Alien.broadcast Alien.ReportSourceProcessingError data)
+        NudgeUI tag ->
+            NotifyUI (Alien.trigger tag)
 
 
 updateChild =
@@ -132,9 +125,7 @@ subscriptions model =
         -----------------------------------------
         -- Children
         -----------------------------------------
-        , Sub.map
-            SourceProcessingMsg
-            (Brain.Sources.Processing.subscriptions model.sourceProcessing)
+        , Sub.map ProcessingMsg (Processing.subscriptions model.processing)
         ]
 
 
@@ -142,17 +133,19 @@ translateAlienEvent : Alien.Event -> Msg
 translateAlienEvent event =
     case Alien.tagFromString event.tag of
         Just Alien.AuthAnonymous ->
-            AuthenticationMsg (Brain.Authentication.HypaethralDataRetrieved event.data)
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
 
         Just Alien.AuthMethod ->
-            AuthenticationMsg (Brain.Authentication.MethodRetrieved event.data)
+            AuthenticationMsg (Authentication.MethodRetrieved event.data)
 
         Just Alien.ProcessSources ->
             -- Only proceed to the processing if we got all the necessary data,
             -- otherwise report an error in the UI.
-            case Json.Decode.decodeValue Sources.Processing.Encoding.argumentsDecoder event.data of
+            case Json.Decode.decodeValue Processing.argumentsDecoder event.data of
                 Ok arguments ->
-                    SourceProcessingMsg (Brain.Sources.Processing.Process arguments)
+                    arguments
+                        |> Processing.Process
+                        |> ProcessingMsg
 
                 Err error ->
                     error
@@ -161,16 +154,16 @@ translateAlienEvent event =
                         |> NotifyUI
 
         Just Alien.SaveEnclosedUserData ->
-            AuthenticationMsg (Brain.Authentication.SaveEnclosedData event.data)
+            AuthenticationMsg (Authentication.SaveEnclosedData event.data)
 
         Just Alien.SaveHypaethralUserData ->
-            AuthenticationMsg (Brain.Authentication.SaveHypaethralData event.data)
+            AuthenticationMsg (Authentication.SaveHypaethralData event.data)
 
         Just Alien.SignIn ->
-            AuthenticationMsg (Brain.Authentication.PerformSignIn event.data)
+            AuthenticationMsg (Authentication.PerformSignIn event.data)
 
         Just Alien.SignOut ->
-            AuthenticationMsg Brain.Authentication.PerformSignOut
+            AuthenticationMsg Authentication.PerformSignOut
 
         _ ->
             Bypass

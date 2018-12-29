@@ -1,4 +1,4 @@
-module Sources.Processing exposing (Arguments, Context, ContextForTags, HttpMethod(..), Marker(..), PrepationAnswer, Status(..), TreeAnswer, httpMethod)
+module Sources.Processing exposing (Arguments, Context, ContextForTags, HttpMethod(..), Marker(..), PrepationAnswer, Status(..), TagUrls, TreeAnswer, httpMethod)
 
 import Http
 import Sources exposing (Source, SourceData)
@@ -61,7 +61,13 @@ type alias ContextForTags =
     , receivedFilePaths : List String
     , receivedTags : List (Maybe Tags)
     , sourceId : String
-    , urlsForTags : List String
+    , urlsForTags : List TagUrls
+    }
+
+
+type alias TagUrls =
+    { getUrl : String
+    , headUrl : String
     }
 
 
