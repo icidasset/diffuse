@@ -78,7 +78,7 @@ update msg model =
             )
 
         -----------------------------------------
-        -- PHASE 1
+        -- Phase 1
         -- Prepare for processing.
         -----------------------------------------
         PrepareStep context (Ok response) ->
@@ -94,7 +94,7 @@ update msg model =
             )
 
         -----------------------------------------
-        -- PHASE 2
+        -- Phase 2
         -- Make a file list/tree.
         -----------------------------------------
         TreeStep context (Ok response) ->
@@ -110,7 +110,7 @@ update msg model =
             )
 
         -----------------------------------------
-        -- PHASE 3
+        -- Phase 3
         -- Get the tags for each file in the file list.
         -----------------------------------------
         TagsStep tagsContext ->
@@ -120,7 +120,7 @@ update msg model =
             )
 
         -----------------------------------------
-        -- BITS & PIECES
+        -- Bits & Pieces
         -----------------------------------------
         SetCurrentTime time ->
             ( { model | currentTime = time }
@@ -130,12 +130,15 @@ update msg model =
 
 
 
--- 📣  |  Common
+-- 📣 ▒▒▒ COMMON
 
 
 reportHttpError : Source -> Http.Error -> Reply
 reportHttpError source err =
-    reportError { sourceId = source.id, error = translateHttpError source.service err }
+    reportError
+        { sourceId = source.id
+        , error = translateHttpError source.service err
+        }
 
 
 reportError : { sourceId : String, error : String } -> Reply
