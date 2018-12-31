@@ -10,7 +10,7 @@ import Tracks exposing (Tags, Track)
 
 
 type Status
-    = Processing (List ( Source, List Track ))
+    = Processing ( Source, List Track ) (List ( Source, List Track ))
     | NotProcessing
 
 

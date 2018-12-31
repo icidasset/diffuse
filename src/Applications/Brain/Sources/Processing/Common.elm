@@ -1,4 +1,4 @@
-module Brain.Sources.Processing.Common exposing (Model, Msg(..), contextToTagsContext, findTagsContextSource, isProcessing, reportError, reportHttpError, tracksFromTagsContext, translateHttpError)
+module Brain.Sources.Processing.Common exposing (Model, Msg(..), contextToTagsContext, isProcessing, reportError, reportHttpError, tracksFromTagsContext, translateHttpError)
 
 import Alien
 import Brain.Reply exposing (Reply(..))
@@ -58,15 +58,10 @@ contextToTagsContext context =
     }
 
 
-findTagsContextSource : ContextForTags -> List Source -> Maybe Source
-findTagsContextSource tagsContext =
-    List.find (.id >> (==) tagsContext.sourceId)
-
-
 isProcessing : Status -> Bool
 isProcessing status =
     case status of
-        Processing _ ->
+        Processing _ _ ->
             True
 
         NotProcessing ->

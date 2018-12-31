@@ -1,8 +1,7 @@
 {
   "private": true,
-  "depedencies": {},
   "dependencies": {
-    "fast-text-encoding": "^1.0.0",
-    "tachyons": "^4.11.1"
+    "fast-text-encoding": "~1.0.0",
+    "tachyons": "~4.11.1"
   }
 }

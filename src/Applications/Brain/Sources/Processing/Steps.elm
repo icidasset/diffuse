@@ -74,7 +74,7 @@ takeFirstStep origin currentTime source =
 -- 2nd STEP
 
 
-takePrepareStep : Context -> String -> Time.Posix -> ( Cmd Msg, Maybe Reply )
+takePrepareStep : Context -> String -> Time.Posix -> ( Cmd Msg, Maybe (List Reply) )
 takePrepareStep context response currentTime =
     context
         |> handlePreparationResponse response
@@ -110,9 +110,11 @@ takeTagsStep currentTime tagsCtx source =
             , urlsForTags = makeTrackUrls currentTime source filesToProcess
             }
     in
-    filesToProcess
-        |> List.head
-        |> Maybe.map (always (getTags newTagsCtx))
+    if List.isEmpty filesToProcess then
+        Nothing
+
+    else
+        Just (getTags newTagsCtx)
 
 
 
@@ -162,7 +164,7 @@ handlePreparationResponse response context =
     }
 
 
-intoPreparationCommands : Time.Posix -> Context -> ( Cmd Msg, Maybe Reply )
+intoPreparationCommands : Time.Posix -> Context -> ( Cmd Msg, Maybe (List Reply) )
 intoPreparationCommands currentTime context =
     case context.preparationMarker of
         TheBeginning ->
@@ -193,6 +195,7 @@ intoPreparationCommands currentTime context =
             , updatedSource
                 |> Sources.Encoding.encode
                 |> GiveUI Alien.UpdateSourceData
+                |> List.singleton
                 |> Just
             )
 
@@ -301,8 +304,8 @@ separate current srcOfTruth =
 
 
 getTags : ContextForTags -> Cmd Msg
-getTags context =
-    Ports.requestTags context
+getTags =
+    Ports.requestTags
 
 
 makeTrackUrls : Time.Posix -> Source -> List String -> List TagUrls

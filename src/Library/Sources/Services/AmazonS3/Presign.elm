@@ -6,7 +6,9 @@ import Crypto.HMAC as HMAC
 import DateFormat as Date
 import Dict
 import Dict.Ext as Dict
+import Hex
 import Maybe.Extra as Maybe
+import Regex
 import SHA
 import Sources exposing (SourceData)
 import Sources.Processing exposing (HttpMethod, httpMethod)
@@ -14,6 +16,10 @@ import String.Ext as String
 import Time
 import Url
 import Url.Builder as Url
+
+
+
+-- 🔱
 
 
 presignedUrl :
@@ -36,7 +42,12 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
             Dict.fetchUnknown "bucketName" aws
 
         customHost =
-            Dict.get "host" aws
+            case Dict.fetch "host" "" aws of
+                "" ->
+                    Nothing
+
+                x ->
+                    Just x
 
         host =
             case customHost of
@@ -68,7 +79,7 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
             pathToFile
                 |> String.chopStart "/"
                 |> String.split "/"
-                |> List.map Url.percentEncode
+                |> List.map (Url.percentEncode >> encodeAdditionalCharacters)
                 |> String.join "/"
                 |> String.append ("/" ++ filePathPrefix)
 
@@ -119,6 +130,8 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
                 |> List.sortBy Tuple.first
                 |> List.map (\( a, b ) -> Url.string a b)
                 |> Url.toQuery
+                |> String.dropLeft 1
+                |> encodeAdditionalCharacters
 
         request =
             String.join
@@ -139,7 +152,7 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
                 [ "AWS4-HMAC-SHA256"
                 , timestamp
                 , String.join "/" [ date, region, "s3", "aws4_request" ]
-                , Binary.toHex (SHA.sha256 request)
+                , String.toLower (Binary.toHex (SHA.sha256 request))
                 ]
 
         -- Signature
@@ -150,11 +163,15 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
                 |> hmacSha256 "s3"
                 |> hmacSha256 "aws4_request"
                 |> hmacSha256 stringToSign
+                |> Binary.fromString
+                |> Binary.toHex
+                |> String.toLower
     in
     String.concat
         [ protocol
         , host
         , filePath
+        , "?"
         , queryString
         , "&X-Amz-Signature="
         , signature
@@ -163,6 +180,19 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
 
 
 -- ⚗️
+
+
+encodeAdditionalCharacters : String -> String
+encodeAdditionalCharacters query =
+    Regex.replace
+        (Maybe.withDefault Regex.never <| Regex.fromString "[!*'()]")
+        (\{ match } ->
+            match
+                |> String.toList
+                |> List.map (Char.toCode >> Hex.toString >> String.toUpper >> (++) "%")
+                |> String.concat
+        )
+        query
 
 
 hmacSha256 : String -> String -> String

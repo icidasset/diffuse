@@ -1,13 +1,20 @@
 module Brain.Sources.Processing exposing (initialCommand, initialModel, subscriptions, update)
 
+import Alien
+import Brain.Ports
 import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing.Common exposing (..)
 import Brain.Sources.Processing.Steps as Steps
 import Http
-import Replying exposing (R3D3)
+import Json.Encode as Encode
+import List.Extra as List
+import Maybe.Extra as Maybe
+import Replying exposing (R3D3, do)
 import Return3
 import Sources.Processing exposing (..)
+import Task
 import Time
+import Tracks.Encoding
 
 
 
@@ -24,7 +31,7 @@ initialModel =
 
 initialCommand : Cmd Msg
 initialCommand =
-    Cmd.none
+    Task.perform SetCurrentTime Time.now
 
 
 
@@ -39,23 +46,21 @@ update msg model =
            If there are sources, start processing the first source.
         -}
         Process { origin, sources, tracks } ->
-            if isProcessing model.status then
+            if isProcessing model.status || List.isEmpty sources then
                 Return3.withNothing model
 
             else
-                case List.head sources of
-                    Just source ->
-                        let
-                            filter s =
-                                List.filter (.sourceId >> (==) s.id) tracks
+                let
+                    filter s =
+                        List.filter (.sourceId >> (==) s.id) tracks
 
-                            status =
-                                sources
-                                    |> List.map (\s -> ( s, filter s ))
-                                    |> Processing
-                        in
-                        ( { model | status = status }
-                        , Steps.takeFirstStep origin model.currentTime source
+                    all =
+                        List.map (\s -> ( s, filter s )) sources
+                in
+                case List.uncons all of
+                    Just ( ( s, t ), future ) ->
+                        ( { model | origin = origin, status = Processing ( s, t ) future }
+                        , Steps.takeFirstStep origin model.currentTime s
                         , Nothing
                         )
 
@@ -67,24 +72,36 @@ update msg model =
            If there are sources left, start processing the next source in line.
         -}
         NextInLine ->
-            ( model
-            , Cmd.none
-            , Nothing
-            )
+            case model.status of
+                Processing _ (( source, tracks ) :: rest) ->
+                    ( { model | status = Processing ( source, tracks ) rest }
+                    , Steps.takeFirstStep model.origin model.currentTime source
+                    , Nothing
+                    )
+
+                _ ->
+                    ( { model | status = NotProcessing }
+                    , Cmd.none
+                    , Nothing
+                    )
 
         -----------------------------------------
         -- Phase 1
         -- Prepare for processing.
         -----------------------------------------
         PrepareStep context (Ok response) ->
+            let
+                ( cmd, maybeReplies ) =
+                    Steps.takePrepareStep context response model.currentTime
+            in
             ( model
-            , Cmd.none
-            , Nothing
+            , cmd
+            , maybeReplies
             )
 
         PrepareStep context (Err err) ->
             ( model
-            , Cmd.none
+            , do NextInLine
             , Just [ reportHttpError context.source err ]
             )
 
@@ -93,22 +110,40 @@ update msg model =
         -- Make a file list/tree.
         -----------------------------------------
         TreeStep context (Ok response) ->
-            ( model
-            , Cmd.none
-            , Nothing
-            )
+            let
+                dbg =
+                    Debug.log "treeStep" response
+            in
+            case model.status of
+                Processing ( source, tracks ) rest ->
+                    ( { model | status = Processing ( context.source, tracks ) rest }
+                    , Steps.takeTreeStep context response tracks model.currentTime
+                    , Nothing
+                    )
+
+                NotProcessing ->
+                    ( model
+                    , Cmd.none
+                    , Nothing
+                    )
 
         TreeStep context (Err err) ->
             ( model
-            , Cmd.none
+            , do NextInLine
             , Just [ reportHttpError context.source err ]
             )
 
         TreeStepRemoveTracks sourceId filePaths ->
-            -- TODO
+            let
+                encodedData =
+                    Encode.object
+                        [ ( "filePaths", Encode.list Encode.string filePaths )
+                        , ( "sourceId", Encode.string sourceId )
+                        ]
+            in
             ( model
             , Cmd.none
-            , Nothing
+            , Just [ GiveUI Alien.RemoveTracksByPath encodedData ]
             )
 
         -----------------------------------------
@@ -116,9 +151,39 @@ update msg model =
         -- Get the tags for each file in the file list.
         -----------------------------------------
         TagsStep tagsContext ->
+            let
+                dbg =
+                    Debug.log "tags" tagsContext
+            in
             ( model
-            , Cmd.none
-            , Nothing
+              ----------
+              -- Command
+              ----------
+            , case model.status of
+                Processing ( source, _ ) _ ->
+                    source
+                        |> Debug.log "tagsSource"
+                        |> Steps.takeTagsStep model.currentTime tagsContext
+                        |> Debug.log "tagsCmd"
+                        |> Maybe.withDefault Cmd.none
+
+                NotProcessing ->
+                    Cmd.none
+              --------
+              -- Reply
+              --------
+            , case List.isEmpty (List.filter Maybe.isJust tagsContext.receivedTags) of
+                True ->
+                    Nothing
+
+                False ->
+                    tagsContext
+                        |> tracksFromTagsContext
+                        |> Debug.log "tracks"
+                        |> Encode.list Tracks.Encoding.encodeTrack
+                        |> GiveUI Alien.AddTracks
+                        |> List.singleton
+                        |> Just
             )
 
         -----------------------------------------
@@ -137,4 +202,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Time.every (60 * 1000) SetCurrentTime
+    Sub.batch
+        [ Time.every (60 * 1000) SetCurrentTime
+        , Brain.Ports.receiveTags TagsStep
+        ]

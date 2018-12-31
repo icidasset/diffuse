@@ -16,6 +16,7 @@ type alias HashFunction =
 These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
 
     >>> import Binary
+    >>> import Crypto.Binary as Binary
     >>> import SHA
 
     >>> encrypt64 SHA.sha256 "" ""
@@ -27,6 +28,14 @@ These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
     ..>   |> Binary.toHex
     ..>   |> String.toLower
     "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
+
+    >>> "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"
+    ..>   |> Binary.fromHex
+    ..>   |> Binary.toString
+    ..>   |> encrypt64 SHA.sha256 "Hi There"
+    ..>   |> Binary.toHex
+    ..>   |> String.toLower
+    "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"
 
 -}
 encrypt64 : HashFunction -> String -> String -> Bits

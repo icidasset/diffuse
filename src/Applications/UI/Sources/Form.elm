@@ -100,8 +100,11 @@ update msg model =
                 context =
                     model.context
 
+                trimmedValue =
+                    String.trim value
+
                 updatedData =
-                    Dict.insert key value context.data
+                    Dict.insert key trimmedValue context.data
             in
             { model | context = { context | data = updatedData } }
 

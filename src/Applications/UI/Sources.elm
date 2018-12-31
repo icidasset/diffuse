@@ -44,6 +44,7 @@ initialModel =
 
 type Msg
     = Bypass
+    | Process
       -----------------------------------------
       -- Collection
       -----------------------------------------
@@ -59,13 +60,16 @@ update : Msg -> Model -> R3D3 Model Msg Reply
 update msg model =
     case msg of
         Bypass ->
-            model
-                |> Return3.withNothing
+            Return3.withNothing model
+
+        Process ->
+            ( model, Cmd.none, Just [ UI.Reply.ProcessSources ] )
 
         -----------------------------------------
         -- Collection
         -----------------------------------------
         AddToCollection source ->
+            -- TODO: Set proper source id
             source
                 |> List.singleton
                 |> List.append model.collection
@@ -122,7 +126,7 @@ index model =
           )
         , ( Icon Icons.sync
           , Label "Process sources" Shown
-          , PerformMsg Bypass
+          , PerformMsg Process
           )
         ]
 

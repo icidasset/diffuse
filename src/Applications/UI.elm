@@ -12,12 +12,14 @@ import Css.Global
 import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
 import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
-import Json.Encode
+import Json.Encode as Encode
 import Replying exposing (return)
 import Return2
 import Return3
 import Sources
+import Sources.Encoding
 import Tachyons.Classes as T
+import Tracks.Encoding
 import UI.Authentication
 import UI.Backdrop
 import UI.Core as Core exposing (Flags, Model, Msg(..), Switch(..))
@@ -139,6 +141,17 @@ update msg model =
             , Ports.toBrain alienEvent
             )
 
+        Core.ProcessSources ->
+            ( model
+            , [ ( "origin", Encode.string "TODO" )
+              , ( "sources", Encode.list Sources.Encoding.encode model.sources.collection )
+              , ( "tracks", Encode.list Tracks.Encoding.encodeTrack [] )
+              ]
+                |> Encode.object
+                |> Alien.broadcast Alien.ProcessSources
+                |> Ports.toBrain
+            )
+
         Core.SaveEnclosedUserData ->
             ( model
             , Cmd.none
@@ -156,7 +169,7 @@ update msg model =
             ( model
             , method
                 |> Authentication.methodToString
-                |> Json.Encode.string
+                |> Encode.string
                 |> Alien.broadcast Alien.SignIn
                 |> Ports.toBrain
             )
@@ -213,6 +226,9 @@ translateReply reply =
         GoToPage page ->
             ChangeUrlUsingPage page
 
+        Reply.ProcessSources ->
+            Core.ProcessSources
+
         Reply.SaveEnclosedUserData ->
             Core.SaveEnclosedUserData
 
@@ -244,6 +260,13 @@ translateAlienEvent event =
 
         Just Alien.LoadHypaethralUserData ->
             LoadHypaethralUserData event.data
+
+        Just Alien.ReportGenericError ->
+            let
+                dbg =
+                    Debug.log "error" event
+            in
+            Bypass
 
         _ ->
             Bypass

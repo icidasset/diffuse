@@ -29,9 +29,11 @@ type Tag
     | SignIn
     | SignOut
       -- to UI
+    | AddTracks
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
+    | RemoveTracksByPath
     | ReportGenericError
     | ReportProcessingError
     | UpdateSourceData
@@ -98,6 +100,9 @@ tagToString tag =
         -----------------------------------------
         -- To UI
         -----------------------------------------
+        AddTracks ->
+            "ADD_TRACKS"
+
         HideLoadingScreen ->
             "HIDE_LOADING_SCREEN"
 
@@ -106,6 +111,9 @@ tagToString tag =
 
         LoadHypaethralUserData ->
             "LOAD_HYPAETHRAL_USER_DATA"
+
+        RemoveTracksByPath ->
+            "REMOVE_TRACKS_BY_PATH"
 
         ReportGenericError ->
             "REPORT_GENERIC_ERROR"
@@ -150,6 +158,9 @@ tagFromString string =
         -----------------------------------------
         -- UI
         -----------------------------------------
+        "ADD_TRACKS" ->
+            Just AddTracks
+
         "HIDE_LOADING_SCREEN" ->
             Just HideLoadingScreen
 
@@ -158,6 +169,9 @@ tagFromString string =
 
         "LOAD_HYPAETHRAL_USER_DATA" ->
             Just LoadHypaethralUserData
+
+        "REMOVE_TRACKS_BY_PATH" ->
+            Just RemoveTracksByPath
 
         "REPORT_GENERIC_ERROR" ->
             Just ReportGenericError

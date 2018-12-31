@@ -4,8 +4,12 @@
 //
 // This worker is responsible for everything non-UI.
 
+importScripts("/vendor/music-metadata.js")
+
 importScripts("/brain.js")
 importScripts("/indexed-db.js")
+importScripts("/processing.js")
+importScripts("/urls.js")
 
 
 const app = Elm.Brain.init()
@@ -46,4 +50,15 @@ app.ports.requestCache.subscribe(event => {
 
 app.ports.toCache.subscribe(event => {
   setInIndex({ key: event.tag, data: event.data })
+})
+
+
+
+// Tags
+// ----
+
+app.ports.requestTags.subscribe(context => {
+  processContext(context).then(newContext => {
+    app.ports.receiveTags.send(newContext)
+  })
 })

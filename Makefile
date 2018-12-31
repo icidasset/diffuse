@@ -1,8 +1,9 @@
-.PHONY: build system
+.PHONY: build system vendor
 
 
 # Variables
 
+NPM_DIR=./node_modules
 SRC_DIR=./src
 BUILD_DIR=./build
 
@@ -60,6 +61,10 @@ doc-tests:
 server:
 	@echo "> Booting up web server on port 5000"
 	@devd --port 5000 --all --crossdomain --quiet --notfound=index.html $(BUILD_DIR)
+
+
+test:
+	@make -j doc-tests
 
 
 watch: build
