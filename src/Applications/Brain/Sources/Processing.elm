@@ -82,7 +82,7 @@ update msg model =
                 _ ->
                     ( { model | status = NotProcessing }
                     , Cmd.none
-                    , Nothing
+                    , Just [ NudgeUI Alien.FinishedProcessingSources ]
                     )
 
         -----------------------------------------
@@ -110,10 +110,6 @@ update msg model =
         -- Make a file list/tree.
         -----------------------------------------
         TreeStep context (Ok response) ->
-            let
-                dbg =
-                    Debug.log "treeStep" response
-            in
             case model.status of
                 Processing ( source, tracks ) rest ->
                     ( { model | status = Processing ( context.source, tracks ) rest }
@@ -151,10 +147,6 @@ update msg model =
         -- Get the tags for each file in the file list.
         -----------------------------------------
         TagsStep tagsContext ->
-            let
-                dbg =
-                    Debug.log "tags" tagsContext
-            in
             ( model
               ----------
               -- Command
@@ -162,10 +154,8 @@ update msg model =
             , case model.status of
                 Processing ( source, _ ) _ ->
                     source
-                        |> Debug.log "tagsSource"
                         |> Steps.takeTagsStep model.currentTime tagsContext
-                        |> Debug.log "tagsCmd"
-                        |> Maybe.withDefault Cmd.none
+                        |> Maybe.withDefault (do NextInLine)
 
                 NotProcessing ->
                     Cmd.none
@@ -179,7 +169,6 @@ update msg model =
                 False ->
                     tagsContext
                         |> tracksFromTagsContext
-                        |> Debug.log "tracks"
                         |> Encode.list Tracks.Encoding.encodeTrack
                         |> GiveUI Alien.AddTracks
                         |> List.singleton

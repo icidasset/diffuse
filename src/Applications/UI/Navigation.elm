@@ -197,6 +197,7 @@ localItemStyles =
     , Css.borderRight3 (px 1) solid (Color.toElmCssColor localColors.border)
     , Css.borderTop3 (px 2) solid transparent
     , Css.color (Color.toElmCssColor localColors.text)
+    , Css.flexBasis (px 0)
     , Css.height (px 43)
     , UI.Kit.navFocus
 

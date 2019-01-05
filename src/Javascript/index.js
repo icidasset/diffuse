@@ -84,10 +84,20 @@ const orchestrion = {
 
 
 
-// Other
+// Focus
 // -----
 
-app.ports.removeFocus.subscribe(_ => {
-  var n = document.activeElement
-  if (n && !n.dataset.keepFocus) n.blur()
+document.body.addEventListener("click", event => {
+  if (
+    event.target.matches("button, a") ||
+    event.target.closest("button, a")
+  ) {
+    removeFocus()
+  }
 })
+
+
+function removeFocus() {
+  const n = document.activeElement
+  if (n && !n.dataset.keepFocus) n.blur()
+}

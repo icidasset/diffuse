@@ -68,7 +68,8 @@ function getTags(getUrl, headUrl) {
 
 
 function pickTags(result) {
-  const tags = result.common
+  const tags = result && result.common
+  if (!tags) return null
 
   return {
     disc: tags.disk.no || 1,
@@ -76,7 +77,7 @@ function pickTags(result) {
     album: tags.album && tags.album.length ? tags.album : "Unknown",
     artist: tags.artist && tags.artist.length ? tags.artist : "Unknown",
     title: tags.title && tags.title.length ? tags.title : "Unknown",
-    genre: tags.genre && tags.genre[0],
+    genre: (tags.genre && tags.genre[0]) || null,
     year: tags.year || null,
     picture: null
   }

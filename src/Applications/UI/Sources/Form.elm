@@ -116,15 +116,7 @@ update msg model =
       -----------------------------------------
       -- Command
       -----------------------------------------
-    , case msg of
-        TakeStep ->
-            UI.Ports.removeFocus ()
-
-        TakeStepBackwards ->
-            UI.Ports.removeFocus ()
-
-        _ ->
-            Cmd.none
+    , Cmd.none
       -----------------------------------------
       -- Reply
       -----------------------------------------

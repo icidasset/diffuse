@@ -25,6 +25,6 @@ selectMusicFiles =
 
 musicFileRegex : Regex.Regex
 musicFileRegex =
-    "\\.(mp3|mp4|m4a|flac)$"
+    "\\.(mp3|mp4|m4a|flac|ogg|wave|webm)$"
         |> Regex.fromStringWith { caseInsensitive = True, multiline = False }
         |> Maybe.withDefault Regex.never

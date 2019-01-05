@@ -89,7 +89,7 @@ update msg model =
 
 
 
--- 📣 ▒▒▒ CHILDREN & REPLIES
+-- 📣 ░░░ CHILDREN & REPLIES
 
 
 translateReply : Reply -> Msg

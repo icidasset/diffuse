@@ -206,12 +206,12 @@ update msg model =
                 | page = Page.fromUrl url
                 , url = url
               }
-            , Ports.removeFocus ()
+            , Cmd.none
             )
 
 
 
--- 📣 ▒▒▒ CHILDREN & REPLIES
+-- 📣 ░░░ CHILDREN & REPLIES
 
 
 translateReply : Reply -> Msg
@@ -252,6 +252,17 @@ subscriptions _ =
 translateAlienEvent : Alien.Event -> Msg
 translateAlienEvent event =
     case Alien.tagFromString event.tag of
+        Just Alien.AddTracks ->
+            let
+                dbg =
+                    -- TODO
+                    Debug.log "addTracks" event
+            in
+            Bypass
+
+        Just Alien.FinishedProcessingSources ->
+            SourcesMsg UI.Sources.FinishedProcessing
+
         Just Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off
 
@@ -261,11 +272,24 @@ translateAlienEvent event =
         Just Alien.LoadHypaethralUserData ->
             LoadHypaethralUserData event.data
 
+        Just Alien.RemoveTracksByPath ->
+            -- TODO
+            Bypass
+
         Just Alien.ReportGenericError ->
             let
                 dbg =
+                    -- TODO
                     Debug.log "error" event
             in
+            Bypass
+
+        Just Alien.ReportProcessingError ->
+            -- TODO
+            Bypass
+
+        Just Alien.UpdateSourceData ->
+            -- TODO
             Bypass
 
         _ ->
@@ -351,7 +375,7 @@ defaultScreen model =
 
 
 
--- 🗺 ▒▒▒ BITS
+-- 🗺 ░░░ BITS
 
 
 content : List (Html msg) -> Html msg
@@ -374,7 +398,7 @@ loadingAnimation =
 
 
 
--- 🖼 ▒▒▒ GLOBAL
+-- 🖼 ░░░ GLOBAL
 
 
 globalCss : List Css.Global.Snippet

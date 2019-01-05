@@ -28,6 +28,7 @@ import UI.Sources.Form as Form
 type alias Model =
     { collection : List Source
     , form : Form.Model
+    , isProcessing : Bool
     }
 
 
@@ -35,6 +36,7 @@ initialModel : Model
 initialModel =
     { collection = []
     , form = Form.initialModel
+    , isProcessing = False
     }
 
 
@@ -44,6 +46,7 @@ initialModel =
 
 type Msg
     = Bypass
+    | FinishedProcessing
     | Process
       -----------------------------------------
       -- Collection
@@ -62,8 +65,17 @@ update msg model =
         Bypass ->
             Return3.withNothing model
 
+        FinishedProcessing ->
+            ( { model | isProcessing = False }
+            , Cmd.none
+            , Nothing
+            )
+
         Process ->
-            ( model, Cmd.none, Just [ UI.Reply.ProcessSources ] )
+            ( { model | isProcessing = True }
+            , Cmd.none
+            , Just [ UI.Reply.ProcessSources ]
+            )
 
         -----------------------------------------
         -- Collection
@@ -124,10 +136,20 @@ index model =
           , Label "Add a new source" Shown
           , GoToPage (Page.Sources New)
           )
-        , ( Icon Icons.sync
-          , Label "Process sources" Shown
-          , PerformMsg Process
-          )
+
+        -- Process
+        ----------
+        , if model.isProcessing then
+            ( Icon Icons.sync
+            , Label "Processing sources ..." Shown
+            , PerformMsg Bypass
+            )
+
+          else
+            ( Icon Icons.sync
+            , Label "Process sources" Shown
+            , PerformMsg Process
+            )
         ]
 
     -----------------------------------------

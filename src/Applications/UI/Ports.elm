@@ -1,13 +1,10 @@
-port module UI.Ports exposing (fromBrain, removeFocus, toBrain)
+port module UI.Ports exposing (fromBrain, toBrain)
 
 import Alien
 
 
 
 -- 📣
-
-
-port removeFocus : () -> Cmd msg
 
 
 port toBrain : Alien.Event -> Cmd msg

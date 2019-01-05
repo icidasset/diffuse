@@ -30,6 +30,7 @@ type Tag
     | SignOut
       -- to UI
     | AddTracks
+    | FinishedProcessingSources
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
@@ -103,6 +104,9 @@ tagToString tag =
         AddTracks ->
             "ADD_TRACKS"
 
+        FinishedProcessingSources ->
+            "FINISHED_PROCESSING_SOURCES"
+
         HideLoadingScreen ->
             "HIDE_LOADING_SCREEN"
 
@@ -160,6 +164,9 @@ tagFromString string =
         -----------------------------------------
         "ADD_TRACKS" ->
             Just AddTracks
+
+        "FINISHED_PROCESSING_SOURCES" ->
+            Just FinishedProcessingSources
 
         "HIDE_LOADING_SCREEN" ->
             Just HideLoadingScreen

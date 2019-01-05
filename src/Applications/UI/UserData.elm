@@ -36,7 +36,7 @@ importHypaethral value model =
 
 
 
--- 📭 ▒▒▒ IMPORTING HYPAETHRAL
+-- 📭 ░░░ IMPORTING HYPAETHRAL
 
 
 importSources : UI.Sources.Model -> HypaethralBundle -> UI.Sources.Model
@@ -45,7 +45,7 @@ importSources model ( data, _ ) =
 
 
 
--- 📭 ▒▒▒ DECODING
+-- 📭 ░░░ DECODING
 
 
 decode : Decode.Value -> Result Decode.Error HypaethralUserData
@@ -61,7 +61,7 @@ decoder =
 
 
 
--- 📭 ▒▒▒ FALLBACKS
+-- 📭 ░░░ FALLBACKS
 
 
 emptyHypaethralUserData : HypaethralUserData
@@ -81,7 +81,7 @@ exportHypaethral =
 
 
 
--- 📮 ▒▒▒ ENCODING
+-- 📮 ░░░ ENCODING
 
 
 encode : UI.Core.Model -> Encode.Value
