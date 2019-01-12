@@ -31,6 +31,7 @@ import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings
 import UI.Sources
 import UI.Svg.Elements
+import UI.Tracks
 import UI.UserData
 import Url exposing (Url)
 
@@ -69,6 +70,7 @@ init flags url key =
       -- Children
       , backdrop = UI.Backdrop.initialModel
       , sources = UI.Sources.initialModel
+      , tracks = UI.Tracks.initialModel
       }
       -----------------------------------------
       -- Initial command
@@ -130,6 +132,16 @@ update msg model =
                 , update = UI.Sources.update
                 }
                 { model = model.sources
+                , msg = sub
+                }
+
+        TracksMsg sub ->
+            updateChild
+                { mapCmd = TracksMsg
+                , mapModel = \child -> { model | tracks = child }
+                , update = UI.Tracks.update
+                }
+                { model = model.tracks
                 , msg = sub
                 }
 
@@ -211,7 +223,7 @@ update msg model =
 
 
 
--- 📣 ░░░ CHILDREN & REPLIES
+-- 📣  ░░  CHILDREN & REPLIES
 
 
 translateReply : Reply -> Msg
@@ -352,7 +364,9 @@ defaultScreen model =
     -----------------------------------------
     , case model.page of
         Page.Index ->
-            empty
+            model.tracks
+                |> Lazy.lazy UI.Tracks.view
+                |> Html.map TracksMsg
 
         Page.NotFound ->
             text "Page not found."
@@ -375,7 +389,7 @@ defaultScreen model =
 
 
 
--- 🗺 ░░░ BITS
+-- 🗺  ░░  BITS
 
 
 content : List (Html msg) -> Html msg
@@ -398,7 +412,7 @@ loadingAnimation =
 
 
 
--- 🖼 ░░░ GLOBAL
+-- 🖼  ░░  GLOBAL
 
 
 globalCss : List Css.Global.Snippet

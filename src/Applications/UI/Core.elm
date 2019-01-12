@@ -8,6 +8,7 @@ import Json.Encode as Json
 import UI.Backdrop
 import UI.Page exposing (Page)
 import UI.Sources
+import UI.Tracks
 import Url exposing (Url)
 
 
@@ -35,6 +36,7 @@ type alias Model =
     -----------------------------------------
     , backdrop : UI.Backdrop.Model
     , sources : UI.Sources.Model
+    , tracks : UI.Tracks.Model
     }
 
 
@@ -52,6 +54,7 @@ type Msg
       -----------------------------------------
     | BackdropMsg UI.Backdrop.Msg
     | SourcesMsg UI.Sources.Msg
+    | TracksMsg UI.Tracks.Msg
       -----------------------------------------
       -- Brain
       -----------------------------------------

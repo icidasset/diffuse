@@ -1,4 +1,4 @@
-module Tracks exposing (Collection, Favourite, IdentifiedTrack, Identifiers, Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, makeTrack, missingId)
+module Tracks exposing (Collection, Favourite, IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, makeTrack, missingId)
 
 import Base64
 import Bytes.Encode
@@ -79,6 +79,37 @@ type alias Collection =
     -- Filtered by search results, favourites, etc.
     , harvested : List IdentifiedTrack
     }
+
+
+type alias Parcel =
+    ( -- Things I need to make a proper collection:
+      { enabledSourceIds : List String
+      , favourites : List Favourite
+      , favouritesOnly : Bool
+      , nowPlaying : Maybe IdentifiedTrack
+      , searchResults : Maybe (List String)
+      , sortBy : SortBy
+      , sortDirection : SortDirection
+      }
+      -- The collection itself:
+    , Collection
+    )
+
+
+
+-- SORTING
+
+
+type SortBy
+    = Artist
+    | Album
+    | PlaylistIndex
+    | Title
+
+
+type SortDirection
+    = Asc
+    | Desc
 
 
 
