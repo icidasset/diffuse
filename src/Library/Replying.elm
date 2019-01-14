@@ -1,4 +1,4 @@
-module Replying exposing (R3D3, do, return, updateChild)
+module Replying exposing (R3D3, Updator, do, reducto, return, updateChild)
 
 import Return3
 import Task
@@ -10,6 +10,10 @@ import Task
 
 type alias R3D3 model msg reply =
     ( model, Cmd msg, Maybe (List reply) )
+
+
+type alias Updator msg model =
+    msg -> model -> ( model, Cmd msg )
 
 
 
@@ -46,6 +50,16 @@ return model msg =
     ( model, msg )
 
 
+{-| Reduce a `R3D3` to a `R2D2`.
+-}
+reducto : Updator msg model -> (reply -> msg) -> R3D3 model msg reply -> ( model, Cmd msg )
+reducto updator translator ( model, cmd, maybeReplies ) =
+    maybeReplies
+        |> Maybe.withDefault []
+        |> List.map translator
+        |> List.foldl (andThenUpdate updator) ( model, cmd )
+
+
 
 -- 🔱  ░░  TASKS
 
@@ -61,20 +75,8 @@ do msg =
 -----------------------------------------
 
 
-type alias Updator msg model =
-    msg -> model -> ( model, Cmd msg )
-
-
 andThenUpdate : Updator msg model -> msg -> ( model, Cmd msg ) -> ( model, Cmd msg )
 andThenUpdate updator msg ( model, cmd ) =
     model
         |> updator msg
         |> Tuple.mapSecond (\c -> Cmd.batch [ cmd, c ])
-
-
-reducto : Updator msg model -> (reply -> msg) -> R3D3 model msg reply -> ( model, Cmd msg )
-reducto updator translator ( model, cmd, maybeReplies ) =
-    maybeReplies
-        |> Maybe.withDefault []
-        |> List.map translator
-        |> List.foldl (andThenUpdate updator) ( model, cmd )

@@ -1,6 +1,7 @@
 module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), methodFromString, methodToString)
 
 import Sources
+import Tracks
 
 
 
@@ -16,7 +17,9 @@ type alias EnclosedUserData =
 
 
 type alias HypaethralUserData =
-    { sources : Maybe (List Sources.Source)
+    { favourites : Maybe (List Tracks.Favourite)
+    , sources : Maybe (List Sources.Source)
+    , tracks : Maybe (List Tracks.Track)
     }
 
 

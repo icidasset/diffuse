@@ -7,13 +7,14 @@ import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
+import Common
 import Css exposing (url)
 import Css.Global
 import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
 import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
 import Json.Encode as Encode
-import Replying exposing (return)
+import Replying exposing (do, return)
 import Return2
 import Return3
 import Sources
@@ -97,10 +98,9 @@ update msg model =
             )
 
         LoadHypaethralUserData json ->
-            ( { model | isAuthenticated = True, isLoading = False }
+            { model | isAuthenticated = True, isLoading = False }
                 |> UI.UserData.importHypaethral json
-            , Cmd.none
-            )
+                |> Replying.reducto update translateReply
 
         ToggleLoadingScreen On ->
             ( { model | isLoading = True }
@@ -155,9 +155,15 @@ update msg model =
 
         Core.ProcessSources ->
             ( model
-            , [ ( "origin", Encode.string "TODO" )
-              , ( "sources", Encode.list Sources.Encoding.encode model.sources.collection )
-              , ( "tracks", Encode.list Tracks.Encoding.encodeTrack [] )
+            , [ ( "origin"
+                , Encode.string (Common.urlOrigin model.url)
+                )
+              , ( "sources"
+                , Encode.list Sources.Encoding.encode model.sources.collection
+                )
+              , ( "tracks"
+                , Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
+                )
               ]
                 |> Encode.object
                 |> Alien.broadcast Alien.ProcessSources
@@ -187,6 +193,7 @@ update msg model =
             )
 
         SignOut ->
+            -- TODO: Reset user data
             ( { model | isAuthenticated = False }
             , Alien.SignOut
                 |> Alien.trigger
@@ -265,12 +272,7 @@ translateAlienEvent : Alien.Event -> Msg
 translateAlienEvent event =
     case Alien.tagFromString event.tag of
         Just Alien.AddTracks ->
-            let
-                dbg =
-                    -- TODO
-                    Debug.log "addTracks" event
-            in
-            Bypass
+            TracksMsg (UI.Tracks.Add event.data)
 
         Just Alien.FinishedProcessingSources ->
             SourcesMsg UI.Sources.FinishedProcessing
@@ -362,22 +364,28 @@ defaultScreen model =
     -----------------------------------------
     -- Main
     -----------------------------------------
-    , case model.page of
-        Page.Index ->
-            model.tracks
-                |> Lazy.lazy UI.Tracks.view
-                |> Html.map TracksMsg
+    , UI.Kit.vessel
+        [ model.tracks
+            |> Lazy.lazy UI.Tracks.view
+            |> Html.map TracksMsg
 
-        Page.NotFound ->
-            text "Page not found."
+        -- Pages
+        --------
+        , case model.page of
+            Page.Index ->
+                empty
 
-        Page.Settings ->
-            UI.Settings.view model
+            Page.NotFound ->
+                UI.Kit.receptacle [ text "Page not found." ]
 
-        Page.Sources subPage ->
-            model.sources
-                |> Lazy.lazy2 UI.Sources.view subPage
-                |> Html.map SourcesMsg
+            Page.Settings ->
+                UI.Settings.view model
+
+            Page.Sources subPage ->
+                model.sources
+                    |> Lazy.lazy2 UI.Sources.view subPage
+                    |> Html.map SourcesMsg
+        ]
 
     -----------------------------------------
     -- Controls

@@ -17,7 +17,7 @@ import UI.Page as Page
 
 view : UI.Core.Model -> Html UI.Core.Msg
 view =
-    UI.Kit.vessel << index
+    UI.Kit.receptacle << index
 
 
 

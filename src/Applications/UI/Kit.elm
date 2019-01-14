@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, select, textField, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textField, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -315,6 +315,17 @@ logoBackdrop =
         []
 
 
+receptacle : List (Html msg) -> Html msg
+receptacle =
+    chunk
+        [ T.absolute
+        , T.absolute__fill
+        , T.bg_white
+        , T.flex
+        , T.flex_column
+        ]
+
+
 select : (String -> msg) -> List (Html msg) -> Html msg
 select inputHandler options =
     brick
@@ -375,6 +386,7 @@ vessel =
         , T.flex_column
         , T.flex_grow_1
         , T.overflow_hidden
+        , T.relative
         , T.w_100
         ]
 

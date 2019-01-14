@@ -112,7 +112,7 @@ update msg model =
 
 view : Sources.Page -> Model -> Html Msg
 view page model =
-    UI.Kit.vessel
+    UI.Kit.receptacle
         (case page of
             Index ->
                 index model
