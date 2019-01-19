@@ -31,9 +31,9 @@ __A music player which connects to your cloud/distributed storage__, in the form
 
 - [Elm](https://elm-lang.org/) programming language
 - [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
-- [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests
-- [Devd](https://github.com/cortesi/devd) web server for development
-- [Watchexec](https://github.com/watchexec/watchexec) watching for file changes
+- [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
+- [Devd](https://github.com/cortesi/devd) web server for development (optional)
+- [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
 
 
 ```shell

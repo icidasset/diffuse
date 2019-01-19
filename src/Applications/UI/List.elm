@@ -76,4 +76,4 @@ listStyles =
 
 itemStyles : List Css.Style
 itemStyles =
-    [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor UI.Kit.colors.subtleBorder) ]
+    [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor UI.Kit.colors.verySubtleBorder) ]

@@ -43,6 +43,7 @@ colors =
     { errorBorder = colorKit.base08
     , inputBorder = rgb 225 225 225
     , subtleBorder = rgb 238 238 238
+    , verySubtleBorder = rgb 248 248 248
 
     -- States
     , success = colorKit.base0B
@@ -323,6 +324,7 @@ receptacle =
         , T.bg_white
         , T.flex
         , T.flex_column
+        , T.z_999
         ]
 
 

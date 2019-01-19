@@ -65,23 +65,28 @@ globalItem activePage totalItems idx ( page, label ) =
         isLastItem =
             idx + 1 == totalItems
     in
-    slab
-        Html.a
-        [ attribute "data-keep-focus" "t"
-        , css (globalItemStyles isActivePage)
-        , href (Page.toString page)
-        ]
+    chunk
         [ T.dib
-        , T.lh_copy
-        , T.no_underline
-        , T.pointer
-        , T.pt2
-
-        --
-        , ifThenElse isActivePage T.bb T.bn
-        , ifThenElse isLastItem T.mr0 T.mr4
+        , ifThenElse isLastItem T.mr0 T.mr1
         ]
-        [ text label ]
+        [ slab
+            Html.a
+            [ attribute "data-keep-focus" "t"
+            , css (globalItemStyles isActivePage)
+            , href (Page.toString page)
+            ]
+            [ T.dib
+            , T.lh_copy
+            , T.no_underline
+            , T.pointer
+            , T.pt2
+
+            --
+            , ifThenElse isActivePage T.bb T.bn
+            , ifThenElse isLastItem T.mr0 T.mr4
+            ]
+            [ text label ]
+        ]
 
 
 globalColors : { active : Css.Color, border : Css.Color, default : Css.Color }
@@ -94,7 +99,7 @@ globalColors =
 
 globalStyles : List Css.Style
 globalStyles =
-    [ Css.fontSize (px 11.5) ]
+    [ Css.fontSize (px 11.25) ]
 
 
 globalItemStyles : Bool -> List Css.Style
