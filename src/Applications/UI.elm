@@ -20,6 +20,7 @@ import Return3
 import Sources
 import Sources.Encoding
 import Tachyons.Classes as T
+import Time
 import Tracks.Encoding
 import UI.Authentication
 import UI.Backdrop
@@ -101,6 +102,15 @@ update msg model =
             { model | isAuthenticated = True, isLoading = False }
                 |> UI.UserData.importHypaethral json
                 |> Replying.reducto update translateReply
+
+        SetCurrentTime time ->
+            let
+                sources =
+                    model.sources
+            in
+            ( { model | sources = { sources | currentTime = time } }
+            , Cmd.none
+            )
 
         ToggleLoadingScreen On ->
             ( { model | isLoading = True }
@@ -265,7 +275,10 @@ updateChild =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Ports.fromBrain translateAlienEvent
+    Sub.batch
+        [ Ports.fromBrain translateAlienEvent
+        , Time.every (60 * 1000) SetCurrentTime
+        ]
 
 
 translateAlienEvent : Alien.Event -> Msg

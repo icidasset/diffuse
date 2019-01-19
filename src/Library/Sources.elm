@@ -1,6 +1,7 @@
-module Sources exposing (Page(..), Property, Service(..), Source, SourceData)
+module Sources exposing (Page(..), Property, Service(..), Source, SourceData, setProperId)
 
 import Dict exposing (Dict)
+import Time
 
 
 
@@ -47,3 +48,12 @@ type Service
 type Page
     = Index
     | New
+
+
+
+--- 🔱
+
+
+setProperId : Int -> Time.Posix -> Source -> Source
+setProperId n time source =
+    { source | id = String.fromInt (Time.toMillis Time.utc time) ++ String.fromInt n }

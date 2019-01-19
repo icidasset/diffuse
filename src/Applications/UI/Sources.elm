@@ -13,6 +13,7 @@ import Return3
 import Sources exposing (..)
 import Sources.Services as Services
 import Tachyons.Classes as T
+import Time
 import UI.Kit exposing (ButtonType(..), select)
 import UI.List
 import UI.Navigation exposing (..)
@@ -27,6 +28,7 @@ import UI.Sources.Form as Form
 
 type alias Model =
     { collection : List Source
+    , currentTime : Time.Posix
     , form : Form.Model
     , isProcessing : Bool
     }
@@ -35,6 +37,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { collection = []
+    , currentTime = Time.millisToPosix 0
     , form = Form.initialModel
     , isProcessing = False
     }
@@ -81,8 +84,8 @@ update msg model =
         -- Collection
         -----------------------------------------
         AddToCollection source ->
-            -- TODO: Set proper source id
             source
+                |> setProperId (List.length model.collection + 1) model.currentTime
                 |> List.singleton
                 |> List.append model.collection
                 |> (\c -> { model | collection = c })

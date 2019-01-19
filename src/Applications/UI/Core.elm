@@ -5,6 +5,7 @@ import Authentication
 import Browser
 import Browser.Navigation as Nav
 import Json.Encode as Json
+import Time
 import UI.Backdrop
 import UI.Page exposing (Page)
 import UI.Sources
@@ -48,6 +49,7 @@ type Msg
     = Bypass
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
+    | SetCurrentTime Time.Posix
     | ToggleLoadingScreen Switch
       -----------------------------------------
       -- Children
