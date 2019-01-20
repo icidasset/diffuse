@@ -52,20 +52,22 @@ type Msg
     | SetCurrentTime Time.Posix
     | ToggleLoadingScreen Switch
       -----------------------------------------
-      -- Children
-      -----------------------------------------
-    | BackdropMsg UI.Backdrop.Msg
-    | SourcesMsg UI.Sources.Msg
-    | TracksMsg UI.Tracks.Msg
-      -----------------------------------------
       -- Brain
       -----------------------------------------
     | NotifyBrain Alien.Event
     | ProcessSources
     | SaveEnclosedUserData
-    | SaveHypaethralUserData
+    | SaveFavourites
+    | SaveSources
+    | SaveTracks
     | SignIn Authentication.Method
     | SignOut
+      -----------------------------------------
+      -- Children
+      -----------------------------------------
+    | BackdropMsg UI.Backdrop.Msg
+    | SourcesMsg UI.Sources.Msg
+    | TracksMsg UI.Tracks.Msg
       -----------------------------------------
       -- URL
       -----------------------------------------

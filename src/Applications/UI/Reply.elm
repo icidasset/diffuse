@@ -1,5 +1,7 @@
 module UI.Reply exposing (Reply(..))
 
+import Alien
+import Json.Decode as Json
 import Sources exposing (Source)
 import UI.Page exposing (Page)
 
@@ -14,4 +16,6 @@ type Reply
     | GoToPage Page
     | ProcessSources
     | SaveEnclosedUserData
-    | SaveHypaethralUserData
+    | SaveFavourites
+    | SaveSources
+    | SaveTracks

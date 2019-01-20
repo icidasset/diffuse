@@ -1,15 +1,20 @@
 module Brain exposing (main)
 
 import Alien
+import Authentication exposing (HypaethralUserData)
 import Brain.Authentication as Authentication
 import Brain.Core exposing (..)
 import Brain.Ports
 import Brain.Reply as Reply exposing (Reply(..))
 import Brain.Sources.Processing as Processing
 import Brain.Sources.Processing.Common as Processing
-import Json.Decode
+import Json.Decode as Json
+import Json.Decode.Pipeline exposing (optional)
+import Json.Encode
 import Replying exposing (return)
+import Sources.Encoding as Sources
 import Sources.Processing.Encoding as Processing
+import Tracks.Encoding as Tracks
 
 
 
@@ -35,6 +40,7 @@ init flags =
       -- Initial model
       -----------------------------------------
       { authentication = Authentication.initialModel
+      , hypaethralUserData = Authentication.emptyHypaethralUserData
       , processing = Processing.initialModel
       }
       -----------------------------------------
@@ -67,25 +73,52 @@ update msg model =
         -----------------------------------------
         -- Children
         -----------------------------------------
+        AuthenticationMsg Authentication.PerformSignOut ->
+            -- When signing out, remove all traces of the user's data.
+            updateAuthentication
+                { model | hypaethralUserData = Authentication.emptyHypaethralUserData }
+                Authentication.PerformSignOut
+
         AuthenticationMsg sub ->
-            updateChild
-                { mapCmd = AuthenticationMsg
-                , mapModel = \child -> { model | authentication = child }
-                , update = Authentication.update
-                }
-                { model = model.authentication
-                , msg = sub
-                }
+            updateAuthentication model sub
 
         ProcessingMsg sub ->
-            updateChild
-                { mapCmd = ProcessingMsg
-                , mapModel = \child -> { model | processing = child }
-                , update = Processing.update
-                }
-                { model = model.processing
-                , msg = sub
-                }
+            updateProcessing model sub
+
+        -----------------------------------------
+        -- User data
+        -----------------------------------------
+        LoadHypaethralUserData value ->
+            let
+                decodedData =
+                    value
+                        |> Authentication.decode
+                        |> Result.withDefault model.hypaethralUserData
+            in
+            ( { model | hypaethralUserData = decodedData }
+            , Brain.Ports.toUI (Alien.broadcast Alien.LoadHypaethralUserData value)
+            )
+
+        SaveFavourites value ->
+            value
+                |> Json.decodeValue (Json.list Tracks.favouriteDecoder)
+                |> Result.withDefault model.hypaethralUserData.favourites
+                |> hypaethralLenses.setFavourites model
+                |> saveHypaethralData
+
+        SaveSources value ->
+            value
+                |> Json.decodeValue (Json.list Sources.decoder)
+                |> Result.withDefault model.hypaethralUserData.sources
+                |> hypaethralLenses.setSources model
+                |> saveHypaethralData
+
+        SaveTracks value ->
+            value
+                |> Json.decodeValue (Json.list Tracks.trackDecoder)
+                |> Result.withDefault model.hypaethralUserData.tracks
+                |> hypaethralLenses.setTracks model
+                |> saveHypaethralData
 
 
 
@@ -101,6 +134,9 @@ translateReply reply =
         -----------------------------------------
         -- To UI
         -----------------------------------------
+        GiveUI Alien.LoadHypaethralUserData data ->
+            LoadHypaethralUserData data
+
         GiveUI tag data ->
             NotifyUI (Alien.broadcast tag data)
 
@@ -110,6 +146,66 @@ translateReply reply =
 
 updateChild =
     Replying.updateChild update translateReply
+
+
+updateAuthentication : Model -> Authentication.Msg -> ( Model, Cmd Msg )
+updateAuthentication model sub =
+    updateChild
+        { mapCmd = AuthenticationMsg
+        , mapModel = \child -> { model | authentication = child }
+        , update = Authentication.update
+        }
+        { model = model.authentication
+        , msg = sub
+        }
+
+
+updateProcessing : Model -> Processing.Msg -> ( Model, Cmd Msg )
+updateProcessing model sub =
+    updateChild
+        { mapCmd = ProcessingMsg
+        , mapModel = \child -> { model | processing = child }
+        , update = Processing.update
+        }
+        { model = model.processing
+        , msg = sub
+        }
+
+
+
+-- 📣  ░░  USER DATA
+
+
+hypaethralLenses =
+    { setFavourites = makeHypaethralLens (\h f -> { h | favourites = f })
+    , setSources = makeHypaethralLens (\h s -> { h | sources = s })
+    , setTracks = makeHypaethralLens (\h t -> { h | tracks = t })
+    }
+
+
+makeHypaethralLens : (HypaethralUserData -> a -> HypaethralUserData) -> Model -> a -> Model
+makeHypaethralLens setter model value =
+    let
+        h =
+            model.hypaethralUserData
+    in
+    { model | hypaethralUserData = setter h value }
+
+
+saveHypaethralData : Model -> ( Model, Cmd Msg )
+saveHypaethralData model =
+    let
+        { favourites, sources, tracks } =
+            model.hypaethralUserData
+    in
+    [ ( "favourites", Json.Encode.list Tracks.encodeFavourite favourites )
+    , ( "sources", Json.Encode.list Sources.encode sources )
+    , ( "tracks", Json.Encode.list Tracks.encodeTrack tracks )
+    ]
+        |> Json.Encode.object
+        |> Authentication.SaveHypaethralData
+        |> AuthenticationMsg
+        |> (\msg -> update msg model)
 
 
 
@@ -141,7 +237,7 @@ translateAlienEvent event =
         Just Alien.ProcessSources ->
             -- Only proceed to the processing if we got all the necessary data,
             -- otherwise report an error in the UI.
-            case Json.Decode.decodeValue Processing.argumentsDecoder event.data of
+            case Json.decodeValue Processing.argumentsDecoder event.data of
                 Ok arguments ->
                     arguments
                         |> Processing.Process
@@ -149,15 +245,21 @@ translateAlienEvent event =
 
                 Err error ->
                     error
-                        |> Json.Decode.errorToString
+                        |> Json.errorToString
                         |> Alien.report Alien.ReportGenericError
                         |> NotifyUI
 
         Just Alien.SaveEnclosedUserData ->
             AuthenticationMsg (Authentication.SaveEnclosedData event.data)
 
-        Just Alien.SaveHypaethralUserData ->
-            AuthenticationMsg (Authentication.SaveHypaethralData event.data)
+        Just Alien.SaveFavourites ->
+            SaveFavourites event.data
+
+        Just Alien.SaveSources ->
+            SaveSources event.data
+
+        Just Alien.SaveTracks ->
+            SaveTracks event.data
 
         Just Alien.SignIn ->
             AuthenticationMsg (Authentication.PerformSignIn event.data)

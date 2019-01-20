@@ -8,6 +8,7 @@
     "dependencies": {
         "direct": {
             "Chadtech/return": "1.0.2",
+            "NoRedInk/elm-json-decode-pipeline": "1.0.0",
             "avh4/elm-color": "1.0.0",
             "danfishgold/base64-bytes": "1.0.1",
             "danmarcab/material-icons": "1.0.0",

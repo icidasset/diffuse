@@ -123,6 +123,74 @@ update msg model =
             )
 
         -----------------------------------------
+        -- Brain
+        -----------------------------------------
+        NotifyBrain alienEvent ->
+            ( model
+            , Ports.toBrain alienEvent
+            )
+
+        Core.ProcessSources ->
+            ( model
+            , [ ( "origin"
+                , Encode.string (Common.urlOrigin model.url)
+                )
+              , ( "sources"
+                , Encode.list Sources.Encoding.encode model.sources.collection
+                )
+              , ( "tracks"
+                , Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
+                )
+              ]
+                |> Encode.object
+                |> Alien.broadcast Alien.ProcessSources
+                |> Ports.toBrain
+            )
+
+        Core.SaveEnclosedUserData ->
+            ( model
+            , Cmd.none
+            )
+
+        Core.SaveFavourites ->
+            model
+                |> UI.UserData.encodedFavourites
+                |> Alien.broadcast Alien.SaveFavourites
+                |> Ports.toBrain
+                |> Return2.withModel model
+
+        Core.SaveSources ->
+            model
+                |> UI.UserData.encodedSources
+                |> Alien.broadcast Alien.SaveSources
+                |> Ports.toBrain
+                |> Return2.withModel model
+
+        Core.SaveTracks ->
+            model
+                |> UI.UserData.encodedTracks
+                |> Alien.broadcast Alien.SaveTracks
+                |> Ports.toBrain
+                |> Return2.withModel model
+
+        SignIn method ->
+            ( model
+            , method
+                |> Authentication.methodToString
+                |> Encode.string
+                |> Alien.broadcast Alien.SignIn
+                |> Ports.toBrain
+            )
+
+        SignOut ->
+            -- TODO: Reset user data
+            ( { model | isAuthenticated = False }
+            , Alien.SignOut
+                |> Alien.trigger
+                |> Ports.toBrain
+            )
+
+        -----------------------------------------
         -- Children
         -----------------------------------------
         BackdropMsg sub ->
@@ -154,61 +222,6 @@ update msg model =
                 { model = model.tracks
                 , msg = sub
                 }
-
-        -----------------------------------------
-        -- Brain
-        -----------------------------------------
-        NotifyBrain alienEvent ->
-            ( model
-            , Ports.toBrain alienEvent
-            )
-
-        Core.ProcessSources ->
-            ( model
-            , [ ( "origin"
-                , Encode.string (Common.urlOrigin model.url)
-                )
-              , ( "sources"
-                , Encode.list Sources.Encoding.encode model.sources.collection
-                )
-              , ( "tracks"
-                , Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
-                )
-              ]
-                |> Encode.object
-                |> Alien.broadcast Alien.ProcessSources
-                |> Ports.toBrain
-            )
-
-        Core.SaveEnclosedUserData ->
-            ( model
-            , Cmd.none
-            )
-
-        Core.SaveHypaethralUserData ->
-            ( model
-            , model
-                |> UI.UserData.exportHypaethral
-                |> Alien.broadcast Alien.SaveHypaethralUserData
-                |> Ports.toBrain
-            )
-
-        SignIn method ->
-            ( model
-            , method
-                |> Authentication.methodToString
-                |> Encode.string
-                |> Alien.broadcast Alien.SignIn
-                |> Ports.toBrain
-            )
-
-        SignOut ->
-            -- TODO: Reset user data
-            ( { model | isAuthenticated = False }
-            , Alien.SignOut
-                |> Alien.trigger
-                |> Ports.toBrain
-            )
 
         -----------------------------------------
         -- URL
@@ -261,8 +274,14 @@ translateReply reply =
         Reply.SaveEnclosedUserData ->
             Core.SaveEnclosedUserData
 
-        Reply.SaveHypaethralUserData ->
-            Core.SaveHypaethralUserData
+        Reply.SaveFavourites ->
+            Core.SaveFavourites
+
+        Reply.SaveSources ->
+            Core.SaveSources
+
+        Reply.SaveTracks ->
+            Core.SaveTracks
 
 
 updateChild =

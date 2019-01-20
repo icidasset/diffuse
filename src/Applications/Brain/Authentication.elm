@@ -16,7 +16,7 @@ Methods:
 Steps:
 
     1. Get active method (if none, we're signed out)
-    2. Get unrestricted data
+    2. Get hypaethral data
 
 -}
 

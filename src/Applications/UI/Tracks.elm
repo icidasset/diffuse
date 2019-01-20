@@ -148,7 +148,7 @@ resolveParcel model ( _, newCollection ) =
     if model.collection.untouched /= newCollection.untouched then
         ( modelWithNewCollection
         , Cmd.none
-        , Just [ SaveHypaethralUserData ]
+        , Just [ SaveTracks ]
         )
 
     else

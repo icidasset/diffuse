@@ -52,14 +52,14 @@ type Msg
     | FinishedProcessing
     | Process
       -----------------------------------------
+      -- Children
+      -----------------------------------------
+    | FormMsg Form.Msg
+      -----------------------------------------
       -- Collection
       -----------------------------------------
     | AddToCollection Source
     | RemoveFromCollection String
-      -----------------------------------------
-      -- Children
-      -----------------------------------------
-    | FormMsg Form.Msg
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -81,6 +81,15 @@ update msg model =
             )
 
         -----------------------------------------
+        -- Children
+        -----------------------------------------
+        FormMsg sub ->
+            model.form
+                |> Form.update sub
+                |> Return3.mapModel (\f -> { model | form = f })
+                |> Return3.mapCmd FormMsg
+
+        -----------------------------------------
         -- Collection
         -----------------------------------------
         AddToCollection source ->
@@ -90,23 +99,14 @@ update msg model =
                 |> List.append model.collection
                 |> (\c -> { model | collection = c })
                 |> Return2.withNoCmd
-                |> Return3.withReply [ UI.Reply.SaveHypaethralUserData ]
+                |> Return3.withReply [ UI.Reply.SaveSources ]
 
         RemoveFromCollection sourceId ->
             model.collection
                 |> List.filter (.id >> (/=) sourceId)
                 |> (\c -> { model | collection = c })
                 |> Return2.withNoCmd
-                |> Return3.withReply [ UI.Reply.SaveHypaethralUserData ]
-
-        -----------------------------------------
-        -- Children
-        -----------------------------------------
-        FormMsg sub ->
-            model.form
-                |> Form.update sub
-                |> Return3.mapModel (\f -> { model | form = f })
-                |> Return3.mapCmd FormMsg
+                |> Return3.withReply [ UI.Reply.SaveSources ]
 
 
 

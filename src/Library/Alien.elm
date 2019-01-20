@@ -25,7 +25,9 @@ type Tag
       -- from UI
     | ProcessSources
     | SaveEnclosedUserData
-    | SaveHypaethralUserData
+    | SaveFavourites
+    | SaveSources
+    | SaveTracks
     | SignIn
     | SignOut
       -- to UI
@@ -89,8 +91,14 @@ tagToString tag =
         SaveEnclosedUserData ->
             "SAVE_ENCLOSED_USER_DATA"
 
-        SaveHypaethralUserData ->
-            "SAVE_HYPAETHRAL_USER_DATA"
+        SaveFavourites ->
+            "SAVE_FAVOURITES"
+
+        SaveSources ->
+            "SAVE_SOURCES"
+
+        SaveTracks ->
+            "SAVE_TRACKS"
 
         SignIn ->
             "SIGN_IN"
@@ -150,8 +158,14 @@ tagFromString string =
         "SAVE_ENCLOSED_USER_DATA" ->
             Just SaveEnclosedUserData
 
-        "SAVE_HYPAETHRAL_USER_DATA" ->
-            Just SaveHypaethralUserData
+        "SAVE_FAVOURITES" ->
+            Just SaveFavourites
+
+        "SAVE_SOURCES" ->
+            Just SaveSources
+
+        "SAVE_TRACKS" ->
+            Just SaveTracks
 
         "SIGN_IN" ->
             Just SignIn
