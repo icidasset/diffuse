@@ -19,3 +19,6 @@ type Reply
     | SaveFavourites
     | SaveSources
     | SaveTracks
+      -- Brain
+    | GiveBrain Alien.Tag Json.Value
+    | NudgeBrain Alien.Tag

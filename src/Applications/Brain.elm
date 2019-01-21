@@ -8,10 +8,11 @@ import Brain.Ports
 import Brain.Reply as Reply exposing (Reply(..))
 import Brain.Sources.Processing as Processing
 import Brain.Sources.Processing.Common as Processing
+import Brain.Tracks as Tracks
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
-import Replying exposing (return)
+import Replying exposing (andThen, return)
 import Sources.Encoding as Sources
 import Sources.Processing.Encoding as Processing
 import Tracks.Encoding as Tracks
@@ -42,6 +43,7 @@ init flags =
       { authentication = Authentication.initialModel
       , hypaethralUserData = Authentication.emptyHypaethralUserData
       , processing = Processing.initialModel
+      , tracks = Tracks.initialModel
       }
       -----------------------------------------
       -- Initial command
@@ -85,9 +87,21 @@ update msg model =
         ProcessingMsg sub ->
             updateProcessing model sub
 
+        TracksMsg sub ->
+            updateTracks model sub
+
         -----------------------------------------
         -- User data
         -----------------------------------------
+        --   The hypaethral user data is received in pieces,
+        --   pieces which are "cached" here in the web worker.
+        --
+        --   The reasons for this are:
+        --   1. Lesser performance penalty on the UI when saving data
+        --      (ie. this avoids having to encode/decode everything each time)
+        --   2. The data can be used in the web worker (brain) as well.
+        --      (eg. for track-search index)
+        --
         LoadHypaethralUserData value ->
             let
                 decodedData =
@@ -98,6 +112,7 @@ update msg model =
             ( { model | hypaethralUserData = decodedData }
             , Brain.Ports.toUI (Alien.broadcast Alien.LoadHypaethralUserData value)
             )
+                |> andThen updateSearchIndex
 
         SaveFavourites value ->
             value
@@ -118,11 +133,22 @@ update msg model =
                 |> Json.decodeValue (Json.list Tracks.trackDecoder)
                 |> Result.withDefault model.hypaethralUserData.tracks
                 |> hypaethralLenses.setTracks model
-                |> saveHypaethralData
+                |> updateSearchIndex
+                |> andThen saveHypaethralData
+
+
+updateSearchIndex : Model -> ( Model, Cmd Msg )
+updateSearchIndex model =
+    update
+        (model.hypaethralUserData.tracks
+            |> Tracks.UpdateSearchIndex
+            |> TracksMsg
+        )
+        model
 
 
 
--- 📣  ░░  CHILDREN & REPLIES
+-- 📣  ░░  REPLIES
 
 
 translateReply : Reply -> Msg
@@ -146,6 +172,10 @@ translateReply reply =
 
 updateChild =
     Replying.updateChild update translateReply
+
+
+
+-- 📣  ░░  CHILDREN
 
 
 updateAuthentication : Model -> Authentication.Msg -> ( Model, Cmd Msg )
@@ -172,6 +202,18 @@ updateProcessing model sub =
         }
 
 
+updateTracks : Model -> Tracks.Msg -> ( Model, Cmd Msg )
+updateTracks model sub =
+    updateChild
+        { mapCmd = TracksMsg
+        , mapModel = \child -> { model | tracks = child }
+        , update = Tracks.update
+        }
+        { model = model.tracks
+        , msg = sub
+        }
+
+
 
 -- 📣  ░░  USER DATA
 
@@ -185,11 +227,7 @@ hypaethralLenses =
 
 makeHypaethralLens : (HypaethralUserData -> a -> HypaethralUserData) -> Model -> a -> Model
 makeHypaethralLens setter model value =
-    let
-        h =
-            model.hypaethralUserData
-    in
-    { model | hypaethralUserData = setter h value }
+    { model | hypaethralUserData = setter model.hypaethralUserData value }
 
 
 saveHypaethralData : Model -> ( Model, Cmd Msg )
@@ -260,6 +298,13 @@ translateAlienEvent event =
 
         Just Alien.SaveTracks ->
             SaveTracks event.data
+
+        Just Alien.SearchTracks ->
+            event.data
+                |> Json.decodeValue Json.string
+                |> Result.withDefault ""
+                |> Tracks.Search
+                |> TracksMsg
 
         Just Alien.SignIn ->
             AuthenticationMsg (Authentication.PerformSignIn event.data)

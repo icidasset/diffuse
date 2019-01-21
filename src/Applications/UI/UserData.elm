@@ -5,6 +5,7 @@ import Json.Decode as Json
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
 import Replying exposing (R3D3)
+import Sources
 import Sources.Encoding as Sources
 import Tracks exposing (emptyCollection)
 import Tracks.Collection as Tracks
@@ -81,6 +82,7 @@ importTracks model data =
         adjustedModel =
             { model
                 | collection = { emptyCollection | untouched = data.tracks }
+                , enabledSourceIds = Sources.enabledSourceIds data.sources
                 , favourites = data.favourites
             }
     in

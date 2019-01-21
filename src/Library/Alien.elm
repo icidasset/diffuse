@@ -22,6 +22,7 @@ type Tag
     = AuthAnonymous
     | AuthEnclosedData
     | AuthMethod
+    | SearchTracks
       -- from UI
     | ProcessSources
     | SaveEnclosedUserData
@@ -81,6 +82,9 @@ tagToString tag =
 
         AuthEnclosedData ->
             "AUTH_ENCLOSED_DATA"
+
+        SearchTracks ->
+            "SEARCH_TRACKS"
 
         -----------------------------------------
         -- From UI
@@ -148,6 +152,9 @@ tagFromString string =
 
         "AUTH_ENCLOSED_DATA" ->
             Just AuthEnclosedData
+
+        "SEARCH_TRACKS" ->
+            Just SearchTracks
 
         -----------------------------------------
         -- From UI

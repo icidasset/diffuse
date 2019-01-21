@@ -1,5 +1,6 @@
-module Sources exposing (Page(..), Property, Service(..), Source, SourceData, setProperId)
+module Sources exposing (Page(..), Property, Service(..), Source, SourceData, enabledSourceIds, setProperId)
 
+import Conditional exposing (..)
 import Dict exposing (Dict)
 import Time
 
@@ -52,6 +53,11 @@ type Page
 
 
 --- 🔱
+
+
+enabledSourceIds : List Source -> List String
+enabledSourceIds =
+    List.filterMap (\s -> ifThenElse s.enabled (Just s.id) Nothing)
 
 
 setProperId : Int -> Time.Posix -> Source -> Source

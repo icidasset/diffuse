@@ -29,7 +29,7 @@ clean:
 elm:
 	@echo "> Compiling Elm application"
 	@elm make $(SRC_DIR)/Applications/Brain.elm --output $(BUILD_DIR)/brain.js
-	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/application.js
+	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/application.js --debug
 
 
 system:

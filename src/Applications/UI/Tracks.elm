@@ -1,20 +1,23 @@
 module UI.Tracks exposing (Model, Msg(..), initialModel, makeParcel, resolveParcel, update, view)
 
+import Alien
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
 import Css
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, placeholder, title, value)
-import Html.Styled.Events exposing (onClick, onInput)
+import Html.Styled.Events exposing (onBlur, onClick, onInput)
 import Html.Styled.Ext exposing (onEnterKey)
 import Html.Styled.Lazy exposing (..)
-import Json.Decode
+import Json.Decode as Json
+import Json.Encode
 import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
 import Replying exposing (R3D3)
+import Return2
 import Return3
 import Tachyons.Classes as T
 import Tracks exposing (..)
@@ -65,7 +68,7 @@ type Msg
       -----------------------------------------
       -- Collection
       -----------------------------------------
-    | Add Json.Decode.Value
+    | Add Json.Value
       -----------------------------------------
       -- Favourites
       -----------------------------------------
@@ -75,6 +78,7 @@ type Msg
       -----------------------------------------
     | ClearSearch
     | Search (Maybe String)
+    | SetSearchResults Json.Value
     | SetSearchTerm String
 
 
@@ -94,7 +98,7 @@ update msg model =
             let
                 tracks =
                     json
-                        |> Json.Decode.decodeValue (Json.Decode.list Encoding.trackDecoder)
+                        |> Json.decodeValue (Json.list Encoding.trackDecoder)
                         |> Result.withDefault []
             in
             model
@@ -112,10 +116,34 @@ update msg model =
         -- Search
         -----------------------------------------
         ClearSearch ->
-            Return3.withNothing { model | searchTerm = Nothing }
+            reviseCollection
+                harvest
+                { model | searchResults = Nothing, searchTerm = Nothing }
 
-        Search maybeTerm ->
-            Return3.withNothing { model | searchTerm = maybeTerm }
+        Search Nothing ->
+            reviseCollection
+                harvest
+                { model | searchResults = Nothing, searchTerm = Nothing }
+
+        Search (Just "") ->
+            reviseCollection
+                harvest
+                { model | searchResults = Nothing, searchTerm = Nothing }
+
+        Search (Just term) ->
+            { model | searchTerm = Just term }
+                |> Return2.withNoCmd
+                |> Return3.withReply [ GiveBrain Alien.SearchTracks (Json.Encode.string term) ]
+
+        SetSearchResults json ->
+            json
+                |> Json.decodeValue (Json.list Json.string)
+                |> Result.withDefault []
+                |> (\results -> { model | searchResults = Just results })
+                |> reviseCollection harvest
+
+        SetSearchTerm "" ->
+            Return3.withNothing { model | searchTerm = Nothing }
 
         SetSearchTerm term ->
             Return3.withNothing { model | searchTerm = Just term }
@@ -155,6 +183,14 @@ resolveParcel model ( _, newCollection ) =
         Return3.withNothing modelWithNewCollection
 
 
+reviseCollection : (Parcel -> Parcel) -> Model -> R3D3 Model Msg Reply
+reviseCollection collector model =
+    model
+        |> makeParcel
+        |> collector
+        |> resolveParcel model
+
+
 
 -- 🗺
 
@@ -172,8 +208,8 @@ view model =
         , chunk
             []
             (List.map
-                (\t -> text <| t.tags.artist ++ " - " ++ t.tags.title)
-                model.collection.untouched
+                (\( _, t ) -> text <| t.tags.artist ++ " - " ++ t.tags.title)
+                model.collection.harvested
             )
         ]
 
@@ -196,6 +232,7 @@ navigation favouritesOnly searchTerm =
               slab
                 Html.input
                 [ css searchInputStyles
+                , onBlur (Search searchTerm)
                 , onEnterKey (Search searchTerm)
                 , onInput SetSearchTerm
                 , placeholder "Search"

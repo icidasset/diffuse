@@ -283,6 +283,15 @@ translateReply reply =
         Reply.SaveTracks ->
             Core.SaveTracks
 
+        -----------------------------------------
+        -- To Brain
+        -----------------------------------------
+        GiveBrain tag data ->
+            NotifyBrain (Alien.broadcast tag data)
+
+        NudgeBrain tag ->
+            NotifyBrain (Alien.trigger tag)
+
 
 updateChild =
     Replying.updateChild update translateReply
@@ -333,6 +342,9 @@ translateAlienEvent event =
         Just Alien.ReportProcessingError ->
             -- TODO
             Bypass
+
+        Just Alien.SearchTracks ->
+            TracksMsg (UI.Tracks.SetSearchResults event.data)
 
         Just Alien.UpdateSourceData ->
             -- TODO

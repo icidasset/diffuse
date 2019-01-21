@@ -1,5 +1,6 @@
-module Replying exposing (R3D3, Updator, do, reducto, return, updateChild)
+module Replying exposing (R3D3, Updator, andThen, do, reducto, return, updateChild)
 
+import Return2
 import Return3
 import Task
 
@@ -48,6 +49,15 @@ updateChild update translateReply context data =
 return : model -> Cmd msg -> ( model, Cmd msg )
 return model msg =
     ( model, msg )
+
+
+{-| Chain `update` calls.
+-}
+andThen : (model -> ( model, Cmd msg )) -> ( model, Cmd msg ) -> ( model, Cmd msg )
+andThen fn ( model, cmd ) =
+    model
+        |> fn
+        |> Return2.addCmd cmd
 
 
 {-| Reduce a `R3D3` to a `R2D2`.
