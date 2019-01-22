@@ -125,11 +125,6 @@ update msg model =
         -----------------------------------------
         -- Brain
         -----------------------------------------
-        NotifyBrain alienEvent ->
-            ( model
-            , Ports.toBrain alienEvent
-            )
-
         Core.ProcessSources ->
             ( model
             , [ ( "origin"
@@ -160,11 +155,23 @@ update msg model =
                 |> Return2.withModel model
 
         Core.SaveSources ->
-            model
+            let
+                updateEnabledSourceIdsOnTracks =
+                    model.sources.collection
+                        |> Sources.enabledSourceIds
+                        |> UI.Tracks.SetEnabledSourceIds
+                        |> TracksMsg
+                        |> update
+
+                ( updatedModel, updatedCmd ) =
+                    updateEnabledSourceIdsOnTracks model
+            in
+            updatedModel
                 |> UI.UserData.encodedSources
                 |> Alien.broadcast Alien.SaveSources
                 |> Ports.toBrain
-                |> Return2.withModel model
+                |> Return2.withModel updatedModel
+                |> Return2.addCmd updatedCmd
 
         Core.SaveTracks ->
             model
@@ -271,6 +278,9 @@ translateReply reply =
         Reply.ProcessSources ->
             Core.ProcessSources
 
+        Reply.RemoveTracksWithSourceId sourceId ->
+            TracksMsg (UI.Tracks.RemoveBySourceId sourceId)
+
         Reply.SaveEnclosedUserData ->
             Core.SaveEnclosedUserData
 
@@ -282,15 +292,6 @@ translateReply reply =
 
         Reply.SaveTracks ->
             Core.SaveTracks
-
-        -----------------------------------------
-        -- To Brain
-        -----------------------------------------
-        GiveBrain tag data ->
-            NotifyBrain (Alien.broadcast tag data)
-
-        NudgeBrain tag ->
-            NotifyBrain (Alien.trigger tag)
 
 
 updateChild =
@@ -328,8 +329,7 @@ translateAlienEvent event =
             LoadHypaethralUserData event.data
 
         Just Alien.RemoveTracksByPath ->
-            -- TODO
-            Bypass
+            TracksMsg (UI.Tracks.RemoveByPaths event.data)
 
         Just Alien.ReportGenericError ->
             let

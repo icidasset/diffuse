@@ -15,10 +15,8 @@ type Reply
     | Chill
     | GoToPage Page
     | ProcessSources
+    | RemoveTracksWithSourceId String
     | SaveEnclosedUserData
     | SaveFavourites
     | SaveSources
     | SaveTracks
-      -- Brain
-    | GiveBrain Alien.Tag Json.Value
-    | NudgeBrain Alien.Tag

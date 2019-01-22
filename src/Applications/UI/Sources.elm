@@ -97,16 +97,22 @@ update msg model =
                 |> setProperId (List.length model.collection + 1) model.currentTime
                 |> List.singleton
                 |> List.append model.collection
-                |> (\c -> { model | collection = c })
+                |> (\c -> { model | collection = c, isProcessing = True })
                 |> Return2.withNoCmd
-                |> Return3.withReply [ UI.Reply.SaveSources ]
+                |> Return3.withReply
+                    [ UI.Reply.SaveSources
+                    , UI.Reply.ProcessSources
+                    ]
 
         RemoveFromCollection sourceId ->
             model.collection
                 |> List.filter (.id >> (/=) sourceId)
                 |> (\c -> { model | collection = c })
                 |> Return2.withNoCmd
-                |> Return3.withReply [ UI.Reply.SaveSources ]
+                |> Return3.withReply
+                    [ UI.Reply.SaveSources
+                    , UI.Reply.RemoveTracksWithSourceId sourceId
+                    ]
 
 
 

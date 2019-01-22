@@ -25,6 +25,7 @@ import Tracks.Collection exposing (..)
 import Tracks.Encoding as Encoding
 import UI.Kit
 import UI.Navigation exposing (..)
+import UI.Ports
 import UI.Reply exposing (Reply(..))
 
 
@@ -65,10 +66,13 @@ initialModel =
 
 type Msg
     = Bypass
+    | SetEnabledSourceIds (List String)
       -----------------------------------------
       -- Collection
       -----------------------------------------
     | Add Json.Value
+    | RemoveByPaths Json.Value
+    | RemoveBySourceId String
       -----------------------------------------
       -- Favourites
       -----------------------------------------
@@ -88,6 +92,9 @@ update msg model =
         Bypass ->
             Return3.withNothing model
 
+        SetEnabledSourceIds sourceIds ->
+            Return3.withNothing { model | enabledSourceIds = sourceIds }
+
         -----------------------------------------
         -- Collection
         -----------------------------------------
@@ -104,6 +111,32 @@ update msg model =
             model
                 |> makeParcel
                 |> add tracks
+                |> resolveParcel model
+
+        -- # Remove
+        -- > Remove tracks from the collection.
+        RemoveByPaths json ->
+            let
+                decoder =
+                    Json.map2
+                        Tuple.pair
+                        (Json.field "filePaths" <| Json.list Json.string)
+                        (Json.field "sourceId" Json.string)
+
+                ( paths, sourceId ) =
+                    json
+                        |> Json.decodeValue decoder
+                        |> Result.withDefault ( [], missingId )
+            in
+            model
+                |> makeParcel
+                |> removeByPaths sourceId paths
+                |> resolveParcel model
+
+        RemoveBySourceId sourceId ->
+            model
+                |> makeParcel
+                |> removeBySourceId sourceId
                 |> resolveParcel model
 
         -----------------------------------------
@@ -126,8 +159,8 @@ update msg model =
             case ( model.searchTerm, model.searchResults ) of
                 ( Just term, _ ) ->
                     ( model
-                    , Cmd.none
-                    , Just [ GiveBrain Alien.SearchTracks (Json.Encode.string term) ]
+                    , UI.Ports.giveBrain Alien.SearchTracks (Json.Encode.string term)
+                    , Nothing
                     )
 
                 ( Nothing, Just _ ) ->

@@ -54,7 +54,6 @@ type Msg
       -----------------------------------------
       -- Brain
       -----------------------------------------
-    | NotifyBrain Alien.Event
     | ProcessSources
     | SaveEnclosedUserData
     | SaveFavourites
