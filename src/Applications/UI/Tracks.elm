@@ -77,7 +77,7 @@ type Msg
       -- Search
       -----------------------------------------
     | ClearSearch
-    | Search (Maybe String)
+    | Search
     | SetSearchResults Json.Value
     | SetSearchTerm String
 
@@ -120,20 +120,19 @@ update msg model =
                 harvest
                 { model | searchResults = Nothing, searchTerm = Nothing }
 
-        Search Nothing ->
-            reviseCollection
-                harvest
-                { model | searchResults = Nothing, searchTerm = Nothing }
+        Search ->
+            case ( model.searchTerm, model.searchResults ) of
+                ( Just term, _ ) ->
+                    ( model
+                    , Cmd.none
+                    , Just [ GiveBrain Alien.SearchTracks (Json.Encode.string term) ]
+                    )
 
-        Search (Just "") ->
-            reviseCollection
-                harvest
-                { model | searchResults = Nothing, searchTerm = Nothing }
+                ( Nothing, Just _ ) ->
+                    reviseCollection harvest { model | searchResults = Nothing }
 
-        Search (Just term) ->
-            { model | searchTerm = Just term }
-                |> Return2.withNoCmd
-                |> Return3.withReply [ GiveBrain Alien.SearchTracks (Json.Encode.string term) ]
+                ( Nothing, Nothing ) ->
+                    Return3.withNothing model
 
         SetSearchResults json ->
             json
@@ -142,11 +141,15 @@ update msg model =
                 |> (\results -> { model | searchResults = Just results })
                 |> reviseCollection harvest
 
-        SetSearchTerm "" ->
-            Return3.withNothing { model | searchTerm = Nothing }
-
         SetSearchTerm term ->
-            Return3.withNothing { model | searchTerm = Just term }
+            Return3.withNothing
+                (case String.trim term of
+                    "" ->
+                        { model | searchTerm = Nothing }
+
+                    t ->
+                        { model | searchTerm = Just t }
+                )
 
 
 
@@ -232,8 +235,8 @@ navigation favouritesOnly searchTerm =
               slab
                 Html.input
                 [ css searchInputStyles
-                , onBlur (Search searchTerm)
-                , onEnterKey (Search searchTerm)
+                , onBlur Search
+                , onEnterKey Search
                 , onInput SetSearchTerm
                 , placeholder "Search"
                 , value (Maybe.withDefault "" searchTerm)
