@@ -110,7 +110,9 @@ update msg model =
         -- Favourites
         -----------------------------------------
         ToggleFavouritesOnly ->
-            Return3.withNothing { model | favouritesOnly = not model.favouritesOnly }
+            reviseCollection
+                harvest
+                { model | favouritesOnly = not model.favouritesOnly }
 
         -----------------------------------------
         -- Search
