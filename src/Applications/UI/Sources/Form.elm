@@ -6,7 +6,7 @@ import Dict
 import Dict.Ext as Dict
 import Html.Styled as Html exposing (Html, strong, text)
 import Html.Styled.Attributes exposing (for, name, placeholder, type_, value)
-import Html.Styled.Events exposing (onInput)
+import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
@@ -184,7 +184,7 @@ newWhere { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , UI.Kit.centeredContent
+    , form
         [ UI.Kit.h2 "Where is your music stored?"
 
         -- Dropdown
@@ -219,11 +219,11 @@ newHow { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\a ->
-        UI.Kit.centeredContent
+    , (\h ->
+        form
             [ chunk
                 [ T.w_100 ]
-                [ UI.Kit.canister a ]
+                [ UI.Kit.canister h ]
             ]
       )
         [ UI.Kit.h3 "Where exactly?"
@@ -278,7 +278,7 @@ newBy { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , UI.Kit.centeredContent
+    , form
         [ UI.Kit.h2 "One last thing"
         , UI.Kit.label [] "What are we going to call this source?"
 
@@ -343,3 +343,18 @@ renderProperty context property =
             , value (Dict.fetch property.k "" context.data)
             ]
         ]
+
+
+
+-- ⚗️
+
+
+form : List (Html Msg) -> Html Msg
+form html =
+    slab
+        Html.form
+        [ onSubmit Bypass ]
+        [ T.flex
+        , T.flex_grow_1
+        ]
+        [ UI.Kit.centeredContent html ]
