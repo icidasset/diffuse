@@ -1,11 +1,11 @@
 module UI.Core exposing (Flags, Model, Msg(..), Switch(..))
 
 import Alien
-import Authentication
 import Browser
 import Browser.Navigation as Nav
 import Json.Encode as Json
 import Time
+import UI.Authentication
 import UI.Backdrop
 import UI.Page exposing (Page)
 import UI.Sources
@@ -35,6 +35,7 @@ type alias Model =
     -----------------------------------------
     -- Children
     -----------------------------------------
+    , authentication : UI.Authentication.Model
     , backdrop : UI.Backdrop.Model
     , sources : UI.Sources.Model
     , tracks : UI.Tracks.Model
@@ -59,11 +60,11 @@ type Msg
     | SaveFavourites
     | SaveSources
     | SaveTracks
-    | SignIn Authentication.Method
     | SignOut
       -----------------------------------------
       -- Children
       -----------------------------------------
+    | AuthenticationMsg UI.Authentication.Msg
     | BackdropMsg UI.Backdrop.Msg
     | SourcesMsg UI.Sources.Msg
     | TracksMsg UI.Tracks.Msg

@@ -70,6 +70,7 @@ init flags url key =
       , url = url
 
       -- Children
+      , authentication = UI.Authentication.initialModel
       , backdrop = UI.Backdrop.initialModel
       , sources = UI.Sources.initialModel
       , tracks = UI.Tracks.initialModel
@@ -180,15 +181,6 @@ update msg model =
                 |> Ports.toBrain
                 |> Return2.withModel model
 
-        SignIn method ->
-            ( model
-            , method
-                |> Authentication.methodToString
-                |> Encode.string
-                |> Alien.broadcast Alien.SignIn
-                |> Ports.toBrain
-            )
-
         SignOut ->
             -- TODO: Reset user data
             ( { model | isAuthenticated = False }
@@ -200,6 +192,16 @@ update msg model =
         -----------------------------------------
         -- Children
         -----------------------------------------
+        AuthenticationMsg sub ->
+            updateChild
+                { mapCmd = AuthenticationMsg
+                , mapModel = \child -> { model | authentication = child }
+                , update = UI.Authentication.update
+                }
+                { model = model.authentication
+                , msg = sub
+                }
+
         BackdropMsg sub ->
             updateChild
                 { mapCmd = BackdropMsg
@@ -389,7 +391,10 @@ body model =
                 defaultScreen model
 
              else
-                [ UI.Authentication.signInScreen ]
+                [ model.authentication
+                    |> UI.Authentication.view
+                    |> Html.map AuthenticationMsg
+                ]
             )
         ]
 

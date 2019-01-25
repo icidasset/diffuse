@@ -13,7 +13,8 @@ import Tracks.Encoding as Tracks
 
 
 type Method
-    = Local
+    = Ipfs
+    | Local
 
 
 type alias EnclosedUserData =
@@ -42,6 +43,9 @@ emptyHypaethralUserData =
 methodToString : Method -> String
 methodToString method =
     case method of
+        Ipfs ->
+            "IPFS"
+
         Local ->
             "LOCAL"
 
@@ -49,6 +53,9 @@ methodToString method =
 methodFromString : String -> Maybe Method
 methodFromString string =
     case string of
+        "IPFS" ->
+            Just Ipfs
+
         "LOCAL" ->
             Just Local
 

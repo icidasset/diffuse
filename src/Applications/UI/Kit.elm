@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textField, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -361,6 +361,24 @@ select inputHandler options =
         ]
 
 
+textArea : List (Html.Attribute msg) -> Html msg
+textArea attributes =
+    slab
+        Html.textarea
+        (css textAreaStyles :: attributes)
+        [ T.bn
+        , T.bg_white
+        , T.br2
+        , T.db
+        , T.f6
+        , T.lh_copy
+        , T.mb3
+        , T.pa3
+        , T.w_100
+        ]
+        []
+
+
 textField : List (Html.Attribute msg) -> Html msg
 textField attributes =
     slab
@@ -465,6 +483,15 @@ selectStyles =
         , inputFocus
         ]
     }
+
+
+textAreaStyles : List Css.Style
+textAreaStyles =
+    [ Css.color (Color.toElmCssColor colors.text)
+    , Css.height (px 90)
+    , Css.resize Css.none
+    , Css.width (px 320)
+    ]
 
 
 textFieldStyles : List Css.Style

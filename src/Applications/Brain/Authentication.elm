@@ -141,6 +141,10 @@ update msg model =
             ( model
             , case model.method of
                 -- 🚀
+                Just Ipfs ->
+                    Cmd.none
+
+                -- TODO
                 Just Local ->
                     Ports.requestCache (Alien.trigger Alien.AuthAnonymous)
 
@@ -183,6 +187,10 @@ update msg model =
             ( model
             , case model.method of
                 -- 🚀
+                Just Ipfs ->
+                    Cmd.none
+
+                -- TODO
                 Just Local ->
                     Ports.toCache (Alien.broadcast Alien.AuthAnonymous json)
 
