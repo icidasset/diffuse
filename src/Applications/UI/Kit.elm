@@ -489,6 +489,7 @@ textAreaStyles : List Css.Style
 textAreaStyles =
     [ Css.color (Color.toElmCssColor colors.text)
     , Css.height (px 90)
+    , Css.maxWidth (pct 87.5)
     , Css.resize Css.none
     , Css.width (px 320)
     ]
