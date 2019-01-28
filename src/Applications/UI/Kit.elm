@@ -87,7 +87,8 @@ focus styles =
 buttonFocus : Css.Style
 buttonFocus =
     focusWhileNotActive
-        [ Css.borderColor (Color.toElmCssColor colors.focus)
+        [ Css.backgroundColor (Css.rgb 255 255 255)
+        , Css.borderColor (Color.toElmCssColor colors.focus)
         , Css.color (Color.toElmCssColor colors.focus)
         , iconFocusStyle
         ]
@@ -112,6 +113,13 @@ textFocus =
     focus
         [ Css.borderBottomColor (Css.rgba 0 0 0 0.475)
         , Css.color (Color.toElmCssColor colors.focus)
+        ]
+
+
+textAreaFocus : Css.Style
+textAreaFocus =
+    focus
+        [ Css.color (Color.toElmCssColor colors.focus)
         ]
 
 
@@ -488,10 +496,11 @@ selectStyles =
 textAreaStyles : List Css.Style
 textAreaStyles =
     [ Css.color (Color.toElmCssColor colors.text)
-    , Css.height (px 90)
-    , Css.maxWidth (pct 87.5)
+    , Css.height (px 109)
+    , Css.maxWidth (Css.vw 87.5)
     , Css.resize Css.none
-    , Css.width (px 320)
+    , Css.width (px 292)
+    , textAreaFocus
     ]
 
 

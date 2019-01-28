@@ -136,7 +136,6 @@ view model =
                 chunk
                     [ T.flex
                     , T.flex_column
-                    , T.items_center
                     ]
                     [ UI.Kit.textArea
                         [ attribute "autocomplete" "off"
