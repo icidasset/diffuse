@@ -2,10 +2,11 @@ module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), initialModel, new
 
 import Chunky exposing (..)
 import Conditional exposing (..)
+import Css
 import Dict
 import Dict.Ext as Dict
 import Html.Styled as Html exposing (Html, strong, text)
-import Html.Styled.Attributes exposing (for, name, placeholder, type_, value)
+import Html.Styled.Attributes exposing (css, for, name, placeholder, type_, value)
 import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons.Alert as Icons
@@ -219,13 +220,7 @@ newHow { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\h ->
-        form
-            [ chunk
-                [ T.w_100 ]
-                [ UI.Kit.canister h ]
-            ]
-      )
+    , (form << List.singleton << chunk [ T.tl ])
         [ UI.Kit.h3 "Where exactly?"
 
         -- Fields
@@ -300,18 +295,18 @@ newBy { context } =
         -- Note
         -------
         , chunk
-            [ T.f6, T.flex, T.lh_title, T.mt4, T.o_50, T.tc ]
+            [ T.f6, T.flex, T.items_center, T.justify_center, T.lh_title, T.mt5, T.o_50 ]
             [ slab
                 Html.span
-                []
+                [ css warningIconStyles ]
                 [ T.mr1 ]
-                [ Html.fromUnstyled (Icons.warning UI.Kit.colors.text 16) ]
+                [ Html.fromUnstyled (Icons.warning UI.Kit.colors.text 14) ]
             , strong
                 []
                 [ text "Make sure CORS is enabled" ]
             ]
         , chunk
-            [ T.f6, T.lh_title, T.mb4, T.mt2, T.o_50, T.tc ]
+            [ T.f6, T.lh_title, T.mb4, T.mt1, T.o_50 ]
             [ text "You can find the instructions over "
             , UI.Kit.link { label = "here", url = "/about#CORS" }
             ]
@@ -356,5 +351,21 @@ form html =
         [ onSubmit Bypass ]
         [ T.flex
         , T.flex_grow_1
+        , T.overflow_hidden
+        , T.tc
         ]
-        [ UI.Kit.centeredContent html ]
+        [ UI.Kit.centeredContent
+            [ UI.Kit.canister html ]
+        ]
+
+
+
+-- 🖼
+
+
+warningIconStyles : List Css.Style
+warningIconStyles =
+    [ Css.fontSize (Css.px 0)
+    , Css.lineHeight (Css.px 0)
+    , Css.marginTop (Css.px -1)
+    ]

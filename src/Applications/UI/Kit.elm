@@ -208,9 +208,13 @@ button buttonType msg child =
 
 
 canister : List (Html msg) -> Html msg
-canister =
+canister children =
     chunk
-        [ T.mh1, T.ph3 ]
+        [ T.overflow_scroll, T.w_100 ]
+        [ chunk
+            [ T.mh1, T.ph3, T.pb3 ]
+            children
+        ]
 
 
 centeredContent : List (Html msg) -> Html msg
@@ -260,11 +264,13 @@ h2 text =
     slab
         Html.h2
         [ css headerFontStyles ]
-        [ T.f3
+        [ T.center
+        , T.f3
         , T.fw7
         , T.lh_title
         , T.mb4
-        , T.mt0
+        , T.mt3
+        , T.tc
         ]
         [ Html.text text ]
 
@@ -489,6 +495,13 @@ selectStyles =
         [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
         , Css.color (Color.toElmCssColor colors.text)
         , inputFocus
+
+        --
+        , Css.pseudoClass
+            "-moz-focusring"
+            [ Css.color Css.transparent
+            , Css.textShadow4 zero zero zero (Css.rgb 0 0 0)
+            ]
         ]
     }
 
