@@ -361,8 +361,7 @@ select : (String -> msg) -> List (Html msg) -> Html msg
 select inputHandler options =
     brick
         [ css selectStyles.container ]
-        [ T.center
-        , T.mb4
+        [ T.mb4
         , T.relative
         , T.w_100
         ]

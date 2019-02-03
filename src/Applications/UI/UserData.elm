@@ -1,10 +1,11 @@
-module UI.UserData exposing (encodedFavourites, encodedSources, encodedTracks, importHypaethral)
+module UI.UserData exposing (encodedFavourites, encodedSources, encodedTracks, exportEnclosed, importEnclosed, importHypaethral)
 
 import Authentication exposing (..)
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
 import Replying exposing (R3D3)
+import Return3 as R3
 import Sources
 import Sources.Encoding as Sources
 import Tracks exposing (emptyCollection)
@@ -17,7 +18,7 @@ import UI.Tracks as Tracks
 
 
 
--- 🔱
+-- HYPAETHRAL
 
 
 encodedFavourites : UI.Core.Model -> Json.Value
@@ -41,7 +42,7 @@ importHypaethral value model =
         -- TODO: The app should notify the user if it's trying to import faulty data.
         --       (instead of doing nothing, like it is now)
         data =
-            Result.withDefault emptyHypaethralUserData (decode value)
+            Result.withDefault emptyHypaethralUserData (decodeHypaethral value)
 
         ( sourcesModel, sourcesCmd, sourcesReply ) =
             importSources model.sources data
@@ -92,6 +93,39 @@ importTracks model data =
         |> Tracks.makeParcel
         |> Tracks.identify
         |> Tracks.resolveParcel adjustedModel
+
+
+
+-- ENCLOSED
+
+
+exportEnclosed : UI.Core.Model -> Json.Value
+exportEnclosed model =
+    encodeEnclosed
+        { backgroundImage = Just model.backdrop.chosen
+        }
+
+
+importEnclosed : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
+importEnclosed value model =
+    case decodeEnclosed value of
+        Ok data ->
+            let
+                { backdrop } =
+                    model
+            in
+            R3.withNothing
+                { model
+                    | backdrop = { backdrop | chosen = Maybe.withDefault backdrop.chosen data.backgroundImage }
+                }
+
+        Err err ->
+            -- TODO: Show error
+            R3.withNothing model
+
+
+
+-- ㊙️
 
 
 mergeReplies : List (Maybe (List UI.Reply)) -> Maybe (List UI.Reply)

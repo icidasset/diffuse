@@ -106,7 +106,7 @@ update msg model =
             let
                 decodedData =
                     value
-                        |> Authentication.decode
+                        |> Authentication.decodeHypaethral
                         |> Result.withDefault model.hypaethralUserData
             in
             ( { model | hypaethralUserData = decodedData }
@@ -233,7 +233,7 @@ makeHypaethralLens setter model value =
 saveHypaethralData : Model -> ( Model, Cmd Msg )
 saveHypaethralData model =
     model.hypaethralUserData
-        |> Authentication.encodeHypaethralUserData
+        |> Authentication.encodeHypaethral
         |> Authentication.SaveHypaethralData
         |> AuthenticationMsg
         |> (\msg -> update msg model)
@@ -264,6 +264,9 @@ translateAlienEvent event =
 
         Just Alien.AuthMethod ->
             AuthenticationMsg (Authentication.MethodRetrieved event.data)
+
+        Just Alien.AuthEnclosedData ->
+            AuthenticationMsg (Authentication.EnclosedDataRetrieved event.data)
 
         Just Alien.ProcessSources ->
             -- Only proceed to the processing if we got all the necessary data,

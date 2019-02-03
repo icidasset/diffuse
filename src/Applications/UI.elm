@@ -76,6 +76,7 @@ init flags url key =
       , url = url
 
       -- Children
+      -----------
       , authentication = UI.Authentication.initialModel
       , backdrop = UI.Backdrop.initialModel
       , sources = UI.Sources.initialModel
@@ -101,9 +102,9 @@ update msg model =
             )
 
         LoadEnclosedUserData json ->
-            ( model
-            , Cmd.none
-            )
+            model
+                |> UI.UserData.importEnclosed json
+                |> Replying.reducto update translateReply
 
         LoadHypaethralUserData json ->
             { model | isAuthenticated = True, isLoading = False }
@@ -150,9 +151,11 @@ update msg model =
             )
 
         Core.SaveEnclosedUserData ->
-            ( model
-            , Cmd.none
-            )
+            model
+                |> UI.UserData.exportEnclosed
+                |> Alien.broadcast Alien.SaveEnclosedUserData
+                |> Ports.toBrain
+                |> R2.withModel model
 
         Core.SaveFavourites ->
             model
@@ -257,7 +260,7 @@ update msg model =
                  , sources = model.sources.collection
                  , tracks = model.tracks.collection.untouched
                  }
-                    |> Authentication.encodeHypaethralUserData
+                    |> Authentication.encodeHypaethral
                     |> Json.Encode.encode 2
                 )
             )
@@ -399,7 +402,11 @@ translateAlienEvent event =
             Bypass
 
         Just Alien.ReportProcessingError ->
-            -- TODO
+            let
+                dbg =
+                    -- TODO
+                    Debug.log "error" event
+            in
             Bypass
 
         Just Alien.SearchTracks ->
@@ -498,6 +505,7 @@ defaultScreen model =
     -- Controls
     -----------------------------------------
     , chunk
+        -- TODO
         [ T.h4 ]
         []
     ]

@@ -1,8 +1,8 @@
-module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), decode, decodeMethod, decoder, emptyHypaethralUserData, encodeHypaethralUserData, encodeMethod, methodFromString, methodToString)
+module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), decodeEnclosed, decodeHypaethral, decodeMethod, emptyHypaethralUserData, enclosedDecoder, encodeEnclosed, encodeHypaethral, encodeMethod, hypaethralDecoder, methodFromString, methodToString)
 
 import Json.Decode as Json
 import Json.Decode.Ext as Json
-import Json.Decode.Pipeline exposing (optional)
+import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import Maybe.Extra as Maybe
 import Sources
@@ -21,7 +21,8 @@ type Method
 
 
 type alias EnclosedUserData =
-    {}
+    { backgroundImage : Maybe String
+    }
 
 
 type alias HypaethralUserData =
@@ -70,9 +71,14 @@ methodFromString string =
 -- 🔱  ░░  DECODING & ENCODING
 
 
-decode : Json.Value -> Result Json.Error HypaethralUserData
-decode =
-    Json.decodeValue decoder
+decodeEnclosed : Json.Value -> Result Json.Error EnclosedUserData
+decodeEnclosed =
+    Json.decodeValue enclosedDecoder
+
+
+decodeHypaethral : Json.Value -> Result Json.Error HypaethralUserData
+decodeHypaethral =
+    Json.decodeValue hypaethralDecoder
 
 
 decodeMethod : Json.Value -> Maybe Method
@@ -80,16 +86,21 @@ decodeMethod =
     Json.decodeValue (Json.map methodFromString Json.string) >> Result.toMaybe >> Maybe.join
 
 
-decoder : Json.Decoder HypaethralUserData
-decoder =
-    Json.succeed HypaethralUserData
-        |> optional "favourites" (Json.listIgnore Tracks.favouriteDecoder) []
-        |> optional "sources" (Json.listIgnore Sources.decoder) []
-        |> optional "tracks" (Json.listIgnore Tracks.trackDecoder) []
+enclosedDecoder : Json.Decoder EnclosedUserData
+enclosedDecoder =
+    Json.succeed EnclosedUserData
+        |> required "backgroundImage" (Json.maybe Json.string)
 
 
-encodeHypaethralUserData : HypaethralUserData -> Json.Value
-encodeHypaethralUserData { favourites, sources, tracks } =
+encodeEnclosed : EnclosedUserData -> Json.Value
+encodeEnclosed { backgroundImage } =
+    Json.Encode.object
+        [ ( "backgroundImage", Json.Encode.string (Maybe.withDefault "" backgroundImage) )
+        ]
+
+
+encodeHypaethral : HypaethralUserData -> Json.Value
+encodeHypaethral { favourites, sources, tracks } =
     Json.Encode.object
         [ ( "favourites", Json.Encode.list Tracks.encodeFavourite favourites )
         , ( "sources", Json.Encode.list Sources.encode sources )
@@ -100,3 +111,11 @@ encodeHypaethralUserData { favourites, sources, tracks } =
 encodeMethod : Method -> Json.Value
 encodeMethod =
     methodToString >> Json.Encode.string
+
+
+hypaethralDecoder : Json.Decoder HypaethralUserData
+hypaethralDecoder =
+    Json.succeed HypaethralUserData
+        |> optional "favourites" (Json.listIgnore Tracks.favouriteDecoder) []
+        |> optional "sources" (Json.listIgnore Sources.decoder) []
+        |> optional "tracks" (Json.listIgnore Tracks.trackDecoder) []

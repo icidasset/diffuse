@@ -194,7 +194,7 @@ newWhere { context } =
         , Services.labels
             |> List.map (\( k, l ) -> Html.option [ value k ] [ text l ])
             |> select SelectService
-            |> chunky [ T.pv2, T.w_100 ]
+            |> chunky [ T.flex, T.justify_center, T.pv2, T.w_100 ]
 
         -- Button
         ---------

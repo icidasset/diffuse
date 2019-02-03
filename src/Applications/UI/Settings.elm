@@ -3,9 +3,11 @@ module UI.Settings exposing (view)
 import Authentication exposing (Method(..))
 import Chunky exposing (..)
 import Html.Styled as Html exposing (Html, text)
+import Html.Styled.Attributes exposing (selected, value)
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Tachyons.Classes as T
+import UI.Backdrop
 import UI.Core
 import UI.Kit
 import UI.Navigation exposing (..)
@@ -68,5 +70,19 @@ index model =
           ]
             |> raw
             |> UI.Kit.intro
+
+        -- Background image
+        -------------------
+        , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Background Image" ]
+        , UI.Kit.select
+            (UI.Core.BackdropMsg << UI.Backdrop.Choose)
+            (List.map
+                (\( v, l ) ->
+                    Html.option
+                        [ selected (v == model.backdrop.chosen), value v ]
+                        [ text l ]
+                )
+                UI.Backdrop.options
+            )
         ]
     ]
