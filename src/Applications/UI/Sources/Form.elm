@@ -186,7 +186,7 @@ newWhere { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , form
+    , (\h -> form [ UI.Kit.canister h ])
         [ UI.Kit.h2 "Where is your music stored?"
 
         -- Dropdown
@@ -221,7 +221,7 @@ newHow { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (form << List.singleton << chunk [ T.tl ])
+    , (\h -> form [ chunk [ T.tl, T.w_100 ] [ UI.Kit.canister h ] ])
         [ UI.Kit.h3 "Where exactly?"
 
         -- Fields
@@ -274,7 +274,7 @@ newBy { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , form
+    , (\h -> form [ UI.Kit.canister h ])
         [ UI.Kit.h2 "One last thing"
         , UI.Kit.label [] "What are we going to call this source?"
 
@@ -348,9 +348,6 @@ form html =
         [ onSubmit Bypass ]
         [ T.flex
         , T.flex_grow_1
-        , T.overflow_hidden
         , T.tc
         ]
-        [ UI.Kit.centeredContent
-            [ UI.Kit.canister html ]
-        ]
+        [ UI.Kit.centeredContent html ]

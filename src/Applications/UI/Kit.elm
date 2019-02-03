@@ -216,11 +216,8 @@ buttonWithColor buttonColor buttonType msg child =
 canister : List (Html msg) -> Html msg
 canister children =
     chunk
-        [ T.overflow_scroll, T.w_100 ]
-        [ chunk
-            [ T.mh1, T.ph3, T.pb3 ]
-            children
-        ]
+        [ T.mh1, T.ph3, T.pb3 ]
+        children
 
 
 centeredContent : List (Html msg) -> Html msg
@@ -433,7 +430,7 @@ vessel =
         , T.flex
         , T.flex_column
         , T.flex_grow_1
-        , T.overflow_hidden
+        , T.overflow_scroll
         , T.relative
         , T.w_100
         ]
