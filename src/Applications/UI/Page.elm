@@ -1,6 +1,7 @@
 module UI.Page exposing (Page(..), fromUrl, sameBase, toString)
 
-import Sources
+import UI.Settings.Page as Settings
+import UI.Sources.Page as Sources
 import Url exposing (Url)
 import Url.Parser exposing (..)
 
@@ -11,7 +12,7 @@ import Url.Parser exposing (..)
 
 type Page
     = Index
-    | Settings
+    | Settings Settings.Page
     | Sources Sources.Page
       --
     | NotFound
@@ -37,7 +38,13 @@ toString page =
         NotFound ->
             "/404"
 
-        Settings ->
+        -----------------------------------------
+        -- Settings
+        -----------------------------------------
+        Settings Settings.ImportExport ->
+            "/settings/import-export"
+
+        Settings Settings.Index ->
             "/settings"
 
         -----------------------------------------
@@ -55,6 +62,9 @@ toString page =
 sameBase : Page -> Page -> Bool
 sameBase a b =
     case ( a, b ) of
+        ( Settings _, Settings _ ) ->
+            True
+
         ( Sources _, Sources _ ) ->
             True
 
@@ -71,9 +81,16 @@ route =
     oneOf
         [ map Index top
         , map NotFound (s "404")
-        , map Settings (s "settings")
 
+        -----------------------------------------
+        -- Settings
+        -----------------------------------------
+        , map (Settings Settings.ImportExport) (s "settings" </> s "import-export")
+        , map (Settings Settings.Index) (s "settings")
+
+        -----------------------------------------
         -- Sources
+        -----------------------------------------
         , map (Sources Sources.Index) (s "sources")
         , map (Sources Sources.New) (s "sources" </> s "new")
         ]

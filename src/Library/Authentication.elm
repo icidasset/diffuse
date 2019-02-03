@@ -1,6 +1,7 @@
-module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), decode, decodeMethod, decoder, emptyHypaethralUserData, encodeMethod, methodFromString, methodToString)
+module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), decode, decodeMethod, decoder, emptyHypaethralUserData, encodeHypaethralUserData, encodeMethod, methodFromString, methodToString)
 
 import Json.Decode as Json
+import Json.Decode.Ext as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
 import Maybe.Extra as Maybe
@@ -82,9 +83,18 @@ decodeMethod =
 decoder : Json.Decoder HypaethralUserData
 decoder =
     Json.succeed HypaethralUserData
-        |> optional "favourites" (Json.list Tracks.favouriteDecoder) []
-        |> optional "sources" (Json.list Sources.decoder) []
-        |> optional "tracks" (Json.list Tracks.trackDecoder) []
+        |> optional "favourites" (Json.listIgnore Tracks.favouriteDecoder) []
+        |> optional "sources" (Json.listIgnore Sources.decoder) []
+        |> optional "tracks" (Json.listIgnore Tracks.trackDecoder) []
+
+
+encodeHypaethralUserData : HypaethralUserData -> Json.Value
+encodeHypaethralUserData { favourites, sources, tracks } =
+    Json.Encode.object
+        [ ( "favourites", Json.Encode.list Tracks.encodeFavourite favourites )
+        , ( "sources", Json.Encode.list Sources.encode sources )
+        , ( "tracks", Json.Encode.list Tracks.encodeTrack tracks )
+        ]
 
 
 encodeMethod : Method -> Json.Value

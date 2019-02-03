@@ -3,6 +3,7 @@ module UI.Core exposing (Flags, Model, Msg(..), Switch(..))
 import Alien
 import Browser
 import Browser.Navigation as Nav
+import File exposing (File)
 import Json.Encode as Json
 import Time
 import UI.Authentication
@@ -68,6 +69,13 @@ type Msg
     | BackdropMsg UI.Backdrop.Msg
     | SourcesMsg UI.Sources.Msg
     | TracksMsg UI.Tracks.Msg
+      -----------------------------------------
+      -- Import / Export
+      -----------------------------------------
+    | Export
+    | Import File
+    | ImportJson String
+    | RequestImport
       -----------------------------------------
       -- URL
       -----------------------------------------

@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonWithColor, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -9,6 +9,7 @@ import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes exposing (css, href, style)
 import Html.Styled.Events exposing (onClick, onInput)
 import Material.Icons.Hardware as Icons
+import Svg
 import Tachyons.Classes as T
 
 
@@ -176,10 +177,15 @@ type ButtonType
 
 
 button : ButtonType -> msg -> Html msg -> Html msg
-button buttonType msg child =
+button =
+    buttonWithColor colorKit.accent
+
+
+buttonWithColor : Color.Color -> ButtonType -> msg -> Html msg -> Html msg
+buttonWithColor buttonColor buttonType msg child =
     slab
         Html.button
-        [ css buttonStyles
+        [ css (buttonStyles buttonColor)
         , onClick msg
         ]
         [ borderRadius
@@ -286,6 +292,15 @@ h3 text =
         , T.mb4
         ]
         [ Html.text text ]
+
+
+inlineIcon : (Color.Color -> Int -> Svg.Svg msg) -> Html msg
+inlineIcon icon =
+    slab
+        Html.span
+        [ css inlineIconStyles ]
+        [ T.mr1 ]
+        [ Html.fromUnstyled (icon colors.text 14) ]
 
 
 intro : Html msg -> Html msg
@@ -431,10 +446,10 @@ vessel =
 -----------------------------------------
 
 
-buttonStyles : List Css.Style
-buttonStyles =
-    [ Css.borderColor (Color.toElmCssColor colorKit.accent)
-    , Css.color (Color.toElmCssColor colorKit.accent)
+buttonStyles : Color.Color -> List Css.Style
+buttonStyles buttonColor =
+    [ Css.borderColor (Color.toElmCssColor buttonColor)
+    , Css.color (Color.toElmCssColor buttonColor)
     , buttonFocus
     ]
 
@@ -445,6 +460,22 @@ h1Styles =
     , Css.fontSize (px 11.25)
     , Css.letterSpacing (px 0.25)
     , Css.top (px -1)
+    ]
+
+
+inlineIconStyles : List Css.Style
+inlineIconStyles =
+    [ Css.fontSize (px 0)
+    , Css.lineHeight (px 0)
+    , Css.position Css.relative
+    , Css.top (px -1)
+    , Css.verticalAlign Css.sub
+
+    --
+    , Css.Global.descendants
+        [ Css.Global.selector "svg > g"
+            [ Css.fill Css.currentColor ]
+        ]
     ]
 
 

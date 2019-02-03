@@ -9,16 +9,23 @@ import Tachyons.Classes as T
 import UI.Core
 import UI.Kit
 import UI.Navigation exposing (..)
-import UI.Page as Page
+import UI.Page
+import UI.Settings.ImportExport
+import UI.Settings.Page as Settings exposing (..)
 
 
 
 -- 🗺
 
 
-view : UI.Core.Model -> Html UI.Core.Msg
-view =
-    UI.Kit.receptacle << index
+view : Settings.Page -> UI.Core.Model -> Html UI.Core.Msg
+view page model =
+    case page of
+        ImportExport ->
+            UI.Settings.ImportExport.view
+
+        Index ->
+            UI.Kit.receptacle (index model)
 
 
 
@@ -33,7 +40,7 @@ index model =
       UI.Navigation.local
         [ ( Icon Icons.import_export
           , Label "Import / Export" Shown
-          , PerformMsg UI.Core.Bypass
+          , GoToPage (UI.Page.Settings ImportExport)
           )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown

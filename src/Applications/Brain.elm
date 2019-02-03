@@ -232,15 +232,8 @@ makeHypaethralLens setter model value =
 
 saveHypaethralData : Model -> ( Model, Cmd Msg )
 saveHypaethralData model =
-    let
-        { favourites, sources, tracks } =
-            model.hypaethralUserData
-    in
-    [ ( "favourites", Json.Encode.list Tracks.encodeFavourite favourites )
-    , ( "sources", Json.Encode.list Sources.encode sources )
-    , ( "tracks", Json.Encode.list Tracks.encodeTrack tracks )
-    ]
-        |> Json.Encode.object
+    model.hypaethralUserData
+        |> Authentication.encodeHypaethralUserData
         |> Authentication.SaveHypaethralData
         |> AuthenticationMsg
         |> (\msg -> update msg model)

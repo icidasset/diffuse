@@ -38,6 +38,8 @@ encodedTracks { tracks } =
 importHypaethral : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importHypaethral value model =
     let
+        -- TODO: The app should notify the user if it's trying to import faulty data.
+        --       (instead of doing nothing, like it is now)
         data =
             Result.withDefault emptyHypaethralUserData (decode value)
 

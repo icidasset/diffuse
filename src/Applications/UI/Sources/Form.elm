@@ -18,9 +18,10 @@ import Sources.Services.Common
 import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
-import UI.Page as Page
+import UI.Page
 import UI.Ports
 import UI.Reply exposing (Reply)
+import UI.Sources.Page
 
 
 
@@ -124,7 +125,7 @@ update msg model =
     , case msg of
         AddSource ->
             Just
-                [ UI.Reply.GoToPage (Page.Sources Sources.Index)
+                [ UI.Reply.GoToPage (UI.Page.Sources UI.Sources.Page.Index)
                 , UI.Reply.AddSourceToCollection model.context
                 ]
 
@@ -178,7 +179,7 @@ newWhere { context } =
       UI.Navigation.local
         [ ( Icon Icons.arrow_back
           , Label "Back to list" Hidden
-          , GoToPage (Page.Sources Sources.Index)
+          , GoToPage (UI.Page.Sources UI.Sources.Page.Index)
           )
         ]
 
@@ -296,11 +297,7 @@ newBy { context } =
         -------
         , chunk
             [ T.f6, T.flex, T.items_center, T.justify_center, T.lh_title, T.mt5, T.o_50 ]
-            [ slab
-                Html.span
-                [ css warningIconStyles ]
-                [ T.mr1 ]
-                [ Html.fromUnstyled (Icons.warning UI.Kit.colors.text 14) ]
+            [ UI.Kit.inlineIcon Icons.warning
             , strong
                 []
                 [ text "Make sure CORS is enabled" ]
@@ -357,15 +354,3 @@ form html =
         [ UI.Kit.centeredContent
             [ UI.Kit.canister html ]
         ]
-
-
-
--- 🖼
-
-
-warningIconStyles : List Css.Style
-warningIconStyles =
-    [ Css.fontSize (Css.px 0)
-    , Css.lineHeight (Css.px 0)
-    , Css.marginTop (Css.px -1)
-    ]

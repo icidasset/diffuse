@@ -15,6 +15,7 @@
             "elm/browser": "1.0.1",
             "elm/bytes": "1.0.7",
             "elm/core": "1.0.2",
+            "elm/file": "1.0.3",
             "elm/html": "1.0.0",
             "elm/http": "2.0.0",
             "elm/json": "1.1.2",
@@ -39,7 +40,6 @@
         },
         "indirect": {
             "Skinney/murmur3": "2.0.8",
-            "elm/file": "1.0.1",
             "elm/parser": "1.1.0",
             "elm/random": "1.0.0",
             "elm-explorations/test": "1.2.0",

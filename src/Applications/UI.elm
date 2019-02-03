@@ -10,15 +10,20 @@ import Color.Ext as Color
 import Common
 import Css exposing (url)
 import Css.Global
+import File
+import File.Download
+import File.Select
 import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
 import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
-import Json.Encode as Encode
+import Json.Decode
+import Json.Encode
 import Replying exposing (do, return)
 import Return2 as R2
 import Sources
 import Sources.Encoding
 import Tachyons.Classes as T
+import Task
 import Time
 import Tracks.Encoding
 import UI.Authentication
@@ -30,7 +35,9 @@ import UI.Page as Page
 import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings
+import UI.Settings.Page
 import UI.Sources
+import UI.Sources.Page
 import UI.Svg.Elements
 import UI.Tracks
 import UI.UserData
@@ -128,16 +135,16 @@ update msg model =
         Core.ProcessSources ->
             ( model
             , [ ( "origin"
-                , Encode.string (Common.urlOrigin model.url)
+                , Json.Encode.string (Common.urlOrigin model.url)
                 )
               , ( "sources"
-                , Encode.list Sources.Encoding.encode model.sources.collection
+                , Json.Encode.list Sources.Encoding.encode model.sources.collection
                 )
               , ( "tracks"
-                , Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
+                , Json.Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
                 )
               ]
-                |> Encode.object
+                |> Json.Encode.object
                 |> Alien.broadcast Alien.ProcessSources
                 |> Ports.toBrain
             )
@@ -237,6 +244,45 @@ update msg model =
                 { model = model.tracks
                 , msg = sub
                 }
+
+        -----------------------------------------
+        -- Import / Export
+        -----------------------------------------
+        Export ->
+            ( model
+            , File.Download.string
+                "diffuse.json"
+                "application/json"
+                ({ favourites = model.tracks.favourites
+                 , sources = model.sources.collection
+                 , tracks = model.tracks.collection.untouched
+                 }
+                    |> Authentication.encodeHypaethralUserData
+                    |> Json.Encode.encode 2
+                )
+            )
+
+        Import file ->
+            ( { model | isLoading = True }
+            , Task.perform ImportJson (File.toString file)
+            )
+
+        ImportJson json ->
+            model
+                |> update
+                    (json
+                        |> Json.Decode.decodeString Json.Decode.value
+                        |> Result.withDefault Json.Encode.null
+                        |> LoadHypaethralUserData
+                    )
+                -- TODO:
+                -- Show notication relating to import
+                |> R2.addCmd (do <| ChangeUrlUsingPage Page.Index)
+
+        RequestImport ->
+            ( model
+            , File.Select.file [ "application/json" ] Import
+            )
 
         -----------------------------------------
         -- URL
@@ -415,8 +461,8 @@ defaultScreen model =
     [ Lazy.lazy
         (UI.Navigation.global
             [ ( Page.Index, "Tracks" )
-            , ( Page.Sources Sources.Index, "Sources" )
-            , ( Page.Settings, "Settings" )
+            , ( Page.Sources UI.Sources.Page.Index, "Sources" )
+            , ( Page.Settings UI.Settings.Page.Index, "Settings" )
             ]
         )
         model.page
@@ -436,10 +482,11 @@ defaultScreen model =
                 empty
 
             Page.NotFound ->
+                -- TODO
                 UI.Kit.receptacle [ text "Page not found." ]
 
-            Page.Settings ->
-                UI.Settings.view model
+            Page.Settings subPage ->
+                UI.Settings.view subPage model
 
             Page.Sources subPage ->
                 model.sources

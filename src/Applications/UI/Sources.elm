@@ -17,9 +17,10 @@ import Time
 import UI.Kit exposing (ButtonType(..), select)
 import UI.List
 import UI.Navigation exposing (..)
-import UI.Page as Page
+import UI.Page
 import UI.Reply exposing (Reply)
 import UI.Sources.Form as Form
+import UI.Sources.Page as Sources exposing (..)
 
 
 
@@ -143,7 +144,7 @@ index model =
       UI.Navigation.local
         [ ( Icon Icons.add
           , Label "Add a new source" Shown
-          , GoToPage (Page.Sources New)
+          , GoToPage (UI.Page.Sources New)
           )
 
         -- Process
@@ -175,7 +176,7 @@ index model =
           , lineBreak
           , text "It will not copy anything."
           ]
-            |> Html.span []
+            |> raw
             |> UI.Kit.intro
 
         -- List

@@ -1,4 +1,4 @@
-module Sources exposing (Page(..), Property, Service(..), Source, SourceData, enabledSourceIds, setProperId)
+module Sources exposing (Property, Service(..), Source, SourceData, enabledSourceIds, setProperId)
 
 import Conditional exposing (..)
 import Dict exposing (Dict)
@@ -40,15 +40,6 @@ type alias SourceData =
 
 type Service
     = AmazonS3
-
-
-
--- PAGE
-
-
-type Page
-    = Index
-    | New
 
 
 
