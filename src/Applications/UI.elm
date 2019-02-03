@@ -15,8 +15,7 @@ import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
 import Json.Encode as Encode
 import Replying exposing (do, return)
-import Return2
-import Return3
+import Return2 as R2
 import Sources
 import Sources.Encoding
 import Tachyons.Classes as T
@@ -153,7 +152,7 @@ update msg model =
                 |> UI.UserData.encodedFavourites
                 |> Alien.broadcast Alien.SaveFavourites
                 |> Ports.toBrain
-                |> Return2.withModel model
+                |> R2.withModel model
 
         Core.SaveSources ->
             let
@@ -171,23 +170,30 @@ update msg model =
                 |> UI.UserData.encodedSources
                 |> Alien.broadcast Alien.SaveSources
                 |> Ports.toBrain
-                |> Return2.withModel updatedModel
-                |> Return2.addCmd updatedCmd
+                |> R2.withModel updatedModel
+                |> R2.addCmd updatedCmd
 
         Core.SaveTracks ->
             model
                 |> UI.UserData.encodedTracks
                 |> Alien.broadcast Alien.SaveTracks
                 |> Ports.toBrain
-                |> Return2.withModel model
+                |> R2.withModel model
 
         SignOut ->
-            -- TODO: Reset user data
-            ( { model | isAuthenticated = False }
-            , Alien.SignOut
-                |> Alien.trigger
-                |> Ports.toBrain
-            )
+            let
+                alienSigningOut =
+                    Alien.SignOut
+                        |> Alien.trigger
+                        |> Ports.toBrain
+            in
+            { model
+                | isAuthenticated = False
+                , sources = UI.Sources.initialModel
+                , tracks = UI.Tracks.initialModel
+            }
+                |> update (AuthenticationMsg UI.Authentication.DischargeMethod)
+                |> R2.addCmd alienSigningOut
 
         -----------------------------------------
         -- Children
@@ -317,6 +323,11 @@ translateAlienEvent event =
     case Alien.tagFromString event.tag of
         Just Alien.AddTracks ->
             TracksMsg (UI.Tracks.Add event.data)
+
+        Just Alien.AuthMethod ->
+            -- My brain told me which auth method we're using,
+            -- so we can tell the user in the UI.
+            AuthenticationMsg (UI.Authentication.ActivateMethod event.data)
 
         Just Alien.FinishedProcessingSources ->
             SourcesMsg UI.Sources.FinishedProcessing

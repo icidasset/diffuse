@@ -1,5 +1,6 @@
 module UI.Settings exposing (view)
 
+import Authentication exposing (Method(..))
 import Chunky exposing (..)
 import Html.Styled as Html exposing (Html, text)
 import Material.Icons.Action as Icons
@@ -45,9 +46,20 @@ index model =
     -----------------------------------------
     , UI.Kit.canister
         [ UI.Kit.h1 "Settings"
-        , [ text "Changes are automatically saved."
+        , [ text "Changes are saved automatically."
+          , lineBreak
+          , text "PS. You're storing the data for this application "
+          , case model.authentication.methodInUse of
+                Just Ipfs ->
+                    text "on IPFS."
+
+                Just Local ->
+                    text "in this browser."
+
+                Nothing ->
+                    text "on nothing, wtf?"
           ]
-            |> Html.span []
+            |> raw
             |> UI.Kit.intro
         ]
     ]

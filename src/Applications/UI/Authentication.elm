@@ -10,9 +10,11 @@ import Css exposing (pct, px, solid, transparent)
 import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
 import Html.Styled.Attributes exposing (attribute, css, href, src, style, type_, width)
 import Html.Styled.Events exposing (onClick)
-import Json.Encode as Encode
+import Json.Decode as Json
+import Json.Encode
 import Material.Icons.Action as Icons
 import Replying exposing (R3D3)
+import Return3 as R3
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
@@ -25,13 +27,15 @@ import UI.Reply exposing (Reply(..))
 
 
 type alias Model =
-    { privateKeyInputFor : Maybe Authentication.Method
+    { methodInUse : Maybe Authentication.Method
+    , privateKeyInputFor : Maybe Authentication.Method
     }
 
 
 initialModel : Model
 initialModel =
-    { privateKeyInputFor = Nothing
+    { methodInUse = Nothing
+    , privateKeyInputFor = Nothing
     }
 
 
@@ -41,41 +45,52 @@ initialModel =
 
 type Msg
     = Bypass
+    | SignIn Authentication.Method
+      -----------------------------------------
+      -- Method
+      -----------------------------------------
+    | ActivateMethod Json.Value
+    | DischargeMethod
+      -----------------------------------------
+      -- Private Key
+      -----------------------------------------
     | HidePrivateKeyScreen
     | ShowPrivateKeyScreen Authentication.Method
-    | SignIn Authentication.Method
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
 update msg model =
     case msg of
         Bypass ->
-            ( model
-            , Cmd.none
-            , Nothing
-            )
-
-        HidePrivateKeyScreen ->
-            ( { model | privateKeyInputFor = Nothing }
-            , Cmd.none
-            , Nothing
-            )
-
-        ShowPrivateKeyScreen method ->
-            ( { model | privateKeyInputFor = Just method }
-            , Cmd.none
-            , Nothing
-            )
+            R3.withNothing model
 
         SignIn method ->
             ( model
             , method
                 |> Authentication.methodToString
-                |> Encode.string
+                |> Json.Encode.string
                 |> Alien.broadcast Alien.SignIn
                 |> Ports.toBrain
             , Nothing
             )
+
+        -----------------------------------------
+        -- Method
+        -----------------------------------------
+        ActivateMethod encodedMethod ->
+            R3.withNothing { model | methodInUse = Authentication.decodeMethod encodedMethod }
+
+        DischargeMethod ->
+            R3.withNothing { model | methodInUse = Nothing }
+
+        -----------------------------------------
+        -- Private Key
+        -----------------------------------------
+        HidePrivateKeyScreen ->
+            R3.withNothing { model | privateKeyInputFor = Nothing }
+
+        ShowPrivateKeyScreen method ->
+            R3.withNothing { model | privateKeyInputFor = Just method }
 
 
 

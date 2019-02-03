@@ -142,9 +142,9 @@ update msg model =
             , case model.method of
                 -- 🚀
                 Just Ipfs ->
+                    -- TODO
                     Cmd.none
 
-                -- TODO
                 Just Local ->
                     Ports.requestCache (Alien.trigger Alien.AuthAnonymous)
 
@@ -157,7 +157,7 @@ update msg model =
         HypaethralDataRetrieved json ->
             ( model
             , noCmd
-            , terminate (Authenticated json)
+            , Maybe.andThen (\m -> terminate <| Authenticated m json) model.method
             )
 
         -----------------------------------------
@@ -188,9 +188,9 @@ update msg model =
             , case model.method of
                 -- 🚀
                 Just Ipfs ->
+                    -- TODO
                     Cmd.none
 
-                -- TODO
                 Just Local ->
                     Ports.toCache (Alien.broadcast Alien.AuthAnonymous json)
 
@@ -223,15 +223,19 @@ decodeMethod json =
 
 
 type Termination
-    = Authenticated J.Value
+    = Authenticated Method J.Value
     | NotAuthenticated
 
 
 terminate : Termination -> Maybe (List Reply)
 terminate t =
     case t of
-        Authenticated json ->
-            Just [ GiveUI Alien.LoadHypaethralUserData json ]
+        Authenticated method hypData ->
+            Just
+                [ GiveUI Alien.LoadHypaethralUserData hypData
+                , GiveUI Alien.AuthMethod (Authentication.encodeMethod method)
+                ]
 
         NotAuthenticated ->
-            Just [ NudgeUI Alien.HideLoadingScreen ]
+            Just
+                [ NudgeUI Alien.HideLoadingScreen ]
