@@ -134,7 +134,13 @@ localWithTabindex tabindex_ items =
 localItem : Int -> ( Icon msg, Label, Action msg ) -> Html msg
 localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
     slab
-        Html.a
+        (case action of
+            GoToPage page ->
+                Html.a
+
+            PerformMsg msg ->
+                Html.button
+        )
         [ case action of
             GoToPage page ->
                 href (Page.toString page)
