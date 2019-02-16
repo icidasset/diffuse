@@ -47,7 +47,7 @@ options =
 
 
 type alias Model =
-    { chosen : String
+    { chosen : Maybe String
     , fadeIn : Bool
     , loaded : List String
     }
@@ -55,7 +55,7 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { chosen = default
+    { chosen = Nothing
     , fadeIn = True
     , loaded = []
     }
@@ -74,7 +74,7 @@ update : Msg -> Model -> R3D3 Model Msg Reply
 update msg model =
     case msg of
         Choose backdrop ->
-            { model | chosen = backdrop }
+            { model | chosen = Just backdrop }
                 |> R2.withNoCmd
                 |> R3.withReply [ Reply.SaveEnclosedUserData ]
 
@@ -107,24 +107,29 @@ view model =
 -----------------------------------------
 
 
-chosen : String -> Html Msg
-chosen c =
-    let
-        loadingDecoder =
-            c
-                |> Load
-                |> Json.Decode.succeed
-    in
-    slab
-        Html.img
-        [ css chosenStyles
-        , on "load" loadingDecoder
-        , src ("/images/Background/" ++ c)
-        ]
-        [ T.fixed
-        , T.overflow_hidden
-        ]
-        []
+chosen : Maybe String -> Html Msg
+chosen maybeChosen =
+    case maybeChosen of
+        Just c ->
+            let
+                loadingDecoder =
+                    c
+                        |> Load
+                        |> Json.Decode.succeed
+            in
+            slab
+                Html.img
+                [ css chosenStyles
+                , on "load" loadingDecoder
+                , src ("/images/Background/" ++ c)
+                ]
+                [ T.fixed
+                , T.overflow_hidden
+                ]
+                []
+
+        Nothing ->
+            nothing
 
 
 loaded : List String -> Bool -> Html Msg

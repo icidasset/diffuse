@@ -76,10 +76,14 @@ update msg model =
             )
 
         Process ->
-            ( { model | isProcessing = True }
-            , Cmd.none
-            , Just [ UI.Reply.ProcessSources ]
-            )
+            if List.isEmpty model.collection then
+                Return3.withNothing model
+
+            else
+                ( { model | isProcessing = True }
+                , Cmd.none
+                , Just [ UI.Reply.ProcessSources ]
+                )
 
         -----------------------------------------
         -- Children

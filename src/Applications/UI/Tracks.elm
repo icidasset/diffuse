@@ -6,7 +6,7 @@ import Color
 import Color.Ext as Color
 import Css
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, placeholder, title, value)
+import Html.Styled.Attributes exposing (css, placeholder, tabindex, title, value)
 import Html.Styled.Events exposing (onBlur, onClick, onInput)
 import Html.Styled.Ext exposing (onEnterKey)
 import Html.Styled.Lazy exposing (..)
@@ -25,6 +25,7 @@ import Tracks.Collection exposing (..)
 import Tracks.Encoding as Encoding
 import UI.Kit
 import UI.Navigation exposing (..)
+import UI.Page exposing (Page)
 import UI.Ports
 import UI.Reply exposing (Reply(..))
 
@@ -233,14 +234,15 @@ reviseCollection collector model =
 -- 🗺
 
 
-view : Model -> Html Msg
-view model =
+view : Page -> Model -> Html Msg
+view page model =
     chunk
         []
-        [ lazy2
+        [ lazy3
             navigation
             model.favouritesOnly
             model.searchTerm
+            page
 
         --
         , chunk
@@ -252,8 +254,17 @@ view model =
         ]
 
 
-navigation : Bool -> Maybe String -> Html Msg
-navigation favouritesOnly searchTerm =
+navigation : Bool -> Maybe String -> Page -> Html Msg
+navigation favouritesOnly searchTerm page =
+    let
+        tabindex_ =
+            case page of
+                UI.Page.Index ->
+                    0
+
+                _ ->
+                    -1
+    in
     chunk
         [ T.flex ]
         [ -----------------------------------------
@@ -274,6 +285,7 @@ navigation favouritesOnly searchTerm =
                 , onEnterKey Search
                 , onInput SetSearchTerm
                 , placeholder "Search"
+                , tabindex tabindex_
                 , value (Maybe.withDefault "" searchTerm)
                 ]
                 [ T.bg_transparent
@@ -324,7 +336,7 @@ navigation favouritesOnly searchTerm =
                             [ Html.fromUnstyled (Icons.clear searchIconColor 16) ]
 
                     Nothing ->
-                        empty
+                        nothing
 
                 -- 2
                 , brick
@@ -342,13 +354,14 @@ navigation favouritesOnly searchTerm =
                     ]
 
                 -- 3
-                , empty
+                , nothing
                 ]
             ]
         , -----------------------------------------
           -- Part 2
           -----------------------------------------
-          UI.Navigation.local
+          UI.Navigation.localWithTabindex
+            tabindex_
             [ ( Icon Icons.format_list_numbered
               , Label "Playlists" Hidden
               , PerformMsg Bypass

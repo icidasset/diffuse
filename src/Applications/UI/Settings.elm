@@ -79,7 +79,7 @@ index model =
             (List.map
                 (\( v, l ) ->
                     Html.option
-                        [ selected (v == model.backdrop.chosen), value v ]
+                        [ selected (Just v == model.backdrop.chosen), value v ]
                         [ text l ]
                 )
                 UI.Backdrop.options

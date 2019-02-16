@@ -1,4 +1,4 @@
-module UI.Navigation exposing (Action(..), Icon(..), Label(..), LabelType(..), global, local)
+module UI.Navigation exposing (Action(..), Icon(..), Label(..), LabelType(..), global, local, localWithTabindex)
 
 import Chunky exposing (..)
 import Color exposing (Color)
@@ -7,7 +7,7 @@ import Color.Manipulate
 import Conditional exposing (..)
 import Css exposing (px, solid, transparent, zero)
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (attribute, css, href, style, title)
+import Html.Styled.Attributes exposing (attribute, css, href, style, tabindex, title)
 import Html.Styled.Events exposing (onClick)
 import List.Extra as List
 import String.Format
@@ -115,27 +115,26 @@ globalItemStyles isActivePage =
 
 
 local : List ( Icon msg, Label, Action msg ) -> Html msg
-local items =
+local =
+    localWithTabindex 0
+
+
+localWithTabindex : Int -> List ( Icon msg, Label, Action msg ) -> Html msg
+localWithTabindex tabindex_ items =
     brick
         [ css localStyles ]
         [ T.bb, T.flex ]
         (items
             |> List.reverse
-            |> List.map localItem
+            |> List.map (localItem tabindex_)
             |> List.reverse
         )
 
 
-localItem : ( Icon msg, Label, Action msg ) -> Html msg
-localItem ( Icon icon, Label labelText labelType, action ) =
+localItem : Int -> ( Icon msg, Label, Action msg ) -> Html msg
+localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
     slab
-        (case action of
-            GoToPage _ ->
-                Html.a
-
-            PerformMsg _ ->
-                Html.button
-        )
+        Html.a
         [ case action of
             GoToPage page ->
                 href (Page.toString page)
@@ -153,6 +152,7 @@ localItem ( Icon icon, Label labelText labelType, action ) =
 
         --
         , css localItemStyles
+        , tabindex tabindex_
         ]
         [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
         , T.bg_transparent
@@ -171,7 +171,7 @@ localItem ( Icon icon, Label labelText labelType, action ) =
         --
         , case labelType of
             Hidden ->
-                empty
+                nothing
 
             Shown ->
                 slab

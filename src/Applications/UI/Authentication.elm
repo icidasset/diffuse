@@ -139,7 +139,7 @@ view model =
                             |> speechBubble
 
                     Nothing ->
-                        empty
+                        nothing
                 ]
             ]
 

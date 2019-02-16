@@ -479,14 +479,14 @@ defaultScreen model =
     -----------------------------------------
     , UI.Kit.vessel
         [ model.tracks
-            |> Lazy.lazy UI.Tracks.view
+            |> Lazy.lazy2 UI.Tracks.view model.page
             |> Html.map TracksMsg
 
         -- Pages
         --------
         , case model.page of
             Page.Index ->
-                empty
+                nothing
 
             Page.NotFound ->
                 -- TODO

@@ -11,6 +11,7 @@ import Sources.Encoding as Sources
 import Tracks exposing (emptyCollection)
 import Tracks.Collection as Tracks
 import Tracks.Encoding as Tracks
+import UI.Backdrop
 import UI.Core
 import UI.Reply as UI
 import UI.Sources as Sources
@@ -102,26 +103,29 @@ importTracks model data =
 exportEnclosed : UI.Core.Model -> Json.Value
 exportEnclosed model =
     encodeEnclosed
-        { backgroundImage = Just model.backdrop.chosen
+        { backgroundImage = model.backdrop.chosen
         }
 
 
 importEnclosed : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importEnclosed value model =
+    let
+        { backdrop } =
+            model
+    in
     case decodeEnclosed value of
         Ok data ->
-            let
-                { backdrop } =
-                    model
-            in
             R3.withNothing
                 { model
-                    | backdrop = { backdrop | chosen = Maybe.withDefault backdrop.chosen data.backgroundImage }
+                    | backdrop = { backdrop | chosen = Just (Maybe.withDefault UI.Backdrop.default data.backgroundImage) }
                 }
 
         Err err ->
             -- TODO: Show error
-            R3.withNothing model
+            R3.withNothing
+                { model
+                    | backdrop = { backdrop | chosen = Just UI.Backdrop.default }
+                }
 
 
 
