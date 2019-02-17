@@ -1,6 +1,7 @@
 module UI.Tracks.Scene.List exposing (view)
 
 import Chunky exposing (..)
+import Color
 import Color.Ext as Color
 import Conditional exposing (ifThenElse)
 import Css
@@ -8,44 +9,160 @@ import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtmlAttributes
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled)
+import Html.Styled.Lazy
 import InfiniteList
+import Material.Icons.Navigation as Icons
 import Tachyons.Classes as T
 import Tracks exposing (..)
 import UI.Kit
+import UI.Tracks.Core exposing (..)
 
 
 
 -- 🗺
 
 
-type alias Necessities msg =
-    { favouritesOnly : Bool
-    , infiniteList : InfiniteList.Model
-    , screenHeight : Float
-    , scrollMsg : InfiniteList.Model -> msg
+type alias Necessities =
+    { height : Float
     }
 
 
-view : Necessities msg -> List IdentifiedTrack -> Html msg
-view necessities tracks =
+view : Necessities -> Model -> Html Msg
+view necessities model =
     let
-        { favouritesOnly, infiniteList, scrollMsg } =
-            necessities
+        { infiniteList } =
+            model
     in
     brick
-        [ fromUnstyled (InfiniteList.onScroll scrollMsg) ]
+        [ fromUnstyled (InfiniteList.onScroll InfiniteListMsg) ]
         [ T.flex_grow_1
         , T.vh_25
         , T.overflow_x_hidden
         , T.overflow_y_scroll
         ]
-        [ Html.fromUnstyled
+        [ Html.Styled.Lazy.lazy2 header model.sortBy model.sortDirection
+        , Html.fromUnstyled
             (InfiniteList.view
-                (infiniteListConfig necessities)
+                (infiniteListConfig necessities model)
                 infiniteList
-                tracks
+                model.collection.harvested
             )
         ]
+
+
+
+-- HEADERS
+
+
+header : SortBy -> SortDirection -> Html Msg
+header sortBy sortDirection =
+    let
+        color =
+            Color.rgb255 207 207 207
+
+        sortIcon =
+            (if sortDirection == Desc then
+                Icons.expand_less
+
+             else
+                Icons.expand_more
+            )
+                color
+                15
+
+        sortIconHtml =
+            Html.fromUnstyled sortIcon
+
+        maybeSortIcon s =
+            ifThenElse (sortBy == s) (Just sortIconHtml) Nothing
+    in
+    brick
+        [ css headerStyles ]
+        [ T.bg_white, T.flex, T.fw6, T.relative, T.z_5 ]
+        [ headerColumn "" 4.5 First Nothing
+        , headerColumn "Title" 37.5 Between (maybeSortIcon Title)
+        , headerColumn "Artist" 29.0 Between (maybeSortIcon Artist)
+        , headerColumn "Album" 29.0 Last (maybeSortIcon Album)
+        ]
+
+
+headerStyles : List Css.Style
+headerStyles =
+    [ Css.borderBottom3 (Css.px 1) Css.solid (Color.toElmCssColor UI.Kit.colors.subtleBorder)
+    , Css.color (Color.toElmCssColor headerTextColor)
+    , Css.fontSize (Css.px 11)
+    ]
+
+
+headerTextColor : Color.Color
+headerTextColor =
+    Color.rgb255 207 207 207
+
+
+
+-- HEADER COLUMN
+
+
+type Pos
+    = First
+    | Between
+    | Last
+
+
+headerColumn :
+    String
+    -> Float
+    -> Pos
+    -> Maybe (Html msg)
+    -> Html msg
+headerColumn text_ width pos maybeSortIcon =
+    let
+        paddingLeft =
+            ifThenElse (pos == First) T.pl2 T.pl1
+
+        paddingRight =
+            ifThenElse (pos == Last) T.pr2 T.pr1
+    in
+    brick
+        [ css
+            [ Css.borderLeft3
+                (Css.px <| ifThenElse (pos /= First) 1 0)
+                Css.solid
+                (Color.toElmCssColor UI.Kit.colors.subtleBorder)
+            , Css.width (Css.pct width)
+            ]
+        ]
+        [ T.lh_title
+        , T.ph2
+        , T.pv1
+        , T.relative
+
+        --
+        , ifThenElse (pos == First) "" T.pointer
+        ]
+        [ brick
+            [ css [ Css.top (Css.px 1) ] ]
+            [ T.relative ]
+            [ text text_ ]
+        , case maybeSortIcon of
+            Just sortIcon ->
+                brick
+                    [ css sortIconStyles ]
+                    [ T.absolute, T.mr1, T.right_0 ]
+                    [ sortIcon ]
+
+            Nothing ->
+                nothing
+        ]
+
+
+sortIconStyles : List Css.Style
+sortIconStyles =
+    [ Css.fontSize (Css.px 0)
+    , Css.lineHeight (Css.px 0)
+    , Css.top (Css.pct 50)
+    , Css.transform (Css.translateY <| Css.pct -50)
+    ]
 
 
 
@@ -143,14 +260,14 @@ otherColumnStyles columnWidth =
 -- INFINITE LIST
 
 
-infiniteListConfig : Necessities msg -> InfiniteList.Config IdentifiedTrack msg
-infiniteListConfig necessities =
+infiniteListConfig : Necessities -> Model -> InfiniteList.Config IdentifiedTrack Msg
+infiniteListConfig necessities model =
     InfiniteList.withCustomContainer
         infiniteListContainer
         (InfiniteList.config
-            { itemView = itemView necessities
+            { itemView = itemView model
             , itemHeight = InfiniteList.withConstantHeight (round rowHeight)
-            , containerHeight = round necessities.screenHeight
+            , containerHeight = round necessities.height
             }
         )
 
@@ -184,7 +301,7 @@ listStyles =
     ]
 
 
-itemView : Necessities msg -> Int -> Int -> IdentifiedTrack -> UnstyledHtml.Html msg
+itemView : Model -> Int -> Int -> IdentifiedTrack -> UnstyledHtml.Html Msg
 itemView { favouritesOnly } _ idx ( identifiers, track ) =
     Html.toUnstyled <|
         slab

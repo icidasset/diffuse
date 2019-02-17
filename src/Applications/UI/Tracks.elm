@@ -1,4 +1,4 @@
-module UI.Tracks exposing (Model, Msg(..), initialModel, makeParcel, resolveParcel, update, view)
+module UI.Tracks exposing (initialModel, makeParcel, resolveParcel, update, view)
 
 import Alien
 import Chunky exposing (..)
@@ -29,30 +29,12 @@ import UI.Navigation exposing (..)
 import UI.Page exposing (Page)
 import UI.Ports
 import UI.Reply exposing (Reply(..))
+import UI.Tracks.Core exposing (..)
 import UI.Tracks.Scene.List
 
 
 
 -- 🌳
-
-
-type alias Model =
-    { collection : Collection
-    , enabledSourceIds : List String
-    , favourites : List Favourite
-    , favouritesOnly : Bool
-    , infiniteList : InfiniteList.Model
-    , nowPlaying : Maybe IdentifiedTrack
-    , scene : Scene
-    , searchResults : Maybe (List String)
-    , searchTerm : Maybe String
-    , sortBy : SortBy
-    , sortDirection : SortDirection
-    }
-
-
-type Scene
-    = List
 
 
 initialModel : Model
@@ -73,29 +55,6 @@ initialModel =
 
 
 -- 📣
-
-
-type Msg
-    = Bypass
-    | InfiniteListMsg InfiniteList.Model
-    | SetEnabledSourceIds (List String)
-      -----------------------------------------
-      -- Collection
-      -----------------------------------------
-    | Add Json.Value
-    | RemoveByPaths Json.Value
-    | RemoveBySourceId String
-      -----------------------------------------
-      -- Favourites
-      -----------------------------------------
-    | ToggleFavouritesOnly
-      -----------------------------------------
-      -- Search
-      -----------------------------------------
-    | ClearSearch
-    | Search
-    | SetSearchResults Json.Value
-    | SetSearchTerm String
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -264,13 +223,7 @@ view page screenHeight model =
         --
         , case model.scene of
             List ->
-                UI.Tracks.Scene.List.view
-                    { favouritesOnly = model.favouritesOnly
-                    , infiniteList = model.infiniteList
-                    , screenHeight = screenHeight
-                    , scrollMsg = InfiniteListMsg
-                    }
-                    model.collection.harvested
+                UI.Tracks.Scene.List.view { height = screenHeight } model
         ]
 
 
@@ -285,8 +238,9 @@ navigation favouritesOnly searchTerm page =
                 _ ->
                     -1
     in
-    chunk
-        [ T.flex ]
+    brick
+        [ css navigationStyles ]
+        [ T.flex, T.relative, T.z_4 ]
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
@@ -400,6 +354,12 @@ navigation favouritesOnly searchTerm page =
 
 
 -- 🖼
+
+
+navigationStyles : List Css.Style
+navigationStyles =
+    [ Css.boxShadow5 (Css.px 0) (Css.px 0) (Css.px 10) (Css.px 1) (Css.rgba 0 0 0 0.05)
+    ]
 
 
 searchStyles : List Css.Style

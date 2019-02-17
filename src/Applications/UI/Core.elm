@@ -6,11 +6,11 @@ import Browser.Navigation as Nav
 import File exposing (File)
 import Json.Encode as Json
 import Time
-import UI.Authentication
-import UI.Backdrop
+import UI.Authentication as Authentication
+import UI.Backdrop as Backdrop
 import UI.Page exposing (Page)
-import UI.Sources
-import UI.Tracks
+import UI.Sources as Sources
+import UI.Tracks.Core as Tracks
 import Url exposing (Url)
 
 
@@ -37,10 +37,10 @@ type alias Model =
     -----------------------------------------
     -- Children
     -----------------------------------------
-    , authentication : UI.Authentication.Model
-    , backdrop : UI.Backdrop.Model
-    , sources : UI.Sources.Model
-    , tracks : UI.Tracks.Model
+    , authentication : Authentication.Model
+    , backdrop : Backdrop.Model
+    , sources : Sources.Model
+    , tracks : Tracks.Model
     }
 
 
@@ -72,10 +72,10 @@ type Msg
       -----------------------------------------
       -- Children
       -----------------------------------------
-    | AuthenticationMsg UI.Authentication.Msg
-    | BackdropMsg UI.Backdrop.Msg
-    | SourcesMsg UI.Sources.Msg
-    | TracksMsg UI.Tracks.Msg
+    | AuthenticationMsg Authentication.Msg
+    | BackdropMsg Backdrop.Msg
+    | SourcesMsg Sources.Msg
+    | TracksMsg Tracks.Msg
       -----------------------------------------
       -- Import / Export
       -----------------------------------------

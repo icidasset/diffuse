@@ -26,21 +26,22 @@ import Tachyons.Classes as T
 import Task
 import Time
 import Tracks.Encoding
-import UI.Authentication
-import UI.Backdrop
+import UI.Authentication as Authentication
+import UI.Backdrop as Backdrop
 import UI.Core as Core exposing (Flags, Model, Msg(..), Switch(..))
 import UI.Kit
-import UI.Navigation
+import UI.Navigation as Navigation
 import UI.Page as Page
 import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))
-import UI.Settings
+import UI.Settings as Settings
 import UI.Settings.Page
-import UI.Sources
+import UI.Sources as Sources
 import UI.Sources.Page
 import UI.Svg.Elements
-import UI.Tracks
-import UI.UserData
+import UI.Tracks as Tracks
+import UI.Tracks.Core as Tracks
+import UI.UserData as UserData
 import Url exposing (Url)
 
 
@@ -78,10 +79,10 @@ init flags url key =
 
       -- Children
       -----------
-      , authentication = UI.Authentication.initialModel
-      , backdrop = UI.Backdrop.initialModel
-      , sources = UI.Sources.initialModel
-      , tracks = UI.Tracks.initialModel
+      , authentication = Authentication.initialModel
+      , backdrop = Backdrop.initialModel
+      , sources = Sources.initialModel
+      , tracks = Tracks.initialModel
       }
       -----------------------------------------
       -- Initial command
@@ -104,12 +105,12 @@ update msg model =
 
         LoadEnclosedUserData json ->
             model
-                |> UI.UserData.importEnclosed json
+                |> UserData.importEnclosed json
                 |> Replying.reducto update translateReply
 
         LoadHypaethralUserData json ->
             { model | isAuthenticated = True, isLoading = False }
-                |> UI.UserData.importHypaethral json
+                |> UserData.importHypaethral json
                 |> Replying.reducto update translateReply
 
         SetCurrentTime time ->
@@ -153,14 +154,14 @@ update msg model =
 
         Core.SaveEnclosedUserData ->
             model
-                |> UI.UserData.exportEnclosed
+                |> UserData.exportEnclosed
                 |> Alien.broadcast Alien.SaveEnclosedUserData
                 |> Ports.toBrain
                 |> R2.withModel model
 
         Core.SaveFavourites ->
             model
-                |> UI.UserData.encodedFavourites
+                |> UserData.encodedFavourites
                 |> Alien.broadcast Alien.SaveFavourites
                 |> Ports.toBrain
                 |> R2.withModel model
@@ -170,7 +171,7 @@ update msg model =
                 updateEnabledSourceIdsOnTracks =
                     model.sources.collection
                         |> Sources.enabledSourceIds
-                        |> UI.Tracks.SetEnabledSourceIds
+                        |> Tracks.SetEnabledSourceIds
                         |> TracksMsg
                         |> update
 
@@ -178,7 +179,7 @@ update msg model =
                     updateEnabledSourceIdsOnTracks model
             in
             updatedModel
-                |> UI.UserData.encodedSources
+                |> UserData.encodedSources
                 |> Alien.broadcast Alien.SaveSources
                 |> Ports.toBrain
                 |> R2.withModel updatedModel
@@ -186,7 +187,7 @@ update msg model =
 
         Core.SaveTracks ->
             model
-                |> UI.UserData.encodedTracks
+                |> UserData.encodedTracks
                 |> Alien.broadcast Alien.SaveTracks
                 |> Ports.toBrain
                 |> R2.withModel model
@@ -200,10 +201,10 @@ update msg model =
             in
             { model
                 | isAuthenticated = False
-                , sources = UI.Sources.initialModel
-                , tracks = UI.Tracks.initialModel
+                , sources = Sources.initialModel
+                , tracks = Tracks.initialModel
             }
-                |> update (AuthenticationMsg UI.Authentication.DischargeMethod)
+                |> update (AuthenticationMsg Authentication.DischargeMethod)
                 |> R2.addCmd alienSigningOut
 
         -----------------------------------------
@@ -213,7 +214,7 @@ update msg model =
             updateChild
                 { mapCmd = AuthenticationMsg
                 , mapModel = \child -> { model | authentication = child }
-                , update = UI.Authentication.update
+                , update = Authentication.update
                 }
                 { model = model.authentication
                 , msg = sub
@@ -223,7 +224,7 @@ update msg model =
             updateChild
                 { mapCmd = BackdropMsg
                 , mapModel = \child -> { model | backdrop = child }
-                , update = UI.Backdrop.update
+                , update = Backdrop.update
                 }
                 { model = model.backdrop
                 , msg = sub
@@ -233,7 +234,7 @@ update msg model =
             updateChild
                 { mapCmd = SourcesMsg
                 , mapModel = \child -> { model | sources = child }
-                , update = UI.Sources.update
+                , update = Sources.update
                 }
                 { model = model.sources
                 , msg = sub
@@ -243,7 +244,7 @@ update msg model =
             updateChild
                 { mapCmd = TracksMsg
                 , mapModel = \child -> { model | tracks = child }
-                , update = UI.Tracks.update
+                , update = Tracks.update
                 }
                 { model = model.tracks
                 , msg = sub
@@ -328,7 +329,7 @@ translateReply : Reply -> Msg
 translateReply reply =
     case reply of
         AddSourceToCollection source ->
-            SourcesMsg (UI.Sources.AddToCollection source)
+            SourcesMsg (Sources.AddToCollection source)
 
         Chill ->
             Bypass
@@ -340,7 +341,7 @@ translateReply reply =
             Core.ProcessSources
 
         Reply.RemoveTracksWithSourceId sourceId ->
-            TracksMsg (UI.Tracks.RemoveBySourceId sourceId)
+            TracksMsg (Tracks.RemoveBySourceId sourceId)
 
         Reply.SaveEnclosedUserData ->
             Core.SaveEnclosedUserData
@@ -375,15 +376,15 @@ translateAlienEvent : Alien.Event -> Msg
 translateAlienEvent event =
     case Alien.tagFromString event.tag of
         Just Alien.AddTracks ->
-            TracksMsg (UI.Tracks.Add event.data)
+            TracksMsg (Tracks.Add event.data)
 
         Just Alien.AuthMethod ->
             -- My brain told me which auth method we're using,
             -- so we can tell the user in the UI.
-            AuthenticationMsg (UI.Authentication.ActivateMethod event.data)
+            AuthenticationMsg (Authentication.ActivateMethod event.data)
 
         Just Alien.FinishedProcessingSources ->
-            SourcesMsg UI.Sources.FinishedProcessing
+            SourcesMsg Sources.FinishedProcessing
 
         Just Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off
@@ -395,7 +396,7 @@ translateAlienEvent event =
             LoadHypaethralUserData event.data
 
         Just Alien.RemoveTracksByPath ->
-            TracksMsg (UI.Tracks.RemoveByPaths event.data)
+            TracksMsg (Tracks.RemoveByPaths event.data)
 
         Just Alien.ReportGenericError ->
             let
@@ -414,7 +415,7 @@ translateAlienEvent event =
             Bypass
 
         Just Alien.SearchTracks ->
-            TracksMsg (UI.Tracks.SetSearchResults event.data)
+            TracksMsg (Tracks.SetSearchResults event.data)
 
         Just Alien.UpdateSourceData ->
             -- TODO
@@ -445,7 +446,7 @@ body model =
         -- Backdrop
         -----------------------------------------
         , model.backdrop
-            |> Lazy.lazy UI.Backdrop.view
+            |> Lazy.lazy Backdrop.view
             |> Html.map BackdropMsg
 
         -----------------------------------------
@@ -460,7 +461,7 @@ body model =
 
              else
                 [ model.authentication
-                    |> UI.Authentication.view
+                    |> Authentication.view
                     |> Html.map AuthenticationMsg
                 ]
             )
@@ -470,7 +471,7 @@ body model =
 defaultScreen : Model -> List (Html Msg)
 defaultScreen model =
     [ Lazy.lazy
-        (UI.Navigation.global
+        (Navigation.global
             [ ( Page.Index, "Tracks" )
             , ( Page.Sources UI.Sources.Page.Index, "Sources" )
             , ( Page.Settings UI.Settings.Page.Index, "Settings" )
@@ -483,7 +484,7 @@ defaultScreen model =
     -----------------------------------------
     , UI.Kit.vessel
         [ model.tracks
-            |> Lazy.lazy3 UI.Tracks.view model.page model.viewport.height
+            |> Lazy.lazy3 Tracks.view model.page model.viewport.height
             |> Html.map TracksMsg
 
         -- Pages
@@ -497,11 +498,11 @@ defaultScreen model =
                 UI.Kit.receptacle [ text "Page not found." ]
 
             Page.Settings subPage ->
-                UI.Settings.view subPage model
+                Settings.view subPage model
 
             Page.Sources subPage ->
                 model.sources
-                    |> Lazy.lazy2 UI.Sources.view subPage
+                    |> Lazy.lazy2 Sources.view subPage
                     |> Html.map SourcesMsg
         ]
 
