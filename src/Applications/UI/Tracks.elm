@@ -10,6 +10,7 @@ import Html.Styled.Attributes exposing (css, placeholder, tabindex, title, value
 import Html.Styled.Events exposing (onBlur, onClick, onInput)
 import Html.Styled.Ext exposing (onEnterKey)
 import Html.Styled.Lazy exposing (..)
+import InfiniteList
 import Json.Decode as Json
 import Json.Encode
 import Material.Icons.Action as Icons
@@ -28,6 +29,7 @@ import UI.Navigation exposing (..)
 import UI.Page exposing (Page)
 import UI.Ports
 import UI.Reply exposing (Reply(..))
+import UI.Tracks.Scene.List
 
 
 
@@ -39,12 +41,18 @@ type alias Model =
     , enabledSourceIds : List String
     , favourites : List Favourite
     , favouritesOnly : Bool
+    , infiniteList : InfiniteList.Model
     , nowPlaying : Maybe IdentifiedTrack
+    , scene : Scene
     , searchResults : Maybe (List String)
     , searchTerm : Maybe String
     , sortBy : SortBy
     , sortDirection : SortDirection
     }
+
+
+type Scene
+    = List
 
 
 initialModel : Model
@@ -53,7 +61,9 @@ initialModel =
     , enabledSourceIds = []
     , favourites = []
     , favouritesOnly = False
+    , infiniteList = InfiniteList.init
     , nowPlaying = Nothing
+    , scene = List
     , searchResults = Nothing
     , searchTerm = Nothing
     , sortBy = Artist
@@ -67,6 +77,7 @@ initialModel =
 
 type Msg
     = Bypass
+    | InfiniteListMsg InfiniteList.Model
     | SetEnabledSourceIds (List String)
       -----------------------------------------
       -- Collection
@@ -92,6 +103,9 @@ update msg model =
     case msg of
         Bypass ->
             Return3.withNothing model
+
+        InfiniteListMsg infiniteList ->
+            Return3.withNothing { model | infiniteList = infiniteList }
 
         SetEnabledSourceIds sourceIds ->
             Return3.withNothing { model | enabledSourceIds = sourceIds }
@@ -160,7 +174,7 @@ update msg model =
             case ( model.searchTerm, model.searchResults ) of
                 ( Just term, _ ) ->
                     ( model
-                    , UI.Ports.giveBrain Alien.SearchTracks (Json.Encode.string term)
+                    , UI.Ports.giveBrain Alien.SearchTracks (Json.Encode.string <| String.trim term)
                     , Nothing
                     )
 
@@ -183,8 +197,8 @@ update msg model =
                     "" ->
                         { model | searchTerm = Nothing }
 
-                    t ->
-                        { model | searchTerm = Just t }
+                    _ ->
+                        { model | searchTerm = Just term }
                 )
 
 
@@ -234,10 +248,13 @@ reviseCollection collector model =
 -- 🗺
 
 
-view : Page -> Model -> Html Msg
-view page model =
+view : Page -> Float -> Model -> Html Msg
+view page screenHeight model =
     chunk
-        []
+        [ T.flex
+        , T.flex_column
+        , T.flex_grow_1
+        ]
         [ lazy3
             navigation
             model.favouritesOnly
@@ -245,12 +262,15 @@ view page model =
             page
 
         --
-        , chunk
-            []
-            (List.map
-                (\( _, t ) -> text <| t.tags.artist ++ " - " ++ t.tags.title)
-                model.collection.harvested
-            )
+        , case model.scene of
+            List ->
+                UI.Tracks.Scene.List.view
+                    { favouritesOnly = model.favouritesOnly
+                    , infiniteList = model.infiniteList
+                    , screenHeight = screenHeight
+                    , scrollMsg = InfiniteListMsg
+                    }
+                    model.collection.harvested
         ]
 
 
@@ -391,7 +411,9 @@ searchStyles =
 
 searchActionsStyles : List Css.Style
 searchActionsStyles =
-    [ Css.marginTop (Css.px 1)
+    [ Css.fontSize (Css.px 0)
+    , Css.lineHeight (Css.px 0)
+    , Css.marginTop (Css.px 1)
     , Css.paddingRight (Css.px <| 13 - 6)
     , Css.top (Css.pct 50)
     , Css.transform (Css.translateY <| Css.pct -50)

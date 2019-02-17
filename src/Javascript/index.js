@@ -8,7 +8,12 @@
 
 const app = Elm.UI.init({
   node: document.getElementById("elm"),
-  flags: {}
+  flags: {
+    viewport: {
+      height: window.innerHeight,
+      width: window.innerWidth
+    }
+  }
 })
 
 

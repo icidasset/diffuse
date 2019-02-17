@@ -33,7 +33,7 @@ app.ports.toUI.subscribe(event => {
 // -----
 
 app.ports.removeCache.subscribe(event => {
-  deleteFromIndex({ key: event.tag })
+  deleteFromIndex({ key: event.tag }).catch(console.error)
 })
 
 
@@ -44,13 +44,47 @@ app.ports.requestCache.subscribe(event => {
       data: data,
       error: null
     })
-  })
+  }).catch(
+     console.error
+  )
 })
 
 
 app.ports.toCache.subscribe(event => {
-  setInIndex({ key: event.tag, data: event.data })
+  setInIndex({ key: event.tag, data: event.data }).catch(console.error)
 })
+
+
+
+// Search
+// ------
+
+const search = new Worker("/workers/search.js")
+
+
+app.ports.requestSearch.subscribe(searchTerm => {
+  search.postMessage({
+    action: "PERFORM_SEARCH",
+    data: searchTerm
+  })
+})
+
+
+app.ports.updateSearchIndex.subscribe(tracksJson => {
+  search.postMessage({
+    action: "UPDATE_SEARCH_INDEX",
+    data: tracksJson
+  })
+})
+
+
+search.onmessage = event => {
+  switch (event.data.action) {
+    case "PERFORM_SEARCH":
+      app.ports.receiveSearchResults.send(event.data.data)
+      break
+  }
+}
 
 
 

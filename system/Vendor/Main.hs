@@ -14,6 +14,7 @@ main :: IO Dictionary
 main =
     Shikensu.listRelative
         [ "node_modules/fast-text-encoding/text.min.js"
+        , "node_modules/lunr/lunr.js"
         , "node_modules/tachyons/css/tachyons.min.css"
         , "vendor/music-metadata.min.js"
         ]

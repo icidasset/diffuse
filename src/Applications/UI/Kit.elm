@@ -53,6 +53,7 @@ colors =
     -- Other
     , background = rgb 2 7 14
     , focus = rgb 0 0 0
+    , selection = rgb 3 48 63
     , text = colorKit.base01
     }
 

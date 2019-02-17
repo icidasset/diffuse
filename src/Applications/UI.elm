@@ -18,7 +18,7 @@ import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
-import Replying exposing (do, return)
+import Replying exposing (andThen, do, return)
 import Return2 as R2
 import Sources
 import Sources.Encoding
@@ -74,6 +74,7 @@ init flags url key =
       , navKey = key
       , page = Page.fromUrl url
       , url = url
+      , viewport = flags.viewport
 
       -- Children
       -----------
@@ -278,6 +279,9 @@ update msg model =
                         |> Result.withDefault Json.Encode.null
                         |> LoadHypaethralUserData
                     )
+                |> andThen (update Core.SaveFavourites)
+                |> andThen (update Core.SaveSources)
+                |> andThen (update Core.SaveTracks)
                 -- TODO:
                 -- Show notication relating to import
                 |> R2.addCmd (do <| ChangeUrlUsingPage Page.Index)
@@ -479,7 +483,7 @@ defaultScreen model =
     -----------------------------------------
     , UI.Kit.vessel
         [ model.tracks
-            |> Lazy.lazy2 UI.Tracks.view model.page
+            |> Lazy.lazy3 UI.Tracks.view model.page model.viewport.height
             |> Html.map TracksMsg
 
         -- Pages

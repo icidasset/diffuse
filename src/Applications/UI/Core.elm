@@ -19,7 +19,7 @@ import Url exposing (Url)
 
 
 type alias Flags =
-    {}
+    { viewport : Viewport }
 
 
 
@@ -32,6 +32,7 @@ type alias Model =
     , navKey : Nav.Key
     , page : Page
     , url : Url
+    , viewport : Viewport
 
     -----------------------------------------
     -- Children
@@ -40,6 +41,12 @@ type alias Model =
     , backdrop : UI.Backdrop.Model
     , sources : UI.Sources.Model
     , tracks : UI.Tracks.Model
+    }
+
+
+type alias Viewport =
+    { height : Float
+    , width : Float
     }
 
 

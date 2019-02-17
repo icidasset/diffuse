@@ -108,11 +108,15 @@ update msg model =
                     value
                         |> Authentication.decodeHypaethral
                         |> Result.withDefault model.hypaethralUserData
+
+                encodedTracks =
+                    Json.Encode.list Tracks.encodeTrack decodedData.tracks
             in
-            ( { model | hypaethralUserData = decodedData }
-            , Brain.Ports.toUI (Alien.broadcast Alien.LoadHypaethralUserData value)
-            )
-                |> andThen updateSearchIndex
+            andThen
+                (updateSearchIndex encodedTracks)
+                ( { model | hypaethralUserData = decodedData }
+                , Brain.Ports.toUI (Alien.broadcast Alien.LoadHypaethralUserData value)
+                )
 
         SaveFavourites value ->
             value
@@ -133,14 +137,14 @@ update msg model =
                 |> Json.decodeValue (Json.list Tracks.trackDecoder)
                 |> Result.withDefault model.hypaethralUserData.tracks
                 |> hypaethralLenses.setTracks model
-                |> updateSearchIndex
+                |> updateSearchIndex value
                 |> andThen saveHypaethralData
 
 
-updateSearchIndex : Model -> ( Model, Cmd Msg )
-updateSearchIndex model =
+updateSearchIndex : Json.Value -> Model -> ( Model, Cmd Msg )
+updateSearchIndex value model =
     update
-        (model.hypaethralUserData.tracks
+        (value
             |> Tracks.UpdateSearchIndex
             |> TracksMsg
         )
@@ -253,6 +257,7 @@ subscriptions model =
         -- Children
         -----------------------------------------
         , Sub.map ProcessingMsg (Processing.subscriptions model.processing)
+        , Sub.map TracksMsg (Tracks.subscriptions model.tracks)
         ]
 
 

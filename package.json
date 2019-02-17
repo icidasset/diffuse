@@ -2,6 +2,7 @@
   "private": true,
   "dependencies": {
     "fast-text-encoding": "~1.0.0",
+    "lunr": "^2.3.5",
     "tachyons": "~4.11.1"
   }
 }
