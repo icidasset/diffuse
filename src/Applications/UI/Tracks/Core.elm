@@ -31,7 +31,9 @@ type alias Model =
 type Msg
     = Bypass
     | InfiniteListMsg InfiniteList.Model
+    | Play IdentifiedTrack
     | SetEnabledSourceIds (List String)
+    | SetNowPlaying (Maybe IdentifiedTrack)
       -----------------------------------------
       -- Collection
       -----------------------------------------

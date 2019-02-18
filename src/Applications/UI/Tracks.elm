@@ -17,6 +17,7 @@ import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
+import Maybe.Extra as Maybe
 import Replying exposing (R3D3)
 import Return2
 import Return3
@@ -63,11 +64,17 @@ update msg model =
         Bypass ->
             Return3.withNothing model
 
+        Play identifiedTrack ->
+            ( model, Cmd.none, Just [ PlayTrack identifiedTrack ] )
+
         InfiniteListMsg infiniteList ->
             Return3.withNothing { model | infiniteList = infiniteList }
 
         SetEnabledSourceIds sourceIds ->
             Return3.withNothing { model | enabledSourceIds = sourceIds }
+
+        SetNowPlaying maybeIdentifiedTrack ->
+            reviseCollection harvest { model | nowPlaying = maybeIdentifiedTrack }
 
         -----------------------------------------
         -- Collection
@@ -89,6 +96,7 @@ update msg model =
 
         -- # Remove
         -- > Remove tracks from the collection.
+        --
         RemoveByPaths json ->
             let
                 decoder =
@@ -184,15 +192,30 @@ resolveParcel model ( _, newCollection ) =
     let
         modelWithNewCollection =
             { model | collection = newCollection }
-    in
-    if model.collection.untouched /= newCollection.untouched then
-        ( modelWithNewCollection
-        , Cmd.none
-        , Just [ SaveTracks ]
-        )
 
-    else
-        Return3.withNothing modelWithNewCollection
+        oldHarvest =
+            List.map (Tuple.second >> .id) model.collection.harvested
+
+        newHarvest =
+            List.map (Tuple.second >> .id) newCollection.harvested
+    in
+    ( modelWithNewCollection
+    , Cmd.none
+    , (Just << Maybe.values)
+        [ if model.collection.untouched /= newCollection.untouched then
+            Just SaveTracks
+
+          else
+            Nothing
+
+        --
+        , if oldHarvest /= newHarvest then
+            Just ResetQueue
+
+          else
+            Nothing
+        ]
+    )
 
 
 reviseCollection : (Parcel -> Parcel) -> Model -> R3D3 Model Msg Reply

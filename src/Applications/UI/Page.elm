@@ -1,5 +1,6 @@
 module UI.Page exposing (Page(..), fromUrl, sameBase, toString)
 
+import UI.Queue.Page as Queue
 import UI.Settings.Page as Settings
 import UI.Sources.Page as Sources
 import Url exposing (Url)
@@ -12,6 +13,7 @@ import Url.Parser exposing (..)
 
 type Page
     = Index
+    | Queue Queue.Page
     | Settings Settings.Page
     | Sources Sources.Page
       --
@@ -39,6 +41,15 @@ toString page =
             "/404"
 
         -----------------------------------------
+        -- Queue
+        -----------------------------------------
+        Queue Queue.History ->
+            "/queue/history"
+
+        Queue Queue.Index ->
+            "/queue"
+
+        -----------------------------------------
         -- Settings
         -----------------------------------------
         Settings Settings.ImportExport ->
@@ -62,6 +73,9 @@ toString page =
 sameBase : Page -> Page -> Bool
 sameBase a b =
     case ( a, b ) of
+        ( Queue _, Queue _ ) ->
+            True
+
         ( Settings _, Settings _ ) ->
             True
 
@@ -81,6 +95,12 @@ route =
     oneOf
         [ map Index top
         , map NotFound (s "404")
+
+        -----------------------------------------
+        -- Queue
+        -----------------------------------------
+        , map (Queue Queue.History) (s "queue" </> s "history")
+        , map (Queue Queue.Index) (s "queue")
 
         -----------------------------------------
         -- Settings

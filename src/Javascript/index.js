@@ -9,6 +9,7 @@
 const app = Elm.UI.init({
   node: document.getElementById("elm"),
   flags: {
+    initialTime: Date.now(),
     viewport: {
       height: window.innerHeight,
       width: window.innerWidth
@@ -43,23 +44,23 @@ const orchestrion = {
 }
 
 
-// app.ports.activeQueueItemChanged.subscribe(item => {
-//   const timestampInMilliseconds = Date.now()
-//
-//   orchestrion.activeQueueItem = item
-//   orchestrion.audio = null
-//
-//   removeOlderAudioElements(timestampInMilliseconds)
-//
-//   if (item) {
-//     insertTrack(orchestrion, item)
-//   } else {
-//     app.ports.setIsPlaying.send(false)
-//     setProgressBarWidth(0)
-//   }
-// })
-//
-//
+app.ports.activeQueueItemChanged.subscribe(item => {
+  const timestampInMilliseconds = Date.now()
+
+  orchestrion.activeQueueItem = item
+  orchestrion.audio = null
+
+  removeOlderAudioElements(timestampInMilliseconds)
+
+  if (item) {
+    insertTrack(orchestrion, item)
+  } else {
+    app.ports.setIsPlaying.send(false)
+    setProgressBarWidth(0)
+  }
+})
+
+
 // app.ports.play.subscribe(_ => {
 //   if (orchestrion.audio) orchestrion.audio.play()
 // })

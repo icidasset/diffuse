@@ -9,6 +9,7 @@ import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtmlAttributes
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled)
+import Html.Styled.Events exposing (onDoubleClick)
 import Html.Styled.Lazy
 import InfiniteList
 import Material.Icons.Navigation as Icons
@@ -133,11 +134,12 @@ headerColumn text_ width pos maybeSortIcon =
             ]
         ]
         [ T.lh_title
-        , T.ph2
         , T.pv1
         , T.relative
 
         --
+        , ifThenElse (pos == First) T.pl3 T.pl2
+        , ifThenElse (pos == Last) T.pr3 T.pr2
         , ifThenElse (pos == First) "" T.pointer
         ]
         [ brick
@@ -306,7 +308,9 @@ itemView { favouritesOnly } _ idx ( identifiers, track ) =
     Html.toUnstyled <|
         slab
             Html.li
-            [ css (rowStyles idx identifiers) ]
+            [ css (rowStyles idx identifiers)
+            , onDoubleClick (Play ( identifiers, track ))
+            ]
             [ T.dt_row
 
             --

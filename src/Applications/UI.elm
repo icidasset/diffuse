@@ -33,6 +33,9 @@ import UI.Kit
 import UI.Navigation as Navigation
 import UI.Page as Page
 import UI.Ports as Ports
+import UI.Queue as Queue
+import UI.Queue.Common
+import UI.Queue.Core as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings as Settings
 import UI.Settings.Page
@@ -70,7 +73,8 @@ init flags url key =
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
-      { isAuthenticated = False
+      { currentTime = Time.millisToPosix flags.initialTime
+      , isAuthenticated = False
       , isLoading = True
       , navKey = key
       , page = Page.fromUrl url
@@ -81,6 +85,7 @@ init flags url key =
       -----------
       , authentication = Authentication.initialModel
       , backdrop = Backdrop.initialModel
+      , queue = Queue.initialModel
       , sources = Sources.initialModel
       , tracks = Tracks.initialModel
       }
@@ -118,7 +123,10 @@ update msg model =
                 sources =
                     model.sources
             in
-            ( { model | sources = { sources | currentTime = time } }
+            ( { model
+                | currentTime = time
+                , sources = { sources | currentTime = time }
+              }
             , Cmd.none
             )
 
@@ -230,6 +238,16 @@ update msg model =
                 , msg = sub
                 }
 
+        QueueMsg sub ->
+            updateChild
+                { mapCmd = QueueMsg
+                , mapModel = \child -> { model | queue = child }
+                , update = Queue.update
+                }
+                { model = model.queue
+                , msg = sub
+                }
+
         SourcesMsg sub ->
             updateChild
                 { mapCmd = SourcesMsg
@@ -249,6 +267,34 @@ update msg model =
                 { model = model.tracks
                 , msg = sub
                 }
+
+        -----------------------------------------
+        -- Children, Pt. 2
+        -----------------------------------------
+        Core.ActiveQueueItemChanged maybeQueueItem ->
+            let
+                nowPlaying =
+                    Maybe.map .identifiedTrack maybeQueueItem
+
+                portCmd =
+                    maybeQueueItem
+                        |> Maybe.map .identifiedTrack
+                        |> Maybe.map
+                            (UI.Queue.Common.makeEngineItem
+                                model.currentTime
+                                model.sources.collection
+                            )
+                        |> Ports.activeQueueItemChanged
+            in
+            model
+                |> update (TracksMsg <| Tracks.SetNowPlaying nowPlaying)
+                |> R2.addCmd portCmd
+
+        Core.FillQueue ->
+            model.tracks.collection.harvested
+                |> Queue.Fill model.currentTime
+                |> QueueMsg
+                |> (\msg_ -> update msg_ model)
 
         -----------------------------------------
         -- Import / Export
@@ -328,20 +374,35 @@ update msg model =
 translateReply : Reply -> Msg
 translateReply reply =
     case reply of
-        AddSourceToCollection source ->
+        Reply.ActiveQueueItemChanged m ->
+            Core.ActiveQueueItemChanged m
+
+        Reply.AddSourceToCollection source ->
             SourcesMsg (Sources.AddToCollection source)
 
-        Chill ->
+        Reply.Chill ->
             Bypass
 
-        GoToPage page ->
+        Reply.FillQueue ->
+            Core.FillQueue
+
+        Reply.GoToPage page ->
             ChangeUrlUsingPage page
+
+        Reply.PlayTrack identifiedTrack ->
+            QueueMsg (Queue.InjectFirstAndPlay identifiedTrack)
 
         Reply.ProcessSources ->
             Core.ProcessSources
 
         Reply.RemoveTracksWithSourceId sourceId ->
             TracksMsg (Tracks.RemoveBySourceId sourceId)
+
+        Reply.ResetQueue ->
+            QueueMsg Queue.Reset
+
+        Reply.ShiftQueue ->
+            QueueMsg Queue.Shift
 
         Reply.SaveEnclosedUserData ->
             Core.SaveEnclosedUserData
@@ -496,6 +557,10 @@ defaultScreen model =
             Page.NotFound ->
                 -- TODO
                 UI.Kit.receptacle [ text "Page not found." ]
+
+            Page.Queue _ ->
+                -- TODO
+                nothing
 
             Page.Settings subPage ->
                 Settings.view subPage model

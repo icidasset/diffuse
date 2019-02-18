@@ -1,4 +1,4 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, makeTrack, missingId)
+module Tracks exposing (Collection, CollectionDependencies, Favourite, IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId)
 
 import Base64
 import Bytes.Encode
@@ -158,6 +158,11 @@ emptyCollection =
     , arranged = []
     , harvested = []
     }
+
+
+isNowPlaying : IdentifiedTrack -> IdentifiedTrack -> Bool
+isNowPlaying ( a, b ) ( x, y ) =
+    a.indexInPlaylist == x.indexInPlaylist && b == y
 
 
 makeTrack : String -> ( String, Tags ) -> Track
