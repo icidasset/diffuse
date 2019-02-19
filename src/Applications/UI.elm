@@ -28,6 +28,7 @@ import Time
 import Tracks.Encoding
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
+import UI.Console
 import UI.Core as Core exposing (Flags, Model, Msg(..), Switch(..))
 import UI.Kit
 import UI.Navigation as Navigation
@@ -81,6 +82,13 @@ init flags url key =
       , url = url
       , viewport = flags.viewport
 
+      -- Audio
+      --------
+      , audioDuration = 0
+      , audioHasStalled = False
+      , audioIsLoading = False
+      , audioIsPlaying = False
+
       -- Children
       -----------
       , authentication = Authentication.initialModel
@@ -104,9 +112,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Bypass ->
-            ( model
-            , Cmd.none
-            )
+            R2.withNoCmd model
 
         LoadEnclosedUserData json ->
             model
@@ -131,14 +137,37 @@ update msg model =
             )
 
         ToggleLoadingScreen On ->
-            ( { model | isLoading = True }
-            , Cmd.none
-            )
+            R2.withNoCmd { model | isLoading = True }
 
         ToggleLoadingScreen Off ->
-            ( { model | isLoading = False }
-            , Cmd.none
-            )
+            R2.withNoCmd { model | isLoading = False }
+
+        -----------------------------------------
+        -- Audio
+        -----------------------------------------
+        Pause ->
+            R2.withCmd (Ports.pause ()) model
+
+        Play ->
+            R2.withCmd (Ports.play ()) model
+
+        Seek percentage ->
+            R2.withCmd (Ports.seek percentage) model
+
+        SetAudioDuration duration ->
+            R2.withNoCmd { model | audioDuration = duration }
+
+        SetAudioHasStalled hasStalled ->
+            R2.withNoCmd { model | audioHasStalled = hasStalled }
+
+        SetAudioIsLoading isLoading ->
+            R2.withNoCmd { model | audioIsLoading = isLoading }
+
+        SetAudioIsPlaying isPlayinh ->
+            R2.withNoCmd { model | audioIsPlaying = isPlayinh }
+
+        Unstall ->
+            R2.withCmd (Ports.unstall ()) model
 
         -----------------------------------------
         -- Brain
@@ -291,10 +320,12 @@ update msg model =
                 |> R2.addCmd portCmd
 
         Core.FillQueue ->
-            model.tracks.collection.harvested
-                |> Queue.Fill model.currentTime
-                |> QueueMsg
-                |> (\msg_ -> update msg_ model)
+            update
+                (model.tracks.collection.harvested
+                    |> Queue.Fill model.currentTime
+                    |> QueueMsg
+                )
+                model
 
         -----------------------------------------
         -- Import / Export
@@ -429,6 +460,15 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.fromBrain translateAlienEvent
+
+        -- Audio
+        --------
+        , Ports.setAudioDuration SetAudioDuration
+        , Ports.setAudioHasStalled SetAudioHasStalled
+        , Ports.setAudioIsLoading SetAudioIsLoading
+        , Ports.setAudioIsPlaying SetAudioIsPlaying
+
+        --
         , Time.every (60 * 1000) SetCurrentTime
         ]
 
@@ -574,10 +614,13 @@ defaultScreen model =
     -----------------------------------------
     -- Controls
     -----------------------------------------
-    , chunk
-        -- TODO
-        [ T.h4 ]
-        []
+    , UI.Console.view
+        model.queue.activeItem
+        model.queue.repeat
+        model.queue.shuffle
+        model.audioHasStalled
+        model.audioIsLoading
+        model.audioIsPlaying
     ]
 
 

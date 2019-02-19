@@ -45,3 +45,8 @@ type Msg
       ------------------------------------
     | Reset
     | Fill Time.Posix (List IdentifiedTrack)
+      ------------------------------------
+      -- Settings
+      ------------------------------------
+    | ToggleRepeat
+    | ToggleShuffle

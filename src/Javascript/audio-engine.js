@@ -173,8 +173,7 @@ function audioErrorEvent(event) {
       // NOTE: Weird issue with Chrome
       if (event.target.duration && (event.target.currentTime / event.target.duration) > 0.975) {
         console.log("Moving on to the next track.")
-        // TODO
-        // this.app.ports.activeQueueItemEnded.send(null)
+        this.app.ports.activeQueueItemEnded.send()
       }
       break
     case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
@@ -190,10 +189,9 @@ function audioStalledEvent(event) {
   this.stalledTimeoutId = setTimeout(() => {
     console.error(`Audio stalled for '${ audioElementTrackId(event.target) }'`)
 
-    // TODO:
-    // this.app.ports.setStalled.send(true)
+    this.app.ports.setAudioHasStalled.send(true)
     this.unstallTimeoutId = setTimeout(() => {
-      // this.app.ports.setStalled.send(false)
+      this.app.ports.setAudioHasStalled.send(false)
       unstallAudio(event.target)
     }, 2500)
   }, 60000)
@@ -215,31 +213,31 @@ function audioEndEvent(event) {
   if (this.repeat) {
     event.target.play()
   } else {
-    // TODO: this.app.ports.activeQueueItemEnded.send(null)
+    this.app.ports.activeQueueItemEnded.send()
   }
 }
 
 
 function audioLoading() {
   this.loadingTimeoutId = setTimeout(() => {
-    // TODO: this.app.ports.setIsLoading.send(true)
+    this.app.ports.setAudioIsLoading.send(true)
   }, 1750)
 }
 
 
 function audioLoaded() {
   clearTimeout(this.loadingTimeoutId)
-  // TODO: this.app.ports.setIsLoading.send(false)
+  this.app.ports.setAudioIsLoading.send(false)
 }
 
 
 function audioPlayEvent(event) {
-  // TODO: this.app.ports.setIsPlaying.send(true)
+  this.app.ports.setAudioIsPlaying.send(true)
 }
 
 
 function audioPauseEvent(event) {
-  // TODO: this.app.ports.setIsPlaying.send(false)
+  this.app.ports.setAudioIsPlaying.send(false)
 }
 
 
@@ -249,8 +247,7 @@ let lastSetDuration = 0
 function audioCanPlayEvent(event) {
   if (event.target.paused) event.target.play()
   if (event.target.duration != lastSetDuration) {
-    // TODO:
-    // this.app.ports.setDuration.send(event.target.duration || 0)
+    this.app.ports.setAudioDuration.send(event.target.duration || 0)
     lastSetDuration = event.target.duration
   }
 }

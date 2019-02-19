@@ -171,6 +171,15 @@ update msg model =
             , Just [ FillQueue ]
             )
 
+        ------------------------------------
+        -- Settings
+        ------------------------------------
+        ToggleRepeat ->
+            R3.withNothing { model | repeat = not model.repeat }
+
+        ToggleShuffle ->
+            R3.withNothing { model | shuffle = not model.shuffle }
+
 
 
 -- 📣  ░░  COMMON

@@ -61,26 +61,26 @@ app.ports.activeQueueItemChanged.subscribe(item => {
 })
 
 
-// app.ports.play.subscribe(_ => {
-//   if (orchestrion.audio) orchestrion.audio.play()
-// })
-//
-//
-// app.ports.pause.subscribe(_ => {
-//   if (orchestrion.audio) orchestrion.audio.pause()
-// })
-//
-//
-// app.ports.seek.subscribe(percentage => {
-//   const audio = orchestrion.audio
-//
-//   if (audio && !isNaN(audio.duration)) {
-//     audio.currentTime = audio.duration * percentage
-//     if (audio.paused) audio.pause()
-//   }
-// })
-//
-//
+app.ports.play.subscribe(_ => {
+  if (orchestrion.audio) orchestrion.audio.play()
+})
+
+
+app.ports.pause.subscribe(_ => {
+  if (orchestrion.audio) orchestrion.audio.pause()
+})
+
+
+app.ports.seek.subscribe(percentage => {
+  const audio = orchestrion.audio
+
+  if (audio && !isNaN(audio.duration)) {
+    audio.currentTime = audio.duration * percentage
+    if (audio.paused) audio.pause()
+  }
+})
+
+
 // app.ports.unstall.subscribe(_ => {
 //   if (orchestrion.audio) {
 //     clearTimeout(orchestrion.unstallTimeoutId)

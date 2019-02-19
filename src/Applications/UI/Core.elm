@@ -40,6 +40,14 @@ type alias Model =
     , viewport : Viewport
 
     -----------------------------------------
+    -- Audio
+    -----------------------------------------
+    , audioDuration : Float
+    , audioHasStalled : Bool
+    , audioIsLoading : Bool
+    , audioIsPlaying : Bool
+
+    -----------------------------------------
     -- Children
     -----------------------------------------
     , authentication : Authentication.Model
@@ -66,6 +74,17 @@ type Msg
     | LoadHypaethralUserData Json.Value
     | SetCurrentTime Time.Posix
     | ToggleLoadingScreen Switch
+      -----------------------------------------
+      -- Audio
+      -----------------------------------------
+    | Pause
+    | Play
+    | Seek Float
+    | SetAudioDuration Float
+    | SetAudioHasStalled Bool
+    | SetAudioIsLoading Bool
+    | SetAudioIsPlaying Bool
+    | Unstall
       -----------------------------------------
       -- Brain
       -----------------------------------------
