@@ -175,10 +175,10 @@ update msg model =
         -- Settings
         ------------------------------------
         ToggleRepeat ->
-            R3.withNothing { model | repeat = not model.repeat }
+            ( { model | repeat = not model.repeat }, Cmd.none, Just [ SaveEnclosedUserData ] )
 
         ToggleShuffle ->
-            R3.withNothing { model | shuffle = not model.shuffle }
+            ( { model | shuffle = not model.shuffle }, Cmd.none, Just [ SaveEnclosedUserData ] )
 
 
 

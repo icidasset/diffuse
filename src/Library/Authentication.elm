@@ -22,6 +22,8 @@ type Method
 
 type alias EnclosedUserData =
     { backgroundImage : Maybe String
+    , repeat : Bool
+    , shuffle : Bool
     }
 
 
@@ -90,12 +92,16 @@ enclosedDecoder : Json.Decoder EnclosedUserData
 enclosedDecoder =
     Json.succeed EnclosedUserData
         |> required "backgroundImage" (Json.maybe Json.string)
+        |> optional "repeat" Json.bool False
+        |> optional "shuffle" Json.bool False
 
 
 encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { backgroundImage } =
+encodeEnclosed { backgroundImage, repeat, shuffle } =
     Json.Encode.object
         [ ( "backgroundImage", Json.Encode.string (Maybe.withDefault "" backgroundImage) )
+        , ( "repeat", Json.Encode.bool repeat )
+        , ( "shuffle", Json.Encode.bool shuffle )
         ]
 
 

@@ -105,20 +105,30 @@ exportEnclosed : UI.Core.Model -> Json.Value
 exportEnclosed model =
     encodeEnclosed
         { backgroundImage = model.backdrop.chosen
+        , repeat = model.queue.repeat
+        , shuffle = model.queue.shuffle
         }
 
 
 importEnclosed : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importEnclosed value model =
     let
-        { backdrop } =
+        { backdrop, queue } =
             model
     in
     case decodeEnclosed value of
         Ok data ->
+            let
+                newBackDrop =
+                    { backdrop | chosen = Just (Maybe.withDefault UI.Backdrop.default data.backgroundImage) }
+
+                newQueue =
+                    { queue | repeat = data.repeat, shuffle = data.shuffle }
+            in
             R3.withNothing
                 { model
-                    | backdrop = { backdrop | chosen = Just (Maybe.withDefault UI.Backdrop.default data.backgroundImage) }
+                    | backdrop = newBackDrop
+                    , queue = newQueue
                 }
 
         Err err ->
