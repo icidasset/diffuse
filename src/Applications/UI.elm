@@ -463,6 +463,7 @@ subscriptions _ =
 
         -- Audio
         --------
+        , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
         , Ports.setAudioDuration SetAudioDuration
         , Ports.setAudioHasStalled SetAudioHasStalled
         , Ports.setAudioIsLoading SetAudioIsLoading

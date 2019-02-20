@@ -55,7 +55,7 @@ app.ports.activeQueueItemChanged.subscribe(item => {
   if (item) {
     insertTrack(orchestrion, item)
   } else {
-    app.ports.setIsPlaying.send(false)
+    app.ports.setAudioIsPlaying.send(false)
     setProgressBarWidth(0)
   }
 })
@@ -81,12 +81,12 @@ app.ports.seek.subscribe(percentage => {
 })
 
 
-// app.ports.unstall.subscribe(_ => {
-//   if (orchestrion.audio) {
-//     clearTimeout(orchestrion.unstallTimeoutId)
-//     unstallAudio(orchestrion.audio)
-//   }
-// })
+app.ports.unstall.subscribe(_ => {
+  if (orchestrion.audio) {
+    clearTimeout(orchestrion.unstallTimeoutId)
+    unstallAudio(orchestrion.audio)
+  }
+})
 
 
 

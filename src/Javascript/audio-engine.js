@@ -173,7 +173,7 @@ function audioErrorEvent(event) {
       // NOTE: Weird issue with Chrome
       if (event.target.duration && (event.target.currentTime / event.target.duration) > 0.975) {
         console.log("Moving on to the next track.")
-        this.app.ports.activeQueueItemEnded.send()
+        this.app.ports.activeQueueItemEnded.send(null)
       }
       break
     case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
@@ -213,7 +213,7 @@ function audioEndEvent(event) {
   if (this.repeat) {
     event.target.play()
   } else {
-    this.app.ports.activeQueueItemEnded.send()
+    this.app.ports.activeQueueItemEnded.send(null)
   }
 }
 
