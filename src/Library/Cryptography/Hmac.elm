@@ -1,4 +1,4 @@
-module Crypto.HMAC exposing (encrypt128, encrypt64)
+module Cryptography.HMAC exposing (encrypt128, encrypt64)
 
 {-| Cryptography – HMAC
 -}

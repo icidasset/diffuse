@@ -32,6 +32,8 @@
             "icidasset/elm-sha": "2.0.0",
             "jorgengranseth/elm-string-format": "1.0.1",
             "justgage/tachyons-elm": "4.1.1",
+            "ktonon/elm-crypto": "1.1.2",
+            "ktonon/elm-word": "2.1.2",
             "noahzgordon/elm-color-extra": "1.0.1",
             "pilatch/flip": "1.0.0",
             "rluiten/elm-text-search": "5.0.0",
