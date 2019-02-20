@@ -24,6 +24,8 @@ type alias EnclosedUserData =
     { backgroundImage : Maybe String
     , repeat : Bool
     , shuffle : Bool
+    , sortBy : Tracks.SortBy
+    , sortDirection : Tracks.SortDirection
     }
 
 
@@ -35,15 +37,17 @@ type alias HypaethralUserData =
 
 
 
--- 🔱
+-- 🔱  ░░  METHOD
 
 
-emptyHypaethralUserData : HypaethralUserData
-emptyHypaethralUserData =
-    { favourites = []
-    , sources = []
-    , tracks = []
-    }
+decodeMethod : Json.Value -> Maybe Method
+decodeMethod =
+    Json.decodeValue (Json.map methodFromString Json.string) >> Result.toMaybe >> Maybe.join
+
+
+encodeMethod : Method -> Json.Value
+encodeMethod =
+    methodToString >> Json.Encode.string
 
 
 methodToString : Method -> String
@@ -70,22 +74,12 @@ methodFromString string =
 
 
 
--- 🔱  ░░  DECODING & ENCODING
+-- 🔱  ░░  ENCLOSED
 
 
 decodeEnclosed : Json.Value -> Result Json.Error EnclosedUserData
 decodeEnclosed =
     Json.decodeValue enclosedDecoder
-
-
-decodeHypaethral : Json.Value -> Result Json.Error HypaethralUserData
-decodeHypaethral =
-    Json.decodeValue hypaethralDecoder
-
-
-decodeMethod : Json.Value -> Maybe Method
-decodeMethod =
-    Json.decodeValue (Json.map methodFromString Json.string) >> Result.toMaybe >> Maybe.join
 
 
 enclosedDecoder : Json.Decoder EnclosedUserData
@@ -94,15 +88,36 @@ enclosedDecoder =
         |> required "backgroundImage" (Json.maybe Json.string)
         |> optional "repeat" Json.bool False
         |> optional "shuffle" Json.bool False
+        |> optional "sortBy" Tracks.sortByDecoder Tracks.Artist
+        |> optional "sortDirection" Tracks.sortDirectionDecoder Tracks.Asc
 
 
 encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { backgroundImage, repeat, shuffle } =
+encodeEnclosed { backgroundImage, repeat, shuffle, sortBy, sortDirection } =
     Json.Encode.object
         [ ( "backgroundImage", Json.Encode.string (Maybe.withDefault "" backgroundImage) )
         , ( "repeat", Json.Encode.bool repeat )
         , ( "shuffle", Json.Encode.bool shuffle )
+        , ( "sortBy", Tracks.encodeSortBy sortBy )
+        , ( "sortDirection", Tracks.encodeSortDirection sortDirection )
         ]
+
+
+
+-- 🔱  ░░  HYPAETHRAL
+
+
+decodeHypaethral : Json.Value -> Result Json.Error HypaethralUserData
+decodeHypaethral =
+    Json.decodeValue hypaethralDecoder
+
+
+emptyHypaethralUserData : HypaethralUserData
+emptyHypaethralUserData =
+    { favourites = []
+    , sources = []
+    , tracks = []
+    }
 
 
 encodeHypaethral : HypaethralUserData -> Json.Value
@@ -112,11 +127,6 @@ encodeHypaethral { favourites, sources, tracks } =
         , ( "sources", Json.Encode.list Sources.encode sources )
         , ( "tracks", Json.Encode.list Tracks.encodeTrack tracks )
         ]
-
-
-encodeMethod : Method -> Json.Value
-encodeMethod =
-    methodToString >> Json.Encode.string
 
 
 hypaethralDecoder : Json.Decoder HypaethralUserData

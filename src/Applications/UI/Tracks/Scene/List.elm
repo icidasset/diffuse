@@ -9,7 +9,7 @@ import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtmlAttributes
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled)
-import Html.Styled.Events exposing (onDoubleClick)
+import Html.Styled.Events exposing (onClick, onDoubleClick)
 import Html.Styled.Lazy
 import InfiniteList
 import Material.Icons.Navigation as Icons
@@ -80,10 +80,10 @@ header sortBy sortDirection =
     brick
         [ css headerStyles ]
         [ T.bg_white, T.flex, T.fw6, T.relative, T.z_5 ]
-        [ headerColumn "" 4.5 First Nothing
-        , headerColumn "Title" 37.5 Between (maybeSortIcon Title)
-        , headerColumn "Artist" 29.0 Between (maybeSortIcon Artist)
-        , headerColumn "Album" 29.0 Last (maybeSortIcon Album)
+        [ headerColumn "" 4.5 First Nothing Bypass
+        , headerColumn "Title" 37.5 Between (maybeSortIcon Title) (SortBy Title)
+        , headerColumn "Artist" 29.0 Between (maybeSortIcon Artist) (SortBy Artist)
+        , headerColumn "Album" 29.0 Last (maybeSortIcon Album) (SortBy Album)
         ]
 
 
@@ -115,8 +115,9 @@ headerColumn :
     -> Float
     -> Pos
     -> Maybe (Html msg)
+    -> msg
     -> Html msg
-headerColumn text_ width pos maybeSortIcon =
+headerColumn text_ width pos maybeSortIcon msg =
     let
         paddingLeft =
             ifThenElse (pos == First) T.pl2 T.pl1
@@ -125,7 +126,8 @@ headerColumn text_ width pos maybeSortIcon =
             ifThenElse (pos == Last) T.pr2 T.pr1
     in
     brick
-        [ css
+        [ onClick msg
+        , css
             [ Css.borderLeft3
                 (Css.px <| ifThenElse (pos /= First) 1 0)
                 Css.solid

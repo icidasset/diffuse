@@ -34,6 +34,7 @@ type Msg
     | Play IdentifiedTrack
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)
+    | SortBy SortBy
       -----------------------------------------
       -- Collection
       -----------------------------------------

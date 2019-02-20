@@ -1,4 +1,4 @@
-module Tracks.Encoding exposing (decodeFavourite, decodeTrack, encodeFavourite, encodeMaybe, encodeTags, encodeTrack, favouriteDecoder, tagsDecoder, trackDecoder)
+module Tracks.Encoding exposing (decodeFavourite, decodeTrack, encodeFavourite, encodeMaybe, encodeSortBy, encodeSortDirection, encodeTags, encodeTrack, favouriteDecoder, sortByDecoder, sortDirectionDecoder, tagsDecoder, trackDecoder)
 
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -9,6 +9,40 @@ import Tracks exposing (..)
 -- ENCODE
 
 
+encodeFavourite : Favourite -> Encode.Value
+encodeFavourite fav =
+    Encode.object
+        [ ( "artist", Encode.string fav.artist )
+        , ( "title", Encode.string fav.title )
+        ]
+
+
+encodeSortBy : SortBy -> Encode.Value
+encodeSortBy v =
+    case v of
+        Artist ->
+            Encode.string "ARTIST"
+
+        Album ->
+            Encode.string "ALBUM"
+
+        PlaylistIndex ->
+            Encode.string "PLAYLIST_INDEX"
+
+        Title ->
+            Encode.string "TITLE"
+
+
+encodeSortDirection : SortDirection -> Encode.Value
+encodeSortDirection v =
+    case v of
+        Asc ->
+            Encode.string "ASC"
+
+        Desc ->
+            Encode.string "DESC"
+
+
 encodeTrack : Track -> Encode.Value
 encodeTrack track =
     Encode.object
@@ -16,14 +50,6 @@ encodeTrack track =
         , ( "path", Encode.string track.path )
         , ( "sourceId", Encode.string track.sourceId )
         , ( "tags", encodeTags track.tags )
-        ]
-
-
-encodeFavourite : Favourite -> Encode.Value
-encodeFavourite fav =
-    Encode.object
-        [ ( "artist", Encode.string fav.artist )
-        , ( "title", Encode.string fav.title )
         ]
 
 
@@ -56,25 +82,63 @@ encodeMaybe maybe encoder =
 -- DECODE
 
 
-decodeTrack : Decode.Value -> Maybe Track
-decodeTrack =
-    Decode.decodeValue trackDecoder
-        >> Result.toMaybe
-
-
 decodeFavourite : Decode.Value -> Maybe Favourite
 decodeFavourite =
     Decode.decodeValue favouriteDecoder
         >> Result.toMaybe
 
 
-trackDecoder : Decode.Decoder Track
-trackDecoder =
-    Decode.map4 Track
-        (Decode.field "id" Decode.string)
-        (Decode.field "path" Decode.string)
-        (Decode.field "sourceId" Decode.string)
-        (Decode.field "tags" tagsDecoder)
+decodeTrack : Decode.Value -> Maybe Track
+decodeTrack =
+    Decode.decodeValue trackDecoder
+        >> Result.toMaybe
+
+
+favouriteDecoder : Decode.Decoder Favourite
+favouriteDecoder =
+    Decode.map2 Favourite
+        (Decode.field "artist" Decode.string)
+        (Decode.field "title" Decode.string)
+
+
+sortByDecoder : Decode.Decoder SortBy
+sortByDecoder =
+    Decode.andThen
+        (\string ->
+            case string of
+                "ARTIST" ->
+                    Decode.succeed Artist
+
+                "ALBUM" ->
+                    Decode.succeed Album
+
+                "PLAYLIST_INDEX" ->
+                    Decode.succeed PlaylistIndex
+
+                "TITLE" ->
+                    Decode.succeed Title
+
+                _ ->
+                    Decode.fail "Invalid SortBy"
+        )
+        Decode.string
+
+
+sortDirectionDecoder : Decode.Decoder SortDirection
+sortDirectionDecoder =
+    Decode.andThen
+        (\string ->
+            case string of
+                "ASC" ->
+                    Decode.succeed Asc
+
+                "DESC" ->
+                    Decode.succeed Desc
+
+                _ ->
+                    Decode.fail "Invalid SortDirection"
+        )
+        Decode.string
 
 
 tagsDecoder : Decode.Decoder Tags
@@ -90,8 +154,10 @@ tagsDecoder =
         (Decode.maybe <| Decode.field "year" Decode.int)
 
 
-favouriteDecoder : Decode.Decoder Favourite
-favouriteDecoder =
-    Decode.map2 Favourite
-        (Decode.field "artist" Decode.string)
-        (Decode.field "title" Decode.string)
+trackDecoder : Decode.Decoder Track
+trackDecoder =
+    Decode.map4 Track
+        (Decode.field "id" Decode.string)
+        (Decode.field "path" Decode.string)
+        (Decode.field "sourceId" Decode.string)
+        (Decode.field "tags" tagsDecoder)

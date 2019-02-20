@@ -19,8 +19,7 @@ import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
 import Maybe.Extra as Maybe
 import Replying exposing (R3D3)
-import Return2
-import Return3
+import Return3 as R3
 import Tachyons.Classes as T
 import Tracks exposing (..)
 import Tracks.Collection exposing (..)
@@ -62,19 +61,35 @@ update : Msg -> Model -> R3D3 Model Msg Reply
 update msg model =
     case msg of
         Bypass ->
-            Return3.withNothing model
+            R3.withNothing model
 
         Play identifiedTrack ->
             ( model, Cmd.none, Just [ PlayTrack identifiedTrack ] )
 
         InfiniteListMsg infiniteList ->
-            Return3.withNothing { model | infiniteList = infiniteList }
+            R3.withNothing { model | infiniteList = infiniteList }
 
         SetEnabledSourceIds sourceIds ->
-            Return3.withNothing { model | enabledSourceIds = sourceIds }
+            R3.withNothing { model | enabledSourceIds = sourceIds }
 
         SetNowPlaying maybeIdentifiedTrack ->
             reviseCollection harvest { model | nowPlaying = maybeIdentifiedTrack }
+
+        SortBy property ->
+            let
+                sortDir =
+                    if model.sortBy /= property then
+                        Asc
+
+                    else if model.sortDirection == Asc then
+                        Desc
+
+                    else
+                        Asc
+            in
+            { model | sortBy = property, sortDirection = sortDir }
+                |> reviseCollection arrange
+                |> R3.mapReply (Maybe.map <| (::) SaveEnclosedUserData)
 
         -----------------------------------------
         -- Collection
@@ -83,16 +98,13 @@ update msg model =
         -- > Add tracks to the collection.
         --
         Add json ->
-            let
-                tracks =
-                    json
-                        |> Json.decodeValue (Json.list Encoding.trackDecoder)
-                        |> Result.withDefault []
-            in
-            model
-                |> makeParcel
-                |> add tracks
-                |> resolveParcel model
+            reviseCollection
+                (json
+                    |> Json.decodeValue (Json.list Encoding.trackDecoder)
+                    |> Result.withDefault []
+                    |> add
+                )
+                model
 
         -- # Remove
         -- > Remove tracks from the collection.
@@ -110,16 +122,14 @@ update msg model =
                         |> Json.decodeValue decoder
                         |> Result.withDefault ( [], missingId )
             in
-            model
-                |> makeParcel
-                |> removeByPaths sourceId paths
-                |> resolveParcel model
+            reviseCollection
+                (removeByPaths sourceId paths)
+                model
 
         RemoveBySourceId sourceId ->
-            model
-                |> makeParcel
-                |> removeBySourceId sourceId
-                |> resolveParcel model
+            reviseCollection
+                (removeBySourceId sourceId)
+                model
 
         -----------------------------------------
         -- Favourites
@@ -149,17 +159,19 @@ update msg model =
                     reviseCollection harvest { model | searchResults = Nothing }
 
                 ( Nothing, Nothing ) ->
-                    Return3.withNothing model
+                    R3.withNothing model
 
         SetSearchResults json ->
-            json
-                |> Json.decodeValue (Json.list Json.string)
-                |> Result.withDefault []
-                |> (\results -> { model | searchResults = Just results })
-                |> reviseCollection harvest
+            reviseCollection
+                harvest
+                (json
+                    |> Json.decodeValue (Json.list Json.string)
+                    |> Result.withDefault []
+                    |> (\results -> { model | searchResults = Just results })
+                )
 
         SetSearchTerm term ->
-            Return3.withNothing
+            R3.withNothing
                 (case String.trim term of
                     "" ->
                         { model | searchTerm = Nothing }

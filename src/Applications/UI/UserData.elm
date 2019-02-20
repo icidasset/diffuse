@@ -107,13 +107,15 @@ exportEnclosed model =
         { backgroundImage = model.backdrop.chosen
         , repeat = model.queue.repeat
         , shuffle = model.queue.shuffle
+        , sortBy = model.tracks.sortBy
+        , sortDirection = model.tracks.sortDirection
         }
 
 
 importEnclosed : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importEnclosed value model =
     let
-        { backdrop, queue } =
+        { backdrop, queue, tracks } =
             model
     in
     case decodeEnclosed value of
@@ -124,11 +126,15 @@ importEnclosed value model =
 
                 newQueue =
                     { queue | repeat = data.repeat, shuffle = data.shuffle }
+
+                newTracks =
+                    { tracks | sortBy = data.sortBy, sortDirection = data.sortDirection }
             in
             R3.withNothing
                 { model
                     | backdrop = newBackDrop
                     , queue = newQueue
+                    , tracks = newTracks
                 }
 
         Err err ->
