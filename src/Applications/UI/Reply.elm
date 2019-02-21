@@ -1,6 +1,7 @@
 module UI.Reply exposing (Reply(..))
 
 import Alien
+import Common exposing (Switch(..))
 import Json.Decode as Json
 import Queue
 import Sources exposing (Source)
@@ -27,3 +28,4 @@ type Reply
     | SaveFavourites
     | SaveSources
     | SaveTracks
+    | ToggleLoadingScreen Switch

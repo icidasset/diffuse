@@ -4,6 +4,7 @@ import Alien
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
+import Common exposing (Switch(..))
 import Css
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, placeholder, tabindex, title, value)
@@ -18,7 +19,8 @@ import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
 import Maybe.Extra as Maybe
-import Replying exposing (R3D3)
+import Replying as N5 exposing (R3D3)
+import Return2 as R2
 import Return3 as R3
 import Tachyons.Classes as T
 import Tracks exposing (..)
@@ -89,7 +91,7 @@ update msg model =
             in
             { model | sortBy = property, sortDirection = sortDir }
                 |> reviseCollection arrange
-                |> R3.mapReply (Maybe.map <| (::) SaveEnclosedUserData)
+                |> N5.addReply SaveEnclosedUserData
 
         -----------------------------------------
         -- Collection
@@ -135,17 +137,17 @@ update msg model =
         -- Favourites
         -----------------------------------------
         ToggleFavouritesOnly ->
-            reviseCollection
-                harvest
-                { model | favouritesOnly = not model.favouritesOnly }
+            { model | favouritesOnly = not model.favouritesOnly }
+                |> reviseCollection harvest
+                |> N5.addReply SaveEnclosedUserData
 
         -----------------------------------------
         -- Search
         -----------------------------------------
         ClearSearch ->
-            reviseCollection
-                harvest
-                { model | searchResults = Nothing, searchTerm = Nothing }
+            { model | searchResults = Nothing, searchTerm = Nothing }
+                |> reviseCollection harvest
+                |> N5.addReply SaveEnclosedUserData
 
         Search ->
             case ( model.searchTerm, model.searchResults ) of
@@ -162,22 +164,22 @@ update msg model =
                     R3.withNothing model
 
         SetSearchResults json ->
-            reviseCollection
-                harvest
-                (json
-                    |> Json.decodeValue (Json.list Json.string)
-                    |> Result.withDefault []
-                    |> (\results -> { model | searchResults = Just results })
-                )
+            json
+                |> Json.decodeValue (Json.list Json.string)
+                |> Result.withDefault []
+                |> (\results -> { model | searchResults = Just results })
+                |> reviseCollection harvest
+                |> N5.addReply (ToggleLoadingScreen Off)
 
         SetSearchTerm term ->
-            R3.withNothing
+            R3.withReply
+                [ SaveEnclosedUserData ]
                 (case String.trim term of
                     "" ->
-                        { model | searchTerm = Nothing }
+                        R2.withNoCmd { model | searchTerm = Nothing }
 
                     _ ->
-                        { model | searchTerm = Just term }
+                        R2.withNoCmd { model | searchTerm = Just term }
                 )
 
 

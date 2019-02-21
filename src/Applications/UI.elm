@@ -7,7 +7,7 @@ import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
-import Common
+import Common exposing (Switch(..))
 import Css exposing (url)
 import Css.Global
 import File
@@ -18,7 +18,7 @@ import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
-import Replying exposing (andThen, do, return)
+import Replying as N5 exposing (do, return)
 import Return2 as R2
 import Sources
 import Sources.Encoding
@@ -29,7 +29,7 @@ import Tracks.Encoding
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
-import UI.Core as Core exposing (Flags, Model, Msg(..), Switch(..))
+import UI.Core as Core exposing (Flags, Model, Msg(..))
 import UI.Kit
 import UI.Navigation as Navigation
 import UI.Page as Page
@@ -117,12 +117,12 @@ update msg model =
         LoadEnclosedUserData json ->
             model
                 |> UserData.importEnclosed json
-                |> Replying.reducto update translateReply
+                |> N5.reducto update translateReply
 
         LoadHypaethralUserData json ->
-            { model | isAuthenticated = True, isLoading = False }
+            { model | isAuthenticated = True }
                 |> UserData.importHypaethral json
-                |> Replying.reducto update translateReply
+                |> N5.reducto update translateReply
 
         SetCurrentTime time ->
             let
@@ -136,10 +136,10 @@ update msg model =
             , Cmd.none
             )
 
-        ToggleLoadingScreen On ->
+        Core.ToggleLoadingScreen On ->
             R2.withNoCmd { model | isLoading = True }
 
-        ToggleLoadingScreen Off ->
+        Core.ToggleLoadingScreen Off ->
             R2.withNoCmd { model | isLoading = False }
 
         -----------------------------------------
@@ -357,9 +357,9 @@ update msg model =
                         |> Result.withDefault Json.Encode.null
                         |> LoadHypaethralUserData
                     )
-                |> andThen (update Core.SaveFavourites)
-                |> andThen (update Core.SaveSources)
-                |> andThen (update Core.SaveTracks)
+                |> N5.andThen2 (update Core.SaveFavourites)
+                |> N5.andThen2 (update Core.SaveSources)
+                |> N5.andThen2 (update Core.SaveTracks)
                 -- TODO:
                 -- Show notication relating to import
                 |> R2.addCmd (do <| ChangeUrlUsingPage Page.Index)
@@ -447,9 +447,12 @@ translateReply reply =
         Reply.SaveTracks ->
             Core.SaveTracks
 
+        Reply.ToggleLoadingScreen state ->
+            Core.ToggleLoadingScreen state
+
 
 updateChild =
-    Replying.updateChild update translateReply
+    N5.updateChild update translateReply
 
 
 
@@ -489,7 +492,7 @@ translateAlienEvent event =
             SourcesMsg Sources.FinishedProcessing
 
         Just Alien.HideLoadingScreen ->
-            ToggleLoadingScreen Off
+            Core.ToggleLoadingScreen Off
 
         Just Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData event.data

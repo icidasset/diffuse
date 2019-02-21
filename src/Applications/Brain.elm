@@ -12,7 +12,7 @@ import Brain.Tracks as Tracks
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
-import Replying exposing (andThen, return)
+import Replying exposing (andThen2, return)
 import Sources.Encoding as Sources
 import Sources.Processing.Encoding as Processing
 import Tracks.Encoding as Tracks
@@ -112,7 +112,7 @@ update msg model =
                 encodedTracks =
                     Json.Encode.list Tracks.encodeTrack decodedData.tracks
             in
-            andThen
+            andThen2
                 (updateSearchIndex encodedTracks)
                 ( { model | hypaethralUserData = decodedData }
                 , Brain.Ports.toUI (Alien.broadcast Alien.LoadHypaethralUserData value)
@@ -138,7 +138,7 @@ update msg model =
                 |> Result.withDefault model.hypaethralUserData.tracks
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndex value
-                |> andThen saveHypaethralData
+                |> andThen2 saveHypaethralData
 
 
 updateSearchIndex : Json.Value -> Model -> ( Model, Cmd Msg )

@@ -1,8 +1,9 @@
-module UI.Core exposing (Flags, Model, Msg(..), Switch(..))
+module UI.Core exposing (Flags, Model, Msg(..))
 
 import Alien
 import Browser
 import Browser.Navigation as Nav
+import Common exposing (Switch(..))
 import File exposing (File)
 import Json.Encode as Json
 import Queue
@@ -120,8 +121,3 @@ type Msg
     | ChangeUrlUsingPage Page
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url
-
-
-type Switch
-    = On
-    | Off

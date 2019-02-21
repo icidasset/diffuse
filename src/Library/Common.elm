@@ -1,6 +1,15 @@
-module Common exposing (urlOrigin)
+module Common exposing (Switch(..), urlOrigin)
 
 import Url exposing (Protocol(..), Url)
+
+
+
+-- 🌳
+
+
+type Switch
+    = On
+    | Off
 
 
 

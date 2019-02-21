@@ -4,7 +4,7 @@ import Authentication exposing (..)
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
-import Replying exposing (R3D3)
+import Replying as N5 exposing (R3D3)
 import Return3 as R3
 import Sources
 import Sources.Encoding as Sources
@@ -95,6 +95,7 @@ importTracks model data =
         |> Tracks.makeParcel
         |> Tracks.identify
         |> Tracks.resolveParcel adjustedModel
+        |> N5.andThen3 (Tracks.update Tracks.Search)
 
 
 
@@ -105,7 +106,9 @@ exportEnclosed : UI.Core.Model -> Json.Value
 exportEnclosed model =
     encodeEnclosed
         { backgroundImage = model.backdrop.chosen
+        , onlyShowFavourites = model.tracks.favouritesOnly
         , repeat = model.queue.repeat
+        , searchTerm = model.tracks.searchTerm
         , shuffle = model.queue.shuffle
         , sortBy = model.tracks.sortBy
         , sortDirection = model.tracks.sortDirection
@@ -128,7 +131,7 @@ importEnclosed value model =
                     { queue | repeat = data.repeat, shuffle = data.shuffle }
 
                 newTracks =
-                    { tracks | sortBy = data.sortBy, sortDirection = data.sortDirection }
+                    { tracks | favouritesOnly = data.onlyShowFavourites, searchTerm = data.searchTerm, sortBy = data.sortBy, sortDirection = data.sortDirection }
             in
             R3.withNothing
                 { model

@@ -22,7 +22,9 @@ type Method
 
 type alias EnclosedUserData =
     { backgroundImage : Maybe String
+    , onlyShowFavourites : Bool
     , repeat : Bool
+    , searchTerm : Maybe String
     , shuffle : Bool
     , sortBy : Tracks.SortBy
     , sortDirection : Tracks.SortDirection
@@ -86,17 +88,21 @@ enclosedDecoder : Json.Decoder EnclosedUserData
 enclosedDecoder =
     Json.succeed EnclosedUserData
         |> required "backgroundImage" (Json.maybe Json.string)
+        |> optional "onlyShowFavourites" Json.bool False
         |> optional "repeat" Json.bool False
+        |> required "searchTerm" (Json.maybe Json.string)
         |> optional "shuffle" Json.bool False
         |> optional "sortBy" Tracks.sortByDecoder Tracks.Artist
         |> optional "sortDirection" Tracks.sortDirectionDecoder Tracks.Asc
 
 
 encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { backgroundImage, repeat, shuffle, sortBy, sortDirection } =
+encodeEnclosed { backgroundImage, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
     Json.Encode.object
-        [ ( "backgroundImage", Json.Encode.string (Maybe.withDefault "" backgroundImage) )
+        [ ( "backgroundImage", Maybe.unwrap Json.Encode.null Json.Encode.string backgroundImage )
+        , ( "onlyShowFavourites", Json.Encode.bool onlyShowFavourites )
         , ( "repeat", Json.Encode.bool repeat )
+        , ( "searchTerm", Maybe.unwrap Json.Encode.null Json.Encode.string searchTerm )
         , ( "shuffle", Json.Encode.bool shuffle )
         , ( "sortBy", Tracks.encodeSortBy sortBy )
         , ( "sortDirection", Tracks.encodeSortDirection sortDirection )
