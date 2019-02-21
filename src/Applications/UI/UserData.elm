@@ -1,6 +1,7 @@
 module UI.UserData exposing (encodedFavourites, encodedSources, encodedTracks, exportEnclosed, importEnclosed, importHypaethral)
 
 import Authentication exposing (..)
+import Common exposing (Switch(..))
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
@@ -90,12 +91,21 @@ importTracks model data =
                 , enabledSourceIds = Sources.enabledSourceIds data.sources
                 , favourites = data.favourites
             }
+
+        addReplyIfNecessary =
+            case model.searchTerm of
+                Just _ ->
+                    identity
+
+                Nothing ->
+                    N5.addReply (UI.ToggleLoadingScreen Off)
     in
     adjustedModel
         |> Tracks.makeParcel
         |> Tracks.identify
         |> Tracks.resolveParcel adjustedModel
         |> N5.andThen3 (Tracks.update Tracks.Search)
+        |> addReplyIfNecessary
 
 
 
