@@ -243,6 +243,7 @@ update msg model =
             }
                 |> update (AuthenticationMsg Authentication.DischargeMethod)
                 |> R2.addCmd alienSigningOut
+                |> R2.addCmd (Nav.pushUrl model.navKey "/")
 
         -----------------------------------------
         -- Children

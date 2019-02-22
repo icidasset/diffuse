@@ -5,6 +5,7 @@ import Authentication
 import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
+import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
 import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
@@ -71,7 +72,7 @@ update msg model =
                 |> Json.Encode.string
                 |> Alien.broadcast Alien.SignIn
                 |> Ports.toBrain
-            , Nothing
+            , Just [ ToggleLoadingScreen On ]
             )
 
         -----------------------------------------
