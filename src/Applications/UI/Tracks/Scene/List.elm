@@ -199,10 +199,12 @@ rowStyles idx { isNowPlaying } =
 -- COLUMNS
 
 
-favouriteColumn : Bool -> Identifiers -> Html msg
+favouriteColumn : Bool -> Identifiers -> Html Msg
 favouriteColumn favouritesOnly identifiers =
     brick
-        [ css (favouriteColumnStyles favouritesOnly identifiers) ]
+        [ css (favouriteColumnStyles favouritesOnly identifiers)
+        , onClick (ToggleFavourite identifiers.indexInList)
+        ]
         [ T.dtc, T.pl3, T.v_mid ]
         [ if identifiers.isFavourite then
             text "t"

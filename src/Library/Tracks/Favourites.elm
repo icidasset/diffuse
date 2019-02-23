@@ -1,6 +1,7 @@
-module Tracks.Favourites exposing (match)
+module Tracks.Favourites exposing (match, toggleInFavouritesList, toggleInTracksList)
 
-import Tracks exposing (Favourite, Track)
+import List.Extra as List
+import Tracks exposing (Favourite, IdentifiedTrack, Track)
 
 
 
@@ -21,3 +22,58 @@ match a b =
             )
     in
     aa == ba && at == bt
+
+
+toggleInTracksList : Track -> List IdentifiedTrack -> List IdentifiedTrack
+toggleInTracksList track =
+    let
+        lartist =
+            lowercaseArtist track
+
+        ltitle =
+            lowercaseTitle track
+    in
+    List.map
+        (\( i, t ) ->
+            if lowercaseArtist t == lartist && lowercaseTitle t == ltitle then
+                ( { i | isFavourite = not i.isFavourite }, t )
+
+            else
+                ( i, t )
+        )
+
+
+toggleInFavouritesList : IdentifiedTrack -> List Favourite -> List Favourite
+toggleInFavouritesList ( i, t ) favourites =
+    let
+        favourite =
+            { artist = t.tags.artist
+            , title = t.tags.title
+            }
+    in
+    case i.isFavourite of
+        True ->
+            -- Remove from list
+            List.filterNot
+                (match favourite)
+                favourites
+
+        False ->
+            -- Add to list
+            List.append
+                favourites
+                [ favourite ]
+
+
+
+-- ⚗️
+
+
+lowercaseArtist : Track -> String
+lowercaseArtist =
+    .tags >> .artist >> String.toLower
+
+
+lowercaseTitle : Track -> String
+lowercaseTitle =
+    .tags >> .title >> String.toLower

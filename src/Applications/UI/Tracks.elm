@@ -14,6 +14,7 @@ import Html.Styled.Lazy exposing (..)
 import InfiniteList
 import Json.Decode as Json
 import Json.Encode
+import List.Extra as List
 import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
@@ -24,8 +25,9 @@ import Return2 as R2
 import Return3 as R3
 import Tachyons.Classes as T
 import Tracks exposing (..)
-import Tracks.Collection exposing (..)
+import Tracks.Collection as Collection exposing (..)
 import Tracks.Encoding as Encoding
+import Tracks.Favourites as Favourites
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page exposing (Page)
@@ -136,6 +138,14 @@ update msg model =
         -----------------------------------------
         -- Favourites
         -----------------------------------------
+        -- > Make a track a favourite, or remove it as a favourite
+        ToggleFavourite index ->
+            model.collection.harvested
+                |> List.getAt index
+                |> Maybe.map (toggleFavourite model)
+                |> Maybe.withDefault (R3.withNothing model)
+
+        -- > Filter collection by favourites only {toggle}
         ToggleFavouritesOnly ->
             { model | favouritesOnly = not model.favouritesOnly }
                 |> reviseCollection harvest
@@ -238,6 +248,28 @@ reviseCollection collector model =
         |> makeParcel
         |> collector
         |> resolveParcel model
+
+
+
+-- 📣  ░░  FAVOURITES
+
+
+toggleFavourite : Model -> IdentifiedTrack -> R3D3 Model Msg Reply
+toggleFavourite model ( i, t ) =
+    let
+        newFavourites =
+            Favourites.toggleInFavouritesList ( i, t ) model.favourites
+
+        effect =
+            if model.favouritesOnly then
+                Collection.map (Favourites.toggleInTracksList t) >> harvest
+
+            else
+                Collection.map (Favourites.toggleInTracksList t)
+    in
+    { model | favourites = newFavourites }
+        |> reviseCollection effect
+        |> N5.addReply SaveFavourites
 
 
 
