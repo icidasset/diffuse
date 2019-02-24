@@ -8,7 +8,7 @@ import Css
 import Css.Ext as Css
 import Html as UnstyledHtml
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, style)
+import Html.Styled.Attributes exposing (class, css, style)
 import Html.Styled.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Material.Icons.Av as Icons
@@ -18,6 +18,7 @@ import Tachyons.Classes as T
 import UI.Core as Core exposing (Msg(..))
 import UI.Kit
 import UI.Queue.Core as Queue
+import UI.Tracks.Core as Tracks
 
 
 
@@ -28,7 +29,7 @@ view : Maybe Queue.Item -> Bool -> Bool -> Bool -> Bool -> Bool -> Html Core.Msg
 view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
     brick
         [ css consoleStyles ]
-        [ T.mt2, T.tc, T.w_100 ]
+        [ T.mt1, T.tc, T.w_100 ]
         [ -----------------------------------------
           -- Now Playing
           -----------------------------------------
@@ -52,10 +53,7 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
                 case Maybe.map .identifiedTrack activeQueueItem of
                     Just ( _, { tags } ) ->
                         Html.span
-                            [ onClick Bypass
-
-                            {- TODO -}
-                            ]
+                            [ onClick (TracksMsg Tracks.ScrollToNowPlaying), class T.pointer ]
                             [ text (tags.artist ++ " - " ++ tags.title) ]
 
                     Nothing ->

@@ -32,6 +32,7 @@ type Msg
     = Bypass
     | InfiniteListMsg InfiniteList.Model
     | Play IdentifiedTrack
+    | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)
     | SortBy SortBy

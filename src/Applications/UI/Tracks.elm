@@ -73,11 +73,35 @@ update msg model =
         InfiniteListMsg infiniteList ->
             R3.withNothing { model | infiniteList = infiniteList }
 
+        ScrollToNowPlaying ->
+            case model.nowPlaying of
+                Just identifiedTrack ->
+                    case model.scene of
+                        List ->
+                            identifiedTrack
+                                |> UI.Tracks.Scene.List.scrollToNowPlaying
+                                |> R2.withModel model
+                                |> R3.withNoReply
+
+                Nothing ->
+                    R3.withNothing model
+
         SetEnabledSourceIds sourceIds ->
             R3.withNothing { model | enabledSourceIds = sourceIds }
 
         SetNowPlaying maybeIdentifiedTrack ->
-            reviseCollection harvest { model | nowPlaying = maybeIdentifiedTrack }
+            let
+                mapFn =
+                    case maybeIdentifiedTrack of
+                        Just a ->
+                            \( i, t ) -> Tuple.pair { i | isNowPlaying = isNowPlaying a ( i, t ) } t
+
+                        Nothing ->
+                            \( i, t ) -> Tuple.pair { i | isNowPlaying = False } t
+            in
+            reviseCollection
+                (map <| List.map mapFn)
+                { model | nowPlaying = maybeIdentifiedTrack }
 
         SortBy property ->
             let
@@ -224,7 +248,17 @@ resolveParcel model ( _, newCollection ) =
             List.map (Tuple.second >> .id) newCollection.harvested
     in
     ( modelWithNewCollection
-    , Cmd.none
+      -- Command
+      ----------
+    , if oldHarvest /= newHarvest then
+        case model.scene of
+            List ->
+                UI.Tracks.Scene.List.scrollToTop
+
+      else
+        Cmd.none
+      -- Reply
+      --------
     , (Just << Maybe.values)
         [ if model.collection.untouched /= newCollection.untouched then
             Just SaveTracks

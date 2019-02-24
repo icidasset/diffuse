@@ -1,5 +1,6 @@
-module UI.Tracks.Scene.List exposing (view)
+module UI.Tracks.Scene.List exposing (scrollToNowPlaying, scrollToTop, view)
 
+import Browser.Dom as Dom
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
@@ -8,12 +9,13 @@ import Css
 import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtmlAttributes
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, fromUnstyled)
+import Html.Styled.Attributes exposing (css, fromUnstyled, id)
 import Html.Styled.Events exposing (onClick, onDoubleClick)
 import Html.Styled.Lazy
 import InfiniteList
 import Material.Icons.Navigation as Icons
 import Tachyons.Classes as T
+import Task
 import Tracks exposing (..)
 import UI.Kit
 import UI.Tracks.Core exposing (..)
@@ -35,7 +37,9 @@ view necessities model =
             model
     in
     brick
-        [ fromUnstyled (InfiniteList.onScroll InfiniteListMsg) ]
+        [ fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
+        , id containerId
+        ]
         [ T.flex_grow_1
         , T.vh_25
         , T.overflow_x_hidden
@@ -49,6 +53,23 @@ view necessities model =
                 model.collection.harvested
             )
         ]
+
+
+containerId : String
+containerId =
+    "diffuse__track-list"
+
+
+scrollToNowPlaying : IdentifiedTrack -> Cmd Msg
+scrollToNowPlaying ( identifiers, track ) =
+    (22 - rowHeight / 2 + 5 + toFloat identifiers.indexInList * rowHeight)
+        |> Dom.setViewportOf containerId 0
+        |> Task.attempt (always Bypass)
+
+
+scrollToTop : Cmd Msg
+scrollToTop =
+    Task.attempt (always Bypass) (Dom.setViewportOf containerId 0 0)
 
 
 
@@ -190,8 +211,16 @@ rowStyles idx { isNowPlaying } =
 
             else
                 Css.rgb 255 255 255
+
+        color =
+            if isNowPlaying then
+                Css.rgb 255 255 255
+
+            else
+                Color.toElmCssColor UI.Kit.colors.text
     in
     [ Css.backgroundColor bgColor
+    , Css.color color
     ]
 
 
