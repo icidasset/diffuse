@@ -2,6 +2,7 @@ module Brain.Sources.Processing.Common exposing (Model, Msg(..), contextToTagsCo
 
 import Alien
 import Brain.Reply exposing (Reply(..))
+import Dict.Ext as Dict
 import Http exposing (Error(..))
 import Json.Encode as Encode
 import List.Extra as List
@@ -71,14 +72,14 @@ isProcessing status =
 reportHttpError : Source -> Http.Error -> Reply
 reportHttpError source err =
     reportError
-        { sourceId = source.id
-        , error = translateHttpError source.service err
-        }
+        source
+        (translateHttpError source.service err)
 
 
-reportError : { sourceId : String, error : String } -> Reply
-reportError { sourceId, error } =
-    [ ( "sourceId", Encode.string sourceId )
+reportError : Source -> String -> Reply
+reportError source error =
+    [ ( "sourceId", Encode.string source.id )
+    , ( "sourceName", Encode.string (Dict.fetch "name" "Unnamed" source.data) )
     , ( "error", Encode.string error )
     ]
         |> Encode.object

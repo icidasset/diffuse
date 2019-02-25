@@ -6,6 +6,7 @@ import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import File exposing (File)
 import Json.Encode as Json
+import Notifications exposing (..)
 import Queue
 import Time
 import UI.Authentication as Authentication
@@ -36,6 +37,7 @@ type alias Model =
     , isAuthenticated : Bool
     , isLoading : Bool
     , navKey : Nav.Key
+    , notifications : List (Notification Msg)
     , page : Page
     , url : Url
     , viewport : Viewport
@@ -115,6 +117,11 @@ type Msg
     | Import File
     | ImportJson String
     | RequestImport
+      -----------------------------------------
+      -- Notifications
+      -----------------------------------------
+    | DismissNotification { id : Int }
+    | ShowNotification (Notification Msg)
       -----------------------------------------
       -- URL
       -----------------------------------------

@@ -10,6 +10,7 @@ import Color.Ext as Color
 import Common exposing (Switch(..))
 import Css exposing (url)
 import Css.Global
+import Dict.Ext as Dict
 import File
 import File.Download
 import File.Select
@@ -18,6 +19,7 @@ import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
+import Notifications
 import Replying as N5 exposing (do, return)
 import Return2 as R2
 import Sources
@@ -32,6 +34,7 @@ import UI.Console
 import UI.Core as Core exposing (Flags, Model, Msg(..))
 import UI.Kit
 import UI.Navigation as Navigation
+import UI.Notifications
 import UI.Page as Page
 import UI.Ports as Ports
 import UI.Queue as Queue
@@ -78,6 +81,7 @@ init flags url key =
       , isAuthenticated = False
       , isLoading = True
       , navKey = key
+      , notifications = []
       , page = Page.fromUrl url
       , url = url
       , viewport = flags.viewport
@@ -351,6 +355,10 @@ update msg model =
             )
 
         ImportJson json ->
+            let
+                notification =
+                    Notifications.success "Imported data successfully!"
+            in
             model
                 |> update
                     (json
@@ -361,13 +369,30 @@ update msg model =
                 |> N5.andThen2 (update Core.SaveFavourites)
                 |> N5.andThen2 (update Core.SaveSources)
                 |> N5.andThen2 (update Core.SaveTracks)
-                -- TODO:
-                -- Show notication relating to import
+                |> N5.andThen2 (update <| ShowNotification notification)
                 |> R2.addCmd (do <| ChangeUrlUsingPage Page.Index)
 
         RequestImport ->
             ( model
             , File.Select.file [ "application/json" ] Import
+            )
+
+        -----------------------------------------
+        -- Notifications
+        -----------------------------------------
+        DismissNotification { id } ->
+            ( { model
+                | notifications =
+                    List.filter
+                        (Notifications.id >> (/=) id)
+                        model.notifications
+              }
+            , Cmd.none
+            )
+
+        ShowNotification notification ->
+            ( { model | notifications = notification :: model.notifications }
+            , Cmd.none
             )
 
         -----------------------------------------
@@ -505,20 +530,28 @@ translateAlienEvent event =
             TracksMsg (Tracks.RemoveByPaths event.data)
 
         Just Alien.ReportGenericError ->
-            let
-                dbg =
-                    -- TODO
-                    Debug.log "error" event
-            in
-            Bypass
+            event.data
+                |> Json.Decode.decodeValue Json.Decode.string
+                |> Result.map ((++) "Something went wrong, got the error: ")
+                |> Result.map (Notifications.error >> ShowNotification)
+                |> Result.withDefault Bypass
 
         Just Alien.ReportProcessingError ->
-            let
-                dbg =
-                    -- TODO
-                    Debug.log "error" event
-            in
-            Bypass
+            case Json.Decode.decodeValue (Json.Decode.dict Json.Decode.string) event.data of
+                Ok dict ->
+                    ShowNotification
+                        (Notifications.stickyError
+                            ("Could not process the **"
+                                ++ Dict.fetch "sourceName" "" dict
+                                ++ "** source. I got the following response from the source:"
+                            )
+                            (Dict.fetch "error" "missingError" dict)
+                            []
+                        )
+
+                Err _ ->
+                    ShowNotification
+                        (Notifications.error "Could not decode processing error")
 
         Just Alien.SearchTracks ->
             TracksMsg (Tracks.SetSearchResults event.data)
@@ -554,6 +587,12 @@ body model =
         , model.backdrop
             |> Lazy.lazy Backdrop.view
             |> Html.map BackdropMsg
+
+        -----------------------------------------
+        -- Notifications
+        -----------------------------------------
+        , model.notifications
+            |> Lazy.lazy UI.Notifications.view
 
         -----------------------------------------
         -- Content
