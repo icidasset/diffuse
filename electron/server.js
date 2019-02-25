@@ -55,7 +55,7 @@ function webdavProxy(req, res) {
     agentOptions: { rejectUnauthorized: false },
     url: req.query.url,
     method: req.method,
-    headers: Object.assign({}, req.headers, { authorization: req.query.auth })
+    headers: Object.assign({}, req.headers, { authorization: req.query.auth, host: undefined })
   })
   .on("error", err => res.status(500).send(err.message))
   .pipe(res)

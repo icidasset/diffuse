@@ -2,7 +2,7 @@
   "name": "Diffuse",
   "short_name": "Diffuse",
   "description": "A music player which connects to your cloud/distributed storage",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Steven Vandevelde <icid.asset@gmail.com>",
   "icons": [
     {
