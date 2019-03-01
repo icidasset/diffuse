@@ -93,9 +93,7 @@ _Not necessary._
 #### IPFS
 
 ```shell
-ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
-ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
-ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["X-Requested-With", "Range", "Content-Range"]'
+ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh"]'
 ```
 
 #### Microsoft Azure Storage

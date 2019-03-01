@@ -59,7 +59,7 @@ index model =
           , lineBreak
           , text "PS. You're storing the data for this application "
           , case model.authentication.methodInUse of
-                Just Ipfs ->
+                Just (Ipfs _) ->
                     text "on IPFS."
 
                 Just Local ->

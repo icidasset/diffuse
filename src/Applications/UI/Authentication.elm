@@ -1,12 +1,13 @@
 module UI.Authentication exposing (Model, Msg(..), initialModel, update, view)
 
 import Alien
-import Authentication
+import Authentication exposing (Method(..))
 import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
+import Crypto.Hash
 import Css exposing (pct, px, solid, transparent)
 import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
 import Html.Styled.Attributes exposing (attribute, css, href, src, style, type_, width)
@@ -28,14 +29,16 @@ import UI.Reply exposing (Reply(..))
 
 
 type alias Model =
-    { methodInUse : Maybe Authentication.Method
+    { encryptionKey : Maybe String
+    , methodInUse : Maybe Authentication.Method
     , privateKeyInputFor : Maybe Authentication.Method
     }
 
 
 initialModel : Model
 initialModel =
-    { methodInUse = Nothing
+    { encryptionKey = Nothing
+    , methodInUse = Nothing
     , privateKeyInputFor = Nothing
     }
 
@@ -52,6 +55,7 @@ type Msg
       -----------------------------------------
     | ActivateMethod Json.Value
     | DischargeMethod
+    | SetEncryptionKey String
       -----------------------------------------
       -- Private Key
       -----------------------------------------
@@ -66,7 +70,7 @@ update msg model =
             R3.withNothing model
 
         SignIn method ->
-            ( model
+            ( { model | privateKeyInputFor = Nothing }
             , method
                 |> Authentication.methodToString
                 |> Json.Encode.string
@@ -83,6 +87,21 @@ update msg model =
 
         DischargeMethod ->
             R3.withNothing { model | methodInUse = Nothing }
+
+        SetEncryptionKey privateKey ->
+            case model.privateKeyInputFor of
+                Just (Ipfs _) ->
+                    { encryptionKey = Crypto.Hash.sha256 privateKey }
+                        |> Ipfs
+                        |> Just
+                        |> (\m -> { model | privateKeyInputFor = m })
+                        |> R3.withNothing
+
+                Just Local ->
+                    R3.withNothing model
+
+                Nothing ->
+                    R3.withNothing model
 
         -----------------------------------------
         -- Private Key
@@ -157,11 +176,11 @@ view model =
                         [ attribute "autocomplete" "off"
                         , attribute "autocorrect" "off"
                         , attribute "spellcheck" "false"
-                        , Html.Styled.Attributes.value "4AVTfKTYio3rfVBQKkfiioRFur2pnbdMMGeWmkwPdGAQ32XV"
+                        , Html.Styled.Events.onInput SetEncryptionKey
                         ]
                     , UI.Kit.button
                         UI.Kit.WithText
-                        Bypass
+                        (SignIn method)
                         (text "Continue")
                     ]
 
@@ -179,7 +198,7 @@ view model =
                         , label = "Store data in the browser"
                         }
                     , choiceButton
-                        { action = ShowPrivateKeyScreen Authentication.Ipfs
+                        { action = ShowPrivateKeyScreen (Authentication.Ipfs { encryptionKey = "" })
                         , icon = Icons.fingerprint
                         , isLast = True
                         , label = "Store encrypted data on IPFS"

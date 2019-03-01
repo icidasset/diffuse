@@ -20,7 +20,7 @@ const app = Elm.Brain.init()
 // ==
 
 self.onmessage = event => {
-  app.ports.fromUI.send(event.data)
+  app.ports.fromAlien.send(event.data)
 }
 
 app.ports.toUI.subscribe(event => {
@@ -33,25 +33,83 @@ app.ports.toUI.subscribe(event => {
 // -----
 
 app.ports.removeCache.subscribe(event => {
-  deleteFromIndex({ key: event.tag }).catch(console.error)
+  deleteFromIndex({ key: event.tag }).catch(reportError(event))
 })
 
 
 app.ports.requestCache.subscribe(event => {
-  getFromIndex({ key: event.tag }).then(data => {
-    app.ports.fromCache.send({
-      tag: event.tag,
-      data: data,
-      error: null
-    })
-  }).catch(
-     console.error
-  )
+  getFromIndex({ key: event.tag })
+    .then(data => {
+      app.ports.fromAlien.send({
+        tag: event.tag,
+        data: data,
+        error: null
+      })
+    }).catch(
+      reportError(event)
+    )
 })
 
 
 app.ports.toCache.subscribe(event => {
-  setInIndex({ key: event.tag, data: event.data }).catch(console.error)
+  setInIndex({ key: event.tag, data: event.data }).catch(reportError(event))
+})
+
+
+
+// IPFS
+// ----
+
+const IPFS_ROOT = "/Applications/Diffuse/"
+
+
+function ipfsFilePath(tag) {
+  return IPFS_ROOT + (_ => {
+    switch (tag) {
+      case "AUTH_IPFS": return "Data.json"
+      default: return tag
+    }
+  })()
+}
+
+
+app.ports.requestIpfs.subscribe(event => {
+  const path = ipfsFilePath(event.tag)
+
+  fetch("http://localhost:5001/api/v0/files/read?arg=" + path)
+    .then(r => r.ok ? r.text() : r.json())
+    .then(r => {
+      app.ports.fromAlien.send({
+        tag: event.tag,
+        data: r.Code === 0 ? {} : r,
+        error: null
+      })
+    })
+    .catch(
+      reportError(event)
+    )
+})
+
+
+app.ports.toIpfs.subscribe(event => {
+  const formData = new FormData()
+
+  formData.append("data", event.data)
+
+  const params = new URLSearchParams({
+    arg: ipfsFilePath(event.tag),
+    create: true,
+    offset: 0,
+    parents: true,
+    truncate: true
+  }).toString()
+
+  fetch(
+    "http://localhost:5001/api/v0/files/write?" + params,
+    { method: "POST", body: formData }
+  ).catch(
+    reportError(event)
+  )
 })
 
 
@@ -96,3 +154,15 @@ app.ports.requestTags.subscribe(context => {
     app.ports.receiveTags.send(newContext)
   })
 })
+
+
+
+// 🔱
+// --
+
+function reportError(event) {
+  return err => {
+    console.error(err)
+    app.ports.fromAlien.send({ tag: event.tag, data: null, error: err })
+  }
+}

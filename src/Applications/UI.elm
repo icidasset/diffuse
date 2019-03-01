@@ -488,7 +488,7 @@ updateChild =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Ports.fromBrain translateAlienEvent
+        [ Ports.fromBrain alien
 
         -- Audio
         --------
@@ -501,6 +501,19 @@ subscriptions _ =
         --
         , Time.every (60 * 1000) SetCurrentTime
         ]
+
+
+alien : Alien.Event -> Msg
+alien event =
+    case event.error of
+        Just err ->
+            err
+                |> (++) "Something went wrong, got the error: "
+                |> Notifications.error
+                |> ShowNotification
+
+        Nothing ->
+            translateAlienEvent event
 
 
 translateAlienEvent : Alien.Event -> Msg
@@ -528,13 +541,6 @@ translateAlienEvent event =
 
         Just Alien.RemoveTracksByPath ->
             TracksMsg (Tracks.RemoveByPaths event.data)
-
-        Just Alien.ReportGenericError ->
-            event.data
-                |> Json.Decode.decodeValue Json.Decode.string
-                |> Result.map ((++) "Something went wrong, got the error: ")
-                |> Result.map (Notifications.error >> ShowNotification)
-                |> Result.withDefault Bypass
 
         Just Alien.ReportProcessingError ->
             case Json.Decode.decodeValue (Json.Decode.dict Json.Decode.string) event.data of

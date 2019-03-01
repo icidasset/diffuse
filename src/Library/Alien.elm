@@ -21,7 +21,9 @@ type alias Event =
 type Tag
     = AuthAnonymous
     | AuthEnclosedData
+    | AuthIpfs
     | AuthMethod
+    | Report
     | SearchTracks
       -- from UI
     | ProcessSources
@@ -38,7 +40,6 @@ type Tag
     | LoadEnclosedUserData
     | LoadHypaethralUserData
     | RemoveTracksByPath
-    | ReportGenericError
     | ReportProcessingError
     | UpdateSourceData
 
@@ -77,11 +78,17 @@ tagToString tag =
         AuthAnonymous ->
             "AUTH_ANONYMOUS"
 
+        AuthIpfs ->
+            "AUTH_IPFS"
+
         AuthMethod ->
             "AUTH_METHOD"
 
         AuthEnclosedData ->
             "AUTH_ENCLOSED_DATA"
+
+        Report ->
+            "REPORT"
 
         SearchTracks ->
             "SEARCH_TRACKS"
@@ -131,9 +138,6 @@ tagToString tag =
         RemoveTracksByPath ->
             "REMOVE_TRACKS_BY_PATH"
 
-        ReportGenericError ->
-            "REPORT_GENERIC_ERROR"
-
         ReportProcessingError ->
             "REPORT_PROCESSING_ERROR"
 
@@ -147,11 +151,17 @@ tagFromString string =
         "AUTH_ANONYMOUS" ->
             Just AuthAnonymous
 
+        "AUTH_IPFS" ->
+            Just AuthIpfs
+
         "AUTH_METHOD" ->
             Just AuthMethod
 
         "AUTH_ENCLOSED_DATA" ->
             Just AuthEnclosedData
+
+        "REPORT" ->
+            Just Report
 
         "SEARCH_TRACKS" ->
             Just SearchTracks
@@ -200,9 +210,6 @@ tagFromString string =
 
         "REMOVE_TRACKS_BY_PATH" ->
             Just RemoveTracksByPath
-
-        "REPORT_GENERIC_ERROR" ->
-            Just ReportGenericError
 
         "REPORT_PROCESSING_ERROR" ->
             Just ReportProcessingError

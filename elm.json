@@ -12,6 +12,7 @@
             "NoRedInk/elm-json-decode-pipeline": "1.0.0",
             "Skinney/murmur3": "2.0.8",
             "avh4/elm-color": "1.0.0",
+            "billstclair/elm-crypto-aes": "1.0.8",
             "danfishgold/base64-bytes": "1.0.1",
             "danmarcab/material-icons": "1.0.0",
             "elm/browser": "1.0.1",
@@ -38,20 +39,17 @@
             "ktonon/elm-word": "2.1.2",
             "noahzgordon/elm-color-extra": "1.0.1",
             "pilatch/flip": "1.0.0",
-            "rluiten/elm-text-search": "5.0.0",
             "rtfeldman/elm-css": "16.0.0",
             "rtfeldman/elm-hex": "1.0.0",
             "ryannhg/date-format": "2.3.0",
-            "ymtszw/elm-xml-decode": "3.0.0"
+            "ymtszw/elm-xml-decode": "3.0.0",
+            "zwilias/elm-utf-tools": "2.0.1"
         },
         "indirect": {
             "elm/parser": "1.1.0",
             "elm-explorations/test": "1.2.0",
             "fredcy/elm-parseint": "2.0.1",
-            "jinjor/elm-xml-parser": "2.0.0",
-            "rluiten/sparsevector": "1.0.3",
-            "rluiten/stemmer": "1.0.4",
-            "rluiten/trie": "2.0.3"
+            "jinjor/elm-xml-parser": "2.0.0"
         }
     },
     "test-dependencies": {

@@ -236,6 +236,7 @@ makeHypaethralLens setter model value =
 
 saveHypaethralData : Model -> ( Model, Cmd Msg )
 saveHypaethralData model =
+    -- TODO: DEBOUNCE
     model.hypaethralUserData
         |> Authentication.encodeHypaethral
         |> Authentication.SaveHypaethralData
@@ -250,8 +251,7 @@ saveHypaethralData model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Brain.Ports.fromCache translateAlienEvent
-        , Brain.Ports.fromUI translateAlienEvent
+        [ Brain.Ports.fromAlien alien
 
         -----------------------------------------
         -- Children
@@ -261,10 +261,23 @@ subscriptions model =
         ]
 
 
-translateAlienEvent : Alien.Event -> Msg
-translateAlienEvent event =
+alien : Alien.Event -> Msg
+alien event =
+    case event.error of
+        Nothing ->
+            translateAlienData event
+
+        Just err ->
+            translateAlienError event err
+
+
+translateAlienData : Alien.Event -> Msg
+translateAlienData event =
     case Alien.tagFromString event.tag of
         Just Alien.AuthAnonymous ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
+
+        Just Alien.AuthIpfs ->
             AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
 
         Just Alien.AuthMethod ->
@@ -285,7 +298,7 @@ translateAlienEvent event =
                 Err error ->
                     error
                         |> Json.errorToString
-                        |> Alien.report Alien.ReportGenericError
+                        |> Alien.report Alien.Report
                         |> NotifyUI
 
         Just Alien.SaveEnclosedUserData ->
@@ -314,4 +327,20 @@ translateAlienEvent event =
             AuthenticationMsg Authentication.PerformSignOut
 
         _ ->
+            Bypass
+
+
+translateAlienError : Alien.Event -> String -> Msg
+translateAlienError event err =
+    case event.tag of
+        _ ->
+            -- TODO: SHOW NOTIFICATION IN UI?
+            -- err
+            --     |> (++) "Something went wrong, got the error: "
+            --     |> Notifications.error
+            --     |> NotifyUI
+            let
+                dbg =
+                    Debug.log "alienError" err
+            in
             Bypass
