@@ -3,7 +3,7 @@ module Brain exposing (main)
 import Alien
 import Authentication exposing (HypaethralUserData)
 import Brain.Authentication as Authentication
-import Brain.Core exposing (..)
+import Brain.Core as Core exposing (..)
 import Brain.Ports
 import Brain.Reply as Reply exposing (Reply(..))
 import Brain.Sources.Processing as Processing
@@ -70,6 +70,11 @@ update msg model =
         NotifyUI alienEvent ->
             ( model
             , Brain.Ports.toUI alienEvent
+            )
+
+        ToCache alienEvent ->
+            ( model
+            , Brain.Ports.toCache alienEvent
             )
 
         -----------------------------------------
@@ -277,14 +282,14 @@ translateAlienData event =
         Just Alien.AuthAnonymous ->
             AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
 
+        Just Alien.AuthEnclosedData ->
+            AuthenticationMsg (Authentication.EnclosedDataRetrieved event.data)
+
         Just Alien.AuthIpfs ->
             AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
 
         Just Alien.AuthMethod ->
             AuthenticationMsg (Authentication.MethodRetrieved event.data)
-
-        Just Alien.AuthEnclosedData ->
-            AuthenticationMsg (Authentication.EnclosedDataRetrieved event.data)
 
         Just Alien.ProcessSources ->
             -- Only proceed to the processing if we got all the necessary data,
@@ -325,6 +330,13 @@ translateAlienData event =
 
         Just Alien.SignOut ->
             AuthenticationMsg Authentication.PerformSignOut
+
+        Just Alien.ToCache ->
+            -- TODO: Show error
+            event.data
+                |> Json.decodeValue Alien.hostDecoder
+                |> Result.map Core.ToCache
+                |> Result.withDefault Bypass
 
         _ ->
             Bypass

@@ -1,4 +1,4 @@
-module Alien exposing (Event, Tag(..), broadcast, report, tagFromString, tagToString, trigger)
+module Alien exposing (Event, Tag(..), broadcast, hostDecoder, report, tagFromString, tagToString, trigger)
 
 {-| 👽 Aliens.
 
@@ -7,6 +7,7 @@ Including the communication between the different Elm apps/workers.
 
 -}
 
+import Json.Decode
 import Json.Encode
 
 
@@ -23,6 +24,7 @@ type Tag
     | AuthEnclosedData
     | AuthIpfs
     | AuthMethod
+    | AuthSecretKey
     | Report
     | SearchTracks
       -- from UI
@@ -33,6 +35,7 @@ type Tag
     | SaveTracks
     | SignIn
     | SignOut
+    | ToCache
       -- to UI
     | AddTracks
     | FinishedProcessingSources
@@ -78,14 +81,17 @@ tagToString tag =
         AuthAnonymous ->
             "AUTH_ANONYMOUS"
 
+        AuthEnclosedData ->
+            "AUTH_ENCLOSED_DATA"
+
         AuthIpfs ->
             "AUTH_IPFS"
 
         AuthMethod ->
             "AUTH_METHOD"
 
-        AuthEnclosedData ->
-            "AUTH_ENCLOSED_DATA"
+        AuthSecretKey ->
+            "AUTH_SECRET_KEY"
 
         Report ->
             "REPORT"
@@ -116,6 +122,9 @@ tagToString tag =
 
         SignOut ->
             "SIGN_OUT"
+
+        ToCache ->
+            "TO_CACHE"
 
         -----------------------------------------
         -- To UI
@@ -151,14 +160,17 @@ tagFromString string =
         "AUTH_ANONYMOUS" ->
             Just AuthAnonymous
 
+        "AUTH_ENCLOSED_DATA" ->
+            Just AuthEnclosedData
+
         "AUTH_IPFS" ->
             Just AuthIpfs
 
         "AUTH_METHOD" ->
             Just AuthMethod
 
-        "AUTH_ENCLOSED_DATA" ->
-            Just AuthEnclosedData
+        "AUTH_SECRET_KEY" ->
+            Just AuthSecretKey
 
         "REPORT" ->
             Just Report
@@ -190,6 +202,9 @@ tagFromString string =
         "SIGN_OUT" ->
             Just SignOut
 
+        "TO_CACHE" ->
+            Just ToCache
+
         -----------------------------------------
         -- UI
         -----------------------------------------
@@ -219,3 +234,23 @@ tagFromString string =
 
         _ ->
             Nothing
+
+
+
+-- ⚗️
+
+
+{-| Decoder for an alien event inside another alient event.
+-}
+hostDecoder : Json.Decode.Decoder Event
+hostDecoder =
+    Json.Decode.map3
+        (\tag data error ->
+            { tag = tag
+            , data = data
+            , error = error
+            }
+        )
+        (Json.Decode.field "tag" Json.Decode.string)
+        (Json.Decode.field "data" Json.Decode.value)
+        (Json.Decode.field "error" <| Json.Decode.maybe Json.Decode.string)

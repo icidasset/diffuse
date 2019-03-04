@@ -16,6 +16,7 @@ import Json.Decode as Json
 import Json.Encode
 import Material.Icons.Action as Icons
 import Replying exposing (R3D3)
+import Return2 as R2
 import Return3 as R3
 import Svg exposing (Svg)
 import Tachyons.Classes as T
@@ -29,17 +30,15 @@ import UI.Reply exposing (Reply(..))
 
 
 type alias Model =
-    { encryptionKey : Maybe String
+    { encryptionKeyInputFor : Maybe Authentication.Method
     , methodInUse : Maybe Authentication.Method
-    , privateKeyInputFor : Maybe Authentication.Method
     }
 
 
 initialModel : Model
 initialModel =
-    { encryptionKey = Nothing
+    { encryptionKeyInputFor = Nothing
     , methodInUse = Nothing
-    , privateKeyInputFor = Nothing
     }
 
 
@@ -55,12 +54,12 @@ type Msg
       -----------------------------------------
     | ActivateMethod Json.Value
     | DischargeMethod
-    | SetEncryptionKey String
+    | FabricateSecretKey String
       -----------------------------------------
       -- Private Key
       -----------------------------------------
-    | HidePrivateKeyScreen
-    | ShowPrivateKeyScreen Authentication.Method
+    | HideEncryptionKeyScreen
+    | ShowEncryptionKeyScreen Authentication.Method
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -70,7 +69,7 @@ update msg model =
             R3.withNothing model
 
         SignIn method ->
-            ( { model | privateKeyInputFor = Nothing }
+            ( { model | encryptionKeyInputFor = Nothing }
             , method
                 |> Authentication.methodToString
                 |> Json.Encode.string
@@ -88,29 +87,25 @@ update msg model =
         DischargeMethod ->
             R3.withNothing { model | methodInUse = Nothing }
 
-        SetEncryptionKey privateKey ->
-            case model.privateKeyInputFor of
-                Just (Ipfs _) ->
-                    { encryptionKey = Crypto.Hash.sha256 privateKey }
-                        |> Ipfs
-                        |> Just
-                        |> (\m -> { model | privateKeyInputFor = m })
-                        |> R3.withNothing
-
-                Just Local ->
-                    R3.withNothing model
-
-                Nothing ->
-                    R3.withNothing model
+        FabricateSecretKey passphrase ->
+            [ ( "tag", Json.Encode.string <| Alien.tagToString Alien.AuthSecretKey )
+            , ( "data", Json.Encode.string <| Crypto.Hash.sha256 passphrase )
+            , ( "error", Json.Encode.null )
+            ]
+                |> Json.Encode.object
+                |> Alien.broadcast Alien.ToCache
+                |> Ports.toBrain
+                |> R2.withModel model
+                |> R3.withNoReply
 
         -----------------------------------------
         -- Private Key
         -----------------------------------------
-        HidePrivateKeyScreen ->
-            R3.withNothing { model | privateKeyInputFor = Nothing }
+        HideEncryptionKeyScreen ->
+            R3.withNothing { model | encryptionKeyInputFor = Nothing }
 
-        ShowPrivateKeyScreen method ->
-            R3.withNothing { model | privateKeyInputFor = Just method }
+        ShowEncryptionKeyScreen method ->
+            R3.withNothing { model | encryptionKeyInputFor = Just method }
 
 
 
@@ -133,12 +128,12 @@ view model =
             [ chunk
                 [ T.relative ]
                 [ img
-                    [ onClick HidePrivateKeyScreen
+                    [ onClick HideEncryptionKeyScreen
                     , src "/images/diffuse-light.svg"
                     , width 190
 
                     --
-                    , case model.privateKeyInputFor of
+                    , case model.encryptionKeyInputFor of
                         Just _ ->
                             style "cursor" "pointer"
 
@@ -149,7 +144,7 @@ view model =
 
                 -- Speech bubble
                 ----------------
-                , case model.privateKeyInputFor of
+                , case model.encryptionKeyInputFor of
                     Just _ ->
                         [ text "I need a passcode"
                         , lineBreak
@@ -166,7 +161,7 @@ view model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , case model.privateKeyInputFor of
+        , case model.encryptionKeyInputFor of
             Just method ->
                 chunk
                     [ T.flex
@@ -176,7 +171,7 @@ view model =
                         [ attribute "autocomplete" "off"
                         , attribute "autocorrect" "off"
                         , attribute "spellcheck" "false"
-                        , Html.Styled.Events.onInput SetEncryptionKey
+                        , Html.Styled.Events.onInput FabricateSecretKey
                         ]
                     , UI.Kit.button
                         UI.Kit.WithText
@@ -198,7 +193,7 @@ view model =
                         , label = "Store data in the browser"
                         }
                     , choiceButton
-                        { action = ShowPrivateKeyScreen (Authentication.Ipfs { encryptionKey = "" })
+                        { action = ShowEncryptionKeyScreen Authentication.Ipfs
                         , icon = Icons.fingerprint
                         , isLast = True
                         , label = "Store encrypted data on IPFS"

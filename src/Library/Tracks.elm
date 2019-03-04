@@ -169,11 +169,8 @@ makeTrack : String -> ( String, Tags ) -> Track
 makeTrack sourceId ( path, tags ) =
     { id =
         (sourceId ++ "//" ++ path)
-            |> Bytes.Encode.string
-            |> Bytes.Encode.encode
-            |> Base64.fromBytes
-            |> Maybe.map (String.chopEnd "=")
-            |> Maybe.withDefault missingId
+            |> Base64.encode
+            |> String.chopEnd "="
     , path = path
     , sourceId = sourceId
     , tags = tags

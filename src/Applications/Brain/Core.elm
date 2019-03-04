@@ -35,6 +35,7 @@ type alias Model =
 type Msg
     = Bypass
     | NotifyUI Alien.Event
+    | ToCache Alien.Event
       -----------------------------------------
       -- Children
       -----------------------------------------

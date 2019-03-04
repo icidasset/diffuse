@@ -7,6 +7,7 @@
 importScripts("/vendor/music-metadata.js")
 
 importScripts("/brain.js")
+importScripts("/encryption.js")
 importScripts("/indexed-db.js")
 importScripts("/processing.js")
 importScripts("/urls.js")
@@ -52,7 +53,16 @@ app.ports.requestCache.subscribe(event => {
 
 
 app.ports.toCache.subscribe(event => {
-  setInIndex({ key: event.tag, data: event.data }).catch(reportError(event))
+  const dataPromise = (_ => {
+    switch (event.tag) {
+      case "AUTH_SECRET_KEY": return keyFromPassphrase(event.data)
+      default: return Promise.resolve(event.data)
+    }
+  })()
+
+  dataPromise
+    .then(data => setInIndex({ key: event.tag, data: data }))
+    .catch(reportError(event))
 })
 
 
@@ -75,13 +85,16 @@ function ipfsFilePath(tag) {
 
 app.ports.requestIpfs.subscribe(event => {
   const path = ipfsFilePath(event.tag)
+  const secretKeyPromise = getFromIndex({ key: "AUTH_SECRET_KEY" })
 
   fetch("http://localhost:5001/api/v0/files/read?arg=" + path)
     .then(r => r.ok ? r.text() : r.json())
-    .then(r => {
+    .then(r => secretKeyPromise.then(s => [r, s]))
+    .then(([r, s]) => r.Code === 0 ? {} : decrypt(s, r))
+    .then(data => {
       app.ports.fromAlien.send({
         tag: event.tag,
-        data: r.Code === 0 ? {} : r,
+        data: typeof data === "string" ? JSON.parse(data) : data,
         error: null
       })
     })
@@ -92,10 +105,7 @@ app.ports.requestIpfs.subscribe(event => {
 
 
 app.ports.toIpfs.subscribe(event => {
-  const formData = new FormData()
-
-  formData.append("data", event.data)
-
+  const json = JSON.stringify(event.data)
   const params = new URLSearchParams({
     arg: ipfsFilePath(event.tag),
     create: true,
@@ -104,12 +114,22 @@ app.ports.toIpfs.subscribe(event => {
     truncate: true
   }).toString()
 
-  fetch(
-    "http://localhost:5001/api/v0/files/write?" + params,
-    { method: "POST", body: formData }
-  ).catch(
-    reportError(event)
-  )
+  getFromIndex({ key: "AUTH_SECRET_KEY" })
+    .then(secretKey => encrypt(secretKey, json))
+    .then(data => {
+      const formData = new FormData()
+
+      formData.append("data", data)
+
+      return fetch(
+        "http://localhost:5001/api/v0/files/write?" + params,
+        { method: "POST", body: formData }
+      )
+
+    }).catch(
+      reportError(event)
+
+    )
 })
 
 

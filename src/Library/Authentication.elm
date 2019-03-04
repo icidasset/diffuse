@@ -16,7 +16,7 @@ import Tracks.Encoding as Tracks
 
 
 type Method
-    = Ipfs { encryptionKey : String }
+    = Ipfs
     | Local
 
 
@@ -55,8 +55,8 @@ encodeMethod =
 methodToString : Method -> String
 methodToString method =
     case method of
-        Ipfs { encryptionKey } ->
-            String.join methodSeparator [ "IPFS", encryptionKey ]
+        Ipfs ->
+            "IPFS"
 
         Local ->
             "LOCAL"
@@ -64,20 +64,15 @@ methodToString method =
 
 methodFromString : String -> Maybe Method
 methodFromString string =
-    case String.split methodSeparator string of
-        [ "IPFS", encryptionKey ] ->
-            Just (Ipfs { encryptionKey = encryptionKey })
+    case string of
+        "IPFS" ->
+            Just Ipfs
 
-        [ "LOCAL" ] ->
+        "LOCAL" ->
             Just Local
 
         _ ->
             Nothing
-
-
-methodSeparator : String
-methodSeparator =
-    ":::"
 
 
 
