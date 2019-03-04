@@ -1,6 +1,7 @@
 <img src="https://diffuse.sh/images/diffuse-dark.svg" alt="Diffuse" width="158" />
 
-__A music player which connects to your cloud/distributed storage__, in the form of a static, serverless, web application.
+_A music player which connects to your cloud/distributed storage,  
+in the form of a static, serverless, web application._
 
 <br />
 <img src="https://icidasset-public.s3.amazonaws.com/diffuse.jpg" />
@@ -15,7 +16,8 @@ __A music player which connects to your cloud/distributed storage__, in the form
 
 #### User layer
 
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(ie. anonymous mode)</small>
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(unencrypted data in browser)</small>
+- [IPFS](https://ipfs.io/) <small>(encrypted)</small>
 
 #### Music layer
 
@@ -29,8 +31,12 @@ __A music player which connects to your cloud/distributed storage__, in the form
 
 ## Development
 
+For version numbers,  
+see `.tool-versions` and `stack.yaml`.
+
 - [Elm](https://elm-lang.org/) programming language
 - [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
+- [NPM](https://www.npmjs.com/) package management through node.js
 - [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
 - [Devd](https://github.com/cortesi/devd) web server for development (optional)
 - [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
