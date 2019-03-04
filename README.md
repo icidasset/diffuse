@@ -3,7 +3,7 @@
 _A music player which connects to your cloud/distributed storage,  
 in the form of a static, serverless, web application._
 
-📍 Available at [https://diffuse.sh/](https://diffuse.sh/) and for [download](https://github.com/icidasset/diffuse/releases)
+📍 Available at [diffuse.sh](https://diffuse.sh/) and for [download](https://github.com/icidasset/diffuse/releases).
 
 <br />
 <img src="https://icidasset-public.s3.amazonaws.com/diffuse.jpg" />
