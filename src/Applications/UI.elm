@@ -20,6 +20,7 @@ import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
 import Notifications
+import Process
 import Replying as N5 exposing (do, return)
 import Return2 as R2
 import Sources
@@ -351,7 +352,10 @@ update msg model =
 
         Import file ->
             ( { model | isLoading = True }
-            , Task.perform ImportJson (File.toString file)
+            , 250
+                |> Process.sleep
+                |> Task.andThen (\_ -> File.toString file)
+                |> Task.perform ImportJson
             )
 
         ImportJson json ->
