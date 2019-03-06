@@ -10,7 +10,7 @@ import Conditional exposing (..)
 import Crypto.Hash
 import Css exposing (pct, px, solid, transparent)
 import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
-import Html.Styled.Attributes exposing (attribute, css, href, src, style, type_, width)
+import Html.Styled.Attributes exposing (attribute, css, href, placeholder, src, style, type_, width)
 import Html.Styled.Events exposing (onClick)
 import Json.Decode as Json
 import Json.Encode
@@ -146,7 +146,7 @@ view model =
                 ----------------
                 , case model.encryptionKeyInputFor of
                     Just _ ->
-                        [ text "I need a passcode"
+                        [ text "I need a passphrase"
                         , lineBreak
                         , text "to encrypt your data."
                         ]
@@ -171,6 +171,7 @@ view model =
                         [ attribute "autocomplete" "off"
                         , attribute "autocorrect" "off"
                         , attribute "spellcheck" "false"
+                        , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
                         , Html.Styled.Events.onInput FabricateSecretKey
                         ]
                     , UI.Kit.button
