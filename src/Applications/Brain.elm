@@ -69,7 +69,17 @@ update msg model =
 
         NotifyUI alienEvent ->
             ( model
-            , Brain.Ports.toUI alienEvent
+            , Cmd.batch
+                [ Brain.Ports.toUI alienEvent
+
+                --
+                , case alienEvent.error of
+                    Just _ ->
+                        Brain.Ports.toUI (Alien.trigger Alien.HideLoadingScreen)
+
+                    Nothing ->
+                        Cmd.none
+                ]
             )
 
         ToCache alienEvent ->
@@ -300,11 +310,8 @@ translateAlienData event =
                         |> Processing.Process
                         |> ProcessingMsg
 
-                Err error ->
-                    error
-                        |> Json.errorToString
-                        |> Alien.report Alien.Report
-                        |> NotifyUI
+                Err err ->
+                    report Alien.ProcessSources (Json.errorToString err)
 
         Just Alien.SaveEnclosedUserData ->
             AuthenticationMsg (Authentication.SaveEnclosedData event.data)
@@ -332,11 +339,12 @@ translateAlienData event =
             AuthenticationMsg Authentication.PerformSignOut
 
         Just Alien.ToCache ->
-            -- TODO: Show error
-            event.data
-                |> Json.decodeValue Alien.hostDecoder
-                |> Result.map Core.ToCache
-                |> Result.withDefault Bypass
+            case Json.decodeValue Alien.hostDecoder event.data of
+                Ok val ->
+                    Core.ToCache val
+
+                Err err ->
+                    report Alien.ToCache (Json.errorToString err)
 
         _ ->
             Bypass
@@ -344,15 +352,19 @@ translateAlienData event =
 
 translateAlienError : Alien.Event -> String -> Msg
 translateAlienError event err =
-    case event.tag of
-        _ ->
-            -- TODO: SHOW NOTIFICATION IN UI?
-            -- err
-            --     |> (++) "Something went wrong, got the error: "
-            --     |> Notifications.error
-            --     |> NotifyUI
-            let
-                dbg =
-                    Debug.log "alienError" err
-            in
+    case Alien.tagFromString event.tag of
+        Just Alien.AuthIpfs ->
+            report Alien.AuthIpfs "I can't seem to connect with IPFS. Maybe you used the wrong passphrase, or your IPFS node is offline?"
+
+        Just tag ->
+            report tag err
+
+        Nothing ->
             Bypass
+
+
+report : Alien.Tag -> String -> Msg
+report tag err =
+    err
+        |> Alien.report tag
+        |> NotifyUI

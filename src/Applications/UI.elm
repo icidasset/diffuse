@@ -233,7 +233,7 @@ update msg model =
                 |> Ports.toBrain
                 |> R2.withModel model
 
-        SignOut ->
+        Core.SignOut ->
             let
                 alienSigningOut =
                     Alien.SignOut
@@ -380,7 +380,10 @@ update msg model =
         -----------------------------------------
         -- Notifications
         -----------------------------------------
-        DismissNotification { id } ->
+        DismissNotification args ->
+            UI.Notifications.dismissNotification model args
+
+        RemoveNotification { id } ->
             ( { model
                 | notifications =
                     List.filter
@@ -391,9 +394,7 @@ update msg model =
             )
 
         ShowNotification notification ->
-            ( { model | notifications = notification :: model.notifications }
-            , Cmd.none
-            )
+            UI.Notifications.showNotification model notification
 
         -----------------------------------------
         -- URL
@@ -506,18 +507,15 @@ subscriptions _ =
 alien : Alien.Event -> Msg
 alien event =
     case event.error of
-        Just err ->
-            err
-                |> (++) "Something went wrong, got the error: "
-                |> Notifications.error
-                |> ShowNotification
-
         Nothing ->
-            translateAlienEvent event
+            translateAlienData event
+
+        Just err ->
+            translateAlienError event err
 
 
-translateAlienEvent : Alien.Event -> Msg
-translateAlienEvent event =
+translateAlienData : Alien.Event -> Msg
+translateAlienData event =
     case Alien.tagFromString event.tag of
         Just Alien.AddTracks ->
             TracksMsg (Tracks.Add event.data)
@@ -567,6 +565,18 @@ translateAlienEvent event =
             Bypass
 
         _ ->
+            Bypass
+
+
+translateAlienError : Alien.Event -> String -> Msg
+translateAlienError event err =
+    case Alien.tagFromString event.tag of
+        Just tag ->
+            []
+                |> Notifications.stickyError err ""
+                |> ShowNotification
+
+        Nothing ->
             Bypass
 
 

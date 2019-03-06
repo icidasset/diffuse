@@ -121,6 +121,7 @@ type Msg
       -- Notifications
       -----------------------------------------
     | DismissNotification { id : Int }
+    | RemoveNotification { id : Int }
     | ShowNotification (Notification Msg)
       -----------------------------------------
       -- URL

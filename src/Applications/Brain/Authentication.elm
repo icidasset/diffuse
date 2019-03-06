@@ -10,7 +10,6 @@ Involves:
 Methods:
 
     - Local
-    - RemoteStorage
     - IPFS
 
 Steps:

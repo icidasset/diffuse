@@ -25,7 +25,6 @@ type Tag
     | AuthIpfs
     | AuthMethod
     | AuthSecretKey
-    | Report
     | SearchTracks
       -- from UI
     | ProcessSources
@@ -92,9 +91,6 @@ tagToString tag =
 
         AuthSecretKey ->
             "AUTH_SECRET_KEY"
-
-        Report ->
-            "REPORT"
 
         SearchTracks ->
             "SEARCH_TRACKS"
@@ -171,9 +167,6 @@ tagFromString string =
 
         "AUTH_SECRET_KEY" ->
             Just AuthSecretKey
-
-        "REPORT" ->
-            Just Report
 
         "SEARCH_TRACKS" ->
             Just SearchTracks

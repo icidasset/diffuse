@@ -3,6 +3,7 @@ module UI.Reply exposing (Reply(..))
 import Alien
 import Common exposing (Switch(..))
 import Json.Decode as Json
+import Notifications exposing (Notification)
 import Queue
 import Sources exposing (Source)
 import Tracks exposing (IdentifiedTrack)

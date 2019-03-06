@@ -183,6 +183,6 @@ app.ports.requestTags.subscribe(context => {
 function reportError(event) {
   return err => {
     console.error(err)
-    app.ports.fromAlien.send({ tag: event.tag, data: null, error: err })
+    app.ports.fromAlien.send({ tag: event.tag, data: null, error: err.message })
   }
 }

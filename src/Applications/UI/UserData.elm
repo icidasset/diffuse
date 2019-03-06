@@ -5,6 +5,7 @@ import Common exposing (Switch(..))
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
+import Notifications
 import Replying as N5 exposing (R3D3)
 import Return3 as R3
 import Sources
@@ -14,6 +15,7 @@ import Tracks.Collection as Tracks
 import Tracks.Encoding as Tracks
 import UI.Backdrop
 import UI.Core
+import UI.Notifications
 import UI.Reply as UI
 import UI.Sources as Sources
 import UI.Tracks as Tracks
@@ -41,31 +43,35 @@ encodedTracks { tracks } =
 
 importHypaethral : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importHypaethral value model =
-    let
-        -- TODO: The app should notify the user if it's trying to import faulty data.
-        --       (instead of doing nothing, like it is now)
-        data =
-            Result.withDefault emptyHypaethralUserData (decodeHypaethral value)
+    case decodeHypaethral value of
+        Ok data ->
+            let
+                ( sourcesModel, sourcesCmd, sourcesReply ) =
+                    importSources model.sources data
 
-        ( sourcesModel, sourcesCmd, sourcesReply ) =
-            importSources model.sources data
+                ( tracksModel, tracksCmd, tracksReply ) =
+                    importTracks model.tracks data
+            in
+            ( { model
+                | sources = sourcesModel
+                , tracks = tracksModel
+              }
+            , Cmd.batch
+                [ Cmd.map UI.Core.SourcesMsg sourcesCmd
+                , Cmd.map UI.Core.TracksMsg tracksCmd
+                ]
+            , mergeReplies
+                [ sourcesReply
+                , tracksReply
+                ]
+            )
 
-        ( tracksModel, tracksCmd, tracksReply ) =
-            importTracks model.tracks data
-    in
-    ( { model
-        | sources = sourcesModel
-        , tracks = tracksModel
-      }
-    , Cmd.batch
-        [ Cmd.map UI.Core.SourcesMsg sourcesCmd
-        , Cmd.map UI.Core.TracksMsg tracksCmd
-        ]
-    , mergeReplies
-        [ sourcesReply
-        , tracksReply
-        ]
-    )
+        Err err ->
+            err
+                |> Json.errorToString
+                |> Notifications.error
+                |> UI.Notifications.showNotification model
+                |> R3.withNoReply
 
 
 
@@ -151,11 +157,14 @@ importEnclosed value model =
                 }
 
         Err err ->
-            -- TODO: Show error
-            R3.withNothing
-                { model
-                    | backdrop = { backdrop | chosen = Just UI.Backdrop.default }
-                }
+            err
+                |> Json.errorToString
+                |> Notifications.error
+                |> UI.Notifications.showNotification
+                    { model
+                        | backdrop = { backdrop | chosen = Just UI.Backdrop.default }
+                    }
+                |> R3.withNoReply
 
 
 

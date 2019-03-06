@@ -49,6 +49,7 @@ colors =
     -- States
     , success = colorKit.base0B
     , error = colorKit.base08
+    , warning = colorKit.base0A
 
     -- Other
     , background = rgb 2 7 14

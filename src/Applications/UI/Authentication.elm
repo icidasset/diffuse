@@ -241,7 +241,7 @@ choiceButton { action, icon, isLast, label } =
         , T.flex
         , T.items_center
         , T.lh_solid
-        , T.outline_0 -- TODO
+        , T.outline_0
         , T.pointer
         , T.pv3
         , T.tl

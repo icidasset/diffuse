@@ -1,4 +1,4 @@
-module Notifications exposing (Action, Kind(..), Notification, Options, contents, error, id, kind, options, stickyError, success, warning)
+module Notifications exposing (Action, Kind(..), Notification, Options, contents, dismiss, error, id, kind, options, stickyError, success, warning)
 
 import Chunky exposing (..)
 import Html.Styled as Html exposing (Html)
@@ -21,7 +21,7 @@ type alias Action msg =
 
 
 type alias Options =
-    { sticky : Bool }
+    { sticky : Bool, wasDismissed : Bool }
 
 
 type Kind
@@ -55,12 +55,27 @@ options (Notification _ _ o _) =
 
 
 
+-- ⚗️
+
+
+dismiss : Notification msg -> Notification msg
+dismiss (Notification k i o c) =
+    Notification k i { o | wasDismissed = True } c
+
+
+
 -- 🚨
 
 
 error : String -> Notification msg
 error content =
-    Notification Error (hashString 0 content) { sticky = False } (render content)
+    Notification
+        Error
+        (hashString 0 content)
+        { sticky = False
+        , wasDismissed = False
+        }
+        (render content)
 
 
 stickyError : String -> String -> List (Action msg) -> Notification msg
@@ -68,15 +83,21 @@ stickyError content code actions =
     Notification
         Error
         (hashString 0 content)
-        { sticky = True }
+        { sticky = True
+        , wasDismissed = False
+        }
         (Html.div
             []
             [ render content
-            , slab
-                Html.pre
-                [ style "font-size" "11px" ]
-                [ T.bg_black_50, T.br2, T.mb0, T.mt3, T.pa2 ]
-                [ Html.code [ class T.v_mid ] [ Html.text code ] ]
+            , if String.isEmpty (String.trim code) then
+                nothing
+
+              else
+                slab
+                    Html.pre
+                    [ style "font-size" "11px" ]
+                    [ T.bg_black_50, T.br2, T.mb0, T.mt3, T.pa2 ]
+                    [ Html.code [ class T.v_mid ] [ Html.text code ] ]
             ]
         )
 
@@ -87,7 +108,13 @@ stickyError content code actions =
 
 success : String -> Notification msg
 success content =
-    Notification Success (hashString 0 content) { sticky = False } (render content)
+    Notification
+        Success
+        (hashString 0 content)
+        { sticky = False
+        , wasDismissed = False
+        }
+        (render content)
 
 
 
@@ -96,7 +123,13 @@ success content =
 
 warning : String -> Notification msg
 warning content =
-    Notification Warning (hashString 0 content) { sticky = False } (render content)
+    Notification
+        Warning
+        (hashString 0 content)
+        { sticky = False
+        , wasDismissed = False
+        }
+        (render content)
 
 
 
