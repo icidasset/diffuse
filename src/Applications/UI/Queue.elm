@@ -178,7 +178,9 @@ update msg model =
             ( { model | repeat = not model.repeat }, Cmd.none, Just [ SaveEnclosedUserData ] )
 
         ToggleShuffle ->
-            ( { model | shuffle = not model.shuffle }, Cmd.none, Just [ SaveEnclosedUserData ] )
+            { model | shuffle = not model.shuffle }
+                |> update Reset
+                |> Replying.addReply SaveEnclosedUserData
 
 
 
