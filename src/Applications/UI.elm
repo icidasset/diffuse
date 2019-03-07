@@ -336,7 +336,7 @@ update msg model =
         -----------------------------------------
         -- Import / Export
         -----------------------------------------
-        Export ->
+        Core.Export ->
             ( model
             , File.Download.string
                 "diffuse.json"
@@ -350,7 +350,7 @@ update msg model =
                 )
             )
 
-        Import file ->
+        Core.Import file ->
             ( { model | isLoading = True }
             , 250
                 |> Process.sleep
@@ -358,7 +358,7 @@ update msg model =
                 |> Task.perform ImportJson
             )
 
-        ImportJson json ->
+        Core.ImportJson json ->
             let
                 notification =
                     Notifications.success "Imported data successfully!"
@@ -376,7 +376,14 @@ update msg model =
                 |> N5.andThen2 (update <| ShowNotification notification)
                 |> R2.addCmd (do <| ChangeUrlUsingPage Page.Index)
 
-        RequestImport ->
+        Core.InsertDemo ->
+            model
+                |> update (LoadHypaethralUserData UserData.demo)
+                |> N5.andThen2 (update Core.SaveFavourites)
+                |> N5.andThen2 (update Core.SaveSources)
+                |> N5.andThen2 (update Core.SaveTracks)
+
+        Core.RequestImport ->
             ( model
             , File.Select.file [ "application/json" ] Import
             )
@@ -450,6 +457,9 @@ translateReply reply =
 
         Reply.GoToPage page ->
             ChangeUrlUsingPage page
+
+        Reply.InsertDemo ->
+            Core.InsertDemo
 
         Reply.PlayTrack identifiedTrack ->
             QueueMsg (Queue.InjectFirstAndPlay identifiedTrack)
@@ -648,8 +658,8 @@ defaultScreen model =
     -- Main
     -----------------------------------------
     , UI.Kit.vessel
-        [ model.tracks
-            |> Lazy.lazy3 Tracks.view model.page model.viewport.height
+        [ model
+            |> Tracks.view
             |> Html.map TracksMsg
 
         -- Pages

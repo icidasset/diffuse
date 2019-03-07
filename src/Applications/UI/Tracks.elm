@@ -19,6 +19,7 @@ import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
+import Material.Icons.Image as Icons
 import Maybe.Extra as Maybe
 import Replying as N5 exposing (R3D3)
 import Return2 as R2
@@ -28,6 +29,7 @@ import Tracks exposing (..)
 import Tracks.Collection as Collection exposing (..)
 import Tracks.Encoding as Encoding
 import Tracks.Favourites as Favourites
+import UI.Core
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page exposing (Page)
@@ -67,11 +69,11 @@ update msg model =
         Bypass ->
             R3.withNothing model
 
-        Play identifiedTrack ->
-            ( model, Cmd.none, Just [ PlayTrack identifiedTrack ] )
-
         InfiniteListMsg infiniteList ->
             R3.withNothing { model | infiniteList = infiniteList }
+
+        Reply replies ->
+            ( model, Cmd.none, Just replies )
 
         ScrollToNowPlaying ->
             case model.nowPlaying of
@@ -310,8 +312,8 @@ toggleFavourite model ( i, t ) =
 -- 🗺
 
 
-view : Page -> Float -> Model -> Html Msg
-view page screenHeight model =
+view : UI.Core.Model -> Html Msg
+view core =
     chunk
         [ T.flex
         , T.flex_column
@@ -319,14 +321,23 @@ view page screenHeight model =
         ]
         [ lazy3
             navigation
-            model.favouritesOnly
-            model.searchTerm
-            page
+            core.tracks.favouritesOnly
+            core.tracks.searchTerm
+            core.page
 
         --
-        , case model.scene of
-            List ->
-                UI.Tracks.Scene.List.view { height = screenHeight } model
+        , if List.isEmpty core.tracks.collection.harvested then
+            lazy4
+                noTracksView
+                core.sources.isProcessing
+                (List.length core.sources.collection)
+                (List.length core.tracks.collection.harvested)
+                (List.length core.tracks.favourites)
+
+          else
+            case core.tracks.scene of
+                List ->
+                    UI.Tracks.Scene.List.view { height = core.viewport.height } core.tracks
         ]
 
 
@@ -453,6 +464,54 @@ navigation favouritesOnly searchTerm page =
               )
             ]
         ]
+
+
+noTracksView : Bool -> Int -> Int -> Int -> Html Msg
+noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
+    UI.Kit.centeredContent
+        [ if isProcessing then
+            message "Processing Tracks"
+
+          else if amountOfSources == 0 then
+            chunk
+                []
+                [ UI.Kit.buttonLink
+                    "/sources/new"
+                    UI.Kit.Normal
+                    (inline
+                        [ UI.Kit.inlineIcon Icons.add
+                        , text "Add some music"
+                        ]
+                    )
+                , slab
+                    Html.span
+                    []
+                    [ T.dib, T.w1 ]
+                    []
+                , UI.Kit.buttonWithColor
+                    UI.Kit.colorKit.base0B
+                    UI.Kit.Normal
+                    (Reply [ InsertDemo ])
+                    (inline
+                        [ UI.Kit.inlineIcon Icons.music_note
+                        , text "Insert demo"
+                        ]
+                    )
+                ]
+
+          else if amountOfTracks == 0 then
+            message "No tracks found"
+
+          else
+            message "No sources available"
+        ]
+
+
+message : String -> Html Msg
+message m =
+    chunk
+        [ T.bb, T.bw1, T.f6, T.fw6, T.lh_title, T.pb1 ]
+        [ text m ]
 
 
 

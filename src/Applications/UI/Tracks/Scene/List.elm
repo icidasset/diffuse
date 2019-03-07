@@ -18,6 +18,7 @@ import Tachyons.Classes as T
 import Task
 import Tracks exposing (..)
 import UI.Kit
+import UI.Reply
 import UI.Tracks.Core exposing (..)
 
 
@@ -342,7 +343,7 @@ itemView { favouritesOnly } _ idx ( identifiers, track ) =
         slab
             Html.li
             [ css (rowStyles idx identifiers)
-            , onDoubleClick (Play ( identifiers, track ))
+            , onDoubleClick (Reply [ UI.Reply.PlayTrack ( identifiers, track ) ])
             ]
             [ T.dt_row
 

@@ -20,6 +20,7 @@ type Reply
     | Chill
     | FillQueue
     | GoToPage Page
+    | InsertDemo
     | PlayTrack IdentifiedTrack
     | ProcessSources
     | RemoveTracksWithSourceId String

@@ -199,7 +199,7 @@ newWhere { context } =
         -- Button
         ---------
         , UI.Kit.button
-            WithIcon
+            IconOnly
             TakeStep
             (Html.fromUnstyled <| Icons.arrow_forward UI.Kit.colorKit.accent 17)
         ]
@@ -251,7 +251,7 @@ newHow { context } =
         , chunk
             [ T.mt3, T.tc ]
             [ UI.Kit.button
-                WithIcon
+                IconOnly
                 TakeStep
                 (Html.fromUnstyled <| Icons.arrow_forward UI.Kit.colorKit.accent 17)
             ]
@@ -311,7 +311,7 @@ newBy { context } =
         -- Button
         ---------
         , UI.Kit.button
-            WithText
+            Normal
             AddSource
             (text "Add source")
         ]

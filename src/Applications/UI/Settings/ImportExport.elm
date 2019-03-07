@@ -48,7 +48,7 @@ view =
             , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Import" ]
             , UI.Kit.buttonWithColor
                 UI.Kit.colorKit.base05
-                WithText
+                Normal
                 UI.Core.RequestImport
                 (text "Choose file")
 
@@ -56,7 +56,7 @@ view =
             ---------
             , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Export" ]
             , UI.Kit.button
-                WithText
+                Normal
                 UI.Core.Export
                 (text "Export data")
             ]

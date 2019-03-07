@@ -3,6 +3,7 @@ module UI.Tracks.Core exposing (Model, Msg(..), Scene(..))
 import InfiniteList
 import Json.Encode as Json
 import Tracks exposing (..)
+import UI.Reply exposing (Reply)
 
 
 
@@ -31,7 +32,7 @@ type alias Model =
 type Msg
     = Bypass
     | InfiniteListMsg InfiniteList.Model
-    | Play IdentifiedTrack
+    | Reply (List Reply)
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)

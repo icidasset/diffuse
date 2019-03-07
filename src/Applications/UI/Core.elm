@@ -116,6 +116,7 @@ type Msg
     | Export
     | Import File
     | ImportJson String
+    | InsertDemo
     | RequestImport
       -----------------------------------------
       -- Notifications

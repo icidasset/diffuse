@@ -1,4 +1,4 @@
-module Chunky exposing (brick, bricky, chunk, chunky, lineBreak, nothing, raw, rawy, slab, slaby)
+module Chunky exposing (brick, bricky, chunk, chunky, inline, lineBreak, nothing, raw, rawy, slab, slaby)
 
 {-| Chunks, blocks and slabs.
 
@@ -84,6 +84,11 @@ rawy =
 
 
 -- 5
+
+
+inline : List (Html msg) -> Html msg
+inline =
+    Html.span []
 
 
 nothing : Html msg

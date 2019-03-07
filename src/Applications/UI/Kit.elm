@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonWithColor, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -174,8 +174,8 @@ maxInputWidth =
 
 
 type ButtonType
-    = WithIcon
-    | WithText
+    = IconOnly
+    | Normal
 
 
 button : ButtonType -> msg -> Html msg -> Html msg
@@ -183,32 +183,59 @@ button =
     buttonWithColor colorKit.accent
 
 
+buttonLink : String -> ButtonType -> Html msg -> Html msg
+buttonLink theHref buttonType =
+    buttonWithOptions Html.a [ href theHref ] colorKit.accent buttonType Nothing
+
+
 buttonWithColor : Color.Color -> ButtonType -> msg -> Html msg -> Html msg
-buttonWithColor buttonColor buttonType msg child =
+buttonWithColor color buttonType msg =
+    buttonWithOptions Html.button [] color buttonType (Just msg)
+
+
+buttonWithOptions :
+    (List (Html.Attribute msg) -> List (Html msg) -> Html msg)
+    -> List (Html.Attribute msg)
+    -> Color.Color
+    -> ButtonType
+    -> Maybe msg
+    -> Html msg
+    -> Html msg
+buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
     slab
-        Html.button
-        [ css (buttonStyles buttonColor)
-        , onClick msg
-        ]
+        tag
+        (List.append
+            attributes
+            [ css (buttonStyles buttonColor)
+            , case maybeMsg of
+                Just msg ->
+                    onClick msg
+
+                Nothing ->
+                    style "carry" "on"
+            ]
+        )
         [ borderRadius
         , T.b__solid
         , T.bg_transparent
         , T.bw1
+        , T.dib
         , T.f6
         , T.fw7
+        , T.no_underline
         , T.ph3
         , T.pointer
         , T.pv2
         ]
         [ case buttonType of
-            WithIcon ->
+            IconOnly ->
                 slab
                     Html.span
                     [ style "font-size" "0" ]
                     [ T.dib, T.lh_solid, T.v_top ]
                     [ child ]
 
-            WithText ->
+            Normal ->
                 chunk
                     [ T.lh_copy ]
                     [ child ]
@@ -465,8 +492,6 @@ inlineIconStyles : List Css.Style
 inlineIconStyles =
     [ Css.fontSize (px 0)
     , Css.lineHeight (px 0)
-    , Css.position Css.relative
-    , Css.top (px -1)
     , Css.verticalAlign Css.sub
 
     --

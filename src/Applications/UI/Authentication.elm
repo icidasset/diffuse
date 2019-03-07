@@ -175,7 +175,7 @@ view model =
                         , Html.Styled.Events.onInput FabricateSecretKey
                         ]
                     , UI.Kit.button
-                        UI.Kit.WithText
+                        UI.Kit.Normal
                         (SignIn method)
                         (text "Continue")
                     ]
