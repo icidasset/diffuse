@@ -10,7 +10,7 @@ in the form of a static, serverless, web application._
 
 
 
-## Integrations
+### Integrations
 
 [More info](https://diffuse.sh/about/)
 
@@ -29,7 +29,7 @@ in the form of a static, serverless, web application._
 
 
 
-## Development
+### Development
 
 For version numbers,  
 see `.tool-versions` and `stack.yaml`.
@@ -43,9 +43,12 @@ see `.tool-versions` and `stack.yaml`.
 
 ```shell
 # 🍱
-# 1. Install vendor dependencies
+# 1. Install programming languages:
+#    Elm 0.19 & Haskell (Stack), see links above.
+
+# 2. Install vendor dependencies.
 make install
 
-# 2. Build, start server & watch for changes
+# 3. Build, start server & watch for changes.
 make
 ```
