@@ -6,6 +6,7 @@
 NPM_DIR=./node_modules
 SRC_DIR=./src
 BUILD_DIR=./build
+VENDOR_DIR=./vendor
 
 
 # Default task
@@ -39,7 +40,8 @@ system:
 
 vendor:
 	@echo "> Copying vendor things"
-	@stack build && stack exec vendor
+	@mkdir -p $(BUILD_DIR)/vendor/
+	@cp -rf $(VENDOR_DIR)/ $(BUILD_DIR)/vendor/
 
 
 #
@@ -56,6 +58,21 @@ doc-tests:
 		find . -name "*.elm" -print0 | \
 		xargs -0 -n 1 sh -c 'elm-proofread -- $0 || exit 255; echo "\n\n"'
 	)
+
+
+install:
+	@echo "> Downloading & minifying dependencies"
+	@mkdir -p $(VENDOR_DIR)
+	@curl https://unpkg.com/lunr@2.3.6/lunr.js -o $(VENDOR_DIR)/lunr.js
+	@curl https://unpkg.com/fast-text-encoding@1.0.0/text.min.js -o $(VENDOR_DIR)/text-encoding-polyfill.min.js
+	@curl https://unpkg.com/tachyons@4.11.1/css/tachyons.min.css -o $(VENDOR_DIR)/tachyons.min.css
+
+	@# Non-NPM dependencies
+	@curl https://raw.githubusercontent.com/icidasset/diffuse-musicmetadata/0ae8c854e18b6960b9f7e94b7eb47868416dc2ad/dist/musicmetadata.min.js -o $(VENDOR_DIR)/musicmetadata.min.js
+
+	@# Minify non-minified dependencies
+	@# TODO
+	@mv $(VENDOR_DIR)/lunr.js $(VENDOR_DIR)/lunr.min.js
 
 
 server:

@@ -5,4 +5,4 @@
 /.stack-work
 /build
 /elm-stuff
-/node_modules
+/vendor

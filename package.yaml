@@ -26,10 +26,4 @@ executables:
   build:
     main: Main.hs
     source-dirs:
-      - src
       - system/Build
-
-  # 🏪
-  vendor:
-    main: Main.hs
-    source-dirs: system/Vendor

@@ -5,7 +5,7 @@
 // The local database.
 // This is used instead of localStorage.
 
-importScripts("/vendor/text-encoding.js")
+importScripts("/vendor/text-encoding-polyfill.min.js")
 
 
 const indexedDB =

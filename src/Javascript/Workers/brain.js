@@ -4,7 +4,7 @@
 //
 // This worker is responsible for everything non-UI.
 
-importScripts("/vendor/music-metadata.js")
+importScripts("/vendor/musicmetadata.min.js")
 
 importScripts("/brain.js")
 importScripts("/encryption.js")

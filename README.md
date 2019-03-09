@@ -36,19 +36,16 @@ see `.tool-versions` and `stack.yaml`.
 
 - [Elm](https://elm-lang.org/) programming language
 - [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
-- [NPM](https://www.npmjs.com/) package management through node.js
 - [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
 - [Devd](https://github.com/cortesi/devd) web server for development (optional)
 - [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
 
 
 ```shell
-# build, start server & watch for changes
+# 🍱
+# 1. Install vendor dependencies
+make install
+
+# 2. Build, start server & watch for changes
 make
-
-# make a static ./build
-make build
-
-# run tests
-make test
 ```
