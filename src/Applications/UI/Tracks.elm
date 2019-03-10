@@ -200,12 +200,17 @@ update msg model =
                     R3.withNothing model
 
         SetSearchResults json ->
-            json
-                |> Json.decodeValue (Json.list Json.string)
-                |> Result.withDefault []
-                |> (\results -> { model | searchResults = Just results })
-                |> reviseCollection harvest
-                |> N5.addReply (ToggleLoadingScreen Off)
+            case model.searchTerm of
+                Just _ ->
+                    json
+                        |> Json.decodeValue (Json.list Json.string)
+                        |> Result.withDefault []
+                        |> (\results -> { model | searchResults = Just results })
+                        |> reviseCollection harvest
+                        |> N5.addReply (ToggleLoadingScreen Off)
+
+                Nothing ->
+                    R3.withNothing model
 
         SetSearchTerm term ->
             R3.withReply
