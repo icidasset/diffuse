@@ -515,7 +515,7 @@ updateChild =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Ports.fromBrain alien
+        [ Ports.fromAlien alien
 
         -- Audio
         --------

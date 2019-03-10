@@ -29,7 +29,7 @@ app.ports.toBrain.subscribe(thing => {
 })
 
 brain.onmessage = event => {
-  app.ports.fromBrain.send(event.data)
+  app.ports.fromAlien.send(event.data)
 }
 
 

@@ -1,4 +1,4 @@
-port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, fromBrain, giveBrain, nudgeBrain, pause, play, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, toBrain, toggleRepeat, unstall)
+port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, fromAlien, giveBrain, nudgeBrain, pause, play, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, toBrain, toggleRepeat, unstall)
 
 import Alien
 import Json.Encode as Json
@@ -37,7 +37,7 @@ port toggleRepeat : Bool -> Cmd msg
 port activeQueueItemEnded : (() -> msg) -> Sub msg
 
 
-port fromBrain : (Alien.Event -> msg) -> Sub msg
+port fromAlien : (Alien.Event -> msg) -> Sub msg
 
 
 port setAudioDuration : (Float -> msg) -> Sub msg
