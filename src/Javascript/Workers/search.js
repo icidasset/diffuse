@@ -69,8 +69,6 @@ function performSearch(rawSearchTerm) {
     )[0]
     .join(" ")
 
-  console.log(searchTerm)
-
   if (index) {
     results = index
       .search(searchTerm)
