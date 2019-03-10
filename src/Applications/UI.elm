@@ -83,7 +83,7 @@ init flags url key =
       , isLoading = True
       , navKey = key
       , notifications = []
-      , page = Page.fromUrl url
+      , page = Maybe.withDefault Page.Index (Page.fromUrl url)
       , url = url
       , viewport = flags.viewport
 
@@ -105,7 +105,12 @@ init flags url key =
       -----------------------------------------
       -- Initial command
       -----------------------------------------
-    , Cmd.none
+    , case Page.fromUrl url of
+        Just _ ->
+            Cmd.none
+
+        Nothing ->
+            Nav.replaceUrl key "/"
     )
 
 
@@ -428,12 +433,19 @@ update msg model =
                     return model (Nav.load href)
 
         UrlChanged url ->
-            ( { model
-                | page = Page.fromUrl url
-                , url = url
-              }
-            , Cmd.none
-            )
+            case Page.fromUrl url of
+                Just page ->
+                    ( { model
+                        | page = page
+                        , url = url
+                      }
+                    , Cmd.none
+                    )
+
+                Nothing ->
+                    ( model
+                    , Nav.replaceUrl model.navKey "/"
+                    )
 
 
 
@@ -667,10 +679,6 @@ defaultScreen model =
         , case model.page of
             Page.Index ->
                 nothing
-
-            Page.NotFound ->
-                -- TODO
-                UI.Kit.receptacle [ text "Page not found." ]
 
             Page.Queue _ ->
                 -- TODO

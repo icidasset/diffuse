@@ -16,19 +16,15 @@ type Page
     | Queue Queue.Page
     | Settings Settings.Page
     | Sources Sources.Page
-      --
-    | NotFound
 
 
 
 -- 🔱
 
 
-fromUrl : Url -> Page
-fromUrl url =
-    url
-        |> parse route
-        |> Maybe.withDefault NotFound
+fromUrl : Url -> Maybe Page
+fromUrl =
+    parse route
 
 
 toString : Page -> String
@@ -36,9 +32,6 @@ toString page =
     case page of
         Index ->
             "/"
-
-        NotFound ->
-            "/404"
 
         -----------------------------------------
         -- Queue
@@ -94,7 +87,6 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map Index top
-        , map NotFound (s "404")
 
         -----------------------------------------
         -- Queue
