@@ -10,7 +10,6 @@ import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (attribute, css, href, style, tabindex, title)
 import Html.Styled.Events exposing (onClick)
 import List.Extra as List
-import String.Format
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit

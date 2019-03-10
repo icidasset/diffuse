@@ -8,7 +8,6 @@ import Dict.Ext as Dict
 import Hex
 import Maybe.Extra as Maybe
 import Regex
-import SHA
 import Sources exposing (SourceData)
 import Sources.Processing exposing (HttpMethod, httpMethod)
 import String.Ext as String

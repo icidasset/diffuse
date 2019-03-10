@@ -1,6 +1,5 @@
 module Tracks.Collection exposing (add, arrange, harvest, identify, map, removeByPaths, removeBySourceId)
 
-import Flip exposing (flip)
 import List.Extra as List
 import Tracks exposing (..)
 import Tracks.Collection.Internal as Internal
