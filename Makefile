@@ -71,8 +71,8 @@ install:
 	@curl https://raw.githubusercontent.com/icidasset/diffuse-musicmetadata/0ae8c854e18b6960b9f7e94b7eb47868416dc2ad/dist/musicmetadata.min.js -o $(VENDOR_DIR)/musicmetadata.min.js
 
 	@# Minify non-minified dependencies
-	@# TODO
-	@mv $(VENDOR_DIR)/lunr.js $(VENDOR_DIR)/lunr.min.js
+	@closure-compiler --js=$(VENDOR_DIR)/lunr.js --js_output_file=$(VENDOR_DIR)/lunr.min.js
+	@rm $(VENDOR_DIR)/lunr.js
 
 
 server:

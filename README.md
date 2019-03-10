@@ -36,6 +36,7 @@ see `.tool-versions` and `stack.yaml`.
 
 - [Elm](https://elm-lang.org/) programming language
 - [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
+- [Google Closure Compiler](https://github.com/google/closure-compiler#getting-started) minifying assets
 - [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
 - [Devd](https://github.com/cortesi/devd) web server for development (optional)
 - [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
