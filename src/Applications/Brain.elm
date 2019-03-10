@@ -9,6 +9,7 @@ import Brain.Reply as Reply exposing (Reply(..))
 import Brain.Sources.Processing as Processing
 import Brain.Sources.Processing.Common as Processing
 import Brain.Tracks as Tracks
+import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
@@ -44,6 +45,13 @@ init flags =
       , hypaethralUserData = Authentication.emptyHypaethralUserData
       , processing = Processing.initialModel
       , tracks = Tracks.initialModel
+
+      --
+      , notSoFast =
+            2.5
+                |> Debouncer.fromSeconds
+                |> Debouncer.debounce
+                |> Debouncer.toDebouncer
       }
       -----------------------------------------
       -- Initial command
@@ -81,6 +89,26 @@ update msg model =
                         Cmd.none
                 ]
             )
+
+        NotSoFast debouncerMsg ->
+            let
+                ( subModel, subCmd, emittedMsg ) =
+                    Debouncer.update debouncerMsg model.notSoFast
+
+                mappedCmd =
+                    Cmd.map NotSoFast subCmd
+
+                updatedModel =
+                    { model | notSoFast = subModel }
+            in
+            case emittedMsg of
+                Just emitted ->
+                    updatedModel
+                        |> update emitted
+                        |> Tuple.mapSecond (\cmd -> Cmd.batch [ cmd, mappedCmd ])
+
+                Nothing ->
+                    ( updatedModel, mappedCmd )
 
         ToCache alienEvent ->
             ( model
@@ -132,6 +160,13 @@ update msg model =
                 ( { model | hypaethralUserData = decodedData }
                 , Brain.Ports.toUI (Alien.broadcast Alien.LoadHypaethralUserData value)
                 )
+
+        SaveHypaethralData ->
+            model.hypaethralUserData
+                |> Authentication.encodeHypaethral
+                |> Authentication.SaveHypaethralData
+                |> AuthenticationMsg
+                |> (\m -> update m model)
 
         SaveFavourites value ->
             value
@@ -251,12 +286,12 @@ makeHypaethralLens setter model value =
 
 saveHypaethralData : Model -> ( Model, Cmd Msg )
 saveHypaethralData model =
-    -- TODO: DEBOUNCE
-    model.hypaethralUserData
-        |> Authentication.encodeHypaethral
-        |> Authentication.SaveHypaethralData
-        |> AuthenticationMsg
-        |> (\msg -> update msg model)
+    update
+        (SaveHypaethralData
+            |> Debouncer.provideInput
+            |> NotSoFast
+        )
+        model
 
 
 

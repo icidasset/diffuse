@@ -5,6 +5,7 @@ import Authentication
 import Brain.Authentication as Authentication
 import Brain.Sources.Processing.Common as Processing
 import Brain.Tracks as Tracks
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Json.Decode as Json
 
 
@@ -23,6 +24,7 @@ type alias Flags =
 type alias Model =
     { authentication : Authentication.Model
     , hypaethralUserData : Authentication.HypaethralUserData
+    , notSoFast : Debouncer Msg Msg
     , processing : Processing.Model
     , tracks : Tracks.Model
     }
@@ -35,6 +37,7 @@ type alias Model =
 type Msg
     = Bypass
     | NotifyUI Alien.Event
+    | NotSoFast (Debouncer.Msg Msg)
     | ToCache Alien.Event
       -----------------------------------------
       -- Children
@@ -46,6 +49,7 @@ type Msg
       -- User data
       -----------------------------------------
     | LoadHypaethralUserData Json.Value
+    | SaveHypaethralData
     | SaveFavourites Json.Value
     | SaveSources Json.Value
     | SaveTracks Json.Value
