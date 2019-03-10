@@ -587,8 +587,7 @@ translateAlienData event =
             TracksMsg (Tracks.SetSearchResults event.data)
 
         Just Alien.UpdateSourceData ->
-            -- TODO
-            Bypass
+            SourcesMsg (Sources.UpdateSourceData event.data)
 
         _ ->
             Bypass

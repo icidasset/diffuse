@@ -3,14 +3,16 @@ module UI.Sources exposing (Model, Msg(..), initialModel, update, view)
 import Chunky exposing (..)
 import Dict.Ext as Dict
 import Html.Styled as Html exposing (Html, text)
+import Json.Decode as Json
 import Material.Icons.Action as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
-import Replying exposing (R3D3)
+import Replying exposing (R3D3, return)
 import Return2
 import Return3
 import Sources exposing (..)
+import Sources.Encoding
 import Sources.Services as Services
 import Tachyons.Classes as T
 import Time
@@ -61,6 +63,7 @@ type Msg
       -----------------------------------------
     | AddToCollection Source
     | RemoveFromCollection String
+    | UpdateSourceData Json.Value
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -118,6 +121,26 @@ update msg model =
                     [ UI.Reply.SaveSources
                     , UI.Reply.RemoveTracksWithSourceId sourceId
                     ]
+
+        UpdateSourceData json ->
+            json
+                |> Sources.Encoding.decode
+                |> Maybe.map
+                    (\source ->
+                        List.map
+                            (\s ->
+                                if s.id == source.id then
+                                    source
+
+                                else
+                                    s
+                            )
+                            model.collection
+                    )
+                |> Maybe.map (\col -> { model | collection = col })
+                |> Maybe.withDefault model
+                |> Return2.withNoCmd
+                |> Return3.withReply [ UI.Reply.SaveSources ]
 
 
 
