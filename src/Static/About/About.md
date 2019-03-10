@@ -53,6 +53,9 @@ Diffuse locates all the music files on the given services, extracts the metadata
 - MP3
 - MP4/M4A
 - FLAC
+- OGG
+- WAV
+- WEBM
 
 
 <div id="CORS" />
@@ -126,19 +129,16 @@ The user interface should be self explanatory, but there are a few "hidden" feat
 
 ### Search
 
-Searching is powered by [lunr.js](https://lunrjs.com/), which means you can use all [these wildcards](https://lunrjs.com/guides/searching.html) and other stuff to refine your search. A few examples:
+```shell
+# Show me every track where the title, artist or album contains the term 'Parkway' and the term 'Drive'. Terms are separated by spaces (eg. "Killing with a smile" has four terms).
+Parkway Drive
 
-```elm
-# "Parkway Drive" or "Iron Maiden".
-# The non-escaped space (ie. ` `, not `\ `) indicates a new term.
-Parkway\ Drive Iron\ Maiden
-
-# Show me every track of which the artist's name starts with 'park'.
+# Show me every track of which the artist's name contains 'park'.
 artist:park*
 
 # Show me every track from Parkway Drive's "Deep Blue" album.
-artist:Parkway\ Drive + album:Deep\ Blue
+artist:Parkway Drive album:Deep Blue
 
 # Show me every track from Parkway Drive but not their "Atlas" album.
-artist:Parkway\ Drive - album:Atlas
+artist:Parkway Drive - album:Atlas
 ```

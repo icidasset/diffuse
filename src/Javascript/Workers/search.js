@@ -35,7 +35,7 @@ const mapTrack = track => ({
   id: track.id,
   album: track.tags.album,
   artist: track.tags.artist,
-  title: track.tags.title
+  title: track.tags.title,
 })
 
 
@@ -43,12 +43,37 @@ const mapTrack = track => ({
 // Actions
 // -------
 
-function performSearch(searchTerm) {
-  let results = []
+function performSearch(rawSearchTerm) {
+  let results =
+    []
+
+  const searchTerm = rawSearchTerm
+    .replace(/\-\s+/g, "-")
+    .replace(/\+\s+/g, "+")
+    .split(/ +/)
+    .reduce(
+      ([ acc, previousOperator, previousPrefix ], chunk) => {
+        const operator = (a => a && a[0])( chunk.match(/^(\+|\-)/) )
+        const chunkWithoutOperator = chunk.replace(/^(\+|\-)/, "")
+        const prefix = (a => a && a[1])( chunkWithoutOperator.match(/^([^:]+:)/) )
+        const chunkWithoutPrefix = chunkWithoutOperator.replace(/^([^:]+:)/, "")
+
+        const op = operator || previousOperator
+        const pr = prefix ? "" : (operator ? "" : previousPrefix)
+
+        return chunkWithoutPrefix.trim().length > 0
+          ? [ [ ...acc, op + pr + chunkWithoutOperator ], op, prefix || pr ]
+          : [ acc, previousOperator, previousPrefix ]
+      },
+      [ [], "+", "" ]
+    )[0]
+    .join(" ")
+
+  console.log(searchTerm)
 
   if (index) {
     results = index
-      .search(searchTerm.replace(" *", ""))
+      .search(searchTerm)
       .map(s => s.ref)
   }
 
@@ -65,9 +90,9 @@ function updateSearchIndex(input) {
     : input
 
   index = lunr(function() {
-    this.field("album", {});
-    this.field("artist", {});
-    this.field("title", {});
+    this.field("album");
+    this.field("artist");
+    this.field("title");
 
     (tracks || [])
       .map(mapTrack)
