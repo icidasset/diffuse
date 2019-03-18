@@ -11,6 +11,7 @@ import Queue
 import Time
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
+import UI.Equalizer as Equalizer
 import UI.Page exposing (Page)
 import UI.Queue.Core as Queue
 import UI.Sources as Sources
@@ -55,6 +56,7 @@ type alias Model =
     -----------------------------------------
     , authentication : Authentication.Model
     , backdrop : Backdrop.Model
+    , equalizer : Equalizer.Model
     , queue : Queue.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
@@ -102,6 +104,7 @@ type Msg
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg
     | BackdropMsg Backdrop.Msg
+    | EqualizerMsg Equalizer.Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg

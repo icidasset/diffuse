@@ -79,8 +79,8 @@ reducto updator translator ( model, cmd, maybeReplies ) =
 {-| Convenience function for returning the standard ( model, Cmd msg ) tuple.
 -}
 return : model -> Cmd msg -> ( model, Cmd msg )
-return model msg =
-    ( model, msg )
+return =
+    Tuple.pair
 
 
 {-| Handle the state of a child.

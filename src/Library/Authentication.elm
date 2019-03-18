@@ -1,5 +1,6 @@
 module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), decodeEnclosed, decodeHypaethral, decodeMethod, emptyHypaethralUserData, enclosedDecoder, encodeEnclosed, encodeHypaethral, encodeMethod, hypaethralDecoder, methodFromString, methodToString)
 
+import Equalizer
 import Json.Decode as Json
 import Json.Decode.Ext as Json
 import Json.Decode.Pipeline exposing (optional, required)
@@ -22,6 +23,7 @@ type Method
 
 type alias EnclosedUserData =
     { backgroundImage : Maybe String
+    , equalizerSettings : Equalizer.Settings
     , onlyShowFavourites : Bool
     , repeat : Bool
     , searchTerm : Maybe String
@@ -88,6 +90,7 @@ enclosedDecoder : Json.Decoder EnclosedUserData
 enclosedDecoder =
     Json.succeed EnclosedUserData
         |> required "backgroundImage" (Json.maybe Json.string)
+        |> optional "equalizerSettings" Equalizer.settingsDecoder Equalizer.defaultSettings
         |> optional "onlyShowFavourites" Json.bool False
         |> optional "repeat" Json.bool False
         |> required "searchTerm" (Json.maybe Json.string)
@@ -97,9 +100,10 @@ enclosedDecoder =
 
 
 encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { backgroundImage, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
+encodeEnclosed { backgroundImage, equalizerSettings, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
     Json.Encode.object
         [ ( "backgroundImage", Maybe.unwrap Json.Encode.null Json.Encode.string backgroundImage )
+        , ( "equalizerSettings", Equalizer.encodeSettings equalizerSettings )
         , ( "onlyShowFavourites", Json.Encode.bool onlyShowFavourites )
         , ( "repeat", Json.Encode.bool repeat )
         , ( "searchTerm", Maybe.unwrap Json.Encode.null Json.Encode.string searchTerm )

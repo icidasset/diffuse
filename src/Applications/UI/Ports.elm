@@ -1,4 +1,4 @@
-port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, fromAlien, giveBrain, nudgeBrain, pause, play, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, toBrain, toggleRepeat, unstall)
+port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, adjustEqualizerSetting, fromAlien, giveBrain, nudgeBrain, pause, play, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, toBrain, toggleRepeat, unstall)
 
 import Alien
 import Json.Encode as Json
@@ -10,6 +10,9 @@ import Queue
 
 
 port activeQueueItemChanged : Maybe Queue.EngineItem -> Cmd msg
+
+
+port adjustEqualizerSetting : { knob : String, value : Float } -> Cmd msg
 
 
 port pause : () -> Cmd msg

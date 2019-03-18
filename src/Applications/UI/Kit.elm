@@ -257,7 +257,7 @@ centeredContent children =
         , T.overflow_hidden
         , T.relative
         ]
-        [ logoBackdrop
+        [ Html.map never logoBackdrop
         , chunk
             [ T.flex
             , T.flex_column
@@ -363,7 +363,7 @@ link params =
         [ Html.text params.label ]
 
 
-logoBackdrop : Html msg
+logoBackdrop : Html Never
 logoBackdrop =
     brick
         [ css logoBackdropStyles ]
@@ -484,6 +484,7 @@ h1Styles =
     [ Css.backgroundColor (Color.toElmCssColor colorKit.base06)
     , Css.fontSize (px 11.25)
     , Css.letterSpacing (px 0.25)
+    , Css.pointerEvents Css.none
     , Css.top (px -1)
     ]
 

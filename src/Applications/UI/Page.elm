@@ -12,7 +12,8 @@ import Url.Parser exposing (..)
 
 
 type Page
-    = Index
+    = Equalizer
+    | Index
     | Queue Queue.Page
     | Settings Settings.Page
     | Sources Sources.Page
@@ -30,6 +31,9 @@ fromUrl =
 toString : Page -> String
 toString page =
     case page of
+        Equalizer ->
+            "/equalizer"
+
         Index ->
             "/"
 
@@ -75,6 +79,9 @@ sameBase a b =
         ( Sources _, Sources _ ) ->
             True
 
+        ( Index, Equalizer ) ->
+            True
+
         _ ->
             a == b
 
@@ -87,6 +94,9 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map Index top
+
+        --
+        , map Equalizer (s "equalizer")
 
         -----------------------------------------
         -- Queue

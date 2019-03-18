@@ -1,10 +1,22 @@
-module Color.Ext exposing (toElmCssColor)
+module Color.Ext exposing (setOpacity, toElmCssColor)
 
-import Color
+import Color exposing (Color)
 import Css
 
 
-toElmCssColor : Color.Color -> Css.Color
+
+-- 🔱
+
+
+setOpacity : Float -> Color -> Color
+setOpacity opacity color =
+    color
+        |> Color.toRgba
+        |> (\c -> { c | alpha = opacity })
+        |> Color.fromRgba
+
+
+toElmCssColor : Color -> Css.Color
 toElmCssColor color =
     color
         |> Color.toRgba

@@ -16,6 +16,7 @@ import Tracks.Collection as Tracks
 import Tracks.Encoding as Tracks
 import UI.Backdrop
 import UI.Core
+import UI.Equalizer as Equalizer
 import UI.Notifications
 import UI.Reply as UI
 import UI.Sources as Sources
@@ -121,8 +122,17 @@ importTracks model data =
 
 exportEnclosed : UI.Core.Model -> Json.Value
 exportEnclosed model =
+    let
+        equalizerSettings =
+            { low = model.equalizer.low
+            , mid = model.equalizer.mid
+            , high = model.equalizer.high
+            , volume = model.equalizer.volume
+            }
+    in
     encodeEnclosed
         { backgroundImage = model.backdrop.chosen
+        , equalizerSettings = equalizerSettings
         , onlyShowFavourites = model.tracks.favouritesOnly
         , repeat = model.queue.repeat
         , searchTerm = model.tracks.searchTerm
@@ -135,27 +145,48 @@ exportEnclosed model =
 importEnclosed : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importEnclosed value model =
     let
-        { backdrop, queue, tracks } =
+        { backdrop, equalizer, queue, tracks } =
             model
     in
     case decodeEnclosed value of
         Ok data ->
             let
                 newBackDrop =
-                    { backdrop | chosen = Just (Maybe.withDefault UI.Backdrop.default data.backgroundImage) }
+                    { backdrop
+                        | chosen = Just (Maybe.withDefault UI.Backdrop.default data.backgroundImage)
+                    }
+
+                newEqualizer =
+                    { equalizer
+                        | low = data.equalizerSettings.low
+                        , mid = data.equalizerSettings.mid
+                        , high = data.equalizerSettings.high
+                        , volume = data.equalizerSettings.volume
+                    }
 
                 newQueue =
-                    { queue | repeat = data.repeat, shuffle = data.shuffle }
+                    { queue
+                        | repeat = data.repeat
+                        , shuffle = data.shuffle
+                    }
 
                 newTracks =
-                    { tracks | favouritesOnly = data.onlyShowFavourites, searchTerm = data.searchTerm, sortBy = data.sortBy, sortDirection = data.sortDirection }
+                    { tracks
+                        | favouritesOnly = data.onlyShowFavourites
+                        , searchTerm = data.searchTerm
+                        , sortBy = data.sortBy
+                        , sortDirection = data.sortDirection
+                    }
             in
-            R3.withNothing
-                { model
-                    | backdrop = newBackDrop
-                    , queue = newQueue
-                    , tracks = newTracks
-                }
+            ( { model
+                | backdrop = newBackDrop
+                , equalizer = newEqualizer
+                , queue = newQueue
+                , tracks = newTracks
+              }
+            , Cmd.map UI.Core.EqualizerMsg (Equalizer.adjustAllKnobs newEqualizer)
+            , Nothing
+            )
 
         Err err ->
             err

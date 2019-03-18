@@ -80,7 +80,7 @@ high.connect(context.destination)
 
 function determineNodeGainValue(knobType, value) {
   switch (knobType) {
-    case "Volume"   : return value
+    case "VOLUME"   : return value
     default         : return value < 0 ? value * 50 : value * 15
   }
 }

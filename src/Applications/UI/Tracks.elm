@@ -465,7 +465,7 @@ navigation favouritesOnly searchTerm page =
               )
             , ( Icon Icons.equalizer
               , Label "Equalizer" Hidden
-              , PerformMsg Bypass
+              , UI.Navigation.GoToPage UI.Page.Equalizer
               )
             ]
         ]

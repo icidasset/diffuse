@@ -14,6 +14,7 @@ import Dict.Ext as Dict
 import File
 import File.Download
 import File.Select
+import Html.Events.Extra.Pointer as Pointer
 import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
 import Html.Styled.Attributes exposing (id, style)
 import Html.Styled.Lazy as Lazy
@@ -33,6 +34,7 @@ import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.Core as Core exposing (Flags, Model, Msg(..))
+import UI.Equalizer as Equalizer
 import UI.Kit
 import UI.Navigation as Navigation
 import UI.Notifications
@@ -98,6 +100,7 @@ init flags url key =
       -----------
       , authentication = Authentication.initialModel
       , backdrop = Backdrop.initialModel
+      , equalizer = Equalizer.initialModel
       , queue = Queue.initialModel
       , sources = Sources.initialModel
       , tracks = Tracks.initialModel
@@ -275,6 +278,16 @@ update msg model =
                 , update = Backdrop.update
                 }
                 { model = model.backdrop
+                , msg = sub
+                }
+
+        EqualizerMsg sub ->
+            updateChild
+                { mapCmd = EqualizerMsg
+                , mapModel = \child -> { model | equalizer = child }
+                , update = Equalizer.update
+                }
+                { model = model.equalizer
                 , msg = sub
                 }
 
@@ -619,7 +632,19 @@ view model =
 body : Model -> Html Msg
 body model =
     section
-        []
+        (case model.equalizer.activeKnob of
+            Just _ ->
+                [ (EqualizerMsg << Equalizer.AdjustKnob)
+                    |> Pointer.onMove
+                    |> Html.Styled.Attributes.fromUnstyled
+                , (EqualizerMsg << Equalizer.DeactivateKnob)
+                    |> Pointer.onUp
+                    |> Html.Styled.Attributes.fromUnstyled
+                ]
+
+            Nothing ->
+                []
+        )
         [ Css.Global.global globalCss
 
         -----------------------------------------
@@ -676,6 +701,9 @@ defaultScreen model =
         -- Pages
         --------
         , case model.page of
+            Page.Equalizer ->
+                Html.map EqualizerMsg (Equalizer.view model.equalizer)
+
             Page.Index ->
                 nothing
 

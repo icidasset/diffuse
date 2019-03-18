@@ -61,6 +61,23 @@ app.ports.activeQueueItemChanged.subscribe(item => {
 })
 
 
+app.ports.adjustEqualizerSetting.subscribe(e => {
+  let node
+
+  switch (e.knob) {
+    case "LOW"      : node = low; break
+    case "MID"      : node = mid; break
+    case "HIGH"     : node = high; break
+    case "VOLUME"   : node = volume; break
+  }
+
+  node.gain.setValueAtTime(
+    determineNodeGainValue(e.knob, e.value),
+    context.currentTime
+  )
+})
+
+
 app.ports.play.subscribe(_ => {
   if (orchestrion.audio) orchestrion.audio.play()
 })
