@@ -186,21 +186,34 @@ update msg model =
         -- Brain
         -----------------------------------------
         Core.ProcessSources ->
-            ( model
-            , [ ( "origin"
-                , Json.Encode.string (Common.urlOrigin model.url)
-                )
-              , ( "sources"
-                , Json.Encode.list Sources.Encoding.encode model.sources.collection
-                )
-              , ( "tracks"
-                , Json.Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
-                )
-              ]
+            let
+                notification =
+                    Notifications.warning "Processing sources …"
+
+                notificationId =
+                    Notifications.id notification
+
+                sources =
+                    model.sources
+
+                newSources =
+                    { sources | processingNotificationId = Just notificationId }
+            in
+            [ ( "origin"
+              , Json.Encode.string (Common.urlOrigin model.url)
+              )
+            , ( "sources"
+              , Json.Encode.list Sources.Encoding.encode model.sources.collection
+              )
+            , ( "tracks"
+              , Json.Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
+              )
+            ]
                 |> Json.Encode.object
                 |> Alien.broadcast Alien.ProcessSources
                 |> Ports.toBrain
-            )
+                |> R2.withModel { model | sources = newSources }
+                |> N5.andThen2 (update <| ShowNotification notification)
 
         Core.SaveEnclosedUserData ->
             model
@@ -409,7 +422,7 @@ update msg model =
         -----------------------------------------
         -- Notifications
         -----------------------------------------
-        DismissNotification args ->
+        Core.DismissNotification args ->
             UI.Notifications.dismissNotification model args
 
         RemoveNotification { id } ->
@@ -476,6 +489,9 @@ translateReply reply =
 
         Reply.Chill ->
             Bypass
+
+        Reply.DismissNotification opts ->
+            Core.DismissNotification opts
 
         Reply.FillQueue ->
             Core.FillQueue

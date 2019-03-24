@@ -8,6 +8,7 @@ import Material.Icons.Action as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
+import Notifications exposing (Notification)
 import Replying exposing (R3D3, return)
 import Return2
 import Return3
@@ -34,6 +35,7 @@ type alias Model =
     , currentTime : Time.Posix
     , form : Form.Model
     , isProcessing : Bool
+    , processingNotificationId : Maybe Int
     }
 
 
@@ -43,6 +45,7 @@ initialModel =
     , currentTime = Time.millisToPosix 0
     , form = Form.initialModel
     , isProcessing = False
+    , processingNotificationId = Nothing
     }
 
 
@@ -75,7 +78,9 @@ update msg model =
         FinishedProcessing ->
             ( { model | isProcessing = False }
             , Cmd.none
-            , Nothing
+            , Maybe.map
+                (\id -> [ UI.Reply.DismissNotification { id = id } ])
+                model.processingNotificationId
             )
 
         Process ->

@@ -170,4 +170,4 @@ successStyles =
 
 warningStyles : List Css.Style
 warningStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.warning) ]
+    [ Css.backgroundColor (Css.rgba 255 255 255 0.2) ]

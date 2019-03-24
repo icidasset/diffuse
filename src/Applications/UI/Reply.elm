@@ -18,6 +18,7 @@ type Reply
     = ActiveQueueItemChanged (Maybe Queue.Item)
     | AddSourceToCollection Source
     | Chill
+    | DismissNotification { id : Int }
     | FillQueue
     | GoToPage Page
     | InsertDemo
