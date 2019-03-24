@@ -708,7 +708,6 @@ defaultScreen model =
                 nothing
 
             Page.Queue _ ->
-                -- TODO
                 nothing
 
             Page.Settings subPage ->

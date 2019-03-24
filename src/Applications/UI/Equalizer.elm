@@ -76,8 +76,6 @@ update msg model =
         -- Activate
         -----------------------------------------
         ActivateKnob theKnob { pointer } ->
-            -- TODO: mousePos should be the center position of the knob,
-            --       not the starting mouse position
             let
                 ( x, y ) =
                     pointer.clientPos
