@@ -189,14 +189,8 @@ importEnclosed value model =
             )
 
         Err err ->
-            err
-                |> Json.errorToString
-                |> Notifications.error
-                |> UI.Notifications.showNotification
-                    { model
-                        | backdrop = { backdrop | chosen = Just UI.Backdrop.default }
-                    }
-                |> R3.withNoReply
+            R3.withNothing
+                { model | backdrop = { backdrop | chosen = Just UI.Backdrop.default } }
 
 
 
