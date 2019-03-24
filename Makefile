@@ -69,10 +69,13 @@ install:
 
 	@# Non-NPM dependencies
 	@curl https://raw.githubusercontent.com/icidasset/diffuse-musicmetadata/0ae8c854e18b6960b9f7e94b7eb47868416dc2ad/dist/musicmetadata.min.js -o $(VENDOR_DIR)/musicmetadata.min.js
+	@curl https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js -o $(VENDOR_DIR)/pep.js
 
 	@# Minify non-minified dependencies
 	@closure-compiler --js=$(VENDOR_DIR)/lunr.js --js_output_file=$(VENDOR_DIR)/lunr.min.js
+	@closure-compiler --js=$(VENDOR_DIR)/pep.js --js_output_file=$(VENDOR_DIR)/pep.min.js
 	@rm $(VENDOR_DIR)/lunr.js
+	@rm $(VENDOR_DIR)/pep.js
 
 
 server:
