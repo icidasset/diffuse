@@ -389,7 +389,7 @@ translateAlienError : Alien.Event -> String -> Msg
 translateAlienError event err =
     case Alien.tagFromString event.tag of
         Just Alien.AuthIpfs ->
-            report Alien.AuthIpfs "I can't seem to connect with IPFS. Maybe you used the wrong passphrase, or your IPFS node is offline?"
+            report Alien.AuthIpfs "Something went wrong regarding the IPFS storage. Maybe you used the wrong passphrase, or your IPFS node is offline?"
 
         Just tag ->
             report tag err

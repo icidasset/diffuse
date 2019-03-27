@@ -35,12 +35,14 @@ import Replying exposing (R3D3, do)
 
 type alias Model =
     { method : Maybe Method
+    , performingSignIn : Bool
     }
 
 
 initialModel : Model
 initialModel =
     { method = Nothing
+    , performingSignIn = False
     }
 
 
@@ -81,19 +83,14 @@ update msg model =
         PerformSignIn json ->
             case decodeMethod json of
                 Just method ->
-                    ( { model | method = Just method }
-                    , Cmd.batch
-                        [ do RetrieveHypaethralData
-                        , json
-                            |> Alien.broadcast Alien.AuthMethod
-                            |> Ports.toCache
-                        ]
+                    ( { model | method = Just method, performingSignIn = True }
+                    , do RetrieveHypaethralData
                     , Nothing
                     )
 
                 Nothing ->
                     ( model
-                    , noCmd
+                    , Cmd.none
                     , Nothing
                     )
 
@@ -130,7 +127,7 @@ update msg model =
                 -- ✋
                 _ ->
                     ( model
-                    , noCmd
+                    , Cmd.none
                     , terminate NotAuthenticated
                     )
 
@@ -149,13 +146,21 @@ update msg model =
 
                 -- ✋
                 Nothing ->
-                    noCmd
+                    Cmd.none
             , Nothing
             )
 
         HypaethralDataRetrieved json ->
-            ( model
-            , noCmd
+            ( { model | performingSignIn = False }
+              --
+            , if model.performingSignIn then
+                json
+                    |> Alien.broadcast Alien.AuthMethod
+                    |> Ports.toCache
+
+              else
+                Cmd.none
+              --
             , Maybe.andThen
                 (\method -> terminate <| Authenticated method json)
                 model.method
@@ -172,7 +177,7 @@ update msg model =
 
         EnclosedDataRetrieved json ->
             ( model
-            , noCmd
+            , Cmd.none
             , Just [ GiveUI Alien.LoadEnclosedUserData json ]
             )
 
@@ -196,14 +201,9 @@ update msg model =
 
                 -- ✋
                 Nothing ->
-                    noCmd
+                    Cmd.none
             , Nothing
             )
-
-
-noCmd : Cmd msg
-noCmd =
-    Cmd.none
 
 
 
