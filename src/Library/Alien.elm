@@ -30,6 +30,7 @@ type Tag
     | ProcessSources
     | SaveEnclosedUserData
     | SaveFavourites
+    | SaveSettings
     | SaveSources
     | SaveTracks
     | SignIn
@@ -107,6 +108,9 @@ tagToString tag =
         SaveFavourites ->
             "SAVE_FAVOURITES"
 
+        SaveSettings ->
+            "SAVE_SETTINGS"
+
         SaveSources ->
             "SAVE_SOURCES"
 
@@ -182,6 +186,9 @@ tagFromString string =
 
         "SAVE_FAVOURITES" ->
             Just SaveFavourites
+
+        "SAVE_SETTINGS" ->
+            Just SaveSettings
 
         "SAVE_SOURCES" ->
             Just SaveSources

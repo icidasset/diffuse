@@ -96,6 +96,7 @@ type Msg
     | ProcessSources
     | SaveEnclosedUserData
     | SaveFavourites
+    | SaveSettings
     | SaveSources
     | SaveTracks
     | SignOut

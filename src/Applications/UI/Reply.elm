@@ -29,6 +29,7 @@ type Reply
     | ShiftQueue
     | SaveEnclosedUserData
     | SaveFavourites
+    | SaveSettings
     | SaveSources
     | SaveTracks
     | ToggleLoadingScreen Switch

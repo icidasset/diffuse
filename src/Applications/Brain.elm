@@ -175,6 +175,13 @@ update msg model =
                 |> hypaethralLenses.setFavourites model
                 |> saveHypaethralData
 
+        SaveSettings value ->
+            value
+                |> Json.decodeValue (Json.map Just Authentication.settingsDecoder)
+                |> Result.withDefault model.hypaethralUserData.settings
+                |> hypaethralLenses.setSettings model
+                |> saveHypaethralData
+
         SaveSources value ->
             value
                 |> Json.decodeValue (Json.list Sources.decoder)
@@ -274,6 +281,7 @@ updateTracks model sub =
 
 hypaethralLenses =
     { setFavourites = makeHypaethralLens (\h f -> { h | favourites = f })
+    , setSettings = makeHypaethralLens (\h s -> { h | settings = s })
     , setSources = makeHypaethralLens (\h s -> { h | sources = s })
     , setTracks = makeHypaethralLens (\h t -> { h | tracks = t })
     }
@@ -353,6 +361,9 @@ translateAlienData event =
 
         Just Alien.SaveFavourites ->
             SaveFavourites event.data
+
+        Just Alien.SaveSettings ->
+            SaveSettings event.data
 
         Just Alien.SaveSources ->
             SaveSources event.data

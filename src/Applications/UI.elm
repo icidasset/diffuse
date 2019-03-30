@@ -229,6 +229,14 @@ update msg model =
                 |> Ports.toBrain
                 |> R2.withModel model
 
+        Core.SaveSettings ->
+            model
+                |> UserData.gatherSettings
+                |> Authentication.encodeSettings
+                |> Alien.broadcast Alien.SaveSettings
+                |> Ports.toBrain
+                |> R2.withModel model
+
         Core.SaveSources ->
             let
                 updateEnabledSourceIdsOnTracks =
@@ -373,6 +381,7 @@ update msg model =
                 "diffuse.json"
                 "application/json"
                 ({ favourites = model.tracks.favourites
+                 , settings = Just (UserData.gatherSettings model)
                  , sources = model.sources.collection
                  , tracks = model.tracks.collection.untouched
                  }
@@ -522,6 +531,9 @@ translateReply reply =
 
         Reply.SaveFavourites ->
             Core.SaveFavourites
+
+        Reply.SaveSettings ->
+            Core.SaveSettings
 
         Reply.SaveSources ->
             Core.SaveSources

@@ -51,5 +51,6 @@ type Msg
     | LoadHypaethralUserData Json.Value
     | SaveHypaethralData
     | SaveFavourites Json.Value
+    | SaveSettings Json.Value
     | SaveSources Json.Value
     | SaveTracks Json.Value

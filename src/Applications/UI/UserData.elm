@@ -1,4 +1,4 @@
-module UI.UserData exposing (demo, encodedFavourites, encodedSources, encodedTracks, exportEnclosed, importEnclosed, importHypaethral)
+module UI.UserData exposing (demo, encodedFavourites, encodedSources, encodedTracks, exportEnclosed, gatherSettings, importEnclosed, importHypaethral)
 
 import Authentication exposing (..)
 import Base64
@@ -6,6 +6,7 @@ import Common exposing (Switch(..))
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
+import Maybe.Extra as Maybe
 import Notifications
 import Replying as N5 exposing (R3D3)
 import Return3 as R3
@@ -43,11 +44,27 @@ encodedTracks { tracks } =
     Json.Encode.list Tracks.encodeTrack tracks.collection.untouched
 
 
+gatherSettings : UI.Core.Model -> Settings
+gatherSettings { backdrop } =
+    { backgroundImage = backdrop.chosen
+    }
+
+
 importHypaethral : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importHypaethral value model =
     case decodeHypaethral value of
         Ok data ->
             let
+                { backdrop } =
+                    model
+
+                backdropModel =
+                    data.settings
+                        |> Maybe.andThen .backgroundImage
+                        |> Maybe.withDefault UI.Backdrop.default
+                        |> Just
+                        |> (\c -> { backdrop | chosen = c })
+
                 ( sourcesModel, sourcesCmd, sourcesReply ) =
                     importSources model.sources data
 
@@ -55,7 +72,8 @@ importHypaethral value model =
                     importTracks model.tracks data
             in
             ( { model
-                | sources = sourcesModel
+                | backdrop = backdropModel
+                , sources = sourcesModel
                 , tracks = tracksModel
               }
             , Cmd.batch
@@ -131,8 +149,7 @@ exportEnclosed model =
             }
     in
     encodeEnclosed
-        { backgroundImage = model.backdrop.chosen
-        , equalizerSettings = equalizerSettings
+        { equalizerSettings = equalizerSettings
         , onlyShowFavourites = model.tracks.favouritesOnly
         , repeat = model.queue.repeat
         , searchTerm = model.tracks.searchTerm
@@ -145,17 +162,12 @@ exportEnclosed model =
 importEnclosed : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
 importEnclosed value model =
     let
-        { backdrop, equalizer, queue, tracks } =
+        { equalizer, queue, tracks } =
             model
     in
     case decodeEnclosed value of
         Ok data ->
             let
-                newBackDrop =
-                    { backdrop
-                        | chosen = Just (Maybe.withDefault UI.Backdrop.default data.backgroundImage)
-                    }
-
                 newEqualizer =
                     { equalizer
                         | low = data.equalizerSettings.low
@@ -179,8 +191,7 @@ importEnclosed value model =
                     }
             in
             ( { model
-                | backdrop = newBackDrop
-                , equalizer = newEqualizer
+                | equalizer = newEqualizer
                 , queue = newQueue
                 , tracks = newTracks
               }
@@ -189,8 +200,7 @@ importEnclosed value model =
             )
 
         Err err ->
-            R3.withNothing
-                { model | backdrop = { backdrop | chosen = Just UI.Backdrop.default } }
+            R3.withNothing model
 
 
 
@@ -214,7 +224,7 @@ mergeReplies list =
 
 
 
--- DEMO
+-- DEMO (TODO: Update this to the new structure)
 
 
 demo : Json.Value

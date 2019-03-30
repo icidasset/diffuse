@@ -76,7 +76,7 @@ update msg model =
         Choose backdrop ->
             { model | chosen = Just backdrop }
                 |> R2.withNoCmd
-                |> R3.withReply [ Reply.SaveEnclosedUserData ]
+                |> R3.withReply [ Reply.SaveSettings ]
 
         Load backdrop ->
             [ backdrop ]

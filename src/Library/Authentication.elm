@@ -1,4 +1,4 @@
-module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), decodeEnclosed, decodeHypaethral, decodeMethod, emptyHypaethralUserData, enclosedDecoder, encodeEnclosed, encodeHypaethral, encodeMethod, hypaethralDecoder, methodFromString, methodToString)
+module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), Settings, decodeEnclosed, decodeHypaethral, decodeMethod, emptyHypaethralUserData, enclosedDecoder, encodeEnclosed, encodeHypaethral, encodeMethod, encodeSettings, hypaethralDecoder, methodFromString, methodToString, settingsDecoder)
 
 import Equalizer
 import Json.Decode as Json
@@ -22,8 +22,7 @@ type Method
 
 
 type alias EnclosedUserData =
-    { backgroundImage : Maybe String
-    , equalizerSettings : Equalizer.Settings
+    { equalizerSettings : Equalizer.Settings
     , onlyShowFavourites : Bool
     , repeat : Bool
     , searchTerm : Maybe String
@@ -35,8 +34,14 @@ type alias EnclosedUserData =
 
 type alias HypaethralUserData =
     { favourites : List Tracks.Favourite
+    , settings : Maybe Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
+    }
+
+
+type alias Settings =
+    { backgroundImage : Maybe String
     }
 
 
@@ -89,21 +94,19 @@ decodeEnclosed =
 enclosedDecoder : Json.Decoder EnclosedUserData
 enclosedDecoder =
     Json.succeed EnclosedUserData
-        |> required "backgroundImage" (Json.maybe Json.string)
         |> optional "equalizerSettings" Equalizer.settingsDecoder Equalizer.defaultSettings
         |> optional "onlyShowFavourites" Json.bool False
         |> optional "repeat" Json.bool False
-        |> required "searchTerm" (Json.maybe Json.string)
+        |> optional "searchTerm" (Json.maybe Json.string) Nothing
         |> optional "shuffle" Json.bool False
         |> optional "sortBy" Tracks.sortByDecoder Tracks.Artist
         |> optional "sortDirection" Tracks.sortDirectionDecoder Tracks.Asc
 
 
 encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { backgroundImage, equalizerSettings, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
+encodeEnclosed { equalizerSettings, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
     Json.Encode.object
-        [ ( "backgroundImage", Maybe.unwrap Json.Encode.null Json.Encode.string backgroundImage )
-        , ( "equalizerSettings", Equalizer.encodeSettings equalizerSettings )
+        [ ( "equalizerSettings", Equalizer.encodeSettings equalizerSettings )
         , ( "onlyShowFavourites", Json.Encode.bool onlyShowFavourites )
         , ( "repeat", Json.Encode.bool repeat )
         , ( "searchTerm", Maybe.unwrap Json.Encode.null Json.Encode.string searchTerm )
@@ -125,17 +128,28 @@ decodeHypaethral =
 emptyHypaethralUserData : HypaethralUserData
 emptyHypaethralUserData =
     { favourites = []
+    , settings = Nothing
     , sources = []
     , tracks = []
     }
 
 
 encodeHypaethral : HypaethralUserData -> Json.Value
-encodeHypaethral { favourites, sources, tracks } =
+encodeHypaethral { favourites, settings, sources, tracks } =
     Json.Encode.object
         [ ( "favourites", Json.Encode.list Tracks.encodeFavourite favourites )
+        , ( "settings", Maybe.unwrap Json.Encode.null encodeSettings settings )
         , ( "sources", Json.Encode.list Sources.encode sources )
         , ( "tracks", Json.Encode.list Tracks.encodeTrack tracks )
+        ]
+
+
+encodeSettings : Settings -> Json.Value
+encodeSettings settings =
+    Json.Encode.object
+        [ ( "backgroundImage"
+          , Maybe.unwrap Json.Encode.null Json.Encode.string settings.backgroundImage
+          )
         ]
 
 
@@ -143,5 +157,12 @@ hypaethralDecoder : Json.Decoder HypaethralUserData
 hypaethralDecoder =
     Json.succeed HypaethralUserData
         |> optional "favourites" (Json.listIgnore Tracks.favouriteDecoder) []
+        |> optional "settings" (Json.maybe settingsDecoder) Nothing
         |> optional "sources" (Json.listIgnore Sources.decoder) []
         |> optional "tracks" (Json.listIgnore Tracks.trackDecoder) []
+
+
+settingsDecoder : Json.Decoder Settings
+settingsDecoder =
+    Json.succeed Settings
+        |> required "backgroundImage" (Json.maybe Json.string)

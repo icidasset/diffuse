@@ -153,13 +153,15 @@ update msg model =
         HypaethralDataRetrieved json ->
             ( { model | performingSignIn = False }
               --
-            , if model.performingSignIn then
-                json
-                    |> Alien.broadcast Alien.AuthMethod
-                    |> Ports.toCache
+            , case ( model.performingSignIn, model.method ) of
+                ( True, Just method ) ->
+                    method
+                        |> encodeMethod
+                        |> Alien.broadcast Alien.AuthMethod
+                        |> Ports.toCache
 
-              else
-                Cmd.none
+                _ ->
+                    Cmd.none
               --
             , Maybe.andThen
                 (\method -> terminate <| Authenticated method json)
