@@ -15,6 +15,7 @@ type alias Model =
     , enabledSourceIds : List String
     , favourites : List Favourite
     , favouritesOnly : Bool
+    , hideDuplicates : Bool
     , infiniteList : InfiniteList.Model
     , nowPlaying : Maybe IdentifiedTrack
     , scene : Scene
@@ -37,6 +38,7 @@ type Msg
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)
     | SortBy SortBy
+    | ToggleHideDuplicates
       -----------------------------------------
       -- Collection
       -----------------------------------------

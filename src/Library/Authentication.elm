@@ -42,6 +42,7 @@ type alias HypaethralUserData =
 
 type alias Settings =
     { backgroundImage : Maybe String
+    , hideDuplicates : Bool
     }
 
 
@@ -150,6 +151,9 @@ encodeSettings settings =
         [ ( "backgroundImage"
           , Maybe.unwrap Json.Encode.null Json.Encode.string settings.backgroundImage
           )
+        , ( "hideDuplicates"
+          , Json.Encode.bool settings.hideDuplicates
+          )
         ]
 
 
@@ -165,4 +169,5 @@ hypaethralDecoder =
 settingsDecoder : Json.Decoder Settings
 settingsDecoder =
     Json.succeed Settings
-        |> required "backgroundImage" (Json.maybe Json.string)
+        |> optional "backgroundImage" (Json.maybe Json.string) Nothing
+        |> optional "hideDuplicates" Json.bool False

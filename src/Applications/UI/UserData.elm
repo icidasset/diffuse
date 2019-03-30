@@ -45,8 +45,9 @@ encodedTracks { tracks } =
 
 
 gatherSettings : UI.Core.Model -> Settings
-gatherSettings { backdrop } =
+gatherSettings { backdrop, tracks } =
     { backgroundImage = backdrop.chosen
+    , hideDuplicates = tracks.hideDuplicates
     }
 
 
@@ -116,6 +117,7 @@ importTracks model data =
                 | collection = { emptyCollection | untouched = data.tracks }
                 , enabledSourceIds = Sources.enabledSourceIds data.sources
                 , favourites = data.favourites
+                , hideDuplicates = Maybe.unwrap False .hideDuplicates data.settings
             }
 
         addReplyIfNecessary =

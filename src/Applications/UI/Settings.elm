@@ -14,6 +14,7 @@ import UI.Navigation exposing (..)
 import UI.Page
 import UI.Settings.ImportExport
 import UI.Settings.Page as Settings exposing (..)
+import UI.Tracks.Core
 
 
 
@@ -84,5 +85,13 @@ index model =
                 )
                 UI.Backdrop.options
             )
+
+        -- Duplicates
+        -------------
+        , chunk [ T.mb3, T.mt4 ] [ UI.Kit.label [] "Hide Duplicates" ]
+        , UI.Kit.checkbox
+            { checked = model.tracks.hideDuplicates
+            , toggleMsg = UI.Core.TracksMsg UI.Tracks.Core.ToggleHideDuplicates
+            }
         ]
     ]

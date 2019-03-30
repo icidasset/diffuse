@@ -85,6 +85,7 @@ type alias CollectionDependencies =
     { enabledSourceIds : List String
     , favourites : List Favourite
     , favouritesOnly : Bool
+    , hideDuplicates : Bool
     , nowPlaying : Maybe IdentifiedTrack
     , searchResults : Maybe (List String)
     , sortBy : SortBy

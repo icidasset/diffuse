@@ -49,6 +49,7 @@ initialModel =
     , enabledSourceIds = []
     , favourites = []
     , favouritesOnly = False
+    , hideDuplicates = False
     , infiniteList = InfiniteList.init
     , nowPlaying = Nothing
     , scene = List
@@ -120,6 +121,11 @@ update msg model =
             { model | sortBy = property, sortDirection = sortDir }
                 |> reviseCollection arrange
                 |> N5.addReply SaveEnclosedUserData
+
+        ToggleHideDuplicates ->
+            { model | hideDuplicates = not model.hideDuplicates }
+                |> reviseCollection arrange
+                |> N5.addReply SaveSettings
 
         -----------------------------------------
         -- Collection
@@ -233,6 +239,7 @@ makeParcel model =
     ( { enabledSourceIds = model.enabledSourceIds
       , favourites = model.favourites
       , favouritesOnly = model.favouritesOnly
+      , hideDuplicates = model.hideDuplicates
       , nowPlaying = model.nowPlaying
       , searchResults = model.searchResults
       , sortBy = model.sortBy

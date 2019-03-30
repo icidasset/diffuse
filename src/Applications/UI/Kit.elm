@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -6,9 +6,10 @@ import Color.Ext as Color
 import Css exposing (deg, em, none, num, pct, px, solid, url, zero)
 import Css.Global
 import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (css, href, style)
+import Html.Styled.Attributes exposing (checked, css, href, style, type_)
 import Html.Styled.Events exposing (onClick, onInput)
 import Material.Icons.Hardware as Icons
+import Material.Icons.Toggle as Icons
 import Svg
 import Tachyons.Classes as T
 
@@ -271,6 +272,19 @@ centeredContent children =
         ]
 
 
+checkbox : { checked : Bool, toggleMsg : msg } -> Html msg
+checkbox opts =
+    brick
+        [ css checkboxStyles, onClick opts.toggleMsg ]
+        [ T.dib, T.pointer, T.relative ]
+        [ if opts.checked then
+            Html.fromUnstyled (Icons.check_box colors.text 22)
+
+          else
+            Html.fromUnstyled (Icons.check_box_outline_blank colors.text 22)
+        ]
+
+
 h1 : String -> Html msg
 h1 text =
     slab
@@ -476,6 +490,12 @@ buttonStyles buttonColor =
     [ Css.borderColor (Color.toElmCssColor buttonColor)
     , Css.color (Color.toElmCssColor buttonColor)
     , buttonFocus
+    ]
+
+
+checkboxStyles : List Css.Style
+checkboxStyles =
+    [ Css.left (Css.px -3)
     ]
 
 

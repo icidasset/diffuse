@@ -49,6 +49,25 @@ harvest ( deps, collection ) =
     in
     harvested
         |> List.filter theFilter
+        |> (if deps.hideDuplicates then
+                List.foldr
+                    (\( i, t ) ( seen, acc ) ->
+                        let
+                            s =
+                                String.toLower (t.tags.artist ++ "/" ++ t.tags.title)
+                        in
+                        if List.member s seen then
+                            ( seen, acc )
+
+                        else
+                            ( s :: seen, ( i, t ) :: acc )
+                    )
+                    ( [], [] )
+                    >> Tuple.second
+
+            else
+                identity
+           )
         |> List.indexedMap (\idx tup -> Tuple.mapFirst (\i -> { i | indexInList = idx }) tup)
         |> (\h -> { collection | harvested = h })
         |> (\c -> ( deps, c ))
