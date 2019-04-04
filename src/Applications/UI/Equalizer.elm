@@ -3,6 +3,7 @@ module UI.Equalizer exposing (Model, Msg(..), adjustAllKnobs, initialModel, upda
 import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
+import Coordinates exposing (Coordinates)
 import Css
 import Equalizer exposing (..)
 import Html.Events.Extra.Pointer as Pointer
@@ -40,7 +41,7 @@ type alias Model =
 
     --
     , activeKnob : Maybe Knob
-    , startCoordinates : { x : Float, y : Float }
+    , startCoordinates : Coordinates
     }
 
 

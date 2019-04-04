@@ -1,5 +1,6 @@
 module UI.Tracks.Core exposing (Model, Msg(..), Scene(..))
 
+import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Encode as Json
 import Tracks exposing (..)
@@ -37,6 +38,7 @@ type Msg
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)
+    | ShowContextMenu IdentifiedTrack Mouse.Event
     | SortBy SortBy
     | ToggleHideDuplicates
       -----------------------------------------

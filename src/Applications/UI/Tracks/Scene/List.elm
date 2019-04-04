@@ -8,6 +8,7 @@ import Conditional exposing (ifThenElse)
 import Css
 import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtmlAttributes
+import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, id)
 import Html.Styled.Events exposing (onClick, onDoubleClick)
@@ -343,7 +344,23 @@ itemView { favouritesOnly } _ idx ( identifiers, track ) =
         slab
             Html.li
             [ css (rowStyles idx identifiers)
-            , onDoubleClick (Reply [ UI.Reply.PlayTrack ( identifiers, track ) ])
+
+            -- Play
+            -------
+            , [ UI.Reply.PlayTrack ( identifiers, track ) ]
+                |> Reply
+                |> onDoubleClick
+
+            -- Context Menu
+            ---------------
+            , ( identifiers, track )
+                |> ShowContextMenu
+                |> onWithOptions
+                    "contextmenu"
+                    { stopPropagation = True
+                    , preventDefault = True
+                    }
+                |> Html.Styled.Attributes.fromUnstyled
             ]
             [ T.dt_row
 

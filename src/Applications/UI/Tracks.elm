@@ -74,7 +74,23 @@ update msg model =
             R3.withNothing { model | infiniteList = infiniteList }
 
         Reply replies ->
-            ( model, Cmd.none, Just replies )
+            ( model
+            , Cmd.none
+            , Just replies
+            )
+
+        ShowContextMenu track mouseEvent ->
+            let
+                ( x, y ) =
+                    mouseEvent.clientPos
+
+                tracks =
+                    [ track ]
+            in
+            ( model
+            , Cmd.none
+            , Just [ ShowTracksContextMenu { x = x, y = y } tracks ]
+            )
 
         ScrollToNowPlaying ->
             case model.nowPlaying of
@@ -491,6 +507,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     "/sources/new"
                     UI.Kit.Normal
                     (inline
+                        []
                         [ UI.Kit.inlineIcon Icons.add
                         , text "Add some music"
                         ]
@@ -505,6 +522,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     UI.Kit.Normal
                     (Reply [ InsertDemo ])
                     (inline
+                        []
                         [ UI.Kit.inlineIcon Icons.music_note
                         , text "Insert demo"
                         ]

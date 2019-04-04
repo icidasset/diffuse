@@ -8,18 +8,23 @@ import Chunky exposing (..)
 import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
+import Conditional exposing (..)
+import ContextMenu exposing (ContextMenu)
 import Css exposing (url)
 import Css.Global
+import Css.Transitions
 import Dict.Ext as Dict
 import File
 import File.Download
 import File.Select
 import Html.Events.Extra.Pointer as Pointer
 import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
-import Html.Styled.Attributes exposing (id, style)
+import Html.Styled.Attributes exposing (css, id, style)
+import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
+import Maybe.Extra as Maybe
 import Notifications
 import Process
 import Replying as N5 exposing (do, return)
@@ -33,6 +38,7 @@ import Tracks.Encoding
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
+import UI.ContextMenu
 import UI.Core as Core exposing (Flags, Model, Msg(..))
 import UI.Equalizer as Equalizer
 import UI.Kit
@@ -50,6 +56,7 @@ import UI.Sources as Sources
 import UI.Sources.Page
 import UI.Svg.Elements
 import UI.Tracks as Tracks
+import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Core as Tracks
 import UI.UserData as UserData
 import Url exposing (Url)
@@ -80,7 +87,8 @@ init flags url key =
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
-      { currentTime = Time.millisToPosix flags.initialTime
+      { contextMenu = Nothing
+      , currentTime = Time.millisToPosix flags.initialTime
       , isAuthenticated = False
       , isLoading = True
       , navKey = key
@@ -373,6 +381,19 @@ update msg model =
                 model
 
         -----------------------------------------
+        -- Context Menu
+        -----------------------------------------
+        Core.HideContextMenu ->
+            ( { model | contextMenu = Nothing }
+            , Cmd.none
+            )
+
+        Core.ShowTracksContextMenu coordinates tracks ->
+            ( { model | contextMenu = Just (Tracks.trackMenu tracks coordinates) }
+            , Cmd.none
+            )
+
+        -----------------------------------------
         -- Import / Export
         -----------------------------------------
         Core.Export ->
@@ -541,6 +562,9 @@ translateReply reply =
         Reply.SaveTracks ->
             Core.SaveTracks
 
+        Reply.ShowTracksContextMenu coordinates tracks ->
+            Core.ShowTracksContextMenu coordinates tracks
+
         Reply.ToggleLoadingScreen state ->
             Core.ToggleLoadingScreen state
 
@@ -683,10 +707,22 @@ body model =
             |> Html.map BackdropMsg
 
         -----------------------------------------
+        -- Context Menu
+        -----------------------------------------
+        , model.contextMenu
+            |> Lazy.lazy UI.ContextMenu.view
+
+        -----------------------------------------
         -- Notifications
         -----------------------------------------
         , model.notifications
             |> Lazy.lazy UI.Notifications.view
+
+        -----------------------------------------
+        -- Overlay
+        -----------------------------------------
+        , model.contextMenu
+            |> Lazy.lazy overlay
 
         -----------------------------------------
         -- Content
@@ -783,6 +819,28 @@ loadingAnimation =
     Html.map never UI.Svg.Elements.loading
 
 
+overlay : Maybe (ContextMenu Msg) -> Html Msg
+overlay maybeContextMenu =
+    let
+        isVisible =
+            Maybe.isJust maybeContextMenu
+    in
+    brick
+        [ css (overlayStyles { clickable = isVisible })
+
+        --
+        , ifThenElse isVisible (onClick HideContextMenu) (onClick Bypass)
+        ]
+        [ T.absolute
+        , T.absolute__fill
+        , T.z_999
+
+        --
+        , ifThenElse isVisible T.o_100 T.o_0
+        ]
+        []
+
+
 
 -- 🖼  ░░  GLOBAL
 
@@ -812,6 +870,11 @@ globalCss =
     , Css.Global.selector ":-ms-input-placeholder" placeholderStyles
     , Css.Global.selector ":-moz-placeholder" placeholderStyles
     , Css.Global.selector "::placeholder" placeholderStyles
+
+    -----------------------------------------
+    -- Bits & Pieces
+    -----------------------------------------
+    , Css.Global.selector ".lh-0" [ Css.lineHeight Css.zero ]
     ]
 
 
@@ -819,4 +882,30 @@ placeholderStyles : List Css.Style
 placeholderStyles =
     [ Css.color (Css.rgb 0 0 0)
     , Css.opacity (Css.num 0.2)
+    ]
+
+
+
+-- 🖼  ░░  OTHER
+
+
+overlayStyles : { clickable : Bool } -> List Css.Style
+overlayStyles { clickable } =
+    [ Css.backgroundColor (Css.rgba 0 0 0 0.25)
+
+    --
+    , ifThenElse
+        clickable
+        (Css.pointerEvents Css.auto)
+        (Css.pointerEvents Css.none)
+
+    --
+    , ifThenElse
+        clickable
+        (Css.cursor Css.pointer)
+        (Css.cursor Css.inherit)
+
+    --
+    , Css.Transitions.transition
+        [ Css.Transitions.opacity3 1000 0 Css.Transitions.ease ]
     ]

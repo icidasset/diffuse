@@ -68,6 +68,11 @@ chunky a =
     List.singleton >> chunk a
 
 
+inline : List String -> List (Html msg) -> Html msg
+inline =
+    slab Html.span []
+
+
 
 -- 4
 
@@ -84,11 +89,6 @@ rawy =
 
 
 -- 5
-
-
-inline : List (Html msg) -> Html msg
-inline =
-    Html.span []
 
 
 nothing : Html msg

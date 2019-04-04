@@ -2,6 +2,7 @@ module UI.Reply exposing (Reply(..))
 
 import Alien
 import Common exposing (Switch(..))
+import Coordinates exposing (Coordinates)
 import Json.Decode as Json
 import Notifications exposing (Notification)
 import Queue
@@ -32,4 +33,5 @@ type Reply
     | SaveSettings
     | SaveSources
     | SaveTracks
+    | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
     | ToggleLoadingScreen Switch

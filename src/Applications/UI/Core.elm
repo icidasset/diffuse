@@ -4,11 +4,14 @@ import Alien
 import Browser
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
+import ContextMenu exposing (ContextMenu)
+import Coordinates exposing (Coordinates)
 import File exposing (File)
 import Json.Encode as Json
 import Notifications exposing (..)
 import Queue
 import Time
+import Tracks exposing (IdentifiedTrack)
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Equalizer as Equalizer
@@ -34,7 +37,8 @@ type alias Flags =
 
 
 type alias Model =
-    { currentTime : Time.Posix
+    { contextMenu : Maybe (ContextMenu Msg)
+    , currentTime : Time.Posix
     , isAuthenticated : Bool
     , isLoading : Bool
     , navKey : Nav.Key
@@ -114,6 +118,11 @@ type Msg
       -----------------------------------------
     | ActiveQueueItemChanged (Maybe Queue.Item)
     | FillQueue
+      -----------------------------------------
+      -- Context Menu
+      -----------------------------------------
+    | HideContextMenu
+    | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
       -----------------------------------------
       -- Import / Export
       -----------------------------------------

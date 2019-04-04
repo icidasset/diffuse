@@ -603,7 +603,9 @@ textFieldStyles =
 
 vesselStyles : List Css.Style
 vesselStyles =
-    [ Css.maxWidth (px insulationWidth) ]
+    [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
+    , Css.maxWidth (px insulationWidth)
+    ]
 
 
 
