@@ -684,18 +684,20 @@ view model =
 body : Model -> Html Msg
 body model =
     section
-        (case model.equalizer.activeKnob of
-            Just _ ->
-                [ (EqualizerMsg << Equalizer.AdjustKnob)
-                    |> Pointer.onMove
-                    |> Html.Styled.Attributes.fromUnstyled
-                , (EqualizerMsg << Equalizer.DeactivateKnob)
-                    |> Pointer.onUp
-                    |> Html.Styled.Attributes.fromUnstyled
-                ]
+        (if Maybe.isJust model.contextMenu then
+            [ onClick HideContextMenu ]
 
-            Nothing ->
-                []
+         else if Maybe.isJust model.equalizer.activeKnob then
+            [ (EqualizerMsg << Equalizer.AdjustKnob)
+                |> Pointer.onMove
+                |> Html.Styled.Attributes.fromUnstyled
+            , (EqualizerMsg << Equalizer.DeactivateKnob)
+                |> Pointer.onUp
+                |> Html.Styled.Attributes.fromUnstyled
+            ]
+
+         else
+            []
         )
         [ Css.Global.global globalCss
 
@@ -821,22 +823,14 @@ loadingAnimation =
 
 overlay : Maybe (ContextMenu Msg) -> Html Msg
 overlay maybeContextMenu =
-    let
-        isVisible =
-            Maybe.isJust maybeContextMenu
-    in
     brick
-        [ css (overlayStyles { clickable = isVisible })
-
-        --
-        , ifThenElse isVisible (onClick HideContextMenu) (onClick Bypass)
-        ]
+        [ css overlayStyles ]
         [ T.absolute
         , T.absolute__fill
         , T.z_999
 
         --
-        , ifThenElse isVisible T.o_100 T.o_0
+        , ifThenElse (Maybe.isJust maybeContextMenu) T.o_100 T.o_0
         ]
         []
 
@@ -889,21 +883,10 @@ placeholderStyles =
 -- 🖼  ░░  OTHER
 
 
-overlayStyles : { clickable : Bool } -> List Css.Style
-overlayStyles { clickable } =
+overlayStyles : List Css.Style
+overlayStyles =
     [ Css.backgroundColor (Css.rgba 0 0 0 0.25)
-
-    --
-    , ifThenElse
-        clickable
-        (Css.pointerEvents Css.auto)
-        (Css.pointerEvents Css.none)
-
-    --
-    , ifThenElse
-        clickable
-        (Css.cursor Css.pointer)
-        (Css.cursor Css.inherit)
+    , Css.pointerEvents Css.none
 
     --
     , Css.Transitions.transition
