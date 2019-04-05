@@ -98,6 +98,11 @@ app.ports.seek.subscribe(percentage => {
 })
 
 
+app.ports.setRepeat.subscribe(repeat => {
+  orchestrion.repeat = repeat
+})
+
+
 app.ports.unstall.subscribe(_ => {
   if (orchestrion.audio) {
     clearTimeout(orchestrion.unstallTimeoutId)

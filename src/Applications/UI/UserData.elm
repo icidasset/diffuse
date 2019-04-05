@@ -19,6 +19,7 @@ import UI.Backdrop
 import UI.Core
 import UI.Equalizer as Equalizer
 import UI.Notifications
+import UI.Ports as Ports
 import UI.Reply as UI
 import UI.Sources as Sources
 import UI.Tracks as Tracks
@@ -197,7 +198,10 @@ importEnclosed value model =
                 , queue = newQueue
                 , tracks = newTracks
               }
-            , Cmd.map UI.Core.EqualizerMsg (Equalizer.adjustAllKnobs newEqualizer)
+            , Cmd.batch
+                [ Cmd.map UI.Core.EqualizerMsg (Equalizer.adjustAllKnobs newEqualizer)
+                , Ports.setRepeat data.repeat
+                ]
             , Nothing
             )
 

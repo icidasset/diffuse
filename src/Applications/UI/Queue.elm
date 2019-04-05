@@ -175,7 +175,10 @@ update msg model =
         -- Settings
         ------------------------------------
         ToggleRepeat ->
-            ( { model | repeat = not model.repeat }, Cmd.none, Just [ SaveEnclosedUserData ] )
+            ( { model | repeat = not model.repeat }
+            , Ports.setRepeat (not model.repeat)
+            , Just [ SaveEnclosedUserData ]
+            )
 
         ToggleShuffle ->
             { model | shuffle = not model.shuffle }
