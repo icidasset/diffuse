@@ -225,9 +225,10 @@ function audioLoading() {
 }
 
 
-function audioLoaded() {
+function audioLoaded(event) {
   clearTimeout(this.loadingTimeoutId)
   this.app.ports.setAudioIsLoading.send(false)
+  if (event.target.paused) event.target.play()
 }
 
 
@@ -245,7 +246,6 @@ let lastSetDuration = 0
 
 
 function audioCanPlayEvent(event) {
-  if (event.target.paused) event.target.play()
   if (event.target.duration != lastSetDuration) {
     this.app.ports.setAudioDuration.send(event.target.duration || 0)
     lastSetDuration = event.target.duration
