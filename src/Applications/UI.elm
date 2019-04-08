@@ -89,7 +89,6 @@ init flags url key =
       -----------------------------------------
       { contextMenu = Nothing
       , currentTime = Time.millisToPosix flags.initialTime
-      , isAuthenticated = False
       , isLoading = True
       , navKey = key
       , notifications = []
@@ -141,7 +140,7 @@ update msg model =
                 |> N5.reducto update translateReply
 
         LoadHypaethralUserData json ->
-            { model | isAuthenticated = True }
+            model
                 |> UserData.importHypaethral json
                 |> N5.reducto update translateReply
 
@@ -279,11 +278,11 @@ update msg model =
                         |> Ports.toBrain
             in
             { model
-                | isAuthenticated = False
+                | authentication = Authentication.initialModel
                 , sources = Sources.initialModel
                 , tracks = Tracks.initialModel
             }
-                |> update (AuthenticationMsg Authentication.DischargeMethod)
+                |> update (BackdropMsg Backdrop.Default)
                 |> R2.addCmd alienSigningOut
                 |> R2.addCmd (Nav.pushUrl model.navKey "/")
 
@@ -517,9 +516,6 @@ translateReply reply =
         Reply.AddSourceToCollection source ->
             SourcesMsg (Sources.AddToCollection source)
 
-        Reply.Chill ->
-            Bypass
-
         Reply.DismissNotification opts ->
             Core.DismissNotification opts
 
@@ -614,7 +610,12 @@ translateAlienData event =
         Just Alien.AuthMethod ->
             -- My brain told me which auth method we're using,
             -- so we can tell the user in the UI.
-            AuthenticationMsg (Authentication.ActivateMethod event.data)
+            case Authentication.decodeMethod event.data of
+                Just method ->
+                    AuthenticationMsg (Authentication.SignedIn method)
+
+                Nothing ->
+                    Bypass
 
         Just Alien.FinishedProcessingSources ->
             SourcesMsg Sources.FinishedProcessing
@@ -627,6 +628,11 @@ translateAlienData event =
 
         Just Alien.LoadHypaethralUserData ->
             LoadHypaethralUserData event.data
+
+        Just Alien.NotAuthenticated ->
+            -- There's not to do in this case.
+            -- (ie. the case when we're not authenticated at the start)
+            BackdropMsg Backdrop.Default
 
         Just Alien.RemoveTracksByPath ->
             TracksMsg (Tracks.RemoveByPaths event.data)
@@ -729,19 +735,19 @@ body model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , content
-            (if model.isLoading then
-                [ loadingAnimation ]
+        , case ( model.isLoading, model.authentication ) of
+            ( True, _ ) ->
+                content [ loadingAnimation ]
 
-             else if model.isAuthenticated then
-                defaultScreen model
+            ( False, Authentication.Authenticated _ ) ->
+                content (defaultScreen model)
 
-             else
-                [ model.authentication
+            ( False, _ ) ->
+                model.authentication
                     |> Authentication.view
                     |> Html.map AuthenticationMsg
-                ]
-            )
+                    |> List.singleton
+                    |> content
         ]
 
 

@@ -39,7 +39,6 @@ type alias Flags =
 type alias Model =
     { contextMenu : Maybe (ContextMenu Msg)
     , currentTime : Time.Posix
-    , isAuthenticated : Bool
     , isLoading : Bool
     , navKey : Nav.Key
     , notifications : List (Notification Msg)

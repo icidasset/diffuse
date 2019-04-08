@@ -80,7 +80,8 @@ update msg model =
             , Cmd.batch
                 [ Brain.Ports.toUI alienEvent
 
-                --
+                -- Sometimes the loading screen is still showing,
+                -- so we hide it here just in case.
                 , case alienEvent.error of
                     Just _ ->
                         Brain.Ports.toUI (Alien.trigger Alien.HideLoadingScreen)
@@ -215,8 +216,8 @@ updateSearchIndex value model =
 translateReply : Reply -> Msg
 translateReply reply =
     case reply of
-        Chill ->
-            Bypass
+        FabricatedNewSecretKey ->
+            SaveHypaethralData
 
         -----------------------------------------
         -- To UI
@@ -344,6 +345,9 @@ translateAlienData event =
         Just Alien.AuthMethod ->
             AuthenticationMsg (Authentication.MethodRetrieved event.data)
 
+        Just Alien.FabricateSecretKey ->
+            AuthenticationMsg Authentication.SecretKeyFabricated
+
         Just Alien.ProcessSources ->
             -- Only proceed to the processing if we got all the necessary data,
             -- otherwise report an error in the UI.
@@ -391,6 +395,14 @@ translateAlienData event =
 
                 Err err ->
                     report Alien.ToCache (Json.errorToString err)
+
+        Just Alien.UpdateEncryptionKey ->
+            case Json.decodeValue Json.string event.data of
+                Ok passphrase ->
+                    AuthenticationMsg (Authentication.FabricateSecretKey passphrase)
+
+                Err _ ->
+                    Bypass
 
         _ ->
             Bypass

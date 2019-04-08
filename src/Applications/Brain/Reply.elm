@@ -9,7 +9,7 @@ import Json.Encode as Json
 
 
 type Reply
-    = Chill
+    = FabricatedNewSecretKey
       -- UI
     | GiveUI Alien.Tag Json.Value
     | NudgeUI Alien.Tag

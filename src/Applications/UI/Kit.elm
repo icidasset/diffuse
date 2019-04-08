@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textField, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -445,6 +445,15 @@ textArea attributes =
         , T.w_100
         ]
         []
+
+
+textButton : { label : String, onClick : msg } -> Html msg
+textButton params =
+    slab
+        Html.button
+        [ css linkStyles, onClick params.onClick ]
+        [ T.bg_transparent, T.color_inherit, T.bn, T.lh_title, T.ma0, T.pa0, T.pointer ]
+        [ Html.text params.label ]
 
 
 textField : List (Html.Attribute msg) -> Html msg

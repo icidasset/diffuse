@@ -30,6 +30,24 @@ app.ports.toUI.subscribe(event => {
 
 
 
+// Authentication
+// --------------
+
+app.ports.fabricateSecretKey.subscribe(event => {
+  keyFromPassphrase(event.data)
+    .then(data => toCache("AUTH_SECRET_KEY", data))
+    .then(_ => {
+      app.ports.fromAlien.send({
+        tag: event.tag,
+        data: null,
+        error: null
+      })
+    })
+    .catch(reportError(event))
+})
+
+
+
 // Cache
 // -----
 
@@ -53,17 +71,13 @@ app.ports.requestCache.subscribe(event => {
 
 
 app.ports.toCache.subscribe(event => {
-  const dataPromise = (_ => {
-    switch (event.tag) {
-      case "AUTH_SECRET_KEY": return keyFromPassphrase(event.data)
-      default: return Promise.resolve(event.data)
-    }
-  })()
-
-  dataPromise
-    .then(data => setInIndex({ key: event.tag, data: data }))
-    .catch(reportError(event))
+  toCache(event.tag, event.data).catch(reportError(event))
 })
+
+
+function toCache(key, data) {
+  return setInIndex({ key: key, data: data })
+}
 
 
 

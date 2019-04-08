@@ -24,8 +24,8 @@ import Authentication exposing (..)
 import Brain.Ports as Ports
 import Brain.Reply exposing (Reply(..))
 import Conditional exposing (..)
-import Json.Decode as J
-import Json.Encode
+import Json.Decode as Decode
+import Json.Encode as J
 import Replying exposing (R3D3, do)
 
 
@@ -61,6 +61,9 @@ initialCommand =
 type Msg
     = PerformSignIn J.Value
     | PerformSignOut
+      -- 0. Secret Key
+    | FabricateSecretKey String
+    | SecretKeyFabricated
       -- 1. Method
     | RetrieveMethod
     | MethodRetrieved J.Value
@@ -81,14 +84,29 @@ update msg model =
         -- Set & store method,
         -- and retrieve data.
         PerformSignIn json ->
-            case decodeMethod json of
-                Just method ->
-                    ( { model | method = Just method, performingSignIn = True }
-                    , do RetrieveHypaethralData
-                    , Nothing
-                    )
+            let
+                decoder =
+                    Decode.map2
+                        (\a b -> { maybeMethod = a, maybePassphrase = b })
+                        (Decode.field "method" <| Decode.map methodFromString Decode.string)
+                        (Decode.field "passphrase" <| Decode.maybe Decode.string)
+            in
+            case Decode.decodeValue decoder json of
+                Ok { maybeMethod, maybePassphrase } ->
+                    case maybePassphrase of
+                        Just passphrase ->
+                            ( { model | method = maybeMethod, performingSignIn = True }
+                            , do (FabricateSecretKey passphrase)
+                            , Nothing
+                            )
 
-                Nothing ->
+                        Nothing ->
+                            ( { model | method = maybeMethod, performingSignIn = True }
+                            , do RetrieveHypaethralData
+                            , Nothing
+                            )
+
+                _ ->
                     ( model
                     , Cmd.none
                     , Nothing
@@ -98,11 +116,31 @@ update msg model =
         -- Unset & remove stored method.
         PerformSignOut ->
             ( { model | method = Nothing }
-            , Alien.AuthMethod
-                |> Alien.trigger
-                |> Ports.removeCache
+            , Cmd.batch
+                [ Ports.removeCache (Alien.trigger Alien.AuthMethod)
+                , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
+                ]
             , Nothing
             )
+
+        -----------------------------------------
+        -- # 0
+        -----------------------------------------
+        FabricateSecretKey passphrase ->
+            ( model
+            , passphrase
+                |> J.string
+                |> Alien.broadcast Alien.FabricateSecretKey
+                |> Ports.fabricateSecretKey
+            , Nothing
+            )
+
+        SecretKeyFabricated ->
+            if model.performingSignIn then
+                ( model, do RetrieveHypaethralData, Nothing )
+
+            else
+                ( model, Cmd.none, Just [ FabricatedNewSecretKey ] )
 
         -----------------------------------------
         -- # 1
@@ -209,18 +247,6 @@ update msg model =
 
 
 
--- JSON
-
-
-decodeMethod : J.Value -> Maybe Method
-decodeMethod json =
-    json
-        |> J.decodeValue J.string
-        |> Result.toMaybe
-        |> Maybe.andThen Authentication.methodFromString
-
-
-
 -- TERMINATION
 
 
@@ -240,4 +266,6 @@ terminate t =
 
         NotAuthenticated ->
             Just
-                [ NudgeUI Alien.HideLoadingScreen ]
+                [ NudgeUI Alien.NotAuthenticated
+                , NudgeUI Alien.HideLoadingScreen
+                ]

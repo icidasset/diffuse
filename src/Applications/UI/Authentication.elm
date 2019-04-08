@@ -1,4 +1,4 @@
-module UI.Authentication exposing (Model, Msg(..), initialModel, update, view)
+module UI.Authentication exposing (Model(..), Msg(..), extractMethod, initialModel, update, view)
 
 import Alien
 import Authentication exposing (Method(..))
@@ -10,12 +10,12 @@ import Conditional exposing (..)
 import Crypto.Hash
 import Css exposing (pct, px, solid, transparent)
 import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
-import Html.Styled.Attributes exposing (attribute, css, href, placeholder, src, style, type_, width)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Attributes exposing (attribute, css, href, placeholder, src, style, type_, value, width)
+import Html.Styled.Events exposing (onClick, onSubmit)
 import Json.Decode as Json
 import Json.Encode
 import Material.Icons.Action as Icons
-import Replying exposing (R3D3)
+import Replying exposing (R3D3, andThen3)
 import Return2 as R2
 import Return3 as R3
 import Svg exposing (Svg)
@@ -29,17 +29,32 @@ import UI.Reply exposing (Reply(..))
 -- 🌳
 
 
-type alias Model =
-    { encryptionKeyInputFor : Maybe Authentication.Method
-    , methodInUse : Maybe Authentication.Method
-    }
+type Model
+    = Authenticated Method
+    | NewEncryptionKeyScreen Method (Maybe String)
+    | UpdateEncryptionKeyScreen Method (Maybe String)
+    | Unauthenticated
 
 
 initialModel : Model
 initialModel =
-    { encryptionKeyInputFor = Nothing
-    , methodInUse = Nothing
-    }
+    Unauthenticated
+
+
+extractMethod : Model -> Maybe Method
+extractMethod model =
+    case model of
+        Authenticated method ->
+            Just method
+
+        NewEncryptionKeyScreen method _ ->
+            Just method
+
+        UpdateEncryptionKeyScreen method _ ->
+            Just method
+
+        Unauthenticated ->
+            Nothing
 
 
 
@@ -48,18 +63,14 @@ initialModel =
 
 type Msg
     = Bypass
-    | SignIn Authentication.Method
-      -----------------------------------------
-      -- Method
-      -----------------------------------------
-    | ActivateMethod Json.Value
-    | DischargeMethod
-    | FabricateSecretKey String
-      -----------------------------------------
-      -- Private Key
-      -----------------------------------------
     | HideEncryptionKeyScreen
-    | ShowEncryptionKeyScreen Authentication.Method
+    | KeepPassphraseInMemory String
+    | ShowNewEncryptionKeyScreen Method
+    | ShowUpdateEncryptionKeyScreen Method
+    | SignIn Method
+    | SignInWithPassphrase Method String
+    | SignedIn Method
+    | UpdateEncryptionKey Method String
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -68,44 +79,81 @@ update msg model =
         Bypass ->
             R3.withNothing model
 
+        HideEncryptionKeyScreen ->
+            case model of
+                Authenticated method ->
+                    R3.withNothing (Authenticated method)
+
+                NewEncryptionKeyScreen _ _ ->
+                    R3.withNothing Unauthenticated
+
+                UpdateEncryptionKeyScreen method _ ->
+                    R3.withNothing (Authenticated method)
+
+                Unauthenticated ->
+                    R3.withNothing Unauthenticated
+
+        KeepPassphraseInMemory passphrase ->
+            case model of
+                NewEncryptionKeyScreen method _ ->
+                    R3.withNothing (NewEncryptionKeyScreen method <| Just passphrase)
+
+                UpdateEncryptionKeyScreen method _ ->
+                    R3.withNothing (UpdateEncryptionKeyScreen method <| Just passphrase)
+
+                _ ->
+                    R3.withNothing model
+
+        ShowNewEncryptionKeyScreen method ->
+            R3.withNothing (NewEncryptionKeyScreen method Nothing)
+
+        ShowUpdateEncryptionKeyScreen method ->
+            R3.withNothing (UpdateEncryptionKeyScreen method Nothing)
+
         SignIn method ->
-            ( { model | encryptionKeyInputFor = Nothing }
-            , method
-                |> Authentication.methodToString
-                |> Json.Encode.string
-                |> Alien.broadcast Alien.SignIn
-                |> Ports.toBrain
+            ( Unauthenticated
+            , signIn method
             , Just [ ToggleLoadingScreen On ]
             )
 
-        -----------------------------------------
-        -- Method
-        -----------------------------------------
-        ActivateMethod encodedMethod ->
-            R3.withNothing { model | methodInUse = Authentication.decodeMethod encodedMethod }
+        SignInWithPassphrase method passphrase ->
+            ( Unauthenticated
+            , signInWithPassphrase method passphrase
+            , Just [ ToggleLoadingScreen On ]
+            )
 
-        DischargeMethod ->
-            R3.withNothing { model | methodInUse = Nothing }
+        SignedIn method ->
+            R3.withNothing (Authenticated method)
 
-        FabricateSecretKey passphrase ->
-            [ ( "tag", Json.Encode.string <| Alien.tagToString Alien.AuthSecretKey )
-            , ( "data", Json.Encode.string <| Crypto.Hash.sha256 passphrase )
-            , ( "error", Json.Encode.null )
-            ]
-                |> Json.Encode.object
-                |> Alien.broadcast Alien.ToCache
+        UpdateEncryptionKey method passphrase ->
+            ( Authenticated method
+            , passphrase
+                |> Crypto.Hash.sha256
+                |> Json.Encode.string
+                |> Alien.broadcast Alien.UpdateEncryptionKey
                 |> Ports.toBrain
-                |> R2.withModel model
-                |> R3.withNoReply
+            , Nothing
+            )
 
-        -----------------------------------------
-        -- Private Key
-        -----------------------------------------
-        HideEncryptionKeyScreen ->
-            R3.withNothing { model | encryptionKeyInputFor = Nothing }
 
-        ShowEncryptionKeyScreen method ->
-            R3.withNothing { model | encryptionKeyInputFor = Just method }
+signIn : Method -> Cmd Msg
+signIn method =
+    [ ( "method", Authentication.encodeMethod method )
+    , ( "passphrase", Json.Encode.null )
+    ]
+        |> Json.Encode.object
+        |> Alien.broadcast Alien.SignIn
+        |> Ports.toBrain
+
+
+signInWithPassphrase : Method -> String -> Cmd Msg
+signInWithPassphrase method passphrase =
+    [ ( "method", Authentication.encodeMethod method )
+    , ( "passphrase", Json.Encode.string <| Crypto.Hash.sha256 passphrase )
+    ]
+        |> Json.Encode.object
+        |> Alien.broadcast Alien.SignIn
+        |> Ports.toBrain
 
 
 
@@ -133,19 +181,22 @@ view model =
                     , width 190
 
                     --
-                    , case model.encryptionKeyInputFor of
-                        Just _ ->
+                    , case model of
+                        NewEncryptionKeyScreen _ _ ->
                             style "cursor" "pointer"
 
-                        Nothing ->
+                        UpdateEncryptionKeyScreen _ _ ->
+                            style "cursor" "pointer"
+
+                        _ ->
                             style "cursor" "default"
                     ]
                     []
 
                 -- Speech bubble
                 ----------------
-                , case model.encryptionKeyInputFor of
-                    Just _ ->
+                , case model of
+                    NewEncryptionKeyScreen _ _ ->
                         [ text "I need a passphrase"
                         , lineBreak
                         , text "to encrypt your data."
@@ -153,7 +204,15 @@ view model =
                             |> chunk []
                             |> speechBubble
 
-                    Nothing ->
+                    UpdateEncryptionKeyScreen _ _ ->
+                        [ text "I need a new passphrase"
+                        , lineBreak
+                        , text "to encrypt your data."
+                        ]
+                            |> chunk []
+                            |> speechBubble
+
+                    _ ->
                         nothing
                 ]
             ]
@@ -161,45 +220,24 @@ view model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , case model.encryptionKeyInputFor of
-            Just method ->
-                chunk
-                    [ T.flex
-                    , T.flex_column
-                    ]
-                    [ UI.Kit.textArea
-                        [ attribute "autocomplete" "off"
-                        , attribute "autocorrect" "off"
-                        , attribute "spellcheck" "false"
-                        , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
-                        , Html.Styled.Events.onInput FabricateSecretKey
-                        ]
-                    , UI.Kit.button
-                        UI.Kit.Normal
-                        (SignIn method)
-                        (text "Continue")
-                    ]
+        , case model of
+            NewEncryptionKeyScreen method Nothing ->
+                encryptionKeyScreen Bypass
 
-            Nothing ->
-                chunk
-                    [ T.bg_white
-                    , T.br2
-                    , T.ph3
-                    , T.pv2
-                    ]
-                    [ choiceButton
-                        { action = SignIn Authentication.Local
-                        , icon = Icons.lock_open
-                        , isLast = False
-                        , label = "Store data in the browser"
-                        }
-                    , choiceButton
-                        { action = ShowEncryptionKeyScreen Authentication.Ipfs
-                        , icon = Icons.fingerprint
-                        , isLast = True
-                        , label = "Store encrypted data on IPFS"
-                        }
-                    ]
+            NewEncryptionKeyScreen method (Just passphrase) ->
+                encryptionKeyScreen (SignInWithPassphrase method passphrase)
+
+            UpdateEncryptionKeyScreen method Nothing ->
+                encryptionKeyScreen Bypass
+
+            UpdateEncryptionKeyScreen method (Just passphrase) ->
+                encryptionKeyScreen (UpdateEncryptionKey method passphrase)
+
+            Unauthenticated ->
+                choicesScreen
+
+            Authenticated _ ->
+                choicesScreen
 
         -----------------------------------------
         -- Link to about page
@@ -221,6 +259,53 @@ view model =
                 ]
                 [ em [] [ text "What is this exactly?" ] ]
             ]
+        ]
+
+
+
+-- CHOICES
+
+
+encryptionKeyScreen : Msg -> Html Msg
+encryptionKeyScreen msg =
+    chunk
+        [ T.flex
+        , T.flex_column
+        ]
+        [ UI.Kit.textArea
+            [ attribute "autocomplete" "off"
+            , attribute "autocorrect" "off"
+            , attribute "spellcheck" "false"
+            , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
+            , Html.Styled.Events.onInput KeepPassphraseInMemory
+            ]
+        , UI.Kit.button
+            UI.Kit.Normal
+            msg
+            (text "Continue")
+        ]
+
+
+choicesScreen : Html Msg
+choicesScreen =
+    chunk
+        [ T.bg_white
+        , T.br2
+        , T.ph3
+        , T.pv2
+        ]
+        [ choiceButton
+            { action = SignIn Authentication.Local
+            , icon = Icons.lock_open
+            , isLast = False
+            , label = "Store data in the browser"
+            }
+        , choiceButton
+            { action = ShowNewEncryptionKeyScreen Authentication.Ipfs
+            , icon = Icons.fingerprint
+            , isLast = True
+            , label = "Store encrypted data on IPFS"
+            }
         ]
 
 
@@ -254,6 +339,10 @@ choiceButton { action, icon, isLast, label } =
             [ fromUnstyled (icon UI.Kit.colors.text 16) ]
         , text label
         ]
+
+
+
+-- ENCRYPTION KEY
 
 
 speechBubble : Html msg -> Html msg

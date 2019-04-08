@@ -1,4 +1,4 @@
-port module Brain.Ports exposing (fromAlien, receiveSearchResults, receiveTags, removeCache, removeIpfs, requestCache, requestIpfs, requestSearch, requestTags, toCache, toIpfs, toUI, updateSearchIndex)
+port module Brain.Ports exposing (fabricateSecretKey, fromAlien, receiveSearchResults, receiveTags, removeCache, removeIpfs, requestCache, requestIpfs, requestSearch, requestTags, toCache, toIpfs, toUI, updateSearchIndex)
 
 import Alien
 import Json.Encode as Json
@@ -7,6 +7,9 @@ import Sources.Processing exposing (ContextForTags)
 
 
 -- 📣
+
+
+port fabricateSecretKey : Alien.Event -> Cmd msg
 
 
 port removeCache : Alien.Event -> Cmd msg

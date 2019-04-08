@@ -25,6 +25,7 @@ type Tag
     | AuthIpfs
     | AuthMethod
     | AuthSecretKey
+    | FabricateSecretKey
     | SearchTracks
       -- from UI
     | ProcessSources
@@ -36,12 +37,14 @@ type Tag
     | SignIn
     | SignOut
     | ToCache
+    | UpdateEncryptionKey
       -- to UI
     | AddTracks
     | FinishedProcessingSources
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
+    | NotAuthenticated
     | RemoveTracksByPath
     | ReportProcessingError
     | UpdateSourceData
@@ -93,6 +96,9 @@ tagToString tag =
         AuthSecretKey ->
             "AUTH_SECRET_KEY"
 
+        FabricateSecretKey ->
+            "FABRICATE_SECRET_KEY"
+
         SearchTracks ->
             "SEARCH_TRACKS"
 
@@ -126,6 +132,9 @@ tagToString tag =
         ToCache ->
             "TO_CACHE"
 
+        UpdateEncryptionKey ->
+            "UPDATE_ENCRYPTION_KEY"
+
         -----------------------------------------
         -- To UI
         -----------------------------------------
@@ -143,6 +152,9 @@ tagToString tag =
 
         LoadHypaethralUserData ->
             "LOAD_HYPAETHRAL_USER_DATA"
+
+        NotAuthenticated ->
+            "NOT_AUTHENTICATED"
 
         RemoveTracksByPath ->
             "REMOVE_TRACKS_BY_PATH"
@@ -171,6 +183,9 @@ tagFromString string =
 
         "AUTH_SECRET_KEY" ->
             Just AuthSecretKey
+
+        "FABRICATE_SECRET_KEY" ->
+            Just FabricateSecretKey
 
         "SEARCH_TRACKS" ->
             Just SearchTracks
@@ -205,6 +220,9 @@ tagFromString string =
         "TO_CACHE" ->
             Just ToCache
 
+        "UPDATE_ENCRYPTION_KEY" ->
+            Just UpdateEncryptionKey
+
         -----------------------------------------
         -- UI
         -----------------------------------------
@@ -222,6 +240,9 @@ tagFromString string =
 
         "LOAD_HYPAETHRAL_USER_DATA" ->
             Just LoadHypaethralUserData
+
+        "NOT_AUTHENTICATED" ->
+            Just NotAuthenticated
 
         "REMOVE_TRACKS_BY_PATH" ->
             Just RemoveTracksByPath

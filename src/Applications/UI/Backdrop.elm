@@ -67,6 +67,7 @@ initialModel =
 
 type Msg
     = Choose String
+    | Default
     | Load String
 
 
@@ -77,6 +78,10 @@ update msg model =
             { model | chosen = Just backdrop }
                 |> R2.withNoCmd
                 |> R3.withReply [ Reply.SaveSettings ]
+
+        Default ->
+            { model | chosen = Just default }
+                |> R3.withNothing
 
         Load backdrop ->
             [ backdrop ]

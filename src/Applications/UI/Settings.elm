@@ -7,6 +7,7 @@ import Html.Styled.Attributes exposing (selected, value)
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Tachyons.Classes as T
+import UI.Authentication
 import UI.Backdrop
 import UI.Core
 import UI.Kit
@@ -59,9 +60,22 @@ index model =
         , [ text "Changes are saved automatically."
           , lineBreak
           , text "PS. You're storing the data for this application "
-          , case model.authentication.methodInUse of
+          , case UI.Authentication.extractMethod model.authentication of
                 Just Ipfs ->
-                    text "on IPFS."
+                    inline
+                        []
+                        [ text "on IPFS."
+                        , lineBreak
+                        , text "If you want to, you can "
+                        , UI.Kit.textButton
+                            { label = "change your passphrase"
+                            , onClick =
+                                Ipfs
+                                    |> UI.Authentication.ShowUpdateEncryptionKeyScreen
+                                    |> UI.Core.AuthenticationMsg
+                            }
+                        , text "."
+                        ]
 
                 Just Local ->
                     text "in this browser."
