@@ -32,6 +32,7 @@ type Reply
     | SaveSettings
     | SaveSources
     | SaveTracks
+    | ShowErrorNotification String
     | ShowSuccessNotification String
     | ShowWarningNotification String
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)

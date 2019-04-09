@@ -26,6 +26,18 @@ import UI.Reply exposing (Reply(..))
 
 
 
+-- ⛩
+
+
+minimumPassphraseLength =
+    16
+
+
+passphraseLengthErrorMessage =
+    "Your passphrase should be atleast *16 characters* long."
+
+
+
 -- 🌳
 
 
@@ -117,23 +129,37 @@ update msg model =
             )
 
         SignInWithPassphrase method passphrase ->
-            ( Unauthenticated
-            , signInWithPassphrase method passphrase
-            , Just [ ToggleLoadingScreen On ]
-            )
+            if String.length passphrase < minimumPassphraseLength then
+                ( model
+                , Cmd.none
+                , Just [ ShowErrorNotification passphraseLengthErrorMessage ]
+                )
+
+            else
+                ( Unauthenticated
+                , signInWithPassphrase method passphrase
+                , Just [ ToggleLoadingScreen On ]
+                )
 
         SignedIn method ->
             R3.withNothing (Authenticated method)
 
         UpdateEncryptionKey method passphrase ->
-            ( Authenticated method
-            , passphrase
-                |> Crypto.Hash.sha256
-                |> Json.Encode.string
-                |> Alien.broadcast Alien.UpdateEncryptionKey
-                |> Ports.toBrain
-            , Nothing
-            )
+            if String.length passphrase < minimumPassphraseLength then
+                ( model
+                , Cmd.none
+                , Just [ ShowErrorNotification passphraseLengthErrorMessage ]
+                )
+
+            else
+                ( Authenticated method
+                , passphrase
+                    |> Crypto.Hash.sha256
+                    |> Json.Encode.string
+                    |> Alien.broadcast Alien.UpdateEncryptionKey
+                    |> Ports.toBrain
+                , Nothing
+                )
 
 
 signIn : Method -> Cmd Msg

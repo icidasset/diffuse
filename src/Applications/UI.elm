@@ -558,11 +558,14 @@ translateReply reply =
         Reply.SaveTracks ->
             Core.SaveTracks
 
+        Reply.ShowErrorNotification string ->
+            ShowNotification (Notifications.stickyError string)
+
         Reply.ShowSuccessNotification string ->
             ShowNotification (Notifications.success string)
 
         Reply.ShowWarningNotification string ->
-            ShowNotification (Notifications.warning string)
+            ShowNotification (Notifications.stickyWarning string)
 
         Reply.ShowTracksContextMenu coordinates tracks ->
             Core.ShowTracksContextMenu coordinates tracks
@@ -647,7 +650,7 @@ translateAlienData event =
             case Json.Decode.decodeValue (Json.Decode.dict Json.Decode.string) event.data of
                 Ok dict ->
                     ShowNotification
-                        (Notifications.stickyError
+                        (Notifications.errorWithCode
                             ("Could not process the _"
                                 ++ Dict.fetch "sourceName" "" dict
                                 ++ "_ source. I got the following response from the source:"
@@ -674,8 +677,8 @@ translateAlienError : Alien.Event -> String -> Msg
 translateAlienError event err =
     case Alien.tagFromString event.tag of
         Just tag ->
-            []
-                |> Notifications.stickyError err ""
+            err
+                |> Notifications.stickyError
                 |> ShowNotification
 
         Nothing ->
