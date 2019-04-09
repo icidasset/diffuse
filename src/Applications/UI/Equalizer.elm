@@ -114,14 +114,14 @@ update msg model =
                         |> min maxAngle
 
                 value =
-                    case model.activeKnob of
-                        Just Volume ->
+                    case ( distance > 10, model.activeKnob ) of
+                        ( True, Just Volume ) ->
                             Just ( Volume, (maxAngle + angle) / (maxAngle * 2) )
 
-                        Just knobType ->
+                        ( True, Just knobType ) ->
                             Just ( knobType, angle / maxAngle )
 
-                        Nothing ->
+                        _ ->
                             Nothing
 
                 newModel =
