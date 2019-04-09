@@ -43,7 +43,7 @@ update msg model =
         InjectFirstAndPlay identifiedTrack ->
             let
                 ( a, b, _ ) =
-                    update (InjectFirst [ identifiedTrack ]) model
+                    update (InjectFirst { showNotification = False } [ identifiedTrack ]) model
 
                 ( x, y, z ) =
                     update Shift a
@@ -56,7 +56,7 @@ update msg model =
         -- # InjectFirst
         -- > Add an item in front of the queue.
         --
-        InjectFirst identifiedTracks ->
+        InjectFirst { showNotification } identifiedTracks ->
             let
                 ( items, tracks ) =
                     ( List.map (makeItem True) identifiedTracks
@@ -73,14 +73,33 @@ update msg model =
             in
             ( { model | future = items ++ cleanedFuture }
             , Cmd.none
-            , Just [ FillQueue ]
+              -- Show notification
+              --------------------
+            , (if showNotification then
+                [ case tracks of
+                    [ t ] ->
+                        ShowSuccessNotification ("__" ++ t.tags.title ++ "__ will be played next")
+
+                    list ->
+                        list
+                            |> List.length
+                            |> String.fromInt
+                            |> (\s -> "__" ++ s ++ " tracks__ will be played next")
+                            |> ShowSuccessNotification
+                ]
+
+               else
+                []
+              )
+                |> List.append [ FillQueue ]
+                |> Just
             )
 
         -- # InjectLast
         -- > Add an item after the last manual entry
         --   (ie. after the last injected item).
         --
-        InjectLast identifiedTracks ->
+        InjectLast { showNotification } identifiedTracks ->
             let
                 ( items, tracks ) =
                     ( List.map (makeItem True) identifiedTracks
@@ -108,7 +127,26 @@ update msg model =
                         ++ List.drop manualItems cleanedFuture
               }
             , Cmd.none
-            , Just [ FillQueue ]
+              -- Show notification
+              --------------------
+            , (if showNotification then
+                [ case tracks of
+                    [ t ] ->
+                        ShowSuccessNotification ("__" ++ t.tags.title ++ "__ was added to the queue")
+
+                    list ->
+                        list
+                            |> List.length
+                            |> String.fromInt
+                            |> (\s -> "__" ++ s ++ " tracks__ were added to the queue")
+                            |> ShowSuccessNotification
+                ]
+
+               else
+                []
+              )
+                |> List.append [ FillQueue ]
+                |> Just
             )
 
         -----------------------------------------

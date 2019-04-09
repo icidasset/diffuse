@@ -32,5 +32,7 @@ type Reply
     | SaveSettings
     | SaveSources
     | SaveTracks
+    | ShowSuccessNotification String
+    | ShowWarningNotification String
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
     | ToggleLoadingScreen Switch

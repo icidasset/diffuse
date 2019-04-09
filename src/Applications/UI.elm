@@ -558,6 +558,12 @@ translateReply reply =
         Reply.SaveTracks ->
             Core.SaveTracks
 
+        Reply.ShowSuccessNotification string ->
+            ShowNotification (Notifications.success string)
+
+        Reply.ShowWarningNotification string ->
+            ShowNotification (Notifications.warning string)
+
         Reply.ShowTracksContextMenu coordinates tracks ->
             Core.ShowTracksContextMenu coordinates tracks
 
@@ -642,9 +648,9 @@ translateAlienData event =
                 Ok dict ->
                     ShowNotification
                         (Notifications.stickyError
-                            ("Could not process the **"
+                            ("Could not process the _"
                                 ++ Dict.fetch "sourceName" "" dict
-                                ++ "** source. I got the following response from the source:"
+                                ++ "_ source. I got the following response from the source:"
                             )
                             (Dict.fetch "error" "missingError" dict)
                             []

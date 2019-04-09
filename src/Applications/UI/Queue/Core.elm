@@ -33,8 +33,8 @@ type Msg
       ------------------------------------
       -- Future
       ------------------------------------
-    | InjectFirst (List IdentifiedTrack)
-    | InjectLast (List IdentifiedTrack)
+    | InjectFirst { showNotification : Bool } (List IdentifiedTrack)
+    | InjectLast { showNotification : Bool } (List IdentifiedTrack)
       ------------------------------------
       -- Position
       ------------------------------------

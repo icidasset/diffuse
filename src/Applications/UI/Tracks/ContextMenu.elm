@@ -25,10 +25,10 @@ queueActions : List IdentifiedTrack -> ContextMenuItems Msg
 queueActions identifiedTracks =
     [ ( Icons.event_seat
       , "Play next"
-      , QueueMsg (Queue.InjectFirst identifiedTracks)
+      , QueueMsg (Queue.InjectFirst { showNotification = True } identifiedTracks)
       )
     , ( Icons.event_seat
       , "Add to queue"
-      , QueueMsg (Queue.InjectLast identifiedTracks)
+      , QueueMsg (Queue.InjectLast { showNotification = True } identifiedTracks)
       )
     ]

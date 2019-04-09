@@ -107,10 +107,20 @@ notificationView notification =
             |> onDoubleClick
         ]
         [ T.br2
-        , T.measure_narrow
         , T.mt2
         , T.pa3
         , T.white_90
+
+        --
+        , case Notifications.kind notification of
+            Error ->
+                T.measure_narrow
+
+            Success ->
+                T.measure_wide
+
+            Warning ->
+                ""
 
         --
         , if options.wasDismissed then
@@ -137,13 +147,14 @@ notificationView notification =
 
 containerStyles : List Css.Style
 containerStyles =
-    [ Css.lineHeight (Css.num 1.35)
+    [ Css.fontSize (Css.px 13)
+    , Css.lineHeight (Css.num 1.35)
     , Css.Global.descendants
         [ Css.Global.p
             [ Css.margin Css.zero
             , Css.padding Css.zero
             ]
-        , Css.Global.strong
+        , Css.Global.em
             [ Css.borderBottom3 (Css.px 1) Css.solid (Css.rgba 255 255 255 0.45)
             , Css.fontWeight Css.inherit
             ]
