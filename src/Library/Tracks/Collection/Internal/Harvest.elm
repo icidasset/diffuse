@@ -68,7 +68,7 @@ harvest ( deps, collection ) =
             else
                 identity
            )
-        |> List.indexedMap (\idx tup -> Tuple.mapFirst (\i -> { i | indexInList = idx }) tup)
+        |> List.indexedMap (\idx -> Tuple.mapFirst (\i -> { i | indexInList = idx }))
         |> (\h -> { collection | harvested = h })
         |> (\c -> ( deps, c ))
 

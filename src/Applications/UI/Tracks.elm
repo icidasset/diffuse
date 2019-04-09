@@ -93,7 +93,20 @@ update msg model =
             )
 
         ScrollToNowPlaying ->
-            case model.nowPlaying of
+            let
+                -- The index identifier might be out-of-date,
+                -- so we get the latest version.
+                it =
+                    model.nowPlaying
+                        |> Maybe.map (Tuple.second >> .id)
+                        |> Maybe.andThen
+                            (\id ->
+                                List.find
+                                    (Tuple.second >> .id >> (==) id)
+                                    model.collection.harvested
+                            )
+            in
+            case it of
                 Just identifiedTrack ->
                     case model.scene of
                         List ->
