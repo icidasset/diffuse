@@ -833,7 +833,7 @@ content =
 
 loadingAnimation : Html msg
 loadingAnimation =
-    Html.map never UI.Svg.Elements.loading
+    Html.map never (Html.fromUnstyled UI.Svg.Elements.loading)
 
 
 overlay : Maybe (ContextMenu Msg) -> Html Msg

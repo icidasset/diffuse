@@ -33,9 +33,12 @@ app.ports.toUI.subscribe(event => {
 // Authentication
 // --------------
 
+const SECRET_KEY_LOCATION = "AUTH_SECRET_KEY"
+
+
 app.ports.fabricateSecretKey.subscribe(event => {
   keyFromPassphrase(event.data)
-    .then(data => toCache("AUTH_SECRET_KEY", data))
+    .then(data => toCache(SECRET_KEY_LOCATION, data))
     .then(_ => {
       app.ports.fromAlien.send({
         tag: event.tag,
@@ -57,7 +60,19 @@ app.ports.removeCache.subscribe(event => {
 
 
 app.ports.requestCache.subscribe(event => {
-  getFromIndex({ key: event.tag })
+  const dataPromise = (_ => {
+    if (event.tag == "AUTH_ANONYMOUS") {
+      return getFromIndex({ key: event.tag })
+        .then(r => getFromIndex({ key: SECRET_KEY_LOCATION }).then(s => [r, s]))
+        .then(([r, s]) => r ? decrypt(s, r) : null)
+        .then(d => d ? JSON.parse(d) : null)
+
+    } else {
+      return getFromIndex({ key: event.tag })
+    }
+  })()
+
+  dataPromise
     .then(data => {
       app.ports.fromAlien.send({
         tag: event.tag,
@@ -76,7 +91,17 @@ app.ports.toCache.subscribe(event => {
 
 
 function toCache(key, data) {
-  return setInIndex({ key: key, data: data })
+  if (key == "AUTH_ANONYMOUS") {
+    const json = JSON.stringify(data)
+
+    return getFromIndex({ key: SECRET_KEY_LOCATION })
+      .then(secretKey => encrypt(secretKey, json))
+      .then(encryptedData => setInIndex({ key: key, data: encryptedData }))
+
+  } else {
+    return setInIndex({ key: key, data: data })
+
+  }
 }
 
 
@@ -99,7 +124,7 @@ function ipfsFilePath(tag) {
 
 app.ports.requestIpfs.subscribe(event => {
   const path = ipfsFilePath(event.tag)
-  const secretKeyPromise = getFromIndex({ key: "AUTH_SECRET_KEY" })
+  const secretKeyPromise = getFromIndex({ key: SECRET_KEY_LOCATION })
 
   fetch("http://localhost:5001/api/v0/files/read?arg=" + path)
     .then(r => r.ok ? r.text() : r.json())
@@ -128,7 +153,7 @@ app.ports.toIpfs.subscribe(event => {
     truncate: true
   }).toString()
 
-  getFromIndex({ key: "AUTH_SECRET_KEY" })
+  getFromIndex({ key: SECRET_KEY_LOCATION })
     .then(secretKey => encrypt(secretKey, json))
     .then(data => {
       const formData = new FormData()

@@ -62,26 +62,23 @@ index model =
           , text "PS. You're storing the data for this application "
           , case UI.Authentication.extractMethod model.authentication of
                 Just Ipfs ->
-                    inline
-                        []
-                        [ text "on IPFS."
-                        , lineBreak
-                        , text "If you want to, you can "
-                        , UI.Kit.textButton
-                            { label = "change your passphrase"
-                            , onClick =
-                                Ipfs
-                                    |> UI.Authentication.ShowUpdateEncryptionKeyScreen
-                                    |> UI.Core.AuthenticationMsg
-                            }
-                        , text "."
-                        ]
+                    text "on IPFS."
 
                 Just Local ->
                     text "in this browser."
 
                 Nothing ->
                     text "on nothing, wtf?"
+          , lineBreak
+          , text "If you want to, you can "
+          , UI.Kit.textButton
+                { label = "change your passphrase"
+                , onClick =
+                    Ipfs
+                        |> UI.Authentication.ShowUpdateEncryptionKeyScreen
+                        |> UI.Core.AuthenticationMsg
+                }
+          , text "."
           ]
             |> raw
             |> UI.Kit.intro

@@ -14,7 +14,7 @@ import Html.Styled.Attributes exposing (attribute, css, href, placeholder, src, 
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Json.Decode as Json
 import Json.Encode
-import Material.Icons.Action as Icons
+import Material.Icons.Av as Icons
 import Replying exposing (R3D3, andThen3)
 import Return2 as R2
 import Return3 as R3
@@ -23,6 +23,7 @@ import Tachyons.Classes as T
 import UI.Kit
 import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
+import UI.Svg.Elements
 
 
 
@@ -195,7 +196,7 @@ view model =
         , T.items_center
         ]
         [ brick
-            [ style "height" "45%" ]
+            [ style "height" "42%" ]
             [ T.flex
             , T.items_center
             ]
@@ -239,7 +240,12 @@ view model =
                             |> speechBubble
 
                     _ ->
-                        nothing
+                        [ text "Where would you like to"
+                        , lineBreak
+                        , text "store your encrypted data?"
+                        ]
+                            |> chunk []
+                            |> speechBubble
                 ]
             ]
 
@@ -321,16 +327,39 @@ choicesScreen =
         , T.pv2
         ]
         [ choiceButton
-            { action = SignIn Authentication.Local
-            , icon = Icons.lock_open
+            { action = ShowNewEncryptionKeyScreen Authentication.Local
+            , icon = Icons.web
             , isLast = False
-            , label = "Store data in the browser"
+            , label = "My Browser"
+            , outOfOrder = False
+            }
+        , choiceButton
+            { action = Bypass
+            , icon = \_ _ -> Svg.map never UI.Svg.Elements.blockstackLogo
+            , isLast = False
+            , label = "Blockstack"
+            , outOfOrder = True
             }
         , choiceButton
             { action = ShowNewEncryptionKeyScreen Authentication.Ipfs
-            , icon = Icons.fingerprint
+            , icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
+            , isLast = False
+            , label = "IPFS"
+            , outOfOrder = False
+            }
+        , choiceButton
+            { action = Bypass
+            , icon = \_ _ -> Svg.map never UI.Svg.Elements.remoteStorageLogo
+            , isLast = False
+            , label = "RemoteStorage"
+            , outOfOrder = True
+            }
+        , choiceButton
+            { action = Bypass
+            , icon = \_ _ -> Svg.map never UI.Svg.Elements.solidLogo
             , isLast = True
-            , label = "Store encrypted data on IPFS"
+            , label = "Solid"
+            , outOfOrder = True
             }
         ]
 
@@ -340,9 +369,10 @@ choiceButton :
     , icon : Color -> Int -> Svg msg
     , isLast : Bool
     , label : String
+    , outOfOrder : Bool
     }
     -> Html msg
-choiceButton { action, icon, isLast, label } =
+choiceButton { action, icon, isLast, label, outOfOrder } =
     slab
         button
         [ css (choiceButtonStyles { border = not isLast })
@@ -358,12 +388,21 @@ choiceButton { action, icon, isLast, label } =
         , T.pv3
         , T.tl
         ]
-        [ slab
-            span
-            []
-            [ T.inline_flex, T.mr3 ]
-            [ fromUnstyled (icon UI.Kit.colors.text 16) ]
-        , text label
+        [ -- TODO: Remove `chunk` + outOfOrder when everything is implemented
+          chunk
+            [ T.flex
+            , T.items_center
+
+            --
+            , ifThenElse outOfOrder T.o_20 T.o_100
+            ]
+            [ slab
+                span
+                []
+                [ T.inline_flex, T.mr3 ]
+                [ fromUnstyled (icon UI.Kit.colors.text 16) ]
+            , text label
+            ]
         ]
 
 
@@ -407,7 +446,7 @@ choiceButtonStyles { border } =
         (ifThenElse border (px 1) (px 0))
         solid
         (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    , Css.minWidth (px 260)
+    , Css.minWidth (px 210)
     ]
 
 
