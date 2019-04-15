@@ -24,6 +24,7 @@ type Tag
     | AuthEnclosedData
     | AuthIpfs
     | AuthMethod
+    | AuthRemoteStorage
     | AuthSecretKey
     | FabricateSecretKey
     | SearchTracks
@@ -92,6 +93,9 @@ tagToString tag =
 
         AuthMethod ->
             "AUTH_METHOD"
+
+        AuthRemoteStorage ->
+            "AUTH_REMOTE_STORAGE"
 
         AuthSecretKey ->
             "AUTH_SECRET_KEY"
@@ -180,6 +184,9 @@ tagFromString string =
 
         "AUTH_METHOD" ->
             Just AuthMethod
+
+        "AUTH_REMOTE_STORAGE" ->
+            Just AuthRemoteStorage
 
         "AUTH_SECRET_KEY" ->
             Just AuthSecretKey

@@ -1,6 +1,7 @@
 module UI.Core exposing (Flags, Model, Msg(..))
 
 import Alien
+import Authentication
 import Browser
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
@@ -93,6 +94,10 @@ type Msg
     | SetAudioIsLoading Bool
     | SetAudioIsPlaying Bool
     | Unstall
+      -----------------------------------------
+      -- Authentication
+      -----------------------------------------
+    | ExternalAuth Authentication.Method String
       -----------------------------------------
       -- Brain
       -----------------------------------------

@@ -50,6 +50,11 @@ app.ports.fabricateSecretKey.subscribe(event => {
 })
 
 
+function getSecretKey() {
+  return getFromIndex({ key: SECRET_KEY_LOCATION })
+}
+
+
 
 // Cache
 // -----
@@ -63,7 +68,7 @@ app.ports.requestCache.subscribe(event => {
   const dataPromise = (_ => {
     if (event.tag == "AUTH_ANONYMOUS") {
       return getFromIndex({ key: event.tag })
-        .then(r => getFromIndex({ key: SECRET_KEY_LOCATION }).then(s => [r, s]))
+        .then(r => getSecretKey().then(s => [r, s]))
         .then(([r, s]) => r ? decrypt(s, r) : null)
         .then(d => d ? JSON.parse(d) : null)
 
@@ -94,7 +99,7 @@ function toCache(key, data) {
   if (key == "AUTH_ANONYMOUS") {
     const json = JSON.stringify(data)
 
-    return getFromIndex({ key: SECRET_KEY_LOCATION })
+    return getSecretKey()
       .then(secretKey => encrypt(secretKey, json))
       .then(encryptedData => setInIndex({ key: key, data: encryptedData }))
 
@@ -124,11 +129,10 @@ function ipfsFilePath(tag) {
 
 app.ports.requestIpfs.subscribe(event => {
   const path = ipfsFilePath(event.tag)
-  const secretKeyPromise = getFromIndex({ key: SECRET_KEY_LOCATION })
 
   fetch("http://localhost:5001/api/v0/files/read?arg=" + path)
     .then(r => r.ok ? r.text() : r.json())
-    .then(r => secretKeyPromise.then(s => [r, s]))
+    .then(r => getSecretKey().then(s => [r, s]))
     .then(([r, s]) => r.Code === 0 ? {} : decrypt(s, r))
     .then(data => {
       app.ports.fromAlien.send({
@@ -153,7 +157,7 @@ app.ports.toIpfs.subscribe(event => {
     truncate: true
   }).toString()
 
-  getFromIndex({ key: SECRET_KEY_LOCATION })
+  getSecretKey()
     .then(secretKey => encrypt(secretKey, json))
     .then(data => {
       const formData = new FormData()
@@ -168,6 +172,66 @@ app.ports.toIpfs.subscribe(event => {
     }).catch(
       reportError(event)
 
+    )
+})
+
+
+
+// Remote Storage
+// --------------
+
+let rs
+let rsClient
+
+
+function remoteStorage(event) {
+  if (!rs) {
+    importScripts("/vendor/remotestorage.min.js")
+
+    rs = new RemoteStorage({ cache: false })
+    rs.access.claim("diffuse", "rw")
+
+    rsClient = rs.scope("/diffuse-v2/")
+
+    return new Promise(resolve => {
+      rs.on("connected", resolve)
+      rs.connect(event.data.userAddress, event.data.token)
+    })
+
+  } else {
+    return Promise.resolve()
+
+  }
+}
+
+
+app.ports.requestRemoteStorage.subscribe(event => {
+  remoteStorage(event)
+    .then(_ => rsClient.getFile("diffuse.json"))
+    .then(r => getSecretKey().then(s => [r.data, s]))
+    .then(([r, s]) => r ? decrypt(s, r) : null)
+    .then(data => {
+      app.ports.fromAlien.send({
+        tag: event.tag,
+        data: typeof data === "string" ? JSON.parse(data) : data,
+        error: null
+      })
+    })
+    .catch(
+      reportError(event)
+    )
+})
+
+
+app.ports.toRemoteStorage.subscribe(event => {
+  const json = JSON.stringify(event.data.data)
+
+  remoteStorage(event)
+    .then(_ => getSecretKey())
+    .then(secretKey => encrypt(secretKey, json))
+    .then(data => rsClient.storeFile("application/json", "diffuse.json", data))
+    .catch(
+      reportError(event)
     )
 })
 

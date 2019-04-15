@@ -67,6 +67,9 @@ index model =
                 Just Local ->
                     text "in this browser."
 
+                Just (RemoteStorage _) ->
+                    text "on a RemoteStorage server."
+
                 Nothing ->
                     text "on nothing, wtf?"
           , lineBreak

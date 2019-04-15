@@ -25,7 +25,7 @@ import Brain.Ports as Ports
 import Brain.Reply exposing (Reply(..))
 import Conditional exposing (..)
 import Json.Decode as Decode
-import Json.Encode as J
+import Json.Encode as Json
 import Replying exposing (R3D3, do)
 
 
@@ -59,22 +59,22 @@ initialCommand =
 
 
 type Msg
-    = PerformSignIn J.Value
+    = PerformSignIn Json.Value
     | PerformSignOut
       -- 0. Secret Key
     | FabricateSecretKey String
     | SecretKeyFabricated
       -- 1. Method
     | RetrieveMethod
-    | MethodRetrieved J.Value
+    | MethodRetrieved Json.Value
       -- 2. Data
     | RetrieveHypaethralData
-    | HypaethralDataRetrieved J.Value
+    | HypaethralDataRetrieved Json.Value
       -- x. Data
     | RetrieveEnclosedData
-    | EnclosedDataRetrieved J.Value
-    | SaveEnclosedData J.Value
-    | SaveHypaethralData J.Value
+    | EnclosedDataRetrieved Json.Value
+    | SaveEnclosedData Json.Value
+    | SaveHypaethralData Json.Value
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -129,7 +129,7 @@ update msg model =
         FabricateSecretKey passphrase ->
             ( model
             , passphrase
-                |> J.string
+                |> Json.string
                 |> Alien.broadcast Alien.FabricateSecretKey
                 |> Ports.fabricateSecretKey
             , Nothing
@@ -181,6 +181,14 @@ update msg model =
 
                 Just Local ->
                     Ports.requestCache (Alien.trigger Alien.AuthAnonymous)
+
+                Just (RemoteStorage { userAddress, token }) ->
+                    [ ( "token", Json.string token )
+                    , ( "userAddress", Json.string userAddress )
+                    ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthRemoteStorage
+                        |> Ports.requestRemoteStorage
 
                 -- ✋
                 Nothing ->
@@ -239,6 +247,15 @@ update msg model =
                 Just Local ->
                     Ports.toCache (Alien.broadcast Alien.AuthAnonymous json)
 
+                Just (RemoteStorage { userAddress, token }) ->
+                    [ ( "data", json )
+                    , ( "token", Json.string token )
+                    , ( "userAddress", Json.string userAddress )
+                    ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthRemoteStorage
+                        |> Ports.toRemoteStorage
+
                 -- ✋
                 Nothing ->
                     Cmd.none
@@ -251,7 +268,7 @@ update msg model =
 
 
 type Termination
-    = Authenticated Method J.Value
+    = Authenticated Method Json.Value
     | NotAuthenticated
 
 

@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -473,6 +473,24 @@ textField attributes =
         []
 
 
+textFieldAlt : List (Html.Attribute msg) -> Html msg
+textFieldAlt attributes =
+    slab
+        Html.input
+        (css textFieldAltStyles :: attributes)
+        [ T.bn
+        , T.bg_white
+        , T.br2
+        , T.db
+        , T.f6
+        , T.lh_copy
+        , T.mb3
+        , T.pa3
+        , T.w_100
+        ]
+        []
+
+
 vessel : List (Html msg) -> Html msg
 vessel =
     brick
@@ -607,6 +625,16 @@ textFieldStyles =
     , Css.color (Color.toElmCssColor colors.text)
     , Css.maxWidth (px maxInputWidth)
     , inputFocus
+    ]
+
+
+textFieldAltStyles : List Css.Style
+textFieldAltStyles =
+    [ Css.color (Color.toElmCssColor colors.text)
+    , Css.maxWidth (Css.vw 87.5)
+    , Css.resize Css.none
+    , Css.width (px 292)
+    , textAreaFocus
     ]
 
 

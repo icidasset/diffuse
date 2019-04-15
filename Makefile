@@ -64,6 +64,7 @@ install:
 	@echo "> Downloading & minifying dependencies"
 	@mkdir -p $(VENDOR_DIR)
 	@curl https://unpkg.com/lunr@2.3.6/lunr.js -o $(VENDOR_DIR)/lunr.js
+	@curl https://unpkg.com/remotestoragejs@1.2.2/release/remotestorage.js -o $(VENDOR_DIR)/remotestorage.min.js
 	@curl https://unpkg.com/fast-text-encoding@1.0.0/text.min.js -o $(VENDOR_DIR)/text-encoding-polyfill.min.js
 	@curl https://unpkg.com/tachyons@4.11.1/css/tachyons.min.css -o $(VENDOR_DIR)/tachyons.min.css
 

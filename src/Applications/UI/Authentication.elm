@@ -2,6 +2,7 @@ module UI.Authentication exposing (Model(..), Msg(..), extractMethod, initialMod
 
 import Alien
 import Authentication exposing (Method(..))
+import Base64
 import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
@@ -24,6 +25,7 @@ import UI.Kit
 import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
+import Url exposing (Url)
 
 
 
@@ -44,20 +46,46 @@ passphraseLengthErrorMessage =
 
 type Model
     = Authenticated Method
+    | InputScreen Method { input : String, placeholder : String, question : String }
     | NewEncryptionKeyScreen Method (Maybe String)
     | UpdateEncryptionKeyScreen Method (Maybe String)
     | Unauthenticated
 
 
-initialModel : Model
-initialModel =
-    Unauthenticated
+initialModel : Url -> Model
+initialModel url =
+    case String.split "/" (String.dropLeft 1 url.path) of
+        [ "authenticate", "remotestorage", encodedUserAddress ] ->
+            let
+                userAddress =
+                    encodedUserAddress
+                        |> Url.percentDecode
+                        |> Maybe.andThen (Base64.decode >> Result.toMaybe)
+                        |> Maybe.withDefault encodedUserAddress
+            in
+            url.fragment
+                |> Maybe.map (String.split "&")
+                |> Maybe.map (List.filter <| String.startsWith "access_token=")
+                |> Maybe.andThen List.head
+                |> Maybe.withDefault ""
+                |> String.replace "access_token=" ""
+                |> (\t ->
+                        NewEncryptionKeyScreen
+                            (RemoteStorage { userAddress = userAddress, token = t })
+                            Nothing
+                   )
+
+        _ ->
+            Unauthenticated
 
 
 extractMethod : Model -> Maybe Method
 extractMethod model =
     case model of
         Authenticated method ->
+            Just method
+
+        InputScreen method _ ->
             Just method
 
         NewEncryptionKeyScreen method _ ->
@@ -76,14 +104,23 @@ extractMethod model =
 
 type Msg
     = Bypass
-    | HideEncryptionKeyScreen
-    | KeepPassphraseInMemory String
-    | ShowNewEncryptionKeyScreen Method
-    | ShowUpdateEncryptionKeyScreen Method
+    | Cancel
     | SignIn Method
     | SignInWithPassphrase Method String
     | SignedIn Method
+      -----------------------------------------
+      -- Encryption
+      -----------------------------------------
+    | KeepPassphraseInMemory String
+    | ShowNewEncryptionKeyScreen Method
+    | ShowUpdateEncryptionKeyScreen Method
     | UpdateEncryptionKey Method String
+      -----------------------------------------
+      -- More Input
+      -----------------------------------------
+    | AskForInput Method { placeholder : String, question : String }
+    | Input String
+    | ConfirmInput
 
 
 update : Msg -> Model -> R3D3 Model Msg Reply
@@ -92,10 +129,13 @@ update msg model =
         Bypass ->
             R3.withNothing model
 
-        HideEncryptionKeyScreen ->
+        Cancel ->
             case model of
                 Authenticated method ->
                     R3.withNothing (Authenticated method)
+
+                InputScreen _ _ ->
+                    R3.withNothing Unauthenticated
 
                 NewEncryptionKeyScreen _ _ ->
                     R3.withNothing Unauthenticated
@@ -106,6 +146,45 @@ update msg model =
                 Unauthenticated ->
                     R3.withNothing Unauthenticated
 
+        SignIn method ->
+            ( Unauthenticated
+              --
+            , [ ( "method", Authentication.encodeMethod method )
+              , ( "passphrase", Json.Encode.null )
+              ]
+                |> Json.Encode.object
+                |> Alien.broadcast Alien.SignIn
+                |> Ports.toBrain
+              --
+            , Just [ ToggleLoadingScreen On ]
+            )
+
+        SignInWithPassphrase method passphrase ->
+            if String.length passphrase < minimumPassphraseLength then
+                ( model
+                , Cmd.none
+                , Just [ ShowErrorNotification passphraseLengthErrorMessage ]
+                )
+
+            else
+                ( Unauthenticated
+                  --
+                , [ ( "method", Authentication.encodeMethod method )
+                  , ( "passphrase", Json.Encode.string <| Crypto.Hash.sha256 passphrase )
+                  ]
+                    |> Json.Encode.object
+                    |> Alien.broadcast Alien.SignIn
+                    |> Ports.toBrain
+                  --
+                , Just [ ToggleLoadingScreen On ]
+                )
+
+        SignedIn method ->
+            R3.withNothing (Authenticated method)
+
+        -----------------------------------------
+        -- Encryption
+        -----------------------------------------
         KeepPassphraseInMemory passphrase ->
             case model of
                 NewEncryptionKeyScreen method _ ->
@@ -122,28 +201,6 @@ update msg model =
 
         ShowUpdateEncryptionKeyScreen method ->
             R3.withNothing (UpdateEncryptionKeyScreen method Nothing)
-
-        SignIn method ->
-            ( Unauthenticated
-            , signIn method
-            , Just [ ToggleLoadingScreen On ]
-            )
-
-        SignInWithPassphrase method passphrase ->
-            if String.length passphrase < minimumPassphraseLength then
-                ( model
-                , Cmd.none
-                , Just [ ShowErrorNotification passphraseLengthErrorMessage ]
-                )
-
-            else
-                ( Unauthenticated
-                , signInWithPassphrase method passphrase
-                , Just [ ToggleLoadingScreen On ]
-                )
-
-        SignedIn method ->
-            R3.withNothing (Authenticated method)
 
         UpdateEncryptionKey method passphrase ->
             if String.length passphrase < minimumPassphraseLength then
@@ -162,25 +219,35 @@ update msg model =
                 , Nothing
                 )
 
+        -----------------------------------------
+        -- More Input
+        -----------------------------------------
+        AskForInput method opts ->
+            { input = ""
+            , placeholder = opts.placeholder
+            , question = opts.question
+            }
+                |> InputScreen method
+                |> R3.withNothing
 
-signIn : Method -> Cmd Msg
-signIn method =
-    [ ( "method", Authentication.encodeMethod method )
-    , ( "passphrase", Json.Encode.null )
-    ]
-        |> Json.Encode.object
-        |> Alien.broadcast Alien.SignIn
-        |> Ports.toBrain
+        Input string ->
+            case model of
+                InputScreen method opts ->
+                    R3.withNothing (InputScreen method { opts | input = string })
 
+                m ->
+                    R3.withNothing m
 
-signInWithPassphrase : Method -> String -> Cmd Msg
-signInWithPassphrase method passphrase =
-    [ ( "method", Authentication.encodeMethod method )
-    , ( "passphrase", Json.Encode.string <| Crypto.Hash.sha256 passphrase )
-    ]
-        |> Json.Encode.object
-        |> Alien.broadcast Alien.SignIn
-        |> Ports.toBrain
+        ConfirmInput ->
+            case model of
+                InputScreen method { input } ->
+                    ( model
+                    , Cmd.none
+                    , Just [ ExternalAuth method input ]
+                    )
+
+                _ ->
+                    R3.withNothing model
 
 
 
@@ -203,26 +270,28 @@ view model =
             [ chunk
                 [ T.relative ]
                 [ img
-                    [ onClick HideEncryptionKeyScreen
+                    [ onClick Cancel
                     , src "/images/diffuse-light.svg"
                     , width 190
 
                     --
                     , case model of
-                        NewEncryptionKeyScreen _ _ ->
-                            style "cursor" "pointer"
-
-                        UpdateEncryptionKeyScreen _ _ ->
-                            style "cursor" "pointer"
+                        Unauthenticated ->
+                            style "cursor" "default"
 
                         _ ->
-                            style "cursor" "default"
+                            style "cursor" "pointer"
                     ]
                     []
 
                 -- Speech bubble
                 ----------------
                 , case model of
+                    InputScreen _ { question } ->
+                        question
+                            |> text
+                            |> speechBubble
+
                     NewEncryptionKeyScreen _ _ ->
                         [ text "I need a passphrase"
                         , lineBreak
@@ -253,6 +322,9 @@ view model =
         -- Content
         -----------------------------------------
         , case model of
+            InputScreen method opts ->
+                inputScreen opts
+
             NewEncryptionKeyScreen method Nothing ->
                 encryptionKeyScreen Bypass
 
@@ -298,26 +370,6 @@ view model =
 -- CHOICES
 
 
-encryptionKeyScreen : Msg -> Html Msg
-encryptionKeyScreen msg =
-    chunk
-        [ T.flex
-        , T.flex_column
-        ]
-        [ UI.Kit.textArea
-            [ attribute "autocomplete" "off"
-            , attribute "autocorrect" "off"
-            , attribute "spellcheck" "false"
-            , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
-            , Html.Styled.Events.onInput KeepPassphraseInMemory
-            ]
-        , UI.Kit.button
-            UI.Kit.Normal
-            msg
-            (text "Continue")
-        ]
-
-
 choicesScreen : Html Msg
 choicesScreen =
     chunk
@@ -348,11 +400,16 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = Bypass
+            { action =
+                AskForInput
+                    (Authentication.RemoteStorage { userAddress = "", token = "" })
+                    { placeholder = "username@5apps.com"
+                    , question = "What's your user address?"
+                    }
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.remoteStorageLogo
             , isLast = False
             , label = "RemoteStorage"
-            , outOfOrder = True
+            , outOfOrder = False
             }
         , choiceButton
             { action = Bypass
@@ -408,6 +465,55 @@ choiceButton { action, icon, isLast, label, outOfOrder } =
 
 
 -- ENCRYPTION KEY
+
+
+encryptionKeyScreen : Msg -> Html Msg
+encryptionKeyScreen msg =
+    slab
+        Html.form
+        [ onSubmit msg ]
+        [ T.flex
+        , T.flex_column
+        ]
+        [ UI.Kit.textArea
+            [ attribute "autocomplete" "off"
+            , attribute "autocorrect" "off"
+            , attribute "spellcheck" "false"
+            , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
+            , Html.Styled.Events.onInput KeepPassphraseInMemory
+            ]
+        , UI.Kit.button
+            UI.Kit.Normal
+            Bypass
+            (text "Continue")
+        ]
+
+
+
+-- INPUT SCREEN
+
+
+inputScreen : { question : String, input : String, placeholder : String } -> Html Msg
+inputScreen opts =
+    slab
+        Html.form
+        [ onSubmit ConfirmInput ]
+        [ T.flex
+        , T.flex_column
+        ]
+        [ UI.Kit.textFieldAlt
+            [ placeholder opts.placeholder
+            , Html.Styled.Events.onInput Input
+            ]
+        , UI.Kit.button
+            UI.Kit.Normal
+            Bypass
+            (text "Continue")
+        ]
+
+
+
+-- SPEECH BUBBLE
 
 
 speechBubble : Html msg -> Html msg

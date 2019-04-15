@@ -345,6 +345,9 @@ translateAlienData event =
         Just Alien.AuthMethod ->
             AuthenticationMsg (Authentication.MethodRetrieved event.data)
 
+        Just Alien.AuthRemoteStorage ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
+
         Just Alien.FabricateSecretKey ->
             AuthenticationMsg Authentication.SecretKeyFabricated
 
@@ -416,6 +419,9 @@ translateAlienError event err =
 
         Just Alien.AuthIpfs ->
             report Alien.AuthIpfs "Something went wrong regarding the IPFS storage. Maybe you used the wrong passphrase, or your IPFS node is offline?"
+
+        Just Alien.AuthRemoteStorage ->
+            report Alien.AuthRemoteStorage "I couldn't decrypt your data, maybe you used the wrong passphrase?"
 
         Just tag ->
             report tag err

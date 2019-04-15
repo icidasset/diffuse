@@ -19,6 +19,7 @@ import Tracks.Encoding as Tracks
 type Method
     = Ipfs
     | Local
+    | RemoteStorage { userAddress : String, token : String }
 
 
 type alias EnclosedUserData =
@@ -69,18 +70,34 @@ methodToString method =
         Local ->
             "LOCAL"
 
+        RemoteStorage { userAddress, token } ->
+            String.join
+                methodSeparator
+                [ "REMOTE_STORAGE"
+                , userAddress
+                , token
+                ]
+
 
 methodFromString : String -> Maybe Method
 methodFromString string =
-    case string of
-        "IPFS" ->
+    case String.split methodSeparator string of
+        [ "IPFS" ] ->
             Just Ipfs
 
-        "LOCAL" ->
+        [ "LOCAL" ] ->
             Just Local
+
+        [ "REMOTE_STORAGE", u, t ] ->
+            Just (RemoteStorage { userAddress = u, token = t })
 
         _ ->
             Nothing
+
+
+methodSeparator : String
+methodSeparator =
+    "___"
 
 
 

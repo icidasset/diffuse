@@ -2,6 +2,7 @@ module UI exposing (main)
 
 import Alien
 import Authentication
+import Authentication.RemoteStorage
 import Browser
 import Browser.Navigation as Nav
 import Chunky exposing (..)
@@ -105,7 +106,7 @@ init flags url key =
 
       -- Children
       -----------
-      , authentication = Authentication.initialModel
+      , authentication = Authentication.initialModel url
       , backdrop = Backdrop.initialModel
       , equalizer = Equalizer.initialModel
       , queue = Queue.initialModel
@@ -188,6 +189,29 @@ update msg model =
 
         Unstall ->
             R2.withCmd (Ports.unstall ()) model
+
+        -----------------------------------------
+        -- Authentication
+        -----------------------------------------
+        Core.ExternalAuth (Authentication.RemoteStorage _) input ->
+            -- TODO:
+            -- 1. Make request to RemoteStorage.webfingerAddress
+            -- 2. If proper response    -> Valid RemoteStorage
+            --    If not                -> Not a RemoteStorage      -> Show notification
+            -- 3. Extract oauth address from webfinger response
+            let
+                origin =
+                    Common.urlOrigin model.url
+            in
+            input
+                |> Authentication.RemoteStorage.parseUserAddress
+                |> Maybe.map (Authentication.RemoteStorage.oauthAddress { origin = origin })
+                |> Maybe.map Nav.load
+                |> Maybe.withDefault Cmd.none
+                |> Tuple.pair model
+
+        Core.ExternalAuth _ _ ->
+            R2.withNoCmd model
 
         -----------------------------------------
         -- Brain
@@ -278,7 +302,7 @@ update msg model =
                         |> Ports.toBrain
             in
             { model
-                | authentication = Authentication.initialModel
+                | authentication = Authentication.initialModel model.url
                 , sources = Sources.initialModel
                 , tracks = Tracks.initialModel
             }
@@ -518,6 +542,9 @@ translateReply reply =
 
         Reply.DismissNotification opts ->
             Core.DismissNotification opts
+
+        Reply.ExternalAuth a b ->
+            Core.ExternalAuth a b
 
         Reply.FillQueue ->
             Core.FillQueue
