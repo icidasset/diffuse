@@ -4,18 +4,22 @@ import Alien
 import Authentication exposing (Method(..))
 import Base64
 import Chunky exposing (..)
+import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
+import Coordinates
 import Crypto.Hash
 import Css exposing (pct, px, solid, transparent)
+import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
-import Html.Styled.Attributes exposing (attribute, css, href, placeholder, src, style, type_, value, width)
+import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, type_, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Json.Decode as Json
 import Json.Encode
 import Material.Icons.Av as Icons
+import Material.Icons.Navigation as Icons
 import Replying exposing (R3D3, andThen3)
 import Return2 as R2
 import Return3 as R3
@@ -105,6 +109,7 @@ extractMethod model =
 type Msg
     = Bypass
     | Cancel
+    | ShowMoreOptions Mouse.Event
     | SignIn Method
     | SignInWithPassphrase Method String
     | SignedIn Method
@@ -145,6 +150,22 @@ update msg model =
 
                 Unauthenticated ->
                     R3.withNothing Unauthenticated
+
+        ShowMoreOptions mouseEvent ->
+            ( model
+            , Cmd.none
+            , ( mouseEvent.clientPos
+              , mouseEvent.offsetPos
+              )
+                |> (\( ( a, b ), ( c, d ) ) ->
+                        { x = a - c + 15
+                        , y = b - d + 12
+                        }
+                   )
+                |> ShowMoreAuthenticationOptions
+                |> List.singleton
+                |> Just
+            )
 
         SignIn method ->
             ( Unauthenticated
@@ -393,13 +414,6 @@ choicesScreen =
             , outOfOrder = True
             }
         , choiceButton
-            { action = ShowNewEncryptionKeyScreen Authentication.Ipfs
-            , icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
-            , isLast = False
-            , label = "IPFS"
-            , outOfOrder = False
-            }
-        , choiceButton
             { action =
                 AskForInput
                     (Authentication.RemoteStorage { userAddress = "", token = "" })
@@ -413,11 +427,27 @@ choicesScreen =
             }
         , choiceButton
             { action = Bypass
-            , icon = \_ _ -> Svg.map never UI.Svg.Elements.solidLogo
-            , isLast = True
-            , label = "Solid"
+            , icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
+            , isLast = False
+            , label = "Textile"
             , outOfOrder = True
             }
+
+        -- More options
+        ---------------
+        , chunk
+            [ T.pb1, T.pt3, T.tc ]
+            [ slab
+                Html.span
+                [ title "More options"
+                , Attributes.fromUnstyled (Mouse.onClick ShowMoreOptions)
+                ]
+                [ T.dib, T.ph1, T.pointer, C.lh_0 ]
+                [ chunk
+                    [ C.pointer_events_none ]
+                    [ fromUnstyled (Icons.more_horiz UI.Kit.colors.text 22) ]
+                ]
+            ]
         ]
 
 

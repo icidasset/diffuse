@@ -35,6 +35,7 @@ type Reply
     | SaveSources
     | SaveTracks
     | ShowErrorNotification String
+    | ShowMoreAuthenticationOptions Coordinates
     | ShowSuccessNotification String
     | ShowWarningNotification String
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)

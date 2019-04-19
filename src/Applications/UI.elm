@@ -37,6 +37,7 @@ import Task
 import Time
 import Tracks.Encoding
 import UI.Authentication as Authentication
+import UI.Authentication.ContextMenu
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
@@ -212,6 +213,13 @@ update msg model =
 
         Core.ExternalAuth _ _ ->
             R2.withNoCmd model
+
+        Core.ShowMoreAuthenticationOptions coordinates ->
+            coordinates
+                |> UI.Authentication.ContextMenu.moreOptionsMenu
+                |> Just
+                |> (\c -> { model | contextMenu = c })
+                |> R2.withNoCmd
 
         -----------------------------------------
         -- Brain
@@ -588,6 +596,9 @@ translateReply reply =
         Reply.ShowErrorNotification string ->
             ShowNotification (Notifications.stickyError string)
 
+        Reply.ShowMoreAuthenticationOptions coordinates ->
+            Core.ShowMoreAuthenticationOptions coordinates
+
         Reply.ShowSuccessNotification string ->
             ShowNotification (Notifications.success string)
 
@@ -911,6 +922,7 @@ globalCss =
     -- Bits & Pieces
     -----------------------------------------
     , Css.Global.selector ".lh-0" [ Css.lineHeight Css.zero ]
+    , Css.Global.selector ".pointer-events-none" [ Css.pointerEvents Css.none ]
     ]
 
 

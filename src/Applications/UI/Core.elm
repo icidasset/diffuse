@@ -98,6 +98,7 @@ type Msg
       -- Authentication
       -----------------------------------------
     | ExternalAuth Authentication.Method String
+    | ShowMoreAuthenticationOptions Coordinates
       -----------------------------------------
       -- Brain
       -----------------------------------------
