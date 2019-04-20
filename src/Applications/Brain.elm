@@ -5,13 +5,12 @@ import Authentication exposing (HypaethralUserData)
 import Brain.Authentication as Authentication
 import Brain.Core as Core exposing (..)
 import Brain.Ports
-import Brain.Reply as Reply exposing (Reply(..))
+import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing as Processing
 import Brain.Sources.Processing.Common as Processing
 import Brain.Tracks as Tracks
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
-import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
 import Return2 exposing (..)
 import Return3

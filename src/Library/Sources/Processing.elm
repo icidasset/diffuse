@@ -1,6 +1,5 @@
 module Sources.Processing exposing (Arguments, Context, ContextForTags, HttpMethod(..), Marker(..), PrepationAnswer, Status(..), TagUrls, TreeAnswer, httpMethod)
 
-import Http
 import Sources exposing (Source, SourceData)
 import Tracks exposing (Tags, Track)
 

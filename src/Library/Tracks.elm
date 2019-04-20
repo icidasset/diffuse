@@ -1,7 +1,6 @@
 module Tracks exposing (Collection, CollectionDependencies, Favourite, IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId)
 
 import Base64
-import Bytes.Encode
 import String.Ext as String
 
 

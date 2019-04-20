@@ -1,18 +1,15 @@
 module UI.Core exposing (Flags, Model, Msg(..))
 
-import Alien
 import Authentication
 import Browser
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import ContextMenu exposing (ContextMenu)
-import Coordinates exposing (Coordinates)
 import File exposing (File)
 import Json.Encode as Json
 import Notifications exposing (..)
 import Queue
 import Time
-import Tracks exposing (IdentifiedTrack)
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Equalizer as Equalizer

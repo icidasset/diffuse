@@ -8,14 +8,11 @@ import Material.Icons.Action as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
-import Notifications exposing (Notification)
 import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Encoding
-import Sources.Services as Services
-import Tachyons.Classes as T
 import Time
-import UI.Kit exposing (ButtonType(..), select)
+import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page

@@ -4,7 +4,7 @@ module Tracks.Collection.Internal exposing
     , identify
     )
 
-import Tracks exposing (Parcel, Track)
+import Tracks exposing (Parcel)
 import Tracks.Collection.Internal.Arrange as Internal
 import Tracks.Collection.Internal.Harvest as Internal
 import Tracks.Collection.Internal.Identify as Internal

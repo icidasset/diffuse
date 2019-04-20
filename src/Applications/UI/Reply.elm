@@ -1,11 +1,8 @@
 module UI.Reply exposing (Reply(..))
 
-import Alien
 import Authentication
 import Common exposing (Switch(..))
 import Coordinates exposing (Coordinates)
-import Json.Decode as Json
-import Notifications exposing (Notification)
 import Queue
 import Sources exposing (Source)
 import Tracks exposing (IdentifiedTrack)

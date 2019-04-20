@@ -2,11 +2,10 @@ module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), initialModel, new
 
 import Chunky exposing (..)
 import Conditional exposing (..)
-import Css
 import Dict
 import Dict.Ext as Dict
 import Html.Styled as Html exposing (Html, strong, text)
-import Html.Styled.Attributes exposing (css, for, name, placeholder, type_, value)
+import Html.Styled.Attributes exposing (for, name, placeholder, type_, value)
 import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons.Alert as Icons
@@ -14,12 +13,10 @@ import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services
-import Sources.Services.Common
 import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page
-import UI.Ports
 import UI.Reply exposing (Reply)
 import UI.Sources.Page
 

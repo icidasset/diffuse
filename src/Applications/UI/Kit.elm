@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -6,7 +6,7 @@ import Color.Ext as Color
 import Css exposing (deg, em, none, num, pct, px, solid, url, zero)
 import Css.Global
 import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (checked, css, href, style, type_)
+import Html.Styled.Attributes exposing (css, href, style)
 import Html.Styled.Events exposing (onClick, onInput)
 import Material.Icons.Hardware as Icons
 import Material.Icons.Toggle as Icons
@@ -138,7 +138,7 @@ defaultFontFamilies =
 
 defaultFontStyles : List Css.Style
 defaultFontStyles =
-    [ Css.fontFamilies headerFontFamilies ]
+    [ Css.fontFamilies defaultFontFamilies ]
 
 
 headerFontFamilies : List String

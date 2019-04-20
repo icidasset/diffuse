@@ -8,7 +8,7 @@ import Conditional exposing (ifThenElse)
 import Css
 import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtmlAttributes
-import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
+import Html.Events.Extra.Mouse exposing (onWithOptions)
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, id)
 import Html.Styled.Events exposing (onClick, onDoubleClick)
@@ -141,13 +141,6 @@ headerColumn :
     -> msg
     -> Html msg
 headerColumn text_ width pos maybeSortIcon msg =
-    let
-        paddingLeft =
-            ifThenElse (pos == First) T.pl2 T.pl1
-
-        paddingRight =
-            ifThenElse (pos == Last) T.pr2 T.pr1
-    in
     brick
         [ onClick msg
         , css

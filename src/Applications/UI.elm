@@ -19,8 +19,8 @@ import File
 import File.Download
 import File.Select
 import Html.Events.Extra.Pointer as Pointer
-import Html.Styled as Html exposing (Html, div, section, text, toUnstyled)
-import Html.Styled.Attributes exposing (css, id, style)
+import Html.Styled as Html exposing (Html, section, toUnstyled)
+import Html.Styled.Attributes exposing (css, id)
 import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode

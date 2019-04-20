@@ -4,7 +4,6 @@ module Cryptography.HMAC exposing (encrypt128, encrypt64)
 -}
 
 import Binary exposing (Bits)
-import SHA
 
 
 type alias HashFunction =

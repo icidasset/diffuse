@@ -9,14 +9,12 @@ import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Coordinates
 import Crypto.Hash
 import Css exposing (pct, px, solid, transparent)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, a, button, div, em, fromUnstyled, img, span, text)
-import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, type_, value, width)
+import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
+import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
-import Json.Decode as Json
 import Json.Encode
 import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons

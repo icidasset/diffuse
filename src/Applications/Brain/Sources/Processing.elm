@@ -5,7 +5,6 @@ import Brain.Ports
 import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing.Common exposing (..)
 import Brain.Sources.Processing.Steps as Steps
-import Http
 import Json.Encode as Encode
 import List.Extra as List
 import Maybe.Extra as Maybe

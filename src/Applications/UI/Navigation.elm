@@ -7,7 +7,7 @@ import Color.Manipulate
 import Conditional exposing (..)
 import Css exposing (px, solid, transparent, zero)
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (attribute, css, href, style, tabindex, title)
+import Html.Styled.Attributes exposing (attribute, css, href, tabindex, title)
 import Html.Styled.Events exposing (onClick)
 import List.Extra as List
 import Svg exposing (Svg)

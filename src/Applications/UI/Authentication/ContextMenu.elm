@@ -3,7 +3,6 @@ module UI.Authentication.ContextMenu exposing (moreOptionsMenu)
 import Authentication
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
-import Material.Icons.Action as Icons
 import Svg
 import UI.Authentication as Authentication
 import UI.Core exposing (Msg(..))
