@@ -192,6 +192,27 @@ update msg model =
             returnWithModel model (Ports.unstall ())
 
         -----------------------------------------
+        -- Authentication
+        -----------------------------------------
+        RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
+            let
+                origin =
+                    Common.urlOrigin model.url
+            in
+            remoteStorage
+                |> Authentication.RemoteStorage.oauthAddress
+                    { oauthOrigin = oauthOrigin
+                    , origin = origin
+                    }
+                |> Nav.load
+                |> returnWithModel model
+
+        RemoteStorageWebfinger _ (Err _) ->
+            UI.Notifications.show
+                (Notifications.error Authentication.RemoteStorage.webfingerError)
+                model
+
+        -----------------------------------------
         -- Brain
         -----------------------------------------
         SignOut ->
@@ -379,21 +400,16 @@ translateReply : Reply -> Model -> ( Model, Cmd Msg )
 translateReply reply model =
     case reply of
         ExternalAuth (Authentication.RemoteStorage _) input ->
-            -- TODO:
-            -- 1. Make request to RemoteStorage.webfingerAddress
-            -- 2. If proper response    -> Valid RemoteStorage
-            --    If not                -> Not a RemoteStorage      -> Show notification
-            -- 3. Extract oauth address from webfinger response
-            let
-                origin =
-                    Common.urlOrigin model.url
-            in
             input
                 |> Authentication.RemoteStorage.parseUserAddress
-                |> Maybe.map (Authentication.RemoteStorage.oauthAddress { origin = origin })
-                |> Maybe.map Nav.load
-                |> Maybe.withDefault Cmd.none
-                |> returnWithModel model
+                |> Maybe.map
+                    (Authentication.RemoteStorage.webfingerRequest RemoteStorageWebfinger)
+                |> Maybe.unwrap
+                    (UI.Notifications.show
+                        (Notifications.error Authentication.RemoteStorage.userAddressError)
+                        model
+                    )
+                    (returnWithModel model)
 
         ExternalAuth _ _ ->
             return model

@@ -1,11 +1,13 @@
 module UI.Core exposing (Flags, Model, Msg(..))
 
 import Authentication
+import Authentication.RemoteStorage exposing (RemoteStorage)
 import Browser
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import ContextMenu exposing (ContextMenu)
 import File exposing (File)
+import Http
 import Json.Encode as Json
 import Notifications exposing (..)
 import Queue
@@ -91,6 +93,10 @@ type Msg
     | SetAudioIsLoading Bool
     | SetAudioIsPlaying Bool
     | Unstall
+      -----------------------------------------
+      -- Authentication
+      -----------------------------------------
+    | RemoteStorageWebfinger RemoteStorage (Result Http.Error String)
       -----------------------------------------
       -- Brain
       -----------------------------------------
