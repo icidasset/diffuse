@@ -5,6 +5,7 @@ import Chunky exposing (..)
 import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
+import Coordinates
 import Css
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, placeholder, tabindex, title, value)
@@ -21,9 +22,7 @@ import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
 import Material.Icons.Image as Icons
 import Maybe.Extra as Maybe
-import Replying as N5 exposing (R3D3)
-import Return2 as R2
-import Return3 as R3
+import Return3 as Return exposing (..)
 import Tachyons.Classes as T
 import Tracks exposing (..)
 import Tracks.Collection as Collection exposing (..)
@@ -64,33 +63,22 @@ initialModel =
 -- 📣
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         Bypass ->
-            R3.withNothing model
+            return model
 
         InfiniteListMsg infiniteList ->
-            R3.withNothing { model | infiniteList = infiniteList }
+            return { model | infiniteList = infiniteList }
 
         Reply replies ->
-            ( model
-            , Cmd.none
-            , Just replies
-            )
+            returnRepliesWithModel model replies
 
         ShowContextMenu track mouseEvent ->
-            let
-                ( x, y ) =
-                    mouseEvent.clientPos
-
-                tracks =
-                    [ track ]
-            in
-            ( model
-            , Cmd.none
-            , Just [ ShowTracksContextMenu { x = x, y = y } tracks ]
-            )
+            [ track ]
+                |> ShowTracksContextMenu (Coordinates.fromTuple mouseEvent.clientPos)
+                |> returnReplyWithModel model
 
         ScrollToNowPlaying ->
             let
@@ -112,14 +100,13 @@ update msg model =
                         List ->
                             identifiedTrack
                                 |> UI.Tracks.Scene.List.scrollToNowPlaying
-                                |> R2.withModel model
-                                |> R3.withNoReply
+                                |> Return.commandWithModel model
 
                 Nothing ->
-                    R3.withNothing model
+                    return model
 
         SetEnabledSourceIds sourceIds ->
-            R3.withNothing { model | enabledSourceIds = sourceIds }
+            return { model | enabledSourceIds = sourceIds }
 
         SetNowPlaying maybeIdentifiedTrack ->
             let
@@ -149,12 +136,12 @@ update msg model =
             in
             { model | sortBy = property, sortDirection = sortDir }
                 |> reviseCollection arrange
-                |> N5.addReply SaveEnclosedUserData
+                |> addReply SaveEnclosedUserData
 
         ToggleHideDuplicates ->
             { model | hideDuplicates = not model.hideDuplicates }
                 |> reviseCollection arrange
-                |> N5.addReply SaveSettings
+                |> addReply SaveSettings
 
         -----------------------------------------
         -- Collection
@@ -204,13 +191,13 @@ update msg model =
             model.collection.harvested
                 |> List.getAt index
                 |> Maybe.map (toggleFavourite model)
-                |> Maybe.withDefault (R3.withNothing model)
+                |> Maybe.withDefault (return model)
 
         -- > Filter collection by favourites only {toggle}
         ToggleFavouritesOnly ->
             { model | favouritesOnly = not model.favouritesOnly }
                 |> reviseCollection harvest
-                |> N5.addReply SaveEnclosedUserData
+                |> addReply SaveEnclosedUserData
 
         -----------------------------------------
         -- Search
@@ -218,21 +205,22 @@ update msg model =
         ClearSearch ->
             { model | searchResults = Nothing, searchTerm = Nothing }
                 |> reviseCollection harvest
-                |> N5.addReply SaveEnclosedUserData
+                |> addReply SaveEnclosedUserData
 
         Search ->
             case ( model.searchTerm, model.searchResults ) of
                 ( Just term, _ ) ->
-                    ( model
-                    , UI.Ports.giveBrain Alien.SearchTracks (Json.Encode.string <| String.trim term)
-                    , Nothing
-                    )
+                    term
+                        |> String.trim
+                        |> Json.Encode.string
+                        |> UI.Ports.giveBrain Alien.SearchTracks
+                        |> Return.commandWithModel model
 
                 ( Nothing, Just _ ) ->
                     reviseCollection harvest { model | searchResults = Nothing }
 
                 ( Nothing, Nothing ) ->
-                    R3.withNothing model
+                    return model
 
         SetSearchResults json ->
             case model.searchTerm of
@@ -242,20 +230,20 @@ update msg model =
                         |> Result.withDefault []
                         |> (\results -> { model | searchResults = Just results })
                         |> reviseCollection harvest
-                        |> N5.addReply (ToggleLoadingScreen Off)
+                        |> addReply (ToggleLoadingScreen Off)
 
                 Nothing ->
-                    R3.withNothing model
+                    return model
 
         SetSearchTerm term ->
-            R3.withReply
+            addReplies
                 [ SaveEnclosedUserData ]
                 (case String.trim term of
                     "" ->
-                        R2.withNoCmd { model | searchTerm = Nothing }
+                        return { model | searchTerm = Nothing }
 
                     _ ->
-                        R2.withNoCmd { model | searchTerm = Just term }
+                        return { model | searchTerm = Just term }
                 )
 
 
@@ -278,7 +266,7 @@ makeParcel model =
     )
 
 
-resolveParcel : Model -> Parcel -> R3D3 Model Msg Reply
+resolveParcel : Model -> Parcel -> Return Model Msg Reply
 resolveParcel model ( _, newCollection ) =
     let
         modelWithNewCollection =
@@ -291,6 +279,7 @@ resolveParcel model ( _, newCollection ) =
             List.map (Tuple.second >> .id) newCollection.harvested
     in
     ( modelWithNewCollection
+      ----------
       -- Command
       ----------
     , if oldHarvest /= newHarvest then
@@ -300,9 +289,10 @@ resolveParcel model ( _, newCollection ) =
 
       else
         Cmd.none
+      --------
       -- Reply
       --------
-    , (Just << Maybe.values)
+    , Maybe.values
         [ if model.collection.untouched /= newCollection.untouched then
             Just SaveTracks
 
@@ -319,7 +309,7 @@ resolveParcel model ( _, newCollection ) =
     )
 
 
-reviseCollection : (Parcel -> Parcel) -> Model -> R3D3 Model Msg Reply
+reviseCollection : (Parcel -> Parcel) -> Model -> Return Model Msg Reply
 reviseCollection collector model =
     model
         |> makeParcel
@@ -331,7 +321,7 @@ reviseCollection collector model =
 -- 📣  ░░  FAVOURITES
 
 
-toggleFavourite : Model -> IdentifiedTrack -> R3D3 Model Msg Reply
+toggleFavourite : Model -> IdentifiedTrack -> Return Model Msg Reply
 toggleFavourite model ( i, t ) =
     let
         newFavourites =
@@ -346,7 +336,7 @@ toggleFavourite model ( i, t ) =
     in
     { model | favourites = newFavourites }
         |> reviseCollection effect
-        |> N5.addReply SaveFavourites
+        |> addReply SaveFavourites
 
 
 

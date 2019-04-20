@@ -1,4 +1,4 @@
-module UI.Notifications exposing (dismissNotification, showNotification, view)
+module UI.Notifications exposing (dismiss, show, showWithModel, view)
 
 import Chunky exposing (..)
 import Color.Ext as Color
@@ -21,8 +21,8 @@ import UI.Kit
 -- 📣
 
 
-dismissNotification : Model -> { id : Int } -> ( Model, Cmd Msg )
-dismissNotification model { id } =
+dismiss : Model -> { id : Int } -> ( Model, Cmd Msg )
+dismiss model { id } =
     ( { model
         | notifications =
             List.map
@@ -41,8 +41,8 @@ dismissNotification model { id } =
     )
 
 
-showNotification : Model -> Notification Msg -> ( Model, Cmd Msg )
-showNotification model notification =
+show : Notification Msg -> Model -> ( Model, Cmd Msg )
+show notification model =
     ( { model | notifications = notification :: model.notifications }
       -- Hide notification after a certain amount of time,
       -- unless it's a sticky notification.
@@ -54,6 +54,11 @@ showNotification model notification =
             (\_ -> UI.Core.DismissNotification { id = Notifications.id notification })
             (Process.sleep 3000)
     )
+
+
+showWithModel : Model -> Notification Msg -> ( Model, Cmd Msg )
+showWithModel model notification =
+    show notification model
 
 
 

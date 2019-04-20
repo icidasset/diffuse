@@ -20,9 +20,7 @@ import Json.Decode as Json
 import Json.Encode
 import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
-import Replying exposing (R3D3, andThen3)
-import Return2 as R2
-import Return3 as R3
+import Return3 as Return exposing (..)
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
@@ -128,28 +126,28 @@ type Msg
     | ConfirmInput
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         Bypass ->
-            R3.withNothing model
+            return model
 
         Cancel ->
             case model of
                 Authenticated method ->
-                    R3.withNothing (Authenticated method)
+                    return (Authenticated method)
 
                 InputScreen _ _ ->
-                    R3.withNothing Unauthenticated
+                    return Unauthenticated
 
                 NewEncryptionKeyScreen _ _ ->
-                    R3.withNothing Unauthenticated
+                    return Unauthenticated
 
                 UpdateEncryptionKeyScreen method _ ->
-                    R3.withNothing (Authenticated method)
+                    return (Authenticated method)
 
                 Unauthenticated ->
-                    R3.withNothing Unauthenticated
+                    return Unauthenticated
 
         ShowMoreOptions mouseEvent ->
             ( model
@@ -164,7 +162,6 @@ update msg model =
                    )
                 |> ShowMoreAuthenticationOptions
                 |> List.singleton
-                |> Just
             )
 
         SignIn method ->
@@ -177,15 +174,14 @@ update msg model =
                 |> Alien.broadcast Alien.SignIn
                 |> Ports.toBrain
               --
-            , Just [ ToggleLoadingScreen On ]
+            , [ ToggleLoadingScreen On ]
             )
 
         SignInWithPassphrase method passphrase ->
             if String.length passphrase < minimumPassphraseLength then
-                ( model
-                , Cmd.none
-                , Just [ ShowErrorNotification passphraseLengthErrorMessage ]
-                )
+                addReply
+                    (ShowErrorNotification passphraseLengthErrorMessage)
+                    (return model)
 
             else
                 ( Unauthenticated
@@ -197,11 +193,11 @@ update msg model =
                     |> Alien.broadcast Alien.SignIn
                     |> Ports.toBrain
                   --
-                , Just [ ToggleLoadingScreen On ]
+                , [ ToggleLoadingScreen On ]
                 )
 
         SignedIn method ->
-            R3.withNothing (Authenticated method)
+            return (Authenticated method)
 
         -----------------------------------------
         -- Encryption
@@ -209,36 +205,35 @@ update msg model =
         KeepPassphraseInMemory passphrase ->
             case model of
                 NewEncryptionKeyScreen method _ ->
-                    R3.withNothing (NewEncryptionKeyScreen method <| Just passphrase)
+                    return (NewEncryptionKeyScreen method <| Just passphrase)
 
                 UpdateEncryptionKeyScreen method _ ->
-                    R3.withNothing (UpdateEncryptionKeyScreen method <| Just passphrase)
+                    return (UpdateEncryptionKeyScreen method <| Just passphrase)
 
                 _ ->
-                    R3.withNothing model
+                    return model
 
         ShowNewEncryptionKeyScreen method ->
-            R3.withNothing (NewEncryptionKeyScreen method Nothing)
+            return (NewEncryptionKeyScreen method Nothing)
 
         ShowUpdateEncryptionKeyScreen method ->
-            R3.withNothing (UpdateEncryptionKeyScreen method Nothing)
+            return (UpdateEncryptionKeyScreen method Nothing)
 
         UpdateEncryptionKey method passphrase ->
             if String.length passphrase < minimumPassphraseLength then
-                ( model
-                , Cmd.none
-                , Just [ ShowErrorNotification passphraseLengthErrorMessage ]
-                )
+                addReply
+                    (ShowErrorNotification passphraseLengthErrorMessage)
+                    (return model)
 
             else
-                ( Authenticated method
-                , passphrase
-                    |> Crypto.Hash.sha256
-                    |> Json.Encode.string
-                    |> Alien.broadcast Alien.UpdateEncryptionKey
-                    |> Ports.toBrain
-                , Nothing
-                )
+                returnCommandWithModel
+                    (Authenticated method)
+                    (passphrase
+                        |> Crypto.Hash.sha256
+                        |> Json.Encode.string
+                        |> Alien.broadcast Alien.UpdateEncryptionKey
+                        |> Ports.toBrain
+                    )
 
         -----------------------------------------
         -- More Input
@@ -249,26 +244,25 @@ update msg model =
             , question = opts.question
             }
                 |> InputScreen method
-                |> R3.withNothing
+                |> return
 
         Input string ->
             case model of
                 InputScreen method opts ->
-                    R3.withNothing (InputScreen method { opts | input = string })
+                    return (InputScreen method { opts | input = string })
 
                 m ->
-                    R3.withNothing m
+                    return m
 
         ConfirmInput ->
             case model of
                 InputScreen method { input } ->
-                    ( model
-                    , Cmd.none
-                    , Just [ ExternalAuth method input ]
-                    )
+                    addReply
+                        (ExternalAuth method input)
+                        (return model)
 
                 _ ->
-                    R3.withNothing model
+                    return model
 
 
 

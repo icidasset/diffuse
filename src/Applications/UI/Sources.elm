@@ -9,9 +9,7 @@ import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Notifications exposing (Notification)
-import Replying exposing (R3D3, return)
-import Return2
-import Return3
+import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Encoding
 import Sources.Services as Services
@@ -21,7 +19,7 @@ import UI.Kit exposing (ButtonType(..), select)
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page
-import UI.Reply exposing (Reply)
+import UI.Reply exposing (Reply(..))
 import UI.Sources.Form as Form
 import UI.Sources.Page as Sources exposing (..)
 
@@ -69,29 +67,24 @@ type Msg
     | UpdateSourceData Json.Value
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         Bypass ->
-            Return3.withNothing model
+            return model
 
         FinishedProcessing ->
-            ( { model | isProcessing = False }
-            , Cmd.none
-            , Maybe.map
-                (\id -> [ UI.Reply.DismissNotification { id = id } ])
-                model.processingNotificationId
-            )
+            model.processingNotificationId
+                |> Maybe.map (\id -> [ DismissNotification { id = id } ])
+                |> Maybe.withDefault []
+                |> Return.repliesWithModel { model | isProcessing = False }
 
         Process ->
             if List.isEmpty model.collection then
-                Return3.withNothing model
+                return model
 
             else
-                ( { model | isProcessing = True }
-                , Cmd.none
-                , Just [ UI.Reply.ProcessSources ]
-                )
+                returnReplyWithModel { model | isProcessing = True } ProcessSources
 
         -----------------------------------------
         -- Children
@@ -99,8 +92,8 @@ update msg model =
         FormMsg sub ->
             model.form
                 |> Form.update sub
-                |> Return3.mapModel (\f -> { model | form = f })
-                |> Return3.mapCmd FormMsg
+                |> mapModel (\f -> { model | form = f })
+                |> mapCmd FormMsg
 
         -----------------------------------------
         -- Collection
@@ -111,8 +104,8 @@ update msg model =
                 |> List.singleton
                 |> List.append model.collection
                 |> (\c -> { model | collection = c, isProcessing = True })
-                |> Return2.withNoCmd
-                |> Return3.withReply
+                |> return
+                |> addReplies
                     [ UI.Reply.SaveSources
                     , UI.Reply.ProcessSources
                     ]
@@ -121,8 +114,8 @@ update msg model =
             model.collection
                 |> List.filter (.id >> (/=) sourceId)
                 |> (\c -> { model | collection = c })
-                |> Return2.withNoCmd
-                |> Return3.withReply
+                |> return
+                |> addReplies
                     [ UI.Reply.SaveSources
                     , UI.Reply.RemoveTracksWithSourceId sourceId
                     ]
@@ -144,8 +137,8 @@ update msg model =
                     )
                 |> Maybe.map (\col -> { model | collection = col })
                 |> Maybe.withDefault model
-                |> Return2.withNoCmd
-                |> Return3.withReply [ UI.Reply.SaveSources ]
+                |> return
+                |> addReply UI.Reply.SaveSources
 
 
 
@@ -176,7 +169,7 @@ index model =
       UI.Navigation.local
         [ ( Icon Icons.add
           , Label "Add a new source" Shown
-          , GoToPage (UI.Page.Sources New)
+          , UI.Navigation.GoToPage (UI.Page.Sources New)
           )
 
         -- Process

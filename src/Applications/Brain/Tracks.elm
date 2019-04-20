@@ -4,7 +4,7 @@ import Alien
 import Brain.Ports as Ports
 import Brain.Reply exposing (Reply(..))
 import Json.Encode as Json
-import Replying exposing (R3D3)
+import Return3 as Return exposing (..)
 import Tracks exposing (Track)
 
 
@@ -31,25 +31,25 @@ type Msg
     | UpdateSearchIndex Json.Value
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         Search term ->
             ( model
             , Ports.requestSearch term
-            , Nothing
+            , []
             )
 
         Searched results ->
             ( model
             , Cmd.none
-            , Just [ GiveUI Alien.SearchTracks <| Json.list Json.string results ]
+            , [ GiveUI Alien.SearchTracks (Json.list Json.string results) ]
             )
 
         UpdateSearchIndex tracksJson ->
             ( model
             , Ports.updateSearchIndex tracksJson
-            , Nothing
+            , []
             )
 
 

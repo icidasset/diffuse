@@ -11,7 +11,7 @@ import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
-import Replying exposing (R3D3)
+import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services
 import Sources.Services.Common
@@ -71,7 +71,7 @@ type Msg
     | TakeStepBackwards
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     ( -----------------------------------------
       -- Model
@@ -124,13 +124,12 @@ update msg model =
       -----------------------------------------
     , case msg of
         AddSource ->
-            Just
-                [ UI.Reply.GoToPage (UI.Page.Sources UI.Sources.Page.Index)
-                , UI.Reply.AddSourceToCollection model.context
-                ]
+            [ UI.Reply.GoToPage (UI.Page.Sources UI.Sources.Page.Index)
+            , UI.Reply.AddSourceToCollection model.context
+            ]
 
         _ ->
-            Nothing
+            []
     )
 
 

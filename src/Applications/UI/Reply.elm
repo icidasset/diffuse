@@ -17,26 +17,41 @@ import UI.Page exposing (Page)
 
 
 type Reply
-    = ActiveQueueItemChanged (Maybe Queue.Item)
-    | AddSourceToCollection Source
-    | DismissNotification { id : Int }
-    | ExternalAuth Authentication.Method String
-    | FillQueue
+    = ExternalAuth Authentication.Method String
     | GoToPage Page
-    | InsertDemo
+    | ToggleLoadingScreen Switch
+      -----------------------------------------
+      -- Context Menu
+      -----------------------------------------
+    | ShowMoreAuthenticationOptions Coordinates
+    | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
+      -----------------------------------------
+      -- Notifications
+      -----------------------------------------
+    | DismissNotification { id : Int }
+    | ShowErrorNotification String
+    | ShowSuccessNotification String
+    | ShowWarningNotification String
+      -----------------------------------------
+      -- Queue
+      -----------------------------------------
+    | ActiveQueueItemChanged (Maybe Queue.Item)
+    | FillQueue
     | PlayTrack IdentifiedTrack
-    | ProcessSources
-    | RemoveTracksWithSourceId String
     | ResetQueue
     | ShiftQueue
+      -----------------------------------------
+      -- Sources & Tracks
+      -----------------------------------------
+    | AddSourceToCollection Source
+    | ProcessSources
+    | RemoveTracksWithSourceId String
+      -----------------------------------------
+      -- User Data
+      -----------------------------------------
+    | InsertDemo
     | SaveEnclosedUserData
     | SaveFavourites
     | SaveSettings
     | SaveSources
     | SaveTracks
-    | ShowErrorNotification String
-    | ShowMoreAuthenticationOptions Coordinates
-    | ShowSuccessNotification String
-    | ShowWarningNotification String
-    | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
-    | ToggleLoadingScreen Switch

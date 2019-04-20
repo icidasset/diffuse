@@ -8,9 +8,7 @@ import Html.Styled.Attributes exposing (class, css, src, style)
 import Html.Styled.Events exposing (on)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
-import Replying exposing (R3D3)
-import Return2 as R2
-import Return3 as R3
+import Return3 as Return exposing (..)
 import Tachyons.Classes as T
 import UI.Animations
 import UI.Reply as Reply exposing (Reply)
@@ -71,23 +69,17 @@ type Msg
     | Load String
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         Choose backdrop ->
-            { model | chosen = Just backdrop }
-                |> R2.withNoCmd
-                |> R3.withReply [ Reply.SaveSettings ]
+            return { model | chosen = Just backdrop } |> addReply Reply.SaveSettings
 
         Default ->
-            { model | chosen = Just default }
-                |> R3.withNothing
+            return { model | chosen = Just default }
 
         Load backdrop ->
-            [ backdrop ]
-                |> List.append model.loaded
-                |> (\list -> { model | loaded = list })
-                |> R3.withNothing
+            return { model | loaded = model.loaded ++ [ backdrop ] }
 
 
 

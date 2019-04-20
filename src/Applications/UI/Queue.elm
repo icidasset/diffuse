@@ -1,9 +1,9 @@
 module UI.Queue exposing (initialModel, update)
 
+import Conditional exposing (..)
 import List.Extra as List
 import Queue exposing (..)
-import Replying exposing (R3D3)
-import Return3 as R3
+import Return3 as Return exposing (..)
 import Time
 import Tracks exposing (IdentifiedTrack)
 import UI.Ports as Ports
@@ -34,21 +34,17 @@ initialModel =
 -- 📣
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         ------------------------------------
         -- Combos
         ------------------------------------
         InjectFirstAndPlay identifiedTrack ->
-            let
-                ( a, b, _ ) =
-                    update (InjectFirst { showNotification = False } [ identifiedTrack ]) model
-
-                ( x, y, z ) =
-                    update Shift a
-            in
-            ( x, Cmd.batch [ b, y ], z )
+            [ identifiedTrack ]
+                |> InjectFirst { showNotification = False }
+                |> updateWithModel model
+                |> andThen (update Shift)
 
         ------------------------------------
         -- Future
@@ -71,29 +67,21 @@ update msg model =
                         model.future
                         tracks
             in
-            ( { model | future = items ++ cleanedFuture }
-            , Cmd.none
-              -- Show notification
-              --------------------
-            , (if showNotification then
-                [ case tracks of
-                    [ t ] ->
-                        ShowSuccessNotification ("__" ++ t.tags.title ++ "__ will be played next")
+            [ case tracks of
+                [ t ] ->
+                    ("__" ++ t.tags.title ++ "__ will be played next")
+                        |> ShowSuccessNotification
 
-                    list ->
-                        list
-                            |> List.length
-                            |> String.fromInt
-                            |> (\s -> "__" ++ s ++ " tracks__ will be played next")
-                            |> ShowSuccessNotification
-                ]
-
-               else
-                []
-              )
-                |> List.append [ FillQueue ]
-                |> Just
-            )
+                list ->
+                    list
+                        |> List.length
+                        |> String.fromInt
+                        |> (\s -> "__" ++ s ++ " tracks__ will be played next")
+                        |> ShowSuccessNotification
+            ]
+                |> (\list -> ifThenElse showNotification list [])
+                |> returnRepliesWithModel { model | future = items ++ cleanedFuture }
+                |> addReply FillQueue
 
         -- # InjectLast
         -- > Add an item after the last manual entry
@@ -118,36 +106,28 @@ update msg model =
                     cleanedFuture
                         |> List.filter (.manualEntry >> (==) True)
                         |> List.length
-            in
-            ( { model
-                | future =
+
+                newFuture =
                     []
                         ++ List.take manualItems cleanedFuture
                         ++ items
                         ++ List.drop manualItems cleanedFuture
-              }
-            , Cmd.none
-              -- Show notification
-              --------------------
-            , (if showNotification then
-                [ case tracks of
-                    [ t ] ->
-                        ShowSuccessNotification ("__" ++ t.tags.title ++ "__ was added to the queue")
+            in
+            [ case tracks of
+                [ t ] ->
+                    ("__" ++ t.tags.title ++ "__ was added to the queue")
+                        |> ShowSuccessNotification
 
-                    list ->
-                        list
-                            |> List.length
-                            |> String.fromInt
-                            |> (\s -> "__" ++ s ++ " tracks__ were added to the queue")
-                            |> ShowSuccessNotification
-                ]
-
-               else
-                []
-              )
-                |> List.append [ FillQueue ]
-                |> Just
-            )
+                list ->
+                    list
+                        |> List.length
+                        |> String.fromInt
+                        |> (\s -> "__" ++ s ++ " tracks__ were added to the queue")
+                        |> ShowSuccessNotification
+            ]
+                |> (\list -> ifThenElse showNotification list [])
+                |> returnRepliesWithModel { model | future = newFuture }
+                |> addReply FillQueue
 
         -----------------------------------------
         -- Position
@@ -193,7 +173,7 @@ update msg model =
         -- > Fill the queue with items.
         --
         Fill timestamp tracks ->
-            ( fillQueue timestamp tracks model, Cmd.none, Nothing )
+            return (fillQueue timestamp tracks model)
 
         -- # Reset
         -- > Renew the queue, meaning that the auto-generated items in the queue
@@ -204,10 +184,9 @@ update msg model =
                 newFuture =
                     List.filter (.manualEntry >> (==) True) model.future
             in
-            ( { model | future = newFuture, ignored = [] }
-            , Cmd.none
-            , Just [ FillQueue ]
-            )
+            returnRepliesWithModel
+                { model | future = newFuture, ignored = [] }
+                [ FillQueue ]
 
         ------------------------------------
         -- Settings
@@ -215,25 +194,31 @@ update msg model =
         ToggleRepeat ->
             ( { model | repeat = not model.repeat }
             , Ports.setRepeat (not model.repeat)
-            , Just [ SaveEnclosedUserData ]
+            , [ SaveEnclosedUserData ]
             )
 
         ToggleShuffle ->
             { model | shuffle = not model.shuffle }
                 |> update Reset
-                |> Replying.addReply SaveEnclosedUserData
+                |> addReply SaveEnclosedUserData
+
+
+updateWithModel : Model -> Msg -> Return Model Msg Reply
+updateWithModel model msg =
+    update msg model
 
 
 
 -- 📣  ░░  COMMON
 
 
-changeActiveItem : Maybe Item -> Model -> R3D3 Model Msg Reply
+changeActiveItem : Maybe Item -> Model -> Return Model Msg Reply
 changeActiveItem maybeItem model =
-    ( { model | activeItem = maybeItem }
-    , Cmd.none
-    , Just [ ActiveQueueItemChanged maybeItem, FillQueue ]
-    )
+    returnRepliesWithModel
+        { model | activeItem = maybeItem }
+        [ ActiveQueueItemChanged maybeItem
+        , FillQueue
+        ]
 
 
 fillQueue : Time.Posix -> List IdentifiedTrack -> Model -> Model

@@ -11,7 +11,7 @@ import Html.Styled exposing (Html, text)
 import Html.Styled.Attributes exposing (css, style)
 import Html.Styled.Events
 import Material.Icons.Navigation as Icons
-import Replying exposing (R3D3)
+import Return3 as Return exposing (..)
 import Svg.Styled exposing (Svg, polygon, svg)
 import Svg.Styled.Attributes
 import Tachyons.Classes as T
@@ -70,21 +70,18 @@ type Msg
     | ResetKnob Knob
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         -----------------------------------------
         -- Activate
         -----------------------------------------
         ActivateKnob theKnob { pointer } ->
-            let
-                ( x, y ) =
-                    pointer.clientPos
-            in
-            ( { model | activeKnob = Just theKnob, startCoordinates = { x = x, y = y } }
-            , Cmd.none
-            , Nothing
-            )
+            { model
+                | activeKnob = Just theKnob
+                , startCoordinates = Coordinates.fromTuple pointer.clientPos
+            }
+                |> return
 
         -----------------------------------------
         -- Adjust
@@ -143,25 +140,18 @@ update msg model =
             in
             case value of
                 Just ( knobType, v ) ->
-                    ( newModel
-                    , adjustKnob knobType v
-                    , Nothing
-                    )
+                    returnCommandWithModel newModel (adjustKnob knobType v)
 
                 Nothing ->
-                    ( newModel
-                    , Cmd.none
-                    , Nothing
-                    )
+                    return newModel
 
         -----------------------------------------
         -- Deactivate
         -----------------------------------------
         DeactivateKnob _ ->
-            ( { model | activeKnob = Nothing }
-            , Cmd.none
-            , Just [ UI.Reply.SaveEnclosedUserData ]
-            )
+            Return.replyWithModel
+                { model | activeKnob = Nothing }
+                UI.Reply.SaveEnclosedUserData
 
         -----------------------------------------
         -- Reset
@@ -213,11 +203,11 @@ adjustAllKnobs model =
         ]
 
 
-reset : Model -> Knob -> Float -> R3D3 Model Msg Reply
+reset : Model -> Knob -> Float -> Return Model Msg Reply
 reset newModel knobType value =
     ( newModel
     , adjustKnob knobType value
-    , Just [ UI.Reply.SaveEnclosedUserData ]
+    , [ UI.Reply.SaveEnclosedUserData ]
     )
 
 

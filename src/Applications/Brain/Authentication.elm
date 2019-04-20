@@ -26,7 +26,8 @@ import Brain.Reply exposing (Reply(..))
 import Conditional exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Json
-import Replying exposing (R3D3, do)
+import Return3 as Return exposing (..)
+import Task.Extra exposing (do)
 
 
 
@@ -77,7 +78,7 @@ type Msg
     | SaveHypaethralData Json.Value
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         -- 🐤
@@ -87,100 +88,90 @@ update msg model =
             let
                 decoder =
                     Decode.map2
-                        (\a b -> { maybeMethod = a, maybePassphrase = b })
+                        Tuple.pair
                         (Decode.field "method" <| Decode.map methodFromString Decode.string)
                         (Decode.field "passphrase" <| Decode.maybe Decode.string)
             in
             case Decode.decodeValue decoder json of
-                Ok { maybeMethod, maybePassphrase } ->
-                    case maybePassphrase of
-                        Just passphrase ->
-                            ( { model | method = maybeMethod, performingSignIn = True }
-                            , do (FabricateSecretKey passphrase)
-                            , Nothing
-                            )
+                Ok ( maybeMethod, Just passphrase ) ->
+                    update
+                        (FabricateSecretKey passphrase)
+                        { model | method = maybeMethod, performingSignIn = True }
 
-                        Nothing ->
-                            ( { model | method = maybeMethod, performingSignIn = True }
-                            , do RetrieveHypaethralData
-                            , Nothing
-                            )
+                Ok ( maybeMethod, Nothing ) ->
+                    update
+                        RetrieveHypaethralData
+                        { model | method = maybeMethod, performingSignIn = True }
 
                 _ ->
-                    ( model
-                    , Cmd.none
-                    , Nothing
-                    )
+                    return model
 
         -- 💀
         -- Unset & remove stored method.
         PerformSignOut ->
-            ( { model | method = Nothing }
-            , Cmd.batch
-                [ Ports.removeCache (Alien.trigger Alien.AuthMethod)
-                , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
-                ]
-            , Nothing
-            )
+            [ Ports.removeCache (Alien.trigger Alien.AuthMethod)
+            , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
+            ]
+                |> Cmd.batch
+                |> Return.commandWithModel { model | method = Nothing }
 
         -----------------------------------------
         -- # 0
         -----------------------------------------
         FabricateSecretKey passphrase ->
-            ( model
-            , passphrase
+            passphrase
                 |> Json.string
                 |> Alien.broadcast Alien.FabricateSecretKey
                 |> Ports.fabricateSecretKey
-            , Nothing
-            )
+                |> Return.commandWithModel model
 
         SecretKeyFabricated ->
             if model.performingSignIn then
-                ( model, do RetrieveHypaethralData, Nothing )
+                update RetrieveHypaethralData model
 
             else
-                ( model, Cmd.none, Just [ FabricatedNewSecretKey ] )
+                returnReplyWithModel model FabricatedNewSecretKey
 
         -----------------------------------------
         -- # 1
         -----------------------------------------
         RetrieveMethod ->
-            ( model
-            , Alien.AuthMethod
+            Alien.AuthMethod
                 |> Alien.trigger
                 |> Ports.requestCache
-            , Nothing
-            )
+                |> Return.commandWithModel model
 
         MethodRetrieved json ->
             case decodeMethod json of
                 -- 🚀
                 Just method ->
-                    ( { model | method = Just method }
-                    , do RetrieveHypaethralData
-                    , Nothing
-                    )
+                    update
+                        RetrieveHypaethralData
+                        { model | method = Just method }
 
                 -- ✋
                 _ ->
-                    ( model
-                    , Cmd.none
-                    , terminate NotAuthenticated
-                    )
+                    addReplies
+                        (terminate NotAuthenticated)
+                        (return model)
 
         -----------------------------------------
         -- # 2
         -----------------------------------------
         RetrieveHypaethralData ->
-            ( model
-            , case model.method of
+            case model.method of
                 -- 🚀
                 Just Ipfs ->
-                    Ports.requestIpfs (Alien.trigger Alien.AuthIpfs)
+                    Alien.AuthIpfs
+                        |> Alien.trigger
+                        |> Ports.requestIpfs
+                        |> Return.commandWithModel model
 
                 Just Local ->
-                    Ports.requestCache (Alien.trigger Alien.AuthAnonymous)
+                    Alien.AuthAnonymous
+                        |> Alien.trigger
+                        |> Ports.requestCache
+                        |> Return.commandWithModel model
 
                 Just (RemoteStorage { userAddress, token }) ->
                     [ ( "token", Json.string token )
@@ -189,12 +180,11 @@ update msg model =
                         |> Json.object
                         |> Alien.broadcast Alien.AuthRemoteStorage
                         |> Ports.requestRemoteStorage
+                        |> Return.commandWithModel model
 
                 -- ✋
                 Nothing ->
-                    Cmd.none
-            , Nothing
-            )
+                    return model
 
         HypaethralDataRetrieved json ->
             ( { model | performingSignIn = False }
@@ -209,43 +199,46 @@ update msg model =
                 _ ->
                     Cmd.none
               --
-            , Maybe.andThen
-                (\method -> terminate <| Authenticated method json)
-                model.method
+            , model.method
+                |> Maybe.map (\method -> Authenticated method json)
+                |> Maybe.map terminate
+                |> Maybe.withDefault []
             )
 
         -----------------------------------------
         -- Data
         -----------------------------------------
         RetrieveEnclosedData ->
-            ( model
-            , Ports.requestCache (Alien.trigger Alien.AuthEnclosedData)
-            , Nothing
-            )
+            Alien.AuthEnclosedData
+                |> Alien.trigger
+                |> Ports.requestCache
+                |> Return.commandWithModel model
 
         EnclosedDataRetrieved json ->
-            ( model
-            , Cmd.none
-            , Just [ GiveUI Alien.LoadEnclosedUserData json ]
-            )
+            json
+                |> GiveUI Alien.LoadEnclosedUserData
+                |> Return.replyWithModel model
 
         SaveEnclosedData json ->
-            ( model
-            , json
+            json
                 |> Alien.broadcast Alien.AuthEnclosedData
                 |> Ports.toCache
-            , Nothing
-            )
+                |> Return.commandWithModel model
 
         SaveHypaethralData json ->
-            ( model
-            , case model.method of
+            case model.method of
                 -- 🚀
                 Just Ipfs ->
-                    Ports.toIpfs (Alien.broadcast Alien.AuthIpfs json)
+                    json
+                        |> Alien.broadcast Alien.AuthIpfs
+                        |> Ports.toIpfs
+                        |> Return.commandWithModel model
 
                 Just Local ->
-                    Ports.toCache (Alien.broadcast Alien.AuthAnonymous json)
+                    json
+                        |> Alien.broadcast Alien.AuthAnonymous
+                        |> Ports.toCache
+                        |> Return.commandWithModel model
 
                 Just (RemoteStorage { userAddress, token }) ->
                     [ ( "data", json )
@@ -255,12 +248,11 @@ update msg model =
                         |> Json.object
                         |> Alien.broadcast Alien.AuthRemoteStorage
                         |> Ports.toRemoteStorage
+                        |> Return.commandWithModel model
 
                 -- ✋
                 Nothing ->
-                    Cmd.none
-            , Nothing
-            )
+                    return model
 
 
 
@@ -272,17 +264,15 @@ type Termination
     | NotAuthenticated
 
 
-terminate : Termination -> Maybe (List Reply)
+terminate : Termination -> List Reply
 terminate t =
     case t of
         Authenticated method hypData ->
-            Just
-                [ GiveUI Alien.LoadHypaethralUserData hypData
-                , GiveUI Alien.AuthMethod (Authentication.encodeMethod method)
-                ]
+            [ GiveUI Alien.LoadHypaethralUserData hypData
+            , GiveUI Alien.AuthMethod (Authentication.encodeMethod method)
+            ]
 
         NotAuthenticated ->
-            Just
-                [ NudgeUI Alien.NotAuthenticated
-                , NudgeUI Alien.HideLoadingScreen
-                ]
+            [ NudgeUI Alien.NotAuthenticated
+            , NudgeUI Alien.HideLoadingScreen
+            ]

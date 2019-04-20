@@ -26,12 +26,12 @@ import Brain.Ports as Ports
 import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing.Common exposing (..)
 import List.Extra as List
-import Replying exposing (do)
 import Set
 import Sources exposing (Source)
 import Sources.Encoding
 import Sources.Processing exposing (..)
 import Sources.Services as Services
+import Task.Extra exposing (do)
 import Time
 import Tracks exposing (Track)
 
@@ -74,7 +74,7 @@ takeFirstStep origin currentTime source =
 -- 2nd STEP
 
 
-takePrepareStep : Context -> String -> Time.Posix -> ( Cmd Msg, Maybe (List Reply) )
+takePrepareStep : Context -> String -> Time.Posix -> ( Cmd Msg, List Reply )
 takePrepareStep context response currentTime =
     context
         |> handlePreparationResponse response
@@ -164,12 +164,12 @@ handlePreparationResponse response context =
     }
 
 
-intoPreparationCommands : Time.Posix -> Context -> ( Cmd Msg, Maybe (List Reply) )
+intoPreparationCommands : Time.Posix -> Context -> ( Cmd Msg, List Reply )
 intoPreparationCommands currentTime context =
     case context.preparationMarker of
         TheBeginning ->
             ( Cmd.none
-            , Nothing
+            , []
             )
 
         -- Still preparing,
@@ -177,7 +177,7 @@ intoPreparationCommands currentTime context =
         --
         InProgress _ ->
             ( prepare context currentTime
-            , Nothing
+            , []
             )
 
         -- The preparation is completed,
@@ -196,7 +196,6 @@ intoPreparationCommands currentTime context =
                 |> Sources.Encoding.encode
                 |> GiveUI Alien.UpdateSourceData
                 |> List.singleton
-                |> Just
             )
 
 

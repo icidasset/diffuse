@@ -8,8 +8,7 @@ import Json.Decode.Pipeline exposing (..)
 import Json.Encode
 import Maybe.Extra as Maybe
 import Notifications
-import Replying as N5 exposing (R3D3)
-import Return3 as R3
+import Return3 exposing (..)
 import Sources
 import Sources.Encoding as Sources
 import Tracks exposing (emptyCollection)
@@ -52,7 +51,7 @@ gatherSettings { backdrop, tracks } =
     }
 
 
-importHypaethral : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
+importHypaethral : Json.Value -> UI.Core.Model -> Return UI.Core.Model UI.Core.Msg UI.Reply
 importHypaethral value model =
     case decodeHypaethral value of
         Ok data ->
@@ -67,10 +66,10 @@ importHypaethral value model =
                         |> Just
                         |> (\c -> { backdrop | chosen = c })
 
-                ( sourcesModel, sourcesCmd, sourcesReply ) =
+                ( sourcesModel, sourcesCmd, sourcesReplies ) =
                     importSources model.sources data
 
-                ( tracksModel, tracksCmd, tracksReply ) =
+                ( tracksModel, tracksCmd, tracksReplies ) =
                     importTracks model.tracks data
             in
             ( { model
@@ -82,35 +81,27 @@ importHypaethral value model =
                 [ Cmd.map UI.Core.SourcesMsg sourcesCmd
                 , Cmd.map UI.Core.TracksMsg tracksCmd
                 ]
-            , mergeReplies
-                [ sourcesReply
-                , tracksReply
-                ]
+            , sourcesReplies ++ tracksReplies
             )
 
         Err err ->
             err
                 |> Json.errorToString
                 |> Notifications.error
-                |> UI.Notifications.showNotification model
-                |> R3.withNoReply
+                |> UI.Notifications.showWithModel model
+                |> Return3.from2
 
 
 
 -- ㊙️
 
 
-importSources : Sources.Model -> HypaethralUserData -> R3D3 Sources.Model Sources.Msg UI.Reply
+importSources : Sources.Model -> HypaethralUserData -> Return Sources.Model Sources.Msg UI.Reply
 importSources model data =
-    ( { model
-        | collection = data.sources
-      }
-    , Cmd.none
-    , Nothing
-    )
+    return { model | collection = data.sources }
 
 
-importTracks : Tracks.Model -> HypaethralUserData -> R3D3 Tracks.Model Tracks.Msg UI.Reply
+importTracks : Tracks.Model -> HypaethralUserData -> Return Tracks.Model Tracks.Msg UI.Reply
 importTracks model data =
     let
         adjustedModel =
@@ -127,13 +118,13 @@ importTracks model data =
                     identity
 
                 Nothing ->
-                    N5.addReply (UI.ToggleLoadingScreen Off)
+                    addReply (UI.ToggleLoadingScreen Off)
     in
     adjustedModel
         |> Tracks.makeParcel
         |> Tracks.identify
         |> Tracks.resolveParcel adjustedModel
-        |> N5.andThen3 (Tracks.update Tracks.Search)
+        |> andThen (Tracks.update Tracks.Search)
         |> addReplyIfNecessary
 
 
@@ -162,7 +153,7 @@ exportEnclosed model =
         }
 
 
-importEnclosed : Json.Value -> UI.Core.Model -> R3D3 UI.Core.Model UI.Core.Msg UI.Reply
+importEnclosed : Json.Value -> UI.Core.Model -> Return UI.Core.Model UI.Core.Msg UI.Reply
 importEnclosed value model =
     let
         { equalizer, queue, tracks } =
@@ -202,31 +193,11 @@ importEnclosed value model =
                 [ Cmd.map UI.Core.EqualizerMsg (Equalizer.adjustAllKnobs newEqualizer)
                 , Ports.setRepeat data.repeat
                 ]
-            , Nothing
+            , []
             )
 
         Err err ->
-            R3.withNothing model
-
-
-
--- ㊙️
-
-
-mergeReplies : List (Maybe (List UI.Reply)) -> Maybe (List UI.Reply)
-mergeReplies list =
-    list
-        |> List.foldl
-            (\maybeReply replies ->
-                case maybeReply of
-                    Just r ->
-                        replies ++ r
-
-                    Nothing ->
-                        replies
-            )
-            []
-        |> Just
+            return model
 
 
 

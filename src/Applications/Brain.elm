@@ -13,7 +13,8 @@ import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
-import Replying exposing (andThen2, return)
+import Return2 exposing (..)
+import Return3
 import Sources.Encoding as Sources
 import Sources.Processing.Encoding as Processing
 import Tracks.Encoding as Tracks
@@ -71,50 +72,38 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Bypass ->
-            ( model
-            , Cmd.none
-            )
+            return model
 
         NotifyUI alienEvent ->
-            ( model
-            , Cmd.batch
-                [ Brain.Ports.toUI alienEvent
+            [ Brain.Ports.toUI alienEvent
 
-                -- Sometimes the loading screen is still showing,
-                -- so we hide it here just in case.
-                , case alienEvent.error of
-                    Just _ ->
-                        Brain.Ports.toUI (Alien.trigger Alien.HideLoadingScreen)
-
-                    Nothing ->
-                        Cmd.none
-                ]
-            )
-
-        NotSoFast debouncerMsg ->
-            let
-                ( subModel, subCmd, emittedMsg ) =
-                    Debouncer.update debouncerMsg model.notSoFast
-
-                mappedCmd =
-                    Cmd.map NotSoFast subCmd
-
-                updatedModel =
-                    { model | notSoFast = subModel }
-            in
-            case emittedMsg of
-                Just emitted ->
-                    updatedModel
-                        |> update emitted
-                        |> Tuple.mapSecond (\cmd -> Cmd.batch [ cmd, mappedCmd ])
+            -- Sometimes the loading screen is still showing,
+            -- so we hide it here just in case.
+            , case alienEvent.error of
+                Just _ ->
+                    Brain.Ports.toUI (Alien.trigger Alien.HideLoadingScreen)
 
                 Nothing ->
-                    ( updatedModel, mappedCmd )
+                    Cmd.none
+            ]
+                |> Cmd.batch
+                |> returnWithModel model
+
+        NotSoFast debouncerMsg ->
+            Return3.wieldNested
+                update
+                { mapCmd = NotSoFast
+                , mapModel = \child -> { model | notSoFast = child }
+                , update = \m -> Debouncer.update m >> Return3.fromDebouncer
+                }
+                { model = model.notSoFast
+                , msg = debouncerMsg
+                }
 
         ToCache alienEvent ->
-            ( model
-            , Brain.Ports.toCache alienEvent
-            )
+            alienEvent
+                |> Brain.Ports.toCache
+                |> returnWithModel model
 
         -----------------------------------------
         -- Children
@@ -156,18 +145,18 @@ update msg model =
                 encodedTracks =
                     Json.Encode.list Tracks.encodeTrack decodedData.tracks
             in
-            andThen2
-                (updateSearchIndex encodedTracks)
-                ( { model | hypaethralUserData = decodedData }
-                , Brain.Ports.toUI (Alien.broadcast Alien.LoadHypaethralUserData value)
-                )
+            value
+                |> Alien.broadcast Alien.LoadHypaethralUserData
+                |> Brain.Ports.toUI
+                |> returnWithModel { model | hypaethralUserData = decodedData }
+                |> andThen (updateSearchIndex encodedTracks)
 
         SaveHypaethralData ->
             model.hypaethralUserData
                 |> Authentication.encodeHypaethral
                 |> Authentication.SaveHypaethralData
                 |> AuthenticationMsg
-                |> (\m -> update m model)
+                |> updateWithModel model
 
         SaveFavourites value ->
             value
@@ -196,44 +185,49 @@ update msg model =
                 |> Result.withDefault model.hypaethralUserData.tracks
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndex value
-                |> andThen2 saveHypaethralData
+                |> andThen saveHypaethralData
+
+
+updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
+updateWithModel model msg =
+    update msg model
 
 
 updateSearchIndex : Json.Value -> Model -> ( Model, Cmd Msg )
 updateSearchIndex value model =
-    update
-        (value
-            |> Tracks.UpdateSearchIndex
-            |> TracksMsg
-        )
-        model
+    value
+        |> Tracks.UpdateSearchIndex
+        |> TracksMsg
+        |> updateWithModel model
 
 
 
 -- 📣  ░░  REPLIES
 
 
-translateReply : Reply -> Msg
-translateReply reply =
+translateReply : Reply -> Model -> ( Model, Cmd Msg )
+translateReply reply model =
     case reply of
         FabricatedNewSecretKey ->
-            SaveHypaethralData
+            update SaveHypaethralData model
 
         -----------------------------------------
         -- To UI
         -----------------------------------------
         GiveUI Alien.LoadHypaethralUserData data ->
-            LoadHypaethralUserData data
+            update (LoadHypaethralUserData data) model
 
         GiveUI tag data ->
-            NotifyUI (Alien.broadcast tag data)
+            data
+                |> Alien.broadcast tag
+                |> NotifyUI
+                |> updateWithModel model
 
         NudgeUI tag ->
-            NotifyUI (Alien.trigger tag)
-
-
-updateChild =
-    Replying.updateChild update translateReply
+            tag
+                |> Alien.trigger
+                |> NotifyUI
+                |> updateWithModel model
 
 
 
@@ -242,7 +236,8 @@ updateChild =
 
 updateAuthentication : Model -> Authentication.Msg -> ( Model, Cmd Msg )
 updateAuthentication model sub =
-    updateChild
+    Return3.wieldNested
+        translateReply
         { mapCmd = AuthenticationMsg
         , mapModel = \child -> { model | authentication = child }
         , update = Authentication.update
@@ -254,7 +249,8 @@ updateAuthentication model sub =
 
 updateProcessing : Model -> Processing.Msg -> ( Model, Cmd Msg )
 updateProcessing model sub =
-    updateChild
+    Return3.wieldNested
+        translateReply
         { mapCmd = ProcessingMsg
         , mapModel = \child -> { model | processing = child }
         , update = Processing.update
@@ -266,7 +262,8 @@ updateProcessing model sub =
 
 updateTracks : Model -> Tracks.Msg -> ( Model, Cmd Msg )
 updateTracks model sub =
-    updateChild
+    Return3.wieldNested
+        translateReply
         { mapCmd = TracksMsg
         , mapModel = \child -> { model | tracks = child }
         , update = Tracks.update
@@ -295,12 +292,10 @@ makeHypaethralLens setter model value =
 
 saveHypaethralData : Model -> ( Model, Cmd Msg )
 saveHypaethralData model =
-    update
-        (SaveHypaethralData
-            |> Debouncer.provideInput
-            |> NotSoFast
-        )
-        model
+    SaveHypaethralData
+        |> Debouncer.provideInput
+        |> NotSoFast
+        |> updateWithModel model
 
 
 

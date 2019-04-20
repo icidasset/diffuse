@@ -9,10 +9,10 @@ import Http
 import Json.Encode as Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
-import Replying exposing (R3D3, do)
-import Return3
+import Return3 as Return exposing (..)
 import Sources.Processing exposing (..)
 import Task
+import Task.Extra exposing (do)
 import Time
 import Tracks.Encoding
 
@@ -38,7 +38,7 @@ initialCommand =
 -- 📣
 
 
-update : Msg -> Model -> R3D3 Model Msg Reply
+update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         {- If already processing, do nothing.
@@ -46,26 +46,25 @@ update msg model =
            If there are sources, start processing the first source.
         -}
         Process { origin, sources, tracks } ->
-            if isProcessing model.status || List.isEmpty sources then
-                Return3.withNothing model
+            let
+                filter s =
+                    List.filter (.sourceId >> (==) s.id) tracks
 
-            else
-                let
-                    filter s =
-                        List.filter (.sourceId >> (==) s.id) tracks
+                all =
+                    List.map (\s -> ( s, filter s )) sources
+            in
+            case
+                ( isProcessing model.status || List.isEmpty sources
+                , List.uncons all
+                )
+            of
+                ( False, Just ( ( s, t ), future ) ) ->
+                    Return.commandWithModel
+                        { model | origin = origin, status = Processing ( s, t ) future }
+                        (Steps.takeFirstStep origin model.currentTime s)
 
-                    all =
-                        List.map (\s -> ( s, filter s )) sources
-                in
-                case List.uncons all of
-                    Just ( ( s, t ), future ) ->
-                        ( { model | origin = origin, status = Processing ( s, t ) future }
-                        , Steps.takeFirstStep origin model.currentTime s
-                        , Nothing
-                        )
-
-                    Nothing ->
-                        Return3.withNothing model
+                _ ->
+                    return model
 
         {- If not processing, do nothing.
            If there are no sources left, do nothing.
@@ -74,16 +73,14 @@ update msg model =
         NextInLine ->
             case model.status of
                 Processing _ (( source, tracks ) :: rest) ->
-                    ( { model | status = Processing ( source, tracks ) rest }
-                    , Steps.takeFirstStep model.origin model.currentTime source
-                    , Nothing
-                    )
+                    Return.commandWithModel
+                        { model | status = Processing ( source, tracks ) rest }
+                        (Steps.takeFirstStep model.origin model.currentTime source)
 
                 _ ->
-                    ( { model | status = NotProcessing }
-                    , Cmd.none
-                    , Just [ NudgeUI Alien.FinishedProcessingSources ]
-                    )
+                    Return.repliesWithModel
+                        { model | status = NotProcessing }
+                        [ NudgeUI Alien.FinishedProcessingSources ]
 
         -----------------------------------------
         -- Phase 1
@@ -91,18 +88,18 @@ update msg model =
         -----------------------------------------
         PrepareStep context (Ok response) ->
             let
-                ( cmd, maybeReplies ) =
+                ( cmd, replies ) =
                     Steps.takePrepareStep context response model.currentTime
             in
             ( model
             , cmd
-            , maybeReplies
+            , replies
             )
 
         PrepareStep context (Err err) ->
             ( model
             , do NextInLine
-            , Just [ reportHttpError context.source err ]
+            , [ reportHttpError context.source err ]
             )
 
         -----------------------------------------
@@ -114,19 +111,16 @@ update msg model =
                 Processing ( source, tracks ) rest ->
                     ( { model | status = Processing ( context.source, tracks ) rest }
                     , Steps.takeTreeStep context response tracks model.currentTime
-                    , Nothing
+                    , []
                     )
 
                 NotProcessing ->
-                    ( model
-                    , Cmd.none
-                    , Nothing
-                    )
+                    return model
 
         TreeStep context (Err err) ->
             ( model
             , do NextInLine
-            , Just [ reportHttpError context.source err ]
+            , [ reportHttpError context.source err ]
             )
 
         TreeStepRemoveTracks sourceId filePaths ->
@@ -139,7 +133,7 @@ update msg model =
             in
             ( model
             , Cmd.none
-            , Just [ GiveUI Alien.RemoveTracksByPath encodedData ]
+            , [ GiveUI Alien.RemoveTracksByPath encodedData ]
             )
 
         -----------------------------------------
@@ -164,7 +158,7 @@ update msg model =
               --------
             , case List.isEmpty (List.filter Maybe.isJust tagsContext.receivedTags) of
                 True ->
-                    Nothing
+                    []
 
                 False ->
                     tagsContext
@@ -172,17 +166,13 @@ update msg model =
                         |> Encode.list Tracks.Encoding.encodeTrack
                         |> GiveUI Alien.AddTracks
                         |> List.singleton
-                        |> Just
             )
 
         -----------------------------------------
         -- Bits & Pieces
         -----------------------------------------
         SetCurrentTime time ->
-            ( { model | currentTime = time }
-            , Cmd.none
-            , Nothing
-            )
+            return { model | currentTime = time }
 
 
 

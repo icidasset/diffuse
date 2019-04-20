@@ -95,19 +95,8 @@ type Msg
     | SetAudioIsPlaying Bool
     | Unstall
       -----------------------------------------
-      -- Authentication
-      -----------------------------------------
-    | ExternalAuth Authentication.Method String
-    | ShowMoreAuthenticationOptions Coordinates
-      -----------------------------------------
       -- Brain
       -----------------------------------------
-    | ProcessSources
-    | SaveEnclosedUserData
-    | SaveFavourites
-    | SaveSettings
-    | SaveSources
-    | SaveTracks
     | SignOut
       -----------------------------------------
       -- Children
@@ -119,22 +108,15 @@ type Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
       -----------------------------------------
-      -- Children, Pt. 2
-      -----------------------------------------
-    | ActiveQueueItemChanged (Maybe Queue.Item)
-    | FillQueue
-      -----------------------------------------
       -- Context Menu
       -----------------------------------------
     | HideContextMenu
-    | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
       -----------------------------------------
       -- Import / Export
       -----------------------------------------
     | Export
     | Import File
     | ImportJson String
-    | InsertDemo
     | RequestImport
       -----------------------------------------
       -- Notifications

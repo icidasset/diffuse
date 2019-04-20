@@ -28,8 +28,8 @@ import Json.Encode
 import Maybe.Extra as Maybe
 import Notifications
 import Process
-import Replying as N5 exposing (do, return)
-import Return2 as R2
+import Return2 exposing (..)
+import Return3
 import Sources
 import Sources.Encoding
 import Tachyons.Classes as T
@@ -37,7 +37,7 @@ import Task
 import Time
 import Tracks.Encoding
 import UI.Authentication as Authentication
-import UI.Authentication.ContextMenu
+import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
@@ -134,17 +134,17 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Bypass ->
-            R2.withNoCmd model
+            return model
 
         LoadEnclosedUserData json ->
             model
                 |> UserData.importEnclosed json
-                |> N5.reducto update translateReply
+                |> Return3.wield translateReply
 
         LoadHypaethralUserData json ->
             model
                 |> UserData.importHypaethral json
-                |> N5.reducto update translateReply
+                |> Return3.wield translateReply
 
         SetCurrentTime time ->
             let
@@ -159,42 +159,226 @@ update msg model =
             )
 
         Core.ToggleLoadingScreen On ->
-            R2.withNoCmd { model | isLoading = True }
+            return { model | isLoading = True }
 
         Core.ToggleLoadingScreen Off ->
-            R2.withNoCmd { model | isLoading = False }
+            return { model | isLoading = False }
 
         -----------------------------------------
         -- Audio
         -----------------------------------------
         Pause ->
-            R2.withCmd (Ports.pause ()) model
+            returnWithModel model (Ports.pause ())
 
         Play ->
-            R2.withCmd (Ports.play ()) model
+            returnWithModel model (Ports.play ())
 
         Seek percentage ->
-            R2.withCmd (Ports.seek percentage) model
+            returnWithModel model (Ports.seek percentage)
 
         SetAudioDuration duration ->
-            R2.withNoCmd { model | audioDuration = duration }
+            return { model | audioDuration = duration }
 
         SetAudioHasStalled hasStalled ->
-            R2.withNoCmd { model | audioHasStalled = hasStalled }
+            return { model | audioHasStalled = hasStalled }
 
         SetAudioIsLoading isLoading ->
-            R2.withNoCmd { model | audioIsLoading = isLoading }
+            return { model | audioIsLoading = isLoading }
 
         SetAudioIsPlaying isPlayinh ->
-            R2.withNoCmd { model | audioIsPlaying = isPlayinh }
+            return { model | audioIsPlaying = isPlayinh }
 
         Unstall ->
-            R2.withCmd (Ports.unstall ()) model
+            returnWithModel model (Ports.unstall ())
 
         -----------------------------------------
-        -- Authentication
+        -- Brain
         -----------------------------------------
-        Core.ExternalAuth (Authentication.RemoteStorage _) input ->
+        SignOut ->
+            { model
+                | authentication = Authentication.initialModel model.url
+                , sources = Sources.initialModel
+                , tracks = Tracks.initialModel
+            }
+                |> update (BackdropMsg Backdrop.Default)
+                |> addCommand (Ports.toBrain <| Alien.trigger Alien.SignOut)
+                |> addCommand (Nav.pushUrl model.navKey "/")
+
+        -----------------------------------------
+        -- Children
+        -----------------------------------------
+        AuthenticationMsg sub ->
+            Return3.wieldNested
+                translateReply
+                { mapCmd = AuthenticationMsg
+                , mapModel = \child -> { model | authentication = child }
+                , update = Authentication.update
+                }
+                { model = model.authentication
+                , msg = sub
+                }
+
+        BackdropMsg sub ->
+            Return3.wieldNested
+                translateReply
+                { mapCmd = BackdropMsg
+                , mapModel = \child -> { model | backdrop = child }
+                , update = Backdrop.update
+                }
+                { model = model.backdrop
+                , msg = sub
+                }
+
+        EqualizerMsg sub ->
+            Return3.wieldNested
+                translateReply
+                { mapCmd = EqualizerMsg
+                , mapModel = \child -> { model | equalizer = child }
+                , update = Equalizer.update
+                }
+                { model = model.equalizer
+                , msg = sub
+                }
+
+        QueueMsg sub ->
+            Return3.wieldNested
+                translateReply
+                { mapCmd = QueueMsg
+                , mapModel = \child -> { model | queue = child }
+                , update = Queue.update
+                }
+                { model = model.queue
+                , msg = sub
+                }
+
+        SourcesMsg sub ->
+            Return3.wieldNested
+                translateReply
+                { mapCmd = SourcesMsg
+                , mapModel = \child -> { model | sources = child }
+                , update = Sources.update
+                }
+                { model = model.sources
+                , msg = sub
+                }
+
+        TracksMsg sub ->
+            Return3.wieldNested
+                translateReply
+                { mapCmd = TracksMsg
+                , mapModel = \child -> { model | tracks = child }
+                , update = Tracks.update
+                }
+                { model = model.tracks
+                , msg = sub
+                }
+
+        -----------------------------------------
+        -- Context Menu
+        -----------------------------------------
+        HideContextMenu ->
+            return { model | contextMenu = Nothing }
+
+        -----------------------------------------
+        -- Import / Export
+        -----------------------------------------
+        Export ->
+            { favourites = model.tracks.favourites
+            , settings = Just (UserData.gatherSettings model)
+            , sources = model.sources.collection
+            , tracks = model.tracks.collection.untouched
+            }
+                |> Authentication.encodeHypaethral
+                |> Json.Encode.encode 2
+                |> File.Download.string "diffuse.json" "application/json"
+                |> returnWithModel model
+
+        Import file ->
+            250
+                |> Process.sleep
+                |> Task.andThen (\_ -> File.toString file)
+                |> Task.perform ImportJson
+                |> returnWithModel { model | isLoading = True }
+
+        ImportJson json ->
+            let
+                notification =
+                    Notifications.success "Imported data successfully!"
+            in
+            model
+                |> update
+                    (json
+                        |> Json.Decode.decodeString Json.Decode.value
+                        |> Result.withDefault Json.Encode.null
+                        |> LoadHypaethralUserData
+                    )
+                |> andThen (translateReply SaveFavourites)
+                |> andThen (translateReply SaveSources)
+                |> andThen (translateReply SaveTracks)
+                |> andThen (update <| ShowNotification notification)
+                |> andThen (update <| ChangeUrlUsingPage Page.Index)
+
+        RequestImport ->
+            Import
+                |> File.Select.file [ "application/json" ]
+                |> returnWithModel model
+
+        -----------------------------------------
+        -- Notifications
+        -----------------------------------------
+        Core.DismissNotification args ->
+            UI.Notifications.dismiss model args
+
+        RemoveNotification { id } ->
+            model.notifications
+                |> List.filter (Notifications.id >> (/=) id)
+                |> (\notifications -> { model | notifications = notifications })
+                |> return
+
+        ShowNotification notification ->
+            UI.Notifications.show notification model
+
+        -----------------------------------------
+        -- URL
+        -----------------------------------------
+        ChangeUrlUsingPage page ->
+            page
+                |> Page.toString
+                |> Nav.pushUrl model.navKey
+                |> returnWithModel model
+
+        LinkClicked (Browser.Internal url) ->
+            if url.path == "/about" then
+                returnWithModel model (Nav.load "/about")
+
+            else
+                returnWithModel model (Nav.pushUrl model.navKey <| Url.toString url)
+
+        LinkClicked (Browser.External href) ->
+            returnWithModel model (Nav.load href)
+
+        UrlChanged url ->
+            case Page.fromUrl url of
+                Just page ->
+                    return { model | page = page, url = url }
+
+                Nothing ->
+                    returnWithModel model (Nav.replaceUrl model.navKey "/")
+
+
+updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
+updateWithModel model msg =
+    update msg model
+
+
+
+-- 📣  ░░  CHILDREN & REPLIES
+
+
+translateReply : Reply -> Model -> ( Model, Cmd Msg )
+translateReply reply model =
+    case reply of
+        ExternalAuth (Authentication.RemoteStorage _) input ->
             -- TODO:
             -- 1. Make request to RemoteStorage.webfingerAddress
             -- 2. If proper response    -> Valid RemoteStorage
@@ -209,22 +393,93 @@ update msg model =
                 |> Maybe.map (Authentication.RemoteStorage.oauthAddress { origin = origin })
                 |> Maybe.map Nav.load
                 |> Maybe.withDefault Cmd.none
-                |> Tuple.pair model
+                |> returnWithModel model
 
-        Core.ExternalAuth _ _ ->
-            R2.withNoCmd model
+        ExternalAuth _ _ ->
+            return model
 
-        Core.ShowMoreAuthenticationOptions coordinates ->
-            coordinates
-                |> UI.Authentication.ContextMenu.moreOptionsMenu
-                |> Just
-                |> (\c -> { model | contextMenu = c })
-                |> R2.withNoCmd
+        GoToPage page ->
+            page
+                |> ChangeUrlUsingPage
+                |> updateWithModel model
+
+        Reply.ToggleLoadingScreen state ->
+            update (Core.ToggleLoadingScreen state) model
 
         -----------------------------------------
-        -- Brain
+        -- Context Menu
         -----------------------------------------
-        Core.ProcessSources ->
+        ShowMoreAuthenticationOptions coordinates ->
+            return { model | contextMenu = Just (Authentication.moreOptionsMenu coordinates) }
+
+        ShowTracksContextMenu coordinates tracks ->
+            return { model | contextMenu = Just (Tracks.trackMenu tracks coordinates) }
+
+        -----------------------------------------
+        -- Notifications
+        -----------------------------------------
+        Reply.DismissNotification options ->
+            UI.Notifications.dismiss model options
+
+        ShowErrorNotification string ->
+            UI.Notifications.show (Notifications.stickyError string) model
+
+        ShowSuccessNotification string ->
+            UI.Notifications.show (Notifications.success string) model
+
+        ShowWarningNotification string ->
+            UI.Notifications.show (Notifications.stickyWarning string) model
+
+        -----------------------------------------
+        -- Queue
+        -----------------------------------------
+        ActiveQueueItemChanged maybeQueueItem ->
+            let
+                nowPlaying =
+                    Maybe.map .identifiedTrack maybeQueueItem
+
+                portCmd =
+                    maybeQueueItem
+                        |> Maybe.map .identifiedTrack
+                        |> Maybe.map
+                            (UI.Queue.Common.makeEngineItem
+                                model.currentTime
+                                model.sources.collection
+                            )
+                        |> Ports.activeQueueItemChanged
+            in
+            model
+                |> update (TracksMsg <| Tracks.SetNowPlaying nowPlaying)
+                |> addCommand portCmd
+
+        FillQueue ->
+            model.tracks.collection.harvested
+                |> Queue.Fill model.currentTime
+                |> QueueMsg
+                |> updateWithModel model
+
+        PlayTrack identifiedTrack ->
+            identifiedTrack
+                |> Queue.InjectFirstAndPlay
+                |> QueueMsg
+                |> updateWithModel model
+
+        ResetQueue ->
+            update (QueueMsg Queue.Reset) model
+
+        ShiftQueue ->
+            update (QueueMsg Queue.Shift) model
+
+        -----------------------------------------
+        -- Sources & Tracks
+        -----------------------------------------
+        AddSourceToCollection source ->
+            source
+                |> Sources.AddToCollection
+                |> SourcesMsg
+                |> updateWithModel model
+
+        ProcessSources ->
             let
                 notification =
                     Notifications.warning "Processing sources …"
@@ -251,32 +506,48 @@ update msg model =
                 |> Json.Encode.object
                 |> Alien.broadcast Alien.ProcessSources
                 |> Ports.toBrain
-                |> R2.withModel { model | sources = newSources }
-                |> N5.andThen2 (update <| ShowNotification notification)
+                |> returnWithModel { model | sources = newSources }
+                |> andThen (UI.Notifications.show notification)
 
-        Core.SaveEnclosedUserData ->
+        RemoveTracksWithSourceId sourceId ->
+            sourceId
+                |> Tracks.RemoveBySourceId
+                |> TracksMsg
+                |> updateWithModel model
+
+        -----------------------------------------
+        -- User Data
+        -----------------------------------------
+        InsertDemo ->
+            model
+                |> update (LoadHypaethralUserData UserData.demo)
+                |> andThen (translateReply SaveFavourites)
+                |> andThen (translateReply SaveSources)
+                |> andThen (translateReply SaveTracks)
+
+        SaveEnclosedUserData ->
             model
                 |> UserData.exportEnclosed
                 |> Alien.broadcast Alien.SaveEnclosedUserData
                 |> Ports.toBrain
-                |> R2.withModel model
+                |> returnWithModel model
 
-        Core.SaveFavourites ->
+        SaveFavourites ->
             model
                 |> UserData.encodedFavourites
                 |> Alien.broadcast Alien.SaveFavourites
                 |> Ports.toBrain
-                |> R2.withModel model
+                |> returnWithModel model
 
-        Core.SaveSettings ->
+        SaveSettings ->
             model
                 |> UserData.gatherSettings
                 |> Authentication.encodeSettings
                 |> Alien.broadcast Alien.SaveSettings
                 |> Ports.toBrain
-                |> R2.withModel model
+                |> returnWithModel model
 
-        Core.SaveSources ->
+        SaveSources ->
             let
                 updateEnabledSourceIdsOnTracks =
                     model.sources.collection
@@ -292,328 +563,15 @@ update msg model =
                 |> UserData.encodedSources
                 |> Alien.broadcast Alien.SaveSources
                 |> Ports.toBrain
-                |> R2.withModel updatedModel
-                |> R2.addCmd updatedCmd
+                |> returnWithModel updatedModel
+                |> addCommand updatedCmd
 
-        Core.SaveTracks ->
+        SaveTracks ->
             model
                 |> UserData.encodedTracks
                 |> Alien.broadcast Alien.SaveTracks
                 |> Ports.toBrain
-                |> R2.withModel model
-
-        Core.SignOut ->
-            let
-                alienSigningOut =
-                    Alien.SignOut
-                        |> Alien.trigger
-                        |> Ports.toBrain
-            in
-            { model
-                | authentication = Authentication.initialModel model.url
-                , sources = Sources.initialModel
-                , tracks = Tracks.initialModel
-            }
-                |> update (BackdropMsg Backdrop.Default)
-                |> R2.addCmd alienSigningOut
-                |> R2.addCmd (Nav.pushUrl model.navKey "/")
-
-        -----------------------------------------
-        -- Children
-        -----------------------------------------
-        AuthenticationMsg sub ->
-            updateChild
-                { mapCmd = AuthenticationMsg
-                , mapModel = \child -> { model | authentication = child }
-                , update = Authentication.update
-                }
-                { model = model.authentication
-                , msg = sub
-                }
-
-        BackdropMsg sub ->
-            updateChild
-                { mapCmd = BackdropMsg
-                , mapModel = \child -> { model | backdrop = child }
-                , update = Backdrop.update
-                }
-                { model = model.backdrop
-                , msg = sub
-                }
-
-        EqualizerMsg sub ->
-            updateChild
-                { mapCmd = EqualizerMsg
-                , mapModel = \child -> { model | equalizer = child }
-                , update = Equalizer.update
-                }
-                { model = model.equalizer
-                , msg = sub
-                }
-
-        QueueMsg sub ->
-            updateChild
-                { mapCmd = QueueMsg
-                , mapModel = \child -> { model | queue = child }
-                , update = Queue.update
-                }
-                { model = model.queue
-                , msg = sub
-                }
-
-        SourcesMsg sub ->
-            updateChild
-                { mapCmd = SourcesMsg
-                , mapModel = \child -> { model | sources = child }
-                , update = Sources.update
-                }
-                { model = model.sources
-                , msg = sub
-                }
-
-        TracksMsg sub ->
-            updateChild
-                { mapCmd = TracksMsg
-                , mapModel = \child -> { model | tracks = child }
-                , update = Tracks.update
-                }
-                { model = model.tracks
-                , msg = sub
-                }
-
-        -----------------------------------------
-        -- Children, Pt. 2
-        -----------------------------------------
-        Core.ActiveQueueItemChanged maybeQueueItem ->
-            let
-                nowPlaying =
-                    Maybe.map .identifiedTrack maybeQueueItem
-
-                portCmd =
-                    maybeQueueItem
-                        |> Maybe.map .identifiedTrack
-                        |> Maybe.map
-                            (UI.Queue.Common.makeEngineItem
-                                model.currentTime
-                                model.sources.collection
-                            )
-                        |> Ports.activeQueueItemChanged
-            in
-            model
-                |> update (TracksMsg <| Tracks.SetNowPlaying nowPlaying)
-                |> R2.addCmd portCmd
-
-        Core.FillQueue ->
-            update
-                (model.tracks.collection.harvested
-                    |> Queue.Fill model.currentTime
-                    |> QueueMsg
-                )
-                model
-
-        -----------------------------------------
-        -- Context Menu
-        -----------------------------------------
-        Core.HideContextMenu ->
-            ( { model | contextMenu = Nothing }
-            , Cmd.none
-            )
-
-        Core.ShowTracksContextMenu coordinates tracks ->
-            ( { model | contextMenu = Just (Tracks.trackMenu tracks coordinates) }
-            , Cmd.none
-            )
-
-        -----------------------------------------
-        -- Import / Export
-        -----------------------------------------
-        Core.Export ->
-            ( model
-            , File.Download.string
-                "diffuse.json"
-                "application/json"
-                ({ favourites = model.tracks.favourites
-                 , settings = Just (UserData.gatherSettings model)
-                 , sources = model.sources.collection
-                 , tracks = model.tracks.collection.untouched
-                 }
-                    |> Authentication.encodeHypaethral
-                    |> Json.Encode.encode 2
-                )
-            )
-
-        Core.Import file ->
-            ( { model | isLoading = True }
-            , 250
-                |> Process.sleep
-                |> Task.andThen (\_ -> File.toString file)
-                |> Task.perform ImportJson
-            )
-
-        Core.ImportJson json ->
-            let
-                notification =
-                    Notifications.success "Imported data successfully!"
-            in
-            model
-                |> update
-                    (json
-                        |> Json.Decode.decodeString Json.Decode.value
-                        |> Result.withDefault Json.Encode.null
-                        |> LoadHypaethralUserData
-                    )
-                |> N5.andThen2 (update Core.SaveFavourites)
-                |> N5.andThen2 (update Core.SaveSources)
-                |> N5.andThen2 (update Core.SaveTracks)
-                |> N5.andThen2 (update <| ShowNotification notification)
-                |> R2.addCmd (do <| ChangeUrlUsingPage Page.Index)
-
-        Core.InsertDemo ->
-            model
-                |> update (LoadHypaethralUserData UserData.demo)
-                |> N5.andThen2 (update Core.SaveFavourites)
-                |> N5.andThen2 (update Core.SaveSources)
-                |> N5.andThen2 (update Core.SaveTracks)
-
-        Core.RequestImport ->
-            ( model
-            , File.Select.file [ "application/json" ] Import
-            )
-
-        -----------------------------------------
-        -- Notifications
-        -----------------------------------------
-        Core.DismissNotification args ->
-            UI.Notifications.dismissNotification model args
-
-        RemoveNotification { id } ->
-            ( { model
-                | notifications =
-                    List.filter
-                        (Notifications.id >> (/=) id)
-                        model.notifications
-              }
-            , Cmd.none
-            )
-
-        ShowNotification notification ->
-            UI.Notifications.showNotification model notification
-
-        -----------------------------------------
-        -- URL
-        -----------------------------------------
-        ChangeUrlUsingPage page ->
-            ( model
-            , Nav.pushUrl model.navKey (Page.toString page)
-            )
-
-        LinkClicked urlRequest ->
-            case urlRequest of
-                Browser.Internal url ->
-                    if url.path == "/about" then
-                        return model (Nav.load "/about")
-
-                    else
-                        return model (Nav.pushUrl model.navKey <| Url.toString url)
-
-                Browser.External href ->
-                    return model (Nav.load href)
-
-        UrlChanged url ->
-            case Page.fromUrl url of
-                Just page ->
-                    ( { model
-                        | page = page
-                        , url = url
-                      }
-                    , Cmd.none
-                    )
-
-                Nothing ->
-                    ( model
-                    , Nav.replaceUrl model.navKey "/"
-                    )
-
-
-
--- 📣  ░░  CHILDREN & REPLIES
-
-
-translateReply : Reply -> Msg
-translateReply reply =
-    case reply of
-        Reply.ActiveQueueItemChanged m ->
-            Core.ActiveQueueItemChanged m
-
-        Reply.AddSourceToCollection source ->
-            SourcesMsg (Sources.AddToCollection source)
-
-        Reply.DismissNotification opts ->
-            Core.DismissNotification opts
-
-        Reply.ExternalAuth a b ->
-            Core.ExternalAuth a b
-
-        Reply.FillQueue ->
-            Core.FillQueue
-
-        Reply.GoToPage page ->
-            ChangeUrlUsingPage page
-
-        Reply.InsertDemo ->
-            Core.InsertDemo
-
-        Reply.PlayTrack identifiedTrack ->
-            QueueMsg (Queue.InjectFirstAndPlay identifiedTrack)
-
-        Reply.ProcessSources ->
-            Core.ProcessSources
-
-        Reply.RemoveTracksWithSourceId sourceId ->
-            TracksMsg (Tracks.RemoveBySourceId sourceId)
-
-        Reply.ResetQueue ->
-            QueueMsg Queue.Reset
-
-        Reply.ShiftQueue ->
-            QueueMsg Queue.Shift
-
-        Reply.SaveEnclosedUserData ->
-            Core.SaveEnclosedUserData
-
-        Reply.SaveFavourites ->
-            Core.SaveFavourites
-
-        Reply.SaveSettings ->
-            Core.SaveSettings
-
-        Reply.SaveSources ->
-            Core.SaveSources
-
-        Reply.SaveTracks ->
-            Core.SaveTracks
-
-        Reply.ShowErrorNotification string ->
-            ShowNotification (Notifications.stickyError string)
-
-        Reply.ShowMoreAuthenticationOptions coordinates ->
-            Core.ShowMoreAuthenticationOptions coordinates
-
-        Reply.ShowSuccessNotification string ->
-            ShowNotification (Notifications.success string)
-
-        Reply.ShowWarningNotification string ->
-            ShowNotification (Notifications.stickyWarning string)
-
-        Reply.ShowTracksContextMenu coordinates tracks ->
-            Core.ShowTracksContextMenu coordinates tracks
-
-        Reply.ToggleLoadingScreen state ->
-            Core.ToggleLoadingScreen state
-
-
-updateChild =
-    N5.updateChild update translateReply
+                |> returnWithModel model
 
 
 
