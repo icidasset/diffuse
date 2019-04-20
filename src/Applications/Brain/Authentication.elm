@@ -182,6 +182,14 @@ update msg model =
                         |> Ports.requestRemoteStorage
                         |> Return.commandWithModel model
 
+                Just (Textile { apiOrigin }) ->
+                    [ ( "apiOrigin", Json.string apiOrigin )
+                    ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthTextile
+                        |> Ports.requestTextile
+                        |> Return.commandWithModel model
+
                 -- ✋
                 Nothing ->
                     return model
@@ -248,6 +256,15 @@ update msg model =
                         |> Json.object
                         |> Alien.broadcast Alien.AuthRemoteStorage
                         |> Ports.toRemoteStorage
+                        |> Return.commandWithModel model
+
+                Just (Textile { apiOrigin }) ->
+                    [ ( "apiOrigin", Json.string apiOrigin )
+                    , ( "data", json )
+                    ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthTextile
+                        |> Ports.toTextile
                         |> Return.commandWithModel model
 
                 -- ✋

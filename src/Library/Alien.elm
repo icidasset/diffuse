@@ -26,6 +26,7 @@ type Tag
     | AuthMethod
     | AuthRemoteStorage
     | AuthSecretKey
+    | AuthTextile
     | FabricateSecretKey
     | SearchTracks
       -- from UI
@@ -99,6 +100,9 @@ tagToString tag =
 
         AuthSecretKey ->
             "AUTH_SECRET_KEY"
+
+        AuthTextile ->
+            "AUTH_TEXTILE"
 
         FabricateSecretKey ->
             "FABRICATE_SECRET_KEY"
@@ -190,6 +194,9 @@ tagFromString string =
 
         "AUTH_SECRET_KEY" ->
             Just AuthSecretKey
+
+        "AUTH_TEXTILE" ->
+            Just AuthTextile
 
         "FABRICATE_SECRET_KEY" ->
             Just FabricateSecretKey

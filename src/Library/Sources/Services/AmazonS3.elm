@@ -63,7 +63,7 @@ properties =
       }
     , { key = "host"
       , label = "Host (optional)"
-      , placeholder = "http://127.0.0.1:9000"
+      , placeholder = "http://localhost:9000"
       , password = False
       }
     ]
