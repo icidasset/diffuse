@@ -322,13 +322,13 @@ renderProperty : Source -> Property -> Html Msg
 renderProperty context property =
     chunk
         [ T.mb4 ]
-        [ UI.Kit.label [ for property.k ] property.l
+        [ UI.Kit.label [ for property.key ] property.label
         , UI.Kit.textField
-            [ name property.k
-            , onInput (SetData property.k)
-            , placeholder property.h
-            , type_ (ifThenElse property.p "password" "text")
-            , value (Dict.fetch property.k "" context.data)
+            [ name property.key
+            , onInput (SetData property.key)
+            , placeholder property.placeholder
+            , type_ (ifThenElse property.password "password" "text")
+            , value (Dict.fetch property.key "" context.data)
             ]
         ]
 

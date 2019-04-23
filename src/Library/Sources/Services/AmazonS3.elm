@@ -15,7 +15,7 @@ import Sources.Pick
 import Sources.Processing exposing (..)
 import Sources.Services.AmazonS3.Parser as Parser
 import Sources.Services.AmazonS3.Presign exposing (..)
-import Sources.Services.Common exposing (cleanPath, nameProperty, noPrep)
+import Sources.Services.Common exposing (cleanPath, noPrep)
 import Time
 
 
@@ -36,12 +36,36 @@ defaults =
 -}
 properties : List Property
 properties =
-    [ { k = "accessKey", l = "Access key", h = "Fv6EWfLfCcMo", p = True }
-    , { k = "secretKey", l = "Secret key", h = "qeNcqiMpgqC8", p = True }
-    , { k = "bucketName", l = "Bucket name", h = "music", p = False }
-    , { k = "region", l = "Region", h = defaults.region, p = False }
-    , { k = "directoryPath", l = "Directory", h = defaults.directoryPath, p = False }
-    , { k = "host", l = "Host (optional)", h = "http://127.0.0.1:9000", p = False }
+    [ { key = "accessKey"
+      , label = "Access key"
+      , placeholder = "Fv6EWfLfCcMo"
+      , password = True
+      }
+    , { key = "secretKey"
+      , label = "Secret key"
+      , placeholder = "qeNcqiMpgqC8"
+      , password = True
+      }
+    , { key = "bucketName"
+      , label = "Bucket name"
+      , placeholder = "music"
+      , password = False
+      }
+    , { key = "region"
+      , label = "Region"
+      , placeholder = defaults.region
+      , password = False
+      }
+    , { key = "directoryPath"
+      , label = "Directory"
+      , placeholder = defaults.directoryPath
+      , password = False
+      }
+    , { key = "host"
+      , label = "Host (optional)"
+      , placeholder = "http://127.0.0.1:9000"
+      , password = False
+      }
     ]
 
 

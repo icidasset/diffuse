@@ -23,10 +23,10 @@ type alias Source =
 
 
 type alias Property =
-    { k : String -- Key
-    , l : String -- Label
-    , h : String -- Placeholder
-    , p : Bool -- Password?
+    { key : String
+    , label : String
+    , placeholder : String
+    , password : Bool
     }
 
 

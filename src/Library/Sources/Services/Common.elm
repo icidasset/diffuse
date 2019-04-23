@@ -1,21 +1,8 @@
-module Sources.Services.Common exposing (cleanPath, nameProperty, noPrep)
+module Sources.Services.Common exposing (cleanPath, noPrep)
 
 import Sources exposing (..)
 import Sources.Processing exposing (..)
 import String.Ext as String
-
-
-
--- FORMS
-
-
-nameProperty : String -> Property
-nameProperty placeholder =
-    { k = "name"
-    , l = "Name"
-    , h = placeholder
-    , p = False
-    }
 
 
 
