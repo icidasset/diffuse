@@ -86,6 +86,10 @@ main =
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
+    let
+        maybePage =
+            Page.fromUrl url
+    in
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
@@ -94,7 +98,7 @@ init flags url key =
       , isLoading = True
       , navKey = key
       , notifications = []
-      , page = Maybe.withDefault Page.Index (Page.fromUrl url)
+      , page = Maybe.withDefault Page.Index maybePage
       , url = url
       , viewport = flags.viewport
 
@@ -111,13 +115,13 @@ init flags url key =
       , backdrop = Backdrop.initialModel
       , equalizer = Equalizer.initialModel
       , queue = Queue.initialModel
-      , sources = Sources.initialModel
+      , sources = Sources.initialModel (Maybe.andThen Page.sources maybePage)
       , tracks = Tracks.initialModel
       }
       -----------------------------------------
       -- Initial command
       -----------------------------------------
-    , case Page.fromUrl url of
+    , case maybePage of
         Just _ ->
             Cmd.none
 
@@ -218,7 +222,7 @@ update msg model =
         SignOut ->
             { model
                 | authentication = Authentication.initialModel model.url
-                , sources = Sources.initialModel
+                , sources = Sources.initialModel (Page.sources Page.Index)
                 , tracks = Tracks.initialModel
             }
                 |> update (BackdropMsg Backdrop.Default)
@@ -494,6 +498,13 @@ translateReply reply model =
                 |> Sources.AddToCollection
                 |> SourcesMsg
                 |> updateWithModel model
+
+        ExternalSourceAuthorization urlBuilder ->
+            model.url
+                |> Common.urlOrigin
+                |> urlBuilder
+                |> Nav.load
+                |> returnWithModel model
 
         ProcessSources ->
             let

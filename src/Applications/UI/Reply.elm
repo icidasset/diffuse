@@ -41,6 +41,7 @@ type Reply
       -- Sources & Tracks
       -----------------------------------------
     | AddSourceToCollection Source
+    | ExternalSourceAuthorization (String -> String)
     | ProcessSources
     | RemoveTracksWithSourceId String
       -----------------------------------------

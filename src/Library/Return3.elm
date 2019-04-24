@@ -59,7 +59,7 @@ three model cmd replies =
 
 
 
--- 🔱  ░░░  ALIASES
+-- 🔱  ░░  ALIASES
 
 
 commandWithModel =
@@ -75,7 +75,7 @@ replyWithModel =
 
 
 
--- 🔱  ░░░  MODIFICATIONS
+-- 🔱  ░░  MODIFICATIONS
 
 
 addCommand : Cmd msg -> Return model msg reply -> Return model msg reply
@@ -115,7 +115,7 @@ mapReplies fn ( model, cmd, replies ) =
 
 
 
--- 🔱  ░░░  WIELDING
+-- 🔱  ░░  WIELDING
 
 
 wield :
@@ -167,7 +167,7 @@ wieldNested replyTransformer a b =
 
 
 
--- 🔱  ░░░  DEBOUNCER
+-- 🔱  ░░  DEBOUNCER
 
 
 fromDebouncer : ( model, Cmd msg, Maybe reply ) -> Return model msg reply

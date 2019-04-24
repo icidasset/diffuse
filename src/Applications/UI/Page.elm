@@ -1,10 +1,12 @@
-module UI.Page exposing (Page(..), fromUrl, sameBase, toString)
+module UI.Page exposing (Page(..), fromUrl, sameBase, sources, toString)
 
+import Sources exposing (Service(..))
 import UI.Queue.Page as Queue
 import UI.Settings.Page as Settings
 import UI.Sources.Page as Sources
 import Url exposing (Url)
 import Url.Parser exposing (..)
+import Url.Parser.Query as Query
 
 
 
@@ -24,8 +26,13 @@ type Page
 
 
 fromUrl : Url -> Maybe Page
-fromUrl =
-    parse route
+fromUrl url =
+    -- For some oauth stuff, replace the query with the fragment
+    if Maybe.map (String.contains "token=") url.fragment == Just True then
+        parse route { url | query = url.fragment }
+
+    else
+        parse route url
 
 
 toString : Page -> String
@@ -64,6 +71,12 @@ toString page =
         Sources Sources.New ->
             "/sources/new"
 
+        Sources (Sources.NewThroughRedirect Google _) ->
+            "/sources/new/google"
+
+        Sources (Sources.NewThroughRedirect _ _) ->
+            "/sources/new"
+
 
 {-| Are the bases of these two pages the same?
 -}
@@ -84,6 +97,20 @@ sameBase a b =
 
         _ ->
             a == b
+
+
+
+-- 🔱  ░░  SPECIFIC
+
+
+sources : Page -> Maybe Sources.Page
+sources page =
+    case page of
+        Sources s ->
+            Just s
+
+        _ ->
+            Nothing
 
 
 
@@ -115,4 +142,31 @@ route =
         -----------------------------------------
         , map (Sources Sources.Index) (s "sources")
         , map (Sources Sources.New) (s "sources" </> s "new")
+
+        -- Oauth
+        --------
+        , map
+            (\token state ->
+                { codeOrToken = token, state = state }
+                    |> Sources.NewThroughRedirect Dropbox
+                    |> Sources
+            )
+            (s "sources"
+                </> s "new"
+                </> s "dropbox"
+                <?> Query.string "access_token"
+                <?> Query.string "state"
+            )
+        , map
+            (\code state ->
+                { codeOrToken = code, state = state }
+                    |> Sources.NewThroughRedirect Google
+                    |> Sources
+            )
+            (s "sources"
+                </> s "new"
+                </> s "google"
+                <?> Query.string "code"
+                <?> Query.string "state"
+            )
         ]

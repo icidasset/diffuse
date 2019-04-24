@@ -40,6 +40,9 @@ type alias SourceData =
 
 type Service
     = AmazonS3
+    | Dropbox
+    | Google
+    | Ipfs
 
 
 

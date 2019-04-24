@@ -34,11 +34,11 @@ type alias Model =
     }
 
 
-initialModel : Model
-initialModel =
+initialModel : Maybe Sources.Page -> Model
+initialModel maybePage =
     { collection = []
     , currentTime = Time.millisToPosix 0
-    , form = Form.initialModel
+    , form = Form.initialModel maybePage
     , isProcessing = False
     , processingNotificationId = Nothing
     }
@@ -150,6 +150,9 @@ view page model =
                 index model
 
             New ->
+                List.map (Html.map FormMsg) (Form.new model.form)
+
+            NewThroughRedirect _ _ ->
                 List.map (Html.map FormMsg) (Form.new model.form)
         )
 

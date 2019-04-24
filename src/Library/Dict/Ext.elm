@@ -1,6 +1,11 @@
-module Dict.Ext exposing (fetch, fetchUnknown)
+module Dict.Ext exposing (fetch, fetchUnknown, unionFlipped)
 
 import Dict exposing (Dict)
+
+
+unionFlipped : Dict comparable v -> Dict comparable v -> Dict comparable v
+unionFlipped a b =
+    Dict.union b a
 
 
 fetch : comparable -> v -> Dict comparable v -> v

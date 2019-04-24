@@ -1,5 +1,6 @@
 module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), initialModel, new, takeStepBackwards, takeStepForwards, update)
 
+import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Conditional exposing (..)
 import Dict
@@ -13,12 +14,14 @@ import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services
+import Sources.Services.Dropbox
+import Sources.Services.Google
 import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page
 import UI.Reply exposing (Reply)
-import UI.Sources.Page
+import UI.Sources.Page as Sources
 
 
 
@@ -26,7 +29,9 @@ import UI.Sources.Page
 
 
 type alias Model =
-    { step : FormStep, context : Source }
+    { step : FormStep
+    , context : Source
+    }
 
 
 type FormStep
@@ -35,9 +40,32 @@ type FormStep
     | By
 
 
-initialModel : Model
-initialModel =
-    { step = Where, context = defaultContext }
+initialModel : Maybe Sources.Page -> Model
+initialModel maybePage =
+    { step =
+        case maybePage of
+            Just (Sources.NewThroughRedirect _ _) ->
+                How
+
+            _ ->
+                Where
+    , context =
+        case maybePage of
+            Just (Sources.NewThroughRedirect Dropbox args) ->
+                { defaultContext
+                    | data = Sources.Services.Dropbox.authorizationSourceData args
+                    , service = Dropbox
+                }
+
+            Just (Sources.NewThroughRedirect Google args) ->
+                { defaultContext
+                    | data = Sources.Services.Google.authorizationSourceData args
+                    , service = Google
+                }
+
+            _ ->
+                defaultContext
+    }
 
 
 defaultContext : Source
@@ -70,15 +98,16 @@ type Msg
 
 update : Msg -> Model -> Return Model Msg Reply
 update msg model =
-    ( -----------------------------------------
-      -- Model
-      -----------------------------------------
-      case msg of
+    case msg of
         AddSource ->
-            { model | step = Where, context = defaultContext }
+            returnRepliesWithModel
+                { model | step = Where, context = defaultContext }
+                [ UI.Reply.GoToPage (UI.Page.Sources Sources.Index)
+                , UI.Reply.AddSourceToCollection model.context
+                ]
 
         Bypass ->
-            model
+            return model
 
         SelectService serviceKey ->
             case Services.keyToType serviceKey of
@@ -88,46 +117,47 @@ update msg model =
                             ( model.context
                             , Services.initialData service
                             )
+
+                        newContext =
+                            { context | data = data, service = service }
                     in
-                    { model | context = { context | data = data, service = service } }
+                    return { model | context = newContext }
 
                 Nothing ->
-                    model
+                    return model
 
         SetData key value ->
             let
                 context =
                     model.context
 
-                trimmedValue =
-                    String.trim value
-
                 updatedData =
-                    Dict.insert key trimmedValue context.data
+                    Dict.insert key (String.trim value) context.data
+
+                newContext =
+                    { context | data = updatedData }
             in
-            { model | context = { context | data = updatedData } }
+            return { model | context = newContext }
 
         TakeStep ->
-            { model | step = takeStepForwards model.step }
+            case ( model.step, model.context.service ) of
+                ( Where, Dropbox ) ->
+                    model.context.data
+                        |> Sources.Services.Dropbox.authorizationUrl
+                        |> UI.Reply.ExternalSourceAuthorization
+                        |> returnReplyWithModel model
+
+                ( Where, Google ) ->
+                    model.context.data
+                        |> Sources.Services.Google.authorizationUrl
+                        |> UI.Reply.ExternalSourceAuthorization
+                        |> returnReplyWithModel model
+
+                _ ->
+                    return { model | step = takeStepForwards model.step }
 
         TakeStepBackwards ->
-            { model | step = takeStepBackwards model.step }
-      -----------------------------------------
-      -- Command
-      -----------------------------------------
-    , Cmd.none
-      -----------------------------------------
-      -- Reply
-      -----------------------------------------
-    , case msg of
-        AddSource ->
-            [ UI.Reply.GoToPage (UI.Page.Sources UI.Sources.Page.Index)
-            , UI.Reply.AddSourceToCollection model.context
-            ]
-
-        _ ->
-            []
-    )
+            return { model | step = takeStepBackwards model.step }
 
 
 takeStepForwards : FormStep -> FormStep
@@ -175,7 +205,7 @@ newWhere { context } =
       UI.Navigation.local
         [ ( Icon Icons.arrow_back
           , Label "Back to list" Hidden
-          , GoToPage (UI.Page.Sources UI.Sources.Page.Index)
+          , GoToPage (UI.Page.Sources Sources.Index)
           )
         ]
 

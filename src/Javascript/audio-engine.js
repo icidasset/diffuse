@@ -102,9 +102,12 @@ function insertTrack(orchestrion, queueItem) {
   // Create audio node
   let audioNode
 
-  audioNode = createAudioElement(orchestrion, queueItem)
-  audioNode.context = context.createMediaElementSource(audioNode)
-  audioNode.context.connect(volume)
+  transformUrl(queueItem.url).then(url => {
+    queueItem = Object.assign({}, queueItem, { url: url })
+    audioNode = createAudioElement(orchestrion, queueItem)
+    audioNode.context = context.createMediaElementSource(audioNode)
+    audioNode.context.connect(volume)
+  })
 }
 
 

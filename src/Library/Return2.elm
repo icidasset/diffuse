@@ -33,7 +33,7 @@ returnWithModel =
 
 
 
--- 🔱  ░░░  ALIASES
+-- 🔱  ░░  ALIASES
 
 
 withModel =
@@ -41,7 +41,7 @@ withModel =
 
 
 
--- 🔱  ░░░  MODIFICATIONS
+-- 🔱  ░░  MODIFICATIONS
 
 
 addCommand : Cmd msg -> Return model msg -> Return model msg

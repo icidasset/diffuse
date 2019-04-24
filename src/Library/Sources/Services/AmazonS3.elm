@@ -10,7 +10,7 @@ Resources:
 
 import Dict
 import Http
-import Sources exposing (..)
+import Sources exposing (Property, SourceData)
 import Sources.Pick
 import Sources.Processing exposing (..)
 import Sources.Services.AmazonS3.Parser as Parser
@@ -164,7 +164,7 @@ parseErrorResponse =
 
 
 
--- Post
+-- POST
 
 
 {-| Post process the tree results.
@@ -178,7 +178,7 @@ postProcessTree =
 
 
 
--- Track URL
+-- TRACK URL
 
 
 {-| Create a public url for a file.
