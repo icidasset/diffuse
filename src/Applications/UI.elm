@@ -4,6 +4,7 @@ import Alien
 import Authentication
 import Authentication.RemoteStorage
 import Browser
+import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Color
@@ -14,6 +15,7 @@ import ContextMenu exposing (ContextMenu)
 import Css exposing (url)
 import Css.Global
 import Css.Transitions
+import Debouncer.Basic as Debouncer
 import Dict.Ext as Dict
 import File
 import File.Download
@@ -122,6 +124,14 @@ init flags url key =
     , queue = Queue.initialModel
     , sources = Sources.initialModel
     , tracks = Tracks.initialModel
+
+    -- Debouncing
+    -------------
+    , debounce =
+        0.25
+            |> Debouncer.fromSeconds
+            |> Debouncer.debounce
+            |> Debouncer.toDebouncer
     }
         |> update
             (PageChanged page)
@@ -145,6 +155,17 @@ update msg model =
         Bypass ->
             return model
 
+        Debounce debouncerMsg ->
+            Return3.wieldNested
+                update
+                { mapCmd = Debounce
+                , mapModel = \child -> { model | debounce = child }
+                , update = \m -> Debouncer.update m >> Return3.fromDebouncer
+                }
+                { model = model.debounce
+                , msg = debouncerMsg
+                }
+
         LoadEnclosedUserData json ->
             model
                 |> UserData.importEnclosed json
@@ -154,6 +175,13 @@ update msg model =
             model
                 |> UserData.importHypaethral json
                 |> Return3.wield translateReply
+
+        ResizedWindow ( width, height ) ->
+            { height = toFloat height
+            , width = toFloat width
+            }
+                |> (\v -> { model | contextMenu = Nothing, viewport = v })
+                |> return
 
         SetCurrentTime time ->
             let
@@ -708,6 +736,13 @@ subscriptions _ =
         , Ports.setAudioIsPlaying SetAudioIsPlaying
 
         --
+        , Browser.Events.onResize
+            (\w h ->
+                ( w, h )
+                    |> ResizedWindow
+                    |> Debouncer.provideInput
+                    |> Debounce
+            )
         , Time.every (60 * 1000) SetCurrentTime
         ]
 

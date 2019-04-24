@@ -6,6 +6,7 @@ import Browser
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import ContextMenu exposing (ContextMenu)
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 import File exposing (File)
 import Http
 import Json.Encode as Json
@@ -39,6 +40,7 @@ type alias Flags =
 type alias Model =
     { contextMenu : Maybe (ContextMenu Msg)
     , currentTime : Time.Posix
+    , debounce : Debouncer Msg Msg
     , isLoading : Bool
     , navKey : Nav.Key
     , notifications : List (Notification Msg)
@@ -78,8 +80,10 @@ type alias Viewport =
 
 type Msg
     = Bypass
+    | Debounce (Debouncer.Msg Msg)
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
+    | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix
     | ToggleLoadingScreen Switch
       -----------------------------------------
