@@ -70,6 +70,7 @@ type Msg
       -----------------------------------------
     | SourceContextMenu Source Mouse.Event
     | ToggleActivation { sourceId : String }
+    | ToggleDirectoryPlaylists { sourceId : String }
 
 
 update : Msg -> Model -> Return Model Msg Reply
@@ -161,9 +162,24 @@ update msg model =
             model.collection
                 |> List.map
                     (\source ->
-                        ifThenElse
-                            (source.id == sourceId)
+                        if source.id == sourceId then
                             { source | enabled = not source.enabled }
+
+                        else
+                            source
+                    )
+                |> (\collection -> { model | collection = collection })
+                |> return
+                |> addReply SaveSources
+
+        ToggleDirectoryPlaylists { sourceId } ->
+            model.collection
+                |> List.map
+                    (\source ->
+                        if source.id == sourceId then
+                            { source | directoryPlaylists = not source.directoryPlaylists }
+
+                        else
                             source
                     )
                 |> (\collection -> { model | collection = collection })

@@ -69,6 +69,7 @@ itemView lastIndex index ( icon, label, msg ) =
         [ T.b__near_white
         , T.pa3
         , T.pointer
+        , T.truncate
 
         --
         , ifThenElse isLast "" T.bb
