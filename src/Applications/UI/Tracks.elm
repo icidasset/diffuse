@@ -106,7 +106,8 @@ update msg model =
                     return model
 
         SetEnabledSourceIds sourceIds ->
-            return { model | enabledSourceIds = sourceIds }
+            reviseCollection identify
+                { model | enabledSourceIds = sourceIds }
 
         SetNowPlaying maybeIdentifiedTrack ->
             let

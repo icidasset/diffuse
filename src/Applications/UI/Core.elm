@@ -128,6 +128,10 @@ type Msg
     | RemoveNotification { id : Int }
     | ShowNotification (Notification Msg)
       -----------------------------------------
+      -- Page Transitions
+      -----------------------------------------
+    | PageChanged Page
+      -----------------------------------------
       -- URL
       -----------------------------------------
     | ChangeUrlUsingPage Page

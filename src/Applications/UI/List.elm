@@ -4,9 +4,9 @@ import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
 import Css exposing (px, solid)
+import Html.Events.Extra.Mouse as Mouse exposing (onClick)
 import Html.Styled as Html exposing (Html, fromUnstyled)
-import Html.Styled.Attributes exposing (css, style)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Attributes as Attributes exposing (css, style, title)
 import Tachyons.Classes as T
 import UI.Kit
 import VirtualDom
@@ -18,7 +18,8 @@ import VirtualDom
 
 type alias Action msg =
     { icon : Color -> Int -> VirtualDom.Node msg
-    , msg : msg
+    , msg : Mouse.Event -> msg
+    , title : String
     }
 
 
@@ -54,11 +55,16 @@ item { label, actions } =
         , chunk
             [ T.flex, T.items_center ]
             (List.map
-                (\{ icon, msg } ->
+                (\action ->
                     brick
-                        [ onClick msg, style "line-height" "0" ]
-                        [ T.pointer ]
-                        [ fromUnstyled (icon UI.Kit.colors.text 16) ]
+                        [ Attributes.fromUnstyled (onClick action.msg)
+                        , style "line-height" "0"
+                        , title action.title
+                        ]
+                        [ T.ml2
+                        , T.pointer
+                        ]
+                        [ fromUnstyled (action.icon UI.Kit.colors.text 16) ]
                 )
                 actions
             )

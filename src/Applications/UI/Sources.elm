@@ -1,7 +1,10 @@
 module UI.Sources exposing (Model, Msg(..), initialModel, update, view)
 
 import Chunky exposing (..)
+import Conditional exposing (ifThenElse)
+import Coordinates exposing (Coordinates)
 import Dict.Ext as Dict
+import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, text)
 import Json.Decode as Json
 import Material.Icons.Action as Icons
@@ -34,11 +37,11 @@ type alias Model =
     }
 
 
-initialModel : Maybe Sources.Page -> Model
-initialModel maybePage =
+initialModel : Model
+initialModel =
     { collection = []
     , currentTime = Time.millisToPosix 0
-    , form = Form.initialModel maybePage
+    , form = Form.initialModel
     , isProcessing = False
     , processingNotificationId = Nothing
     }
@@ -60,8 +63,13 @@ type Msg
       -- Collection
       -----------------------------------------
     | AddToCollection Source
-    | RemoveFromCollection String
+    | RemoveFromCollection { sourceId : String }
     | UpdateSourceData Json.Value
+      -----------------------------------------
+      -- Individual
+      -----------------------------------------
+    | SourceContextMenu Source Mouse.Event
+    | ToggleActivation { sourceId : String }
 
 
 update : Msg -> Model -> Return Model Msg Reply
@@ -107,7 +115,7 @@ update msg model =
                     , UI.Reply.ProcessSources
                     ]
 
-        RemoveFromCollection sourceId ->
+        RemoveFromCollection { sourceId } ->
             model.collection
                 |> List.filter (.id >> (/=) sourceId)
                 |> (\c -> { model | collection = c })
@@ -137,6 +145,31 @@ update msg model =
                 |> return
                 |> addReply UI.Reply.SaveSources
 
+        -----------------------------------------
+        -- Individual
+        -----------------------------------------
+        SourceContextMenu source mouseEvent ->
+            let
+                coordinates =
+                    Coordinates.fromTuple mouseEvent.clientPos
+            in
+            returnRepliesWithModel
+                model
+                [ ShowSourceContextMenu coordinates source ]
+
+        ToggleActivation { sourceId } ->
+            model.collection
+                |> List.map
+                    (\source ->
+                        ifThenElse
+                            (source.id == sourceId)
+                            { source | enabled = not source.enabled }
+                            source
+                    )
+                |> (\collection -> { model | collection = collection })
+                |> return
+                |> addReply SaveSources
+
 
 
 -- 🗺
@@ -148,6 +181,9 @@ view page model =
         (case page of
             Index ->
                 index model
+
+            Edit sourceId ->
+                List.map (Html.map FormMsg) (Form.edit model.form)
 
             New ->
                 List.map (Html.map FormMsg) (Form.new model.form)
@@ -215,7 +251,24 @@ index model =
 
 sourceActions : Source -> List (UI.List.Action Msg)
 sourceActions source =
-    [ { icon = Icons.close
-      , msg = RemoveFromCollection source.id
+    [ { icon =
+            if source.enabled then
+                Icons.check
+
+            else
+                Icons.block
+      , msg = always (ToggleActivation { sourceId = source.id })
+      , title =
+            if source.enabled then
+                "Enabled (click to disable)"
+
+            else
+                "Disabled (click to enable)"
+      }
+
+    --
+    , { icon = Icons.settings
+      , msg = SourceContextMenu source
+      , title = "Menu"
       }
     ]

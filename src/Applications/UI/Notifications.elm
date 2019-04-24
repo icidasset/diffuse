@@ -7,8 +7,9 @@ import Css.Ext as Css
 import Css.Global
 import Css.Transitions exposing (transition)
 import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (css, rel)
 import Html.Styled.Events exposing (onDoubleClick)
+import Html.Styled.Lazy
 import Notifications exposing (..)
 import Process
 import Tachyons.Classes as T
@@ -79,7 +80,7 @@ view notifications =
         , T.z_9999
         ]
         (List.map
-            notificationView
+            (Html.Styled.Lazy.lazy notificationView)
             (List.reverse notifications)
         )
 
@@ -132,7 +133,7 @@ notificationView notification =
             T.o_0
 
           else
-            ""
+            T.o_100
         ]
         [ contents notification
         , if options.sticky then

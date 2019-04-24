@@ -108,7 +108,7 @@ errorWithCode content code actions =
                     Html.pre
                     [ style "font-size" "11px" ]
                     [ T.bg_black_50, T.br2, T.mb0, T.mt3, T.pa2 ]
-                    [ Html.code [ class T.v_mid ] [ Html.text code ] ]
+                    [ slab Html.code [] [ T.ws_normal, T.v_mid ] [ Html.text code ] ]
             ]
         )
 

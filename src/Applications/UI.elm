@@ -25,6 +25,7 @@ import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
+import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
 import Process
@@ -32,6 +33,8 @@ import Return2 exposing (..)
 import Return3
 import Sources
 import Sources.Encoding
+import Sources.Services.Dropbox
+import Sources.Services.Google
 import Tachyons.Classes as T
 import Task
 import Time
@@ -55,6 +58,8 @@ import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings as Settings
 import UI.Settings.Page
 import UI.Sources as Sources
+import UI.Sources.ContextMenu as Sources
+import UI.Sources.Form
 import UI.Sources.Page
 import UI.Svg.Elements
 import UI.Tracks as Tracks
@@ -89,45 +94,45 @@ init flags url key =
     let
         maybePage =
             Page.fromUrl url
+
+        page =
+            Maybe.withDefault Page.Index maybePage
     in
-    ( -----------------------------------------
-      -- Initial model
-      -----------------------------------------
-      { contextMenu = Nothing
-      , currentTime = Time.millisToPosix flags.initialTime
-      , isLoading = True
-      , navKey = key
-      , notifications = []
-      , page = Maybe.withDefault Page.Index maybePage
-      , url = url
-      , viewport = flags.viewport
+    { contextMenu = Nothing
+    , currentTime = Time.millisToPosix flags.initialTime
+    , isLoading = True
+    , navKey = key
+    , notifications = []
+    , page = page
+    , url = url
+    , viewport = flags.viewport
 
-      -- Audio
-      --------
-      , audioDuration = 0
-      , audioHasStalled = False
-      , audioIsLoading = False
-      , audioIsPlaying = False
+    -- Audio
+    --------
+    , audioDuration = 0
+    , audioHasStalled = False
+    , audioIsLoading = False
+    , audioIsPlaying = False
 
-      -- Children
-      -----------
-      , authentication = Authentication.initialModel url
-      , backdrop = Backdrop.initialModel
-      , equalizer = Equalizer.initialModel
-      , queue = Queue.initialModel
-      , sources = Sources.initialModel (Maybe.andThen Page.sources maybePage)
-      , tracks = Tracks.initialModel
-      }
-      -----------------------------------------
-      -- Initial command
-      -----------------------------------------
-    , case maybePage of
-        Just _ ->
-            Cmd.none
+    -- Children
+    -----------
+    , authentication = Authentication.initialModel url
+    , backdrop = Backdrop.initialModel
+    , equalizer = Equalizer.initialModel
+    , queue = Queue.initialModel
+    , sources = Sources.initialModel
+    , tracks = Tracks.initialModel
+    }
+        |> update
+            (PageChanged page)
+        |> addCommand
+            (case maybePage of
+                Just _ ->
+                    Cmd.none
 
-        Nothing ->
-            Nav.replaceUrl key "/"
-    )
+                Nothing ->
+                    Nav.replaceUrl key "/"
+            )
 
 
 
@@ -222,7 +227,7 @@ update msg model =
         SignOut ->
             { model
                 | authentication = Authentication.initialModel model.url
-                , sources = Sources.initialModel (Page.sources Page.Index)
+                , sources = Sources.initialModel
                 , tracks = Tracks.initialModel
             }
                 |> update (BackdropMsg Backdrop.Default)
@@ -364,6 +369,73 @@ update msg model =
             UI.Notifications.show notification model
 
         -----------------------------------------
+        -- Page Transitions
+        -----------------------------------------
+        PageChanged (Page.Sources (UI.Sources.Page.NewThroughRedirect service args)) ->
+            let
+                ( sources, form, defaultContext ) =
+                    ( model.sources
+                    , model.sources.form
+                    , UI.Sources.Form.defaultContext
+                    )
+            in
+            { defaultContext
+                | data =
+                    case service of
+                        Sources.Dropbox ->
+                            Sources.Services.Dropbox.authorizationSourceData args
+
+                        Sources.Google ->
+                            Sources.Services.Google.authorizationSourceData args
+
+                        _ ->
+                            defaultContext.data
+                , service =
+                    service
+            }
+                |> (\c -> { form | context = c, step = UI.Sources.Form.How })
+                |> (\f -> { sources | form = f })
+                |> (\s -> { model | sources = s })
+                |> return
+
+        PageChanged (Page.Sources (UI.Sources.Page.Edit sourceId)) ->
+            let
+                isLoading =
+                    model.isLoading
+
+                maybeSource =
+                    List.find (.id >> (==) sourceId) model.sources.collection
+            in
+            case ( isLoading, maybeSource ) of
+                ( False, Just source ) ->
+                    let
+                        ( sources, form ) =
+                            ( model.sources
+                            , model.sources.form
+                            )
+
+                        newForm =
+                            { form | context = source }
+
+                        newSources =
+                            { sources | form = newForm }
+                    in
+                    return { model | sources = newSources }
+
+                ( False, Nothing ) ->
+                    return model
+
+                ( True, _ ) ->
+                    -- Redirect away from edit-source page
+                    UI.Sources.Page.Index
+                        |> Page.Sources
+                        |> ChangeUrlUsingPage
+                        |> updateWithModel model
+
+        PageChanged _ ->
+            return model
+
+        -----------------------------------------
         -- URL
         -----------------------------------------
         ChangeUrlUsingPage page ->
@@ -385,7 +457,9 @@ update msg model =
         UrlChanged url ->
             case Page.fromUrl url of
                 Just page ->
-                    return { model | page = page, url = url }
+                    { model | page = page, url = url }
+                        |> return
+                        |> andThen (update <| PageChanged page)
 
                 Nothing ->
                     returnWithModel model (Nav.replaceUrl model.navKey "/")
@@ -431,6 +505,9 @@ translateReply reply model =
         -----------------------------------------
         ShowMoreAuthenticationOptions coordinates ->
             return { model | contextMenu = Just (Authentication.moreOptionsMenu coordinates) }
+
+        ShowSourceContextMenu coordinates source ->
+            return { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
 
         ShowTracksContextMenu coordinates tracks ->
             return { model | contextMenu = Just (Tracks.trackMenu tracks coordinates) }
@@ -541,6 +618,18 @@ translateReply reply model =
                 |> Tracks.RemoveBySourceId
                 |> TracksMsg
                 |> updateWithModel model
+
+        ReplaceSourceInCollection source ->
+            let
+                sources =
+                    model.sources
+            in
+            model.sources.collection
+                |> List.map (\s -> ifThenElse (s.id == source.id) source s)
+                |> (\c -> { sources | collection = c })
+                |> (\s -> { model | sources = s })
+                |> return
+                |> andThen (translateReply SaveSources)
 
         -----------------------------------------
         -- User Data

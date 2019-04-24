@@ -65,6 +65,9 @@ toString page =
         -----------------------------------------
         -- Sources
         -----------------------------------------
+        Sources (Sources.Edit sourceId) ->
+            "/sources/edit/" ++ sourceId
+
         Sources Sources.Index ->
             "/sources"
 
@@ -128,19 +131,20 @@ route =
         -----------------------------------------
         -- Queue
         -----------------------------------------
-        , map (Queue Queue.History) (s "queue" </> s "history")
         , map (Queue Queue.Index) (s "queue")
+        , map (Queue Queue.History) (s "queue" </> s "history")
 
         -----------------------------------------
         -- Settings
         -----------------------------------------
-        , map (Settings Settings.ImportExport) (s "settings" </> s "import-export")
         , map (Settings Settings.Index) (s "settings")
+        , map (Settings Settings.ImportExport) (s "settings" </> s "import-export")
 
         -----------------------------------------
         -- Sources
         -----------------------------------------
         , map (Sources Sources.Index) (s "sources")
+        , map (Sources << Sources.Edit) (s "sources" </> s "edit" </> string)
         , map (Sources Sources.New) (s "sources" </> s "new")
 
         -- Oauth

@@ -21,6 +21,7 @@ type Reply
       -- Context Menu
       -----------------------------------------
     | ShowMoreAuthenticationOptions Coordinates
+    | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
       -----------------------------------------
       -- Notifications
@@ -44,6 +45,7 @@ type Reply
     | ExternalSourceAuthorization (String -> String)
     | ProcessSources
     | RemoveTracksWithSourceId String
+    | ReplaceSourceInCollection Source
       -----------------------------------------
       -- User Data
       -----------------------------------------

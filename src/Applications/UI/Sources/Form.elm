@@ -1,4 +1,4 @@
-module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), initialModel, new, takeStepBackwards, takeStepForwards, update)
+module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, edit, initialModel, new, takeStepBackwards, takeStepForwards, update)
 
 import Browser.Navigation as Nav
 import Chunky exposing (..)
@@ -19,8 +19,8 @@ import Sources.Services.Google
 import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
-import UI.Page
-import UI.Reply exposing (Reply)
+import UI.Page as Page
+import UI.Reply as Reply exposing (Reply)
 import UI.Sources.Page as Sources
 
 
@@ -40,31 +40,10 @@ type FormStep
     | By
 
 
-initialModel : Maybe Sources.Page -> Model
-initialModel maybePage =
-    { step =
-        case maybePage of
-            Just (Sources.NewThroughRedirect _ _) ->
-                How
-
-            _ ->
-                Where
-    , context =
-        case maybePage of
-            Just (Sources.NewThroughRedirect Dropbox args) ->
-                { defaultContext
-                    | data = Sources.Services.Dropbox.authorizationSourceData args
-                    , service = Dropbox
-                }
-
-            Just (Sources.NewThroughRedirect Google args) ->
-                { defaultContext
-                    | data = Sources.Services.Google.authorizationSourceData args
-                    , service = Google
-                }
-
-            _ ->
-                defaultContext
+initialModel : Model
+initialModel =
+    { step = Where
+    , context = defaultContext
     }
 
 
@@ -90,6 +69,8 @@ defaultService =
 type Msg
     = AddSource
     | Bypass
+    | EditSource
+    | ReturnToIndex
     | SelectService String
     | SetData String String
     | TakeStep
@@ -102,12 +83,25 @@ update msg model =
         AddSource ->
             returnRepliesWithModel
                 { model | step = Where, context = defaultContext }
-                [ UI.Reply.GoToPage (UI.Page.Sources Sources.Index)
-                , UI.Reply.AddSourceToCollection model.context
+                [ Reply.GoToPage (Page.Sources Sources.Index)
+                , Reply.AddSourceToCollection model.context
                 ]
 
         Bypass ->
             return model
+
+        EditSource ->
+            returnRepliesWithModel
+                { model | step = Where, context = defaultContext }
+                [ Reply.ReplaceSourceInCollection model.context
+                , Reply.ProcessSources
+                , Reply.GoToPage (Page.Sources Sources.Index)
+                ]
+
+        ReturnToIndex ->
+            returnRepliesWithModel
+                model
+                [ Reply.GoToPage (Page.Sources Sources.Index) ]
 
         SelectService serviceKey ->
             case Services.keyToType serviceKey of
@@ -144,13 +138,13 @@ update msg model =
                 ( Where, Dropbox ) ->
                     model.context.data
                         |> Sources.Services.Dropbox.authorizationUrl
-                        |> UI.Reply.ExternalSourceAuthorization
+                        |> Reply.ExternalSourceAuthorization
                         |> returnReplyWithModel model
 
                 ( Where, Google ) ->
                     model.context.data
                         |> Sources.Services.Google.authorizationUrl
-                        |> UI.Reply.ExternalSourceAuthorization
+                        |> Reply.ExternalSourceAuthorization
                         |> returnReplyWithModel model
 
                 _ ->
@@ -205,7 +199,7 @@ newWhere { context } =
       UI.Navigation.local
         [ ( Icon Icons.arrow_back
           , Label "Back to list" Hidden
-          , GoToPage (UI.Page.Sources Sources.Index)
+          , GoToPage (Page.Sources Sources.Index)
           )
         ]
 
@@ -340,6 +334,63 @@ newBy { context } =
             Normal
             AddSource
             (text "Add source")
+        ]
+    ]
+
+
+
+-- EDIT
+
+
+edit : Model -> List (Html Msg)
+edit { context } =
+    [ -----------------------------------------
+      -- Navigation
+      -----------------------------------------
+      UI.Navigation.local
+        [ ( Icon Icons.arrow_back
+          , Label "Go Back" Shown
+          , PerformMsg ReturnToIndex
+          )
+        ]
+
+    -----------------------------------------
+    -- Content
+    -----------------------------------------
+    , (\h -> form [ chunk [ T.tl, T.w_100 ] [ UI.Kit.canister h ] ])
+        [ UI.Kit.h3 "Edit source"
+
+        -- Fields
+        ---------
+        , let
+            properties =
+                Services.properties context.service
+
+            dividingPoint =
+                toFloat (List.length properties) / 2
+
+            ( listA, listB ) =
+                List.splitAt (ceiling dividingPoint) properties
+          in
+          chunk
+            [ T.flex, T.pt3 ]
+            [ chunk
+                [ T.flex_grow_1, T.pr3 ]
+                (List.map (renderProperty context) listA)
+            , chunk
+                [ T.flex_grow_1, T.pl3 ]
+                (List.map (renderProperty context) listB)
+            ]
+
+        -- Button
+        ---------
+        , chunk
+            [ T.mt3, T.tc ]
+            [ UI.Kit.button
+                Normal
+                EditSource
+                (text "Save")
+            ]
         ]
     ]
 
