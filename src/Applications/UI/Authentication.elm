@@ -3,13 +3,13 @@ module UI.Authentication exposing (Model(..), Msg(..), extractMethod, initialMod
 import Alien
 import Authentication exposing (Method(..))
 import Base64
+import Binary
 import Chunky exposing (..)
 import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Crypto.Hash
 import Css exposing (pct, px, solid, transparent)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
@@ -19,6 +19,7 @@ import Json.Encode
 import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
+import SHA
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
@@ -185,7 +186,7 @@ update msg model =
                 ( Unauthenticated
                   --
                 , [ ( "method", Authentication.encodeMethod method )
-                  , ( "passphrase", Json.Encode.string <| Crypto.Hash.sha256 passphrase )
+                  , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
                   ]
                     |> Json.Encode.object
                     |> Alien.broadcast Alien.SignIn
@@ -227,7 +228,7 @@ update msg model =
                 returnCommandWithModel
                     (Authenticated method)
                     (passphrase
-                        |> Crypto.Hash.sha256
+                        |> hashPassphrase
                         |> Json.Encode.string
                         |> Alien.broadcast Alien.UpdateEncryptionKey
                         |> Ports.toBrain
@@ -261,6 +262,15 @@ update msg model =
 
                 _ ->
                     return model
+
+
+hashPassphrase : String -> String
+hashPassphrase phrase =
+    phrase
+        |> Binary.fromStringAsUtf8
+        |> SHA.sha256
+        |> Binary.toHex
+        |> String.toLower
 
 
 

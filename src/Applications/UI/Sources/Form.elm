@@ -81,10 +81,17 @@ update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
         AddSource ->
+            let
+                context =
+                    model.context
+
+                cleanContext =
+                    { context | data = Dict.map (always String.trim) context.data }
+            in
             returnRepliesWithModel
                 { model | step = Where, context = defaultContext }
                 [ Reply.GoToPage (Page.Sources Sources.Index)
-                , Reply.AddSourceToCollection model.context
+                , Reply.AddSourceToCollection cleanContext
                 ]
 
         Bypass ->
@@ -126,7 +133,7 @@ update msg model =
                     model.context
 
                 updatedData =
-                    Dict.insert key (String.trim value) context.data
+                    Dict.insert key value context.data
 
                 newContext =
                     { context | data = updatedData }

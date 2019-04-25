@@ -85,8 +85,34 @@ encrypt blockSize hash messageString key =
         |> hash
 
 
+
+-- PADDING
+
+
 padding : Int -> ( Bits, Bits )
 padding blockSize =
-    ( Binary.concat (List.repeat blockSize <| Binary.fromHex "36")
-    , Binary.concat (List.repeat blockSize <| Binary.fromHex "5C")
+    case blockSize of
+        64 ->
+            padding64
+
+        128 ->
+            padding128
+
+        _ ->
+            ( Binary.concat (List.repeat blockSize <| Binary.fromHex "36")
+            , Binary.concat (List.repeat blockSize <| Binary.fromHex "5C")
+            )
+
+
+padding64 : ( Bits, Bits )
+padding64 =
+    ( Binary.concat (List.repeat 64 <| Binary.fromHex "36")
+    , Binary.concat (List.repeat 64 <| Binary.fromHex "5C")
+    )
+
+
+padding128 : ( Bits, Bits )
+padding128 =
+    ( Binary.concat (List.repeat 128 <| Binary.fromHex "36")
+    , Binary.concat (List.repeat 128 <| Binary.fromHex "5C")
     )

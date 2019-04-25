@@ -1,21 +1,20 @@
 module Sources.Services.AmazonS3.Presign exposing (presignedUrl)
 
-import Crypto.HMAC
-import Crypto.Hash
+import Binary exposing (Bits)
+import Cryptography.HMAC as HMAC
 import DateFormat as Date
 import Dict
 import Dict.Ext as Dict
 import Hex
 import Maybe.Extra as Maybe
 import Regex
+import SHA
 import Sources exposing (SourceData)
 import Sources.Processing exposing (HttpMethod, httpMethod)
 import String.Ext as String
 import Time
 import Url
 import Url.Builder as Url
-import Word.Bytes as Bytes
-import Word.Hex as Hex
 
 
 
@@ -154,19 +153,24 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
                 , String.join "/" [ date, region, "s3", "aws4_request" ]
 
                 --
-                , Crypto.Hash.sha256 request
+                , request
+                    |> Binary.fromStringAsUtf8
+                    |> SHA.sha256
+                    |> Binary.toHex
+                    |> String.toLower
                 ]
 
         -- Signature
         signature =
             ("AWS4" ++ Dict.fetchUnknown "secretKey" aws)
-                |> Bytes.fromUTF8
+                |> Binary.fromStringAsUtf8
                 |> hmacSha256 date
                 |> hmacSha256 region
                 |> hmacSha256 "s3"
                 |> hmacSha256 "aws4_request"
                 |> hmacSha256 stringToSign
-                |> Hex.fromByteList
+                |> Binary.toHex
+                |> String.toLower
     in
     String.concat
         [ protocol
@@ -196,8 +200,6 @@ encodeAdditionalCharacters query =
         query
 
 
-hmacSha256 : String -> List Int -> List Int
-hmacSha256 message key =
-    Crypto.HMAC.digestBytes Crypto.HMAC.sha256
-        key
-        (Bytes.fromUTF8 message)
+hmacSha256 : String -> Bits -> Bits
+hmacSha256 =
+    HMAC.encrypt64 SHA.sha256

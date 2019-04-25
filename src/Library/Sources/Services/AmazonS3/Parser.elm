@@ -23,7 +23,11 @@ parseTreeResponse response _ =
 
 filePathsDecoder : Decoder (List String)
 filePathsDecoder =
-    path [ "Contents" ] (list <| path [ "Key" ] (single string))
+    string
+        |> single
+        |> path [ "Key" ]
+        |> list
+        |> path [ "Contents" ]
 
 
 markerDecoder : Decoder Marker
@@ -40,8 +44,8 @@ markerDecoder =
                     b
                 )
         )
-        (maybe <| path [ "IsTruncated" ] (single string))
-        (maybe <| path [ "NextContinuationToken" ] (single string))
+        (maybe <| path [ "IsTruncated" ] <| single string)
+        (maybe <| path [ "NextContinuationToken" ] <| single string)
 
 
 
@@ -59,4 +63,8 @@ parseErrorResponse response =
 
 errorMessagesDecoder : Decoder (List String)
 errorMessagesDecoder =
-    path [ "Error" ] (list <| path [ "Message" ] (single string))
+    string
+        |> single
+        |> path [ "Message" ]
+        |> list
+        |> path [ "Error" ]
