@@ -40,6 +40,8 @@ type alias SourceData =
 
 type Service
     = AmazonS3
+    | AzureBlob
+    | AzureFile
     | Dropbox
     | Google
     | Ipfs

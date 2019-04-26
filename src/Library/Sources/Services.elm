@@ -7,6 +7,8 @@ import Http
 import Sources exposing (..)
 import Sources.Processing exposing (..)
 import Sources.Services.AmazonS3 as AmazonS3
+import Sources.Services.AzureBlob as AzureBlob
+import Sources.Services.AzureFile as AzureFile
 import Sources.Services.Dropbox as Dropbox
 import Sources.Services.Google as Google
 import Sources.Services.Ipfs as Ipfs
@@ -23,6 +25,12 @@ initialData service =
         AmazonS3 ->
             AmazonS3.initialData
 
+        AzureBlob ->
+            AzureBlob.initialData
+
+        AzureFile ->
+            AzureFile.initialData
+
         Dropbox ->
             Dropbox.initialData
 
@@ -38,6 +46,12 @@ makeTrackUrl service =
     case service of
         AmazonS3 ->
             AmazonS3.makeTrackUrl
+
+        AzureBlob ->
+            AzureBlob.makeTrackUrl
+
+        AzureFile ->
+            AzureFile.makeTrackUrl
 
         Dropbox ->
             Dropbox.makeTrackUrl
@@ -61,6 +75,12 @@ makeTree service =
         AmazonS3 ->
             AmazonS3.makeTree
 
+        AzureBlob ->
+            AzureBlob.makeTree
+
+        AzureFile ->
+            AzureFile.makeTree
+
         Dropbox ->
             Dropbox.makeTree
 
@@ -76,6 +96,12 @@ parseErrorResponse service =
     case service of
         AmazonS3 ->
             AmazonS3.parseErrorResponse
+
+        AzureBlob ->
+            AzureBlob.parseErrorResponse
+
+        AzureFile ->
+            AzureFile.parseErrorResponse
 
         Dropbox ->
             Dropbox.parseErrorResponse
@@ -93,6 +119,12 @@ parsePreparationResponse service =
         AmazonS3 ->
             AmazonS3.parsePreparationResponse
 
+        AzureBlob ->
+            AzureBlob.parsePreparationResponse
+
+        AzureFile ->
+            AzureFile.parsePreparationResponse
+
         Dropbox ->
             Dropbox.parsePreparationResponse
 
@@ -109,6 +141,12 @@ parseTreeResponse service =
         AmazonS3 ->
             AmazonS3.parseTreeResponse
 
+        AzureBlob ->
+            AzureBlob.parseTreeResponse
+
+        AzureFile ->
+            AzureFile.parseTreeResponse
+
         Dropbox ->
             Dropbox.parseTreeResponse
 
@@ -124,6 +162,12 @@ postProcessTree service =
     case service of
         AmazonS3 ->
             AmazonS3.postProcessTree
+
+        AzureBlob ->
+            AzureBlob.postProcessTree
+
+        AzureFile ->
+            AzureFile.postProcessTree
 
         Dropbox ->
             Dropbox.postProcessTree
@@ -147,6 +191,12 @@ prepare service =
         AmazonS3 ->
             AmazonS3.prepare
 
+        AzureBlob ->
+            AzureBlob.prepare
+
+        AzureFile ->
+            AzureFile.prepare
+
         Dropbox ->
             Dropbox.prepare
 
@@ -162,6 +212,12 @@ properties service =
     case service of
         AmazonS3 ->
             AmazonS3.properties
+
+        AzureBlob ->
+            AzureBlob.properties
+
+        AzureFile ->
+            AzureFile.properties
 
         Dropbox ->
             Dropbox.properties
@@ -183,6 +239,12 @@ keyToType str =
         "AmazonS3" ->
             Just AmazonS3
 
+        "AzureBlob" ->
+            Just AzureBlob
+
+        "AzureFile" ->
+            Just AzureFile
+
         "Dropbox" ->
             Just Dropbox
 
@@ -202,6 +264,12 @@ typeToKey service =
         AmazonS3 ->
             "AmazonS3"
 
+        AzureBlob ->
+            "AzureBlob"
+
+        AzureFile ->
+            "AzureFile"
+
         Dropbox ->
             "Dropbox"
 
@@ -218,6 +286,8 @@ Maps a service key to a label.
 labels : List ( String, String )
 labels =
     [ ( typeToKey AmazonS3, "Amazon S3" )
+    , ( typeToKey AzureBlob, "Azure Blob Storage" )
+    , ( typeToKey AzureFile, "Azure File Storage" )
     , ( typeToKey Dropbox, "Dropbox" )
     , ( typeToKey Google, "Google Drive" )
     , ( typeToKey Ipfs, "IPFS" )

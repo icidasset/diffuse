@@ -4,6 +4,7 @@ module Sources.Services.Dropbox exposing (authorizationSourceData, authorization
 -}
 
 import Base64
+import Common
 import Dict
 import Dict.Ext as Dict
 import Http
@@ -16,8 +17,6 @@ import Sources.Processing exposing (..)
 import Sources.Services.Common exposing (cleanPath, noPrep)
 import Sources.Services.Dropbox.Parser as Parser
 import Time
-import Url
-import Url.Builder as Url
 
 
 
@@ -96,8 +95,7 @@ authorizationUrl sourceData origin =
     , ( "redirect_uri", origin ++ "/sources/new/dropbox" )
     , ( "state", state )
     ]
-        |> List.map (\( a, b ) -> Url.string a b)
-        |> Url.toQuery
+        |> Common.queryString
         |> String.append "https://www.dropbox.com/oauth2/authorize"
 
 

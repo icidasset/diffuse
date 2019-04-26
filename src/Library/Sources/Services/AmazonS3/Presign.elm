@@ -1,6 +1,7 @@
 module Sources.Services.AmazonS3.Presign exposing (presignedUrl)
 
 import Binary exposing (Bits)
+import Common
 import Cryptography.HMAC as HMAC
 import DateFormat as Date
 import Dict
@@ -14,7 +15,6 @@ import Sources.Processing exposing (HttpMethod, httpMethod)
 import String.Ext as String
 import Time
 import Url
-import Url.Builder as Url
 
 
 
@@ -127,8 +127,7 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
             ]
                 |> List.append extraParams
                 |> List.sortBy Tuple.first
-                |> List.map (\( a, b ) -> Url.string a b)
-                |> Url.toQuery
+                |> Common.queryString
                 |> String.dropLeft 1
                 |> encodeAdditionalCharacters
 

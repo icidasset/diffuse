@@ -34,6 +34,18 @@ These include: SHA-0, SHA-1, SHA-224, SHA-256, MD5, etc.
     ..>   |> String.toLower
     "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"
 
+    >>> Binary.fromHex "4a656665"
+    ..>   |> encrypt64 SHA.sha256 "what do ya want for nothing?"
+    ..>   |> Binary.toHex
+    ..>   |> String.toLower
+    "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+
+    >>> Binary.fromHex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ..>   |> encrypt64 SHA.sha256 "Test Using Larger Than Block-Size Key - Hash Key First"
+    ..>   |> Binary.toHex
+    ..>   |> String.toLower
+    "60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54"
+
 -}
 encrypt64 : HashFunction -> String -> Bits -> Bits
 encrypt64 =
@@ -60,13 +72,10 @@ encrypt blockSize hash messageString key =
 
         keyWithBlockSize =
             if keySize > blockSize then
-                hash key
+                padRight blockSize (hash key)
 
             else if keySize < blockSize then
-                False
-                    |> List.repeat (blockSize - keySize)
-                    |> List.append (Binary.toBooleans key)
-                    |> Binary.fromBooleans
+                padRight blockSize key
 
             else
                 key
@@ -83,6 +92,18 @@ encrypt blockSize hash messageString key =
         |> hash
         |> Binary.append binSeqTwo
         |> hash
+
+
+padRight : Int -> Bits -> Bits
+padRight int bits =
+    let
+        size =
+            Binary.width bits
+    in
+    False
+        |> List.repeat (int - size)
+        |> List.append (Binary.toBooleans bits)
+        |> Binary.fromBooleans
 
 
 

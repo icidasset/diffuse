@@ -4,6 +4,7 @@ module Sources.Services.Google exposing (authorizationSourceData, authorizationU
 -}
 
 import Base64
+import Common
 import Dict
 import Dict.Ext as Dict
 import Http
@@ -15,8 +16,6 @@ import Sources.Pick
 import Sources.Processing exposing (..)
 import Sources.Services.Google.Parser as Parser
 import Time
-import Url
-import Url.Builder as Url
 
 
 
@@ -113,8 +112,7 @@ authorizationUrl sourceData origin =
     , ( "scope", "https://www.googleapis.com/auth/drive.readonly" )
     , ( "state", state )
     ]
-        |> List.map (\( a, b ) -> Url.string a b)
-        |> Url.toQuery
+        |> Common.queryString
         |> String.append "https://accounts.google.com/o/oauth2/v2/auth"
 
 
@@ -165,9 +163,7 @@ prepare origin srcData _ toMsg =
                     ]
 
         query =
-            queryParams
-                |> List.map (\( a, b ) -> Url.string a b)
-                |> Url.toQuery
+            Common.queryString queryParams
 
         url =
             "https://www.googleapis.com/oauth2/v4/token" ++ query
@@ -215,7 +211,7 @@ makeTree srcData marker currentTime toMsg =
             , ( "spaces", "drive" )
             ]
 
-        params =
+        queryString =
             (case marker of
                 InProgress cursor ->
                     [ ( "pageToken", cursor )
@@ -225,13 +221,12 @@ makeTree srcData marker currentTime toMsg =
                     []
             )
                 |> List.append paramsBase
-                |> List.map (\( a, b ) -> Url.string a b)
-                |> Url.toQuery
+                |> Common.queryString
     in
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-        , url = "https://www.googleapis.com/drive/v3/files" ++ params
+        , url = "https://www.googleapis.com/drive/v3/files" ++ queryString
         , body = Http.emptyBody
         , expect = Http.expectString toMsg
         , timeout = Nothing

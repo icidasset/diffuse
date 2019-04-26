@@ -1,6 +1,8 @@
-module Common exposing (Switch(..), urlOrigin)
+module Common exposing (Switch(..), queryString, urlOrigin)
 
+import Tuple.Ext as Tuple
 import Url exposing (Protocol(..), Url)
+import Url.Builder as Url
 
 
 
@@ -14,6 +16,11 @@ type Switch
 
 
 -- 🔱
+
+
+queryString : List ( String, String ) -> String
+queryString =
+    List.map (Tuple.uncurry Url.string) >> Url.toQuery
 
 
 urlOrigin : Url -> String
