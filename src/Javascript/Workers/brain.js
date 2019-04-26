@@ -280,6 +280,61 @@ app.ports.requestTags.subscribe(context => {
 
 
 
+// Textile
+// -------
+
+let tt
+
+
+function textile() {
+  if (!tt) {
+    importScripts("/textile.js")
+    tt = true
+  }
+}
+
+
+app.ports.requestTextile.subscribe(event => {
+  const apiOrigin = event.data.apiOrigin
+
+  textile()
+
+  Textile.ensureThread
+    (apiOrigin)
+
+    .then(_ => Textile.getFile(apiOrigin))
+    .then(f => f ? Textile.readFile(apiOrigin, f) : null)
+    .then(data => {
+      app.ports.fromAlien.send({
+        tag: event.tag,
+        data: typeof data === "string" ? JSON.parse(data) : data,
+        error: null
+      })
+    })
+
+    .catch(reportError(event))
+})
+
+
+app.ports.toTextile.subscribe(event => {
+  const apiOrigin = event.data.apiOrigin
+  const json = JSON.stringify(event.data.data)
+
+  textile()
+
+  Textile.ensureThread
+    (apiOrigin)
+
+    .then(_ => Textile.getFile(apiOrigin))
+    .then(f => f ? Textile.deleteBlock(apiOrigin, f) : null)
+    .then(_ => Textile.useMill(apiOrigin, json))
+    .then(m => Textile.addFileToThread(apiOrigin, m))
+
+    .catch(reportError(event))
+})
+
+
+
 // 🔱
 // --
 

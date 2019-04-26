@@ -342,6 +342,9 @@ translateAlienData event =
         Just Alien.AuthRemoteStorage ->
             AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
 
+        Just Alien.AuthTextile ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
+
         Just Alien.FabricateSecretKey ->
             AuthenticationMsg Authentication.SecretKeyFabricated
 
@@ -416,6 +419,9 @@ translateAlienError event err =
 
         Just Alien.AuthRemoteStorage ->
             report Alien.AuthRemoteStorage "I couldn't decrypt your data, maybe you used the wrong passphrase?"
+
+        Just Alien.AuthTextile ->
+            report Alien.AuthTextile "Something went wrong regarding Textile. Maybe Textile isn't running?"
 
         Just tag ->
             report tag err

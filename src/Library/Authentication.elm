@@ -20,6 +20,7 @@ type Method
     = Ipfs
     | Local
     | RemoteStorage { userAddress : String, token : String }
+    | Textile { apiOrigin : String }
 
 
 type alias EnclosedUserData =
@@ -78,6 +79,13 @@ methodToString method =
                 , token
                 ]
 
+        Textile { apiOrigin } ->
+            String.join
+                methodSeparator
+                [ "TEXTILE"
+                , apiOrigin
+                ]
+
 
 methodFromString : String -> Maybe Method
 methodFromString string =
@@ -90,6 +98,9 @@ methodFromString string =
 
         [ "REMOTE_STORAGE", u, t ] ->
             Just (RemoteStorage { userAddress = u, token = t })
+
+        [ "TEXTILE", a ] ->
+            Just (Textile { apiOrigin = a })
 
         _ ->
             Nothing

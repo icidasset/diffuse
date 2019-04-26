@@ -70,6 +70,9 @@ index model =
                 Just (RemoteStorage _) ->
                     text "on a RemoteStorage server."
 
+                Just (Textile _) ->
+                    text "on Textile."
+
                 Nothing ->
                     text "on nothing, wtf?"
           , lineBreak

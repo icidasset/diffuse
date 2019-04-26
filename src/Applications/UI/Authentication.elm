@@ -13,13 +13,14 @@ import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
-import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, width)
+import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Json.Encode
 import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
 import SHA
+import String.Ext as String
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
@@ -47,10 +48,17 @@ passphraseLengthErrorMessage =
 
 type Model
     = Authenticated Method
-    | InputScreen Method { input : String, placeholder : String, question : String }
+    | InputScreen Method Question
     | NewEncryptionKeyScreen Method (Maybe String)
     | UpdateEncryptionKeyScreen Method (Maybe String)
     | Unauthenticated
+
+
+type alias Question =
+    { placeholder : String
+    , question : String
+    , value : String
+    }
 
 
 initialModel : Url -> Model
@@ -120,7 +128,7 @@ type Msg
       -----------------------------------------
       -- More Input
       -----------------------------------------
-    | AskForInput Method { placeholder : String, question : String }
+    | AskForInput Method Question
     | Input String
     | ConfirmInput
 
@@ -238,9 +246,9 @@ update msg model =
         -- More Input
         -----------------------------------------
         AskForInput method opts ->
-            { input = ""
-            , placeholder = opts.placeholder
+            { placeholder = opts.placeholder
             , question = opts.question
+            , value = opts.value
             }
                 |> InputScreen method
                 |> return
@@ -248,20 +256,31 @@ update msg model =
         Input string ->
             case model of
                 InputScreen method opts ->
-                    return (InputScreen method { opts | input = string })
+                    return (InputScreen method { opts | value = string })
 
                 m ->
                     return m
 
         ConfirmInput ->
             case model of
-                InputScreen method { input } ->
+                InputScreen (RemoteStorage r) { value } ->
                     addReply
-                        (ExternalAuth method input)
+                        (ExternalAuth (RemoteStorage r) value)
                         (return model)
+
+                InputScreen (Textile t) { value } ->
+                    { t | apiOrigin = String.chopEnd "/" value }
+                        |> Textile
+                        |> SignIn
+                        |> updateWithModel model
 
                 _ ->
                     return model
+
+
+updateWithModel : Model -> Msg -> Return Model Msg Reply
+updateWithModel model msg =
+    update msg model
 
 
 hashPassphrase : String -> String
@@ -418,9 +437,10 @@ choicesScreen =
         , choiceButton
             { action =
                 AskForInput
-                    (Authentication.RemoteStorage { userAddress = "", token = "" })
+                    (RemoteStorage { userAddress = "", token = "" })
                     { placeholder = "username@5apps.com"
                     , question = "What's your user address?"
+                    , value = ""
                     }
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.remoteStorageLogo
             , isLast = False
@@ -428,11 +448,17 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = Bypass
+            { action =
+                AskForInput
+                    (Textile { apiOrigin = "" })
+                    { placeholder = "http://localhost:40600"
+                    , question = "Where's your Textile API located?"
+                    , value = "http://localhost:40600"
+                    }
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
             , isLast = False
             , label = "Textile"
-            , outOfOrder = True
+            , outOfOrder = False
             }
 
         -- More options
@@ -525,8 +551,8 @@ encryptionKeyScreen msg =
 -- INPUT SCREEN
 
 
-inputScreen : { question : String, input : String, placeholder : String } -> Html Msg
-inputScreen opts =
+inputScreen : Question -> Html Msg
+inputScreen question =
     slab
         Html.form
         [ onSubmit ConfirmInput ]
@@ -534,8 +560,9 @@ inputScreen opts =
         , T.flex_column
         ]
         [ UI.Kit.textFieldAlt
-            [ placeholder opts.placeholder
+            [ placeholder question.placeholder
             , Html.Styled.Events.onInput Input
+            , value question.value
             ]
         , UI.Kit.button
             UI.Kit.Normal
