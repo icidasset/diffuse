@@ -55,6 +55,7 @@ import UI.Page as Page
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.Common
+import UI.Queue.ContextMenu as Queue
 import UI.Queue.Core as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings as Settings
@@ -531,6 +532,9 @@ translateReply reply model =
         -----------------------------------------
         -- Context Menu
         -----------------------------------------
+        ShowFutureQueueItemMenu coordinates queueItem ->
+            return { model | contextMenu = Just (Queue.futureItemMenu queueItem coordinates) }
+
         ShowMoreAuthenticationOptions coordinates ->
             return { model | contextMenu = Just (Authentication.moreOptionsMenu coordinates) }
 
@@ -935,8 +939,8 @@ defaultScreen model =
             Page.Index ->
                 nothing
 
-            Page.Queue _ ->
-                nothing
+            Page.Queue subPage ->
+                Html.map QueueMsg (Queue.view subPage model.queue)
 
             Page.Settings subPage ->
                 Settings.view subPage model

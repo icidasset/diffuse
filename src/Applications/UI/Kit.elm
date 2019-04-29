@@ -246,7 +246,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 canister : List (Html msg) -> Html msg
 canister children =
     chunk
-        [ T.mh1, T.ph3, T.pb3 ]
+        [ T.mh1, T.ph3, T.pb4 ]
         children
 
 
@@ -497,8 +497,6 @@ vessel =
         [ css vesselStyles ]
         [ borderRadius
         , T.bg_white
-        , T.flex
-        , T.flex_column
         , T.flex_grow_1
         , T.overflow_scroll
         , T.relative

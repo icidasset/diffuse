@@ -33,6 +33,7 @@ import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page exposing (Page)
 import UI.Ports
+import UI.Queue.Page
 import UI.Reply exposing (Reply(..))
 import UI.Tracks.Core exposing (..)
 import UI.Tracks.Scene.List
@@ -349,7 +350,7 @@ view core =
     chunk
         [ T.flex
         , T.flex_column
-        , T.flex_grow_1
+        , T.h_100
         ]
         [ lazy3
             navigation
@@ -488,11 +489,11 @@ navigation favouritesOnly searchTerm page =
               )
             , ( Icon Icons.event_seat
               , Label "Queue" Hidden
-              , PerformMsg Bypass
+              , NavigateToPage (UI.Page.Queue UI.Queue.Page.Index)
               )
             , ( Icon Icons.equalizer
               , Label "Equalizer" Hidden
-              , UI.Navigation.GoToPage UI.Page.Equalizer
+              , NavigateToPage UI.Page.Equalizer
               )
             ]
         ]

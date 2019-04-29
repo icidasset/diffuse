@@ -221,7 +221,7 @@ index model =
       UI.Navigation.local
         [ ( Icon Icons.add
           , Label "Add a new source" Shown
-          , UI.Navigation.GoToPage (UI.Page.Sources New)
+          , NavigateToPage (UI.Page.Sources New)
           )
 
         -- Process
@@ -259,7 +259,12 @@ index model =
         -- List
         -------
         , model.collection
-            |> List.map (\s -> { label = Dict.fetch "name" "" s.data, actions = sourceActions s })
+            |> List.map
+                (\source ->
+                    { label = Html.text (Dict.fetch "name" "" source.data)
+                    , actions = sourceActions source
+                    }
+                )
             |> UI.List.view
         ]
     ]
@@ -283,7 +288,7 @@ sourceActions source =
       }
 
     --
-    , { icon = Icons.settings
+    , { icon = Icons.more_vert
       , msg = SourceContextMenu source
       , title = "Menu"
       }

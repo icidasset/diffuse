@@ -19,7 +19,7 @@ import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page
 import UI.Ports as Ports
-import UI.Reply exposing (Reply)
+import UI.Reply exposing (Reply(..))
 
 
 
@@ -151,7 +151,7 @@ update msg model =
         DeactivateKnob _ ->
             Return.replyWithModel
                 { model | activeKnob = Nothing }
-                UI.Reply.SaveEnclosedUserData
+                SaveEnclosedUserData
 
         -----------------------------------------
         -- Reset
@@ -207,7 +207,7 @@ reset : Model -> Knob -> Float -> Return Model Msg Reply
 reset newModel knobType value =
     ( newModel
     , adjustKnob knobType value
-    , [ UI.Reply.SaveEnclosedUserData ]
+    , [ SaveEnclosedUserData ]
     )
 
 
@@ -224,7 +224,7 @@ view model =
           UI.Navigation.local
             [ ( Icon Icons.arrow_back
               , Label "Back to list" Hidden
-              , GoToPage UI.Page.Index
+              , NavigateToPage UI.Page.Index
               )
             ]
 

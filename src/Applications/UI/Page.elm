@@ -98,6 +98,9 @@ sameBase a b =
         ( Index, Equalizer ) ->
             True
 
+        ( Index, Queue _ ) ->
+            True
+
         _ ->
             a == b
 

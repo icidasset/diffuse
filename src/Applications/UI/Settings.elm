@@ -44,7 +44,7 @@ index model =
       UI.Navigation.local
         [ ( Icon Icons.import_export
           , Label "Import / Export" Shown
-          , GoToPage (UI.Page.Settings ImportExport)
+          , NavigateToPage (UI.Page.Settings ImportExport)
           )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown

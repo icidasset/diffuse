@@ -25,7 +25,7 @@ view =
           UI.Navigation.local
             [ ( Icon Icons.arrow_back
               , Label "Settings" Hidden
-              , GoToPage (UI.Page.Settings UI.Settings.Page.Index)
+              , NavigateToPage (UI.Page.Settings UI.Settings.Page.Index)
               )
             ]
 

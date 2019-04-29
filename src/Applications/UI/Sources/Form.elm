@@ -20,7 +20,7 @@ import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Reply as Reply exposing (Reply)
+import UI.Reply as Reply exposing (Reply(..))
 import UI.Sources.Page as Sources
 
 
@@ -90,8 +90,8 @@ update msg model =
             in
             returnRepliesWithModel
                 { model | step = Where, context = defaultContext }
-                [ Reply.GoToPage (Page.Sources Sources.Index)
-                , Reply.AddSourceToCollection cleanContext
+                [ GoToPage (Page.Sources Sources.Index)
+                , AddSourceToCollection cleanContext
                 ]
 
         Bypass ->
@@ -100,15 +100,15 @@ update msg model =
         EditSource ->
             returnRepliesWithModel
                 { model | step = Where, context = defaultContext }
-                [ Reply.ReplaceSourceInCollection model.context
-                , Reply.ProcessSources
-                , Reply.GoToPage (Page.Sources Sources.Index)
+                [ ReplaceSourceInCollection model.context
+                , ProcessSources
+                , GoToPage (Page.Sources Sources.Index)
                 ]
 
         ReturnToIndex ->
             returnRepliesWithModel
                 model
-                [ Reply.GoToPage (Page.Sources Sources.Index) ]
+                [ GoToPage (Page.Sources Sources.Index) ]
 
         SelectService serviceKey ->
             case Services.keyToType serviceKey of
@@ -145,13 +145,13 @@ update msg model =
                 ( Where, Dropbox ) ->
                     model.context.data
                         |> Sources.Services.Dropbox.authorizationUrl
-                        |> Reply.ExternalSourceAuthorization
+                        |> ExternalSourceAuthorization
                         |> returnReplyWithModel model
 
                 ( Where, Google ) ->
                     model.context.data
                         |> Sources.Services.Google.authorizationUrl
-                        |> Reply.ExternalSourceAuthorization
+                        |> ExternalSourceAuthorization
                         |> returnReplyWithModel model
 
                 _ ->
@@ -206,7 +206,7 @@ newWhere { context } =
       UI.Navigation.local
         [ ( Icon Icons.arrow_back
           , Label "Back to list" Hidden
-          , GoToPage (Page.Sources Sources.Index)
+          , NavigateToPage (Page.Sources Sources.Index)
           )
         ]
 

@@ -1,6 +1,7 @@
 module UI.List exposing (Action, Item, view)
 
 import Chunky exposing (..)
+import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Css exposing (px, solid)
@@ -24,7 +25,7 @@ type alias Action msg =
 
 
 type alias Item msg =
-    { label : String
+    { label : Html msg
     , actions : List (Action msg)
     }
 
@@ -49,19 +50,24 @@ item { label, actions } =
     brick
         [ css itemStyles ]
         [ T.flex, T.fw6, T.items_center, T.pv3 ]
-        [ chunk
+        [ -- Label
+          --------
+          chunk
             [ T.flex_grow_1 ]
-            [ Html.text label ]
+            [ label ]
+
+        -- Actions
+        ----------
         , chunk
             [ T.flex, T.items_center ]
             (List.map
                 (\action ->
                     brick
                         [ Attributes.fromUnstyled (onClick action.msg)
-                        , style "line-height" "0"
                         , title action.title
                         ]
-                        [ T.ml2
+                        [ C.lh_0
+                        , T.ml2
                         , T.pointer
                         ]
                         [ fromUnstyled (action.icon UI.Kit.colors.text 16) ]

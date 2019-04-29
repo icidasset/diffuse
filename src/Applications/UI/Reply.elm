@@ -20,6 +20,7 @@ type Reply
       -----------------------------------------
       -- Context Menu
       -----------------------------------------
+    | ShowFutureQueueItemMenu Coordinates Queue.Item
     | ShowMoreAuthenticationOptions Coordinates
     | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)

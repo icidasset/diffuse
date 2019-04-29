@@ -1,15 +1,26 @@
-module UI.Queue exposing (initialModel, update)
+module UI.Queue exposing (initialModel, update, view)
 
+import Chunky exposing (..)
 import Conditional exposing (..)
+import Html.Styled as Html exposing (Html, fromUnstyled, text)
 import List.Extra as List
+import Material.Icons.Action as Icons
+import Material.Icons.Image as Icons
+import Material.Icons.Navigation as Icons
 import Queue exposing (..)
 import Return3 as Return exposing (..)
+import Tachyons.Classes as T
 import Time
 import Tracks exposing (IdentifiedTrack)
+import UI.Kit
+import UI.List
+import UI.Navigation exposing (..)
+import UI.Page as Page
 import UI.Ports as Ports
 import UI.Queue.Common exposing (makeItem)
 import UI.Queue.Core exposing (..)
 import UI.Queue.Fill as Fill
+import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Reply exposing (Reply(..))
 
 
@@ -37,6 +48,22 @@ initialModel =
 update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
+        ShowFutureItemMenu item mouseEvent ->
+            let
+                coordinates =
+                    ( mouseEvent.clientPos
+                    , mouseEvent.offsetPos
+                    )
+                        |> (\( ( a, b ), ( c, d ) ) ->
+                                { x = a - c + 8
+                                , y = b - d + 8
+                                }
+                           )
+            in
+            item
+                |> ShowFutureQueueItemMenu coordinates
+                |> returnReplyWithModel model
+
         ------------------------------------
         -- Combos
         ------------------------------------
@@ -169,6 +196,13 @@ update msg model =
         ------------------------------------
         -- Contents
         ------------------------------------
+        -- # Clear
+        --
+        Clear ->
+            returnRepliesWithModel
+                { model | future = [], ignored = [] }
+                [ FillQueue ]
+
         -- # Fill
         -- > Fill the queue with items.
         --
@@ -247,3 +281,157 @@ fillQueue timestamp availableTracks model =
                     True ->
                         { m | future = Fill.shuffled timestamp nonMissingTracks m }
            )
+
+
+
+-- 🗺
+
+
+view : Queue.Page -> Model -> Html Msg
+view page model =
+    UI.Kit.receptacle
+        (case page of
+            History ->
+                historyView model
+
+            Index ->
+                futureView model
+        )
+
+
+
+-- 🗺  ░░  FUTURE
+
+
+futureView : Model -> List (Html Msg)
+futureView model =
+    [ -----------------------------------------
+      -- Navigation
+      -----------------------------------------
+      UI.Navigation.local
+        [ ( Icon Icons.arrow_back
+          , Label "Back to list" Hidden
+          , NavigateToPage Page.Index
+          )
+        , ( Icon Icons.event_seat
+          , Label "History" Shown
+          , NavigateToPage (Page.Queue History)
+          )
+        , ( Icon Icons.cancel
+          , Label "Clear all" Shown
+          , PerformMsg Clear
+          )
+        , ( Icon Icons.restore
+          , Label "Clear ignored" Shown
+          , PerformMsg Reset
+          )
+        ]
+
+    -----------------------------------------
+    -- Content
+    -----------------------------------------
+    , UI.Kit.canister
+        [ UI.Kit.h1 "Up next"
+        , model.future
+            |> List.indexedMap futureItem
+            |> UI.List.view
+            |> chunky [ T.mt3 ]
+        ]
+    ]
+
+
+futureItem : Int -> Queue.Item -> UI.List.Item Msg
+futureItem idx item =
+    let
+        ( _, track ) =
+            item.identifiedTrack
+    in
+    { label =
+        inline
+            [ ifThenElse item.manualEntry T.o_100 T.o_50 ]
+            [ inline
+                [ T.dib, T.f7, T.mr2 ]
+                [ text (String.fromInt <| idx + 1), text "." ]
+            , text (track.tags.artist ++ " - " ++ track.tags.title)
+            ]
+    , actions =
+        []
+    }
+
+
+
+-- 🗺  ░░  HISTORY
+
+
+historyView : Model -> List (Html Msg)
+historyView model =
+    [ -----------------------------------------
+      -- Navigation
+      -----------------------------------------
+      UI.Navigation.local
+        [ ( Icon Icons.arrow_back
+          , Label "Back to list" Hidden
+          , NavigateToPage Page.Index
+          )
+        , ( Icon Icons.event_seat
+          , Label "Up next" Shown
+          , NavigateToPage (Page.Queue Index)
+          )
+        ]
+
+    -----------------------------------------
+    -- Content
+    -----------------------------------------
+    , if List.isEmpty model.past then
+        chunk
+            [ T.relative ]
+            [ chunk
+                [ T.absolute, T.left_0, T.top_0 ]
+                [ UI.Kit.canister [ UI.Kit.h1 "History" ] ]
+            ]
+
+      else
+        UI.Kit.canister
+            [ UI.Kit.h1 "History"
+            , model.past
+                |> List.reverse
+                |> List.indexedMap historyItem
+                |> UI.List.view
+                |> chunky [ T.mt3 ]
+            ]
+
+    --
+    , if List.isEmpty model.past then
+        UI.Kit.centeredContent
+            [ chunk
+                [ T.o_30 ]
+                [ fromUnstyled (Icons.music_note UI.Kit.colors.text 64) ]
+            , chunk
+                [ T.lh_copy, T.mt2, T.o_40, T.tc ]
+                [ text "Nothing here yet,"
+                , lineBreak
+                , text "play some music first."
+                ]
+            ]
+
+      else
+        nothing
+    ]
+
+
+historyItem : Int -> Queue.Item -> UI.List.Item Msg
+historyItem idx { identifiedTrack, manualEntry } =
+    let
+        ( _, track ) =
+            identifiedTrack
+    in
+    { label =
+        inline
+            [ ifThenElse manualEntry T.o_100 T.o_50 ]
+            [ inline
+                [ T.dib, T.f7, T.mr2 ]
+                [ text (String.fromInt <| idx + 1), text "." ]
+            , text (track.tags.artist ++ " - " ++ track.tags.title)
+            ]
+    , actions = []
+    }

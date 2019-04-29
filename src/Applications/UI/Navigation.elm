@@ -21,7 +21,7 @@ import UI.Page as Page exposing (Page)
 
 
 type Action msg
-    = GoToPage Page
+    = NavigateToPage Page
     | PerformMsg msg
 
 
@@ -134,14 +134,14 @@ localItem : Int -> ( Icon msg, Label, Action msg ) -> Html msg
 localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
     slab
         (case action of
-            GoToPage page ->
+            NavigateToPage page ->
                 Html.a
 
             PerformMsg msg ->
                 Html.button
         )
         [ case action of
-            GoToPage page ->
+            NavigateToPage page ->
                 href (Page.toString page)
 
             PerformMsg msg ->

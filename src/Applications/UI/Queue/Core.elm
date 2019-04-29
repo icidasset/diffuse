@@ -1,5 +1,6 @@
 module UI.Queue.Core exposing (Model, Msg(..))
 
+import Html.Events.Extra.Mouse as Mouse
 import Queue exposing (..)
 import Time
 import Tracks exposing (IdentifiedTrack)
@@ -26,10 +27,11 @@ type alias Model =
 
 
 type Msg
-    = ------------------------------------
+    = ShowFutureItemMenu Item Mouse.Event
+      ------------------------------------
       -- Combos
       ------------------------------------
-      InjectFirstAndPlay IdentifiedTrack
+    | InjectFirstAndPlay IdentifiedTrack
       ------------------------------------
       -- Future
       ------------------------------------
@@ -43,6 +45,7 @@ type Msg
       ------------------------------------
       -- Contents
       ------------------------------------
+    | Clear
     | Reset
     | Fill Time.Posix (List IdentifiedTrack)
       ------------------------------------
