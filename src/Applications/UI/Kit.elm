@@ -8,6 +8,7 @@ import Css.Global
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes exposing (css, href, style)
 import Html.Styled.Events exposing (onClick, onInput)
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Material.Icons.Toggle as Icons
 import Svg
@@ -278,10 +279,10 @@ checkbox opts =
         [ css checkboxStyles, onClick opts.toggleMsg ]
         [ T.dib, T.pointer, T.relative ]
         [ if opts.checked then
-            Html.fromUnstyled (Icons.check_box colors.text 22)
+            Html.fromUnstyled (Icons.check_box 22 Inherit)
 
           else
-            Html.fromUnstyled (Icons.check_box_outline_blank colors.text 22)
+            Html.fromUnstyled (Icons.check_box_outline_blank 22 Inherit)
         ]
 
 
@@ -334,13 +335,13 @@ h3 text =
         [ Html.text text ]
 
 
-inlineIcon : (Color.Color -> Int -> Svg.Svg msg) -> Html msg
+inlineIcon : (Int -> Coloring -> Svg.Svg msg) -> Html msg
 inlineIcon icon =
     slab
         Html.span
         [ css inlineIconStyles ]
         [ T.mr1 ]
-        [ Html.fromUnstyled (icon colors.text 14) ]
+        [ Html.fromUnstyled (icon 14 Inherit) ]
 
 
 intro : Html msg -> Html msg
@@ -425,7 +426,7 @@ select inputHandler options =
         , brick
             [ css selectStyles.arrow ]
             [ T.absolute, T.right_0 ]
-            [ Html.fromUnstyled (Icons.keyboard_arrow_down colorKit.base05 20) ]
+            [ Html.fromUnstyled <| Icons.keyboard_arrow_down 20 (Color colorKit.base05) ]
         ]
 
 

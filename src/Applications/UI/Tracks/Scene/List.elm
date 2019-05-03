@@ -14,6 +14,7 @@ import Html.Styled.Attributes exposing (css, fromUnstyled, id)
 import Html.Styled.Events exposing (onClick, onDoubleClick)
 import Html.Styled.Lazy
 import InfiniteList
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Navigation as Icons
 import Tachyons.Classes as T
 import Task
@@ -81,9 +82,6 @@ scrollToTop =
 header : SortBy -> SortDirection -> Html Msg
 header sortBy sortDirection =
     let
-        color =
-            Color.rgb255 207 207 207
-
         sortIcon =
             (if sortDirection == Desc then
                 Icons.expand_less
@@ -91,8 +89,8 @@ header sortBy sortDirection =
              else
                 Icons.expand_more
             )
-                color
                 15
+                Inherit
 
         sortIconHtml =
             Html.fromUnstyled sortIcon

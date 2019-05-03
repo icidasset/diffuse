@@ -2,6 +2,7 @@ module ContextMenu exposing (ContextMenu(..), ContextMenuItems)
 
 import Color exposing (Color)
 import Coordinates exposing (Coordinates)
+import Material.Icons exposing (Coloring(..))
 import Svg exposing (Svg)
 
 
@@ -14,4 +15,4 @@ type ContextMenu msg
 
 
 type alias ContextMenuItems msg =
-    List ( Color -> Int -> Svg msg, String, msg )
+    List ( Int -> Coloring -> Svg msg, String, msg )

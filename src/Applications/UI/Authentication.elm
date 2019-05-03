@@ -16,6 +16,7 @@ import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, spa
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Json.Encode
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
@@ -473,7 +474,7 @@ choicesScreen =
                 [ T.dib, T.ph1, T.pointer, C.lh_0 ]
                 [ chunk
                     [ C.pointer_events_none ]
-                    [ fromUnstyled (Icons.more_horiz UI.Kit.colors.text 22) ]
+                    [ fromUnstyled (Icons.more_horiz 22 Inherit) ]
                 ]
             ]
         ]
@@ -481,7 +482,7 @@ choicesScreen =
 
 choiceButton :
     { action : msg
-    , icon : Color -> Int -> Svg msg
+    , icon : Int -> Coloring -> Svg msg
     , isLast : Bool
     , label : String
     , outOfOrder : Bool
@@ -515,7 +516,7 @@ choiceButton { action, icon, isLast, label, outOfOrder } =
                 span
                 []
                 [ T.inline_flex, T.mr3 ]
-                [ fromUnstyled (icon UI.Kit.colors.text 16) ]
+                [ fromUnstyled (icon 16 Inherit) ]
             , text label
             ]
         ]

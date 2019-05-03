@@ -11,6 +11,7 @@ import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (class, css, style)
 import Html.Styled.Events exposing (on, onClick)
 import Json.Decode as Decode
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue
@@ -165,9 +166,9 @@ play =
         [ text "PLAY" ]
 
 
-icon : (Color.Color -> Int -> UnstyledHtml.Html msg) -> Int -> Html msg
+icon : (Int -> Coloring -> UnstyledHtml.Html msg) -> Int -> Html msg
 icon iconFunction int =
-    Html.fromUnstyled (iconFunction iconColor int)
+    Html.fromUnstyled (iconFunction int <| Color iconColor)
 
 
 

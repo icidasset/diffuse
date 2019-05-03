@@ -10,6 +10,7 @@ import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (attribute, css, href, tabindex, title)
 import Html.Styled.Events exposing (onClick)
 import List.Extra as List
+import Material.Icons exposing (Coloring(..))
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
@@ -26,7 +27,7 @@ type Action msg
 
 
 type Icon msg
-    = Icon (Color -> Int -> Svg msg)
+    = Icon (Int -> Coloring -> Svg msg)
 
 
 type Label
@@ -171,7 +172,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , T.pointer
         , T.ph3
         ]
-        [ Html.fromUnstyled (icon UI.Kit.colors.text 16)
+        [ Html.fromUnstyled (icon 16 Inherit)
 
         --
         , case labelType of

@@ -16,6 +16,7 @@ import InfiniteList
 import Json.Decode as Json
 import Json.Encode
 import List.Extra as List
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
@@ -433,7 +434,7 @@ navigation favouritesOnly searchTerm page =
                 , T.top_0
                 , T.z_0
                 ]
-                [ Html.fromUnstyled (Icons.search searchIconColor 16) ]
+                [ Html.fromUnstyled (Icons.search 16 searchIconColoring) ]
 
             -- Actions
             ----------
@@ -454,7 +455,7 @@ navigation favouritesOnly searchTerm page =
                             , title "Clear search"
                             ]
                             [ T.pointer ]
-                            [ Html.fromUnstyled (Icons.clear searchIconColor 16) ]
+                            [ Html.fromUnstyled (Icons.clear 16 searchIconColoring) ]
 
                     Nothing ->
                         nothing
@@ -468,10 +469,10 @@ navigation favouritesOnly searchTerm page =
                     [ T.pointer ]
                     [ case favouritesOnly of
                         True ->
-                            Html.fromUnstyled (Icons.favorite UI.Kit.colorKit.base08 16)
+                            Html.fromUnstyled (Icons.favorite 16 <| Color UI.Kit.colorKit.base08)
 
                         False ->
-                            Html.fromUnstyled (Icons.favorite_border searchIconColor 16)
+                            Html.fromUnstyled (Icons.favorite_border 16 searchIconColoring)
                     ]
 
                 -- 3
@@ -582,9 +583,9 @@ searchActionIconStyle =
     [ Css.marginRight (Css.px 6) ]
 
 
-searchIconColor : Color.Color
-searchIconColor =
-    Color.rgb255 205 205 205
+searchIconColoring : Coloring
+searchIconColoring =
+    Color (Color.rgb255 205 205 205)
 
 
 searchIconStyles : List Css.Style

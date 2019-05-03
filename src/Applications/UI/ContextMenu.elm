@@ -11,6 +11,7 @@ import Html.Styled exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Json.Decode
+import Material.Icons exposing (Coloring(..))
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Core
@@ -58,7 +59,7 @@ view m =
             nothing
 
 
-itemView : Int -> Int -> ( Color -> Int -> Svg msg, String, msg ) -> Html msg
+itemView : Int -> Int -> ( Int -> Coloring -> Svg msg, String, msg ) -> Html msg
 itemView lastIndex index ( icon, label, msg ) =
     let
         isLast =
@@ -74,7 +75,7 @@ itemView lastIndex index ( icon, label, msg ) =
         --
         , ifThenElse isLast "" T.bb
         ]
-        [ inline [ T.dib, C.lh_0, T.v_mid ] [ fromUnstyled (icon UI.Kit.colors.text 14) ]
+        [ inline [ T.dib, C.lh_0, T.v_mid ] [ fromUnstyled (icon 14 Inherit) ]
         , inline [ T.dib, T.ml2, T.v_mid ] [ text label ]
         ]
 

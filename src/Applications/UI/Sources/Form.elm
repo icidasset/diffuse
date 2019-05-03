@@ -9,6 +9,7 @@ import Html.Styled as Html exposing (Html, strong, text)
 import Html.Styled.Attributes exposing (for, name, placeholder, type_, value)
 import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
@@ -228,7 +229,7 @@ newWhere { context } =
         , UI.Kit.button
             IconOnly
             TakeStep
-            (Html.fromUnstyled <| Icons.arrow_forward UI.Kit.colorKit.accent 17)
+            (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
         ]
     ]
 
@@ -280,7 +281,7 @@ newHow { context } =
             [ UI.Kit.button
                 IconOnly
                 TakeStep
-                (Html.fromUnstyled <| Icons.arrow_forward UI.Kit.colorKit.accent 17)
+                (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
             ]
         ]
     ]

@@ -8,6 +8,7 @@ import Css exposing (px, solid)
 import Html.Events.Extra.Mouse as Mouse exposing (onClick)
 import Html.Styled as Html exposing (Html, fromUnstyled)
 import Html.Styled.Attributes as Attributes exposing (css, style, title)
+import Material.Icons exposing (Coloring(..))
 import Tachyons.Classes as T
 import UI.Kit
 import VirtualDom
@@ -18,7 +19,7 @@ import VirtualDom
 
 
 type alias Action msg =
-    { icon : Color -> Int -> VirtualDom.Node msg
+    { icon : Int -> Coloring -> VirtualDom.Node msg
     , msg : Mouse.Event -> msg
     , title : String
     }
@@ -70,7 +71,7 @@ item { label, actions } =
                         , T.ml2
                         , T.pointer
                         ]
-                        [ fromUnstyled (action.icon UI.Kit.colors.text 16) ]
+                        [ fromUnstyled (action.icon 16 Inherit) ]
                 )
                 actions
             )

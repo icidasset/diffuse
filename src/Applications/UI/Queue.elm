@@ -4,6 +4,7 @@ import Chunky exposing (..)
 import Conditional exposing (..)
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
 import List.Extra as List
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
@@ -405,7 +406,7 @@ historyView model =
         UI.Kit.centeredContent
             [ chunk
                 [ T.o_30 ]
-                [ fromUnstyled (Icons.music_note UI.Kit.colors.text 64) ]
+                [ fromUnstyled (Icons.music_note 64 Inherit) ]
             , chunk
                 [ T.lh_copy, T.mt2, T.o_40, T.tc ]
                 [ text "Nothing here yet,"
