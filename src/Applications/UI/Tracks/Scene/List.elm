@@ -193,7 +193,7 @@ rowHeight =
 
 
 rowStyles : Int -> Identifiers -> List Css.Style
-rowStyles idx { isNowPlaying } =
+rowStyles idx { isMissing, isNowPlaying } =
     let
         bgColor =
             if isNowPlaying then
@@ -208,6 +208,9 @@ rowStyles idx { isNowPlaying } =
         color =
             if isNowPlaying then
                 Css.rgb 255 255 255
+
+            else if isMissing then
+                Color.toElmCssColor UI.Kit.colorKit.base04
 
             else
                 Color.toElmCssColor UI.Kit.colors.text
