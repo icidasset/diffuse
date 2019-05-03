@@ -259,6 +259,8 @@ index model =
         -- List
         -------
         , model.collection
+            |> List.sortBy
+                (.data >> Dict.fetch "name" "")
             |> List.map
                 (\source ->
                     { label = Html.text (Dict.fetch "name" "" source.data)
