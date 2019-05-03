@@ -7,7 +7,9 @@ import Dict.Ext as Dict
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, text)
 import Json.Decode as Json
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
+import Material.Icons.Alert as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
@@ -33,6 +35,7 @@ type alias Model =
     , currentTime : Time.Posix
     , form : Form.Model
     , isProcessing : Bool
+    , processingError : Maybe { error : String, sourceId : String }
     , processingNotificationId : Maybe Int
     }
 
@@ -43,6 +46,7 @@ initialModel =
     , currentTime = Time.millisToPosix 0
     , form = Form.initialModel
     , isProcessing = False
+    , processingError = Nothing
     , processingNotificationId = Nothing
     }
 
@@ -55,6 +59,7 @@ type Msg
     = Bypass
     | FinishedProcessing
     | Process
+    | ReportProcessingError Json.Value
       -----------------------------------------
       -- Children
       -----------------------------------------
@@ -91,6 +96,30 @@ update msg model =
 
             else
                 returnReplyWithModel { model | isProcessing = True } ProcessSources
+
+        ReportProcessingError json ->
+            case Json.decodeValue (Json.dict Json.string) json of
+                Ok dict ->
+                    let
+                        args =
+                            { error = Dict.fetch "error" "" dict
+                            , sourceId = Dict.fetch "sourceId" "" dict
+                            }
+                    in
+                    dict
+                        |> Dict.fetch "error" "missingError"
+                        |> ShowErrorNotificationWithCode
+                            ("Could not process the _"
+                                ++ Dict.fetch "sourceName\n                                " "" dict
+                                ++ "_ source. I got the following response from the source:"
+                            )
+                        |> returnReplyWithModel
+                            { model | processingError = Just args }
+
+                Err _ ->
+                    "Could not decode processing error"
+                        |> ShowErrorNotification
+                        |> returnReplyWithModel model
 
         -----------------------------------------
         -- Children
@@ -264,7 +293,7 @@ index model =
             |> List.map
                 (\source ->
                     { label = Html.text (Dict.fetch "name" "" source.data)
-                    , actions = sourceActions source
+                    , actions = sourceActions model.processingError source
                     }
                 )
             |> UI.List.view
@@ -272,26 +301,49 @@ index model =
     ]
 
 
-sourceActions : Source -> List (UI.List.Action Msg)
-sourceActions source =
-    [ { icon =
-            if source.enabled then
-                Icons.check
+sourceActions : Maybe { error : String, sourceId : String } -> Source -> List (UI.List.Action Msg)
+sourceActions processingError source =
+    List.append
+        (case processingError of
+            Just { error, sourceId } ->
+                if sourceId == source.id then
+                    [ { color = Color UI.Kit.colors.error
+                      , icon = Icons.error_outline
+                      , msg = Nothing
+                      , title = error
+                      }
+                    ]
 
-            else
-                Icons.block
-      , msg = always (ToggleActivation { sourceId = source.id })
-      , title =
-            if source.enabled then
-                "Enabled (click to disable)"
+                else
+                    []
 
-            else
-                "Disabled (click to enable)"
-      }
+            Nothing ->
+                []
+        )
+        [ { color = Inherit
+          , icon =
+                if source.enabled then
+                    Icons.check
 
-    --
-    , { icon = Icons.more_vert
-      , msg = SourceContextMenu source
-      , title = "Menu"
-      }
-    ]
+                else
+                    Icons.block
+          , msg =
+                { sourceId = source.id }
+                    |> ToggleActivation
+                    |> always
+                    |> Just
+          , title =
+                if source.enabled then
+                    "Enabled (click to disable)"
+
+                else
+                    "Disabled (click to enable)"
+          }
+
+        --
+        , { color = Inherit
+          , icon = Icons.more_vert
+          , msg = Just (SourceContextMenu source)
+          , title = "Menu"
+          }
+        ]

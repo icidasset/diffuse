@@ -4,11 +4,13 @@ import Chunky exposing (..)
 import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
+import Conditional exposing (..)
 import Css exposing (px, solid)
 import Html.Events.Extra.Mouse as Mouse exposing (onClick)
 import Html.Styled as Html exposing (Html, fromUnstyled)
 import Html.Styled.Attributes as Attributes exposing (css, style, title)
 import Material.Icons exposing (Coloring(..))
+import Maybe.Extra as Maybe
 import Tachyons.Classes as T
 import UI.Kit
 import VirtualDom
@@ -19,8 +21,9 @@ import VirtualDom
 
 
 type alias Action msg =
-    { icon : Int -> Coloring -> VirtualDom.Node msg
-    , msg : Mouse.Event -> msg
+    { color : Coloring
+    , icon : Int -> Coloring -> VirtualDom.Node msg
+    , msg : Maybe (Mouse.Event -> msg)
     , title : String
     }
 
@@ -64,14 +67,20 @@ item { label, actions } =
             (List.map
                 (\action ->
                     brick
-                        [ Attributes.fromUnstyled (onClick action.msg)
-                        , title action.title
-                        ]
+                        (case action.msg of
+                            Just msg ->
+                                [ Attributes.fromUnstyled (onClick msg)
+                                , title action.title
+                                ]
+
+                            Nothing ->
+                                [ title action.title ]
+                        )
                         [ C.lh_0
                         , T.ml2
-                        , T.pointer
+                        , ifThenElse (Maybe.isJust action.msg) T.pointer ""
                         ]
-                        [ fromUnstyled (action.icon 16 Inherit) ]
+                        [ fromUnstyled (action.icon 16 action.color) ]
                 )
                 actions
             )

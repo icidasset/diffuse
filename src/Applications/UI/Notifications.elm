@@ -88,14 +88,14 @@ view notifications =
 notificationView : Notification Msg -> Html Msg
 notificationView notification =
     let
+        kind =
+            Notifications.kind notification
+
         options =
             Notifications.options notification
     in
     brick
-        [ css notificationStyles
-
-        --
-        , case Notifications.kind notification of
+        [ case kind of
             Error ->
                 css errorStyles
 
@@ -118,7 +118,7 @@ notificationView notification =
         , T.white_90
 
         --
-        , case Notifications.kind notification of
+        , case kind of
             Error ->
                 T.measure_narrow
 
@@ -136,7 +136,7 @@ notificationView notification =
             T.o_100
         ]
         [ contents notification
-        , if options.sticky then
+        , if options.sticky && kind /= Warning then
             brick
                 [ css [ Css.disableUserSelection ] ]
                 [ T.f7, T.i, T.mt2, T.o_60, T.pointer ]
@@ -168,23 +168,22 @@ containerStyles =
     ]
 
 
-notificationStyles : List Css.Style
-notificationStyles =
-    [ transition
-        [ Css.Transitions.opacity 450 ]
-    ]
-
-
 errorStyles : List Css.Style
 errorStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.error) ]
+    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.error)
+    , Css.Transitions.transition [ Css.Transitions.opacity 450 ]
+    ]
 
 
 successStyles : List Css.Style
 successStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.success) ]
+    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.success)
+    , Css.Transitions.transition [ Css.Transitions.opacity 450 ]
+    ]
 
 
 warningStyles : List Css.Style
 warningStyles =
-    [ Css.backgroundColor (Css.rgba 255 255 255 0.2) ]
+    [ Css.backgroundColor (Css.rgba 255 255 255 0.2)
+    , Css.Transitions.transition [ Css.Transitions.opacity 450 ]
+    ]

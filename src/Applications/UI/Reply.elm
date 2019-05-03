@@ -29,6 +29,7 @@ type Reply
       -----------------------------------------
     | DismissNotification { id : Int }
     | ShowErrorNotification String
+    | ShowErrorNotificationWithCode String String
     | ShowSuccessNotification String
     | ShowWarningNotification String
       -----------------------------------------

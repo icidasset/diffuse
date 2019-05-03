@@ -553,6 +553,9 @@ translateReply reply model =
         ShowErrorNotification string ->
             UI.Notifications.show (Notifications.stickyError string) model
 
+        ShowErrorNotificationWithCode string code ->
+            UI.Notifications.show (Notifications.errorWithCode string code []) model
+
         ShowSuccessNotification string ->
             UI.Notifications.show (Notifications.success string) model
 
@@ -627,7 +630,10 @@ translateReply reply model =
                     model.sources
 
                 newSources =
-                    { sources | processingNotificationId = Just notificationId }
+                    { sources
+                        | processingError = Nothing
+                        , processingNotificationId = Just notificationId
+                    }
             in
             [ ( "origin"
               , Json.Encode.string (Common.urlOrigin model.url)
@@ -798,21 +804,7 @@ translateAlienData event =
             TracksMsg (Tracks.RemoveByPaths event.data)
 
         Just Alien.ReportProcessingError ->
-            case Json.Decode.decodeValue (Json.Decode.dict Json.Decode.string) event.data of
-                Ok dict ->
-                    ShowNotification
-                        (Notifications.errorWithCode
-                            ("Could not process the _"
-                                ++ Dict.fetch "sourceName" "" dict
-                                ++ "_ source. I got the following response from the source:"
-                            )
-                            (Dict.fetch "error" "missingError" dict)
-                            []
-                        )
-
-                Err _ ->
-                    ShowNotification
-                        (Notifications.error "Could not decode processing error")
+            SourcesMsg (Sources.ReportProcessingError event.data)
 
         Just Alien.SearchTracks ->
             TracksMsg (Tracks.SetSearchResults event.data)
