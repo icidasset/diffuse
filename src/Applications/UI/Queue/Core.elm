@@ -37,6 +37,7 @@ type Msg
       ------------------------------------
     | InjectFirst { showNotification : Bool } (List IdentifiedTrack)
     | InjectLast { showNotification : Bool } (List IdentifiedTrack)
+    | RemoveItem { index : Int, item : Item }
       ------------------------------------
       -- Position
       ------------------------------------

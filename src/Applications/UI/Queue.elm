@@ -1,11 +1,16 @@
 module UI.Queue exposing (initialModel, update, view)
 
 import Chunky exposing (..)
+import Color.Ext as Color
 import Conditional exposing (..)
+import Css
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
+import Html.Styled.Attributes exposing (css)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
+import Material.Icons.Av as Icons
+import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Queue exposing (..)
@@ -156,6 +161,25 @@ update msg model =
                 |> (\list -> ifThenElse showNotification list [])
                 |> returnRepliesWithModel { model | future = newFuture }
                 |> addReply FillQueue
+
+        -- # RemoveItem
+        -- > Remove a future item.
+        --
+        RemoveItem { index, item } ->
+            let
+                newFuture =
+                    List.removeAt index model.future
+
+                newIgnored =
+                    if item.manualEntry then
+                        model.ignored
+
+                    else
+                        item :: model.ignored
+            in
+            returnRepliesWithModel
+                { model | future = newFuture, ignored = newIgnored }
+                [ FillQueue ]
 
         -----------------------------------------
         -- Position
@@ -314,15 +338,15 @@ futureView model =
           , Label "Back to list" Hidden
           , NavigateToPage Page.Index
           )
-        , ( Icon Icons.event_seat
+        , ( Icon Icons.history
           , Label "History" Shown
           , NavigateToPage (Page.Queue History)
           )
-        , ( Icon Icons.cancel
+        , ( Icon Icons.clear
           , Label "Clear all" Shown
           , PerformMsg Clear
           )
-        , ( Icon Icons.restore
+        , ( Icon Icons.clear
           , Label "Clear ignored" Shown
           , PerformMsg Reset
           )
@@ -348,15 +372,32 @@ futureItem idx item =
             item.identifiedTrack
     in
     { label =
-        inline
-            [ ifThenElse item.manualEntry T.o_100 T.o_50 ]
+        slab
+            Html.span
+            (if item.manualEntry then
+                []
+
+             else
+                [ UI.Kit.colorKit.base05
+                    |> Color.toElmCssColor
+                    |> Css.color
+                    |> List.singleton
+                    |> css
+                ]
+            )
+            []
             [ inline
                 [ T.dib, T.f7, T.mr2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
     , actions =
-        []
+        [ { color = Color (ifThenElse item.manualEntry UI.Kit.colorKit.base03 UI.Kit.colorKit.base07)
+          , icon = ifThenElse item.manualEntry Icons.remove_circle_outline Icons.not_interested
+          , msg = Just (\_ -> RemoveItem { index = idx, item = item })
+          , title = ifThenElse item.manualEntry "Remove" "Ignore"
+          }
+        ]
     }
 
 

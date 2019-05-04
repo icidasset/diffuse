@@ -484,7 +484,7 @@ navigation favouritesOnly searchTerm page =
           -----------------------------------------
           UI.Navigation.localWithTabindex
             tabindex_
-            [ ( Icon Icons.format_list_numbered
+            [ ( Icon Icons.waves
               , Label "Playlists" Hidden
               , PerformMsg Bypass
               )
