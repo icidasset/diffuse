@@ -54,22 +54,6 @@ initialModel =
 update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
-        ShowFutureItemMenu item mouseEvent ->
-            let
-                coordinates =
-                    ( mouseEvent.clientPos
-                    , mouseEvent.offsetPos
-                    )
-                        |> (\( ( a, b ), ( c, d ) ) ->
-                                { x = a - c + 8
-                                , y = b - d + 8
-                                }
-                           )
-            in
-            item
-                |> ShowFutureQueueItemMenu coordinates
-                |> returnReplyWithModel model
-
         ------------------------------------
         -- Combos
         ------------------------------------
@@ -392,8 +376,22 @@ futureItem idx item =
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
     , actions =
-        [ { color = Color (ifThenElse item.manualEntry UI.Kit.colorKit.base03 UI.Kit.colorKit.base07)
-          , icon = ifThenElse item.manualEntry Icons.remove_circle_outline Icons.not_interested
+        [ -- Remove
+          ---------
+          { color =
+                if item.manualEntry then
+                    Color UI.Kit.colorKit.base03
+
+                else
+                    Color UI.Kit.colorKit.base07
+          , icon =
+                if item.manualEntry then
+                    Icons.remove_circle_outline
+
+                else
+                    Icons.not_interested
+
+          --
           , msg = Just (\_ -> RemoveItem { index = idx, item = item })
           , title = ifThenElse item.manualEntry "Remove" "Ignore"
           }

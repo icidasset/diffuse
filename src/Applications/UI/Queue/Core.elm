@@ -27,11 +27,10 @@ type alias Model =
 
 
 type Msg
-    = ShowFutureItemMenu Item Mouse.Event
-      ------------------------------------
+    = ------------------------------------
       -- Combos
       ------------------------------------
-    | InjectFirstAndPlay IdentifiedTrack
+      InjectFirstAndPlay IdentifiedTrack
       ------------------------------------
       -- Future
       ------------------------------------
