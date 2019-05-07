@@ -22,7 +22,7 @@ import File.Download
 import File.Select
 import Html.Events.Extra.Pointer as Pointer
 import Html.Styled as Html exposing (Html, section, toUnstyled)
-import Html.Styled.Attributes exposing (css, id)
+import Html.Styled.Attributes as Attributes exposing (css, id)
 import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
@@ -47,6 +47,7 @@ import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
 import UI.Core as Core exposing (Flags, Model, Msg(..))
+import UI.DnD as DnD
 import UI.Equalizer as Equalizer
 import UI.Kit
 import UI.Navigation as Navigation
@@ -102,6 +103,7 @@ init flags url key =
     in
     { contextMenu = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
+    , isDragging = False
     , isLoading = True
     , navKey = key
     , notifications = []
@@ -194,6 +196,18 @@ update msg model =
               }
             , Cmd.none
             )
+
+        StoppedDragging ->
+            let
+                notDragging =
+                    { model | isDragging = False }
+            in
+            case model.page of
+                Page.Queue _ ->
+                    update (QueueMsg <| Queue.DragMsg DnD.stoppedDragging) notDragging
+
+                _ ->
+                    return notDragging
 
         Core.ToggleLoadingScreen On ->
             return { model | isLoading = True }
@@ -525,6 +539,9 @@ translateReply reply model =
                 |> ChangeUrlUsingPage
                 |> updateWithModel model
 
+        StartedDragging ->
+            return { model | isDragging = True }
+
         Reply.ToggleLoadingScreen state ->
             update (Core.ToggleLoadingScreen state) model
 
@@ -844,10 +861,15 @@ body model =
          else if Maybe.isJust model.equalizer.activeKnob then
             [ (EqualizerMsg << Equalizer.AdjustKnob)
                 |> Pointer.onMove
-                |> Html.Styled.Attributes.fromUnstyled
+                |> Attributes.fromUnstyled
             , (EqualizerMsg << Equalizer.DeactivateKnob)
                 |> Pointer.onUp
-                |> Html.Styled.Attributes.fromUnstyled
+                |> Attributes.fromUnstyled
+            ]
+
+         else if model.isDragging then
+            [ Attributes.class "dragging-something"
+            , Attributes.fromUnstyled (Pointer.onUp <| always StoppedDragging)
             ]
 
          else
@@ -1022,6 +1044,9 @@ globalCss =
     -----------------------------------------
     -- Bits & Pieces
     -----------------------------------------
+    , Css.Global.selector ".dragging-something" [ Css.cursor Css.grabbing ]
+    , Css.Global.selector ".dragging-something *" [ Css.cursor Css.grabbing ]
+    , Css.Global.selector ".grab-cursor" [ Css.cursor Css.grab ]
     , Css.Global.selector ".lh-0" [ Css.lineHeight Css.zero ]
     , Css.Global.selector ".pointer-events-none" [ Css.pointerEvents Css.none ]
     ]

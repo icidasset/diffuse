@@ -41,6 +41,7 @@ type alias Model =
     { contextMenu : Maybe (ContextMenu Msg)
     , currentTime : Time.Posix
     , debounce : Debouncer Msg Msg
+    , isDragging : Bool
     , isLoading : Bool
     , navKey : Nav.Key
     , notifications : List (Notification Msg)
@@ -85,6 +86,7 @@ type Msg
     | LoadHypaethralUserData Json.Value
     | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix
+    | StoppedDragging
     | ToggleLoadingScreen Switch
       -----------------------------------------
       -- Audio

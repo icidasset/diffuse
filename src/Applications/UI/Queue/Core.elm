@@ -1,5 +1,6 @@
 module UI.Queue.Core exposing (Model, Msg(..))
 
+import UI.DnD as DnD
 import Html.Events.Extra.Mouse as Mouse
 import Queue exposing (..)
 import Time
@@ -19,6 +20,9 @@ type alias Model =
     --
     , repeat : Bool
     , shuffle : Bool
+
+    --
+    , dnd : DnD.Model Int
     }
 
 
@@ -48,6 +52,10 @@ type Msg
     | Clear
     | Reset
     | Fill Time.Posix (List IdentifiedTrack)
+      ------------------------------------
+      -- Drag & Drop
+      ------------------------------------
+    | DragMsg (DnD.Msg Int)
       ------------------------------------
       -- Settings
       ------------------------------------

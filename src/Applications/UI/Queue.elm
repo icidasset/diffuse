@@ -18,6 +18,7 @@ import Return3 as Return exposing (..)
 import Tachyons.Classes as T
 import Time
 import Tracks exposing (IdentifiedTrack)
+import UI.DnD as DnD
 import UI.Kit
 import UI.List
 import UI.Navigation exposing (..)
@@ -44,6 +45,9 @@ initialModel =
     --
     , repeat = False
     , shuffle = False
+
+    --
+    , dnd = DnD.initialModel
     }
 
 
@@ -232,6 +236,59 @@ update msg model =
                 [ FillQueue ]
 
         ------------------------------------
+        -- Drag & Drop
+        ------------------------------------
+        DragMsg dragMsg ->
+            let
+                ( dnd, replies ) =
+                    DnD.update dragMsg model.dnd
+            in
+            if DnD.hasDropped dnd then
+                let
+                    ( subject, target ) =
+                        ( Maybe.withDefault 0 <| DnD.modelSubject dnd
+                        , Maybe.withDefault 0 <| DnD.modelTarget dnd
+                        )
+
+                    subjectItem =
+                        model.future
+                            |> List.getAt subject
+                            |> Maybe.map (\s -> { s | manualEntry = True })
+
+                    fixedTarget =
+                        if target > subject then
+                            target - 1
+
+                        else
+                            target
+
+                    newFuture =
+                        model.future
+                            |> List.removeAt subject
+                            |> List.indexedFoldr
+                                (\idx existingItem acc ->
+                                    if idx == fixedTarget then
+                                        case subjectItem of
+                                            Just itemToInsert ->
+                                                List.append [ itemToInsert, existingItem ] acc
+
+                                            Nothing ->
+                                                existingItem :: acc
+
+                                    else if idx < fixedTarget then
+                                        { existingItem | manualEntry = True } :: acc
+
+                                    else
+                                        existingItem :: acc
+                                )
+                                []
+                in
+                returnRepliesWithModel { model | dnd = dnd, future = newFuture } replies
+
+            else
+                returnRepliesWithModel { model | dnd = dnd } replies
+
+        ------------------------------------
         -- Settings
         ------------------------------------
         ToggleRepeat ->
@@ -344,6 +401,11 @@ futureView model =
         , model.future
             |> List.indexedMap futureItem
             |> UI.List.view
+                (UI.List.Draggable
+                    { model = model.dnd
+                    , toMsg = DragMsg
+                    }
+                )
             |> chunky [ T.mt3 ]
         ]
     ]
@@ -436,7 +498,7 @@ historyView model =
             , model.past
                 |> List.reverse
                 |> List.indexedMap historyItem
-                |> UI.List.view
+                |> UI.List.view UI.List.Normal
                 |> chunky [ T.mt3 ]
             ]
 

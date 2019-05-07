@@ -296,7 +296,7 @@ index model =
                     , actions = sourceActions model.processingError source
                     }
                 )
-            |> UI.List.view
+            |> UI.List.view UI.List.Normal
         ]
     ]
 

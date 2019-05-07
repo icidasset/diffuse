@@ -16,6 +16,7 @@ import UI.Page exposing (Page)
 type Reply
     = ExternalAuth Authentication.Method String
     | GoToPage Page
+    | StartedDragging
     | ToggleLoadingScreen Switch
       -----------------------------------------
       -- Context Menu
