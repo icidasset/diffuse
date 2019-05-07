@@ -94,6 +94,9 @@ function insertTrack(orchestrion, queueItem) {
   if (!queueItem.url) console.error("insertTrack, missing `url`");
   if (!queueItem.track && !queueItem.track.id) console.error("insertTrack, missing `track.id`");
 
+  // Reset progress-bar width
+  setProgressBarWidth(0)
+
   // Resume audio context if it's suspended
   if (context.resume && context.state !== "running") {
     context.resume()
