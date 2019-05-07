@@ -103,6 +103,7 @@ update msg model =
                             identifiedTrack
                                 |> UI.Tracks.Scene.List.scrollToNowPlaying
                                 |> Return.commandWithModel model
+                                |> Return.addReply (GoToPage UI.Page.Index)
 
                 Nothing ->
                     return model
