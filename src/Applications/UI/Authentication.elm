@@ -566,7 +566,7 @@ inputScreen question =
             , value question.value
             ]
         , UI.Kit.button
-            UI.Kit.Normal
+            UI.Kit.Filled
             Bypass
             (text "Continue")
         ]
