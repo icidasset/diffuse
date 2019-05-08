@@ -6,7 +6,7 @@ in the form of a static, serverless, web application._
 📍 Available at [diffuse.sh](https://diffuse.sh/) and for [download](https://github.com/icidasset/diffuse/releases).
 
 <br />
-<img src="https://icidasset-public.s3.amazonaws.com/diffuse.jpg" />
+<img src="https://icidasset-public.s3.amazonaws.com/diffuse-v2-alpha.jpg" />
 
 
 
