@@ -1,6 +1,6 @@
 <img src="https://diffuse.sh/images/diffuse-dark.svg" alt="Diffuse" width="158" />
 
-_A music player which connects to your cloud/distributed storage,  
+_A music player that connects to your cloud/distributed storage,  
 in the form of a static, serverless, web application._
 
 📍 Available at [diffuse.sh](https://diffuse.sh/) and for [download](https://github.com/icidasset/diffuse/releases).
@@ -12,16 +12,29 @@ in the form of a static, serverless, web application._
 
 ### Integrations
 
-[More info](https://diffuse.sh/about/)
+User layer for user-data storage.  
+Music layer for music storage.
 
 #### User layer
 
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(unencrypted data in browser)</small>
-- [IPFS](https://ipfs.io/) <small>(encrypted)</small>
+- [~~Blockstack~~](https://blockstack.org/) <small>(TODO)</small>
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
+- [IPFS](https://ipfs.io/)
+- [RemoteStorage](https://remotestorage.io/)
+- [~~Solid~~](https://solid.inrupt.com/) <small>(TODO)</small>
+- [Textile](https://github.com/textileio/go-textile)
 
 #### Music layer
 
 - [Amazon S3](https://aws.amazon.com/s3/)
+- [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
+- [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
+- [~~Blockstack Gaia Storage~~](https://github.com/blockstack/gaia) <small>(TODO)</small>
+- [Dropbox](https://dropbox.com/)
+- [Google Drive](https://drive.google.com/)
+- ~~HTTP Server~~ <small>(TODO)</small>
+- [IPFS](https://ipfs.io/)
+- [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
 
 
