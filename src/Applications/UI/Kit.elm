@@ -38,7 +38,7 @@ colorKit =
     , base0F = rgb 233 107 168
 
     -- ~(˘▾˘~)
-    , accent = rgb 248 164 167
+    , accent = rgb 231 150 128
     }
 
 
@@ -176,7 +176,8 @@ maxInputWidth =
 
 
 type ButtonType
-    = IconOnly
+    = Filled
+    | IconOnly
     | Normal
 
 
@@ -208,7 +209,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
         tag
         (List.append
             attributes
-            [ css (buttonStyles buttonColor)
+            [ css (buttonStyles buttonType buttonColor)
             , case maybeMsg of
                 Just msg ->
                     onClick msg
@@ -237,7 +238,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                     [ T.dib, T.lh_solid, T.v_top ]
                     [ child ]
 
-            Normal ->
+            _ ->
                 chunk
                     [ T.lh_copy ]
                     [ child ]
@@ -511,12 +512,21 @@ vessel =
 -----------------------------------------
 
 
-buttonStyles : Color.Color -> List Css.Style
-buttonStyles buttonColor =
-    [ Css.borderColor (Color.toElmCssColor buttonColor)
-    , Css.color (Color.toElmCssColor buttonColor)
-    , buttonFocus
-    ]
+buttonStyles : ButtonType -> Color.Color -> List Css.Style
+buttonStyles buttonType buttonColor =
+    case buttonType of
+        Filled ->
+            [ Css.backgroundColor (Color.toElmCssColor buttonColor)
+            , Css.borderColor Css.transparent
+            , Css.color (Css.rgb 255 255 255)
+            , buttonFocus
+            ]
+
+        _ ->
+            [ Css.borderColor (Color.toElmCssColor buttonColor)
+            , Css.color (Color.toElmCssColor buttonColor)
+            , buttonFocus
+            ]
 
 
 checkboxStyles : List Css.Style

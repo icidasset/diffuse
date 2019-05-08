@@ -542,7 +542,7 @@ encryptionKeyScreen msg =
             , Html.Styled.Events.onInput KeepPassphraseInMemory
             ]
         , UI.Kit.button
-            UI.Kit.Normal
+            UI.Kit.Filled
             Bypass
             (text "Continue")
         ]

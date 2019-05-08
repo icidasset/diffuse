@@ -20,18 +20,18 @@ import UI.Reply as Reply exposing (Reply)
 
 default : String
 default =
-    "1.jpg"
+    "7.jpg"
 
 
 options : List ( String, String )
 options =
-    [ ( "1.jpg", "Option 1 (default)" )
+    [ ( "1.jpg", "Option 1" )
     , ( "2.jpg", "Option 2" )
     , ( "3.jpg", "Option 3" )
     , ( "4.jpg", "Option 4" )
     , ( "5.jpg", "Option 5" )
     , ( "6.jpg", "Option 6" )
-    , ( "7.jpg", "Option 7" )
+    , ( "7.jpg", "Option 7 (default)" )
     , ( "8.jpg", "Option 8" )
     , ( "9.jpg", "Option 9" )
     , ( "10.jpg", "Option 10" )
