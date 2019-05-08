@@ -20,23 +20,32 @@ import UI.Reply as Reply exposing (Reply)
 
 default : String
 default =
-    "7.jpg"
+    "1.jpg"
 
 
 options : List ( String, String )
 options =
-    [ ( "1.jpg", "Option 1" )
+    [ ( "1.jpg", "Option 1 (default)" )
     , ( "2.jpg", "Option 2" )
     , ( "3.jpg", "Option 3" )
     , ( "4.jpg", "Option 4" )
     , ( "5.jpg", "Option 5" )
     , ( "6.jpg", "Option 6" )
-    , ( "7.jpg", "Option 7 (default)" )
+    , ( "7.jpg", "Option 7" )
     , ( "8.jpg", "Option 8" )
     , ( "9.jpg", "Option 9" )
     , ( "10.jpg", "Option 10" )
     , ( "11.jpg", "Option 11" )
     , ( "12.jpg", "Option 12" )
+    , ( "13.jpg", "Option 13" )
+    , ( "14.jpg", "Option 14" )
+    , ( "15.jpg", "Option 15" )
+    , ( "16.jpg", "Option 16" )
+    , ( "17.jpg", "Option 17" )
+    , ( "18.jpg", "Option 18" )
+    , ( "19.jpg", "Option 19" )
+    , ( "20.jpg", "Option 20" )
+    , ( "21.jpg", "Option 21" )
     ]
 
 
@@ -191,11 +200,29 @@ imageStyles fadeIn isPrevious loadedBackdrop =
     -- Background
     -------------
     , case loadedBackdrop of
-        "1.jpg" ->
+        "2.jpg" ->
+            style "background-position" "center 68%"
+
+        "3.jpg" ->
             style "background-position" "center 30%"
 
-        "9.jpg" ->
-            style "background-position" "center 68%"
+        "4.jpg" ->
+            style "background-position" "center 96.125%"
+
+        "6.jpg" ->
+            style "background-position" "center 40%"
+
+        "11.jpg" ->
+            style "background-position" "center 67.25%"
+
+        "17.jpg" ->
+            style "background-position" "center 87.5%"
+
+        "19.jpg" ->
+            style "background-position" "center 13%"
+
+        "20.jpg" ->
+            style "background-position" "center 39.75%"
 
         _ ->
             style "background-position" "center bottom"
