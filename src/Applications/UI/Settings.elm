@@ -2,27 +2,32 @@ module UI.Settings exposing (view)
 
 import Authentication exposing (Method(..))
 import Chunky exposing (..)
+import Color.Ext as Color
+import Conditional exposing (ifThenElse)
+import Css
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (selected, value)
+import Html.Styled.Attributes exposing (css, selected, value)
+import Html.Styled.Events exposing (onClick)
+import Html.Styled.Lazy
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Tachyons.Classes as T
-import UI.Authentication
-import UI.Backdrop
-import UI.Core
+import UI.Authentication as Authentication
+import UI.Backdrop as Backdrop
+import UI.Core as Core
 import UI.Kit
 import UI.Navigation exposing (..)
-import UI.Page
+import UI.Page as Page
 import UI.Settings.ImportExport
 import UI.Settings.Page as Settings exposing (..)
-import UI.Tracks.Core
+import UI.Tracks.Core as Tracks
 
 
 
 -- 🗺
 
 
-view : Settings.Page -> UI.Core.Model -> Html UI.Core.Msg
+view : Settings.Page -> Core.Model -> Html Core.Msg
 view page model =
     case page of
         ImportExport ->
@@ -33,10 +38,10 @@ view page model =
 
 
 
--- PAGES
+-- INDEX
 
 
-index : UI.Core.Model -> List (Html UI.Core.Msg)
+index : Core.Model -> List (Html Core.Msg)
 index model =
     [ -----------------------------------------
       -- Navigation
@@ -44,11 +49,11 @@ index model =
       UI.Navigation.local
         [ ( Icon Icons.import_export
           , Label "Import / Export" Shown
-          , NavigateToPage (UI.Page.Settings ImportExport)
+          , NavigateToPage (Page.Settings ImportExport)
           )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown
-          , PerformMsg UI.Core.SignOut
+          , PerformMsg Core.SignOut
           )
         ]
 
@@ -60,7 +65,7 @@ index model =
         , [ text "Changes are saved automatically."
           , lineBreak
           , text "PS. You're storing the data for this application "
-          , case UI.Authentication.extractMethod model.authentication of
+          , case Authentication.extractMethod model.authentication of
                 Just Ipfs ->
                     text "on IPFS."
 
@@ -81,34 +86,135 @@ index model =
                 { label = "change your passphrase"
                 , onClick =
                     Ipfs
-                        |> UI.Authentication.ShowUpdateEncryptionKeyScreen
-                        |> UI.Core.AuthenticationMsg
+                        |> Authentication.ShowUpdateEncryptionKeyScreen
+                        |> Core.AuthenticationMsg
                 }
           , text "."
           ]
             |> raw
             |> UI.Kit.intro
 
-        -- Background image
-        -------------------
-        , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Background Image" ]
-        , UI.Kit.select
-            (UI.Core.BackdropMsg << UI.Backdrop.Choose)
-            (List.map
-                (\( v, l ) ->
-                    Html.option
-                        [ selected (Just v == model.backdrop.chosen), value v ]
-                        [ text l ]
-                )
-                UI.Backdrop.options
-            )
-
         -- Duplicates
         -------------
         , chunk [ T.mb3, T.mt4 ] [ UI.Kit.label [] "Hide Duplicates" ]
         , UI.Kit.checkbox
             { checked = model.tracks.hideDuplicates
-            , toggleMsg = UI.Core.TracksMsg UI.Tracks.Core.ToggleHideDuplicates
+            , toggleMsg = Core.TracksMsg Tracks.ToggleHideDuplicates
             }
+
+        -- Background image
+        -------------------
+        , chunk [ T.mb3, T.mt4 ] [ UI.Kit.label [] "Background Image" ]
+        , Html.Styled.Lazy.lazy backgroundImage model.backdrop.chosen
         ]
+    ]
+
+
+backgroundImage : Maybe String -> Html Core.Msg
+backgroundImage chosenBackground =
+    chunk
+        [ T.flex, T.flex_wrap ]
+        (List.map
+            (\( filename, backdropLabel ) ->
+                let
+                    isActive =
+                        chosenBackground == Just filename
+                in
+                brick
+                    [ css backgroundThumbnailStyles
+                    , onClick (Core.BackdropMsg <| Backdrop.Choose filename)
+                    ]
+                    [ T.overflow_hidden
+                    , T.pointer
+                    , T.relative
+                    ]
+                    [ if isActive then
+                        brick
+                            [ css backgroundThumbnailColorStyles ]
+                            [ T.absolute
+                            , T.absolute__fill
+                            , T.br1
+                            , T.mb1
+                            , T.mr1
+                            , T.z_1
+                            ]
+                            []
+
+                      else
+                        chunk
+                            [ T.absolute
+                            , T.absolute__fill
+                            , T.bg_black_05
+                            , T.br1
+                            , T.mb1
+                            , T.mr1
+                            , T.z_1
+                            ]
+                            []
+
+                    --
+                    , brick
+                        [ css (backgroundThumbnailInnerStyles filename)
+                        , Backdrop.backgroundPositioning filename
+                        ]
+                        [ T.absolute
+                        , T.absolute__fill
+                        , T.br1
+                        , T.mb1
+                        , T.mr1
+                        , T.z_2
+                        , ifThenElse isActive T.o_20 T.o_100
+                        ]
+                        []
+
+                    --
+                    , if isActive then
+                        chunk
+                            [ T.absolute
+                            , T.absolute__fill
+                            , T.f7
+                            , T.flex
+                            , T.fw7
+                            , T.items_center
+                            , T.justify_center
+                            , T.lh_title
+                            , T.mb1
+                            , T.mr1
+                            , T.ph2
+                            , T.tc
+                            , T.white
+                            , T.z_3
+                            ]
+                            [ chunk
+                                [ T.dn
+                                , T.db_ns
+                                ]
+                                [ text "Selected" ]
+                            ]
+
+                      else
+                        nothing
+                    ]
+            )
+            Backdrop.options
+        )
+
+
+backgroundThumbnailStyles : List Css.Style
+backgroundThumbnailStyles =
+    [ Css.height Css.zero
+    , Css.paddingTop (Css.pct 8.275)
+    , Css.width (Css.pct 14.28571)
+    ]
+
+
+backgroundThumbnailColorStyles : List Css.Style
+backgroundThumbnailColorStyles =
+    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.accent) ]
+
+
+backgroundThumbnailInnerStyles : String -> List Css.Style
+backgroundThumbnailInnerStyles filename =
+    [ Css.backgroundImage (Css.url <| "/images/Background/Thumbnails/" ++ filename)
+    , Css.backgroundSize Css.cover
     ]

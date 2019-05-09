@@ -1,4 +1,4 @@
-module UI.Backdrop exposing (Model, Msg(..), default, initialModel, options, update, view)
+module UI.Backdrop exposing (Model, Msg(..), backgroundPositioning, default, initialModel, options, update, view)
 
 import Chunky exposing (..)
 import Css exposing (..)
@@ -107,6 +107,37 @@ view model =
         ]
 
 
+backgroundPositioning : String -> Html.Attribute msg
+backgroundPositioning filename =
+    case filename of
+        "2.jpg" ->
+            style "background-position" "center 68%"
+
+        "3.jpg" ->
+            style "background-position" "center 30%"
+
+        "4.jpg" ->
+            style "background-position" "center 96.125%"
+
+        "6.jpg" ->
+            style "background-position" "center 40%"
+
+        "11.jpg" ->
+            style "background-position" "center 67.25%"
+
+        "17.jpg" ->
+            style "background-position" "center 87.5%"
+
+        "19.jpg" ->
+            style "background-position" "center 13%"
+
+        "20.jpg" ->
+            style "background-position" "center 39.75%"
+
+        _ ->
+            style "background-position" "center bottom"
+
+
 
 -----------------------------------------
 -- ㊙️
@@ -199,33 +230,7 @@ imageStyles fadeIn isPrevious loadedBackdrop =
 
     -- Background
     -------------
-    , case loadedBackdrop of
-        "2.jpg" ->
-            style "background-position" "center 68%"
-
-        "3.jpg" ->
-            style "background-position" "center 30%"
-
-        "4.jpg" ->
-            style "background-position" "center 96.125%"
-
-        "6.jpg" ->
-            style "background-position" "center 40%"
-
-        "11.jpg" ->
-            style "background-position" "center 67.25%"
-
-        "17.jpg" ->
-            style "background-position" "center 87.5%"
-
-        "19.jpg" ->
-            style "background-position" "center 13%"
-
-        "20.jpg" ->
-            style "background-position" "center 39.75%"
-
-        _ ->
-            style "background-position" "center bottom"
+    , backgroundPositioning loadedBackdrop
 
     -- Opacity
     ----------
