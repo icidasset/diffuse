@@ -24,9 +24,12 @@ This layer will use a service to store data from a user, such as the user's favo
 
 You can choose between these services:
 
-- [Blockstack](https://blockstack.org/)
-- [RemoteStorage](remotestorage.io)
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(ie. anonymous mode)</small>
+- [<del>Blockstack</del>](https://blockstack.org/) <small>(TODO)</small>
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
+- [IPFS](https://ipfs.io/)
+- [RemoteStorage](https://remotestorage.io/)
+- [<del>Solid</del>](https://solid.inrupt.com/) <small>(TODO)</small>
+- [Textile](https://github.com/textileio/go-textile)
 
 
 ### Music layer
@@ -35,11 +38,13 @@ This layer connects with the services the user has on which music can be found. 
 
 - [Amazon S3](https://aws.amazon.com/s3/)
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
+- [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
+- [<del>Blockstack Gaia Storage</del>](https://github.com/blockstack/gaia) <small>(TODO)</small>
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
+- <del>HTTP Server</del> <small>(TODO)</small>
 - [IPFS](https://ipfs.io/)
-- Local Filesystem <small>(native only)</small>
-- [WebDAV](https://en.wikipedia.org/wiki/WebDAV) <small>(native only)</small>
+- [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
 
 
@@ -119,7 +124,9 @@ _Not necessary._
 
 <div id="UI" />
 
-### UI
+
+
+## UI
 
 The user interface should be self explanatory, but there are a few "hidden" features:
 
