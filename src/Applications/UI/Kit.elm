@@ -393,7 +393,6 @@ receptacle =
         [ T.absolute
         , T.absolute__fill
         , T.bg_white
-        , T.br2
         , T.flex
         , T.flex_column
         , T.z_999
@@ -654,6 +653,7 @@ vesselStyles : List Css.Style
 vesselStyles =
     [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
     , Css.maxWidth (px insulationWidth)
+    , Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)"
     ]
 
 
