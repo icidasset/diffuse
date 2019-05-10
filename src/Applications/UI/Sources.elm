@@ -5,7 +5,8 @@ import Conditional exposing (ifThenElse)
 import Coordinates exposing (Coordinates)
 import Dict.Ext as Dict
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, text)
+import Html.Styled as Html exposing (Html, fromUnstyled, text)
+import Html.Styled.Attributes exposing (href)
 import Json.Decode as Json
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
@@ -16,11 +17,12 @@ import Material.Icons.Notification as Icons
 import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Encoding
+import Tachyons.Classes as T
 import Time
 import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
-import UI.Page
+import UI.Page as Page
 import UI.Reply exposing (Reply(..))
 import UI.Sources.Form as Form
 import UI.Sources.Page as Sources exposing (..)
@@ -247,58 +249,102 @@ index model =
     [ -----------------------------------------
       -- Navigation
       -----------------------------------------
-      UI.Navigation.local
-        [ ( Icon Icons.add
-          , Label "Add a new source" Shown
-          , NavigateToPage (UI.Page.Sources New)
-          )
+      if List.isEmpty model.collection then
+        UI.Navigation.local
+            [ ( Icon Icons.add
+              , Label "Add a new source" Shown
+              , NavigateToPage (Page.Sources New)
+              )
+            ]
 
-        -- Process
-        ----------
-        , if model.isProcessing then
-            ( Icon Icons.sync
-            , Label "Processing sources ..." Shown
-            , PerformMsg Bypass
-            )
+      else
+        UI.Navigation.local
+            [ ( Icon Icons.add
+              , Label "Add a new source" Shown
+              , NavigateToPage (Page.Sources New)
+              )
 
-          else
-            ( Icon Icons.sync
-            , Label "Process sources" Shown
-            , PerformMsg Process
-            )
-        ]
+            -- Process
+            ----------
+            , if model.isProcessing then
+                ( Icon Icons.sync
+                , Label "Processing sources ..." Shown
+                , PerformMsg Bypass
+                )
+
+              else
+                ( Icon Icons.sync
+                , Label "Process sources" Shown
+                , PerformMsg Process
+                )
+            ]
 
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , UI.Kit.canister
-        [ UI.Kit.h1 "Sources"
+    , if List.isEmpty model.collection then
+        chunk
+            [ T.relative ]
+            [ chunk
+                [ T.absolute, T.left_0, T.top_0 ]
+                [ UI.Kit.canister [ UI.Kit.h1 "Sources" ] ]
+            ]
 
-        -- Intro
-        --------
-        , [ text "A source is a place where your music is stored."
-          , lineBreak
-          , text "By connecting a source, the application will scan it and keep a list of all the music in it."
-          , lineBreak
-          , text "It will not copy anything."
-          ]
-            |> raw
-            |> UI.Kit.intro
+      else
+        UI.Kit.canister
+            [ UI.Kit.h1 "Sources"
 
-        -- List
-        -------
-        , model.collection
-            |> List.sortBy
-                (.data >> Dict.fetch "name" "")
-            |> List.map
-                (\source ->
-                    { label = Html.text (Dict.fetch "name" "" source.data)
-                    , actions = sourceActions model.processingError source
-                    }
-                )
-            |> UI.List.view UI.List.Normal
-        ]
+            -- Intro
+            --------
+            , intro
+
+            -- List
+            -------
+            , model.collection
+                |> List.sortBy
+                    (.data >> Dict.fetch "name" "")
+                |> List.map
+                    (\source ->
+                        { label = Html.text (Dict.fetch "name" "" source.data)
+                        , actions = sourceActions model.processingError source
+                        }
+                    )
+                |> UI.List.view UI.List.Normal
+            ]
+
+    --
+    , if List.isEmpty model.collection then
+        UI.Kit.centeredContent
+            [ slab
+                Html.a
+                [ href (Page.toString <| Page.Sources New) ]
+                [ T.color_inherit, T.db, T.link, T.o_30 ]
+                [ fromUnstyled (Icons.add 64 Inherit) ]
+            , slab
+                Html.a
+                [ href (Page.toString <| Page.Sources New) ]
+                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+                [ text "No sources have been added yet,"
+                , lineBreak
+                , text "add one to get started."
+                ]
+            ]
+
+      else
+        nothing
     ]
+
+
+intro : Html Msg
+intro =
+    [ text "A source is a place where your music is stored."
+    , lineBreak
+    , text "By connecting a source, the application will scan it and keep a list of all the music in it."
+    , lineBreak
+    , text "It will not copy anything."
+    ]
+        |> raw
+        |> UI.Kit.intro
 
 
 sourceActions : Maybe { error : String, sourceId : String } -> Source -> List (UI.List.Action Msg)

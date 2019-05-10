@@ -5,7 +5,7 @@ import Color.Ext as Color
 import Conditional exposing (..)
 import Css
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (css, href)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
@@ -29,6 +29,7 @@ import UI.Queue.Core exposing (..)
 import UI.Queue.Fill as Fill
 import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Reply exposing (Reply(..))
+import UI.Sources.Page
 
 
 
@@ -397,16 +398,11 @@ futureView model =
     -- Content
     -----------------------------------------
     , if List.isEmpty model.future then
-        UI.Kit.centeredContent
+        chunk
+            [ T.relative ]
             [ chunk
-                [ T.o_30 ]
-                [ fromUnstyled (Icons.music_note 64 Inherit) ]
-            , chunk
-                [ T.lh_copy, T.mt2, T.o_40, T.tc ]
-                [ text "Nothing here yet,"
-                , lineBreak
-                , text "add some music first."
-                ]
+                [ T.absolute, T.left_0, T.top_0 ]
+                [ UI.Kit.canister [ UI.Kit.h1 "Up next" ] ]
             ]
 
       else
@@ -422,6 +418,27 @@ futureView model =
                     )
                 |> chunky [ T.mt3 ]
             ]
+
+    --
+    , if List.isEmpty model.future then
+        UI.Kit.centeredContent
+            [ slab
+                Html.a
+                [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
+                [ T.color_inherit, T.db, T.link, T.o_30 ]
+                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+            , slab
+                Html.a
+                [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
+                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+                [ text "Nothing here yet,"
+                , lineBreak
+                , text "add some music first."
+                ]
+            ]
+
+      else
+        nothing
     ]
 
 
