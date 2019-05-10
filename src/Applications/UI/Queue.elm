@@ -396,18 +396,32 @@ futureView model =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , UI.Kit.canister
-        [ UI.Kit.h1 "Up next"
-        , model.future
-            |> List.indexedMap futureItem
-            |> UI.List.view
-                (UI.List.Draggable
-                    { model = model.dnd
-                    , toMsg = DragMsg
-                    }
-                )
-            |> chunky [ T.mt3 ]
-        ]
+    , if List.isEmpty model.future then
+        UI.Kit.centeredContent
+            [ chunk
+                [ T.o_30 ]
+                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+            , chunk
+                [ T.lh_copy, T.mt2, T.o_40, T.tc ]
+                [ text "Nothing here yet,"
+                , lineBreak
+                , text "add some music first."
+                ]
+            ]
+
+      else
+        UI.Kit.canister
+            [ UI.Kit.h1 "Up next"
+            , model.future
+                |> List.indexedMap futureItem
+                |> UI.List.view
+                    (UI.List.Draggable
+                        { model = model.dnd
+                        , toMsg = DragMsg
+                        }
+                    )
+                |> chunky [ T.mt3 ]
+            ]
     ]
 
 
