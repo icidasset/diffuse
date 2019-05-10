@@ -14,6 +14,6 @@ type alias Item =
 
 
 type alias EngineItem =
-    { track : Track
+    { trackId : String
     , url : String
     }

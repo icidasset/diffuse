@@ -3,7 +3,7 @@ module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..)
 import Equalizer
 import Json.Decode as Json
 import Json.Decode.Ext as Json
-import Json.Decode.Pipeline exposing (optional, required)
+import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
 import Maybe.Extra as Maybe
 import Sources

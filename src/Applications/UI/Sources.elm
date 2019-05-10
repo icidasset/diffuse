@@ -19,6 +19,7 @@ import Sources exposing (..)
 import Sources.Encoding
 import Tachyons.Classes as T
 import Time
+import Time.Ext as Time
 import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
@@ -45,7 +46,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { collection = []
-    , currentTime = Time.millisToPosix 0
+    , currentTime = Time.default
     , form = Form.initialModel
     , isProcessing = False
     , processingError = Nothing

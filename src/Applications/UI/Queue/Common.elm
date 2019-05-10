@@ -15,7 +15,7 @@ import Tracks exposing (IdentifiedTrack, Track)
 
 makeEngineItem : Time.Posix -> List Source -> IdentifiedTrack -> EngineItem
 makeEngineItem timestamp sources ( _, track ) =
-    { track = track
+    { trackId = track.id
     , url =
         sources
             |> List.find (.id >> (==) track.sourceId)

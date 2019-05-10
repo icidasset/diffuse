@@ -2,6 +2,8 @@ module Tracks exposing (Collection, CollectionDependencies, Favourite, Identifie
 
 import Base64
 import String.Ext as String
+import Time
+import Time.Ext as Time
 
 
 
@@ -10,6 +12,7 @@ import String.Ext as String
 
 type alias Track =
     { id : String
+    , insertedAt : Time.Posix
     , path : String
     , sourceId : String
     , tags : Tags
@@ -119,6 +122,7 @@ type SortDirection
 emptyTrack : Track
 emptyTrack =
     { id = ""
+    , insertedAt = Time.default
     , path = ""
     , sourceId = ""
     , tags = emptyTags
@@ -171,6 +175,7 @@ makeTrack sourceId ( path, tags ) =
         (sourceId ++ "//" ++ path)
             |> Base64.encode
             |> String.chopEnd "="
+    , insertedAt = Time.default
     , path = path
     , sourceId = sourceId
     , tags = tags

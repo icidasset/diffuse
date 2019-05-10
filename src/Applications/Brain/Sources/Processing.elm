@@ -13,6 +13,7 @@ import Sources.Processing exposing (..)
 import Task
 import Task.Extra exposing (do)
 import Time
+import Time.Ext as Time
 import Tracks.Encoding
 
 
@@ -22,7 +23,7 @@ import Tracks.Encoding
 
 initialModel : Model
 initialModel =
-    { currentTime = Time.millisToPosix 0
+    { currentTime = Time.default
     , origin = "ORIGIN_UNKNOWN"
     , status = NotProcessing
     }
@@ -162,6 +163,7 @@ update msg model =
                 False ->
                     tagsContext
                         |> tracksFromTagsContext
+                        |> List.map (\track -> { track | insertedAt = model.currentTime })
                         |> Encode.list Tracks.Encoding.encodeTrack
                         |> GiveUI Alien.AddTracks
                         |> List.singleton

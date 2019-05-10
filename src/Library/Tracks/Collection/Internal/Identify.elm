@@ -1,6 +1,7 @@
 module Tracks.Collection.Internal.Identify exposing (identify)
 
 import List.Extra as List
+import Time.Ext as Time
 import Tracks exposing (..)
 import Tracks.Favourites as Favourites
 
@@ -134,6 +135,7 @@ makeMissingFavouriteTrack fav =
       }
     , { tags = tags
       , id = missingId
+      , insertedAt = Time.default
       , path = missingId
       , sourceId = missingId
       }

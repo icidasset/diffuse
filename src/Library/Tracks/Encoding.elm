@@ -1,7 +1,9 @@
 module Tracks.Encoding exposing (decodeFavourite, decodeTrack, encodeFavourite, encodeMaybe, encodeSortBy, encodeSortDirection, encodeTags, encodeTrack, favouriteDecoder, sortByDecoder, sortDirectionDecoder, tagsDecoder, trackDecoder)
 
 import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
+import Time.Ext as Time
 import Tracks exposing (..)
 
 
@@ -47,6 +49,7 @@ encodeTrack : Track -> Encode.Value
 encodeTrack track =
     Encode.object
         [ ( "id", Encode.string track.id )
+        , ( "insertedAt", Time.encode track.insertedAt )
         , ( "path", Encode.string track.path )
         , ( "sourceId", Encode.string track.sourceId )
         , ( "tags", encodeTags track.tags )
@@ -156,8 +159,9 @@ tagsDecoder =
 
 trackDecoder : Decode.Decoder Track
 trackDecoder =
-    Decode.map4 Track
-        (Decode.field "id" Decode.string)
-        (Decode.field "path" Decode.string)
-        (Decode.field "sourceId" Decode.string)
-        (Decode.field "tags" tagsDecoder)
+    Decode.succeed Track
+        |> required "id" Decode.string
+        |> optional "insertedAt" Time.decoder Time.default
+        |> required "path" Decode.string
+        |> required "sourceId" Decode.string
+        |> required "tags" tagsDecoder

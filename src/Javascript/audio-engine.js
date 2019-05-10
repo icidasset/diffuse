@@ -92,7 +92,7 @@ function determineNodeGainValue(knobType, value) {
 
 function insertTrack(orchestrion, queueItem) {
   if (!queueItem.url) console.error("insertTrack, missing `url`");
-  if (!queueItem.track && !queueItem.track.id) console.error("insertTrack, missing `track.id`");
+  if (!queueItem.trackId) console.error("insertTrack, missing `trackId`");
 
   // Reset progress-bar width
   setProgressBarWidth(0)
@@ -130,7 +130,7 @@ function createAudioElement(orchestrion, queueItem) {
   audio.setAttribute("crossorigin", "anonymous")
   audio.setAttribute("preload", "none")
   audio.setAttribute("src", queueItem.url)
-  audio.setAttribute("rel", queueItem.track.id)
+  audio.setAttribute("rel", queueItem.trackId)
   audio.setAttribute("data-timestamp", timestampInMilliseconds)
 
   audio.crossorigin = "anonymous"
@@ -270,7 +270,7 @@ function audioElementTrackId(node) {
 
 function isActiveAudioElement(orchestrion, node) {
   if (!orchestrion.activeQueueItem || !node) return false;
-  return orchestrion.activeQueueItem.track.id === audioElementTrackId(node)
+  return orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
 }
 
 
