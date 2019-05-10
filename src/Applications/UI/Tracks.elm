@@ -352,7 +352,7 @@ view core =
     chunk
         [ T.flex
         , T.flex_column
-        , T.h_100
+        , T.flex_grow_1
         ]
         [ lazy3
             navigation

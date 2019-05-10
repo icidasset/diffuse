@@ -393,6 +393,7 @@ receptacle =
         [ T.absolute
         , T.absolute__fill
         , T.bg_white
+        , T.br2
         , T.flex
         , T.flex_column
         , T.z_999
@@ -499,6 +500,8 @@ vessel =
         [ css vesselStyles ]
         [ borderRadius
         , T.bg_white
+        , T.flex
+        , T.flex_column
         , T.flex_grow_1
         , T.overflow_scroll
         , T.relative

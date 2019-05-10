@@ -91,13 +91,13 @@ type Msg
       -----------------------------------------
       -- Audio
       -----------------------------------------
-    | Pause
-    | Play
+    | PlayPause
     | Seek Float
     | SetAudioDuration Float
     | SetAudioHasStalled Bool
     | SetAudioIsLoading Bool
     | SetAudioIsPlaying Bool
+    | Stop
     | Unstall
       -----------------------------------------
       -- Authentication

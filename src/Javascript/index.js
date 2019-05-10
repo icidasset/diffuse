@@ -129,3 +129,27 @@ function removeFocus() {
   const n = document.activeElement
   if (n && !n.dataset.keepFocus) n.blur()
 }
+
+
+
+// Media Keys
+// ----------
+
+document.addEventListener("MediaPlayPause", () => {
+  app.ports.requestPlayPause.send(null)
+})
+
+
+document.addEventListener("MediaStop", () => {
+  app.ports.requestStop.send(null)
+})
+
+
+document.addEventListener("MediaPrev", () => {
+  app.ports.requestPrevious.send(null)
+})
+
+
+document.addEventListener("MediaNext", () => {
+  app.ports.requestNext.send(null)
+})

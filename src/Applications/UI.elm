@@ -218,11 +218,15 @@ update msg model =
         -----------------------------------------
         -- Audio
         -----------------------------------------
-        Pause ->
-            returnWithModel model (Ports.pause ())
+        PlayPause ->
+            if Maybe.isNothing model.queue.activeItem then
+                update (QueueMsg Queue.Shift) model
 
-        Play ->
-            returnWithModel model (Ports.play ())
+            else if model.audioIsPlaying then
+                returnWithModel model (Ports.pause ())
+
+            else
+                returnWithModel model (Ports.play ())
 
         Seek percentage ->
             returnWithModel model (Ports.seek percentage)
@@ -236,8 +240,11 @@ update msg model =
         SetAudioIsLoading isLoading ->
             return { model | audioIsLoading = isLoading }
 
-        SetAudioIsPlaying isPlayinh ->
-            return { model | audioIsPlaying = isPlayinh }
+        SetAudioIsPlaying isPlaying ->
+            return { model | audioIsPlaying = isPlaying }
+
+        Stop ->
+            returnWithModel model (Ports.pause ())
 
         Unstall ->
             returnWithModel model (Ports.unstall ())
@@ -757,6 +764,13 @@ subscriptions _ =
         , Ports.setAudioHasStalled SetAudioHasStalled
         , Ports.setAudioIsLoading SetAudioIsLoading
         , Ports.setAudioIsPlaying SetAudioIsPlaying
+
+        -- Remote
+        ---------
+        , Ports.requestNext <| always (QueueMsg Queue.Shift)
+        , Ports.requestPlayPause <| always PlayPause
+        , Ports.requestPrevious <| always (QueueMsg Queue.Rewind)
+        , Ports.requestStop <| always Stop
 
         --
         , Browser.Events.onResize

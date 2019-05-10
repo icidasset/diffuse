@@ -82,23 +82,12 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
         -----------------------------------------
         -- Buttons
         -----------------------------------------
-        , let
-            playMsg =
-                if Maybe.isNothing activeQueueItem then
-                    QueueMsg Queue.Shift
-
-                else if isPlaying then
-                    Pause
-
-                else
-                    Play
-          in
-          brick
+        , brick
             [ css buttonsContainerStyles ]
             [ T.flex, T.justify_center, T.mb2, T.mt3, T.pb1 ]
             [ button (smallLight repeat) (icon Icons.repeat 18) (QueueMsg <| Queue.ToggleRepeat)
             , button lightPlaceHolder (icon Icons.fast_rewind 20) (QueueMsg <| Queue.Rewind)
-            , button (largeLight isPlaying) play playMsg
+            , button (largeLight isPlaying) play PlayPause
             , button lightPlaceHolder (icon Icons.fast_forward 20) (QueueMsg <| Queue.Shift)
             , button (smallLight shuffle) (icon Icons.shuffle 18) (QueueMsg <| Queue.ToggleShuffle)
             ]
