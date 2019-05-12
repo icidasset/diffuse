@@ -1,4 +1,4 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId)
+module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId)
 
 import Base64
 import String.Ext as String
@@ -60,6 +60,7 @@ type alias Identifiers =
     , isSelected : Bool
 
     --
+    , group : Maybe { name : String, index : Int }
     , indexInList : Int
     , indexInPlaylist : Maybe Int
     }
@@ -87,6 +88,7 @@ type alias CollectionDependencies =
     { enabledSourceIds : List String
     , favourites : List Favourite
     , favouritesOnly : Bool
+    , grouping : Maybe Grouping
     , hideDuplicates : Bool
     , nowPlaying : Maybe IdentifiedTrack
     , searchResults : Maybe (List String)
@@ -100,7 +102,12 @@ type alias Parcel =
 
 
 
--- SORTING
+-- GROUPING & SORTING
+
+
+type Grouping
+    = AddedOnGroups
+    | TrackYearGroups
 
 
 type SortBy
@@ -148,6 +155,9 @@ emptyIdentifiedTrack =
       , isMissing = False
       , isNowPlaying = False
       , isSelected = False
+
+      --
+      , group = Nothing
       , indexInList = 0
       , indexInPlaylist = Nothing
       }

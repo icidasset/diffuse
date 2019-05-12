@@ -7,8 +7,9 @@ import Color.Ext as Color
 import Common exposing (Switch(..))
 import Coordinates
 import Css
+import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, placeholder, tabindex, title, value)
+import Html.Styled.Attributes exposing (css, fromUnstyled, placeholder, tabindex, title, value)
 import Html.Styled.Events exposing (onBlur, onClick, onInput)
 import Html.Styled.Ext exposing (onEnterKey)
 import Html.Styled.Lazy exposing (..)
@@ -22,6 +23,7 @@ import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
 import Material.Icons.Image as Icons
+import Material.Icons.Navigation as Icons
 import Maybe.Extra as Maybe
 import Return3 as Return exposing (..)
 import Tachyons.Classes as T
@@ -51,10 +53,11 @@ initialModel =
     , enabledSourceIds = []
     , favourites = []
     , favouritesOnly = False
+    , grouping = Just AddedOnGroups
     , hideDuplicates = False
     , infiniteList = InfiniteList.init
     , nowPlaying = Nothing
-    , scene = List
+    , scene = GroupedList
     , searchResults = Nothing
     , searchTerm = Nothing
     , sortBy = Artist
@@ -78,9 +81,15 @@ update msg model =
         Reply replies ->
             returnRepliesWithModel model replies
 
-        ShowContextMenu track mouseEvent ->
+        ShowTrackMenu track mouseEvent ->
             [ track ]
                 |> ShowTracksContextMenu (Coordinates.fromTuple mouseEvent.clientPos)
+                |> returnReplyWithModel model
+
+        ShowViewMenu mouseEvent ->
+            mouseEvent.clientPos
+                |> Coordinates.fromTuple
+                |> ShowTracksViewMenu
                 |> returnReplyWithModel model
 
         ScrollToNowPlaying ->
@@ -273,6 +282,7 @@ makeParcel model =
     ( { enabledSourceIds = model.enabledSourceIds
       , favourites = model.favourites
       , favouritesOnly = model.favouritesOnly
+      , grouping = model.grouping
       , hideDuplicates = model.hideDuplicates
       , nowPlaying = model.nowPlaying
       , searchResults = model.searchResults
@@ -496,7 +506,13 @@ navigation favouritesOnly searchTerm page =
                     ]
 
                 -- 3
-                , nothing
+                , brick
+                    [ css searchActionIconStyle
+                    , fromUnstyled (Mouse.onClick ShowViewMenu)
+                    , title "View settings"
+                    ]
+                    [ T.pointer ]
+                    [ Html.fromUnstyled (Icons.more_vert 16 searchIconColoring) ]
                 ]
             ]
         , -----------------------------------------

@@ -564,6 +564,9 @@ translateReply reply model =
         ShowTracksContextMenu coordinates tracks ->
             return { model | contextMenu = Just (Tracks.trackMenu tracks coordinates) }
 
+        ShowTracksViewMenu coordinates ->
+            return { model | contextMenu = Just (Tracks.viewMenu coordinates) }
+
         -----------------------------------------
         -- Notifications
         -----------------------------------------

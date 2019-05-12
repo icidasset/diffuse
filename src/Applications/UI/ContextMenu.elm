@@ -51,7 +51,15 @@ view m =
                         List.length items - 1
                  in
                  List.indexedMap
-                    (itemView lastIndex)
+                    (\idx item ->
+                        case item of
+                            Item i ->
+                                itemView lastIndex idx i
+
+                            Divider ->
+                                -- TODO
+                                nothing
+                    )
                     items
                 )
 

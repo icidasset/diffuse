@@ -348,7 +348,7 @@ itemView { favouritesOnly } _ idx ( identifiers, track ) =
             -- Context Menu
             ---------------
             , ( identifiers, track )
-                |> ShowContextMenu
+                |> ShowTrackMenu
                 |> onWithOptions
                     "contextmenu"
                     { stopPropagation = True

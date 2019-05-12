@@ -39,54 +39,11 @@ type alias Necessities =
     }
 
 
-type alias GroupedIdentifiedTrack =
-    { date : ( Int, Time.Month )
-    , identifiedTrack : IdentifiedTrack
-    , isFirst : Bool
-    }
-
-
 view : Necessities -> Model -> Html Msg
 view necessities model =
     let
         { infiniteList } =
             model
-
-        groupedTracksDictionary =
-            List.foldl
-                (\( i, t ) ->
-                    let
-                        ( year, month ) =
-                            ( Time.toYear Time.utc t.insertedAt
-                            , Time.toMonth Time.utc t.insertedAt
-                            )
-
-                        item =
-                            { date = ( year, month )
-                            , identifiedTrack = ( i, t )
-                            , isFirst = False
-                            }
-                    in
-                    Dict.update
-                        (year * 1000 + Time.monthNumber month)
-                        (\maybeList ->
-                            case maybeList of
-                                Just list ->
-                                    Just (item :: list)
-
-                                Nothing ->
-                                    Just [ { item | isFirst = True } ]
-                        )
-                )
-                Dict.empty
-                model.collection.harvested
-
-        groupedTracks =
-            groupedTracksDictionary
-                |> Dict.values
-                |> List.reverse
-                |> List.map List.reverse
-                |> List.concat
     in
     brick
         [ fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
@@ -102,7 +59,7 @@ view necessities model =
             (InfiniteList.view
                 (infiniteListConfig necessities model)
                 infiniteList
-                groupedTracks
+                model.collection.harvested
             )
         ]
 
@@ -236,7 +193,7 @@ sortIconStyles =
 -- INFINITE LIST
 
 
-infiniteListConfig : Necessities -> Model -> InfiniteList.Config GroupedIdentifiedTrack Msg
+infiniteListConfig : Necessities -> Model -> InfiniteList.Config IdentifiedTrack Msg
 infiniteListConfig necessities model =
     InfiniteList.withCustomContainer
         infiniteListContainer
@@ -273,19 +230,23 @@ listStyles =
     [ Css.fontSize (Css.px 12.5) ]
 
 
-itemView : Model -> Int -> Int -> GroupedIdentifiedTrack -> UnstyledHtml.Html Msg
-itemView { favouritesOnly } _ idx { date, identifiedTrack, isFirst } =
+itemView : Model -> Int -> Int -> IdentifiedTrack -> UnstyledHtml.Html Msg
+itemView { favouritesOnly } _ idx ( identifiers, track ) =
     let
-        ( year, month ) =
-            date
+        groupName =
+            identifiers.group
+                |> Maybe.map .name
+                |> Maybe.withDefault "Unknown"
 
-        ( identifiers, track ) =
-            identifiedTrack
+        shouldRenderGroup =
+            identifiers.group
+                |> Maybe.map (.index >> (==) 0)
+                |> Maybe.withDefault False
     in
     Html.toUnstyled <|
         chunk
             []
-            [ if isFirst then
+            [ if shouldRenderGroup then
                 brick
                     [ css groupStyles ]
                     [ T.f7
@@ -301,14 +262,11 @@ itemView { favouritesOnly } _ idx { date, identifiedTrack, isFirst } =
                         [ Html.fromUnstyled (Icons.terrain 16 Inherit) ]
                     , inline
                         [ T.dib, T.pl2, T.v_mid ]
-                        (if year == 1970 then
+                        (if String.contains "1970" groupName then
                             [ text "AGES AGO" ]
 
                          else
-                            [ text (Time.monthNumber month |> String.fromInt |> String.padLeft 2 '0')
-                            , text " / "
-                            , text (String.fromInt year)
-                            ]
+                            [ text groupName ]
                         )
                     ]
 
@@ -328,7 +286,7 @@ itemView { favouritesOnly } _ idx { date, identifiedTrack, isFirst } =
                 -- Context Menu
                 ---------------
                 , ( identifiers, track )
-                    |> ShowContextMenu
+                    |> ShowTrackMenu
                     |> onWithOptions
                         "contextmenu"
                         { stopPropagation = True

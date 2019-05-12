@@ -1,4 +1,4 @@
-module ContextMenu exposing (ContextMenu(..), ContextMenuItems)
+module ContextMenu exposing (ContextMenu(..), Item(..))
 
 import Color exposing (Color)
 import Coordinates exposing (Coordinates)
@@ -11,8 +11,9 @@ import Svg exposing (Svg)
 
 
 type ContextMenu msg
-    = ContextMenu (ContextMenuItems msg) Coordinates
+    = ContextMenu (List (Item msg)) Coordinates
 
 
-type alias ContextMenuItems msg =
-    List ( Int -> Coloring -> Svg msg, String, msg )
+type Item msg
+    = Item ( Int -> Coloring -> Svg msg, String, msg )
+    | Divider

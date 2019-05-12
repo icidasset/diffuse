@@ -24,6 +24,7 @@ type Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
+    | ShowTracksViewMenu Coordinates
       -----------------------------------------
       -- Notifications
       -----------------------------------------

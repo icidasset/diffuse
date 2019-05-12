@@ -16,10 +16,11 @@ import UI.Svg.Elements
 moreOptionsMenu : Coordinates -> ContextMenu Msg
 moreOptionsMenu =
     ContextMenu
-        [ ( \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
-          , "IPFS"
-          , AuthenticationMsg (Authentication.ShowNewEncryptionKeyScreen Authentication.Ipfs)
-          )
+        [ Item
+            ( \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
+            , "IPFS"
+            , AuthenticationMsg (Authentication.ShowNewEncryptionKeyScreen Authentication.Ipfs)
+            )
 
         -- , ( \_ _ -> Svg.map never UI.Svg.Elements.solidLogo
         --   , "Solid"
