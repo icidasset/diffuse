@@ -29,7 +29,7 @@
             "elm-community/maybe-extra": "5.0.0",
             "elm-explorations/markdown": "1.0.0",
             "icidasset/elm-binary": "2.1.0",
-            "icidasset/elm-material-icons": "1.0.0",
+            "icidasset/elm-material-icons": "1.0.1",
             "icidasset/elm-sha": "2.0.2",
             "justgage/tachyons-elm": "4.1.3",
             "mpizenberg/elm-pointer-events": "4.0.1",
