@@ -1,7 +1,6 @@
 @font-face {
   font-family: "Source Sans Pro";
-  src: url("fonts/sourcesanspro/light.woff2") format("woff2"),
-       url("fonts/sourcesanspro/light.woff") format("woff");
+  src: url("fonts/sourcesanspro/light.woff2") format("woff2");
        font-weight: 300;
        font-style: normal;
 }
@@ -9,8 +8,7 @@
 
 @font-face {
   font-family: "Source Sans Pro";
-  src: url("fonts/sourcesanspro/light-italic.woff2") format("woff2"),
-       url("fonts/sourcesanspro/light-italic.woff") format("woff");
+  src: url("fonts/sourcesanspro/light-italic.woff2") format("woff2");
        font-weight: 300;
        font-style: italic;
 }
@@ -18,8 +16,7 @@
 
 @font-face {
   font-family: "Source Sans Pro";
-  src: url("fonts/sourcesanspro/regular.woff2") format("woff2"),
-       url("fonts/sourcesanspro/regular.woff") format("woff");
+  src: url("fonts/sourcesanspro/regular.woff2") format("woff2");
        font-weight: 400;
        font-style: normal;
 }
@@ -27,8 +24,7 @@
 
 @font-face {
   font-family: "Source Sans Pro";
-  src: url("fonts/sourcesanspro/italic.woff2") format("woff2"),
-       url("fonts/sourcesanspro/italic.woff") format("woff");
+  src: url("fonts/sourcesanspro/italic.woff2") format("woff2");
        font-weight: 400;
        font-style: italic;
 }
@@ -36,8 +32,7 @@
 
 @font-face {
   font-family: "Source Sans Pro";
-  src: url("fonts/sourcesanspro/semibold.woff2") format("woff2"),
-       url("fonts/sourcesanspro/semibold.woff") format("woff");
+  src: url("fonts/sourcesanspro/semibold.woff2") format("woff2");
        font-weight: 600;
        font-style: normal;
 }
@@ -45,8 +40,7 @@
 
 @font-face {
   font-family: "Source Sans Pro";
-  src: url("fonts/sourcesanspro/bold.woff2") format("woff2"),
-       url("fonts/sourcesanspro/bold.woff") format("woff");
+  src: url("fonts/sourcesanspro/bold.woff2") format("woff2");
        font-weight: 700;
        font-style: normal;
 }
@@ -58,8 +52,23 @@
 
 @font-face {
   font-family: "Montserrat";
-  src: url("fonts/montserrat/semibold.woff2") format("woff2"),
-       url("fonts/montserrat/semibold.woff") format("woff");
+  src: url("fonts/montserrat/light.woff2") format("woff2");
+       font-weight: 300;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("fonts/montserrat/regular.woff2") format("woff2");
+       font-weight: 400;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("fonts/montserrat/medium.woff2") format("woff2");
        font-weight: 500;
        font-style: normal;
 }
@@ -67,9 +76,24 @@
 
 @font-face {
   font-family: "Montserrat";
-  src: url("fonts/montserrat/bold.woff2") format("woff2"),
-       url("fonts/montserrat/bold.woff") format("woff");
+  src: url("fonts/montserrat/semibold.woff2") format("woff2");
+       font-weight: 600;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("fonts/montserrat/bold.woff2") format("woff2");
        font-weight: 700;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("fonts/montserrat/extrabold.woff2") format("woff2");
+       font-weight: 800;
        font-style: normal;
 }
 
