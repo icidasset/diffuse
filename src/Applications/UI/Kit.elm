@@ -20,14 +20,14 @@ import Tachyons.Classes as T
 
 
 colorKit =
-    { base00 = rgb 47 30 46
-    , base01 = rgb 65 50 63
-    , base02 = rgb 79 66 76
-    , base03 = rgb 119 110 113
-    , base04 = rgb 141 134 135
-    , base05 = rgb 163 158 155
-    , base06 = rgb 185 182 176
-    , base07 = rgb 231 233 219
+    { base00 = rgb 45 45 45
+    , base01 = rgb 63 63 63
+    , base02 = rgb 79 79 79
+    , base03 = rgb 119 119 119
+    , base04 = rgb 140 140 140
+    , base05 = rgb 163 163 163
+    , base06 = rgb 186 186 186
+    , base07 = rgb 232 232 232
     , base08 = rgb 239 97 85
     , base09 = rgb 249 155 21
     , base0A = rgb 254 196 24
