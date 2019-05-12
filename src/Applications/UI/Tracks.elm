@@ -37,6 +37,7 @@ import UI.Ports
 import UI.Queue.Page
 import UI.Reply exposing (Reply(..))
 import UI.Tracks.Core exposing (..)
+import UI.Tracks.Scene.GroupedList
 import UI.Tracks.Scene.List
 
 
@@ -96,17 +97,29 @@ update msg model =
                                     model.collection.harvested
                             )
             in
-            case it of
-                Just identifiedTrack ->
-                    case model.scene of
-                        List ->
-                            identifiedTrack
-                                |> UI.Tracks.Scene.List.scrollToNowPlaying
-                                |> Return.commandWithModel model
-                                |> Return.addReply (GoToPage UI.Page.Index)
+            model.nowPlaying
+                |> Maybe.map (Tuple.second >> .id)
+                |> Maybe.andThen
+                    (\id ->
+                        List.find
+                            (Tuple.second >> .id >> (==) id)
+                            model.collection.harvested
+                    )
+                |> Maybe.map
+                    (case model.scene of
+                        GroupedList ->
+                            UI.Tracks.Scene.GroupedList.scrollToNowPlaying
 
-                Nothing ->
-                    return model
+                        List ->
+                            UI.Tracks.Scene.List.scrollToNowPlaying
+                    )
+                |> Maybe.map
+                    (\cmd ->
+                        cmd
+                            |> Return.commandWithModel model
+                            |> Return.addReply (GoToPage UI.Page.Index)
+                    )
+                |> Maybe.withDefault (return model)
 
         SetEnabledSourceIds sourceIds ->
             reviseCollection identify
@@ -288,6 +301,9 @@ resolveParcel model ( _, newCollection ) =
       ----------
     , if oldHarvest /= newHarvest then
         case model.scene of
+            GroupedList ->
+                UI.Tracks.Scene.GroupedList.scrollToTop
+
             List ->
                 UI.Tracks.Scene.List.scrollToTop
 
@@ -371,6 +387,9 @@ view core =
 
           else
             case core.tracks.scene of
+                GroupedList ->
+                    UI.Tracks.Scene.GroupedList.view { height = core.viewport.height } core.tracks
+
                 List ->
                     UI.Tracks.Scene.List.view { height = core.viewport.height } core.tracks
         ]
