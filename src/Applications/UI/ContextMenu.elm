@@ -8,7 +8,7 @@ import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Css
 import Html.Styled exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (css, style)
 import Html.Styled.Events exposing (onClick)
 import Json.Decode
 import Material.Icons exposing (Coloring(..))
@@ -75,19 +75,25 @@ itemView lastIndex index { icon, label, msg, active } =
     in
     brick
         [ onClick msg ]
-        [ T.b__near_white
+        [ T.bb
         , T.pa3
         , T.pointer
         , T.truncate
 
         --
-        , ifThenElse (isLast || active) "" T.bb
+        , ifThenElse (active || isLast) T.b__transparent T.b__near_white
         , ifThenElse active C.bg_base_00 ""
         , ifThenElse active T.white T.color_inherit
         , ifThenElse active T.fw6 T.fw4
         ]
-        [ inline [ T.dib, C.lh_0, T.v_mid ] [ fromUnstyled (icon 14 Inherit) ]
-        , inline [ T.dib, T.ml2, T.v_mid ] [ text label ]
+        [ inline
+            [ T.dib, C.lh_0, T.v_mid ]
+            [ fromUnstyled (icon 14 Inherit) ]
+        , slab
+            Html.Styled.span
+            [ style "top" "-0.5px" ]
+            [ T.dib, T.ml2, T.relative, T.v_mid ]
+            [ text label ]
         ]
 
 
