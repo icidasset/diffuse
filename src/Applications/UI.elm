@@ -564,8 +564,8 @@ translateReply reply model =
         ShowTracksContextMenu coordinates tracks ->
             return { model | contextMenu = Just (Tracks.trackMenu tracks coordinates) }
 
-        ShowTracksViewMenu coordinates ->
-            return { model | contextMenu = Just (Tracks.viewMenu coordinates) }
+        ShowTracksViewMenu coordinates maybeGrouping ->
+            return { model | contextMenu = Just (Tracks.viewMenu maybeGrouping coordinates) }
 
         -----------------------------------------
         -- Notifications
@@ -1061,6 +1061,8 @@ globalCss =
     -----------------------------------------
     -- Bits & Pieces
     -----------------------------------------
+    , Css.Global.selector ".bg-base-00" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base00) ]
+    , Css.Global.selector ".bg-base-01" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base01) ]
     , Css.Global.selector ".dragging-something" [ Css.cursor Css.grabbing ]
     , Css.Global.selector ".dragging-something *" [ Css.cursor Css.grabbing ]
     , Css.Global.selector ".grab-cursor" [ Css.cursor Css.grab ]

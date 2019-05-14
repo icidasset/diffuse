@@ -1,4 +1,4 @@
-module ContextMenu exposing (ContextMenu(..), Item(..))
+module ContextMenu exposing (ContextMenu(..), Item(..), ItemProperties)
 
 import Color exposing (Color)
 import Coordinates exposing (Coordinates)
@@ -15,5 +15,13 @@ type ContextMenu msg
 
 
 type Item msg
-    = Item ( Int -> Coloring -> Svg msg, String, msg )
+    = Item (ItemProperties msg)
     | Divider
+
+
+type alias ItemProperties msg =
+    { icon : Int -> Coloring -> Svg msg
+    , label : String
+    , msg : msg
+    , active : Bool
+    }

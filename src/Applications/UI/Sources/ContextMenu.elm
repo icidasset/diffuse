@@ -21,21 +21,25 @@ sourceMenu : Source -> Coordinates -> ContextMenu Msg
 sourceMenu source =
     ContextMenu
         [ Item
-            ( ifThenElse source.directoryPlaylists Icons.folder Icons.folder_open
-            , ifThenElse source.directoryPlaylists "Disable Directory Playlists" "Enable Directory Playlists"
-            , SourcesMsg (Sources.ToggleDirectoryPlaylists { sourceId = source.id })
-            )
+            { icon = ifThenElse source.directoryPlaylists Icons.folder Icons.folder_open
+            , label = ifThenElse source.directoryPlaylists "Disable Directory Playlists" "Enable Directory Playlists"
+            , msg = SourcesMsg (Sources.ToggleDirectoryPlaylists { sourceId = source.id })
+            , active = False
+            }
         , Item
-            ( Icons.edit
-            , "Edit source"
-            , source.id
-                |> UI.Sources.Page.Edit
-                |> UI.Page.Sources
-                |> ChangeUrlUsingPage
-            )
+            { icon = Icons.edit
+            , label = "Edit source"
+            , msg =
+                source.id
+                    |> UI.Sources.Page.Edit
+                    |> UI.Page.Sources
+                    |> ChangeUrlUsingPage
+            , active = False
+            }
         , Item
-            ( Icons.delete
-            , "Remove source"
-            , SourcesMsg (Sources.RemoveFromCollection { sourceId = source.id })
-            )
+            { icon = Icons.delete
+            , label = "Remove source"
+            , msg = SourcesMsg (Sources.RemoveFromCollection { sourceId = source.id })
+            , active = False
+            }
         ]

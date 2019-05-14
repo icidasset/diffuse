@@ -17,13 +17,9 @@ moreOptionsMenu : Coordinates -> ContextMenu Msg
 moreOptionsMenu =
     ContextMenu
         [ Item
-            ( \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
-            , "IPFS"
-            , AuthenticationMsg (Authentication.ShowNewEncryptionKeyScreen Authentication.Ipfs)
-            )
-
-        -- , ( \_ _ -> Svg.map never UI.Svg.Elements.solidLogo
-        --   , "Solid"
-        --   , AuthenticationMsg (Authentication.ShowNewEncryptionKeyScreen Authentication.Ipfs)
-        --   )
+            { icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
+            , label = "IPFS"
+            , msg = AuthenticationMsg (Authentication.ShowNewEncryptionKeyScreen Authentication.Ipfs)
+            , active = False
+            }
         ]

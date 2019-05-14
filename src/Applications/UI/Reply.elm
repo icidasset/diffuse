@@ -24,7 +24,7 @@ type Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
-    | ShowTracksViewMenu Coordinates
+    | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)
       -----------------------------------------
       -- Notifications
       -----------------------------------------

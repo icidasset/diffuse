@@ -67,8 +67,8 @@ view m =
             nothing
 
 
-itemView : Int -> Int -> ( Int -> Coloring -> Svg msg, String, msg ) -> Html msg
-itemView lastIndex index ( icon, label, msg ) =
+itemView : Int -> Int -> ContextMenu.ItemProperties msg -> Html msg
+itemView lastIndex index { icon, label, msg, active } =
     let
         isLast =
             index == lastIndex
@@ -81,7 +81,10 @@ itemView lastIndex index ( icon, label, msg ) =
         , T.truncate
 
         --
-        , ifThenElse isLast "" T.bb
+        , ifThenElse (isLast || active) "" T.bb
+        , ifThenElse active C.bg_base_00 ""
+        , ifThenElse active T.white T.color_inherit
+        , ifThenElse active T.fw6 T.fw4
         ]
         [ inline [ T.dib, C.lh_0, T.v_mid ] [ fromUnstyled (icon 14 Inherit) ]
         , inline [ T.dib, T.ml2, T.v_mid ] [ text label ]

@@ -86,10 +86,9 @@ update msg model =
                 |> ShowTracksContextMenu (Coordinates.fromTuple mouseEvent.clientPos)
                 |> returnReplyWithModel model
 
-        ShowViewMenu mouseEvent ->
-            mouseEvent.clientPos
-                |> Coordinates.fromTuple
-                |> ShowTracksViewMenu
+        ShowViewMenu grouping mouseEvent ->
+            grouping
+                |> ShowTracksViewMenu (Coordinates.fromTuple mouseEvent.clientPos)
                 |> returnReplyWithModel model
 
         ScrollToNowPlaying ->
@@ -380,8 +379,9 @@ view core =
         , T.flex_column
         , T.flex_grow_1
         ]
-        [ lazy3
+        [ lazy4
             navigation
+            core.tracks.grouping
             core.tracks.favouritesOnly
             core.tracks.searchTerm
             core.page
@@ -405,8 +405,8 @@ view core =
         ]
 
 
-navigation : Bool -> Maybe String -> Page -> Html Msg
-navigation favouritesOnly searchTerm page =
+navigation : Maybe Grouping -> Bool -> Maybe String -> Page -> Html Msg
+navigation maybeGrouping favouritesOnly searchTerm page =
     let
         tabindex_ =
             case page of
@@ -508,7 +508,7 @@ navigation favouritesOnly searchTerm page =
                 -- 3
                 , brick
                     [ css searchActionIconStyle
-                    , fromUnstyled (Mouse.onClick ShowViewMenu)
+                    , fromUnstyled (Mouse.onClick <| ShowViewMenu maybeGrouping)
                     , title "View settings"
                     ]
                     [ T.pointer ]

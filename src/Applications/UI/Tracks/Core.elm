@@ -40,7 +40,7 @@ type Msg
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)
     | ShowTrackMenu IdentifiedTrack Mouse.Event
-    | ShowViewMenu Mouse.Event
+    | ShowViewMenu (Maybe Grouping) Mouse.Event
     | SortBy SortBy
     | ToggleHideDuplicates
       -----------------------------------------
