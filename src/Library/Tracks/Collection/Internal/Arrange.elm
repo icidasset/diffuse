@@ -1,6 +1,6 @@
 module Tracks.Collection.Internal.Arrange exposing (arrange)
 
-import Dict
+import Dict exposing (Dict)
 import Time
 import Time.Ext as Time
 import Tracks exposing (..)
@@ -37,47 +37,43 @@ arrange ( deps, collection ) =
 
 groupByInsertedAt : CollectionDependencies -> Collection -> Collection
 groupByInsertedAt deps collection =
-    let
-        groupedTracksDictionary =
-            List.foldl
-                (\( i, t ) ->
-                    let
-                        ( year, month ) =
-                            ( Time.toYear Time.utc t.insertedAt
-                            , Time.toMonth Time.utc t.insertedAt
-                            )
-
-                        item =
-                            ( { i
-                                | group =
-                                    Just
-                                        { name = insertedAtGroupName year month
-                                        , index = 0
-                                        }
-                              }
-                            , t
-                            )
-                    in
-                    Dict.update
-                        (year * 1000 + Time.monthNumber month)
-                        (\maybeList ->
-                            case maybeList of
-                                Just list ->
-                                    Just (item :: list)
-
-                                Nothing ->
-                                    Just [ item ]
-                        )
-                )
-                Dict.empty
-                collection.identified
-    in
-    groupedTracksDictionary
+    collection.identified
+        |> List.foldl groupByInsertedAt_ Dict.empty
         |> Dict.values
         |> List.reverse
         |> List.map (Sorting.sort deps.sortBy deps.sortDirection >> List.indexedMap setIndexInGroup)
         |> List.concat
         |> (\arranged -> { collection | arranged = arranged })
+
+
+groupByInsertedAt_ : IdentifiedTrack -> Dict Int (List IdentifiedTrack) -> Dict Int (List IdentifiedTrack)
+groupByInsertedAt_ ( i, t ) =
+    let
+        ( year, month ) =
+            ( Time.toYear Time.utc t.insertedAt
+            , Time.toMonth Time.utc t.insertedAt
+            )
+
+        group =
+            { name = insertedAtGroupName year month
+            , index = 0
+            }
+
+        item =
+            ( { i | group = Just group }
+            , t
+            )
+    in
+    Dict.update
+        (year * 1000 + Time.monthNumber month)
+        (\maybeList ->
+            case maybeList of
+                Just list ->
+                    Just (item :: list)
+
+                Nothing ->
+                    Just [ item ]
+        )
 
 
 insertedAtGroupName : Int -> Time.Month -> String

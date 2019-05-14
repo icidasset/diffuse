@@ -1,4 +1,4 @@
-module Tracks.Favourites exposing (match, toggleInFavouritesList, toggleInTracksList)
+module Tracks.Favourites exposing (match, simplified, toggleInFavouritesList, toggleInTracksList)
 
 import List.Extra as List
 import Tracks exposing (Favourite, IdentifiedTrack, Track)
@@ -22,6 +22,11 @@ match a b =
             )
     in
     aa == ba && at == bt
+
+
+simplified : Favourite -> String
+simplified fav =
+    String.toLower fav.artist ++ String.toLower fav.title
 
 
 toggleInTracksList : Track -> List IdentifiedTrack -> List IdentifiedTrack

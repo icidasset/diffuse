@@ -1,5 +1,6 @@
 module Tracks.Collection.Internal.Identify exposing (identify)
 
+import Dict
 import List.Extra as List
 import Time.Ext as Time
 import Tracks exposing (..)
@@ -13,15 +14,42 @@ import Tracks.Favourites as Favourites
 identify : Parcel -> Parcel
 identify ( deps, collection ) =
     let
-        ( identifiedUnsorted, missingFavourites ) =
+        ( favouritesDictionary, simplifiedFavourites ) =
+            List.foldr
+                (\fav ( dict, acc ) ->
+                    let
+                        simpl =
+                            Favourites.simplified fav
+                    in
+                    ( Dict.insert simpl fav dict
+                    , simpl :: acc
+                    )
+                )
+                ( Dict.empty, [] )
+                deps.favourites
+
+        ( identifiedUnsorted, missingFavouritesSimplified ) =
             List.foldl
                 (identifyTrack
                     deps.enabledSourceIds
-                    deps.favourites
+                    simplifiedFavourites
                     deps.nowPlaying
                 )
-                ( [], deps.favourites )
+                ( [], simplifiedFavourites )
                 collection.untouched
+
+        missingFavourites =
+            List.foldr
+                (\simpl acc ->
+                    case Dict.get simpl favouritesDictionary of
+                        Just fav ->
+                            fav :: acc
+
+                        Nothing ->
+                            acc
+                )
+                []
+                missingFavouritesSimplified
     in
     identifiedUnsorted
         |> List.append (List.map makeMissingFavouriteTrack missingFavourites)
@@ -35,11 +63,11 @@ identify ( deps, collection ) =
 
 identifyTrack :
     List String
-    -> List Favourite
+    -> List String
     -> Maybe IdentifiedTrack
     -> Track
-    -> ( List IdentifiedTrack, List Favourite )
-    -> ( List IdentifiedTrack, List Favourite )
+    -> ( List IdentifiedTrack, List String )
+    -> ( List IdentifiedTrack, List String )
 identifyTrack enabledSourceIds favourites nowPlaying track =
     case List.member track.sourceId enabledSourceIds of
         True ->
@@ -50,17 +78,20 @@ identifyTrack enabledSourceIds favourites nowPlaying track =
 
 
 partTwo :
-    List Favourite
+    List String
     -> Maybe IdentifiedTrack
     -> Track
-    -> ( List IdentifiedTrack, List Favourite )
-    -> ( List IdentifiedTrack, List Favourite )
+    -> ( List IdentifiedTrack, List String )
+    -> ( List IdentifiedTrack, List String )
 partTwo favourites nowPlaying track ( acc, remainingFavourites ) =
     let
         isNP =
-            nowPlaying
-                |> Maybe.map (Tuple.second >> .id >> (==) track.id)
-                |> Maybe.withDefault False
+            case nowPlaying of
+                Just ( _, { id } ) ->
+                    track.id == id
+
+                Nothing ->
+                    False
 
         isFavourite_ =
             isFavourite track
@@ -69,12 +100,15 @@ partTwo favourites nowPlaying track ( acc, remainingFavourites ) =
             List.any isFavourite_ favourites
 
         identifiedTrack =
-            ( { indexInList = 0
-              , indexInPlaylist = Nothing
-              , isFavourite = isFav
+            ( { isFavourite = isFav
               , isMissing = False
               , isNowPlaying = isNP
               , isSelected = False
+
+              --
+              , group = Nothing
+              , indexInList = 0
+              , indexInPlaylist = Nothing
               }
             , track
             )
@@ -104,12 +138,9 @@ partTwo favourites nowPlaying track ( acc, remainingFavourites ) =
 -- FAVOURITES
 
 
-isFavourite : Track -> (Favourite -> Bool)
+isFavourite : Track -> String -> Bool
 isFavourite track =
-    Favourites.match
-        { artist = track.tags.artist
-        , title = track.tags.title
-        }
+    (==) (String.toLower track.tags.artist ++ String.toLower track.tags.title)
 
 
 makeMissingFavouriteTrack : Favourite -> IdentifiedTrack
@@ -126,12 +157,15 @@ makeMissingFavouriteTrack fav =
             , year = Nothing
             }
     in
-    ( { indexInList = 0
-      , indexInPlaylist = Nothing
-      , isFavourite = True
+    ( { isFavourite = True
       , isMissing = True
       , isNowPlaying = False
       , isSelected = False
+
+      --
+      , group = Nothing
+      , indexInList = 0
+      , indexInPlaylist = Nothing
       }
     , { tags = tags
       , id = missingId
