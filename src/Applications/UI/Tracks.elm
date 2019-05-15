@@ -80,16 +80,6 @@ update msg model =
         Reply replies ->
             returnRepliesWithModel model replies
 
-        ShowTrackMenu track mouseEvent ->
-            [ track ]
-                |> ShowTracksContextMenu (Coordinates.fromTuple mouseEvent.clientPos)
-                |> returnReplyWithModel model
-
-        ShowViewMenu grouping mouseEvent ->
-            grouping
-                |> ShowTracksViewMenu (Coordinates.fromTuple mouseEvent.clientPos)
-                |> returnReplyWithModel model
-
         ScrollToNowPlaying ->
             let
                 -- The index identifier might be out-of-date,
@@ -219,6 +209,32 @@ update msg model =
             { model | favouritesOnly = not model.favouritesOnly }
                 |> reviseCollection harvest
                 |> addReply SaveEnclosedUserData
+
+        -----------------------------------------
+        -- Groups
+        -----------------------------------------
+        DisableGrouping ->
+            reviseCollection
+                arrange
+                { model | grouping = Nothing }
+
+        GroupBy grouping ->
+            reviseCollection
+                arrange
+                { model | grouping = Just grouping }
+
+        -----------------------------------------
+        -- Menus
+        -----------------------------------------
+        ShowTrackMenu track mouseEvent ->
+            [ track ]
+                |> ShowTracksContextMenu (Coordinates.fromTuple mouseEvent.clientPos)
+                |> returnReplyWithModel model
+
+        ShowViewMenu grouping mouseEvent ->
+            grouping
+                |> ShowTracksViewMenu (Coordinates.fromTuple mouseEvent.clientPos)
+                |> returnReplyWithModel model
 
         -----------------------------------------
         -- Search

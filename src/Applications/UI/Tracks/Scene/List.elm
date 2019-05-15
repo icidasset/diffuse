@@ -304,12 +304,7 @@ groupNode identifiers =
             [ Html.fromUnstyled (Icons.terrain 16 Inherit) ]
         , inline
             [ T.dib, T.pl2, T.v_mid ]
-            (if String.contains "1970" groupName then
-                [ text "AGES AGO" ]
-
-             else
-                [ text groupName ]
-            )
+            [ text groupName ]
         ]
 
 

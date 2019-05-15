@@ -1,6 +1,7 @@
 module Tracks.Collection.Internal.Arrange exposing (arrange)
 
 import Dict exposing (Dict)
+import Maybe.Extra as Maybe
 import Time
 import Time.Ext as Time
 import Tracks exposing (..)
@@ -18,11 +19,7 @@ arrange ( deps, collection ) =
             ( deps, groupByInsertedAt deps collection )
 
         Just TrackYearGroups ->
-            -- TODO
-            collection.identified
-                |> Sorting.sort deps.sortBy deps.sortDirection
-                |> (\x -> { collection | arranged = x })
-                |> (\x -> ( deps, x ))
+            ( deps, groupByYear deps collection )
 
         Nothing ->
             collection.identified
@@ -35,14 +32,24 @@ arrange ( deps, collection ) =
 -- GROUPING
 
 
+setIndexInGroup : Int -> IdentifiedTrack -> IdentifiedTrack
+setIndexInGroup idx ( i, t ) =
+    ( { i | group = Maybe.map (\g -> { g | index = idx }) i.group }
+    , t
+    )
+
+
+
+-- GROUPING  ░░  INSERTED AT
+
+
 groupByInsertedAt : CollectionDependencies -> Collection -> Collection
 groupByInsertedAt deps collection =
     collection.identified
         |> List.foldl groupByInsertedAt_ Dict.empty
         |> Dict.values
         |> List.reverse
-        |> List.map (Sorting.sort deps.sortBy deps.sortDirection >> List.indexedMap setIndexInGroup)
-        |> List.concat
+        |> List.concatMap (Sorting.sort deps.sortBy deps.sortDirection >> List.indexedMap setIndexInGroup)
         |> (\arranged -> { collection | arranged = arranged })
 
 
@@ -82,11 +89,52 @@ insertedAtGroupName year month =
         |> Time.monthNumber
         |> String.fromInt
         |> String.padLeft 2 '0'
-        |> (\m -> m ++ " / " ++ String.fromInt year)
+        |> (\m ->
+                m ++ " / " ++ String.fromInt year
+           )
+        |> (\y ->
+                if String.contains "1970" y then
+                    "AGES AGO"
+
+                else
+                    y
+           )
 
 
-setIndexInGroup : Int -> IdentifiedTrack -> IdentifiedTrack
-setIndexInGroup idx ( i, t ) =
-    ( { i | group = Maybe.map (\g -> { g | index = idx }) i.group }
-    , t
-    )
+
+-- GROUPING  ░░  YEAR
+
+
+groupByYear : CollectionDependencies -> Collection -> Collection
+groupByYear deps collection =
+    collection.identified
+        |> List.foldl groupByYear_ Dict.empty
+        |> Dict.values
+        |> List.reverse
+        |> List.concatMap (Sorting.sort deps.sortBy deps.sortDirection >> List.indexedMap setIndexInGroup)
+        |> (\arranged -> { collection | arranged = arranged })
+
+
+groupByYear_ : IdentifiedTrack -> Dict Int (List IdentifiedTrack) -> Dict Int (List IdentifiedTrack)
+groupByYear_ ( i, t ) =
+    let
+        group =
+            { name = Maybe.unwrap "0000 - Unknown" String.fromInt t.tags.year
+            , index = 0
+            }
+
+        item =
+            ( { i | group = Just group }
+            , t
+            )
+    in
+    Dict.update
+        (Maybe.withDefault 0 t.tags.year)
+        (\maybeList ->
+            case maybeList of
+                Just list ->
+                    Just (item :: list)
+
+                Nothing ->
+                    Just [ item ]
+        )

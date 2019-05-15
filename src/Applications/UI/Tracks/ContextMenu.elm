@@ -9,6 +9,7 @@ import Material.Icons.Maps as Icons
 import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Core exposing (Msg(..))
 import UI.Queue.Core as Queue
+import UI.Tracks.Core as Tracks
 
 
 
@@ -53,8 +54,15 @@ groupByProcessingDate isActive =
     Item
         { icon = ifThenElse isActive Icons.clear Icons.terrain
         , label = "Group by processing date"
-        , msg = Bypass
         , active = isActive
+
+        --
+        , msg =
+            if isActive then
+                TracksMsg Tracks.DisableGrouping
+
+            else
+                TracksMsg (Tracks.GroupBy AddedOnGroups)
         }
 
 
@@ -62,6 +70,13 @@ groupByTrackYear isActive =
     Item
         { icon = ifThenElse isActive Icons.clear Icons.terrain
         , label = "Group by track year"
-        , msg = Bypass
         , active = isActive
+
+        --
+        , msg =
+            if isActive then
+                TracksMsg Tracks.DisableGrouping
+
+            else
+                TracksMsg (Tracks.GroupBy TrackYearGroups)
         }

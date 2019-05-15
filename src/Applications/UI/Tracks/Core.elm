@@ -39,8 +39,6 @@ type Msg
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)
-    | ShowTrackMenu IdentifiedTrack Mouse.Event
-    | ShowViewMenu (Maybe Grouping) Mouse.Event
     | SortBy SortBy
     | ToggleHideDuplicates
       -----------------------------------------
@@ -54,6 +52,16 @@ type Msg
       -----------------------------------------
     | ToggleFavourite Int
     | ToggleFavouritesOnly
+      -----------------------------------------
+      -- Groups
+      -----------------------------------------
+    | DisableGrouping
+    | GroupBy Grouping
+      -----------------------------------------
+      -- Menus
+      -----------------------------------------
+    | ShowTrackMenu IdentifiedTrack Mouse.Event
+    | ShowViewMenu (Maybe Grouping) Mouse.Event
       -----------------------------------------
       -- Search
       -----------------------------------------
