@@ -25,6 +25,7 @@ type Method
 
 type alias EnclosedUserData =
     { equalizerSettings : Equalizer.Settings
+    , grouping : Maybe Tracks.Grouping
     , onlyShowFavourites : Bool
     , repeat : Bool
     , searchTerm : Maybe String
@@ -124,6 +125,7 @@ enclosedDecoder : Json.Decoder EnclosedUserData
 enclosedDecoder =
     Json.succeed EnclosedUserData
         |> optional "equalizerSettings" Equalizer.settingsDecoder Equalizer.defaultSettings
+        |> optional "grouping" (Json.maybe Tracks.groupingDecoder) Nothing
         |> optional "onlyShowFavourites" Json.bool False
         |> optional "repeat" Json.bool False
         |> optional "searchTerm" (Json.maybe Json.string) Nothing
@@ -133,9 +135,10 @@ enclosedDecoder =
 
 
 encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { equalizerSettings, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
+encodeEnclosed { equalizerSettings, grouping, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
     Json.Encode.object
         [ ( "equalizerSettings", Equalizer.encodeSettings equalizerSettings )
+        , ( "grouping", Maybe.unwrap Json.Encode.null Tracks.encodeGrouping grouping )
         , ( "onlyShowFavourites", Json.Encode.bool onlyShowFavourites )
         , ( "repeat", Json.Encode.bool repeat )
         , ( "searchTerm", Maybe.unwrap Json.Encode.null Json.Encode.string searchTerm )

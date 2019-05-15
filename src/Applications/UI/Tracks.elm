@@ -214,14 +214,14 @@ update msg model =
         -- Groups
         -----------------------------------------
         DisableGrouping ->
-            reviseCollection
-                arrange
-                { model | grouping = Nothing }
+            { model | grouping = Nothing }
+                |> reviseCollection arrange
+                |> addReply SaveEnclosedUserData
 
         GroupBy grouping ->
-            reviseCollection
-                arrange
-                { model | grouping = Just grouping }
+            { model | grouping = Just grouping }
+                |> reviseCollection arrange
+                |> addReply SaveEnclosedUserData
 
         -----------------------------------------
         -- Menus

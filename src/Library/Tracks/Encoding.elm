@@ -1,4 +1,4 @@
-module Tracks.Encoding exposing (decodeFavourite, decodeTrack, encodeFavourite, encodeMaybe, encodeSortBy, encodeSortDirection, encodeTags, encodeTrack, favouriteDecoder, sortByDecoder, sortDirectionDecoder, tagsDecoder, trackDecoder)
+module Tracks.Encoding exposing (decodeFavourite, decodeTrack, encodeFavourite, encodeGrouping, encodeMaybe, encodeSortBy, encodeSortDirection, encodeTags, encodeTrack, favouriteDecoder, groupingDecoder, sortByDecoder, sortDirectionDecoder, tagsDecoder, trackDecoder)
 
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (optional, required)
@@ -17,6 +17,16 @@ encodeFavourite fav =
         [ ( "artist", Encode.string fav.artist )
         , ( "title", Encode.string fav.title )
         ]
+
+
+encodeGrouping : Grouping -> Encode.Value
+encodeGrouping v =
+    case v of
+        AddedOnGroups ->
+            Encode.string "ADDED_ON_GROUPS"
+
+        TrackYearGroups ->
+            Encode.string "TRACK_YEAR_GROUPS"
 
 
 encodeSortBy : SortBy -> Encode.Value
@@ -102,6 +112,23 @@ favouriteDecoder =
     Decode.map2 Favourite
         (Decode.field "artist" Decode.string)
         (Decode.field "title" Decode.string)
+
+
+groupingDecoder : Decode.Decoder Grouping
+groupingDecoder =
+    Decode.andThen
+        (\string ->
+            case string of
+                "ADDED_ON_GROUPS" ->
+                    Decode.succeed AddedOnGroups
+
+                "TRACK_YEAR_GROUPS" ->
+                    Decode.succeed TrackYearGroups
+
+                _ ->
+                    Decode.fail "Invalid Grouping"
+        )
+        Decode.string
 
 
 sortByDecoder : Decode.Decoder SortBy

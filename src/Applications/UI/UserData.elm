@@ -144,6 +144,7 @@ exportEnclosed model =
     in
     encodeEnclosed
         { equalizerSettings = equalizerSettings
+        , grouping = model.tracks.grouping
         , onlyShowFavourites = model.tracks.favouritesOnly
         , repeat = model.queue.repeat
         , searchTerm = model.tracks.searchTerm
@@ -179,6 +180,7 @@ importEnclosed value model =
                 newTracks =
                     { tracks
                         | favouritesOnly = data.onlyShowFavourites
+                        , grouping = data.grouping
                         , searchTerm = data.searchTerm
                         , sortBy = data.sortBy
                         , sortDirection = data.sortDirection
