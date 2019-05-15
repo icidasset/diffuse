@@ -210,7 +210,7 @@ dynamicRowHeight idx ( i, t ) =
                 |> Maybe.withDefault False
     in
     if shouldRenderGroup then
-        rowHeight + 29
+        rowHeight + 35
 
     else
         rowHeight
@@ -307,17 +307,16 @@ groupNode identifiers =
     brick
         [ css groupStyles ]
         [ T.f7
-        , T.fw6
+        , T.fw7
         , T.lh_copy
         , T.mb3
         , T.mh3
         , T.mt4
-        , T.tracked
         , T.truncate
         ]
         [ inline
             [ T.dib, T.pr2, T.v_mid, C.lh_0 ]
-            [ Html.fromUnstyled (Icons.terrain 16 Inherit) ]
+            [ Html.fromUnstyled (Icons.terrain 22 Inherit) ]
         , inline
             [ T.v_mid ]
             [ text groupName ]
@@ -328,7 +327,8 @@ groupStyles : List Css.Style
 groupStyles =
     [ Css.color (Color.toElmCssColor UI.Kit.colorKit.base04)
     , Css.fontFamilies UI.Kit.headerFontFamilies
-    , Css.fontSize (Css.px 10.5)
+    , Css.fontSize (Css.px 11.5)
+    , Css.letterSpacing (Css.em 0.0375)
     ]
 
 
