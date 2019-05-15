@@ -77,6 +77,7 @@ itemView lastIndex index { icon, label, msg, active } =
         [ onClick msg ]
         [ T.bb
         , T.pa3
+        , T.pr4
         , T.pointer
         , T.truncate
 

@@ -39,7 +39,6 @@ import UI.Ports
 import UI.Queue.Page
 import UI.Reply exposing (Reply(..))
 import UI.Tracks.Core exposing (..)
-import UI.Tracks.Scene.GroupedList
 import UI.Tracks.Scene.List
 
 
@@ -53,11 +52,11 @@ initialModel =
     , enabledSourceIds = []
     , favourites = []
     , favouritesOnly = False
-    , grouping = Just AddedOnGroups
+    , grouping = Nothing
     , hideDuplicates = False
     , infiniteList = InfiniteList.init
     , nowPlaying = Nothing
-    , scene = GroupedList
+    , scene = List
     , searchResults = Nothing
     , searchTerm = Nothing
     , sortBy = Artist
@@ -115,9 +114,6 @@ update msg model =
                     )
                 |> Maybe.map
                     (case model.scene of
-                        GroupedList ->
-                            UI.Tracks.Scene.GroupedList.scrollToNowPlaying
-
                         List ->
                             UI.Tracks.Scene.List.scrollToNowPlaying
                     )
@@ -310,9 +306,6 @@ resolveParcel model ( _, newCollection ) =
       ----------
     , if oldHarvest /= newHarvest then
         case model.scene of
-            GroupedList ->
-                UI.Tracks.Scene.GroupedList.scrollToTop
-
             List ->
                 UI.Tracks.Scene.List.scrollToTop
 
@@ -397,9 +390,6 @@ view core =
 
           else
             case core.tracks.scene of
-                GroupedList ->
-                    UI.Tracks.Scene.GroupedList.view { height = core.viewport.height } core.tracks
-
                 List ->
                     UI.Tracks.Scene.List.view { height = core.viewport.height } core.tracks
         ]

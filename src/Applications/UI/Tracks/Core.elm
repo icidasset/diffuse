@@ -68,5 +68,4 @@ type Msg
 
 
 type Scene
-    = GroupedList
-    | List
+    = List

@@ -2,6 +2,7 @@ module UI.Tracks.Scene.List exposing (scrollToNowPlaying, scrollToTop, view)
 
 import Browser.Dom as Dom
 import Chunky exposing (..)
+import Classes as C
 import Color
 import Color.Ext as Color
 import Conditional exposing (ifThenElse)
@@ -15,6 +16,7 @@ import Html.Styled.Events exposing (onClick, onDoubleClick)
 import Html.Styled.Lazy
 import InfiniteList
 import Material.Icons exposing (Coloring(..))
+import Material.Icons.Maps as Icons
 import Material.Icons.Navigation as Icons
 import Tachyons.Classes as T
 import Task
@@ -184,7 +186,139 @@ sortIconStyles =
 
 
 
+-- INFINITE LIST
+
+
+infiniteListConfig : Necessities -> Model -> InfiniteList.Config IdentifiedTrack Msg
+infiniteListConfig necessities model =
+    InfiniteList.withCustomContainer
+        infiniteListContainer
+        (InfiniteList.config
+            { itemView = itemView model
+            , itemHeight = InfiniteList.withConstantHeight (round rowHeight)
+            , containerHeight = round necessities.height
+            }
+        )
+
+
+infiniteListContainer :
+    List ( String, String )
+    -> List (UnstyledHtml.Html msg)
+    -> UnstyledHtml.Html msg
+infiniteListContainer styles children =
+    UnstyledHtml.div
+        (List.map (\( k, v ) -> UnstyledHtmlAttributes.style k v) styles)
+        [ (Html.toUnstyled << rawy) <|
+            brick
+                [ css listStyles ]
+                [ T.f6
+                , T.pv1
+                ]
+                (List.map Html.fromUnstyled children)
+        ]
+
+
+listStyles : List Css.Style
+listStyles =
+    [ Css.fontSize (Css.px 12.5)
+    ]
+
+
+itemView : Model -> Int -> Int -> IdentifiedTrack -> UnstyledHtml.Html Msg
+itemView { favouritesOnly } _ idx ( identifiers, track ) =
+    let
+        shouldRenderGroup =
+            identifiers.group
+                |> Maybe.map (.index >> (==) 0)
+                |> Maybe.withDefault False
+    in
+    Html.toUnstyled <|
+        Html.div
+            []
+            [ if shouldRenderGroup then
+                groupNode identifiers
+
+              else
+                nothing
+
+            --
+            , brick
+                [ css (rowStyles idx identifiers)
+
+                -- Play
+                -------
+                , [ UI.Reply.PlayTrack ( identifiers, track ) ]
+                    |> Reply
+                    |> onDoubleClick
+
+                -- Context Menu
+                ---------------
+                , ( identifiers, track )
+                    |> ShowTrackMenu
+                    |> onWithOptions
+                        "contextmenu"
+                        { stopPropagation = True
+                        , preventDefault = True
+                        }
+                    |> Html.Styled.Attributes.fromUnstyled
+                ]
+                [ T.flex
+                , T.items_center
+
+                --
+                , ifThenElse identifiers.isMissing "" T.pointer
+                , ifThenElse identifiers.isSelected T.fw6 ""
+                ]
+                [ favouriteColumn favouritesOnly identifiers
+                , otherColumn 37.5 False track.tags.title
+                , otherColumn 29.0 False track.tags.artist
+                , otherColumn 29.0 True track.tags.album
+                ]
+            ]
+
+
+
 -- ROWS
+
+
+groupNode : Identifiers -> Html Msg
+groupNode identifiers =
+    let
+        groupName =
+            identifiers.group
+                |> Maybe.map .name
+                |> Maybe.withDefault "Unknown"
+    in
+    brick
+        [ css groupStyles ]
+        [ T.f7
+        , T.fw6
+        , T.lh_copy
+        , T.mb3
+        , T.mh3
+        , T.mt4
+        , T.tracked
+        ]
+        [ inline
+            [ T.dib, T.v_mid, C.lh_0 ]
+            [ Html.fromUnstyled (Icons.terrain 16 Inherit) ]
+        , inline
+            [ T.dib, T.pl2, T.v_mid ]
+            (if String.contains "1970" groupName then
+                [ text "AGES AGO" ]
+
+             else
+                [ text groupName ]
+            )
+        ]
+
+
+groupStyles : List Css.Style
+groupStyles =
+    [ Css.color (Color.toElmCssColor UI.Kit.colorKit.base04)
+    , Css.fontFamilies UI.Kit.headerFontFamilies
+    , Css.fontSize (Css.px 10.5)
+    ]
 
 
 rowHeight : Float
@@ -217,6 +351,7 @@ rowStyles idx { isMissing, isNowPlaying } =
     in
     [ Css.backgroundColor bgColor
     , Css.color color
+    , Css.height (Css.px rowHeight)
     ]
 
 
@@ -230,7 +365,7 @@ favouriteColumn favouritesOnly identifiers =
         [ css (favouriteColumnStyles favouritesOnly identifiers)
         , onClick (ToggleFavourite identifiers.indexInList)
         ]
-        [ T.dtc, T.pl3, T.v_mid ]
+        [ T.pl3 ]
         [ if identifiers.isFavourite then
             text "t"
 
@@ -260,7 +395,6 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } =
     in
     [ Css.color color
     , Css.fontFamilies [ "or-favourites" ]
-    , Css.height (Css.px rowHeight)
     , Css.width (Css.pct 4.5)
     ]
 
@@ -269,10 +403,8 @@ otherColumn : Float -> Bool -> String -> Html msg
 otherColumn width isLast text_ =
     brick
         [ css (otherColumnStyles width) ]
-        [ T.dtc
-        , T.pl2
+        [ T.pl2
         , T.truncate
-        , T.v_mid
 
         --
         , ifThenElse isLast T.pr3 T.pr2
@@ -282,88 +414,5 @@ otherColumn width isLast text_ =
 
 otherColumnStyles : Float -> List Css.Style
 otherColumnStyles columnWidth =
-    [ Css.height (Css.px rowHeight)
-    , Css.width (Css.pct columnWidth)
+    [ Css.width (Css.pct columnWidth)
     ]
-
-
-
--- INFINITE LIST
-
-
-infiniteListConfig : Necessities -> Model -> InfiniteList.Config IdentifiedTrack Msg
-infiniteListConfig necessities model =
-    InfiniteList.withCustomContainer
-        infiniteListContainer
-        (InfiniteList.config
-            { itemView = itemView model
-            , itemHeight = InfiniteList.withConstantHeight (round rowHeight)
-            , containerHeight = round necessities.height
-            }
-        )
-
-
-infiniteListContainer :
-    List ( String, String )
-    -> List (UnstyledHtml.Html msg)
-    -> UnstyledHtml.Html msg
-infiniteListContainer styles children =
-    UnstyledHtml.div
-        (List.map (\( k, v ) -> UnstyledHtmlAttributes.style k v) styles)
-        [ (Html.toUnstyled << rawy) <|
-            slab
-                Html.ol
-                [ css listStyles ]
-                [ T.dt
-                , T.dt__fixed
-                , T.f6
-                , T.list
-                , T.ma0
-                , T.ph0
-                , T.pv1
-                ]
-                (List.map Html.fromUnstyled children)
-        ]
-
-
-listStyles : List Css.Style
-listStyles =
-    [ Css.fontSize (Css.px 12.5)
-    ]
-
-
-itemView : Model -> Int -> Int -> IdentifiedTrack -> UnstyledHtml.Html Msg
-itemView { favouritesOnly } _ idx ( identifiers, track ) =
-    Html.toUnstyled <|
-        slab
-            Html.li
-            [ css (rowStyles idx identifiers)
-
-            -- Play
-            -------
-            , [ UI.Reply.PlayTrack ( identifiers, track ) ]
-                |> Reply
-                |> onDoubleClick
-
-            -- Context Menu
-            ---------------
-            , ( identifiers, track )
-                |> ShowTrackMenu
-                |> onWithOptions
-                    "contextmenu"
-                    { stopPropagation = True
-                    , preventDefault = True
-                    }
-                |> Html.Styled.Attributes.fromUnstyled
-            ]
-            [ T.dt_row
-
-            --
-            , ifThenElse identifiers.isMissing "" T.pointer
-            , ifThenElse identifiers.isSelected T.fw6 ""
-            ]
-            [ favouriteColumn favouritesOnly identifiers
-            , otherColumn 37.5 False track.tags.title
-            , otherColumn 29.0 False track.tags.artist
-            , otherColumn 29.0 True track.tags.album
-            ]
