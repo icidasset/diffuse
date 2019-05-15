@@ -67,7 +67,7 @@ containerId =
 
 scrollToNowPlaying : IdentifiedTrack -> Cmd Msg
 scrollToNowPlaying ( identifiers, track ) =
-    (22 - rowHeight / 2 + 5 + toFloat identifiers.indexInList * rowHeight)
+    (22 - toFloat rowHeight / 2 + 5 + toFloat identifiers.indexInList * toFloat rowHeight)
         |> Dom.setViewportOf containerId 0
         |> Task.attempt (always Bypass)
 
@@ -195,10 +195,25 @@ infiniteListConfig necessities model =
         infiniteListContainer
         (InfiniteList.config
             { itemView = itemView model
-            , itemHeight = InfiniteList.withConstantHeight (round rowHeight)
+            , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
             , containerHeight = round necessities.height
             }
         )
+
+
+dynamicRowHeight : Int -> IdentifiedTrack -> Int
+dynamicRowHeight idx ( i, t ) =
+    let
+        shouldRenderGroup =
+            i.group
+                |> Maybe.map (.index >> (==) 0)
+                |> Maybe.withDefault False
+    in
+    if shouldRenderGroup then
+        rowHeight + 29
+
+    else
+        rowHeight
 
 
 infiniteListContainer :
@@ -298,12 +313,13 @@ groupNode identifiers =
         , T.mh3
         , T.mt4
         , T.tracked
+        , T.truncate
         ]
         [ inline
-            [ T.dib, T.v_mid, C.lh_0 ]
+            [ T.dib, T.pr2, T.v_mid, C.lh_0 ]
             [ Html.fromUnstyled (Icons.terrain 16 Inherit) ]
         , inline
-            [ T.dib, T.pl2, T.v_mid ]
+            [ T.v_mid ]
             [ text groupName ]
         ]
 
@@ -316,7 +332,7 @@ groupStyles =
     ]
 
 
-rowHeight : Float
+rowHeight : Int
 rowHeight =
     35
 
@@ -346,7 +362,7 @@ rowStyles idx { isMissing, isNowPlaying } =
     in
     [ Css.backgroundColor bgColor
     , Css.color color
-    , Css.height (Css.px rowHeight)
+    , Css.height (Css.px <| toFloat rowHeight)
     ]
 
 

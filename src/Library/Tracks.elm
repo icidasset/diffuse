@@ -107,6 +107,7 @@ type alias Parcel =
 
 type Grouping
     = AddedOnGroups
+    | Directory
     | TrackYearGroups
 
 

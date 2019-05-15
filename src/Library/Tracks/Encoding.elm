@@ -25,6 +25,9 @@ encodeGrouping v =
         AddedOnGroups ->
             Encode.string "ADDED_ON_GROUPS"
 
+        Directory ->
+            Encode.string "DIRECTORY"
+
         TrackYearGroups ->
             Encode.string "TRACK_YEAR_GROUPS"
 
@@ -121,6 +124,9 @@ groupingDecoder =
             case string of
                 "ADDED_ON_GROUPS" ->
                     Decode.succeed AddedOnGroups
+
+                "DIRECTORY" ->
+                    Decode.succeed Directory
 
                 "TRACK_YEAR_GROUPS" ->
                     Decode.succeed TrackYearGroups

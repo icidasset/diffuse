@@ -45,9 +45,26 @@ queueActions identifiedTracks =
 viewMenu : Maybe Grouping -> Coordinates -> ContextMenu Msg
 viewMenu maybeGrouping =
     ContextMenu
-        [ groupByProcessingDate (maybeGrouping == Just AddedOnGroups)
+        [ groupByDirectory (maybeGrouping == Just Directory)
+        , groupByProcessingDate (maybeGrouping == Just AddedOnGroups)
         , groupByTrackYear (maybeGrouping == Just TrackYearGroups)
         ]
+
+
+groupByDirectory isActive =
+    Item
+        { icon = ifThenElse isActive Icons.clear Icons.terrain
+        , label = "Group by directory"
+        , active = isActive
+
+        --
+        , msg =
+            if isActive then
+                TracksMsg Tracks.DisableGrouping
+
+            else
+                TracksMsg (Tracks.GroupBy Directory)
+        }
 
 
 groupByProcessingDate isActive =
