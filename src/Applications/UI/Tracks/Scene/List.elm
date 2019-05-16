@@ -209,7 +209,7 @@ dynamicRowHeight _ ( i, t ) =
     let
         shouldRenderGroup =
             i.group
-                |> Maybe.map (.index >> (==) 0)
+                |> Maybe.map (.firstInGroup >> (==) True)
                 |> Maybe.withDefault False
     in
     if shouldRenderGroup then
@@ -248,7 +248,7 @@ itemView { favouritesOnly } _ idx ( identifiers, track ) =
     let
         shouldRenderGroup =
             identifiers.group
-                |> Maybe.map (.index >> (==) 0)
+                |> Maybe.map (.firstInGroup >> (==) True)
                 |> Maybe.withDefault False
     in
     Html.toUnstyled <|

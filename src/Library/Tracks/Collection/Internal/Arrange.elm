@@ -53,15 +53,8 @@ groupBy { reversed } folder deps collection =
         |> List.foldl folder Dict.empty
         |> Dict.values
         |> ifThenElse reversed List.reverse identity
-        |> List.concatMap (Sorting.sort deps.sortBy deps.sortDirection >> List.indexedMap setIndexInGroup)
+        |> List.concatMap (Sorting.sort deps.sortBy deps.sortDirection)
         |> (\arranged -> { collection | arranged = arranged })
-
-
-setIndexInGroup : Int -> IdentifiedTrack -> IdentifiedTrack
-setIndexInGroup idx ( i, t ) =
-    ( { i | group = Maybe.map (\g -> { g | index = idx }) i.group }
-    , t
-    )
 
 
 
@@ -83,7 +76,7 @@ groupByInsertedAtFolder ( i, t ) =
 
         group =
             { name = insertedAtGroupName year month
-            , index = 0
+            , firstInGroup = False
             }
 
         item =
@@ -138,7 +131,7 @@ groupByDirectoryFolder ( i, t ) =
 
         group =
             { name = directory
-            , index = 0
+            , firstInGroup = False
             }
 
         item =
@@ -165,7 +158,7 @@ groupByYearFolder ( i, t ) =
     let
         group =
             { name = Maybe.unwrap "0000 - Unknown" String.fromInt t.tags.year
-            , index = 0
+            , firstInGroup = False
             }
 
         item =
