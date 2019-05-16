@@ -91,20 +91,11 @@ groupByInsertedAtFolder ( i, t ) =
 
 insertedAtGroupName : Int -> Time.Month -> String
 insertedAtGroupName year month =
-    month
-        |> Time.monthNumber
-        |> String.fromInt
-        |> String.padLeft 2 '0'
-        |> (\m ->
-                m ++ " / " ++ String.fromInt year
-           )
-        |> (\y ->
-                if String.contains "1970" y then
-                    "AGES AGO"
+    if year == 1970 then
+        "I HONESTLY CAN'T REMEMBER"
 
-                else
-                    y
-           )
+    else
+        Time.monthName month ++ " " ++ String.fromInt year
 
 
 
@@ -126,7 +117,7 @@ groupByDirectoryFolder ( i, t ) =
             t.path
                 |> String.split "/"
                 |> List.init
-                |> Maybe.map (String.join "/")
+                |> Maybe.map (String.join " / ")
                 |> Maybe.withDefault t.path
 
         group =

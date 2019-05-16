@@ -332,7 +332,7 @@ groupStyles =
     [ Css.color (Color.toElmCssColor UI.Kit.colorKit.base04)
     , Css.fontFamilies UI.Kit.headerFontFamilies
     , Css.fontSize (Css.px 11)
-    , Css.letterSpacing (Css.em 0.03)
+    , Css.letterSpacing (Css.em 0.005)
     ]
 
 
