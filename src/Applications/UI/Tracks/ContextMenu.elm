@@ -4,8 +4,8 @@ import Conditional exposing (ifThenElse)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Material.Icons.Action as Icons
+import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
-import Material.Icons.Maps as Icons
 import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Core exposing (Msg(..))
 import UI.Queue.Core as Queue
@@ -53,7 +53,7 @@ viewMenu maybeGrouping =
 
 groupByDirectory isActive =
     Item
-        { icon = ifThenElse isActive Icons.clear Icons.terrain
+        { icon = ifThenElse isActive Icons.clear Icons.library_music
         , label = "Group by directory"
         , active = isActive
 
@@ -69,7 +69,7 @@ groupByDirectory isActive =
 
 groupByProcessingDate isActive =
     Item
-        { icon = ifThenElse isActive Icons.clear Icons.terrain
+        { icon = ifThenElse isActive Icons.clear Icons.library_music
         , label = "Group by processing date"
         , active = isActive
 
@@ -85,7 +85,7 @@ groupByProcessingDate isActive =
 
 groupByTrackYear isActive =
     Item
-        { icon = ifThenElse isActive Icons.clear Icons.terrain
+        { icon = ifThenElse isActive Icons.clear Icons.library_music
         , label = "Group by track year"
         , active = isActive
 
