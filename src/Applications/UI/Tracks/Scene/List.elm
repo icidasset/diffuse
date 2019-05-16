@@ -230,7 +230,7 @@ infiniteListContainer styles children =
             brick
                 [ css listStyles ]
                 [ T.f6
-                , T.pb3
+                , T.pb1
                 , T.pt1
                 ]
                 (List.map Html.fromUnstyled children)
