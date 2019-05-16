@@ -105,7 +105,7 @@ update msg model =
                 |> Maybe.map
                     (case model.scene of
                         List ->
-                            UI.Tracks.Scene.List.scrollToNowPlaying
+                            UI.Tracks.Scene.List.scrollToNowPlaying model.collection.harvested
                     )
                 |> Maybe.map
                     (\cmd ->

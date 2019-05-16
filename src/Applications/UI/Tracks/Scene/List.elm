@@ -16,7 +16,7 @@ import Html.Styled.Events exposing (onClick, onDoubleClick)
 import Html.Styled.Lazy
 import InfiniteList
 import Material.Icons exposing (Coloring(..))
-import Material.Icons.Maps as Icons
+import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
 import Tachyons.Classes as T
 import Task
@@ -65,9 +65,12 @@ containerId =
     "diffuse__track-list"
 
 
-scrollToNowPlaying : IdentifiedTrack -> Cmd Msg
-scrollToNowPlaying ( identifiers, track ) =
-    (22 - toFloat rowHeight / 2 + 5 + toFloat identifiers.indexInList * toFloat rowHeight)
+scrollToNowPlaying : List IdentifiedTrack -> IdentifiedTrack -> Cmd Msg
+scrollToNowPlaying harvest ( identifiers, _ ) =
+    harvest
+        |> List.take identifiers.indexInList
+        |> List.foldl (\a -> (+) <| dynamicRowHeight 0 a) 0
+        |> (\n -> 22 - toFloat rowHeight / 2 + 5 + toFloat n)
         |> Dom.setViewportOf containerId 0
         |> Task.attempt (always Bypass)
 
@@ -202,7 +205,7 @@ infiniteListConfig necessities model =
 
 
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
-dynamicRowHeight idx ( i, t ) =
+dynamicRowHeight _ ( i, t ) =
     let
         shouldRenderGroup =
             i.group
@@ -210,7 +213,7 @@ dynamicRowHeight idx ( i, t ) =
                 |> Maybe.withDefault False
     in
     if shouldRenderGroup then
-        rowHeight + 35
+        32 + 18 + 16 + rowHeight
 
     else
         rowHeight
@@ -249,9 +252,9 @@ itemView { favouritesOnly } _ idx ( identifiers, track ) =
     in
     Html.toUnstyled <|
         Html.div
-            []
+            [ id ("track-" ++ String.fromInt identifiers.indexInList) ]
             [ if shouldRenderGroup then
-                groupNode identifiers
+                groupNode idx identifiers
 
               else
                 nothing
@@ -296,8 +299,8 @@ itemView { favouritesOnly } _ idx ( identifiers, track ) =
 -- ROWS
 
 
-groupNode : Identifiers -> Html Msg
-groupNode identifiers =
+groupNode : Int -> Identifiers -> Html Msg
+groupNode idx identifiers =
     let
         groupName =
             identifiers.group
@@ -309,14 +312,14 @@ groupNode identifiers =
         [ T.f7
         , T.fw7
         , T.lh_copy
-        , T.mb3
-        , T.mh3
-        , T.mt4
+        , T.pb3
+        , T.ph3
+        , ifThenElse (0 == idx) T.pt3 T.pt4
         , T.truncate
         ]
         [ inline
             [ T.dib, T.pr2, T.v_mid, C.lh_0 ]
-            [ Html.fromUnstyled (Icons.terrain 22 Inherit) ]
+            [ Html.fromUnstyled (Icons.library_music 16 Inherit) ]
         , inline
             [ T.v_mid ]
             [ text groupName ]
@@ -328,7 +331,7 @@ groupStyles =
     [ Css.color (Color.toElmCssColor UI.Kit.colorKit.base04)
     , Css.fontFamilies UI.Kit.headerFontFamilies
     , Css.fontSize (Css.px 11.5)
-    , Css.letterSpacing (Css.em 0.0375)
+    , Css.letterSpacing (Css.em 0.03)
     ]
 
 
