@@ -104,6 +104,19 @@ view model =
         ]
         [ Lazy.lazy chosen model.chosen
         , Lazy.lazy2 loaded model.loaded model.fadeIn
+
+        -- Shadow
+        ---------
+        , brick
+            [ style "background" "linear-gradient(#0000, rgba(0, 0, 0, 0.175))" ]
+            [ T.absolute
+            , T.bottom_0
+            , T.h5
+            , T.left_0
+            , T.right_0
+            , T.z_1
+            ]
+            []
         ]
 
 
