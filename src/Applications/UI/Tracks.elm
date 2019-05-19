@@ -2,6 +2,7 @@ module UI.Tracks exposing (initialModel, makeParcel, resolveParcel, update, view
 
 import Alien
 import Chunky exposing (..)
+import Classes as C
 import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
@@ -25,6 +26,7 @@ import Material.Icons.Editor as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Maybe.Extra as Maybe
+import Playlists exposing (Playlist)
 import Return3 as Return exposing (..)
 import Tachyons.Classes as T
 import Tracks exposing (..)
@@ -404,11 +406,12 @@ view core =
         , T.flex_column
         , T.flex_grow_1
         ]
-        [ lazy4
+        [ lazy5
             navigation
             core.tracks.grouping
             core.tracks.favouritesOnly
             core.tracks.searchTerm
+            core.tracks.selectedPlaylist
             core.page
 
         --
@@ -427,8 +430,8 @@ view core =
         ]
 
 
-navigation : Maybe Grouping -> Bool -> Maybe String -> Page -> Html Msg
-navigation maybeGrouping favouritesOnly searchTerm page =
+navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Page -> Html Msg
+navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page =
     let
         tabindex_ =
             case page of
@@ -535,6 +538,25 @@ navigation maybeGrouping favouritesOnly searchTerm page =
                     ]
                     [ T.pointer ]
                     [ Html.fromUnstyled (Icons.more_vert 16 searchIconColoring) ]
+
+                -- 4
+                , case selectedPlaylist of
+                    Just playlist ->
+                        brick
+                            [ css selectedPlaylistStyles
+                            , onClick DeselectPlaylist
+                            ]
+                            [ T.br2
+                            , T.f7
+                            , T.fw7
+                            , T.lh_solid
+                            , T.pointer
+                            , T.white_90
+                            ]
+                            [ text playlist.name ]
+
+                    Nothing ->
+                        nothing
                 ]
             ]
         , -----------------------------------------
@@ -656,4 +678,13 @@ searchInputStyles =
     [ Css.paddingLeft (Css.px <| 13 + 16 + 9)
     , Css.fontSize (Css.px 14)
     , Css.height (Css.pct 98)
+    ]
+
+
+selectedPlaylistStyles : List Css.Style
+selectedPlaylistStyles =
+    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base00)
+    , Css.fontSize (Css.px 11)
+    , Css.marginRight (Css.px 6)
+    , Css.padding2 (Css.px 4) (Css.px 5.5)
     ]
