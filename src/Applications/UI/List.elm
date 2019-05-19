@@ -6,9 +6,10 @@ import Color exposing (Color)
 import Color.Ext as Color
 import Conditional exposing (..)
 import Css exposing (px, solid)
-import Html.Events.Extra.Mouse as Mouse exposing (onClick)
+import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
 import Html.Styled as Html exposing (Html, fromUnstyled)
 import Html.Styled.Attributes as Attributes exposing (css, style, title)
+import Html.Styled.Events exposing (onClick)
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Maybe.Extra as Maybe
@@ -33,6 +34,7 @@ type alias Action msg =
 type alias Item msg =
     { label : Html msg
     , actions : List (Action msg)
+    , msg : Maybe msg
     }
 
 
@@ -57,7 +59,7 @@ view variant =
 
 
 item : Variant Int msg -> Int -> Item msg -> Html msg
-item variant idx { label, actions } =
+item variant idx { label, actions, msg } =
     let
         dragHandleColoring =
             actions
@@ -68,7 +70,15 @@ item variant idx { label, actions } =
     brick
         (case variant of
             Normal ->
-                [ css (itemStyles { dragTarget = False }) ]
+                List.append
+                    [ css (itemStyles { dragTarget = False }) ]
+                    (case msg of
+                        Just m ->
+                            [ onClick m ]
+
+                        Nothing ->
+                            []
+                    )
 
             Draggable env ->
                 List.concat
@@ -81,6 +91,9 @@ item variant idx { label, actions } =
         , T.fw6
         , T.items_center
         , T.pv3
+
+        --
+        , ifThenElse (Maybe.isJust msg) T.pointer ""
         ]
         [ -- Label
           --------
@@ -110,8 +123,12 @@ actionView action =
     brick
         (case action.msg of
             Just msg ->
-                [ Attributes.fromUnstyled (onClick msg)
-                , title action.title
+                [ title action.title
+
+                --
+                , msg
+                    |> onWithOptions "click" { stopPropagation = True, preventDefault = True }
+                    |> Attributes.fromUnstyled
                 ]
 
             Nothing ->

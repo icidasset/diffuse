@@ -1,6 +1,7 @@
 module UI.Page exposing (Page(..), fromUrl, sameBase, sources, toString)
 
 import Sources exposing (Service(..))
+import UI.Playlists.Page as Playlists
 import UI.Queue.Page as Queue
 import UI.Settings.Page as Settings
 import UI.Sources.Page as Sources
@@ -17,6 +18,7 @@ type Page
     = Equalizer
     | Index
     | Queue Queue.Page
+    | Playlists Playlists.Page
     | Settings Settings.Page
     | Sources Sources.Page
 
@@ -43,6 +45,12 @@ toString page =
 
         Index ->
             "/"
+
+        -----------------------------------------
+        -- Playlists
+        -----------------------------------------
+        Playlists Playlists.Index ->
+            "/playlists"
 
         -----------------------------------------
         -- Queue
@@ -86,6 +94,9 @@ toString page =
 sameBase : Page -> Page -> Bool
 sameBase a b =
     case ( a, b ) of
+        ( Playlists _, Playlists _ ) ->
+            True
+
         ( Queue _, Queue _ ) ->
             True
 
@@ -130,6 +141,11 @@ route =
 
         --
         , map Equalizer (s "equalizer")
+
+        -----------------------------------------
+        -- Playlists
+        -----------------------------------------
+        , map (Playlists Playlists.Index) (s "playlists")
 
         -----------------------------------------
         -- Queue

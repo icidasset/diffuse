@@ -3,6 +3,7 @@ module UI.Reply exposing (Reply(..))
 import Authentication
 import Common exposing (Switch(..))
 import Coordinates exposing (Coordinates)
+import Playlists exposing (Playlist)
 import Queue
 import Sources exposing (Source)
 import Tracks exposing (IdentifiedTrack)
@@ -33,6 +34,12 @@ type Reply
     | ShowErrorNotificationWithCode String String
     | ShowSuccessNotification String
     | ShowWarningNotification String
+      -----------------------------------------
+      -- Playlists
+      -----------------------------------------
+    | ActivatePlaylist Playlist
+    | DeactivatePlaylist
+    | GenerateDirectoryPlaylists
       -----------------------------------------
       -- Queue
       -----------------------------------------

@@ -308,6 +308,7 @@ index model =
                     (\source ->
                         { label = Html.text (Dict.fetch "name" "" source.data)
                         , actions = sourceActions model.processingError source
+                        , msg = Nothing
                         }
                     )
                 |> UI.List.view UI.List.Normal

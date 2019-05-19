@@ -1,6 +1,7 @@
 module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId)
 
 import Base64
+import Playlists exposing (Playlist)
 import String.Ext as String
 import Time
 import Time.Ext as Time
@@ -91,6 +92,7 @@ type alias CollectionDependencies =
     , grouping : Maybe Grouping
     , hideDuplicates : Bool
     , nowPlaying : Maybe IdentifiedTrack
+    , selectedPlaylist : Maybe Playlist
     , searchResults : Maybe (List String)
     , sortBy : SortBy
     , sortDirection : SortDirection

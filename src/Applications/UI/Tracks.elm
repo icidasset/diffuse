@@ -35,6 +35,7 @@ import UI.Core
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page exposing (Page)
+import UI.Playlists.Page
 import UI.Ports
 import UI.Queue.Page
 import UI.Reply exposing (Reply(..))
@@ -59,6 +60,7 @@ initialModel =
     , scene = List
     , searchResults = Nothing
     , searchTerm = Nothing
+    , selectedPlaylist = Nothing
     , sortBy = Artist
     , sortDirection = Asc
     }
@@ -237,6 +239,17 @@ update msg model =
                 |> returnReplyWithModel model
 
         -----------------------------------------
+        -- Playlists
+        -----------------------------------------
+        DeselectPlaylist ->
+            reviseCollection arrange
+                { model | selectedPlaylist = Nothing }
+
+        SelectPlaylist playlist ->
+            reviseCollection arrange
+                { model | selectedPlaylist = Just playlist }
+
+        -----------------------------------------
         -- Search
         -----------------------------------------
         ClearSearch ->
@@ -297,6 +310,7 @@ makeParcel model =
       , hideDuplicates = model.hideDuplicates
       , nowPlaying = model.nowPlaying
       , searchResults = model.searchResults
+      , selectedPlaylist = model.selectedPlaylist
       , sortBy = model.sortBy
       , sortDirection = model.sortDirection
       }
@@ -310,17 +324,25 @@ resolveParcel model ( _, newCollection ) =
         modelWithNewCollection =
             { model | collection = newCollection }
 
-        oldHarvest =
-            List.map (Tuple.second >> .id) model.collection.harvested
+        collectionChanged =
+            Collection.tracksChanged
+                model.collection.untouched
+                newCollection.untouched
 
-        newHarvest =
-            List.map (Tuple.second >> .id) newCollection.harvested
+        harvestChanged =
+            if collectionChanged then
+                True
+
+            else
+                Collection.harvestChanged
+                    model.collection.harvested
+                    newCollection.harvested
     in
     ( modelWithNewCollection
       ----------
       -- Command
       ----------
-    , if oldHarvest /= newHarvest then
+    , if harvestChanged then
         case model.scene of
             List ->
                 UI.Tracks.Scene.List.scrollToTop
@@ -330,20 +352,14 @@ resolveParcel model ( _, newCollection ) =
       --------
       -- Reply
       --------
-    , Maybe.values
-        [ if model.collection.untouched /= newCollection.untouched then
-            Just SaveTracks
+    , if collectionChanged then
+        [ GenerateDirectoryPlaylists, ResetQueue, SaveTracks ]
 
-          else
-            Nothing
+      else if harvestChanged then
+        [ ResetQueue ]
 
-        --
-        , if oldHarvest /= newHarvest then
-            Just ResetQueue
-
-          else
-            Nothing
-        ]
+      else
+        []
     )
 
 
@@ -528,7 +544,7 @@ navigation maybeGrouping favouritesOnly searchTerm page =
             tabindex_
             [ ( Icon Icons.waves
               , Label "Playlists" Hidden
-              , PerformMsg Bypass
+              , NavigateToPage (UI.Page.Playlists UI.Playlists.Page.Index)
               )
             , ( Icon Icons.event_seat
               , Label "Queue" Hidden

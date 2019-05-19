@@ -489,6 +489,7 @@ futureItem idx item =
           , title = ifThenElse item.manualEntry "Remove" "Ignore"
           }
         ]
+    , msg = Nothing
     }
 
 
@@ -567,4 +568,5 @@ historyItem idx { identifiedTrack, manualEntry } =
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
     , actions = []
+    , msg = Nothing
     }

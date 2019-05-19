@@ -3,6 +3,7 @@ module UI.Tracks.Core exposing (Model, Msg(..), Scene(..))
 import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Encode as Json
+import Playlists exposing (Playlist)
 import Tracks exposing (..)
 import UI.Reply exposing (Reply)
 
@@ -23,6 +24,7 @@ type alias Model =
     , scene : Scene
     , searchResults : Maybe (List String)
     , searchTerm : Maybe String
+    , selectedPlaylist : Maybe Playlist
     , sortBy : SortBy
     , sortDirection : SortDirection
     }
@@ -62,6 +64,11 @@ type Msg
       -----------------------------------------
     | ShowTrackMenu IdentifiedTrack Mouse.Event
     | ShowViewMenu (Maybe Grouping) Mouse.Event
+      -----------------------------------------
+      -- Playlists
+      -----------------------------------------
+    | DeselectPlaylist
+    | SelectPlaylist Playlist
       -----------------------------------------
       -- Search
       -----------------------------------------

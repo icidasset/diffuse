@@ -17,6 +17,7 @@ import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Equalizer as Equalizer
 import UI.Page exposing (Page)
+import UI.Playlists as Playlists
 import UI.Queue.Core as Queue
 import UI.Sources as Sources
 import UI.Tracks.Core as Tracks
@@ -64,6 +65,7 @@ type alias Model =
     , backdrop : Backdrop.Model
     , equalizer : Equalizer.Model
     , queue : Queue.Model
+    , playlists : Playlists.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
     }
@@ -113,6 +115,7 @@ type Msg
     | AuthenticationMsg Authentication.Msg
     | BackdropMsg Backdrop.Msg
     | EqualizerMsg Equalizer.Msg
+    | PlaylistsMsg Playlists.Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg

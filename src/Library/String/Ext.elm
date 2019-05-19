@@ -1,5 +1,7 @@
 module String.Ext exposing (chopEnd, chopStart)
 
+-- 🔱
+
 
 chopEnd : String -> String -> String
 chopEnd needle str =

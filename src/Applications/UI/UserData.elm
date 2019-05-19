@@ -125,6 +125,7 @@ importTracks model data =
         |> Tracks.identify
         |> Tracks.resolveParcel adjustedModel
         |> andThen (Tracks.update Tracks.Search)
+        |> addReply UI.GenerateDirectoryPlaylists
         |> addReplyIfNecessary
 
 

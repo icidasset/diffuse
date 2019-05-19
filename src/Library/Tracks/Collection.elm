@@ -1,4 +1,4 @@
-module Tracks.Collection exposing (add, arrange, harvest, identify, map, removeByPaths, removeBySourceId)
+module Tracks.Collection exposing (add, arrange, harvest, harvestChanged, identify, map, removeByPaths, removeBySourceId, tracksChanged)
 
 import List.Extra as List
 import Tracks exposing (..)
@@ -74,3 +74,41 @@ removeBySourceId sourceId ( deps, { untouched } ) =
         ( deps
         , { emptyCollection | untouched = List.filter (.sourceId >> (/=) sourceId) untouched }
         )
+
+
+
+-- ⚗️
+
+
+tracksChanged : List Track -> List Track -> Bool
+tracksChanged listA listB =
+    case ( listA, listB ) of
+        ( [], [] ) ->
+            False
+
+        ( a :: restA, b :: restB ) ->
+            if a.id /= b.id then
+                True
+
+            else
+                tracksChanged restA restB
+
+        _ ->
+            True
+
+
+harvestChanged : List IdentifiedTrack -> List IdentifiedTrack -> Bool
+harvestChanged listA listB =
+    case ( listA, listB ) of
+        ( [], [] ) ->
+            False
+
+        ( ( _, a ) :: restA, ( _, b ) :: restB ) ->
+            if a.id /= b.id then
+                True
+
+            else
+                harvestChanged restA restB
+
+        _ ->
+            True
