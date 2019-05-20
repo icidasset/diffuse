@@ -245,12 +245,14 @@ update msg model =
         -- Playlists
         -----------------------------------------
         DeselectPlaylist ->
-            reviseCollection arrange
-                { model | selectedPlaylist = Nothing }
+            { model | selectedPlaylist = Nothing }
+                |> reviseCollection arrange
+                |> addReply SaveEnclosedUserData
 
         SelectPlaylist playlist ->
-            reviseCollection arrange
-                { model | selectedPlaylist = Just playlist }
+            { model | selectedPlaylist = Just playlist }
+                |> reviseCollection arrange
+                |> addReply SaveEnclosedUserData
 
         -----------------------------------------
         -- Search

@@ -29,6 +29,7 @@ type alias EnclosedUserData =
     , onlyShowFavourites : Bool
     , repeat : Bool
     , searchTerm : Maybe String
+    , selectedPlaylist : Maybe String
     , shuffle : Bool
     , sortBy : Tracks.SortBy
     , sortDirection : Tracks.SortDirection
@@ -129,19 +130,21 @@ enclosedDecoder =
         |> optional "onlyShowFavourites" Json.bool False
         |> optional "repeat" Json.bool False
         |> optional "searchTerm" (Json.maybe Json.string) Nothing
+        |> optional "selectedPlaylist" (Json.maybe Json.string) Nothing
         |> optional "shuffle" Json.bool False
         |> optional "sortBy" Tracks.sortByDecoder Tracks.Artist
         |> optional "sortDirection" Tracks.sortDirectionDecoder Tracks.Asc
 
 
 encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { equalizerSettings, grouping, onlyShowFavourites, repeat, searchTerm, shuffle, sortBy, sortDirection } =
+encodeEnclosed { equalizerSettings, grouping, onlyShowFavourites, repeat, searchTerm, selectedPlaylist, shuffle, sortBy, sortDirection } =
     Json.Encode.object
         [ ( "equalizerSettings", Equalizer.encodeSettings equalizerSettings )
         , ( "grouping", Maybe.unwrap Json.Encode.null Tracks.encodeGrouping grouping )
         , ( "onlyShowFavourites", Json.Encode.bool onlyShowFavourites )
         , ( "repeat", Json.Encode.bool repeat )
         , ( "searchTerm", Maybe.unwrap Json.Encode.null Json.Encode.string searchTerm )
+        , ( "selectedPlaylist", Maybe.unwrap Json.Encode.null Json.Encode.string selectedPlaylist )
         , ( "shuffle", Json.Encode.bool shuffle )
         , ( "sortBy", Tracks.encodeSortBy sortBy )
         , ( "sortDirection", Tracks.encodeSortDirection sortDirection )

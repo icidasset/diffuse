@@ -26,12 +26,16 @@ import UI.Reply exposing (Reply(..))
 
 
 type alias Model =
-    { collection : List Playlist }
+    { collection : List Playlist
+    , playlistToActivate : Maybe String
+    }
 
 
 initialModel : Model
 initialModel =
-    { collection = [] }
+    { collection = []
+    , playlistToActivate = Nothing
+    }
 
 
 

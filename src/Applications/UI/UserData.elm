@@ -6,18 +6,22 @@ import Common exposing (Switch(..))
 import Json.Decode as Json
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
+import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
+import Playlists exposing (Playlist)
 import Return3 exposing (..)
-import Sources
+import Sources exposing (Source)
 import Sources.Encoding as Sources
-import Tracks exposing (emptyCollection)
+import Tracks exposing (Track, emptyCollection)
 import Tracks.Collection as Tracks
 import Tracks.Encoding as Tracks
 import UI.Backdrop
 import UI.Core
 import UI.Equalizer as Equalizer
 import UI.Notifications
+import UI.Playlists as Playlists
+import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Reply as UI
 import UI.Sources as Sources
@@ -69,19 +73,31 @@ importHypaethral value model =
                 ( sourcesModel, sourcesCmd, sourcesReplies ) =
                     importSources model.sources data
 
+                ( playlistsModel, playlistsCmd, playlistsReplies ) =
+                    importPlaylists
+                        model.playlists
+                        data
+
+                selectedPlaylist =
+                    Maybe.andThen
+                        (\n -> List.find (.name >> (==) n) playlistsModel.collection)
+                        model.playlists.playlistToActivate
+
                 ( tracksModel, tracksCmd, tracksReplies ) =
-                    importTracks model.tracks data
+                    importTracks model.tracks data selectedPlaylist
             in
             ( { model
                 | backdrop = backdropModel
+                , playlists = playlistsModel
                 , sources = sourcesModel
                 , tracks = tracksModel
               }
             , Cmd.batch
-                [ Cmd.map UI.Core.SourcesMsg sourcesCmd
+                [ Cmd.map UI.Core.PlaylistsMsg playlistsCmd
+                , Cmd.map UI.Core.SourcesMsg sourcesCmd
                 , Cmd.map UI.Core.TracksMsg tracksCmd
                 ]
-            , sourcesReplies ++ tracksReplies
+            , playlistsReplies ++ sourcesReplies ++ tracksReplies
             )
 
         Err err ->
@@ -96,13 +112,22 @@ importHypaethral value model =
 -- ㊙️
 
 
+importPlaylists : Playlists.Model -> HypaethralUserData -> Return Playlists.Model Playlists.Msg UI.Reply
+importPlaylists model data =
+    return
+        { model
+            | collection = UI.Playlists.Directory.generate data.sources data.tracks
+            , playlistToActivate = Nothing
+        }
+
+
 importSources : Sources.Model -> HypaethralUserData -> Return Sources.Model Sources.Msg UI.Reply
 importSources model data =
     return { model | collection = data.sources }
 
 
-importTracks : Tracks.Model -> HypaethralUserData -> Return Tracks.Model Tracks.Msg UI.Reply
-importTracks model data =
+importTracks : Tracks.Model -> HypaethralUserData -> Maybe Playlist -> Return Tracks.Model Tracks.Msg UI.Reply
+importTracks model data selectedPlaylist =
     let
         adjustedModel =
             { model
@@ -110,6 +135,7 @@ importTracks model data =
                 , enabledSourceIds = Sources.enabledSourceIds data.sources
                 , favourites = data.favourites
                 , hideDuplicates = Maybe.unwrap False .hideDuplicates data.settings
+                , selectedPlaylist = selectedPlaylist
             }
 
         addReplyIfNecessary =
@@ -125,7 +151,6 @@ importTracks model data =
         |> Tracks.identify
         |> Tracks.resolveParcel adjustedModel
         |> andThen (Tracks.update Tracks.Search)
-        |> addReply UI.GenerateDirectoryPlaylists
         |> addReplyIfNecessary
 
 
@@ -149,6 +174,7 @@ exportEnclosed model =
         , onlyShowFavourites = model.tracks.favouritesOnly
         , repeat = model.queue.repeat
         , searchTerm = model.tracks.searchTerm
+        , selectedPlaylist = Maybe.map .name model.tracks.selectedPlaylist
         , shuffle = model.queue.shuffle
         , sortBy = model.tracks.sortBy
         , sortDirection = model.tracks.sortDirection
@@ -158,7 +184,7 @@ exportEnclosed model =
 importEnclosed : Json.Value -> UI.Core.Model -> Return UI.Core.Model UI.Core.Msg UI.Reply
 importEnclosed value model =
     let
-        { equalizer, queue, tracks } =
+        { equalizer, playlists, queue, tracks } =
             model
     in
     case decodeEnclosed value of
@@ -170,6 +196,11 @@ importEnclosed value model =
                         , mid = data.equalizerSettings.mid
                         , high = data.equalizerSettings.high
                         , volume = data.equalizerSettings.volume
+                    }
+
+                newPlaylists =
+                    { playlists
+                        | playlistToActivate = data.selectedPlaylist
                     }
 
                 newQueue =
@@ -189,6 +220,7 @@ importEnclosed value model =
             in
             ( { model
                 | equalizer = newEqualizer
+                , playlists = newPlaylists
                 , queue = newQueue
                 , tracks = newTracks
               }
