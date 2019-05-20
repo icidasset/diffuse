@@ -424,7 +424,12 @@ translateAlienError event err =
             report Alien.AuthTextile "Something went wrong regarding Textile. Maybe Textile isn't running?"
 
         Just tag ->
-            report tag err
+            case err of
+                "db is undefined" ->
+                    report tag "Can't connect to the browser's IndexedDB. FYI, this is __not supported in Firefox's private mode__."
+
+                _ ->
+                    report tag err
 
         Nothing ->
             Bypass

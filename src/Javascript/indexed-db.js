@@ -31,8 +31,8 @@ idx.onsuccess = _ => {
   db = idx.result
 }
 
-idx.onerror = err => {
-  console.error("IndexedDB error: " + err)
+idx.onerror = event => {
+  console.error("IndexedDB error: " + event.target.error)
 }
 
 

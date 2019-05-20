@@ -44,17 +44,28 @@ dismiss model { id } =
 
 show : Notification Msg -> Model -> ( Model, Cmd Msg )
 show notification model =
-    ( { model | notifications = notification :: model.notifications }
-      -- Hide notification after a certain amount of time,
-      -- unless it's a sticky notification.
-    , if (Notifications.options notification).sticky then
-        Cmd.none
+    let
+        existingNotificationIds =
+            List.map Notifications.id model.notifications
+    in
+    if List.member (Notifications.id notification) existingNotificationIds then
+        -- Don't show duplicate notifications
+        ( model
+        , Cmd.none
+        )
 
-      else
-        Task.perform
-            (\_ -> UI.Core.DismissNotification { id = Notifications.id notification })
-            (Process.sleep 3000)
-    )
+    else
+        ( { model | notifications = notification :: model.notifications }
+          -- Hide notification after a certain amount of time,
+          -- unless it's a sticky notification.
+        , if (Notifications.options notification).sticky then
+            Cmd.none
+
+          else
+            Task.perform
+                (\_ -> UI.Core.DismissNotification { id = Notifications.id notification })
+                (Process.sleep 3000)
+        )
 
 
 showWithModel : Model -> Notification Msg -> ( Model, Cmd Msg )
