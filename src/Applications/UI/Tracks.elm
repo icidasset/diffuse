@@ -671,9 +671,10 @@ searchIconStyles =
 
 searchInputStyles : List Css.Style
 searchInputStyles =
-    [ Css.paddingLeft (Css.px <| 13 + 16 + 9)
-    , Css.fontSize (Css.px 14)
+    [ Css.fontSize (Css.px 14)
     , Css.height (Css.pct 98)
+    , Css.minWidth (Css.px 59)
+    , Css.paddingLeft (Css.px <| 13 + 16 + 9)
     ]
 
 
