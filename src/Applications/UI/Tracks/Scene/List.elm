@@ -151,6 +151,7 @@ headerColumn text_ width pos maybeSortIcon msg =
                 (Css.px <| ifThenElse (pos /= First) 1 0)
                 Css.solid
                 (Color.toElmCssColor UI.Kit.colors.subtleBorder)
+            , Css.minWidth (Css.px columnMinWidth)
             , Css.width (Css.pct width)
             ]
         ]
@@ -374,13 +375,17 @@ rowStyles idx { isMissing, isNowPlaying } =
 -- COLUMNS
 
 
+columnMinWidth =
+    28
+
+
 favouriteColumn : Bool -> Identifiers -> Html Msg
 favouriteColumn favouritesOnly identifiers =
     brick
         [ css (favouriteColumnStyles favouritesOnly identifiers)
         , onClick (ToggleFavourite identifiers.indexInList)
         ]
-        [ T.pl3 ]
+        [ T.flex_shrink_0, T.pl3 ]
         [ if identifiers.isFavourite then
             text "t"
 
@@ -410,6 +415,7 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } =
     in
     [ Css.color color
     , Css.fontFamilies [ "or-favourites" ]
+    , Css.minWidth (Css.px columnMinWidth)
     , Css.width (Css.pct 4.5)
     ]
 
@@ -429,5 +435,6 @@ otherColumn width isLast text_ =
 
 otherColumnStyles : Float -> List Css.Style
 otherColumnStyles columnWidth =
-    [ Css.width (Css.pct columnWidth)
+    [ Css.minWidth (Css.px columnMinWidth)
+    , Css.width (Css.pct columnWidth)
     ]

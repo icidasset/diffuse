@@ -451,9 +451,9 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
           -----------------------------------------
           brick
             [ css searchStyles ]
-            [ T.flex_grow_1
+            [ T.flex
+            , T.flex_grow_1
             , T.overflow_hidden
-            , T.relative
             ]
             [ -- Input
               --------
@@ -469,13 +469,11 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
                 ]
                 [ T.bg_transparent
                 , T.bn
-                , T.flex
+                , T.flex_grow_1
                 , T.h_100
-                , T.items_center
                 , T.outline_0
-                , T.relative
+                , T.pr2
                 , T.w_100
-                , T.z_1
                 ]
                 []
 
@@ -497,11 +495,8 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
             ----------
             , brick
                 [ css searchActionsStyles ]
-                [ T.absolute
-                , T.flex
+                [ T.flex
                 , T.items_center
-                , T.right_0
-                , T.z_2
                 ]
                 [ -- 1
                   case searchTerm of
@@ -553,6 +548,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
                             , T.fw7
                             , T.lh_solid
                             , T.pointer
+                            , T.truncate
                             , T.white_90
                             ]
                             [ text playlist.name ]
@@ -655,8 +651,6 @@ searchActionsStyles =
     , Css.lineHeight (Css.px 0)
     , Css.marginTop (Css.px 1)
     , Css.paddingRight (Css.px <| 13 - 6)
-    , Css.top (Css.pct 50)
-    , Css.transform (Css.translateY <| Css.pct -50)
     ]
 
 

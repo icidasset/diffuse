@@ -274,7 +274,7 @@ knob : Knob -> Float -> Html Msg
 knob knobType value =
     brick
         [ css columnStyles ]
-        [ T.flex_grow_1, T.flex_shrink_0, T.ph5, T.pv3 ]
+        [ T.flex_grow_1, T.flex_shrink_0, T.ph4, T.ph5_ns, T.pv3 ]
         [ knob_ knobType value
         , knobLines
         , knobLabel knobType
