@@ -829,6 +829,7 @@ subscriptions _ =
                     |> Debouncer.provideInput
                     |> Debounce
             )
+        , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
         , Time.every (60 * 1000) SetCurrentTime
         ]
 

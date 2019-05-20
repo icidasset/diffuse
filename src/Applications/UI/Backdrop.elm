@@ -1,7 +1,8 @@
 module UI.Backdrop exposing (Model, Msg(..), backgroundPositioning, default, initialModel, options, update, view)
 
 import Chunky exposing (..)
-import Css exposing (..)
+import Color exposing (Color)
+import Css exposing (int, num, pct, px)
 import Css.Global
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes exposing (class, css, src, style)
@@ -11,6 +12,7 @@ import Json.Decode
 import Return3 as Return exposing (..)
 import Tachyons.Classes as T
 import UI.Animations
+import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply)
 
 
@@ -54,7 +56,8 @@ options =
 
 
 type alias Model =
-    { chosen : Maybe String
+    { bgColor : Maybe Color
+    , chosen : Maybe String
     , fadeIn : Bool
     , loaded : List String
     }
@@ -62,7 +65,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { chosen = Nothing
+    { bgColor = Nothing
+    , chosen = Nothing
     , fadeIn = True
     , loaded = []
     }
@@ -73,7 +77,8 @@ initialModel =
 
 
 type Msg
-    = Choose String
+    = BackgroundColor { r : Int, g : Int, b : Int }
+    | Choose String
     | Default
     | Load String
 
@@ -81,6 +86,9 @@ type Msg
 update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
+        BackgroundColor { r, g, b } ->
+            return { model | bgColor = Just (Color.rgb255 r g b) }
+
         Choose backdrop ->
             return { model | chosen = Just backdrop } |> addReply Reply.SaveSettings
 
@@ -88,7 +96,9 @@ update msg model =
             return { model | chosen = Just default }
 
         Load backdrop ->
-            return { model | loaded = model.loaded ++ [ backdrop ] }
+            returnCommandWithModel
+                { model | loaded = model.loaded ++ [ backdrop ] }
+                (Ports.pickAverageBackgroundColor backdrop)
 
 
 
@@ -202,13 +212,13 @@ loaded list fadeIn =
 
 chosenStyles : List Css.Style
 chosenStyles =
-    [ height (px 1)
-    , left (pct 100)
-    , opacity (num 0.00001)
-    , top (pct 100)
-    , transform (translate2 (px -1) (px -1))
-    , width (px 1)
-    , zIndex (int -10000)
+    [ Css.height (px 1)
+    , Css.left (pct 100)
+    , Css.opacity (num 0.00001)
+    , Css.top (pct 100)
+    , Css.transform (Css.translate2 (px -1) (px -1))
+    , Css.width (px 1)
+    , Css.zIndex (int -10000)
     ]
 
 
@@ -224,10 +234,10 @@ imageContainerStyles =
 
 imageAnimation : List Css.Style
 imageAnimation =
-    [ animationName UI.Animations.fadeIn
-    , animationDuration (ms 2000)
-    , animationDelay (ms 50)
-    , property "animation-fill-mode" "forwards"
+    [ Css.animationName UI.Animations.fadeIn
+    , Css.animationDuration (Css.ms 2000)
+    , Css.animationDelay (Css.ms 50)
+    , Css.property "animation-fill-mode" "forwards"
     ]
 
 

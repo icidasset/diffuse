@@ -3,11 +3,12 @@ module UI.Tracks exposing (initialModel, makeParcel, resolveParcel, update, view
 import Alien
 import Chunky exposing (..)
 import Classes as C
-import Color
+import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Coordinates
 import Css
+import Css.Transitions exposing (transition)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, placeholder, tabindex, title, value)
@@ -406,13 +407,14 @@ view core =
         , T.flex_column
         , T.flex_grow_1
         ]
-        [ lazy5
+        [ lazy6
             navigation
             core.tracks.grouping
             core.tracks.favouritesOnly
             core.tracks.searchTerm
             core.tracks.selectedPlaylist
             core.page
+            core.backdrop.bgColor
 
         --
         , if List.isEmpty core.tracks.collection.harvested then
@@ -430,8 +432,8 @@ view core =
         ]
 
 
-navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Page -> Html Msg
-navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page =
+navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Page -> Maybe Color -> Html Msg
+navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor =
     let
         tabindex_ =
             case page of
@@ -543,7 +545,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page =
                 , case selectedPlaylist of
                     Just playlist ->
                         brick
-                            [ css selectedPlaylistStyles
+                            [ css (selectedPlaylistStyles bgColor)
                             , onClick DeselectPlaylist
                             ]
                             [ T.br2
@@ -681,10 +683,11 @@ searchInputStyles =
     ]
 
 
-selectedPlaylistStyles : List Css.Style
-selectedPlaylistStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base00)
+selectedPlaylistStyles : Maybe Color -> List Css.Style
+selectedPlaylistStyles bgColor =
+    [ Css.backgroundColor (Color.toElmCssColor <| Maybe.withDefault UI.Kit.colorKit.base01 bgColor)
     , Css.fontSize (Css.px 11)
     , Css.marginRight (Css.px 6)
     , Css.padding2 (Css.px 4) (Css.px 5.5)
+    , Css.Transitions.transition [ Css.Transitions.backgroundColor 450 ]
     ]
