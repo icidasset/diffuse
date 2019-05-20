@@ -53,6 +53,7 @@ type Reply
       -----------------------------------------
     | AddSourceToCollection Source
     | ExternalSourceAuthorization (String -> String)
+    | ForceTracksRerender
     | ProcessSources
     | RemoveTracksWithSourceId String
     | ReplaceSourceInCollection Source

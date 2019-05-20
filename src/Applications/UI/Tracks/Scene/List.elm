@@ -1,4 +1,4 @@
-module UI.Tracks.Scene.List exposing (scrollToNowPlaying, scrollToTop, view)
+module UI.Tracks.Scene.List exposing (containerId, scrollToNowPlaying, scrollToTop, view)
 
 import Browser.Dom as Dom
 import Chunky exposing (..)
@@ -13,7 +13,7 @@ import Html.Events.Extra.Mouse exposing (onWithOptions)
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, id)
 import Html.Styled.Events exposing (onClick, onDoubleClick)
-import Html.Styled.Lazy
+import Html.Styled.Lazy as Lazy
 import InfiniteList
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
@@ -31,16 +31,23 @@ import UI.Tracks.Core exposing (..)
 
 
 type alias Necessities =
-    { height : Float
-    }
+    { height : Float }
 
 
 view : Necessities -> Model -> Html Msg
 view necessities model =
-    let
-        { infiniteList } =
-            model
-    in
+    Lazy.lazy6
+        lazyView
+        necessities
+        model.collection.harvested
+        model.infiniteList
+        model.favouritesOnly
+        model.sortBy
+        model.sortDirection
+
+
+lazyView : Necessities -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> SortBy -> SortDirection -> Html Msg
+lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection =
     brick
         [ fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
         , id containerId
@@ -50,12 +57,15 @@ view necessities model =
         , T.overflow_x_hidden
         , T.overflow_y_scroll
         ]
-        [ Html.Styled.Lazy.lazy2 header model.sortBy model.sortDirection
+        [ Lazy.lazy2
+            header
+            sortBy
+            sortDirection
         , Html.fromUnstyled
             (InfiniteList.view
-                (infiniteListConfig necessities model)
+                (infiniteListConfig necessities favouritesOnly)
                 infiniteList
-                model.collection.harvested
+                harvest
             )
         ]
 
@@ -193,12 +203,12 @@ sortIconStyles =
 -- INFINITE LIST
 
 
-infiniteListConfig : Necessities -> Model -> InfiniteList.Config IdentifiedTrack Msg
-infiniteListConfig necessities model =
+infiniteListConfig : Necessities -> Bool -> InfiniteList.Config IdentifiedTrack Msg
+infiniteListConfig necessities favouritesOnly =
     InfiniteList.withCustomContainer
         infiniteListContainer
         (InfiniteList.config
-            { itemView = itemView model
+            { itemView = itemView favouritesOnly
             , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
             , containerHeight = round necessities.height
             }
@@ -244,8 +254,8 @@ listStyles =
     ]
 
 
-itemView : Model -> Int -> Int -> IdentifiedTrack -> UnstyledHtml.Html Msg
-itemView { favouritesOnly } _ idx ( identifiers, track ) =
+itemView : Bool -> Int -> Int -> IdentifiedTrack -> UnstyledHtml.Html Msg
+itemView favouritesOnly _ idx ( identifiers, track ) =
     let
         shouldRenderGroup =
             identifiers.group

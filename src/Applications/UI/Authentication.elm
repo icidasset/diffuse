@@ -141,21 +141,25 @@ update msg model =
             return model
 
         Cancel ->
-            case model of
+            ( case model of
                 Authenticated method ->
-                    return (Authenticated method)
+                    Authenticated method
 
                 InputScreen _ _ ->
-                    return Unauthenticated
+                    Unauthenticated
 
                 NewEncryptionKeyScreen _ _ ->
-                    return Unauthenticated
+                    Unauthenticated
 
                 UpdateEncryptionKeyScreen method _ ->
-                    return (Authenticated method)
+                    Authenticated method
 
                 Unauthenticated ->
-                    return Unauthenticated
+                    Unauthenticated
+              --
+            , Cmd.none
+            , [ ForceTracksRerender ]
+            )
 
         ShowMoreOptions mouseEvent ->
             ( model
@@ -234,14 +238,14 @@ update msg model =
                     (return model)
 
             else
-                returnCommandWithModel
-                    (Authenticated method)
-                    (passphrase
-                        |> hashPassphrase
-                        |> Json.Encode.string
-                        |> Alien.broadcast Alien.UpdateEncryptionKey
-                        |> Ports.toBrain
-                    )
+                ( Authenticated method
+                , passphrase
+                    |> hashPassphrase
+                    |> Json.Encode.string
+                    |> Alien.broadcast Alien.UpdateEncryptionKey
+                    |> Ports.toBrain
+                , [ ForceTracksRerender ]
+                )
 
         -----------------------------------------
         -- More Input

@@ -4,6 +4,7 @@ import Alien
 import Authentication
 import Authentication.RemoteStorage
 import Browser
+import Browser.Dom
 import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
@@ -70,6 +71,7 @@ import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Core as Tracks
+import UI.Tracks.Scene.List
 import UI.UserData as UserData
 import Url exposing (Url)
 
@@ -686,6 +688,13 @@ translateReply reply model =
                 |> urlBuilder
                 |> Nav.load
                 |> returnWithModel model
+
+        ForceTracksRerender ->
+            ( model
+            , Task.attempt
+                (always Bypass)
+                (Browser.Dom.setViewportOf UI.Tracks.Scene.List.containerId 0 1)
+            )
 
         ProcessSources ->
             let
