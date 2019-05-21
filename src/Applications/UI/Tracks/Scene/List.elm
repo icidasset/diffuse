@@ -11,7 +11,7 @@ import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtmlAttributes
 import Html.Events.Extra.Mouse exposing (onWithOptions)
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, fromUnstyled, id)
+import Html.Styled.Attributes exposing (css, fromUnstyled, id, tabindex)
 import Html.Styled.Events exposing (onClick, onDoubleClick)
 import Html.Styled.Lazy as Lazy
 import InfiniteList
@@ -31,7 +31,7 @@ import UI.Tracks.Core exposing (..)
 
 
 type alias Necessities =
-    { height : Float }
+    { height : Float, isVisible : Bool }
 
 
 view : Necessities -> Model -> Html Msg
@@ -51,6 +51,7 @@ lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection =
     brick
         [ fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
         , id containerId
+        , tabindex (ifThenElse necessities.isVisible 0 -1)
         ]
         [ T.flex_grow_1
         , T.vh_25

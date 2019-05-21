@@ -430,7 +430,11 @@ view core =
           else
             case core.tracks.scene of
                 List ->
-                    UI.Tracks.Scene.List.view { height = core.viewport.height } core.tracks
+                    UI.Tracks.Scene.List.view
+                        { height = core.viewport.height
+                        , isVisible = core.page == UI.Page.Index
+                        }
+                        core.tracks
         ]
 
 
