@@ -327,7 +327,10 @@ resolveParcel : Model -> Parcel -> Return Model Msg Reply
 resolveParcel model ( _, newCollection ) =
     let
         modelWithNewCollection =
-            { model | collection = newCollection }
+            { model
+                | collection = newCollection
+                , infiniteList = InfiniteList.updateScroll Json.Encode.null model.infiniteList
+            }
 
         collectionChanged =
             Collection.tracksChanged
@@ -586,44 +589,47 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
 
 noTracksView : Bool -> Int -> Int -> Int -> Html Msg
 noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
-    UI.Kit.centeredContent
-        [ if isProcessing then
-            message "Processing Tracks"
+    chunk
+        [ T.flex, T.flex_grow_1 ]
+        [ UI.Kit.centeredContent
+            [ if isProcessing then
+                message "Processing Tracks"
 
-          else if amountOfSources == 0 then
-            chunk
-                []
-                [ UI.Kit.buttonLink
-                    "/sources/new"
-                    UI.Kit.Normal
-                    (inline
-                        []
-                        [ UI.Kit.inlineIcon Icons.add
-                        , text "Add some music"
-                        ]
-                    )
-                , slab
-                    Html.span
+              else if amountOfSources == 0 then
+                chunk
                     []
-                    [ T.dib, T.w1 ]
-                    []
-                , UI.Kit.buttonWithColor
-                    UI.Kit.colorKit.base0B
-                    UI.Kit.Normal
-                    (Reply [ InsertDemo ])
-                    (inline
+                    [ UI.Kit.buttonLink
+                        "/sources/new"
+                        UI.Kit.Normal
+                        (inline
+                            []
+                            [ UI.Kit.inlineIcon Icons.add
+                            , text "Add some music"
+                            ]
+                        )
+                    , slab
+                        Html.span
                         []
-                        [ UI.Kit.inlineIcon Icons.music_note
-                        , text "Insert demo"
-                        ]
-                    )
-                ]
+                        [ T.dib, T.w1 ]
+                        []
+                    , UI.Kit.buttonWithColor
+                        UI.Kit.colorKit.base0B
+                        UI.Kit.Normal
+                        (Reply [ InsertDemo ])
+                        (inline
+                            []
+                            [ UI.Kit.inlineIcon Icons.music_note
+                            , text "Insert demo"
+                            ]
+                        )
+                    ]
 
-          else if amountOfTracks == 0 then
-            message "No tracks found"
+              else if amountOfTracks == 0 then
+                message "No tracks found"
 
-          else
-            message "No sources available"
+              else
+                message "No sources available"
+            ]
         ]
 
 
