@@ -1,8 +1,17 @@
-module Common exposing (Switch(..), queryString, urlOrigin)
+module Common exposing (Switch(..), backToIndex, queryString, urlOrigin)
 
 import Tuple.Ext as Tuple
 import Url exposing (Protocol(..), Url)
 import Url.Builder as Url
+
+
+
+-- ⛩
+
+
+backToIndex : String
+backToIndex =
+    "Back to tracks"
 
 
 

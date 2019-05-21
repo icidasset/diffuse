@@ -4,4 +4,6 @@ module UI.Playlists.Page exposing (Page(..))
 
 
 type Page
-    = Index
+    = Edit String
+    | Index
+    | New

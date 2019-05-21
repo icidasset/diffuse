@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, headerFontStyles, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, canisterForm, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, headerFontStyles, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus, vessel)
 
 import Chunky exposing (..)
 import Color
@@ -166,11 +166,6 @@ insulationWidth =
     840
 
 
-maxInputWidth : Float
-maxInputWidth =
-    360
-
-
 
 -- NODES
 
@@ -249,6 +244,13 @@ canister : List (Html msg) -> Html msg
 canister children =
     chunk
         [ T.mh1, T.ph3, T.pb4 ]
+        children
+
+
+canisterForm : List (Html msg) -> Html msg
+canisterForm children =
+    chunk
+        [ T.measure, T.mh1, T.ph3, T.pb4, T.w_100 ]
         children
 
 
@@ -403,8 +405,7 @@ select : (String -> msg) -> List (Html msg) -> Html msg
 select inputHandler options =
     brick
         [ css selectStyles.container ]
-        [ T.mb4
-        , T.relative
+        [ T.relative
         , T.w_100
         ]
         [ slab
@@ -603,7 +604,7 @@ selectStyles =
         , Css.transform (Css.translateY <| pct -50)
         ]
     , container =
-        [ Css.maxWidth (px maxInputWidth) ]
+        []
     , field =
         [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
         , Css.color (Color.toElmCssColor colors.text)
@@ -634,7 +635,6 @@ textFieldStyles : List Css.Style
 textFieldStyles =
     [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
     , Css.color (Color.toElmCssColor colors.text)
-    , Css.maxWidth (px maxInputWidth)
     , inputFocus
     ]
 

@@ -595,6 +595,9 @@ translateReply reply model =
         ShowErrorNotificationWithCode string code ->
             UI.Notifications.show (Notifications.errorWithCode string code []) model
 
+        ShowNonStickyErrorNotification string ->
+            UI.Notifications.show (Notifications.error string) model
+
         ShowSuccessNotification string ->
             UI.Notifications.show (Notifications.success string) model
 

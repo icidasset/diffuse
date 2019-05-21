@@ -32,6 +32,7 @@ type Reply
     | DismissNotification { id : Int }
     | ShowErrorNotification String
     | ShowErrorNotificationWithCode String String
+    | ShowNonStickyErrorNotification String
     | ShowSuccessNotification String
     | ShowWarningNotification String
       -----------------------------------------

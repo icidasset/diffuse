@@ -3,6 +3,7 @@ module UI.Equalizer exposing (Model, Msg(..), adjustAllKnobs, initialModel, upda
 import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
+import Common
 import Coordinates exposing (Coordinates)
 import Css
 import Equalizer exposing (..)
@@ -223,7 +224,7 @@ view model =
           -----------------------------------------
           UI.Navigation.local
             [ ( Icon Icons.arrow_back
-              , Label "Back to list" Hidden
+              , Label Common.backToIndex Hidden
               , NavigateToPage UI.Page.Index
               )
             ]

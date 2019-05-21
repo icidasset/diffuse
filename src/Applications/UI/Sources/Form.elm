@@ -214,7 +214,7 @@ newWhere { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\h -> form [ UI.Kit.canister h ])
+    , (\h -> form [ UI.Kit.canisterForm h ])
         [ UI.Kit.h2 "Where is your music stored?"
 
         -- Dropdown
@@ -222,14 +222,16 @@ newWhere { context } =
         , Services.labels
             |> List.map (\( k, l ) -> Html.option [ value k ] [ text l ])
             |> select SelectService
-            |> chunky [ T.flex, T.justify_center, T.pv2, T.w_100 ]
 
         -- Button
         ---------
-        , UI.Kit.button
-            IconOnly
-            TakeStep
-            (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
+        , chunk
+            [ T.mt4, T.pt2 ]
+            [ UI.Kit.button
+                IconOnly
+                TakeStep
+                (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
+            ]
         ]
     ]
 
@@ -302,7 +304,7 @@ newBy { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\h -> form [ UI.Kit.canister h ])
+    , (\h -> form [ UI.Kit.canisterForm h ])
         [ UI.Kit.h2 "One last thing"
         , UI.Kit.label [] "What are we going to call this source?"
 

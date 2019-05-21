@@ -2,6 +2,7 @@ module UI.Queue exposing (initialModel, update, view)
 
 import Chunky exposing (..)
 import Color.Ext as Color
+import Common
 import Conditional exposing (..)
 import Css
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
@@ -377,7 +378,7 @@ futureView model =
       -----------------------------------------
       UI.Navigation.local
         [ ( Icon Icons.arrow_back
-          , Label "Back to list" Hidden
+          , Label Common.backToIndex Hidden
           , NavigateToPage Page.Index
           )
         , ( Icon Icons.history
@@ -504,7 +505,7 @@ historyView model =
       -----------------------------------------
       UI.Navigation.local
         [ ( Icon Icons.arrow_back
-          , Label "Back to list" Hidden
+          , Label Common.backToIndex Hidden
           , NavigateToPage Page.Index
           )
         , ( Icon Icons.event_seat

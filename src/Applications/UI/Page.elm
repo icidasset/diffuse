@@ -52,6 +52,12 @@ toString page =
         Playlists Playlists.Index ->
             "/playlists"
 
+        Playlists Playlists.New ->
+            "/playlists/new"
+
+        Playlists (Playlists.Edit playlistName) ->
+            "/playlists/edit/" ++ playlistName
+
         -----------------------------------------
         -- Queue
         -----------------------------------------
@@ -146,6 +152,8 @@ route =
         -- Playlists
         -----------------------------------------
         , map (Playlists Playlists.Index) (s "playlists")
+        , map (Playlists << Playlists.Edit) (s "playlists" </> s "edit" </> string)
+        , map (Playlists Playlists.New) (s "playlists" </> s "new")
 
         -----------------------------------------
         -- Queue
