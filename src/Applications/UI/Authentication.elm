@@ -12,7 +12,7 @@ import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
+import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, strong, text)
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Json.Encode
@@ -24,7 +24,7 @@ import SHA
 import String.Ext as String
 import Svg exposing (Svg)
 import Tachyons.Classes as T
-import UI.Kit
+import UI.Kit exposing (ButtonType(..))
 import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
@@ -53,6 +53,7 @@ type Model
     | NewEncryptionKeyScreen Method (Maybe String)
     | UpdateEncryptionKeyScreen Method (Maybe String)
     | Unauthenticated
+    | Welcome
 
 
 type alias Question =
@@ -86,7 +87,7 @@ initialModel url =
                    )
 
         _ ->
-            Unauthenticated
+            Welcome
 
 
 extractMethod : Model -> Maybe Method
@@ -107,6 +108,9 @@ extractMethod model =
         Unauthenticated ->
             Nothing
 
+        Welcome ->
+            Nothing
+
 
 
 -- 📣
@@ -115,6 +119,7 @@ extractMethod model =
 type Msg
     = Bypass
     | Cancel
+    | GetStarted
     | ShowMoreOptions Mouse.Event
     | SignIn Method
     | SignInWithPassphrase Method String
@@ -155,10 +160,19 @@ update msg model =
                     Authenticated method
 
                 Unauthenticated ->
-                    Unauthenticated
+                    Welcome
+
+                Welcome ->
+                    Welcome
               --
             , Cmd.none
             , [ ForceTracksRerender ]
+            )
+
+        GetStarted ->
+            ( Unauthenticated
+            , Cmd.none
+            , []
             )
 
         ShowMoreOptions mouseEvent ->
@@ -315,7 +329,7 @@ view model =
             , T.items_center
             ]
             [ chunk
-                [ T.relative ]
+                [ T.pv3, T.relative ]
                 [ img
                     [ onClick Cancel
                     , src "/images/diffuse-light.svg"
@@ -323,7 +337,15 @@ view model =
 
                     --
                     , case model of
-                        Unauthenticated ->
+                        Welcome ->
+                            title "Diffuse"
+
+                        _ ->
+                            title "Go back"
+
+                    --
+                    , case model of
+                        Welcome ->
                             style "cursor" "default"
 
                         _ ->
@@ -355,10 +377,20 @@ view model =
                             |> chunk []
                             |> speechBubble
 
+                    Welcome ->
+                        [ inline [ T.i ] [ text "Hi, I'm D1ff-B0t, I play music" ]
+                        , lineBreak
+                        , inline [ T.i ] [ text "♫ from your digital storage." ]
+                        ]
+                            |> chunk []
+                            |> speechBubble
+
                     _ ->
                         [ text "Where would you like to"
                         , lineBreak
                         , text "store your encrypted data?"
+                        , lineBreak
+                        , inline [ T.i, T.o_50 ] [ text "favourites, settings, etc." ]
                         ]
                             |> chunk []
                             |> speechBubble
@@ -390,11 +422,15 @@ view model =
             Authenticated _ ->
                 choicesScreen
 
+            Welcome ->
+                welcomeScreen
+
         -----------------------------------------
         -- Link to about page
         -----------------------------------------
         , chunk
             [ T.f6
+            , T.fw6
             , T.flex
             , T.flex_grow_1
             , T.items_end
@@ -406,10 +442,29 @@ view model =
                 a
                 [ href "/about" ]
                 [ T.no_underline
-                , T.white_50
+                , T.white_60
                 ]
                 [ em [] [ text "What is this exactly?" ] ]
             ]
+        ]
+
+
+
+-- WELCOME
+
+
+welcomeScreen : Html Msg
+welcomeScreen =
+    chunk
+        [ T.relative
+        , T.tracked_mega
+        , T.z_1
+        ]
+        [ UI.Kit.buttonWithColor
+            UI.Kit.colors.background
+            Normal
+            GetStarted
+            (text "GET STARTED")
         ]
 
 
@@ -424,6 +479,8 @@ choicesScreen =
         , T.br2
         , T.ph3
         , T.pv2
+        , T.relative
+        , T.z_1
         ]
         [ choiceButton
             { action = ShowNewEncryptionKeyScreen Authentication.Local
@@ -546,7 +603,7 @@ encryptionKeyScreen msg =
             , Html.Styled.Events.onInput KeepPassphraseInMemory
             ]
         , UI.Kit.button
-            UI.Kit.Filled
+            Filled
             Bypass
             (text "Continue")
         ]
@@ -588,7 +645,6 @@ speechBubble contents =
         , T.br2
         , T.f6
         , T.lh_copy
-        , T.mt3
         , T.nowrap
         , T.ph3
         , T.pv2

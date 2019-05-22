@@ -41,6 +41,7 @@ import Sources.Services.Google
 import Tachyons.Classes as T
 import Task
 import Time
+import Tracks
 import Tracks.Encoding
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
@@ -279,10 +280,27 @@ update msg model =
         -- Brain
         -----------------------------------------
         SignOut ->
+            let
+                { sources, tracks } =
+                    model
+            in
             { model
-                | authentication = Authentication.initialModel model.url
-                , sources = Sources.initialModel
-                , tracks = Tracks.initialModel
+                | authentication = Authentication.Unauthenticated
+                , sources =
+                    { sources
+                        | collection = []
+                        , isProcessing = False
+                    }
+                , tracks =
+                    { tracks
+                        | collection = Tracks.emptyCollection
+                        , enabledSourceIds = []
+                        , favourites = []
+                        , hideDuplicates = Tracks.initialModel.hideDuplicates
+                        , nowPlaying = Nothing
+                        , searchResults = Nothing
+                        , selectedPlaylist = Nothing
+                    }
             }
                 |> update (BackdropMsg Backdrop.Default)
                 |> addCommand (Ports.toBrain <| Alien.trigger Alien.SignOut)
