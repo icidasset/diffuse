@@ -281,11 +281,16 @@ update msg model =
         -----------------------------------------
         SignOut ->
             let
-                { sources, tracks } =
+                { playlists, sources, tracks } =
                     model
             in
             { model
                 | authentication = Authentication.Unauthenticated
+                , playlists =
+                    { playlists
+                        | collection = []
+                        , playlistToActivate = Maybe.map .name tracks.selectedPlaylist
+                    }
                 , sources =
                     { sources
                         | collection = []
@@ -299,7 +304,6 @@ update msg model =
                         , hideDuplicates = Tracks.initialModel.hideDuplicates
                         , nowPlaying = Nothing
                         , searchResults = Nothing
-                        , selectedPlaylist = Nothing
                     }
             }
                 |> update (BackdropMsg Backdrop.Default)
