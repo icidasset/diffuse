@@ -465,7 +465,9 @@ welcomeScreen =
             GetStarted
             (slab
                 Html.span
-                [ style "line-height" "22px" ]
+                [ style "font-size" "13px"
+                , style "line-height" "20px"
+                ]
                 [ T.tracked_mega ]
                 [ text "GET STARTED" ]
             )
