@@ -328,7 +328,7 @@ resolveParcel model ( _, newCollection ) =
     let
         scrollObj =
             Json.Encode.object
-                [ ( "scrollTop", Json.Encode.float 0 ) ]
+                [ ( "scrollTop", Json.Encode.int 0 ) ]
 
         scrollEvent =
             Json.Encode.object
@@ -363,7 +363,13 @@ resolveParcel model ( _, newCollection ) =
       ----------
       -- Command
       ----------
-    , Cmd.none
+    , if harvestChanged then
+        case model.scene of
+            List ->
+                UI.Tracks.Scene.List.scrollToTop
+
+      else
+        Cmd.none
       --------
       -- Reply
       --------
