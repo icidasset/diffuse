@@ -12,7 +12,7 @@ import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, strong, text)
+import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Json.Encode
@@ -463,7 +463,12 @@ welcomeScreen =
             UI.Kit.colors.background
             Normal
             GetStarted
-            (inline [ T.tracked_mega ] [ text "GET STARTED" ])
+            (slab
+                Html.span
+                [ style "line-height" "22px" ]
+                [ T.tracked_mega ]
+                [ text "GET STARTED" ]
+            )
         ]
 
 
