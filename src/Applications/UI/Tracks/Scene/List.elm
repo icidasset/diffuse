@@ -1,4 +1,4 @@
-module UI.Tracks.Scene.List exposing (containerId, scrollToNowPlaying, scrollToTop, view)
+module UI.Tracks.Scene.List exposing (containerId, scrollToNowPlaying, view)
 
 import Browser.Dom as Dom
 import Chunky exposing (..)
@@ -84,11 +84,6 @@ scrollToNowPlaying harvest ( identifiers, _ ) =
         |> (\n -> 22 - toFloat rowHeight / 2 + 5 + toFloat n)
         |> Dom.setViewportOf containerId 0
         |> Task.attempt (always Bypass)
-
-
-scrollToTop : Cmd Msg
-scrollToTop =
-    Task.attempt (always Bypass) (Dom.setViewportOf containerId 0 0)
 
 
 

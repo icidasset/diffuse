@@ -326,10 +326,23 @@ makeParcel model =
 resolveParcel : Model -> Parcel -> Return Model Msg Reply
 resolveParcel model ( _, newCollection ) =
     let
+        scrollObj =
+            Json.Encode.object
+                [ ( "scrollTop", Json.Encode.float 0 ) ]
+
+        scrollEvent =
+            Json.Encode.object
+                [ ( "target", scrollObj ) ]
+
         modelWithNewCollection =
             { model
                 | collection = newCollection
-                , infiniteList = InfiniteList.updateScroll Json.Encode.null model.infiniteList
+                , infiniteList =
+                    if harvestChanged && model.scene == List then
+                        InfiniteList.updateScroll scrollEvent model.infiniteList
+
+                    else
+                        model.infiniteList
             }
 
         collectionChanged =
@@ -350,13 +363,7 @@ resolveParcel model ( _, newCollection ) =
       ----------
       -- Command
       ----------
-    , if harvestChanged then
-        case model.scene of
-            List ->
-                UI.Tracks.Scene.List.scrollToTop
-
-      else
-        Cmd.none
+    , Cmd.none
       --------
       -- Reply
       --------
