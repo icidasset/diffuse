@@ -234,7 +234,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                     [ child ]
 
             _ ->
-                chunk
+                inline
                     [ T.lh_copy ]
                     [ child ]
         ]

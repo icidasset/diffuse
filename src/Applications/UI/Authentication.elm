@@ -457,14 +457,13 @@ welcomeScreen : Html Msg
 welcomeScreen =
     chunk
         [ T.relative
-        , T.tracked_mega
         , T.z_1
         ]
         [ UI.Kit.buttonWithColor
             UI.Kit.colors.background
             Normal
             GetStarted
-            (text "GET STARTED")
+            (inline [ T.tracked_mega ] [ text "GET STARTED" ])
         ]
 
 
