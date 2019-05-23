@@ -15,6 +15,7 @@ import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
+import Http
 import Json.Encode
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
@@ -137,6 +138,11 @@ type Msg
     | AskForInput Method Question
     | Input String
     | ConfirmInput
+      -----------------------------------------
+      -- Textile
+      -----------------------------------------
+    | PingTextile
+    | PingTextileCallback (Result Http.Error ())
 
 
 update : Msg -> Model -> Return Model Msg Reply
@@ -295,6 +301,30 @@ update msg model =
 
                 _ ->
                     return model
+
+        -----------------------------------------
+        -- Textile
+        -----------------------------------------
+        PingTextile ->
+            { url = "http://localhost:40600"
+            , expect = Http.expectWhatever PingTextileCallback
+            }
+                |> Http.get
+                |> returnCommandWithModel model
+
+        PingTextileCallback (Ok _) ->
+            { apiOrigin = "http://localhost:40600" }
+                |> Textile
+                |> SignIn
+                |> updateWithModel model
+
+        PingTextileCallback (Err _) ->
+            { placeholder = "http://localhost:40600"
+            , question = "Where's your Textile API located?"
+            , value = "http://localhost:40600"
+            }
+                |> AskForInput (Textile { apiOrigin = "" })
+                |> updateWithModel model
 
 
 updateWithModel : Model -> Msg -> Return Model Msg Reply
@@ -517,12 +547,7 @@ choicesScreen =
             }
         , choiceButton
             { action =
-                AskForInput
-                    (Textile { apiOrigin = "" })
-                    { placeholder = "http://localhost:40600"
-                    , question = "Where's your Textile API located?"
-                    , value = "http://localhost:40600"
-                    }
+                PingTextile
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
             , isLast = False
             , label = "Textile"
