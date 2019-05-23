@@ -284,11 +284,21 @@ update msg model =
                                         existingItem :: acc
                                 )
                                 []
+                            |> (if model.shuffle then
+                                    identity
+
+                                else
+                                    List.filter (.manualEntry >> (==) True)
+                               )
                 in
-                returnRepliesWithModel { model | dnd = dnd, future = newFuture } replies
+                returnRepliesWithModel
+                    { model | dnd = dnd, future = newFuture }
+                    (FillQueue :: replies)
 
             else
-                returnRepliesWithModel { model | dnd = dnd } replies
+                returnRepliesWithModel
+                    { model | dnd = dnd }
+                    replies
 
         ------------------------------------
         -- Settings
