@@ -17,11 +17,11 @@ type alias RemoteStorage =
 
 
 userAddressError =
-    "Please provide a valid RemoteStorage address, the format is **user@server**."
+    "Please provide a valid RemoteStorage address, the format is **user@server**"
 
 
 webfingerError =
-    "Failed to connect to the given RemoteStorage server."
+    "**Failed to connect** to the given RemoteStorage server, maybe a typo?"
 
 
 

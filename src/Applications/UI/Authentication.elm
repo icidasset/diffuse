@@ -506,7 +506,7 @@ choicesScreen =
             { action =
                 AskForInput
                     (RemoteStorage { userAddress = "", token = "" })
-                    { placeholder = "username@5apps.com"
+                    { placeholder = "username@remote.storage"
                     , question = "What's your user address?"
                     , value = ""
                     }

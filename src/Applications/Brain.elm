@@ -412,13 +412,13 @@ translateAlienError : Alien.Event -> String -> Msg
 translateAlienError event err =
     case Alien.tagFromString event.tag of
         Just Alien.AuthAnonymous ->
-            report Alien.AuthAnonymous "I couldn't decrypt your data, maybe you used the wrong passphrase?"
+            report Alien.AuthAnonymous "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
 
         Just Alien.AuthIpfs ->
             report Alien.AuthIpfs "Something went wrong regarding the IPFS storage. Maybe you used the wrong passphrase, or your IPFS node is offline?"
 
         Just Alien.AuthRemoteStorage ->
-            report Alien.AuthRemoteStorage "I couldn't decrypt your data, maybe you used the wrong passphrase?"
+            report Alien.AuthRemoteStorage "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
 
         Just Alien.AuthTextile ->
             report Alien.AuthTextile "Something went wrong regarding Textile. Maybe Textile isn't running?"
