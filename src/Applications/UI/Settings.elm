@@ -66,7 +66,7 @@ index model =
           , lineBreak
           , text "PS. You're storing the data for this application "
           , case Authentication.extractMethod model.authentication of
-                Just Ipfs ->
+                Just (Ipfs _) ->
                     text "on IPFS."
 
                 Just Local ->
@@ -80,16 +80,23 @@ index model =
 
                 Nothing ->
                     text "on nothing, wtf?"
-          , lineBreak
-          , text "If you want to, you can "
-          , UI.Kit.textButton
-                { label = "change your passphrase"
-                , onClick =
-                    Ipfs
-                        |> Authentication.ShowUpdateEncryptionKeyScreen
-                        |> Core.AuthenticationMsg
-                }
-          , text "."
+
+          -- Change passphrase (if applicable)
+          , case Authentication.extractMethod model.authentication of
+                Just (Ipfs i) ->
+                    changePassphrase (Ipfs i)
+
+                Just Local ->
+                    changePassphrase Local
+
+                Just (RemoteStorage r) ->
+                    changePassphrase (RemoteStorage r)
+
+                Just (Textile _) ->
+                    nothing
+
+                Nothing ->
+                    nothing
           ]
             |> raw
             |> UI.Kit.intro
@@ -108,6 +115,30 @@ index model =
         , Html.Styled.Lazy.lazy backgroundImage model.backdrop.chosen
         ]
     ]
+
+
+
+-- AUTHENTICATION
+
+
+changePassphrase : Authentication.Method -> Html Core.Msg
+changePassphrase method =
+    raw
+        [ lineBreak
+        , text "If you want to, you can "
+        , UI.Kit.textButton
+            { label = "change your passphrase"
+            , onClick =
+                method
+                    |> Authentication.ShowUpdateEncryptionKeyScreen
+                    |> Core.AuthenticationMsg
+            }
+        , text "."
+        ]
+
+
+
+-- BACKGROUND IMAGE
 
 
 backgroundImage : Maybe String -> Html Core.Msg

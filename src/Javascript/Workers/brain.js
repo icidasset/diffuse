@@ -128,9 +128,10 @@ function ipfsFilePath(tag) {
 
 
 app.ports.requestIpfs.subscribe(event => {
+  const apiOrigin = event.data.apiOrigin
   const path = ipfsFilePath(event.tag)
 
-  fetch("http://localhost:5001/api/v0/files/read?arg=" + path)
+  fetch(apiOrigin + "/api/v0/files/read?arg=" + path)
     .then(r => r.ok ? r.text() : r.json())
     .then(r => getSecretKey().then(s => [r, s]))
     .then(([r, s]) => r.Code === 0 ? {} : decrypt(s, r))
@@ -148,7 +149,8 @@ app.ports.requestIpfs.subscribe(event => {
 
 
 app.ports.toIpfs.subscribe(event => {
-  const json = JSON.stringify(event.data)
+  const apiOrigin = event.data.apiOrigin
+  const json = JSON.stringify(event.data.data)
   const params = new URLSearchParams({
     arg: ipfsFilePath(event.tag),
     create: true,
@@ -165,7 +167,7 @@ app.ports.toIpfs.subscribe(event => {
       formData.append("data", data)
 
       return fetch(
-        "http://localhost:5001/api/v0/files/write?" + params,
+        apiOrigin + "/api/v0/files/write?" + params,
         { method: "POST", body: formData }
       )
 

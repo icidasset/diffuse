@@ -19,7 +19,7 @@ moreOptionsMenu =
         [ Item
             { icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
             , label = "IPFS"
-            , msg = AuthenticationMsg (Authentication.ShowNewEncryptionKeyScreen Authentication.Ipfs)
+            , msg = AuthenticationMsg Authentication.PingIpfs
             , active = False
             }
         ]

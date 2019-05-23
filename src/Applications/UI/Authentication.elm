@@ -133,6 +133,13 @@ type Msg
     | ShowUpdateEncryptionKeyScreen Method
     | UpdateEncryptionKey Method String
       -----------------------------------------
+      -- IPFS
+      -----------------------------------------
+    | PingIpfs
+    | PingIpfsCallback (Result Http.Error ())
+    | PingOtherIpfs String
+    | PingOtherIpfsCallback String (Result Http.Error ())
+      -----------------------------------------
       -- More Input
       -----------------------------------------
     | AskForInput Method Question
@@ -143,6 +150,8 @@ type Msg
       -----------------------------------------
     | PingTextile
     | PingTextileCallback (Result Http.Error ())
+    | PingOtherTextile String
+    | PingOtherTextileCallback String (Result Http.Error ())
 
 
 update : Msg -> Model -> Return Model Msg Reply
@@ -268,6 +277,48 @@ update msg model =
                 )
 
         -----------------------------------------
+        -- IPFS
+        -----------------------------------------
+        PingIpfs ->
+            { url = "http://localhost:5001/api/v0/id"
+            , expect = Http.expectWhatever PingIpfsCallback
+            }
+                |> Http.get
+                |> returnCommandWithModel model
+
+        PingIpfsCallback (Ok _) ->
+            { apiOrigin = "http://localhost:5001" }
+                |> Ipfs
+                |> ShowNewEncryptionKeyScreen
+                |> updateWithModel model
+
+        PingIpfsCallback (Err _) ->
+            { placeholder = "http://localhost:5001"
+            , question = "Where's your IPFS API located?"
+            , value = "http://localhost:5001"
+            }
+                |> AskForInput (Ipfs { apiOrigin = "" })
+                |> updateWithModel model
+
+        PingOtherIpfs origin ->
+            { url = origin ++ "/api/v0/id"
+            , expect = Http.expectWhatever (PingOtherIpfsCallback origin)
+            }
+                |> Http.get
+                |> returnCommandWithModel model
+
+        PingOtherIpfsCallback origin (Ok _) ->
+            { apiOrigin = origin }
+                |> Ipfs
+                |> ShowNewEncryptionKeyScreen
+                |> updateWithModel model
+
+        PingOtherIpfsCallback origin (Err _) ->
+            "Can't reach this IPFS API, maybe it's offline?"
+                |> ShowErrorNotification
+                |> returnReplyWithModel model
+
+        -----------------------------------------
         -- More Input
         -----------------------------------------
         AskForInput method opts ->
@@ -288,15 +339,21 @@ update msg model =
 
         ConfirmInput ->
             case model of
+                InputScreen (Ipfs i) { value } ->
+                    value
+                        |> String.chopEnd "/"
+                        |> PingOtherIpfs
+                        |> updateWithModel model
+
                 InputScreen (RemoteStorage r) { value } ->
                     addReply
                         (ExternalAuth (RemoteStorage r) value)
                         (return model)
 
                 InputScreen (Textile t) { value } ->
-                    { t | apiOrigin = String.chopEnd "/" value }
-                        |> Textile
-                        |> SignIn
+                    value
+                        |> String.chopEnd "/"
+                        |> PingOtherTextile
                         |> updateWithModel model
 
                 _ ->
@@ -306,7 +363,7 @@ update msg model =
         -- Textile
         -----------------------------------------
         PingTextile ->
-            { url = "http://localhost:40600"
+            { url = "http://localhost:40600/api/v0/summary"
             , expect = Http.expectWhatever PingTextileCallback
             }
                 |> Http.get
@@ -325,6 +382,24 @@ update msg model =
             }
                 |> AskForInput (Textile { apiOrigin = "" })
                 |> updateWithModel model
+
+        PingOtherTextile origin ->
+            { url = origin ++ "/api/v0/summary"
+            , expect = Http.expectWhatever (PingOtherTextileCallback origin)
+            }
+                |> Http.get
+                |> returnCommandWithModel model
+
+        PingOtherTextileCallback origin (Ok _) ->
+            { apiOrigin = origin }
+                |> Textile
+                |> SignIn
+                |> updateWithModel model
+
+        PingOtherTextileCallback origin (Err _) ->
+            "Can't reach this Textile API, maybe it's offline?"
+                |> ShowErrorNotification
+                |> returnReplyWithModel model
 
 
 updateWithModel : Model -> Msg -> Return Model Msg Reply

@@ -17,7 +17,7 @@ import Tracks.Encoding as Tracks
 
 
 type Method
-    = Ipfs
+    = Ipfs { apiOrigin : String }
     | Local
     | RemoteStorage { userAddress : String, token : String }
     | Textile { apiOrigin : String }
@@ -67,8 +67,12 @@ encodeMethod =
 methodToString : Method -> String
 methodToString method =
     case method of
-        Ipfs ->
-            "IPFS"
+        Ipfs { apiOrigin } ->
+            String.join
+                methodSeparator
+                [ "IPFS"
+                , apiOrigin
+                ]
 
         Local ->
             "LOCAL"
@@ -92,8 +96,8 @@ methodToString method =
 methodFromString : String -> Maybe Method
 methodFromString string =
     case String.split methodSeparator string of
-        [ "IPFS" ] ->
-            Just Ipfs
+        [ "IPFS", a ] ->
+            Just (Ipfs { apiOrigin = a })
 
         [ "LOCAL" ] ->
             Just Local
