@@ -217,6 +217,7 @@ update msg model =
                 |> (\collection -> { model | collection = collection })
                 |> return
                 |> addReply SaveSources
+                |> addReply GenerateDirectoryPlaylists
 
 
 
