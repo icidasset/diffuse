@@ -23,6 +23,7 @@ type Reply
       -- Context Menu
       -----------------------------------------
     | ShowMoreAuthenticationOptions Coordinates
+    | ShowPlaylistListMenu Coordinates Playlist
     | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
     | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)

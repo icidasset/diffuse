@@ -56,6 +56,7 @@ import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
 import UI.Playlists as Playlists
+import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Queue as Queue
@@ -595,6 +596,9 @@ translateReply reply model =
         -----------------------------------------
         ShowMoreAuthenticationOptions coordinates ->
             return { model | contextMenu = Just (Authentication.moreOptionsMenu coordinates) }
+
+        ShowPlaylistListMenu coordinates playlist ->
+            return { model | contextMenu = Just (Playlists.listMenu playlist coordinates) }
 
         ShowSourceContextMenu coordinates source ->
             return { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
