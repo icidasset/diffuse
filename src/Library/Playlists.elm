@@ -22,5 +22,4 @@ type alias IdentifiedPlaylistTrack =
 
 
 type alias Identifiers =
-    { index : Int
-    }
+    { index : Int }
