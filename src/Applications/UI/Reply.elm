@@ -65,6 +65,7 @@ type Reply
     | InsertDemo
     | SaveEnclosedUserData
     | SaveFavourites
+    | SavePlaylists
     | SaveSettings
     | SaveSources
     | SaveTracks

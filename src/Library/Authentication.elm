@@ -6,6 +6,8 @@ import Json.Decode.Ext as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
 import Maybe.Extra as Maybe
+import Playlists
+import Playlists.Encoding as Playlists
 import Sources
 import Sources.Encoding as Sources
 import Tracks
@@ -38,6 +40,7 @@ type alias EnclosedUserData =
 
 type alias HypaethralUserData =
     { favourites : List Tracks.Favourite
+    , playlists : List Playlists.Playlist
     , settings : Maybe Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
@@ -167,6 +170,7 @@ decodeHypaethral =
 emptyHypaethralUserData : HypaethralUserData
 emptyHypaethralUserData =
     { favourites = []
+    , playlists = []
     , settings = Nothing
     , sources = []
     , tracks = []
@@ -174,9 +178,10 @@ emptyHypaethralUserData =
 
 
 encodeHypaethral : HypaethralUserData -> Json.Value
-encodeHypaethral { favourites, settings, sources, tracks } =
+encodeHypaethral { favourites, playlists, settings, sources, tracks } =
     Json.Encode.object
         [ ( "favourites", Json.Encode.list Tracks.encodeFavourite favourites )
+        , ( "playlists", Json.Encode.list Playlists.encode playlists )
         , ( "settings", Maybe.unwrap Json.Encode.null encodeSettings settings )
         , ( "sources", Json.Encode.list Sources.encode sources )
         , ( "tracks", Json.Encode.list Tracks.encodeTrack tracks )
@@ -199,6 +204,7 @@ hypaethralDecoder : Json.Decoder HypaethralUserData
 hypaethralDecoder =
     Json.succeed HypaethralUserData
         |> optional "favourites" (Json.listIgnore Tracks.favouriteDecoder) []
+        |> optional "playlists" (Json.listIgnore Playlists.decoder) []
         |> optional "settings" (Json.maybe settingsDecoder) Nothing
         |> optional "sources" (Json.listIgnore Sources.decoder) []
         |> optional "tracks" (Json.listIgnore Tracks.trackDecoder) []

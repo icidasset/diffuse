@@ -1,4 +1,4 @@
-module UI.UserData exposing (demo, encodedFavourites, encodedSources, encodedTracks, exportEnclosed, gatherSettings, importEnclosed, importHypaethral)
+module UI.UserData exposing (demo, encodedFavourites, encodedPlaylists, encodedSources, encodedTracks, exportEnclosed, gatherSettings, importEnclosed, importHypaethral)
 
 import Authentication exposing (..)
 import Base64
@@ -10,6 +10,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
 import Playlists exposing (Playlist)
+import Playlists.Encoding as Playlists
 import Return3 exposing (..)
 import Sources exposing (Source)
 import Sources.Encoding as Sources
@@ -36,6 +37,11 @@ import UI.Tracks.Core as Tracks
 encodedFavourites : UI.Core.Model -> Json.Value
 encodedFavourites { tracks } =
     Json.Encode.list Tracks.encodeFavourite tracks.favourites
+
+
+encodedPlaylists : UI.Core.Model -> Json.Value
+encodedPlaylists { playlists } =
+    Json.Encode.list Playlists.encode playlists.collection
 
 
 encodedSources : UI.Core.Model -> Json.Value
@@ -116,7 +122,7 @@ importPlaylists : Playlists.Model -> HypaethralUserData -> Return Playlists.Mode
 importPlaylists model data =
     return
         { model
-            | collection = UI.Playlists.Directory.generate data.sources data.tracks
+            | collection = data.playlists ++ UI.Playlists.Directory.generate data.sources data.tracks
             , playlistToActivate = Nothing
         }
 

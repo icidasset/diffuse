@@ -7,6 +7,7 @@ Including the communication between the different Elm apps/workers.
 
 -}
 
+import Enum exposing (Enum)
 import Json.Decode
 import Json.Encode
 
@@ -16,7 +17,10 @@ import Json.Encode
 
 
 type alias Event =
-    { tag : String, data : Json.Encode.Value, error : Maybe String }
+    { tag : String
+    , data : Json.Encode.Value
+    , error : Maybe String
+    }
 
 
 type Tag
@@ -33,6 +37,7 @@ type Tag
     | ProcessSources
     | SaveEnclosedUserData
     | SaveFavourites
+    | SavePlaylists
     | SaveSettings
     | SaveSources
     | SaveTracks
@@ -50,6 +55,49 @@ type Tag
     | RemoveTracksByPath
     | ReportProcessingError
     | UpdateSourceData
+
+
+enum : Enum Tag
+enum =
+    Enum.create
+        [ ( "AUTH_ANONYMOUS", AuthAnonymous )
+        , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
+        , ( "AUTH_IPFS", AuthIpfs )
+        , ( "AUTH_METHOD", AuthMethod )
+        , ( "AUTH_REMOTE_STORAGE", AuthRemoteStorage )
+        , ( "AUTH_SECRET_KEY", AuthSecretKey )
+        , ( "AUTH_TEXTILE", AuthTextile )
+        , ( "FABRICATE_SECRET_KEY", FabricateSecretKey )
+        , ( "SEARCH_TRACKS", SearchTracks )
+
+        -----------------------------------------
+        -- From UI
+        -----------------------------------------
+        , ( "PROCESS_SOURCES", ProcessSources )
+        , ( "SAVE_ENCLOSED_USER_DATA", SaveEnclosedUserData )
+        , ( "SAVE_FAVOURITES", SaveFavourites )
+        , ( "SAVE_PLAYLISTS", SavePlaylists )
+        , ( "SAVE_SETTINGS", SaveSettings )
+        , ( "SAVE_SOURCES", SaveSources )
+        , ( "SAVE_TRACKS", SaveTracks )
+        , ( "SIGN_IN", SignIn )
+        , ( "SIGN_OUT", SignOut )
+        , ( "TO_CACHE", ToCache )
+        , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )
+
+        -----------------------------------------
+        -- UI
+        -----------------------------------------
+        , ( "ADD_TRACKS", AddTracks )
+        , ( "FINISHED_PROCESSING_SOURCES", FinishedProcessingSources )
+        , ( "HIDE_LOADING_SCREEN", HideLoadingScreen )
+        , ( "LOAD_ENCLOSED_USER_DATA", LoadEnclosedUserData )
+        , ( "LOAD_HYPAETHRAL_USER_DATA", LoadHypaethralUserData )
+        , ( "NOT_AUTHENTICATED", NotAuthenticated )
+        , ( "REMOVE_TRACKS_BY_PATH", RemoveTracksByPath )
+        , ( "REPORT_PROCESSING_ERROR", ReportProcessingError )
+        , ( "UPDATE_SOURCE_DATA", UpdateSourceData )
+        ]
 
 
 
@@ -81,194 +129,13 @@ trigger tag =
 
 
 tagToString : Tag -> String
-tagToString tag =
-    case tag of
-        AuthAnonymous ->
-            "AUTH_ANONYMOUS"
-
-        AuthEnclosedData ->
-            "AUTH_ENCLOSED_DATA"
-
-        AuthIpfs ->
-            "AUTH_IPFS"
-
-        AuthMethod ->
-            "AUTH_METHOD"
-
-        AuthRemoteStorage ->
-            "AUTH_REMOTE_STORAGE"
-
-        AuthSecretKey ->
-            "AUTH_SECRET_KEY"
-
-        AuthTextile ->
-            "AUTH_TEXTILE"
-
-        FabricateSecretKey ->
-            "FABRICATE_SECRET_KEY"
-
-        SearchTracks ->
-            "SEARCH_TRACKS"
-
-        -----------------------------------------
-        -- From UI
-        -----------------------------------------
-        ProcessSources ->
-            "PROCESS_SOURCES"
-
-        SaveEnclosedUserData ->
-            "SAVE_ENCLOSED_USER_DATA"
-
-        SaveFavourites ->
-            "SAVE_FAVOURITES"
-
-        SaveSettings ->
-            "SAVE_SETTINGS"
-
-        SaveSources ->
-            "SAVE_SOURCES"
-
-        SaveTracks ->
-            "SAVE_TRACKS"
-
-        SignIn ->
-            "SIGN_IN"
-
-        SignOut ->
-            "SIGN_OUT"
-
-        ToCache ->
-            "TO_CACHE"
-
-        UpdateEncryptionKey ->
-            "UPDATE_ENCRYPTION_KEY"
-
-        -----------------------------------------
-        -- To UI
-        -----------------------------------------
-        AddTracks ->
-            "ADD_TRACKS"
-
-        FinishedProcessingSources ->
-            "FINISHED_PROCESSING_SOURCES"
-
-        HideLoadingScreen ->
-            "HIDE_LOADING_SCREEN"
-
-        LoadEnclosedUserData ->
-            "LOAD_ENCLOSED_USER_DATA"
-
-        LoadHypaethralUserData ->
-            "LOAD_HYPAETHRAL_USER_DATA"
-
-        NotAuthenticated ->
-            "NOT_AUTHENTICATED"
-
-        RemoveTracksByPath ->
-            "REMOVE_TRACKS_BY_PATH"
-
-        ReportProcessingError ->
-            "REPORT_PROCESSING_ERROR"
-
-        UpdateSourceData ->
-            "UPDATE_SOURCE_DATA"
+tagToString =
+    enum.toString
 
 
 tagFromString : String -> Maybe Tag
-tagFromString string =
-    case string of
-        "AUTH_ANONYMOUS" ->
-            Just AuthAnonymous
-
-        "AUTH_ENCLOSED_DATA" ->
-            Just AuthEnclosedData
-
-        "AUTH_IPFS" ->
-            Just AuthIpfs
-
-        "AUTH_METHOD" ->
-            Just AuthMethod
-
-        "AUTH_REMOTE_STORAGE" ->
-            Just AuthRemoteStorage
-
-        "AUTH_SECRET_KEY" ->
-            Just AuthSecretKey
-
-        "AUTH_TEXTILE" ->
-            Just AuthTextile
-
-        "FABRICATE_SECRET_KEY" ->
-            Just FabricateSecretKey
-
-        "SEARCH_TRACKS" ->
-            Just SearchTracks
-
-        -----------------------------------------
-        -- From UI
-        -----------------------------------------
-        "PROCESS_SOURCES" ->
-            Just ProcessSources
-
-        "SAVE_ENCLOSED_USER_DATA" ->
-            Just SaveEnclosedUserData
-
-        "SAVE_FAVOURITES" ->
-            Just SaveFavourites
-
-        "SAVE_SETTINGS" ->
-            Just SaveSettings
-
-        "SAVE_SOURCES" ->
-            Just SaveSources
-
-        "SAVE_TRACKS" ->
-            Just SaveTracks
-
-        "SIGN_IN" ->
-            Just SignIn
-
-        "SIGN_OUT" ->
-            Just SignOut
-
-        "TO_CACHE" ->
-            Just ToCache
-
-        "UPDATE_ENCRYPTION_KEY" ->
-            Just UpdateEncryptionKey
-
-        -----------------------------------------
-        -- UI
-        -----------------------------------------
-        "ADD_TRACKS" ->
-            Just AddTracks
-
-        "FINISHED_PROCESSING_SOURCES" ->
-            Just FinishedProcessingSources
-
-        "HIDE_LOADING_SCREEN" ->
-            Just HideLoadingScreen
-
-        "LOAD_ENCLOSED_USER_DATA" ->
-            Just LoadEnclosedUserData
-
-        "LOAD_HYPAETHRAL_USER_DATA" ->
-            Just LoadHypaethralUserData
-
-        "NOT_AUTHENTICATED" ->
-            Just NotAuthenticated
-
-        "REMOVE_TRACKS_BY_PATH" ->
-            Just RemoveTracksByPath
-
-        "REPORT_PROCESSING_ERROR" ->
-            Just ReportProcessingError
-
-        "UPDATE_SOURCE_DATA" ->
-            Just UpdateSourceData
-
-        _ ->
-            Nothing
+tagFromString =
+    enum.fromString
 
 
 

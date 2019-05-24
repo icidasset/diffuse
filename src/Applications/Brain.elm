@@ -12,6 +12,7 @@ import Brain.Tracks as Tracks
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import Json.Encode
+import Playlists.Encoding as Playlists
 import Return2 exposing (..)
 import Return3
 import Sources.Encoding as Sources
@@ -164,6 +165,13 @@ update msg model =
                 |> hypaethralLenses.setFavourites model
                 |> saveHypaethralData
 
+        SavePlaylists value ->
+            value
+                |> Json.decodeValue (Json.list Playlists.decoder)
+                |> Result.withDefault model.hypaethralUserData.playlists
+                |> hypaethralLenses.setPlaylists model
+                |> saveHypaethralData
+
         SaveSettings value ->
             value
                 |> Json.decodeValue (Json.map Just Authentication.settingsDecoder)
@@ -278,6 +286,7 @@ updateTracks model sub =
 
 hypaethralLenses =
     { setFavourites = makeHypaethralLens (\h f -> { h | favourites = f })
+    , setPlaylists = makeHypaethralLens (\h p -> { h | playlists = p })
     , setSettings = makeHypaethralLens (\h s -> { h | settings = s })
     , setSources = makeHypaethralLens (\h s -> { h | sources = s })
     , setTracks = makeHypaethralLens (\h t -> { h | tracks = t })
@@ -365,6 +374,9 @@ translateAlienData event =
 
         Just Alien.SaveFavourites ->
             SaveFavourites event.data
+
+        Just Alien.SavePlaylists ->
+            SavePlaylists event.data
 
         Just Alien.SaveSettings ->
             SaveSettings event.data
