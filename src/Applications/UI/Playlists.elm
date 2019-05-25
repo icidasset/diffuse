@@ -345,9 +345,10 @@ index selectedPlaylist model =
 
 intro : Html Msg
 intro =
-    [ text "Playlists are not tied to the sources of its tracks."
+    [ text "Playlists are not tied to the sources of its tracks, "
+    , text "same goes for favourites."
     , lineBreak
-    , text "Same goes for favourites."
+    , text "There's also directory playlists, which are playlists derived from root directories."
     ]
         |> raw
         |> UI.Kit.intro

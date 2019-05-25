@@ -123,7 +123,8 @@ index model =
 
 changePassphrase : Authentication.Method -> Html Core.Msg
 changePassphrase method =
-    raw
+    inline
+        []
         [ lineBreak
         , text "If you want to, you can "
         , UI.Kit.textButton
