@@ -491,6 +491,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
                 ]
                 [ T.bg_transparent
                 , T.bn
+                , T.color_inherit
                 , T.flex_grow_1
                 , T.h_100
                 , T.outline_0
