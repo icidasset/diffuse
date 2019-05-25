@@ -22,6 +22,7 @@ import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
+import Material.Icons.Communication as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Editor as Icons
 import Material.Icons.Image as Icons
@@ -589,7 +590,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
               , Label "Playlists" Hidden
               , NavigateToPage (UI.Page.Playlists UI.Playlists.Page.Index)
               )
-            , ( Icon Icons.event_seat
+            , ( Icon Icons.schedule
               , Label "Queue" Hidden
               , NavigateToPage (UI.Page.Queue UI.Queue.Page.Index)
               )

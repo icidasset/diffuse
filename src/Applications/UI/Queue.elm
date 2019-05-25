@@ -518,7 +518,7 @@ historyView model =
           , Label Common.backToIndex Hidden
           , NavigateToPage Page.Index
           )
-        , ( Icon Icons.event_seat
+        , ( Icon Icons.update
           , Label "Up next" Shown
           , NavigateToPage (Page.Queue Index)
           )
