@@ -13,12 +13,14 @@ import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
-import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, title, value, width)
+import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, target, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Http
 import Json.Encode
 import Material.Icons exposing (Coloring(..))
+import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
+import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
 import SHA
@@ -483,11 +485,14 @@ view model =
                             |> speechBubble
 
                     Welcome ->
-                        [ inline [ T.i ] [ text "Hi, I'm D1ff-B0t, I play music" ]
+                        [ inline [ T.fw6, T.white ] [ text "Diffuse plays music ♫" ]
+                        , text " from your Dropbox,"
                         , lineBreak
-                        , inline [ T.i ] [ text "♫ from your digital storage." ]
+                        , text "IPFS node, Amazon S3 bucket, or any other"
+                        , lineBreak
+                        , text "cloud/distributed storage service you use."
                         ]
-                            |> chunk []
+                            |> chunk [ T.i, T.white_60 ]
                             |> speechBubble
 
                     _ ->
@@ -495,7 +500,7 @@ view model =
                         , lineBreak
                         , text "store your encrypted data?"
                         , lineBreak
-                        , inline [ T.i, T.o_50 ] [ text "favourites, settings, etc." ]
+                        , inline [ T.i, T.white_60 ] [ text "favourites, settings, etc." ]
                         ]
                             |> chunk []
                             |> speechBubble
@@ -539,17 +544,18 @@ view model =
             , T.flex
             , T.flex_grow_1
             , T.items_end
-            , T.lh_solid
+            , T.lh_title
             , T.pb4
             , T.pt3
             ]
             [ slab
                 a
                 [ href "/about" ]
-                [ T.no_underline
+                [ T.bb
+                , T.no_underline
                 , T.white_60
                 ]
-                [ em [] [ text "What is this exactly?" ] ]
+                [ em [] [ text "More info" ] ]
             ]
         ]
 
@@ -561,7 +567,8 @@ view model =
 welcomeScreen : Html Msg
 welcomeScreen =
     chunk
-        [ T.relative
+        [ T.mt3
+        , T.relative
         , T.z_1
         ]
         [ UI.Kit.buttonWithColor
@@ -596,6 +603,7 @@ choicesScreen =
         [ choiceButton
             { action = ShowNewEncryptionKeyScreen Authentication.Local
             , icon = Icons.web
+            , infoLink = Nothing
             , isLast = False
             , label = "My Browser"
             , outOfOrder = False
@@ -603,6 +611,7 @@ choicesScreen =
         , choiceButton
             { action = Bypass
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.blockstackLogo
+            , infoLink = Just "https://blockstack.org"
             , isLast = False
             , label = "Blockstack"
             , outOfOrder = True
@@ -616,6 +625,7 @@ choicesScreen =
                     , value = ""
                     }
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.remoteStorageLogo
+            , infoLink = Just "https://remotestorage.io/"
             , isLast = False
             , label = "RemoteStorage"
             , outOfOrder = False
@@ -624,6 +634,7 @@ choicesScreen =
             { action =
                 PingTextile
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
+            , infoLink = Just "https://textile.io/"
             , isLast = False
             , label = "Textile"
             , outOfOrder = False
@@ -650,42 +661,71 @@ choicesScreen =
 choiceButton :
     { action : msg
     , icon : Int -> Coloring -> Svg msg
+    , infoLink : Maybe String
     , isLast : Bool
     , label : String
     , outOfOrder : Bool
     }
     -> Html msg
-choiceButton { action, icon, isLast, label, outOfOrder } =
-    slab
-        button
-        [ css (choiceButtonStyles { border = not isLast })
-        , onClick action
-        ]
-        [ T.b__none
-        , T.f6
-        , T.flex
-        , T.items_center
-        , T.lh_solid
-        , T.outline_0
-        , T.pointer
-        , T.pv3
-        , T.tl
-        ]
-        [ -- TODO: Remove `chunk` + outOfOrder when everything is implemented
-          chunk
-            [ T.flex
+choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
+    chunk
+        [ T.relative ]
+        [ -----------------------------------------
+          -- Button
+          -----------------------------------------
+          slab
+            button
+            [ css (choiceButtonStyles { border = not isLast })
+            , onClick action
+            ]
+            [ T.b__none
+            , T.f6
+            , T.flex
             , T.items_center
+            , T.lh_solid
+            , T.outline_0
+            , T.pointer
+            , T.pv3
+            , T.tl
+            ]
+            [ -- TODO: Remove `chunk` + outOfOrder when everything is implemented
+              chunk
+                [ T.flex
+                , T.items_center
 
-            --
-            , ifThenElse outOfOrder T.o_20 T.o_100
+                --
+                , ifThenElse outOfOrder T.o_20 T.o_100
+                ]
+                [ slab
+                    span
+                    []
+                    [ T.inline_flex, T.mr3 ]
+                    [ fromUnstyled (icon 16 Inherit) ]
+                , text label
+                ]
             ]
-            [ slab
-                span
-                []
-                [ T.inline_flex, T.mr3 ]
-                [ fromUnstyled (icon 16 Inherit) ]
-            , text label
-            ]
+
+        -----------------------------------------
+        -- Info icon
+        -----------------------------------------
+        , case infoLink of
+            Just link ->
+                slab
+                    Html.a
+                    [ style "left" "100%"
+                    , style "top" "50%"
+                    , style "transform" "translateY(-50%)"
+
+                    --
+                    , href link
+                    , target "_blank"
+                    , title ("Learn more about " ++ label)
+                    ]
+                    [ T.absolute, T.glow, C.lh_0, T.ml3, T.o_40, T.pl3, T.pointer, T.white ]
+                    [ fromUnstyled (Icons.help 17 Inherit) ]
+
+            Nothing ->
+                nothing
         ]
 
 
