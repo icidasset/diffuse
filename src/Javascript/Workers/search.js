@@ -87,7 +87,7 @@ function updateSearchIndex(input) {
     ? JSON.parse(input)
     : input
 
-  index = lunr(function() {
+  index = customLunr(function() {
     this.field("album");
     this.field("artist");
     this.field("title");
@@ -96,4 +96,22 @@ function updateSearchIndex(input) {
       .map(mapTrack)
       .forEach(t => this.add(t))
   })
+}
+
+
+
+function customLunr(config) {
+  const builder = new lunr.Builder
+
+  builder.pipeline.add(
+    lunr.trimmer,
+    lunr.stemmer
+  )
+
+  builder.searchPipeline.add(
+    lunr.stemmer
+  )
+
+  config.call(builder, builder)
+  return builder.build()
 }
