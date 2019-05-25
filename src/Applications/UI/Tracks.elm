@@ -626,7 +626,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                         [ T.dib, T.w1 ]
                         []
                     , UI.Kit.buttonWithColor
-                        UI.Kit.colorKit.base0B
+                        UI.Kit.colorKit.base04
                         UI.Kit.Normal
                         (Reply [ InsertDemo ])
                         (inline
