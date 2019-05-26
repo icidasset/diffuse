@@ -24,13 +24,13 @@ trackMenu tracks =
 queueActions : List IdentifiedTrack -> List (ContextMenu.Item Msg)
 queueActions identifiedTracks =
     [ Item
-        { icon = Icons.watch_later
+        { icon = Icons.update
         , label = "Play next"
         , msg = QueueMsg (Queue.InjectFirst { showNotification = True } identifiedTracks)
         , active = False
         }
     , Item
-        { icon = Icons.watch_later
+        { icon = Icons.update
         , label = "Add to queue"
         , msg = QueueMsg (Queue.InjectLast { showNotification = True } identifiedTracks)
         , active = False
