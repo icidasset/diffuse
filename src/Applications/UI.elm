@@ -29,6 +29,7 @@ import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
+import Keyboard
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
@@ -117,6 +118,7 @@ init flags url key =
     , navKey = key
     , notifications = []
     , page = page
+    , pressedKeys = []
     , url = url
     , viewport = flags.viewport
 
@@ -187,6 +189,15 @@ update msg model =
 
         HideOverlay ->
             return { model | alfred = { instance = Nothing }, contextMenu = Nothing }
+
+        KeyboardMsg subMsg ->
+            { model | pressedKeys = Keyboard.update subMsg model.pressedKeys }
+                |> (\m ->
+                        ifThenElse
+                            (List.member Keyboard.Escape m.pressedKeys)
+                            (update HideOverlay m)
+                            (return m)
+                   )
 
         LoadEnclosedUserData json ->
             model
@@ -939,6 +950,7 @@ subscriptions model =
                     |> Debounce
             )
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
+        , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]
 

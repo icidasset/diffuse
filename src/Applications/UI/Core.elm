@@ -10,6 +10,7 @@ import Debouncer.Basic as Debouncer exposing (Debouncer)
 import File exposing (File)
 import Http
 import Json.Encode as Json
+import Keyboard
 import Notifications exposing (..)
 import Queue
 import Time
@@ -49,6 +50,7 @@ type alias Model =
     , navKey : Nav.Key
     , notifications : List (Notification Msg)
     , page : Page
+    , pressedKeys : List Keyboard.Key
     , url : Url
     , viewport : Viewport
 
@@ -90,6 +92,7 @@ type Msg
     | HideAlfred
     | HideContextMenu
     | HideOverlay
+    | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
     | RequestAssistanceForPlaylists (List IdentifiedTrack)
