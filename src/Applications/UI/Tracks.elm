@@ -682,7 +682,7 @@ searchActionsStyles =
 
 searchActionIconStyle : List Css.Style
 searchActionIconStyle =
-    [ Css.height (Css.px 14)
+    [ Css.height (Css.px 15)
     , Css.marginRight (Css.px 6)
     ]
 
