@@ -308,9 +308,9 @@ h1 text =
         [ css h1Styles ]
         [ borderRadius
         , T.br__bottom
-        , T.dt
-        , T.fw7
-        , T.lh_copy
+        , T.dib
+        , T.fw6
+        , T.lh_title
         , T.ma0
         , T.ph2
         , T.pv1
@@ -538,8 +538,8 @@ checkboxStyles =
 h1Styles : List Css.Style
 h1Styles =
     [ Css.backgroundColor (Color.toElmCssColor colorKit.base06)
-    , Css.fontSize (px 11.25)
-    , Css.letterSpacing (px 0.25)
+    , Css.fontSize (px 13.5)
+    , Css.fontVariant Css.allSmallCaps
     , Css.pointerEvents Css.none
     , Css.top (px -1)
     ]

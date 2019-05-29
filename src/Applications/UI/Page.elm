@@ -115,6 +115,9 @@ sameBase a b =
         ( Index, Equalizer ) ->
             True
 
+        ( Index, Playlists _ ) ->
+            True
+
         ( Index, Queue _ ) ->
             True
 

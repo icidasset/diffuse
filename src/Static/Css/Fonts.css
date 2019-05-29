@@ -2,6 +2,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/light.woff2") format("woff2");
        font-weight: 300;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -10,6 +11,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/light-italic.woff2") format("woff2");
        font-weight: 300;
+       font-stretch: normal;
        font-style: italic;
 }
 
@@ -18,6 +20,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/regular.woff2") format("woff2");
        font-weight: 400;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -26,6 +29,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/italic.woff2") format("woff2");
        font-weight: 400;
+       font-stretch: normal;
        font-style: italic;
 }
 
@@ -34,6 +38,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/semibold.woff2") format("woff2");
        font-weight: 600;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -42,6 +47,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/semibold-italic.woff2") format("woff2");
        font-weight: 600;
+       font-stretch: normal;
        font-style: italic;
 }
 
@@ -50,6 +56,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/bold.woff2") format("woff2");
        font-weight: 700;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -58,6 +65,7 @@
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/bold-italic.woff2") format("woff2");
        font-weight: 700;
+       font-stretch: normal;
        font-style: italic;
 }
 
@@ -70,6 +78,7 @@
   font-family: "Montserrat";
   src: url("fonts/montserrat/light.woff2") format("woff2");
        font-weight: 300;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -78,6 +87,7 @@
   font-family: "Montserrat";
   src: url("fonts/montserrat/regular.woff2") format("woff2");
        font-weight: 400;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -86,6 +96,7 @@
   font-family: "Montserrat";
   src: url("fonts/montserrat/medium.woff2") format("woff2");
        font-weight: 500;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -94,6 +105,7 @@
   font-family: "Montserrat";
   src: url("fonts/montserrat/semibold.woff2") format("woff2");
        font-weight: 600;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -102,6 +114,7 @@
   font-family: "Montserrat";
   src: url("fonts/montserrat/bold.woff2") format("woff2");
        font-weight: 700;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -110,6 +123,7 @@
   font-family: "Montserrat";
   src: url("fonts/montserrat/extrabold.woff2") format("woff2");
        font-weight: 800;
+       font-stretch: normal;
        font-style: normal;
 }
 
@@ -123,5 +137,6 @@
   src:
   url(data:application/x-font-woff;charset=utf-8;base64,d09GMgABAAAAAALMAA0AAAAABtgAAAJ3AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP0ZGVE0cGh4GYACCZhEICoIkgiALEAABNgIkAxoEIAWDYwc/G90FyK4GbGMY+iEaIl0ZXnqKj/KnMxo7rFjbeJ5aK9/v7pldlgeU6EhAReQQhOPyqSgCF2HRqQMjoqPX6vfTvRLxyy8hvfxwgdgCG18WlkhGZ3wxVyCZK1Ax/aiqC+B/4mbcWICdj4mBZGkigQYYTgsk7LKxKMD9f/5g/fla58se9MEfLNSfcvcO9O3SWls3IbDt4mQLsPO506mPDqZYAkVELxoKan2ddJQfZfAFrM4/QkypmmLtKeRVvX0rsyIZCEj3I9S5bSDwhL5gg4FzYGqoaGI/qeHF70Bi9gvts99VMQVAVNKTCqSggHQPjarzL3rg45FF1mAA5uhxD7wHNEAQUaTWurrhQYB4+hIlu2a3I8xOXQvzO3CizrFj67snzG8Dsray+jlA9h5ezAsG025eelIV85r3AwDU71dzp4caxei26MzamixWl2hW+WUHJJl1NZnROUYue2qoNFe4OdrTX+dfx9KE/vahFdXFL1cVr2ofSZppTAzr8pckcBbsbPn493jRlIeqiT2AI78PQBDeHHyt7bBO/T80b+bKaag/KzBUQBjfHpqKuPLt0DdAbgJQ0LilHmHgCD1QAAAw91dAzGwgUAycRKCaeYRAM/NWQGfSDeiR3c1ja3GjL20k1iCiirkDVLUmG2iIiuos2aV6a87fMnaYFn0GRZLqMqrPiEFyw7ghePoi8puJy+TDfAi4hhONUOkyCO+o1YPOhTW69BZu0BC5Pho+mCgxcD9rjEXFDHTaBX00hvkQcRrcoC7llF4+uk3wUaRHnzJ9wImCp+nYcd4p6un78cMlgEKfGJCipKJHXNbQi6qJfhkzHtHIY2JiGAA=) format("woff2"), url(data:application/x-font-woff;charset=utf-8;base64,d09GRgABAAAAAAWQAAsAAAAABUQAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABPUy8yAAABCAAAAGAAAABgDxEM82NtYXAAAAFoAAAAXAAAAFwAsAEYZ2FzcAAAAcQAAAAIAAAACAAAABBnbHlmAAABzAAAATAAAAEwWmanp2hlYWQAAAL8AAAANgAAADYOgV4yaGhlYQAAAzQAAAAkAAAAJAdsA8dobXR4AAADWAAAABgAAAAYDgAArGxvY2EAAANwAAAADgAAAA4AwACAbWF4cAAAA4AAAAAgAAAAIAAJADduYW1lAAADoAAAAc4AAAHOtR+CC3Bvc3QAAAVwAAAAIAAAACAAAwAAAAMDVQGQAAUAAAKZAswAAACPApkCzAAAAesAMwEJAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAQAAAAHQDwP/AAEADwABAAAAAAQAAAAAAAAAAAAAAIAAAAAAAAwAAAAMAAAAcAAEAAwAAABwAAwABAAAAHAAEAEAAAAAMAAgAAgAEAAEAIABmAHT//f//AAAAAAAgAGYAdP/9//8AAf/j/57/kQADAAEAAAAAAAAAAAAAAAAAAQAB//8ADwABAAAAAAAAAAAAAgAANzkBAAAAAAEAAAAAAAAAAAACAAA3OQEAAAAAAQAAAAAAAAAAAAIAADc5AQAAAAACAFYAHQOqAysAGAA0AAAlPgM1NCYjIgYHIy4BIyIGFRQeAh8BEzIeAhUUDgIPAScuAzU0PgIzMhYXPgECBEx9WTBVQTFWEVAQVjJAVjBZfE0EwDFWPyQ0X4ZTPj5Sh180JD9VMjdmIyJmk0V0aF4vQFQ5Kys5VEAvXmh0RQQCnCQ/VjE9cXR/Szg2S392cT0xVj8kMigoMgAAAAABAFYAHQOqAysAGwAAJScuAzU0PgIzMhYXPgEzMh4CFRQOAgcCAD5Sh180JD9VMjdmIyJmODFWPyQ0X4ZTHThLf3RxPTFWPyQyKCgyJD9WMT1xdn9LAAAAAQAAAAEAALY04pNfDzz1AAsEAAAAAADV3I0FAAAAANXcjQUAAAAAA6oDKwAAAAgAAgAAAAAAAAABAAADwP/AAAAEAAAAAAADqgABAAAAAAAAAAAAAAAAAAAABgQAAAAAAAAAAAAAAAIAAAAEAABWBAAAVgAAAAAACgAUAB4AbACYAAAAAQAAAAYANQACAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAA4ArgABAAAAAAABAA0AAAABAAAAAAACAAcAlgABAAAAAAADAA0ASAABAAAAAAAEAA0AqwABAAAAAAAFAAsAJwABAAAAAAAGAA0AbwABAAAAAAAKABoA0gADAAEECQABABoADQADAAEECQACAA4AnQADAAEECQADABoAVQADAAEECQAEABoAuAADAAEECQAFABYAMgADAAEECQAGABoAfAADAAEECQAKADQA7G9yLWZhdm91cml0ZXMAbwByAC0AZgBhAHYAbwB1AHIAaQB0AGUAc1ZlcnNpb24gMS4wAFYAZQByAHMAaQBvAG4AIAAxAC4AMG9yLWZhdm91cml0ZXMAbwByAC0AZgBhAHYAbwB1AHIAaQB0AGUAc29yLWZhdm91cml0ZXMAbwByAC0AZgBhAHYAbwB1AHIAaQB0AGUAc1JlZ3VsYXIAUgBlAGcAdQBsAGEAcm9yLWZhdm91cml0ZXMAbwByAC0AZgBhAHYAbwB1AHIAaQB0AGUAc0ZvbnQgZ2VuZXJhdGVkIGJ5IEljb01vb24uAEYAbwBuAHQAIABnAGUAbgBlAHIAYQB0AGUAZAAgAGIAeQAgAEkAYwBvAE0AbwBvAG4ALgAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=) format("woff");
   font-weight: normal;
+  font-stretch: normal;
   font-style: normal;
 }

@@ -1257,6 +1257,11 @@ globalCss =
         , Css.property "-webkit-font-smoothing" "antialiased"
         , Css.property "-moz-osx-font-smoothing" "grayscale"
         , Css.property "font-smoothing" "antialiased"
+
+        -- Font features
+        ----------------
+        , Css.property "-moz-font-feature-settings" "\"kern\", \"liga\""
+        , Css.property "font-feature-settings" "\"kern\", \"liga\""
         ]
 
     -----------------------------------------
