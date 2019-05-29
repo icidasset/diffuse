@@ -376,11 +376,11 @@ selectedPlaylistListItem : Playlist -> UI.List.Item Msg
 selectedPlaylistListItem playlist =
     { label =
         brick
-            [ style "color" (Color.toCssString UI.Kit.colorKit.accent) ]
+            [ style "color" (Color.toCssString UI.Kit.colors.selection) ]
             []
             [ text playlist.name ]
     , actions =
-        [ { color = Color UI.Kit.colorKit.accent
+        [ { color = Color UI.Kit.colors.selection
           , icon = Icons.check
           , msg = Nothing
           , title = "Selected playlist"

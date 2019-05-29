@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, canisterForm, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, headerFontStyles, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus, vessel)
+module UI.Kit exposing (ButtonType(..), borderRadius, button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, canisterForm, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, headerFontStyles, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, onOverlayShadow, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus)
 
 import Chunky exposing (..)
 import Color
@@ -56,7 +56,8 @@ colors =
     -- Other
     , background = rgb 2 7 14
     , focus = rgb 0 0 0
-    , selection = rgb 3 48 63
+    , selection = colorKit.base0D
+    , selectionAlt = rgb 3 48 63
     , text = colorKit.base01
     }
 
@@ -150,6 +151,17 @@ headerFontFamilies =
 headerFontStyles : List Css.Style
 headerFontStyles =
     [ Css.fontFamilies headerFontFamilies ]
+
+
+
+-- SHADOWS
+
+
+onOverlayShadow : Css.Style
+onOverlayShadow =
+    Css.property
+        "box-shadow"
+        "0 1px 3px 0 rgba(0, 0, 0, 0.175), 0 3px 15px 0 rgba(0, 0, 0, 0.075)"
 
 
 
@@ -494,21 +506,6 @@ textFieldAlt attributes =
         []
 
 
-vessel : List (Html msg) -> Html msg
-vessel =
-    brick
-        [ css vesselStyles ]
-        [ borderRadius
-        , T.bg_white
-        , T.flex
-        , T.flex_column
-        , T.flex_grow_1
-        , T.overflow_scroll
-        , T.relative
-        , T.w_100
-        ]
-
-
 
 -----------------------------------------
 -- ㊙️
@@ -646,14 +643,6 @@ textFieldAltStyles =
     , Css.resize Css.none
     , Css.width (px 292)
     , textAreaFocus
-    ]
-
-
-vesselStyles : List Css.Style
-vesselStyles =
-    [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
-    , Css.maxWidth (px insulationWidth)
-    , Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)"
     ]
 
 

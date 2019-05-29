@@ -1,10 +1,15 @@
-module Classes exposing (bg_base_00, bg_base_01, grab_cursor, lh_0, pointer_events_none)
+module Classes exposing (bg_accent, bg_base_00, bg_base_01, bg_base_0D, grab_cursor, lh_0, pointer_events_none)
 
 {-| Some class names used for global css.
 
 This is an extension of Tachyons.
 
 -}
+
+
+bg_accent : String
+bg_accent =
+    "bg-accent"
 
 
 bg_base_00 : String
@@ -15,6 +20,11 @@ bg_base_00 =
 bg_base_01 : String
 bg_base_01 =
     "bg-base-01"
+
+
+bg_base_0D : String
+bg_base_0D =
+    "bg-base-0D"
 
 
 grab_cursor : String

@@ -13,6 +13,8 @@ import Json.Encode as Json
 import Notifications exposing (..)
 import Queue
 import Time
+import Tracks exposing (IdentifiedTrack)
+import UI.Alfred as Alfred
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Equalizer as Equalizer
@@ -61,6 +63,7 @@ type alias Model =
     -----------------------------------------
     -- Children
     -----------------------------------------
+    , alfred : Alfred.Model
     , authentication : Authentication.Model
     , backdrop : Backdrop.Model
     , equalizer : Equalizer.Model
@@ -84,8 +87,12 @@ type alias Viewport =
 type Msg
     = Bypass
     | Debounce (Debouncer.Msg Msg)
+    | HideAlfred
+    | HideContextMenu
+    | HideOverlay
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
+    | RequestAssistanceForPlaylists (List IdentifiedTrack)
     | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix
     | StoppedDragging
@@ -112,6 +119,7 @@ type Msg
       -----------------------------------------
       -- Children
       -----------------------------------------
+    | AlfredMsg Alfred.Msg
     | AuthenticationMsg Authentication.Msg
     | BackdropMsg Backdrop.Msg
     | EqualizerMsg Equalizer.Msg
@@ -119,10 +127,6 @@ type Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
-      -----------------------------------------
-      -- Context Menu
-      -----------------------------------------
-    | HideContextMenu
       -----------------------------------------
       -- Import / Export
       -----------------------------------------

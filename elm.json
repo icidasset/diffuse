@@ -36,6 +36,7 @@
             "mpizenberg/elm-pointer-events": "4.0.1",
             "newlandsvalley/elm-binary-base64": "1.0.3",
             "noahzgordon/elm-color-extra": "1.0.2",
+            "ohanhi/keyboard": "2.0.0",
             "rtfeldman/elm-css": "16.0.1",
             "rtfeldman/elm-hex": "1.0.0",
             "ryannhg/date-format": "2.3.0",

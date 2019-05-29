@@ -1,5 +1,6 @@
 module UI.Navigation exposing (Action(..), Icon(..), Label(..), LabelType(..), global, local, localWithTabindex)
 
+import Alfred exposing (Alfred)
 import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
@@ -11,6 +12,7 @@ import Html.Styled.Attributes exposing (attribute, css, href, tabindex, title)
 import Html.Styled.Events exposing (onClick)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
+import Maybe.Extra as Maybe
 import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
@@ -43,8 +45,8 @@ type LabelType
 -- GLOBAL
 
 
-global : List ( Page, String ) -> Page -> Html msg
-global items activePage =
+global : List ( Page, String ) -> Maybe (Alfred reply) -> Page -> Html msg
+global items alfred activePage =
     brick
         [ css globalStyles ]
         [ T.f7
@@ -52,6 +54,9 @@ global items activePage =
         , T.mt4
         , T.tracked
         , T.ttu
+
+        --
+        , ifThenElse (Maybe.isJust alfred) T.o_0 T.o_100
         ]
         (List.indexedMap (globalItem activePage <| List.length items) items)
 

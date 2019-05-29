@@ -485,8 +485,9 @@ view model =
                             |> speechBubble
 
                     Welcome ->
-                        [ inline [ T.fw6, T.white ] [ text "Diffuse plays music ♫" ]
-                        , text " from your Dropbox,"
+                        [ inline [ T.fw6, T.white ] [ text "Diffuse plays music" ]
+                        , inline [ T.fs_normal, T.white ] [ text " ♫ " ]
+                        , text "from your Dropbox,"
                         , lineBreak
                         , text "IPFS node, Amazon S3 bucket, or any other"
                         , lineBreak

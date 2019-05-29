@@ -12,9 +12,10 @@ import Html.Attributes as UnstyledHtmlAttributes
 import Html.Events.Extra.Mouse exposing (onWithOptions)
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, id, tabindex)
-import Html.Styled.Events exposing (onClick, onDoubleClick)
+import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy as Lazy
 import InfiniteList
+import Json.Decode
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
@@ -54,9 +55,10 @@ lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection =
         , tabindex (ifThenElse necessities.isVisible 0 -1)
         ]
         [ T.flex_grow_1
-        , T.vh_25
+        , T.outline_0
         , T.overflow_x_hidden
         , T.overflow_y_scroll
+        , T.vh_25
         ]
         [ Lazy.lazy2
             header
@@ -278,9 +280,14 @@ itemView favouritesOnly _ idx ( identifiers, track ) =
 
                 -- Play
                 -------
-                , [ UI.Reply.PlayTrack ( identifiers, track ) ]
-                    |> Reply
-                    |> onDoubleClick
+                , Html.Styled.Events.custom
+                    "dblclick"
+                    (Json.Decode.succeed
+                        { message = Reply [ UI.Reply.PlayTrack ( identifiers, track ) ]
+                        , stopPropagation = True
+                        , preventDefault = True
+                        }
+                    )
 
                 -- Context Menu
                 ---------------
@@ -358,7 +365,7 @@ rowStyles idx { isMissing, isNowPlaying } =
     let
         bgColor =
             if isNowPlaying then
-                Color.toElmCssColor UI.Kit.colorKit.base0D
+                Color.toElmCssColor UI.Kit.colors.selection
 
             else if modBy 2 idx == 1 then
                 Css.rgb 252 252 252
@@ -410,7 +417,7 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } =
     let
         color =
             if isSelected then
-                Color.toElmCssColor UI.Kit.colors.selection
+                Color.toElmCssColor UI.Kit.colors.selectionAlt
 
             else if isNowPlaying && isFavourite then
                 Css.rgb 255 255 255

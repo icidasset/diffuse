@@ -3,7 +3,7 @@ module UI.Reply exposing (Reply(..))
 import Authentication
 import Common exposing (Switch(..))
 import Coordinates exposing (Coordinates)
-import Playlists exposing (Playlist)
+import Playlists exposing (Playlist, PlaylistTrack)
 import Queue
 import Sources exposing (Source)
 import Tracks exposing (IdentifiedTrack)
@@ -40,6 +40,7 @@ type Reply
       -- Playlists
       -----------------------------------------
     | ActivatePlaylist Playlist
+    | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
     | DeactivatePlaylist
     | GenerateDirectoryPlaylists
       -----------------------------------------

@@ -93,7 +93,7 @@ itemView lastIndex index { icon, label, msg, active } =
         , slab
             Html.Styled.span
             [ style "top" "-0.5px" ]
-            [ T.dib, T.ml2, T.relative, T.v_mid ]
+            [ T.dib, T.ml2, T.pl1, T.relative, T.v_mid ]
             [ text label ]
         ]
 
@@ -109,9 +109,5 @@ menuStyles { x, y } =
     , Css.minWidth (Css.px 170)
     , Css.transform (Css.translate2 (Css.pct -50) (Css.pct -50))
     , Css.top (Css.px y)
-
-    --
-    , Css.property
-        "box-shadow"
-        "0 1px 3px 0 rgba(0, 0, 0, 0.225), 0 3px 15px 0 rgba(0, 0, 0, 0.1)"
+    , UI.Kit.onOverlayShadow
     ]
