@@ -676,14 +676,15 @@ searchActionsStyles : List Css.Style
 searchActionsStyles =
     [ Css.fontSize (Css.px 0)
     , Css.lineHeight (Css.px 0)
-    , Css.marginTop (Css.px 1)
     , Css.paddingRight (Css.px <| 13 - 6)
     ]
 
 
 searchActionIconStyle : List Css.Style
 searchActionIconStyle =
-    [ Css.marginRight (Css.px 6) ]
+    [ Css.height (Css.px 15)
+    , Css.marginRight (Css.px 6)
+    ]
 
 
 searchIconColoring : Coloring
@@ -693,7 +694,9 @@ searchIconColoring =
 
 searchIconStyles : List Css.Style
 searchIconStyles =
-    [ Css.paddingLeft (Css.px 13) ]
+    [ Css.marginTop (Css.px 1)
+    , Css.paddingLeft (Css.px 13)
+    ]
 
 
 searchInputStyles : List Css.Style
@@ -710,6 +713,6 @@ selectedPlaylistStyles bgColor =
     [ Css.backgroundColor (Color.toElmCssColor <| Maybe.withDefault UI.Kit.colorKit.base01 bgColor)
     , Css.fontSize (Css.px 11)
     , Css.marginRight (Css.px 6)
-    , Css.padding2 (Css.px 4) (Css.px 5.5)
+    , Css.padding3 (Css.px 5) (Css.px 5) (Css.px 4)
     , Css.Transitions.transition [ Css.Transitions.backgroundColor 450 ]
     ]
