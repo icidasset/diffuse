@@ -13,7 +13,7 @@ import Json.Decode
 import Keyboard
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
-import Material.Icons.Action as Icons
+import Material.Icons.Hardware as Icons
 import Return3 exposing (..)
 import Tachyons.Classes as T
 import Task
@@ -277,7 +277,9 @@ view model =
                                         , T.mr3
                                         , T.right_0
                                         ]
-                                        [ fromUnstyled (Icons.done 13 Inherit) ]
+                                        [ fromUnstyled
+                                            (Icons.keyboard_return 13 Inherit)
+                                        ]
 
                                   else
                                     nothing
