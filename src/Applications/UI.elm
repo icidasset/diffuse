@@ -1285,6 +1285,14 @@ globalCss =
     , Css.Global.selector ".grab-cursor" [ Css.cursor Css.grab ]
     , Css.Global.selector ".lh-0" [ Css.lineHeight Css.zero ]
     , Css.Global.selector ".pointer-events-none" [ Css.pointerEvents Css.none ]
+
+    --
+    , Css.Global.selector ".disable-selection"
+        [ Css.property "-webkit-user-select" "none"
+        , Css.property "-moz-user-select" "none"
+        , Css.property "-ms-user-select" "none"
+        , Css.property "user-select" "none"
+        ]
     ]
 
 

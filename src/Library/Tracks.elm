@@ -184,7 +184,7 @@ emptyCollection =
 
 isNowPlaying : IdentifiedTrack -> IdentifiedTrack -> Bool
 isNowPlaying ( a, b ) ( x, y ) =
-    a.indexInPlaylist == x.indexInPlaylist && b == y
+    a.indexInPlaylist == x.indexInPlaylist && b.id == y.id
 
 
 makeTrack : String -> ( String, Tags ) -> Track

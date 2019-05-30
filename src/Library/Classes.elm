@@ -1,4 +1,4 @@
-module Classes exposing (bg_accent, bg_base_00, bg_base_01, bg_base_0D, grab_cursor, lh_0, pointer_events_none)
+module Classes exposing (bg_accent, bg_base_00, bg_base_01, bg_base_0D, disable_selection, grab_cursor, lh_0, pointer_events_none)
 
 {-| Some class names used for global css.
 
@@ -25,6 +25,11 @@ bg_base_01 =
 bg_base_0D : String
 bg_base_0D =
     "bg-base-0D"
+
+
+disable_selection : String
+disable_selection =
+    "disable-selection"
 
 
 grab_cursor : String

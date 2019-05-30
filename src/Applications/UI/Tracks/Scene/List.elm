@@ -54,7 +54,8 @@ lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection =
         , id containerId
         , tabindex (ifThenElse necessities.isVisible 0 -1)
         ]
-        [ T.flex_grow_1
+        [ C.disable_selection
+        , T.flex_grow_1
         , T.outline_0
         , T.overflow_x_hidden
         , T.overflow_y_scroll
