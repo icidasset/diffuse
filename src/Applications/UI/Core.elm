@@ -114,6 +114,7 @@ type Msg
       -----------------------------------------
       -- Authentication
       -----------------------------------------
+    | AuthenticationBootFailure String
     | RemoteStorageWebfinger RemoteStorage (Result Http.Error String)
       -----------------------------------------
       -- Brain

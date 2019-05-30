@@ -291,6 +291,11 @@ update msg model =
         -----------------------------------------
         -- Authentication
         -----------------------------------------
+        AuthenticationBootFailure err ->
+            model
+                |> UI.Notifications.show (Notifications.stickyError err)
+                |> andThen (update (BackdropMsg Backdrop.Default))
+
         RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
             let
                 origin =
@@ -1017,9 +1022,21 @@ translateAlienData event =
 translateAlienError : Alien.Event -> String -> Msg
 translateAlienError event err =
     case Alien.tagFromString event.tag of
-        Just tag ->
+        Just Alien.AuthAnonymous ->
+            AuthenticationBootFailure err
+
+        Just Alien.AuthIpfs ->
+            AuthenticationBootFailure err
+
+        Just Alien.AuthRemoteStorage ->
+            AuthenticationBootFailure err
+
+        Just Alien.AuthTextile ->
+            AuthenticationBootFailure err
+
+        Just _ ->
             err
-                |> Notifications.stickyError
+                |> Notifications.error
                 |> ShowNotification
 
         Nothing ->

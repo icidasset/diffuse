@@ -1,5 +1,6 @@
 module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), Settings, decodeEnclosed, decodeHypaethral, decodeMethod, emptyHypaethralUserData, enclosedDecoder, encodeEnclosed, encodeHypaethral, encodeMethod, encodeSettings, hypaethralDecoder, methodFromString, methodToString, settingsDecoder)
 
+import Alien
 import Equalizer
 import Json.Decode as Json
 import Json.Decode.Ext as Json
