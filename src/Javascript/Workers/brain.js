@@ -5,6 +5,7 @@
 // This worker is responsible for everything non-UI.
 
 importScripts("/vendor/musicmetadata.min.js")
+importScripts("/vendor/subworkers-polyfill.js")
 
 importScripts("/brain.js")
 importScripts("/encryption.js")
@@ -21,7 +22,7 @@ const app = Elm.Brain.init()
 // ==
 
 self.onmessage = event => {
-  app.ports.fromAlien.send(event.data)
+  if (event.data.tag) app.ports.fromAlien.send(event.data)
 }
 
 app.ports.toUI.subscribe(event => {
@@ -242,7 +243,7 @@ app.ports.toRemoteStorage.subscribe(event => {
 // Search
 // ------
 
-const search = new Worker("/workers/search.js")
+const search = new Worker("search.js")
 
 
 app.ports.requestSearch.subscribe(searchTerm => {
