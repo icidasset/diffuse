@@ -1250,6 +1250,7 @@ globalCss =
       Css.Global.body
         [ Css.color (Color.toElmCssColor UI.Kit.colors.text)
         , Css.fontFamilies UI.Kit.defaultFontFamilies
+        , Css.minWidth (Css.px 300)
         , Css.textRendering Css.optimizeLegibility
 
         -- Font smoothing

@@ -434,6 +434,8 @@ view model =
             [ style "height" "42%" ]
             [ T.flex
             , T.items_center
+            , T.pb4
+            , T.pb0_ns
             ]
             [ chunk
                 [ T.pv3, T.relative ]

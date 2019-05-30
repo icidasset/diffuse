@@ -612,16 +612,19 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
 
               else if amountOfSources == 0 then
                 chunk
-                    []
-                    [ UI.Kit.buttonLink
-                        "/sources/new"
-                        UI.Kit.Normal
-                        (inline
-                            []
-                            [ UI.Kit.inlineIcon Icons.add
-                            , text "Add some music"
-                            ]
-                        )
+                    [ T.flex, T.items_start, T.ph3 ]
+                    [ inline
+                        [ T.dib, T.mb2 ]
+                        [ UI.Kit.buttonLink
+                            "/sources/new"
+                            UI.Kit.Normal
+                            (inline
+                                []
+                                [ UI.Kit.inlineIcon Icons.add
+                                , text "Add some music"
+                                ]
+                            )
+                        ]
                     , slab
                         Html.span
                         []

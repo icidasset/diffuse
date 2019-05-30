@@ -236,6 +236,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
         , T.ph3
         , T.pointer
         , T.pv2
+        , T.tc
         ]
         [ case buttonType of
             IconOnly ->
@@ -355,7 +356,7 @@ inlineIcon icon =
     slab
         Html.span
         [ css inlineIconStyles ]
-        [ T.mr1 ]
+        [ T.dib, T.mr1 ]
         [ Html.fromUnstyled (icon 14 Inherit) ]
 
 
