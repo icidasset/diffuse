@@ -111,7 +111,7 @@ update msg model =
                     in
                     dict
                         |> Dict.fetch "error" "missingError"
-                        |> ShowErrorNotificationWithCode
+                        |> ShowStickyErrorNotificationWithCode
                             ("Could not process the _"
                                 ++ Dict.fetch "sourceName\n                                " "" dict
                                 ++ "_ source. I got the following response from the source:"
@@ -121,7 +121,7 @@ update msg model =
 
                 Err _ ->
                     "Could not decode processing error"
-                        |> ShowErrorNotification
+                        |> ShowStickyErrorNotification
                         |> returnReplyWithModel model
 
         -----------------------------------------

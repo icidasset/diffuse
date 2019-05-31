@@ -51,8 +51,18 @@ app.ports.fabricateSecretKey.subscribe(event => {
 })
 
 
+function authError(event) {
+  console.log(event)
+  return reportError(event)
+}
+
+
 function getSecretKey() {
-  return getFromIndex({ key: SECRET_KEY_LOCATION })
+  return getFromIndex({
+    key: SECRET_KEY_LOCATION
+  }).then(key => {
+    return key ? key : Promise.reject(new Error("MISSING_SECRET_KEY"))
+  })
 }
 
 
@@ -70,8 +80,9 @@ app.ports.requestCache.subscribe(event => {
     if (event.tag == "AUTH_ANONYMOUS") {
       return getFromIndex({ key: event.tag })
         .then(r => getSecretKey().then(s => [r, s]))
-        .then(([r, s]) => r ? decrypt(s, r) : null)
-        .then(d => d ? JSON.parse(d) : null)
+        .then(([r, s]) => typeof r === "string" ? decrypt(s, r) : r)
+        .then(d => typeof d === "string" ? JSON.parse(d) : d)
+        .then(a => a === undefined ? null : a)
 
     } else {
       return getFromIndex({ key: event.tag })
@@ -86,13 +97,13 @@ app.ports.requestCache.subscribe(event => {
         error: null
       })
     }).catch(
-      reportError(event)
+      authError(event)
     )
 })
 
 
 app.ports.toCache.subscribe(event => {
-  toCache(event.tag, event.data).catch(reportError(event))
+  toCache(event.tag, event.data).catch(authError(event))
 })
 
 
@@ -144,7 +155,7 @@ app.ports.requestIpfs.subscribe(event => {
       })
     })
     .catch(
-      reportError(event)
+      authError(event)
     )
 })
 
@@ -173,7 +184,7 @@ app.ports.toIpfs.subscribe(event => {
       )
 
     }).catch(
-      reportError(event)
+      authError(event)
 
     )
 })
@@ -221,7 +232,7 @@ app.ports.requestRemoteStorage.subscribe(event => {
       })
     })
     .catch(
-      reportError(event)
+      authError(event)
     )
 })
 
@@ -234,7 +245,7 @@ app.ports.toRemoteStorage.subscribe(event => {
     .then(secretKey => encrypt(secretKey, json))
     .then(data => rsClient.storeFile("application/json", "diffuse.json", data))
     .catch(
-      reportError(event)
+      authError(event)
     )
 })
 
@@ -315,7 +326,7 @@ app.ports.requestTextile.subscribe(event => {
       })
     })
 
-    .catch(reportError(event))
+    .catch(authError(event))
 })
 
 
@@ -333,7 +344,7 @@ app.ports.toTextile.subscribe(event => {
     .then(_ => Textile.useMill(apiOrigin, json))
     .then(m => Textile.addFileToThread(apiOrigin, m))
 
-    .catch(reportError(event))
+    .catch(authError(event))
 })
 
 

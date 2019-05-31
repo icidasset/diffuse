@@ -1,6 +1,5 @@
 module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), Settings, decodeEnclosed, decodeHypaethral, decodeMethod, emptyHypaethralUserData, enclosedDecoder, encodeEnclosed, encodeHypaethral, encodeMethod, encodeSettings, hypaethralDecoder, methodFromString, methodToString, settingsDecoder)
 
-import Alien
 import Equalizer
 import Json.Decode as Json
 import Json.Decode.Ext as Json
@@ -68,6 +67,25 @@ encodeMethod =
     methodToString >> Json.Encode.string
 
 
+methodFromString : String -> Maybe Method
+methodFromString string =
+    case String.split methodSeparator string of
+        [ "IPFS", a ] ->
+            Just (Ipfs { apiOrigin = a })
+
+        [ "LOCAL" ] ->
+            Just Local
+
+        [ "REMOTE_STORAGE", u, t ] ->
+            Just (RemoteStorage { userAddress = u, token = t })
+
+        [ "TEXTILE", a ] ->
+            Just (Textile { apiOrigin = a })
+
+        _ ->
+            Nothing
+
+
 methodToString : Method -> String
 methodToString method =
     case method of
@@ -95,25 +113,6 @@ methodToString method =
                 [ "TEXTILE"
                 , apiOrigin
                 ]
-
-
-methodFromString : String -> Maybe Method
-methodFromString string =
-    case String.split methodSeparator string of
-        [ "IPFS", a ] ->
-            Just (Ipfs { apiOrigin = a })
-
-        [ "LOCAL" ] ->
-            Just Local
-
-        [ "REMOTE_STORAGE", u, t ] ->
-            Just (RemoteStorage { userAddress = u, token = t })
-
-        [ "TEXTILE", a ] ->
-            Just (Textile { apiOrigin = a })
-
-        _ ->
-            Nothing
 
 
 methodSeparator : String

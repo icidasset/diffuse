@@ -294,7 +294,7 @@ update msg model =
         AuthenticationBootFailure err ->
             model
                 |> UI.Notifications.show (Notifications.stickyError err)
-                |> andThen (update (BackdropMsg Backdrop.Default))
+                |> andThen (translateReply LoadDefaultBackdrop)
 
         RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
             let
@@ -659,18 +659,24 @@ translateReply reply model =
             UI.Notifications.dismiss model options
 
         ShowErrorNotification string ->
+            UI.Notifications.show (Notifications.error string) model
+
+        ShowStickyErrorNotification string ->
             UI.Notifications.show (Notifications.stickyError string) model
 
-        ShowErrorNotificationWithCode string code ->
+        ShowStickyErrorNotificationWithCode string code ->
             UI.Notifications.show (Notifications.errorWithCode string code []) model
-
-        ShowNonStickyErrorNotification string ->
-            UI.Notifications.show (Notifications.error string) model
 
         ShowSuccessNotification string ->
             UI.Notifications.show (Notifications.success string) model
 
+        ShowStickySuccessNotification string ->
+            UI.Notifications.show (Notifications.stickySuccess string) model
+
         ShowWarningNotification string ->
+            UI.Notifications.show (Notifications.warning string) model
+
+        ShowStickyWarningNotification string ->
             UI.Notifications.show (Notifications.stickyWarning string) model
 
         -----------------------------------------
@@ -859,6 +865,11 @@ translateReply reply model =
                 |> andThen (translateReply SaveSources)
                 |> andThen (translateReply SaveTracks)
 
+        LoadDefaultBackdrop ->
+            Backdrop.Default
+                |> BackdropMsg
+                |> updateWithModel model
+
         SaveEnclosedUserData ->
             model
                 |> UserData.exportEnclosed
@@ -997,6 +1008,13 @@ translateAlienData event =
 
         Just Alien.LoadHypaethralUserData ->
             LoadHypaethralUserData event.data
+
+        Just Alien.MissingSecretKey ->
+            event.data
+                |> Json.Decode.decodeValue (Json.Decode.field "alienMethodTag" Alien.tagDecoder)
+                |> Result.map (\tag -> Authentication.MissingSecretKey tag event.data)
+                |> Result.map AuthenticationMsg
+                |> Result.withDefault Bypass
 
         Just Alien.NotAuthenticated ->
             -- There's not to do in this case.

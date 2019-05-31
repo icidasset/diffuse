@@ -1,4 +1,4 @@
-module Notifications exposing (Action, Kind(..), Notification, Options, contents, dismiss, error, errorWithCode, id, kind, options, stickyError, stickyWarning, success, warning)
+module Notifications exposing (Action, Kind(..), Notification, Options, contents, dismiss, error, errorWithCode, id, kind, options, stickyError, stickySuccess, stickyWarning, success, warning)
 
 import Chunky exposing (..)
 import Html.Styled as Html exposing (Html)
@@ -123,6 +123,17 @@ success content =
         Success
         (hashString 0 content)
         { sticky = False
+        , wasDismissed = False
+        }
+        (render content)
+
+
+stickySuccess : String -> Notification msg
+stickySuccess content =
+    Notification
+        Success
+        (hashString 0 content)
+        { sticky = True
         , wasDismissed = False
         }
         (render content)

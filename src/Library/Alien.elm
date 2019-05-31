@@ -1,4 +1,4 @@
-module Alien exposing (Event, Tag(..), broadcast, hostDecoder, report, tagFromString, tagToString, trigger)
+module Alien exposing (Event, Tag(..), broadcast, hostDecoder, report, tagDecoder, tagFromJson, tagFromString, tagToJson, tagToString, trigger)
 
 {-| 👽 Aliens.
 
@@ -51,6 +51,7 @@ type Tag
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
+    | MissingSecretKey
     | NotAuthenticated
     | RemoveTracksByPath
     | ReportProcessingError
@@ -93,6 +94,7 @@ enum =
         , ( "HIDE_LOADING_SCREEN", HideLoadingScreen )
         , ( "LOAD_ENCLOSED_USER_DATA", LoadEnclosedUserData )
         , ( "LOAD_HYPAETHRAL_USER_DATA", LoadHypaethralUserData )
+        , ( "MISSING_SECRET_KEY", MissingSecretKey )
         , ( "NOT_AUTHENTICATED", NotAuthenticated )
         , ( "REMOVE_TRACKS_BY_PATH", RemoveTracksByPath )
         , ( "REPORT_PROCESSING_ERROR", ReportProcessingError )
@@ -128,9 +130,24 @@ trigger tag =
     }
 
 
+tagDecoder : Json.Decode.Decoder Tag
+tagDecoder =
+    enum.decoder
+
+
+tagToJson : Tag -> Json.Encode.Value
+tagToJson =
+    enum.encode
+
+
 tagToString : Tag -> String
 tagToString =
     enum.toString
+
+
+tagFromJson : Json.Decode.Value -> Result Json.Decode.Error Tag
+tagFromJson =
+    Json.Decode.decodeValue enum.decoder
 
 
 tagFromString : String -> Maybe Tag

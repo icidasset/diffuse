@@ -16,6 +16,7 @@ import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, spa
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, target, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Http
+import Json.Decode
 import Json.Encode
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
@@ -142,6 +143,10 @@ type Msg
     | PingOtherIpfs String
     | PingOtherIpfsCallback String (Result Http.Error ())
       -----------------------------------------
+      -- Missing secret key
+      -----------------------------------------
+    | MissingSecretKey Alien.Tag Json.Decode.Value
+      -----------------------------------------
       -- More Input
       -----------------------------------------
     | AskForInput Method Question
@@ -223,7 +228,7 @@ update msg model =
         SignInWithPassphrase method passphrase ->
             if String.length passphrase < minimumPassphraseLength then
                 addReply
-                    (ShowErrorNotification passphraseLengthErrorMessage)
+                    (ShowStickyErrorNotification passphraseLengthErrorMessage)
                     (return model)
 
             else
@@ -265,7 +270,7 @@ update msg model =
         UpdateEncryptionKey method passphrase ->
             if String.length passphrase < minimumPassphraseLength then
                 addReply
-                    (ShowErrorNotification passphraseLengthErrorMessage)
+                    (ShowStickyErrorNotification passphraseLengthErrorMessage)
                     (return model)
 
             else
@@ -317,8 +322,31 @@ update msg model =
 
         PingOtherIpfsCallback origin (Err _) ->
             "Can't reach this IPFS API, maybe it's offline?"
-                |> ShowErrorNotification
+                |> ShowStickyErrorNotification
                 |> returnReplyWithModel model
+
+        -----------------------------------------
+        -- Missing secret key
+        -----------------------------------------
+        MissingSecretKey Alien.AuthAnonymous data ->
+            returnRepliesWithModel
+                (NewEncryptionKeyScreen Local Nothing)
+                [ LoadDefaultBackdrop
+                , ShowStickySuccessNotification """
+                    Thanks for upgrading from Diffuse V1!
+
+                    In this newer version all your __data is encrypted__, for this we'll need a __passphrase__.
+                  """
+                , ToggleLoadingScreen Off
+                ]
+
+        MissingSecretKey _ data ->
+            data
+                |> Json.Decode.decodeValue (Json.Decode.field "fallbackError" Json.Decode.string)
+                |> Result.withDefault "I seem to be missing your encrypted passphrase, please reauthenticate."
+                |> ShowStickyErrorNotification
+                |> returnReplyWithModel model
+                |> addReply LoadDefaultBackdrop
 
         -----------------------------------------
         -- More Input
@@ -400,7 +428,7 @@ update msg model =
 
         PingOtherTextileCallback origin (Err _) ->
             "Can't reach this Textile API, maybe it's offline?"
-                |> ShowErrorNotification
+                |> ShowStickyErrorNotification
                 |> returnReplyWithModel model
 
 

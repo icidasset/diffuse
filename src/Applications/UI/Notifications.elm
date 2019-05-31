@@ -131,10 +131,18 @@ notificationView notification =
         --
         , case kind of
             Error ->
-                T.measure_narrow
+                if options.sticky then
+                    T.measure_narrow
+
+                else
+                    T.measure_wide
 
             Success ->
-                T.measure_wide
+                if options.sticky then
+                    T.measure_narrow
+
+                else
+                    T.measure_wide
 
             Warning ->
                 ""

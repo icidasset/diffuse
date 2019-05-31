@@ -32,10 +32,12 @@ type Reply
       -----------------------------------------
     | DismissNotification { id : Int }
     | ShowErrorNotification String
-    | ShowErrorNotificationWithCode String String
-    | ShowNonStickyErrorNotification String
+    | ShowStickyErrorNotification String
+    | ShowStickyErrorNotificationWithCode String String
     | ShowSuccessNotification String
+    | ShowStickySuccessNotification String
     | ShowWarningNotification String
+    | ShowStickyWarningNotification String
       -----------------------------------------
       -- Playlists
       -----------------------------------------
@@ -64,6 +66,7 @@ type Reply
       -- User Data
       -----------------------------------------
     | InsertDemo
+    | LoadDefaultBackdrop
     | SaveEnclosedUserData
     | SaveFavourites
     | SavePlaylists

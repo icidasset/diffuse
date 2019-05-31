@@ -93,7 +93,7 @@ update msg model =
                     if alreadyExists then
                         returnReplyWithModel
                             model
-                            (ShowNonStickyErrorNotification "There's already a playlist with this name")
+                            (ShowErrorNotification "There's already a playlist with this name")
 
                     else
                         returnRepliesWithModel
@@ -142,7 +142,7 @@ update msg model =
                     if alreadyExists then
                         returnReplyWithModel
                             { model | editContext = Nothing }
-                            (ShowNonStickyErrorNotification "There's already a playlist with this name")
+                            (ShowErrorNotification "There's already a playlist with this name")
 
                     else if validName then
                         returnRepliesWithModel
