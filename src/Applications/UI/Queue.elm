@@ -395,12 +395,12 @@ futureView model =
           , Label "History" Shown
           , NavigateToPage (Page.Queue History)
           )
-        , ( Icon Icons.clear
-          , Label "Clear all" Shown
+        , ( Icon Icons.backspace
+          , Label "Clear" Shown
           , PerformMsg Clear
           )
-        , ( Icon Icons.clear
-          , Label "Clear ignored" Shown
+        , ( Icon Icons.not_interested
+          , Label "Reset ignored" Shown
           , PerformMsg Reset
           )
         ]
