@@ -60,6 +60,15 @@ function encrypt(key, string) {
 
 
 function decrypt(key, string) {
+  if (typeof string !== "string") {
+    throw("Cannot decrypt a non-string value!")
+  }
+
+  if (string.trimStart().startsWith("{")) {
+    // {!} Already decrypted
+    return string
+  }
+
   const iv_b64 = string.substring(0, 16)
   const buf_b64 = string.substring(16)
 

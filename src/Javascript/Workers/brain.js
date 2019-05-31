@@ -52,7 +52,6 @@ app.ports.fabricateSecretKey.subscribe(event => {
 
 
 function authError(event) {
-  console.log(event)
   return reportError(event)
 }
 
@@ -205,7 +204,7 @@ function remoteStorage(event) {
     rs = new RemoteStorage({ cache: false })
     rs.access.claim("diffuse", "rw")
 
-    rsClient = rs.scope("/diffuse-v2/")
+    rsClient = rs.scope("/diffuse/")
 
     return new Promise(resolve => {
       rs.on("connected", resolve)
