@@ -63,6 +63,7 @@ doc-tests:
 install:
 	@echo "> Downloading & minifying dependencies"
 	@mkdir -p $(VENDOR_DIR)
+	@curl https://unpkg.com/blockstack@19.1.0/dist/blockstack.js -o $(VENDOR_DIR)/blockstack.min.js
 	@curl https://unpkg.com/lunr@2.3.6/lunr.js -o $(VENDOR_DIR)/lunr.js
 	@curl https://unpkg.com/remotestoragejs@1.2.2/release/remotestorage.js -o $(VENDOR_DIR)/remotestorage.min.js
 	@curl https://unpkg.com/fast-text-encoding@1.0.0/text.min.js -o $(VENDOR_DIR)/text-encoding-polyfill.min.js
@@ -74,8 +75,10 @@ install:
 	@curl https://raw.githubusercontent.com/dmihal/Subworkers/6c3a57953615b26cd82fd39894b947f2b954fcfd/subworkers.js -o $(VENDOR_DIR)/subworkers-polyfill.js
 
 	@# Minify non-minified dependencies
+	@closure-compiler --js=$(VENDOR_DIR)/subworkers-polyfill.js --js_output_file=$(VENDOR_DIR)/subworkers-polyfill.min.js
 	@closure-compiler --js=$(VENDOR_DIR)/lunr.js --js_output_file=$(VENDOR_DIR)/lunr.min.js
 	@closure-compiler --js=$(VENDOR_DIR)/pep.js --js_output_file=$(VENDOR_DIR)/pep.min.js
+	@rm $(VENDOR_DIR)/subworkers-polyfill.js
 	@rm $(VENDOR_DIR)/lunr.js
 	@rm $(VENDOR_DIR)/pep.js
 

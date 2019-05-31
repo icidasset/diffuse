@@ -5,7 +5,7 @@
 // This worker is responsible for everything non-UI.
 
 importScripts("/vendor/musicmetadata.min.js")
-importScripts("/vendor/subworkers-polyfill.js")
+importScripts("/vendor/subworkers-polyfill.min.js")
 
 importScripts("/brain.js")
 importScripts("/encryption.js")
