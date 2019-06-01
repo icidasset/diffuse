@@ -243,7 +243,18 @@ update msg model =
             in
             case model.page of
                 Page.Queue _ ->
-                    update (QueueMsg <| Queue.DragMsg DnD.stoppedDragging) notDragging
+                    DnD.stoppedDragging
+                        |> Queue.DragMsg
+                        |> QueueMsg
+                        |> updateWithModel notDragging
+
+                Page.Index ->
+                    case model.tracks.scene of
+                        Tracks.List ->
+                            DnD.stoppedDragging
+                                |> Tracks.ListDragAndDropMsg
+                                |> TracksMsg
+                                |> updateWithModel notDragging
 
                 _ ->
                     return notDragging
@@ -740,6 +751,17 @@ translateReply reply model =
                 |> (\c -> { playlists | collection = c })
                 |> (\p -> { model | playlists = p })
                 |> return
+
+        ReplacePlaylistInCollection playlist ->
+            let
+                playlists =
+                    model.playlists
+            in
+            playlists.collection
+                |> List.map (\p -> ifThenElse (p.name == playlist.name) playlist p)
+                |> (\c -> { playlists | collection = c })
+                |> (\p -> { model | playlists = p })
+                |> translateReply SavePlaylists
 
         -----------------------------------------
         -- Queue
@@ -1317,7 +1339,7 @@ globalCss =
     , Css.Global.selector ".bg-base-01" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base01) ]
     , Css.Global.selector ".bg-base-0D" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base0D) ]
     , Css.Global.selector ".dragging-something" [ Css.cursor Css.grabbing ]
-    , Css.Global.selector ".dragging-something *" [ Css.cursor Css.grabbing ]
+    , Css.Global.selector ".dragging-something *" [ Css.important (Css.cursor Css.grabbing) ]
     , Css.Global.selector ".grab-cursor" [ Css.cursor Css.grab ]
     , Css.Global.selector ".lh-0" [ Css.lineHeight Css.zero ]
     , Css.Global.selector ".pointer-events-none" [ Css.pointerEvents Css.none ]

@@ -18,6 +18,7 @@ import Html.Styled.Lazy exposing (..)
 import InfiniteList
 import Json.Decode as Json
 import Json.Encode
+import List.Ext as List
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
@@ -36,6 +37,7 @@ import Tracks.Collection as Collection exposing (..)
 import Tracks.Encoding as Encoding
 import Tracks.Favourites as Favourites
 import UI.Core
+import UI.DnD as DnD
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page exposing (Page)
@@ -59,7 +61,6 @@ initialModel =
     , favouritesOnly = False
     , grouping = Nothing
     , hideDuplicates = False
-    , infiniteList = InfiniteList.init
     , nowPlaying = Nothing
     , scene = List
     , searchResults = Nothing
@@ -67,6 +68,12 @@ initialModel =
     , selectedPlaylist = Nothing
     , sortBy = Artist
     , sortDirection = Asc
+
+    -----------------------------------------
+    -- Scenes / List
+    -----------------------------------------
+    , infiniteList = InfiniteList.init
+    , listDnD = DnD.initialModel
     }
 
 
@@ -79,9 +86,6 @@ update msg model =
     case msg of
         Bypass ->
             return model
-
-        InfiniteListMsg infiniteList ->
-            return { model | infiniteList = infiniteList }
 
         Reply replies ->
             returnRepliesWithModel model replies
@@ -254,6 +258,48 @@ update msg model =
             { model | selectedPlaylist = Just playlist }
                 |> reviseCollection arrange
                 |> addReply SaveEnclosedUserData
+
+        -----------------------------------------
+        -- Scenes / List
+        -----------------------------------------
+        InfiniteListMsg infiniteList ->
+            return { model | infiniteList = infiniteList }
+
+        ListDragAndDropMsg subMsg ->
+            let
+                ( newDnD, replies ) =
+                    DnD.update subMsg model.listDnD
+            in
+            if DnD.hasDropped newDnD then
+                let
+                    ( subject, target ) =
+                        ( Maybe.withDefault 0 <| DnD.modelSubject newDnD
+                        , Maybe.withDefault 0 <| DnD.modelTarget newDnD
+                        )
+
+                    moveFromTo =
+                        { from = subject, to = target }
+
+                    selectedPlaylist =
+                        Maybe.map
+                            (\p -> { p | tracks = List.move moveFromTo p.tracks })
+                            model.selectedPlaylist
+                in
+                case selectedPlaylist of
+                    Just playlist ->
+                        { model | listDnD = newDnD, selectedPlaylist = Just playlist }
+                            |> reviseCollection arrange
+                            |> addReply (ReplacePlaylistInCollection playlist)
+
+                    Nothing ->
+                        returnRepliesWithModel
+                            { model | listDnD = newDnD }
+                            replies
+
+            else
+                returnRepliesWithModel
+                    { model | listDnD = newDnD }
+                    replies
 
         -----------------------------------------
         -- Search

@@ -45,6 +45,7 @@ type Reply
     | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
     | DeactivatePlaylist
     | GenerateDirectoryPlaylists
+    | ReplacePlaylistInCollection Playlist
       -----------------------------------------
       -- Queue
       -----------------------------------------

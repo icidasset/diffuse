@@ -167,6 +167,7 @@ view model =
                 , T.flex_column
                 , T.fixed
                 , T.items_center
+                , T.ph3
                 , T.pointer
                 , T.z_9999
                 ]

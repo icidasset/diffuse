@@ -5,6 +5,7 @@ import InfiniteList
 import Json.Encode as Json
 import Playlists exposing (Playlist)
 import Tracks exposing (..)
+import UI.DnD as DnD
 import UI.Reply exposing (Reply)
 
 
@@ -19,7 +20,6 @@ type alias Model =
     , favouritesOnly : Bool
     , grouping : Maybe Grouping
     , hideDuplicates : Bool
-    , infiniteList : InfiniteList.Model
     , nowPlaying : Maybe IdentifiedTrack
     , scene : Scene
     , searchResults : Maybe (List String)
@@ -27,6 +27,12 @@ type alias Model =
     , selectedPlaylist : Maybe Playlist
     , sortBy : SortBy
     , sortDirection : SortDirection
+
+    -----------------------------------------
+    -- Scenes / List
+    -----------------------------------------
+    , infiniteList : InfiniteList.Model
+    , listDnD : DnD.Model Int
     }
 
 
@@ -36,7 +42,6 @@ type alias Model =
 
 type Msg
     = Bypass
-    | InfiniteListMsg InfiniteList.Model
     | Reply (List Reply)
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
@@ -69,6 +74,11 @@ type Msg
       -----------------------------------------
     | DeselectPlaylist
     | SelectPlaylist Playlist
+      -----------------------------------------
+      -- Scenes / List
+      -----------------------------------------
+    | InfiniteListMsg InfiniteList.Model
+    | ListDragAndDropMsg (DnD.Msg Int)
       -----------------------------------------
       -- Search
       -----------------------------------------
