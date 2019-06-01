@@ -1379,6 +1379,7 @@ vesselStyles : List Css.Style
 vesselStyles =
     [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
     , Css.maxWidth (Css.px UI.Kit.insulationWidth)
+    , Css.minHeight (Css.px 296)
     ]
 
 

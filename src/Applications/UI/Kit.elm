@@ -256,14 +256,14 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 canister : List (Html msg) -> Html msg
 canister children =
     chunk
-        [ T.mh1, T.ph3, T.pb4 ]
+        [ T.mh1, T.ph3, T.pb3 ]
         children
 
 
 canisterForm : List (Html msg) -> Html msg
 canisterForm children =
     chunk
-        [ T.measure, T.mh1, T.ph3, T.pb4, T.w_100 ]
+        [ T.measure, T.mh1, T.ph3, T.pb3, T.w_100 ]
         children
 
 
