@@ -1,6 +1,7 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId)
+module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, removeFromPlaylist)
 
 import Base64
+import List.Extra as List
 import Playlists exposing (Playlist)
 import String.Ext as String
 import Time
@@ -198,6 +199,24 @@ makeTrack sourceId ( path, tags ) =
     , sourceId = sourceId
     , tags = tags
     }
+
+
+removeFromPlaylist : List IdentifiedTrack -> Playlist -> Playlist
+removeFromPlaylist tracks playlist =
+    playlist.tracks
+        |> List.indexedFoldr
+            (\idx t ( acc, remaining ) ->
+                case List.partition ((==) (Just idx)) remaining of
+                    ( match :: _, rem ) ->
+                        ( acc, rem )
+
+                    ( _, rem ) ->
+                        ( t :: acc, rem )
+            )
+            ( []
+            , List.map (Tuple.first >> .indexInPlaylist) tracks
+            )
+        |> (\( t, _ ) -> { playlist | tracks = t })
 
 
 missingId : String

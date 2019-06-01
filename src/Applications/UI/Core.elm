@@ -12,6 +12,7 @@ import Http
 import Json.Encode as Json
 import Keyboard
 import Notifications exposing (..)
+import Playlists exposing (Playlist)
 import Queue
 import Time
 import Tracks exposing (IdentifiedTrack)
@@ -95,7 +96,6 @@ type Msg
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
-    | RequestAssistanceForPlaylists (List IdentifiedTrack)
     | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix
     | StoppedDragging
@@ -148,6 +148,11 @@ type Msg
       -- Page Transitions
       -----------------------------------------
     | PageChanged Page
+      -----------------------------------------
+      -- Playlists
+      -----------------------------------------
+    | RequestAssistanceForPlaylists (List IdentifiedTrack)
+    | RemoveFromSelectedPlaylist Playlist (List IdentifiedTrack)
       -----------------------------------------
       -- URL
       -----------------------------------------
