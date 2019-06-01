@@ -124,9 +124,6 @@ groupByDirectory deps =
 
 groupByDirectoryFolder : CollectionDependencies -> IdentifiedTrack -> Dict String (List IdentifiedTrack) -> Dict String (List IdentifiedTrack)
 groupByDirectoryFolder deps ( i, t ) =
-    -- TODO:
-    -- When directory playlists are added, and if one is active,
-    -- remove the first (ie. root) directory.
     let
         prefix =
             case deps.selectedPlaylist of
@@ -260,5 +257,35 @@ playlistTrackIdentifiers nowPlaying i t pi =
 
 dealWithMissingPlaylistTracks : ( List IdentifiedTrack, List IdentifiedPlaylistTrack ) -> List IdentifiedTrack
 dealWithMissingPlaylistTracks ( identifiedTracks, remainingPlaylistTracks ) =
-    -- TODO
-    identifiedTracks
+    identifiedTracks ++ List.map makeMissingPlaylistTrack remainingPlaylistTracks
+
+
+makeMissingPlaylistTrack : IdentifiedPlaylistTrack -> IdentifiedTrack
+makeMissingPlaylistTrack ( identifiers, playlistTrack ) =
+    let
+        tags =
+            { disc = 1
+            , nr = 0
+            , artist = playlistTrack.artist
+            , title = playlistTrack.title
+            , album = playlistTrack.album
+            , genre = Nothing
+            , picture = Nothing
+            , year = Nothing
+            }
+    in
+    Tuple.pair
+        { group = Nothing
+        , indexInList = 0
+        , indexInPlaylist = Just identifiers.index
+        , isFavourite = False
+        , isMissing = True
+        , isNowPlaying = False
+        , isSelected = False
+        }
+        { tags = tags
+        , id = missingId
+        , insertedAt = Time.default
+        , path = missingId
+        , sourceId = missingId
+        }

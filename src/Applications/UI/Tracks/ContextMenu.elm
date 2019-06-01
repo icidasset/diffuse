@@ -32,8 +32,13 @@ playlistActions tracks selectedPlaylist =
         -- In a playlist
         -----------------------------------------
         Just False ->
-            -- TODO
-            []
+            [ Item
+                { icon = Icons.waves
+                , label = "Add to another playlist"
+                , msg = RequestAssistanceForPlaylists tracks
+                , active = False
+                }
+            ]
 
         -----------------------------------------
         -- Not in a playlist

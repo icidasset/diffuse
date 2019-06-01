@@ -395,11 +395,16 @@ contextMenuEvent identifiedTrack =
 
 
 mousePlayEvent : IdentifiedTrack -> Html.Attribute Msg
-mousePlayEvent identifiedTrack =
+mousePlayEvent ( i, t ) =
     Html.Styled.Events.custom
         "dblclick"
         (Json.Decode.succeed
-            { message = Reply [ UI.Reply.PlayTrack identifiedTrack ]
+            { message =
+                if i.isMissing then
+                    Bypass
+
+                else
+                    Reply [ UI.Reply.PlayTrack ( i, t ) ]
             , stopPropagation = True
             , preventDefault = True
             }
