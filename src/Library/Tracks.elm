@@ -182,6 +182,10 @@ emptyCollection =
     }
 
 
+
+-- MORE STUFF
+
+
 isNowPlaying : IdentifiedTrack -> IdentifiedTrack -> Bool
 isNowPlaying ( a, b ) ( x, y ) =
     a.indexInPlaylist == x.indexInPlaylist && b.id == y.id

@@ -757,13 +757,25 @@ translateReply reply model =
                                 , tracks = tracks
                                 }
                                 playlistsModel.collection
+
+                newModel =
+                    { playlistsModel
+                        | collection = newCollection
+                        , lastModifiedPlaylist = Just properPlaylistName
+                    }
+                        |> (\m -> { model | playlists = m })
             in
-            { playlistsModel
-                | collection = newCollection
-                , lastModifiedPlaylist = Just properPlaylistName
-            }
-                |> (\m -> { model | playlists = m })
-                |> translateReply SavePlaylists
+            (case tracks of
+                [ t ] ->
+                    "Added __" ++ t.title ++ "__"
+
+                l ->
+                    "Added __" ++ String.fromInt (List.length l) ++ " tracks__"
+            )
+                |> (\s -> s ++ " to the __" ++ properPlaylistName ++ "__ playlist")
+                |> ShowSuccessNotification
+                |> (\r -> translateReply r newModel)
+                |> andThen (translateReply SavePlaylists)
 
         DeactivatePlaylist ->
             update (TracksMsg <| Tracks.DeselectPlaylist) model
