@@ -36,14 +36,7 @@ action : List IdentifiedTrack -> { result : Maybe String, searchTerm : Maybe Str
 action tracks maybe =
     let
         playlistTracks =
-            List.map
-                (\( i, t ) ->
-                    { album = t.tags.album
-                    , artist = t.tags.artist
-                    , title = t.tags.title
-                    }
-                )
-                tracks
+            Tracks.toPlaylistTracks tracks
     in
     case maybe.result of
         Just result ->

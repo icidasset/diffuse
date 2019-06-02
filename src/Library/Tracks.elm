@@ -1,8 +1,8 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, removeFromPlaylist)
+module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, removeFromPlaylist, toPlaylistTracks)
 
 import Base64
 import List.Extra as List
-import Playlists exposing (Playlist)
+import Playlists exposing (Playlist, PlaylistTrack)
 import String.Ext as String
 import Time
 import Time.Ext as Time
@@ -222,3 +222,14 @@ removeFromPlaylist tracks playlist =
 missingId : String
 missingId =
     "<missing>"
+
+
+toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrack
+toPlaylistTracks =
+    List.map
+        (\( i, t ) ->
+            { album = t.tags.album
+            , artist = t.tags.artist
+            , title = t.tags.title
+            }
+        )

@@ -1,4 +1,4 @@
-module ContextMenu exposing (ContextMenu(..), Item(..), ItemProperties)
+module ContextMenu exposing (ContextMenu(..), Item(..), ItemProperties, justAnItem)
 
 import Color exposing (Color)
 import Coordinates exposing (Coordinates)
@@ -25,3 +25,12 @@ type alias ItemProperties msg =
     , msg : msg
     , active : Bool
     }
+
+
+
+-- 🔱
+
+
+justAnItem : ItemProperties msg -> Maybe (Item msg)
+justAnItem =
+    Just << Item

@@ -23,6 +23,7 @@ import UI.Equalizer as Equalizer
 import UI.Page exposing (Page)
 import UI.Playlists as Playlists
 import UI.Queue.Core as Queue
+import UI.Reply exposing (Reply)
 import UI.Sources as Sources
 import UI.Tracks.Core as Tracks
 import Url exposing (Url)
@@ -96,6 +97,7 @@ type Msg
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
+    | Reply Reply
     | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix
     | StoppedDragging
