@@ -59,7 +59,6 @@ type alias Identifiers =
     { isFavourite : Bool
     , isMissing : Bool
     , isNowPlaying : Bool
-    , isSelected : Bool
 
     --
     , group : Maybe { name : String, firstInGroup : Bool }
@@ -166,7 +165,6 @@ emptyIdentifiers =
     { isFavourite = False
     , isMissing = False
     , isNowPlaying = False
-    , isSelected = False
 
     --
     , group = Nothing

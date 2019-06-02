@@ -81,11 +81,16 @@ item variant idx { label, actions, msg } =
                     )
 
             Draggable env ->
-                List.concat
-                    [ [ css (itemStyles { dragTarget = DnD.environmentTarget env == Just idx }) ]
-                    , DnD.listenToEnterLeave env idx
-                    , DnD.listenToDrop env idx
-                    ]
+                [ DnD.listenToEnterLeave env idx
+                , DnD.listenToDrop env idx
+                ]
+                    |> List.concat
+                    |> List.map Attributes.fromUnstyled
+                    |> List.append
+                        [ { dragTarget = DnD.environmentTarget env == Just idx }
+                            |> itemStyles
+                            |> css
+                        ]
         )
         [ T.flex
         , T.fw6
@@ -144,8 +149,8 @@ actionView action =
 dragActionView : Coloring -> DnD.Environment Int msg -> Int -> Html msg
 dragActionView coloring env context =
     brick
-        [ title "Drag me"
-        , DnD.listenToStart env context
+        [ Attributes.title "Drag me"
+        , Attributes.fromUnstyled (DnD.listenToStart env context)
         ]
         [ C.lh_0
         , C.grab_cursor

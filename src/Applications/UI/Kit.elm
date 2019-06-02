@@ -3,6 +3,7 @@ module UI.Kit exposing (ButtonType(..), borderRadius, button, buttonFocus, butto
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
+import Color.Manipulate as Color
 import Css exposing (deg, em, none, num, pct, px, solid, url, zero)
 import Css.Global
 import Html.Styled as Html exposing (Html)
@@ -57,7 +58,7 @@ colors =
     , background = rgb 2 7 14
     , focus = rgb 0 0 0
     , selection = colorKit.base0D
-    , selectionAlt = rgb 3 48 63
+    , selectionAlt = Color.darken 0.275 colorKit.base0D -- rgb 3 48 63
     , text = colorKit.base01
     }
 

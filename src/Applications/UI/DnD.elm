@@ -1,9 +1,9 @@
 module UI.DnD exposing (Environment, Model, Msg, environmentSubject, environmentTarget, hasDropped, initialModel, isBeingDraggedOver, listenToDrop, listenToEnterLeave, listenToStart, modelSubject, modelTarget, stoppedDragging, update)
 
+import Html exposing (Attribute)
+import Html.Attributes as Attributes
 import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
-import Html.Styled exposing (Attribute)
-import Html.Styled.Attributes as Attributes
 import UI.Reply as Reply exposing (Reply)
 
 
@@ -94,16 +94,15 @@ update msg model =
 
 listenToStart : Environment context msg -> context -> Attribute msg
 listenToStart { toMsg } context =
-    (\event ->
-        case event.pointer.button of
-            Mouse.MainButton ->
-                toMsg (Start context)
+    Pointer.onDown
+        (\event ->
+            case event.pointer.button of
+                Mouse.MainButton ->
+                    toMsg (Start context)
 
-            _ ->
-                toMsg Stop
-    )
-        |> Pointer.onDown
-        |> Attributes.fromUnstyled
+                _ ->
+                    toMsg Stop
+        )
 
 
 listenToEnterLeave : Environment context msg -> context -> List (Attribute msg)
@@ -118,13 +117,11 @@ listenToEnterLeave { model, toMsg } context =
                 |> toMsg
                 |> always
                 |> Pointer.onEnter
-                |> Attributes.fromUnstyled
             , context
                 |> Leave
                 |> toMsg
                 |> always
                 |> Pointer.onLeave
-                |> Attributes.fromUnstyled
             ]
 
 
@@ -140,7 +137,6 @@ listenToDrop { model, toMsg } context =
                 |> toMsg
                 |> always
                 |> Pointer.onUp
-                |> Attributes.fromUnstyled
             ]
 
 

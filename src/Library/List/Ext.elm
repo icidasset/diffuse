@@ -1,6 +1,13 @@
-module List.Ext exposing (move)
+module List.Ext exposing (addTo, move)
 
 import List.Extra as List
+
+
+{-| Flipped version of (::).
+-}
+addTo : List a -> a -> List a
+addTo list item =
+    item :: list
 
 
 {-| Move an item "from" an index "to" another index.

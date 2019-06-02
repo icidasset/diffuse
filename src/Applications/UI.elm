@@ -1262,7 +1262,8 @@ defaultScreen model =
     -----------------------------------------
     -- Controls
     -----------------------------------------
-    , UI.Console.view
+    , Lazy.lazy6
+        UI.Console.view
         model.queue.activeItem
         model.queue.repeat
         model.queue.shuffle

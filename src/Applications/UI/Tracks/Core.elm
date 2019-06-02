@@ -25,6 +25,7 @@ type alias Model =
     , searchResults : Maybe (List String)
     , searchTerm : Maybe String
     , selectedPlaylist : Maybe Playlist
+    , selectedTrackIndexes : List Int
     , sortBy : SortBy
     , sortDirection : SortDirection
 
@@ -42,6 +43,7 @@ type alias Model =
 
 type Msg
     = Bypass
+    | MarkAsSelected Int Mouse.Event
     | Reply (List Reply)
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
@@ -67,7 +69,7 @@ type Msg
       -----------------------------------------
       -- Menus
       -----------------------------------------
-    | ShowTrackMenu IdentifiedTrack Mouse.Event
+    | ShowTrackMenu Int Mouse.Event
     | ShowViewMenu (Maybe Grouping) Mouse.Event
       -----------------------------------------
       -- Playlists

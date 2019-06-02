@@ -103,7 +103,6 @@ partTwo favourites nowPlaying track ( acc, remainingFavourites ) =
             ( { isFavourite = isFav
               , isMissing = False
               , isNowPlaying = isNP
-              , isSelected = False
 
               --
               , group = Nothing
@@ -160,7 +159,6 @@ makeMissingFavouriteTrack fav =
     ( { isFavourite = True
       , isMissing = True
       , isNowPlaying = False
-      , isSelected = False
 
       --
       , group = Nothing

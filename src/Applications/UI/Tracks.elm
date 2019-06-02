@@ -66,6 +66,7 @@ initialModel =
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedPlaylist = Nothing
+    , selectedTrackIndexes = []
     , sortBy = Artist
     , sortDirection = Asc
 
@@ -86,6 +87,27 @@ update msg model =
     case msg of
         Bypass ->
             return model
+
+        MarkAsSelected indexInList mouseEvent ->
+            let
+                selection =
+                    if mouseEvent.keys.shift then
+                        model.selectedTrackIndexes
+                            |> List.head
+                            |> Maybe.map
+                                (\n ->
+                                    if n > indexInList then
+                                        List.range indexInList n
+
+                                    else
+                                        List.range n indexInList
+                                )
+                            |> Maybe.withDefault [ indexInList ]
+
+                    else
+                        [ indexInList ]
+            in
+            return { model | selectedTrackIndexes = selection }
 
         Reply replies ->
             returnRepliesWithModel model replies
@@ -130,6 +152,8 @@ update msg model =
                 { model | enabledSourceIds = sourceIds }
 
         SetNowPlaying maybeIdentifiedTrack ->
+            -- TODO:
+            -- Improve performance
             let
                 mapFn =
                     case maybeIdentifiedTrack of
@@ -236,10 +260,29 @@ update msg model =
         -----------------------------------------
         -- Menus
         -----------------------------------------
-        ShowTrackMenu track mouseEvent ->
-            [ track ]
+        ShowTrackMenu trackIndex mouseEvent ->
+            let
+                selection =
+                    if List.isEmpty model.selectedTrackIndexes then
+                        [ trackIndex ]
+
+                    else if List.member trackIndex model.selectedTrackIndexes == False then
+                        [ trackIndex ]
+
+                    else
+                        model.selectedTrackIndexes
+            in
+            selection
+                |> List.foldr
+                    (\s acc ->
+                        model.collection.harvested
+                            |> List.getAt s
+                            |> Maybe.map (List.addTo acc)
+                            |> Maybe.withDefault acc
+                    )
+                    []
                 |> ShowTracksContextMenu (Coordinates.fromTuple mouseEvent.clientPos)
-                |> returnReplyWithModel model
+                |> returnReplyWithModel { model | selectedTrackIndexes = selection }
 
         ShowViewMenu grouping mouseEvent ->
             grouping
@@ -381,17 +424,6 @@ resolveParcel model ( _, newCollection ) =
             Json.Encode.object
                 [ ( "target", scrollObj ) ]
 
-        modelWithNewCollection =
-            { model
-                | collection = newCollection
-                , infiniteList =
-                    if harvestChanged && model.scene == List then
-                        InfiniteList.updateScroll scrollEvent model.infiniteList
-
-                    else
-                        model.infiniteList
-            }
-
         collectionChanged =
             Collection.tracksChanged
                 model.collection.untouched
@@ -405,6 +437,23 @@ resolveParcel model ( _, newCollection ) =
                 Collection.harvestChanged
                     model.collection.harvested
                     newCollection.harvested
+
+        modelWithNewCollection =
+            { model
+                | collection = newCollection
+                , infiniteList =
+                    if harvestChanged && model.scene == List then
+                        InfiniteList.updateScroll scrollEvent model.infiniteList
+
+                    else
+                        model.infiniteList
+                , selectedTrackIndexes =
+                    if harvestChanged then
+                        []
+
+                    else
+                        model.selectedTrackIndexes
+            }
     in
     ( modelWithNewCollection
       ----------

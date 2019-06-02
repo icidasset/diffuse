@@ -337,7 +337,6 @@ makeMissingPlaylistTrack ( identifiers, playlistTrack ) =
         , isFavourite = False
         , isMissing = True
         , isNowPlaying = False
-        , isSelected = False
         }
         { tags = tags
         , id = missingId
