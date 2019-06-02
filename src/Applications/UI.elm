@@ -877,6 +877,20 @@ translateReply reply model =
                 (Browser.Dom.setViewportOf UI.Tracks.Scene.List.containerId 0 1)
             )
 
+        PreloadNextTrack ->
+            case List.head model.queue.future of
+                Just item ->
+                    item
+                        |> .identifiedTrack
+                        |> UI.Queue.Common.makeEngineItem
+                            model.currentTime
+                            model.sources.collection
+                        |> Ports.preloadAudio
+                        |> returnWithModel model
+
+                Nothing ->
+                    return model
+
         ProcessSources ->
             let
                 notification =

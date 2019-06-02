@@ -18,6 +18,9 @@ const app = Elm.UI.init({
 })
 
 
+addAudioContainer()
+
+
 
 // Brain
 // =====
@@ -78,13 +81,18 @@ app.ports.adjustEqualizerSetting.subscribe(e => {
 })
 
 
+app.ports.pause.subscribe(_ => {
+  if (orchestrion.audio) orchestrion.audio.pause()
+})
+
+
 app.ports.play.subscribe(_ => {
   if (orchestrion.audio) orchestrion.audio.play()
 })
 
 
-app.ports.pause.subscribe(_ => {
-  if (orchestrion.audio) orchestrion.audio.pause()
+app.ports.preloadAudio.subscribe(item => {
+  preloadAudioElement(orchestrion, item)
 })
 
 

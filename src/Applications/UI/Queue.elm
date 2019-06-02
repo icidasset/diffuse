@@ -222,7 +222,9 @@ update msg model =
         -- > Fill the queue with items.
         --
         Fill timestamp tracks ->
-            return (fillQueue timestamp tracks model)
+            returnReplyWithModel
+                (fillQueue timestamp tracks model)
+                PreloadNextTrack
 
         -- # Reset
         -- > Renew the queue, meaning that the auto-generated items in the queue

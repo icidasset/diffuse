@@ -60,6 +60,7 @@ type Reply
     | AddSourceToCollection Source
     | ExternalSourceAuthorization (String -> String)
     | ForceTracksRerender
+    | PreloadNextTrack
     | ProcessSources
     | RemoveTracksWithSourceId String
     | ReplaceSourceInCollection Source

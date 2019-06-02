@@ -39,7 +39,9 @@ const audioElementsContainer = (() => {
 })()
 
 
-document.body.appendChild(audioElementsContainer)
+function addAudioContainer() {
+  document.body.appendChild(audioElementsContainer)
+}
 
 
 
@@ -102,21 +104,38 @@ function insertTrack(orchestrion, queueItem) {
     context.resume()
   }
 
-  // Create audio node
+  // Find or create audio node
   let audioNode
 
   transformUrl(queueItem.url).then(url => {
-    queueItem = Object.assign({}, queueItem, { url: url })
-    audioNode = createAudioElement(orchestrion, queueItem)
-    audioNode.context = context.createMediaElementSource(audioNode)
-    audioNode.context.connect(volume)
+    queueItem =
+      Object.assign({}, queueItem, { url: url })
+
+    if (audioNode = findExistingAudioElement(queueItem)) {
+      audioNode.setAttribute("data-timestamp", Date.now())
+      audioNode.context = context.createMediaElementSource(audioNode)
+      audioNode.context.connect(volume)
+      audioNode.play()
+
+    } else {
+      audioNode = createAudioElement(orchestrion, queueItem, Date.now())
+      audioNode.context = context.createMediaElementSource(audioNode)
+      audioNode.context.connect(volume)
+
+    }
+
+    orchestrion.audio = audioNode
   })
 }
 
 
-function createAudioElement(orchestrion, queueItem) {
+function findExistingAudioElement(queueItem) {
+  return audioElementsContainer.querySelector(`[rel="${queueItem.trackId}"]`)
+}
+
+
+function createAudioElement(orchestrion, queueItem, timestampInMilliseconds) {
   let audio
-  let timestampInMilliseconds = Date.now()
 
   const bind = fn => event => {
     const is = isActiveAudioElement(orchestrion, event.target)
@@ -150,11 +169,19 @@ function createAudioElement(orchestrion, queueItem) {
   audio.addEventListener("timeupdate", timeUpdateFunc)
 
   audio.load()
-
   audioElementsContainer.appendChild(audio)
-  orchestrion.audio = audio
 
   return audio
+}
+
+
+function preloadAudioElement(orchestrion, queueItem) {
+  // audio element remains valid for 2 hours
+  createAudioElement(
+    orchestrion,
+    queueItem,
+    Date.now() + 1000 * 60 * 60 * 2
+  )
 }
 
 
