@@ -109,9 +109,10 @@ type alias Parcel =
 
 
 type Grouping
-    = AddedOnGroups
+    = AddedOn
     | Directory
-    | TrackYearGroups
+    | FirstAlphaCharacter
+    | TrackYear
 
 
 type SortBy

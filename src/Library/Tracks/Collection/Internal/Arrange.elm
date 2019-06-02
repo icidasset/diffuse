@@ -36,13 +36,16 @@ arrange ( deps, collection ) =
 arrangeByGroup : Parcel -> Parcel
 arrangeByGroup ( deps, collection ) =
     case deps.grouping of
-        Just AddedOnGroups ->
+        Just AddedOn ->
             ( deps, groupByInsertedAt deps collection )
 
         Just Directory ->
             ( deps, groupByDirectory deps collection )
 
-        Just TrackYearGroups ->
+        Just FirstAlphaCharacter ->
+            ( deps, groupByFirstAlphaCharacter deps collection )
+
+        Just TrackYear ->
             ( deps, groupByYear deps collection )
 
         Nothing ->
@@ -73,7 +76,7 @@ groupBy { reversed } folder deps collection =
 
 
 
--- GROUPING  ░░  INSERTED AT
+-- GROUPING  ░░  ADDED ON
 
 
 groupByInsertedAt : CollectionDependencies -> Collection -> Collection
@@ -157,6 +160,59 @@ groupByDirectoryFolder deps ( i, t ) =
     in
     Dict.update
         directory
+        (addToList item)
+
+
+
+-- GROUPING  ░░  FIRST LETTER
+
+
+groupByFirstAlphaCharacter : CollectionDependencies -> Collection -> Collection
+groupByFirstAlphaCharacter deps =
+    groupBy { reversed = False } (groupByFirstAlphaCharacterFolder deps) deps
+
+
+groupByFirstAlphaCharacterFolder : CollectionDependencies -> IdentifiedTrack -> Dict String (List IdentifiedTrack) -> Dict String (List IdentifiedTrack)
+groupByFirstAlphaCharacterFolder deps ( i, t ) =
+    let
+        tag =
+            case deps.sortBy of
+                Artist ->
+                    t.tags.artist
+
+                Album ->
+                    t.tags.album
+
+                PlaylistIndex ->
+                    ""
+
+                Title ->
+                    t.tags.title
+
+        group =
+            { name =
+                tag
+                    |> String.toList
+                    |> List.head
+                    |> Maybe.andThen
+                        (\char ->
+                            if Char.isAlpha char then
+                                Just (String.fromList [ char ])
+
+                            else
+                                Nothing
+                        )
+                    |> Maybe.withDefault "#"
+            , firstInGroup = False
+            }
+
+        item =
+            ( { i | group = Just group }
+            , t
+            )
+    in
+    Dict.update
+        group.name
         (addToList item)
 
 

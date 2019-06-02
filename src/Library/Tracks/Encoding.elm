@@ -22,14 +22,17 @@ encodeFavourite fav =
 encodeGrouping : Grouping -> Encode.Value
 encodeGrouping v =
     case v of
-        AddedOnGroups ->
-            Encode.string "ADDED_ON_GROUPS"
+        AddedOn ->
+            Encode.string "ADDED_ON"
 
         Directory ->
             Encode.string "DIRECTORY"
 
-        TrackYearGroups ->
-            Encode.string "TRACK_YEAR_GROUPS"
+        FirstAlphaCharacter ->
+            Encode.string "FIRST_ALPHA_CHARACTER"
+
+        TrackYear ->
+            Encode.string "TRACK_YEAR"
 
 
 encodeSortBy : SortBy -> Encode.Value
@@ -122,14 +125,17 @@ groupingDecoder =
     Decode.andThen
         (\string ->
             case string of
-                "ADDED_ON_GROUPS" ->
-                    Decode.succeed AddedOnGroups
+                "ADDED_ON" ->
+                    Decode.succeed AddedOn
 
                 "DIRECTORY" ->
                     Decode.succeed Directory
 
-                "TRACK_YEAR_GROUPS" ->
-                    Decode.succeed TrackYearGroups
+                "FIRST_ALPHA_CHARACTER" ->
+                    Decode.succeed FirstAlphaCharacter
+
+                "TRACK_YEAR" ->
+                    Decode.succeed TrackYear
 
                 _ ->
                     Decode.fail "Invalid Grouping"

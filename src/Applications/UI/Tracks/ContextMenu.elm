@@ -116,8 +116,9 @@ viewMenu : Maybe Grouping -> Coordinates -> ContextMenu Msg
 viewMenu maybeGrouping =
     ContextMenu
         [ groupByDirectory (maybeGrouping == Just Directory)
-        , groupByProcessingDate (maybeGrouping == Just AddedOnGroups)
-        , groupByTrackYear (maybeGrouping == Just TrackYearGroups)
+        , groupByFirstAlphaCharacter (maybeGrouping == Just FirstAlphaCharacter)
+        , groupByProcessingDate (maybeGrouping == Just AddedOn)
+        , groupByTrackYear (maybeGrouping == Just TrackYear)
         ]
 
 
@@ -137,6 +138,22 @@ groupByDirectory isActive =
         }
 
 
+groupByFirstAlphaCharacter isActive =
+    Item
+        { icon = ifThenElse isActive Icons.clear Icons.library_music
+        , label = "Group by first letter"
+        , active = isActive
+
+        --
+        , msg =
+            if isActive then
+                TracksMsg Tracks.DisableGrouping
+
+            else
+                TracksMsg (Tracks.GroupBy FirstAlphaCharacter)
+        }
+
+
 groupByProcessingDate isActive =
     Item
         { icon = ifThenElse isActive Icons.clear Icons.library_music
@@ -149,7 +166,7 @@ groupByProcessingDate isActive =
                 TracksMsg Tracks.DisableGrouping
 
             else
-                TracksMsg (Tracks.GroupBy AddedOnGroups)
+                TracksMsg (Tracks.GroupBy AddedOn)
         }
 
 
@@ -165,5 +182,5 @@ groupByTrackYear isActive =
                 TracksMsg Tracks.DisableGrouping
 
             else
-                TracksMsg (Tracks.GroupBy TrackYearGroups)
+                TracksMsg (Tracks.GroupBy TrackYear)
         }
