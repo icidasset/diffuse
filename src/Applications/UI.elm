@@ -115,6 +115,7 @@ init flags url key =
     , currentTime = Time.millisToPosix flags.initialTime
     , isDragging = False
     , isLoading = True
+    , isOnline = flags.isOnline
     , navKey = key
     , notifications = []
     , page = page
@@ -228,6 +229,11 @@ update msg model =
                 | currentTime = time
                 , sources = { sources | currentTime = time }
               }
+            , Cmd.none
+            )
+
+        SetIsOnline bool ->
+            ( { model | isOnline = bool }
             , Cmd.none
             )
 
@@ -1044,7 +1050,8 @@ subscriptions model =
             (Sub.map AlfredMsg <| Alfred.subscriptions model.alfred)
             Sub.none
 
-        --
+        -- ...
+        ------
         , Browser.Events.onResize
             (\w h ->
                 ( w, h )
@@ -1053,6 +1060,7 @@ subscriptions model =
                     |> Debounce
             )
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
+        , Ports.setIsOnline SetIsOnline
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]

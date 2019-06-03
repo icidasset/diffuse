@@ -1,4 +1,4 @@
-port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, adjustEqualizerSetting, fromAlien, giveBrain, nudgeBrain, pause, pickAverageBackgroundColor, play, preloadAudio, requestNext, requestPlayPause, requestPrevious, requestStop, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, setAverageBackgroundColor, setRepeat, toBrain, unstall)
+port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, adjustEqualizerSetting, fromAlien, giveBrain, nudgeBrain, pause, pickAverageBackgroundColor, play, preloadAudio, requestNext, requestPlayPause, requestPrevious, requestStop, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, setAverageBackgroundColor, setIsOnline, setRepeat, toBrain, unstall)
 
 import Alien
 import Json.Encode as Json
@@ -74,6 +74,9 @@ port setAudioHasStalled : (Bool -> msg) -> Sub msg
 
 
 port setAverageBackgroundColor : ({ r : Int, g : Int, b : Int } -> msg) -> Sub msg
+
+
+port setIsOnline : (Bool -> msg) -> Sub msg
 
 
 

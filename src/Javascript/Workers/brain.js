@@ -65,6 +65,26 @@ function getSecretKey() {
 }
 
 
+function isAuthMethodService(eventTag) {
+  return (
+    eventTag.startsWith("AUTH_") &&
+    eventTag !== "AUTH_ENCLOSED_DATA" &&
+    eventTag !== "AUTH_METHOD" &&
+    eventTag !== "AUTH_SECRET_KEY"
+  )
+}
+
+
+function isLocalHost(url) {
+  return (
+    url.startsWith("localhost") ||
+    url.startsWith("localhost") ||
+    url.startsWith("127.0.0.1") ||
+    url.startsWith("127.0.0.1")
+  )
+}
+
+
 
 // Cache
 // -----
@@ -75,20 +95,7 @@ app.ports.removeCache.subscribe(event => {
 
 
 app.ports.requestCache.subscribe(event => {
-  const dataPromise = (_ => {
-    if (event.tag == "AUTH_ANONYMOUS") {
-      return getFromIndex({ key: event.tag })
-        .then(r => getSecretKey().then(s => [r, s]))
-        .then(([r, s]) => typeof r === "string" ? decrypt(s, r) : r)
-        .then(d => typeof d === "string" ? JSON.parse(d) : d)
-        .then(a => a === undefined ? null : a)
-
-    } else {
-      return getFromIndex({ key: event.tag })
-    }
-  })()
-
-  dataPromise
+  fromCache(event.tag)
     .then(data => {
       app.ports.fromAlien.send({
         tag: event.tag,
@@ -96,18 +103,39 @@ app.ports.requestCache.subscribe(event => {
         error: null
       })
     }).catch(
-      authError(event)
+      isAuthMethodService(event.tag)
+        ? authError(event)
+        : reportError(event)
     )
 })
 
 
 app.ports.toCache.subscribe(event => {
-  toCache(event.tag, event.data).catch(authError(event))
+  toCache(event.tag, event.data).catch(
+    isAuthMethodService(event.tag)
+      ? authError(event)
+      : reportError(event)
+  )
 })
 
 
+function fromCache(key) {
+  if (isAuthMethodService(key)) {
+    return getFromIndex({ key: key })
+      .then(r => getSecretKey().then(s => [r, s]))
+      .then(([r, s]) => typeof r === "string" ? decrypt(s, r) : r)
+      .then(d => typeof d === "string" ? JSON.parse(d) : d)
+      .then(a => a === undefined ? null : a)
+
+  } else {
+    return getFromIndex({ key: key })
+
+  }
+}
+
+
 function toCache(key, data) {
-  if (key == "AUTH_ANONYMOUS") {
+  if (isAuthMethodService(key)) {
     const json = JSON.stringify(data)
 
     return getSecretKey()
@@ -219,10 +247,20 @@ function remoteStorage(event) {
 
 
 app.ports.requestRemoteStorage.subscribe(event => {
-  remoteStorage(event)
-    .then(_ => rsClient.getFile("diffuse.json"))
-    .then(r => getSecretKey().then(s => [r.data, s]))
-    .then(([r, s]) => r ? decrypt(s, r) : null)
+  const dataPromise =
+    !navigator.onLine &&
+    !isLocalHost(event.data.userAddress.replace(/^[^@]*@/, ""))
+    ? (
+        fromCache(event.tag)
+      )
+    : (
+        remoteStorage(event)
+          .then(_ => rsClient.getFile("diffuse.json"))
+          .then(r => getSecretKey().then(s => [r.data, s]))
+          .then(([r, s]) => r ? decrypt(s, r) : null)
+      )
+
+  dataPromise
     .then(data => {
       app.ports.fromAlien.send({
         tag: event.tag,
@@ -245,6 +283,11 @@ app.ports.toRemoteStorage.subscribe(event => {
     .then(data => rsClient.storeFile("application/json", "diffuse.json", data))
     .catch(
       authError(event)
+    )
+
+  toCache(event.tag, event.data.data)
+    .catch(
+      reportError(event)
     )
 })
 

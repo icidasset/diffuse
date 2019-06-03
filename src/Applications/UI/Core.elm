@@ -35,6 +35,7 @@ import Url exposing (Url)
 
 type alias Flags =
     { initialTime : Int
+    , isOnline : Bool
     , viewport : Viewport
     }
 
@@ -49,6 +50,7 @@ type alias Model =
     , debounce : Debouncer Msg Msg
     , isDragging : Bool
     , isLoading : Bool
+    , isOnline : Bool
     , navKey : Nav.Key
     , notifications : List (Notification Msg)
     , page : Page
@@ -100,6 +102,7 @@ type Msg
     | Reply Reply
     | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix
+    | SetIsOnline Bool
     | StoppedDragging
     | ToggleLoadingScreen Switch
       -----------------------------------------

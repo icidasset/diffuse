@@ -10,6 +10,7 @@ const app = Elm.UI.init({
   node: document.getElementById("elm"),
   flags: {
     initialTime: Date.now(),
+    isOnline: navigator.onLine,
     viewport: {
       height: window.innerHeight,
       width: window.innerWidth
@@ -175,6 +176,18 @@ document.body.addEventListener("click", event => {
 function removeFocus() {
   const n = document.activeElement
   if (n && !n.dataset.keepFocus) n.blur()
+}
+
+
+
+// Internet Connection
+// -------------------
+
+window.addEventListener("online", onlineStatusChanged)
+window.addEventListener("offline", onlineStatusChanged)
+
+function onlineStatusChanged() {
+  app.ports.setIsOnline.send(navigator.onLine)
 }
 
 
