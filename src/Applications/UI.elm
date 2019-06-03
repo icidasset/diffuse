@@ -233,9 +233,19 @@ update msg model =
             )
 
         SetIsOnline bool ->
-            ( { model | isOnline = bool }
-            , Cmd.none
-            )
+            andThen
+                -- We're caching the user's data in the browser while offline.
+                -- If we're back online again, sync all the user's data.
+                (case ( bool, model.authentication ) of
+                    ( True, Authentication.Authenticated (Authentication.RemoteStorage _) ) ->
+                        update SyncUserData
+
+                    _ ->
+                        update Bypass
+                )
+                ( { model | isOnline = bool }
+                , Cmd.none
+                )
 
         StoppedDragging ->
             let
@@ -325,6 +335,13 @@ update msg model =
             UI.Notifications.show
                 (Notifications.error Authentication.RemoteStorage.webfingerError)
                 model
+
+        SyncUserData ->
+            model
+                |> translateReply SaveFavourites
+                |> andThen (translateReply SaveSources)
+                |> andThen (translateReply SaveTracks)
+                |> andThen (translateReply <| ShowWarningNotification "Syncing")
 
         -----------------------------------------
         -- Brain

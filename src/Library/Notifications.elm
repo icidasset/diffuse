@@ -148,7 +148,7 @@ warning content =
     Notification
         Warning
         (hashString 0 content)
-        { sticky = True
+        { sticky = False
         , wasDismissed = False
         }
         (render content)

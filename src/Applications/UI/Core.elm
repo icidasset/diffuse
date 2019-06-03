@@ -121,6 +121,7 @@ type Msg
       -----------------------------------------
     | AuthenticationBootFailure String
     | RemoteStorageWebfinger RemoteStorage (Result Http.Error String)
+    | SyncUserData
       -----------------------------------------
       -- Brain
       -----------------------------------------
