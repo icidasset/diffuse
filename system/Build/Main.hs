@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Time.Clock.POSIX (getPOSIXTime)
 import Flow
 import Protolude hiding (list)
 import Renderers
@@ -9,9 +10,11 @@ import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities
 
 import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Lazy as BSL (toStrict)
 import qualified Data.Char as Char
 import qualified Data.HashMap.Strict as HashMap (fromList)
 import qualified Data.List as List
+import qualified Data.Text.Encoding as Text
 import qualified Data.Text.IO as Text
 
 
@@ -30,7 +33,9 @@ main =
 
         -- Make a file tree
         -- and then write to disk
-        write "../build" dictionary
+        dictionary
+            |> insertTree
+            |> write "../build"
 
 
 list :: [Char] -> IO Dictionary
@@ -39,7 +44,7 @@ list pattern =
 
 
 
--- Sequences
+-- SEQUENCES
 
 
 data Sequence
@@ -74,7 +79,7 @@ sequences = lsequence
 
 
 
--- Flows
+-- FLOWS
 
 
 flow :: Dependencies -> (Sequence, Dictionary) -> Dictionary
@@ -89,8 +94,14 @@ flow _ (Favicons, dict)       = dict
 flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
 flow _ (Hosting, dict)        = dict
 flow _ (Images, dict)         = prefixDirname "images/" dict
-flow _ (Js, dict)             = dict |> map lowerCasePath
 flow _ (Manifest, dict)       = dict
+
+
+{-| Javascript -}
+flow x (Js, dict) =
+    dict
+        |> map lowerCasePath
+        |> insertVersion (x !~> "timestamp")
 
 
 {-| About Pages -}
@@ -108,8 +119,8 @@ flow x (AboutPages, dict) =
 
 
 
--- Additional IO
--- Flow dependencies
+-- ADDITIONAL IO
+-- FLOW DEPENDENCIES
 
 
 type Dependencies = Aeson.Object
@@ -117,15 +128,62 @@ type Dependencies = Aeson.Object
 
 dependencies :: IO Dependencies
 dependencies = do
-    aboutLayout <- Text.readFile "src/Static/About/Layout.html"
+    aboutLayout     <- Text.readFile "src/Static/About/Layout.html"
+    timestamp       <- fmap show unixTime :: IO Text
 
     return $ HashMap.fromList
-        [ ("aboutLayout", Aeson.toJSON aboutLayout)
+        [ ( "aboutLayout", Aeson.toJSON aboutLayout )
+        , ( "timestamp", Aeson.toJSON timestamp )
         ]
 
 
+-- INSERT
 
--- Utilities
+
+insertTree :: Dictionary -> Dictionary
+insertTree dict =
+    let
+        treeContent =
+            dict
+                |> List.map localPath
+                |> Aeson.encode
+                |> BSL.toStrict
+
+        defs =
+            case headMay dict of
+                Just def ->
+                    def
+                        |> forkDefinition "tree.json"
+                        |> wrap
+                        |> setContent treeContent
+
+                Nothing ->
+                    []
+    in
+    dict <> defs
+
+
+insertVersion :: Text -> Dictionary -> Dictionary
+insertVersion version dict =
+    let
+        versionContent =
+            Text.encodeUtf8 ("self.VERSION = \"" <> version <> "\"")
+
+        defs =
+            case headMay dict of
+                Just def ->
+                    def
+                        |> forkDefinition "version.js"
+                        |> wrap
+                        |> setContent versionContent
+
+                Nothing ->
+                        []
+    in
+    dict <> defs
+
+
+-- COMMON
 
 
 lowerCasePath :: Definition -> Definition
@@ -136,3 +194,13 @@ lowerCasePath def =
             |> List.map Char.toLower
         )
         def
+
+
+unixTime :: IO Int
+unixTime =
+    fmap floor getPOSIXTime
+
+
+wrap :: a -> [a]
+wrap a =
+    [a]

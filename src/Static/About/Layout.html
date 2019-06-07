@@ -38,5 +38,13 @@
   </div>
 
 
+  <!-- Service worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/workers/service.js")
+    }
+  </script>
+
+
 </body>
 </html>

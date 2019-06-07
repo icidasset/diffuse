@@ -94,6 +94,13 @@
   <!-- Initialize Boot Procedure -->
   <script src="/index.js"></script>
 
+  <!-- Service worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("workers/service.js")
+    }
+  </script>
+
 
 </body>
 </html>
