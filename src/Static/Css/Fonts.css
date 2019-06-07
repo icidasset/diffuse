@@ -70,6 +70,15 @@
 }
 
 
+@font-face {
+  font-family: "Source Sans Pro";
+  src: url("fonts/sourcesanspro/black.woff2") format("woff2");
+       font-weight: 900;
+       font-stretch: normal;
+       font-style: normal;
+}
+
+
 
 /* Montserrat */
 

@@ -106,6 +106,14 @@ update msg model =
                 |> returnWithModel model
 
         -----------------------------------------
+        -- Authentication
+        -----------------------------------------
+        RedirectToBlockstackSignIn origin ->
+            origin
+                |> Brain.Ports.redirectToBlockstackSignIn
+                |> returnWithModel model
+
+        -----------------------------------------
         -- Children
         -----------------------------------------
         AuthenticationMsg Authentication.PerformSignOut ->
@@ -325,42 +333,55 @@ subscriptions model =
 
 alien : Alien.Event -> Msg
 alien event =
-    case event.error of
-        Nothing ->
-            translateAlienData event
+    case ( event.error, Alien.tagFromString event.tag ) of
+        ( Nothing, Just tag ) ->
+            translateAlienData tag event.data
 
-        Just err ->
-            translateAlienError event err
+        ( Just err, Just tag ) ->
+            translateAlienError tag err
+
+        _ ->
+            Bypass
 
 
-translateAlienData : Alien.Event -> Msg
-translateAlienData event =
-    case Alien.tagFromString event.tag of
-        Just Alien.AuthAnonymous ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
+translateAlienData : Alien.Tag -> Json.Value -> Msg
+translateAlienData tag data =
+    case tag of
+        Alien.AuthAnonymous ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
 
-        Just Alien.AuthEnclosedData ->
-            AuthenticationMsg (Authentication.EnclosedDataRetrieved event.data)
+        Alien.AuthEnclosedData ->
+            AuthenticationMsg (Authentication.EnclosedDataRetrieved data)
 
-        Just Alien.AuthIpfs ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
+        Alien.AuthIpfs ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
 
-        Just Alien.AuthMethod ->
-            AuthenticationMsg (Authentication.MethodRetrieved event.data)
+        Alien.AuthMethod ->
+            AuthenticationMsg (Authentication.MethodRetrieved data)
 
-        Just Alien.AuthRemoteStorage ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
+        Alien.AuthRemoteStorage ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
 
-        Just Alien.AuthTextile ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved event.data)
+        Alien.AuthTextile ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
 
-        Just Alien.FabricateSecretKey ->
+        Alien.FabricateSecretKey ->
             AuthenticationMsg Authentication.SecretKeyFabricated
 
-        Just Alien.ProcessSources ->
+        Alien.SearchTracks ->
+            data
+                |> Json.decodeValue Json.string
+                |> Result.withDefault ""
+                |> Tracks.Search
+                |> TracksMsg
+
+        -----------------------------------------
+        -- From UI
+        -----------------------------------------
+        Alien.ProcessSources ->
             -- Only proceed to the processing if we got all the necessary data,
             -- otherwise report an error in the UI.
-            case Json.decodeValue Processing.argumentsDecoder event.data of
+            case Json.decodeValue Processing.argumentsDecoder data of
                 Ok arguments ->
                     arguments
                         |> Processing.Process
@@ -369,47 +390,46 @@ translateAlienData event =
                 Err err ->
                     report Alien.ProcessSources (Json.errorToString err)
 
-        Just Alien.SaveEnclosedUserData ->
-            AuthenticationMsg (Authentication.SaveEnclosedData event.data)
-
-        Just Alien.SaveFavourites ->
-            SaveFavourites event.data
-
-        Just Alien.SavePlaylists ->
-            SavePlaylists event.data
-
-        Just Alien.SaveSettings ->
-            SaveSettings event.data
-
-        Just Alien.SaveSources ->
-            SaveSources event.data
-
-        Just Alien.SaveTracks ->
-            SaveTracks event.data
-
-        Just Alien.SearchTracks ->
-            event.data
-                |> Json.decodeValue Json.string
+        Alien.RedirectToBlockstackSignIn ->
+            data
+                |> Json.decodeValue (Json.field "origin" Json.string)
                 |> Result.withDefault ""
-                |> Tracks.Search
-                |> TracksMsg
+                |> RedirectToBlockstackSignIn
 
-        Just Alien.SignIn ->
-            AuthenticationMsg (Authentication.PerformSignIn event.data)
+        Alien.SaveEnclosedUserData ->
+            AuthenticationMsg (Authentication.SaveEnclosedData data)
 
-        Just Alien.SignOut ->
+        Alien.SaveFavourites ->
+            SaveFavourites data
+
+        Alien.SavePlaylists ->
+            SavePlaylists data
+
+        Alien.SaveSettings ->
+            SaveSettings data
+
+        Alien.SaveSources ->
+            SaveSources data
+
+        Alien.SaveTracks ->
+            SaveTracks data
+
+        Alien.SignIn ->
+            AuthenticationMsg (Authentication.PerformSignIn data)
+
+        Alien.SignOut ->
             AuthenticationMsg Authentication.PerformSignOut
 
-        Just Alien.ToCache ->
-            case Json.decodeValue Alien.hostDecoder event.data of
+        Alien.ToCache ->
+            case Json.decodeValue Alien.hostDecoder data of
                 Ok val ->
                     Core.ToCache val
 
                 Err err ->
                     report Alien.ToCache (Json.errorToString err)
 
-        Just Alien.UpdateEncryptionKey ->
-            case Json.decodeValue Json.string event.data of
+        Alien.UpdateEncryptionKey ->
+            case Json.decodeValue Json.string data of
                 Ok passphrase ->
                     AuthenticationMsg (Authentication.FabricateSecretKey passphrase)
 
@@ -420,31 +440,28 @@ translateAlienData event =
             Bypass
 
 
-translateAlienError : Alien.Event -> String -> Msg
-translateAlienError event err =
-    case Alien.tagFromString event.tag of
-        Just Alien.AuthAnonymous ->
+translateAlienError : Alien.Tag -> String -> Msg
+translateAlienError tag err =
+    case tag of
+        Alien.AuthAnonymous ->
             reportAuthError Alien.AuthAnonymous err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
 
-        Just Alien.AuthIpfs ->
+        Alien.AuthIpfs ->
             reportAuthError Alien.AuthIpfs err "Something went wrong regarding the IPFS storage. Maybe you used the wrong passphrase, or your IPFS node is offline?"
 
-        Just Alien.AuthRemoteStorage ->
+        Alien.AuthRemoteStorage ->
             reportAuthError Alien.AuthRemoteStorage err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
 
-        Just Alien.AuthTextile ->
+        Alien.AuthTextile ->
             reportAuthError Alien.AuthTextile err "Something went wrong regarding Textile. Maybe Textile isn't running?"
 
-        Just tag ->
+        _ ->
             case err of
                 "db is undefined" ->
                     report tag "Can't connect to the browser's IndexedDB. FYI, this is __not supported in Firefox's private mode__."
 
                 _ ->
                     report tag err
-
-        Nothing ->
-            Bypass
 
 
 reportAuthError : Alien.Tag -> String -> String -> Msg

@@ -63,7 +63,7 @@ doc-tests:
 install:
 	@echo "> Downloading & minifying dependencies"
 	@mkdir -p $(VENDOR_DIR)
-	@curl https://unpkg.com/blockstack@19.1.0/dist/blockstack.js -o $(VENDOR_DIR)/blockstack.min.js
+	@curl https://unpkg.com/blockstack@19.2.1/dist/blockstack.js -o $(VENDOR_DIR)/blockstack.min.js
 	@curl https://unpkg.com/lunr@2.3.6/lunr.js -o $(VENDOR_DIR)/lunr.js
 	@curl https://unpkg.com/remotestoragejs@1.2.2/release/remotestorage.js -o $(VENDOR_DIR)/remotestorage.min.js
 	@curl https://unpkg.com/fast-text-encoding@1.0.0/text.min.js -o $(VENDOR_DIR)/text-encoding-polyfill.min.js

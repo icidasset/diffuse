@@ -86,11 +86,63 @@ function isLocalHost(url) {
 
 
 
+// Blockstack
+// ----------
+
+let bl
+
+
+function bl0ckst4ck(appDomain) {
+  if (!bl) {
+    importScripts("/vendor/blockstack.min.js")
+
+    bl = new blockstack.UserSession({
+      options: {
+        appConfig: new blockstack.AppConfig({
+          appDomain: appDomain
+        }),
+        sessionStore: BLOCKSTACK_SESSION_STORE
+      }
+    })
+  }
+
+  return bl
+}
+
+
+const BLOCKSTACK_SESSION_STORE = {
+  key: "AUTH_BLOCKSTACK_SESSION",
+  getSessionData() { return fromCache(this.key) },
+  setSessionData(data) { return toCache(this.key, data) },
+  deleteSessionData() { return removeCache(this.key) }
+}
+
+
+app.ports.redirectToBlockstackSignIn.subscribe(event => {
+  const session = bl0ckst4ck(event.data)
+  // TODO
+})
+
+
+app.ports.requestBlockstack.subscribe(event => {
+  const session = bl0ckst4ck(event.data.appDomain)
+  // TODO
+})
+
+
+app.ports.toBlockstack.subscribe(event => {
+  const json = JSON.stringify(event.data.data)
+  const session = bl0ckst4ck(event.data.appDomain)
+  // TODO
+})
+
+
+
 // Cache
 // -----
 
 app.ports.removeCache.subscribe(event => {
-  deleteFromIndex({ key: event.tag }).catch(reportError(event))
+  removeCache(event.tag).catch(reportError(event))
 })
 
 
@@ -131,6 +183,11 @@ function fromCache(key) {
     return getFromIndex({ key: key })
 
   }
+}
+
+
+function removeCache(key) {
+  return deleteFromIndex({ key: key })
 }
 
 

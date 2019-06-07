@@ -15,10 +15,13 @@ import UI.Page exposing (Page)
 
 
 type Reply
-    = ExternalAuth Authentication.Method String
-    | GoToPage Page
+    = GoToPage Page
     | StartedDragging
     | ToggleLoadingScreen Switch
+      -----------------------------------------
+      -- Authentication
+      -----------------------------------------
+    | ExternalAuth Authentication.Method String
       -----------------------------------------
       -- Context Menu
       -----------------------------------------

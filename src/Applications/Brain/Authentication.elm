@@ -161,6 +161,12 @@ update msg model =
         RetrieveHypaethralData ->
             case model.method of
                 -- 🚀
+                Just Blockstack ->
+                    Alien.AuthBlockstack
+                        |> Alien.trigger
+                        |> Ports.requestBlockstack
+                        |> Return.commandWithModel model
+
                 Just (Ipfs { apiOrigin }) ->
                     [ ( "apiOrigin", Json.string apiOrigin )
                     ]
@@ -238,6 +244,12 @@ update msg model =
         SaveHypaethralData json ->
             case model.method of
                 -- 🚀
+                Just Blockstack ->
+                    json
+                        |> Alien.broadcast Alien.AuthBlockstack
+                        |> Ports.toBlockstack
+                        |> Return.commandWithModel model
+
                 Just (Ipfs { apiOrigin }) ->
                     [ ( "apiOrigin", Json.string apiOrigin )
                     , ( "data", json )

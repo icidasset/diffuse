@@ -133,6 +133,7 @@ The user interface should be self explanatory, but there are a few "hidden" feat
 - You can select multiple tracks using the SHIFT key and then add that selection
   to the queue or a playlist by right clicking on the selection (desktop only).
 - You can reorder playlist tracks with drag-and-drop.
+- Double tap on a EQ setting to reset it to its default value.
 
 ### Search
 

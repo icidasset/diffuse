@@ -128,6 +128,7 @@ type Msg
     | SignIn Method
     | SignInWithPassphrase Method String
     | SignedIn Method
+    | TriggerExternalAuth Method String
       -----------------------------------------
       -- Encryption
       -----------------------------------------
@@ -192,10 +193,7 @@ update msg model =
             )
 
         GetStarted ->
-            ( Unauthenticated
-            , Cmd.none
-            , []
-            )
+            return Unauthenticated
 
         ShowMoreOptions mouseEvent ->
             ( model
@@ -246,6 +244,9 @@ update msg model =
 
         SignedIn method ->
             return (Authenticated method)
+
+        TriggerExternalAuth method string ->
+            returnReplyWithModel model (ExternalAuth method string)
 
         -----------------------------------------
         -- Encryption
@@ -640,7 +641,7 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = Bypass
+            { action = Bypass -- TriggerExternalAuth Blockstack ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.blockstackLogo
             , infoLink = Just "https://blockstack.org"
             , isLast = False

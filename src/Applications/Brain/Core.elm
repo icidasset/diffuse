@@ -40,6 +40,10 @@ type Msg
     | NotSoFast (Debouncer.Msg Msg)
     | ToCache Alien.Event
       -----------------------------------------
+      -- Authentication
+      -----------------------------------------
+    | RedirectToBlockstackSignIn String
+      -----------------------------------------
       -- Children
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg

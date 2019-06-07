@@ -675,6 +675,27 @@ updateWithModel model msg =
 translateReply : Reply -> Model -> ( Model, Cmd Msg )
 translateReply reply model =
     case reply of
+        GoToPage page ->
+            page
+                |> ChangeUrlUsingPage
+                |> updateWithModel model
+
+        StartedDragging ->
+            return { model | isDragging = True }
+
+        Reply.ToggleLoadingScreen state ->
+            update (Core.ToggleLoadingScreen state) model
+
+        -----------------------------------------
+        -- Authentication
+        -----------------------------------------
+        ExternalAuth Authentication.Blockstack _ ->
+            [ ( "origin", Json.Encode.string (Common.urlOrigin model.url) ) ]
+                |> Json.Encode.object
+                |> Alien.broadcast Alien.RedirectToBlockstackSignIn
+                |> Ports.toBrain
+                |> returnWithModel model
+
         ExternalAuth (Authentication.RemoteStorage _) input ->
             input
                 |> Authentication.RemoteStorage.parseUserAddress
@@ -689,17 +710,6 @@ translateReply reply model =
 
         ExternalAuth _ _ ->
             return model
-
-        GoToPage page ->
-            page
-                |> ChangeUrlUsingPage
-                |> updateWithModel model
-
-        StartedDragging ->
-            return { model | isDragging = True }
-
-        Reply.ToggleLoadingScreen state ->
-            update (Core.ToggleLoadingScreen state) model
 
         -----------------------------------------
         -- Context Menu

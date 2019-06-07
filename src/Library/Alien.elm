@@ -25,6 +25,7 @@ type alias Event =
 
 type Tag
     = AuthAnonymous
+    | AuthBlockstack
     | AuthEnclosedData
     | AuthIpfs
     | AuthMethod
@@ -35,6 +36,7 @@ type Tag
     | SearchTracks
       -- from UI
     | ProcessSources
+    | RedirectToBlockstackSignIn
     | SaveEnclosedUserData
     | SaveFavourites
     | SavePlaylists
@@ -62,6 +64,7 @@ enum : Enum Tag
 enum =
     Enum.create
         [ ( "AUTH_ANONYMOUS", AuthAnonymous )
+        , ( "AUTH_BLOCKSTACK", AuthBlockstack )
         , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
         , ( "AUTH_IPFS", AuthIpfs )
         , ( "AUTH_METHOD", AuthMethod )
@@ -75,6 +78,7 @@ enum =
         -- From UI
         -----------------------------------------
         , ( "PROCESS_SOURCES", ProcessSources )
+        , ( "REDIRECT_TO_BLOCKSTACK_SIGN_IN", RedirectToBlockstackSignIn )
         , ( "SAVE_ENCLOSED_USER_DATA", SaveEnclosedUserData )
         , ( "SAVE_FAVOURITES", SaveFavourites )
         , ( "SAVE_PLAYLISTS", SavePlaylists )

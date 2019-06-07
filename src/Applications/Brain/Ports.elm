@@ -1,4 +1,4 @@
-port module Brain.Ports exposing (fabricateSecretKey, fromAlien, receiveSearchResults, receiveTags, removeCache, removeIpfs, requestCache, requestIpfs, requestRemoteStorage, requestSearch, requestTags, requestTextile, toCache, toIpfs, toRemoteStorage, toTextile, toUI, updateSearchIndex)
+port module Brain.Ports exposing (fabricateSecretKey, fromAlien, receiveSearchResults, receiveTags, redirectToBlockstackSignIn, removeCache, requestBlockstack, requestCache, requestIpfs, requestRemoteStorage, requestSearch, requestTags, requestTextile, toBlockstack, toCache, toIpfs, toRemoteStorage, toTextile, toUI, updateSearchIndex)
 
 import Alien
 import Json.Encode as Json
@@ -12,10 +12,13 @@ import Sources.Processing exposing (ContextForTags)
 port fabricateSecretKey : Alien.Event -> Cmd msg
 
 
+port redirectToBlockstackSignIn : String -> Cmd msg
+
+
 port removeCache : Alien.Event -> Cmd msg
 
 
-port removeIpfs : Alien.Event -> Cmd msg
+port requestBlockstack : Alien.Event -> Cmd msg
 
 
 port requestCache : Alien.Event -> Cmd msg
@@ -34,6 +37,9 @@ port requestTags : ContextForTags -> Cmd msg
 
 
 port requestTextile : Alien.Event -> Cmd msg
+
+
+port toBlockstack : Alien.Event -> Cmd msg
 
 
 port toCache : Alien.Event -> Cmd msg

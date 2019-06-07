@@ -66,6 +66,9 @@ index model =
           , lineBreak
           , text "PS. You're storing the data for this application "
           , case Authentication.extractMethod model.authentication of
+                Just Blockstack ->
+                    text "on Blockstack."
+
                 Just (Ipfs _) ->
                     text "on IPFS."
 
@@ -83,6 +86,9 @@ index model =
 
           -- Change passphrase (if applicable)
           , case Authentication.extractMethod model.authentication of
+                Just Blockstack ->
+                    nothing
+
                 Just (Ipfs i) ->
                     changePassphrase (Ipfs i)
 
