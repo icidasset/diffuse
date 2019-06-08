@@ -1086,9 +1086,13 @@ subscriptions model =
                     |> Debouncer.provideInput
                     |> Debounce
             )
-        , Ports.reportError (Notifications.error >> ShowNotification)
+
+        --
+        , Ports.showErrorNotification (Notifications.error >> ShowNotification)
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
         , Ports.setIsOnline SetIsOnline
+
+        --
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]
