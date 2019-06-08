@@ -927,7 +927,7 @@ translateReply reply model =
         ProcessSources ->
             let
                 notification =
-                    Notifications.warning "Processing sources …"
+                    Notifications.stickyWarning "Processing sources …"
 
                 notificationId =
                     Notifications.id notification
