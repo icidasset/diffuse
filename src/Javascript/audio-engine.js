@@ -211,6 +211,13 @@ function audioErrorEvent(event) {
       break
     case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
       console.error("The audio not be loaded, either because the server or network failed or because the format is not supported.")
+
+      app.ports.reportError.send(
+        navigator.onLine
+          ? "I can't play this track because of a network error"
+          : "I can't play this track because we're offline"
+      )
+
       break
     default:
       console.error("An unknown error occurred.")
