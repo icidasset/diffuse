@@ -113,7 +113,7 @@ update msg model =
                         |> Dict.fetch "error" "missingError"
                         |> ShowStickyErrorNotificationWithCode
                             ("Could not process the _"
-                                ++ Dict.fetch "sourceName\n                                " "" dict
+                                ++ Dict.fetch "sourceName" "" dict
                                 ++ "_ source. I got the following response from the source:"
                             )
                         |> returnReplyWithModel

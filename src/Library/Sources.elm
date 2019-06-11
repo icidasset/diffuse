@@ -45,6 +45,7 @@ type Service
     | Dropbox
     | Google
     | Ipfs
+    | WebDav
 
 
 

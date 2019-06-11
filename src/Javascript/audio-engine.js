@@ -145,9 +145,8 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds) {
   const timeUpdateFunc = bind(audioTimeUpdateEvent)
 
   audio = new window.Audio()
-  audio.setAttribute("crossOrigin", "anonymous")
   audio.setAttribute("crossorigin", "anonymous")
-  audio.setAttribute("preload", "none")
+  audio.setAttribute("preload", "auto")
   audio.setAttribute("src", queueItem.url)
   audio.setAttribute("rel", queueItem.trackId)
   audio.setAttribute("data-timestamp", timestampInMilliseconds)
@@ -190,7 +189,10 @@ function preloadAudioElement(orchestrion, queueItem) {
 // ------------
 
 function audioErrorEvent(event) {
-  console.error(`Audio error for '${ audioElementTrackId(event.target) }'`)
+  console.error(
+    `Audio error for '${ audioElementTrackId(event.target) }': ` +
+    (event.target.error.message || "")
+  )
 
   switch (event.target.error.code) {
     case event.target.error.MEDIA_ERR_ABORTED:

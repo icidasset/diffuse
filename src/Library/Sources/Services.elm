@@ -12,6 +12,7 @@ import Sources.Services.AzureFile as AzureFile
 import Sources.Services.Dropbox as Dropbox
 import Sources.Services.Google as Google
 import Sources.Services.Ipfs as Ipfs
+import Sources.Services.WebDav as WebDav
 import Time
 
 
@@ -40,6 +41,9 @@ initialData service =
         Google ->
             Google.initialData
 
+        WebDav ->
+            WebDav.initialData
+
 
 makeTrackUrl : Service -> Time.Posix -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl service =
@@ -61,6 +65,9 @@ makeTrackUrl service =
 
         Google ->
             Google.makeTrackUrl
+
+        WebDav ->
+            WebDav.makeTrackUrl
 
 
 makeTree :
@@ -90,6 +97,9 @@ makeTree service =
         Google ->
             Google.makeTree
 
+        WebDav ->
+            WebDav.makeTree
+
 
 parseErrorResponse : Service -> String -> String
 parseErrorResponse service =
@@ -111,6 +121,9 @@ parseErrorResponse service =
 
         Google ->
             Google.parseErrorResponse
+
+        WebDav ->
+            WebDav.parseErrorResponse
 
 
 parsePreparationResponse : Service -> String -> SourceData -> Marker -> PrepationAnswer Marker
@@ -134,6 +147,9 @@ parsePreparationResponse service =
         Google ->
             Google.parsePreparationResponse
 
+        WebDav ->
+            WebDav.parsePreparationResponse
+
 
 parseTreeResponse : Service -> String -> Marker -> TreeAnswer Marker
 parseTreeResponse service =
@@ -156,6 +172,9 @@ parseTreeResponse service =
         Google ->
             Google.parseTreeResponse
 
+        WebDav ->
+            WebDav.parseTreeResponse
+
 
 postProcessTree : Service -> List String -> List String
 postProcessTree service =
@@ -177,6 +196,9 @@ postProcessTree service =
 
         Google ->
             Google.postProcessTree
+
+        WebDav ->
+            WebDav.postProcessTree
 
 
 prepare :
@@ -206,6 +228,9 @@ prepare service =
         Google ->
             Google.prepare
 
+        WebDav ->
+            WebDav.prepare
+
 
 properties : Service -> List Property
 properties service =
@@ -227,6 +252,9 @@ properties service =
 
         Google ->
             Google.properties
+
+        WebDav ->
+            WebDav.properties
 
 
 
@@ -254,6 +282,9 @@ keyToType str =
         "Google" ->
             Just Google
 
+        "WebDav" ->
+            Just WebDav
+
         _ ->
             Nothing
 
@@ -279,6 +310,9 @@ typeToKey service =
         Google ->
             "Google"
 
+        WebDav ->
+            "WebDav"
+
 
 {-| Service labels.
 Maps a service key to a label.
@@ -291,4 +325,5 @@ labels =
     , ( typeToKey Dropbox, "Dropbox" )
     , ( typeToKey Google, "Google Drive" )
     , ( typeToKey Ipfs, "IPFS" )
+    , ( typeToKey WebDav, "WebDAV (Experimental)" )
     ]

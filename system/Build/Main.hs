@@ -101,6 +101,7 @@ flow _ (Manifest, dict)       = dict
 flow x (Js, dict) =
     dict
         |> map lowerCasePath
+        |> rename "workers/service.js" "service-worker.js"
         |> insertVersion (x !~> "timestamp")
 
 

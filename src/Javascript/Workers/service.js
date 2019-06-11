@@ -55,6 +55,23 @@ self.addEventListener("fetch", event => {
       .then(r => r || fetch(event.request))
 
     event.respondWith(promise)
+
+  } else if (event.request.url.includes("service_worker_authentication")) {
+    const [_, token] = event.request.url.split("service_worker_authentication=")
+    const newHeaders = new Headers()
+
+    for (const h of event.request.headers.entries()) {
+      switch (h[0]) {
+        case "range":
+          newHeaders.append(h[0], h[1])
+      }
+    }
+
+    newHeaders.set("Authorization", "Basic " + token)
+
+    const newRequest = new Request(event.request, { headers: newHeaders })
+    event.respondWith(fetch(newRequest))
+
   }
 })
 
