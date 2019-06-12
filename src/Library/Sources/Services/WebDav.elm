@@ -121,7 +121,7 @@ makeTree srcData marker _ resultMsg =
         auth =
             "Basic " ++ Base64.encode (username ++ ":" ++ password)
     in
-    Http.riskyRequest
+    Http.request
         { method = "PROPFIND"
         , headers = [ Http.header "Authorization" auth, Http.header "Depth" "1" ]
         , url = url { addAuth = False } srcData directory
