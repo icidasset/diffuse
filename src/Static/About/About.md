@@ -69,57 +69,91 @@ Diffuse locates all the music files on the given services, extracts the metadata
 
 There's only one thing you need to do yourself so that your service will work with the application, and that's setting up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) (Cross-Origin Resource Sharing). Here are the instructions you'll need for each service:
 
+<div id="CORS__S3" />
+
 #### Amazon S3
+
+*You can find the CORS configuration editor under the "Permissions" tab, on the S3 AWS Console.*
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
 <CORSRule>
     <AllowedOrigin>*</AllowedOrigin>
-    <AllowedMethod>HEAD</AllowedMethod>
     <AllowedMethod>GET</AllowedMethod>
+    <AllowedMethod>HEAD</AllowedMethod>
     <MaxAgeSeconds>31536000</MaxAgeSeconds>
-    <ExposeHeader>Accept-Ranges</ExposeHeader>
-    <ExposeHeader>Content-Encoding</ExposeHeader>
     <ExposeHeader>Content-Length</ExposeHeader>
-    <ExposeHeader>Content-Range</ExposeHeader>
-    <AllowedHeader>If-Modified-Since</AllowedHeader>
-    <AllowedHeader>Origin</AllowedHeader>
+    <ExposeHeader>Content-Type</ExposeHeader>
     <AllowedHeader>Range</AllowedHeader>
 </CORSRule>
 </CORSConfiguration>
 ```
 
+<div id="CORS__Dropbox" />
+
 #### Dropbox
 
 _Not necessary._
 
-#### Locally
+<div id="CORS__Google-Drive" />
+
+#### Google Drive
 
 _Not necessary._
 
+<div id="CORS__IPFS" />
+
 #### IPFS
+
+*Add the domain, of the app, with the protocol to the __list of allowed origins__. For example:*
 
 ```shell
 ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh"]'
 ```
 
+<div id="CORS__Azure" />
+
 #### Microsoft Azure Storage
 
-```xml
-<Cors>
-  <CorsRule>
-    <AllowedOrigins>*</AllowedOrigins>
-    <AllowedMethods>HEAD,GET</AllowedMethods>
-    <AllowedHeaders>If-Modified-Since,Origin,Range</AllowedHeaders>
-    <ExposedHeaders>Accept-Ranges,Content-Encoding,Content-Length,Content-Range</ExposedHeaders>
-</CorsRule>
-<Cors>
+*You can find the CORS configuration under the "Settings -> CORS".  
+Then fill in the following in the input boxes (left to right):*
+
 ```
+ALLOWED ORIGINS       *
+ALLOWED METHODS       GET, HEAD
+ALLOWED HEADERS       Range
+EXPOSED HEADERS       Content-Length, Content-Range
+MAX AGE               0
+```
+
+<div id="CORS__WebDAV" />
 
 #### WebDAV
 
-_Not necessary._
+*__Depends on your WebDAV server.__  
+Example setup for Henrique Dias's [WebDAV server](https://github.com/hacdias/webdav):*
+
+```yaml
+cors:
+  enabled: true
+  credentials: true
+
+  allowed_headers:
+    - Authorization
+    - Content-Type
+    - Depth
+    - Range
+  allowed_methods:
+    - GET
+    - HEAD
+    - PROPFIND
+  allowed_hosts:
+    - https://diffuse.sh
+  exposed_headers:
+    - Content-Length
+    - Content-Type
+```
 
 
 <div id="UI" />

@@ -47,10 +47,10 @@ Will be used for the forms.
 -}
 properties : List Property
 properties =
-    [ { key = "authCode"
-      , label = "Auth Code"
-      , placeholder = "..."
-      , password = True
+    [ { key = "folderId"
+      , label = "Folder Id (Optional)"
+      , placeholder = defaults.folderId
+      , password = False
       }
     , { key = "clientId"
       , label = "Client Id (Google Console)"
@@ -62,11 +62,6 @@ properties =
       , placeholder = defaults.clientSecret
       , password = False
       }
-    , { key = "folderId"
-      , label = "Folder Id (Optional)"
-      , placeholder = defaults.folderId
-      , password = False
-      }
     ]
 
 
@@ -75,8 +70,7 @@ properties =
 initialData : SourceData
 initialData =
     Dict.fromList
-        [ ( "authCode", "" )
-        , ( "clientId", defaults.clientId )
+        [ ( "clientId", defaults.clientId )
         , ( "clientSecret", defaults.clientSecret )
         , ( "folderId", defaults.folderId )
         , ( "name", defaults.name )

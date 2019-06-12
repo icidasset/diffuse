@@ -2,11 +2,12 @@ module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, e
 
 import Browser.Navigation as Nav
 import Chunky exposing (..)
+import Color
 import Conditional exposing (..)
 import Dict
 import Dict.Ext as Dict
 import Html.Styled as Html exposing (Html, strong, text)
-import Html.Styled.Attributes exposing (for, name, placeholder, type_, value)
+import Html.Styled.Attributes exposing (for, name, placeholder, required, selected, style, type_, value)
 import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
@@ -214,13 +215,25 @@ newWhere { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\h -> form [ UI.Kit.canisterForm h ])
+    , (\h ->
+        form TakeStep
+            [ UI.Kit.canisterForm h ]
+      )
         [ UI.Kit.h2 "Where is your music stored?"
 
         -- Dropdown
         -----------
-        , Services.labels
-            |> List.map (\( k, l ) -> Html.option [ value k ] [ text l ])
+        , let
+            contextServiceKey =
+                Services.typeToKey context.service
+          in
+          Services.labels
+            |> List.map
+                (\( k, l ) ->
+                    Html.option
+                        [ value k, selected (contextServiceKey == k) ]
+                        [ text l ]
+                )
             |> select SelectService
 
         -- Button
@@ -229,7 +242,7 @@ newWhere { context } =
             [ T.mt4, T.pt2 ]
             [ UI.Kit.button
                 IconOnly
-                TakeStep
+                Bypass
                 (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
             ]
         ]
@@ -251,8 +264,84 @@ newHow { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\h -> form [ chunk [ T.tl, T.w_100 ] [ UI.Kit.canister h ] ])
+    , (\h ->
+        form TakeStep
+            [ chunk
+                [ T.tl, T.w_100 ]
+                [ UI.Kit.canister h ]
+            ]
+      )
         [ UI.Kit.h3 "Where exactly?"
+
+        -- Note
+        -------
+        , case context.service of
+            AmazonS3 ->
+                nothing
+
+            AzureBlob ->
+                nothing
+
+            AzureFile ->
+                nothing
+
+            Dropbox ->
+                howNote
+                    [ inline
+                        [ T.fw6 ]
+                        [ text "If you don't know what any of this is, "
+                        , text "carry on to the next screen."
+                        ]
+                    , text " Changing the app key allows you to use your own Dropbox app."
+                    ]
+
+            Google ->
+                howNote
+                    [ inline
+                        [ T.fw6 ]
+                        [ text "If you don't know what any of this is, "
+                        , text "carry on to the next screen."
+                        ]
+                    , text " Changing the client stuff allows you to use your own Google OAuth client."
+                    ]
+
+            Ipfs ->
+                howNote
+                    [ inline [ T.fw6 ] [ text "This is using the default gateway address." ]
+                    , lineBreak
+                    , text " If you use a different gateway, please change it here."
+                    , lineBreak
+                    , text " You can find your gateway address on the IPFS Web UI."
+                    ]
+
+            WebDav ->
+                howNote
+                    [ inline
+                        [ T.fw6 ]
+                        [ UI.Kit.inlineIcon Icons.warning
+                        , text "This app requires a proper implementation of "
+                        , UI.Kit.link
+                            { label = "CORS"
+                            , url = "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"
+                            }
+                        , text " on the server side."
+                        ]
+                    , lineBreak
+                    , text " WebDAV servers usually don't implement"
+                    , text " CORS properly, if at all."
+                    , lineBreak
+                    , text " Some servers, like "
+                    , UI.Kit.link
+                        { label = "this one"
+                        , url = "https://github.com/hacdias/webdav"
+                        }
+                    , text ", do. You can find the configuration for that server "
+                    , UI.Kit.link
+                        { label = "here"
+                        , url = "/about#CORS__WebDAV"
+                        }
+                    , text "."
+                    ]
 
         -- Fields
         ---------
@@ -282,11 +371,16 @@ newHow { context } =
             [ T.mt3, T.tc ]
             [ UI.Kit.button
                 IconOnly
-                TakeStep
+                Bypass
                 (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
             ]
         ]
     ]
+
+
+howNote : List (Html Msg) -> Html Msg
+howNote =
+    chunk [ T.f6, T.i, T.lh_copy, T.mb4, T.measure_wide ]
 
 
 newBy : Model -> List (Html Msg)
@@ -304,7 +398,10 @@ newBy { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\h -> form [ UI.Kit.canisterForm h ])
+    , (\h ->
+        form AddSource
+            [ UI.Kit.canisterForm h ]
+      )
         [ UI.Kit.h2 "One last thing"
         , UI.Kit.label [] "What are we going to call this source?"
 
@@ -326,24 +423,53 @@ newBy { context } =
         -- Note
         -------
         , chunk
-            [ T.f6, T.flex, T.items_center, T.justify_center, T.lh_title, T.mt5, T.o_50 ]
-            [ UI.Kit.inlineIcon Icons.warning
-            , strong
-                []
-                [ text "Make sure CORS is enabled" ]
-            ]
-        , chunk
-            [ T.f6, T.lh_title, T.mb4, T.mt1, T.o_50 ]
-            [ text "You can find the instructions over "
-            , UI.Kit.link { label = "here", url = "/about#CORS" }
-            ]
+            [ T.mt5 ]
+            (case context.service of
+                AmazonS3 ->
+                    corsWarning "CORS__S3"
+
+                AzureBlob ->
+                    corsWarning "CORS__Azure"
+
+                AzureFile ->
+                    corsWarning "CORS__Azure"
+
+                Dropbox ->
+                    []
+
+                Google ->
+                    []
+
+                Ipfs ->
+                    corsWarning "CORS__IPFS"
+
+                WebDav ->
+                    corsWarning "CORS__WebDAV"
+            )
 
         -- Button
         ---------
         , UI.Kit.button
             Normal
-            AddSource
+            Bypass
             (text "Add source")
+        ]
+    ]
+
+
+corsWarning : String -> List (Html Msg)
+corsWarning id =
+    [ chunk
+        [ T.f6, T.flex, T.items_center, T.justify_center, T.lh_title, T.o_50 ]
+        [ UI.Kit.inlineIcon Icons.warning
+        , strong
+            []
+            [ text "Make sure CORS is enabled" ]
+        ]
+    , chunk
+        [ T.f6, T.lh_title, T.mb4, T.mt1, T.o_50 ]
+        [ text "You can find the instructions over "
+        , UI.Kit.link { label = "here", url = "/about#" ++ id }
         ]
     ]
 
@@ -367,7 +493,13 @@ edit { context } =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , (\h -> form [ chunk [ T.tl, T.w_100 ] [ UI.Kit.canister h ] ])
+    , (\h ->
+        form EditSource
+            [ chunk
+                [ T.tl, T.w_100 ]
+                [ UI.Kit.canister h ]
+            ]
+      )
         [ UI.Kit.h3 "Edit source"
 
         -- Fields
@@ -398,7 +530,7 @@ edit { context } =
             [ T.mt3, T.tc ]
             [ UI.Kit.button
                 Normal
-                EditSource
+                Bypass
                 (text "Save")
             ]
         ]
@@ -413,11 +545,14 @@ renderProperty : Source -> Property -> Html Msg
 renderProperty context property =
     chunk
         [ T.mb4 ]
-        [ UI.Kit.label [ for property.key ] property.label
+        [ UI.Kit.label
+            [ for property.key ]
+            property.label
         , UI.Kit.textField
             [ name property.key
             , onInput (SetData property.key)
             , placeholder property.placeholder
+            , required (property.label |> String.toLower |> String.contains "optional" |> not)
             , type_ (ifThenElse property.password "password" "text")
             , value (Dict.fetch property.key "" context.data)
             ]
@@ -428,11 +563,11 @@ renderProperty context property =
 -- ⚗️
 
 
-form : List (Html Msg) -> Html Msg
-form html =
+form : Msg -> List (Html Msg) -> Html Msg
+form msg html =
     slab
         Html.form
-        [ onSubmit Bypass ]
+        [ onSubmit msg ]
         [ T.flex
         , T.flex_grow_1
         , T.tc

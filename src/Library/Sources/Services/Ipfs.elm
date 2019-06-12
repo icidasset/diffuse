@@ -24,7 +24,7 @@ import Time
 
 
 defaults =
-    { gateway = "http://localhost:8080"
+    { gateway = "http://127.0.0.1:8080"
     , name = "Music from IPFS"
     }
 
@@ -43,7 +43,7 @@ properties =
       , password = False
       }
     , { key = "gateway"
-      , label = "Read-only gateway"
+      , label = "Gateway"
       , placeholder = defaults.gateway
       , password = False
       }

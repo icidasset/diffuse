@@ -26,7 +26,6 @@ import Time
 
 defaults =
     { bucketName = "music"
-    , directoryPath = "/"
     , name = "Music from Amazon S3"
     , region = "eu-west-1"
     }
@@ -57,12 +56,12 @@ properties =
       , password = False
       }
     , { key = "directoryPath"
-      , label = "Directory"
-      , placeholder = defaults.directoryPath
+      , label = "Directory (Optional)"
+      , placeholder = "/"
       , password = False
       }
     , { key = "host"
-      , label = "Host (optional)"
+      , label = "Host (Optional)"
       , placeholder = "http://localhost:9000"
       , password = False
       }
@@ -76,7 +75,7 @@ initialData =
     Dict.fromList
         [ ( "accessKey", "" )
         , ( "bucketName", defaults.bucketName )
-        , ( "directoryPath", defaults.directoryPath )
+        , ( "directoryPath", "" )
         , ( "host", "" )
         , ( "name", defaults.name )
         , ( "region", defaults.region )
@@ -109,7 +108,7 @@ makeTree srcData marker currentTime resultMsg =
         directoryPath =
             srcData
                 |> Dict.get "directoryPath"
-                |> Maybe.withDefault defaults.directoryPath
+                |> Maybe.withDefault ""
                 |> cleanPath
 
         initialParams =

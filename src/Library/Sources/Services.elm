@@ -35,11 +35,11 @@ initialData service =
         Dropbox ->
             Dropbox.initialData
 
-        Ipfs ->
-            Ipfs.initialData
-
         Google ->
             Google.initialData
+
+        Ipfs ->
+            Ipfs.initialData
 
         WebDav ->
             WebDav.initialData
@@ -60,11 +60,11 @@ makeTrackUrl service =
         Dropbox ->
             Dropbox.makeTrackUrl
 
-        Ipfs ->
-            Ipfs.makeTrackUrl
-
         Google ->
             Google.makeTrackUrl
+
+        Ipfs ->
+            Ipfs.makeTrackUrl
 
         WebDav ->
             WebDav.makeTrackUrl
@@ -91,11 +91,11 @@ makeTree service =
         Dropbox ->
             Dropbox.makeTree
 
-        Ipfs ->
-            Ipfs.makeTree
-
         Google ->
             Google.makeTree
+
+        Ipfs ->
+            Ipfs.makeTree
 
         WebDav ->
             WebDav.makeTree
@@ -116,11 +116,11 @@ parseErrorResponse service =
         Dropbox ->
             Dropbox.parseErrorResponse
 
-        Ipfs ->
-            Ipfs.parseErrorResponse
-
         Google ->
             Google.parseErrorResponse
+
+        Ipfs ->
+            Ipfs.parseErrorResponse
 
         WebDav ->
             WebDav.parseErrorResponse
@@ -141,11 +141,11 @@ parsePreparationResponse service =
         Dropbox ->
             Dropbox.parsePreparationResponse
 
-        Ipfs ->
-            Ipfs.parsePreparationResponse
-
         Google ->
             Google.parsePreparationResponse
+
+        Ipfs ->
+            Ipfs.parsePreparationResponse
 
         WebDav ->
             WebDav.parsePreparationResponse
@@ -166,11 +166,11 @@ parseTreeResponse service =
         Dropbox ->
             Dropbox.parseTreeResponse
 
-        Ipfs ->
-            Ipfs.parseTreeResponse
-
         Google ->
             Google.parseTreeResponse
+
+        Ipfs ->
+            Ipfs.parseTreeResponse
 
         WebDav ->
             WebDav.parseTreeResponse
@@ -191,11 +191,11 @@ postProcessTree service =
         Dropbox ->
             Dropbox.postProcessTree
 
-        Ipfs ->
-            Ipfs.postProcessTree
-
         Google ->
             Google.postProcessTree
+
+        Ipfs ->
+            Ipfs.postProcessTree
 
         WebDav ->
             WebDav.postProcessTree
@@ -222,11 +222,11 @@ prepare service =
         Dropbox ->
             Dropbox.prepare
 
-        Ipfs ->
-            Ipfs.prepare
-
         Google ->
             Google.prepare
+
+        Ipfs ->
+            Ipfs.prepare
 
         WebDav ->
             WebDav.prepare
@@ -247,11 +247,11 @@ properties service =
         Dropbox ->
             Dropbox.properties
 
-        Ipfs ->
-            Ipfs.properties
-
         Google ->
             Google.properties
+
+        Ipfs ->
+            Ipfs.properties
 
         WebDav ->
             WebDav.properties
@@ -276,11 +276,11 @@ keyToType str =
         "Dropbox" ->
             Just Dropbox
 
-        "Ipfs" ->
-            Just Ipfs
-
         "Google" ->
             Just Google
+
+        "Ipfs" ->
+            Just Ipfs
 
         "WebDav" ->
             Just WebDav
@@ -304,11 +304,11 @@ typeToKey service =
         Dropbox ->
             "Dropbox"
 
-        Ipfs ->
-            "Ipfs"
-
         Google ->
             "Google"
+
+        Ipfs ->
+            "Ipfs"
 
         WebDav ->
             "WebDav"

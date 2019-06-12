@@ -25,8 +25,7 @@ import Time
 
 
 defaults =
-    { directoryPath = "/"
-    , name = "Music from Azure Blob Storage"
+    { name = "Music from Azure Blob Storage"
     }
 
 
@@ -54,8 +53,8 @@ properties =
       , password = False
       }
     , { key = "directoryPath"
-      , label = "Directory (aka. Prefix)"
-      , placeholder = defaults.directoryPath
+      , label = "Directory (aka. Prefix, Optional)"
+      , placeholder = "/"
       , password = False
       }
     ]
@@ -69,7 +68,7 @@ initialData =
         [ ( "accountName", "" )
         , ( "accountKey", "" )
         , ( "container", "" )
-        , ( "directoryPath", defaults.directoryPath )
+        , ( "directoryPath", "" )
         , ( "name", defaults.name )
         ]
 
@@ -99,7 +98,7 @@ makeTree srcData marker currentTime toMsg =
         directoryPath =
             srcData
                 |> Dict.get "directoryPath"
-                |> Maybe.withDefault defaults.directoryPath
+                |> Maybe.withDefault ""
                 |> cleanPath
 
         baseParams =

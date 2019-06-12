@@ -635,6 +635,16 @@ textFieldStyles =
     [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
     , Css.color (Color.toElmCssColor colors.text)
     , inputFocus
+
+    --
+    , Css.invalid
+        [ Css.boxShadow none
+        , Css.outline none
+        ]
+
+    --
+    , (Css.focus << List.singleton << Css.invalid)
+        [ Css.borderBottomColor (Color.toElmCssColor colors.error) ]
     ]
 
 

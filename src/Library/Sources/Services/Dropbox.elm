@@ -26,7 +26,6 @@ import Time
 
 defaults =
     { appKey = "kwsydtrzban41zr"
-    , directoryPath = "/"
     , name = "Music from Dropbox"
     }
 
@@ -39,19 +38,14 @@ Will be used for the forms.
 -}
 properties : List Property
 properties =
-    [ { key = "accessToken"
-      , label = "Access Token"
-      , placeholder = "..."
-      , password = True
+    [ { key = "directoryPath"
+      , label = "Directory (Optional)"
+      , placeholder = "/"
+      , password = False
       }
     , { key = "appKey"
       , label = "App key"
       , placeholder = defaults.appKey
-      , password = False
-      }
-    , { key = "directoryPath"
-      , label = "Directory"
-      , placeholder = defaults.directoryPath
       , password = False
       }
     ]
@@ -62,9 +56,8 @@ properties =
 initialData : SourceData
 initialData =
     Dict.fromList
-        [ ( "accessToken", "" )
-        , ( "appKey", defaults.appKey )
-        , ( "directoryPath", defaults.directoryPath )
+        [ ( "appKey", defaults.appKey )
+        , ( "directoryPath", "" )
         , ( "name", defaults.name )
         ]
 
@@ -183,7 +176,7 @@ getProperDirectoryPath srcData =
         path =
             srcData
                 |> Dict.get "directoryPath"
-                |> Maybe.withDefault defaults.directoryPath
+                |> Maybe.withDefault ""
                 |> cleanPath
     in
     if path == "" then

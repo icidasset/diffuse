@@ -46,6 +46,11 @@ properties =
       , placeholder = "https://demo.nextcloud.com"
       , password = False
       }
+    , { key = "directoryPath"
+      , label = "Directory (Optional)"
+      , placeholder = "/icidasset/remote.php/webdav/"
+      , password = False
+      }
     , { key = "username"
       , label = "Username (Optional)"
       , placeholder = ""
@@ -55,16 +60,6 @@ properties =
       , label = "Password (Optional)"
       , placeholder = ""
       , password = True
-      }
-    , { key = "directoryPath"
-      , label = "Directory (Optional)"
-      , placeholder = "/icidasset/remote.php/webdav/"
-      , password = False
-      }
-    , { key = "corsProxy"
-      , label = "CORS Proxy Prefix (Optional)"
-      , placeholder = "https://cors-anywhere.herokuapp.com/"
-      , password = False
       }
     ]
 
@@ -187,16 +182,6 @@ url { addAuth } srcData path =
         host =
             String.chopEnd "/" (Dict.fetch "url" "" srcData)
 
-        corsProxyWoSlash =
-            String.chopEnd "/" (Dict.fetch "corsProxy" "" srcData)
-
-        corsProxy =
-            if String.isEmpty (String.trim corsProxyWoSlash) then
-                ""
-
-            else
-                corsProxyWoSlash ++ "/"
-
         username =
             Dict.fetch "username" "" srcData
 
@@ -225,4 +210,4 @@ url { addAuth } srcData path =
                 |> List.map Url.percentEncode
                 |> String.join "/"
     in
-    corsProxy ++ host ++ "/" ++ encodedPath ++ authBit
+    host ++ "/" ++ encodedPath ++ authBit
