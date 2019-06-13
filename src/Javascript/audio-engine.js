@@ -347,8 +347,10 @@ function removeOlderAudioElements(timestamp) {
     const t = parseInt(node.getAttribute("data-timestamp"), 10)
     if (t >= timestamp) return
 
-    node.context.disconnect()
-    node.context = null
+    if (node.context) {
+      node.context.disconnect()
+      node.context = null
+    }
 
     audioElementsContainer.removeChild(node)
   })
