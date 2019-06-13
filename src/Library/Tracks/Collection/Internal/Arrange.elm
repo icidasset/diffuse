@@ -197,7 +197,7 @@ groupByFirstAlphaCharacterFolder deps ( i, t ) =
                     |> Maybe.andThen
                         (\char ->
                             if Char.isAlpha char then
-                                Just (String.fromList [ char ])
+                                Just (String.fromList [ Char.toUpper char ])
 
                             else
                                 Nothing
