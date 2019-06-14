@@ -54,6 +54,7 @@ app.ports.activeQueueItemChanged.subscribe(item => {
   orchestrion.activeQueueItem = item
   orchestrion.audio = null
 
+  clearTimeout(orchestrion.loadingTimeoutId)
   removeOlderAudioElements(timestampInMilliseconds)
 
   if (item) {
