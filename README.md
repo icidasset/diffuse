@@ -21,7 +21,6 @@ Music layer for music storage.
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
 - [IPFS](https://ipfs.io/)
 - [RemoteStorage](https://remotestorage.io/)
-- [~~Solid~~](https://solid.inrupt.com/) <small>(TODO)</small>
 - [Textile](https://github.com/textileio/go-textile)
 
 #### Music layer
@@ -32,7 +31,6 @@ Music layer for music storage.
 - [~~Blockstack Gaia Storage~~](https://github.com/blockstack/gaia) <small>(TODO)</small>
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
-- ~~HTTP Server~~ <small>(TODO)</small>
 - [IPFS](https://ipfs.io/)
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
@@ -42,7 +40,31 @@ Music layer for music storage.
 
 
 
-### Development
+### Hosting on your own server
+
+Diffuse is a static web application, which means it's just HTML, CSS and Javascript. No REST API, database, or anything backend-related involved. That said, the app does require a HTTP web server so it can have "clean urls". It also requires one special rule, and that is, no matter which HTML page is requested, it should always render the root `200.html` or `index.html` file. `https://diffuse.sh` uses Netlify, which in turn uses the `_redirects` file for this.
+
+In short:
+- Diffuse is a static, serverless, web application
+- Diffuse requires a HTTP server
+- Always render root `200.html` or `index.html` file
+
+```shell
+# Example of a nginx configuration
+# Disclaimer: I'm not confident this'll actually work,
+#             but it should be something along these lines.
+location ~ .html$ {
+  try_files $uri /200.html;
+}
+```
+
+
+
+---
+
+
+
+### Building it yourself
 
 For version numbers,  
 see `.tool-versions` and `stack.yaml`.
