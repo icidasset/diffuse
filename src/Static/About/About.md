@@ -1,6 +1,11 @@
-> A music player that connects to your cloud/distributed storage.
+<blockquote class="f1 fw7 lh-title moon-gray">
+  <p>
+    A music player that connects to your
+    cloud &amp; distributed storage
+  </p>
+</blockquote>
 
-[Return to the application](/).
+[Return to the application](/)
 
 #### Links
 
@@ -28,7 +33,6 @@ You can choose between these services:
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
 - [IPFS](https://ipfs.io/)
 - [RemoteStorage](https://remotestorage.io/)
-- [<del>Solid</del>](https://solid.inrupt.com/) <small>(TODO)</small>
 - [Textile](https://github.com/textileio/go-textile)
 
 
@@ -42,7 +46,6 @@ This layer connects with the services the user has on which music can be found. 
 - [<del>Blockstack Gaia Storage</del>](https://github.com/blockstack/gaia) <small>(TODO)</small>
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
-- <del>HTTP Server</del> <small>(TODO)</small>
 - [IPFS](https://ipfs.io/)
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
@@ -67,13 +70,13 @@ Diffuse locates all the music files on the given services, extracts the metadata
 
 ### CORS
 
-There's only one thing you need to do yourself so that your service will work with the application, and that's setting up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) (Cross-Origin Resource Sharing). Here are the instructions you'll need for each service:
+There's only one thing you need to do yourself so that your service will work with the application, and that's setting up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing). Here are the instructions you'll need for each service:
 
 <div id="CORS__S3" />
 
 #### Amazon S3
 
-*You can find the CORS configuration editor under the "Permissions" tab, on the S3 AWS Console.*
+You can find the CORS configuration editor under the "Permissions" tab, on the S3 AWS Console.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -106,7 +109,7 @@ _Not necessary._
 
 #### IPFS
 
-*Add the domain, of the app, with the protocol to the __list of allowed origins__. For example:*
+Add the domain, of the app, with the protocol to the __list of allowed origins__. For example:
 
 ```shell
 ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh"]'
@@ -116,8 +119,8 @@ ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffus
 
 #### Microsoft Azure Storage
 
-*You can find the CORS configuration under the "Settings -> CORS".  
-Then fill in the following in the input boxes (left to right):*
+You can find the CORS configuration under the "Settings -> CORS".  
+Then fill in the following in the input boxes (left to right):
 
 ```
 ALLOWED ORIGINS       *
@@ -131,8 +134,8 @@ MAX AGE               0
 
 #### WebDAV
 
-*__Depends on your WebDAV server.__  
-Example setup for Henrique Dias's [WebDAV server](https://github.com/hacdias/webdav):*
+__Depends on your WebDAV server.__  
+Example setup for Henrique Dias's [WebDAV server](https://github.com/hacdias/webdav):
 
 ```yaml
 cors:

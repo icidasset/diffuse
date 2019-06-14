@@ -13,7 +13,7 @@ html {
 
 body {
   background: white;
-  color: #322230;
+  color: #3F3F3F;
   font-family: "Source Sans Pro", sans-serif;
   margin: 0 1.125rem 4.5rem;
 
@@ -25,7 +25,7 @@ body {
 
 .container {
   margin: 0 auto;
-  max-width: 650px;
+  max-width: 660px;
 }
 
 
@@ -37,7 +37,7 @@ body {
 
 .logo {
   margin: 4.125rem auto 3rem;
-  opacity: 0.2;
+  opacity: 0.85;
 }
 
 
@@ -76,13 +76,18 @@ p {
 }
 
 blockquote {
-  border-left: 4px solid rgb(231, 150, 128);
+  font-family: Montserrat;
+  letter-spacing: -0.025em;
   margin-left: 0;
-  padding-left: 0.75rem;
+  padding-left: 0;
 }
 
 a {
+  border-bottom: 1px solid currentColor;
   color: inherit;
+  display: inline-block;
+  line-height: 1;
+  text-decoration: none;
 }
 
 pre {

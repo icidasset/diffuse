@@ -1,3 +1,28 @@
+/* Hack */
+
+
+@font-face {
+  font-family: "Hack";
+  src: url("fonts/hack/regular-subset.woff2") format("woff2");
+       font-weight: 400;
+       font-stretch: normal;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: "Hack";
+  src: url("fonts/hack/bold-subset.woff2") format("woff2");
+       font-weight: 700;
+       font-stretch: normal;
+       font-style: normal;
+}
+
+
+
+/* Source Sans Pro */
+
+
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/light.woff2") format("woff2");
@@ -132,6 +157,19 @@
   font-family: "Montserrat";
   src: url("fonts/montserrat/extrabold.woff2") format("woff2");
        font-weight: 800;
+       font-stretch: normal;
+       font-style: normal;
+}
+
+
+
+/* Playfair Display */
+
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("fonts/playfairdisplay/bold.woff2") format("woff2");
+       font-weight: 700;
        font-stretch: normal;
        font-style: normal;
 }
