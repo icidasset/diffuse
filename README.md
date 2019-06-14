@@ -42,12 +42,13 @@ Music layer for music storage.
 
 ### Hosting on your own server
 
-Diffuse is a static web application, which means it's just HTML, CSS and Javascript. No REST API, database, or anything backend-related involved. That said, the app does require a HTTP web server so it can have "clean urls". It also requires one special rule, and that is, no matter which HTML page is requested, it should always render the root `200.html` or `index.html` file. `https://diffuse.sh` uses Netlify, which in turn uses the `_redirects` file for this.
+Diffuse is a static web application, which means it's just HTML, CSS and Javascript. No REST API, database, or anything backend-related involved. That said, the app does require a HTTP web server so it can have "clean urls" and use service workers (preferably HTTPS). It also requires one special rule, and that is, no matter which HTML page is requested, it should always render the root `200.html` or `index.html` file. `https://diffuse.sh` uses Netlify, which in turn uses the `_redirects` file for this. You can download a pre-build web-only version of Diffuse on the [releases](https://github.com/icidasset/diffuse/releases) page.
 
 In short:
 - Diffuse is a static, serverless, web application
-- Diffuse requires a HTTP server
-- Always render root `200.html` or `index.html` file
+- Diffuse requires a HTTP server (prefer HTTPS for service worker)
+- Always render the root `200.html` or `index.html` file
+- Download a web build on the [releases](https://github.com/icidasset/diffuse/releases) page
 
 ```shell
 # Example of a nginx configuration
