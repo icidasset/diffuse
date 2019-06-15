@@ -260,7 +260,7 @@ update msg model =
         -----------------------------------------
         -- Menus
         -----------------------------------------
-        ShowTrackMenu trackIndex mouseEvent ->
+        ShowTrackMenu trackIndex coordinates ->
             let
                 selection =
                     if List.isEmpty model.selectedTrackIndexes then
@@ -281,7 +281,7 @@ update msg model =
                             |> Maybe.withDefault acc
                     )
                     []
-                |> ShowTracksContextMenu (Coordinates.fromTuple mouseEvent.clientPos)
+                |> ShowTracksContextMenu coordinates
                 |> returnReplyWithModel { model | selectedTrackIndexes = selection }
 
         ShowViewMenu grouping mouseEvent ->
@@ -544,6 +544,7 @@ view core =
                 List ->
                     UI.Tracks.Scene.List.view
                         { height = core.viewport.height
+                        , isTouchDevice = core.isTouchDevice
                         , isVisible = core.page == UI.Page.Index
                         }
                         core.tracks

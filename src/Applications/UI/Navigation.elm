@@ -128,12 +128,15 @@ localWithTabindex : Int -> List ( Icon msg, Label, Action msg ) -> Html msg
 localWithTabindex tabindex_ items =
     brick
         [ css localStyles ]
-        [ T.bb, T.flex ]
-        (items
-            |> List.reverse
-            |> List.map (localItem tabindex_)
-            |> List.reverse
-        )
+        [ T.bb ]
+        [ chunk
+            [ T.flex ]
+            (items
+                |> List.reverse
+                |> List.map (localItem tabindex_)
+                |> List.reverse
+            )
+        ]
 
 
 localItem : Int -> ( Icon msg, Label, Action msg ) -> Html msg
@@ -169,7 +172,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , T.bg_transparent
         , T.bl_0
         , T.fw6
-        , T.inline_flex
+        , T.flex
         , T.items_center
         , T.justify_center
         , T.lh_solid

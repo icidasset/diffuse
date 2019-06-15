@@ -70,7 +70,7 @@ sequences = lsequence
     , ( Html,           list "Static/Html/**/*.html"    )
     , ( Images,         list "Static/Images/**/*.*"     )
     , ( Js,             list "Javascript/**/*.js"       )
-    , ( Manifest,       list "Static/manifest.json"     )
+    , ( Manifest,       list "Static/Manifests/*.*"     )
 
     -- About Pages
     , ( AboutPages,      list "Static/About/**/*.md"    )
@@ -138,6 +138,7 @@ dependencies = do
         ]
 
 
+
 -- INSERT
 
 
@@ -182,6 +183,7 @@ insertVersion version dict =
                         []
     in
     dict <> defs
+
 
 
 -- COMMON

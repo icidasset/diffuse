@@ -214,3 +214,31 @@ document.addEventListener("MediaPrev", () => {
 document.addEventListener("MediaNext", () => {
   app.ports.requestNext.send(null)
 })
+
+
+
+// Touch Events
+// ------------
+
+tocca({
+  dbltapThreshold: 600
+})
+
+
+
+// Vertical Height
+// ---------------
+
+setVerticalHeightUnit()
+
+
+window.addEventListener("resize", () => {
+  setTimeout(setVerticalHeightUnit, 0)
+  setTimeout(setVerticalHeightUnit, 32)
+})
+
+
+function setVerticalHeightUnit() {
+  const vh = window.innerHeight * 0.01
+  document.documentElement.style.setProperty("--vh", `${vh}px`)
+}

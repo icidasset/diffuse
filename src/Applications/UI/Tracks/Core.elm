@@ -1,5 +1,6 @@
 module UI.Tracks.Core exposing (Model, Msg(..), Scene(..))
 
+import Coordinates exposing (Coordinates)
 import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Encode as Json
@@ -69,7 +70,7 @@ type Msg
       -----------------------------------------
       -- Menus
       -----------------------------------------
-    | ShowTrackMenu Int Mouse.Event
+    | ShowTrackMenu Int Coordinates
     | ShowViewMenu (Maybe Grouping) Mouse.Event
       -----------------------------------------
       -- Playlists

@@ -23,8 +23,9 @@ import File
 import File.Download
 import File.Select
 import Html.Events.Extra.Pointer as Pointer
+import Html.Events.Extra.Touch as Touch
 import Html.Styled as Html exposing (Html, section, toUnstyled)
-import Html.Styled.Attributes as Attributes exposing (css, id)
+import Html.Styled.Attributes as Attributes exposing (css, id, style)
 import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
@@ -116,6 +117,7 @@ init flags url key =
     , isDragging = False
     , isLoading = True
     , isOnline = flags.isOnline
+    , isTouchDevice = False
     , navKey = key
     , notifications = []
     , page = page
@@ -246,6 +248,9 @@ update msg model =
                 ( { model | isOnline = bool }
                 , Cmd.none
                 )
+
+        IndicateTouchDevice ->
+            return { model | isTouchDevice = True }
 
         StoppedDragging ->
             let
@@ -1224,6 +1229,9 @@ body model =
             , Attributes.fromUnstyled (Pointer.onUp <| always StoppedDragging)
             ]
 
+         else if not model.isTouchDevice then
+            [ Attributes.fromUnstyled (Touch.onStart <| always IndicateTouchDevice) ]
+
          else
             []
         )
@@ -1350,7 +1358,8 @@ defaultScreen model =
 
 content : List (Html msg) -> Html msg
 content =
-    chunk
+    brick
+        [ style "min-height" "calc(var(--vh, 1vh) * 100)" ]
         [ T.flex
         , T.flex_column
         , T.items_center
@@ -1496,4 +1505,6 @@ vesselStyles =
 
 vesselInnerStyles : List Css.Style
 vesselInnerStyles =
-    [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
+    [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)"
+    , Css.property "-webkit-overflow-scrolling" "touch"
+    ]

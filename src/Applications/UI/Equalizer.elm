@@ -6,6 +6,7 @@ import Color.Ext as Color
 import Common
 import Coordinates exposing (Coordinates)
 import Css
+import Css.Ext as Css
 import Equalizer exposing (..)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Styled exposing (Html, text)
@@ -232,7 +233,8 @@ view model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , chunk
+        , brick
+            [ css eqStyles ]
             [ T.relative ]
             [ chunk
                 [ T.absolute, T.left_0, T.top_0 ]
@@ -303,7 +305,12 @@ knob_ knobType value =
 
         --
         , Html.Styled.Events.onDoubleClick (ResetKnob knobType)
-        , Html.Styled.Attributes.fromUnstyled <| Pointer.onDown (ActivateKnob knobType)
+
+        --
+        , knobType
+            |> ActivateKnob
+            |> Pointer.onDown
+            |> Html.Styled.Attributes.fromUnstyled
         ]
         [ T.br_100, T.center, T.pointer, T.relative ]
         [ Html.Styled.map never knob__ ]
@@ -391,6 +398,11 @@ maxAngle =
 
 
 -- 🖼
+
+
+eqStyles : List Css.Style
+eqStyles =
+    [ Css.disableUserSelection ]
 
 
 columnStyles : List Css.Style
