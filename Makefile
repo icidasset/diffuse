@@ -63,7 +63,6 @@ doc-tests:
 install:
 	@echo "> Downloading & minifying dependencies"
 	@mkdir -p $(VENDOR_DIR)
-	@curl https://unpkg.com/3box@1.8.5/dist/3box.min.js -o $(VENDOR_DIR)/3box.min.js
 	@curl https://unpkg.com/blockstack@19.2.1/dist/blockstack.js -o $(VENDOR_DIR)/blockstack.min.js
 	@curl https://unpkg.com/lunr@2.3.6/lunr.js -o $(VENDOR_DIR)/lunr.js
 	@curl https://unpkg.com/remotestoragejs@1.2.2/release/remotestorage.js -o $(VENDOR_DIR)/remotestorage.min.js
