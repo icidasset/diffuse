@@ -22,6 +22,10 @@ build: clean elm system vendor
 	@echo "> Build completed ⚡"
 
 
+build-prod: clean elm-prod system vendor
+	@echo "> Production build completed 🛳"
+
+
 clean:
 	@echo "> Cleaning build directory"
 	@rm -rf $(BUILD_DIR) || true
@@ -31,6 +35,12 @@ elm:
 	@echo "> Compiling Elm application"
 	@elm make $(SRC_DIR)/Applications/Brain.elm --output $(BUILD_DIR)/brain.js
 	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/application.js
+
+
+elm-prod:
+	@echo "> Compiling Elm application (optimized)"
+	@elm make $(SRC_DIR)/Applications/Brain.elm --output $(BUILD_DIR)/brain.js --optimize
+	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/application.js --optimize
 
 
 system:
