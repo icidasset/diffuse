@@ -1222,11 +1222,15 @@ body model =
             , (EqualizerMsg << Equalizer.DeactivateKnob)
                 |> Pointer.onUp
                 |> Attributes.fromUnstyled
+            , (EqualizerMsg << Equalizer.DeactivateKnob)
+                |> Pointer.onCancel
+                |> Attributes.fromUnstyled
             ]
 
          else if model.isDragging then
             [ Attributes.class "dragging-something"
             , Attributes.fromUnstyled (Pointer.onUp <| always StoppedDragging)
+            , Attributes.fromUnstyled (Pointer.onCancel <| always StoppedDragging)
             ]
 
          else if not model.isTouchDevice then
