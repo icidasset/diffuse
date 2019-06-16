@@ -221,7 +221,7 @@ document.addEventListener("MediaNext", () => {
 // ------------
 
 tocca({
-  dbltapThreshold: 600
+  dbltapThreshold: 800
 })
 
 

@@ -12,6 +12,7 @@ import Html.Events.Extra.Pointer as Pointer
 import Html.Styled exposing (Html, text)
 import Html.Styled.Attributes exposing (css, style)
 import Html.Styled.Events
+import Json.Decode as Decode
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
 import Svg.Styled exposing (Svg, polygon, svg)
@@ -294,6 +295,13 @@ knob_ knobType value =
 
                 _ ->
                     value * maxAngle
+
+        resetDecoder =
+            Decode.succeed
+                { message = ResetKnob knobType
+                , stopPropagation = True
+                , preventDefault = True
+                }
     in
     brick
         [ css knobStyles
@@ -304,7 +312,8 @@ knob_ knobType value =
             |> style "transform"
 
         --
-        , Html.Styled.Events.onDoubleClick (ResetKnob knobType)
+        , Html.Styled.Events.custom "dblclick" resetDecoder
+        , Html.Styled.Events.custom "dbltap" resetDecoder
 
         --
         , knobType

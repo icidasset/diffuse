@@ -173,7 +173,9 @@ itemStyles { dragTarget } =
     if dragTarget then
         List.append
             itemBaseStyles
-            [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent) ]
+            [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent)
+            , Css.touchAction Css.none
+            ]
 
     else
         itemBaseStyles

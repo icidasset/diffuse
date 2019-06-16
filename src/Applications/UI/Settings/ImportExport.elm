@@ -33,7 +33,7 @@ view =
         -- Content
         -----------------------------------------
         , UI.Kit.canister
-            [ UI.Kit.h1 "Import / Export"
+            [ UI.Kit.h1 "Import & Export"
 
             -- Intro
             --------

@@ -48,7 +48,7 @@ index model =
       -----------------------------------------
       UI.Navigation.local
         [ ( Icon Icons.import_export
-          , Label "Import / Export" Shown
+          , Label "Import & Export" Shown
           , NavigateToPage (Page.Settings ImportExport)
           )
         , ( Icon Icons.exit_to_app
