@@ -1405,7 +1405,7 @@ vessel =
             , T.flex
             , T.flex_column
             , T.flex_grow_1
-            , T.overflow_scroll
+            , T.overflow_hidden
             , T.relative
             ]
         )
@@ -1510,5 +1510,4 @@ vesselStyles =
 vesselInnerStyles : List Css.Style
 vesselInnerStyles =
     [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)"
-    , Css.property "-webkit-overflow-scrolling" "touch"
     ]

@@ -84,7 +84,13 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
         -----------------------------------------
         , brick
             [ css buttonsContainerStyles ]
-            [ T.flex, T.justify_center, T.mb2, T.mt3, T.pb1 ]
+            [ T.flex
+            , T.justify_between
+            , T.justify_center_ns
+            , T.mb2
+            , T.mt3
+            , T.pb1
+            ]
             [ button (smallLight repeat) (icon Icons.repeat 18) (QueueMsg <| Queue.ToggleRepeat)
             , button lightPlaceHolder (icon Icons.fast_rewind 20) (QueueMsg <| Queue.Rewind)
             , button (largeLight isPlaying) play PlayPause

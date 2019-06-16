@@ -570,6 +570,7 @@ form msg html =
         [ onSubmit msg ]
         [ T.flex
         , T.flex_grow_1
+        , T.flex_shrink_0
         , T.tc
         ]
         [ UI.Kit.centeredContent html ]

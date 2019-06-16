@@ -405,12 +405,17 @@ logoBackdrop =
 
 receptacle : List (Html msg) -> Html msg
 receptacle =
-    chunk
+    brick
+        [ css
+            [ Css.property "-webkit-overflow-scrolling" "touch" ]
+        ]
         [ T.absolute
         , T.absolute__fill
         , T.bg_white
         , T.flex
         , T.flex_column
+        , T.overflow_x_hidden
+        , T.overflow_y_scroll
         , T.z_999
         ]
 
@@ -480,6 +485,7 @@ textField attributes =
         (css textFieldStyles :: attributes)
         [ T.bn
         , T.bg_transparent
+        , T.br0
         , T.db
         , T.f6
         , T.lh_copy
