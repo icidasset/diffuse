@@ -1292,17 +1292,17 @@ body model =
         -----------------------------------------
         , case ( model.isLoading, model.authentication ) of
             ( True, _ ) ->
-                content [ loadingAnimation ]
+                content { justifyCenter = True } [ loadingAnimation ]
 
             ( False, Authentication.Authenticated _ ) ->
-                content (defaultScreen model)
+                content { justifyCenter = False } (defaultScreen model)
 
             ( False, _ ) ->
                 model.authentication
                     |> Lazy.lazy Authentication.view
                     |> Html.map AuthenticationMsg
                     |> List.singleton
-                    |> content
+                    |> content { justifyCenter = False }
         ]
 
 
@@ -1374,19 +1374,42 @@ defaultScreen model =
 -- 🗺  ░░  BITS
 
 
-content : List (Html msg) -> Html msg
-content =
+content : { justifyCenter : Bool } -> List (Html msg) -> Html msg
+content { justifyCenter } nodes =
     brick
-        [ style "min-height" "calc(var(--vh, 1vh) * 100)" ]
-        [ T.flex
-        , T.flex_column
-        , T.items_center
-        , T.justify_center
-        , T.min_vh_100
-        , T.ph3
+        [ css contentStyles ]
+        [ T.overflow_scroll
         , T.relative
         , T.z_1
         ]
+        [ brick
+            [ css contentInnerStyles ]
+            [ T.flex
+            , T.flex_column
+            , T.items_center
+            , T.h_100
+            , T.ph3
+
+            --
+            , ifThenElse justifyCenter T.justify_center ""
+            ]
+            nodes
+        ]
+
+
+contentStyles : List Css.Style
+contentStyles =
+    [ Css.width (Css.vw 100)
+
+    --
+    , Css.property "height" "calc(var(--vh, 1vh) * 100)"
+    , Css.property "-webkit-overflow-scrolling" "touch"
+    ]
+
+
+contentInnerStyles : List Css.Style
+contentInnerStyles =
+    [ Css.minWidth (Css.px 280) ]
 
 
 loadingAnimation : Html msg

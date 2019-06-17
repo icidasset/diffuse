@@ -104,7 +104,7 @@ button : Html msg -> Html msg -> msg -> Html msg
 button light content msg =
     brick
         [ onClick msg ]
-        [ T.flex, T.flex_column, T.items_center, T.mh3, T.mh4_ns, T.ph1, T.pointer ]
+        [ T.flex, T.flex_column, T.items_center, T.mh1, T.mh4_ns, T.ph1, T.pointer ]
         [ brick
             [ css [ Css.height (Css.px 4) ] ]
             []

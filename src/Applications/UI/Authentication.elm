@@ -456,7 +456,7 @@ view model =
     chunk
         [ T.flex
         , T.flex_column
-        , T.vh_100
+        , T.h_100
         , T.items_center
         ]
         [ brick
