@@ -53,6 +53,7 @@ type Msg
       -- User data
       -----------------------------------------
     | LoadHypaethralUserData Json.Value
+    | RemoveTracksBySourceId String
     | SaveHypaethralData
     | SaveFavourites Json.Value
     | SavePlaylists Json.Value

@@ -1,7 +1,7 @@
 module Tracks.Collection exposing (add, arrange, harvest, harvestChanged, identify, map, removeByPaths, removeBySourceId, tracksChanged)
 
 import List.Extra as List
-import Tracks exposing (..)
+import Tracks exposing (IdentifiedTrack, Parcel, Track, emptyCollection)
 import Tracks.Collection.Internal as Internal
 
 
@@ -49,22 +49,12 @@ add tracks ( deps, { untouched } ) =
 
 removeByPaths : String -> List String -> Parcel -> Parcel
 removeByPaths sourceId paths ( deps, { untouched } ) =
-    let
-        ( filtered, _ ) =
-            List.foldr
-                (\t ( acc, remainingPaths ) ->
-                    if t.sourceId == sourceId && List.member t.path remainingPaths then
-                        ( acc, List.remove t.path remainingPaths )
-
-                    else
-                        ( t :: acc, remainingPaths )
-                )
-                ( [], paths )
-                untouched
-    in
     identify
         ( deps
-        , { emptyCollection | untouched = filtered }
+        , { emptyCollection
+            | untouched =
+                Tracks.removeByPaths { sourceId = sourceId, paths = paths } untouched
+          }
         )
 
 
@@ -72,7 +62,10 @@ removeBySourceId : String -> Parcel -> Parcel
 removeBySourceId sourceId ( deps, { untouched } ) =
     identify
         ( deps
-        , { emptyCollection | untouched = List.filter (.sourceId >> (/=) sourceId) untouched }
+        , { emptyCollection
+            | untouched =
+                Tracks.removeBySourceId sourceId untouched
+          }
         )
 
 

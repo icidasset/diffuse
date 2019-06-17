@@ -17,6 +17,7 @@ import Return2 exposing (..)
 import Return3
 import Sources.Encoding as Sources
 import Sources.Processing.Encoding as Processing
+import Tracks
 import Tracks.Encoding as Tracks
 
 
@@ -159,6 +160,13 @@ update msg model =
                 |> returnWithModel { model | hypaethralUserData = decodedData }
                 |> andThen (updateSearchIndex encodedTracks)
 
+        RemoveTracksBySourceId sourceId ->
+            model.hypaethralUserData.tracks
+                |> Tracks.removeBySourceId sourceId
+                |> hypaethralLenses.setTracks model
+                |> updateSearchIndexWithModel
+                |> andThen saveHypaethralData
+
         SaveHypaethralData ->
             model.hypaethralUserData
                 |> Authentication.encodeHypaethral
@@ -216,6 +224,15 @@ updateSearchIndex value model =
         |> updateWithModel model
 
 
+updateSearchIndexWithModel : Model -> ( Model, Cmd Msg )
+updateSearchIndexWithModel model =
+    model.hypaethralUserData.tracks
+        |> Json.Encode.list Tracks.encodeTrack
+        |> Tracks.UpdateSearchIndex
+        |> TracksMsg
+        |> updateWithModel model
+
+
 
 -- 📣  ░░  REPLIES
 
@@ -225,6 +242,23 @@ translateReply reply model =
     case reply of
         FabricatedNewSecretKey ->
             update SaveHypaethralData model
+
+        -----------------------------------------
+        -- Tracks
+        -----------------------------------------
+        AddTracks tracks ->
+            tracks
+                |> (++) model.hypaethralUserData.tracks
+                |> hypaethralLenses.setTracks model
+                |> updateSearchIndexWithModel
+                |> andThen saveHypaethralData
+
+        RemoveTracksByPaths args ->
+            model.hypaethralUserData.tracks
+                |> Tracks.removeByPaths args
+                |> hypaethralLenses.setTracks model
+                |> updateSearchIndexWithModel
+                |> andThen saveHypaethralData
 
         -----------------------------------------
         -- To UI
@@ -395,6 +429,12 @@ translateAlienData tag data =
                 |> Json.decodeValue (Json.field "origin" Json.string)
                 |> Result.withDefault ""
                 |> RedirectToBlockstackSignIn
+
+        Alien.RemoveTracksBySourceId ->
+            data
+                |> Json.decodeValue Json.string
+                |> Result.withDefault ""
+                |> RemoveTracksBySourceId
 
         Alien.SaveEnclosedUserData ->
             AuthenticationMsg (Authentication.SaveEnclosedData data)

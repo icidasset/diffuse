@@ -37,6 +37,7 @@ type Tag
       -- from UI
     | ProcessSources
     | RedirectToBlockstackSignIn
+    | RemoveTracksBySourceId
     | SaveEnclosedUserData
     | SaveFavourites
     | SavePlaylists
@@ -79,6 +80,7 @@ enum =
         -----------------------------------------
         , ( "PROCESS_SOURCES", ProcessSources )
         , ( "REDIRECT_TO_BLOCKSTACK_SIGN_IN", RedirectToBlockstackSignIn )
+        , ( "REMOVE_TRACKS_BY_SOURCE_ID", RemoveTracksBySourceId )
         , ( "SAVE_ENCLOSED_USER_DATA", SaveEnclosedUserData )
         , ( "SAVE_FAVOURITES", SaveFavourites )
         , ( "SAVE_PLAYLISTS", SavePlaylists )

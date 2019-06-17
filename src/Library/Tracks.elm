@@ -1,4 +1,4 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, removeFromPlaylist, toPlaylistTracks)
+module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, removeByPaths, removeBySourceId, removeFromPlaylist, toPlaylistTracks)
 
 import Base64
 import List.Extra as List
@@ -202,6 +202,26 @@ makeTrack sourceId ( path, tags ) =
     , sourceId = sourceId
     , tags = tags
     }
+
+
+removeByPaths : { sourceId : String, paths : List String } -> List Track -> List Track
+removeByPaths { sourceId, paths } tracks =
+    tracks
+        |> List.foldr
+            (\t ( acc, remainingPaths ) ->
+                if t.sourceId == sourceId && List.member t.path remainingPaths then
+                    ( acc, List.remove t.path remainingPaths )
+
+                else
+                    ( t :: acc, remainingPaths )
+            )
+            ( [], paths )
+        |> Tuple.first
+
+
+removeBySourceId : String -> List Track -> List Track
+removeBySourceId sourceId =
+    List.filter (.sourceId >> (/=) sourceId)
 
 
 removeFromPlaylist : List IdentifiedTrack -> Playlist -> Playlist

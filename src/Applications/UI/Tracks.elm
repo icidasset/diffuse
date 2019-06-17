@@ -220,12 +220,12 @@ update msg model =
                         |> Result.withDefault ( [], missingId )
             in
             reviseCollection
-                (removeByPaths sourceId paths)
+                (Collection.removeByPaths sourceId paths)
                 model
 
         RemoveBySourceId sourceId ->
             reviseCollection
-                (removeBySourceId sourceId)
+                (Collection.removeBySourceId sourceId)
                 model
 
         -----------------------------------------
@@ -470,7 +470,7 @@ resolveParcel model ( _, newCollection ) =
       -- Reply
       --------
     , if collectionChanged then
-        [ GenerateDirectoryPlaylists, ResetQueue, SaveTracks ]
+        [ GenerateDirectoryPlaylists, ResetQueue ]
 
       else if harvestChanged then
         [ ResetQueue ]

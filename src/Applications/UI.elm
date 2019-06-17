@@ -345,7 +345,7 @@ update msg model =
             model
                 |> translateReply SaveFavourites
                 |> andThen (translateReply SaveSources)
-                |> andThen (translateReply SaveTracks)
+                |> andThen (translateReply SaveTracksFromCache)
                 |> andThen (translateReply <| ShowWarningNotification "Syncing")
 
         -----------------------------------------
@@ -968,10 +968,18 @@ translateReply reply model =
                 |> andThen (UI.Notifications.show notification)
 
         RemoveTracksWithSourceId sourceId ->
+            let
+                cmd =
+                    sourceId
+                        |> Json.Encode.string
+                        |> Alien.broadcast Alien.RemoveTracksBySourceId
+                        |> Ports.toBrain
+            in
             sourceId
                 |> Tracks.RemoveBySourceId
                 |> TracksMsg
                 |> updateWithModel model
+                |> addCommand cmd
 
         ReplaceSourceInCollection source ->
             let
@@ -1052,6 +1060,12 @@ translateReply reply model =
             model
                 |> UserData.encodedTracks
                 |> Alien.broadcast Alien.SaveTracks
+                |> Ports.toBrain
+                |> returnWithModel model
+
+        SaveTracksFromCache ->
+            Alien.SaveTracks
+                |> Alien.trigger
                 |> Ports.toBrain
                 |> returnWithModel model
 

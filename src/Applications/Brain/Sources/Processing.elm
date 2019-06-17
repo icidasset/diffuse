@@ -133,7 +133,9 @@ update msg model =
             in
             ( model
             , Cmd.none
-            , [ GiveUI Alien.RemoveTracksByPath encodedData ]
+            , [ GiveUI Alien.RemoveTracksByPath encodedData
+              , RemoveTracksByPaths { sourceId = sourceId, paths = filePaths }
+              ]
             )
 
         -----------------------------------------
@@ -161,12 +163,15 @@ update msg model =
                     []
 
                 False ->
-                    tagsContext
-                        |> tracksFromTagsContext
-                        |> List.map (\track -> { track | insertedAt = model.currentTime })
-                        |> Encode.list Tracks.Encoding.encodeTrack
-                        |> GiveUI Alien.AddTracks
-                        |> List.singleton
+                    let
+                        tracksToAdd =
+                            tagsContext
+                                |> tracksFromTagsContext
+                                |> List.map (\track -> { track | insertedAt = model.currentTime })
+                    in
+                    [ GiveUI Alien.AddTracks (Encode.list Tracks.Encoding.encodeTrack tracksToAdd)
+                    , AddTracks tracksToAdd
+                    ]
             )
 
         -----------------------------------------
