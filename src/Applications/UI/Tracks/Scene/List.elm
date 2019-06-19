@@ -329,7 +329,7 @@ defaultItemView isTouchDevice favouritesOnly selectedTrackIndexes _ idx identifi
 
                 --
                 , if isTouchDevice then
-                    [ touchContextMenuEvent identifiedTrack
+                    [ touchContextMenuEvent identifiedTrack Nothing
                     , touchPlayEvent identifiedTrack
                     ]
 
@@ -382,7 +382,7 @@ playlistItemView isTouchDevice favouritesOnly selectedTrackIndexes dnd _ idx ide
 
             --
             , if isTouchDevice then
-                [ touchContextMenuEvent identifiedTrack
+                [ touchContextMenuEvent identifiedTrack (Just dragEnv)
                 , touchPlayEvent identifiedTrack
                 , DnD.listenToStart dragEnv listIdx
                 ]
@@ -407,7 +407,7 @@ playlistItemView isTouchDevice favouritesOnly selectedTrackIndexes dnd _ idx ide
 
             --
             , DnD.listenToEnterLeave dragEnv listIdx
-            , DnD.listenToDrop dragEnv listIdx
+            , DnD.listenToDrop dragEnv
 
             --
             , if DnD.isBeingDraggedOver listIdx dnd then
@@ -462,13 +462,19 @@ mouseSelectEvent ( i, _ ) =
     Mouse.onClick (MarkAsSelected i.indexInList)
 
 
-touchContextMenuEvent : IdentifiedTrack -> Html.Attribute Msg
-touchContextMenuEvent ( i, _ ) =
+touchContextMenuEvent : IdentifiedTrack -> Maybe (DnD.Environment Int Msg) -> Html.Attribute Msg
+touchContextMenuEvent ( i, _ ) maybeDragEnv =
     Html.Events.custom
         "longtap"
         (Decode.map2
             (\x y ->
-                { message = ShowTrackMenu i.indexInList { x = x, y = y }
+                { message =
+                    case Maybe.andThen (.model >> DnD.modelTarget) maybeDragEnv of
+                        Just _ ->
+                            Bypass
+
+                        Nothing ->
+                            ShowTrackMenu i.indexInList { x = x, y = y }
                 , stopPropagation = True
                 , preventDefault = True
                 }

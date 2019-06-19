@@ -1,4 +1,4 @@
-module UI.DnD exposing (Environment, Model, Msg, environmentSubject, environmentTarget, hasDropped, initialModel, isBeingDraggedOver, listenToDrop, listenToEnterLeave, listenToStart, modelSubject, modelTarget, stoppedDragging, update)
+module UI.DnD exposing (Environment, Model, Msg, environmentSubject, environmentTarget, hasDropped, initialModel, isBeingDraggedOver, isDragging, listenToDrop, listenToEnterLeave, listenToStart, modelSubject, modelTarget, stoppedDragging, update)
 
 import Html exposing (Attribute)
 import Html.Attributes as Attributes
@@ -55,13 +55,20 @@ update msg model =
                 Dragging { subject } ->
                     DraggingOver { subject = subject, target = context }
 
+                DraggingOver { subject } ->
+                    DraggingOver { subject = subject, target = context }
+
                 _ ->
                     model
 
-        Leave _ ->
+        Leave context ->
             case model of
-                DraggingOver { subject } ->
-                    Dragging { subject = subject }
+                DraggingOver { subject, target } ->
+                    if context == target then
+                        Dragging { subject = subject }
+
+                    else
+                        model
 
                 _ ->
                     model
@@ -94,7 +101,11 @@ update msg model =
 
 listenToStart : Environment context msg -> context -> Attribute msg
 listenToStart { toMsg } context =
-    Pointer.onDown
+    Pointer.onWithOptions
+        "pointerdown"
+        { stopPropagation = True
+        , preventDefault = True
+        }
         (\event ->
             case event.pointer.button of
                 Mouse.MainButton ->
@@ -125,19 +136,19 @@ listenToEnterLeave { model, toMsg } context =
             ]
 
 
-listenToDrop : Environment context msg -> context -> List (Attribute msg)
-listenToDrop { model, toMsg } context =
-    case model of
-        NotDragging ->
-            []
-
-        _ ->
-            [ context
+listenToDrop : Environment context msg -> List (Attribute msg)
+listenToDrop { model, toMsg } =
+    case modelTarget model of
+        Just target ->
+            [ target
                 |> Drop
                 |> toMsg
                 |> always
                 |> Pointer.onUp
             ]
+
+        Nothing ->
+            []
 
 
 stoppedDragging : Msg context
@@ -213,3 +224,19 @@ environmentSubject =
 environmentTarget : Environment context msg -> Maybe context
 environmentTarget =
     .model >> modelTarget
+
+
+isDragging : Environment context msg -> Bool
+isDragging { model } =
+    case model of
+        NotDragging ->
+            False
+
+        Dragging _ ->
+            True
+
+        DraggingOver _ ->
+            True
+
+        Dropped _ ->
+            True

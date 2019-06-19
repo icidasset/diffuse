@@ -225,6 +225,37 @@ tocca({
 })
 
 
+// Simulate `pointerenter` and `pointerleave` event for touch devices
+let enteredElement
+
+document.body.addEventListener("touchmove", event => {
+  let touch = event.touches[0]
+  let node
+
+  if (touch) {
+    node = document.elementFromPoint(touch.clientX, touch.clientY)
+  }
+
+  if (node && node != enteredElement) {
+    const eventOpts = {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      isPrimary: true,
+      pointerType: "touch"
+    }
+
+    const eventClass =
+      PointerEvent || MouseEvent
+
+    enteredElement && enteredElement.dispatchEvent(new eventClass("pointerleave", eventOpts))
+    node.dispatchEvent(new eventClass("pointerenter", eventOpts))
+
+    enteredElement = node
+  }
+})
+
+
+
 
 // Vertical Height
 // ---------------

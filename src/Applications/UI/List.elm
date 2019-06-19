@@ -82,7 +82,7 @@ item variant idx { label, actions, msg } =
 
             Draggable env ->
                 [ DnD.listenToEnterLeave env idx
-                , DnD.listenToDrop env idx
+                , DnD.listenToDrop env
                 ]
                     |> List.concat
                     |> List.map Attributes.fromUnstyled
@@ -103,13 +103,27 @@ item variant idx { label, actions, msg } =
         [ -- Label
           --------
           chunk
-            [ T.flex_grow_1 ]
+            [ C.pointer_events_none, T.flex_grow_1 ]
             [ label ]
 
         -- Actions
         ----------
         , chunk
-            [ T.flex, T.items_center ]
+            [ T.flex
+            , T.items_center
+
+            --
+            , case variant of
+                Normal ->
+                    ""
+
+                Draggable env ->
+                    if DnD.isDragging env then
+                        C.pointer_events_none
+
+                    else
+                        ""
+            ]
             (List.append
                 (List.map actionView actions)
                 (case variant of
@@ -173,9 +187,7 @@ itemStyles { dragTarget } =
     if dragTarget then
         List.append
             itemBaseStyles
-            [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent)
-            , Css.touchAction Css.none
-            ]
+            [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent) ]
 
     else
         itemBaseStyles
@@ -186,4 +198,5 @@ itemBaseStyles =
     [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor UI.Kit.colors.verySubtleBorder)
     , Css.borderTop3 (px 1) solid Css.transparent
     , Css.marginTop (px -1)
+    , Css.touchAction Css.none
     ]
