@@ -42,13 +42,13 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
             , T.pt3
             , T.white
             ]
-            [ if isLoading then
-                text "Loading track …"
-
-              else if hasStalled then
+            [ if hasStalled then
                 Html.span
                     [ onClick Unstall ]
                     [ text "Your internet connection got interrupted, click to resume." ]
+
+              else if isLoading then
+                text "Loading track …"
 
               else
                 case Maybe.map .identifiedTrack activeQueueItem of

@@ -115,7 +115,13 @@ function insertTrack(orchestrion, queueItem) {
       audioNode.setAttribute("data-timestamp", Date.now())
       audioNode.context = context.createMediaElementSource(audioNode)
       audioNode.context.connect(volume)
-      audioNode.play()
+
+      if (audioNode.readyState >= 4) {
+        audioNode.play()
+      } else {
+        orchestrion.app.ports.setAudioIsLoading.send(true)
+        audioNode.load()
+      }
 
     } else {
       audioNode = createAudioElement(orchestrion, queueItem, Date.now())
@@ -175,6 +181,9 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds) {
 
 
 function preloadAudioElement(orchestrion, queueItem) {
+  // already preloaded?
+  if (findExistingAudioElement(queueItem)) return
+
   // audio element remains valid for 2 hours
   createAudioElement(
     orchestrion,
@@ -228,6 +237,7 @@ function audioErrorEvent(event) {
 
 
 function audioStalledEvent(event) {
+  this.app.ports.setAudioIsLoading.send(true)
   this.stalledTimeoutId = setTimeout(() => {
     console.error(`Audio stalled for '${ audioElementTrackId(event.target) }'`)
 
