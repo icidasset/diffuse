@@ -604,12 +604,13 @@ welcomeScreen =
         , T.z_1
         ]
         [ UI.Kit.buttonWithColor
-            UI.Kit.colors.background
-            Normal
+            (Color.rgb 1 1 1)
+            Filled
             GetStarted
             (slab
                 Html.span
-                [ style "font-size" "13px"
+                [ style "color" "#A19B9D"
+                , style "font-size" "13px"
                 , style "line-height" "20px"
                 ]
                 [ T.tracked_mega ]
