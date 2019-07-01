@@ -49,6 +49,7 @@ self.addEventListener("fetch", event => {
   const isOffline =
     !self.navigator.onLine
 
+  // Use cache if offline and requesting something non-local and identified as cached (internal)
   if (isNotLocal && isInternal && isOffline) {
     const promise = caches
       .match(event.request)
@@ -56,21 +57,25 @@ self.addEventListener("fetch", event => {
 
     event.respondWith(promise)
 
-  } else if (event.request.url.includes("service_worker_authentication")) {
-    const [_, token] = event.request.url.split("service_worker_authentication=")
-    const newHeaders = new Headers()
+  // When doing a request with basic authentication in the url, put it in the headers instead
+  } else if (event.request.url.includes("service_worker_authentication=")) {
+    const [urlWithoutToken, token] = event.request.url.split("service_worker_authentication=")
 
-    for (const h of event.request.headers.entries()) {
-      switch (h[0]) {
-        case "range":
-          newHeaders.append(h[0], h[1])
-      }
-    }
+    newRequestWithAuth(
+      event,
+      urlWithoutToken,
+      "Basic " + token
+    )
 
-    newHeaders.set("Authorization", "Basic " + token)
+  // When doing a request with access token in the url, put it in the headers instead
+  } else if (event.request.url.includes("&access_token=")) {
+    const [urlWithoutToken, token] = event.request.url.split("&access_token=")
 
-    const newRequest = new Request(event.request, { headers: newHeaders })
-    event.respondWith(fetch(newRequest))
+    newRequestWithAuth(
+      event,
+      urlWithoutToken,
+      "Bearer " + token
+    )
 
   }
 })
@@ -78,6 +83,27 @@ self.addEventListener("fetch", event => {
 
 
 // ⚗️
+
+
+function newRequestWithAuth(event, urlWithoutToken, authToken) {
+  const newHeaders = new Headers()
+
+  for (const h of event.request.headers.entries()) {
+    switch (h[0]) {
+      case "range":
+        newHeaders.append(h[0], h[1])
+    }
+  }
+
+  newHeaders.set("authorization", authToken)
+
+  const newRequest = new Request(event.request, {
+    headers: newHeaders,
+    url: urlWithoutToken
+  })
+
+  event.respondWith(fetch(newRequest))
+}
 
 
 function removeAllCaches() {
