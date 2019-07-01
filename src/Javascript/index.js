@@ -26,7 +26,7 @@ addAudioContainer()
 // Brain
 // =====
 
-const brain = new Worker("/workers/brain.js")
+const brain = new Worker("workers/brain.js")
 
 app.ports.toBrain.subscribe(thing => {
   brain.postMessage(thing)

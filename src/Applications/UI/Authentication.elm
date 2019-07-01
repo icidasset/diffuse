@@ -470,7 +470,7 @@ view model =
                 [ T.pv3, T.relative ]
                 [ img
                     [ onClick Cancel
-                    , src "/images/diffuse-light.svg"
+                    , src "images/diffuse-light.svg"
                     , width 190
 
                     --
@@ -582,7 +582,7 @@ view model =
             ]
             [ slab
                 a
-                [ href "/about" ]
+                [ href "about" ]
                 [ T.bb
                 , T.no_underline
                 , T.white_60

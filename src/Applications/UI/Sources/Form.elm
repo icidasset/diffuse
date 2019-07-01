@@ -338,7 +338,7 @@ newHow { context } =
                     , text ", do. You can find the configuration for that server "
                     , UI.Kit.link
                         { label = "here"
-                        , url = "/about#CORS__WebDAV"
+                        , url = "about#CORS__WebDAV"
                         }
                     , text "."
                     ]
@@ -469,7 +469,7 @@ corsWarning id =
     , chunk
         [ T.f6, T.lh_title, T.mb4, T.mt1, T.o_50 ]
         [ text "You can find the instructions over "
-        , UI.Kit.link { label = "here", url = "/about#" ++ id }
+        , UI.Kit.link { label = "here", url = "about#" ++ id }
         ]
     ]
 

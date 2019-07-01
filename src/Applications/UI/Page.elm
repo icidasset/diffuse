@@ -1,5 +1,6 @@
 module UI.Page exposing (Page(..), fromUrl, sameBase, sources, toString)
 
+import Maybe.Extra as Maybe
 import Sources exposing (Service(..))
 import UI.Playlists.Page as Playlists
 import UI.Queue.Page as Queue
@@ -29,70 +30,93 @@ type Page
 
 fromUrl : Url -> Maybe Page
 fromUrl url =
-    -- For some oauth stuff, replace the query with the fragment
-    if Maybe.map (String.contains "token=") url.fragment == Just True then
-        parse route { url | query = url.fragment }
+    if Maybe.unwrap False (String.contains "path=") url.query == True then
+        -- Sometimes we have to use this kind of routing when doing redirections
+        let
+            maybePath =
+                url
+                    |> Url.Parser.parse (query (Query.string "path"))
+                    |> Maybe.join
+
+            path =
+                Maybe.withDefault "" maybePath
+        in
+        if Maybe.unwrap False (String.contains "token=") url.fragment == True then
+            -- For some oauth stuff, replace the query with the fragment
+            parse route { url | path = path, query = url.fragment }
+
+        else
+            parse route { url | path = path }
 
     else
-        parse route url
+        -- Otherwise do hash-based routing and replace the path with the fragment
+        parse route { url | path = Maybe.withDefault "" url.fragment }
 
 
 toString : Page -> String
-toString page =
+toString =
+    toString_ >> (++) "#/"
+
+
+toString_ : Page -> String
+toString_ page =
     case page of
         Equalizer ->
-            "/equalizer"
+            "equalizer"
 
         Index ->
-            "/"
+            ""
 
         -----------------------------------------
         -- Playlists
         -----------------------------------------
         Playlists Playlists.Index ->
-            "/playlists"
+            "playlists"
 
         Playlists Playlists.New ->
-            "/playlists/new"
+            "playlists/new"
 
         Playlists (Playlists.Edit playlistName) ->
-            "/playlists/edit/" ++ playlistName
+            "playlists/edit/" ++ playlistName
 
         -----------------------------------------
         -- Queue
         -----------------------------------------
         Queue Queue.History ->
-            "/queue/history"
+            "queue/history"
 
         Queue Queue.Index ->
-            "/queue"
+            "queue"
 
         -----------------------------------------
         -- Settings
         -----------------------------------------
         Settings Settings.ImportExport ->
-            "/settings/import-export"
+            "settings/import-export"
 
         Settings Settings.Index ->
-            "/settings"
+            "settings"
 
         -----------------------------------------
         -- Sources
         -----------------------------------------
         Sources (Sources.Edit sourceId) ->
-            "/sources/edit/" ++ sourceId
+            "sources/edit/" ++ sourceId
 
         Sources Sources.Index ->
-            "/sources"
+            "sources"
 
         Sources Sources.New ->
-            "/sources/new"
+            "sources/new"
+
+        Sources (Sources.NewThroughRedirect Dropbox _) ->
+            "sources/new/dropbox"
 
         Sources (Sources.NewThroughRedirect Google _) ->
-            "/sources/new/google"
+            "sources/new/google"
 
         Sources (Sources.NewThroughRedirect _ _) ->
-            "/sources/new"
+            "sources/new"
 
 
 {-| Are the bases of these two pages the same?

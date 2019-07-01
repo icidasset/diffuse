@@ -253,6 +253,6 @@ backgroundThumbnailColorStyles =
 
 backgroundThumbnailInnerStyles : String -> List Css.Style
 backgroundThumbnailInnerStyles filename =
-    [ Css.backgroundImage (Css.url <| "/images/Background/Thumbnails/" ++ filename)
+    [ Css.backgroundImage (Css.url <| "images/Background/Thumbnails/" ++ filename)
     , Css.backgroundSize Css.cover
     ]

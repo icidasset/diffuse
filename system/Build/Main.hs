@@ -84,9 +84,7 @@ sequences = lsequence
 
 flow :: Dependencies -> (Sequence, Dictionary) -> Dictionary
 flow _ (Html, dict) =
-    dict
-        |> rename "Application.html" "200.html"
-        |> clone "200.html" "index.html"
+    rename "Application.html" "index.html" dict
 
 
 flow _ (Css, dict)            = dict |> map lowerCasePath

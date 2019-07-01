@@ -85,7 +85,7 @@ authorizationUrl sourceData origin =
     in
     [ ( "response_type", "token" )
     , ( "client_id", Dict.fetch "appKey" "unknown" sourceData )
-    , ( "redirect_uri", origin ++ "/sources/new/dropbox" )
+    , ( "redirect_uri", origin ++ "?path=sources/new/dropbox" )
     , ( "state", state )
     ]
         |> Common.queryString

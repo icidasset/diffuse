@@ -586,7 +586,7 @@ linkStyles =
 
 logoBackdropStyles : List Css.Style
 logoBackdropStyles =
-    [ Css.backgroundImage (url "/images/diffuse__icon-dark.svg")
+    [ Css.backgroundImage (url "images/diffuse__icon-dark.svg")
     , Css.backgroundPosition2 (pct -43.5) (px 98)
     , Css.backgroundRepeat Css.noRepeat
     , Css.backgroundSize Css.cover

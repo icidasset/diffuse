@@ -101,7 +101,7 @@ authorizationUrl sourceData origin =
     [ ( "access_type", "offline" )
     , ( "client_id", Dict.fetch "clientId" "unknown" sourceData )
     , ( "prompt", "consent" )
-    , ( "redirect_uri", origin ++ "/sources/new/google" )
+    , ( "redirect_uri", origin ++ "?path=sources/new/google" )
     , ( "response_type", "code" )
     , ( "scope", "https://www.googleapis.com/auth/drive.readonly" )
     , ( "state", state )
@@ -145,7 +145,7 @@ prepare origin srcData _ toMsg =
                     , ( "client_secret", Dict.fetch "clientSecret" "" srcData )
                     , ( "code", Dict.fetch "authCode" "" srcData )
                     , ( "grant_type", "authorization_code" )
-                    , ( "redirect_uri", origin ++ "/sources/new/google" )
+                    , ( "redirect_uri", origin ++ "?path=sources/new/google" )
                     ]
 
                 -- Refresh access token

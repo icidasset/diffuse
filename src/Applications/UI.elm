@@ -154,12 +154,11 @@ init flags url key =
         |> update
             (PageChanged page)
         |> addCommand
-            (case maybePage of
-                Just _ ->
-                    Cmd.none
+            (if Maybe.isNothing maybePage then
+                resetUrl key url page
 
-                Nothing ->
-                    Nav.replaceUrl key "/"
+             else
+                Cmd.none
             )
 
 
@@ -383,7 +382,7 @@ update msg model =
                 |> update (BackdropMsg Backdrop.Default)
                 |> addCommand (Ports.toBrain <| Alien.trigger Alien.SignOut)
                 |> addCommand (Ports.activeQueueItemChanged Nothing)
-                |> addCommand (Nav.pushUrl model.navKey "/")
+                |> addCommand (Nav.pushUrl model.navKey "")
 
         -----------------------------------------
         -- Children
@@ -650,9 +649,17 @@ update msg model =
                 |> Nav.pushUrl model.navKey
                 |> returnWithModel model
 
-        LinkClicked (Browser.Internal url) ->
-            if url.path == "/about" then
-                returnWithModel model (Nav.load "/about")
+        LinkClicked (Browser.Internal urlWithFragment) ->
+            let
+                url =
+                    if urlWithFragment.fragment == Just "/" then
+                        { urlWithFragment | fragment = Nothing }
+
+                    else
+                        urlWithFragment
+            in
+            if url.path == "about" then
+                returnWithModel model (Nav.load "about")
 
             else
                 returnWithModel model (Nav.pushUrl model.navKey <| Url.toString url)
@@ -660,20 +667,32 @@ update msg model =
         LinkClicked (Browser.External href) ->
             returnWithModel model (Nav.load href)
 
-        UrlChanged url ->
-            case Page.fromUrl url of
-                Just page ->
+        UrlChanged ({ fragment, query } as urlWithQuery) ->
+            let
+                url =
+                    { urlWithQuery | query = Nothing }
+            in
+            case ( query, Page.fromUrl url ) of
+                ( Nothing, Just page ) ->
                     { model | page = page, url = url }
                         |> return
                         |> andThen (update <| PageChanged page)
 
-                Nothing ->
-                    returnWithModel model (Nav.replaceUrl model.navKey "/")
+                ( Just _, Just page ) ->
+                    returnWithModel model (resetUrl model.navKey url page)
+
+                _ ->
+                    returnWithModel model (resetUrl model.navKey url Page.Index)
 
 
 updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
 updateWithModel model msg =
     update msg model
+
+
+resetUrl : Nav.Key -> Url -> Page.Page -> Cmd Msg
+resetUrl key url page =
+    Nav.replaceUrl key (url.path ++ Page.toString page)
 
 
 

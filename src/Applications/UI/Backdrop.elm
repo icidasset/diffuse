@@ -181,7 +181,7 @@ chosen maybeChosen =
                 Html.img
                 [ css chosenStyles
                 , on "load" loadingDecoder
-                , src ("/images/Background/" ++ c)
+                , src ("images/Background/" ++ c)
                 ]
                 [ T.fixed
                 , T.overflow_hidden
@@ -264,7 +264,7 @@ imageStyles fadeIn isPrevious loadedBackdrop =
         style "opacity" "0"
 
     --
-    , style "background-image" ("url(/images/Background/" ++ loadedBackdrop ++ ")")
+    , style "background-image" ("url(images/Background/" ++ loadedBackdrop ++ ")")
     , style "background-size" "cover"
     , style "bottom" "-1px"
     , style "left" "-1px"

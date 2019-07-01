@@ -4,14 +4,14 @@
 //
 // This worker is responsible for everything non-UI.
 
-importScripts("/vendor/musicmetadata.min.js")
-importScripts("/vendor/subworkers-polyfill.min.js")
+importScripts("../vendor/musicmetadata.min.js")
+importScripts("../vendor/subworkers-polyfill.min.js")
 
-importScripts("/brain.js")
-importScripts("/encryption.js")
-importScripts("/indexed-db.js")
-importScripts("/processing.js")
-importScripts("/urls.js")
+importScripts("../brain.js")
+importScripts("../encryption.js")
+importScripts("../indexed-db.js")
+importScripts("../processing.js")
+importScripts("../urls.js")
 
 
 const app = Elm.Brain.init()

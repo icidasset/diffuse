@@ -712,7 +712,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     [ inline
                         [ T.dib, T.mb2 ]
                         [ UI.Kit.buttonLink
-                            "/sources/new"
+                            "sources/new"
                             UI.Kit.Normal
                             (inline
                                 []

@@ -42,22 +42,14 @@ Music layer for music storage.
 
 ### Hosting on your own server
 
-Diffuse is a static web application, which means it's just HTML, CSS and Javascript. No REST API, database, or anything backend-related involved. That said, the app does require a HTTP web server so it can have "clean urls" and use service workers (preferably HTTPS). It also requires one special rule, and that is, no matter which HTML page is requested, it should always render the root `200.html` or `index.html` file. `https://diffuse.sh` uses Netlify, which in turn uses the `_redirects` file for this. You can download a pre-build web-only version of Diffuse on the [releases](https://github.com/icidasset/diffuse/releases) page.
+Diffuse is a static web application, which means it's just HTML, CSS and Javascript. No REST API, database, or anything backend-related involved. The app uses a hash, aka. fragment, based routing system, so you don't need any special server rules for routing. You can download a pre-build web-only version of Diffuse on the [releases](https://github.com/icidasset/diffuse/releases) page. Diffuse uses service workers, so you may need HTTPS for it to work smoothly in certain browsers. I should also note that some source services use OAuth, so you'll need to use your own application credentials (eg. google drive client id + secret).
 
 In short:
 - Diffuse is a static, serverless, web application
-- Diffuse requires a HTTP server (prefer HTTPS for service worker)
-- Always render the root `200.html` or `index.html` file
+- Routing is done using hashes/fragments (eg. `diffuse.sh/#/sources`)
 - Download a web build on the [releases](https://github.com/icidasset/diffuse/releases) page
-
-```shell
-# Example of a nginx configuration
-# Disclaimer: I'm not confident this'll actually work,
-#             but it should be something along these lines.
-location ~ .html$ {
-  try_files $uri /200.html;
-}
-```
+- Uses service workers (use HTTPS if possible)
+- May need own OAuth application credentials for some source services
 
 
 
@@ -67,15 +59,15 @@ location ~ .html$ {
 
 ### Building it yourself
 
-For version numbers,  
-see `.tool-versions` and `stack.yaml`.
+For version numbers, see `.tool-versions` and `stack.yaml`.  
+All of these, except the last one, can be install using [homebrew](https://brew.sh/).
 
 - [Elm](https://elm-lang.org/) programming language
 - [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
 - [Google Closure Compiler](https://github.com/google/closure-compiler#getting-started) minifying assets
-- [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
 - [Devd](https://github.com/cortesi/devd) web server for development (optional)
 - [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
+- [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
 
 
 ```shell

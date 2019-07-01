@@ -5,7 +5,7 @@
 // This worker is responsible for caching the application
 // so it can be used offline.
 
-importScripts("/version.js")
+importScripts("version.js")
 
 
 const KEY =
