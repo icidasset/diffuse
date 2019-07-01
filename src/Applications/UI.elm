@@ -560,7 +560,7 @@ update msg model =
                 , service =
                     service
             }
-                |> (\c -> { form | context = c, step = UI.Sources.Form.How })
+                |> (\c -> { form | context = c, step = UI.Sources.Form.By })
                 |> (\f -> { sources | form = f })
                 |> (\s -> { model | sources = s })
                 |> return

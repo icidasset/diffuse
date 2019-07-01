@@ -144,13 +144,13 @@ update msg model =
 
         TakeStep ->
             case ( model.step, model.context.service ) of
-                ( Where, Dropbox ) ->
+                ( How, Dropbox ) ->
                     model.context.data
                         |> Sources.Services.Dropbox.authorizationUrl
                         |> ExternalSourceAuthorization
                         |> returnReplyWithModel model
 
-                ( Where, Google ) ->
+                ( How, Google ) ->
                     model.context.data
                         |> Sources.Services.Google.authorizationUrl
                         |> ExternalSourceAuthorization
@@ -290,7 +290,7 @@ newHow { context } =
                     [ inline
                         [ T.fw6 ]
                         [ text "If you don't know what any of this is, "
-                        , text "carry on to the next screen."
+                        , text "continue to the next screen."
                         ]
                     , text " Changing the app key allows you to use your own Dropbox app."
                     ]
@@ -300,7 +300,7 @@ newHow { context } =
                     [ inline
                         [ T.fw6 ]
                         [ text "If you don't know what any of this is, "
-                        , text "carry on to the next screen."
+                        , text "continue to the next screen."
                         ]
                     , text " Changing the client stuff allows you to use your own Google OAuth client."
                     ]
