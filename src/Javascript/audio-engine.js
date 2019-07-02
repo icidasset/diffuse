@@ -117,7 +117,7 @@ function insertTrack(orchestrion, queueItem) {
       audioNode.context.connect(volume)
 
       if (audioNode.readyState >= 4) {
-        audioNode.play()
+        playAudio(audioNode)
       } else {
         orchestrion.app.ports.setAudioIsLoading.send(true)
         audioNode.load()
@@ -263,7 +263,7 @@ function audioTimeUpdateEvent(event) {
 
 function audioEndEvent(event) {
   if (this.repeat) {
-    event.target.play()
+    playAudio(event.target)
   } else {
     this.app.ports.activeQueueItemEnded.send(null)
   }
@@ -280,7 +280,7 @@ function audioLoading() {
 function audioLoaded(event) {
   clearTimeout(this.loadingTimeoutId)
   this.app.ports.setAudioIsLoading.send(false)
-  if (event.target.paused) event.target.play()
+  if (event.target.paused) playAudio(event.target)
 }
 
 
@@ -317,6 +317,15 @@ function audioElementTrackId(node) {
 function isActiveAudioElement(orchestrion, node) {
   if (!orchestrion.activeQueueItem || !node) return false;
   return orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
+}
+
+
+function playAudio(element) {
+  const promise = element.play() || Promise.resolve()
+
+  promise.catch(err => {
+    console.error(err)
+  })
 }
 
 
