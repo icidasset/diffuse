@@ -9,7 +9,7 @@ import Coordinates exposing (Coordinates)
 import Css
 import Html.Styled exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (css, style)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (on, onClick)
 import Json.Decode
 import Material.Icons exposing (Coloring(..))
 import Svg exposing (Svg)
@@ -22,8 +22,8 @@ import UI.Kit
 -- 🗺
 
 
-view : Maybe (ContextMenu UI.Core.Msg) -> Html UI.Core.Msg
-view m =
+view : Bool -> Maybe (ContextMenu UI.Core.Msg) -> Html UI.Core.Msg
+view isTouchDevice m =
     case m of
         Just (ContextMenu items coordinates) ->
             brick
@@ -31,7 +31,12 @@ view m =
 
                 --
                 , Html.Styled.Events.custom
-                    "click"
+                    (if isTouchDevice then
+                        "tap"
+
+                     else
+                        "click"
+                    )
                     (Json.Decode.succeed
                         { message = UI.Core.HideContextMenu
                         , stopPropagation = True
@@ -54,7 +59,7 @@ view m =
                     (\idx item ->
                         case item of
                             Item i ->
-                                itemView lastIndex idx i
+                                itemView isTouchDevice lastIndex idx i
 
                             Divider ->
                                 -- TODO
@@ -67,14 +72,19 @@ view m =
             nothing
 
 
-itemView : Int -> Int -> ContextMenu.ItemProperties msg -> Html msg
-itemView lastIndex index { icon, label, msg, active } =
+itemView : Bool -> Int -> Int -> ContextMenu.ItemProperties msg -> Html msg
+itemView isTouchDevice lastIndex index { icon, label, msg, active } =
     let
         isLast =
             index == lastIndex
     in
     brick
-        [ onClick msg ]
+        [ if isTouchDevice then
+            on "tap" (Json.Decode.succeed msg)
+
+          else
+            onClick msg
+        ]
         [ T.bb
         , T.pa3
         , T.pr4

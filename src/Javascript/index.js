@@ -277,7 +277,7 @@ document.body.addEventListener("touchmove", event => {
     }
 
     const eventClass =
-      PointerEvent || MouseEvent
+      self.PointerEvent || self.MouseEvent
 
     enteredElement && enteredElement.dispatchEvent(new eventClass("pointerleave", eventOpts))
     node.dispatchEvent(new eventClass("pointerenter", eventOpts))

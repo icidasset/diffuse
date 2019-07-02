@@ -26,7 +26,7 @@ import Html.Events.Extra.Pointer as Pointer
 import Html.Events.Extra.Touch as Touch
 import Html.Styled as Html exposing (Html, section, toUnstyled)
 import Html.Styled.Attributes as Attributes exposing (css, id, style)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (on, onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
@@ -1248,7 +1248,12 @@ body : Model -> Html Msg
 body model =
     section
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred.instance then
-            [ onClick HideOverlay ]
+            [ if model.isTouchDevice then
+                on "tap" (Json.Decode.succeed HideOverlay)
+
+              else
+                onClick HideOverlay
+            ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
             [ (EqualizerMsg << Equalizer.AdjustKnob)
@@ -1294,7 +1299,7 @@ body model =
         -- Context Menu
         -----------------------------------------
         , model.contextMenu
-            |> Lazy.lazy UI.ContextMenu.view
+            |> Lazy.lazy2 UI.ContextMenu.view model.isTouchDevice
 
         -----------------------------------------
         -- Notifications
