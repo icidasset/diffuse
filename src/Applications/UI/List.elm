@@ -95,7 +95,6 @@ item variant idx { label, actions, msg } =
         [ T.flex
         , T.fw6
         , T.items_center
-        , T.pv3
 
         --
         , ifThenElse (Maybe.isJust msg) T.pointer ""
@@ -103,7 +102,7 @@ item variant idx { label, actions, msg } =
         [ -- Label
           --------
           chunk
-            [ C.pointer_events_none, T.flex_grow_1 ]
+            [ C.pointer_events_none, T.flex_grow_1, T.mv3 ]
             [ label ]
 
         -- Actions
@@ -166,9 +165,11 @@ dragActionView coloring env context =
         [ Attributes.title "Drag me"
         , Attributes.fromUnstyled (DnD.listenToStart env context)
         ]
-        [ C.lh_0
+        [ C.disable_selection
+        , C.lh_0
         , C.grab_cursor
         , T.ml2
+        , T.pv2
         ]
         [ fromUnstyled (Icons.drag_indicator 16 coloring) ]
 

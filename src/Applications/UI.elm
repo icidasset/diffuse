@@ -9,6 +9,7 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
+import Classes as C
 import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
@@ -25,7 +26,7 @@ import File.Select
 import Html.Events.Extra.Pointer as Pointer
 import Html.Events.Extra.Touch as Touch
 import Html.Styled as Html exposing (Html, section, toUnstyled)
-import Html.Styled.Attributes as Attributes exposing (css, id, style)
+import Html.Styled.Attributes as Attributes exposing (class, css, id, style)
 import Html.Styled.Events exposing (on, onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
@@ -1268,7 +1269,7 @@ body model =
             ]
 
          else if model.isDragging then
-            [ Attributes.class "dragging-something"
+            [ Attributes.class ("dragging-something " ++ C.disable_selection)
             , Attributes.fromUnstyled (Pointer.onUp <| always StoppedDragging)
             , Attributes.fromUnstyled (Pointer.onCancel <| always StoppedDragging)
             ]
@@ -1277,7 +1278,7 @@ body model =
             [ Attributes.fromUnstyled (Touch.onStart <| always IndicateTouchDevice) ]
 
          else
-            []
+            [ class C.disable_selection ]
         )
         [ Css.Global.global globalCss
 
@@ -1533,7 +1534,8 @@ globalCss =
 
     --
     , Css.Global.selector ".disable-selection"
-        [ Css.property "-webkit-user-select" "none"
+        [ Css.property "-webkit-touch-callout" "none"
+        , Css.property "-webkit-user-select" "none"
         , Css.property "-moz-user-select" "none"
         , Css.property "-ms-user-select" "none"
         , Css.property "user-select" "none"
