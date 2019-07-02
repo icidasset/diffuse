@@ -17,17 +17,29 @@ importScripts("../urls.js")
 const app = Elm.Brain.init()
 
 
+function initialize(initialUrl) {
+  app.ports.initialize.send(initialUrl)
+}
+
+
 
 // UI
 // ==
 
 self.onmessage = event => {
-  if (event.data.tag) app.ports.fromAlien.send(event.data)
+  if (event.data.action) return handleAction(event.data.action, event.data.data)
+  if (event.data.tag) return app.ports.fromAlien.send(event.data)
 }
+
 
 app.ports.toUI.subscribe(event => {
   self.postMessage(event)
 })
+
+
+function handleAction(action, data) { switch (action) {
+  case "INITIALIZE": return initialize(data)
+}}
 
 
 
@@ -92,17 +104,15 @@ function isLocalHost(url) {
 let bl
 
 
-function bl0ckst4ck(appDomain) {
+function bl0ckst4ck() {
   if (!bl) {
     importScripts("/vendor/blockstack.min.js")
 
     bl = new blockstack.UserSession({
-      options: {
-        appConfig: new blockstack.AppConfig({
-          appDomain: appDomain
-        }),
-        sessionStore: BLOCKSTACK_SESSION_STORE
-      }
+      appConfig: new blockstack.AppConfig({
+        appDomain: location.origin
+      }),
+      sessionStore: BLOCKSTACK_SESSION_STORE
     })
   }
 
@@ -118,21 +128,43 @@ const BLOCKSTACK_SESSION_STORE = {
 }
 
 
-app.ports.redirectToBlockstackSignIn.subscribe(event => {
-  const session = bl0ckst4ck(event.data)
+app.ports.handlePendingBlockstackSignIn.subscribe(authResponse => {
+  const session = bl0ckst4ck()
+
+  console.log("TODO", authResponse)
+
   // TODO
+  session.handlePendingSignIn(authResponse).then(userData => {
+    console.log(userData)
+  })
+})
+
+
+app.ports.redirectToBlockstackSignIn.subscribe(event => {
+  const session = bl0ckst4ck()
+  const authRequest = session.makeAuthRequest(
+    session.generateAndStoreTransitKey(),
+    location.origin + "?action=authenticate/blockstack",
+    location.origin + "/manifest.json",
+    [ "store_write" ]
+  )
+
+  self.postMessage({
+    action: "REDIRECT_TO_BLOCKSTACK",
+    data: authRequest
+  })
 })
 
 
 app.ports.requestBlockstack.subscribe(event => {
-  const session = bl0ckst4ck(event.data.appDomain)
+  const session = bl0ckst4ck()
   // TODO
 })
 
 
 app.ports.toBlockstack.subscribe(event => {
   const json = JSON.stringify(event.data.data)
-  const session = bl0ckst4ck(event.data.appDomain)
+  const session = bl0ckst4ck()
   // TODO
 })
 

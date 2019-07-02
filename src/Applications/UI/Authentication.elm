@@ -23,6 +23,7 @@ import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
+import Maybe.Extra as Maybe
 import Return3 as Return exposing (..)
 import SHA
 import String.Ext as String
@@ -33,6 +34,7 @@ import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
 import Url exposing (Url)
+import Url.Extra as Url
 
 
 
@@ -69,7 +71,7 @@ type alias Question =
 
 initialModel : Url -> Model
 initialModel url =
-    case String.split "/" (String.dropLeft 1 url.path) of
+    case Url.action url of
         [ "authenticate", "remotestorage", encodedUserAddress ] ->
             let
                 userAddress =
@@ -642,12 +644,12 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = Bypass -- TriggerExternalAuth Blockstack ""
+            { action = TriggerExternalAuth Blockstack ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.blockstackLogo
             , infoLink = Just "https://blockstack.org"
             , isLast = False
             , label = "Blockstack"
-            , outOfOrder = True
+            , outOfOrder = False
             }
         , choiceButton
             { action =

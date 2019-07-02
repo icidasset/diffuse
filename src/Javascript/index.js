@@ -28,13 +28,27 @@ addAudioContainer()
 
 const brain = new Worker("workers/brain.js")
 
+
 app.ports.toBrain.subscribe(thing => {
   brain.postMessage(thing)
 })
 
+
 brain.onmessage = event => {
-  if (event.data.tag) app.ports.fromAlien.send(event.data)
+  if (event.data.action) return handleAction(event.data.action, event.data.data)
+  if (event.data.tag) return app.ports.fromAlien.send(event.data)
 }
+
+
+brain.postMessage({
+  action: "INITIALIZE",
+  data: window.location.href
+})
+
+
+function handleAction(action, data) { switch (action) {
+  case "REDIRECT_TO_BLOCKSTACK": return redirectToBlockstack(data)
+}}
 
 
 
@@ -122,6 +136,23 @@ app.ports.unstall.subscribe(_ => {
 
 
 
+// Authentication
+// --------------
+
+function redirectToBlockstack(authRequest) {
+  switch (location.hostname) {
+    case "0.0.0.0":
+    case "127.0.0.1":
+    case "localhost":
+      return window.location.href = `http://localhost:8888/auth?authRequest=${authRequest}`
+
+    default:
+      return window.location.href = `https://browser.blockstack.org/auth?authRequest=${authRequest}`
+  }
+}
+
+
+
 // Backdrop
 // --------
 
@@ -186,6 +217,7 @@ function removeFocus() {
 
 window.addEventListener("online", onlineStatusChanged)
 window.addEventListener("offline", onlineStatusChanged)
+
 
 function onlineStatusChanged() {
   app.ports.setIsOnline.send(navigator.onLine)

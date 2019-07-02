@@ -36,13 +36,14 @@ type alias Model =
 
 type Msg
     = Bypass
+    | Initialize String
     | NotifyUI Alien.Event
     | NotSoFast (Debouncer.Msg Msg)
     | ToCache Alien.Event
       -----------------------------------------
       -- Authentication
       -----------------------------------------
-    | RedirectToBlockstackSignIn String
+    | RedirectToBlockstackSignIn
       -----------------------------------------
       -- Children
       -----------------------------------------

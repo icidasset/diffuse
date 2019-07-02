@@ -48,7 +48,7 @@ oauthAddress { oauthOrigin, origin } { host, username } =
     in
     String.concat
         [ oauthOrigin
-        , "?redirect_uri=" ++ Url.percentEncode (origin ++ "/authenticate/remotestorage/" ++ ua)
+        , "?redirect_uri=" ++ Url.percentEncode (origin ++ "?action=authenticate/remotestorage/" ++ ua)
         , "&client_id=" ++ Url.percentEncode origin
         , "&scope=" ++ Url.percentEncode "diffuse:rw"
         , "&response_type=token"

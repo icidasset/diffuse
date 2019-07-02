@@ -28,6 +28,8 @@ import Json.Decode as Decode
 import Json.Encode as Json
 import Return3 as Return exposing (..)
 import Task.Extra exposing (do)
+import Url exposing (Url)
+import Url.Extra as Url
 
 
 
@@ -47,12 +49,28 @@ initialModel =
     }
 
 
-initialCommand : Cmd Msg
-initialCommand =
-    Cmd.batch
-        [ do RetrieveMethod
-        , do RetrieveEnclosedData
-        ]
+initialCommand : Url -> Cmd Msg
+initialCommand initialUrl =
+    case Url.action initialUrl of
+        [ "authenticate", "blockstack" ] ->
+            case Url.extractQueryParam "authResponse" initialUrl of
+                Just authResponse ->
+                    Cmd.batch
+                        [ do RetrieveEnclosedData
+                        , Ports.handlePendingBlockstackSignIn authResponse
+                        ]
+
+                Nothing ->
+                    Cmd.batch
+                        [ do RetrieveMethod
+                        , do RetrieveEnclosedData
+                        ]
+
+        _ ->
+            Cmd.batch
+                [ do RetrieveMethod
+                , do RetrieveEnclosedData
+                ]
 
 
 

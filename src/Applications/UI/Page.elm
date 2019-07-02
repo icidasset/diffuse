@@ -1,4 +1,4 @@
-module UI.Page exposing (Page(..), fromUrl, sameBase, sources, toString)
+module UI.Page exposing (Page(..), fromUrl, rewriteUrl, sameBase, sources, toString)
 
 import Maybe.Extra as Maybe
 import Sources exposing (Service(..))
@@ -29,8 +29,13 @@ type Page
 
 
 fromUrl : Url -> Maybe Page
-fromUrl url =
-    if Maybe.unwrap False (String.contains "path=") url.query == True then
+fromUrl =
+    parse route
+
+
+rewriteUrl : Url -> Url
+rewriteUrl url =
+    if Maybe.unwrap False (String.contains "path=") url.query then
         -- Sometimes we have to use this kind of routing when doing redirections
         let
             maybePath =
@@ -41,16 +46,16 @@ fromUrl url =
             path =
                 Maybe.withDefault "" maybePath
         in
-        if Maybe.unwrap False (String.contains "token=") url.fragment == True then
+        if Maybe.unwrap False (String.contains "token=") url.fragment then
             -- For some oauth stuff, replace the query with the fragment
-            parse route { url | path = path, query = url.fragment }
+            { url | path = path, query = url.fragment }
 
         else
-            parse route { url | path = path }
+            { url | path = path }
 
     else
         -- Otherwise do hash-based routing and replace the path with the fragment
-        parse route { url | path = Maybe.withDefault "" url.fragment }
+        { url | path = Maybe.withDefault "" url.fragment }
 
 
 toString : Page -> String

@@ -106,8 +106,11 @@ main =
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
+        rewrittenUrl =
+            Page.rewriteUrl url
+
         maybePage =
-            Page.fromUrl url
+            Page.fromUrl rewrittenUrl
 
         page =
             Maybe.withDefault Page.Index maybePage
@@ -667,12 +670,12 @@ update msg model =
         LinkClicked (Browser.External href) ->
             returnWithModel model (Nav.load href)
 
-        UrlChanged ({ fragment, query } as urlWithQuery) ->
+        UrlChanged url ->
             let
-                url =
-                    { urlWithQuery | query = Nothing }
+                rewrittenUrl =
+                    Page.rewriteUrl { url | query = Nothing }
             in
-            case ( query, Page.fromUrl url ) of
+            case ( url.query, Page.fromUrl rewrittenUrl ) of
                 ( Nothing, Just page ) ->
                     { model | page = page, url = url }
                         |> return
@@ -717,9 +720,8 @@ translateReply reply model =
         -- Authentication
         -----------------------------------------
         ExternalAuth Authentication.Blockstack _ ->
-            [ ( "origin", Json.Encode.string (Common.urlOrigin model.url) ) ]
-                |> Json.Encode.object
-                |> Alien.broadcast Alien.RedirectToBlockstackSignIn
+            Alien.RedirectToBlockstackSignIn
+                |> Alien.trigger
                 |> Ports.toBrain
                 |> returnWithModel model
 

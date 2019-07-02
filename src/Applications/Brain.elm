@@ -12,6 +12,7 @@ import Brain.Tracks as Tracks
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import Json.Encode
+import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Return2 exposing (..)
 import Return3
@@ -19,6 +20,7 @@ import Sources.Encoding as Sources
 import Sources.Processing.Encoding as Processing
 import Tracks
 import Tracks.Encoding as Tracks
+import Url
 
 
 
@@ -39,7 +41,7 @@ main =
 
 
 init : Flags -> ( Model, Cmd Msg )
-init flags =
+init _ =
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
@@ -58,10 +60,7 @@ init flags =
       -----------------------------------------
       -- Initial command
       -----------------------------------------
-    , Cmd.batch
-        [ Cmd.map AuthenticationMsg Authentication.initialCommand
-        , Cmd.map ProcessingMsg Processing.initialCommand
-        ]
+    , Cmd.none
     )
 
 
@@ -74,6 +73,25 @@ update msg model =
     case msg of
         Bypass ->
             return model
+
+        Initialize href ->
+            let
+                initialUrl =
+                    Maybe.withDefault
+                        { protocol = Url.Http
+                        , host = ""
+                        , port_ = Nothing
+                        , path = ""
+                        , query = Nothing
+                        , fragment = Nothing
+                        }
+                        (Url.fromString href)
+            in
+            [ Cmd.map AuthenticationMsg (Authentication.initialCommand initialUrl)
+            , Cmd.map ProcessingMsg Processing.initialCommand
+            ]
+                |> Cmd.batch
+                |> returnWithModel model
 
         NotifyUI alienEvent ->
             [ Brain.Ports.toUI alienEvent
@@ -109,8 +127,8 @@ update msg model =
         -----------------------------------------
         -- Authentication
         -----------------------------------------
-        RedirectToBlockstackSignIn origin ->
-            origin
+        RedirectToBlockstackSignIn ->
+            ()
                 |> Brain.Ports.redirectToBlockstackSignIn
                 |> returnWithModel model
 
@@ -356,6 +374,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Brain.Ports.fromAlien alien
+        , Brain.Ports.initialize Initialize
 
         -----------------------------------------
         -- Children
@@ -425,10 +444,7 @@ translateAlienData tag data =
                     report Alien.ProcessSources (Json.errorToString err)
 
         Alien.RedirectToBlockstackSignIn ->
-            data
-                |> Json.decodeValue (Json.field "origin" Json.string)
-                |> Result.withDefault ""
-                |> RedirectToBlockstackSignIn
+            RedirectToBlockstackSignIn
 
         Alien.RemoveTracksBySourceId ->
             data
