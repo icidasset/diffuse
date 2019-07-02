@@ -30,8 +30,8 @@ self.addEventListener("install", event => {
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))
-      const whatToCache = [""].concat(filteredTree).map(p => "/" + p)
-      return caches.open(KEY).then(c => c.addAll(whatToCache))
+      const whatToCache = [ "" ].concat(filteredTree)
+      return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
 
   event.waitUntil(promise)
