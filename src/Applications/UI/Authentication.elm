@@ -644,12 +644,12 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = TriggerExternalAuth Blockstack ""
+            { action = Bypass -- TriggerExternalAuth Blockstack ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.blockstackLogo
             , infoLink = Just "https://blockstack.org"
             , isLast = False
             , label = "Blockstack"
-            , outOfOrder = False
+            , outOfOrder = True
             }
         , choiceButton
             { action =
