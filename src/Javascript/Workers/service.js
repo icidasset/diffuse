@@ -26,7 +26,7 @@ const exclude =
 
 self.addEventListener("install", event => {
   const promise = removeAllCaches()
-    .then(_ => fetch("/tree.json"))
+    .then(_ => fetch("tree.json"))
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))

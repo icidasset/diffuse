@@ -34,7 +34,7 @@ import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
 import Url exposing (Url)
-import Url.Extra as Url
+import Url.Ext as Url
 
 
 

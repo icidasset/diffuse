@@ -1,4 +1,4 @@
-module Url.Extra exposing (action, extractQueryParam)
+module Url.Ext exposing (action, extractQueryParam)
 
 import Maybe.Extra as Maybe
 import Url exposing (Url)

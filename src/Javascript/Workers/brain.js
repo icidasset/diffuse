@@ -106,7 +106,7 @@ let bl
 
 function bl0ckst4ck() {
   if (!bl) {
-    importScripts("/vendor/blockstack.min.js")
+    importScripts("../vendor/blockstack.min.js")
 
     bl = new blockstack.UserSession({
       appConfig: new blockstack.AppConfig({
