@@ -1,8 +1,13 @@
-module Html.Styled.Ext exposing (ifEnterKey, onEnterKey)
+module Html.Styled.Ext exposing (ifEnterKey, onDoubleTap, onEnterKey)
 
 import Html.Styled exposing (Attribute)
 import Html.Styled.Events exposing (keyCode, on)
 import Json.Decode as Json
+
+
+onDoubleTap : msg -> Attribute msg
+onDoubleTap msg =
+    on "dbltap" (Json.succeed msg)
 
 
 {-| Event binding for the `Enter` key.

@@ -1,14 +1,15 @@
 module UI.Notifications exposing (dismiss, show, showWithModel, view)
 
 import Chunky exposing (..)
+import Classes as C
 import Color.Ext as Color
 import Css
-import Css.Ext as Css
 import Css.Global
 import Css.Transitions exposing (transition)
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes exposing (css, rel)
 import Html.Styled.Events exposing (onDoubleClick)
+import Html.Styled.Ext exposing (onDoubleTap)
 import Html.Styled.Lazy
 import Notifications exposing (..)
 import Process
@@ -104,6 +105,12 @@ notificationView notification =
 
         options =
             Notifications.options notification
+
+        dismissMsg =
+            notification
+                |> Notifications.id
+                |> (\id -> { id = id })
+                |> UI.Core.DismissNotification
     in
     brick
         [ case kind of
@@ -117,11 +124,8 @@ notificationView notification =
                 css warningStyles
 
         --
-        , notification
-            |> Notifications.id
-            |> (\id -> { id = id })
-            |> UI.Core.DismissNotification
-            |> onDoubleClick
+        , onDoubleClick dismissMsg
+        , onDoubleTap dismissMsg
         ]
         [ T.br2
         , T.mt2
@@ -156,9 +160,8 @@ notificationView notification =
         ]
         [ contents notification
         , if options.sticky && kind /= Warning then
-            brick
-                [ css [ Css.disableUserSelection ] ]
-                [ T.f7, T.i, T.mt2, T.o_60, T.pointer ]
+            chunk
+                [ C.disable_selection, T.f7, T.i, T.mt2, T.o_60, T.pointer ]
                 [ Html.text "Double click to dismiss" ]
 
           else
