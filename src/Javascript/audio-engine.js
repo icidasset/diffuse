@@ -18,6 +18,9 @@ if (window.AudioContext) {
 }
 
 
+const SINGLE_AUDIO_NODE = !!navigator.platform.match(/iPhone|iPod|iPad/)
+
+
 
 // Container for <audio> elements
 // ------------------------------
@@ -111,7 +114,12 @@ function insertTrack(orchestrion, queueItem) {
     queueItem =
       Object.assign({}, queueItem, { url: url })
 
-    if (audioNode = findExistingAudioElement(queueItem)) {
+    if ((audioNode = audioElementsContainer.querySelector("audio")) && SINGLE_AUDIO_NODE) {
+      audioNode.setAttribute("src", queueItem.url)
+      audioNode.setAttribute("rel", queueItem.trackId)
+      audioNode.play()
+
+    } else if (audioNode = findExistingAudioElement(queueItem)) {
       audioNode.setAttribute("data-timestamp", Date.now())
       audioNode.context = context.createMediaElementSource(audioNode)
       audioNode.context.connect(volume)

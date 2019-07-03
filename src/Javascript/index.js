@@ -69,7 +69,7 @@ app.ports.activeQueueItemChanged.subscribe(item => {
   orchestrion.audio = null
 
   clearTimeout(orchestrion.loadingTimeoutId)
-  removeOlderAudioElements(timestampInMilliseconds)
+  SINGLE_AUDIO_NODE ? false : removeOlderAudioElements(timestampInMilliseconds)
 
   if (item) {
     insertTrack(orchestrion, item)
@@ -108,7 +108,9 @@ app.ports.play.subscribe(_ => {
 
 
 app.ports.preloadAudio.subscribe(item => {
-  preloadAudioElement(orchestrion, item)
+  SINGLE_AUDIO_NODE
+    ? false
+    : preloadAudioElement(orchestrion, item)
 })
 
 
