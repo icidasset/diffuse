@@ -376,11 +376,10 @@ setVerticalHeightUnit()
 
 window.addEventListener("resize", () => {
   setTimeout(setVerticalHeightUnit, 0)
-  setTimeout(setVerticalHeightUnit, 32)
 })
 
 
 function setVerticalHeightUnit() {
-  const vh = window.innerHeight * 0.01
+  const vh = document.documentElement.clientHeight * 0.01
   document.documentElement.style.setProperty("--vh", `${vh}px`)
 }

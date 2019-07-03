@@ -153,7 +153,8 @@ actionView action =
                 [ title action.title ]
         )
         [ C.lh_0
-        , T.ml2
+        , T.ml1
+        , T.pl1
         , ifThenElse (Maybe.isJust action.msg) T.pointer ""
         ]
         [ fromUnstyled (action.icon 16 action.color) ]
@@ -168,7 +169,8 @@ dragActionView coloring env context =
         [ C.disable_selection
         , C.lh_0
         , C.grab_cursor
-        , T.ml2
+        , T.ml1
+        , T.pl1
         , T.pv2
         ]
         [ fromUnstyled (Icons.drag_indicator 16 coloring) ]

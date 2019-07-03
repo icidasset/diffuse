@@ -1,3 +1,8 @@
+html {
+  height: calc(var(--vh, 1vh) * 100);
+  overscroll-behavior: none;
+}
+
 body {
   background-color: rgb(2, 7, 14);
   background-image: url(images/ep_naturalblack_pattern.jpg);

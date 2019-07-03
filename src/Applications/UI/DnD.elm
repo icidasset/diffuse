@@ -107,8 +107,8 @@ listenToStart { toMsg } context =
         , preventDefault = True
         }
         (\event ->
-            case event.pointer.button of
-                Mouse.MainButton ->
+            case ( event.pointer.button, event.isPrimary ) of
+                ( Mouse.MainButton, True ) ->
                     toMsg (Start context)
 
                 _ ->
