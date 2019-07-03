@@ -397,7 +397,7 @@ futureView model =
           , Label "History" Shown
           , NavigateToPage (Page.Queue History)
           )
-        , ( Icon Icons.backspace
+        , ( Icon Icons.clear
           , Label "Clear" Shown
           , PerformMsg Clear
           )
