@@ -415,7 +415,7 @@ receptacle =
         , T.flex
         , T.flex_column
         , T.overflow_x_hidden
-        , T.overflow_y_scroll
+        , T.overflow_y_auto
         , T.z_999
         ]
 

@@ -9,6 +9,7 @@ import Css
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (autofocus, css, id, placeholder, type_)
 import Html.Styled.Events exposing (onClick, onInput)
+import Html.Styled.Ext exposing (onTap)
 import Json.Decode
 import Keyboard
 import List.Extra as List
@@ -157,8 +158,8 @@ subscriptions _ =
 -- 🗺
 
 
-view : Model -> Html Msg
-view model =
+view : Bool -> Model -> Html Msg
+view isTouchDevice model =
     case model.instance of
         Just instance ->
             chunk
@@ -183,7 +184,7 @@ view model =
                 -----------------------------------------
                 , brick
                     [ Html.Styled.Events.custom
-                        "click"
+                        (ifThenElse isTouchDevice "tap" "click")
                         (Json.Decode.succeed
                             { message = Bypass
                             , stopPropagation = True
@@ -223,7 +224,7 @@ view model =
                 -----------------------------------------
                 , brick
                     [ Html.Styled.Events.custom
-                        "click"
+                        (ifThenElse isTouchDevice "tap" "click")
                         (Json.Decode.succeed
                             { message = Bypass
                             , stopPropagation = True
@@ -245,7 +246,12 @@ view model =
                     (List.indexedMap
                         (\idx result ->
                             brick
-                                [ onClick (RunAction idx) ]
+                                [ if isTouchDevice then
+                                    onTap (RunAction idx)
+
+                                  else
+                                    onClick (RunAction idx)
+                                ]
                                 [ T.pa3
                                 , T.relative
                                 , T.truncate

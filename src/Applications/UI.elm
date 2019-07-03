@@ -187,12 +187,6 @@ update msg model =
                 , msg = debouncerMsg
                 }
 
-        HideAlfred ->
-            return { model | alfred = { instance = Nothing } }
-
-        HideContextMenu ->
-            return { model | contextMenu = Nothing }
-
         HideOverlay ->
             return { model | alfred = { instance = Nothing }, contextMenu = Nothing }
 
@@ -214,6 +208,9 @@ update msg model =
             model
                 |> UserData.importHypaethral json
                 |> Return3.wield translateReply
+
+        MsgViaContextMenu m ->
+            update m { model | contextMenu = Nothing }
 
         Reply reply ->
             translateReply reply model
@@ -1249,11 +1246,9 @@ body : Model -> Html Msg
 body model =
     section
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred.instance then
-            [ if model.isTouchDevice then
-                on "tap" (Json.Decode.succeed HideOverlay)
-
-              else
-                onClick HideOverlay
+            [ on
+                (ifThenElse model.isTouchDevice "tap" "click")
+                (Json.Decode.succeed HideOverlay)
             ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
@@ -1286,7 +1281,7 @@ body model =
         -- Alfred
         -----------------------------------------
         , model.alfred
-            |> Lazy.lazy Alfred.view
+            |> Lazy.lazy2 Alfred.view model.isTouchDevice
             |> Html.map AlfredMsg
 
         -----------------------------------------
@@ -1317,19 +1312,28 @@ body model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , case ( model.isLoading, model.authentication ) of
+        , let
+            opts =
+                { justifyCenter = False
+                , noPointerEvents =
+                    False
+                        || Maybe.isJust model.contextMenu
+                        || Maybe.isJust model.alfred.instance
+                }
+          in
+          case ( model.isLoading, model.authentication ) of
             ( True, _ ) ->
-                content { justifyCenter = True } [ loadingAnimation ]
+                content { opts | justifyCenter = True } [ loadingAnimation ]
 
             ( False, Authentication.Authenticated _ ) ->
-                content { justifyCenter = False } (defaultScreen model)
+                content opts (defaultScreen model)
 
             ( False, _ ) ->
                 model.authentication
                     |> Lazy.lazy Authentication.view
                     |> Html.map AuthenticationMsg
                     |> List.singleton
-                    |> content { justifyCenter = False }
+                    |> content opts
         ]
 
 
@@ -1401,13 +1405,21 @@ defaultScreen model =
 -- 🗺  ░░  BITS
 
 
-content : { justifyCenter : Bool } -> List (Html msg) -> Html msg
-content { justifyCenter } nodes =
+content : { justifyCenter : Bool, noPointerEvents : Bool } -> List (Html msg) -> Html msg
+content { justifyCenter, noPointerEvents } nodes =
     brick
         [ css contentStyles ]
-        [ T.overflow_scroll
+        [ T.overflow_x_hidden
+        , T.overflow_y_auto
         , T.relative
         , T.z_1
+
+        --
+        , if noPointerEvents then
+            C.pointer_events_none
+
+          else
+            ""
         ]
         [ brick
             [ css contentInnerStyles ]

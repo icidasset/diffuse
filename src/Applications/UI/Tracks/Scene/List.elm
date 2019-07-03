@@ -75,7 +75,7 @@ lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection ( 
         , T.flex_grow_1
         , T.outline_0
         , T.overflow_x_hidden
-        , T.overflow_y_scroll
+        , T.overflow_y_auto
         , T.vh_25
         ]
         [ -- Header
@@ -469,6 +469,7 @@ touchContextMenuEvent ( i, _ ) maybeDragEnv =
         (Decode.map2
             (\x y ->
                 { message =
+                    -- Only show menu when not dragging something
                     case Maybe.andThen (.model >> DnD.modelTarget) maybeDragEnv of
                         Just _ ->
                             Bypass

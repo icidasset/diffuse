@@ -150,7 +150,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds) {
 
   const timeUpdateFunc = bind(audioTimeUpdateEvent)
 
-  audio = new window.Audio()
+  audio = new Audio()
   audio.setAttribute("crossorigin", "anonymous")
   audio.setAttribute("preload", "auto")
   audio.setAttribute("src", queueItem.url)
@@ -324,7 +324,7 @@ function playAudio(element) {
   const promise = element.play() || Promise.resolve()
 
   promise.catch(err => {
-    console.error(err)
+    console.error("Could not play audio automatically. Please resume playback manually.")
   })
 }
 

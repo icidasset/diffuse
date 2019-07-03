@@ -94,13 +94,12 @@ type alias Viewport =
 type Msg
     = Bypass
     | Debounce (Debouncer.Msg Msg)
-    | HideAlfred
-    | HideContextMenu
     | HideOverlay
     | IndicateTouchDevice
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value
+    | MsgViaContextMenu Msg
     | Reply Reply
     | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix

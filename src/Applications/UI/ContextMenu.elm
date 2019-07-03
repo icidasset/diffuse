@@ -9,7 +9,7 @@ import Coordinates exposing (Coordinates)
 import Css
 import Html.Styled exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (css, style)
-import Html.Styled.Events exposing (on, onClick)
+import Html.Styled.Events exposing (custom, onClick)
 import Json.Decode
 import Material.Icons exposing (Coloring(..))
 import Svg exposing (Svg)
@@ -27,23 +27,7 @@ view isTouchDevice m =
     case m of
         Just (ContextMenu items coordinates) ->
             brick
-                [ css (menuStyles coordinates)
-
-                --
-                , Html.Styled.Events.custom
-                    (if isTouchDevice then
-                        "tap"
-
-                     else
-                        "click"
-                    )
-                    (Json.Decode.succeed
-                        { message = UI.Core.HideContextMenu
-                        , stopPropagation = True
-                        , preventDefault = True
-                        }
-                    )
-                ]
+                [ css (menuStyles coordinates) ]
                 [ T.absolute
                 , T.br2
                 , T.bg_white
@@ -62,7 +46,7 @@ view isTouchDevice m =
                                 itemView isTouchDevice lastIndex idx i
 
                             Divider ->
-                                -- TODO
+                                -- NOTE: Not needed at the moment
                                 nothing
                     )
                     items
@@ -72,18 +56,21 @@ view isTouchDevice m =
             nothing
 
 
-itemView : Bool -> Int -> Int -> ContextMenu.ItemProperties msg -> Html msg
+itemView : Bool -> Int -> Int -> ContextMenu.ItemProperties UI.Core.Msg -> Html UI.Core.Msg
 itemView isTouchDevice lastIndex index { icon, label, msg, active } =
     let
         isLast =
             index == lastIndex
     in
     brick
-        [ if isTouchDevice then
-            on "tap" (Json.Decode.succeed msg)
-
-          else
-            onClick msg
+        [ custom
+            (ifThenElse isTouchDevice "tap" "click")
+            (Json.Decode.succeed
+                { message = UI.Core.MsgViaContextMenu msg
+                , stopPropagation = True
+                , preventDefault = True
+                }
+            )
         ]
         [ T.bb
         , T.pa3
