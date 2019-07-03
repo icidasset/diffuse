@@ -119,6 +119,15 @@ update msg model =
                 , msg = debouncerMsg
                 }
 
+        Process { origin, sources } ->
+            { origin = origin
+            , sources = sources
+            , tracks = model.hypaethralUserData.tracks
+            }
+                |> Processing.Process
+                |> ProcessingMsg
+                |> updateWithModel model
+
         ToCache alienEvent ->
             alienEvent
                 |> Brain.Ports.toCache
@@ -436,9 +445,7 @@ translateAlienData tag data =
             -- otherwise report an error in the UI.
             case Json.decodeValue Processing.argumentsDecoder data of
                 Ok arguments ->
-                    arguments
-                        |> Processing.Process
-                        |> ProcessingMsg
+                    Process arguments
 
                 Err err ->
                     report Alien.ProcessSources (Json.errorToString err)

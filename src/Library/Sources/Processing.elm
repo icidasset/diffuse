@@ -16,7 +16,6 @@ type Status
 type alias Arguments =
     { origin : String
     , sources : List Source
-    , tracks : List Track
     }
 
 

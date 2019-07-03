@@ -952,8 +952,6 @@ translateReply reply model =
                     return model
 
         ProcessSources ->
-            -- TODO:
-            -- Don't process disabled sources?
             let
                 notification =
                     Notifications.stickyWarning "Processing sources …"
@@ -974,10 +972,9 @@ translateReply reply model =
               , Json.Encode.string (Common.urlOrigin model.url)
               )
             , ( "sources"
-              , Json.Encode.list Sources.Encoding.encode model.sources.collection
-              )
-            , ( "tracks"
-              , Json.Encode.list Tracks.Encoding.encodeTrack model.tracks.collection.untouched
+              , model.sources.collection
+                    |> List.filter (.enabled >> (==) True)
+                    |> Json.Encode.list Sources.Encoding.encode
               )
             ]
                 |> Json.Encode.object

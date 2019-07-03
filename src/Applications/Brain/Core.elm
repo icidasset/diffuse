@@ -7,6 +7,7 @@ import Brain.Sources.Processing.Common as Processing
 import Brain.Tracks as Tracks
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Json.Decode as Json
+import Sources.Processing as Processing
 
 
 
@@ -39,6 +40,7 @@ type Msg
     | Initialize String
     | NotifyUI Alien.Event
     | NotSoFast (Debouncer.Msg Msg)
+    | Process Processing.Arguments
     | ToCache Alien.Event
       -----------------------------------------
       -- Authentication

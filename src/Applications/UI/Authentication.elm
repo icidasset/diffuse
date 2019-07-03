@@ -723,8 +723,7 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
             , T.pv3
             , T.tl
             ]
-            [ -- TODO: Remove `chunk` + outOfOrder when everything is implemented
-              chunk
+            [ chunk
                 [ T.flex
                 , T.items_center
 
