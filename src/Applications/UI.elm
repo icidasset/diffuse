@@ -368,7 +368,7 @@ update msg model =
                 , sources =
                     { sources
                         | collection = []
-                        , isProcessing = False
+                        , isProcessing = []
                     }
                 , tracks =
                     { tracks
@@ -972,9 +972,7 @@ translateReply reply model =
               , Json.Encode.string (Common.urlOrigin model.url)
               )
             , ( "sources"
-              , model.sources.collection
-                    |> List.filter (.enabled >> (==) True)
-                    |> Json.Encode.list Sources.Encoding.encode
+              , Json.Encode.list Sources.Encoding.encode (Sources.sourcesToProcess model.sources)
               )
             ]
                 |> Json.Encode.object
@@ -1163,6 +1161,12 @@ translateAlienData event =
 
                 Nothing ->
                     Bypass
+
+        Just Alien.FinishedProcessingSource ->
+            event.data
+                |> Json.Decode.decodeValue Json.Decode.string
+                |> Result.map (Sources.FinishedProcessingSource >> SourcesMsg)
+                |> Result.withDefault Bypass
 
         Just Alien.FinishedProcessingSources ->
             SourcesMsg Sources.FinishedProcessing

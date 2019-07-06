@@ -1,4 +1,4 @@
-module UI.Sources exposing (Model, Msg(..), initialModel, update, view)
+module UI.Sources exposing (Model, Msg(..), initialModel, sourcesToProcess, update, view)
 
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
@@ -37,7 +37,7 @@ type alias Model =
     { collection : List Source
     , currentTime : Time.Posix
     , form : Form.Model
-    , isProcessing : Bool
+    , isProcessing : List String
     , processingError : Maybe { error : String, sourceId : String }
     , processingNotificationId : Maybe Int
     }
@@ -48,7 +48,7 @@ initialModel =
     { collection = []
     , currentTime = Time.default
     , form = Form.initialModel
-    , isProcessing = False
+    , isProcessing = []
     , processingError = Nothing
     , processingNotificationId = Nothing
     }
@@ -60,6 +60,7 @@ initialModel =
 
 type Msg
     = Bypass
+    | FinishedProcessingSource String
     | FinishedProcessing
     | Process
     | ReportProcessingError Json.Value
@@ -91,14 +92,19 @@ update msg model =
             model.processingNotificationId
                 |> Maybe.map (\id -> [ DismissNotification { id = id } ])
                 |> Maybe.withDefault []
-                |> Return.repliesWithModel { model | isProcessing = False }
+                |> Return.repliesWithModel { model | isProcessing = [] }
+
+        FinishedProcessingSource sourceId ->
+            return { model | isProcessing = List.filter ((/=) sourceId) model.isProcessing }
 
         Process ->
             if List.isEmpty model.collection then
                 return model
 
             else
-                returnReplyWithModel { model | isProcessing = True } ProcessSources
+                returnReplyWithModel
+                    { model | isProcessing = List.map .id (sourcesToProcess model) }
+                    ProcessSources
 
         ReportProcessingError json ->
             case Json.decodeValue (Json.dict Json.string) json of
@@ -141,7 +147,12 @@ update msg model =
                 |> setProperId (List.length model.collection + 1) model.currentTime
                 |> List.singleton
                 |> List.append model.collection
-                |> (\c -> { model | collection = c, isProcessing = True })
+                |> (\c ->
+                        { model
+                            | collection = c
+                            , isProcessing = List.map .id (sourcesToProcess model)
+                        }
+                   )
                 |> return
                 |> addReplies
                     [ UI.Reply.SaveSources
@@ -220,6 +231,11 @@ update msg model =
                 |> addReply GenerateDirectoryPlaylists
 
 
+sourcesToProcess : Model -> List Source
+sourcesToProcess model =
+    List.filter (.enabled >> (==) True) model.collection
+
+
 
 -- 🗺
 
@@ -268,16 +284,16 @@ index model =
 
             -- Process
             ----------
-            , if model.isProcessing then
+            , if List.isEmpty model.isProcessing then
                 ( Icon Icons.sync
-                , Label "Processing sources ..." Shown
-                , PerformMsg Bypass
+                , Label "Process sources" Shown
+                , PerformMsg Process
                 )
 
               else
                 ( Icon Icons.sync
-                , Label "Process sources" Shown
-                , PerformMsg Process
+                , Label "Processing sources ..." Shown
+                , PerformMsg Bypass
                 )
             ]
 
@@ -308,7 +324,7 @@ index model =
                 |> List.map
                     (\source ->
                         { label = Html.text (Dict.fetch "name" "" source.data)
-                        , actions = sourceActions model.processingError source
+                        , actions = sourceActions model.isProcessing model.processingError source
                         , msg = Nothing
                         }
                     )
@@ -350,11 +366,19 @@ intro =
         |> UI.Kit.intro
 
 
-sourceActions : Maybe { error : String, sourceId : String } -> Source -> List (UI.List.Action Msg)
-sourceActions processingError source =
+sourceActions : List String -> Maybe { error : String, sourceId : String } -> Source -> List (UI.List.Action Msg)
+sourceActions isProcessing processingError source =
     List.append
-        (case processingError of
-            Just { error, sourceId } ->
+        (case ( List.member source.id isProcessing, processingError ) of
+            ( True, _ ) ->
+                [ { color = Inherit
+                  , icon = Icons.sync
+                  , msg = Nothing
+                  , title = "Currently processing"
+                  }
+                ]
+
+            ( False, Just { error, sourceId } ) ->
                 if sourceId == source.id then
                     [ { color = Color UI.Kit.colors.error
                       , icon = Icons.error_outline
@@ -366,7 +390,7 @@ sourceActions processingError source =
                 else
                     []
 
-            Nothing ->
+            _ ->
                 []
         )
         [ { color = Inherit

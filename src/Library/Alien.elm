@@ -34,7 +34,9 @@ type Tag
     | AuthTextile
     | FabricateSecretKey
     | SearchTracks
+      -----------------------------------------
       -- from UI
+      -----------------------------------------
     | ProcessSources
     | RedirectToBlockstackSignIn
     | RemoveTracksBySourceId
@@ -48,8 +50,11 @@ type Tag
     | SignOut
     | ToCache
     | UpdateEncryptionKey
+      -----------------------------------------
       -- to UI
+      -----------------------------------------
     | AddTracks
+    | FinishedProcessingSource
     | FinishedProcessingSources
     | HideLoadingScreen
     | LoadEnclosedUserData
@@ -93,9 +98,10 @@ enum =
         , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )
 
         -----------------------------------------
-        -- UI
+        -- To UI
         -----------------------------------------
         , ( "ADD_TRACKS", AddTracks )
+        , ( "FINISHED_PROCESSING_SOURCE", FinishedProcessingSource )
         , ( "FINISHED_PROCESSING_SOURCES", FinishedProcessingSources )
         , ( "HIDE_LOADING_SCREEN", HideLoadingScreen )
         , ( "LOAD_ENCLOSED_USER_DATA", LoadEnclosedUserData )

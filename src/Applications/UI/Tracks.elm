@@ -698,12 +698,12 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor
         ]
 
 
-noTracksView : Bool -> Int -> Int -> Int -> Html Msg
+noTracksView : List String -> Int -> Int -> Int -> Html Msg
 noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
     chunk
         [ T.flex, T.flex_grow_1 ]
         [ UI.Kit.centeredContent
-            [ if isProcessing then
+            [ if List.length isProcessing > 0 then
                 message "Processing Tracks"
 
               else if amountOfSources == 0 then

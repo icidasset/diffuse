@@ -5,6 +5,7 @@ import Brain.Ports
 import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing.Common exposing (..)
 import Brain.Sources.Processing.Steps as Steps
+import Dict.Ext as Dict
 import Json.Encode as Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -51,7 +52,9 @@ update msg model =
                     List.filter (.sourceId >> (==) s.id) tracks
 
                 all =
-                    List.map (\s -> ( s, filter s )) sources
+                    sources
+                        |> List.sortBy (.data >> Dict.fetch "name" "")
+                        |> List.map (\s -> ( s, filter s ))
             in
             case
                 ( isProcessing model.status || List.isEmpty sources
@@ -72,10 +75,11 @@ update msg model =
         -}
         NextInLine ->
             case model.status of
-                Processing _ (( source, tracks ) :: rest) ->
-                    Return.commandWithModel
+                Processing ( processedSource, _ ) (( source, tracks ) :: rest) ->
+                    Return.three
                         { model | status = Processing ( source, tracks ) rest }
                         (Steps.takeFirstStep model.origin model.currentTime source)
+                        [ GiveUI Alien.FinishedProcessingSource (Encode.string processedSource.id) ]
 
                 _ ->
                     Return.repliesWithModel
