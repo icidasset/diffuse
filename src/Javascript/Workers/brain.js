@@ -433,7 +433,7 @@ let tt
 
 function textile() {
   if (!tt) {
-    importScripts("/textile.js")
+    importScripts("../textile.js")
     tt = true
   }
 }
