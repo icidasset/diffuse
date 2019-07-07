@@ -655,8 +655,8 @@ update msg model =
                     else
                         urlWithFragment
             in
-            if url.path == "/about" then
-                returnWithModel model (Nav.load "about")
+            if url.path /= model.url.path then
+                returnWithModel model (Nav.load url.path)
 
             else
                 returnWithModel model (Nav.pushUrl model.navKey <| Url.toString url)

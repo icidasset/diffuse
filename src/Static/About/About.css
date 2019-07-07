@@ -36,7 +36,6 @@ body {
 
 
 .logo {
-  margin: 4.125rem auto 3rem;
   opacity: 0.85;
 }
 
@@ -82,7 +81,7 @@ blockquote {
   padding-left: 0;
 }
 
-a {
+a:not(.logo) {
   border-bottom: 1px solid currentColor;
   color: inherit;
   display: inline-block;

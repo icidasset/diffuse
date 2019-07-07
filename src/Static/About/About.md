@@ -5,7 +5,7 @@
   </p>
 </blockquote>
 
-[Return to the application](/)
+[Return to the application](../)
 
 #### Links
 
