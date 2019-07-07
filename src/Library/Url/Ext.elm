@@ -20,6 +20,6 @@ action url =
 
 extractQueryParam : String -> Url -> Maybe String
 extractQueryParam key url =
-    url
+    { url | path = "" }
         |> Url.parse (Url.query (Query.string key))
         |> Maybe.join

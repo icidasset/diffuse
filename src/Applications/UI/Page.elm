@@ -7,6 +7,7 @@ import UI.Queue.Page as Queue
 import UI.Settings.Page as Settings
 import UI.Sources.Page as Sources
 import Url exposing (Url)
+import Url.Ext as Url
 import Url.Parser exposing (..)
 import Url.Parser.Query as Query
 
@@ -39,9 +40,7 @@ rewriteUrl url =
         -- Sometimes we have to use this kind of routing when doing redirections
         let
             maybePath =
-                url
-                    |> Url.Parser.parse (query (Query.string "path"))
-                    |> Maybe.join
+                Url.extractQueryParam "path" url
 
             path =
                 Maybe.withDefault "" maybePath

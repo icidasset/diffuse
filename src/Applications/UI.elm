@@ -379,7 +379,7 @@ update msg model =
                 |> update (BackdropMsg Backdrop.Default)
                 |> addCommand (Ports.toBrain <| Alien.trigger Alien.SignOut)
                 |> addCommand (Ports.activeQueueItemChanged Nothing)
-                |> addCommand (Nav.pushUrl model.navKey "")
+                |> addCommand (Nav.pushUrl model.navKey "#/")
 
         -----------------------------------------
         -- Children

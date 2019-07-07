@@ -316,7 +316,7 @@ let rsClient
 
 function remoteStorage(event) {
   if (!rs) {
-    importScripts("/vendor/remotestorage.min.js")
+    importScripts("../vendor/remotestorage.min.js")
 
     rs = new RemoteStorage({ cache: false })
     rs.access.claim("diffuse", "rw")
