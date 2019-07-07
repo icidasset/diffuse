@@ -1,4 +1,4 @@
-module UI.DnD exposing (Environment, Model, Msg, environmentSubject, environmentTarget, hasDropped, initialModel, isBeingDraggedOver, isDragging, listenToDrop, listenToEnterLeave, listenToStart, modelSubject, modelTarget, stoppedDragging, update)
+module UI.DnD exposing (Environment, Model, Msg, hasDropped, initialModel, isBeingDraggedOver, isDragging, isDraggingOver, listenToEnterLeave, listenToStart, modelSubject, modelTarget, startDragging, stoppedDragging, update)
 
 import Html exposing (Attribute)
 import Html.Attributes as Attributes
@@ -22,7 +22,6 @@ type Msg context
     = Start context
     | Enter context
     | Leave context
-    | Drop context
     | Stop
 
 
@@ -52,17 +51,26 @@ update msg model =
 
         Enter context ->
             case model of
+                NotDragging ->
+                    NotDragging
+
                 Dragging { subject } ->
                     DraggingOver { subject = subject, target = context }
 
                 DraggingOver { subject } ->
                     DraggingOver { subject = subject, target = context }
 
-                _ ->
-                    model
+                Dropped _ ->
+                    NotDragging
 
         Leave context ->
             case model of
+                NotDragging ->
+                    NotDragging
+
+                Dragging env ->
+                    Dragging env
+
                 DraggingOver { subject, target } ->
                     if context == target then
                         Dragging { subject = subject }
@@ -70,19 +78,20 @@ update msg model =
                     else
                         model
 
-                _ ->
-                    model
-
-        Drop context ->
-            case model of
-                DraggingOver { subject } ->
-                    Dropped { subject = subject, target = context }
-
-                _ ->
+                Dropped _ ->
                     NotDragging
 
         Stop ->
-            NotDragging
+            case model of
+                DraggingOver { subject, target } ->
+                    if subject /= target then
+                        Dropped { subject = subject, target = target }
+
+                    else
+                        NotDragging
+
+                _ ->
+                    NotDragging
       ------------------------------------
       -- Reply
       ------------------------------------
@@ -104,7 +113,7 @@ listenToStart { toMsg } context =
     Pointer.onWithOptions
         "pointerdown"
         { stopPropagation = True
-        , preventDefault = True
+        , preventDefault = False
         }
         (\event ->
             case ( event.pointer.button, event.isPrimary ) of
@@ -136,19 +145,9 @@ listenToEnterLeave { model, toMsg } context =
             ]
 
 
-listenToDrop : Environment context msg -> List (Attribute msg)
-listenToDrop { model, toMsg } =
-    case modelTarget model of
-        Just target ->
-            [ target
-                |> Drop
-                |> toMsg
-                |> always
-                |> Pointer.onUp
-            ]
-
-        Nothing ->
-            []
+startDragging : context -> Msg context
+startDragging =
+    Start
 
 
 stoppedDragging : Msg context
@@ -216,16 +215,6 @@ modelTarget model =
 -- 🔱  ░░  ENVIRONMENT
 
 
-environmentSubject : Environment context msg -> Maybe context
-environmentSubject =
-    .model >> modelSubject
-
-
-environmentTarget : Environment context msg -> Maybe context
-environmentTarget =
-    .model >> modelTarget
-
-
 isDragging : Environment context msg -> Bool
 isDragging { model } =
     case model of
@@ -239,4 +228,20 @@ isDragging { model } =
             True
 
         Dropped _ ->
-            True
+            False
+
+
+isDraggingOver : context -> Environment context msg -> Bool
+isDraggingOver context { model } =
+    case model of
+        NotDragging ->
+            False
+
+        Dragging _ ->
+            False
+
+        DraggingOver { target } ->
+            target == context
+
+        Dropped _ ->
+            False

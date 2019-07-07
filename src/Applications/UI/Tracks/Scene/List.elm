@@ -9,10 +9,12 @@ import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Coordinates
 import Css
+import Css.Media
 import Html exposing (Html, text)
 import Html.Attributes exposing (class, style)
 import Html.Events
 import Html.Events.Extra.Mouse as Mouse
+import Html.Events.Extra.Touch as Touch
 import Html.Styled
 import Html.Styled.Attributes
 import Html.Styled.Events
@@ -29,6 +31,7 @@ import Tachyons
 import Tachyons.Classes as T
 import Task
 import Tracks exposing (..)
+import UI.Css
 import UI.DnD as DnD
 import UI.Kit
 import UI.Reply
@@ -66,7 +69,8 @@ view necessities model =
 lazyView : Necessities -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> SortBy -> SortDirection -> ( Maybe (DnD.Model Int), List Int ) -> Html.Styled.Html Msg
 lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection ( maybeDnD, selectedTrackIndexes ) =
     brick
-        [ Html.Styled.Attributes.fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
+        [ Html.Styled.Attributes.css lazyViewStyles
+        , Html.Styled.Attributes.fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
         , Html.Styled.Attributes.id containerId
         , Html.Styled.Attributes.tabindex (ifThenElse necessities.isVisible 0 -1)
         , Html.Styled.Attributes.style "-webkit-overflow-scrolling" "touch"
@@ -138,6 +142,15 @@ scrollToNowPlaying harvest ( identifiers, _ ) =
 scrollToTop : Cmd Msg
 scrollToTop =
     Task.attempt (always Bypass) (Dom.setViewportOf containerId 0 0)
+
+
+lazyViewStyles : List Css.Style
+lazyViewStyles =
+    [ Css.fontSize (Css.px 11.5)
+    , Css.Media.withMedia
+        [ UI.Css.notSmallMediaQuery ]
+        [ Css.fontSize (Css.px 12.5) ]
+    ]
 
 
 
@@ -276,9 +289,7 @@ infiniteListContainer styles =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ Tachyons.classes [ T.f6, T.pb1, T.pt1 ]
-    , style "font-size" "12.5px"
-    ]
+    [ Tachyons.classes [ T.pb1, T.pt1 ] ]
 
 
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
@@ -329,9 +340,16 @@ defaultItemView isTouchDevice favouritesOnly selectedTrackIndexes _ idx identifi
 
                 --
                 , if isTouchDevice then
-                    [ touchContextMenuEvent identifiedTrack Nothing
-                    , touchPlayEvent identifiedTrack
-                    ]
+                    List.append
+                        (if isSelected then
+                            [ touchContextMenuEvent identifiedTrack Nothing ]
+
+                         else
+                            []
+                        )
+                        [ touchPlayEvent identifiedTrack
+                        , touchSelectEvent identifiedTrack
+                        ]
 
                   else
                     [ mouseContextMenuEvent identifiedTrack
@@ -382,10 +400,18 @@ playlistItemView isTouchDevice favouritesOnly selectedTrackIndexes dnd _ idx ide
 
             --
             , if isTouchDevice then
-                [ touchContextMenuEvent identifiedTrack (Just dragEnv)
-                , touchPlayEvent identifiedTrack
-                , DnD.listenToStart dragEnv listIdx
-                ]
+                List.append
+                    (if isSelected then
+                        [ touchContextMenuEvent identifiedTrack (Just dragEnv)
+                        , DnD.listenToStart dragEnv listIdx
+                        ]
+
+                     else
+                        []
+                    )
+                    [ touchPlayEvent identifiedTrack
+                    , touchSelectEvent identifiedTrack
+                    ]
 
               else
                 [ mouseContextMenuEvent identifiedTrack
@@ -407,7 +433,6 @@ playlistItemView isTouchDevice favouritesOnly selectedTrackIndexes dnd _ idx ide
 
             --
             , DnD.listenToEnterLeave dragEnv listIdx
-            , DnD.listenToDrop dragEnv
 
             --
             , if DnD.isBeingDraggedOver listIdx dnd then
@@ -459,7 +484,7 @@ mousePlayEvent ( i, t ) =
 
 mouseSelectEvent : IdentifiedTrack -> Html.Attribute Msg
 mouseSelectEvent ( i, _ ) =
-    Mouse.onClick (MarkAsSelected i.indexInList)
+    Mouse.onClick (.keys >> MarkAsSelected i.indexInList)
 
 
 touchContextMenuEvent : IdentifiedTrack -> Maybe (DnD.Environment Int Msg) -> Html.Attribute Msg
@@ -476,8 +501,8 @@ touchContextMenuEvent ( i, _ ) maybeDragEnv =
 
                         Nothing ->
                             ShowTrackMenu i.indexInList { x = x, y = y }
-                , stopPropagation = True
-                , preventDefault = True
+                , stopPropagation = False
+                , preventDefault = False
                 }
             )
             (Decode.field "x" Decode.float)
@@ -499,6 +524,22 @@ touchPlayEvent ( i, t ) =
             , stopPropagation = True
             , preventDefault = True
             }
+        )
+
+
+touchSelectEvent : IdentifiedTrack -> Html.Attribute Msg
+touchSelectEvent ( i, _ ) =
+    Html.Events.custom
+        "tap"
+        (Touch.eventDecoder
+            |> Decode.field "originalEvent"
+            |> Decode.map
+                (\event ->
+                    { message = MarkAsSelected i.indexInList event.keys
+                    , stopPropagation = False
+                    , preventDefault = False
+                    }
+                )
         )
 
 
@@ -656,7 +697,11 @@ playlistIndexColumn indexInPlaylist =
     ]
         |> Tachyons.classes
         |> List.addTo (otherColumnStyles "4.5%")
-        |> (\attributes -> Html.div attributes [ text (String.fromInt <| indexInPlaylist + 1) ])
+        |> (\attributes ->
+                Html.div
+                    attributes
+                    [ text (String.fromInt <| indexInPlaylist + 1) ]
+           )
 
 
 otherColumn : String -> Bool -> String -> Html msg

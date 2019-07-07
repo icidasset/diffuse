@@ -359,10 +359,7 @@ document.body.addEventListener("touchmove", event => {
     enteredElement = node
   }
 
-  if (isDragging) {
-    event.preventDefault()
-    event.stopPropagation()
-  }
+  if (isDragging) event.stopPropagation()
 })
 
 

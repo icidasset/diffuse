@@ -44,7 +44,7 @@ type alias Model =
 
 type Msg
     = Bypass
-    | MarkAsSelected Int Mouse.Event
+    | MarkAsSelected Int Mouse.Keys
     | Reply (List Reply)
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)

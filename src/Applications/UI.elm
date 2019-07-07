@@ -27,7 +27,7 @@ import Html.Events.Extra.Pointer as Pointer
 import Html.Events.Extra.Touch as Touch
 import Html.Styled as Html exposing (Html, section, toUnstyled)
 import Html.Styled.Attributes as Attributes exposing (class, css, id, style)
-import Html.Styled.Events exposing (on, onClick)
+import Html.Styled.Events as Events exposing (on, onClick)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
@@ -1265,9 +1265,10 @@ body model =
             ]
 
          else if model.isDragging then
-            [ Attributes.class ("dragging-something " ++ C.disable_selection)
-            , Attributes.fromUnstyled (Pointer.onUp <| always StoppedDragging)
-            , Attributes.fromUnstyled (Pointer.onCancel <| always StoppedDragging)
+            [ class ("dragging-something " ++ C.disable_selection)
+            , on "mouseup" (Json.Decode.succeed StoppedDragging)
+            , on "touchcancel" (Json.Decode.succeed StoppedDragging)
+            , on "touchend" (Json.Decode.succeed StoppedDragging)
             ]
 
          else if not model.isTouchDevice then

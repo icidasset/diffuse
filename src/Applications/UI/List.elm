@@ -81,13 +81,10 @@ item variant idx { label, actions, msg } =
                     )
 
             Draggable env ->
-                [ DnD.listenToEnterLeave env idx
-                , DnD.listenToDrop env
-                ]
-                    |> List.concat
+                DnD.listenToEnterLeave env idx
                     |> List.map Attributes.fromUnstyled
                     |> List.append
-                        [ { dragTarget = DnD.environmentTarget env == Just idx }
+                        [ { dragTarget = DnD.isDraggingOver idx env }
                             |> itemStyles
                             |> css
                         ]

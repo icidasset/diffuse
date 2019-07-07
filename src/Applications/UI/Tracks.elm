@@ -88,10 +88,10 @@ update msg model =
         Bypass ->
             return model
 
-        MarkAsSelected indexInList mouseEvent ->
+        MarkAsSelected indexInList keys ->
             let
                 selection =
-                    if mouseEvent.keys.shift then
+                    if keys.shift then
                         model.selectedTrackIndexes
                             |> List.head
                             |> Maybe.map
@@ -282,7 +282,11 @@ update msg model =
                     )
                     []
                 |> ShowTracksContextMenu coordinates
-                |> returnReplyWithModel { model | selectedTrackIndexes = selection }
+                |> returnReplyWithModel
+                    { model
+                        | listDnD = DnD.initialModel
+                        , selectedTrackIndexes = selection
+                    }
 
         ShowViewMenu grouping mouseEvent ->
             grouping
