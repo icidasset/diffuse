@@ -370,6 +370,7 @@ fillQueue timestamp availableTracks model =
 view : Queue.Page -> Model -> Html Msg
 view page model =
     UI.Kit.receptacle
+        { scrolling = not (DnD.isDragging model.dnd) }
         (case page of
             History ->
                 historyView model

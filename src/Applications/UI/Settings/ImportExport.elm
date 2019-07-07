@@ -19,6 +19,7 @@ import UI.Settings.Page
 view : Html UI.Core.Msg
 view =
     UI.Kit.receptacle
+        { scrolling = True }
         [ -----------------------------------------
           -- Navigation
           -----------------------------------------

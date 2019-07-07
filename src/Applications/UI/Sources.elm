@@ -243,6 +243,7 @@ sourcesToProcess model =
 view : Sources.Page -> Model -> Html Msg
 view page model =
     UI.Kit.receptacle
+        { scrolling = True }
         (case page of
             Index ->
                 index model

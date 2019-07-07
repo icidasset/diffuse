@@ -221,6 +221,7 @@ reset newModel knobType value =
 view : Model -> Html Msg
 view model =
     UI.Kit.receptacle
+        { scrolling = True }
         [ -----------------------------------------
           -- Navigation
           -----------------------------------------

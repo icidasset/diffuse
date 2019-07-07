@@ -4,6 +4,7 @@ import Chunky exposing (..)
 import Color
 import Color.Ext as Color
 import Color.Manipulate as Color
+import Conditional exposing (ifThenElse)
 import Css exposing (deg, em, none, num, pct, px, solid, url, zero)
 import Css.Global
 import Html.Styled as Html exposing (Html)
@@ -403,8 +404,8 @@ logoBackdrop =
         []
 
 
-receptacle : List (Html msg) -> Html msg
-receptacle =
+receptacle : { scrolling : Bool } -> List (Html msg) -> Html msg
+receptacle { scrolling } =
     brick
         [ css
             [ Css.property "-webkit-overflow-scrolling" "touch" ]
@@ -415,8 +416,10 @@ receptacle =
         , T.flex
         , T.flex_column
         , T.overflow_x_hidden
-        , T.overflow_y_auto
         , T.z_999
+
+        --
+        , ifThenElse scrolling T.overflow_y_auto T.overflow_y_hidden
         ]
 
 

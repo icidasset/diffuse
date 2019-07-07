@@ -5,6 +5,7 @@ import Chunky exposing (..)
 import Color.Ext as Color
 import Conditional exposing (ifThenElse)
 import Css
+import Css.Media
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, selected, value)
 import Html.Styled.Events exposing (onClick)
@@ -15,6 +16,7 @@ import Tachyons.Classes as T
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Core as Core
+import UI.Css
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
@@ -34,7 +36,7 @@ view page model =
             UI.Settings.ImportExport.view
 
         Index ->
-            UI.Kit.receptacle (index model)
+            UI.Kit.receptacle { scrolling = True } (index model)
 
 
 
@@ -241,8 +243,15 @@ backgroundImage chosenBackground =
 backgroundThumbnailStyles : List Css.Style
 backgroundThumbnailStyles =
     [ Css.height Css.zero
-    , Css.paddingTop (Css.pct 8.275)
-    , Css.width (Css.pct 14.28571)
+    , Css.paddingTop (Css.pct 19.3083198175)
+    , Css.width (Css.pct 33.33333)
+
+    --
+    , Css.Media.withMedia
+        [ UI.Css.notSmallMediaQuery ]
+        [ Css.paddingTop (Css.pct 8.275)
+        , Css.width (Css.pct 14.28571)
+        ]
     ]
 
 

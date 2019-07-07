@@ -1311,6 +1311,8 @@ body model =
                     False
                         || Maybe.isJust model.contextMenu
                         || Maybe.isJust model.alfred.instance
+                , scrolling =
+                    not model.isDragging
                 }
           in
           case ( model.isLoading, model.authentication ) of
@@ -1397,21 +1399,17 @@ defaultScreen model =
 -- 🗺  ░░  BITS
 
 
-content : { justifyCenter : Bool, noPointerEvents : Bool } -> List (Html msg) -> Html msg
-content { justifyCenter, noPointerEvents } nodes =
+content : { justifyCenter : Bool, noPointerEvents : Bool, scrolling : Bool } -> List (Html msg) -> Html msg
+content { justifyCenter, noPointerEvents, scrolling } nodes =
     brick
         [ css contentStyles ]
         [ T.overflow_x_hidden
-        , T.overflow_y_auto
         , T.relative
         , T.z_1
 
         --
-        , if noPointerEvents then
-            C.pointer_events_none
-
-          else
-            ""
+        , ifThenElse noPointerEvents C.pointer_events_none ""
+        , ifThenElse scrolling T.overflow_y_auto T.overflow_y_hidden
         ]
         [ brick
             [ css contentInnerStyles ]

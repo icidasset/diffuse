@@ -203,6 +203,7 @@ update msg model =
 view : Page -> Maybe Playlist -> Model -> Html Msg
 view page selectedPlaylist model =
     UI.Kit.receptacle
+        { scrolling = True }
         (case page of
             Edit encodedName ->
                 let
