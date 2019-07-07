@@ -44,7 +44,6 @@ import UI.Tracks.Core exposing (..)
 
 type alias Necessities =
     { height : Float
-    , isTouchDevice : Bool
     , isVisible : Bool
     }
 
@@ -74,13 +73,25 @@ lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection ( 
         , Html.Styled.Attributes.id containerId
         , Html.Styled.Attributes.tabindex (ifThenElse necessities.isVisible 0 -1)
         , Html.Styled.Attributes.style "-webkit-overflow-scrolling" "touch"
+        , Html.Styled.Attributes.style "overscroll-behavior" "none"
         ]
         [ C.disable_selection
         , T.flex_grow_1
         , T.outline_0
         , T.overflow_x_hidden
-        , T.overflow_y_auto
         , T.vh_25
+
+        --
+        , case maybeDnD of
+            Just dnd ->
+                if DnD.isDragging dnd then
+                    T.overflow_y_hidden
+
+                else
+                    T.overflow_y_auto
+
+            Nothing ->
+                T.overflow_y_auto
         ]
         [ -- Header
           ---------
@@ -101,14 +112,12 @@ lazyView necessities harvest infiniteList favouritesOnly sortBy sortDirection ( 
                             case maybeDnD of
                                 Just dnd ->
                                     playlistItemView
-                                        necessities.isTouchDevice
                                         favouritesOnly
                                         selectedTrackIndexes
                                         dnd
 
                                 _ ->
                                     defaultItemView
-                                        necessities.isTouchDevice
                                         favouritesOnly
                                         selectedTrackIndexes
 
@@ -311,8 +320,8 @@ dynamicRowHeight _ ( i, t ) =
 -- INFINITE LIST ITEM
 
 
-defaultItemView : Bool -> Bool -> List Int -> Int -> Int -> IdentifiedTrack -> Html Msg
-defaultItemView isTouchDevice favouritesOnly selectedTrackIndexes _ idx identifiedTrack =
+defaultItemView : Bool -> List Int -> Int -> Int -> IdentifiedTrack -> Html Msg
+defaultItemView favouritesOnly selectedTrackIndexes _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -339,22 +348,16 @@ defaultItemView isTouchDevice favouritesOnly selectedTrackIndexes _ idx identifi
                 [ rowStyles idx isSelected identifiers
 
                 --
-                , if isTouchDevice then
-                    List.append
-                        (if isSelected then
-                            [ touchContextMenuEvent identifiedTrack Nothing ]
+                , List.append
+                    (if isSelected then
+                        [ touchContextMenuEvent identifiedTrack Nothing ]
 
-                         else
-                            []
-                        )
-                        [ touchPlayEvent identifiedTrack
-                        , touchSelectEvent identifiedTrack
-                        ]
-
-                  else
+                     else
+                        []
+                    )
                     [ mouseContextMenuEvent identifiedTrack
-                    , mousePlayEvent identifiedTrack
-                    , mouseSelectEvent identifiedTrack
+                    , playEvent identifiedTrack
+                    , selectEvent identifiedTrack
                     ]
 
                 --
@@ -377,8 +380,8 @@ defaultItemView isTouchDevice favouritesOnly selectedTrackIndexes _ idx identifi
         ]
 
 
-playlistItemView : Bool -> Bool -> List Int -> DnD.Model Int -> Int -> Int -> IdentifiedTrack -> Html Msg
-playlistItemView isTouchDevice favouritesOnly selectedTrackIndexes dnd _ idx identifiedTrack =
+playlistItemView : Bool -> List Int -> DnD.Model Int -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView favouritesOnly selectedTrackIndexes dnd _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -399,25 +402,18 @@ playlistItemView isTouchDevice favouritesOnly selectedTrackIndexes dnd _ idx ide
             [ rowStyles idx isSelected identifiers
 
             --
-            , if isTouchDevice then
-                List.append
-                    (if isSelected then
-                        [ touchContextMenuEvent identifiedTrack (Just dragEnv)
-                        , DnD.listenToStart dragEnv listIdx
-                        ]
-
-                     else
-                        []
-                    )
-                    [ touchPlayEvent identifiedTrack
-                    , touchSelectEvent identifiedTrack
+            , List.append
+                (if isSelected then
+                    [ touchContextMenuEvent identifiedTrack (Just dragEnv)
+                    , DnD.listenToStart dragEnv listIdx
                     ]
 
-              else
+                 else
+                    []
+                )
                 [ mouseContextMenuEvent identifiedTrack
-                , mousePlayEvent identifiedTrack
-                , mouseSelectEvent identifiedTrack
-                , DnD.listenToStart dragEnv listIdx
+                , playEvent identifiedTrack
+                , selectEvent identifiedTrack
                 ]
 
             --
@@ -456,35 +452,13 @@ mouseContextMenuEvent ( i, _ ) =
         "contextmenu"
         (Decode.map
             (\event ->
-                { message = ShowTrackMenu i.indexInList (Coordinates.fromTuple event.clientPos)
+                { message = ShowTrackMenuWithSmallDelay i.indexInList (Coordinates.fromTuple event.clientPos)
                 , stopPropagation = True
                 , preventDefault = True
                 }
             )
             Mouse.eventDecoder
         )
-
-
-mousePlayEvent : IdentifiedTrack -> Html.Attribute Msg
-mousePlayEvent ( i, t ) =
-    Html.Events.custom
-        "dblclick"
-        (Decode.succeed
-            { message =
-                if i.isMissing then
-                    Bypass
-
-                else
-                    Reply [ UI.Reply.PlayTrack ( i, t ) ]
-            , stopPropagation = True
-            , preventDefault = True
-            }
-        )
-
-
-mouseSelectEvent : IdentifiedTrack -> Html.Attribute Msg
-mouseSelectEvent ( i, _ ) =
-    Mouse.onClick (.keys >> MarkAsSelected i.indexInList)
 
 
 touchContextMenuEvent : IdentifiedTrack -> Maybe (DnD.Environment Int Msg) -> Html.Attribute Msg
@@ -510,8 +484,8 @@ touchContextMenuEvent ( i, _ ) maybeDragEnv =
         )
 
 
-touchPlayEvent : IdentifiedTrack -> Html.Attribute Msg
-touchPlayEvent ( i, t ) =
+playEvent : IdentifiedTrack -> Html.Attribute Msg
+playEvent ( i, t ) =
     Html.Events.custom
         "dbltap"
         (Decode.succeed
@@ -527,15 +501,15 @@ touchPlayEvent ( i, t ) =
         )
 
 
-touchSelectEvent : IdentifiedTrack -> Html.Attribute Msg
-touchSelectEvent ( i, _ ) =
+selectEvent : IdentifiedTrack -> Html.Attribute Msg
+selectEvent ( i, _ ) =
     Html.Events.custom
         "tap"
-        (Touch.eventDecoder
-            |> Decode.field "originalEvent"
+        (Decode.bool
+            |> Decode.at [ "originalEvent", "shiftKey" ]
             |> Decode.map
-                (\event ->
-                    { message = MarkAsSelected i.indexInList event.keys
+                (\shiftKey ->
+                    { message = MarkAsSelected i.indexInList { shiftKey = shiftKey }
                     , stopPropagation = False
                     , preventDefault = False
                     }

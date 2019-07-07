@@ -158,8 +158,8 @@ subscriptions _ =
 -- 🗺
 
 
-view : Bool -> Model -> Html Msg
-view isTouchDevice model =
+view : Model -> Html Msg
+view model =
     case model.instance of
         Just instance ->
             chunk
@@ -184,7 +184,7 @@ view isTouchDevice model =
                 -----------------------------------------
                 , brick
                     [ Html.Styled.Events.custom
-                        (ifThenElse isTouchDevice "tap" "click")
+                        "tap"
                         (Json.Decode.succeed
                             { message = Bypass
                             , stopPropagation = True
@@ -224,7 +224,7 @@ view isTouchDevice model =
                 -----------------------------------------
                 , brick
                     [ Html.Styled.Events.custom
-                        (ifThenElse isTouchDevice "tap" "click")
+                        "tap"
                         (Json.Decode.succeed
                             { message = Bypass
                             , stopPropagation = True
@@ -246,12 +246,7 @@ view isTouchDevice model =
                     (List.indexedMap
                         (\idx result ->
                             brick
-                                [ if isTouchDevice then
-                                    onTap (RunAction idx)
-
-                                  else
-                                    onClick (RunAction idx)
-                                ]
+                                [ onTap (RunAction idx) ]
                                 [ T.pa3
                                 , T.relative
                                 , T.truncate

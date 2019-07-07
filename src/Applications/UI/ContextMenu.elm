@@ -22,8 +22,8 @@ import UI.Kit
 -- 🗺
 
 
-view : Bool -> Maybe (ContextMenu UI.Core.Msg) -> Html UI.Core.Msg
-view isTouchDevice m =
+view : Maybe (ContextMenu UI.Core.Msg) -> Html UI.Core.Msg
+view m =
     case m of
         Just (ContextMenu items coordinates) ->
             brick
@@ -43,7 +43,7 @@ view isTouchDevice m =
                     (\idx item ->
                         case item of
                             Item i ->
-                                itemView isTouchDevice lastIndex idx i
+                                itemView lastIndex idx i
 
                             Divider ->
                                 -- NOTE: Not needed at the moment
@@ -56,15 +56,15 @@ view isTouchDevice m =
             nothing
 
 
-itemView : Bool -> Int -> Int -> ContextMenu.ItemProperties UI.Core.Msg -> Html UI.Core.Msg
-itemView isTouchDevice lastIndex index { icon, label, msg, active } =
+itemView : Int -> Int -> ContextMenu.ItemProperties UI.Core.Msg -> Html UI.Core.Msg
+itemView lastIndex index { icon, label, msg, active } =
     let
         isLast =
             index == lastIndex
     in
     brick
         [ custom
-            (ifThenElse isTouchDevice "tap" "click")
+            "tap"
             (Json.Decode.succeed
                 { message = UI.Core.MsgViaContextMenu msg
                 , stopPropagation = True

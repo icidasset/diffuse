@@ -84,7 +84,7 @@ item variant idx { label, actions, msg } =
                 DnD.listenToEnterLeave env idx
                     |> List.map Attributes.fromUnstyled
                     |> List.append
-                        [ { dragTarget = DnD.isDraggingOver idx env }
+                        [ { dragTarget = DnD.isDraggingOver idx env.model }
                             |> itemStyles
                             |> css
                         ]
@@ -114,7 +114,7 @@ item variant idx { label, actions, msg } =
                     ""
 
                 Draggable env ->
-                    if DnD.isDragging env then
+                    if DnD.isDragging env.model then
                         C.pointer_events_none
 
                     else

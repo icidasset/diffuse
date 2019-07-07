@@ -51,7 +51,6 @@ type alias Model =
     , isDragging : Bool
     , isLoading : Bool
     , isOnline : Bool
-    , isTouchDevice : Bool
     , navKey : Nav.Key
     , notifications : List (Notification Msg)
     , page : Page
@@ -95,7 +94,6 @@ type Msg
     = Bypass
     | Debounce (Debouncer.Msg Msg)
     | HideOverlay
-    | IndicateTouchDevice
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Value
     | LoadHypaethralUserData Json.Value

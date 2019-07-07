@@ -169,6 +169,38 @@ isBeingDraggedOver context model =
             False
 
 
+isDragging : Model context -> Bool
+isDragging model =
+    case model of
+        NotDragging ->
+            False
+
+        Dragging _ ->
+            True
+
+        DraggingOver _ ->
+            True
+
+        Dropped _ ->
+            False
+
+
+isDraggingOver : context -> Model context -> Bool
+isDraggingOver context model =
+    case model of
+        NotDragging ->
+            False
+
+        Dragging _ ->
+            False
+
+        DraggingOver { target } ->
+            target == context
+
+        Dropped _ ->
+            False
+
+
 hasDropped : Model context -> Bool
 hasDropped model =
     case model of
@@ -209,39 +241,3 @@ modelTarget model =
 
         Dropped { target } ->
             Just target
-
-
-
--- 🔱  ░░  ENVIRONMENT
-
-
-isDragging : Environment context msg -> Bool
-isDragging { model } =
-    case model of
-        NotDragging ->
-            False
-
-        Dragging _ ->
-            True
-
-        DraggingOver _ ->
-            True
-
-        Dropped _ ->
-            False
-
-
-isDraggingOver : context -> Environment context msg -> Bool
-isDraggingOver context { model } =
-    case model of
-        NotDragging ->
-            False
-
-        Dragging _ ->
-            False
-
-        DraggingOver { target } ->
-            target == context
-
-        Dropped _ ->
-            False

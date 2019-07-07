@@ -44,7 +44,7 @@ type alias Model =
 
 type Msg
     = Bypass
-    | MarkAsSelected Int Mouse.Keys
+    | MarkAsSelected Int { shiftKey : Bool }
     | Reply (List Reply)
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
@@ -71,6 +71,7 @@ type Msg
       -- Menus
       -----------------------------------------
     | ShowTrackMenu Int Coordinates
+    | ShowTrackMenuWithSmallDelay Int Coordinates
     | ShowViewMenu (Maybe Grouping) Mouse.Event
       -----------------------------------------
       -- Playlists

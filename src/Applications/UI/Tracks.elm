@@ -32,6 +32,7 @@ import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Return3 as Return exposing (..)
 import Tachyons.Classes as T
+import Task.Extra as Task
 import Tracks exposing (..)
 import Tracks.Collection as Collection exposing (..)
 import Tracks.Encoding as Encoding
@@ -88,10 +89,10 @@ update msg model =
         Bypass ->
             return model
 
-        MarkAsSelected indexInList keys ->
+        MarkAsSelected indexInList { shiftKey } ->
             let
                 selection =
-                    if keys.shift then
+                    if shiftKey then
                         model.selectedTrackIndexes
                             |> List.head
                             |> Maybe.map
@@ -260,6 +261,11 @@ update msg model =
         -----------------------------------------
         -- Menus
         -----------------------------------------
+        ShowTrackMenuWithSmallDelay a b ->
+            ShowTrackMenu a b
+                |> Task.doDelayed 250
+                |> returnCommandWithModel model
+
         ShowTrackMenu trackIndex coordinates ->
             let
                 selection =
@@ -548,7 +554,6 @@ view core =
                 List ->
                     UI.Tracks.Scene.List.view
                         { height = core.viewport.height
-                        , isTouchDevice = core.isTouchDevice
                         , isVisible = core.page == UI.Page.Index
                         }
                         core.tracks

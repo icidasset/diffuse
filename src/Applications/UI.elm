@@ -121,7 +121,6 @@ init flags url key =
     , isDragging = False
     , isLoading = True
     , isOnline = flags.isOnline
-    , isTouchDevice = False
     , navKey = key
     , notifications = []
     , page = page
@@ -248,9 +247,6 @@ update msg model =
                 ( { model | isOnline = bool }
                 , Cmd.none
                 )
-
-        IndicateTouchDevice ->
-            return { model | isTouchDevice = True }
 
         StoppedDragging ->
             let
@@ -1247,10 +1243,7 @@ body : Model -> Html Msg
 body model =
     section
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred.instance then
-            [ on
-                (ifThenElse model.isTouchDevice "tap" "click")
-                (Json.Decode.succeed HideOverlay)
-            ]
+            [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
             [ (EqualizerMsg << Equalizer.AdjustKnob)
@@ -1271,11 +1264,8 @@ body model =
             , on "touchend" (Json.Decode.succeed StoppedDragging)
             ]
 
-         else if not model.isTouchDevice then
-            [ Attributes.fromUnstyled (Touch.onStart <| always IndicateTouchDevice) ]
-
          else
-            [ class C.disable_selection ]
+            []
         )
         [ Css.Global.global globalCss
 
@@ -1283,7 +1273,7 @@ body model =
         -- Alfred
         -----------------------------------------
         , model.alfred
-            |> Lazy.lazy2 Alfred.view model.isTouchDevice
+            |> Lazy.lazy Alfred.view
             |> Html.map AlfredMsg
 
         -----------------------------------------
@@ -1297,7 +1287,7 @@ body model =
         -- Context Menu
         -----------------------------------------
         , model.contextMenu
-            |> Lazy.lazy2 UI.ContextMenu.view model.isTouchDevice
+            |> Lazy.lazy UI.ContextMenu.view
 
         -----------------------------------------
         -- Notifications
