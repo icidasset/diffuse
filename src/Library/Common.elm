@@ -33,7 +33,7 @@ queryString =
 
 
 urlOrigin : Url -> String
-urlOrigin { host, port_, protocol } =
+urlOrigin { host, port_, path, protocol } =
     let
         scheme =
             case protocol of
@@ -48,4 +48,4 @@ urlOrigin { host, port_, protocol } =
                 |> Maybe.map (String.fromInt >> (++) ":")
                 |> Maybe.withDefault ""
     in
-    scheme ++ host ++ thePort
+    scheme ++ host ++ thePort ++ path
