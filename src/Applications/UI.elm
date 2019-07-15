@@ -175,6 +175,9 @@ update msg model =
         Bypass ->
             return model
 
+        CopyToClipboard string ->
+            returnWithModel model (Ports.copyToClipboard string)
+
         Debounce debouncerMsg ->
             Return3.wieldNested
                 update
@@ -341,7 +344,7 @@ update msg model =
             model
                 |> translateReply SaveFavourites
                 |> andThen (translateReply SaveSources)
-                |> andThen (translateReply SaveTracksFromCache)
+                |> andThen (translateReply SaveTracksFromBrain)
                 |> andThen (translateReply <| ShowWarningNotification "Syncing")
 
         -----------------------------------------
@@ -638,6 +641,62 @@ update msg model =
                 |> andThen (translateReply SavePlaylists)
 
         -----------------------------------------
+        -- Tracks Cache
+        -----------------------------------------
+        RemoveFromTracksCache identifiedTracks ->
+            let
+                trackIds =
+                    List.map (Tuple.second >> .id) identifiedTracks
+
+                tracksModel =
+                    model.tracks
+
+                newCached =
+                    List.filter (\c -> List.notMember c trackIds) tracksModel.cached
+
+                newTracksModel =
+                    { tracksModel | cached = newCached }
+            in
+            identifiedTracks
+                |> Json.Encode.list (Tuple.second >> .id >> Json.Encode.string)
+                |> Alien.broadcast Alien.RemoveTracksFromCache
+                |> Ports.toBrain
+                |> returnWithModel { model | tracks = newTracksModel }
+                |> andThen (translateReply SaveEnclosedUserData)
+
+        StoreInTracksCache identifiedTracks ->
+            let
+                trackIds =
+                    List.map (Tuple.second >> .id) identifiedTracks
+
+                tracksModel =
+                    model.tracks
+
+                newTracksModel =
+                    { tracksModel | cached = List.append tracksModel.cached trackIds }
+            in
+            identifiedTracks
+                |> Json.Encode.list
+                    (\(( i, t ) as track) ->
+                        Json.Encode.object
+                            [ ( "trackId"
+                              , Json.Encode.string t.id
+                              )
+                            , ( "url"
+                              , track
+                                    |> UI.Queue.Common.makeTrackUrl
+                                        model.currentTime
+                                        model.sources.collection
+                                    |> Json.Encode.string
+                              )
+                            ]
+                    )
+                |> Alien.broadcast Alien.StoreTracksInCache
+                |> Ports.toBrain
+                |> returnWithModel { model | tracks = newTracksModel }
+                |> andThen (translateReply SaveEnclosedUserData)
+
+        -----------------------------------------
         -- URL
         -----------------------------------------
         ChangeUrlUsingPage page ->
@@ -747,7 +806,7 @@ translateReply reply model =
             return { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
 
         ShowTracksContextMenu coordinates tracks ->
-            return { model | contextMenu = Just (Tracks.trackMenu tracks model.tracks.selectedPlaylist model.playlists.lastModifiedPlaylist coordinates) }
+            return { model | contextMenu = Just (Tracks.trackMenu tracks model.tracks.cached model.tracks.selectedPlaylist model.playlists.lastModifiedPlaylist coordinates) }
 
         ShowTracksViewMenu coordinates maybeGrouping ->
             return { model | contextMenu = Just (Tracks.viewMenu maybeGrouping coordinates) }
@@ -885,6 +944,7 @@ translateReply reply model =
                             (UI.Queue.Common.makeEngineItem
                                 model.currentTime
                                 model.sources.collection
+                                model.tracks.cached
                             )
                         |> Ports.activeQueueItemChanged
             in
@@ -941,6 +1001,7 @@ translateReply reply model =
                         |> UI.Queue.Common.makeEngineItem
                             model.currentTime
                             model.sources.collection
+                            model.tracks.cached
                         |> Ports.preloadAudio
                         |> returnWithModel model
 
@@ -1073,7 +1134,7 @@ translateReply reply model =
                 |> Ports.toBrain
                 |> returnWithModel model
 
-        SaveTracksFromCache ->
+        SaveTracksFromBrain ->
             Alien.SaveTracks
                 |> Alien.trigger
                 |> Ports.toBrain

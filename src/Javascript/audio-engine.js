@@ -107,10 +107,15 @@ function insertTrack(orchestrion, queueItem) {
     context.resume()
   }
 
+  // Initial promise
+  const initialPromise = queueItem.isCached
+    ? getFromIndex({ key: queueItem.trackId, store: storeNames.tracks }).then(blobToDataURL)
+    : transformUrl(queueItem.url)
+
   // Find or create audio node
   let audioNode
 
-  transformUrl(queueItem.url).then(url => {
+  initialPromise.then(url => {
     queueItem =
       Object.assign({}, queueItem, { url: url })
 
@@ -319,6 +324,16 @@ function audioCanPlayEvent(event) {
 
 function audioElementTrackId(node) {
   return node ? node.getAttribute("rel") : undefined
+}
+
+
+function blobToDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onerror = reject
+    r.onload = e => resolve(e.target.result)
+    r.readAsDataURL(blob)
+  })
 }
 
 

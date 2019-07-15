@@ -74,6 +74,9 @@ update msg model =
         Bypass ->
             return model
 
+        Cmd cmd ->
+            returnWithModel model cmd
+
         Initialize href ->
             let
                 initialUrl =
@@ -459,6 +462,9 @@ translateAlienData tag data =
                 |> Result.withDefault ""
                 |> RemoveTracksBySourceId
 
+        Alien.RemoveTracksFromCache ->
+            Cmd (Brain.Ports.removeTracksFromCache data)
+
         Alien.SaveEnclosedUserData ->
             AuthenticationMsg (Authentication.SaveEnclosedData data)
 
@@ -482,6 +488,9 @@ translateAlienData tag data =
 
         Alien.SignOut ->
             AuthenticationMsg Authentication.PerformSignOut
+
+        Alien.StoreTracksInCache ->
+            Cmd (Brain.Ports.storeTracksInCache data)
 
         Alien.ToCache ->
             case Json.decodeValue Alien.hostDecoder data of

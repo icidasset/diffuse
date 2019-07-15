@@ -178,6 +178,20 @@ app.ports.removeCache.subscribe(event => {
 })
 
 
+app.ports.removeTracksFromCache.subscribe(trackIds => {
+  trackIds.reduce(
+    (acc, id) => acc.then(_ => deleteFromIndex({ key: id, store: storeNames.tracks })),
+    Promise.resolve()
+
+  ).catch(
+    _ => reportError
+      ({ tag: "REMOVE_TRACKS_FROM_CACHE" })
+      ("Failed to remove tracks from cache")
+
+  )
+})
+
+
 app.ports.requestCache.subscribe(event => {
   fromCache(event.tag)
     .then(data => {
@@ -191,6 +205,24 @@ app.ports.requestCache.subscribe(event => {
         ? authError(event)
         : reportError(event)
     )
+})
+
+
+app.ports.storeTracksInCache.subscribe(list => {
+  list.reduce(
+    (acc, item) => { return acc
+      .then(_ => fetch(item.url))
+      .then(r => r.blob())
+      .then(b => setInIndex({ key: item.trackId, data: b, store: storeNames.tracks }))
+    },
+    Promise.resolve()
+
+  ).catch(
+    _ => reportError
+      ({ tag: "STORE_TRACKS_IN_CACHE" })
+      ("Failed to store tracks in cache")
+
+  )
 })
 
 

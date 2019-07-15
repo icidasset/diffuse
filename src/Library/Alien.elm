@@ -40,6 +40,7 @@ type Tag
     | ProcessSources
     | RedirectToBlockstackSignIn
     | RemoveTracksBySourceId
+    | RemoveTracksFromCache
     | SaveEnclosedUserData
     | SaveFavourites
     | SavePlaylists
@@ -48,6 +49,7 @@ type Tag
     | SaveTracks
     | SignIn
     | SignOut
+    | StoreTracksInCache
     | ToCache
     | UpdateEncryptionKey
       -----------------------------------------
@@ -86,6 +88,7 @@ enum =
         , ( "PROCESS_SOURCES", ProcessSources )
         , ( "REDIRECT_TO_BLOCKSTACK_SIGN_IN", RedirectToBlockstackSignIn )
         , ( "REMOVE_TRACKS_BY_SOURCE_ID", RemoveTracksBySourceId )
+        , ( "REMOVE_TRACKS_FROM_CACHE", RemoveTracksFromCache )
         , ( "SAVE_ENCLOSED_USER_DATA", SaveEnclosedUserData )
         , ( "SAVE_FAVOURITES", SaveFavourites )
         , ( "SAVE_PLAYLISTS", SavePlaylists )
@@ -94,6 +97,7 @@ enum =
         , ( "SAVE_TRACKS", SaveTracks )
         , ( "SIGN_IN", SignIn )
         , ( "SIGN_OUT", SignOut )
+        , ( "STORE_TRACKS_IN_CACHE", StoreTracksInCache )
         , ( "TO_CACHE", ToCache )
         , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )
 

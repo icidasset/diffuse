@@ -108,7 +108,7 @@ app.ports.play.subscribe(_ => {
 
 
 app.ports.preloadAudio.subscribe(item => {
-  SINGLE_AUDIO_NODE
+  (SINGLE_AUDIO_NODE || item.isCached)
     ? false
     : preloadAudioElement(orchestrion, item)
 })
@@ -194,6 +194,43 @@ app.ports.pickAverageBackgroundColor.subscribe(src => {
 
 
 
+// Clipboard
+// ---------
+
+app.ports.copyToClipboard.subscribe(text => {
+
+  // Insert a textarea element
+  const el = document.createElement("textarea")
+
+  el.value = text
+  el.setAttribute("readonly", "")
+  el.style.position = "absolute"
+  el.style.left = "-9999px"
+
+  document.body.appendChild(el)
+
+  // Store original selection
+  const selected = document.getSelection().rangeCount > 0
+    ? document.getSelection().getRangeAt(0)
+    : false
+
+  // Select & copy the text
+  el.select()
+  document.execCommand("copy")
+
+  // Remove textarea element
+  document.body.removeChild(el)
+
+  // Restore original selection
+  if (selected) {
+    document.getSelection().removeAllRanges()
+    document.getSelection().addRange(selected)
+  }
+
+})
+
+
+
 // Focus
 // -----
 
@@ -258,9 +295,12 @@ document.addEventListener("MediaNext", () => {
 let enteredElement
 
 
-tocca({
-  dbltapThreshold: 800
-})
+// TODO:
+// Double check if this was actually necessary on mobile
+//
+// tocca({
+//   dbltapThreshold: 800
+// })
 
 
 function mousePointerEvent(eventType, mouseEvent) {

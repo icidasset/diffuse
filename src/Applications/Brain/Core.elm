@@ -37,6 +37,7 @@ type alias Model =
 
 type Msg
     = Bypass
+    | Cmd (Cmd Msg)
     | Initialize String
     | NotifyUI Alien.Event
     | NotSoFast (Debouncer.Msg Msg)

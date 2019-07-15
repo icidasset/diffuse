@@ -1,4 +1,4 @@
-port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, adjustEqualizerSetting, fromAlien, giveBrain, nudgeBrain, pause, pickAverageBackgroundColor, play, preloadAudio, requestNext, requestPlayPause, requestPrevious, requestStop, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, setAverageBackgroundColor, setIsOnline, setRepeat, showErrorNotification, toBrain, unstall)
+port module UI.Ports exposing (activeQueueItemChanged, activeQueueItemEnded, adjustEqualizerSetting, copyToClipboard, fromAlien, giveBrain, nudgeBrain, pause, pickAverageBackgroundColor, play, preloadAudio, requestNext, requestPlayPause, requestPrevious, requestStop, seek, setAudioDuration, setAudioHasStalled, setAudioIsLoading, setAudioIsPlaying, setAverageBackgroundColor, setIsOnline, setRepeat, showErrorNotification, toBrain, unstall)
 
 import Alien
 import Json.Encode as Json
@@ -13,6 +13,9 @@ port activeQueueItemChanged : Maybe Queue.EngineItem -> Cmd msg
 
 
 port adjustEqualizerSetting : { knob : String, value : Float } -> Cmd msg
+
+
+port copyToClipboard : String -> Cmd msg
 
 
 port pause : () -> Cmd msg

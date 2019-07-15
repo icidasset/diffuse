@@ -4,7 +4,7 @@
         "src/Applications",
         "src/Library"
     ],
-    "elm-version": "0.19.0",
+    "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
             "FabienHenon/elm-infinite-list-view": "3.0.0",

@@ -5,7 +5,7 @@
 // The local database.
 // This is used instead of localStorage.
 
-importScripts("../vendor/text-encoding-polyfill.min.js")
+self.importScripts && importScripts("../vendor/text-encoding-polyfill.min.js")
 
 
 const indexedDB =
@@ -15,8 +15,10 @@ const indexedDB =
   self.msIndexedDB
 
 
-const storeName =
-  "main"
+const storeNames = {
+  main: "main",
+  tracks: "tracks"
+}
 
 
 let db, idx, tries = 0
@@ -24,7 +26,8 @@ let db, idx, tries = 0
 
 idx = indexedDB.open("diffuse", 1)
 idx.onupgradeneeded = event => {
-  event.target.result.createObjectStore(storeName)
+  event.target.result.createObjectStore(storeNames.main)
+  event.target.result.createObjectStore(storeNames.tracks)
 }
 
 idx.onsuccess = _ => {
@@ -55,13 +58,14 @@ function getFromIndex(args) {
   tries = 0
 
   return new Promise((resolve, reject) => {
+    const sto = args.store || storeNames.main
     const key = args.key
-    const tra = db.transaction([storeName], "readwrite")
-    const req = tra.objectStore(storeName).get(key)
+    const tra = db.transaction([sto], "readwrite")
+    const req = tra.objectStore(sto).get(key)
 
     req.onsuccess = _ => {
       if (req.result) {
-        resolve(args.useArrayBuffer ? arrayBufToString(req.result) : req.result)
+        resolve(req.result)
       } else {
         resolve(null)
       }
@@ -78,11 +82,12 @@ function getFromIndex(args) {
 
 function setInIndex(args) {
   return new Promise((resolve, reject) => {
+    const sto = args.store || storeNames.main
     const key = args.key
-    const dat = args.useArrayBuffer ? stringToArrayBuf(args.data) : args.data
+    const dat = args.data
 
-    const tra = db.transaction([storeName], "readwrite")
-    const req = tra.objectStore(storeName).put(dat, key)
+    const tra = db.transaction([sto], "readwrite")
+    const req = tra.objectStore(sto).put(dat, key)
 
     req.onsuccess = resolve
     req.onerror = reject
@@ -96,25 +101,12 @@ function setInIndex(args) {
 
 function deleteFromIndex(args) {
   return new Promise((resolve, reject) => {
+    const sto = args.store || storeNames.main
     const key = args.key
-    const tra = db.transaction([storeName], "readwrite")
-    const req = tra.objectStore(storeName).delete(key)
+    const tra = db.transaction([sto], "readwrite")
+    const req = tra.objectStore(sto).delete(key)
 
     req.onsuccess = resolve
     req.onerror = reject
   })
-}
-
-
-
-// 🖍
-
-
-function arrayBufToString(buf) {
-  return new TextDecoder("utf-8").decode(new Uint8Array(buf))
-}
-
-
-function stringToArrayBuf(str) {
-  return new TextEncoder().encode(str).buffer
 }

@@ -8,6 +8,7 @@ import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
+import Sources.Services
 import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Core exposing (Msg(..))
 import UI.Queue.Core as Queue
@@ -19,10 +20,44 @@ import UI.Tracks.Core as Tracks
 -- TRACK MENU
 
 
-trackMenu : List IdentifiedTrack -> Maybe Playlist -> Maybe String -> Coordinates -> ContextMenu Msg
-trackMenu tracks selectedPlaylist lastModifiedPlaylist =
+trackMenu : List IdentifiedTrack -> List String -> Maybe Playlist -> Maybe String -> Coordinates -> ContextMenu Msg
+trackMenu tracks cachedTrackIds selectedPlaylist lastModifiedPlaylist =
     [ queueActions tracks
     , playlistActions tracks selectedPlaylist lastModifiedPlaylist
+
+    --
+    -- TODO: 'Copy short-lived url' item
+    --
+    --
+    --
+    , case tracks of
+        [ ( i, t ) as track ] ->
+            if List.member t.id cachedTrackIds then
+                [ Item
+                    { icon = Icons.offline_bolt
+                    , label = "Remove from cache"
+                    , msg = RemoveFromTracksCache tracks
+                    , active = False
+                    }
+                ]
+
+            else
+                [ Item
+                    { icon = Icons.offline_bolt
+                    , label = "Store in cache"
+                    , msg = StoreInTracksCache tracks
+                    , active = False
+                    }
+                ]
+
+        _ ->
+            [ Item
+                { icon = Icons.offline_bolt
+                , label = "Store in cache"
+                , msg = StoreInTracksCache tracks
+                , active = False
+                }
+            ]
     ]
         |> List.concat
         |> ContextMenu

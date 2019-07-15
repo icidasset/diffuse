@@ -92,6 +92,7 @@ type alias Viewport =
 
 type Msg
     = Bypass
+    | CopyToClipboard String
     | Debounce (Debouncer.Msg Msg)
     | HideOverlay
     | KeyboardMsg Keyboard.Msg
@@ -158,6 +159,11 @@ type Msg
       -----------------------------------------
     | RequestAssistanceForPlaylists (List IdentifiedTrack)
     | RemoveFromSelectedPlaylist Playlist (List IdentifiedTrack)
+      -----------------------------------------
+      -- Tracks Cache
+      -----------------------------------------
+    | RemoveFromTracksCache (List IdentifiedTrack)
+    | StoreInTracksCache (List IdentifiedTrack)
       -----------------------------------------
       -- URL
       -----------------------------------------

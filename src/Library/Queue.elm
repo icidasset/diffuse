@@ -14,6 +14,7 @@ type alias Item =
 
 
 type alias EngineItem =
-    { trackId : String
+    { isCached : Bool
+    , trackId : String
     , url : String
     }
