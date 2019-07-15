@@ -452,7 +452,14 @@ mouseContextMenuEvent ( i, _ ) =
         "contextmenu"
         (Decode.map
             (\event ->
-                { message = ShowTrackMenuWithSmallDelay i.indexInList (Coordinates.fromTuple event.clientPos)
+                { message =
+                    if event.keys.shift then
+                        Bypass
+
+                    else
+                        ShowTrackMenuWithSmallDelay
+                            i.indexInList
+                            (Coordinates.fromTuple event.clientPos)
                 , stopPropagation = True
                 , preventDefault = True
                 }
@@ -505,15 +512,21 @@ selectEvent : IdentifiedTrack -> Html.Attribute Msg
 selectEvent ( i, _ ) =
     Html.Events.custom
         "tap"
-        (Decode.bool
-            |> Decode.at [ "originalEvent", "shiftKey" ]
-            |> Decode.map
-                (\shiftKey ->
-                    { message = MarkAsSelected i.indexInList { shiftKey = shiftKey }
-                    , stopPropagation = False
-                    , preventDefault = False
-                    }
-                )
+        (Decode.map2
+            (\shiftKey button ->
+                { message =
+                    case button of
+                        0 ->
+                            MarkAsSelected i.indexInList { shiftKey = shiftKey }
+
+                        _ ->
+                            Bypass
+                , stopPropagation = False
+                , preventDefault = False
+                }
+            )
+            (Decode.at [ "originalEvent", "shiftKey" ] Decode.bool)
+            (Decode.at [ "originalEvent", "button" ] Decode.int)
         )
 
 

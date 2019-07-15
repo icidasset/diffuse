@@ -295,12 +295,9 @@ document.addEventListener("MediaNext", () => {
 let enteredElement
 
 
-// TODO:
-// Double check if this was actually necessary on mobile
-//
-// tocca({
-//   dbltapThreshold: 800
-// })
+tocca({
+  dbltapThreshold: 400
+})
 
 
 function mousePointerEvent(eventType, mouseEvent) {

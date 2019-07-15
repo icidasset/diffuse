@@ -1368,12 +1368,7 @@ body model =
         , let
             opts =
                 { justifyCenter = False
-                , noPointerEvents =
-                    False
-                        || Maybe.isJust model.contextMenu
-                        || Maybe.isJust model.alfred.instance
-                , scrolling =
-                    not model.isDragging
+                , scrolling = not model.isDragging
                 }
           in
           case ( model.isLoading, model.authentication ) of
@@ -1460,8 +1455,8 @@ defaultScreen model =
 -- 🗺  ░░  BITS
 
 
-content : { justifyCenter : Bool, noPointerEvents : Bool, scrolling : Bool } -> List (Html msg) -> Html msg
-content { justifyCenter, noPointerEvents, scrolling } nodes =
+content : { justifyCenter : Bool, scrolling : Bool } -> List (Html msg) -> Html msg
+content { justifyCenter, scrolling } nodes =
     brick
         [ css contentStyles ]
         [ T.overflow_x_hidden
@@ -1469,7 +1464,6 @@ content { justifyCenter, noPointerEvents, scrolling } nodes =
         , T.z_1
 
         --
-        , ifThenElse noPointerEvents C.pointer_events_none ""
         , ifThenElse scrolling T.overflow_y_auto T.overflow_y_hidden
         ]
         [ brick
