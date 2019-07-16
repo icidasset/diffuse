@@ -20,8 +20,8 @@ import UI.Tracks.Core as Tracks
 -- TRACK MENU
 
 
-trackMenu : List IdentifiedTrack -> List String -> Maybe Playlist -> Maybe String -> Coordinates -> ContextMenu Msg
-trackMenu tracks cachedTrackIds selectedPlaylist lastModifiedPlaylist =
+trackMenu : List IdentifiedTrack -> List String -> List String -> Maybe Playlist -> Maybe String -> Coordinates -> ContextMenu Msg
+trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist =
     [ queueActions tracks
     , playlistActions tracks selectedPlaylist lastModifiedPlaylist
 
@@ -32,12 +32,21 @@ trackMenu tracks cachedTrackIds selectedPlaylist lastModifiedPlaylist =
     --
     , case tracks of
         [ ( i, t ) as track ] ->
-            if List.member t.id cachedTrackIds then
+            if List.member t.id cached then
                 [ Item
                     { icon = Icons.offline_bolt
                     , label = "Remove from cache"
                     , msg = RemoveFromTracksCache tracks
                     , active = False
+                    }
+                ]
+
+            else if List.member t.id cachingInProgress then
+                [ Item
+                    { icon = Icons.offline_bolt
+                    , label = "Downloading ..."
+                    , msg = Bypass
+                    , active = True
                     }
                 ]
 

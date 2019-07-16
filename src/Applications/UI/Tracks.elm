@@ -57,6 +57,7 @@ import UI.Tracks.Scene.List
 initialModel : Model
 initialModel =
     { cached = []
+    , cachingInProgress = []
     , collection = emptyCollection
     , enabledSourceIds = []
     , favourites = []

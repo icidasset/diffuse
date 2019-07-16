@@ -32,6 +32,7 @@ import Html.Styled.Lazy as Lazy
 import Json.Decode
 import Json.Encode
 import Keyboard
+import List.Ext as List
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
@@ -643,6 +644,24 @@ update msg model =
         -----------------------------------------
         -- Tracks Cache
         -----------------------------------------
+        FinishedStoringTracksInCache trackIds ->
+            -- TODO: When a context menu of a track is open,
+            --       it should be "rerendered" in case
+            --       the track is no longer being downloaded.
+            let
+                tracksModel =
+                    model.tracks
+
+                newTracksModel =
+                    { tracksModel
+                        | cached = model.tracks.cached ++ trackIds
+                        , cachingInProgress = List.without trackIds model.tracks.cachingInProgress
+                    }
+            in
+            translateReply
+                SaveEnclosedUserData
+                { model | tracks = newTracksModel }
+
         RemoveFromTracksCache identifiedTracks ->
             let
                 trackIds =
@@ -652,7 +671,7 @@ update msg model =
                     model.tracks
 
                 newCached =
-                    List.filter (\c -> List.notMember c trackIds) tracksModel.cached
+                    List.without trackIds tracksModel.cached
 
                 newTracksModel =
                     { tracksModel | cached = newCached }
@@ -672,8 +691,11 @@ update msg model =
                 tracksModel =
                     model.tracks
 
+                newCachingInProgress =
+                    tracksModel.cachingInProgress ++ trackIds
+
                 newTracksModel =
-                    { tracksModel | cached = List.append tracksModel.cached trackIds }
+                    { tracksModel | cachingInProgress = newCachingInProgress }
             in
             identifiedTracks
                 |> Json.Encode.list
@@ -694,7 +716,6 @@ update msg model =
                 |> Alien.broadcast Alien.StoreTracksInCache
                 |> Ports.toBrain
                 |> returnWithModel { model | tracks = newTracksModel }
-                |> andThen (translateReply SaveEnclosedUserData)
 
         -----------------------------------------
         -- URL
@@ -806,7 +827,7 @@ translateReply reply model =
             return { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
 
         ShowTracksContextMenu coordinates tracks ->
-            return { model | contextMenu = Just (Tracks.trackMenu tracks model.tracks.cached model.tracks.selectedPlaylist model.playlists.lastModifiedPlaylist coordinates) }
+            return { model | contextMenu = Just (Tracks.trackMenu tracks model.tracks.cachingInProgress model.tracks.cached model.tracks.selectedPlaylist model.playlists.lastModifiedPlaylist coordinates) }
 
         ShowTracksViewMenu coordinates maybeGrouping ->
             return { model | contextMenu = Just (Tracks.viewMenu maybeGrouping coordinates) }
@@ -1257,6 +1278,17 @@ translateAlienData event =
 
         Just Alien.SearchTracks ->
             TracksMsg (Tracks.SetSearchResults event.data)
+
+        Just Alien.StoreTracksInCache ->
+            case Json.Decode.decodeValue (Json.Decode.list Json.Decode.string) event.data of
+                Ok list ->
+                    FinishedStoringTracksInCache list
+
+                Err jsonErr ->
+                    jsonErr
+                        |> Json.Decode.errorToString
+                        |> Notifications.error
+                        |> ShowNotification
 
         Just Alien.UpdateSourceData ->
             SourcesMsg (Sources.UpdateSourceData event.data)

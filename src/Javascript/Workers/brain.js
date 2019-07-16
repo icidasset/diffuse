@@ -217,6 +217,14 @@ app.ports.storeTracksInCache.subscribe(list => {
     },
     Promise.resolve()
 
+  ).then(
+    // report success
+    _ => self.postMessage({
+      tag: "STORE_TRACKS_IN_CACHE",
+      data: list.map(l => l.trackId),
+      error: null
+    })
+
   ).catch(
     _ => reportError
       ({ tag: "STORE_TRACKS_IN_CACHE" })

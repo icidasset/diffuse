@@ -16,6 +16,7 @@ import UI.Reply exposing (Reply)
 
 type alias Model =
     { cached : List String
+    , cachingInProgress : List String
     , collection : Collection
     , enabledSourceIds : List String
     , favourites : List Favourite

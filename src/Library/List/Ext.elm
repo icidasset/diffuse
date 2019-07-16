@@ -1,4 +1,4 @@
-module List.Ext exposing (addTo, move)
+module List.Ext exposing (addTo, move, without)
 
 import List.Extra as List
 
@@ -44,3 +44,14 @@ move opts list =
                     existingItem :: acc
             )
             []
+
+
+{-| Exclude a list from another list.
+
+    >>> without [ 2 ] [ 1, 2, 3 ]
+    [ 1, 3 ]
+
+-}
+without : List a -> List a -> List a
+without exclude =
+    List.filter (\c -> List.notMember c exclude)
