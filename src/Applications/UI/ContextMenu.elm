@@ -31,6 +31,7 @@ view m =
                 [ T.absolute
                 , T.br2
                 , T.bg_white
+                , C.disable_selection
                 , T.f7
                 , T.overflow_hidden
                 , T.z_9999
