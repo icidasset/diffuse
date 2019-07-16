@@ -664,8 +664,8 @@ update msg model =
                             , cachingInProgress = List.without trackIds m.cachingInProgress
                         }
                     )
-                |> translateReply
-                    SaveEnclosedUserData
+                |> update (TracksMsg Tracks.Harvest)
+                |> andThen (translateReply SaveEnclosedUserData)
 
         RemoveFromTracksCache identifiedTracks ->
             let
@@ -681,6 +681,7 @@ update msg model =
                         (\m -> { m | cached = List.without trackIds m.cached })
                         model
                     )
+                |> andThen (update <| TracksMsg Tracks.Harvest)
                 |> andThen (translateReply SaveEnclosedUserData)
 
         StoreInTracksCache identifiedTracks ->
@@ -830,7 +831,7 @@ translateReply reply model =
             return { model | contextMenu = Just (Tracks.trackMenu tracks model.tracks.cachingInProgress model.tracks.cached model.tracks.selectedPlaylist model.playlists.lastModifiedPlaylist coordinates) }
 
         ShowTracksViewMenu coordinates maybeGrouping ->
-            return { model | contextMenu = Just (Tracks.viewMenu maybeGrouping coordinates) }
+            return { model | contextMenu = Just (Tracks.viewMenu model.tracks.cachedOnly maybeGrouping coordinates) }
 
         -----------------------------------------
         -- Notifications

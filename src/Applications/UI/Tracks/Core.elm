@@ -16,6 +16,7 @@ import UI.Reply exposing (Reply)
 
 type alias Model =
     { cached : List String
+    , cachedOnly : Bool
     , cachingInProgress : List String
     , collection : Collection
     , enabledSourceIds : List String
@@ -46,12 +47,14 @@ type alias Model =
 
 type Msg
     = Bypass
+    | Harvest
     | MarkAsSelected Int { shiftKey : Bool }
     | Reply (List Reply)
     | ScrollToNowPlaying
     | SetEnabledSourceIds (List String)
     | SetNowPlaying (Maybe IdentifiedTrack)
     | SortBy SortBy
+    | ToggleCachedOnly
     | ToggleHideDuplicates
       -----------------------------------------
       -- Collection

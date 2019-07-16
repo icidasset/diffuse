@@ -57,6 +57,7 @@ import UI.Tracks.Scene.List
 initialModel : Model
 initialModel =
     { cached = []
+    , cachedOnly = False
     , cachingInProgress = []
     , collection = emptyCollection
     , enabledSourceIds = []
@@ -90,6 +91,9 @@ update msg model =
     case msg of
         Bypass ->
             return model
+
+        Harvest ->
+            reviseCollection harvest model
 
         MarkAsSelected indexInList { shiftKey } ->
             let
@@ -184,6 +188,11 @@ update msg model =
             in
             { model | sortBy = property, sortDirection = sortDir }
                 |> reviseCollection arrange
+                |> addReply SaveEnclosedUserData
+
+        ToggleCachedOnly ->
+            { model | cachedOnly = not model.cachedOnly }
+                |> reviseCollection harvest
                 |> addReply SaveEnclosedUserData
 
         ToggleHideDuplicates ->
@@ -410,7 +419,9 @@ update msg model =
 
 makeParcel : Model -> Parcel
 makeParcel model =
-    ( { enabledSourceIds = model.enabledSourceIds
+    ( { cached = model.cached
+      , cachedOnly = model.cachedOnly
+      , enabledSourceIds = model.enabledSourceIds
       , favourites = model.favourites
       , favouritesOnly = model.favouritesOnly
       , grouping = model.grouping

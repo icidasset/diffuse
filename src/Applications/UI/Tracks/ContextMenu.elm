@@ -156,13 +156,21 @@ queueActions identifiedTracks =
 -- VIEW MENU
 
 
-viewMenu : Maybe Grouping -> Coordinates -> ContextMenu Msg
-viewMenu maybeGrouping =
+viewMenu : Bool -> Maybe Grouping -> Coordinates -> ContextMenu Msg
+viewMenu onlyCachedTracks maybeGrouping =
     ContextMenu
         [ groupByDirectory (maybeGrouping == Just Directory)
         , groupByFirstAlphaCharacter (maybeGrouping == Just FirstAlphaCharacter)
         , groupByProcessingDate (maybeGrouping == Just AddedOn)
         , groupByTrackYear (maybeGrouping == Just TrackYear)
+
+        --
+        , Item
+            { icon = Icons.filter_list
+            , label = "Cached tracks only"
+            , active = onlyCachedTracks
+            , msg = TracksMsg Tracks.ToggleCachedOnly
+            }
         ]
 
 

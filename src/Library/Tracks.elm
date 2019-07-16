@@ -86,7 +86,9 @@ type alias Collection =
 
 
 type alias CollectionDependencies =
-    { enabledSourceIds : List String
+    { cached : List String
+    , cachedOnly : Bool
+    , enabledSourceIds : List String
     , favourites : List Favourite
     , favouritesOnly : Bool
     , grouping : Maybe Grouping

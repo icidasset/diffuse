@@ -57,6 +57,14 @@ harvest ( deps, collection ) =
 
                 Nothing ->
                     always True
+
+            -- Cached
+            ---------
+            , if deps.cachedOnly then
+                \( _, t ) -> List.member t.id deps.cached
+
+              else
+                always True
             ]
 
         theFilter x =

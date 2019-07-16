@@ -178,6 +178,7 @@ exportEnclosed model =
         { cachedTracks = model.tracks.cached
         , equalizerSettings = equalizerSettings
         , grouping = model.tracks.grouping
+        , onlyShowCachedTracks = model.tracks.cachedOnly
         , onlyShowFavourites = model.tracks.favouritesOnly
         , repeat = model.queue.repeat
         , searchTerm = model.tracks.searchTerm
@@ -219,6 +220,7 @@ importEnclosed value model =
                 newTracks =
                     { tracks
                         | cached = data.cachedTracks
+                        , cachedOnly = data.onlyShowCachedTracks
                         , favouritesOnly = data.onlyShowFavourites
                         , grouping = data.grouping
                         , searchTerm = data.searchTerm
