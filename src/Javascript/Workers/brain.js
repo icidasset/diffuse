@@ -526,6 +526,6 @@ app.ports.toTextile.subscribe(event => {
 function reportError(event) {
   return err => {
     console.error(err)
-    app.ports.fromAlien.send({ tag: event.tag, data: null, error: err.message })
+    app.ports.fromAlien.send({ tag: event.tag, data: null, error: err.message || err })
   }
 }

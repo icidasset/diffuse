@@ -65,7 +65,7 @@ show notification model =
           else
             Task.perform
                 (\_ -> UI.Core.DismissNotification { id = Notifications.id notification })
-                (Process.sleep 3000)
+                (Process.sleep 5000)
         )
 
 
