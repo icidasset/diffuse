@@ -644,58 +644,49 @@ update msg model =
         -----------------------------------------
         -- Tracks Cache
         -----------------------------------------
+        FailedToStoreTracksInCache trackIds ->
+            model
+                |> updateTracksModel
+                    (\m -> { m | cachingInProgress = List.without trackIds m.cachingInProgress })
+                |> return
+                |> andThen
+                    (translateReply <| ShowErrorNotification "Failed to store track in cache")
+
         FinishedStoringTracksInCache trackIds ->
             -- TODO: When a context menu of a track is open,
             --       it should be "rerendered" in case
             --       the track is no longer being downloaded.
-            let
-                tracksModel =
-                    model.tracks
-
-                newTracksModel =
-                    { tracksModel
-                        | cached = model.tracks.cached ++ trackIds
-                        , cachingInProgress = List.without trackIds model.tracks.cachingInProgress
-                    }
-            in
-            translateReply
-                SaveEnclosedUserData
-                { model | tracks = newTracksModel }
+            model
+                |> updateTracksModel
+                    (\m ->
+                        { m
+                            | cached = m.cached ++ trackIds
+                            , cachingInProgress = List.without trackIds m.cachingInProgress
+                        }
+                    )
+                |> translateReply
+                    SaveEnclosedUserData
 
         RemoveFromTracksCache identifiedTracks ->
             let
                 trackIds =
                     List.map (Tuple.second >> .id) identifiedTracks
-
-                tracksModel =
-                    model.tracks
-
-                newCached =
-                    List.without trackIds tracksModel.cached
-
-                newTracksModel =
-                    { tracksModel | cached = newCached }
             in
             identifiedTracks
                 |> Json.Encode.list (Tuple.second >> .id >> Json.Encode.string)
                 |> Alien.broadcast Alien.RemoveTracksFromCache
                 |> Ports.toBrain
-                |> returnWithModel { model | tracks = newTracksModel }
+                |> returnWithModel
+                    (updateTracksModel
+                        (\m -> { m | cached = List.without trackIds m.cached })
+                        model
+                    )
                 |> andThen (translateReply SaveEnclosedUserData)
 
         StoreInTracksCache identifiedTracks ->
             let
                 trackIds =
                     List.map (Tuple.second >> .id) identifiedTracks
-
-                tracksModel =
-                    model.tracks
-
-                newCachingInProgress =
-                    tracksModel.cachingInProgress ++ trackIds
-
-                newTracksModel =
-                    { tracksModel | cachingInProgress = newCachingInProgress }
             in
             identifiedTracks
                 |> Json.Encode.list
@@ -715,7 +706,11 @@ update msg model =
                     )
                 |> Alien.broadcast Alien.StoreTracksInCache
                 |> Ports.toBrain
-                |> returnWithModel { model | tracks = newTracksModel }
+                |> returnWithModel
+                    (updateTracksModel
+                        (\m -> { m | cachingInProgress = m.cachingInProgress ++ trackIds })
+                        model
+                    )
 
         -----------------------------------------
         -- URL
@@ -760,6 +755,11 @@ update msg model =
 
                 _ ->
                     returnWithModel model (resetUrl model.navKey url Page.Index)
+
+
+updateTracksModel : (Tracks.Model -> Tracks.Model) -> Model -> Model
+updateTracksModel fn model =
+    { model | tracks = fn model.tracks }
 
 
 updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
@@ -1311,6 +1311,16 @@ translateAlienError event err =
 
         Just Alien.AuthTextile ->
             AuthenticationBootFailure err
+
+        Just Alien.StoreTracksInCache ->
+            case Json.Decode.decodeValue (Json.Decode.list Json.Decode.string) event.data of
+                Ok trackIds ->
+                    FailedToStoreTracksInCache trackIds
+
+                Err _ ->
+                    err
+                        |> Notifications.error
+                        |> ShowNotification
 
         Just _ ->
             err

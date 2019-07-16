@@ -226,9 +226,13 @@ app.ports.storeTracksInCache.subscribe(list => {
     })
 
   ).catch(
-    _ => reportError
-      ({ tag: "STORE_TRACKS_IN_CACHE" })
-      ("Failed to store tracks in cache")
+    err => {
+      self.postMessage({
+        tag: "STORE_TRACKS_IN_CACHE",
+        data: list.map(l => l.trackId),
+        error: err.message || err
+      })
+    }
 
   )
 })

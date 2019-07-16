@@ -162,6 +162,7 @@ type Msg
       -----------------------------------------
       -- Tracks Cache
       -----------------------------------------
+    | FailedToStoreTracksInCache (List String)
     | FinishedStoringTracksInCache (List String)
     | RemoveFromTracksCache (List IdentifiedTrack)
     | StoreInTracksCache (List IdentifiedTrack)
