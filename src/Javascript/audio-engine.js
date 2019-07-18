@@ -276,8 +276,9 @@ function audioEndEvent(event) {
 
 function audioLoading(event) {
   clearTimeout(orchestrion.loadingTimeoutId)
+
   this.loadingTimeoutId = setTimeout(() => {
-    if (this.audio.readyState === 4) {
+    if (this.audio.readyState === 4 && this.audio.currentTime === 0) {
       this.app.ports.setAudioIsLoading.send(false)
     } else {
       this.app.ports.setAudioIsLoading.send(true)
