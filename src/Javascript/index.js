@@ -68,7 +68,6 @@ app.ports.activeQueueItemChanged.subscribe(item => {
   orchestrion.activeQueueItem = item
   orchestrion.audio = null
 
-  clearTimeout(orchestrion.loadingTimeoutId)
   SINGLE_AUDIO_NODE ? false : removeOlderAudioElements(timestampInMilliseconds)
 
   if (item) {
@@ -131,7 +130,6 @@ app.ports.setRepeat.subscribe(repeat => {
 
 app.ports.unstall.subscribe(_ => {
   if (orchestrion.audio) {
-    clearTimeout(orchestrion.unstallTimeoutId)
     unstallAudio(orchestrion.audio)
   }
 })

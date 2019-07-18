@@ -251,21 +251,12 @@ function audioErrorEvent(event) {
 
 function audioStalledEvent(event) {
   this.app.ports.setAudioIsLoading.send(true)
-  this.stalledTimeoutId = setTimeout(() => {
-    console.error(`Audio stalled for '${ audioElementTrackId(event.target) }'`)
-
-    this.app.ports.setAudioHasStalled.send(true)
-    this.unstallTimeoutId = setTimeout(() => {
-      this.app.ports.setAudioHasStalled.send(false)
-      unstallAudio(event.target)
-    }, 2500)
-  }, 60000)
+  this.app.ports.setAudioHasStalled.send(true)
+  unstallAudio(event.target)
 }
 
 
 function audioTimeUpdateEvent(event) {
-  clearTimeout(this.stalledTimeoutId)
-
   if (isNaN(event.target.duration) || isNaN(event.target.currentTime)) {
     setProgressBarWidth(0)
   } else if (event.target.duration > 0) {
@@ -283,15 +274,21 @@ function audioEndEvent(event) {
 }
 
 
-function audioLoading() {
+function audioLoading(event) {
+  clearTimeout(orchestrion.loadingTimeoutId)
   this.loadingTimeoutId = setTimeout(() => {
-    this.app.ports.setAudioIsLoading.send(true)
+    if (this.audio.readyState === 4) {
+      this.app.ports.setAudioIsLoading.send(false)
+    } else {
+      this.app.ports.setAudioIsLoading.send(true)
+    }
   }, 1750)
 }
 
 
 function audioLoaded(event) {
   clearTimeout(this.loadingTimeoutId)
+  this.app.ports.setAudioHasStalled.send(false)
   this.app.ports.setAudioIsLoading.send(false)
   if (event.target.paused) playAudio(event.target)
 }

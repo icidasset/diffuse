@@ -45,9 +45,9 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
             [ if hasStalled then
                 slab
                     Html.span
-                    [ onClick Unstall ]
-                    [ T.dib, T.pointer ]
-                    [ text "Your internet connection got interrupted, click to resume." ]
+                    []
+                    [ T.dib ]
+                    [ text "Audio connection got interrupted, trying to reconnect …" ]
 
               else if isLoading then
                 text "Loading track …"
