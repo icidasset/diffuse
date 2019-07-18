@@ -36,7 +36,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
                 [ Item
                     { icon = Icons.offline_bolt
                     , label = "Remove from cache"
-                    , msg = RemoveFromTracksCache tracks
+                    , msg = RemoveFromTracksCache (List.map Tuple.second tracks)
                     , active = False
                     }
                 ]
@@ -54,7 +54,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
                 [ Item
                     { icon = Icons.offline_bolt
                     , label = "Store in cache"
-                    , msg = StoreInTracksCache tracks
+                    , msg = StoreInTracksCache (List.map Tuple.second tracks)
                     , active = False
                     }
                 ]
@@ -63,7 +63,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
             [ Item
                 { icon = Icons.offline_bolt
                 , label = "Store in cache"
-                , msg = StoreInTracksCache tracks
+                , msg = StoreInTracksCache (List.map Tuple.second tracks)
                 , active = False
                 }
             ]

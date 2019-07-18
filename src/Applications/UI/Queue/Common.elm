@@ -13,10 +13,10 @@ import Tracks exposing (IdentifiedTrack, Track)
 -- 🔱
 
 
-makeEngineItem : Time.Posix -> List Source -> List String -> IdentifiedTrack -> EngineItem
-makeEngineItem timestamp sources cachedTrackIds (( _, t ) as track) =
-    { isCached = List.member t.id cachedTrackIds
-    , trackId = t.id
+makeEngineItem : Time.Posix -> List Source -> List String -> Track -> EngineItem
+makeEngineItem timestamp sources cachedTrackIds track =
+    { isCached = List.member track.id cachedTrackIds
+    , trackId = track.id
     , url = makeTrackUrl timestamp sources track
     }
 
@@ -28,8 +28,8 @@ makeItem isManualEntry identifiedTrack =
     }
 
 
-makeTrackUrl : Time.Posix -> List Source -> IdentifiedTrack -> String
-makeTrackUrl timestamp sources ( _, track ) =
+makeTrackUrl : Time.Posix -> List Source -> Track -> String
+makeTrackUrl timestamp sources track =
     sources
         |> List.find (.id >> (==) track.sourceId)
         |> Maybe.map (makeTrackUrl_ timestamp track)

@@ -667,13 +667,13 @@ update msg model =
                 |> update (TracksMsg Tracks.Harvest)
                 |> andThen (translateReply SaveEnclosedUserData)
 
-        RemoveFromTracksCache identifiedTracks ->
+        RemoveFromTracksCache tracks ->
             let
                 trackIds =
-                    List.map (Tuple.second >> .id) identifiedTracks
+                    List.map .id tracks
             in
-            identifiedTracks
-                |> Json.Encode.list (Tuple.second >> .id >> Json.Encode.string)
+            tracks
+                |> Json.Encode.list (.id >> Json.Encode.string)
                 |> Alien.broadcast Alien.RemoveTracksFromCache
                 |> Ports.toBrain
                 |> returnWithModel
@@ -684,17 +684,17 @@ update msg model =
                 |> andThen (update <| TracksMsg Tracks.Harvest)
                 |> andThen (translateReply SaveEnclosedUserData)
 
-        StoreInTracksCache identifiedTracks ->
+        StoreInTracksCache tracks ->
             let
                 trackIds =
-                    List.map (Tuple.second >> .id) identifiedTracks
+                    List.map .id tracks
             in
-            identifiedTracks
+            tracks
                 |> Json.Encode.list
-                    (\(( i, t ) as track) ->
+                    (\track ->
                         Json.Encode.object
                             [ ( "trackId"
-                              , Json.Encode.string t.id
+                              , Json.Encode.string track.id
                               )
                             , ( "url"
                               , track
@@ -961,7 +961,8 @@ translateReply reply model =
 
                 portCmd =
                     maybeQueueItem
-                        |> Maybe.map .identifiedTrack
+                        |> Maybe.map
+                            (.identifiedTrack >> Tuple.second)
                         |> Maybe.map
                             (UI.Queue.Common.makeEngineItem
                                 model.currentTime
@@ -1020,6 +1021,7 @@ translateReply reply model =
                 Just item ->
                     item
                         |> .identifiedTrack
+                        |> Tuple.second
                         |> UI.Queue.Common.makeEngineItem
                             model.currentTime
                             model.sources.collection
@@ -1041,9 +1043,13 @@ translateReply reply model =
                 sources =
                     model.sources
 
+                sourcesToProcess =
+                    Sources.sourcesToProcess model.sources
+
                 newSources =
                     { sources
-                        | processingError = Nothing
+                        | isProcessing = List.map .id sourcesToProcess
+                        , processingError = Nothing
                         , processingNotificationId = Just notificationId
                     }
             in
@@ -1051,7 +1057,7 @@ translateReply reply model =
               , Json.Encode.string (Common.urlOrigin model.url)
               )
             , ( "sources"
-              , Json.Encode.list Sources.Encoding.encode (Sources.sourcesToProcess model.sources)
+              , Json.Encode.list Sources.Encoding.encode sourcesToProcess
               )
             ]
                 |> Json.Encode.object
@@ -1059,6 +1065,11 @@ translateReply reply model =
                 |> Ports.toBrain
                 |> returnWithModel { model | sources = newSources }
                 |> andThen (UI.Notifications.show notification)
+
+        RemoveTracksFromCache tracks ->
+            update
+                (RemoveFromTracksCache tracks)
+                model
 
         RemoveTracksWithSourceId sourceId ->
             let

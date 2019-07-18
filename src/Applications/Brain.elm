@@ -193,6 +193,7 @@ update msg model =
         RemoveTracksBySourceId sourceId ->
             model.hypaethralUserData.tracks
                 |> Tracks.removeBySourceId sourceId
+                |> .kept
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndexWithModel
                 |> andThen saveHypaethralData
@@ -286,6 +287,7 @@ translateReply reply model =
         RemoveTracksByPaths args ->
             model.hypaethralUserData.tracks
                 |> Tracks.removeByPaths args
+                |> .kept
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndexWithModel
                 |> andThen saveHypaethralData

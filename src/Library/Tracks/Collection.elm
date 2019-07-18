@@ -1,4 +1,4 @@
-module Tracks.Collection exposing (add, arrange, harvest, harvestChanged, identify, map, removeByPaths, removeBySourceId, tracksChanged)
+module Tracks.Collection exposing (add, arrange, harvest, harvestChanged, identify, map, tracksChanged)
 
 import List.Extra as List
 import Tracks exposing (IdentifiedTrack, Parcel, Track, emptyCollection)
@@ -44,28 +44,6 @@ add tracks ( deps, { untouched } ) =
     identify
         ( deps
         , { emptyCollection | untouched = untouched ++ tracks }
-        )
-
-
-removeByPaths : String -> List String -> Parcel -> Parcel
-removeByPaths sourceId paths ( deps, { untouched } ) =
-    identify
-        ( deps
-        , { emptyCollection
-            | untouched =
-                Tracks.removeByPaths { sourceId = sourceId, paths = paths } untouched
-          }
-        )
-
-
-removeBySourceId : String -> Parcel -> Parcel
-removeBySourceId sourceId ( deps, { untouched } ) =
-    identify
-        ( deps
-        , { emptyCollection
-            | untouched =
-                Tracks.removeBySourceId sourceId untouched
-          }
         )
 
 

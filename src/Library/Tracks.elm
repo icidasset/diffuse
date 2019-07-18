@@ -206,24 +206,38 @@ makeTrack sourceId ( path, tags ) =
     }
 
 
-removeByPaths : { sourceId : String, paths : List String } -> List Track -> List Track
+removeByPaths : { sourceId : String, paths : List String } -> List Track -> { kept : List Track, removed : List Track }
 removeByPaths { sourceId, paths } tracks =
     tracks
         |> List.foldr
-            (\t ( acc, remainingPaths ) ->
-                if t.sourceId == sourceId && List.member t.path remainingPaths then
-                    ( acc, List.remove t.path remainingPaths )
+            (\t ( kept, removed, remainingPathsToRemove ) ->
+                if t.sourceId == sourceId && List.member t.path remainingPathsToRemove then
+                    ( kept, t :: removed, List.remove t.path remainingPathsToRemove )
 
                 else
-                    ( t :: acc, remainingPaths )
+                    ( t :: kept, removed, remainingPathsToRemove )
             )
-            ( [], paths )
-        |> Tuple.first
+            ( [], [], paths )
+        |> (\( k, r, _ ) ->
+                { kept = k, removed = r }
+           )
 
 
-removeBySourceId : String -> List Track -> List Track
-removeBySourceId sourceId =
-    List.filter (.sourceId >> (/=) sourceId)
+removeBySourceId : String -> List Track -> { kept : List Track, removed : List Track }
+removeBySourceId removedSourceId tracks =
+    tracks
+        |> List.foldr
+            (\t ( kept, removed ) ->
+                if t.sourceId == removedSourceId then
+                    ( kept, t :: removed )
+
+                else
+                    ( t :: kept, removed )
+            )
+            ( [], [] )
+        |> (\( k, r ) ->
+                { kept = k, removed = r }
+           )
 
 
 removeFromPlaylist : List IdentifiedTrack -> Playlist -> Playlist

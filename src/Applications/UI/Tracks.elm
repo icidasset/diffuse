@@ -230,15 +230,30 @@ update msg model =
                     json
                         |> Json.decodeValue decoder
                         |> Result.withDefault ( [], missingId )
+
+                { kept, removed } =
+                    Tracks.removeByPaths
+                        { sourceId = sourceId, paths = paths }
+                        model.collection.untouched
+
+                newCollection =
+                    { emptyCollection | untouched = kept }
             in
-            reviseCollection
-                (Collection.removeByPaths sourceId paths)
-                model
+            { model | collection = newCollection }
+                |> reviseCollection identify
+                |> addReply (RemoveTracksFromCache removed)
 
         RemoveBySourceId sourceId ->
-            reviseCollection
-                (Collection.removeBySourceId sourceId)
-                model
+            let
+                { kept, removed } =
+                    Tracks.removeBySourceId sourceId model.collection.untouched
+
+                newCollection =
+                    { emptyCollection | untouched = kept }
+            in
+            { model | collection = newCollection }
+                |> reviseCollection identify
+                |> addReply (RemoveTracksFromCache removed)
 
         -----------------------------------------
         -- Favourites
@@ -734,7 +749,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     [ inline
                         [ T.dib, T.mb2 ]
                         [ UI.Kit.buttonLink
-                            "sources/new"
+                            "#/sources/new"
                             UI.Kit.Normal
                             (inline
                                 []

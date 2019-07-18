@@ -102,9 +102,7 @@ update msg model =
                 return model
 
             else
-                returnReplyWithModel
-                    { model | isProcessing = List.map .id (sourcesToProcess model) }
-                    ProcessSources
+                returnReplyWithModel model ProcessSources
 
         ReportProcessingError json ->
             case Json.decodeValue (Json.dict Json.string) json of
@@ -147,12 +145,7 @@ update msg model =
                 |> setProperId (List.length model.collection + 1) model.currentTime
                 |> List.singleton
                 |> List.append model.collection
-                |> (\c ->
-                        { model
-                            | collection = c
-                            , isProcessing = List.map .id (sourcesToProcess model)
-                        }
-                   )
+                |> (\c -> { model | collection = c })
                 |> return
                 |> addReplies
                     [ UI.Reply.SaveSources

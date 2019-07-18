@@ -15,7 +15,7 @@ import Notifications exposing (..)
 import Playlists exposing (Playlist)
 import Queue
 import Time
-import Tracks exposing (IdentifiedTrack)
+import Tracks exposing (IdentifiedTrack, Track)
 import UI.Alfred as Alfred
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
@@ -164,8 +164,8 @@ type Msg
       -----------------------------------------
     | FailedToStoreTracksInCache (List String)
     | FinishedStoringTracksInCache (List String)
-    | RemoveFromTracksCache (List IdentifiedTrack)
-    | StoreInTracksCache (List IdentifiedTrack)
+    | RemoveFromTracksCache (List Track)
+    | StoreInTracksCache (List Track)
       -----------------------------------------
       -- URL
       -----------------------------------------
