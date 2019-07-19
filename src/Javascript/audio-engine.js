@@ -99,8 +99,10 @@ function insertTrack(orchestrion, queueItem) {
   if (!queueItem.url) console.error("insertTrack, missing `url`");
   if (!queueItem.trackId) console.error("insertTrack, missing `trackId`");
 
-  // Reset progress-bar width
+  // Reset
+  clearTimeout(orchestrion.unstallTimeout)
   setProgressBarWidth(0)
+  timesStalled = 0
 
   // Resume audio context if it's suspended
   if (context.resume && context.state !== "running") {
@@ -210,6 +212,9 @@ function preloadAudioElement(orchestrion, queueItem) {
 // Audio events
 // ------------
 
+let timesStalled = 0
+
+
 function audioErrorEvent(event) {
   console.error(
     `Audio error for '${ audioElementTrackId(event.target) }': ` +
@@ -252,7 +257,18 @@ function audioErrorEvent(event) {
 function audioStalledEvent(event) {
   this.app.ports.setAudioIsLoading.send(true)
   this.app.ports.setAudioHasStalled.send(true)
-  unstallAudio(event.target)
+
+  clearTimeout(this.unstallTimeout)
+
+  // Timeout
+  setTimeout(_ => {
+    if (isActiveAudioElement(this, event.target)) {
+      unstallAudio(event.target)
+    }
+  }, timesStalled * 500)
+
+  // Increase counter
+  timesStalled++
 }
 
 
