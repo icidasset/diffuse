@@ -1,4 +1,4 @@
-module UI.Tracks exposing (initialModel, makeParcel, resolveParcel, update, view)
+module UI.Tracks exposing (Model, Msg(..), Necessities, Scene(..), initialModel, makeParcel, resolveParcel, update, view)
 
 import Alien
 import Chunky exposing (..)
@@ -6,7 +6,8 @@ import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
-import Coordinates
+import Conditional exposing (ifThenElse)
+import Coordinates exposing (Coordinates, Viewport)
 import Css
 import Css.Transitions exposing (transition)
 import Html.Events.Extra.Mouse as Mouse
@@ -31,13 +32,13 @@ import Material.Icons.Navigation as Icons
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Return3 as Return exposing (..)
+import Sources exposing (Source)
 import Tachyons.Classes as T
 import Task.Extra as Task
 import Tracks exposing (..)
 import Tracks.Collection as Collection exposing (..)
 import Tracks.Encoding as Encoding
 import Tracks.Favourites as Favourites
-import UI.Core
 import UI.DnD as DnD
 import UI.Kit
 import UI.Navigation exposing (..)
@@ -45,13 +46,43 @@ import UI.Page exposing (Page)
 import UI.Playlists.Page
 import UI.Ports
 import UI.Queue.Page
-import UI.Reply exposing (Reply(..))
-import UI.Tracks.Core exposing (..)
+import UI.Reply as UI exposing (Reply(..))
+import UI.Tracks.Reply as Tracks exposing (Reply(..))
 import UI.Tracks.Scene.List
 
 
 
 -- 🌳
+
+
+type alias Model =
+    { cached : List String
+    , cachedOnly : Bool
+    , cachingInProgress : List String
+    , collection : Collection
+    , enabledSourceIds : List String
+    , favourites : List Favourite
+    , favouritesOnly : Bool
+    , grouping : Maybe Grouping
+    , hideDuplicates : Bool
+    , nowPlaying : Maybe IdentifiedTrack
+    , scene : Scene
+    , searchResults : Maybe (List String)
+    , searchTerm : Maybe String
+    , selectedPlaylist : Maybe Playlist
+    , selectedTrackIndexes : List Int
+    , sortBy : SortBy
+    , sortDirection : SortDirection
+
+    -----------------------------------------
+    -- Scenes
+    -----------------------------------------
+    , listScene : UI.Tracks.Scene.List.Model
+    }
+
+
+type Scene
+    = List
 
 
 initialModel : Model
@@ -75,10 +106,9 @@ initialModel =
     , sortDirection = Asc
 
     -----------------------------------------
-    -- Scenes / List
+    -- Scenes
     -----------------------------------------
-    , infiniteList = InfiniteList.init
-    , listDnD = DnD.initialModel
+    , listScene = UI.Tracks.Scene.List.initialModel
     }
 
 
@@ -86,7 +116,51 @@ initialModel =
 -- 📣
 
 
-update : Msg -> Model -> Return Model Msg Reply
+type Msg
+    = Bypass
+    | Harvest
+    | Reply UI.Reply
+    | ScrollToNowPlaying
+    | SetEnabledSourceIds (List String)
+    | SetNowPlaying (Maybe IdentifiedTrack)
+    | ToggleCachedOnly
+    | ToggleFavouritesOnly
+    | ToggleHideDuplicates
+      -----------------------------------------
+      -- Collection
+      -----------------------------------------
+    | Add Json.Value
+    | RemoveByPaths Json.Value
+    | RemoveBySourceId String
+      -----------------------------------------
+      -- Groups
+      -----------------------------------------
+    | DisableGrouping
+    | GroupBy Grouping
+      -----------------------------------------
+      -- Menus
+      -----------------------------------------
+    | ShowTrackMenu Int Coordinates
+    | ShowViewMenu (Maybe Grouping) Mouse.Event
+      -----------------------------------------
+      -- Playlists
+      -----------------------------------------
+    | DeselectPlaylist
+    | SelectPlaylist Playlist
+      -----------------------------------------
+      -- Scenes
+      -----------------------------------------
+    | ListSceneMsg UI.Tracks.Scene.List.Msg
+      -----------------------------------------
+      -- Search
+      -----------------------------------------
+    | ClearSearch
+    | Search
+    | SetSearchResults Json.Value
+    | SetSearchTerm String
+
+
+update : Msg -> Model -> Return Model Msg UI.Reply
 update msg model =
     case msg of
         Bypass ->
@@ -95,29 +169,8 @@ update msg model =
         Harvest ->
             reviseCollection harvest model
 
-        MarkAsSelected indexInList { shiftKey } ->
-            let
-                selection =
-                    if shiftKey then
-                        model.selectedTrackIndexes
-                            |> List.head
-                            |> Maybe.map
-                                (\n ->
-                                    if n > indexInList then
-                                        List.range indexInList n
-
-                                    else
-                                        List.range n indexInList
-                                )
-                            |> Maybe.withDefault [ indexInList ]
-
-                    else
-                        [ indexInList ]
-            in
-            return { model | selectedTrackIndexes = selection }
-
-        Reply replies ->
-            returnRepliesWithModel model replies
+        Reply reply ->
+            returnReplyWithModel model reply
 
         ScrollToNowPlaying ->
             let
@@ -145,6 +198,7 @@ update msg model =
                     (case model.scene of
                         List ->
                             UI.Tracks.Scene.List.scrollToNowPlaying model.collection.harvested
+                                >> Cmd.map ListSceneMsg
                     )
                 |> Maybe.map
                     (\cmd ->
@@ -174,24 +228,13 @@ update msg model =
                 (map <| List.map mapFn)
                 { model | nowPlaying = maybeIdentifiedTrack }
 
-        SortBy property ->
-            let
-                sortDir =
-                    if model.sortBy /= property then
-                        Asc
-
-                    else if model.sortDirection == Asc then
-                        Desc
-
-                    else
-                        Asc
-            in
-            { model | sortBy = property, sortDirection = sortDir }
-                |> reviseCollection arrange
-                |> addReply SaveEnclosedUserData
-
         ToggleCachedOnly ->
             { model | cachedOnly = not model.cachedOnly }
+                |> reviseCollection harvest
+                |> addReply SaveEnclosedUserData
+
+        ToggleFavouritesOnly ->
+            { model | favouritesOnly = not model.favouritesOnly }
                 |> reviseCollection harvest
                 |> addReply SaveEnclosedUserData
 
@@ -256,22 +299,6 @@ update msg model =
                 |> addReply (RemoveTracksFromCache removed)
 
         -----------------------------------------
-        -- Favourites
-        -----------------------------------------
-        -- > Make a track a favourite, or remove it as a favourite
-        ToggleFavourite index ->
-            model.collection.harvested
-                |> List.getAt index
-                |> Maybe.map (toggleFavourite model)
-                |> Maybe.withDefault (return model)
-
-        -- > Filter collection by favourites only {toggle}
-        ToggleFavouritesOnly ->
-            { model | favouritesOnly = not model.favouritesOnly }
-                |> reviseCollection harvest
-                |> addReply SaveEnclosedUserData
-
-        -----------------------------------------
         -- Groups
         -----------------------------------------
         DisableGrouping ->
@@ -287,13 +314,11 @@ update msg model =
         -----------------------------------------
         -- Menus
         -----------------------------------------
-        ShowTrackMenuWithSmallDelay a b ->
-            ShowTrackMenu a b
-                |> Task.doDelayed 250
-                |> returnCommandWithModel model
-
         ShowTrackMenu trackIndex coordinates ->
             let
+                listScene =
+                    model.listScene
+
                 selection =
                     if List.isEmpty model.selectedTrackIndexes then
                         [ trackIndex ]
@@ -316,7 +341,7 @@ update msg model =
                 |> ShowTracksContextMenu coordinates
                 |> returnReplyWithModel
                     { model
-                        | listDnD = DnD.initialModel
+                        | listScene = { listScene | dnd = DnD.initialModel }
                         , selectedTrackIndexes = selection
                     }
 
@@ -339,46 +364,18 @@ update msg model =
                 |> addReply SaveEnclosedUserData
 
         -----------------------------------------
-        -- Scenes / List
+        -- Scenes
         -----------------------------------------
-        InfiniteListMsg infiniteList ->
-            return { model | infiniteList = infiniteList }
-
-        ListDragAndDropMsg subMsg ->
-            let
-                ( newDnD, replies ) =
-                    DnD.update subMsg model.listDnD
-            in
-            if DnD.hasDropped newDnD then
-                let
-                    ( subject, target ) =
-                        ( Maybe.withDefault 0 <| DnD.modelSubject newDnD
-                        , Maybe.withDefault 0 <| DnD.modelTarget newDnD
-                        )
-
-                    moveFromTo =
-                        { from = subject, to = target }
-
-                    selectedPlaylist =
-                        Maybe.map
-                            (\p -> { p | tracks = List.move moveFromTo p.tracks })
-                            model.selectedPlaylist
-                in
-                case selectedPlaylist of
-                    Just playlist ->
-                        { model | listDnD = newDnD, selectedPlaylist = Just playlist }
-                            |> reviseCollection arrange
-                            |> addReply (ReplacePlaylistInCollection playlist)
-
-                    Nothing ->
-                        returnRepliesWithModel
-                            { model | listDnD = newDnD }
-                            replies
-
-            else
-                returnRepliesWithModel
-                    { model | listDnD = newDnD }
-                    replies
+        ListSceneMsg sub ->
+            Return.castNested
+                translateReply
+                { mapCmd = ListSceneMsg
+                , mapModel = \child -> { model | listScene = child }
+                , update = UI.Tracks.Scene.List.update
+                }
+                { model = model.listScene
+                , msg = sub
+                }
 
         -----------------------------------------
         -- Search
@@ -429,6 +426,83 @@ update msg model =
 
 
 
+-- 📣  ░░  CHILDREN & REPLIES
+
+
+translateReply : Tracks.Reply -> Model -> Return Model Msg UI.Reply
+translateReply reply model =
+    case reply of
+        Transcend uiReplies ->
+            returnRepliesWithModel model uiReplies
+
+        --
+        MarkAsSelected indexInList { shiftKey } ->
+            let
+                selection =
+                    if shiftKey then
+                        model.selectedTrackIndexes
+                            |> List.head
+                            |> Maybe.map
+                                (\n ->
+                                    if n > indexInList then
+                                        List.range indexInList n
+
+                                    else
+                                        List.range n indexInList
+                                )
+                            |> Maybe.withDefault [ indexInList ]
+
+                    else
+                        [ indexInList ]
+            in
+            return { model | selectedTrackIndexes = selection }
+
+        MoveTrackInSelectedPlaylist moveFromTo ->
+            case model.selectedPlaylist of
+                Just p ->
+                    let
+                        updatedPlaylist =
+                            { p | tracks = List.move moveFromTo p.tracks }
+                    in
+                    { model | selectedPlaylist = Just updatedPlaylist }
+                        |> reviseCollection arrange
+                        |> addReply (ReplacePlaylistInCollection updatedPlaylist)
+
+                Nothing ->
+                    return model
+
+        ShowTrackMenuWithoutDelay a b ->
+            update (ShowTrackMenu a b) model
+
+        ShowTrackMenuWithSmallDelay a b ->
+            ShowTrackMenu a b
+                |> Task.doDelayed 250
+                |> returnCommandWithModel model
+
+        SortBy property ->
+            let
+                sortDir =
+                    if model.sortBy /= property then
+                        Asc
+
+                    else if model.sortDirection == Asc then
+                        Desc
+
+                    else
+                        Asc
+            in
+            { model | sortBy = property, sortDirection = sortDir }
+                |> reviseCollection arrange
+                |> addReply SaveEnclosedUserData
+
+        ToggleFavourite index ->
+            model.collection.harvested
+                |> List.getAt index
+                |> Maybe.map (toggleFavourite model)
+                |> Maybe.withDefault (return model)
+
+
+
 -- 📣  ░░  PARCEL
 
 
@@ -451,7 +525,7 @@ makeParcel model =
     )
 
 
-resolveParcel : Model -> Parcel -> Return Model Msg Reply
+resolveParcel : Model -> Parcel -> Return Model Msg UI.Reply
 resolveParcel model ( _, newCollection ) =
     let
         scrollObj =
@@ -476,15 +550,20 @@ resolveParcel model ( _, newCollection ) =
                     model.collection.harvested
                     newCollection.harvested
 
+        listSceneModel =
+            model.listScene
+
+        listScene =
+            if harvestChanged && model.scene == List then
+                { listSceneModel | infiniteList = InfiniteList.updateScroll scrollEvent listSceneModel.infiniteList }
+
+            else
+                listSceneModel
+
         modelWithNewCollection =
             { model
                 | collection = newCollection
-                , infiniteList =
-                    if harvestChanged && model.scene == List then
-                        InfiniteList.updateScroll scrollEvent model.infiniteList
-
-                    else
-                        model.infiniteList
+                , listScene = listScene
                 , selectedTrackIndexes =
                     if harvestChanged then
                         []
@@ -500,7 +579,7 @@ resolveParcel model ( _, newCollection ) =
     , if harvestChanged then
         case model.scene of
             List ->
-                UI.Tracks.Scene.List.scrollToTop
+                Cmd.map ListSceneMsg UI.Tracks.Scene.List.scrollToTop
 
       else
         Cmd.none
@@ -518,7 +597,7 @@ resolveParcel model ( _, newCollection ) =
     )
 
 
-reviseCollection : (Parcel -> Parcel) -> Model -> Return Model Msg Reply
+reviseCollection : (Parcel -> Parcel) -> Model -> Return Model Msg UI.Reply
 reviseCollection collector model =
     model
         |> makeParcel
@@ -530,7 +609,7 @@ reviseCollection collector model =
 -- 📣  ░░  FAVOURITES
 
 
-toggleFavourite : Model -> IdentifiedTrack -> Return Model Msg Reply
+toggleFavourite : Model -> IdentifiedTrack -> Return Model Msg UI.Reply
 toggleFavourite model ( i, t ) =
     let
         newFavourites =
@@ -552,8 +631,17 @@ toggleFavourite model ( i, t ) =
 -- 🗺
 
 
-view : UI.Core.Model -> Html Msg
-view core =
+type alias Necessities =
+    { amountOfSources : Int
+    , bgColor : Maybe Color
+    , isOnIndexPage : Bool
+    , sourceIdsBeingProcessed : List String
+    , viewport : Viewport
+    }
+
+
+view : Model -> Necessities -> Html Msg
+view model nec =
     chunk
         [ T.flex
         , T.flex_column
@@ -561,43 +649,34 @@ view core =
         ]
         [ lazy6
             navigation
-            core.tracks.grouping
-            core.tracks.favouritesOnly
-            core.tracks.searchTerm
-            core.tracks.selectedPlaylist
-            core.page
-            core.backdrop.bgColor
+            model.grouping
+            model.favouritesOnly
+            model.searchTerm
+            model.selectedPlaylist
+            nec.isOnIndexPage
+            nec.bgColor
 
         --
-        , if List.isEmpty core.tracks.collection.harvested then
+        , if List.isEmpty model.collection.harvested then
             lazy4
                 noTracksView
-                core.sources.isProcessing
-                (List.length core.sources.collection)
-                (List.length core.tracks.collection.harvested)
-                (List.length core.tracks.favourites)
+                nec.sourceIdsBeingProcessed
+                nec.amountOfSources
+                (List.length model.collection.harvested)
+                (List.length model.favourites)
 
           else
-            case core.tracks.scene of
+            case model.scene of
                 List ->
-                    UI.Tracks.Scene.List.view
-                        { height = core.viewport.height
-                        , isVisible = core.page == UI.Page.Index
-                        }
-                        core.tracks
+                    listView model nec
         ]
 
 
-navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Page -> Maybe Color -> Html Msg
-navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist page bgColor =
+navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Bool -> Maybe Color -> Html Msg
+navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPage bgColor =
     let
         tabindex_ =
-            case page of
-                UI.Page.Index ->
-                    0
-
-                _ ->
-                    -1
+            ifThenElse isOnIndexPage 0 -1
     in
     brick
         [ css navigationStyles ]
@@ -766,7 +845,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     , UI.Kit.buttonWithColor
                         UI.Kit.colorKit.base04
                         UI.Kit.Normal
-                        (Reply [ InsertDemo ])
+                        (Reply InsertDemo)
                         (inline
                             []
                             [ UI.Kit.inlineIcon Icons.music_note
@@ -789,6 +868,32 @@ message m =
     chunk
         [ T.bb, T.bw1, T.f6, T.fw6, T.lh_title, T.pb1 ]
         [ text m ]
+
+
+listView : Model -> Necessities -> Html Msg
+listView model nec =
+    model.selectedPlaylist
+        |> Maybe.map .autoGenerated
+        |> Maybe.andThen
+            (\bool ->
+                if bool then
+                    Nothing
+
+                else
+                    Just model.listScene.dnd
+            )
+        |> Tuple.pair model.selectedTrackIndexes
+        |> lazy7
+            UI.Tracks.Scene.List.view
+            { height = nec.viewport.height
+            , isVisible = nec.isOnIndexPage
+            }
+            model.collection.harvested
+            model.listScene.infiniteList
+            model.favouritesOnly
+            model.sortBy
+            model.sortDirection
+        |> Html.map ListSceneMsg
 
 
 

@@ -19,7 +19,7 @@ import Tachyons.Classes as T
 import UI.Core as Core exposing (Msg(..))
 import UI.Kit
 import UI.Queue as Queue
-import UI.Tracks.Core as Tracks
+import UI.Tracks as Tracks
 
 
 

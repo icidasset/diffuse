@@ -17,7 +17,7 @@ import Material.Icons.Content as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Navigation as Icons
 import Playlists exposing (..)
-import Return3 exposing (..)
+import Return3 as Return exposing (..)
 import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..))
 import UI.List

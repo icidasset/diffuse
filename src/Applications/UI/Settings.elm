@@ -22,7 +22,7 @@ import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Settings.ImportExport
 import UI.Settings.Page as Settings exposing (..)
-import UI.Tracks.Core as Tracks
+import UI.Tracks as Tracks
 
 
 

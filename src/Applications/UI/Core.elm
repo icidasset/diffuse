@@ -6,6 +6,7 @@ import Browser
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import ContextMenu exposing (ContextMenu)
+import Coordinates exposing (Viewport)
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import File exposing (File)
 import Http
@@ -25,7 +26,7 @@ import UI.Playlists as Playlists
 import UI.Queue as Queue
 import UI.Reply exposing (Reply)
 import UI.Sources as Sources
-import UI.Tracks.Core as Tracks
+import UI.Tracks as Tracks
 import Url exposing (Url)
 
 
@@ -77,12 +78,6 @@ type alias Model =
     , playlists : Playlists.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
-    }
-
-
-type alias Viewport =
-    { height : Float
-    , width : Float
     }
 
 

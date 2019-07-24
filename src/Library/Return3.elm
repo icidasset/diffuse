@@ -1,4 +1,4 @@
-module Return3 exposing (Return, addCommand, addReplies, addReply, andThen, commandWithModel, from2, fromDebouncer, mapCmd, mapModel, mapReplies, repliesWithModel, replyWithModel, return, returnCommandWithModel, returnRepliesWithModel, returnReplyWithModel, three, wield, wieldNested)
+module Return3 exposing (Return, addCommand, addReplies, addReply, andThen, cast, castNested, commandWithModel, from2, fromDebouncer, mapCmd, mapModel, mapReplies, repliesWithModel, replyWithModel, return, returnCommandWithModel, returnRepliesWithModel, returnReplyWithModel, three, wield, wieldNested)
 
 import Maybe.Extra as Maybe
 import Return2
@@ -116,6 +116,8 @@ mapReplies fn ( model, cmd, replies ) =
 
 
 -- 🔱  ░░  WIELDING
+--
+-- Return3 -> Return2
 
 
 wield :
@@ -140,7 +142,7 @@ wieldNested :
     ->
         { mapCmd : subMsg -> msg
         , mapModel : subModel -> model
-        , update : subMsg -> subModel -> ( subModel, Cmd subMsg, List reply )
+        , update : subMsg -> subModel -> Return subModel subMsg reply
         }
     ->
         { model : subModel
@@ -159,6 +161,61 @@ wieldNested replyTransformer a b =
             a.update b.msg b.model
     in
     wield
+        replyTransformer
+        ( modelTransformer subModel
+        , Cmd.map cmdTransformer subCmd
+        , replies
+        )
+
+
+
+-- 🔱  ░░  CASTING
+--
+-- Return3 -> Return3
+
+
+cast :
+    (reply -> model -> Return model msg otherReply)
+    -> Return model msg reply
+    -> Return model msg otherReply
+cast replyTransformer ( model, cmd, replies ) =
+    List.foldl
+        (\reply ( accModel, accCmd, accReplies ) ->
+            accModel
+                |> replyTransformer reply
+                |> (\( m, c, r ) -> ( m, Cmd.batch [ accCmd, c ], accReplies ++ r ))
+        )
+        ( model
+        , cmd
+        , []
+        )
+        replies
+
+
+castNested :
+    (reply -> model -> Return model msg otherReply)
+    ->
+        { mapCmd : subMsg -> msg
+        , mapModel : subModel -> model
+        , update : subMsg -> subModel -> Return subModel subMsg reply
+        }
+    ->
+        { model : subModel
+        , msg : subMsg
+        }
+    -> Return model msg otherReply
+castNested replyTransformer a b =
+    let
+        cmdTransformer =
+            a.mapCmd
+
+        modelTransformer =
+            a.mapModel
+
+        ( subModel, subCmd, replies ) =
+            a.update b.msg b.model
+    in
+    cast
         replyTransformer
         ( modelTransformer subModel
         , Cmd.map cmdTransformer subCmd

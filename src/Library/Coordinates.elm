@@ -1,10 +1,16 @@
-module Coordinates exposing (Coordinates, fromTuple)
+module Coordinates exposing (Coordinates, Viewport, fromTuple)
 
 -- 🌳
 
 
 type alias Coordinates =
     { x : Float, y : Float }
+
+
+type alias Viewport =
+    { height : Float
+    , width : Float
+    }
 
 
 

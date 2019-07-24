@@ -13,7 +13,7 @@ import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Core exposing (Msg(..))
 import UI.Queue as Queue
 import UI.Reply
-import UI.Tracks.Core as Tracks
+import UI.Tracks as Tracks
 
 
 

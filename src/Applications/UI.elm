@@ -78,7 +78,6 @@ import UI.Sources.Page
 import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
-import UI.Tracks.Core as Tracks
 import UI.Tracks.Scene.List
 import UI.UserData as UserData
 import Url exposing (Url)
@@ -267,7 +266,8 @@ update msg model =
                     case model.tracks.scene of
                         Tracks.List ->
                             DnD.stoppedDragging
-                                |> Tracks.ListDragAndDropMsg
+                                |> UI.Tracks.Scene.List.DragAndDropMsg
+                                |> Tracks.ListSceneMsg
                                 |> TracksMsg
                                 |> updateWithModel notDragging
 
@@ -1456,8 +1456,13 @@ defaultScreen model =
     -- Main
     -----------------------------------------
     , vessel
-        [ model
-            |> Tracks.view
+        [ { amountOfSources = List.length model.sources.collection
+          , bgColor = model.backdrop.bgColor
+          , isOnIndexPage = model.page == Page.Index
+          , sourceIdsBeingProcessed = model.sources.isProcessing
+          , viewport = model.viewport
+          }
+            |> Tracks.view model.tracks
             |> Html.map TracksMsg
 
         -- Pages
