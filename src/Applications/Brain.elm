@@ -3,13 +3,12 @@ module Brain exposing (main)
 import Alien
 import Authentication exposing (HypaethralUserData)
 import Brain.Authentication as Authentication
-import Brain.Core as Core exposing (..)
 import Brain.Ports
 import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing as Processing
 import Brain.Sources.Processing.Common as Processing
 import Brain.Tracks as Tracks
-import Debouncer.Basic as Debouncer
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Json.Decode as Json
 import Json.Encode
 import Maybe.Extra as Maybe
@@ -17,6 +16,7 @@ import Playlists.Encoding as Playlists
 import Return2 exposing (..)
 import Return3
 import Sources.Encoding as Sources
+import Sources.Processing as Processing
 import Sources.Processing.Encoding as Processing
 import Tracks
 import Tracks.Encoding as Tracks
@@ -25,6 +25,10 @@ import Url
 
 
 -- 🧠
+
+
+type alias Flags =
+    {}
 
 
 main : Program Flags Model Msg
@@ -38,6 +42,15 @@ main =
 
 
 -- 🌳
+
+
+type alias Model =
+    { authentication : Authentication.Model
+    , hypaethralUserData : Authentication.HypaethralUserData
+    , notSoFast : Debouncer Msg Msg
+    , processing : Processing.Model
+    , tracks : Tracks.Model
+    }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -66,6 +79,37 @@ init _ =
 
 
 -- 📣
+
+
+type Msg
+    = Bypass
+    | Cmd (Cmd Msg)
+    | Initialize String
+    | NotifyUI Alien.Event
+    | NotSoFast (Debouncer.Msg Msg)
+    | Process Processing.Arguments
+    | ToCache Alien.Event
+      -----------------------------------------
+      -- Authentication
+      -----------------------------------------
+    | RedirectToBlockstackSignIn
+      -----------------------------------------
+      -- Children
+      -----------------------------------------
+    | AuthenticationMsg Authentication.Msg
+    | ProcessingMsg Processing.Msg
+    | TracksMsg Tracks.Msg
+      -----------------------------------------
+      -- User data
+      -----------------------------------------
+    | LoadHypaethralUserData Json.Value
+    | RemoveTracksBySourceId String
+    | SaveHypaethralData
+    | SaveFavourites Json.Value
+    | SavePlaylists Json.Value
+    | SaveSettings Json.Value
+    | SaveSources Json.Value
+    | SaveTracks Json.Value
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -497,7 +541,7 @@ translateAlienData tag data =
         Alien.ToCache ->
             case Json.decodeValue Alien.hostDecoder data of
                 Ok val ->
-                    Core.ToCache val
+                    ToCache val
 
                 Err err ->
                     report Alien.ToCache (Json.errorToString err)
