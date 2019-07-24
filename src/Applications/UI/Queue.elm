@@ -1,10 +1,11 @@
-module UI.Queue exposing (initialModel, update, view)
+module UI.Queue exposing (Model, Msg(..), initialModel, update, view)
 
 import Chunky exposing (..)
 import Color.Ext as Color
 import Common
 import Conditional exposing (..)
 import Css
+import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (css, href)
 import List.Extra as List
@@ -26,7 +27,6 @@ import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Ports as Ports
 import UI.Queue.Common exposing (makeItem)
-import UI.Queue.Core exposing (..)
 import UI.Queue.Fill as Fill
 import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Reply exposing (Reply(..))
@@ -35,6 +35,21 @@ import UI.Sources.Page
 
 
 -- 🌳
+
+
+type alias Model =
+    { activeItem : Maybe Item
+    , future : List Item
+    , ignored : List Item
+    , past : List Item
+
+    --
+    , repeat : Bool
+    , shuffle : Bool
+
+    --
+    , dnd : DnD.Model Int
+    }
 
 
 initialModel : Model
@@ -55,6 +70,39 @@ initialModel =
 
 
 -- 📣
+
+
+type Msg
+    = ------------------------------------
+      -- Combos
+      ------------------------------------
+      InjectFirstAndPlay IdentifiedTrack
+      ------------------------------------
+      -- Future
+      ------------------------------------
+    | InjectFirst { showNotification : Bool } (List IdentifiedTrack)
+    | InjectLast { showNotification : Bool } (List IdentifiedTrack)
+    | RemoveItem { index : Int, item : Item }
+      ------------------------------------
+      -- Position
+      ------------------------------------
+    | Rewind
+    | Shift
+      ------------------------------------
+      -- Contents
+      ------------------------------------
+    | Clear
+    | Reset
+    | Fill Time.Posix (List IdentifiedTrack)
+      ------------------------------------
+      -- Drag & Drop
+      ------------------------------------
+    | DragMsg (DnD.Msg Int)
+      ------------------------------------
+      -- Settings
+      ------------------------------------
+    | ToggleRepeat
+    | ToggleShuffle
 
 
 update : Msg -> Model -> Return Model Msg Reply
@@ -353,13 +401,21 @@ fillQueue timestamp availableTracks model =
                     m
            )
         |> (\m ->
+                let
+                    fillState =
+                        { activeItem = m.activeItem
+                        , future = m.future
+                        , ignored = m.ignored
+                        , past = m.past
+                        }
+                in
                 -- Fill using the appropiate method
                 case m.shuffle of
                     False ->
-                        { m | future = Fill.ordered timestamp nonMissingTracks m }
+                        { m | future = Fill.ordered timestamp nonMissingTracks fillState }
 
                     True ->
-                        { m | future = Fill.shuffled timestamp nonMissingTracks m }
+                        { m | future = Fill.shuffled timestamp nonMissingTracks fillState }
            )
 
 

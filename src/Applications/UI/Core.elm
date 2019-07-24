@@ -22,7 +22,7 @@ import UI.Backdrop as Backdrop
 import UI.Equalizer as Equalizer
 import UI.Page exposing (Page)
 import UI.Playlists as Playlists
-import UI.Queue.Core as Queue
+import UI.Queue as Queue
 import UI.Reply exposing (Reply)
 import UI.Sources as Sources
 import UI.Tracks.Core as Tracks

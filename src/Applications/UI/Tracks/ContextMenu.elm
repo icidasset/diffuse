@@ -11,7 +11,7 @@ import Playlists exposing (Playlist)
 import Sources.Services
 import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Core exposing (Msg(..))
-import UI.Queue.Core as Queue
+import UI.Queue as Queue
 import UI.Reply
 import UI.Tracks.Core as Tracks
 

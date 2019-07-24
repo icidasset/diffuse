@@ -68,7 +68,6 @@ import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.Common
-import UI.Queue.Core as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings as Settings
 import UI.Settings.Page
