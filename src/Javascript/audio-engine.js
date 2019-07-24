@@ -127,6 +127,7 @@ function insertTrack(orchestrion, queueItem) {
       audioNode.play()
 
     } else if (audioNode = findExistingAudioElement(queueItem)) {
+      audioNode.setAttribute("data-preload", "f")
       audioNode.setAttribute("data-timestamp", Date.now())
       audioNode.context = context.createMediaElementSource(audioNode)
       audioNode.context.connect(volume)
@@ -197,7 +198,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
 
 
 function preloadAudioElement(orchestrion, queueItem) {
-  // already preloaded?
+  // already loaded?
   if (findExistingAudioElement(queueItem)) return
 
   // remove other preloads
