@@ -99,22 +99,22 @@ function insertTrack(orchestrion, queueItem) {
   if (!queueItem.url) console.error("insertTrack, missing `url`");
   if (!queueItem.trackId) console.error("insertTrack, missing `trackId`");
 
-  // Reset
+  // reset
   clearTimeout(orchestrion.unstallTimeout)
   setProgressBarWidth(0)
   timesStalled = 0
 
-  // Resume audio context if it's suspended
+  // resume audio context if it's suspended
   if (context.resume && context.state !== "running") {
     context.resume()
   }
 
-  // Initial promise
+  // initial promise
   const initialPromise = queueItem.isCached
     ? getFromIndex({ key: queueItem.trackId, store: storeNames.tracks }).then(blobToDataURL)
     : transformUrl(queueItem.url)
 
-  // Find or create audio node
+  // find or create audio node
   let audioNode
 
   initialPromise.then(url => {
@@ -155,7 +155,7 @@ function findExistingAudioElement(queueItem) {
 }
 
 
-function createAudioElement(orchestrion, queueItem, timestampInMilliseconds) {
+function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isPreload) {
   let audio
 
   const bind = fn => event => {
@@ -171,6 +171,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds) {
   audio.setAttribute("src", queueItem.url)
   audio.setAttribute("rel", queueItem.trackId)
   audio.setAttribute("data-timestamp", timestampInMilliseconds)
+  audio.setAttribute("data-preload", isPreload ? "t" : "f")
 
   audio.crossorigin = "anonymous"
   audio.volume = 1
@@ -199,11 +200,17 @@ function preloadAudioElement(orchestrion, queueItem) {
   // already preloaded?
   if (findExistingAudioElement(queueItem)) return
 
+  // remove other preloads
+  audioElementsContainer.querySelectorAll(`[data-preload="t"]`).forEach(
+    n => n.parentNode.removeChild(n)
+  )
+
   // audio element remains valid for 2 hours
   createAudioElement(
     orchestrion,
     queueItem,
-    Date.now() + 1000 * 60 * 60 * 2
+    Date.now() + 1000 * 60 * 60 * 2,
+    true
   )
 }
 
