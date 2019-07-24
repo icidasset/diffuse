@@ -324,7 +324,7 @@ update msg model =
                 |> updateWithModel model
 
         PingOtherIpfsCallback origin (Err _) ->
-            "Can't reach this IPFS API, maybe it's offline?"
+            "Can't reach this IPFS API, maybe it's offline? Or I don't have access?"
                 |> ShowStickyErrorNotification
                 |> returnReplyWithModel model
 
@@ -430,7 +430,7 @@ update msg model =
                 |> updateWithModel model
 
         PingOtherTextileCallback origin (Err _) ->
-            "Can't reach this Textile API, maybe it's offline?"
+            "Can't reach this Textile API, maybe it's offline? Or I don't have access?"
                 |> ShowStickyErrorNotification
                 |> returnReplyWithModel model
 
