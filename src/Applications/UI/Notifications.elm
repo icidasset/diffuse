@@ -1,4 +1,4 @@
-module UI.Notifications exposing (dismiss, show, showWithModel, view)
+module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
 import Chunky exposing (..)
 import Classes as C
@@ -15,48 +15,53 @@ import Notifications exposing (..)
 import Process
 import Tachyons.Classes as T
 import Task
-import UI.Core exposing (Model, Msg)
 import UI.Kit
+import UI.Reply exposing (Reply(..))
+
+
+
+-- 🌳
+
+
+type alias Model =
+    List (Notification Reply)
 
 
 
 -- 📣
 
 
-dismiss : Model -> { id : Int } -> ( Model, Cmd Msg )
-dismiss model { id } =
-    ( { model
-        | notifications =
-            List.map
-                (\notification ->
-                    if Notifications.id notification == id then
-                        Notifications.dismiss notification
+dismiss : Model -> { id : Int } -> ( Model, Cmd Reply )
+dismiss collection { id } =
+    ( List.map
+        (\notification ->
+            if Notifications.id notification == id then
+                Notifications.dismiss notification
 
-                    else
-                        notification
-                )
-                model.notifications
-      }
+            else
+                notification
+        )
+        collection
     , Task.perform
-        (\_ -> UI.Core.RemoveNotification { id = id })
+        (\_ -> RemoveNotification { id = id })
         (Process.sleep 500)
     )
 
 
-show : Notification Msg -> Model -> ( Model, Cmd Msg )
-show notification model =
+show : Notification Reply -> Model -> ( Model, Cmd Reply )
+show notification collection =
     let
         existingNotificationIds =
-            List.map Notifications.id model.notifications
+            List.map Notifications.id collection
     in
     if List.member (Notifications.id notification) existingNotificationIds then
         -- Don't show duplicate notifications
-        ( model
+        ( collection
         , Cmd.none
         )
 
     else
-        ( { model | notifications = notification :: model.notifications }
+        ( notification :: collection
           -- Hide notification after a certain amount of time,
           -- unless it's a sticky notification.
         , if (Notifications.options notification).sticky then
@@ -64,12 +69,12 @@ show notification model =
 
           else
             Task.perform
-                (\_ -> UI.Core.DismissNotification { id = Notifications.id notification })
+                (\_ -> DismissNotification { id = Notifications.id notification })
                 (Process.sleep 5000)
         )
 
 
-showWithModel : Model -> Notification Msg -> ( Model, Cmd Msg )
+showWithModel : Model -> Notification Reply -> ( Model, Cmd Reply )
 showWithModel model notification =
     show notification model
 
@@ -78,8 +83,8 @@ showWithModel model notification =
 -- 🗺
 
 
-view : List (Notification Msg) -> Html Msg
-view notifications =
+view : Model -> Html Reply
+view collection =
     brick
         [ css containerStyles ]
         [ T.absolute
@@ -93,11 +98,11 @@ view notifications =
         ]
         (List.map
             (Html.Styled.Lazy.lazy notificationView)
-            (List.reverse notifications)
+            (List.reverse collection)
         )
 
 
-notificationView : Notification Msg -> Html Msg
+notificationView : Notification Reply -> Html Reply
 notificationView notification =
     let
         kind =
@@ -110,7 +115,7 @@ notificationView notification =
             notification
                 |> Notifications.id
                 |> (\id -> { id = id })
-                |> UI.Core.DismissNotification
+                |> DismissNotification
     in
     brick
         [ case kind of

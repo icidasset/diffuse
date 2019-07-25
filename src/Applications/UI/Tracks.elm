@@ -1,6 +1,7 @@
-module UI.Tracks exposing (Dependencies, Model, Msg(..), Scene(..), initialModel, makeParcel, resolveParcel, update, view)
+module UI.Tracks exposing (Dependencies, Model, Msg(..), Scene(..), importHypaethral, initialModel, update, view)
 
 import Alien
+import Authentication exposing (HypaethralUserData)
 import Chunky exposing (..)
 import Classes as C
 import Color exposing (Color)
@@ -423,6 +424,34 @@ update msg model =
                     _ ->
                         return { model | searchTerm = Just term }
                 )
+
+
+importHypaethral : Model -> HypaethralUserData -> Maybe Playlist -> Return Model Msg UI.Reply
+importHypaethral model data selectedPlaylist =
+    let
+        adjustedModel =
+            { model
+                | collection = { emptyCollection | untouched = data.tracks }
+                , enabledSourceIds = Sources.enabledSourceIds data.sources
+                , favourites = data.favourites
+                , hideDuplicates = Maybe.unwrap False .hideDuplicates data.settings
+                , selectedPlaylist = selectedPlaylist
+            }
+
+        addReplyIfNecessary =
+            case model.searchTerm of
+                Just _ ->
+                    identity
+
+                Nothing ->
+                    addReply (ToggleLoadingScreen Off)
+    in
+    adjustedModel
+        |> makeParcel
+        |> identify
+        |> resolveParcel adjustedModel
+        |> andThen (update Search)
+        |> addReplyIfNecessary
 
 
 

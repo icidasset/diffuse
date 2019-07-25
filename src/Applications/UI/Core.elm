@@ -1,4 +1,4 @@
-module UI.Core exposing (Flags, Model, Msg(..))
+module UI.Core exposing (Model, Msg(..))
 
 import Authentication
 import Authentication.RemoteStorage exposing (RemoteStorage)
@@ -21,6 +21,7 @@ import UI.Alfred as Alfred
 import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
 import UI.Equalizer as Equalizer
+import UI.Notifications as Notifications
 import UI.Page exposing (Page)
 import UI.Playlists as Playlists
 import UI.Queue as Queue
@@ -28,17 +29,6 @@ import UI.Reply exposing (Reply)
 import UI.Sources as Sources
 import UI.Tracks as Tracks
 import Url exposing (Url)
-
-
-
--- ⛩
-
-
-type alias Flags =
-    { initialTime : Int
-    , isOnline : Bool
-    , viewport : Viewport
-    }
 
 
 
@@ -53,7 +43,7 @@ type alias Model =
     , isLoading : Bool
     , isOnline : Bool
     , navKey : Nav.Key
-    , notifications : List (Notification Msg)
+    , notifications : Notifications.Model
     , page : Page
     , pressedKeys : List Keyboard.Key
     , url : Url
@@ -136,9 +126,7 @@ type Msg
       -----------------------------------------
       -- Notifications
       -----------------------------------------
-    | DismissNotification { id : Int }
-    | RemoveNotification { id : Int }
-    | ShowNotification (Notification Msg)
+    | ShowNotification (Notification Reply)
       -----------------------------------------
       -- Page Transitions
       -----------------------------------------

@@ -52,7 +52,7 @@ addCommand cmd ( model, earlierCmd ) =
 
 
 mapCommand =
-    Tuple.mapSecond
+    Cmd.map >> Tuple.mapSecond
 
 
 mapModel =

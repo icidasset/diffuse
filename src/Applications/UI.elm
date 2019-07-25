@@ -2,7 +2,7 @@ module UI exposing (main)
 
 import Alfred exposing (Alfred)
 import Alien
-import Authentication
+import Authentication exposing (..)
 import Authentication.RemoteStorage
 import Browser
 import Browser.Dom
@@ -15,6 +15,7 @@ import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
+import Coordinates exposing (Coordinates, Viewport)
 import Css exposing (url)
 import Css.Global
 import Css.Transitions
@@ -36,25 +37,27 @@ import List.Ext as List
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
+import Playlists.Encoding as Playlists
 import Process
 import Return2 exposing (..)
 import Return3
 import Sources
-import Sources.Encoding
+import Sources.Encoding as Sources
 import Sources.Services.Dropbox
 import Sources.Services.Google
 import Tachyons.Classes as T
 import Task
 import Time
 import Tracks
-import Tracks.Encoding
+import Tracks.Encoding as Tracks
 import UI.Alfred as Alfred
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
-import UI.Core as Core exposing (Flags, Model, Msg(..))
+import UI.Core as Core exposing (..)
+import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer as Equalizer
 import UI.Kit
@@ -79,12 +82,18 @@ import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
-import UI.UserData as UserData
 import Url exposing (Url)
 
 
 
 -- ⛩
+
+
+type alias Flags =
+    { initialTime : Int
+    , isOnline : Bool
+    , viewport : Viewport
+    }
 
 
 main : Program Flags Model Msg
@@ -202,12 +211,12 @@ update msg model =
 
         LoadEnclosedUserData json ->
             model
-                |> UserData.importEnclosed json
+                |> importEnclosed json
                 |> Return3.wield translateReply
 
         LoadHypaethralUserData json ->
             model
-                |> UserData.importHypaethral json
+                |> importHypaethral json
                 |> Return3.wield translateReply
 
         MsgViaContextMenu m ->
@@ -318,8 +327,9 @@ update msg model =
         -- Authentication
         -----------------------------------------
         AuthenticationBootFailure err ->
-            model
-                |> UI.Notifications.show (Notifications.stickyError err)
+            Notifications.stickyError err
+                |> ShowNotification
+                |> updateWithModel model
                 |> andThen (translateReply LoadDefaultBackdrop)
 
         RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
@@ -336,9 +346,9 @@ update msg model =
                 |> returnWithModel model
 
         RemoteStorageWebfinger _ (Err _) ->
-            UI.Notifications.show
-                (Notifications.error Authentication.RemoteStorage.webfingerError)
-                model
+            Authentication.RemoteStorage.webfingerError
+                |> ShowErrorNotification
+                |> translateReplyWithModel model
 
         SyncUserData ->
             model
@@ -469,17 +479,11 @@ update msg model =
         -----------------------------------------
         -- Notifications
         -----------------------------------------
-        Core.DismissNotification args ->
-            UI.Notifications.dismiss model args
-
-        RemoveNotification { id } ->
-            model.notifications
-                |> List.filter (Notifications.id >> (/=) id)
-                |> (\notifications -> { model | notifications = notifications })
-                |> return
-
         ShowNotification notification ->
-            UI.Notifications.show notification model
+            model.notifications
+                |> UI.Notifications.show notification
+                |> mapModel (\n -> { model | notifications = n })
+                |> mapCommand Reply
 
         -----------------------------------------
         -- Page Transitions
@@ -751,8 +755,8 @@ translateReply reply model =
                 |> Maybe.map
                     (Authentication.RemoteStorage.webfingerRequest RemoteStorageWebfinger)
                 |> Maybe.unwrap
-                    (UI.Notifications.show
-                        (Notifications.error Authentication.RemoteStorage.userAddressError)
+                    (translateReply
+                        (ShowErrorNotification Authentication.RemoteStorage.userAddressError)
                         model
                     )
                     (returnWithModel model)
@@ -821,29 +825,52 @@ translateReply reply model =
         -----------------------------------------
         -- Notifications
         -----------------------------------------
-        Reply.DismissNotification options ->
-            UI.Notifications.dismiss model options
+        DismissNotification options ->
+            options
+                |> UI.Notifications.dismiss model.notifications
+                |> mapModel (\n -> { model | notifications = n })
+                |> mapCommand Reply
+
+        RemoveNotification { id } ->
+            model.notifications
+                |> List.filter (Notifications.id >> (/=) id)
+                |> (\n -> { model | notifications = n })
+                |> return
 
         ShowErrorNotification string ->
-            UI.Notifications.show (Notifications.error string) model
+            Notifications.error string
+                |> ShowNotification
+                |> updateWithModel model
 
         ShowStickyErrorNotification string ->
-            UI.Notifications.show (Notifications.stickyError string) model
+            Notifications.stickyError string
+                |> ShowNotification
+                |> updateWithModel model
 
         ShowStickyErrorNotificationWithCode string code ->
-            UI.Notifications.show (Notifications.errorWithCode string code []) model
+            Notifications.errorWithCode string code []
+                |> ShowNotification
+                |> updateWithModel model
 
         ShowSuccessNotification string ->
-            UI.Notifications.show (Notifications.success string) model
+            Notifications.success string
+                |> ShowNotification
+                |> updateWithModel model
 
         ShowStickySuccessNotification string ->
-            UI.Notifications.show (Notifications.stickySuccess string) model
+            Notifications.stickySuccess string
+                |> ShowNotification
+                |> updateWithModel model
 
         ShowWarningNotification string ->
-            UI.Notifications.show (Notifications.warning string) model
+            Notifications.warning string
+                |> ShowNotification
+                |> updateWithModel model
 
         ShowStickyWarningNotification string ->
-            UI.Notifications.show (Notifications.stickyWarning string) model
+            Notifications.stickyWarning string
+                |> ShowNotification
+                |> updateWithModel model
 
         -----------------------------------------
         -- Playlists
@@ -1042,14 +1069,14 @@ translateReply reply model =
               , Json.Encode.string (Common.urlOrigin model.url)
               )
             , ( "sources"
-              , Json.Encode.list Sources.Encoding.encode sourcesToProcess
+              , Json.Encode.list Sources.encode sourcesToProcess
               )
             ]
                 |> Json.Encode.object
                 |> Alien.broadcast Alien.ProcessSources
                 |> Ports.toBrain
                 |> returnWithModel { model | sources = newSources }
-                |> andThen (UI.Notifications.show notification)
+                |> andThen (update <| ShowNotification notification)
 
         RemoveTracksFromCache tracks ->
             update
@@ -1097,7 +1124,7 @@ translateReply reply model =
         Export ->
             { favourites = model.tracks.favourites
             , playlists = List.filterNot .autoGenerated model.playlists.collection
-            , settings = Just (UserData.gatherSettings model)
+            , settings = Just (gatherSettings model)
             , sources = model.sources.collection
             , tracks = model.tracks.collection.untouched
             }
@@ -1108,7 +1135,7 @@ translateReply reply model =
 
         InsertDemo ->
             model
-                |> update (LoadHypaethralUserData UserData.demo)
+                |> update (LoadHypaethralUserData Demo.tape)
                 |> andThen (translateReply SaveFavourites)
                 |> andThen (translateReply SaveSources)
                 |> andThen (translateReply SaveTracks)
@@ -1125,28 +1152,29 @@ translateReply reply model =
 
         SaveEnclosedUserData ->
             model
-                |> UserData.exportEnclosed
+                |> exportEnclosed
                 |> Alien.broadcast Alien.SaveEnclosedUserData
                 |> Ports.toBrain
                 |> returnWithModel model
 
         SaveFavourites ->
-            model
-                |> UserData.encodedFavourites
+            model.tracks.favourites
+                |> Json.Encode.list Tracks.encodeFavourite
                 |> Alien.broadcast Alien.SaveFavourites
                 |> Ports.toBrain
                 |> returnWithModel model
 
         SavePlaylists ->
-            model
-                |> UserData.encodedPlaylists
+            model.playlists.collection
+                |> List.filterNot .autoGenerated
+                |> Json.Encode.list Playlists.encode
                 |> Alien.broadcast Alien.SavePlaylists
                 |> Ports.toBrain
                 |> returnWithModel model
 
         SaveSettings ->
             model
-                |> UserData.gatherSettings
+                |> gatherSettings
                 |> Authentication.encodeSettings
                 |> Alien.broadcast Alien.SaveSettings
                 |> Ports.toBrain
@@ -1164,16 +1192,16 @@ translateReply reply model =
                 ( updatedModel, updatedCmd ) =
                     updateEnabledSourceIdsOnTracks model
             in
-            updatedModel
-                |> UserData.encodedSources
+            updatedModel.sources.collection
+                |> Json.Encode.list Sources.encode
                 |> Alien.broadcast Alien.SaveSources
                 |> Ports.toBrain
                 |> returnWithModel updatedModel
                 |> addCommand updatedCmd
 
         SaveTracks ->
-            model
-                |> UserData.encodedTracks
+            model.tracks.collection.untouched
+                |> Json.Encode.list Tracks.encodeTrack
                 |> Alien.broadcast Alien.SaveTracks
                 |> Ports.toBrain
                 |> returnWithModel model
@@ -1183,6 +1211,11 @@ translateReply reply model =
                 |> Alien.trigger
                 |> Ports.toBrain
                 |> returnWithModel model
+
+
+translateReplyWithModel : Model -> Reply -> ( Model, Cmd Msg )
+translateReplyWithModel model reply =
+    translateReply reply model
 
 
 
@@ -1420,6 +1453,7 @@ body model =
         -----------------------------------------
         , model.notifications
             |> Lazy.lazy UI.Notifications.view
+            |> Html.map Reply
 
         -----------------------------------------
         -- Overlay
@@ -1708,3 +1742,148 @@ vesselInnerStyles : List Css.Style
 vesselInnerStyles =
     [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)"
     ]
+
+
+
+-- ⚗️  ░░  HYPAETHRAL DATA
+
+
+gatherSettings : Model -> Settings
+gatherSettings { backdrop, tracks } =
+    { backgroundImage = backdrop.chosen
+    , hideDuplicates = tracks.hideDuplicates
+    }
+
+
+importHypaethral : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
+importHypaethral value model =
+    case decodeHypaethral value of
+        Ok data ->
+            let
+                { backdrop, sources } =
+                    model
+
+                backdropModel =
+                    data.settings
+                        |> Maybe.andThen .backgroundImage
+                        |> Maybe.withDefault Backdrop.default
+                        |> Just
+                        |> (\c -> { backdrop | chosen = c })
+
+                sourcesModel =
+                    { sources | collection = data.sources }
+
+                ( playlistsModel, playlistsCmd, playlistsReplies ) =
+                    Playlists.importHypaethral model.playlists data
+
+                selectedPlaylist =
+                    Maybe.andThen
+                        (\n -> List.find (.name >> (==) n) playlistsModel.collection)
+                        model.playlists.playlistToActivate
+
+                ( tracksModel, tracksCmd, tracksReplies ) =
+                    Tracks.importHypaethral model.tracks data selectedPlaylist
+            in
+            ( { model
+                | backdrop = backdropModel
+                , playlists = playlistsModel
+                , sources = sourcesModel
+                , tracks = tracksModel
+              }
+            , Cmd.batch
+                [ Cmd.map PlaylistsMsg playlistsCmd
+                , Cmd.map TracksMsg tracksCmd
+                ]
+            , playlistsReplies ++ tracksReplies
+            )
+
+        Err err ->
+            err
+                |> Json.Decode.errorToString
+                |> ShowErrorNotification
+                |> Return3.returnReplyWithModel model
+
+
+
+-- ⚗️  ░░  ENCLOSED DATA
+
+
+exportEnclosed : Model -> Json.Encode.Value
+exportEnclosed model =
+    let
+        equalizerSettings =
+            { low = model.equalizer.low
+            , mid = model.equalizer.mid
+            , high = model.equalizer.high
+            , volume = model.equalizer.volume
+            }
+    in
+    encodeEnclosed
+        { cachedTracks = model.tracks.cached
+        , equalizerSettings = equalizerSettings
+        , grouping = model.tracks.grouping
+        , onlyShowCachedTracks = model.tracks.cachedOnly
+        , onlyShowFavourites = model.tracks.favouritesOnly
+        , repeat = model.queue.repeat
+        , searchTerm = model.tracks.searchTerm
+        , selectedPlaylist = Maybe.map .name model.tracks.selectedPlaylist
+        , shuffle = model.queue.shuffle
+        , sortBy = model.tracks.sortBy
+        , sortDirection = model.tracks.sortDirection
+        }
+
+
+importEnclosed : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
+importEnclosed value model =
+    let
+        { equalizer, playlists, queue, tracks } =
+            model
+    in
+    case decodeEnclosed value of
+        Ok data ->
+            let
+                newEqualizer =
+                    { equalizer
+                        | low = data.equalizerSettings.low
+                        , mid = data.equalizerSettings.mid
+                        , high = data.equalizerSettings.high
+                        , volume = data.equalizerSettings.volume
+                    }
+
+                newPlaylists =
+                    { playlists
+                        | playlistToActivate = data.selectedPlaylist
+                    }
+
+                newQueue =
+                    { queue
+                        | repeat = data.repeat
+                        , shuffle = data.shuffle
+                    }
+
+                newTracks =
+                    { tracks
+                        | cached = data.cachedTracks
+                        , cachedOnly = data.onlyShowCachedTracks
+                        , favouritesOnly = data.onlyShowFavourites
+                        , grouping = data.grouping
+                        , searchTerm = data.searchTerm
+                        , sortBy = data.sortBy
+                        , sortDirection = data.sortDirection
+                    }
+            in
+            ( { model
+                | equalizer = newEqualizer
+                , playlists = newPlaylists
+                , queue = newQueue
+                , tracks = newTracks
+              }
+            , Cmd.batch
+                [ Cmd.map EqualizerMsg (Equalizer.adjustAllKnobs newEqualizer)
+                , Ports.setRepeat data.repeat
+                ]
+            , []
+            )
+
+        Err err ->
+            Return3.return model

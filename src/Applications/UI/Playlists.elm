@@ -1,5 +1,6 @@
-module UI.Playlists exposing (Model, Msg(..), initialModel, update, view)
+module UI.Playlists exposing (Model, Msg(..), importHypaethral, initialModel, update, view)
 
+import Authentication exposing (HypaethralUserData)
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
@@ -23,6 +24,7 @@ import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
+import UI.Playlists.Directory
 import UI.Playlists.Page exposing (Page(..))
 import UI.Reply exposing (Reply(..))
 import Url
@@ -194,6 +196,15 @@ update msg model =
                     Coordinates.fromTuple mouseEvent.clientPos
             in
             returnRepliesWithModel model [ ShowPlaylistListMenu coordinates playlist ]
+
+
+importHypaethral : Model -> HypaethralUserData -> Return Model Msg Reply
+importHypaethral model data =
+    return
+        { model
+            | collection = data.playlists ++ UI.Playlists.Directory.generate data.sources data.tracks
+            , playlistToActivate = Nothing
+        }
 
 
 

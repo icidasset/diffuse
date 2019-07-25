@@ -36,6 +36,7 @@ type Reply
       -- Notifications
       -----------------------------------------
     | DismissNotification { id : Int }
+    | RemoveNotification { id : Int }
     | ShowErrorNotification String
     | ShowStickyErrorNotification String
     | ShowStickyErrorNotificationWithCode String String
