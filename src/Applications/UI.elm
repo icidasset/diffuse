@@ -19,7 +19,7 @@ import Coordinates exposing (Coordinates, Viewport)
 import Css exposing (url)
 import Css.Global
 import Css.Transitions
-import Debouncer.Basic as Debouncer
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict.Ext as Dict
 import File
 import File.Download
@@ -63,7 +63,7 @@ import UI.Equalizer as Equalizer
 import UI.Kit
 import UI.Navigation as Navigation
 import UI.Notifications
-import UI.Page as Page
+import UI.Page as Page exposing (Page)
 import UI.Playlists as Playlists
 import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
@@ -110,6 +110,42 @@ main =
 
 
 -- 🌳
+
+
+type alias Model =
+    { contextMenu : Maybe (ContextMenu Msg)
+    , currentTime : Time.Posix
+    , debounce : Debouncer Msg Msg
+    , isDragging : Bool
+    , isLoading : Bool
+    , isOnline : Bool
+    , navKey : Nav.Key
+    , notifications : UI.Notifications.Model
+    , page : Page
+    , pressedKeys : List Keyboard.Key
+    , url : Url
+    , viewport : Viewport
+
+    -----------------------------------------
+    -- Audio
+    -----------------------------------------
+    , audioDuration : Float
+    , audioHasStalled : Bool
+    , audioIsLoading : Bool
+    , audioIsPlaying : Bool
+
+    -----------------------------------------
+    -- Children
+    -----------------------------------------
+    , alfred : Alfred.Model
+    , authentication : Authentication.Model
+    , backdrop : Backdrop.Model
+    , equalizer : Equalizer.Model
+    , queue : Queue.Model
+    , playlists : Playlists.Model
+    , sources : Sources.Model
+    , tracks : Tracks.Model
+    }
 
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )

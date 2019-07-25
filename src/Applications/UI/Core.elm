@@ -1,4 +1,4 @@
-module UI.Core exposing (Model, Msg(..))
+module UI.Core exposing (Msg(..))
 
 import Authentication
 import Authentication.RemoteStorage exposing (RemoteStorage)
@@ -29,46 +29,6 @@ import UI.Reply exposing (Reply)
 import UI.Sources as Sources
 import UI.Tracks as Tracks
 import Url exposing (Url)
-
-
-
--- 🌳
-
-
-type alias Model =
-    { contextMenu : Maybe (ContextMenu Msg)
-    , currentTime : Time.Posix
-    , debounce : Debouncer Msg Msg
-    , isDragging : Bool
-    , isLoading : Bool
-    , isOnline : Bool
-    , navKey : Nav.Key
-    , notifications : Notifications.Model
-    , page : Page
-    , pressedKeys : List Keyboard.Key
-    , url : Url
-    , viewport : Viewport
-
-    -----------------------------------------
-    -- Audio
-    -----------------------------------------
-    , audioDuration : Float
-    , audioHasStalled : Bool
-    , audioIsLoading : Bool
-    , audioIsPlaying : Bool
-
-    -----------------------------------------
-    -- Children
-    -----------------------------------------
-    , alfred : Alfred.Model
-    , authentication : Authentication.Model
-    , backdrop : Backdrop.Model
-    , equalizer : Equalizer.Model
-    , queue : Queue.Model
-    , playlists : Playlists.Model
-    , sources : Sources.Model
-    , tracks : Tracks.Model
-    }
 
 
 
