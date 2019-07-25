@@ -106,19 +106,19 @@ update msg model =
 -- 🗺
 
 
-type alias Necessities =
+type alias Dependencies =
     { height : Float
     , isVisible : Bool
     }
 
 
-view : Necessities -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> SortBy -> SortDirection -> ( List Int, Maybe (DnD.Model Int) ) -> Html.Styled.Html Msg
-view necessities harvest infiniteList favouritesOnly sortBy sortDirection ( selectedTrackIndexes, maybeDnD ) =
+view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> SortBy -> SortDirection -> ( List Int, Maybe (DnD.Model Int) ) -> Html.Styled.Html Msg
+view deps harvest infiniteList favouritesOnly sortBy sortDirection ( selectedTrackIndexes, maybeDnD ) =
     brick
         [ Html.Styled.Attributes.css lazyViewStyles
         , Html.Styled.Attributes.fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
         , Html.Styled.Attributes.id containerId
-        , Html.Styled.Attributes.tabindex (ifThenElse necessities.isVisible 0 -1)
+        , Html.Styled.Attributes.tabindex (ifThenElse deps.isVisible 0 -1)
         , Html.Styled.Attributes.style "-webkit-overflow-scrolling" "touch"
         , Html.Styled.Attributes.style "overscroll-behavior" "none"
         ]
@@ -170,7 +170,7 @@ view necessities harvest infiniteList favouritesOnly sortBy sortDirection ( sele
 
                         --
                         , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
-                        , containerHeight = round necessities.height
+                        , containerHeight = round deps.height
                         }
                     )
                 )

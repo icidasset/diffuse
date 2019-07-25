@@ -1,4 +1,4 @@
-module UI.Settings exposing (view)
+module UI.Settings exposing (Dependencies, view)
 
 import Authentication exposing (Method(..))
 import Chunky exposing (..)
@@ -13,38 +13,43 @@ import Html.Styled.Lazy
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
 import Tachyons.Classes as T
-import UI.Authentication as Authentication
 import UI.Backdrop as Backdrop
-import UI.Core as Core
 import UI.Css
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
+import UI.Reply exposing (Reply(..))
 import UI.Settings.ImportExport
 import UI.Settings.Page as Settings exposing (..)
-import UI.Tracks as Tracks
 
 
 
 -- 🗺
 
 
-view : Settings.Page -> Core.Model -> Html Core.Msg
-view page model =
+type alias Dependencies =
+    { authenticationMethod : Maybe Authentication.Method
+    , chosenBackgroundImage : Maybe String
+    , hideDuplicateTracks : Bool
+    }
+
+
+view : Settings.Page -> Dependencies -> Html Reply
+view page deps =
     case page of
         ImportExport ->
             UI.Settings.ImportExport.view
 
         Index ->
-            UI.Kit.receptacle { scrolling = True } (index model)
+            UI.Kit.receptacle { scrolling = True } (index deps)
 
 
 
 -- INDEX
 
 
-index : Core.Model -> List (Html Core.Msg)
-index model =
+index : Dependencies -> List (Html Reply)
+index deps =
     [ -----------------------------------------
       -- Navigation
       -----------------------------------------
@@ -55,7 +60,7 @@ index model =
           )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown
-          , PerformMsg Core.SignOut
+          , PerformMsg SignOut
           )
         ]
 
@@ -67,7 +72,7 @@ index model =
         , [ text "Changes are saved automatically."
           , lineBreak
           , text "PS. You're storing the data for this application "
-          , case Authentication.extractMethod model.authentication of
+          , case deps.authenticationMethod of
                 Just Blockstack ->
                     text "on Blockstack."
 
@@ -87,7 +92,7 @@ index model =
                     text "on nothing, wtf?"
 
           -- Change passphrase (if applicable)
-          , case Authentication.extractMethod model.authentication of
+          , case deps.authenticationMethod of
                 Just Blockstack ->
                     nothing
 
@@ -113,14 +118,14 @@ index model =
         -------------
         , chunk [ T.mb3, T.mt4 ] [ UI.Kit.label [] "Hide Duplicates" ]
         , UI.Kit.checkbox
-            { checked = model.tracks.hideDuplicates
-            , toggleMsg = Core.TracksMsg Tracks.ToggleHideDuplicates
+            { checked = deps.hideDuplicateTracks
+            , toggleMsg = ToggleHideDuplicates
             }
 
         -- Background image
         -------------------
         , chunk [ T.mb3, T.mt4 ] [ UI.Kit.label [] "Background Image" ]
-        , Html.Styled.Lazy.lazy backgroundImage model.backdrop.chosen
+        , Html.Styled.Lazy.lazy backgroundImage deps.chosenBackgroundImage
         ]
     ]
 
@@ -129,7 +134,7 @@ index model =
 -- AUTHENTICATION
 
 
-changePassphrase : Authentication.Method -> Html Core.Msg
+changePassphrase : Authentication.Method -> Html Reply
 changePassphrase method =
     inline
         []
@@ -137,10 +142,7 @@ changePassphrase method =
         , text "If you want to, you can "
         , UI.Kit.textButton
             { label = "change your passphrase"
-            , onClick =
-                method
-                    |> Authentication.ShowUpdateEncryptionKeyScreen
-                    |> Core.AuthenticationMsg
+            , onClick = ShowUpdateEncryptionKeyScreen method
             }
         , text "."
         ]
@@ -150,7 +152,7 @@ changePassphrase method =
 -- BACKGROUND IMAGE
 
 
-backgroundImage : Maybe String -> Html Core.Msg
+backgroundImage : Maybe String -> Html Reply
 backgroundImage chosenBackground =
     chunk
         [ T.flex, T.flex_wrap ]
@@ -162,7 +164,7 @@ backgroundImage chosenBackground =
                 in
                 brick
                     [ css backgroundThumbnailStyles
-                    , onClick (Core.BackdropMsg <| Backdrop.Choose filename)
+                    , onClick (ChooseBackdrop filename)
                     ]
                     [ T.overflow_hidden
                     , T.pointer

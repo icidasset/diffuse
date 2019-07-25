@@ -5,10 +5,10 @@ import Html.Styled as Html exposing (Html, text)
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
 import Tachyons.Classes as T
-import UI.Core
 import UI.Kit exposing (ButtonType(..))
 import UI.Navigation exposing (..)
 import UI.Page
+import UI.Reply exposing (Reply(..))
 import UI.Settings.Page
 
 
@@ -16,7 +16,7 @@ import UI.Settings.Page
 -- 🗺
 
 
-view : Html UI.Core.Msg
+view : Html Reply
 view =
     UI.Kit.receptacle
         { scrolling = True }
@@ -50,7 +50,7 @@ view =
             , UI.Kit.buttonWithColor
                 UI.Kit.colorKit.base05
                 Normal
-                UI.Core.RequestImport
+                RequestImport
                 (text "Choose file")
 
             -- Export
@@ -58,7 +58,7 @@ view =
             , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Export" ]
             , UI.Kit.button
                 Normal
-                UI.Core.Export
+                Export
                 (text "Export data")
             ]
         ]

@@ -22,6 +22,8 @@ type Reply
       -- Authentication
       -----------------------------------------
     | ExternalAuth Authentication.Method String
+    | ShowUpdateEncryptionKeyScreen Authentication.Method
+    | SignOut
       -----------------------------------------
       -- Context Menu
       -----------------------------------------
@@ -68,11 +70,15 @@ type Reply
     | RemoveTracksFromCache (List Track)
     | RemoveTracksWithSourceId String
     | ReplaceSourceInCollection Source
+    | ToggleHideDuplicates
       -----------------------------------------
       -- User Data
       -----------------------------------------
+    | ChooseBackdrop String
+    | Export
     | InsertDemo
     | LoadDefaultBackdrop
+    | RequestImport
     | SaveEnclosedUserData
     | SaveFavourites
     | SavePlaylists

@@ -118,10 +118,6 @@ type Msg
     | RemoteStorageWebfinger RemoteStorage (Result Http.Error String)
     | SyncUserData
       -----------------------------------------
-      -- Brain
-      -----------------------------------------
-    | SignOut
-      -----------------------------------------
       -- Children
       -----------------------------------------
     | AlfredMsg Alfred.Msg
@@ -135,10 +131,8 @@ type Msg
       -----------------------------------------
       -- Import / Export
       -----------------------------------------
-    | Export
     | Import File
     | ImportJson String
-    | RequestImport
       -----------------------------------------
       -- Notifications
       -----------------------------------------
