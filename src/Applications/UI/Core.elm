@@ -94,7 +94,6 @@ type Msg
       -- Audio
       -----------------------------------------
     | PlayPause
-    | Seek Float
     | SetAudioDuration Float
     | SetAudioHasStalled Bool
     | SetAudioIsLoading Bool

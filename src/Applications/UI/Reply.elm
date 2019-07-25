@@ -19,6 +19,11 @@ type Reply
     | StartedDragging
     | ToggleLoadingScreen Switch
       -----------------------------------------
+      -- Audio
+      -----------------------------------------
+    | Seek Float
+    | TogglePlayPause
+      -----------------------------------------
       -- Authentication
       -----------------------------------------
     | ExternalAuth Authentication.Method String
@@ -59,7 +64,10 @@ type Reply
     | FillQueue
     | PlayTrack IdentifiedTrack
     | ResetQueue
+    | RewindQueue
     | ShiftQueue
+    | ToggleRepeat
+    | ToggleShuffle
       -----------------------------------------
       -- Sources & Tracks
       -----------------------------------------
@@ -71,6 +79,7 @@ type Reply
     | RemoveTracksFromCache (List Track)
     | RemoveTracksWithSourceId String
     | ReplaceSourceInCollection Source
+    | ScrollToNowPlaying
     | ToggleHideDuplicates
       -----------------------------------------
       -- User Data

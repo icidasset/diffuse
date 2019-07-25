@@ -302,9 +302,6 @@ update msg model =
             else
                 returnWithModel model (Ports.play ())
 
-        Seek percentage ->
-            returnWithModel model (Ports.seek percentage)
-
         SetAudioDuration duration ->
             return { model | audioDuration = duration }
 
@@ -741,6 +738,15 @@ translateReply reply model =
             update (Core.ToggleLoadingScreen state) model
 
         -----------------------------------------
+        -- Audio
+        -----------------------------------------
+        Seek percentage ->
+            returnWithModel model (Ports.seek percentage)
+
+        TogglePlayPause ->
+            update PlayPause model
+
+        -----------------------------------------
         -- Authentication
         -----------------------------------------
         ExternalAuth Authentication.Blockstack _ ->
@@ -1002,8 +1008,17 @@ translateReply reply model =
         ResetQueue ->
             update (QueueMsg Queue.Reset) model
 
+        RewindQueue ->
+            update (QueueMsg Queue.Rewind) model
+
         ShiftQueue ->
             update (QueueMsg Queue.Shift) model
+
+        ToggleRepeat ->
+            update (QueueMsg Queue.ToggleRepeat) model
+
+        ToggleShuffle ->
+            update (QueueMsg Queue.ToggleShuffle) model
 
         -----------------------------------------
         -- Sources & Tracks
@@ -1108,6 +1123,9 @@ translateReply reply model =
                 |> (\s -> { model | sources = s })
                 |> return
                 |> andThen (translateReply SaveSources)
+
+        ScrollToNowPlaying ->
+            update (TracksMsg Tracks.ScrollToNowPlaying) model
 
         ToggleHideDuplicates ->
             update (TracksMsg Tracks.ToggleHideDuplicates) model
@@ -1549,14 +1567,16 @@ defaultScreen model =
     -----------------------------------------
     -- Controls
     -----------------------------------------
-    , Lazy.lazy6
-        UI.Console.view
-        model.queue.activeItem
-        model.queue.repeat
-        model.queue.shuffle
-        model.audioHasStalled
-        model.audioIsLoading
-        model.audioIsPlaying
+    , Html.map Reply
+        (Lazy.lazy6
+            UI.Console.view
+            model.queue.activeItem
+            model.queue.repeat
+            model.queue.shuffle
+            model.audioHasStalled
+            model.audioIsLoading
+            model.audioIsPlaying
+        )
     ]
 
 

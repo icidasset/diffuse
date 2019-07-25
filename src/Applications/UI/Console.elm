@@ -16,9 +16,9 @@ import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue
 import Tachyons.Classes as T
-import UI.Core as Core exposing (Msg(..))
 import UI.Kit
 import UI.Queue as Queue
+import UI.Reply exposing (Reply(..))
 import UI.Tracks as Tracks
 
 
@@ -26,7 +26,7 @@ import UI.Tracks as Tracks
 -- 🗺
 
 
-view : Maybe Queue.Item -> Bool -> Bool -> Bool -> Bool -> Bool -> Html Core.Msg
+view : Maybe Queue.Item -> Bool -> Bool -> Bool -> Bool -> Bool -> Html Reply
 view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
     brick
         [ css consoleStyles ]
@@ -56,7 +56,7 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
                 case Maybe.map .identifiedTrack activeQueueItem of
                     Just ( _, { tags } ) ->
                         Html.span
-                            [ onClick (TracksMsg Tracks.ScrollToNowPlaying), class T.pointer ]
+                            [ onClick ScrollToNowPlaying, class T.pointer ]
                             [ text (tags.artist ++ " - " ++ tags.title) ]
 
                     Nothing ->
@@ -93,11 +93,11 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
             , T.mt3
             , T.pb1
             ]
-            [ button (smallLight repeat) (icon Icons.repeat 18) (QueueMsg <| Queue.ToggleRepeat)
-            , button lightPlaceHolder (icon Icons.fast_rewind 20) (QueueMsg <| Queue.Rewind)
-            , button (largeLight isPlaying) play PlayPause
-            , button lightPlaceHolder (icon Icons.fast_forward 20) (QueueMsg <| Queue.Shift)
-            , button (smallLight shuffle) (icon Icons.shuffle 18) (QueueMsg <| Queue.ToggleShuffle)
+            [ button (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
+            , button lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
+            , button (largeLight isPlaying) play TogglePlayPause
+            , button lightPlaceHolder (icon Icons.fast_forward 20) ShiftQueue
+            , button (smallLight shuffle) (icon Icons.shuffle 18) ToggleShuffle
             ]
         ]
 
