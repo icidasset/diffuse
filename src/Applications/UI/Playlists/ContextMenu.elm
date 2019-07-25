@@ -7,10 +7,10 @@ import Material.Icons.Action as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Image as Icons
 import Playlists exposing (Playlist)
-import UI.Core exposing (Msg(..))
 import UI.Page
 import UI.Playlists as Playlists
 import UI.Playlists.Page
+import UI.Reply exposing (Reply(..))
 import Url
 
 
@@ -18,7 +18,7 @@ import Url
 -- 🔱
 
 
-listMenu : Playlist -> Coordinates -> ContextMenu Msg
+listMenu : Playlist -> Coordinates -> ContextMenu Reply
 listMenu playlist =
     ContextMenu
         [ Item
@@ -29,13 +29,13 @@ listMenu playlist =
                     |> Url.percentEncode
                     |> UI.Playlists.Page.Edit
                     |> UI.Page.Playlists
-                    |> ChangeUrlUsingPage
+                    |> GoToPage
             , active = False
             }
         , Item
             { icon = Icons.delete
             , label = "Remove playlist"
-            , msg = PlaylistsMsg (Playlists.RemoveFromCollection { playlistName = playlist.name })
+            , msg = RemovePlaylistFromCollection { playlistName = playlist.name }
             , active = False
             }
         ]

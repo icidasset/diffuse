@@ -14,15 +14,15 @@ import Json.Decode
 import Material.Icons exposing (Coloring(..))
 import Svg exposing (Svg)
 import Tachyons.Classes as T
-import UI.Core
 import UI.Kit
+import UI.Reply exposing (Reply)
 
 
 
 -- 🗺
 
 
-view : Maybe (ContextMenu UI.Core.Msg) -> Html UI.Core.Msg
+view : Maybe (ContextMenu Reply) -> Html Reply
 view m =
     case m of
         Just (ContextMenu items coordinates) ->
@@ -57,7 +57,7 @@ view m =
             nothing
 
 
-itemView : Int -> Int -> ContextMenu.ItemProperties UI.Core.Msg -> Html UI.Core.Msg
+itemView : Int -> Int -> ContextMenu.ItemProperties Reply -> Html Reply
 itemView lastIndex index { icon, label, msg, active } =
     let
         isLast =
@@ -67,7 +67,7 @@ itemView lastIndex index { icon, label, msg, active } =
         [ custom
             "tap"
             (Json.Decode.succeed
-                { message = UI.Core.MsgViaContextMenu msg
+                { message = UI.Reply.ReplyViaContextMenu msg
                 , stopPropagation = True
                 , preventDefault = True
                 }

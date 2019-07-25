@@ -3,7 +3,7 @@ module UI exposing (main)
 import Alfred exposing (Alfred)
 import Alien
 import Authentication exposing (..)
-import Authentication.RemoteStorage
+import Authentication.RemoteStorage exposing (RemoteStorage)
 import Browser
 import Browser.Dom
 import Browser.Events
@@ -21,7 +21,7 @@ import Css.Global
 import Css.Transitions
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict.Ext as Dict
-import File
+import File exposing (File)
 import File.Download
 import File.Select
 import Html.Events.Extra.Pointer as Pointer
@@ -30,13 +30,14 @@ import Html.Styled as Html exposing (Html, section, toUnstyled)
 import Html.Styled.Attributes as Attributes exposing (class, css, id, style)
 import Html.Styled.Events as Events exposing (on, onClick)
 import Html.Styled.Lazy as Lazy
+import Http
 import Json.Decode
 import Json.Encode
 import Keyboard
 import List.Ext as List
 import List.Extra as List
 import Maybe.Extra as Maybe
-import Notifications
+import Notifications exposing (Notification)
 import Playlists.Encoding as Playlists
 import Process
 import Return2 exposing (..)
@@ -56,7 +57,6 @@ import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
-import UI.Core as Core exposing (..)
 import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer as Equalizer
@@ -113,7 +113,7 @@ main =
 
 
 type alias Model =
-    { contextMenu : Maybe (ContextMenu Msg)
+    { contextMenu : Maybe (ContextMenu Reply)
     , currentTime : Time.Posix
     , debounce : Debouncer Msg Msg
     , isDragging : Bool
@@ -213,12 +213,81 @@ init flags url key =
 -- 📣
 
 
+type Msg
+    = Bypass
+      --
+    | CopyToClipboard String
+    | Debounce (Debouncer.Msg Msg)
+    | HideOverlay
+    | KeyboardMsg Keyboard.Msg
+    | LoadEnclosedUserData Json.Decode.Value
+    | LoadHypaethralUserData Json.Decode.Value
+    | Reply Reply
+    | ResizedWindow ( Int, Int )
+    | SetCurrentTime Time.Posix
+    | SetIsOnline Bool
+    | StoppedDragging
+    | ToggleLoadingScreen Switch
+      -----------------------------------------
+      -- Audio
+      -----------------------------------------
+    | PlayPause
+    | SetAudioDuration Float
+    | SetAudioHasStalled Bool
+    | SetAudioIsLoading Bool
+    | SetAudioIsPlaying Bool
+    | Stop
+    | Unstall
+      -----------------------------------------
+      -- Authentication
+      -----------------------------------------
+    | AuthenticationBootFailure String
+    | RemoteStorageWebfinger RemoteStorage (Result Http.Error String)
+    | SyncUserData
+      -----------------------------------------
+      -- Children
+      -----------------------------------------
+    | AlfredMsg Alfred.Msg
+    | AuthenticationMsg Authentication.Msg
+    | BackdropMsg Backdrop.Msg
+    | EqualizerMsg Equalizer.Msg
+    | PlaylistsMsg Playlists.Msg
+    | QueueMsg Queue.Msg
+    | SourcesMsg Sources.Msg
+    | TracksMsg Tracks.Msg
+      -----------------------------------------
+      -- Import / Export
+      -----------------------------------------
+    | Import File
+    | ImportJson String
+      -----------------------------------------
+      -- Notifications
+      -----------------------------------------
+    | ShowNotification (Notification Reply)
+      -----------------------------------------
+      -- Page Transitions
+      -----------------------------------------
+    | PageChanged Page
+      -----------------------------------------
+      -- Tracks Cache
+      -----------------------------------------
+    | FailedToStoreTracksInCache (List String)
+    | FinishedStoringTracksInCache (List String)
+      -----------------------------------------
+      -- URL
+      -----------------------------------------
+    | ChangeUrlUsingPage Page
+    | LinkClicked Browser.UrlRequest
+    | UrlChanged Url
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Bypass ->
             return model
 
+        --
         CopyToClipboard string ->
             returnWithModel model (Ports.copyToClipboard string)
 
@@ -255,18 +324,16 @@ update msg model =
                 |> importHypaethral json
                 |> Return3.wield translateReply
 
-        MsgViaContextMenu m ->
-            update m { model | contextMenu = Nothing }
-
         Reply reply ->
             translateReply reply model
 
         ResizedWindow ( width, height ) ->
-            { height = toFloat height
-            , width = toFloat width
-            }
-                |> (\v -> { model | contextMenu = Nothing, viewport = v })
-                |> return
+            ( { model
+                | contextMenu = Nothing
+                , viewport = { height = toFloat height, width = toFloat width }
+              }
+            , Cmd.none
+            )
 
         SetCurrentTime time ->
             let
@@ -319,10 +386,10 @@ update msg model =
                 _ ->
                     return notDragging
 
-        Core.ToggleLoadingScreen On ->
+        ToggleLoadingScreen On ->
             return { model | isLoading = True }
 
-        Core.ToggleLoadingScreen Off ->
+        ToggleLoadingScreen Off ->
             return { model | isLoading = False }
 
         -----------------------------------------
@@ -586,44 +653,6 @@ update msg model =
             return model
 
         -----------------------------------------
-        -- Playlists
-        -----------------------------------------
-        RequestAssistanceForPlaylists tracks ->
-            model.playlists.collection
-                |> List.filterNot .autoGenerated
-                |> UI.Playlists.Alfred.create tracks
-                |> Alfred.Assign
-                |> AlfredMsg
-                |> updateWithModel model
-
-        RemoveFromSelectedPlaylist playlist tracks ->
-            let
-                updatedPlaylist =
-                    Tracks.removeFromPlaylist tracks playlist
-
-                ( tracksModel, playlistsModel ) =
-                    ( model.tracks
-                    , model.playlists
-                    )
-
-                newPlaylistsCollection =
-                    List.map
-                        (\p ->
-                            if p.name == playlist.name then
-                                updatedPlaylist
-
-                            else
-                                p
-                        )
-                        model.playlists.collection
-            in
-            newPlaylistsCollection
-                |> (\c -> { playlistsModel | collection = c })
-                |> (\p -> { model | playlists = p })
-                |> update (TracksMsg <| Tracks.SelectPlaylist updatedPlaylist)
-                |> andThen (translateReply SavePlaylists)
-
-        -----------------------------------------
         -- Tracks Cache
         -----------------------------------------
         FailedToStoreTracksInCache trackIds ->
@@ -648,52 +677,6 @@ update msg model =
                     )
                 |> update (TracksMsg Tracks.Harvest)
                 |> andThen (translateReply SaveEnclosedUserData)
-
-        RemoveFromTracksCache tracks ->
-            let
-                trackIds =
-                    List.map .id tracks
-            in
-            tracks
-                |> Json.Encode.list (.id >> Json.Encode.string)
-                |> Alien.broadcast Alien.RemoveTracksFromCache
-                |> Ports.toBrain
-                |> returnWithModel
-                    (updateTracksModel
-                        (\m -> { m | cached = List.without trackIds m.cached })
-                        model
-                    )
-                |> andThen (update <| TracksMsg Tracks.Harvest)
-                |> andThen (translateReply SaveEnclosedUserData)
-
-        StoreInTracksCache tracks ->
-            let
-                trackIds =
-                    List.map .id tracks
-            in
-            tracks
-                |> Json.Encode.list
-                    (\track ->
-                        Json.Encode.object
-                            [ ( "trackId"
-                              , Json.Encode.string track.id
-                              )
-                            , ( "url"
-                              , track
-                                    |> UI.Queue.Common.makeTrackUrl
-                                        model.currentTime
-                                        model.sources.collection
-                                    |> Json.Encode.string
-                              )
-                            ]
-                    )
-                |> Alien.broadcast Alien.StoreTracksInCache
-                |> Ports.toBrain
-                |> returnWithModel
-                    (updateTracksModel
-                        (\m -> { m | cachingInProgress = m.cachingInProgress ++ trackIds })
-                        model
-                    )
 
         -----------------------------------------
         -- URL
@@ -762,6 +745,10 @@ resetUrl key url page =
 translateReply : Reply -> Model -> ( Model, Cmd Msg )
 translateReply reply model =
     case reply of
+        Shunt ->
+            return model
+
+        --
         GoToPage page ->
             page
                 |> ChangeUrlUsingPage
@@ -771,7 +758,7 @@ translateReply reply model =
             return { model | isDragging = True }
 
         Reply.ToggleLoadingScreen state ->
-            update (Core.ToggleLoadingScreen state) model
+            update (ToggleLoadingScreen state) model
 
         -----------------------------------------
         -- Audio
@@ -805,6 +792,11 @@ translateReply reply model =
 
         ExternalAuth _ _ ->
             return model
+
+        PingIpfsForAuth ->
+            Authentication.PingIpfs
+                |> AuthenticationMsg
+                |> updateWithModel model
 
         ShowUpdateEncryptionKeyScreen authMethod ->
             authMethod
@@ -849,6 +841,9 @@ translateReply reply model =
         -----------------------------------------
         -- Context Menu
         -----------------------------------------
+        ReplyViaContextMenu r ->
+            translateReply r { model | contextMenu = Nothing }
+
         ShowMoreAuthenticationOptions coordinates ->
             return { model | contextMenu = Just (Authentication.moreOptionsMenu coordinates) }
 
@@ -994,6 +989,39 @@ translateReply reply model =
                 |> (\p -> { model | playlists = p })
                 |> return
 
+        RemoveFromSelectedPlaylist playlist tracks ->
+            let
+                updatedPlaylist =
+                    Tracks.removeFromPlaylist tracks playlist
+
+                ( tracksModel, playlistsModel ) =
+                    ( model.tracks
+                    , model.playlists
+                    )
+
+                newPlaylistsCollection =
+                    List.map
+                        (\p ->
+                            if p.name == playlist.name then
+                                updatedPlaylist
+
+                            else
+                                p
+                        )
+                        model.playlists.collection
+            in
+            newPlaylistsCollection
+                |> (\c -> { playlistsModel | collection = c })
+                |> (\p -> { model | playlists = p })
+                |> update (TracksMsg <| Tracks.SelectPlaylist updatedPlaylist)
+                |> andThen (translateReply SavePlaylists)
+
+        RemovePlaylistFromCollection args ->
+            args
+                |> Playlists.RemoveFromCollection
+                |> PlaylistsMsg
+                |> updateWithModel model
+
         ReplacePlaylistInCollection playlist ->
             let
                 playlists =
@@ -1004,6 +1032,14 @@ translateReply reply model =
                 |> (\c -> { playlists | collection = c })
                 |> (\p -> { model | playlists = p })
                 |> translateReply SavePlaylists
+
+        RequestAssistanceForPlaylists tracks ->
+            model.playlists.collection
+                |> List.filterNot .autoGenerated
+                |> UI.Playlists.Alfred.create tracks
+                |> Alfred.Assign
+                |> AlfredMsg
+                |> updateWithModel model
 
         -----------------------------------------
         -- Queue
@@ -1028,6 +1064,17 @@ translateReply reply model =
             model
                 |> update (TracksMsg <| Tracks.SetNowPlaying nowPlaying)
                 |> addCommand portCmd
+
+        AddToQueue { inFront, tracks } ->
+            (if inFront then
+                Queue.InjectFirst
+
+             else
+                Queue.InjectLast
+            )
+                |> (\msg -> msg { showNotification = True } tracks)
+                |> QueueMsg
+                |> updateWithModel model
 
         FillQueue ->
             model.tracks.collection.harvested
@@ -1065,6 +1112,11 @@ translateReply reply model =
                 |> SourcesMsg
                 |> updateWithModel model
 
+        DisableTracksGrouping ->
+            Tracks.DisableGrouping
+                |> TracksMsg
+                |> updateWithModel model
+
         ExternalSourceAuthorization urlBuilder ->
             model.url
                 |> Common.urlOrigin
@@ -1078,6 +1130,12 @@ translateReply reply model =
                 (always Bypass)
                 (Browser.Dom.setViewportOf UI.Tracks.Scene.List.containerId 0 1)
             )
+
+        GroupTracksBy grouping ->
+            grouping
+                |> Tracks.GroupBy
+                |> TracksMsg
+                |> updateWithModel model
 
         PreloadNextTrack ->
             case List.head model.queue.future of
@@ -1129,10 +1187,28 @@ translateReply reply model =
                 |> returnWithModel { model | sources = newSources }
                 |> andThen (update <| ShowNotification notification)
 
+        RemoveSourceFromCollection args ->
+            args
+                |> Sources.RemoveFromCollection
+                |> SourcesMsg
+                |> updateWithModel model
+
         RemoveTracksFromCache tracks ->
-            update
-                (RemoveFromTracksCache tracks)
-                model
+            let
+                trackIds =
+                    List.map .id tracks
+            in
+            tracks
+                |> Json.Encode.list (.id >> Json.Encode.string)
+                |> Alien.broadcast Alien.RemoveTracksFromCache
+                |> Ports.toBrain
+                |> returnWithModel
+                    (updateTracksModel
+                        (\m -> { m | cached = List.without trackIds m.cached })
+                        model
+                    )
+                |> andThen (update <| TracksMsg Tracks.Harvest)
+                |> andThen (translateReply SaveEnclosedUserData)
 
         RemoveTracksWithSourceId sourceId ->
             let
@@ -1162,6 +1238,41 @@ translateReply reply model =
 
         ScrollToNowPlaying ->
             update (TracksMsg Tracks.ScrollToNowPlaying) model
+
+        StoreTracksInCache tracks ->
+            let
+                trackIds =
+                    List.map .id tracks
+            in
+            tracks
+                |> Json.Encode.list
+                    (\track ->
+                        Json.Encode.object
+                            [ ( "trackId"
+                              , Json.Encode.string track.id
+                              )
+                            , ( "url"
+                              , track
+                                    |> UI.Queue.Common.makeTrackUrl
+                                        model.currentTime
+                                        model.sources.collection
+                                    |> Json.Encode.string
+                              )
+                            ]
+                    )
+                |> Alien.broadcast Alien.StoreTracksInCache
+                |> Ports.toBrain
+                |> returnWithModel
+                    (updateTracksModel
+                        (\m -> { m | cachingInProgress = m.cachingInProgress ++ trackIds })
+                        model
+                    )
+
+        ToggleCachedTracksOnly ->
+            update (TracksMsg Tracks.ToggleCachedOnly) model
+
+        ToggleDirectoryPlaylists args ->
+            update (SourcesMsg <| Sources.ToggleDirectoryPlaylists args) model
 
         ToggleHideDuplicates ->
             update (TracksMsg Tracks.ToggleHideDuplicates) model
@@ -1360,7 +1471,7 @@ translateAlienData event =
             SourcesMsg Sources.FinishedProcessing
 
         Just Alien.HideLoadingScreen ->
-            Core.ToggleLoadingScreen Off
+            ToggleLoadingScreen Off
 
         Just Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData event.data
@@ -1501,6 +1612,7 @@ body model =
         -----------------------------------------
         , model.contextMenu
             |> Lazy.lazy UI.ContextMenu.view
+            |> Html.map Reply
 
         -----------------------------------------
         -- Notifications
@@ -1666,7 +1778,7 @@ loadingAnimation =
     Html.map never (Html.fromUnstyled UI.Svg.Elements.loading)
 
 
-overlay : Maybe (Alfred Reply) -> Maybe (ContextMenu Msg) -> Html Msg
+overlay : Maybe (Alfred Reply) -> Maybe (ContextMenu Reply) -> Html Msg
 overlay maybeAlfred maybeContextMenu =
     brick
         [ css overlayStyles ]

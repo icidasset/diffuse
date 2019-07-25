@@ -10,9 +10,8 @@ import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Sources.Services
 import Tracks exposing (Grouping(..), IdentifiedTrack)
-import UI.Core exposing (Msg(..))
 import UI.Queue as Queue
-import UI.Reply
+import UI.Reply exposing (Reply(..))
 import UI.Tracks as Tracks
 
 
@@ -20,7 +19,7 @@ import UI.Tracks as Tracks
 -- TRACK MENU
 
 
-trackMenu : List IdentifiedTrack -> List String -> List String -> Maybe Playlist -> Maybe String -> Coordinates -> ContextMenu Msg
+trackMenu : List IdentifiedTrack -> List String -> List String -> Maybe Playlist -> Maybe String -> Coordinates -> ContextMenu Reply
 trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist =
     [ queueActions tracks
     , playlistActions tracks selectedPlaylist lastModifiedPlaylist
@@ -36,7 +35,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
                 [ Item
                     { icon = Icons.offline_bolt
                     , label = "Remove from cache"
-                    , msg = RemoveFromTracksCache (List.map Tuple.second tracks)
+                    , msg = RemoveTracksFromCache (List.map Tuple.second tracks)
                     , active = False
                     }
                 ]
@@ -45,7 +44,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
                 [ Item
                     { icon = Icons.offline_bolt
                     , label = "Downloading ..."
-                    , msg = Bypass
+                    , msg = Shunt
                     , active = True
                     }
                 ]
@@ -54,7 +53,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
                 [ Item
                     { icon = Icons.offline_bolt
                     , label = "Store in cache"
-                    , msg = StoreInTracksCache (List.map Tuple.second tracks)
+                    , msg = StoreTracksInCache (List.map Tuple.second tracks)
                     , active = False
                     }
                 ]
@@ -63,7 +62,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
             [ Item
                 { icon = Icons.offline_bolt
                 , label = "Store in cache"
-                , msg = StoreInTracksCache (List.map Tuple.second tracks)
+                , msg = StoreTracksInCache (List.map Tuple.second tracks)
                 , active = False
                 }
             ]
@@ -72,7 +71,7 @@ trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist 
         |> ContextMenu
 
 
-playlistActions : List IdentifiedTrack -> Maybe Playlist -> Maybe String -> List (ContextMenu.Item Msg)
+playlistActions : List IdentifiedTrack -> Maybe Playlist -> Maybe String -> List (ContextMenu.Item Reply)
 playlistActions tracks selectedPlaylist lastModifiedPlaylist =
     let
         maybeCustomPlaylist =
@@ -88,9 +87,8 @@ playlistActions tracks selectedPlaylist lastModifiedPlaylist =
                             { icon = Icons.waves
                             , label = "Add to \"" ++ n ++ "\""
                             , msg =
-                                { playlistName = n, tracks = Tracks.toPlaylistTracks tracks }
-                                    |> UI.Reply.AddTracksToPlaylist
-                                    |> Reply
+                                AddTracksToPlaylist
+                                    { playlistName = n, tracks = Tracks.toPlaylistTracks tracks }
                             , active = False
                             }
 
@@ -135,18 +133,18 @@ playlistActions tracks selectedPlaylist lastModifiedPlaylist =
                 ]
 
 
-queueActions : List IdentifiedTrack -> List (ContextMenu.Item Msg)
+queueActions : List IdentifiedTrack -> List (ContextMenu.Item Reply)
 queueActions identifiedTracks =
     [ Item
         { icon = Icons.update
         , label = "Play next"
-        , msg = QueueMsg (Queue.InjectFirst { showNotification = True } identifiedTracks)
+        , msg = AddToQueue { inFront = True, tracks = identifiedTracks }
         , active = False
         }
     , Item
         { icon = Icons.update
         , label = "Add to queue"
-        , msg = QueueMsg (Queue.InjectLast { showNotification = True } identifiedTracks)
+        , msg = AddToQueue { inFront = False, tracks = identifiedTracks }
         , active = False
         }
     ]
@@ -156,7 +154,7 @@ queueActions identifiedTracks =
 -- VIEW MENU
 
 
-viewMenu : Bool -> Maybe Grouping -> Coordinates -> ContextMenu Msg
+viewMenu : Bool -> Maybe Grouping -> Coordinates -> ContextMenu Reply
 viewMenu onlyCachedTracks maybeGrouping =
     ContextMenu
         [ groupByDirectory (maybeGrouping == Just Directory)
@@ -169,7 +167,7 @@ viewMenu onlyCachedTracks maybeGrouping =
             { icon = Icons.filter_list
             , label = "Cached tracks only"
             , active = onlyCachedTracks
-            , msg = TracksMsg Tracks.ToggleCachedOnly
+            , msg = ToggleCachedTracksOnly
             }
         ]
 
@@ -183,10 +181,10 @@ groupByDirectory isActive =
         --
         , msg =
             if isActive then
-                TracksMsg Tracks.DisableGrouping
+                DisableTracksGrouping
 
             else
-                TracksMsg (Tracks.GroupBy Directory)
+                GroupTracksBy Directory
         }
 
 
@@ -199,10 +197,10 @@ groupByFirstAlphaCharacter isActive =
         --
         , msg =
             if isActive then
-                TracksMsg Tracks.DisableGrouping
+                DisableTracksGrouping
 
             else
-                TracksMsg (Tracks.GroupBy FirstAlphaCharacter)
+                GroupTracksBy FirstAlphaCharacter
         }
 
 
@@ -215,10 +213,10 @@ groupByProcessingDate isActive =
         --
         , msg =
             if isActive then
-                TracksMsg Tracks.DisableGrouping
+                DisableTracksGrouping
 
             else
-                TracksMsg (Tracks.GroupBy AddedOn)
+                GroupTracksBy AddedOn
         }
 
 
@@ -231,8 +229,8 @@ groupByTrackYear isActive =
         --
         , msg =
             if isActive then
-                TracksMsg Tracks.DisableGrouping
+                DisableTracksGrouping
 
             else
-                TracksMsg (Tracks.GroupBy TrackYear)
+                GroupTracksBy TrackYear
         }

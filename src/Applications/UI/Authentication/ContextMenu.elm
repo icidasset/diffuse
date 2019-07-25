@@ -5,7 +5,7 @@ import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Svg
 import UI.Authentication as Authentication
-import UI.Core exposing (Msg(..))
+import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
 
 
@@ -13,13 +13,13 @@ import UI.Svg.Elements
 -- 🔱
 
 
-moreOptionsMenu : Coordinates -> ContextMenu Msg
+moreOptionsMenu : Coordinates -> ContextMenu Reply
 moreOptionsMenu =
     ContextMenu
         [ Item
             { icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
             , label = "IPFS"
-            , msg = AuthenticationMsg Authentication.PingIpfs
+            , msg = PingIpfsForAuth
             , active = False
             }
         ]

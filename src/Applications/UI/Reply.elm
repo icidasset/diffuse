@@ -15,7 +15,9 @@ import UI.Page exposing (Page)
 
 
 type Reply
-    = GoToPage Page
+    = Shunt
+      --
+    | GoToPage Page
     | StartedDragging
     | ToggleLoadingScreen Switch
       -----------------------------------------
@@ -27,11 +29,13 @@ type Reply
       -- Authentication
       -----------------------------------------
     | ExternalAuth Authentication.Method String
+    | PingIpfsForAuth
     | ShowUpdateEncryptionKeyScreen Authentication.Method
     | SignOut
       -----------------------------------------
       -- Context Menu
       -----------------------------------------
+    | ReplyViaContextMenu Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowPlaylistListMenu Coordinates Playlist
     | ShowSourceContextMenu Coordinates Source
@@ -56,11 +60,15 @@ type Reply
     | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
     | DeactivatePlaylist
     | GenerateDirectoryPlaylists
+    | RemoveFromSelectedPlaylist Playlist (List IdentifiedTrack)
+    | RemovePlaylistFromCollection { playlistName : String }
     | ReplacePlaylistInCollection Playlist
+    | RequestAssistanceForPlaylists (List IdentifiedTrack)
       -----------------------------------------
       -- Queue
       -----------------------------------------
     | ActiveQueueItemChanged (Maybe Queue.Item)
+    | AddToQueue { inFront : Bool, tracks : List IdentifiedTrack }
     | FillQueue
     | PlayTrack IdentifiedTrack
     | ResetQueue
@@ -72,14 +80,20 @@ type Reply
       -- Sources & Tracks
       -----------------------------------------
     | AddSourceToCollection Source
+    | DisableTracksGrouping
     | ExternalSourceAuthorization (String -> String)
     | ForceTracksRerender
+    | GroupTracksBy Tracks.Grouping
     | PreloadNextTrack
     | ProcessSources
+    | RemoveSourceFromCollection { sourceId : String }
     | RemoveTracksFromCache (List Track)
     | RemoveTracksWithSourceId String
     | ReplaceSourceInCollection Source
     | ScrollToNowPlaying
+    | StoreTracksInCache (List Track)
+    | ToggleCachedTracksOnly
+    | ToggleDirectoryPlaylists { sourceId : String }
     | ToggleHideDuplicates
       -----------------------------------------
       -- User Data
