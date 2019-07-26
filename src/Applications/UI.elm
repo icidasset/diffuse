@@ -573,6 +573,7 @@ update msg model =
                 |> andThen (translateReply SaveFavourites)
                 |> andThen (translateReply SaveSources)
                 |> andThen (translateReply SaveTracks)
+                |> andThen (translateReply ClearTracksCache)
                 |> andThen (update <| ShowNotification notification)
                 |> andThen (update <| ChangeUrlUsingPage Page.Index)
 
