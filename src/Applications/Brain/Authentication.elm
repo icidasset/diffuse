@@ -129,6 +129,26 @@ update msg model =
         PerformSignOut ->
             [ Ports.removeCache (Alien.trigger Alien.AuthMethod)
             , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
+
+            --
+            , case model.method of
+                Just Blockstack ->
+                    Ports.deconstructBlockstack ()
+
+                Just (Ipfs _) ->
+                    Cmd.none
+
+                Just Local ->
+                    Cmd.none
+
+                Just (RemoteStorage _) ->
+                    Ports.deconstructRemoteStorage ()
+
+                Just (Textile _) ->
+                    Cmd.none
+
+                Nothing ->
+                    Cmd.none
             ]
                 |> Cmd.batch
                 |> Return.commandWithModel { model | method = Nothing }

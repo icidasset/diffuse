@@ -128,6 +128,11 @@ const BLOCKSTACK_SESSION_STORE = {
 }
 
 
+app.ports.deconstructBlockstack.subscribe(_ => {
+  bl = null
+})
+
+
 app.ports.handlePendingBlockstackSignIn.subscribe(authResponse => {
   const session = bl0ckst4ck()
 
@@ -377,6 +382,12 @@ function remoteStorage(event) {
 
   }
 }
+
+
+app.ports.deconstructRemoteStorage.subscribe(_ => {
+  rs = null
+  rsClient = null
+})
 
 
 app.ports.requestRemoteStorage.subscribe(event => {
