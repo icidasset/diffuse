@@ -1112,6 +1112,15 @@ translateReply reply model =
                 |> SourcesMsg
                 |> updateWithModel model
 
+        ClearTracksCache ->
+            model.tracks.cached
+                |> Json.Encode.list Json.Encode.string
+                |> Alien.broadcast Alien.RemoveTracksFromCache
+                |> Ports.toBrain
+                |> returnWithModel (updateTracksModel (\m -> { m | cached = [] }) model)
+                |> andThen (update <| TracksMsg Tracks.Harvest)
+                |> andThen (translateReply SaveEnclosedUserData)
+
         DisableTracksGrouping ->
             Tracks.DisableGrouping
                 |> TracksMsg
@@ -1198,8 +1207,8 @@ translateReply reply model =
                 trackIds =
                     List.map .id tracks
             in
-            tracks
-                |> Json.Encode.list (.id >> Json.Encode.string)
+            trackIds
+                |> Json.Encode.list Json.Encode.string
                 |> Alien.broadcast Alien.RemoveTracksFromCache
                 |> Ports.toBrain
                 |> returnWithModel

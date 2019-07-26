@@ -48,7 +48,7 @@ view =
             ---------
             , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Import" ]
             , UI.Kit.buttonWithColor
-                UI.Kit.colorKit.base05
+                UI.Kit.colorKit.base04
                 Normal
                 RequestImport
                 (text "Choose file")

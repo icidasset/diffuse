@@ -12,6 +12,7 @@ import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
+import String.Ext as String
 import Tachyons.Classes as T
 import UI.Backdrop as Backdrop
 import UI.Css
@@ -114,9 +115,18 @@ index deps =
             |> raw
             |> UI.Kit.intro
 
+        -- Clear cache
+        --------------
+        , label "Downloaded tracks"
+        , UI.Kit.buttonWithColor
+            UI.Kit.colorKit.base04
+            UI.Kit.Normal
+            ClearTracksCache
+            (text "Clear cache")
+
         -- Duplicates
         -------------
-        , chunk [ T.mb3, T.mt4 ] [ UI.Kit.label [] "Hide Duplicates" ]
+        , label "Hide Duplicates"
         , UI.Kit.checkbox
             { checked = deps.hideDuplicateTracks
             , toggleMsg = ToggleHideDuplicates
@@ -124,10 +134,17 @@ index deps =
 
         -- Background image
         -------------------
-        , chunk [ T.mb3, T.mt4 ] [ UI.Kit.label [] "Background Image" ]
+        , label "Background Image"
         , Html.Styled.Lazy.lazy backgroundImage deps.chosenBackgroundImage
         ]
     ]
+
+
+label : String -> Html msg
+label l =
+    chunk
+        [ T.mb3, T.mt4 ]
+        [ UI.Kit.label [] l ]
 
 
 

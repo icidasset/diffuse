@@ -80,6 +80,7 @@ type Reply
       -- Sources & Tracks
       -----------------------------------------
     | AddSourceToCollection Source
+    | ClearTracksCache
     | DisableTracksGrouping
     | ExternalSourceAuthorization (String -> String)
     | ForceTracksRerender

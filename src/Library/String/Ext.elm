@@ -1,4 +1,4 @@
-module String.Ext exposing (chopEnd, chopStart)
+module String.Ext exposing (chopEnd, chopStart, prepend)
 
 -- 🔱
 
@@ -23,3 +23,10 @@ chopStart needle str =
 
     else
         str
+
+
+{-| Flipped version of `append`.
+-}
+prepend : String -> String -> String
+prepend a b =
+    String.append b a
