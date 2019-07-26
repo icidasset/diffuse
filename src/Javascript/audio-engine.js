@@ -273,7 +273,7 @@ function audioStalledEvent(event) {
     if (isActiveAudioElement(this, event.target)) {
       unstallAudio(event.target)
     }
-  }, timesStalled * 500)
+  }, (timesStalled + 1) * 2500)
 
   // Increase counter
   timesStalled++
