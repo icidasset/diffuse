@@ -5,7 +5,7 @@
 // The local database.
 // This is used instead of localStorage.
 
-self.importScripts && importScripts("../vendor/text-encoding-polyfill.min.js")
+self.importScripts && importScripts("../version.js")
 
 
 const indexedDB =
@@ -32,6 +32,11 @@ idx.onupgradeneeded = event => {
 
 idx.onsuccess = _ => {
   db = idx.result
+
+  setInIndex({
+    key: "VERSION",
+    data: self.VERSION
+  })
 }
 
 idx.onerror = event => {
