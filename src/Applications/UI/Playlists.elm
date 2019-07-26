@@ -2,7 +2,7 @@ module UI.Playlists exposing (Model, Msg(..), importHypaethral, initialModel, up
 
 import Authentication exposing (HypaethralUserData)
 import Chunky exposing (..)
-import Color
+import Color exposing (Color)
 import Color.Ext as Color
 import Common
 import Conditional exposing (ifThenElse)
@@ -211,8 +211,8 @@ importHypaethral model data =
 -- 🗺
 
 
-view : Page -> Maybe Playlist -> Model -> Html Msg
-view page selectedPlaylist model =
+view : Page -> Model -> Maybe Playlist -> Maybe Color -> Html Msg
+view page model selectedPlaylist bgColor =
     UI.Kit.receptacle
         { scrolling = True }
         (case page of
@@ -230,7 +230,7 @@ view page selectedPlaylist model =
                     |> Maybe.withDefault [ nothing ]
 
             Index ->
-                index selectedPlaylist model
+                index model selectedPlaylist bgColor
 
             New ->
                 new model
@@ -241,8 +241,8 @@ view page selectedPlaylist model =
 -- INDEX
 
 
-index : Maybe Playlist -> Model -> List (Html Msg)
-index selectedPlaylist model =
+index : Model -> Maybe Playlist -> Maybe Color -> List (Html Msg)
+index model selectedPlaylist bgColor =
     let
         selectedPlaylistName =
             Maybe.map .name selectedPlaylist
@@ -254,7 +254,7 @@ index selectedPlaylist model =
 
         customPlaylistListItem playlist =
             if selectedPlaylistName == Just playlist.name then
-                selectedPlaylistListItem playlist
+                selectedPlaylistListItem playlist bgColor
 
             else
                 { label = text playlist.name
@@ -266,6 +266,7 @@ index selectedPlaylist model =
                       }
                     ]
                 , msg = Just (Activate playlist)
+                , isSelected = False
                 }
 
         directoryPlaylists =
@@ -275,12 +276,13 @@ index selectedPlaylist model =
 
         directoryPlaylistListItem playlist =
             if selectedPlaylistName == Just playlist.name then
-                selectedPlaylistListItem playlist
+                selectedPlaylistListItem playlist bgColor
 
             else
                 { label = text playlist.name
                 , actions = []
                 , msg = Just (Activate playlist)
+                , isSelected = False
                 }
     in
     [ -----------------------------------------
@@ -395,21 +397,29 @@ categoryStyles =
     ]
 
 
-selectedPlaylistListItem : Playlist -> UI.List.Item Msg
-selectedPlaylistListItem playlist =
+selectedPlaylistListItem : Playlist -> Maybe Color -> UI.List.Item Msg
+selectedPlaylistListItem playlist bgColor =
+    let
+        selectionColor =
+            Maybe.withDefault UI.Kit.colors.selection bgColor
+    in
     { label =
         brick
-            [ style "color" (Color.toCssString UI.Kit.colors.selection) ]
+            [ selectionColor
+                |> Color.toCssString
+                |> style "color"
+            ]
             []
             [ text playlist.name ]
     , actions =
-        [ { color = Color UI.Kit.colors.selection
+        [ { color = Color selectionColor
           , icon = Icons.check
           , msg = Nothing
           , title = "Selected playlist"
           }
         ]
     , msg = Just Deactivate
+    , isSelected = False
     }
 
 

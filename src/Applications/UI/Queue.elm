@@ -49,6 +49,7 @@ type alias Model =
 
     --
     , dnd : DnD.Model Int
+    , selection : Maybe Item
     }
 
 
@@ -65,6 +66,7 @@ initialModel =
 
     --
     , dnd = DnD.initialModel
+    , selection = Nothing
     }
 
 
@@ -98,6 +100,7 @@ type Msg
       -- Drag & Drop
       ------------------------------------
     | DragMsg (DnD.Msg Int)
+    | Select Item
       ------------------------------------
       -- Settings
       ------------------------------------
@@ -350,6 +353,9 @@ update msg model =
                     { model | dnd = dnd }
                     replies
 
+        Select item ->
+            return { model | selection = Just item }
+
         ------------------------------------
         -- Settings
         ------------------------------------
@@ -479,7 +485,7 @@ futureView model =
         UI.Kit.canister
             [ UI.Kit.h1 "Up next"
             , model.future
-                |> List.indexedMap futureItem
+                |> List.indexedMap (futureItem model.selection)
                 |> UI.List.view
                     (UI.List.Draggable
                         { model = model.dnd
@@ -512,16 +518,21 @@ futureView model =
     ]
 
 
-futureItem : Int -> Queue.Item -> UI.List.Item Msg
-futureItem idx item =
+futureItem : Maybe Item -> Int -> Queue.Item -> UI.List.Item Msg
+futureItem selection idx item =
     let
-        ( _, track ) =
+        ( identifiers, track ) =
             item.identifiedTrack
+
+        isSelected =
+            selection
+                |> Maybe.map (.identifiedTrack >> Tuple.first >> .indexInList)
+                |> (==) (Just identifiers.indexInList)
     in
     { label =
         slab
             Html.span
-            (if item.manualEntry then
+            (if item.manualEntry || isSelected then
                 []
 
              else
@@ -559,7 +570,8 @@ futureItem idx item =
           , title = ifThenElse item.manualEntry "Remove" "Ignore"
           }
         ]
-    , msg = Nothing
+    , msg = Just (Select item)
+    , isSelected = isSelected
     }
 
 
@@ -639,4 +651,5 @@ historyItem idx { identifiedTrack, manualEntry } =
             ]
     , actions = []
     , msg = Nothing
+    , isSelected = False
     }

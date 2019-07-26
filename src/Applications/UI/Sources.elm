@@ -320,6 +320,7 @@ index model =
                         { label = Html.text (Dict.fetch "name" "" source.data)
                         , actions = sourceActions model.isProcessing model.processingError source
                         , msg = Nothing
+                        , isSelected = False
                         }
                     )
                 |> UI.List.view UI.List.Normal

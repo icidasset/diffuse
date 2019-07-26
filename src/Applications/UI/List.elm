@@ -35,6 +35,7 @@ type alias Item msg =
     { label : Html msg
     , actions : List (Action msg)
     , msg : Maybe msg
+    , isSelected : Bool
     }
 
 
@@ -59,19 +60,17 @@ view variant =
 
 
 item : Variant Int msg -> Int -> Item msg -> Html msg
-item variant idx { label, actions, msg } =
-    let
-        dragHandleColoring =
-            actions
-                |> List.head
-                |> Maybe.map .color
-                |> Maybe.withDefault Inherit
-    in
+item variant idx { label, actions, msg, isSelected } =
     brick
         (case variant of
             Normal ->
                 List.append
-                    [ css (itemStyles { dragTarget = False }) ]
+                    [ { dragTarget = False
+                      , isSelected = isSelected
+                      }
+                        |> itemStyles
+                        |> css
+                    ]
                     (case msg of
                         Just m ->
                             [ onClick m ]
@@ -84,7 +83,20 @@ item variant idx { label, actions, msg } =
                 DnD.listenToEnterLeave env idx
                     |> List.map Attributes.fromUnstyled
                     |> List.append
-                        [ { dragTarget = DnD.isDraggingOver idx env.model }
+                        (case ( isSelected, msg ) of
+                            ( True, _ ) ->
+                                [ Attributes.fromUnstyled (DnD.listenToStart env idx) ]
+
+                            ( False, Just m ) ->
+                                [ onClick m ]
+
+                            ( False, Nothing ) ->
+                                []
+                        )
+                    |> List.append
+                        [ { dragTarget = DnD.isDraggingOver idx env.model
+                          , isSelected = isSelected
+                          }
                             |> itemStyles
                             |> css
                         ]
@@ -120,16 +132,7 @@ item variant idx { label, actions, msg } =
                     else
                         ""
             ]
-            (List.append
-                (List.map actionView actions)
-                (case variant of
-                    Normal ->
-                        []
-
-                    Draggable env ->
-                        [ dragActionView dragHandleColoring env idx ]
-                )
-            )
+            (List.map actionView actions)
         ]
 
 
@@ -157,22 +160,6 @@ actionView action =
         [ fromUnstyled (action.icon 16 action.color) ]
 
 
-dragActionView : Coloring -> DnD.Environment Int msg -> Int -> Html msg
-dragActionView coloring env context =
-    brick
-        [ Attributes.title "Drag me"
-        , Attributes.fromUnstyled (DnD.listenToStart env context)
-        ]
-        [ C.disable_selection
-        , C.lh_0
-        , C.grab_cursor
-        , T.ml1
-        , T.pl1
-        , T.pv2
-        ]
-        [ fromUnstyled (Icons.drag_indicator 16 coloring) ]
-
-
 
 -- 🖼
 
@@ -182,12 +169,19 @@ listStyles =
     [ Css.fontSize (px 13) ]
 
 
-itemStyles : { dragTarget : Bool } -> List Css.Style
-itemStyles { dragTarget } =
+itemStyles : { dragTarget : Bool, isSelected : Bool } -> List Css.Style
+itemStyles { dragTarget, isSelected } =
     if dragTarget then
         List.append
             itemBaseStyles
-            [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent) ]
+            [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent)
+            ]
+
+    else if isSelected then
+        List.append
+            itemBaseStyles
+            [ Css.color (Color.toElmCssColor UI.Kit.colors.selectionAlt)
+            ]
 
     else
         itemBaseStyles

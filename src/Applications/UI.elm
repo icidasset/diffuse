@@ -1699,8 +1699,8 @@ defaultScreen model =
                 nothing
 
             Page.Playlists subPage ->
-                model.playlists
-                    |> Lazy.lazy3 Playlists.view subPage model.tracks.selectedPlaylist
+                model.backdrop.bgColor
+                    |> Lazy.lazy4 Playlists.view subPage model.playlists model.tracks.selectedPlaylist
                     |> Html.map PlaylistsMsg
 
             Page.Queue subPage ->
