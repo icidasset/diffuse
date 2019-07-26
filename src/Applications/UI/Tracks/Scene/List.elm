@@ -112,16 +112,12 @@ type alias Dependencies =
     }
 
 
-view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> SortBy -> SortDirection -> ( List Int, Maybe (DnD.Model Int) ) -> Html.Styled.Html Msg
-view deps harvest infiniteList favouritesOnly sortBy sortDirection ( selectedTrackIndexes, maybeDnD ) =
+view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
+view deps harvest infiniteList favouritesOnly searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
     brick
-        [ Html.Styled.Attributes.css lazyViewStyles
-        , Html.Styled.Attributes.fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
-        , Html.Styled.Attributes.id containerId
-        , Html.Styled.Attributes.tabindex (ifThenElse deps.isVisible 0 -1)
-        , Html.Styled.Attributes.style "-webkit-overflow-scrolling" "touch"
-        , Html.Styled.Attributes.style "overscroll-behavior" "none"
-        ]
+        (List.append viewAttributes
+            [ Html.Styled.Attributes.tabindex (ifThenElse deps.isVisible 0 -1) ]
+        )
         [ C.disable_selection
         , T.flex_grow_1
         , T.outline_0
@@ -150,39 +146,53 @@ view deps harvest infiniteList favouritesOnly sortBy sortDirection ( selectedTra
 
         -- List
         -------
-        , Html.Styled.fromUnstyled
-            (InfiniteList.view
-                (InfiniteList.withCustomContainer
-                    infiniteListContainer
-                    (InfiniteList.config
-                        { itemView =
-                            case maybeDnD of
-                                Just dnd ->
-                                    playlistItemView
-                                        favouritesOnly
-                                        selectedTrackIndexes
-                                        dnd
-
-                                _ ->
-                                    defaultItemView
-                                        favouritesOnly
-                                        selectedTrackIndexes
-
-                        --
-                        , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
-                        , containerHeight = round deps.height
-                        }
-                    )
-                )
-                infiniteList
-                harvest
-            )
+        , Html.Styled.Lazy.lazy7
+            infiniteListView
+            deps
+            harvest
+            infiniteList
+            favouritesOnly
+            searchTerm
+            selectedTrackIndexes
+            maybeDnD
         ]
 
 
 containerId : String
 containerId =
     "diffuse__track-list"
+
+
+infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> List Int -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
+infiniteListView deps harvest infiniteList favouritesOnly searchTerm selectedTrackIndexes maybeDnD =
+    Html.Styled.fromUnstyled
+        (InfiniteList.view
+            (InfiniteList.withCustomContainer
+                infiniteListContainer
+                (InfiniteList.config
+                    { itemView =
+                        case maybeDnD of
+                            Just dnd ->
+                                playlistItemView
+                                    favouritesOnly
+                                    searchTerm
+                                    selectedTrackIndexes
+                                    dnd
+
+                            _ ->
+                                defaultItemView
+                                    favouritesOnly
+                                    selectedTrackIndexes
+
+                    --
+                    , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
+                    , containerHeight = round deps.height
+                    }
+                )
+            )
+            infiniteList
+            harvest
+        )
 
 
 scrollToNowPlaying : List IdentifiedTrack -> IdentifiedTrack -> Cmd Msg
@@ -200,8 +210,17 @@ scrollToTop =
     Task.attempt (always Bypass) (Dom.setViewportOf containerId 0 0)
 
 
-lazyViewStyles : List Css.Style
-lazyViewStyles =
+viewAttributes =
+    [ Html.Styled.Attributes.css viewStyles
+    , Html.Styled.Attributes.fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
+    , Html.Styled.Attributes.id containerId
+    , Html.Styled.Attributes.style "-webkit-overflow-scrolling" "touch"
+    , Html.Styled.Attributes.style "overscroll-behavior" "none"
+    ]
+
+
+viewStyles : List Css.Style
+viewStyles =
     [ Css.fontSize (Css.px 11.5)
     , Css.Media.withMedia
         [ UI.Css.notSmallMediaQuery ]
@@ -427,8 +446,8 @@ defaultItemView favouritesOnly selectedTrackIndexes _ idx identifiedTrack =
         ]
 
 
-playlistItemView : Bool -> List Int -> DnD.Model Int -> Int -> Int -> IdentifiedTrack -> Html Msg
-playlistItemView favouritesOnly selectedTrackIndexes dnd _ idx identifiedTrack =
+playlistItemView : Bool -> Maybe String -> List Int -> DnD.Model Int -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -450,7 +469,7 @@ playlistItemView favouritesOnly selectedTrackIndexes dnd _ idx identifiedTrack =
 
             --
             , List.append
-                (if isSelected && not favouritesOnly then
+                (if isSelected && not favouritesOnly && Maybe.isNothing searchTerm then
                     [ touchContextMenuEvent identifiedTrack (Just dragEnv)
                     , DnD.listenToStart dragEnv listIdx
                     ]

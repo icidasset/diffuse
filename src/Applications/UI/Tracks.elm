@@ -911,17 +911,17 @@ listView model deps =
                 else
                     Just model.listScene.dnd
             )
-        |> Tuple.pair model.selectedTrackIndexes
-        |> lazy7
-            UI.Tracks.Scene.List.view
+        |> UI.Tracks.Scene.List.view
             { height = deps.viewport.height
             , isVisible = deps.isOnIndexPage
             }
             model.collection.harvested
             model.listScene.infiniteList
             model.favouritesOnly
+            model.searchTerm
             model.sortBy
             model.sortDirection
+            model.selectedTrackIndexes
         |> Html.map ListSceneMsg
 
 
