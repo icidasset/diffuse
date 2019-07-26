@@ -106,11 +106,14 @@ app.ports.play.subscribe(_ => {
 })
 
 
-app.ports.preloadAudio.subscribe(item => {
+app.ports.preloadAudio.subscribe(debounce(item => {
+  // Wait 15 seconds to preload something.
+  // This is particularly useful when quickly shifting through tracks,
+  // or when moving things around in the queue.
   (SINGLE_AUDIO_NODE || item.isCached)
     ? false
     : preloadAudioElement(orchestrion, item)
-})
+}, 15000))
 
 
 app.ports.seek.subscribe(percentage => {
