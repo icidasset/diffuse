@@ -59,4 +59,4 @@ enabledSourceIds =
 
 setProperId : Int -> Time.Posix -> Source -> Source
 setProperId n time source =
-    { source | id = String.fromInt (Time.toMillis Time.utc time) ++ String.fromInt n }
+    { source | id = String.fromInt (Time.posixToMillis time) ++ String.fromInt n }
