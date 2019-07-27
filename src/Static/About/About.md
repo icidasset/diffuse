@@ -51,6 +51,8 @@ This layer connects with the services the user has on which music can be found. 
 
 
 
+<div id="How" />
+
 ## How does it work?
 
 Diffuse locates all the music files on the given services, extracts the metadata and then stores it via the user layer (which was explained before).
@@ -167,9 +169,10 @@ cors:
 
 The user interface should be self explanatory, but there are a few "hidden" features:
 
+- You can reorder items in the queue or a playlist with drag-and-drop.
+  Select the item you want to move by tapping on it, then tap and hold to move it around.
 - You can select multiple tracks using the SHIFT key and then add that selection
   to the queue or a playlist by right clicking on the selection (desktop only).
-- You can reorder playlist tracks with drag-and-drop.
 - Double tap on a EQ setting to reset it to its default value.
 
 ### Search

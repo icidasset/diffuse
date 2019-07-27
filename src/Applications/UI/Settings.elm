@@ -59,6 +59,10 @@ index deps =
           , Label "Import & Export" Shown
           , NavigateToPage (Page.Settings ImportExport)
           )
+        , ( Icon Icons.help_outline
+          , Label "Help" Shown
+          , OpenLinkInNewPage "/about#How"
+          )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown
           , PerformMsg SignOut

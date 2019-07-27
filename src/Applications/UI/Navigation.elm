@@ -8,7 +8,7 @@ import Color.Manipulate
 import Conditional exposing (..)
 import Css exposing (px, solid, transparent, zero)
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (attribute, css, href, tabindex, title)
+import Html.Styled.Attributes exposing (attribute, css, href, tabindex, target, title)
 import Html.Styled.Events exposing (onClick)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
@@ -25,6 +25,7 @@ import UI.Page as Page exposing (Page)
 
 type Action msg
     = NavigateToPage Page
+    | OpenLinkInNewPage String
     | PerformMsg msg
 
 
@@ -146,12 +147,18 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
             NavigateToPage page ->
                 Html.a
 
+            OpenLinkInNewPage _ ->
+                Html.a
+
             PerformMsg msg ->
                 Html.button
         )
         [ case action of
             NavigateToPage page ->
                 href (Page.toString page)
+
+            OpenLinkInNewPage link ->
+                href link
 
             PerformMsg msg ->
                 onClick msg
@@ -163,6 +170,14 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
 
             Shown ->
                 title ""
+
+        --
+        , case action of
+            OpenLinkInNewPage _ ->
+                target "_blank"
+
+            _ ->
+                target "_self"
 
         --
         , css localItemStyles
