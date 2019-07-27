@@ -407,21 +407,25 @@ fillQueue timestamp availableTracks model =
                     m
            )
         |> (\m ->
-                let
-                    fillState =
-                        { activeItem = m.activeItem
-                        , future = m.future
-                        , ignored = m.ignored
-                        , past = m.past
-                        }
-                in
-                -- Fill using the appropiate method
-                case m.shuffle of
-                    False ->
-                        { m | future = Fill.ordered timestamp nonMissingTracks fillState }
+                if List.length model.future >= Fill.queueLength then
+                    m
 
-                    True ->
-                        { m | future = Fill.shuffled timestamp nonMissingTracks fillState }
+                else
+                    let
+                        fillState =
+                            { activeItem = m.activeItem
+                            , future = m.future
+                            , ignored = m.ignored
+                            , past = m.past
+                            }
+                    in
+                    -- Fill using the appropiate method
+                    case m.shuffle of
+                        False ->
+                            { m | future = Fill.ordered timestamp nonMissingTracks fillState }
+
+                        True ->
+                            { m | future = Fill.shuffled timestamp nonMissingTracks fillState }
            )
 
 
