@@ -132,7 +132,7 @@ shuffled timestamp rawTracks state =
     in
     if howMany > 0 then
         timestamp
-            |> Time.toMillis Time.utc
+            |> Time.posixToMillis
             |> Random.initialSeed
             |> generateIndexes generator howMany usedIndexes_ []
             |> List.map (\idx -> List.getAt idx tracks)
