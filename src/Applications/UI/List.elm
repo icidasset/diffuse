@@ -111,7 +111,7 @@ item variant idx { label, actions, msg, isSelected } =
         [ -- Label
           --------
           chunk
-            [ C.pointer_events_none, T.flex_grow_1, T.mv3 ]
+            [ C.pointer_events_none, T.flex_grow_1, T.mv3, T.overflow_hidden ]
             [ label ]
 
         -- Actions

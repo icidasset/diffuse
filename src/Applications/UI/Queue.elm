@@ -547,7 +547,7 @@ futureItem selection idx item =
                     |> css
                 ]
             )
-            []
+            [ T.db, T.truncate ]
             [ inline
                 [ T.dib, T.f7, T.mr2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
@@ -647,7 +647,7 @@ historyItem idx { identifiedTrack, manualEntry } =
     in
     { label =
         inline
-            [ ifThenElse manualEntry T.o_100 T.o_50 ]
+            [ T.db, T.truncate, ifThenElse manualEntry T.o_100 T.o_50 ]
             [ inline
                 [ T.dib, T.f7, T.mr2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
