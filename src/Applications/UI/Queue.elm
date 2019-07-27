@@ -1,9 +1,10 @@
-module UI.Queue exposing (Model, Msg(..), initialModel, update, view)
+module UI.Queue exposing (Model, Msg(..), initialModel, moveQueueItemToFirst, moveQueueItemToLast, update, view)
 
 import Chunky exposing (..)
 import Color.Ext as Color
 import Common
 import Conditional exposing (..)
+import Coordinates exposing (Coordinates)
 import Css
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
@@ -75,10 +76,13 @@ initialModel =
 
 
 type Msg
-    = ------------------------------------
+    = Select Item
+    | ShowFutureMenu Item { index : Int } Mouse.Event
+    | ShowHistoryMenu Item Mouse.Event
+      ------------------------------------
       -- Combos
       ------------------------------------
-      InjectFirstAndPlay IdentifiedTrack
+    | InjectFirstAndPlay IdentifiedTrack
       ------------------------------------
       -- Future
       ------------------------------------
@@ -100,7 +104,6 @@ type Msg
       -- Drag & Drop
       ------------------------------------
     | DragMsg (DnD.Msg Int)
-    | Select Item
       ------------------------------------
       -- Settings
       ------------------------------------
@@ -111,6 +114,25 @@ type Msg
 update : Msg -> Model -> Return Model Msg Reply
 update msg model =
     case msg of
+        Select item ->
+            return { model | selection = Just item }
+
+        ShowFutureMenu item { index } mouseEvent ->
+            returnRepliesWithModel
+                model
+                [ ShowQueueFutureMenu
+                    (Coordinates.fromTuple mouseEvent.clientPos)
+                    { item = item, itemIndex = index }
+                ]
+
+        ShowHistoryMenu item mouseEvent ->
+            returnRepliesWithModel
+                model
+                [ ShowQueueHistoryMenu
+                    (Coordinates.fromTuple mouseEvent.clientPos)
+                    { item = item }
+                ]
+
         ------------------------------------
         -- Combos
         ------------------------------------
@@ -300,49 +322,15 @@ update msg model =
             in
             if DnD.hasDropped dnd then
                 let
-                    ( subject, target ) =
+                    ( from, to ) =
                         ( Maybe.withDefault 0 <| DnD.modelSubject dnd
                         , Maybe.withDefault 0 <| DnD.modelTarget dnd
                         )
 
-                    subjectItem =
-                        model.future
-                            |> List.getAt subject
-                            |> Maybe.map (\s -> { s | manualEntry = True })
-
-                    fixedTarget =
-                        if target > subject then
-                            target - 1
-
-                        else
-                            target
-
                     newFuture =
-                        model.future
-                            |> List.removeAt subject
-                            |> List.indexedFoldr
-                                (\idx existingItem acc ->
-                                    if idx == fixedTarget then
-                                        case subjectItem of
-                                            Just itemToInsert ->
-                                                List.append [ itemToInsert, existingItem ] acc
-
-                                            Nothing ->
-                                                existingItem :: acc
-
-                                    else if idx < fixedTarget then
-                                        { existingItem | manualEntry = True } :: acc
-
-                                    else
-                                        existingItem :: acc
-                                )
-                                []
-                            |> (if model.shuffle then
-                                    identity
-
-                                else
-                                    List.filter (.manualEntry >> (==) True)
-                               )
+                        moveItem
+                            { from = from, to = to, shuffle = model.shuffle }
+                            model.future
                 in
                 returnRepliesWithModel
                     { model | dnd = dnd, future = newFuture }
@@ -352,9 +340,6 @@ update msg model =
                 returnRepliesWithModel
                     { model | dnd = dnd }
                     replies
-
-        Select item ->
-            return { model | selection = Just item }
 
         ------------------------------------
         -- Settings
@@ -426,6 +411,68 @@ fillQueue timestamp availableTracks model =
 
                         True ->
                             { m | future = Fill.shuffled timestamp nonMissingTracks fillState }
+           )
+
+
+moveQueueItemToFirst : Model -> { itemIndex : Int } -> Model
+moveQueueItemToFirst model { itemIndex } =
+    model.future
+        |> moveItem { from = itemIndex, to = 0, shuffle = model.shuffle }
+        |> (\f -> { model | future = f })
+
+
+moveQueueItemToLast : Model -> { itemIndex : Int } -> Model
+moveQueueItemToLast model { itemIndex } =
+    let
+        to =
+            model.future
+                |> List.filter (.manualEntry >> (==) True)
+                |> List.length
+    in
+    model.future
+        |> moveItem { from = itemIndex, to = to, shuffle = model.shuffle }
+        |> (\f -> { model | future = f })
+
+
+moveItem : { from : Int, to : Int, shuffle : Bool } -> List Item -> List Item
+moveItem { from, to, shuffle } collection =
+    let
+        subjectItem =
+            collection
+                |> List.getAt from
+                |> Maybe.map (\s -> { s | manualEntry = True })
+
+        fixedTarget =
+            if to > from then
+                to - 1
+
+            else
+                to
+    in
+    collection
+        |> List.removeAt from
+        |> List.indexedFoldr
+            (\idx existingItem acc ->
+                if idx == fixedTarget then
+                    case subjectItem of
+                        Just itemToInsert ->
+                            List.append [ itemToInsert, existingItem ] acc
+
+                        Nothing ->
+                            existingItem :: acc
+
+                else if idx < fixedTarget then
+                    { existingItem | manualEntry = True } :: acc
+
+                else
+                    existingItem :: acc
+            )
+            []
+        |> (if shuffle then
+                identity
+
+            else
+                List.filter (.manualEntry >> (==) True)
            )
 
 
@@ -532,6 +579,13 @@ futureItem selection idx item =
             selection
                 |> Maybe.map (.identifiedTrack >> Tuple.first >> .indexInList)
                 |> (==) (Just identifiers.indexInList)
+
+        iconColor =
+            if item.manualEntry then
+                Color UI.Kit.colorKit.base03
+
+            else
+                Color UI.Kit.colorKit.base07
     in
     { label =
         slab
@@ -556,22 +610,23 @@ futureItem selection idx item =
     , actions =
         [ -- Remove
           ---------
-          { color =
-                if item.manualEntry then
-                    Color UI.Kit.colorKit.base03
-
-                else
-                    Color UI.Kit.colorKit.base07
+          { color = iconColor
           , icon =
                 if item.manualEntry then
                     Icons.remove_circle_outline
 
                 else
                     Icons.not_interested
-
-          --
           , msg = Just (\_ -> RemoveItem { index = idx, item = item })
           , title = ifThenElse item.manualEntry "Remove" "Ignore"
+          }
+
+        -- Menu
+        -------
+        , { color = iconColor
+          , icon = Icons.more_vert
+          , msg = Just (ShowFutureMenu item { index = idx })
+          , title = "Menu"
           }
         ]
     , msg = Just (Select item)
@@ -640,20 +695,26 @@ historyView model =
 
 
 historyItem : Int -> Queue.Item -> UI.List.Item Msg
-historyItem idx { identifiedTrack, manualEntry } =
+historyItem idx ({ identifiedTrack, manualEntry } as item) =
     let
         ( _, track ) =
             identifiedTrack
     in
     { label =
         inline
-            [ T.db, T.truncate, ifThenElse manualEntry T.o_100 T.o_50 ]
+            [ T.db, T.truncate ]
             [ inline
                 [ T.dib, T.f7, T.mr2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
-    , actions = []
+    , actions =
+        [ { color = Inherit
+          , icon = Icons.more_vert
+          , msg = Just (ShowHistoryMenu item)
+          , title = "Menu"
+          }
+        ]
     , msg = Nothing
     , isSelected = False
     }

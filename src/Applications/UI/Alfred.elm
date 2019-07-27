@@ -8,8 +8,8 @@ import Conditional exposing (ifThenElse)
 import Css
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (autofocus, css, id, placeholder, type_)
-import Html.Styled.Events exposing (onClick, onInput)
-import Html.Styled.Ext exposing (onTap)
+import Html.Styled.Events exposing (onInput)
+import Html.Styled.Ext exposing (onTapPreventDefault)
 import Json.Decode
 import Keyboard
 import List.Extra as List
@@ -223,16 +223,7 @@ view model =
                 -- Results
                 -----------------------------------------
                 , brick
-                    [ Html.Styled.Events.custom
-                        "tap"
-                        (Json.Decode.succeed
-                            { message = Bypass
-                            , stopPropagation = True
-                            , preventDefault = True
-                            }
-                        )
-                    , css shadowStyles
-                    ]
+                    [ css shadowStyles ]
                     [ T.bg_white
                     , T.br2
                     , T.f6
@@ -246,7 +237,7 @@ view model =
                     (List.indexedMap
                         (\idx result ->
                             brick
-                                [ onTap (RunAction idx) ]
+                                [ onTapPreventDefault (RunAction idx) ]
                                 [ T.pa3
                                 , T.relative
                                 , T.truncate

@@ -38,6 +38,8 @@ type Reply
     | ReplyViaContextMenu Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowPlaylistListMenu Coordinates Playlist
+    | ShowQueueFutureMenu Coordinates { item : Queue.Item, itemIndex : Int }
+    | ShowQueueHistoryMenu Coordinates { item : Queue.Item }
     | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
     | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)
@@ -70,6 +72,8 @@ type Reply
     | ActiveQueueItemChanged (Maybe Queue.Item)
     | AddToQueue { inFront : Bool, tracks : List IdentifiedTrack }
     | FillQueue
+    | MoveQueueItemToFirst { itemIndex : Int }
+    | MoveQueueItemToLast { itemIndex : Int }
     | PlayTrack IdentifiedTrack
     | ResetQueue
     | RewindQueue

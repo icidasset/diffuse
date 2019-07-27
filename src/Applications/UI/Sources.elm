@@ -186,13 +186,12 @@ update msg model =
         -- Individual
         -----------------------------------------
         SourceContextMenu source mouseEvent ->
-            let
-                coordinates =
-                    Coordinates.fromTuple mouseEvent.clientPos
-            in
             returnRepliesWithModel
                 model
-                [ ShowSourceContextMenu coordinates source ]
+                [ ShowSourceContextMenu
+                    (Coordinates.fromTuple mouseEvent.clientPos)
+                    source
+                ]
 
         ToggleActivation { sourceId } ->
             model.collection

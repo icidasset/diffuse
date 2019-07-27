@@ -1,4 +1,4 @@
-module UI.Tracks.ContextMenu exposing (trackMenu, viewMenu)
+module UI.Tracks.ContextMenu exposing (cacheAction, trackMenu, viewMenu)
 
 import Conditional exposing (ifThenElse)
 import ContextMenu exposing (..)
@@ -19,60 +19,88 @@ import UI.Tracks as Tracks
 -- TRACK MENU
 
 
-trackMenu : List IdentifiedTrack -> List String -> List String -> Maybe Playlist -> Maybe String -> Coordinates -> ContextMenu Reply
-trackMenu tracks cachingInProgress cached selectedPlaylist lastModifiedPlaylist =
-    [ queueActions tracks
-    , playlistActions tracks selectedPlaylist lastModifiedPlaylist
+trackMenu :
+    { cached : List String
+    , cachingInProgress : List String
+    , selectedPlaylist : Maybe Playlist
+    , lastModifiedPlaylistName : Maybe String
+    }
+    -> List IdentifiedTrack
+    -> Coordinates
+    -> ContextMenu Reply
+trackMenu { cached, cachingInProgress, selectedPlaylist, lastModifiedPlaylistName } tracks =
+    [ queueActions
+        tracks
+
+    --
+    , playlistActions
+        { selectedPlaylist = selectedPlaylist
+        , lastModifiedPlaylistName = lastModifiedPlaylistName
+        }
+        tracks
+
+    --
+    , cacheAction
+        { cached = cached
+        , cachingInProgress = cachingInProgress
+        }
+        tracks
+        |> List.singleton
 
     --
     -- TODO: 'Copy short-lived url' item
-    --
-    --
-    --
-    , case tracks of
-        [ ( i, t ) as track ] ->
-            if List.member t.id cached then
-                [ Item
-                    { icon = Icons.offline_bolt
-                    , label = "Remove from cache"
-                    , msg = RemoveTracksFromCache (List.map Tuple.second tracks)
-                    , active = False
-                    }
-                ]
-
-            else if List.member t.id cachingInProgress then
-                [ Item
-                    { icon = Icons.offline_bolt
-                    , label = "Downloading ..."
-                    , msg = Shunt
-                    , active = True
-                    }
-                ]
-
-            else
-                [ Item
-                    { icon = Icons.offline_bolt
-                    , label = "Store in cache"
-                    , msg = StoreTracksInCache (List.map Tuple.second tracks)
-                    , active = False
-                    }
-                ]
-
-        _ ->
-            [ Item
-                { icon = Icons.offline_bolt
-                , label = "Store in cache"
-                , msg = StoreTracksInCache (List.map Tuple.second tracks)
-                , active = False
-                }
-            ]
     ]
         |> List.concat
         |> ContextMenu
 
 
-playlistActions : List IdentifiedTrack -> Maybe Playlist -> Maybe String -> List (ContextMenu.Item Reply)
-playlistActions tracks selectedPlaylist lastModifiedPlaylist =
+cacheAction :
+    { cached : List String, cachingInProgress : List String }
+    -> List IdentifiedTrack
+    -> ContextMenu.Item Reply
+cacheAction { cached, cachingInProgress } tracks =
+    case tracks of
+        [ ( i, t ) as track ] ->
+            if List.member t.id cached then
+                Item
+                    { icon = Icons.offline_bolt
+                    , label = "Remove from cache"
+                    , msg = RemoveTracksFromCache (List.map Tuple.second tracks)
+                    , active = False
+                    }
+
+            else if List.member t.id cachingInProgress then
+                Item
+                    { icon = Icons.offline_bolt
+                    , label = "Downloading ..."
+                    , msg = Shunt
+                    , active = True
+                    }
+
+            else
+                Item
+                    { icon = Icons.offline_bolt
+                    , label = "Store in cache"
+                    , msg = StoreTracksInCache (List.map Tuple.second tracks)
+                    , active = False
+                    }
+
+        _ ->
+            Item
+                { icon = Icons.offline_bolt
+                , label = "Store in cache"
+                , msg = StoreTracksInCache (List.map Tuple.second tracks)
+                , active = False
+                }
+
+
+playlistActions :
+    { selectedPlaylist : Maybe Playlist
+    , lastModifiedPlaylistName : Maybe String
+    }
+    -> List IdentifiedTrack
+    -> List (ContextMenu.Item Reply)
+playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
     let
         maybeCustomPlaylist =
             Maybe.andThen
@@ -95,7 +123,7 @@ playlistActions tracks selectedPlaylist lastModifiedPlaylist =
                     else
                         Nothing
                 )
-                lastModifiedPlaylist
+                lastModifiedPlaylistName
     in
     case maybeCustomPlaylist of
         -----------------------------------------

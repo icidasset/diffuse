@@ -71,6 +71,7 @@ import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.Common
+import UI.Queue.ContextMenu as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings as Settings
 import UI.Settings.Page
@@ -851,11 +852,17 @@ translateReply reply model =
         ShowPlaylistListMenu coordinates playlist ->
             return { model | contextMenu = Just (Playlists.listMenu playlist coordinates) }
 
+        ShowQueueFutureMenu coordinates { item, itemIndex } ->
+            return { model | contextMenu = Just (Queue.futureMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress, itemIndex = itemIndex } item coordinates) }
+
+        ShowQueueHistoryMenu coordinates { item } ->
+            return { model | contextMenu = Just (Queue.historyMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress } item coordinates) }
+
         ShowSourceContextMenu coordinates source ->
             return { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
 
         ShowTracksContextMenu coordinates tracks ->
-            return { model | contextMenu = Just (Tracks.trackMenu tracks model.tracks.cachingInProgress model.tracks.cached model.tracks.selectedPlaylist model.playlists.lastModifiedPlaylist coordinates) }
+            return { model | contextMenu = Just (Tracks.trackMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress, selectedPlaylist = model.tracks.selectedPlaylist, lastModifiedPlaylistName = model.playlists.lastModifiedPlaylist } tracks coordinates) }
 
         ShowTracksViewMenu coordinates maybeGrouping ->
             return { model | contextMenu = Just (Tracks.viewMenu model.tracks.cachedOnly maybeGrouping coordinates) }
@@ -1082,6 +1089,12 @@ translateReply reply model =
                 |> Queue.Fill model.currentTime
                 |> QueueMsg
                 |> updateWithModel model
+
+        MoveQueueItemToFirst args ->
+            return { model | queue = Queue.moveQueueItemToFirst model.queue args }
+
+        MoveQueueItemToLast args ->
+            return { model | queue = Queue.moveQueueItemToLast model.queue args }
 
         PlayTrack identifiedTrack ->
             identifiedTrack
@@ -1790,15 +1803,22 @@ loadingAnimation =
 
 overlay : Maybe (Alfred Reply) -> Maybe (ContextMenu Reply) -> Html Msg
 overlay maybeAlfred maybeContextMenu =
+    let
+        isShown =
+            Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
+    in
     brick
-        [ css overlayStyles ]
+        [ css overlayStyles
+        , onClick HideOverlay
+        ]
         [ T.absolute__fill
         , T.bg_black_40
         , T.fixed
         , T.z_999
 
         --
-        , ifThenElse (Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu) T.o_100 T.o_0
+        , ifThenElse isShown "" C.pointer_events_none
+        , ifThenElse isShown T.o_100 T.o_0
         ]
         []
 
@@ -1900,10 +1920,7 @@ placeholderStyles =
 
 overlayStyles : List Css.Style
 overlayStyles =
-    [ Css.pointerEvents Css.none
-
-    --
-    , Css.Transitions.transition
+    [ Css.Transitions.transition
         [ Css.Transitions.opacity3 1000 0 Css.Transitions.ease ]
     ]
 

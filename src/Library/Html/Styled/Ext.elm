@@ -1,8 +1,13 @@
-module Html.Styled.Ext exposing (ifEnterKey, onDoubleTap, onEnterKey, onTap, onTapStopPropagation)
+module Html.Styled.Ext exposing (ifEnterKey, onClickStopPropagation, onDoubleTap, onEnterKey, onTap, onTapPreventDefault, onTapStopPropagation)
 
 import Html.Styled exposing (Attribute)
-import Html.Styled.Events exposing (keyCode, on, stopPropagationOn)
+import Html.Styled.Events exposing (keyCode, on, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Json
+
+
+onClickStopPropagation : msg -> Attribute msg
+onClickStopPropagation msg =
+    stopPropagationOn "click" (Json.succeed ( msg, True ))
 
 
 onDoubleTap : msg -> Attribute msg
@@ -28,6 +33,11 @@ ifEnterKey msg key =
 onTap : msg -> Attribute msg
 onTap msg =
     on "tap" (Json.succeed msg)
+
+
+onTapPreventDefault : msg -> Attribute msg
+onTapPreventDefault msg =
+    preventDefaultOn "tap" (Json.succeed ( msg, True ))
 
 
 onTapStopPropagation : msg -> Attribute msg

@@ -64,42 +64,20 @@ item variant idx { label, actions, msg, isSelected } =
     brick
         (case variant of
             Normal ->
-                List.append
-                    [ { dragTarget = False
-                      , isSelected = isSelected
-                      }
-                        |> itemStyles
-                        |> css
-                    ]
-                    (case msg of
-                        Just m ->
-                            [ onClick m ]
-
-                        Nothing ->
-                            []
-                    )
+                [ { dragTarget = False
+                  , isSelected = isSelected
+                  }
+                    |> itemStyles
+                    |> css
+                ]
 
             Draggable env ->
-                DnD.listenToEnterLeave env idx
-                    |> List.map Attributes.fromUnstyled
-                    |> List.append
-                        (case ( isSelected, msg ) of
-                            ( True, _ ) ->
-                                [ Attributes.fromUnstyled (DnD.listenToStart env idx) ]
-
-                            ( False, Just m ) ->
-                                [ onClick m ]
-
-                            ( False, Nothing ) ->
-                                []
-                        )
-                    |> List.append
-                        [ { dragTarget = DnD.isDraggingOver idx env.model
-                          , isSelected = isSelected
-                          }
-                            |> itemStyles
-                            |> css
-                        ]
+                [ { dragTarget = DnD.isDraggingOver idx env.model
+                  , isSelected = isSelected
+                  }
+                    |> itemStyles
+                    |> css
+                ]
         )
         [ T.flex
         , T.fw6
@@ -110,8 +88,32 @@ item variant idx { label, actions, msg, isSelected } =
         ]
         [ -- Label
           --------
-          chunk
-            [ C.pointer_events_none, T.flex_grow_1, T.mv3, T.overflow_hidden ]
+          brick
+            (case variant of
+                Normal ->
+                    case msg of
+                        Just m ->
+                            [ onClick m ]
+
+                        Nothing ->
+                            []
+
+                Draggable env ->
+                    DnD.listenToEnterLeave env idx
+                        |> List.map Attributes.fromUnstyled
+                        |> List.append
+                            (case ( isSelected, msg ) of
+                                ( True, _ ) ->
+                                    [ Attributes.fromUnstyled (DnD.listenToStart env idx) ]
+
+                                ( False, Just m ) ->
+                                    [ onClick m ]
+
+                                ( False, Nothing ) ->
+                                    []
+                            )
+            )
+            [ T.flex_grow_1, T.pv3, T.overflow_hidden ]
             [ label ]
 
         -- Actions
