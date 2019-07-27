@@ -1266,6 +1266,19 @@ translateReply reply model =
             let
                 trackIds =
                     List.map .id tracks
+
+                showNotification =
+                    case tracks of
+                        [ t ] ->
+                            ("__" ++ t.tags.title ++ "__ will be stored in the cache")
+                                |> ShowSuccessNotification
+
+                        list ->
+                            list
+                                |> List.length
+                                |> String.fromInt
+                                |> (\s -> "__" ++ s ++ " tracks__ will be stored in the cache")
+                                |> ShowSuccessNotification
             in
             tracks
                 |> Json.Encode.list
@@ -1290,6 +1303,7 @@ translateReply reply model =
                         (\m -> { m | cachingInProgress = m.cachingInProgress ++ trackIds })
                         model
                     )
+                |> andThen (translateReply showNotification)
 
         ToggleCachedTracksOnly ->
             update (TracksMsg Tracks.ToggleCachedOnly) model
