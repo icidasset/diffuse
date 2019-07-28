@@ -672,10 +672,7 @@ type alias Dependencies =
 view : Model -> Dependencies -> Html Msg
 view model deps =
     chunk
-        [ T.flex
-        , T.flex_column
-        , T.flex_grow_1
-        ]
+        viewClasses
         [ lazy6
             navigation
             model.grouping
@@ -699,6 +696,14 @@ view model deps =
                 List ->
                     listView model deps
         ]
+
+
+viewClasses : List String
+viewClasses =
+    [ T.flex
+    , T.flex_column
+    , T.flex_grow_1
+    ]
 
 
 navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Bool -> Maybe Color -> Html Msg

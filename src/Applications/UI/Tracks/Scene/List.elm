@@ -115,8 +115,9 @@ type alias Dependencies =
 view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
 view deps harvest infiniteList favouritesOnly searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
     brick
-        (List.append viewAttributes
-            [ Html.Styled.Attributes.tabindex (ifThenElse deps.isVisible 0 -1) ]
+        ((::)
+            (Html.Styled.Attributes.tabindex (ifThenElse deps.isVisible 0 -1))
+            viewAttributes
         )
         [ C.disable_selection
         , T.flex_grow_1
@@ -210,6 +211,7 @@ scrollToTop =
     Task.attempt (always Bypass) (Dom.setViewportOf containerId 0 0)
 
 
+viewAttributes : List (Html.Styled.Attribute Msg)
 viewAttributes =
     [ Html.Styled.Attributes.css viewStyles
     , Html.Styled.Attributes.fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
