@@ -605,7 +605,11 @@ selectEvent ( i, _ ) =
                 }
             )
             (Decode.at [ "originalEvent", "shiftKey" ] Decode.bool)
-            (Decode.at [ "originalEvent", "button" ] Decode.int)
+            (Decode.oneOf
+                [ Decode.at [ "originalEvent", "button" ] Decode.int
+                , Decode.succeed 0
+                ]
+            )
         )
 
 
