@@ -135,6 +135,9 @@ update msg model =
                 Just Blockstack ->
                     Ports.deconstructBlockstack ()
 
+                Just (Dropbox _) ->
+                    Cmd.none
+
                 Just (Ipfs _) ->
                     Cmd.none
 
@@ -203,6 +206,14 @@ update msg model =
                     Alien.AuthBlockstack
                         |> Alien.trigger
                         |> Ports.requestBlockstack
+                        |> Return.commandWithModel model
+
+                Just (Dropbox { token }) ->
+                    [ ( "token", Json.string token )
+                    ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthDropbox
+                        |> Ports.requestDropbox
                         |> Return.commandWithModel model
 
                 Just (Ipfs { apiOrigin }) ->
@@ -286,6 +297,15 @@ update msg model =
                     json
                         |> Alien.broadcast Alien.AuthBlockstack
                         |> Ports.toBlockstack
+                        |> Return.commandWithModel model
+
+                Just (Dropbox { token }) ->
+                    [ ( "data", json )
+                    , ( "token", Json.string token )
+                    ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthDropbox
+                        |> Ports.toDropbox
                         |> Return.commandWithModel model
 
                 Just (Ipfs { apiOrigin }) ->

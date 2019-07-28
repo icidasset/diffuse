@@ -72,6 +72,19 @@ type alias Question =
 initialModel : Url -> Model
 initialModel url =
     case Url.action url of
+        [ "authenticate", "dropbox" ] ->
+            url.fragment
+                |> Maybe.map (String.split "&")
+                |> Maybe.map (List.filter <| String.startsWith "access_token=")
+                |> Maybe.andThen List.head
+                |> Maybe.withDefault ""
+                |> String.replace "access_token=" ""
+                |> (\t ->
+                        NewEncryptionKeyScreen
+                            (Dropbox { token = t })
+                            Nothing
+                   )
+
         [ "authenticate", "remotestorage", encodedUserAddress ] ->
             let
                 userAddress =
@@ -228,7 +241,7 @@ update msg model =
         SignInWithPassphrase method passphrase ->
             if String.length passphrase < minimumPassphraseLength then
                 addReply
-                    (ShowStickyErrorNotification passphraseLengthErrorMessage)
+                    (ShowErrorNotification passphraseLengthErrorMessage)
                     (return model)
 
             else
@@ -273,7 +286,7 @@ update msg model =
         UpdateEncryptionKey method passphrase ->
             if String.length passphrase < minimumPassphraseLength then
                 addReply
-                    (ShowStickyErrorNotification passphraseLengthErrorMessage)
+                    (ShowErrorNotification passphraseLengthErrorMessage)
                     (return model)
 
             else
@@ -325,7 +338,7 @@ update msg model =
 
         PingOtherIpfsCallback origin (Err _) ->
             "Can't reach this IPFS API, maybe it's offline? Or I don't have access?"
-                |> ShowStickyErrorNotification
+                |> ShowErrorNotification
                 |> returnReplyWithModel model
 
         -----------------------------------------
@@ -347,7 +360,7 @@ update msg model =
             data
                 |> Json.Decode.decodeValue (Json.Decode.field "fallbackError" Json.Decode.string)
                 |> Result.withDefault "I seem to be missing your encrypted passphrase, please reauthenticate."
-                |> ShowStickyErrorNotification
+                |> ShowErrorNotification
                 |> returnReplyWithModel model
                 |> addReply LoadDefaultBackdrop
 
@@ -431,7 +444,7 @@ update msg model =
 
         PingOtherTextileCallback origin (Err _) ->
             "Can't reach this Textile API, maybe it's offline? Or I don't have access?"
-                |> ShowStickyErrorNotification
+                |> ShowErrorNotification
                 |> returnReplyWithModel model
 
 
@@ -652,6 +665,14 @@ choicesScreen =
             , outOfOrder = True
             }
         , choiceButton
+            { action = TriggerExternalAuth (Dropbox { token = "" }) ""
+            , icon = \_ _ -> Svg.map never UI.Svg.Elements.dropboxLogo
+            , infoLink = Just "https://dropbox.com/"
+            , isLast = False
+            , label = "Dropbox"
+            , outOfOrder = False
+            }
+        , choiceButton
             { action =
                 AskForInput
                     (RemoteStorage { userAddress = "", token = "" })
@@ -663,15 +684,6 @@ choicesScreen =
             , infoLink = Just "https://remotestorage.io/"
             , isLast = False
             , label = "RemoteStorage"
-            , outOfOrder = False
-            }
-        , choiceButton
-            { action =
-                PingTextile
-            , icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
-            , infoLink = Just "https://textile.io/"
-            , isLast = False
-            , label = "Textile"
             , outOfOrder = False
             }
 

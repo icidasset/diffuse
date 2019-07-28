@@ -461,6 +461,9 @@ translateAlienData tag data =
         Alien.AuthAnonymous ->
             AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
 
+        Alien.AuthDropbox ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+
         Alien.AuthEnclosedData ->
             AuthenticationMsg (Authentication.EnclosedDataRetrieved data)
 
@@ -563,6 +566,9 @@ translateAlienError tag err =
     case tag of
         Alien.AuthAnonymous ->
             reportAuthError Alien.AuthAnonymous err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
+
+        Alien.AuthDropbox ->
+            reportAuthError Alien.AuthDropbox err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
 
         Alien.AuthIpfs ->
             reportAuthError Alien.AuthIpfs err "Something went wrong regarding the IPFS storage. Maybe you used the wrong passphrase, or your IPFS node is offline?"

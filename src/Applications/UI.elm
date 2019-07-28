@@ -428,7 +428,7 @@ update msg model =
         -- Authentication
         -----------------------------------------
         AuthenticationBootFailure err ->
-            Notifications.stickyError err
+            Notifications.error err
                 |> ShowNotification
                 |> updateWithModel model
                 |> andThen (translateReply LoadDefaultBackdrop)
@@ -780,6 +780,16 @@ translateReply reply model =
                 |> Ports.toBrain
                 |> returnWithModel model
 
+        ExternalAuth (Authentication.Dropbox _) _ ->
+            [ ( "response_type", "token" )
+            , ( "client_id", "te0c9pbeii8f8bw" )
+            , ( "redirect_uri", Common.urlOrigin model.url ++ "?action=authenticate/dropbox" )
+            ]
+                |> Common.queryString
+                |> String.append "https://www.dropbox.com/oauth2/authorize"
+                |> Nav.load
+                |> returnWithModel model
+
         ExternalAuth (Authentication.RemoteStorage _) input ->
             input
                 |> Authentication.RemoteStorage.parseUserAddress
@@ -797,6 +807,11 @@ translateReply reply model =
 
         PingIpfsForAuth ->
             Authentication.PingIpfs
+                |> AuthenticationMsg
+                |> updateWithModel model
+
+        PingTextileForAuth ->
+            Authentication.PingTextile
                 |> AuthenticationMsg
                 |> updateWithModel model
 

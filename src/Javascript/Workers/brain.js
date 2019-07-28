@@ -288,6 +288,66 @@ function toCache(key, data) {
 
 
 
+// Dropbox
+// -------
+
+app.ports.requestDropbox.subscribe(event => {
+  const params = {
+    path: "/diffuse.json"
+  }
+
+  fetch("https://content.dropboxapi.com/2/files/download", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + event.data.token,
+      "Dropbox-API-Arg": JSON.stringify(params)
+    }
+  })
+    .then(r => r.ok ? r.text() : r.json())
+    .then(r => getSecretKey().then(s => [r, s]))
+    .then(([r, s]) => r.error ? null : decrypt(s, r))
+    .then(data => {
+      app.ports.fromAlien.send({
+        tag: event.tag,
+        data: typeof data === "string" ? JSON.parse(data) : data,
+        error: null
+      })
+    })
+    .catch(
+      authError(event)
+    )
+})
+
+
+app.ports.toDropbox.subscribe(event => {
+  const json = JSON.stringify(event.data.data)
+  const params = {
+    path: "/diffuse.json",
+    mode: "overwrite",
+    mute: true
+  }
+
+  getSecretKey()
+    .then(secretKey => encrypt(secretKey, json))
+    .then(data => {
+      return fetch("https://content.dropboxapi.com/2/files/upload", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + event.data.token,
+          "Content-Type": "application/octet-stream",
+          "Dropbox-API-Arg": JSON.stringify(params)
+        },
+        body: data
+      })
+
+    }).catch(
+      authError(event)
+
+    )
+})
+
+
+
 // IPFS
 // ----
 

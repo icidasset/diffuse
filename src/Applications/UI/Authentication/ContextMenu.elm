@@ -22,4 +22,10 @@ moreOptionsMenu =
             , msg = PingIpfsForAuth
             , active = False
             }
+        , Item
+            { icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
+            , label = "Textile"
+            , msg = PingTextileForAuth
+            , active = False
+            }
         ]

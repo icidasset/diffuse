@@ -81,6 +81,9 @@ index deps =
                 Just Blockstack ->
                     text "on Blockstack."
 
+                Just (Dropbox _) ->
+                    text "on Dropbox."
+
                 Just (Ipfs _) ->
                     text "on IPFS."
 
@@ -100,6 +103,9 @@ index deps =
           , case deps.authenticationMethod of
                 Just Blockstack ->
                     nothing
+
+                Just (Dropbox d) ->
+                    changePassphrase (Dropbox d)
 
                 Just (Ipfs i) ->
                     changePassphrase (Ipfs i)

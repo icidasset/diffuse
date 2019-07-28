@@ -18,6 +18,7 @@ Music layer for music storage.
 #### User layer
 
 - [~~Blockstack~~](https://blockstack.org/) <small>(TODO)</small>
+- [Dropbox](https://www.dropbox.com/)
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
 - [IPFS](https://ipfs.io/)
 - [RemoteStorage](https://remotestorage.io/)

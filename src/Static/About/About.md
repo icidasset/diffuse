@@ -30,6 +30,7 @@ This layer will use a service to store data from a user, such as the user's favo
 You can choose between these services:
 
 - [<del>Blockstack</del>](https://blockstack.org/) <small>(TODO)</small>
+- [Dropbox](https://www.dropbox.com/)
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
 - [IPFS](https://ipfs.io/)
 - [RemoteStorage](https://remotestorage.io/)

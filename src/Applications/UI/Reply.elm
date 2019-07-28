@@ -30,6 +30,7 @@ type Reply
       -----------------------------------------
     | ExternalAuth Authentication.Method String
     | PingIpfsForAuth
+    | PingTextileForAuth
     | ShowUpdateEncryptionKeyScreen Authentication.Method
     | SignOut
       -----------------------------------------

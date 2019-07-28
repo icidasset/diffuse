@@ -26,6 +26,7 @@ type alias Event =
 type Tag
     = AuthAnonymous
     | AuthBlockstack
+    | AuthDropbox
     | AuthEnclosedData
     | AuthIpfs
     | AuthMethod
@@ -73,6 +74,7 @@ enum =
     Enum.create
         [ ( "AUTH_ANONYMOUS", AuthAnonymous )
         , ( "AUTH_BLOCKSTACK", AuthBlockstack )
+        , ( "AUTH_DROPBOX", AuthDropbox )
         , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
         , ( "AUTH_IPFS", AuthIpfs )
         , ( "AUTH_METHOD", AuthMethod )

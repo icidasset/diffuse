@@ -20,6 +20,7 @@ import Tracks.Encoding as Tracks
 
 type Method
     = Blockstack
+    | Dropbox { token : String }
     | Ipfs { apiOrigin : String }
     | Local
     | RemoteStorage { userAddress : String, token : String }
@@ -76,6 +77,9 @@ methodFromString string =
         [ "BLOCKSTACK" ] ->
             Just Blockstack
 
+        [ "DROPBOX", t ] ->
+            Just (Dropbox { token = t })
+
         [ "IPFS", a ] ->
             Just (Ipfs { apiOrigin = a })
 
@@ -97,6 +101,13 @@ methodToString method =
     case method of
         Blockstack ->
             "BLOCKSTACK"
+
+        Dropbox { token } ->
+            String.join
+                methodSeparator
+                [ "DROPBOX"
+                , token
+                ]
 
         Ipfs { apiOrigin } ->
             String.join
