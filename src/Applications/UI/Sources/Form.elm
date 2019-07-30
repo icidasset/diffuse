@@ -275,75 +275,7 @@ newHow { context } =
 
         -- Note
         -------
-        , case context.service of
-            AmazonS3 ->
-                nothing
-
-            AzureBlob ->
-                nothing
-
-            AzureFile ->
-                nothing
-
-            Dropbox ->
-                howNote
-                    [ inline
-                        [ T.fw6 ]
-                        [ text "If you don't know what any of this is, "
-                        , text "continue to the next screen."
-                        ]
-                    , text " Changing the app key allows you to use your own Dropbox app."
-                    ]
-
-            Google ->
-                howNote
-                    [ inline
-                        [ T.fw6 ]
-                        [ text "If you don't know what any of this is, "
-                        , text "continue to the next screen."
-                        ]
-                    , text " Changing the client stuff allows you to use your own Google OAuth client."
-                    ]
-
-            Ipfs ->
-                howNote
-                    [ inline [ T.fw6 ] [ text "This is using the default gateway address." ]
-                    , lineBreak
-                    , text " If you use a different gateway, please change it here."
-                    , lineBreak
-                    , text " You can find your gateway address on the IPFS Web UI."
-                    , lineBreak
-                    , text "DNSLinks are resolved through Cloudflare."
-                    ]
-
-            WebDav ->
-                howNote
-                    [ inline
-                        [ T.fw6 ]
-                        [ UI.Kit.inlineIcon Icons.warning
-                        , text "This app requires a proper implementation of "
-                        , UI.Kit.link
-                            { label = "CORS"
-                            , url = "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"
-                            }
-                        , text " on the server side."
-                        ]
-                    , lineBreak
-                    , text " WebDAV servers usually don't implement"
-                    , text " CORS properly, if at all."
-                    , lineBreak
-                    , text " Some servers, like "
-                    , UI.Kit.link
-                        { label = "this one"
-                        , url = "https://github.com/hacdias/webdav"
-                        }
-                    , text ", do. You can find the configuration for that server "
-                    , UI.Kit.link
-                        { label = "here"
-                        , url = "about#CORS__WebDAV"
-                        }
-                    , text "."
-                    ]
+        , note context.service
 
         -- Fields
         ---------
@@ -504,6 +436,10 @@ edit { context } =
       )
         [ UI.Kit.h3 "Edit source"
 
+        -- Note
+        -------
+        , note context.service
+
         -- Fields
         ---------
         , let
@@ -576,3 +512,76 @@ form msg html =
         , T.tc
         ]
         [ UI.Kit.centeredContent html ]
+
+
+note : Service -> Html Msg
+note service =
+    case service of
+        AmazonS3 ->
+            nothing
+
+        AzureBlob ->
+            nothing
+
+        AzureFile ->
+            nothing
+
+        Dropbox ->
+            howNote
+                [ inline
+                    [ T.fw6 ]
+                    [ text "If you don't know what any of this is, "
+                    , text "continue to the next screen."
+                    ]
+                , text " Changing the app key allows you to use your own Dropbox app."
+                ]
+
+        Google ->
+            howNote
+                [ inline
+                    [ T.fw6 ]
+                    [ text "If you don't know what any of this is, "
+                    , text "continue to the next screen."
+                    ]
+                , text " Changing the client stuff allows you to use your own Google OAuth client."
+                ]
+
+        Ipfs ->
+            howNote
+                [ inline [ T.fw6 ] [ text "This is using the default gateway address." ]
+                , lineBreak
+                , text " If you use a different gateway, please change it here."
+                , lineBreak
+                , text " You can find your gateway address on the IPFS Web UI."
+                , lineBreak
+                , text "DNSLinks are resolved through Cloudflare."
+                ]
+
+        WebDav ->
+            howNote
+                [ inline
+                    [ T.fw6 ]
+                    [ UI.Kit.inlineIcon Icons.warning
+                    , text "This app requires a proper implementation of "
+                    , UI.Kit.link
+                        { label = "CORS"
+                        , url = "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"
+                        }
+                    , text " on the server side."
+                    ]
+                , lineBreak
+                , text " WebDAV servers usually don't implement"
+                , text " CORS properly, if at all."
+                , lineBreak
+                , text " Some servers, like "
+                , UI.Kit.link
+                    { label = "this one"
+                    , url = "https://github.com/hacdias/webdav"
+                    }
+                , text ", do. You can find the configuration for that server "
+                , UI.Kit.link
+                    { label = "here"
+                    , url = "about#CORS__WebDAV"
+                    }
+                , text "."
+                ]
