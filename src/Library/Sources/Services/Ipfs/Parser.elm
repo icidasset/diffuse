@@ -1,9 +1,40 @@
-module Sources.Services.Ipfs.Parser exposing (Link, linkDecoder, parseTreeResponse, treeDecoder)
+module Sources.Services.Ipfs.Parser exposing (Link, linkDecoder, parseCloudflareDnsResult, parseTreeResponse, treeDecoder)
 
+import Dict
 import Json.Decode exposing (..)
+import Sources exposing (SourceData)
 import Sources.Pick exposing (isMusicFile)
-import Sources.Processing exposing (Marker(..), TreeAnswer)
+import Sources.Processing exposing (Marker(..), PrepationAnswer, TreeAnswer)
 import Sources.Services.Ipfs.Marker as Marker
+import String.Ext as String
+
+
+
+-- PREPARATION
+
+
+parseCloudflareDnsResult : String -> SourceData -> Marker -> PrepationAnswer Marker
+parseCloudflareDnsResult response srcData _ =
+    case decodeString dnsResultDecoder response of
+        Ok txt ->
+            let
+                dirHash =
+                    txt
+                        |> String.chopEnd "\""
+                        |> String.chopStart "\""
+                        |> String.chopStart "dnslink=/ipfs/"
+            in
+            srcData
+                |> Dict.insert "directoryHashFromDnsLink" dirHash
+                |> (\s -> { sourceData = s, marker = TheEnd })
+
+        Err _ ->
+            { sourceData = srcData, marker = TheEnd }
+
+
+dnsResultDecoder : Decoder String
+dnsResultDecoder =
+    at [ "Answer", "0", "data" ] string
 
 
 
@@ -47,7 +78,7 @@ treeDecoder =
 
 
 
--- Links
+-- LINKS
 
 
 type alias Link =

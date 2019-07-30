@@ -15,6 +15,7 @@ import Sources.Processing exposing (..)
 import Sources.Services.Common exposing (cleanPath, noPrep)
 import Sources.Services.Ipfs.Marker as Marker
 import Sources.Services.Ipfs.Parser as Parser
+import String.Ext as String
 import Time
 
 
@@ -38,7 +39,7 @@ Will be used for the forms.
 properties : List Property
 properties =
     [ { key = "directoryHash"
-      , label = "Directory object hash"
+      , label = "Directory object hash / DNSLink domain"
       , placeholder = "QmVLDAhCY3X9P2u"
       , password = False
       }
@@ -66,8 +67,35 @@ initialData =
 
 
 prepare : String -> SourceData -> Marker -> (Result Http.Error String -> msg) -> Maybe (Cmd msg)
-prepare _ _ _ _ =
-    Nothing
+prepare _ srcData _ toMsg =
+    let
+        isDnsLink =
+            srcData
+                |> Dict.get "directoryHash"
+                |> Maybe.map (String.contains ".")
+
+        domainName =
+            srcData
+                |> Dict.get "directoryHash"
+                |> Maybe.withDefault ""
+                |> String.chopStart "http://"
+                |> String.chopStart "https://"
+                |> String.chopEnd "/"
+    in
+    case isDnsLink of
+        Just True ->
+            (Just << Http.request)
+                { method = "GET"
+                , headers = [ Http.header "Accept" "application/dns-json" ]
+                , url = "https://cloudflare-dns.com/dns-query?type=TXT&name=" ++ domainName
+                , body = Http.emptyBody
+                , expect = Http.expectString toMsg
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+
+        _ ->
+            Nothing
 
 
 
@@ -103,6 +131,14 @@ makeTree srcData marker _ resultMsg =
                 _ ->
                     srcData
                         |> Dict.get "directoryHash"
+                        |> Maybe.andThen
+                            (\h ->
+                                if String.contains "." h then
+                                    Dict.get "directoryHashFromDnsLink" srcData
+
+                                else
+                                    Just h
+                            )
                         |> Maybe.withDefault "MISSING_HASH"
 
         url =
@@ -118,7 +154,7 @@ makeTree srcData marker _ resultMsg =
 -}
 parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse =
-    noPrep
+    Parser.parseCloudflareDnsResult
 
 
 parseTreeResponse : String -> Marker -> TreeAnswer Marker

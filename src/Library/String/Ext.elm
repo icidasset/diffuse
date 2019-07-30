@@ -7,7 +7,7 @@ chopEnd : String -> String -> String
 chopEnd needle str =
     if String.endsWith needle str then
         str
-            |> String.dropRight 1
+            |> String.dropRight (String.length needle)
             |> chopEnd needle
 
     else
@@ -18,7 +18,7 @@ chopStart : String -> String -> String
 chopStart needle str =
     if String.startsWith needle str then
         str
-            |> String.dropLeft 1
+            |> String.dropLeft (String.length needle)
             |> chopStart needle
 
     else
