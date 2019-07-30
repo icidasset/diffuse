@@ -312,6 +312,8 @@ newHow { context } =
                     , text " If you use a different gateway, please change it here."
                     , lineBreak
                     , text " You can find your gateway address on the IPFS Web UI."
+                    , lineBreak
+                    , text "DNSLinks are resolved through Cloudflare."
                     ]
 
             WebDav ->
