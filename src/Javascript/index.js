@@ -131,13 +131,6 @@ app.ports.setRepeat.subscribe(repeat => {
 })
 
 
-app.ports.unstall.subscribe(_ => {
-  if (orchestrion.audio) {
-    unstallAudio(orchestrion.audio)
-  }
-})
-
-
 
 // Authentication
 // --------------

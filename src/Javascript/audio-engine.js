@@ -100,6 +100,7 @@ function insertTrack(orchestrion, queueItem) {
   if (!queueItem.trackId) console.error("insertTrack, missing `trackId`");
 
   // reset
+  orchestrion.app.ports.setAudioHasStalled.send(false)
   clearTimeout(orchestrion.unstallTimeout)
   setProgressBarWidth(0)
   timesStalled = 0
@@ -224,10 +225,7 @@ let timesStalled = 0
 
 
 function audioErrorEvent(event) {
-  console.error(
-    `Audio error for '${ audioElementTrackId(event.target) }': ` +
-    (event.target.error.message || "")
-  )
+  this.app.ports.setAudioIsPlaying.send(false)
 
   switch (event.target.error.code) {
     case event.target.error.MEDIA_ERR_ABORTED:
@@ -235,26 +233,20 @@ function audioErrorEvent(event) {
       break
     case event.target.error.MEDIA_ERR_NETWORK:
       console.error("A network error caused the audio download to fail.")
-      break
-    case event.target.error.MEDIA_ERR_DECODE:
-      console.error("The audio playback was aborted due to a corruption problem or because the video used features your browser did not support.")
-
-      // If this error happens at the end of the track, skip to the next.
-      // NOTE: Weird issue with Chrome
-      if (event.target.duration && (event.target.currentTime / event.target.duration) > 0.975) {
-        console.log("Moving on to the next track.")
-        this.app.ports.activeQueueItemEnded.send(null)
-      }
-      break
-    case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-      console.error("The audio not be loaded, either because the server or network failed or because the format is not supported.")
 
       app.ports.showErrorNotification.send(
         navigator.onLine
           ? "I can't play this track because of a network error"
           : "I can't play this track because we're offline"
       )
+      break
+    case event.target.error.MEDIA_ERR_DECODE:
+      console.error("The audio playback was aborted due to a corruption problem or because the video used features your browser did not support.")
+      break
+    case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+      console.error("The audio not be loaded, either because the server or network failed or because the format is not supported.")
 
+      audioStalledEvent.call(this, event)
       break
     default:
       console.error("An unknown error occurred.")
@@ -273,7 +265,7 @@ function audioStalledEvent(event) {
     if (isActiveAudioElement(this, event.target)) {
       unstallAudio(event.target)
     }
-  }, (timesStalled + 1) * 2500)
+  }, timesStalled * 2500)
 
   // Increase counter
   timesStalled++
@@ -281,11 +273,24 @@ function audioStalledEvent(event) {
 
 
 function audioTimeUpdateEvent(event) {
-  if (isNaN(event.target.duration) || isNaN(event.target.currentTime)) {
-    setProgressBarWidth(0)
-  } else if (event.target.duration > 0) {
-    setProgressBarWidth(event.target.currentTime / event.target.duration)
+  const node = event.target
+
+  if (
+    isNaN(node.duration) ||
+    isNaN(node.currentTime) ||
+    node.duration === 0) {
+    return setProgressBarWidth(0)
   }
+
+  const progress = node.currentTime / node.duration
+
+  setProgressBarWidth(progress)
+
+  // TODO:
+  // if (node.duration >= 30 * 60) {
+  //   this.debouncedSendProgress = this.debouncedSendProgress || debounce(sendProgress, 10000)
+  //   this.debouncedSendProgress.call(this, progress)
+  // }
 }
 
 
@@ -371,6 +376,11 @@ function playAudio(element) {
   promise.catch(err => {
     console.error("Could not play audio automatically. Please resume playback manually.")
   })
+}
+
+
+function sendProgress(progress) {
+  this.app.ports.progress.send(progress)
 }
 
 

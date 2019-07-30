@@ -238,7 +238,6 @@ type Msg
     | SetAudioIsLoading Bool
     | SetAudioIsPlaying Bool
     | Stop
-    | Unstall
       -----------------------------------------
       -- Authentication
       -----------------------------------------
@@ -420,9 +419,6 @@ update msg model =
 
         Stop ->
             returnWithModel model (Ports.pause ())
-
-        Unstall ->
-            returnWithModel model (Ports.unstall ())
 
         -----------------------------------------
         -- Authentication

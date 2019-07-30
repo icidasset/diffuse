@@ -88,6 +88,7 @@ ordered _ rawTracks state =
 
 shuffled : Time.Posix -> List IdentifiedTrack -> State -> List Item
 shuffled timestamp rawTracks state =
+    -- TODO: Improve performance
     let
         tracks =
             purifyTracksList state.ignored rawTracks
