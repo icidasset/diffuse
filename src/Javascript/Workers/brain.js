@@ -22,7 +22,7 @@ function initialize(initialUrl) {
 }
 
 
-importScripts("Brain/user.js")
+importScripts("brain/user.js")
 
 
 
