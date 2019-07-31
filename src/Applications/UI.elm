@@ -347,18 +347,26 @@ update msg model =
             , Cmd.none
             )
 
-        SetIsOnline bool ->
+        SetIsOnline False ->
+            ( { model | isOnline = False }
+            , Cmd.none
+            )
+
+        SetIsOnline True ->
             andThen
                 -- We're caching the user's data in the browser while offline.
                 -- If we're back online again, sync all the user's data.
-                (case ( bool, model.authentication ) of
-                    ( True, Authentication.Authenticated (Authentication.RemoteStorage _) ) ->
+                (case model.authentication of
+                    Authentication.Authenticated (Authentication.Dropbox _) ->
+                        update SyncUserData
+
+                    Authentication.Authenticated (Authentication.RemoteStorage _) ->
                         update SyncUserData
 
                     _ ->
                         update Bypass
                 )
-                ( { model | isOnline = bool }
+                ( { model | isOnline = True }
                 , Cmd.none
                 )
 
