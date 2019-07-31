@@ -91,7 +91,7 @@ type Reply
     | ForceTracksRerender
     | GroupTracksBy Tracks.Grouping
     | PreloadNextTrack
-    | ProcessSources
+    | ProcessSources (List Source)
     | RemoveSourceFromCollection { sourceId : String }
     | RemoveTracksFromCache (List Track)
     | RemoveTracksWithSourceId String

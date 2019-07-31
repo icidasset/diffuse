@@ -98,11 +98,10 @@ update msg model =
             return { model | isProcessing = List.filter ((/=) sourceId) model.isProcessing }
 
         Process ->
-            if List.isEmpty model.collection then
-                return model
-
-            else
-                returnReplyWithModel model ProcessSources
+            model
+                |> sourcesToProcess
+                |> ProcessSources
+                |> returnReplyWithModel model
 
         ReportProcessingError json ->
             case Json.decodeValue (Json.dict Json.string) json of
@@ -146,11 +145,12 @@ update msg model =
                 |> List.singleton
                 |> List.append model.collection
                 |> (\c -> { model | collection = c })
-                |> return
-                |> addReplies
-                    [ UI.Reply.SaveSources
-                    , UI.Reply.ProcessSources
-                    ]
+                |> (\m ->
+                        returnRepliesWithModel m
+                            [ UI.Reply.SaveSources
+                            , UI.Reply.ProcessSources (sourcesToProcess m)
+                            ]
+                   )
 
         RemoveFromCollection { sourceId } ->
             model.collection

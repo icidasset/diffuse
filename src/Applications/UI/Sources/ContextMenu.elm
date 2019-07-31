@@ -6,6 +6,7 @@ import Coordinates exposing (Coordinates)
 import Material.Icons.Action as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Image as Icons
+import Material.Icons.Notification as Icons
 import Sources exposing (Source)
 import UI.Page
 import UI.Reply exposing (Reply(..))
@@ -34,6 +35,12 @@ sourceMenu source =
                     |> UI.Sources.Page.Edit
                     |> UI.Page.Sources
                     |> GoToPage
+            , active = False
+            }
+        , Item
+            { icon = Icons.sync
+            , label = "Process source"
+            , msg = ProcessSources [ source ]
             , active = False
             }
         , Item

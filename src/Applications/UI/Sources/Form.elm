@@ -103,7 +103,7 @@ update msg model =
             returnRepliesWithModel
                 { model | step = Where, context = defaultContext }
                 [ ReplaceSourceInCollection model.context
-                , ProcessSources
+                , ProcessSources [ model.context ]
                 , GoToPage (Page.Sources Sources.Index)
                 ]
 

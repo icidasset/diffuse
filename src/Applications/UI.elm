@@ -1195,7 +1195,7 @@ translateReply reply model =
                 Nothing ->
                     return model
 
-        ProcessSources ->
+        ProcessSources sourcesToProcess ->
             let
                 notification =
                     Notifications.stickyWarning "Processing sources …"
@@ -1205,9 +1205,6 @@ translateReply reply model =
 
                 sources =
                     model.sources
-
-                sourcesToProcess =
-                    Sources.sourcesToProcess model.sources
 
                 newSources =
                     { sources
