@@ -73,7 +73,6 @@ doc-tests:
 install:
 	@echo "> Downloading dependencies"
 	@mkdir -p $(VENDOR_DIR)
-	@curl https://unpkg.com/blockstack@19.2.2-beta.1/dist/blockstack.js -o $(VENDOR_DIR)/blockstack.min.js
 	@curl https://unpkg.com/lunr@2.3.6/lunr.js -o $(VENDOR_DIR)/lunr.js
 	@curl https://unpkg.com/remotestoragejs@1.2.2/release/remotestorage.js -o $(VENDOR_DIR)/remotestorage.min.js
 	@curl https://unpkg.com/fast-text-encoding@1.0.0/text.min.js -o $(VENDOR_DIR)/text-encoding-polyfill.min.js
@@ -81,6 +80,7 @@ install:
 	@curl https://unpkg.com/tocca@2.0.4/Tocca.min.js -o $(VENDOR_DIR)/tocca.min.js
 
 	@# Non-NPM dependencies
+	@curl https://gist.githubusercontent.com/icidasset/a888e02d7441aeb2af99263a3add0f73/raw/e4ca77c02e91a29e0c3c749d2ba80983a137a7aa/blockstack.min.js -o $(VENDOR_DIR)/blockstack.min.js
 	@curl https://raw.githubusercontent.com/icidasset/diffuse-musicmetadata/0ae8c854e18b6960b9f7e94b7eb47868416dc2ad/dist/musicmetadata.min.js -o $(VENDOR_DIR)/musicmetadata.min.js
 	@curl https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js -o $(VENDOR_DIR)/pep.js
 	@curl https://raw.githubusercontent.com/dmihal/Subworkers/6c3a57953615b26cd82fd39894b947f2b954fcfd/subworkers.js -o $(VENDOR_DIR)/subworkers-polyfill.js

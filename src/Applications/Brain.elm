@@ -461,6 +461,9 @@ translateAlienData tag data =
         Alien.AuthAnonymous ->
             AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
 
+        Alien.AuthBlockstack ->
+            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+
         Alien.AuthDropbox ->
             AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
 

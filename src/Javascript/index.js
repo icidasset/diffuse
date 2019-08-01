@@ -136,6 +136,8 @@ app.ports.setRepeat.subscribe(repeat => {
 // --------------
 
 function redirectToBlockstack(authRequest) {
+  console.log(authRequest)
+
   switch (location.hostname) {
     case "0.0.0.0":
     case "127.0.0.1":

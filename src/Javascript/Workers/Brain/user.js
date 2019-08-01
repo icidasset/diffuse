@@ -33,13 +33,14 @@ function bl0ckst4ck() {
 
 const BLOCKSTACK_SESSION_STORE = {
   key: "AUTH_BLOCKSTACK_SESSION",
-  getSessionData() { return fromCache(this.key) },
+  getSessionData() { return fromCache(this.key).then(a => a || {}) },
   setSessionData(data) { return toCache(this.key, data) },
   deleteSessionData() { return removeCache(this.key) }
 }
 
 
 app.ports.deconstructBlockstack.subscribe(_ => {
+  BLOCKSTACK_SESSION_STORE.deleteSessionData()
   bl = null
 })
 
@@ -47,41 +48,61 @@ app.ports.deconstructBlockstack.subscribe(_ => {
 app.ports.handlePendingBlockstackSignIn.subscribe(authResponse => {
   const session = bl0ckst4ck()
 
-  console.log("TODO", authResponse)
+  session.handlePendingSignIn(authResponse).then(_ => {
+    app.ports.fromAlien.send({
+      tag: "SIGN_IN",
+      data: { method: "BLOCKSTACK", passphrase: null },
+      error: null
+    })
 
-  // TODO
-  session.handlePendingSignIn(authResponse).then(userData => {
-    console.log(userData)
-  })
+  }).catch(
+    reportError({ tag: "AUTH_BLOCKSTACK" })
+
+  )
 })
 
 
 app.ports.redirectToBlockstackSignIn.subscribe(event => {
   const session = bl0ckst4ck()
-  const authRequest = session.makeAuthRequest(
-    session.generateAndStoreTransitKey(),
-    location.origin + "?action=authenticate/blockstack",
-    location.origin + "/manifest.json",
-    [ "store_write" ]
-  )
 
-  self.postMessage({
-    action: "REDIRECT_TO_BLOCKSTACK",
-    data: authRequest
-  })
+  session.generateAndStoreTransitKey().then(transitKey => {
+    return session.makeAuthRequest(
+      transitKey,
+      location.origin + "?action=authenticate/blockstack",
+      location.origin + "/manifest.json",
+      [ "store_write" ]
+    )
+
+  }).then(authRequest => {
+    self.postMessage({
+      action: "REDIRECT_TO_BLOCKSTACK",
+      data: authRequest
+    })
+
+  }).catch(
+    reportError(event)
+
+  )
 })
 
 
 app.ports.requestBlockstack.subscribe(event => {
   const session = bl0ckst4ck()
-  // TODO
+
+  bl
+    .getFile("diffuse.json")
+    .then( sendJsonData(event) )
+    .catch( reportError(event) )
 })
 
 
 app.ports.toBlockstack.subscribe(event => {
-  const json = JSON.stringify(event.data.data)
+  const json = JSON.stringify(event.data)
   const session = bl0ckst4ck()
-  // TODO
+
+  bl
+    .putFile("diffuse.json", json)
+    .catch( reportError(event) )
 })
 
 
@@ -372,6 +393,7 @@ function getSecretKey() {
 function isAuthMethodService(eventTag) {
   return (
     eventTag.startsWith("AUTH_") &&
+    eventTag !== "AUTH_BLOCKSTACK_SESSION" &&
     eventTag !== "AUTH_ENCLOSED_DATA" &&
     eventTag !== "AUTH_METHOD" &&
     eventTag !== "AUTH_SECRET_KEY"

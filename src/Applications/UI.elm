@@ -1577,6 +1577,12 @@ translateAlienError event err =
         Just Alien.AuthAnonymous ->
             AuthenticationBootFailure err
 
+        Just Alien.AuthBlockstack ->
+            AuthenticationBootFailure err
+
+        Just Alien.AuthDropbox ->
+            AuthenticationBootFailure err
+
         Just Alien.AuthIpfs ->
             AuthenticationBootFailure err
 
