@@ -66,10 +66,12 @@ app.ports.redirectToBlockstackSignIn.subscribe(event => {
   const session = bl0ckst4ck()
 
   session.generateAndStoreTransitKey().then(transitKey => {
+    const dir = location.pathname.replace("workers/brain.js", "")
+
     return session.makeAuthRequest(
       transitKey,
-      location.origin + "?action=authenticate/blockstack",
-      location.origin + "/manifest.json",
+      location.origin + dir + "?action=authenticate/blockstack",
+      location.origin + dir + "manifest.json",
       [ "store_write" ]
     )
 
