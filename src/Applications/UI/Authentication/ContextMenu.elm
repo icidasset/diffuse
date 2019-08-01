@@ -18,7 +18,7 @@ moreOptionsMenu =
     ContextMenu
         [ Item
             { icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
-            , label = "IPFS"
+            , label = "IPFS (using the Mutable File System)"
             , msg = PingIpfsForAuth
             , active = False
             }
