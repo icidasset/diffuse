@@ -29,10 +29,10 @@ This layer will use a service to store data from a user, such as the user's favo
 
 You can choose between these services:
 
-- [<del>Blockstack</del>](https://blockstack.org/) <small>(TODO)</small>
+- [Blockstack](https://blockstack.org/)
 - [Dropbox](https://www.dropbox.com/)
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
-- [IPFS](https://ipfs.io/)
+- [IPFS](https://ipfs.io/) <small>(using MFS)</small>
 - [RemoteStorage](https://remotestorage.io/)
 - [Textile](https://github.com/textileio/go-textile)
 
@@ -44,10 +44,9 @@ This layer connects with the services the user has on which music can be found. 
 - [Amazon S3](https://aws.amazon.com/s3/)
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
-- [<del>Blockstack Gaia Storage</del>](https://github.com/blockstack/gaia) <small>(TODO)</small>
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
-- [IPFS](https://ipfs.io/)
+- [IPFS](https://ipfs.io/) <small>(supports DNSLink)</small>
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
 
@@ -199,6 +198,6 @@ artist:Parkway Drive - album:Atlas
 
 ### I used version one, where's my data?
 
-There's a small link, or button if you will, on the `Settings -> Import / Export`
+There's a small link, or button if you will, on the "Settings -> Import / Export"
 page that will allow you to import data from version 1 of the app. Note that this
 will need to reflect the authentication/storage method you chose in version 1.
