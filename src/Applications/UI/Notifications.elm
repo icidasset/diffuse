@@ -90,6 +90,7 @@ view collection =
         [ T.absolute
         , T.bottom_0
         , T.f6
+        , T.hide_child
         , T.lh_title
         , T.mb3
         , T.mr3
@@ -111,11 +112,11 @@ notificationView notification =
         options =
             Notifications.options notification
 
+        id =
+            Notifications.id notification
+
         dismissMsg =
-            notification
-                |> Notifications.id
-                |> (\id -> { id = id })
-                |> DismissNotification
+            DismissNotification { id = id }
     in
     brick
         [ case kind of
@@ -131,6 +132,9 @@ notificationView notification =
         --
         , onDoubleClick dismissMsg
         , onDoubleTap dismissMsg
+
+        --
+        , rel (String.fromInt id)
         ]
         [ T.br2
         , T.cb
@@ -139,6 +143,13 @@ notificationView notification =
         , T.mt2
         , T.pa3
         , T.white_90
+
+        --
+        , if options.wasDismissed then
+            T.child
+
+          else
+            ""
 
         --
         , if options.wasDismissed then
@@ -188,20 +199,14 @@ containerStyles =
 
 errorStyles : List Css.Style
 errorStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.error)
-    , Css.Transitions.transition [ Css.Transitions.opacity 450 ]
-    ]
+    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.error) ]
 
 
 successStyles : List Css.Style
 successStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.success)
-    , Css.Transitions.transition [ Css.Transitions.opacity 450 ]
-    ]
+    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.success) ]
 
 
 warningStyles : List Css.Style
 warningStyles =
-    [ Css.backgroundColor (Css.rgba 255 255 255 0.2)
-    , Css.Transitions.transition [ Css.Transitions.opacity 450 ]
-    ]
+    [ Css.backgroundColor (Css.rgba 255 255 255 0.2) ]
