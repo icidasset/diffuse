@@ -5,8 +5,7 @@
 // Communicating with the Textile HTTP API.
 
 
-const TEXTILE_THREAD = "diffuse"
-const TEXTILE_BLOCK = "userdata"
+const TEXTILE_THREAD = "Diffuse"
 const TEXTILE_SCHEMA = {
   name: TEXTILE_THREAD,
   pin: true,
@@ -98,7 +97,7 @@ Textile.addFileToThread = (apiOrigin, millResult) => {
 }
 
 
-Textile.getFile = (apiOrigin) => {
+Textile.getFile = (apiOrigin, file_name) => {
   const headers = new Headers()
   headers.append("X-Textile-Opts", "thread=" + Textile.activeThreadId)
 
@@ -107,7 +106,7 @@ Textile.getFile = (apiOrigin) => {
     method: "GET"
   })
     .then(r => r.json())
-    .then(r => r.items.find(i => i.files[0].file.name === TEXTILE_BLOCK))
+    .then(r => r.items.find(i => i.files[0].file.name === file_name))
 }
 
 
@@ -140,9 +139,9 @@ Textile.createSchema = (apiOrigin) => {
 }
 
 
-Textile.useMill = (apiOrigin, data) => {
+Textile.useMill = (apiOrigin, file_name, data) => {
   const blob = new Blob([data], { type : "application/json" })
-  const file = new File([blob], TEXTILE_BLOCK)
+  const file = new File([blob], file_name)
 
   const formData = new FormData()
   formData.append("file", file)

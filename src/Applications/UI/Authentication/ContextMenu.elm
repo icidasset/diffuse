@@ -1,6 +1,5 @@
 module UI.Authentication.ContextMenu exposing (moreOptionsMenu)
 
-import Authentication
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Svg

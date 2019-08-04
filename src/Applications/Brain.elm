@@ -1,26 +1,29 @@
 module Brain exposing (main)
 
 import Alien
-import Authentication exposing (HypaethralUserData)
-import Brain.Authentication as Authentication
 import Brain.Ports
 import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing as Processing
 import Brain.Sources.Processing.Common as Processing
 import Brain.Tracks as Tracks
+import Brain.User.Layer as User
 import Debouncer.Basic as Debouncer exposing (Debouncer)
+import EverySet
 import Json.Decode as Json
 import Json.Encode
+import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Return2 exposing (..)
 import Return3
+import Settings
 import Sources.Encoding as Sources
 import Sources.Processing as Processing
 import Sources.Processing.Encoding as Processing
 import Tracks
 import Tracks.Encoding as Tracks
 import Url
+import User.Layer as User exposing (HypaethralBit(..))
 
 
 
@@ -45,11 +48,11 @@ main =
 
 
 type alias Model =
-    { authentication : Authentication.Model
-    , hypaethralUserData : Authentication.HypaethralUserData
-    , notSoFast : Debouncer Msg Msg
+    { hypaethralDebouncer : Debouncer HypaethralBit (List HypaethralBit)
+    , hypaethralUserData : User.HypaethralData
     , processing : Processing.Model
     , tracks : Tracks.Model
+    , userLayer : User.Model
     }
 
 
@@ -58,16 +61,17 @@ init _ =
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
-      { authentication = Authentication.initialModel
-      , hypaethralUserData = Authentication.emptyHypaethralUserData
+      { hypaethralUserData = User.emptyHypaethralData
       , processing = Processing.initialModel
       , tracks = Tracks.initialModel
+      , userLayer = User.initialModel
 
       --
-      , notSoFast =
+      , hypaethralDebouncer =
             2.5
                 |> Debouncer.fromSeconds
                 |> Debouncer.debounce
+                |> Debouncer.accumulateWith Debouncer.allInputs
                 |> Debouncer.toDebouncer
       }
       -----------------------------------------
@@ -86,7 +90,6 @@ type Msg
     | Cmd (Cmd Msg)
     | Initialize String
     | NotifyUI Alien.Event
-    | NotSoFast (Debouncer.Msg Msg)
     | Process Processing.Arguments
     | ToCache Alien.Event
       -----------------------------------------
@@ -96,15 +99,16 @@ type Msg
       -----------------------------------------
       -- Children
       -----------------------------------------
-    | AuthenticationMsg Authentication.Msg
     | ProcessingMsg Processing.Msg
     | TracksMsg Tracks.Msg
+    | UserLayerMsg User.Msg
       -----------------------------------------
       -- User data
       -----------------------------------------
     | LoadHypaethralUserData Json.Value
     | RemoveTracksBySourceId String
-    | SaveHypaethralData
+    | SaveHypaethralData HypaethralBit
+    | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
     | SaveFavourites Json.Value
     | SavePlaylists Json.Value
     | SaveSettings Json.Value
@@ -134,7 +138,7 @@ update msg model =
                         }
                         (Url.fromString href)
             in
-            [ Cmd.map AuthenticationMsg (Authentication.initialCommand initialUrl)
+            [ Cmd.map UserLayerMsg (User.initialCommand initialUrl)
             , Cmd.map ProcessingMsg Processing.initialCommand
             ]
                 |> Cmd.batch
@@ -154,17 +158,6 @@ update msg model =
             ]
                 |> Cmd.batch
                 |> returnWithModel model
-
-        NotSoFast debouncerMsg ->
-            Return3.wieldNested
-                update
-                { mapCmd = NotSoFast
-                , mapModel = \child -> { model | notSoFast = child }
-                , update = \m -> Debouncer.update m >> Return3.fromDebouncer
-                }
-                { model = model.notSoFast
-                , msg = debouncerMsg
-                }
 
         Process { origin, sources } ->
             { origin = origin
@@ -191,14 +184,14 @@ update msg model =
         -----------------------------------------
         -- Children
         -----------------------------------------
-        AuthenticationMsg Authentication.PerformSignOut ->
+        UserLayerMsg User.PerformSignOut ->
             -- When signing out, remove all traces of the user's data.
-            updateAuthentication
-                { model | hypaethralUserData = Authentication.emptyHypaethralUserData }
-                Authentication.PerformSignOut
+            updateUserLayer
+                { model | hypaethralUserData = User.emptyHypaethralData }
+                User.PerformSignOut
 
-        AuthenticationMsg sub ->
-            updateAuthentication model sub
+        UserLayerMsg sub ->
+            updateUserLayer model sub
 
         ProcessingMsg sub ->
             updateProcessing model sub
@@ -222,7 +215,7 @@ update msg model =
             let
                 decodedData =
                     value
-                        |> Authentication.decodeHypaethral
+                        |> User.decodeHypaethralData
                         |> Result.withDefault model.hypaethralUserData
 
                 encodedTracks =
@@ -240,42 +233,67 @@ update msg model =
                 |> .kept
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndexWithModel
-                |> andThen saveHypaethralData
+                |> andThen (saveHypaethralDataBitWithDelay Tracks)
 
-        SaveHypaethralData ->
+        SaveHypaethralData bit ->
             model.hypaethralUserData
-                |> Authentication.encodeHypaethral
-                |> Authentication.SaveHypaethralData
-                |> AuthenticationMsg
+                |> User.encodeHypaethralBit bit
+                |> User.SaveHypaethralData bit
+                |> UserLayerMsg
                 |> updateWithModel model
+
+        SaveHypaethralDataSlowly debouncerMsg ->
+            Return3.wieldNested
+                update
+                { mapCmd = SaveHypaethralDataSlowly
+                , mapModel = \child -> { model | hypaethralDebouncer = child }
+                , update =
+                    \dbMsg dbModel ->
+                        let
+                            ( m, c, r ) =
+                                Debouncer.update dbMsg dbModel
+                        in
+                        ( m
+                        , c
+                        , r
+                            |> Debug.log ""
+                            |> Maybe.withDefault []
+                            |> EverySet.fromList
+                            |> EverySet.toList
+                            |> List.map SaveHypaethralData
+                        )
+                }
+                { model = model.hypaethralDebouncer
+                , msg = debouncerMsg
+                }
 
         SaveFavourites value ->
             value
                 |> Json.decodeValue (Json.list Tracks.favouriteDecoder)
                 |> Result.withDefault model.hypaethralUserData.favourites
                 |> hypaethralLenses.setFavourites model
-                |> saveHypaethralData
+                |> saveHypaethralDataBitWithDelay Favourites
 
         SavePlaylists value ->
             value
                 |> Json.decodeValue (Json.list Playlists.decoder)
                 |> Result.withDefault model.hypaethralUserData.playlists
                 |> hypaethralLenses.setPlaylists model
-                |> saveHypaethralData
+                |> saveHypaethralDataBitWithDelay Playlists
 
         SaveSettings value ->
             value
-                |> Json.decodeValue (Json.map Just Authentication.settingsDecoder)
+                |> Json.decodeValue (Json.map Just Settings.decoder)
                 |> Result.withDefault model.hypaethralUserData.settings
                 |> hypaethralLenses.setSettings model
-                |> saveHypaethralData
+                |> saveHypaethralDataBitWithDelay Settings
 
         SaveSources value ->
             value
                 |> Json.decodeValue (Json.list Sources.decoder)
                 |> Result.withDefault model.hypaethralUserData.sources
                 |> hypaethralLenses.setSources model
-                |> saveHypaethralData
+                |> saveHypaethralDataBitWithDelay Sources
 
         SaveTracks value ->
             value
@@ -283,7 +301,7 @@ update msg model =
                 |> Result.withDefault model.hypaethralUserData.tracks
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndex value
-                |> andThen saveHypaethralData
+                |> andThen (saveHypaethralDataBitWithDelay Tracks)
 
 
 updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
@@ -316,7 +334,7 @@ translateReply : Reply -> Model -> ( Model, Cmd Msg )
 translateReply reply model =
     case reply of
         FabricatedNewSecretKey ->
-            update SaveHypaethralData model
+            saveHypaethralData model
 
         -----------------------------------------
         -- Tracks
@@ -326,7 +344,7 @@ translateReply reply model =
                 |> (++) model.hypaethralUserData.tracks
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndexWithModel
-                |> andThen saveHypaethralData
+                |> andThen (saveHypaethralDataBitWithDelay Tracks)
 
         RemoveTracksByPaths args ->
             model.hypaethralUserData.tracks
@@ -334,7 +352,7 @@ translateReply reply model =
                 |> .kept
                 |> hypaethralLenses.setTracks model
                 |> updateSearchIndexWithModel
-                |> andThen saveHypaethralData
+                |> andThen (saveHypaethralDataBitWithDelay Tracks)
 
         -----------------------------------------
         -- To UI
@@ -359,15 +377,15 @@ translateReply reply model =
 -- 📣  ░░  CHILDREN
 
 
-updateAuthentication : Model -> Authentication.Msg -> ( Model, Cmd Msg )
-updateAuthentication model sub =
+updateUserLayer : Model -> User.Msg -> ( Model, Cmd Msg )
+updateUserLayer model sub =
     Return3.wieldNested
         translateReply
-        { mapCmd = AuthenticationMsg
-        , mapModel = \child -> { model | authentication = child }
-        , update = Authentication.update
+        { mapCmd = UserLayerMsg
+        , mapModel = \child -> { model | userLayer = child }
+        , update = User.update
         }
-        { model = model.authentication
+        { model = model.userLayer
         , msg = sub
         }
 
@@ -411,16 +429,29 @@ hypaethralLenses =
     }
 
 
-makeHypaethralLens : (HypaethralUserData -> a -> HypaethralUserData) -> Model -> a -> Model
+makeHypaethralLens : (User.HypaethralData -> a -> User.HypaethralData) -> Model -> a -> Model
 makeHypaethralLens setter model value =
     { model | hypaethralUserData = setter model.hypaethralUserData value }
 
 
 saveHypaethralData : Model -> ( Model, Cmd Msg )
 saveHypaethralData model =
-    SaveHypaethralData
+    List.foldl
+        (\bit ->
+            bit
+                |> SaveHypaethralData
+                |> update
+                |> andThen
+        )
+        (return model)
+        (List.map Tuple.second User.hypaethralBit.list)
+
+
+saveHypaethralDataBitWithDelay : User.HypaethralBit -> Model -> ( Model, Cmd Msg )
+saveHypaethralDataBitWithDelay bit model =
+    bit
         |> Debouncer.provideInput
-        |> NotSoFast
+        |> SaveHypaethralDataSlowly
         |> updateWithModel model
 
 
@@ -459,31 +490,31 @@ translateAlienData : Alien.Tag -> Json.Value -> Msg
 translateAlienData tag data =
     case tag of
         Alien.AuthAnonymous ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+            UserLayerMsg (User.HypaethralDataRetrieved data)
 
         Alien.AuthBlockstack ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+            UserLayerMsg (User.HypaethralDataRetrieved data)
 
         Alien.AuthDropbox ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+            UserLayerMsg (User.HypaethralDataRetrieved data)
 
         Alien.AuthEnclosedData ->
-            AuthenticationMsg (Authentication.EnclosedDataRetrieved data)
+            UserLayerMsg (User.EnclosedDataRetrieved data)
 
         Alien.AuthIpfs ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+            UserLayerMsg (User.HypaethralDataRetrieved data)
 
         Alien.AuthMethod ->
-            AuthenticationMsg (Authentication.MethodRetrieved data)
+            UserLayerMsg (User.MethodRetrieved data)
 
         Alien.AuthRemoteStorage ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+            UserLayerMsg (User.HypaethralDataRetrieved data)
 
         Alien.AuthTextile ->
-            AuthenticationMsg (Authentication.HypaethralDataRetrieved data)
+            UserLayerMsg (User.HypaethralDataRetrieved data)
 
         Alien.FabricateSecretKey ->
-            AuthenticationMsg Authentication.SecretKeyFabricated
+            UserLayerMsg User.SecretKeyFabricated
 
         Alien.SearchTracks ->
             data
@@ -518,7 +549,7 @@ translateAlienData tag data =
             Cmd (Brain.Ports.removeTracksFromCache data)
 
         Alien.SaveEnclosedUserData ->
-            AuthenticationMsg (Authentication.SaveEnclosedData data)
+            UserLayerMsg (User.SaveEnclosedData data)
 
         Alien.SaveFavourites ->
             SaveFavourites data
@@ -536,10 +567,10 @@ translateAlienData tag data =
             SaveTracks data
 
         Alien.SignIn ->
-            AuthenticationMsg (Authentication.PerformSignIn data)
+            UserLayerMsg (User.PerformSignIn data)
 
         Alien.SignOut ->
-            AuthenticationMsg Authentication.PerformSignOut
+            UserLayerMsg User.PerformSignOut
 
         Alien.StoreTracksInCache ->
             Cmd (Brain.Ports.storeTracksInCache data)
@@ -555,7 +586,7 @@ translateAlienData tag data =
         Alien.UpdateEncryptionKey ->
             case Json.decodeValue Json.string data of
                 Ok passphrase ->
-                    AuthenticationMsg (Authentication.FabricateSecretKey passphrase)
+                    UserLayerMsg (User.FabricateSecretKey passphrase)
 
                 Err _ ->
                     Bypass

@@ -12,12 +12,6 @@ import Sources.Processing exposing (ContextForTags)
 port fabricateSecretKey : Alien.Event -> Cmd msg
 
 
-port handlePendingBlockstackSignIn : String -> Cmd msg
-
-
-port redirectToBlockstackSignIn : () -> Cmd msg
-
-
 port removeCache : Alien.Event -> Cmd msg
 
 
@@ -46,13 +40,19 @@ port updateSearchIndex : Json.Value -> Cmd msg
 
 
 
--- 📣  ░░  AUTHENTICATION
+-- 📣  ░░  USER LAYER SERVICES
 
 
 port deconstructBlockstack : () -> Cmd msg
 
 
 port deconstructRemoteStorage : () -> Cmd msg
+
+
+port handlePendingBlockstackSignIn : String -> Cmd msg
+
+
+port redirectToBlockstackSignIn : () -> Cmd msg
 
 
 port requestBlockstack : Alien.Event -> Cmd msg

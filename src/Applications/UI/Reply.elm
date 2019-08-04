@@ -1,6 +1,5 @@
 module UI.Reply exposing (Reply(..))
 
-import Authentication
 import Common exposing (Switch(..))
 import Coordinates exposing (Coordinates)
 import Playlists exposing (Playlist, PlaylistTrack)
@@ -8,6 +7,7 @@ import Queue
 import Sources exposing (Source)
 import Tracks exposing (IdentifiedTrack, Track)
 import UI.Page exposing (Page)
+import User.Layer
 
 
 
@@ -28,10 +28,10 @@ type Reply
       -----------------------------------------
       -- Authentication
       -----------------------------------------
-    | ExternalAuth Authentication.Method String
+    | ExternalAuth User.Layer.Method String
     | PingIpfsForAuth
     | PingTextileForAuth
-    | ShowUpdateEncryptionKeyScreen Authentication.Method
+    | ShowUpdateEncryptionKeyScreen User.Layer.Method
     | SignOut
       -----------------------------------------
       -- Context Menu

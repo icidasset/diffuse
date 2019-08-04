@@ -1,7 +1,6 @@
 module UI.Authentication exposing (Model(..), Msg(..), extractMethod, initialModel, update, view)
 
 import Alien
-import Authentication exposing (Method(..))
 import Base64
 import Binary
 import Chunky exposing (..)
@@ -35,6 +34,7 @@ import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
 import Url exposing (Url)
 import Url.Ext as Url
+import User.Layer exposing (..)
 
 
 
@@ -228,7 +228,7 @@ update msg model =
         SignIn method ->
             ( Unauthenticated
               --
-            , [ ( "method", Authentication.encodeMethod method )
+            , [ ( "method", encodeMethod method )
               , ( "passphrase", Json.Encode.null )
               ]
                 |> Json.Encode.object
@@ -247,7 +247,7 @@ update msg model =
             else
                 ( Unauthenticated
                   --
-                , [ ( "method", Authentication.encodeMethod method )
+                , [ ( "method", encodeMethod method )
                   , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
                   ]
                     |> Json.Encode.object
@@ -649,7 +649,7 @@ choicesScreen =
         , T.z_1
         ]
         [ choiceButton
-            { action = ShowNewEncryptionKeyScreen Authentication.Local
+            { action = ShowNewEncryptionKeyScreen Local
             , icon = Icons.web
             , infoLink = Nothing
             , isLast = False

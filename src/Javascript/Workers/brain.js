@@ -56,14 +56,22 @@ app.ports.removeCache.subscribe(event => {
 
 
 app.ports.requestCache.subscribe(event => {
-  fromCache(event.tag)
+  const key = event.data && event.data.file
+    ? event.tag + "_" + event.data.file
+    : event.tag
+
+  fromCache(key)
     .then( sendData(event) )
     .catch( reportError(event) )
 })
 
 
 app.ports.toCache.subscribe(event => {
-  toCache(event.tag, event.data)
+  const key = event.data && event.data.file
+    ? event.tag + "_" + event.data.file
+    : event.tag
+
+  toCache(key, event.data.data || event.data)
     .catch( reportError(event) )
 })
 

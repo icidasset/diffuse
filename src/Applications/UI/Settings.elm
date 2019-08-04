@@ -1,6 +1,5 @@
 module UI.Settings exposing (Dependencies, view)
 
-import Authentication exposing (Method(..))
 import Chunky exposing (..)
 import Color.Ext as Color
 import Conditional exposing (ifThenElse)
@@ -12,6 +11,7 @@ import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
+import Settings exposing (Settings)
 import String.Ext as String
 import Tachyons.Classes as T
 import UI.Backdrop as Backdrop
@@ -22,6 +22,7 @@ import UI.Page as Page
 import UI.Reply exposing (Reply(..))
 import UI.Settings.ImportExport
 import UI.Settings.Page as Settings exposing (..)
+import User.Layer exposing (Method(..))
 
 
 
@@ -29,7 +30,7 @@ import UI.Settings.Page as Settings exposing (..)
 
 
 type alias Dependencies =
-    { authenticationMethod : Maybe Authentication.Method
+    { authenticationMethod : Maybe User.Layer.Method
     , chosenBackgroundImage : Maybe String
     , hideDuplicateTracks : Bool
     }
@@ -161,7 +162,7 @@ label l =
 -- AUTHENTICATION
 
 
-changePassphrase : Authentication.Method -> Html Reply
+changePassphrase : User.Layer.Method -> Html Reply
 changePassphrase method =
     inline
         []

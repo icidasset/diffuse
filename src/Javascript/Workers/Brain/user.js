@@ -8,6 +8,23 @@
 const SECRET_KEY_LOCATION = "AUTH_SECRET_KEY"
 
 
+// Crypto
+// ======
+
+app.ports.fabricateSecretKey.subscribe(event => {
+  keyFromPassphrase(event.data)
+    .then(data => toCache(SECRET_KEY_LOCATION, data))
+    .then(_ => {
+      app.ports.fromAlien.send({
+        tag: event.tag,
+        data: null,
+        error: null
+      })
+    })
+    .catch(reportError(event))
+})
+
+
 
 // Blockstack
 // ----------
@@ -92,37 +109,19 @@ app.ports.requestBlockstack.subscribe(event => {
   const session = bl0ckst4ck()
 
   bl
-    .getFile("diffuse.json")
+    .getFile(event.data.file)
     .then( sendJsonData(event) )
     .catch( reportError(event) )
 })
 
 
 app.ports.toBlockstack.subscribe(event => {
-  const json = JSON.stringify(event.data)
+  const json = JSON.stringify(event.data.data)
   const session = bl0ckst4ck()
 
   bl
-    .putFile("diffuse.json", json)
+    .putFile(event.data.file, json)
     .catch( reportError(event) )
-})
-
-
-
-// Crypto
-// ------
-
-app.ports.fabricateSecretKey.subscribe(event => {
-  keyFromPassphrase(event.data)
-    .then(data => toCache(SECRET_KEY_LOCATION, data))
-    .then(_ => {
-      app.ports.fromAlien.send({
-        tag: event.tag,
-        data: null,
-        error: null
-      })
-    })
-    .catch(reportError(event))
 })
 
 
@@ -132,7 +131,7 @@ app.ports.fabricateSecretKey.subscribe(event => {
 
 app.ports.requestDropbox.subscribe(event => {
   const params = {
-    path: "/diffuse.json"
+    path: "/" + event.data.file
   }
 
   const dataPromise =
@@ -159,7 +158,7 @@ app.ports.toDropbox.subscribe(event => {
   const json = JSON.stringify(event.data.data)
   const reporter = reportError(event)
   const params = {
-    path: "/diffuse.json",
+    path: "/" + event.data.file,
     mode: "overwrite",
     mute: true
   }
@@ -190,19 +189,9 @@ app.ports.toDropbox.subscribe(event => {
 const IPFS_ROOT = "/Applications/Diffuse/"
 
 
-function ipfsFilePath(tag) {
-  return IPFS_ROOT + (_ => {
-    switch (tag) {
-      case "AUTH_IPFS": return "Data.json"
-      default: return tag
-    }
-  })()
-}
-
-
 app.ports.requestIpfs.subscribe(event => {
   const apiOrigin = event.data.apiOrigin
-  const path = ipfsFilePath(event.tag)
+  const path = IPFS_ROOT + event.data.file
 
   fetch(apiOrigin + "/api/v0/files/read?arg=" + path)
     .then(r => r.ok ? r.text() : r.json())
@@ -217,7 +206,7 @@ app.ports.toIpfs.subscribe(event => {
   const apiOrigin = event.data.apiOrigin
   const json = JSON.stringify(event.data.data)
   const params = new URLSearchParams({
-    arg: ipfsFilePath(event.tag),
+    arg: IPFS_ROOT + event.data.file,
     create: true,
     offset: 0,
     parents: true,
@@ -291,7 +280,7 @@ app.ports.requestRemoteStorage.subscribe(event => {
     isOffline
     ? fromCache(event.tag)
     : remoteStorage(event)
-        .then(_ => rsClient.getFile("diffuse.json"))
+        .then(_ => rsClient.getFile(event.data.file))
         .then(r => r.data)
         .then(decryptWithSecretKey)
 
@@ -308,7 +297,7 @@ app.ports.toRemoteStorage.subscribe(event => {
 
   !isOffline && remoteStorage(event)
     .then(doEncryption)
-    .then(data => rsClient.storeFile("application/json", "diffuse.json", data))
+    .then(data => rsClient.storeFile("application/json", event.data.file, data))
     .catch( reportError(event) )
 
   toCache(event.tag, event.data.data)
@@ -339,7 +328,7 @@ app.ports.requestTextile.subscribe(event => {
   Textile.ensureThread
     (apiOrigin)
 
-    .then(_ => Textile.getFile(apiOrigin))
+    .then(_ => Textile.getFile(apiOrigin, event.data.file))
     .then(f => f ? Textile.readFile(apiOrigin, f) : null)
 
     .then( sendJsonData(event) )
@@ -358,7 +347,7 @@ app.ports.toTextile.subscribe(event => {
 
     .then(_ => Textile.getFile(apiOrigin))
     .then(f => f ? Textile.deleteBlock(apiOrigin, f) : null)
-    .then(_ => Textile.useMill(apiOrigin, json))
+    .then(_ => Textile.useMill(apiOrigin, event.data.file, json))
     .then(m => Textile.addFileToThread(apiOrigin, m))
 
     .catch( reportError(event) )

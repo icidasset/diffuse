@@ -1,6 +1,5 @@
 module UI.Playlists exposing (Model, Msg(..), importHypaethral, initialModel, update, view)
 
-import Authentication exposing (HypaethralUserData)
 import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Ext as Color
@@ -28,6 +27,7 @@ import UI.Playlists.Directory
 import UI.Playlists.Page exposing (Page(..))
 import UI.Reply exposing (Reply(..))
 import Url
+import User.Layer exposing (HypaethralData)
 
 
 
@@ -198,7 +198,7 @@ update msg model =
             returnRepliesWithModel model [ ShowPlaylistListMenu coordinates playlist ]
 
 
-importHypaethral : Model -> HypaethralUserData -> Return Model Msg Reply
+importHypaethral : Model -> HypaethralData -> Return Model Msg Reply
 importHypaethral model data =
     return
         { model

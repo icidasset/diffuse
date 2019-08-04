@@ -1,35 +1,17 @@
-module Brain.Authentication exposing (Model, Msg(..), initialCommand, initialModel, update)
-
-{-| Authentication.
-
-Involves:
-
-    1. Enclosed UserData (enable shuffle, EQ settings, ... ~> device)
-    2. Hypaethral UserData (sources, tracks, favourites, ... ~> account)
-
-Methods:
-
-    - Local
-    - IPFS
-
-Steps:
-
-    1. Get active method (if none, we're signed out)
-    2. Get hypaethral data
-
--}
+module Brain.User.Layer exposing (Model, Msg(..), initialCommand, initialModel, update)
 
 import Alien
-import Authentication exposing (..)
 import Brain.Ports as Ports
 import Brain.Reply exposing (Reply(..))
 import Conditional exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Json
+import List.Zipper as Zipper exposing (Zipper)
 import Return3 as Return exposing (..)
 import Task.Extra exposing (do)
 import Url exposing (Url)
 import Url.Ext as Url
+import User.Layer exposing (..)
 
 
 
@@ -38,6 +20,7 @@ import Url.Ext as Url
 
 type alias Model =
     { method : Maybe Method
+    , hypaethralRetrieval : Maybe (Zipper ( HypaethralBit, Json.Value ))
     , performingSignIn : Bool
     }
 
@@ -45,6 +28,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { method = Nothing
+    , hypaethralRetrieval = Nothing
     , performingSignIn = False
     }
 
@@ -87,13 +71,13 @@ type Msg
     | RetrieveMethod
     | MethodRetrieved Json.Value
       -- 2. Data
-    | RetrieveHypaethralData
+    | RetrieveHypaethralData HypaethralBit
     | HypaethralDataRetrieved Json.Value
       -- x. Data
     | RetrieveEnclosedData
     | EnclosedDataRetrieved Json.Value
     | SaveEnclosedData Json.Value
-    | SaveHypaethralData Json.Value
+    | SaveHypaethralData HypaethralBit Json.Value
 
 
 update : Msg -> Model -> Return Model Msg Reply
@@ -117,8 +101,7 @@ update msg model =
                         { model | method = maybeMethod, performingSignIn = True }
 
                 Ok ( maybeMethod, Nothing ) ->
-                    update
-                        RetrieveHypaethralData
+                    retrieveAllHypaethralData
                         { model | method = maybeMethod, performingSignIn = True }
 
                 _ ->
@@ -168,7 +151,7 @@ update msg model =
 
         SecretKeyFabricated ->
             if model.performingSignIn then
-                update RetrieveHypaethralData model
+                retrieveAllHypaethralData model
 
             else
                 returnReplyWithModel model FabricatedNewSecretKey
@@ -186,8 +169,7 @@ update msg model =
             case decodeMethod json of
                 -- 🚀
                 Just method ->
-                    update
-                        RetrieveHypaethralData
+                    retrieveAllHypaethralData
                         { model | method = Just method }
 
                 -- ✋
@@ -199,17 +181,23 @@ update msg model =
         -----------------------------------------
         -- # 2
         -----------------------------------------
-        RetrieveHypaethralData ->
+        RetrieveHypaethralData bit ->
+            let
+                file =
+                    Json.string (hypaethralBitFileName bit)
+            in
             case model.method of
                 -- 🚀
                 Just Blockstack ->
-                    Alien.AuthBlockstack
-                        |> Alien.trigger
+                    [ ( "file", file ) ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthBlockstack
                         |> Ports.requestBlockstack
                         |> Return.commandWithModel model
 
                 Just (Dropbox { token }) ->
-                    [ ( "token", Json.string token )
+                    [ ( "file", file )
+                    , ( "token", Json.string token )
                     ]
                         |> Json.object
                         |> Alien.broadcast Alien.AuthDropbox
@@ -218,6 +206,7 @@ update msg model =
 
                 Just (Ipfs { apiOrigin }) ->
                     [ ( "apiOrigin", Json.string apiOrigin )
+                    , ( "file", file )
                     ]
                         |> Json.object
                         |> Alien.broadcast Alien.AuthIpfs
@@ -225,13 +214,15 @@ update msg model =
                         |> Return.commandWithModel model
 
                 Just Local ->
-                    Alien.AuthAnonymous
-                        |> Alien.trigger
+                    [ ( "file", file ) ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthAnonymous
                         |> Ports.requestCache
                         |> Return.commandWithModel model
 
                 Just (RemoteStorage { userAddress, token }) ->
-                    [ ( "token", Json.string token )
+                    [ ( "file", file )
+                    , ( "token", Json.string token )
                     , ( "userAddress", Json.string userAddress )
                     ]
                         |> Json.object
@@ -241,6 +232,7 @@ update msg model =
 
                 Just (Textile { apiOrigin }) ->
                     [ ( "apiOrigin", Json.string apiOrigin )
+                    , ( "file", file )
                     ]
                         |> Json.object
                         |> Alien.broadcast Alien.AuthTextile
@@ -252,23 +244,47 @@ update msg model =
                     return model
 
         HypaethralDataRetrieved json ->
-            ( { model | performingSignIn = False }
-              --
-            , case ( model.performingSignIn, model.method ) of
-                ( True, Just method ) ->
-                    method
-                        |> encodeMethod
-                        |> Alien.broadcast Alien.AuthMethod
-                        |> Ports.toCache
+            let
+                retrieval =
+                    Maybe.map
+                        (Zipper.mapCurrent <| Tuple.mapSecond <| always json)
+                        model.hypaethralRetrieval
+            in
+            case Maybe.andThen Zipper.next retrieval of
+                Just nextRetrieval ->
+                    update
+                        (RetrieveHypaethralData <| Tuple.first <| Zipper.current nextRetrieval)
+                        { model | hypaethralRetrieval = Just nextRetrieval }
 
-                _ ->
-                    Cmd.none
-              --
-            , model.method
-                |> Maybe.map (\method -> Authenticated method json)
-                |> Maybe.map terminate
-                |> Maybe.withDefault []
-            )
+                Nothing ->
+                    -- 🚀
+                    ( { model
+                        | hypaethralRetrieval = Nothing
+                        , performingSignIn = False
+                      }
+                      --
+                    , case ( model.performingSignIn, model.method ) of
+                        ( True, Just method ) ->
+                            method
+                                |> encodeMethod
+                                |> Alien.broadcast Alien.AuthMethod
+                                |> Ports.toCache
+
+                        _ ->
+                            Cmd.none
+                      --
+                    , let
+                        allJson =
+                            retrieval
+                                |> Maybe.map Zipper.toList
+                                |> Maybe.withDefault []
+                                |> putHypaethralJsonBitsTogether
+                      in
+                      model.method
+                        |> Maybe.map (\method -> Authenticated method allJson)
+                        |> Maybe.map terminate
+                        |> Maybe.withDefault []
+                    )
 
         -----------------------------------------
         -- Data
@@ -290,17 +306,25 @@ update msg model =
                 |> Ports.toCache
                 |> Return.commandWithModel model
 
-        SaveHypaethralData json ->
+        SaveHypaethralData bit json ->
+            let
+                file =
+                    Json.string (hypaethralBitFileName bit)
+            in
             case model.method of
                 -- 🚀
                 Just Blockstack ->
-                    json
+                    [ ( "data", json )
+                    , ( "file", file )
+                    ]
+                        |> Json.object
                         |> Alien.broadcast Alien.AuthBlockstack
                         |> Ports.toBlockstack
                         |> Return.commandWithModel model
 
                 Just (Dropbox { token }) ->
                     [ ( "data", json )
+                    , ( "file", file )
                     , ( "token", Json.string token )
                     ]
                         |> Json.object
@@ -311,6 +335,7 @@ update msg model =
                 Just (Ipfs { apiOrigin }) ->
                     [ ( "apiOrigin", Json.string apiOrigin )
                     , ( "data", json )
+                    , ( "file", file )
                     ]
                         |> Json.object
                         |> Alien.broadcast Alien.AuthIpfs
@@ -318,13 +343,17 @@ update msg model =
                         |> Return.commandWithModel model
 
                 Just Local ->
-                    json
+                    [ ( "data", json )
+                    , ( "file", file )
+                    ]
+                        |> Json.object
                         |> Alien.broadcast Alien.AuthAnonymous
                         |> Ports.toCache
                         |> Return.commandWithModel model
 
                 Just (RemoteStorage { userAddress, token }) ->
                     [ ( "data", json )
+                    , ( "file", file )
                     , ( "token", Json.string token )
                     , ( "userAddress", Json.string userAddress )
                     ]
@@ -336,6 +365,7 @@ update msg model =
                 Just (Textile { apiOrigin }) ->
                     [ ( "apiOrigin", Json.string apiOrigin )
                     , ( "data", json )
+                    , ( "file", file )
                     ]
                         |> Json.object
                         |> Alien.broadcast Alien.AuthTextile
@@ -345,6 +375,25 @@ update msg model =
                 -- ✋
                 Nothing ->
                     return model
+
+
+retrieveAllHypaethralData : Model -> Return Model Msg Reply
+retrieveAllHypaethralData model =
+    let
+        maybeZipper =
+            hypaethralBit.list
+                |> List.map (\( _, b ) -> ( b, Json.null ))
+                |> Zipper.fromList
+    in
+    case maybeZipper of
+        Just zipper ->
+            update
+                (RetrieveHypaethralData <| Tuple.first <| Zipper.current zipper)
+                { model | hypaethralRetrieval = Just zipper }
+
+        Nothing ->
+            return
+                { model | hypaethralRetrieval = Nothing }
 
 
 
@@ -361,7 +410,7 @@ terminate t =
     case t of
         Authenticated method hypData ->
             [ GiveUI Alien.LoadHypaethralUserData hypData
-            , GiveUI Alien.AuthMethod (Authentication.encodeMethod method)
+            , GiveUI Alien.AuthMethod (encodeMethod method)
             ]
 
         NotAuthenticated ->

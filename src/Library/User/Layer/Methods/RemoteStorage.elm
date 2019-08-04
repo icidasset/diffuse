@@ -1,4 +1,4 @@
-module Authentication.RemoteStorage exposing (RemoteStorage, oauthAddress, parseUserAddress, userAddressError, webfingerAddress, webfingerDecoder, webfingerError, webfingerRequest)
+module User.Layer.Methods.RemoteStorage exposing (Attributes, oauthAddress, parseUserAddress, userAddressError, webfingerAddress, webfingerDecoder, webfingerError, webfingerRequest)
 
 import Base64
 import Http
@@ -10,7 +10,7 @@ import Url
 -- 🌳
 
 
-type alias RemoteStorage =
+type alias Attributes =
     { host : String
     , username : String
     }
@@ -28,7 +28,7 @@ webfingerError =
 -- 🔱
 
 
-parseUserAddress : String -> Maybe RemoteStorage
+parseUserAddress : String -> Maybe Attributes
 parseUserAddress str =
     case String.split "@" str of
         [ u, h ] ->
@@ -38,7 +38,7 @@ parseUserAddress str =
             Nothing
 
 
-oauthAddress : { oauthOrigin : String, origin : String } -> RemoteStorage -> String
+oauthAddress : { oauthOrigin : String, origin : String } -> Attributes -> String
 oauthAddress { oauthOrigin, origin } { host, username } =
     let
         ua =
@@ -55,7 +55,7 @@ oauthAddress { oauthOrigin, origin } { host, username } =
         ]
 
 
-webfingerAddress : RemoteStorage -> String
+webfingerAddress : Attributes -> String
 webfingerAddress { host, username } =
     "https://" ++ host ++ "/.well-known/webfinger?resource=acct:" ++ username
 
@@ -71,7 +71,7 @@ webfingerDecoder =
         Decode.string
 
 
-webfingerRequest : (RemoteStorage -> Result Http.Error String -> msg) -> RemoteStorage -> Cmd msg
+webfingerRequest : (Attributes -> Result Http.Error String -> msg) -> Attributes -> Cmd msg
 webfingerRequest toMsg rs =
     Http.get
         { url = webfingerAddress rs

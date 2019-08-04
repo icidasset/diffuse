@@ -1,5 +1,21 @@
-module Authentication exposing (EnclosedUserData, HypaethralUserData, Method(..), Settings, decodeEnclosed, decodeHypaethral, decodeMethod, emptyHypaethralUserData, enclosedDecoder, encodeEnclosed, encodeHypaethral, encodeMethod, encodeSettings, hypaethralDecoder, methodFromString, methodToString, settingsDecoder)
+module User.Layer exposing (EnclosedData, HypaethralBit(..), HypaethralData, Method(..), decodeEnclosedData, decodeHypaethralData, decodeMethod, emptyHypaethralData, enclosedDataDecoder, encodeEnclosedData, encodeHypaethralBit, encodeHypaethralData, encodeMethod, hypaethralBit, hypaethralBitFileName, hypaethralBitKey, hypaethralDataDecoder, methodFromString, methodSeparator, methodToString, putHypaethralJsonBitsTogether)
 
+{-| User Layer.
+
+This concerns data that relates to the app,
+controlled by the user and stored by the user.
+
+**Enclosed** data is data like, the enable-shuffle setting,
+equalizer settings, or the currently-active-search term.
+Which is stored in the browser.
+
+**Hypaethral** data is data like, the user's favourites,
+processed tracks, or the user's sources.
+Which is stored in the location chosen by the user.
+
+-}
+
+import Enum exposing (Enum)
 import Equalizer
 import Json.Decode as Json
 import Json.Decode.Ext as Json
@@ -8,6 +24,7 @@ import Json.Encode
 import Maybe.Extra as Maybe
 import Playlists
 import Playlists.Encoding as Playlists
+import Settings
 import Sources
 import Sources.Encoding as Sources
 import Tracks
@@ -27,7 +44,11 @@ type Method
     | Textile { apiOrigin : String }
 
 
-type alias EnclosedUserData =
+
+-- 🌳  ░░  ENCLOSED
+
+
+type alias EnclosedData =
     { cachedTracks : List String
     , equalizerSettings : Equalizer.Settings
     , grouping : Maybe Tracks.Grouping
@@ -42,18 +63,24 @@ type alias EnclosedUserData =
     }
 
 
-type alias HypaethralUserData =
+
+-- 🌳  ░░  HYPAETHRAL
+
+
+type HypaethralBit
+    = Favourites
+    | Playlists
+    | Settings
+    | Sources
+    | Tracks
+
+
+type alias HypaethralData =
     { favourites : List Tracks.Favourite
     , playlists : List Playlists.Playlist
-    , settings : Maybe Settings
+    , settings : Maybe Settings.Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
-    }
-
-
-type alias Settings =
-    { backgroundImage : Maybe String
-    , hideDuplicates : Bool
     }
 
 
@@ -144,14 +171,14 @@ methodSeparator =
 -- 🔱  ░░  ENCLOSED
 
 
-decodeEnclosed : Json.Value -> Result Json.Error EnclosedUserData
-decodeEnclosed =
-    Json.decodeValue enclosedDecoder
+decodeEnclosedData : Json.Value -> Result Json.Error EnclosedData
+decodeEnclosedData =
+    Json.decodeValue enclosedDataDecoder
 
 
-enclosedDecoder : Json.Decoder EnclosedUserData
-enclosedDecoder =
-    Json.succeed EnclosedUserData
+enclosedDataDecoder : Json.Decoder EnclosedData
+enclosedDataDecoder =
+    Json.succeed EnclosedData
         |> optional "cachedTracks" (Json.list Json.string) []
         |> optional "equalizerSettings" Equalizer.settingsDecoder Equalizer.defaultSettings
         |> optional "grouping" (Json.maybe Tracks.groupingDecoder) Nothing
@@ -165,8 +192,8 @@ enclosedDecoder =
         |> optional "sortDirection" Tracks.sortDirectionDecoder Tracks.Asc
 
 
-encodeEnclosed : EnclosedUserData -> Json.Value
-encodeEnclosed { cachedTracks, equalizerSettings, grouping, onlyShowCachedTracks, onlyShowFavourites, repeat, searchTerm, selectedPlaylist, shuffle, sortBy, sortDirection } =
+encodeEnclosedData : EnclosedData -> Json.Value
+encodeEnclosedData { cachedTracks, equalizerSettings, grouping, onlyShowCachedTracks, onlyShowFavourites, repeat, searchTerm, selectedPlaylist, shuffle, sortBy, sortDirection } =
     Json.Encode.object
         [ ( "cachedTracks", Json.Encode.list Json.Encode.string cachedTracks )
         , ( "equalizerSettings", Equalizer.encodeSettings equalizerSettings )
@@ -186,13 +213,13 @@ encodeEnclosed { cachedTracks, equalizerSettings, grouping, onlyShowCachedTracks
 -- 🔱  ░░  HYPAETHRAL
 
 
-decodeHypaethral : Json.Value -> Result Json.Error HypaethralUserData
-decodeHypaethral =
-    Json.decodeValue hypaethralDecoder
+decodeHypaethralData : Json.Value -> Result Json.Error HypaethralData
+decodeHypaethralData =
+    Json.decodeValue hypaethralDataDecoder
 
 
-emptyHypaethralUserData : HypaethralUserData
-emptyHypaethralUserData =
+emptyHypaethralData : HypaethralData
+emptyHypaethralData =
     { favourites = []
     , playlists = []
     , settings = Nothing
@@ -201,41 +228,83 @@ emptyHypaethralUserData =
     }
 
 
-encodeHypaethral : HypaethralUserData -> Json.Value
-encodeHypaethral { favourites, playlists, settings, sources, tracks } =
+encodeHypaethralBit : HypaethralBit -> HypaethralData -> Json.Value
+encodeHypaethralBit bit { favourites, playlists, settings, sources, tracks } =
+    case bit of
+        Favourites ->
+            Json.Encode.list Tracks.encodeFavourite favourites
+
+        Playlists ->
+            Json.Encode.list Playlists.encode playlists
+
+        Settings ->
+            Maybe.unwrap Json.Encode.null Settings.encode settings
+
+        Sources ->
+            Json.Encode.list Sources.encode sources
+
+        Tracks ->
+            Json.Encode.list Tracks.encodeTrack tracks
+
+
+encodeHypaethralData : HypaethralData -> Json.Value
+encodeHypaethralData data =
     Json.Encode.object
-        [ ( "favourites", Json.Encode.list Tracks.encodeFavourite favourites )
-        , ( "playlists", Json.Encode.list Playlists.encode playlists )
-        , ( "settings", Maybe.unwrap Json.Encode.null encodeSettings settings )
-        , ( "sources", Json.Encode.list Sources.encode sources )
-        , ( "tracks", Json.Encode.list Tracks.encodeTrack tracks )
+        [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data )
+        , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data )
+        , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data )
+        , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data )
+        , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data )
         ]
 
 
-encodeSettings : Settings -> Json.Value
-encodeSettings settings =
-    Json.Encode.object
-        [ ( "backgroundImage"
-          , Maybe.unwrap Json.Encode.null Json.Encode.string settings.backgroundImage
-          )
-        , ( "hideDuplicates"
-          , Json.Encode.bool settings.hideDuplicates
-          )
+hypaethralBit : Enum HypaethralBit
+hypaethralBit =
+    Enum.create
+        [ ( hypaethralBitKey Favourites, Favourites )
+        , ( hypaethralBitKey Playlists, Playlists )
+        , ( hypaethralBitKey Settings, Settings )
+        , ( hypaethralBitKey Sources, Sources )
+        , ( hypaethralBitKey Tracks, Tracks )
         ]
 
 
-hypaethralDecoder : Json.Decoder HypaethralUserData
-hypaethralDecoder =
-    Json.succeed HypaethralUserData
-        |> optional "favourites" (Json.listIgnore Tracks.favouriteDecoder) []
-        |> optional "playlists" (Json.listIgnore Playlists.decoder) []
-        |> optional "settings" (Json.maybe settingsDecoder) Nothing
-        |> optional "sources" (Json.listIgnore Sources.decoder) []
-        |> optional "tracks" (Json.listIgnore Tracks.trackDecoder) []
+hypaethralBitFileName : HypaethralBit -> String
+hypaethralBitFileName bit =
+    hypaethralBitKey bit ++ ".json"
 
 
-settingsDecoder : Json.Decoder Settings
-settingsDecoder =
-    Json.succeed Settings
-        |> optional "backgroundImage" (Json.maybe Json.string) Nothing
-        |> optional "hideDuplicates" Json.bool False
+hypaethralBitKey : HypaethralBit -> String
+hypaethralBitKey bit =
+    case bit of
+        Favourites ->
+            "favourites"
+
+        Playlists ->
+            "playlists"
+
+        Settings ->
+            "settings"
+
+        Sources ->
+            "sources"
+
+        Tracks ->
+            "tracks"
+
+
+hypaethralDataDecoder : Json.Decoder HypaethralData
+hypaethralDataDecoder =
+    Json.succeed HypaethralData
+        |> optional (hypaethralBitKey Favourites) (Json.listIgnore Tracks.favouriteDecoder) []
+        |> optional (hypaethralBitKey Playlists) (Json.listIgnore Playlists.decoder) []
+        |> optional (hypaethralBitKey Settings) (Json.maybe Settings.decoder) Nothing
+        |> optional (hypaethralBitKey Sources) (Json.listIgnore Sources.decoder) []
+        |> optional (hypaethralBitKey Tracks) (Json.listIgnore Tracks.trackDecoder) []
+
+
+putHypaethralJsonBitsTogether : List ( HypaethralBit, Json.Value ) -> Json.Value
+putHypaethralJsonBitsTogether bits =
+    bits
+        |> List.map (Tuple.mapFirst hypaethralBitKey)
+        |> Json.Encode.object

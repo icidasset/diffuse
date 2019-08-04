@@ -8,6 +8,7 @@
     "dependencies": {
         "direct": {
             "FabienHenon/elm-infinite-list-view": "3.0.0",
+            "Gizra/elm-all-set": "1.0.1",
             "Gizra/elm-debouncer": "2.0.0",
             "Herteby/enum": "1.0.0",
             "NoRedInk/elm-json-decode-pipeline": "1.0.0",
@@ -41,12 +42,14 @@
             "rtfeldman/elm-hex": "1.0.0",
             "ryannhg/date-format": "2.3.0",
             "truqu/elm-base64": "2.0.4",
+            "wernerdegroot/listzipper": "4.0.0",
             "ymtszw/elm-xml-decode": "3.1.0"
         },
         "indirect": {
             "elm/parser": "1.1.0",
             "fredcy/elm-parseint": "2.0.1",
-            "jinjor/elm-xml-parser": "2.0.0"
+            "jinjor/elm-xml-parser": "2.0.0",
+            "pzp1997/assoc-list": "1.0.0"
         }
     },
     "test-dependencies": {

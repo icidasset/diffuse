@@ -1,7 +1,6 @@
 module UI.Tracks exposing (Dependencies, Model, Msg(..), Scene(..), importHypaethral, initialModel, update, view)
 
 import Alien
-import Authentication exposing (HypaethralUserData)
 import Chunky exposing (..)
 import Classes as C
 import Color exposing (Color)
@@ -50,6 +49,7 @@ import UI.Queue.Page
 import UI.Reply as UI exposing (Reply(..))
 import UI.Tracks.Reply as Tracks exposing (Reply(..))
 import UI.Tracks.Scene.List
+import User.Layer exposing (HypaethralData)
 
 
 
@@ -426,7 +426,7 @@ update msg model =
                 )
 
 
-importHypaethral : Model -> HypaethralUserData -> Maybe Playlist -> Return Model Msg UI.Reply
+importHypaethral : Model -> HypaethralData -> Maybe Playlist -> Return Model Msg UI.Reply
 importHypaethral model data selectedPlaylist =
     let
         adjustedModel =

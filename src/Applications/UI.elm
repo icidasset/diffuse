@@ -2,8 +2,6 @@ module UI exposing (main)
 
 import Alfred exposing (Alfred)
 import Alien
-import Authentication exposing (..)
-import Authentication.RemoteStorage exposing (RemoteStorage)
 import Browser
 import Browser.Dom
 import Browser.Events
@@ -42,6 +40,7 @@ import Playlists.Encoding as Playlists
 import Process
 import Return2 exposing (..)
 import Return3
+import Settings
 import Sources
 import Sources.Encoding as Sources
 import Sources.Services.Dropbox
@@ -84,6 +83,8 @@ import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
 import Url exposing (Url)
+import User.Layer exposing (..)
+import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 
@@ -242,7 +243,7 @@ type Msg
       -- Authentication
       -----------------------------------------
     | AuthenticationBootFailure String
-    | RemoteStorageWebfinger RemoteStorage (Result Http.Error String)
+    | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
     | SyncUserData
       -----------------------------------------
       -- Children
@@ -357,10 +358,10 @@ update msg model =
                 -- We're caching the user's data in the browser while offline.
                 -- If we're back online again, sync all the user's data.
                 (case model.authentication of
-                    Authentication.Authenticated (Authentication.Dropbox _) ->
+                    Authentication.Authenticated (Dropbox _) ->
                         update SyncUserData
 
-                    Authentication.Authenticated (Authentication.RemoteStorage _) ->
+                    Authentication.Authenticated (RemoteStorage _) ->
                         update SyncUserData
 
                     _ ->
@@ -443,7 +444,7 @@ update msg model =
                     Common.urlOrigin model.url
             in
             remoteStorage
-                |> Authentication.RemoteStorage.oauthAddress
+                |> RemoteStorage.oauthAddress
                     { oauthOrigin = oauthOrigin
                     , origin = origin
                     }
@@ -451,7 +452,7 @@ update msg model =
                 |> returnWithModel model
 
         RemoteStorageWebfinger _ (Err _) ->
-            Authentication.RemoteStorage.webfingerError
+            RemoteStorage.webfingerError
                 |> ShowErrorNotification
                 |> translateReplyWithModel model
 
@@ -575,12 +576,34 @@ update msg model =
                         |> Result.withDefault Json.Encode.null
                         |> LoadHypaethralUserData
                     )
-                |> andThen (translateReply SaveFavourites)
-                |> andThen (translateReply SaveSources)
-                |> andThen (translateReply SaveTracks)
                 |> andThen (translateReply ClearTracksCache)
                 |> andThen (update <| ShowNotification notification)
                 |> andThen (update <| ChangeUrlUsingPage Page.Index)
+                -----------------------------
+                -- Save all the imported data
+                -----------------------------
+                |> (\return ->
+                        List.foldl
+                            (\( _, bit ) ->
+                                case bit of
+                                    Favourites ->
+                                        andThen (translateReply SaveFavourites)
+
+                                    Playlists ->
+                                        andThen (translateReply SavePlaylists)
+
+                                    Settings ->
+                                        andThen (translateReply SaveSettings)
+
+                                    Sources ->
+                                        andThen (translateReply SaveSources)
+
+                                    Tracks ->
+                                        andThen (translateReply SaveTracks)
+                            )
+                            return
+                            hypaethralBit.list
+                   )
 
         -----------------------------------------
         -- Notifications
@@ -778,13 +801,13 @@ translateReply reply model =
         -----------------------------------------
         -- Authentication
         -----------------------------------------
-        ExternalAuth Authentication.Blockstack _ ->
+        ExternalAuth Blockstack _ ->
             Alien.RedirectToBlockstackSignIn
                 |> Alien.trigger
                 |> Ports.toBrain
                 |> returnWithModel model
 
-        ExternalAuth (Authentication.Dropbox _) _ ->
+        ExternalAuth (Dropbox _) _ ->
             [ ( "response_type", "token" )
             , ( "client_id", "te0c9pbeii8f8bw" )
             , ( "redirect_uri", Common.urlOrigin model.url ++ "?action=authenticate/dropbox" )
@@ -794,14 +817,14 @@ translateReply reply model =
                 |> Nav.load
                 |> returnWithModel model
 
-        ExternalAuth (Authentication.RemoteStorage _) input ->
+        ExternalAuth (RemoteStorage _) input ->
             input
-                |> Authentication.RemoteStorage.parseUserAddress
+                |> RemoteStorage.parseUserAddress
                 |> Maybe.map
-                    (Authentication.RemoteStorage.webfingerRequest RemoteStorageWebfinger)
+                    (RemoteStorage.webfingerRequest RemoteStorageWebfinger)
                 |> Maybe.unwrap
                     (translateReply
-                        (ShowErrorNotification Authentication.RemoteStorage.userAddressError)
+                        (ShowErrorNotification RemoteStorage.userAddressError)
                         model
                     )
                     (returnWithModel model)
@@ -1346,7 +1369,7 @@ translateReply reply model =
             , sources = model.sources.collection
             , tracks = model.tracks.collection.untouched
             }
-                |> Authentication.encodeHypaethral
+                |> encodeHypaethralData
                 |> Json.Encode.encode 2
                 |> File.Download.string "diffuse.json" "application/json"
                 |> returnWithModel model
@@ -1393,7 +1416,7 @@ translateReply reply model =
         SaveSettings ->
             model
                 |> gatherSettings
-                |> Authentication.encodeSettings
+                |> Settings.encode
                 |> Alien.broadcast Alien.SaveSettings
                 |> Ports.toBrain
                 |> returnWithModel model
@@ -1507,7 +1530,7 @@ translateAlienData event =
         Just Alien.AuthMethod ->
             -- My brain told me which auth method we're using,
             -- so we can tell the user in the UI.
-            case Authentication.decodeMethod event.data of
+            case decodeMethod event.data of
                 Just method ->
                     AuthenticationMsg (Authentication.SignedIn method)
 
@@ -1979,7 +2002,7 @@ vesselInnerStyles =
 -- ⚗️  ░░  HYPAETHRAL DATA
 
 
-gatherSettings : Model -> Settings
+gatherSettings : Model -> Settings.Settings
 gatherSettings { backdrop, tracks } =
     { backgroundImage = backdrop.chosen
     , hideDuplicates = tracks.hideDuplicates
@@ -1988,7 +2011,7 @@ gatherSettings { backdrop, tracks } =
 
 importHypaethral : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
 importHypaethral value model =
-    case decodeHypaethral value of
+    case decodeHypaethralData value of
         Ok data ->
             let
                 { backdrop, sources } =
@@ -2049,7 +2072,7 @@ exportEnclosed model =
             , volume = model.equalizer.volume
             }
     in
-    encodeEnclosed
+    encodeEnclosedData
         { cachedTracks = model.tracks.cached
         , equalizerSettings = equalizerSettings
         , grouping = model.tracks.grouping
@@ -2070,7 +2093,7 @@ importEnclosed value model =
         { equalizer, playlists, queue, tracks } =
             model
     in
-    case decodeEnclosed value of
+    case decodeEnclosedData value of
         Ok data ->
             let
                 newEqualizer =
