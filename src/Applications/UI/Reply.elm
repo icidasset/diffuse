@@ -29,6 +29,7 @@ type Reply
       -- Authentication
       -----------------------------------------
     | ExternalAuth User.Layer.Method String
+    | ImportLegacyData
     | PingIpfsForAuth
     | PingTextileForAuth
     | ShowUpdateEncryptionKeyScreen User.Layer.Method

@@ -256,7 +256,6 @@ update msg model =
                         ( m
                         , c
                         , r
-                            |> Debug.log ""
                             |> Maybe.withDefault []
                             |> EverySet.fromList
                             |> EverySet.toList
@@ -335,6 +334,19 @@ translateReply reply model =
     case reply of
         FabricatedNewSecretKey ->
             saveHypaethralData model
+
+        ImportHypaethralData hypData ->
+            List.foldl
+                (\( _, bit ) ->
+                    hypData
+                        |> User.encodeHypaethralBit bit
+                        |> User.SaveHypaethralData bit
+                        |> UserLayerMsg
+                        |> update
+                        |> andThen
+                )
+                (return { model | hypaethralUserData = hypData })
+                User.hypaethralBit.list
 
         -----------------------------------------
         -- Tracks
@@ -526,6 +538,9 @@ translateAlienData tag data =
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        Alien.ImportLegacyData ->
+            UserLayerMsg User.RetrieveLegacyHypaethralData
+
         Alien.ProcessSources ->
             -- Only proceed to the processing if we got all the necessary data,
             -- otherwise report an error in the UI.

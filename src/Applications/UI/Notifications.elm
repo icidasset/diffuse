@@ -133,28 +133,12 @@ notificationView notification =
         , onDoubleTap dismissMsg
         ]
         [ T.br2
+        , T.cb
+        , T.fr
+        , T.measure_narrow
         , T.mt2
         , T.pa3
         , T.white_90
-
-        --
-        , case kind of
-            Error ->
-                if options.sticky then
-                    T.measure_narrow
-
-                else
-                    T.measure_wide
-
-            Success ->
-                if options.sticky then
-                    T.measure_narrow
-
-                else
-                    T.measure_wide
-
-            Warning ->
-                ""
 
         --
         , if options.wasDismissed then
@@ -183,7 +167,14 @@ containerStyles =
     [ Css.fontSize (Css.px 13)
     , Css.lineHeight (Css.num 1.35)
     , Css.Global.descendants
-        [ Css.Global.p
+        [ Css.Global.a
+            [ Css.borderBottom3 (Css.px 1) Css.solid (Css.rgba 255 255 255 0.45)
+            , Css.color Css.inherit
+            , Css.display Css.inlineBlock
+            , Css.fontWeight (Css.int 600)
+            , Css.textDecoration Css.none
+            ]
+        , Css.Global.p
             [ Css.margin Css.zero
             , Css.padding Css.zero
             ]

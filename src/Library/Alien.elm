@@ -38,6 +38,7 @@ type Tag
       -----------------------------------------
       -- from UI
       -----------------------------------------
+    | ImportLegacyData
     | ProcessSources
     | RedirectToBlockstackSignIn
     | RemoveTracksBySourceId
@@ -87,6 +88,7 @@ enum =
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        , ( "IMPORT_LEGACY_DATA", ImportLegacyData )
         , ( "PROCESS_SOURCES", ProcessSources )
         , ( "REDIRECT_TO_BLOCKSTACK_SIGN_IN", RedirectToBlockstackSignIn )
         , ( "REMOVE_TRACKS_BY_SOURCE_ID", RemoveTracksBySourceId )

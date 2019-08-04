@@ -11,6 +11,7 @@ const app = Elm.UI.init({
   flags: {
     initialTime: Date.now(),
     isOnline: navigator.onLine,
+    upgrade: viableForUpgrade(),
     viewport: {
       height: window.innerHeight,
       width: window.innerWidth
@@ -394,6 +395,21 @@ document.body.addEventListener("touchmove", event => {
     event.stopPropagation()
   }
 })
+
+
+
+// Upgrade
+// -------
+
+function viableForUpgrade() {
+  // Was the user using an old version of the app?
+  // V1
+  const viable_v1 = !!localStorage.getItem("additional-userdata")
+  if (viable_v1) localStorage.removeItem("additional-userdata")
+
+  // The end
+  return viable_v1
+}
 
 
 

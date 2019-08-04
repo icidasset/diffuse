@@ -162,9 +162,8 @@ cors:
 ```
 
 
+
 <div id="UI" />
-
-
 
 ## UI
 
@@ -191,3 +190,15 @@ artist:Parkway Drive album:Deep Blue
 # Show me every track from Parkway Drive but not their "Atlas" album.
 artist:Parkway Drive - album:Atlas
 ```
+
+
+
+<div id="QA" />
+
+## Q&A
+
+### I used version one, where's my data?
+
+There's a small link, or button if you will, on the `Settings -> Import / Export`
+page that will allow you to import data from version 1 of the app. Note that this
+will need to reflect the authentication/storage method you chose in version 1.

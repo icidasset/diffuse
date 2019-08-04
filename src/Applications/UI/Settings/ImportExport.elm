@@ -10,14 +10,15 @@ import UI.Navigation exposing (..)
 import UI.Page
 import UI.Reply exposing (Reply(..))
 import UI.Settings.Page
+import User.Layer exposing (Method(..))
 
 
 
 -- 🗺
 
 
-view : Html Reply
-view =
+view : Maybe Method -> Html Reply
+view userLayerMethod =
     UI.Kit.receptacle
         { scrolling = True }
         [ -----------------------------------------
@@ -52,6 +53,18 @@ view =
                 Normal
                 RequestImport
                 (text "Choose file")
+            , case userLayerMethod of
+                Just Blockstack ->
+                    otherImportOptions
+
+                Just Local ->
+                    otherImportOptions
+
+                Just (RemoteStorage _) ->
+                    otherImportOptions
+
+                _ ->
+                    nothing
 
             -- Export
             ---------
@@ -60,5 +73,22 @@ view =
                 Normal
                 Export
                 (text "Export data")
+            ]
+        ]
+
+
+otherImportOptions : Html Reply
+otherImportOptions =
+    raw
+        [ chunk
+            [ T.f7, T.i, T.lh_copy, T.mt3 ]
+            [ text "Other options:" ]
+        , chunk
+            [ T.f6, T.lh_copy, T.mt2 ]
+            [ inline [ T.mr2 ] [ text "•" ]
+            , UI.Kit.textButton
+                { label = "Import Diffuse V1 data"
+                , onClick = ImportLegacyData
+                }
             ]
         ]

@@ -94,6 +94,7 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 type alias Flags =
     { initialTime : Int
     , isOnline : Bool
+    , upgrade : Bool
     , viewport : Viewport
     }
 
@@ -209,6 +210,20 @@ init flags url key =
              else
                 Cmd.none
             )
+        |> (if flags.upgrade then
+                andThen
+                    ("""
+                    Thank you for using Diffuse V1!
+                    If you want to import your old data,
+                    please go to the [import page](#/settings/import-export).
+                    """
+                        |> ShowStickySuccessNotification
+                        |> translateReply
+                    )
+
+            else
+                identity
+           )
 
 
 
@@ -831,6 +846,20 @@ translateReply reply model =
 
         ExternalAuth _ _ ->
             return model
+
+        ImportLegacyData ->
+            Alien.ImportLegacyData
+                |> Alien.trigger
+                |> Ports.toBrain
+                |> returnWithModel model
+                |> andThen
+                    ("""
+                     I'll try to import data from Diffuse version one.
+                     If this was successful, you'll get a notification.
+                     """
+                        |> ShowWarningNotification
+                        |> translateReply
+                    )
 
         PingIpfsForAuth ->
             Authentication.PingIpfs
@@ -1548,6 +1577,11 @@ translateAlienData event =
 
         Just Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off
+
+        Just Alien.ImportLegacyData ->
+            "Imported data successfully!"
+                |> Notifications.success
+                |> ShowNotification
 
         Just Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData event.data

@@ -232,6 +232,28 @@ app.ports.toIpfs.subscribe(event => {
 
 
 
+// Legacy
+// ------
+
+app.ports.requestLegacyLocalData.subscribe(event => {
+  let oldIdx
+  let key = location.hostname + ".json"
+
+  oldIdx = indexedDB.open(key, 1)
+  oldIdx.onsuccess = _ => {
+    const old = oldIdx.result
+    const tra = old.transaction([key], "readwrite")
+    const req = tra.objectStore(key).get(key)
+
+    req.onsuccess = _ => {
+      console.log(req.result)
+      if (req.result) sendJsonData(event)(req.result)
+    }
+  }
+})
+
+
+
 // Remote Storage
 // --------------
 

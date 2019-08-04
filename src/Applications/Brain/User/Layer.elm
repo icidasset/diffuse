@@ -21,6 +21,7 @@ import User.Layer exposing (..)
 type alias Model =
     { method : Maybe Method
     , hypaethralRetrieval : Maybe (Zipper ( HypaethralBit, Json.Value ))
+    , legacyMode : Bool
     , performingSignIn : Bool
     }
 
@@ -29,6 +30,7 @@ initialModel : Model
 initialModel =
     { method = Nothing
     , hypaethralRetrieval = Nothing
+    , legacyMode = False
     , performingSignIn = False
     }
 
@@ -73,6 +75,8 @@ type Msg
       -- 2. Data
     | RetrieveHypaethralData HypaethralBit
     | HypaethralDataRetrieved Json.Value
+      -- 2. Data (Legacy)
+    | RetrieveLegacyHypaethralData
       -- x. Data
     | RetrieveEnclosedData
     | EnclosedDataRetrieved Json.Value
@@ -244,47 +248,104 @@ update msg model =
                     return model
 
         HypaethralDataRetrieved json ->
+            if model.legacyMode then
+                --------------
+                -- Legacy Data
+                --------------
+                case Decode.decodeValue hypaethralDataDecoder json of
+                    Ok hypData ->
+                        returnRepliesWithModel
+                            { model | legacyMode = False }
+                            [ ImportHypaethralData hypData
+                            , NudgeUI Alien.ImportLegacyData
+                            , GiveUI Alien.LoadHypaethralUserData json
+                            ]
+
+                    Err _ ->
+                        return model
+
+            else
+                ---------------
+                -- Default Flow
+                ---------------
+                let
+                    retrieval =
+                        Maybe.map
+                            (Zipper.mapCurrent <| Tuple.mapSecond <| always json)
+                            model.hypaethralRetrieval
+                in
+                case Maybe.andThen Zipper.next retrieval of
+                    Just nextRetrieval ->
+                        update
+                            (RetrieveHypaethralData <| Tuple.first <| Zipper.current nextRetrieval)
+                            { model | hypaethralRetrieval = Just nextRetrieval }
+
+                    Nothing ->
+                        -- 🚀
+                        ( { model
+                            | hypaethralRetrieval = Nothing
+                            , performingSignIn = False
+                          }
+                          --
+                        , case ( model.performingSignIn, model.method ) of
+                            ( True, Just method ) ->
+                                method
+                                    |> encodeMethod
+                                    |> Alien.broadcast Alien.AuthMethod
+                                    |> Ports.toCache
+
+                            _ ->
+                                Cmd.none
+                          --
+                        , let
+                            allJson =
+                                retrieval
+                                    |> Maybe.map Zipper.toList
+                                    |> Maybe.withDefault []
+                                    |> putHypaethralJsonBitsTogether
+                          in
+                          model.method
+                            |> Maybe.map (\method -> Authenticated method allJson)
+                            |> Maybe.map terminate
+                            |> Maybe.withDefault []
+                        )
+
+        -----------------------------------------
+        -- # 2 (Legacy)
+        -----------------------------------------
+        RetrieveLegacyHypaethralData ->
             let
-                retrieval =
-                    Maybe.map
-                        (Zipper.mapCurrent <| Tuple.mapSecond <| always json)
-                        model.hypaethralRetrieval
+                file =
+                    Json.string "diffuse.json"
             in
-            case Maybe.andThen Zipper.next retrieval of
-                Just nextRetrieval ->
-                    update
-                        (RetrieveHypaethralData <| Tuple.first <| Zipper.current nextRetrieval)
-                        { model | hypaethralRetrieval = Just nextRetrieval }
+            case model.method of
+                -- 🚀
+                Just Blockstack ->
+                    [ ( "file", file ) ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthBlockstack
+                        |> Ports.requestBlockstack
+                        |> Return.commandWithModel { model | legacyMode = True }
 
-                Nothing ->
-                    -- 🚀
-                    ( { model
-                        | hypaethralRetrieval = Nothing
-                        , performingSignIn = False
-                      }
-                      --
-                    , case ( model.performingSignIn, model.method ) of
-                        ( True, Just method ) ->
-                            method
-                                |> encodeMethod
-                                |> Alien.broadcast Alien.AuthMethod
-                                |> Ports.toCache
+                Just Local ->
+                    Alien.AuthAnonymous
+                        |> Alien.trigger
+                        |> Ports.requestLegacyLocalData
+                        |> Return.commandWithModel { model | legacyMode = True }
 
-                        _ ->
-                            Cmd.none
-                      --
-                    , let
-                        allJson =
-                            retrieval
-                                |> Maybe.map Zipper.toList
-                                |> Maybe.withDefault []
-                                |> putHypaethralJsonBitsTogether
-                      in
-                      model.method
-                        |> Maybe.map (\method -> Authenticated method allJson)
-                        |> Maybe.map terminate
-                        |> Maybe.withDefault []
-                    )
+                Just (RemoteStorage { userAddress, token }) ->
+                    [ ( "file", file )
+                    , ( "token", Json.string token )
+                    , ( "userAddress", Json.string userAddress )
+                    ]
+                        |> Json.object
+                        |> Alien.broadcast Alien.AuthRemoteStorage
+                        |> Ports.requestRemoteStorage
+                        |> Return.commandWithModel { model | legacyMode = True }
+
+                -- ✋
+                _ ->
+                    return model
 
         -----------------------------------------
         -- Data

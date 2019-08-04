@@ -90,7 +90,7 @@ stickyError content =
 
 
 errorWithCode : String -> String -> List (Action msg) -> Notification msg
-errorWithCode content code actions =
+errorWithCode content code _ =
     Notification
         Error
         (hashString 0 content)

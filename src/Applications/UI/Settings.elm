@@ -40,7 +40,7 @@ view : Settings.Page -> Dependencies -> Html Reply
 view page deps =
     case page of
         ImportExport ->
-            UI.Settings.ImportExport.view
+            UI.Settings.ImportExport.view deps.authenticationMethod
 
         Index ->
             UI.Kit.receptacle { scrolling = True } (index deps)
