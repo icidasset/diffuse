@@ -12,7 +12,6 @@ import User.Layer
 
 type Reply
     = FabricatedNewSecretKey
-    | ImportHypaethralData User.Layer.HypaethralData
       -- Tracks
     | AddTracks (List Track)
     | RemoveTracksByPaths { sourceId : String, paths : List String }

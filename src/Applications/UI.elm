@@ -203,13 +203,6 @@ init flags url key =
     }
         |> update
             (PageChanged page)
-        |> addCommand
-            (if Maybe.isNothing maybePage then
-                resetUrl key url page
-
-             else
-                Cmd.none
-            )
         |> (if flags.upgrade then
                 andThen
                     ("""
@@ -217,13 +210,20 @@ init flags url key =
                     If you want to import your old data,
                     please go to the [import page](#/settings/import-export).
                     """
-                        |> ShowStickySuccessNotification
-                        |> translateReply
+                        |> Notifications.stickySuccess
+                        |> showNotification
                     )
 
             else
                 identity
            )
+        |> addCommand
+            (if Maybe.isNothing maybePage then
+                resetUrl key url page
+
+             else
+                Cmd.none
+            )
 
 
 
@@ -232,6 +232,7 @@ init flags url key =
 
 type Msg
     = Bypass
+    | Reply Reply
       --
     | CopyToClipboard String
     | Debounce (Debouncer.Msg Msg)
@@ -239,7 +240,6 @@ type Msg
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
-    | Reply Reply
     | ResizedWindow ( Int, Int )
     | SetCurrentTime Time.Posix
     | SetIsOnline Bool
@@ -297,11 +297,14 @@ type Msg
     | UrlChanged Url
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Return Model Msg
 update msg model =
     case msg of
         Bypass ->
             return model
+
+        Reply reply ->
+            translateReply reply model
 
         --
         CopyToClipboard string ->
@@ -339,9 +342,6 @@ update msg model =
             model
                 |> importHypaethral json
                 |> Return3.wield translateReply
-
-        Reply reply ->
-            translateReply reply model
 
         ResizedWindow ( width, height ) ->
             ( { model
@@ -448,9 +448,8 @@ update msg model =
         -- Authentication
         -----------------------------------------
         AuthenticationBootFailure err ->
-            Notifications.error err
-                |> ShowNotification
-                |> updateWithModel model
+            model
+                |> showNotification (Notifications.error err)
                 |> andThen (translateReply LoadDefaultBackdrop)
 
         RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
@@ -468,15 +467,14 @@ update msg model =
 
         RemoteStorageWebfinger _ (Err _) ->
             RemoteStorage.webfingerError
-                |> ShowErrorNotification
-                |> translateReplyWithModel model
+                |> Notifications.error
+                |> showNotificationWithModel model
 
         SyncUserData ->
-            model
-                |> translateReply SaveFavourites
-                |> andThen (translateReply SaveSources)
-                |> andThen (translateReply SaveTracksFromBrain)
-                |> andThen (translateReply <| ShowWarningNotification "Syncing")
+            "Syncing"
+                |> Notifications.warning
+                |> showNotificationWithModel model
+                |> saveAllHypaethralData { sync = True }
 
         -----------------------------------------
         -- Children
@@ -580,54 +578,32 @@ update msg model =
                 |> returnWithModel { model | isLoading = True }
 
         ImportJson json ->
-            let
-                notification =
-                    Notifications.success "Imported data successfully!"
-            in
-            model
-                |> update
-                    (json
-                        |> Json.Decode.decodeString Json.Decode.value
-                        |> Result.withDefault Json.Encode.null
-                        |> LoadHypaethralUserData
+            json
+                -- Load data on main thread (this app)
+                |> Json.Decode.decodeString Json.Decode.value
+                |> Result.withDefault Json.Encode.null
+                |> (\j -> importHypaethral j model)
+                |> Return3.wield translateReply
+                -- Show notification
+                |> andThen
+                    ("Imported data successfully!"
+                        |> Notifications.success
+                        |> showNotification
                     )
+                -- Clear tracks cache
                 |> andThen (translateReply ClearTracksCache)
-                |> andThen (update <| ShowNotification notification)
+                -- Redirect to index page
                 |> andThen (update <| ChangeUrlUsingPage Page.Index)
                 -----------------------------
                 -- Save all the imported data
                 -----------------------------
-                |> (\return ->
-                        List.foldl
-                            (\( _, bit ) ->
-                                case bit of
-                                    Favourites ->
-                                        andThen (translateReply SaveFavourites)
-
-                                    Playlists ->
-                                        andThen (translateReply SavePlaylists)
-
-                                    Settings ->
-                                        andThen (translateReply SaveSettings)
-
-                                    Sources ->
-                                        andThen (translateReply SaveSources)
-
-                                    Tracks ->
-                                        andThen (translateReply SaveTracks)
-                            )
-                            return
-                            hypaethralBit.list
-                   )
+                |> saveAllHypaethralData { sync = False }
 
         -----------------------------------------
         -- Notifications
         -----------------------------------------
         ShowNotification notification ->
-            model.notifications
-                |> UI.Notifications.show notification
-                |> mapModel (\n -> { model | notifications = n })
-                |> mapCommand Reply
+            showNotification notification model
 
         -----------------------------------------
         -- Page Transitions
@@ -703,9 +679,8 @@ update msg model =
             model
                 |> updateTracksModel
                     (\m -> { m | cachingInProgress = List.without trackIds m.cachingInProgress })
-                |> return
-                |> andThen
-                    (translateReply <| ShowErrorNotification "Failed to store track in cache")
+                |> showNotification
+                    (Notifications.error "Failed to store track in cache")
 
         FinishedStoringTracksInCache trackIds ->
             -- TODO: When a context menu of a track is open,
@@ -767,6 +742,24 @@ update msg model =
                     returnWithModel model (resetUrl model.navKey url Page.Index)
 
 
+resetUrl : Nav.Key -> Url -> Page.Page -> Cmd Msg
+resetUrl key url page =
+    Nav.replaceUrl key (url.path ++ Page.toString page)
+
+
+showNotification : Notification Reply -> Model -> Return Model Msg
+showNotification notification model =
+    model.notifications
+        |> UI.Notifications.show notification
+        |> mapModel (\n -> { model | isLoading = False, notifications = n })
+        |> mapCommand Reply
+
+
+showNotificationWithModel : Model -> Notification Reply -> Return Model Msg
+showNotificationWithModel model notification =
+    showNotification notification model
+
+
 updateTracksModel : (Tracks.Model -> Tracks.Model) -> Model -> Model
 updateTracksModel fn model =
     { model | tracks = fn model.tracks }
@@ -775,11 +768,6 @@ updateTracksModel fn model =
 updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
 updateWithModel model msg =
     update msg model
-
-
-resetUrl : Nav.Key -> Url -> Page.Page -> Cmd Msg
-resetUrl key url page =
-    Nav.replaceUrl key (url.path ++ Page.toString page)
 
 
 
@@ -801,8 +789,11 @@ translateReply reply model =
         StartedDragging ->
             return { model | isDragging = True }
 
-        Reply.ToggleLoadingScreen state ->
-            update (ToggleLoadingScreen state) model
+        Reply.ToggleLoadingScreen Off ->
+            return { model | isLoading = False }
+
+        Reply.ToggleLoadingScreen On ->
+            return { model | isLoading = True }
 
         -----------------------------------------
         -- Audio
@@ -857,8 +848,8 @@ translateReply reply model =
                      I'll try to import data from Diffuse version one.
                      If this was successful, you'll get a notification.
                      """
-                        |> ShowWarningNotification
-                        |> translateReply
+                        |> Notifications.warning
+                        |> showNotification
                     )
 
         PingIpfsForAuth ->
@@ -954,45 +945,34 @@ translateReply reply model =
                 |> return
 
         ShowErrorNotification string ->
-            Notifications.error string
-                |> ShowNotification
-                |> updateWithModel model
+            showNotificationWithModel model (Notifications.error string)
 
         ShowStickyErrorNotification string ->
-            Notifications.stickyError string
-                |> ShowNotification
-                |> updateWithModel model
+            showNotificationWithModel model (Notifications.stickyError string)
 
         ShowStickyErrorNotificationWithCode string code ->
-            Notifications.errorWithCode string code []
-                |> ShowNotification
-                |> updateWithModel model
+            showNotificationWithModel model (Notifications.errorWithCode string code [])
 
         ShowSuccessNotification string ->
-            Notifications.success string
-                |> ShowNotification
-                |> updateWithModel model
+            showNotificationWithModel model (Notifications.success string)
 
         ShowStickySuccessNotification string ->
-            Notifications.stickySuccess string
-                |> ShowNotification
-                |> updateWithModel model
+            showNotificationWithModel model (Notifications.stickySuccess string)
 
         ShowWarningNotification string ->
-            Notifications.warning string
-                |> ShowNotification
-                |> updateWithModel model
+            showNotificationWithModel model (Notifications.warning string)
 
         ShowStickyWarningNotification string ->
-            Notifications.stickyWarning string
-                |> ShowNotification
-                |> updateWithModel model
+            showNotificationWithModel model (Notifications.stickyWarning string)
 
         -----------------------------------------
         -- Playlists
         -----------------------------------------
         ActivatePlaylist playlist ->
-            update (TracksMsg <| Tracks.SelectPlaylist playlist) model
+            playlist
+                |> Tracks.SelectPlaylist
+                |> TracksMsg
+                |> updateWithModel model
 
         AddTracksToPlaylist { playlistName, tracks } ->
             let
@@ -1038,12 +1018,14 @@ translateReply reply model =
                     "Added __" ++ String.fromInt (List.length l) ++ " tracks__"
             )
                 |> (\s -> s ++ " to the __" ++ properPlaylistName ++ "__ playlist")
-                |> ShowSuccessNotification
-                |> (\r -> translateReply r newModel)
+                |> Notifications.success
+                |> showNotificationWithModel model
                 |> andThen (translateReply SavePlaylists)
 
         DeactivatePlaylist ->
-            update (TracksMsg <| Tracks.DeselectPlaylist) model
+            Tracks.DeselectPlaylist
+                |> TracksMsg
+                |> updateWithModel model
 
         GenerateDirectoryPlaylists ->
             let
@@ -1276,7 +1258,7 @@ translateReply reply model =
                 |> Alien.broadcast Alien.ProcessSources
                 |> Ports.toBrain
                 |> returnWithModel { model | sources = newSources }
-                |> andThen (update <| ShowNotification notification)
+                |> andThen (showNotification notification)
 
         RemoveSourceFromCollection args ->
             args
@@ -1335,18 +1317,18 @@ translateReply reply model =
                 trackIds =
                     List.map .id tracks
 
-                showNotification =
+                notification =
                     case tracks of
                         [ t ] ->
                             ("__" ++ t.tags.title ++ "__ will be stored in the cache")
-                                |> ShowSuccessNotification
+                                |> Notifications.success
 
                         list ->
                             list
                                 |> List.length
                                 |> String.fromInt
                                 |> (\s -> "__" ++ s ++ " tracks__ will be stored in the cache")
-                                |> ShowSuccessNotification
+                                |> Notifications.success
             in
             tracks
                 |> Json.Encode.list
@@ -1371,7 +1353,7 @@ translateReply reply model =
                         (\m -> { m | cachingInProgress = m.cachingInProgress ++ trackIds })
                         model
                     )
-                |> andThen (translateReply showNotification)
+                |> andThen (showNotification notification)
 
         ToggleCachedTracksOnly ->
             update (TracksMsg Tracks.ToggleCachedOnly) model
@@ -1406,9 +1388,7 @@ translateReply reply model =
         InsertDemo ->
             model
                 |> update (LoadHypaethralUserData Demo.tape)
-                |> andThen (translateReply SaveFavourites)
-                |> andThen (translateReply SaveSources)
-                |> andThen (translateReply SaveTracks)
+                |> saveAllHypaethralData { sync = False }
 
         LoadDefaultBackdrop ->
             Backdrop.Default
@@ -1483,9 +1463,32 @@ translateReply reply model =
                 |> returnWithModel model
 
 
-translateReplyWithModel : Model -> Reply -> ( Model, Cmd Msg )
-translateReplyWithModel model reply =
-    translateReply reply model
+saveAllHypaethralData : { sync : Bool } -> Return Model Msg -> Return Model Msg
+saveAllHypaethralData { sync } return =
+    List.foldl
+        (\( _, bit ) ->
+            case bit of
+                Favourites ->
+                    andThen (translateReply SaveFavourites)
+
+                Playlists ->
+                    andThen (translateReply SavePlaylists)
+
+                Settings ->
+                    andThen (translateReply SaveSettings)
+
+                Sources ->
+                    andThen (translateReply SaveSources)
+
+                Tracks ->
+                    if sync then
+                        andThen (translateReply SaveTracksFromBrain)
+
+                    else
+                        andThen (translateReply SaveTracks)
+        )
+        return
+        hypaethralBit.list
 
 
 
@@ -1579,9 +1582,7 @@ translateAlienData event =
             ToggleLoadingScreen Off
 
         Just Alien.ImportLegacyData ->
-            "Imported data successfully!"
-                |> Notifications.success
-                |> ShowNotification
+            ShowNotification (Notifications.success "Imported data successfully!")
 
         Just Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData event.data
@@ -1615,8 +1616,8 @@ translateAlienData event =
                 Ok list ->
                     FinishedStoringTracksInCache list
 
-                Err jsonErr ->
-                    jsonErr
+                Err err ->
+                    err
                         |> Json.Decode.errorToString
                         |> Notifications.error
                         |> ShowNotification
@@ -1655,14 +1656,10 @@ translateAlienError event err =
                     FailedToStoreTracksInCache trackIds
 
                 Err _ ->
-                    err
-                        |> Notifications.error
-                        |> ShowNotification
+                    ShowNotification (Notifications.error err)
 
         Just _ ->
-            err
-                |> Notifications.error
-                |> ShowNotification
+            ShowNotification (Notifications.error err)
 
         Nothing ->
             Bypass

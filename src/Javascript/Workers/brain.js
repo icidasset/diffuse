@@ -14,12 +14,21 @@ importScripts("../processing.js")
 importScripts("../urls.js")
 
 
-const app = Elm.Brain.init()
+const flags = location
+  .search
+  .substr(1)
+  .split("&")
+  .reduce((acc, flag) => {
+    const [k, v] = flag.split("=")
+    return { ...acc, [k]: v }
+  }, {})
 
 
-function initialize(initialUrl) {
-  app.ports.initialize.send(initialUrl)
-}
+const app = Elm.Brain.init({
+  flags: {
+    initialUrl: flags.appHref
+  }
+})
 
 
 importScripts("brain/user.js")
@@ -41,7 +50,7 @@ app.ports.toUI.subscribe(event => {
 
 
 function handleAction(action, data) { switch (action) {
-  case "INITIALIZE": return initialize(data)
+  // Nothing here yet
 }}
 
 

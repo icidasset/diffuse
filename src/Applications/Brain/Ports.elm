@@ -1,4 +1,4 @@
-port module Brain.Ports exposing (deconstructBlockstack, deconstructRemoteStorage, fabricateSecretKey, fromAlien, handlePendingBlockstackSignIn, initialize, receiveSearchResults, receiveTags, redirectToBlockstackSignIn, removeCache, removeTracksFromCache, requestBlockstack, requestCache, requestDropbox, requestIpfs, requestLegacyLocalData, requestRemoteStorage, requestSearch, requestTags, requestTextile, storeTracksInCache, toBlockstack, toCache, toDropbox, toIpfs, toRemoteStorage, toTextile, toUI, updateSearchIndex)
+port module Brain.Ports exposing (deconstructBlockstack, deconstructRemoteStorage, fabricateSecretKey, fromAlien, handlePendingBlockstackSignIn, receiveSearchResults, receiveTags, redirectToBlockstackSignIn, removeCache, removeTracksFromCache, requestBlockstack, requestCache, requestDropbox, requestIpfs, requestLegacyLocalData, requestRemoteStorage, requestSearch, requestTags, requestTextile, storeTracksInCache, toBlockstack, toCache, toDropbox, toIpfs, toRemoteStorage, toTextile, toUI, updateSearchIndex)
 
 import Alien
 import Json.Encode as Json
@@ -93,9 +93,6 @@ port toTextile : Alien.Event -> Cmd msg
 
 
 port fromAlien : (Alien.Event -> msg) -> Sub msg
-
-
-port initialize : (String -> msg) -> Sub msg
 
 
 port receiveSearchResults : (List String -> msg) -> Sub msg

@@ -27,7 +27,10 @@ addAudioContainer()
 // Brain
 // =====
 
-const brain = new Worker("workers/brain.js")
+const brain = new Worker(
+  "workers/brain.js?appHref=" +
+  encodeURIComponent(window.location.href)
+)
 
 
 app.ports.toBrain.subscribe(thing => {
@@ -39,12 +42,6 @@ brain.onmessage = event => {
   if (event.data.action) return handleAction(event.data.action, event.data.data)
   if (event.data.tag) return app.ports.fromAlien.send(event.data)
 }
-
-
-brain.postMessage({
-  action: "INITIALIZE",
-  data: window.location.href
-})
 
 
 function handleAction(action, data) { switch (action) {

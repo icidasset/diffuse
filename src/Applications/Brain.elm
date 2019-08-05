@@ -31,7 +31,7 @@ import User.Layer as User exposing (HypaethralBit(..))
 
 
 type alias Flags =
-    {}
+    { initialUrl : String }
 
 
 main : Program Flags Model Msg
@@ -50,6 +50,8 @@ main =
 type alias Model =
     { hypaethralDebouncer : Debouncer HypaethralBit (List HypaethralBit)
     , hypaethralUserData : User.HypaethralData
+
+    -- Children
     , processing : Processing.Model
     , tracks : Tracks.Model
     , userLayer : User.Model
@@ -57,27 +59,44 @@ type alias Model =
 
 
 init : Flags -> ( Model, Cmd Msg )
-init _ =
-    ( -----------------------------------------
-      -- Initial model
-      -----------------------------------------
-      { hypaethralUserData = User.emptyHypaethralData
-      , processing = Processing.initialModel
-      , tracks = Tracks.initialModel
-      , userLayer = User.initialModel
-
-      --
-      , hypaethralDebouncer =
+init flags =
+    let
+        hypDebouncer =
             2.5
                 |> Debouncer.fromSeconds
                 |> Debouncer.debounce
                 |> Debouncer.accumulateWith Debouncer.allInputs
                 |> Debouncer.toDebouncer
+
+        initialUrl =
+            Maybe.withDefault
+                { protocol = Url.Http
+                , host = ""
+                , port_ = Nothing
+                , path = ""
+                , query = Nothing
+                , fragment = Nothing
+                }
+                (Url.fromString flags.initialUrl)
+    in
+    ( -----------------------------------------
+      -- Initial model
+      -----------------------------------------
+      { hypaethralDebouncer = hypDebouncer
+      , hypaethralUserData = User.emptyHypaethralData
+
+      -- Children
+      , processing = Processing.initialModel
+      , tracks = Tracks.initialModel
+      , userLayer = User.initialModel
       }
       -----------------------------------------
       -- Initial command
       -----------------------------------------
-    , Cmd.none
+    , Cmd.batch
+        [ Cmd.map UserLayerMsg (User.initialCommand initialUrl)
+        , Cmd.map ProcessingMsg Processing.initialCommand
+        ]
     )
 
 
@@ -87,15 +106,11 @@ init _ =
 
 type Msg
     = Bypass
+      -----------------------------------------
+      -- 🂡
+      -----------------------------------------
     | Cmd (Cmd Msg)
-    | Initialize String
-    | NotifyUI Alien.Event
-    | Process Processing.Arguments
     | ToCache Alien.Event
-      -----------------------------------------
-      -- Authentication
-      -----------------------------------------
-    | RedirectToBlockstackSignIn
       -----------------------------------------
       -- Children
       -----------------------------------------
@@ -103,17 +118,23 @@ type Msg
     | TracksMsg Tracks.Msg
     | UserLayerMsg User.Msg
       -----------------------------------------
-      -- User data
+      -- Sources & Tracks
       -----------------------------------------
-    | LoadHypaethralUserData Json.Value
+    | Process Processing.Arguments
     | RemoveTracksBySourceId String
-    | SaveHypaethralData HypaethralBit
-    | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
+      -----------------------------------------
+      -- User layer #1
+      -----------------------------------------
     | SaveFavourites Json.Value
     | SavePlaylists Json.Value
     | SaveSettings Json.Value
     | SaveSources Json.Value
     | SaveTracks Json.Value
+      -----------------------------------------
+      -- User layer #2
+      -----------------------------------------
+    | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
+    | SaveHypaethralData HypaethralBit
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -122,63 +143,15 @@ update msg model =
         Bypass ->
             return model
 
+        -----------------------------------------
+        -- 🂡
+        -----------------------------------------
         Cmd cmd ->
             returnWithModel model cmd
-
-        Initialize href ->
-            let
-                initialUrl =
-                    Maybe.withDefault
-                        { protocol = Url.Http
-                        , host = ""
-                        , port_ = Nothing
-                        , path = ""
-                        , query = Nothing
-                        , fragment = Nothing
-                        }
-                        (Url.fromString href)
-            in
-            [ Cmd.map UserLayerMsg (User.initialCommand initialUrl)
-            , Cmd.map ProcessingMsg Processing.initialCommand
-            ]
-                |> Cmd.batch
-                |> returnWithModel model
-
-        NotifyUI alienEvent ->
-            [ Brain.Ports.toUI alienEvent
-
-            -- Sometimes the loading screen is still showing,
-            -- so we hide it here just in case.
-            , case alienEvent.error of
-                Just _ ->
-                    Brain.Ports.toUI (Alien.trigger Alien.HideLoadingScreen)
-
-                Nothing ->
-                    Cmd.none
-            ]
-                |> Cmd.batch
-                |> returnWithModel model
-
-        Process { origin, sources } ->
-            { origin = origin
-            , sources = sources
-            , tracks = model.hypaethralUserData.tracks
-            }
-                |> Processing.Process
-                |> ProcessingMsg
-                |> updateWithModel model
 
         ToCache alienEvent ->
             alienEvent
                 |> Brain.Ports.toCache
-                |> returnWithModel model
-
-        -----------------------------------------
-        -- Authentication
-        -----------------------------------------
-        RedirectToBlockstackSignIn ->
-            ()
-                |> Brain.Ports.redirectToBlockstackSignIn
                 |> returnWithModel model
 
         -----------------------------------------
@@ -200,7 +173,25 @@ update msg model =
             updateTracks model sub
 
         -----------------------------------------
-        -- User data
+        -- Sources & Tracks
+        -----------------------------------------
+        Process { origin, sources } ->
+            { origin = origin
+            , sources = sources
+            , tracks = model.hypaethralUserData.tracks
+            }
+                |> Processing.Process
+                |> ProcessingMsg
+                |> updateWithModel model
+
+        RemoveTracksBySourceId sourceId ->
+            model.hypaethralUserData.tracks
+                |> Tracks.removeBySourceId sourceId
+                |> .kept
+                |> saveTracks model
+
+        -----------------------------------------
+        -- User layer #1
         -----------------------------------------
         --   The hypaethral user data is received in pieces,
         --   pieces which are "cached" here in the web worker.
@@ -211,61 +202,6 @@ update msg model =
         --   2. The data can be used in the web worker (brain) as well.
         --      (eg. for track-search index)
         --
-        LoadHypaethralUserData value ->
-            let
-                decodedData =
-                    value
-                        |> User.decodeHypaethralData
-                        |> Result.withDefault model.hypaethralUserData
-
-                encodedTracks =
-                    Json.Encode.list Tracks.encodeTrack decodedData.tracks
-            in
-            value
-                |> Alien.broadcast Alien.LoadHypaethralUserData
-                |> Brain.Ports.toUI
-                |> returnWithModel { model | hypaethralUserData = decodedData }
-                |> andThen (updateSearchIndex encodedTracks)
-
-        RemoveTracksBySourceId sourceId ->
-            model.hypaethralUserData.tracks
-                |> Tracks.removeBySourceId sourceId
-                |> .kept
-                |> hypaethralLenses.setTracks model
-                |> updateSearchIndexWithModel
-                |> andThen (saveHypaethralDataBitWithDelay Tracks)
-
-        SaveHypaethralData bit ->
-            model.hypaethralUserData
-                |> User.encodeHypaethralBit bit
-                |> User.SaveHypaethralData bit
-                |> UserLayerMsg
-                |> updateWithModel model
-
-        SaveHypaethralDataSlowly debouncerMsg ->
-            Return3.wieldNested
-                update
-                { mapCmd = SaveHypaethralDataSlowly
-                , mapModel = \child -> { model | hypaethralDebouncer = child }
-                , update =
-                    \dbMsg dbModel ->
-                        let
-                            ( m, c, r ) =
-                                Debouncer.update dbMsg dbModel
-                        in
-                        ( m
-                        , c
-                        , r
-                            |> Maybe.withDefault []
-                            |> EverySet.fromList
-                            |> EverySet.toList
-                            |> List.map SaveHypaethralData
-                        )
-                }
-                { model = model.hypaethralDebouncer
-                , msg = debouncerMsg
-                }
-
         SaveFavourites value ->
             value
                 |> Json.decodeValue (Json.list Tracks.favouriteDecoder)
@@ -298,28 +234,67 @@ update msg model =
             value
                 |> Json.decodeValue (Json.list Tracks.trackDecoder)
                 |> Result.withDefault model.hypaethralUserData.tracks
-                |> hypaethralLenses.setTracks model
-                |> updateSearchIndex value
-                |> andThen (saveHypaethralDataBitWithDelay Tracks)
+                |> saveTracks model
+
+        -----------------------------------------
+        -- User layer #2
+        -----------------------------------------
+        SaveHypaethralDataSlowly debouncerMsg ->
+            Return3.wieldNested
+                update
+                { mapCmd = SaveHypaethralDataSlowly
+                , mapModel = \child -> { model | hypaethralDebouncer = child }
+                , update =
+                    \dbMsg dbModel ->
+                        let
+                            ( m, c, r ) =
+                                Debouncer.update dbMsg dbModel
+                        in
+                        ( m
+                        , c
+                        , r
+                            |> Maybe.withDefault []
+                            |> EverySet.fromList
+                            |> EverySet.toList
+                            |> List.map SaveHypaethralData
+                        )
+                }
+                { model = model.hypaethralDebouncer
+                , msg = debouncerMsg
+                }
+
+        SaveHypaethralData bit ->
+            model.hypaethralUserData
+                |> User.encodeHypaethralBit bit
+                |> User.SaveHypaethralData bit
+                |> UserLayerMsg
+                |> updateWithModel model
 
 
-updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
+saveTracks : Model -> List Tracks.Track -> Return Model Msg
+saveTracks model tracks =
+    tracks
+        -- Store in model
+        |> hypaethralLenses.setTracks model
+        -- Update search index
+        |> .hypaethralUserData
+        |> .tracks
+        |> Json.Encode.list Tracks.encodeTrack
+        |> Tracks.UpdateSearchIndex
+        |> TracksMsg
+        |> updateWithModel model
+        -- Save with delay
+        |> andThen (saveHypaethralDataBitWithDelay Tracks)
+
+
+updateWithModel : Model -> Msg -> Return Model Msg
 updateWithModel model msg =
     update msg model
 
 
-updateSearchIndex : Json.Value -> Model -> ( Model, Cmd Msg )
+updateSearchIndex : Json.Value -> Model -> Return Model Msg
 updateSearchIndex value model =
     value
-        |> Tracks.UpdateSearchIndex
-        |> TracksMsg
-        |> updateWithModel model
-
-
-updateSearchIndexWithModel : Model -> ( Model, Cmd Msg )
-updateSearchIndexWithModel model =
-    model.hypaethralUserData.tracks
-        |> Json.Encode.list Tracks.encodeTrack
         |> Tracks.UpdateSearchIndex
         |> TracksMsg
         |> updateWithModel model
@@ -329,60 +304,60 @@ updateSearchIndexWithModel model =
 -- 📣  ░░  REPLIES
 
 
-translateReply : Reply -> Model -> ( Model, Cmd Msg )
+translateReply : Reply -> Model -> Return Model Msg
 translateReply reply model =
     case reply of
         FabricatedNewSecretKey ->
-            saveHypaethralData model
-
-        ImportHypaethralData hypData ->
-            List.foldl
-                (\( _, bit ) ->
-                    hypData
-                        |> User.encodeHypaethralBit bit
-                        |> User.SaveHypaethralData bit
-                        |> UserLayerMsg
-                        |> update
-                        |> andThen
-                )
-                (return { model | hypaethralUserData = hypData })
-                User.hypaethralBit.list
+            saveAllHypaethralData model
 
         -----------------------------------------
         -- Tracks
         -----------------------------------------
         AddTracks tracks ->
             tracks
-                |> (++) model.hypaethralUserData.tracks
-                |> hypaethralLenses.setTracks model
-                |> updateSearchIndexWithModel
-                |> andThen (saveHypaethralDataBitWithDelay Tracks)
+                |> List.append model.hypaethralUserData.tracks
+                |> saveTracks model
 
         RemoveTracksByPaths args ->
             model.hypaethralUserData.tracks
                 |> Tracks.removeByPaths args
                 |> .kept
-                |> hypaethralLenses.setTracks model
-                |> updateSearchIndexWithModel
-                |> andThen (saveHypaethralDataBitWithDelay Tracks)
+                |> saveTracks model
 
         -----------------------------------------
         -- To UI
         -----------------------------------------
         GiveUI Alien.LoadHypaethralUserData data ->
-            update (LoadHypaethralUserData data) model
+            let
+                decodedData =
+                    data
+                        |> User.decodeHypaethralData
+                        |> Result.withDefault model.hypaethralUserData
+            in
+            data
+                |> Alien.broadcast Alien.LoadHypaethralUserData
+                |> Brain.Ports.toUI
+                |> returnWithModel
+                    { model | hypaethralUserData = decodedData }
+                |> andThen
+                    (decodedData.tracks
+                        |> Json.Encode.list Tracks.encodeTrack
+                        |> Tracks.UpdateSearchIndex
+                        |> TracksMsg
+                        |> update
+                    )
 
         GiveUI tag data ->
             data
                 |> Alien.broadcast tag
-                |> NotifyUI
-                |> updateWithModel model
+                |> Brain.Ports.toUI
+                |> returnWithModel model
 
         NudgeUI tag ->
             tag
                 |> Alien.trigger
-                |> NotifyUI
-                |> updateWithModel model
+                |> Brain.Ports.toUI
+                |> returnWithModel model
 
 
 
@@ -446,8 +421,8 @@ makeHypaethralLens setter model value =
     { model | hypaethralUserData = setter model.hypaethralUserData value }
 
 
-saveHypaethralData : Model -> ( Model, Cmd Msg )
-saveHypaethralData model =
+saveAllHypaethralData : Model -> ( Model, Cmd Msg )
+saveAllHypaethralData model =
     List.foldl
         (\bit ->
             bit
@@ -475,7 +450,6 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Brain.Ports.fromAlien alien
-        , Brain.Ports.initialize Initialize
 
         -----------------------------------------
         -- Children
@@ -552,7 +526,7 @@ translateAlienData tag data =
                     report Alien.ProcessSources (Json.errorToString err)
 
         Alien.RedirectToBlockstackSignIn ->
-            RedirectToBlockstackSignIn
+            Cmd (Brain.Ports.redirectToBlockstackSignIn ())
 
         Alien.RemoveTracksBySourceId ->
             data
@@ -646,7 +620,8 @@ reportAuthError tag originalError fallbackError =
             ]
                 |> Json.Encode.object
                 |> Alien.broadcast Alien.MissingSecretKey
-                |> NotifyUI
+                |> Brain.Ports.toUI
+                |> Cmd
 
         _ ->
             report tag fallbackError
@@ -656,4 +631,5 @@ report : Alien.Tag -> String -> Msg
 report tag err =
     err
         |> Alien.report tag
-        |> NotifyUI
+        |> Brain.Ports.toUI
+        |> Cmd
