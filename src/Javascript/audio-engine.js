@@ -359,8 +359,13 @@ function blobUrl(blob) {
 
 
 function isActiveAudioElement(orchestrion, node) {
-  if (!orchestrion.activeQueueItem || !node) return false;
-  return orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
+  return (
+    !orchestrion.activeQueueItem ||
+    !node ||
+    node.getAttribute("data-preload") === "t"
+  )
+  ? false
+  : orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
 }
 
 
