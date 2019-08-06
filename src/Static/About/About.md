@@ -46,7 +46,7 @@ This layer connects with the services the user has on which music can be found. 
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
-- [IPFS](https://ipfs.io/) <small>(supports DNSLink)</small>
+- [IPFS](https://ipfs.io/) <small>(supports DNSLink & IPNS)</small>
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
 
