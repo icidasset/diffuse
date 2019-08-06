@@ -108,7 +108,7 @@ translateHttpError service err =
             "Diffuse error, invalid url was used"
 
         BadStatus _ ->
-            "Got a faulty response from this source"
+            "Got a faulty response from this source. Use the developer console to get more info."
 
         BadBody response ->
             Services.parseErrorResponse service response

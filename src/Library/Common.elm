@@ -1,4 +1,4 @@
-module Common exposing (Switch(..), backToIndex, queryString, urlOrigin)
+module Common exposing (Switch(..), backToIndex, boolFromString, boolToString, queryString, urlOrigin)
 
 import Tuple.Ext as Tuple
 import Url exposing (Protocol(..), Url)
@@ -25,6 +25,25 @@ type Switch
 
 
 -- 🔱
+
+
+boolFromString : String -> Bool
+boolFromString string =
+    case string of
+        "t" ->
+            True
+
+        _ ->
+            False
+
+
+boolToString : Bool -> String
+boolToString bool =
+    if bool then
+        "t"
+
+    else
+        "f"
 
 
 queryString : List ( String, String ) -> String

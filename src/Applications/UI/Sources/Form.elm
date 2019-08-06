@@ -3,6 +3,7 @@ module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, e
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Color
+import Common exposing (boolFromString, boolToString)
 import Conditional exposing (..)
 import Dict
 import Dict.Ext as Dict
@@ -486,14 +487,39 @@ renderProperty context property =
         [ UI.Kit.label
             [ for property.key ]
             property.label
-        , UI.Kit.textField
-            [ name property.key
-            , onInput (SetData property.key)
-            , placeholder property.placeholder
-            , required (property.label |> String.toLower |> String.contains "optional" |> not)
-            , type_ (ifThenElse property.password "password" "text")
-            , value (Dict.fetch property.key "" context.data)
-            ]
+
+        --
+        , if
+            (property.placeholder == boolToString True)
+                || (property.placeholder == boolToString False)
+          then
+            let
+                bool =
+                    context.data
+                        |> Dict.fetch property.key property.placeholder
+                        |> boolFromString
+            in
+            chunk
+                [ T.mt2, T.pt1 ]
+                [ UI.Kit.checkbox
+                    { checked = bool
+                    , toggleMsg =
+                        bool
+                            |> not
+                            |> boolToString
+                            |> SetData property.key
+                    }
+                ]
+
+          else
+            UI.Kit.textField
+                [ name property.key
+                , onInput (SetData property.key)
+                , placeholder property.placeholder
+                , required (property.label |> String.toLower |> String.contains "optional" |> not)
+                , type_ (ifThenElse property.password "password" "text")
+                , value (Dict.fetch property.key "" context.data)
+                ]
         ]
 
 

@@ -8,14 +8,19 @@ Resources:
 
 -}
 
+import Common exposing (boolFromString, boolToString)
+import Conditional exposing (ifThenElse)
 import Dict
+import Dict.Ext as Dict
 import Http
+import Json.Decode as Json
 import Sources exposing (Property, SourceData)
 import Sources.Processing exposing (..)
 import Sources.Services.Common exposing (cleanPath, noPrep)
 import Sources.Services.Ipfs.Marker as Marker
 import Sources.Services.Ipfs.Parser as Parser
 import String.Ext as String
+import Task
 import Time
 
 
@@ -26,7 +31,9 @@ import Time
 
 defaults =
     { gateway = "http://127.0.0.1:8080"
+    , local = boolToString False
     , name = "Music from IPFS"
+    , ipns = boolToString False
     }
 
 
@@ -43,9 +50,19 @@ properties =
       , placeholder = "QmVLDAhCY3X9P2u"
       , password = False
       }
+    , { key = "ipns"
+      , label = "Resolve using IPNS"
+      , placeholder = defaults.ipns
+      , password = False
+      }
     , { key = "gateway"
       , label = "Gateway"
       , placeholder = defaults.gateway
+      , password = False
+      }
+    , { key = "local"
+      , label = "Resolve IPNS locally"
+      , placeholder = defaults.local
       , password = False
       }
     ]
@@ -59,6 +76,8 @@ initialData =
         [ ( "directoryHash", "" )
         , ( "name", defaults.name )
         , ( "gateway", defaults.gateway )
+        , ( "ipns", defaults.ipns )
+        , ( "local", defaults.local )
         ]
 
 
@@ -121,6 +140,22 @@ makeTree srcData marker _ resultMsg =
                     )
                     ""
 
+        resolveWithIpns =
+            case marker of
+                InProgress _ ->
+                    False
+
+                _ ->
+                    srcData
+                        |> Dict.fetch "ipns" defaults.ipns
+                        |> boolFromString
+
+        resolveLocally =
+            srcData
+                |> Dict.fetch "local" defaults.local
+                |> boolFromString
+                |> (\b -> ifThenElse b "true" "false")
+
         hash =
             case marker of
                 InProgress _ ->
@@ -140,14 +175,77 @@ makeTree srcData marker _ resultMsg =
                                     Just h
                             )
                         |> Maybe.withDefault "MISSING_HASH"
-
-        url =
-            gateway ++ "/api/v0/ls?arg=" ++ hash ++ "&encoding=json"
     in
-    Http.get
-        { url = url
-        , expect = Http.expectString resultMsg
-        }
+    (if resolveWithIpns then
+        Http.task
+            { method = "GET"
+            , headers = []
+            , url = gateway ++ "/api/v0/name/resolve?arg=" ++ hash ++ "&local=" ++ resolveLocally ++ "&encoding=json"
+            , body = Http.emptyBody
+            , resolver = Http.stringResolver ipnsResolver
+            , timeout = Just (60 * 15)
+            }
+
+     else
+        Task.succeed { ipfsHash = hash }
+    )
+        |> Task.andThen
+            (\{ ipfsHash } ->
+                Http.task
+                    { method = "GET"
+                    , headers = []
+                    , url = gateway ++ "/api/v0/ls?arg=" ++ ipfsHash ++ "&encoding=json"
+                    , body = Http.emptyBody
+                    , resolver = Http.stringResolver ipfsResolver
+                    , timeout = Just (60 * 15)
+                    }
+            )
+        |> Task.attempt resultMsg
+
+
+ipnsResolver : Http.Response String -> Result Http.Error { ipfsHash : String }
+ipnsResolver response =
+    case response of
+        Http.BadUrl_ u ->
+            Err (Http.BadUrl u)
+
+        Http.Timeout_ ->
+            Err Http.Timeout
+
+        Http.NetworkError_ ->
+            Err Http.NetworkError
+
+        Http.BadStatus_ m body ->
+            body
+                |> Json.decodeString (Json.field "Message" Json.string)
+                |> Result.map Http.BadBody
+                |> Result.withDefault (Http.BadStatus m.statusCode)
+                |> Err
+
+        Http.GoodStatus_ m body ->
+            body
+                |> Json.decodeString (Json.field "Path" Json.string)
+                |> Result.map (\hash -> { ipfsHash = hash })
+                |> Result.mapError (Json.errorToString >> Http.BadBody)
+
+
+ipfsResolver : Http.Response String -> Result Http.Error String
+ipfsResolver response =
+    case response of
+        Http.BadUrl_ u ->
+            Err (Http.BadUrl u)
+
+        Http.Timeout_ ->
+            Err Http.Timeout
+
+        Http.NetworkError_ ->
+            Err Http.NetworkError
+
+        Http.BadStatus_ m body ->
+            Err (Http.BadStatus m.statusCode)
+
+        Http.GoodStatus_ m body ->
+            Ok body
 
 
 {-| Re-export parser functions.
