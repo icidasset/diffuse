@@ -46,6 +46,7 @@ type Tag
     | SaveEnclosedUserData
     | SaveFavourites
     | SavePlaylists
+    | SaveProgress
     | SaveSettings
     | SaveSources
     | SaveTracks
@@ -96,6 +97,7 @@ enum =
         , ( "SAVE_ENCLOSED_USER_DATA", SaveEnclosedUserData )
         , ( "SAVE_FAVOURITES", SaveFavourites )
         , ( "SAVE_PLAYLISTS", SavePlaylists )
+        , ( "SAVE_PROGRESS", SaveProgress )
         , ( "SAVE_SETTINGS", SaveSettings )
         , ( "SAVE_SOURCES", SaveSources )
         , ( "SAVE_TRACKS", SaveTracks )

@@ -1,5 +1,6 @@
 module UI.Queue.Common exposing (makeEngineItem, makeItem, makeTrackUrl)
 
+import Dict exposing (Dict)
 import List.Extra as List
 import Queue exposing (..)
 import Sources exposing (Source)
@@ -13,9 +14,10 @@ import Tracks exposing (IdentifiedTrack, Track)
 -- 🔱
 
 
-makeEngineItem : Time.Posix -> List Source -> List String -> Track -> EngineItem
-makeEngineItem timestamp sources cachedTrackIds track =
+makeEngineItem : Time.Posix -> List Source -> List String -> Dict String Float -> Track -> EngineItem
+makeEngineItem timestamp sources cachedTrackIds progressTable track =
     { isCached = List.member track.id cachedTrackIds
+    , progress = Dict.get track.id progressTable
     , trackId = track.id
     , url = makeTrackUrl timestamp sources track
     }

@@ -246,7 +246,6 @@ app.ports.requestLegacyLocalData.subscribe(event => {
     const req = tra.objectStore(key).get(key)
 
     req.onsuccess = _ => {
-      console.log(req.result)
       if (req.result) sendJsonData(event)(req.result)
     }
   }

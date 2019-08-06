@@ -25,6 +25,7 @@ type Reply
       -----------------------------------------
     | Seek Float
     | TogglePlayPause
+    | ToggleRememberProgress
       -----------------------------------------
       -- Authentication
       -----------------------------------------
@@ -113,6 +114,7 @@ type Reply
     | SaveEnclosedUserData
     | SaveFavourites
     | SavePlaylists
+    | SaveProgress
     | SaveSettings
     | SaveSources
     | SaveTracks

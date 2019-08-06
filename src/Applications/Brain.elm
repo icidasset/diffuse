@@ -127,6 +127,7 @@ type Msg
       -----------------------------------------
     | SaveFavourites Json.Value
     | SavePlaylists Json.Value
+    | SaveProgress Json.Value
     | SaveSettings Json.Value
     | SaveSources Json.Value
     | SaveTracks Json.Value
@@ -216,6 +217,13 @@ update msg model =
                 |> hypaethralLenses.setPlaylists model
                 |> saveHypaethralDataBitWithDelay Playlists
 
+        SaveProgress value ->
+            value
+                |> Json.decodeValue (Json.dict Json.float)
+                |> Result.withDefault model.hypaethralUserData.progress
+                |> hypaethralLenses.setProgress model
+                |> saveHypaethralDataBitWithDelay Progress
+
         SaveSettings value ->
             value
                 |> Json.decodeValue (Json.map Just Settings.decoder)
@@ -277,12 +285,12 @@ saveTracks model tracks =
         -- Store in model
         |> hypaethralLenses.setTracks model
         -- Update search index
-        |> .hypaethralUserData
-        |> .tracks
-        |> Json.Encode.list Tracks.encodeTrack
-        |> Tracks.UpdateSearchIndex
-        |> TracksMsg
-        |> updateWithModel model
+        |> update
+            (tracks
+                |> Json.Encode.list Tracks.encodeTrack
+                |> Tracks.UpdateSearchIndex
+                |> TracksMsg
+            )
         -- Save with delay
         |> andThen (saveHypaethralDataBitWithDelay Tracks)
 
@@ -410,6 +418,7 @@ updateTracks model sub =
 hypaethralLenses =
     { setFavourites = makeHypaethralLens (\h f -> { h | favourites = f })
     , setPlaylists = makeHypaethralLens (\h p -> { h | playlists = p })
+    , setProgress = makeHypaethralLens (\h p -> { h | progress = p })
     , setSettings = makeHypaethralLens (\h s -> { h | settings = s })
     , setSources = makeHypaethralLens (\h s -> { h | sources = s })
     , setTracks = makeHypaethralLens (\h t -> { h | tracks = t })
@@ -545,6 +554,9 @@ translateAlienData tag data =
 
         Alien.SavePlaylists ->
             SavePlaylists data
+
+        Alien.SaveProgress ->
+            SaveProgress data
 
         Alien.SaveSettings ->
             SaveSettings data

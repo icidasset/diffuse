@@ -33,6 +33,7 @@ type alias Dependencies =
     { authenticationMethod : Maybe User.Layer.Method
     , chosenBackgroundImage : Maybe String
     , hideDuplicateTracks : Bool
+    , rememberProgress : Bool
     }
 
 
@@ -135,13 +136,27 @@ index deps =
             ClearTracksCache
             (text "Clear cache")
 
-        -- Duplicates
-        -------------
-        , label "Hide Duplicates"
-        , UI.Kit.checkbox
-            { checked = deps.hideDuplicateTracks
-            , toggleMsg = ToggleHideDuplicates
-            }
+        -- Check it
+        -----------
+        , chunk
+            [ T.flex, T.flex_wrap ]
+            [ chunk
+                [ T.w_50_ns, T.w_100 ]
+                [ label "Hide Duplicates"
+                , UI.Kit.checkbox
+                    { checked = deps.hideDuplicateTracks
+                    , toggleMsg = ToggleHideDuplicates
+                    }
+                ]
+            , chunk
+                [ T.w_50_ns, T.w_100 ]
+                [ label "Remember position on long tracks"
+                , UI.Kit.checkbox
+                    { checked = deps.rememberProgress
+                    , toggleMsg = ToggleRememberProgress
+                    }
+                ]
+            ]
 
         -- Background image
         -------------------

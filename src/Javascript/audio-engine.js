@@ -125,7 +125,7 @@ function insertTrack(orchestrion, queueItem) {
     if ((audioNode = audioElementsContainer.querySelector("audio")) && SINGLE_AUDIO_NODE) {
       audioNode.setAttribute("src", queueItem.url)
       audioNode.setAttribute("rel", queueItem.trackId)
-      audioNode.play()
+      audioNode.load()
 
     } else if (audioNode = findExistingAudioElement(queueItem)) {
       audioNode.setAttribute("data-preload", "f")
@@ -134,7 +134,7 @@ function insertTrack(orchestrion, queueItem) {
       audioNode.context.connect(volume)
 
       if (audioNode.readyState >= 4) {
-        playAudio(audioNode)
+        playAudio(audioNode, queueItem)
       } else {
         orchestrion.app.ports.setAudioIsLoading.send(true)
         audioNode.load()
@@ -286,18 +286,17 @@ function audioTimeUpdateEvent(event) {
 
   setProgressBarWidth(progress)
 
-  // TODO:
-  // if (node.duration >= 30 * 60) {
-  //   this.debouncedSendProgress = this.debouncedSendProgress || debounce(sendProgress, 10000)
-  //   this.debouncedSendProgress.call(this, progress)
-  // }
+  if (node.duration >= 30 * 60) {
+    sendProgress(this, progress)
+  }
 }
 
 
 function audioEndEvent(event) {
   if (this.repeat) {
-    playAudio(event.target)
+    playAudio(event.target, this.activeQueueItem)
   } else {
+    this.app.ports.noteProgress.send({ trackId: this.activeQueueItem.trackId, progress: 1 })
     this.app.ports.activeQueueItemEnded.send(null)
   }
 }
@@ -320,7 +319,7 @@ function audioLoaded(event) {
   clearTimeout(this.loadingTimeoutId)
   this.app.ports.setAudioHasStalled.send(false)
   this.app.ports.setAudioIsLoading.send(false)
-  if (event.target.paused) playAudio(event.target)
+  if (event.target.paused) playAudio(event.target, this.activeQueueItem)
 }
 
 
@@ -365,7 +364,11 @@ function isActiveAudioElement(orchestrion, node) {
 }
 
 
-function playAudio(element) {
+function playAudio(element, queueItem) {
+  if (queueItem.progress && element.duration) {
+    element.currentTime = queueItem.progress * element.duration
+  }
+
   const promise = element.play() || Promise.resolve()
 
   promise.catch(err => {
@@ -374,9 +377,12 @@ function playAudio(element) {
 }
 
 
-function sendProgress(progress) {
-  this.app.ports.progress.send(progress)
-}
+const sendProgress = throttle((orchestrion, progress) => {
+  orchestrion.app.ports.noteProgress.send({
+    trackId: orchestrion.activeQueueItem.trackId,
+    progress: progress
+  })
+}, 30000)
 
 
 function unstallAudio(node) {

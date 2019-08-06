@@ -15,6 +15,7 @@ Which is stored in the location chosen by the user.
 
 -}
 
+import Dict exposing (Dict)
 import Enum exposing (Enum)
 import Equalizer
 import Json.Decode as Json
@@ -70,6 +71,7 @@ type alias EnclosedData =
 type HypaethralBit
     = Favourites
     | Playlists
+    | Progress
     | Settings
     | Sources
     | Tracks
@@ -78,6 +80,7 @@ type HypaethralBit
 type alias HypaethralData =
     { favourites : List Tracks.Favourite
     , playlists : List Playlists.Playlist
+    , progress : Dict String Float
     , settings : Maybe Settings.Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
@@ -222,6 +225,7 @@ emptyHypaethralData : HypaethralData
 emptyHypaethralData =
     { favourites = []
     , playlists = []
+    , progress = Dict.empty
     , settings = Nothing
     , sources = []
     , tracks = []
@@ -229,13 +233,16 @@ emptyHypaethralData =
 
 
 encodeHypaethralBit : HypaethralBit -> HypaethralData -> Json.Value
-encodeHypaethralBit bit { favourites, playlists, settings, sources, tracks } =
+encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tracks } =
     case bit of
         Favourites ->
             Json.Encode.list Tracks.encodeFavourite favourites
 
         Playlists ->
             Json.Encode.list Playlists.encode playlists
+
+        Progress ->
+            Json.Encode.dict identity Json.Encode.float progress
 
         Settings ->
             Maybe.unwrap Json.Encode.null Settings.encode settings
@@ -252,6 +259,7 @@ encodeHypaethralData data =
     Json.Encode.object
         [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data )
         , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data )
+        , ( hypaethralBitKey Progress, encodeHypaethralBit Progress data )
         , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data )
         , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data )
         , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data )
@@ -263,6 +271,7 @@ hypaethralBit =
     Enum.create
         [ ( hypaethralBitKey Favourites, Favourites )
         , ( hypaethralBitKey Playlists, Playlists )
+        , ( hypaethralBitKey Progress, Progress )
         , ( hypaethralBitKey Settings, Settings )
         , ( hypaethralBitKey Sources, Sources )
         , ( hypaethralBitKey Tracks, Tracks )
@@ -283,6 +292,9 @@ hypaethralBitKey bit =
         Playlists ->
             "playlists"
 
+        Progress ->
+            "progress"
+
         Settings ->
             "settings"
 
@@ -298,6 +310,7 @@ hypaethralDataDecoder =
     Json.succeed HypaethralData
         |> optional (hypaethralBitKey Favourites) (Json.listIgnore Tracks.favouriteDecoder) []
         |> optional (hypaethralBitKey Playlists) (Json.listIgnore Playlists.decoder) []
+        |> optional (hypaethralBitKey Progress) (Json.dict Json.float) Dict.empty
         |> optional (hypaethralBitKey Settings) (Json.maybe Settings.decoder) Nothing
         |> optional (hypaethralBitKey Sources) (Json.listIgnore Sources.decoder) []
         |> optional (hypaethralBitKey Tracks) (Json.listIgnore Tracks.trackDecoder) []
