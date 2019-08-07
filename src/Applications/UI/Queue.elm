@@ -392,7 +392,7 @@ fillQueue timestamp availableTracks model =
                     m
            )
         |> (\m ->
-                if List.length model.future >= Fill.queueLength then
+                if m.shuffle && List.length model.future >= Fill.queueLength then
                     m
 
                 else
