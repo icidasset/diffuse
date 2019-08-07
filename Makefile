@@ -1,12 +1,12 @@
-.PHONY: build electron system
+.PHONY: build system vendor
 
 
 # Variables
 
-NODE_BIN=./node_modules/.bin
+NPM_DIR=./node_modules
 SRC_DIR=./src
 BUILD_DIR=./build
-BUILD_ELECTRON_DIR=./build-electron
+VENDOR_DIR=./vendor
 
 
 # Default task
@@ -22,45 +22,36 @@ build: clean elm system vendor
 	@echo "> Build completed ⚡"
 
 
+build-prod: clean elm-prod system vendor
+	@echo "> Production build completed 🛳"
+
+
 clean:
-	@echo "> Cleaning Build Directory"
+	@echo "> Cleaning build directory"
 	@rm -rf $(BUILD_DIR) || true
 
 
-electron-clean:
-	@echo "> Cleaning Electron Directory"
-	@rm -rf $(BUILD_ELECTRON_DIR) || true
-
-
-electron-prep:
-	@echo "> Copying Electron Script"
-	@cp -r ./electron $(BUILD_DIR)
-	@cp ./package.json $(BUILD_DIR)/package.json
-	@echo "> Creating icons"
-	@mkdir -p $(BUILD_DIR)/resources
-	@cp $(SRC_DIR)/Static/Images/icon.png $(BUILD_DIR)/resources/icon.png
-	@makeicns -in $(BUILD_DIR)/resources/icon.png -out $(BUILD_DIR)/resources/icon.icns 2>/dev/null
-	@convert $(BUILD_DIR)/resources/icon.png -define icon:auto-resize=256 $(BUILD_DIR)/resources/icon.ico
-
-
-electron-build: build electron-clean electron-prep
-	@$(NODE_BIN)/electron-builder build --config=electron/builder.yaml --mac --linux --win
-
-
 elm:
-	@echo "> Compiling Elm"
-	@elm-make $(SRC_DIR)/App/App.elm --output $(BUILD_DIR)/application.js --yes
-	@elm-make $(SRC_DIR)/Slave/Slave.elm --output $(BUILD_DIR)/slave.js --yes
+	@echo "> Compiling Elm application"
+	@elm make $(SRC_DIR)/Applications/Brain.elm --output $(BUILD_DIR)/brain.js
+	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/application.js
+
+
+elm-prod:
+	@echo "> Compiling Elm application (optimized)"
+	@elm make $(SRC_DIR)/Applications/Brain.elm --output $(BUILD_DIR)/brain.js --optimize
+	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/application.js --optimize
 
 
 system:
-	@echo "> Compiling System"
+	@echo "> Compiling system"
 	@stack build && stack exec build
 
 
 vendor:
-	@echo "> Copy vendor dependencies"
-	@stack build && stack exec vendor
+	@echo "> Copying vendor things"
+	@mkdir -p $(BUILD_DIR)/vendor/
+	@cp -rf $(VENDOR_DIR)/ $(BUILD_DIR)/vendor/
 
 
 #
@@ -71,25 +62,46 @@ dev: build
 	@make -j watch-wo-build server
 
 
-electron-dev: build electron-prep
-	@make -j watch-wo-build electron-dev-server
+doc-tests:
+	@echo "> Running documentation tests"
+	@( cd src && \
+		find . -name "*.elm" -print0 | \
+		xargs -0 -n 1 sh -c 'elm-proofread -- $0 || exit 255; echo "\n\n"'
+	)
 
 
-electron-dev-server:
-	@ENV=DEV $(NODE_BIN)/electron $(BUILD_DIR)/electron/index.js
+install:
+	@echo "> Downloading dependencies"
+	@mkdir -p $(VENDOR_DIR)
+	@curl https://unpkg.com/lunr@2.3.6/lunr.js -o $(VENDOR_DIR)/lunr.js
+	@curl https://unpkg.com/remotestoragejs@1.2.2/release/remotestorage.js -o $(VENDOR_DIR)/remotestorage.min.js
+	@curl https://unpkg.com/fast-text-encoding@1.0.0/text.min.js -o $(VENDOR_DIR)/text-encoding-polyfill.min.js
+	@curl https://unpkg.com/tachyons@4.11.1/css/tachyons.min.css -o $(VENDOR_DIR)/tachyons.min.css
+	@curl https://unpkg.com/tocca@2.0.4/Tocca.min.js -o $(VENDOR_DIR)/tocca.min.js
+
+	@# Non-NPM dependencies
+	@curl https://gist.githubusercontent.com/icidasset/a888e02d7441aeb2af99263a3add0f73/raw/e4ca77c02e91a29e0c3c749d2ba80983a137a7aa/blockstack.min.js -o $(VENDOR_DIR)/blockstack.min.js
+	@curl https://raw.githubusercontent.com/icidasset/diffuse-musicmetadata/0ae8c854e18b6960b9f7e94b7eb47868416dc2ad/dist/musicmetadata.min.js -o $(VENDOR_DIR)/musicmetadata.min.js
+	@curl https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js -o $(VENDOR_DIR)/pep.js
+	@curl https://raw.githubusercontent.com/dmihal/Subworkers/6c3a57953615b26cd82fd39894b947f2b954fcfd/subworkers.js -o $(VENDOR_DIR)/subworkers-polyfill.js
+
+	@# Minify non-minified dependencies
+	@echo "> Minifying dependencies"
+	@closure-compiler --js=$(VENDOR_DIR)/subworkers-polyfill.js --js_output_file=$(VENDOR_DIR)/subworkers-polyfill.min.js
+	@closure-compiler --js=$(VENDOR_DIR)/lunr.js --js_output_file=$(VENDOR_DIR)/lunr.min.js
+	@closure-compiler --js=$(VENDOR_DIR)/pep.js --js_output_file=$(VENDOR_DIR)/pep.min.js
+	@rm $(VENDOR_DIR)/subworkers-polyfill.js
+	@rm $(VENDOR_DIR)/lunr.js
+	@rm $(VENDOR_DIR)/pep.js
 
 
 server:
 	@echo "> Booting up web server on port 5000"
-	@stack build && stack exec server
+	@devd --port 5000 --all --crossdomain --quiet --notfound=301.html $(BUILD_DIR)
 
 
 test:
-	@echo "> Run tests"
-	@$(NODE_BIN)/elm-doctest \
-		src/App/Sources/Crypto/Hex.elm \
-		src/App/Sources/Crypto/Hmac.elm \
-		src/App/Sources/Services/Azure/Authorization.elm
+	@make -j doc-tests
 
 
 watch: build
@@ -103,10 +115,8 @@ watch-wo-build:
 
 watch-elm:
 	@watchexec -p \
-		-w $(SRC_DIR)/App \
-		-w $(SRC_DIR)/Lib \
-		-w $(SRC_DIR)/Slave \
-		-w $(SRC_DIR)/Styles \
+		-w $(SRC_DIR)/Applications \
+		-w $(SRC_DIR)/Library \
 		-- make elm
 
 

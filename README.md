@@ -1,93 +1,85 @@
-<strong><img src="https://diffuse.sh/images/diffuse-dark.svg" alt="Diffuse" width="158" /></strong>
+<img src="https://diffuse.sh/images/diffuse-dark.svg" alt="Diffuse" width="158" />
 
-A music player which connects to your cloud/distributed storage.
+_A music player that connects to your cloud/distributed storage,  
+in the form of a static, serverless, web application._
+
+📍 Available at [diffuse.sh](https://diffuse.sh/) and for [download](https://github.com/icidasset/diffuse/releases).
 
 <br />
-<img src="https://icidasset-public.s3.amazonaws.com/diffuse.jpg" />
-
-📍 Available at [https://diffuse.sh/](https://diffuse.sh/)
+<img src="https://icidasset-public.s3.amazonaws.com/diffuse-v2-alpha.jpg" />
 
 
 
-## Versions
+### Integrations
 
-🌍 [Web](https://diffuse.sh/)  
-Chrome, Firefox, Safari & Edge.
-
-🖥 [Native](https://github.com/icidasset/diffuse/releases)  
-MacOS, Linux & Windows.  
-<small>Unique features: Add music from local filesystem, WebDAV & media-keys support.</small>
-
-
-
-## Integrations
-
-[More info](https://diffuse.sh/about/)
+User layer for user-data storage.  
+Music layer for music storage.
 
 #### User layer
 
-- [Blockstack](https://blockstack.org/)
-- [RemoteStorage](remotestorage.io)
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(ie. anonymous mode)</small>
+- [~~Blockstack~~](https://blockstack.org/) <small>(TODO)</small>
+- [Dropbox](https://www.dropbox.com/)
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
+- [IPFS](https://ipfs.io/)
+- [RemoteStorage](https://remotestorage.io/)
+- [Textile](https://github.com/textileio/go-textile)
 
 #### Music layer
 
 - [Amazon S3](https://aws.amazon.com/s3/)
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
+- [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
+- [~~Blockstack Gaia Storage~~](https://github.com/blockstack/gaia) <small>(TODO)</small>
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
 - [IPFS](https://ipfs.io/)
-- Local Filesystem <small>(native only)</small>
-- [WebDAV](https://en.wikipedia.org/wiki/WebDAV) <small>(native only)</small>
+- [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
 
 
-## Q&A
-
-
-__Why don't you support WebDAV on the web version?__  
-Most WebDAV servers aren't built according to the [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) specification.
-Which is a must-have for the web version, otherwise it doesn't work.
-The WebDAV version was built with [NextCloud](https://nextcloud.com/) in mind.
+---
 
 
 
-## Dependencies
+### Hosting on your own server
 
-- Loads of `Elm`
-- A moderate amount of `Haskell` for the build system and static server
-- A tiny bit of `Node` (browserify vendor js & doc tests)
+Diffuse is a static web application, which means it's just HTML, CSS and Javascript. No REST API, database, or anything backend-related involved. The app uses a hash, aka. fragment, based routing system, so you don't need any special server rules for routing. You can download a pre-build web-only version of Diffuse on the [releases](https://github.com/icidasset/diffuse/releases) page. Diffuse uses service workers, so you may need HTTPS for it to work smoothly in certain browsers. I should also note that some source services use OAuth, so you'll need to use your own application credentials (eg. google drive client id + secret).
+
+In short:
+- Diffuse is a static, serverless, web application
+- Routing is done using hashes/fragments (eg. `diffuse.sh/#/sources`)
+- Download a web build on the [releases](https://github.com/icidasset/diffuse/releases) page
+- Uses service workers (use HTTPS if possible)
+- May need own OAuth application credentials for some source services
 
 
 
-## Development
+---
+
+
+
+### Building it yourself
+
+For version numbers, see `.tool-versions` and `stack.yaml`.  
+All of these, except the last one, can be install using [homebrew](https://brew.sh/).
+
+- [Elm](https://elm-lang.org/) programming language
+- [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
+- [Google Closure Compiler](https://github.com/google/closure-compiler#getting-started) minifying assets
+- [Devd](https://github.com/cortesi/devd) web server for development (optional)
+- [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
+- [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
+
 
 ```shell
-# This assumes that you are using macOS
+# 🍱
 
-brew install haskell-stack
-brew install elm
-brew install nodejs
-brew install watchexec
+# 1. Install programming languages:
+#    Elm 0.19 & Haskell (Stack), see links above
 
-npm install
-stack setup
+# 2. Install vendor dependencies
+make install
 
-# Other dependencies
-# 1. For building the Electron version
-brew install makeicns
-brew install imagemagick
-```
-
-### How to run
-
-```shell
-# build + server + watch
+# 3. Build, start server & watch for changes
 make
-
-# make a static `./build`
-make build
-
-# run tests
-make test
 ```

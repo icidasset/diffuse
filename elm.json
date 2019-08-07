@@ -1,0 +1,59 @@
+{
+    "type": "application",
+    "source-directories": [
+        "src/Applications",
+        "src/Library"
+    ],
+    "elm-version": "0.19.1",
+    "dependencies": {
+        "direct": {
+            "FabienHenon/elm-infinite-list-view": "3.0.0",
+            "Gizra/elm-all-set": "1.0.1",
+            "Gizra/elm-debouncer": "2.0.0",
+            "Herteby/enum": "1.0.0",
+            "NoRedInk/elm-json-decode-pipeline": "1.0.0",
+            "Skinney/murmur3": "2.0.8",
+            "avh4/elm-color": "1.0.0",
+            "elm/browser": "1.0.1",
+            "elm/bytes": "1.0.8",
+            "elm/core": "1.0.2",
+            "elm/file": "1.0.5",
+            "elm/html": "1.0.0",
+            "elm/http": "2.0.0",
+            "elm/json": "1.1.3",
+            "elm/random": "1.0.0",
+            "elm/regex": "1.0.0",
+            "elm/svg": "1.0.1",
+            "elm/time": "1.0.0",
+            "elm/url": "1.0.0",
+            "elm/virtual-dom": "1.0.2",
+            "elm-community/list-extra": "8.2.0",
+            "elm-community/maybe-extra": "5.0.0",
+            "elm-explorations/markdown": "1.0.0",
+            "icidasset/elm-binary": "2.1.0",
+            "icidasset/elm-material-icons": "1.0.1",
+            "icidasset/elm-sha": "2.0.2",
+            "justgage/tachyons-elm": "4.1.3",
+            "mpizenberg/elm-pointer-events": "4.0.1",
+            "newlandsvalley/elm-binary-base64": "1.0.3",
+            "noahzgordon/elm-color-extra": "1.0.2",
+            "ohanhi/keyboard": "2.0.0",
+            "rtfeldman/elm-css": "16.0.1",
+            "rtfeldman/elm-hex": "1.0.0",
+            "ryannhg/date-format": "2.3.0",
+            "truqu/elm-base64": "2.0.4",
+            "wernerdegroot/listzipper": "4.0.0",
+            "ymtszw/elm-xml-decode": "3.1.0"
+        },
+        "indirect": {
+            "elm/parser": "1.1.0",
+            "fredcy/elm-parseint": "2.0.1",
+            "jinjor/elm-xml-parser": "2.0.0",
+            "pzp1997/assoc-list": "1.0.0"
+        }
+    },
+    "test-dependencies": {
+        "direct": {},
+        "indirect": {}
+    }
+}

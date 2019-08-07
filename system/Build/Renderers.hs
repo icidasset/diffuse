@@ -15,9 +15,9 @@ import qualified Data.Text.Encoding as Text
 layoutRenderer :: Text -> Definition -> Maybe ByteString
 layoutRenderer layout def =
     content def
-            |> fmap Text.decodeUtf8
-            |> fmap (\text -> Text.replace "<placeholder />" text layout)
-            |> fmap Text.encodeUtf8
+        |> fmap Text.decodeUtf8
+        |> fmap (\text -> Text.replace "<placeholder />" text layout)
+        |> fmap Text.encodeUtf8
 
 
 

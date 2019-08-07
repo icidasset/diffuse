@@ -1,0 +1,103 @@
+html {
+  font-size: 14px;
+  line-height: 1.6;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media screen and (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  background: white;
+  color: #3F3F3F;
+  font-family: "Source Sans Pro", sans-serif;
+  margin: 0 1.125rem 4.5rem;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: always;
+}
+
+
+.container {
+  margin: 0 auto;
+  max-width: 660px;
+}
+
+
+
+/**
+ * Logo
+ */
+
+
+.logo {
+  opacity: 0.85;
+}
+
+
+.logo img {
+  display: block;
+  width: 154px;
+}
+
+
+
+/**
+ * Content
+ */
+
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  letter-spacing: -0.005em;
+
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: unset;
+  font-smooth: never;
+}
+
+h2 {
+  margin: 2.625rem 0 1.125rem;
+}
+
+h3 {
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem
+}
+
+p {
+  font-size: 0.95em;
+}
+
+blockquote {
+  font-family: Montserrat;
+  letter-spacing: -0.025em;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+a:not(.logo) {
+  border-bottom: 1px solid currentColor;
+  color: inherit;
+  display: inline-block;
+  line-height: 1;
+  text-decoration: none;
+}
+
+pre {
+  border: 2px solid rgba(50, 34, 48, 0.15);
+  border-radius: 3px;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1.5rem;
+}
+
+code {
+  font-family: "Hack", monospace;
+}

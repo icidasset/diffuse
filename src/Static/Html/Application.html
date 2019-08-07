@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html class="fixed left-0 overflow-hidden top-0 vh-100 w-100">
+<head>
+
+  <meta charset="utf-8" />
+  <meta name="media-controllable" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+
+  <title>Diffuse</title>
+
+  <!-- Viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=0.9" />
+
+  <!-- Favicons & Mobile -->
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="mask-icon" href="safari-pinned-tab.svg" color="#1E191A" />
+  <meta name="msapplication-TileColor" content="#1E191A" />
+  <meta name="theme-color" content="#1E191A" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="vendor/tachyons.min.css">
+
+  <link rel="stylesheet" href="application.css">
+  <link rel="stylesheet" href="fonts.css">
+
+  <!-- Preload some assets -->
+  <link rel="preload" href="images/diffuse__icon-dark.svg" as="image" crossorigin />
+  <link rel="preload" href="fonts/sourcesanspro/semibold.woff2" as="font" crossorigin />
+
+</head>
+<body>
+
+
+  <div id="elm">
+    <!--
+
+      APPLICATION PLACEHOLDER
+      =======================
+
+      This `noscript` element will be shown if Javascript is disabled.
+
+    -->
+    <noscript>
+      <div class="f5 fixed fw6 lh-copy tc w-90 white" style="
+        left: 50%;
+        top: 50%;
+
+        -webkit-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+
+        font-family: 'Source Sans Pro', sans-serif;
+      ">
+        <p>
+          Damn it, this application needs Javascript in order to operate.
+        </p>
+      </div>
+    </noscript>
+  </div>
+
+
+
+  <!-- Insert loader -->
+  <script>
+    document.getElementById("elm").innerHTML =
+      '<div class="flex items-center justify-center min-vh-100"><svg class="loading-animation" height="29" width="29" viewbox="0 0 30 30"><circle class="loading-animation__circle" cx="15" cy="15" fill="none" r="14" stroke-linecap="round" stroke-width="2"></circle></svg></div>'
+  </script>
+
+
+
+  <!-- Scripts -->
+  <script src="vendor/pep.min.js"></script>
+  <script src="vendor/subworkers-polyfill.min.js"></script>
+  <script src="vendor/tocca.min.js"></script>
+
+  <script src="common.js"></script>
+  <script src="urls.js"></script>
+  <script src="indexed-db.js"></script>
+  <script src="audio-engine.js"></script>
+  <script src="application.js"></script>
+
+  <!-- Initialize Boot Procedure -->
+  <script src="index.js"></script>
+
+  <!-- Service worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+    }
+  </script>
+
+
+</body>
+</html>
