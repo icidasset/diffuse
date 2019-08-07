@@ -157,6 +157,7 @@ app.ports.storeTracksInCache.subscribe(list => {
 
   ).catch(
     err => {
+      console.error(err)
       self.postMessage({
         tag: "STORE_TRACKS_IN_CACHE",
         data: list.map(l => l.trackId),
