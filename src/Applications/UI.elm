@@ -155,7 +155,7 @@ type alias Model =
     }
 
 
-init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init : Flags -> Url -> Nav.Key -> Return Model Msg
 init flags url key =
     let
         rewrittenUrl =
@@ -351,6 +351,17 @@ update msg model =
             model
                 |> importHypaethral json
                 |> Return3.wield translateReply
+                |> andThen
+                    (\m ->
+                        if m.url.host /= "localhost" then
+                            m.sources
+                                |> Sources.sourcesToProcess
+                                |> ProcessSources
+                                |> translateReplyWithModel m
+
+                        else
+                            return m
+                    )
 
         ResizedWindow ( width, height ) ->
             ( { model
@@ -794,7 +805,7 @@ updateTracksModel fn model =
     { model | tracks = fn model.tracks }
 
 
-updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
+updateWithModel : Model -> Msg -> Return Model Msg
 updateWithModel model msg =
     update msg model
 
@@ -803,7 +814,7 @@ updateWithModel model msg =
 -- 📣  ░░  CHILDREN & REPLIES
 
 
-translateReply : Reply -> Model -> ( Model, Cmd Msg )
+translateReply : Reply -> Model -> Return Model Msg
 translateReply reply model =
     case reply of
         Shunt ->
@@ -1276,7 +1287,7 @@ translateReply reply model =
         ProcessSources sourcesToProcess ->
             let
                 notification =
-                    Notifications.stickyWarning "Processing sources …"
+                    Notifications.stickyWarning "Processing sources ..."
 
                 notificationId =
                     Notifications.id notification
@@ -1544,6 +1555,11 @@ saveAllHypaethralData { sync } return =
         )
         return
         hypaethralBit.list
+
+
+translateReplyWithModel : Model -> Reply -> Return Model Msg
+translateReplyWithModel model reply =
+    translateReply reply model
 
 
 

@@ -47,10 +47,10 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
                     Html.span
                     []
                     [ T.dib ]
-                    [ text "Audio connection got interrupted, trying to reconnect …" ]
+                    [ text "Audio connection got interrupted, trying to reconnect ..." ]
 
               else if isLoading then
-                text "Loading track …"
+                text "Loading track ..."
 
               else
                 case Maybe.map .identifiedTrack activeQueueItem of
