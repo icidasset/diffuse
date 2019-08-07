@@ -17,7 +17,7 @@ Music layer for music storage.
 
 #### User layer
 
-- [~~Blockstack~~](https://blockstack.org/) <small>(TODO)</small>
+- [Blockstack](https://blockstack.org/)
 - [Dropbox](https://www.dropbox.com/)
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
 - [IPFS](https://ipfs.io/)
@@ -29,7 +29,6 @@ Music layer for music storage.
 - [Amazon S3](https://aws.amazon.com/s3/)
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
-- [~~Blockstack Gaia Storage~~](https://github.com/blockstack/gaia) <small>(TODO)</small>
 - [Dropbox](https://dropbox.com/)
 - [Google Drive](https://drive.google.com/)
 - [IPFS](https://ipfs.io/)
@@ -75,7 +74,7 @@ All of these, except the last one, can be install using [homebrew](https://brew.
 # 🍱
 
 # 1. Install programming languages:
-#    Elm 0.19 & Haskell (Stack), see links above
+#    Elm 0.19.1 & Haskell (Stack), see links above
 
 # 2. Install vendor dependencies
 make install
