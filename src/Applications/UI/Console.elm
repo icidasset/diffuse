@@ -6,6 +6,7 @@ import Color.Ext as Color
 import Conditional exposing (..)
 import Css
 import Css.Ext as Css
+import Css.Media
 import Html as UnstyledHtml
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (class, css, style)
@@ -16,6 +17,7 @@ import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue
 import Tachyons.Classes as T
+import UI.Css
 import UI.Kit
 import UI.Queue as Queue
 import UI.Reply exposing (Reply(..))
@@ -179,7 +181,12 @@ buttonsContainerStyles =
 
 consoleStyles : List Css.Style
 consoleStyles =
-    [ Css.maxWidth (Css.vh UI.Kit.insulationWidth) ]
+    [ Css.Media.withMedia
+        [ UI.Css.largeMediaQuery ]
+        [ Css.maxWidth (Css.vh UI.Kit.insulationWidth)
+        , Css.minWidth (Css.px 840)
+        ]
+    ]
 
 
 iconColor : Color.Color

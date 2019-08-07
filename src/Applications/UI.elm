@@ -16,6 +16,7 @@ import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Coordinates, Viewport)
 import Css exposing (url)
 import Css.Global
+import Css.Media
 import Css.Transitions
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
@@ -56,6 +57,7 @@ import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
+import UI.Css
 import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer as Equalizer
@@ -2093,8 +2095,14 @@ overlayStyles =
 vesselStyles : List Css.Style
 vesselStyles =
     [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
-    , Css.maxWidth (Css.vh UI.Kit.insulationWidth)
     , Css.minHeight (Css.px 296)
+
+    --
+    , Css.Media.withMedia
+        [ UI.Css.largeMediaQuery ]
+        [ Css.maxWidth (Css.vh UI.Kit.insulationWidth)
+        , Css.minWidth (Css.px 840)
+        ]
     ]
 
 
