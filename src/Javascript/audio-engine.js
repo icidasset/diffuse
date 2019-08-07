@@ -104,6 +104,7 @@ function insertTrack(orchestrion, queueItem) {
   orchestrion.app.ports.setAudioHasStalled.send(false)
   clearTimeout(orchestrion.unstallTimeout)
   setProgressBarWidth(0)
+  didShowNetworkError = false
   timesStalled = 0
 
   // resume audio context if it's suspended
@@ -222,6 +223,7 @@ function preloadAudioElement(orchestrion, queueItem) {
 // Audio events
 // ------------
 
+let didShowNetworkError = false
 let timesStalled = 0
 
 
@@ -234,25 +236,32 @@ function audioErrorEvent(event) {
       break
     case event.target.error.MEDIA_ERR_NETWORK:
       console.error("A network error caused the audio download to fail.")
-
-      app.ports.showErrorNotification.send(
-        navigator.onLine
-          ? "I can't play this track because of a network error"
-          : "I can't play this track because we're offline"
-      )
+      showNetworkErrorNotificationIfNeeded()
       break
     case event.target.error.MEDIA_ERR_DECODE:
       console.error("The audio playback was aborted due to a corruption problem or because the video used features your browser did not support.")
       break
     case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
       console.error("The audio not be loaded, either because the server or network failed or because the format is not supported.")
-
+      showNetworkErrorNotificationIfNeeded()
       audioStalledEvent.call(this, event)
       break
     default:
       console.error("An unknown error occurred.")
   }
 }
+
+
+    function showNetworkErrorNotificationIfNeeded() {
+      if (didShowNetworkError) return
+      didShowNetworkError = true
+
+      app.ports.showErrorNotification.send(
+        navigator.onLine
+          ? "I can't play this track because of a network error. I'll try to reconnect."
+          : "I can't play this track because we're offline. I'll try to reconnect."
+      )
+    }
 
 
 function audioStalledEvent(event) {
