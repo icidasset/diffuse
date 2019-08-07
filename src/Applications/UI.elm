@@ -1284,6 +1284,9 @@ translateReply reply model =
                 Nothing ->
                     return model
 
+        ProcessSources [] ->
+            return model
+
         ProcessSources sourcesToProcess ->
             let
                 notification =
