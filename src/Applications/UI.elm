@@ -128,6 +128,7 @@ type alias Model =
     , notifications : UI.Notifications.Model
     , page : Page
     , pressedKeys : List Keyboard.Key
+    , processAutomatically : Bool
     , url : Url
     , viewport : Viewport
 
@@ -178,6 +179,7 @@ init flags url key =
     , notifications = []
     , page = page
     , pressedKeys = []
+    , processAutomatically = True
     , url = url
     , viewport = flags.viewport
 
@@ -355,7 +357,7 @@ update msg model =
                 |> Return3.wield translateReply
                 |> andThen
                     (\m ->
-                        if m.url.host /= "localhost" then
+                        if m.processAutomatically then
                             m.sources
                                 |> Sources.sourcesToProcess
                                 |> ProcessSources
@@ -1424,6 +1426,9 @@ translateReply reply model =
         ToggleHideDuplicates ->
             update (TracksMsg Tracks.ToggleHideDuplicates) model
 
+        ToggleProcessAutomatically ->
+            translateReply SaveSettings { model | processAutomatically = not model.processAutomatically }
+
         -----------------------------------------
         -- User Data
         -----------------------------------------
@@ -1889,6 +1894,7 @@ defaultScreen model =
                 { authenticationMethod = Authentication.extractMethod model.authentication
                 , chosenBackgroundImage = model.backdrop.chosen
                 , hideDuplicateTracks = model.tracks.hideDuplicates
+                , processAutomatically = model.processAutomatically
                 , rememberProgress = model.rememberProgress
                 }
                     |> Lazy.lazy2 Settings.view subPage
@@ -2117,9 +2123,10 @@ vesselInnerStyles =
 
 
 gatherSettings : Model -> Settings.Settings
-gatherSettings { backdrop, rememberProgress, tracks } =
+gatherSettings { backdrop, processAutomatically, rememberProgress, tracks } =
     { backgroundImage = backdrop.chosen
     , hideDuplicates = tracks.hideDuplicates
+    , processAutomatically = processAutomatically
     , rememberProgress = rememberProgress
     }
 
@@ -2161,6 +2168,7 @@ importHypaethral value model =
                 , tracks = tracksModel
 
                 --
+                , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
                 , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
               }
             , Cmd.batch

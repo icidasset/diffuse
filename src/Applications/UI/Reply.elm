@@ -103,6 +103,7 @@ type Reply
     | ToggleCachedTracksOnly
     | ToggleDirectoryPlaylists { sourceId : String }
     | ToggleHideDuplicates
+    | ToggleProcessAutomatically
       -----------------------------------------
       -- User Data
       -----------------------------------------

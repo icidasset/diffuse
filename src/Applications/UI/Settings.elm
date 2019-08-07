@@ -33,6 +33,7 @@ type alias Dependencies =
     { authenticationMethod : Maybe User.Layer.Method
     , chosenBackgroundImage : Maybe String
     , hideDuplicateTracks : Bool
+    , processAutomatically : Bool
     , rememberProgress : Bool
     }
 
@@ -129,12 +130,26 @@ index deps =
 
         -- Clear cache
         --------------
-        , label "Downloaded tracks"
-        , UI.Kit.buttonWithColor
-            UI.Kit.colorKit.base04
-            UI.Kit.Normal
-            ClearTracksCache
-            (text "Clear cache")
+        , chunk
+            [ T.flex, T.flex_wrap ]
+            [ chunk
+                [ T.w_50_ns, T.w_100 ]
+                [ label "Downloaded tracks"
+                , UI.Kit.buttonWithColor
+                    UI.Kit.colorKit.base04
+                    UI.Kit.Normal
+                    ClearTracksCache
+                    (text "Clear cache")
+                ]
+            , chunk
+                [ T.w_50_ns, T.w_100 ]
+                [ label "Hide Duplicates"
+                , UI.Kit.checkbox
+                    { checked = deps.hideDuplicateTracks
+                    , toggleMsg = ToggleHideDuplicates
+                    }
+                ]
+            ]
 
         -- Check it
         -----------
@@ -142,10 +157,10 @@ index deps =
             [ T.flex, T.flex_wrap ]
             [ chunk
                 [ T.w_50_ns, T.w_100 ]
-                [ label "Hide Duplicates"
+                [ label "Process sources automatically"
                 , UI.Kit.checkbox
-                    { checked = deps.hideDuplicateTracks
-                    , toggleMsg = ToggleHideDuplicates
+                    { checked = deps.processAutomatically
+                    , toggleMsg = ToggleProcessAutomatically
                     }
                 ]
             , chunk
