@@ -28,7 +28,7 @@ addAudioContainer()
 // =====
 
 const brain = new Worker(
-  "workers/brain.js?appHref=" +
+  "workers/brain.js#appHref=" +
   encodeURIComponent(window.location.href)
 )
 

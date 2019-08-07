@@ -15,7 +15,7 @@ importScripts("../urls.js")
 
 
 const flags = location
-  .search
+  .hash
   .substr(1)
   .split("&")
   .reduce((acc, flag) => {
