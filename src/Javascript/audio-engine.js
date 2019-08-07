@@ -18,7 +18,8 @@ if (window.AudioContext) {
 }
 
 
-const SINGLE_AUDIO_NODE = !!navigator.platform.match(/iPhone|iPod|iPad/)
+let SINGLE_AUDIO_NODE = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
+                        !!navigator.userAgent.includes("AppleWebKit")
 
 
 
@@ -96,8 +97,8 @@ function determineNodeGainValue(knobType, value) {
 // --------
 
 function insertTrack(orchestrion, queueItem) {
-  if (!queueItem.url) console.error("insertTrack, missing `url`");
-  if (!queueItem.trackId) console.error("insertTrack, missing `trackId`");
+  if (queueItem.url == undefined) console.error("insertTrack, missing `url`");
+  if (queueItem.trackId == undefined) console.error("insertTrack, missing `trackId`");
 
   // reset
   orchestrion.app.ports.setAudioHasStalled.send(false)
@@ -118,7 +119,7 @@ function insertTrack(orchestrion, queueItem) {
   // find or create audio node
   let audioNode
 
-  initialPromise.then(url => {
+  return initialPromise.then(url => {
     queueItem =
       Object.assign({}, queueItem, { url: url })
 
@@ -169,7 +170,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
 
   audio = new Audio()
   audio.setAttribute("crossorigin", "anonymous")
-  audio.setAttribute("preload", "auto")
+  audio.setAttribute("preload", SINGLE_AUDIO_NODE ? "none" : "auto")
   audio.setAttribute("src", queueItem.url)
   audio.setAttribute("rel", queueItem.trackId)
   audio.setAttribute("data-timestamp", timestampInMilliseconds)
@@ -354,7 +355,11 @@ function audioElementTrackId(node) {
 
 
 function blobUrl(blob) {
-  return URL.createObjectURL(blob)
+  try {
+    return webkitURL.createObjectURL(blob)
+  } catch (err) {
+    return URL.createObjectURL(blob)
+  }
 }
 
 
@@ -376,8 +381,12 @@ function playAudio(element, queueItem) {
 
   const promise = element.play() || Promise.resolve()
 
-  promise.catch(err => {
-    console.error("Could not play audio automatically. Please resume playback manually.")
+  promise.catch(e => {
+    SINGLE_AUDIO_NODE = true
+
+    const err = "Couldn't play audio automatically. Please resume playback manually."
+    console.error(err, e)
+    if (app) app.ports.fromAlien.send({ tag: "", data: null, error: err })
   })
 }
 

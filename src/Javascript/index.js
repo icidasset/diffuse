@@ -60,6 +60,12 @@ const orchestrion = {
 }
 
 
+if (SINGLE_AUDIO_NODE) {
+  // Try to avoid the "couldn't play automatically" error
+  insertTrack(orchestrion, { url: "", trackId: "" })
+}
+
+
 app.ports.activeQueueItemChanged.subscribe(item => {
   const timestampInMilliseconds = Date.now()
 

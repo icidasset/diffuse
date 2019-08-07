@@ -1730,11 +1730,8 @@ translateAlienError event err =
                 Err _ ->
                     ShowNotification (Notifications.error err)
 
-        Just _ ->
+        _ ->
             ShowNotification (Notifications.error err)
-
-        Nothing ->
-            Bypass
 
 
 
