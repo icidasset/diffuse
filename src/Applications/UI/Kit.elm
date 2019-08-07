@@ -177,7 +177,7 @@ borderRadius =
 
 insulationWidth : Float
 insulationWidth =
-    840
+    107.5
 
 
 

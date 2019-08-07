@@ -179,7 +179,7 @@ buttonsContainerStyles =
 
 consoleStyles : List Css.Style
 consoleStyles =
-    [ Css.maxWidth (Css.px UI.Kit.insulationWidth) ]
+    [ Css.maxWidth (Css.vh UI.Kit.insulationWidth) ]
 
 
 iconColor : Color.Color

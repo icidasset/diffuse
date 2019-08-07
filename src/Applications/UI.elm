@@ -1936,6 +1936,8 @@ content { justifyCenter, scrolling } nodes =
             , T.items_center
             , T.h_100
             , T.ph3
+            , T.ph4_m
+            , T.ph5_l
 
             --
             , ifThenElse justifyCenter T.justify_center ""
@@ -2091,7 +2093,7 @@ overlayStyles =
 vesselStyles : List Css.Style
 vesselStyles =
     [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
-    , Css.maxWidth (Css.px UI.Kit.insulationWidth)
+    , Css.maxWidth (Css.vh UI.Kit.insulationWidth)
     , Css.minHeight (Css.px 296)
     ]
 
