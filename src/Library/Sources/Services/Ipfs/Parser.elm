@@ -1,4 +1,4 @@
-module Sources.Services.Ipfs.Parser exposing (Link, linkDecoder, parseCloudflareDnsResult, parseTreeResponse, treeDecoder)
+module Sources.Services.Ipfs.Parser exposing (Link, linkDecoder, parseCloudflareDnsResult, parseErrorResponse, parseTreeResponse, treeDecoder)
 
 import Dict
 import Json.Decode exposing (..)
@@ -94,3 +94,14 @@ linkDecoder =
         (field "Hash" string)
         (field "Name" string)
         (field "Type" int)
+
+
+
+-- ERRORS
+
+
+parseErrorResponse : String -> Maybe String
+parseErrorResponse response =
+    response
+        |> decodeString (field "Message" string)
+        |> Result.toMaybe

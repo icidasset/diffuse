@@ -52,19 +52,15 @@ markerDecoder =
 -- ERROR
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse response =
     response
         |> decodeString errorMessagesDecoder
         |> Result.toMaybe
-        |> Maybe.andThen List.head
-        |> Maybe.withDefault "Invalid request"
 
 
-errorMessagesDecoder : Decoder (List String)
+errorMessagesDecoder : Decoder String
 errorMessagesDecoder =
     string
         |> single
         |> path [ "Message" ]
-        |> list
-        |> path [ "Error" ]

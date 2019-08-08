@@ -9,6 +9,7 @@ Resources:
 -}
 
 import Base64
+import Common
 import Dict
 import Dict.Ext as Dict
 import Http
@@ -121,7 +122,7 @@ makeTree srcData marker _ resultMsg =
         , headers = [ Http.header "Authorization" auth, Http.header "Depth" "1" ]
         , url = url { addAuth = False } srcData directory
         , body = Http.emptyBody
-        , expect = Http.expectString resultMsg
+        , expect = Http.expectStringResponse resultMsg Common.translateHttpResponse
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -139,7 +140,7 @@ parseTreeResponse =
     Parser.parseTreeResponse
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse =
     Parser.parseErrorResponse
 

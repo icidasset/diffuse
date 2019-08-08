@@ -82,9 +82,11 @@ fileDecoder =
 
 
 
--- Error
+-- ERROR
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse response =
     response
+        |> decodeString (at [ "error", "message" ] string)
+        |> Result.toMaybe

@@ -78,6 +78,6 @@ mustBeAudio contentType =
 -- ERROR
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse =
-    identity
+    Just

@@ -8,6 +8,7 @@ Resources:
 
 -}
 
+import Common
 import Dict
 import Http
 import Sources exposing (Property, SourceData)
@@ -94,7 +95,7 @@ Or a specific directory in the container.
 
 -}
 makeTree : SourceData -> Marker -> Time.Posix -> (Result Http.Error String -> msg) -> Cmd msg
-makeTree srcData marker currentTime toMsg =
+makeTree srcData marker currentTime resultMsg =
     let
         directoryPathFromSrcData =
             srcData
@@ -121,7 +122,7 @@ makeTree srcData marker currentTime toMsg =
     in
     Http.get
         { url = url
-        , expect = Http.expectString toMsg
+        , expect = Http.expectStringResponse resultMsg Common.translateHttpResponse
         }
 
 
@@ -137,7 +138,7 @@ parseTreeResponse =
     Parser.parseTreeResponse
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse =
     Parser.parseErrorResponse
 

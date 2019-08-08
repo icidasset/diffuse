@@ -125,7 +125,7 @@ Or a specific directory in the bucket.
 
 -}
 makeTree : SourceData -> Marker -> Time.Posix -> (Result Http.Error String -> msg) -> Cmd msg
-makeTree srcData marker currentTime toMsg =
+makeTree srcData marker currentTime resultMsg =
     let
         accessToken =
             Dict.fetch "accessToken" "" srcData
@@ -164,7 +164,7 @@ makeTree srcData marker currentTime toMsg =
         , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
         , url = url
         , body = body
-        , expect = Http.expectString toMsg
+        , expect = Http.expectStringResponse resultMsg Common.translateHttpResponse
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -198,7 +198,7 @@ parseTreeResponse =
     Parser.parseTreeResponse
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse =
     Parser.parseErrorResponse
 

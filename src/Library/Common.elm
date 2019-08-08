@@ -1,5 +1,6 @@
-module Common exposing (Switch(..), backToIndex, boolFromString, boolToString, queryString, urlOrigin)
+module Common exposing (Switch(..), backToIndex, boolFromString, boolToString, queryString, translateHttpResponse, urlOrigin)
 
+import Http
 import Tuple.Ext as Tuple
 import Url exposing (Protocol(..), Url)
 import Url.Builder as Url
@@ -49,6 +50,25 @@ boolToString bool =
 queryString : List ( String, String ) -> String
 queryString =
     List.map (Tuple.uncurry Url.string) >> Url.toQuery
+
+
+translateHttpResponse : Http.Response String -> Result Http.Error String
+translateHttpResponse response =
+    case response of
+        Http.BadUrl_ u ->
+            Err (Http.BadUrl u)
+
+        Http.Timeout_ ->
+            Err Http.Timeout
+
+        Http.NetworkError_ ->
+            Err Http.NetworkError
+
+        Http.BadStatus_ m body ->
+            Err (Http.BadBody body)
+
+        Http.GoodStatus_ m body ->
+            Ok body
 
 
 urlOrigin : Url -> String

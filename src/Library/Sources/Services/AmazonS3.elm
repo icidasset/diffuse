@@ -8,6 +8,7 @@ Resources:
 
 -}
 
+import Common
 import Dict
 import Http
 import Sources exposing (Property, SourceData)
@@ -139,7 +140,7 @@ makeTree srcData marker currentTime resultMsg =
     in
     Http.get
         { url = url
-        , expect = Http.expectString resultMsg
+        , expect = Http.expectStringResponse resultMsg Common.translateHttpResponse
         }
 
 
@@ -155,7 +156,7 @@ parseTreeResponse =
     Parser.parseTreeResponse
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse =
     Parser.parseErrorResponse
 

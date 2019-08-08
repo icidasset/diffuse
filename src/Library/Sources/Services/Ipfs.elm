@@ -196,7 +196,7 @@ makeTree srcData marker _ resultMsg =
                     , headers = []
                     , url = gateway ++ "/api/v0/ls?arg=" ++ ipfsHash ++ "&encoding=json"
                     , body = Http.emptyBody
-                    , resolver = Http.stringResolver ipfsResolver
+                    , resolver = Http.stringResolver Common.translateHttpResponse
                     , timeout = Just (60 * 15)
                     }
             )
@@ -215,37 +215,14 @@ ipnsResolver response =
         Http.NetworkError_ ->
             Err Http.NetworkError
 
-        Http.BadStatus_ m body ->
-            body
-                |> Json.decodeString (Json.field "Message" Json.string)
-                |> Result.map Http.BadBody
-                |> Result.withDefault (Http.BadStatus m.statusCode)
-                |> Err
+        Http.BadStatus_ _ body ->
+            Err (Http.BadBody body)
 
-        Http.GoodStatus_ m body ->
+        Http.GoodStatus_ _ body ->
             body
                 |> Json.decodeString (Json.field "Path" Json.string)
                 |> Result.map (\hash -> { ipfsHash = hash })
                 |> Result.mapError (Json.errorToString >> Http.BadBody)
-
-
-ipfsResolver : Http.Response String -> Result Http.Error String
-ipfsResolver response =
-    case response of
-        Http.BadUrl_ u ->
-            Err (Http.BadUrl u)
-
-        Http.Timeout_ ->
-            Err Http.Timeout
-
-        Http.NetworkError_ ->
-            Err Http.NetworkError
-
-        Http.BadStatus_ m body ->
-            Err (Http.BadStatus m.statusCode)
-
-        Http.GoodStatus_ m body ->
-            Ok body
 
 
 {-| Re-export parser functions.
@@ -260,9 +237,9 @@ parseTreeResponse =
     Parser.parseTreeResponse
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse =
-    identity
+    Parser.parseErrorResponse
 
 
 

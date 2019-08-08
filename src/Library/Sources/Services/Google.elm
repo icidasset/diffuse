@@ -133,7 +133,7 @@ In this case this means that we will refresh the `access_token`.
 Or if we don't have an access token yet, get one.
 -}
 prepare : String -> SourceData -> Marker -> (Result Http.Error String -> msg) -> Maybe (Cmd msg)
-prepare origin srcData _ toMsg =
+prepare origin srcData _ resultMsg =
     let
         maybeCode =
             Dict.get "authCode" srcData
@@ -166,7 +166,7 @@ prepare origin srcData _ toMsg =
     (Just << Http.post)
         { url = url
         , body = Http.emptyBody
-        , expect = Http.expectString toMsg
+        , expect = Http.expectStringResponse resultMsg Common.translateHttpResponse
         }
 
 
@@ -181,7 +181,7 @@ Or a specific directory in the bucket.
 
 -}
 makeTree : SourceData -> Marker -> Time.Posix -> (Result Http.Error String -> msg) -> Cmd msg
-makeTree srcData marker currentTime toMsg =
+makeTree srcData marker currentTime resultMsg =
     let
         accessToken =
             Dict.fetch "accessToken" "" srcData
@@ -223,7 +223,7 @@ makeTree srcData marker currentTime toMsg =
         , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
         , url = "https://www.googleapis.com/drive/v3/files" ++ queryString
         , body = Http.emptyBody
-        , expect = Http.expectString toMsg
+        , expect = Http.expectStringResponse resultMsg Common.translateHttpResponse
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -241,7 +241,7 @@ parseTreeResponse =
     Parser.parseTreeResponse
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse =
     Parser.parseErrorResponse
 

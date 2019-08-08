@@ -1299,6 +1299,11 @@ translateReply reply model =
                 notificationId =
                     Notifications.id notification
 
+                newNotifications =
+                    List.filter
+                        (\n -> Notifications.kind n /= Notifications.Error)
+                        model.notifications
+
                 sources =
                     model.sources
 
@@ -1308,6 +1313,9 @@ translateReply reply model =
                         , processingError = Nothing
                         , processingNotificationId = Just notificationId
                     }
+
+                newModel =
+                    { model | notifications = newNotifications, sources = newSources }
             in
             [ ( "origin"
               , Json.Encode.string (Common.urlOrigin model.url)
@@ -1319,7 +1327,7 @@ translateReply reply model =
                 |> Json.Encode.object
                 |> Alien.broadcast Alien.ProcessSources
                 |> Ports.toBrain
-                |> returnWithModel { model | sources = newSources }
+                |> returnWithModel newModel
                 |> andThen (showNotification notification)
 
         RemoveSourceFromCollection args ->

@@ -36,6 +36,8 @@ parseTreeResponse response _ =
 -- Error
 
 
-parseErrorResponse : String -> String
+parseErrorResponse : String -> Maybe String
 parseErrorResponse response =
     response
+        |> decodeString (field "error_summary" string)
+        |> Result.toMaybe

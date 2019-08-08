@@ -101,7 +101,7 @@ makeTree service =
             WebDav.makeTree
 
 
-parseErrorResponse : Service -> String -> String
+parseErrorResponse : Service -> String -> Maybe String
 parseErrorResponse service =
     case service of
         AmazonS3 ->

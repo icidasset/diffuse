@@ -111,4 +111,6 @@ translateHttpError service err =
             "Got a faulty response from this source. Use the developer console to get more info."
 
         BadBody response ->
-            Services.parseErrorResponse service response
+            response
+                |> Services.parseErrorResponse service
+                |> Maybe.withDefault (translateHttpError service <| BadStatus 0)
