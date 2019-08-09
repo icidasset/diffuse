@@ -1066,7 +1066,7 @@ translateReply reply model =
             )
                 |> (\s -> s ++ " to the __" ++ properPlaylistName ++ "__ playlist")
                 |> Notifications.success
-                |> showNotificationWithModel model
+                |> showNotificationWithModel newModel
                 |> andThen (translateReply SavePlaylists)
 
         DeactivatePlaylist ->
