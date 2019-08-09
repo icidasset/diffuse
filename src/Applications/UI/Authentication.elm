@@ -788,7 +788,8 @@ encryptionKeyScreen msg =
         , T.flex_column
         ]
         [ UI.Kit.textArea
-            [ attribute "autocomplete" "off"
+            [ attribute "autocapitalize" "off"
+            , attribute "autocomplete" "off"
             , attribute "autocorrect" "off"
             , attribute "spellcheck" "false"
             , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
@@ -814,7 +815,8 @@ inputScreen question =
         , T.flex_column
         ]
         [ UI.Kit.textFieldAlt
-            [ placeholder question.placeholder
+            [ attribute "autocapitalize" "off"
+            , placeholder question.placeholder
             , Html.Styled.Events.onInput Input
             , value question.value
             ]

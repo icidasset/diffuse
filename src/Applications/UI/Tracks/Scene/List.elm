@@ -16,7 +16,7 @@ import Html.Events
 import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Touch as Touch
 import Html.Styled
-import Html.Styled.Attributes
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
 import Html.Styled.Lazy
 import InfiniteList
@@ -109,6 +109,7 @@ update msg model =
 type alias Dependencies =
     { height : Float
     , isVisible : Bool
+    , showAlbum : Bool
     }
 
 
@@ -123,6 +124,7 @@ view deps harvest infiniteList favouritesOnly searchTerm sortBy sortDirection se
         , T.flex_grow_1
         , T.outline_0
         , T.overflow_x_hidden
+        , T.relative
         , T.vh_25
 
         --
@@ -137,11 +139,19 @@ view deps harvest infiniteList favouritesOnly searchTerm sortBy sortDirection se
             Nothing ->
                 T.overflow_y_auto
         ]
-        [ -- Header
+        [ -- Shadow
           ---------
-          Html.Styled.Lazy.lazy3
+          brick
+            [ css shadowStyles ]
+            [ T.left_0, T.right_0, T.top_0, T.z_4 ]
+            []
+
+        -- Header
+        ---------
+        , Html.Styled.Lazy.lazy4
             header
             (Maybe.isJust maybeDnD)
+            deps.showAlbum
             sortBy
             sortDirection
 
@@ -179,11 +189,13 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm selectedTra
                                     searchTerm
                                     selectedTrackIndexes
                                     dnd
+                                    deps.showAlbum
 
                             _ ->
                                 defaultItemView
                                     favouritesOnly
                                     selectedTrackIndexes
+                                    deps.showAlbum
 
                     --
                     , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
@@ -234,8 +246,8 @@ viewStyles =
 -- HEADERS
 
 
-header : Bool -> SortBy -> SortDirection -> Html.Styled.Html Msg
-header isPlaylist sortBy sortDirection =
+header : Bool -> Bool -> SortBy -> SortDirection -> Html.Styled.Html Msg
+header isPlaylist showAlbum sortBy sortDirection =
     let
         sortIcon =
             (if sortDirection == Desc then
@@ -256,7 +268,7 @@ header isPlaylist sortBy sortDirection =
     brick
         [ Html.Styled.Attributes.css headerStyles ]
         [ T.bg_white, T.flex, T.fw6, T.relative, T.z_5 ]
-        (if isPlaylist then
+        (if isPlaylist && showAlbum then
             [ headerColumn "" 4.5 First Nothing Bypass
             , headerColumn "#" 4.5 Between Nothing Bypass
             , headerColumn "Title" 36.0 Between Nothing Bypass
@@ -264,11 +276,24 @@ header isPlaylist sortBy sortDirection =
             , headerColumn "Album" 27.5 Last Nothing Bypass
             ]
 
-         else
+         else if isPlaylist then
+            [ headerColumn "" 4.5 First Nothing Bypass
+            , headerColumn "#" 4.5 Between Nothing Bypass
+            , headerColumn "Title" 49.75 Between Nothing Bypass
+            , headerColumn "Artist" 41.25 Last Nothing Bypass
+            ]
+
+         else if showAlbum then
             [ headerColumn "" 4.5 First Nothing Bypass
             , headerColumn "Title" 37.5 Between (maybeSortIcon Title) (Reply <| SortBy Title)
             , headerColumn "Artist" 29.0 Between (maybeSortIcon Artist) (Reply <| SortBy Artist)
             , headerColumn "Album" 29.0 Last (maybeSortIcon Album) (Reply <| SortBy Album)
+            ]
+
+         else
+            [ headerColumn "" 4.5 First Nothing Bypass
+            , headerColumn "Title" 52 Between (maybeSortIcon Title) (Reply <| SortBy Title)
+            , headerColumn "Artist" 43.5 Last (maybeSortIcon Artist) (Reply <| SortBy Artist)
             ]
         )
 
@@ -388,8 +413,8 @@ dynamicRowHeight _ ( i, t ) =
 -- INFINITE LIST ITEM
 
 
-defaultItemView : Bool -> List Int -> Int -> Int -> IdentifiedTrack -> Html Msg
-defaultItemView favouritesOnly selectedTrackIndexes _ idx identifiedTrack =
+defaultItemView : Bool -> List Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
+defaultItemView favouritesOnly selectedTrackIndexes showAlbum _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -440,16 +465,24 @@ defaultItemView favouritesOnly selectedTrackIndexes _ idx identifiedTrack =
                     |> List.singleton
                 ]
             )
-            [ favouriteColumn favouritesOnly isSelected identifiers
-            , otherColumn "37.5%" False track.tags.title
-            , otherColumn "29.0%" False track.tags.artist
-            , otherColumn "29.0%" True track.tags.album
-            ]
+            (if showAlbum then
+                [ favouriteColumn favouritesOnly isSelected identifiers
+                , otherColumn "37.5%" False track.tags.title
+                , otherColumn "29.0%" False track.tags.artist
+                , otherColumn "29.0%" True track.tags.album
+                ]
+
+             else
+                [ favouriteColumn favouritesOnly isSelected identifiers
+                , otherColumn "52%" False track.tags.title
+                , otherColumn "43.5%" False track.tags.artist
+                ]
+            )
         ]
 
 
-playlistItemView : Bool -> Maybe String -> List Int -> DnD.Model Int -> Int -> Int -> IdentifiedTrack -> Html Msg
-playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd _ idx identifiedTrack =
+playlistItemView : Bool -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd showAlbum _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -510,12 +543,21 @@ playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd _ idx identi
                 []
             ]
         )
-        [ favouriteColumn favouritesOnly isSelected identifiers
-        , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
-        , otherColumn "36.0%" False track.tags.title
-        , otherColumn "27.5%" False track.tags.artist
-        , otherColumn "27.5%" True track.tags.album
-        ]
+        (if showAlbum then
+            [ favouriteColumn favouritesOnly isSelected identifiers
+            , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
+            , otherColumn "36.0%" False track.tags.title
+            , otherColumn "27.5%" False track.tags.artist
+            , otherColumn "27.5%" True track.tags.album
+            ]
+
+         else
+            [ favouriteColumn favouritesOnly isSelected identifiers
+            , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
+            , otherColumn "49.75%" False track.tags.title
+            , otherColumn "41.25%" False track.tags.artist
+            ]
+        )
 
 
 mouseContextMenuEvent : IdentifiedTrack -> Html.Attribute Msg
@@ -830,3 +872,16 @@ rowFontColors =
 dragIndicator : Html.Attribute msg
 dragIndicator =
     style "box-shadow" ("0 1px 0 0 " ++ Color.toCssString UI.Kit.colorKit.accent ++ " inset")
+
+
+shadowStyles : List Css.Style
+shadowStyles =
+    [ Css.boxShadow5 (Css.px 0) (Css.px 0) (Css.px 10) (Css.px 1) (Css.rgba 0 0 0 0.05)
+    , Css.height (Css.px 44)
+    , Css.marginTop (Css.px -44)
+    , Css.transform (Css.translateY <| Css.px -44)
+
+    --
+    , Css.property "position" "-webkit-sticky"
+    , Css.property "position" "sticky"
+    ]

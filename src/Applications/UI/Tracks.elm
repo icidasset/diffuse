@@ -712,9 +712,8 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
         tabindex_ =
             ifThenElse isOnIndexPage 0 -1
     in
-    brick
-        [ css navigationStyles ]
-        [ T.flex, T.relative, T.z_4 ]
+    chunk
+        [ T.flex ]
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
@@ -919,6 +918,7 @@ listView model deps =
         |> UI.Tracks.Scene.List.view
             { height = deps.viewport.height
             , isVisible = deps.isOnIndexPage
+            , showAlbum = deps.viewport.width >= 720
             }
             model.collection.harvested
             model.listScene.infiniteList
@@ -932,12 +932,6 @@ listView model deps =
 
 
 -- 🖼
-
-
-navigationStyles : List Css.Style
-navigationStyles =
-    [ Css.boxShadow5 (Css.px 0) (Css.px 0) (Css.px 10) (Css.px 1) (Css.rgba 0 0 0 0.05)
-    ]
 
 
 searchStyles : List Css.Style

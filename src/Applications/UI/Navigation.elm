@@ -7,6 +7,7 @@ import Color.Ext as Color
 import Color.Manipulate
 import Conditional exposing (..)
 import Css exposing (px, solid, transparent, zero)
+import Css.Media
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (attribute, css, href, tabindex, target, title)
 import Html.Styled.Events exposing (onClick)
@@ -15,6 +16,7 @@ import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Svg exposing (Svg)
 import Tachyons.Classes as T
+import UI.Css
 import UI.Kit
 import UI.Page as Page exposing (Page)
 
@@ -221,7 +223,12 @@ localColors =
 localStyles : List Css.Style
 localStyles =
     [ Css.borderBottomColor (Color.toElmCssColor localColors.border)
-    , Css.fontSize (px 12.5)
+    , Css.fontSize (px 12)
+
+    --
+    , Css.Media.withMedia
+        [ UI.Css.notSmallMediaQuery ]
+        [ Css.fontSize (px 12.5) ]
     ]
 
 
