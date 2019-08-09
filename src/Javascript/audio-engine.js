@@ -364,11 +364,7 @@ function audioElementTrackId(node) {
 
 
 function blobUrl(blob) {
-  try {
-    return webkitURL.createObjectURL(blob)
-  } catch (err) {
-    return URL.createObjectURL(blob)
-  }
+  return URL.createObjectURL(blob)
 }
 
 

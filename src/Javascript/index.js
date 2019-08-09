@@ -55,14 +55,25 @@ function handleAction(action, data) { switch (action) {
 
 const orchestrion = {
   activeQueueItem: null,
+  audio: null,
   app: app,
   repeat: false
 }
 
 
 if (SINGLE_AUDIO_NODE) {
-  // Try to avoid the "couldn't play automatically" error
-  insertTrack(orchestrion, { url: "", trackId: "" })
+  // Try to avoid the "couldn't play automatically" error,
+  // which seems to happen with audio nodes using an url created by `createObjectURL`.
+  const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
+
+  insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
+    const temporaryClickHandler = () => {
+      orchestrion.audio.play()
+      document.body.removeEventListener("click", temporaryClickHandler)
+    }
+
+    document.body.addEventListener("click", temporaryClickHandler)
+  })
 }
 
 
