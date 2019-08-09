@@ -23,7 +23,7 @@ moreOptionsMenu =
             }
         , Item
             { icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
-            , label = "Textile"
+            , label = "Textile (Experimental)"
             , msg = PingTextileForAuth
             , active = False
             }
