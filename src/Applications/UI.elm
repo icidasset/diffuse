@@ -124,6 +124,7 @@ type alias Model =
     , isDragging : Bool
     , isLoading : Bool
     , isOnline : Bool
+    , isUpgrading : Bool
     , navKey : Nav.Key
     , notifications : UI.Notifications.Model
     , page : Page
@@ -175,6 +176,7 @@ init flags url key =
     , isDragging = False
     , isLoading = True
     , isOnline = flags.isOnline
+    , isUpgrading = flags.upgrade
     , navKey = key
     , notifications = []
     , page = page
@@ -215,20 +217,6 @@ init flags url key =
     }
         |> update
             (PageChanged page)
-        |> (if flags.upgrade then
-                andThen
-                    ("""
-                    Thank you for using Diffuse V1!
-                    If you want to import your old data,
-                    please go to the [import page](#/settings/import-export).
-                    """
-                        |> Notifications.stickySuccess
-                        |> showNotification
-                    )
-
-            else
-                identity
-           )
         |> addCommand
             (if Maybe.isNothing maybePage then
                 resetUrl key url page
@@ -271,6 +259,7 @@ type Msg
       -- Authentication
       -----------------------------------------
     | AuthenticationBootFailure String
+    | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
     | SyncUserData
       -----------------------------------------
@@ -355,6 +344,20 @@ update msg model =
             model
                 |> importHypaethral json
                 |> Return3.wield translateReply
+                |> andThen
+                    (\m ->
+                        if m.isUpgrading then
+                            """
+                            Thank you for using Diffuse V1!
+                            If you want to import your old data,
+                            please go to the [import page](#/settings/import-export).
+                            """
+                                |> ShowStickySuccessNotification
+                                |> translateReplyWithModel m
+
+                        else
+                            return m
+                    )
                 |> andThen
                     (\m ->
                         if m.processAutomatically then
@@ -495,6 +498,28 @@ update msg model =
             model
                 |> showNotification (Notifications.error err)
                 |> andThen (translateReply LoadDefaultBackdrop)
+
+        NotAuthenticated ->
+            -- This is the message we get when the app initially
+            -- finds out we're not authenticated.
+            let
+                upgradeNote =
+                    """
+                    Thank you for using Diffuse V1!
+                    If you want to import your old data,
+                    please pick the storage method you used before and
+                    go to the [import page](#/settings/import-export).
+                    """
+            in
+            model
+                |> update (BackdropMsg Backdrop.Default)
+                |> andThen
+                    (if model.isUpgrading then
+                        translateReply (ShowStickySuccessNotification upgradeNote)
+
+                     else
+                        return
+                    )
 
         RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
             let
@@ -1688,9 +1713,7 @@ translateAlienData event =
                 |> Result.withDefault Bypass
 
         Just Alien.NotAuthenticated ->
-            -- There's not to do in this case.
-            -- (ie. the case when we're not authenticated at the start)
-            BackdropMsg Backdrop.Default
+            NotAuthenticated
 
         Just Alien.RemoveTracksByPath ->
             TracksMsg (Tracks.RemoveByPaths event.data)
