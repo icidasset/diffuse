@@ -722,6 +722,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
             [ T.flex
             , T.flex_grow_1
             , T.overflow_hidden
+            , T.relative
             ]
             [ -- Input
               --------
