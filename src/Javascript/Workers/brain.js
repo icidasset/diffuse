@@ -217,8 +217,11 @@ app.ports.requestTags.subscribe(context => {
 
 
 function reportError(event) {
-  return err => {
-    console.error(err.message || err, err.stack)
-    app.ports.fromAlien.send({ tag: event.tag, data: null, error: err.message || err })
+  return e => {
+    const err = e ? e.message || e : null
+    if (err) {
+      console.error(err, e.stack)
+      app.ports.fromAlien.send({ tag: event.tag, data: null, error: err })
+    }
   }
 }
