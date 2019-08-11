@@ -256,8 +256,8 @@ update msg model =
                     Ok hypData ->
                         returnRepliesWithModel
                             { model | legacyMode = False }
-                            [ NudgeUI Alien.ImportLegacyData
-                            , GiveUI Alien.LoadHypaethralUserData json
+                            [ GiveUI Alien.LoadHypaethralUserData json
+                            , NudgeUI Alien.ImportLegacyData
                             ]
 
                     Err _ ->
