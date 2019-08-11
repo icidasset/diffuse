@@ -361,10 +361,10 @@ translateReply reply model =
                 |> Brain.Ports.toUI
                 |> returnWithModel model
 
-        NudgeUI ImportLegacyData ->
+        NudgeUI Alien.ImportLegacyData ->
             model
                 |> saveAllHypaethralData
-                |> addCommand (Brain.Ports.toUI <| Alien.trigger ImportLegacyData)
+                |> addCommand (Brain.Ports.toUI <| Alien.trigger Alien.ImportLegacyData)
 
         NudgeUI tag ->
             tag
