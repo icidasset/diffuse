@@ -788,11 +788,15 @@ encryptionKeyScreen msg =
         , T.flex_column
         ]
         [ UI.Kit.textArea
-            [ attribute "autocapitalize" "off"
+            [ attribute "autocapitalize" "none"
             , attribute "autocomplete" "off"
             , attribute "autocorrect" "off"
             , attribute "spellcheck" "false"
+
+            --
             , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
+
+            --
             , Html.Styled.Events.onInput KeepPassphraseInMemory
             ]
         , UI.Kit.button
