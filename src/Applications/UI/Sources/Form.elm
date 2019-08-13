@@ -560,6 +560,8 @@ note service =
                     , text "continue to the next screen."
                     ]
                 , text " Changing the app key allows you to use your own Dropbox app."
+                , text " Also, make sure you verified your email address on Dropbox,"
+                , text " or this might not work."
                 ]
 
         Google ->
