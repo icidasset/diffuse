@@ -139,18 +139,19 @@ update msg model =
         -----------------------------------------
         -- Collection
         -----------------------------------------
-        AddToCollection source ->
-            source
-                |> setProperId (List.length model.collection + 1) model.currentTime
-                |> List.singleton
-                |> List.append model.collection
-                |> (\c -> { model | collection = c })
-                |> (\m ->
-                        returnRepliesWithModel m
-                            [ UI.Reply.SaveSources
-                            , UI.Reply.ProcessSources (sourcesToProcess m)
-                            ]
-                   )
+        AddToCollection unsuitableSource ->
+            let
+                source =
+                    setProperId
+                        (List.length model.collection + 1)
+                        model.currentTime
+                        unsuitableSource
+            in
+            returnRepliesWithModel
+                { model | collection = model.collection ++ [ source ] }
+                [ UI.Reply.SaveSources
+                , UI.Reply.ProcessSources [ source ]
+                ]
 
         RemoveFromCollection { sourceId } ->
             model.collection
