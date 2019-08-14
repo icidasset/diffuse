@@ -111,10 +111,24 @@ _Not necessary._
 
 #### IPFS
 
-Add the domain, of the app, with the protocol to the __list of allowed origins__. For example:
+Add the domain of the app, with the protocol, to the __list of allowed origins__.  
 
 ```shell
 ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh"]'
+```
+
+You can also make this change in the Web UI, you'll find it under "Settings → IPFS Config".
+
+```json
+{
+  "API": {
+    "HTTPHeaders": {
+      "Access-Control-Allow-Origin": [
+        "https://diffuse.sh"
+      ]
+    }
+  }
+}
 ```
 
 <div id="CORS__Azure" />
@@ -130,6 +144,24 @@ ALLOWED METHODS       GET, HEAD
 ALLOWED HEADERS       Range
 EXPOSED HEADERS       Content-Length, Content-Range
 MAX AGE               0
+```
+
+<div id="CORS__Textile" />
+
+#### Textile
+
+Add the domain of the app, with the protocol, to the __list of allowed origins__ in the configuration.
+
+```json
+{
+  "API": {
+    "HTTPHeaders": {
+      "Access-Control-Allow-Origin": [
+        "https://diffuse.sh"
+      ]
+    }
+  }
+}
 ```
 
 <div id="CORS__WebDAV" />

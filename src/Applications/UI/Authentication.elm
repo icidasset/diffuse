@@ -10,6 +10,7 @@ import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
+import Css.Global
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, target, title, value, width)
@@ -17,6 +18,7 @@ import Html.Styled.Events exposing (onClick, onSubmit)
 import Http
 import Json.Decode
 import Json.Encode
+import Markdown
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Av as Icons
@@ -317,7 +319,15 @@ update msg model =
 
         PingIpfsCallback (Err _) ->
             { placeholder = "http://localhost:5001"
-            , question = "Where's your IPFS API located?"
+            , question = """
+                Where's your IPFS API located?<br />
+                <span class="fw4 white-60">
+                    You can find this address on the IPFS Web UI.<br />
+                    Most likely you'll also need to setup CORS.<br />
+                    You can find the instructions for that
+                    <a href="about#CORS__IPFS" target="_blank" class="bb color-inherit fw6 link">here</a>.
+                </span>
+              """
             , value = "http://localhost:5001"
             }
                 |> AskForInput (Ipfs { apiOrigin = "" })
@@ -423,7 +433,14 @@ update msg model =
 
         PingTextileCallback (Err _) ->
             { placeholder = "http://localhost:40600"
-            , question = "Where's your Textile API located?"
+            , question = """
+                Where's your Textile API located?<br />
+                <span class="fw4 white-60">
+                    You might need to do some CORS configuration.<br />
+                    You can find the instructions for that
+                    <a href="about#CORS__Textile" target="_blank" class="bb color-inherit fw6 link">here</a>.
+                </span>
+              """
             , value = "http://localhost:40600"
             }
                 |> AskForInput (Textile { apiOrigin = "" })
@@ -511,43 +528,63 @@ view model =
                 , case model of
                     InputScreen _ { question } ->
                         question
-                            |> text
+                            |> String.lines
+                            |> List.map String.trimLeft
+                            |> String.join "\n"
+                            |> Markdown.toHtmlWith
+                                { githubFlavored = Nothing
+                                , defaultHighlighting = Nothing
+                                , sanitize = False
+                                , smartypants = True
+                                }
+                                []
+                            |> Html.fromUnstyled
+                            |> bricky [ css inputSpeechStyles ] []
                             |> speechBubble
 
                     NewEncryptionKeyScreen _ _ ->
-                        [ text "I need a passphrase"
+                        [ text "I need a passphrase to encrypt your personal data."
                         , lineBreak
-                        , text "to encrypt your data."
+                        , inline
+                            [ T.fw4, T.white_60 ]
+                            [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
                             |> speechBubble
 
                     UpdateEncryptionKeyScreen _ _ ->
-                        [ text "I need a new passphrase"
+                        [ text "I need a new passphrase to encrypt your personal data."
                         , lineBreak
-                        , text "to encrypt your data."
+                        , inline
+                            [ T.fw4, T.white_60 ]
+                            [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
                             |> speechBubble
 
                     Welcome ->
-                        [ inline [ T.fw6, T.white ] [ text "Diffuse plays music" ]
-                        , inline [ T.fs_normal, T.white ] [ text " ♫ " ]
-                        , text "from your Dropbox,"
-                        , lineBreak
-                        , text "IPFS node, Amazon S3 bucket, or any other"
-                        , lineBreak
-                        , text "cloud/distributed storage service you use."
+                        [ text "Diffuse plays music"
+                        , inline [ T.fs_normal, T.fw4 ] [ text " ♫ " ]
+                        , inline [ T.fw4, T.white_60 ]
+                            [ text "from your Dropbox,"
+                            , lineBreak
+                            , text "IPFS node, Amazon S3 bucket, or any other"
+                            , lineBreak
+                            , text "cloud/distributed storage service you use."
+                            ]
                         ]
-                            |> chunk [ T.i, T.white_60 ]
+                            |> chunk []
                             |> speechBubble
 
                     _ ->
-                        [ text "Where would you like to"
+                        [ text "Where would you like to keep your personal data?"
                         , lineBreak
-                        , text "store your encrypted data?"
-                        , lineBreak
-                        , inline [ T.i, T.white_60 ] [ text "favourites, settings, etc." ]
+                        , inline
+                            [ T.fw4, T.white_60 ]
+                            [ text "That's things like your favourites, your playlists, etc."
+                            , lineBreak
+                            , text "After this you'll be able add some music ♫"
+                            ]
                         ]
                             |> chunk []
                             |> speechBubble
@@ -562,13 +599,13 @@ view model =
                 inputScreen opts
 
             NewEncryptionKeyScreen method Nothing ->
-                encryptionKeyScreen Bypass
+                encryptionKeyScreen (SignInWithPassphrase method "")
 
             NewEncryptionKeyScreen method (Just passphrase) ->
                 encryptionKeyScreen (SignInWithPassphrase method passphrase)
 
             UpdateEncryptionKeyScreen method Nothing ->
-                encryptionKeyScreen Bypass
+                encryptionKeyScreen (UpdateEncryptionKey method "")
 
             UpdateEncryptionKeyScreen method (Just passphrase) ->
                 encryptionKeyScreen (UpdateEncryptionKey method passphrase)
@@ -599,12 +636,22 @@ view model =
                 a
                 [ href "about" ]
                 [ T.bb
+                , T.i
                 , T.no_underline
                 , T.white_60
                 ]
-                [ em [] [ text "More info" ] ]
+                [ text "More info" ]
             ]
         ]
+
+
+inputSpeechStyles : List Css.Style
+inputSpeechStyles =
+    [ Css.Global.descendants
+        [ Css.Global.p
+            [ Css.margin Css.zero ]
+        ]
+    ]
 
 
 
@@ -676,8 +723,14 @@ choicesScreen =
             { action =
                 AskForInput
                     (RemoteStorage { userAddress = "", token = "" })
-                    { placeholder = "username@remote.storage"
-                    , question = "What's your user address?"
+                    { placeholder = "example@5apps.com"
+                    , question = """
+                        What's your user address?
+                        <span class="fw4 white-60">
+                            <br />The format's
+                            <span class="fw6">username@server.domain</span>
+                        </span>
+                      """
                     , value = ""
                     }
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.remoteStorageLogo
@@ -842,6 +895,8 @@ speechBubble contents =
         [ T.absolute
         , T.br2
         , T.f6
+        , T.fw6
+        , T.i
         , T.lh_copy
         , T.nowrap
         , T.ph3
