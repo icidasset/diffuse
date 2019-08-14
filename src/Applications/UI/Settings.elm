@@ -79,7 +79,7 @@ index deps =
         [ UI.Kit.h1 "Settings"
         , [ text "Changes are saved automatically."
           , lineBreak
-          , text "PS. You're storing the data for this application "
+          , text "You're storing the data for this application "
           , case deps.authenticationMethod of
                 Just Blockstack ->
                     text "on Blockstack."
