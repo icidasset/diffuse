@@ -603,7 +603,7 @@ futureItem selection idx item =
             )
             [ T.db, T.truncate ]
             [ inline
-                [ T.dib, T.f7, T.mr2 ]
+                [ T.dib, T.f7, T.mr2, T.o_60 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
