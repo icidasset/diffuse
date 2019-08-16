@@ -19,6 +19,7 @@ makeEngineItem timestamp sources cachedTrackIds progressTable track =
     { isCached = List.member track.id cachedTrackIds
     , progress = Dict.get track.id progressTable
     , trackId = track.id
+    , trackTags = track.tags
     , url = makeTrackUrl timestamp sources track
     }
 

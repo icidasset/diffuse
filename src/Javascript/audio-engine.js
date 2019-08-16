@@ -112,6 +112,15 @@ function insertTrack(orchestrion, queueItem) {
     context.resume()
   }
 
+  // metadata
+  if ("mediaSession" in navigator && queueItem.trackTags) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: queueItem.trackTags.title,
+      artist: queueItem.trackTags.artist,
+      album: queueItem.trackTags.album
+    })
+  }
+
   // initial promise
   const initialPromise = queueItem.isCached
     ? getFromIndex({ key: queueItem.trackId, store: storeNames.tracks }).then(blobUrl)

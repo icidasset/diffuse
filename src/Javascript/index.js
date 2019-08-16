@@ -275,6 +275,8 @@ function onlineStatusChanged() {
 
 // Media Keys
 // ----------
+// https://github.com/borismus/keysocket#api
+// https://developers.google.com/web/updates/2019/02/chrome-73-media-updates
 
 document.addEventListener("MediaPlayPause", () => {
   app.ports.requestPlayPause.send(null)
@@ -294,6 +296,43 @@ document.addEventListener("MediaPrev", () => {
 document.addEventListener("MediaNext", () => {
   app.ports.requestNext.send(null)
 })
+
+
+
+if ("mediaSession" in navigator) {
+
+  navigator.mediaSession.setActionHandler("play", () => {
+    app.ports.requestPlayPause.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("pause", () => {
+    app.ports.requestPlayPause.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("previoustrack", () => {
+    app.ports.requestPrevious.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("nexttrack", () => {
+    app.ports.requestNext.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("seekbackward", event => {
+    const audio = orchestrion.audio
+    if (audio) audio.currentTime = Math.max(audio.currentTime - 10, 0)
+  })
+
+
+  navigator.mediaSession.setActionHandler("seekforward", event => {
+    const audio = orchestrion.audio
+    if (audio) audio.currentTime = Math.min(audio.currentTime + 10, audio.duration)
+  })
+
+}
 
 
 

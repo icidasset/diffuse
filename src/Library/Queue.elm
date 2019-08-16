@@ -1,6 +1,6 @@
 module Queue exposing (EngineItem, Item)
 
-import Tracks exposing (IdentifiedTrack, Track)
+import Tracks exposing (IdentifiedTrack, Tags, Track)
 
 
 
@@ -17,5 +17,6 @@ type alias EngineItem =
     { isCached : Bool
     , progress : Maybe Float
     , trackId : String
+    , trackTags : Tags
     , url : String
     }

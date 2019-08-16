@@ -55,7 +55,7 @@ data Sequence
     | Html
     | Images
     | Js
-    | Manifest
+    | Manifests
     -- About Pages
     | AboutCss
     | AboutPages
@@ -70,11 +70,11 @@ sequences = lsequence
     , ( Html,           list "Static/Html/**/*.html"    )
     , ( Images,         list "Static/Images/**/*.*"     )
     , ( Js,             list "Javascript/**/*.js"       )
-    , ( Manifest,       list "Static/Manifests/*.*"     )
+    , ( Manifests,      list "Static/Manifests/*.*"     )
 
     -- About Pages
-    , ( AboutPages,      list "Static/About/**/*.md"    )
-    , ( AboutCss,        list "Static/About/**/*.css"   )
+    , ( AboutPages,     list "Static/About/**/*.md"    )
+    , ( AboutCss,       list "Static/About/**/*.css"   )
     ]
 
 
@@ -92,7 +92,6 @@ flow _ (Favicons, dict)       = dict
 flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
 flow _ (Hosting, dict)        = dict
 flow _ (Images, dict)         = prefixDirname "images/" dict
-flow _ (Manifest, dict)       = dict
 
 
 {-| Javascript -}
@@ -101,6 +100,12 @@ flow x (Js, dict) =
         |> map lowerCasePath
         |> rename "workers/service.js" "service-worker.js"
         |> insertVersion (x !~> "timestamp")
+
+
+{-| Manifests -}
+flow _ (Manifests, dict) =
+    dict
+        |> clone "manifest.json" "site.webmanifest"
 
 
 {-| About Pages -}
