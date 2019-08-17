@@ -213,7 +213,7 @@ scrollToNowPlaying harvest ( identifiers, _ ) =
     harvest
         |> List.take identifiers.indexInList
         |> List.foldl (\a -> (+) <| dynamicRowHeight 0 a) 0
-        |> (\n -> 22 - toFloat rowHeight / 2 + 5 + toFloat n)
+        |> (\n -> 22 - toFloat rowHeight / 2 + 2 + toFloat n)
         |> Dom.setViewportOf containerId 0
         |> Task.attempt (always Bypass)
 
