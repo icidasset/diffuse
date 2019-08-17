@@ -1510,8 +1510,10 @@ translateReply reply model =
                 |> returnWithModel model
 
         InsertDemo ->
-            model
-                |> update (LoadHypaethralUserData Demo.tape)
+            model.currentTime
+                |> Demo.tape
+                |> LoadHypaethralUserData
+                |> updateWithModel model
                 |> saveAllHypaethralData { sync = False }
 
         LoadDefaultBackdrop ->
