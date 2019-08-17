@@ -273,7 +273,7 @@ matchWithPlaylist deps playlist =
                         (\( pi, pt ) ->
                             if imaginaryPlaylistTrack == pt then
                                 Tuple.mapBoth
-                                    ((::) ( playlistTrackIdentifiers deps.nowPlaying i t pi, t ))
+                                    ((::) ( playlistTrackIdentifiers i pi, t ))
                                     identity
 
                             else
@@ -293,22 +293,9 @@ matchWithPlaylist deps playlist =
         )
 
 
-playlistTrackIdentifiers : Maybe IdentifiedTrack -> Tracks.Identifiers -> Track -> Playlists.Identifiers -> Tracks.Identifiers
-playlistTrackIdentifiers nowPlaying i t pi =
-    let
-        identifiersWithPlaylistIndex =
-            { i | indexInPlaylist = Just pi.index }
-    in
-    case nowPlaying of
-        Just ( ni, nt ) ->
-            if nt.id == t.id && ni.indexInPlaylist == Just pi.index then
-                { identifiersWithPlaylistIndex | isNowPlaying = True }
-
-            else
-                identifiersWithPlaylistIndex
-
-        Nothing ->
-            identifiersWithPlaylistIndex
+playlistTrackIdentifiers : Tracks.Identifiers -> Playlists.Identifiers -> Tracks.Identifiers
+playlistTrackIdentifiers i pi =
+    { i | indexInPlaylist = Just pi.index }
 
 
 dealWithMissingPlaylistTracks : ( List IdentifiedTrack, List IdentifiedPlaylistTrack ) -> List IdentifiedTrack
@@ -336,7 +323,6 @@ makeMissingPlaylistTrack ( identifiers, playlistTrack ) =
         , indexInPlaylist = Just identifiers.index
         , isFavourite = False
         , isMissing = True
-        , isNowPlaying = False
         }
         { tags = tags
         , id = missingId

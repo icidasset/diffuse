@@ -113,8 +113,8 @@ type alias Dependencies =
     }
 
 
-view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
-view deps harvest infiniteList favouritesOnly searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
+view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe IdentifiedTrack -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
+view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
     brick
         ((::)
             (Html.Styled.Attributes.tabindex (ifThenElse deps.isVisible 0 -1))
@@ -164,7 +164,7 @@ view deps harvest infiniteList favouritesOnly searchTerm sortBy sortDirection se
             infiniteList
             favouritesOnly
             searchTerm
-            selectedTrackIndexes
+            ( nowPlaying, selectedTrackIndexes )
             maybeDnD
         ]
 
@@ -174,8 +174,8 @@ containerId =
     "diffuse__track-list"
 
 
-infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> List Int -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
-infiniteListView deps harvest infiniteList favouritesOnly searchTerm selectedTrackIndexes maybeDnD =
+infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe IdentifiedTrack, List Int ) -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
+infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
     Html.Styled.fromUnstyled
         (InfiniteList.view
             (InfiniteList.withCustomContainer
@@ -186,6 +186,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm selectedTra
                             Just dnd ->
                                 playlistItemView
                                     favouritesOnly
+                                    nowPlaying
                                     searchTerm
                                     selectedTrackIndexes
                                     dnd
@@ -194,6 +195,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm selectedTra
                             _ ->
                                 defaultItemView
                                     favouritesOnly
+                                    nowPlaying
                                     selectedTrackIndexes
                                     deps.showAlbum
 
@@ -413,8 +415,8 @@ dynamicRowHeight _ ( i, t ) =
 -- INFINITE LIST ITEM
 
 
-defaultItemView : Bool -> List Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
-defaultItemView favouritesOnly selectedTrackIndexes showAlbum _ idx identifiedTrack =
+defaultItemView : Bool -> Maybe IdentifiedTrack -> List Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
+defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -426,6 +428,19 @@ defaultItemView favouritesOnly selectedTrackIndexes showAlbum _ idx identifiedTr
 
         isSelected =
             List.member idx selectedTrackIndexes
+
+        rowIdentifiers =
+            { isMissing = identifiers.isMissing
+            , isNowPlaying = Maybe.unwrap False (isNowPlaying identifiedTrack) nowPlaying
+            , isSelected = isSelected
+            }
+
+        favIdentifiers =
+            { indexInList = identifiers.indexInList
+            , isFavourite = identifiers.isFavourite
+            , isNowPlaying = rowIdentifiers.isNowPlaying
+            , isSelected = isSelected
+            }
     in
     Html.div
         []
@@ -438,7 +453,7 @@ defaultItemView favouritesOnly selectedTrackIndexes showAlbum _ idx identifiedTr
         --
         , Html.div
             (List.concat
-                [ rowStyles idx isSelected identifiers
+                [ rowStyles idx rowIdentifiers
 
                 --
                 , List.append
@@ -466,14 +481,14 @@ defaultItemView favouritesOnly selectedTrackIndexes showAlbum _ idx identifiedTr
                 ]
             )
             (if showAlbum then
-                [ favouriteColumn favouritesOnly isSelected identifiers
+                [ favouriteColumn favouritesOnly favIdentifiers
                 , otherColumn "37.5%" False track.tags.title
                 , otherColumn "29.0%" False track.tags.artist
                 , otherColumn "29.0%" True track.tags.album
                 ]
 
              else
-                [ favouriteColumn favouritesOnly isSelected identifiers
+                [ favouriteColumn favouritesOnly favIdentifiers
                 , otherColumn "52%" False track.tags.title
                 , otherColumn "43.5%" False track.tags.artist
                 ]
@@ -481,8 +496,8 @@ defaultItemView favouritesOnly selectedTrackIndexes showAlbum _ idx identifiedTr
         ]
 
 
-playlistItemView : Bool -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
-playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd showAlbum _ idx identifiedTrack =
+playlistItemView : Bool -> Maybe IdentifiedTrack -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd showAlbum _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -497,10 +512,23 @@ playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd showAlbum _ 
 
         isSelected =
             List.member idx selectedTrackIndexes
+
+        rowIdentifiers =
+            { isMissing = identifiers.isMissing
+            , isNowPlaying = Maybe.unwrap False (isNowPlaying identifiedTrack) nowPlaying
+            , isSelected = isSelected
+            }
+
+        favIdentifiers =
+            { indexInList = identifiers.indexInList
+            , isFavourite = identifiers.isFavourite
+            , isNowPlaying = rowIdentifiers.isNowPlaying
+            , isSelected = isSelected
+            }
     in
     Html.div
         (List.concat
-            [ rowStyles idx isSelected identifiers
+            [ rowStyles idx rowIdentifiers
 
             --
             , List.append
@@ -544,7 +572,7 @@ playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd showAlbum _ 
             ]
         )
         (if showAlbum then
-            [ favouriteColumn favouritesOnly isSelected identifiers
+            [ favouriteColumn favouritesOnly favIdentifiers
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "36.0%" False track.tags.title
             , otherColumn "27.5%" False track.tags.artist
@@ -552,7 +580,7 @@ playlistItemView favouritesOnly searchTerm selectedTrackIndexes dnd showAlbum _ 
             ]
 
          else
-            [ favouriteColumn favouritesOnly isSelected identifiers
+            [ favouriteColumn favouritesOnly favIdentifiers
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "49.75%" False track.tags.title
             , otherColumn "41.25%" False track.tags.artist
@@ -707,8 +735,8 @@ rowHeight =
     35
 
 
-rowStyles : Int -> Bool -> Identifiers -> List (Html.Attribute msg)
-rowStyles idx isSelected { isMissing, isNowPlaying } =
+rowStyles : Int -> { isMissing : Bool, isNowPlaying : Bool, isSelected : Bool } -> List (Html.Attribute msg)
+rowStyles idx { isMissing, isNowPlaying, isSelected } =
     let
         bgColor =
             if isNowPlaying then
@@ -747,14 +775,14 @@ columnMinWidth =
     "28px"
 
 
-favouriteColumn : Bool -> Bool -> Identifiers -> Html Msg
-favouriteColumn favouritesOnly isSelected identifiers =
+favouriteColumn : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> Html Msg
+favouriteColumn favouritesOnly identifiers =
     Html.div
         ((++)
             [ Html.Events.onClick (Reply <| ToggleFavourite identifiers.indexInList)
             , Tachyons.classes [ T.flex_shrink_0, T.fw4, T.pl3 ]
             ]
-            (favouriteColumnStyles favouritesOnly isSelected identifiers)
+            (favouriteColumnStyles favouritesOnly identifiers)
         )
         [ if identifiers.isFavourite then
             text "t"
@@ -764,8 +792,8 @@ favouriteColumn favouritesOnly isSelected identifiers =
         ]
 
 
-favouriteColumnStyles : Bool -> Bool -> Identifiers -> List (Html.Attribute msg)
-favouriteColumnStyles favouritesOnly isSelected { isFavourite, isNowPlaying } =
+favouriteColumnStyles : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> List (Html.Attribute msg)
+favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } =
     let
         color =
             if isNowPlaying && isFavourite then

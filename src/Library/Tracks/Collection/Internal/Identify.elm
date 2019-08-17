@@ -33,7 +33,6 @@ identify ( deps, collection ) =
                 (identifyTrack
                     deps.enabledSourceIds
                     simplifiedFavourites
-                    deps.nowPlaying
                 )
                 ( [], simplifiedFavourites )
                 collection.untouched
@@ -64,14 +63,13 @@ identify ( deps, collection ) =
 identifyTrack :
     List String
     -> List String
-    -> Maybe IdentifiedTrack
     -> Track
     -> ( List IdentifiedTrack, List String )
     -> ( List IdentifiedTrack, List String )
-identifyTrack enabledSourceIds favourites nowPlaying track =
+identifyTrack enabledSourceIds favourites track =
     case List.member track.sourceId enabledSourceIds of
         True ->
-            partTwo favourites nowPlaying track
+            partTwo favourites track
 
         False ->
             identity
@@ -79,20 +77,11 @@ identifyTrack enabledSourceIds favourites nowPlaying track =
 
 partTwo :
     List String
-    -> Maybe IdentifiedTrack
     -> Track
     -> ( List IdentifiedTrack, List String )
     -> ( List IdentifiedTrack, List String )
-partTwo favourites nowPlaying track ( acc, remainingFavourites ) =
+partTwo favourites track ( acc, remainingFavourites ) =
     let
-        isNP =
-            case nowPlaying of
-                Just ( _, { id } ) ->
-                    track.id == id
-
-                Nothing ->
-                    False
-
         isFavourite_ =
             isFavourite track
 
@@ -102,7 +91,6 @@ partTwo favourites nowPlaying track ( acc, remainingFavourites ) =
         identifiedTrack =
             ( { isFavourite = isFav
               , isMissing = False
-              , isNowPlaying = isNP
 
               --
               , group = Nothing
@@ -158,7 +146,6 @@ makeMissingFavouriteTrack fav =
     in
     ( { isFavourite = True
       , isMissing = True
-      , isNowPlaying = False
 
       --
       , group = Nothing

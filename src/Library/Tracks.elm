@@ -58,7 +58,6 @@ type alias IdentifiedTrack =
 type alias Identifiers =
     { isFavourite : Bool
     , isMissing : Bool
-    , isNowPlaying : Bool
 
     --
     , group : Maybe { name : String, firstInGroup : Bool }
@@ -77,7 +76,7 @@ type alias Collection =
     -- `Track`s with `Identifiers`
     , identified : List IdentifiedTrack
 
-    -- Sorted and filtered by playlist (if not auto-generated)
+    -- Sorted, grouped and filtered by playlist (if not auto-generated)
     , arranged : List IdentifiedTrack
 
     -- Filtered by search results, favourites, etc.
@@ -93,7 +92,6 @@ type alias CollectionDependencies =
     , favouritesOnly : Bool
     , grouping : Maybe Grouping
     , hideDuplicates : Bool
-    , nowPlaying : Maybe IdentifiedTrack
     , selectedPlaylist : Maybe Playlist
     , searchResults : Maybe (List String)
     , sortBy : SortBy
@@ -166,7 +164,6 @@ emptyIdentifiers : Identifiers
 emptyIdentifiers =
     { isFavourite = False
     , isMissing = False
-    , isNowPlaying = False
 
     --
     , group = Nothing

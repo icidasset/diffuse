@@ -214,20 +214,7 @@ update msg model =
                 { model | enabledSourceIds = sourceIds }
 
         SetNowPlaying maybeIdentifiedTrack ->
-            -- TODO:
-            -- Improve performance
-            let
-                mapFn =
-                    case maybeIdentifiedTrack of
-                        Just a ->
-                            \( i, t ) -> Tuple.pair { i | isNowPlaying = isNowPlaying a ( i, t ) } t
-
-                        Nothing ->
-                            \( i, t ) -> Tuple.pair { i | isNowPlaying = False } t
-            in
-            reviseCollection
-                (map <| List.map mapFn)
-                { model | nowPlaying = maybeIdentifiedTrack }
+            return { model | nowPlaying = maybeIdentifiedTrack }
 
         ToggleCachedOnly ->
             { model | cachedOnly = not model.cachedOnly }
@@ -537,7 +524,6 @@ makeParcel model =
       , favouritesOnly = model.favouritesOnly
       , grouping = model.grouping
       , hideDuplicates = model.hideDuplicates
-      , nowPlaying = model.nowPlaying
       , searchResults = model.searchResults
       , selectedPlaylist = model.selectedPlaylist
       , sortBy = model.sortBy
@@ -917,6 +903,7 @@ listView model deps =
             model.collection.harvested
             model.listScene.infiniteList
             model.favouritesOnly
+            model.nowPlaying
             model.searchTerm
             model.sortBy
             model.sortDirection
