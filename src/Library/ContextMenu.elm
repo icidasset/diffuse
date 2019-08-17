@@ -1,4 +1,4 @@
-module ContextMenu exposing (ContextMenu(..), Item(..), ItemProperties, justAnItem)
+module ContextMenu exposing (ContextMenu(..), Item(..), ItemProperties, anyItem, coordinates, justAnItem)
 
 import Color exposing (Color)
 import Coordinates exposing (Coordinates)
@@ -29,6 +29,25 @@ type alias ItemProperties msg =
 
 
 -- 🔱
+
+
+anyItem : (ItemProperties msg -> Bool) -> ContextMenu msg -> Bool
+anyItem fn (ContextMenu items _) =
+    List.any
+        (\item ->
+            case item of
+                Item props ->
+                    fn props
+
+                Divider ->
+                    False
+        )
+        items
+
+
+coordinates : ContextMenu msg -> Coordinates
+coordinates (ContextMenu _ c) =
+    c
 
 
 justAnItem : ItemProperties msg -> Maybe (Item msg)

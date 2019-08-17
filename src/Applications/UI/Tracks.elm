@@ -330,15 +330,8 @@ update msg model =
                     else
                         model.selectedTrackIndexes
             in
-            selection
-                |> List.foldr
-                    (\s acc ->
-                        model.collection.harvested
-                            |> List.getAt s
-                            |> Maybe.map (List.addTo acc)
-                            |> Maybe.withDefault acc
-                    )
-                    []
+            model.collection.harvested
+                |> List.pickIndexes selection
                 |> ShowTracksContextMenu coordinates
                 |> returnReplyWithModel
                     { model

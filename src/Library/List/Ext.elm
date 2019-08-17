@@ -1,9 +1,13 @@
-module List.Ext exposing (addTo, move, without)
+module List.Ext exposing (..)
 
 import List.Extra as List
 
 
 {-| Flipped version of (::).
+
+    >>> addTo [2, 3] 1
+    [1, 2, 3]
+
 -}
 addTo : List a -> a -> List a
 addTo list item =
@@ -11,6 +15,14 @@ addTo list item =
 
 
 {-| Move an item "from" an index "to" another index.
+Putting the item in front of the `to` index.
+
+    >>> move { from = 0, to = 2 } [1, 2, 3]
+    [2, 1, 3]
+
+    >>> move { from = 2, to = 0 } [1, 2, 3]
+    [3, 1, 2]
+
 -}
 move : { from : Int, to : Int } -> List a -> List a
 move opts list =
@@ -44,6 +56,19 @@ move opts list =
                     existingItem :: acc
             )
             []
+
+
+pickIndexes : List Int -> List a -> List a
+pickIndexes indexes items =
+    List.foldr
+        (\idx acc ->
+            items
+                |> List.getAt idx
+                |> Maybe.map (addTo acc)
+                |> Maybe.withDefault acc
+        )
+        []
+        indexes
 
 
 {-| Exclude a list from another list.

@@ -752,18 +752,42 @@ update msg model =
                     (Notifications.error "Failed to store track in cache")
 
         FinishedStoringTracksInCache trackIds ->
-            -- TODO: When a context menu of a track is open,
-            --       it should be "rerendered" in case
-            --       the track is no longer being downloaded.
             model
                 |> updateTracksModel
-                    (\m ->
-                        { m
-                            | cached = m.cached ++ trackIds
-                            , cachingInProgress = List.without trackIds m.cachingInProgress
+                    (\t ->
+                        { t
+                            | cached = t.cached ++ trackIds
+                            , cachingInProgress = List.without trackIds t.cachingInProgress
                         }
                     )
-                |> update (TracksMsg Tracks.Harvest)
+                |> (\m ->
+                        -- When a context menu of a track is open,
+                        -- it should be "rerendered" in case
+                        -- the track is no longer being downloaded.
+                        case m.contextMenu of
+                            Just contextMenu ->
+                                let
+                                    isTrackContextMenu =
+                                        ContextMenu.anyItem
+                                            (.label >> (==) "Downloading ...")
+                                            contextMenu
+
+                                    coordinates =
+                                        ContextMenu.coordinates contextMenu
+                                in
+                                if isTrackContextMenu then
+                                    m.tracks.collection.harvested
+                                        |> List.pickIndexes m.tracks.selectedTrackIndexes
+                                        |> ShowTracksContextMenu coordinates
+                                        |> translateReplyWithModel m
+
+                                else
+                                    return m
+
+                            Nothing ->
+                                return m
+                   )
+                |> andThen (update <| TracksMsg Tracks.Harvest)
                 |> andThen (translateReply SaveEnclosedUserData)
 
         -----------------------------------------
@@ -1265,6 +1289,7 @@ translateReply reply model =
                 |> returnWithModel (updateTracksModel (\m -> { m | cached = [] }) model)
                 |> andThen (update <| TracksMsg Tracks.Harvest)
                 |> andThen (translateReply SaveEnclosedUserData)
+                |> andThen (translateReply <| ShowSuccessNotification "Tracks cache was cleared")
 
         DisableTracksGrouping ->
             Tracks.DisableGrouping
