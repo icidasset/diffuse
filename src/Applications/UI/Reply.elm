@@ -17,6 +17,7 @@ import User.Layer
 type Reply
     = Shunt
       --
+    | CopyToClipboard String
     | GoToPage Page
     | StartedDragging
     | ToggleLoadingScreen Switch
@@ -44,7 +45,7 @@ type Reply
     | ShowQueueFutureMenu Coordinates { item : Queue.Item, itemIndex : Int }
     | ShowQueueHistoryMenu Coordinates { item : Queue.Item }
     | ShowSourceContextMenu Coordinates Source
-    | ShowTracksContextMenu Coordinates (List IdentifiedTrack)
+    | ShowTracksContextMenu Coordinates { alt : Bool } (List IdentifiedTrack)
     | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)
       -----------------------------------------
       -- Notifications

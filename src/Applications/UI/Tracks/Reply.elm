@@ -14,7 +14,7 @@ type Reply
       --
     | MarkAsSelected Int { shiftKey : Bool }
     | MoveTrackInSelectedPlaylist { from : Int, to : Int }
-    | ShowTrackMenuWithoutDelay Int Coordinates
-    | ShowTrackMenuWithSmallDelay Int Coordinates
+    | ShowTrackMenuWithoutDelay Int { alt : Bool } Coordinates
+    | ShowTrackMenuWithSmallDelay Int { alt : Bool } Coordinates
     | SortBy SortBy
     | ToggleFavourite Int

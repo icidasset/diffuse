@@ -204,7 +204,9 @@ The user interface should be self explanatory, but there are a few "hidden" feat
   Select the item you want to move by tapping on it, then tap and hold to move it around.
 - You can select multiple tracks using the SHIFT key and then add that selection
   to the queue or a playlist by right clicking on the selection (desktop only).
+- Click on the now-playing bit to scroll to that track.
 - Double tap on a EQ setting to reset it to its default value.
+- Use the ALT key whilst right clicking on a track to show the alternative track-context menu.
 
 ### Search
 

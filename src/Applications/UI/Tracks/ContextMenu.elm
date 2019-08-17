@@ -8,9 +8,12 @@ import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
+import Sources exposing (Source)
 import Sources.Services
+import Time
 import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Queue as Queue
+import UI.Queue.Common as Queue
 import UI.Reply exposing (Reply(..))
 import UI.Tracks as Tracks
 
@@ -22,36 +25,46 @@ import UI.Tracks as Tracks
 trackMenu :
     { cached : List String
     , cachingInProgress : List String
-    , selectedPlaylist : Maybe Playlist
+    , currentTime : Time.Posix
     , lastModifiedPlaylistName : Maybe String
+    , selectedPlaylist : Maybe Playlist
+    , showAlternativeMenu : Bool
+    , sources : List Source
     }
     -> List IdentifiedTrack
     -> Coordinates
     -> ContextMenu Reply
-trackMenu { cached, cachingInProgress, selectedPlaylist, lastModifiedPlaylistName } tracks =
-    [ queueActions
-        tracks
+trackMenu { cached, cachingInProgress, currentTime, selectedPlaylist, lastModifiedPlaylistName, showAlternativeMenu, sources } tracks =
+    if showAlternativeMenu then
+        [ temporaryUrlActions
+            currentTime
+            sources
+            tracks
+        ]
+            |> List.concat
+            |> ContextMenu
 
-    --
-    , playlistActions
-        { selectedPlaylist = selectedPlaylist
-        , lastModifiedPlaylistName = lastModifiedPlaylistName
-        }
-        tracks
+    else
+        [ queueActions
+            tracks
 
-    --
-    , cacheAction
-        { cached = cached
-        , cachingInProgress = cachingInProgress
-        }
-        tracks
-        |> List.singleton
+        --
+        , playlistActions
+            { selectedPlaylist = selectedPlaylist
+            , lastModifiedPlaylistName = lastModifiedPlaylistName
+            }
+            tracks
 
-    --
-    -- TODO: 'Copy short-lived url' item
-    ]
-        |> List.concat
-        |> ContextMenu
+        --
+        , cacheAction
+            { cached = cached
+            , cachingInProgress = cachingInProgress
+            }
+            tracks
+            |> List.singleton
+        ]
+            |> List.concat
+            |> ContextMenu
 
 
 cacheAction :
@@ -176,6 +189,22 @@ queueActions identifiedTracks =
         , active = False
         }
     ]
+
+
+temporaryUrlActions : Time.Posix -> List Source -> List IdentifiedTrack -> List (ContextMenu.Item Reply)
+temporaryUrlActions timestamp sources tracks =
+    case tracks of
+        [ ( i, t ) ] ->
+            [ Item
+                { icon = Icons.link
+                , label = "Copy temporary url"
+                , msg = CopyToClipboard (Queue.makeTrackUrl timestamp sources t)
+                , active = False
+                }
+            ]
+
+        _ ->
+            []
 
 
 

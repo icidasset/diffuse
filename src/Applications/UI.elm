@@ -234,7 +234,6 @@ type Msg
     = Bypass
     | Reply Reply
       --
-    | CopyToClipboard String
     | Debounce (Debouncer.Msg Msg)
     | HideOverlay
     | KeyboardMsg Keyboard.Msg
@@ -309,9 +308,6 @@ update msg model =
             translateReply reply model
 
         --
-        CopyToClipboard string ->
-            returnWithModel model (Ports.copyToClipboard string)
-
         Debounce debouncerMsg ->
             Return3.wieldNested
                 update
@@ -778,7 +774,7 @@ update msg model =
                                 if isTrackContextMenu then
                                     m.tracks.collection.harvested
                                         |> List.pickIndexes m.tracks.selectedTrackIndexes
-                                        |> ShowTracksContextMenu coordinates
+                                        |> ShowTracksContextMenu coordinates { alt = False }
                                         |> translateReplyWithModel m
 
                                 else
@@ -874,6 +870,11 @@ translateReply reply model =
             return model
 
         --
+        CopyToClipboard string ->
+            string
+                |> Ports.copyToClipboard
+                |> returnWithModel model
+
         GoToPage page ->
             page
                 |> ChangeUrlUsingPage
@@ -1019,8 +1020,19 @@ translateReply reply model =
         ShowSourceContextMenu coordinates source ->
             return { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
 
-        ShowTracksContextMenu coordinates tracks ->
-            return { model | contextMenu = Just (Tracks.trackMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress, selectedPlaylist = model.tracks.selectedPlaylist, lastModifiedPlaylistName = model.playlists.lastModifiedPlaylist } tracks coordinates) }
+        ShowTracksContextMenu coordinates { alt } tracks ->
+            let
+                menuDependencies =
+                    { cached = model.tracks.cached
+                    , cachingInProgress = model.tracks.cachingInProgress
+                    , currentTime = model.currentTime
+                    , selectedPlaylist = model.tracks.selectedPlaylist
+                    , lastModifiedPlaylistName = model.playlists.lastModifiedPlaylist
+                    , showAlternativeMenu = alt
+                    , sources = model.sources.collection
+                    }
+            in
+            return { model | contextMenu = Just (Tracks.trackMenu menuDependencies tracks coordinates) }
 
         ShowTracksViewMenu coordinates maybeGrouping ->
             return { model | contextMenu = Just (Tracks.viewMenu model.tracks.cachedOnly maybeGrouping coordinates) }

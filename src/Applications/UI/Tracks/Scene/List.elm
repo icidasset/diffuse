@@ -573,7 +573,7 @@ mouseContextMenuEvent ( i, _ ) =
                     else
                         event.clientPos
                             |> Coordinates.fromTuple
-                            |> ShowTrackMenuWithSmallDelay i.indexInList
+                            |> ShowTrackMenuWithSmallDelay i.indexInList { alt = event.keys.alt }
                             |> Reply
                 , stopPropagation = True
                 , preventDefault = True
@@ -597,7 +597,7 @@ touchContextMenuEvent ( i, _ ) maybeDragEnv =
 
                         Nothing ->
                             { x = x, y = y }
-                                |> ShowTrackMenuWithoutDelay i.indexInList
+                                |> ShowTrackMenuWithoutDelay i.indexInList { alt = False }
                                 |> Reply
                 , stopPropagation = False
                 , preventDefault = False

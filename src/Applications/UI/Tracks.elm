@@ -141,7 +141,7 @@ type Msg
       -----------------------------------------
       -- Menus
       -----------------------------------------
-    | ShowTrackMenu Int Coordinates
+    | ShowTrackMenu Int { alt : Bool } Coordinates
     | ShowViewMenu (Maybe Grouping) Mouse.Event
       -----------------------------------------
       -- Playlists
@@ -315,7 +315,7 @@ update msg model =
         -----------------------------------------
         -- Menus
         -----------------------------------------
-        ShowTrackMenu trackIndex coordinates ->
+        ShowTrackMenu trackIndex options coordinates ->
             let
                 listScene =
                     model.listScene
@@ -332,7 +332,7 @@ update msg model =
             in
             model.collection.harvested
                 |> List.pickIndexes selection
-                |> ShowTracksContextMenu coordinates
+                |> ShowTracksContextMenu coordinates options
                 |> returnReplyWithModel
                     { model
                         | listScene = { listScene | dnd = DnD.initialModel }
@@ -493,11 +493,11 @@ translateReply reply model =
                 Nothing ->
                     return model
 
-        ShowTrackMenuWithoutDelay a b ->
-            update (ShowTrackMenu a b) model
+        ShowTrackMenuWithoutDelay a b c ->
+            update (ShowTrackMenu a b c) model
 
-        ShowTrackMenuWithSmallDelay a b ->
-            ShowTrackMenu a b
+        ShowTrackMenuWithSmallDelay a b c ->
+            ShowTrackMenu a b c
                 |> Task.doDelayed 250
                 |> returnCommandWithModel model
 
