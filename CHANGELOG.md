@@ -15,6 +15,7 @@
 - **Preloads next track on every queue change**
 - **Remembers the playback progress on long audio files (can be disabled)**
 - **WebDAV support in the browser**
+- Ability to stop processing
 - Added 'Azure File Storage' service back
 - Added, and removed, some background images (21 total now)
 - Data is saved more efficiently and faster
@@ -23,6 +24,7 @@
 - Improved audio streaming (better handling of edge cases, eg. connection drops)
 - Improved drag & drop
 - Improved error messages (eg. through detailed notifications)
+- Improved performance
 - Improved README (how to host yourself, etc.)
 - Improved UI
 - New default background and accent color (softer and warmer colors)
@@ -30,5 +32,5 @@
 - Removed the "authenticating" wording (eg. "Store data on ..." instead of "Authenticate with ...")
 - Select background-image using thumbnail grid
 - Simpler setup (easier to build)
-- Support for [Media Keys](https://github.com/borismus/keysocket) in the browser
+- Support for [Media Keys](https://github.com/borismus/keysocket) in the browser and [Media Session API](https://developer.mozilla.org/en-US/docs/Web/API/Media_Session_API)
 - Uses hash/fragment based routing for easier hosting
