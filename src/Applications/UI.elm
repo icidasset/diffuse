@@ -387,9 +387,21 @@ update msg model =
             )
 
         SetIsOnline False ->
-            ( { model | isOnline = False }
-            , Cmd.none
+            -- The app went offline, cache everything
+            -- (if caching is supported).
+            (case model.authentication of
+                Authentication.Authenticated (Dropbox _) ->
+                    saveAllHypaethralData { sync = True }
+
+                Authentication.Authenticated (RemoteStorage _) ->
+                    saveAllHypaethralData { sync = True }
+
+                _ ->
+                    identity
             )
+                ( { model | isOnline = False }
+                , Cmd.none
+                )
 
         SetIsOnline True ->
             andThen
@@ -403,7 +415,7 @@ update msg model =
                         update SyncUserData
 
                     _ ->
-                        update Bypass
+                        return
                 )
                 ( { model | isOnline = True }
                 , Cmd.none
