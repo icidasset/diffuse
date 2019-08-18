@@ -18,11 +18,11 @@ all: dev
 # Build tasks
 #
 
-build: clean elm system vendor
+build: clean elm system
 	@echo "> Build completed ⚡"
 
 
-build-prod: clean elm-prod system vendor
+build-prod: clean elm-prod system
 	@echo "> Production build completed 🛳"
 
 
@@ -46,12 +46,6 @@ elm-prod:
 system:
 	@echo "> Compiling system"
 	@stack build && stack exec build
-
-
-vendor:
-	@echo "> Copying vendor things"
-	@mkdir -p $(BUILD_DIR)/vendor/
-	@cp -rf $(VENDOR_DIR)/ $(BUILD_DIR)/vendor/
 
 
 #
