@@ -136,7 +136,7 @@ app.ports.requestDropbox.subscribe(event => {
 
   const dataPromise =
     !navigator.onLine
-    ? fromCache(event.tag)
+    ? fromCache(event.tag + "_" + event.data.file)
     : fetch("https://content.dropboxapi.com/2/files/download", {
         method: "POST",
         headers: {
@@ -177,7 +177,7 @@ app.ports.toDropbox.subscribe(event => {
     })
     .catch(reporter)
 
-  toCache(event.tag, event.data.data)
+  toCache(event.tag + "_" + event.data.file, event.data.data)
     .catch(reporter)
 })
 
@@ -299,7 +299,7 @@ app.ports.requestRemoteStorage.subscribe(event => {
 
   const dataPromise =
     isOffline
-    ? fromCache(event.tag)
+    ? fromCache(event.tag + "_" + event.data.file)
     : remoteStorage(event)
         .then(_ => rsClient.getFile(event.data.file))
         .then(r => r.data)
@@ -321,7 +321,7 @@ app.ports.toRemoteStorage.subscribe(event => {
     .then(data => rsClient.storeFile("application/json", event.data.file, data))
     .catch( reportError(event) )
 
-  toCache(event.tag, event.data.data)
+  toCache(event.tag + "_" + event.data.file, event.data.data)
     .catch( reportError(event) )
 })
 
