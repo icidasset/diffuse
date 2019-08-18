@@ -16,7 +16,6 @@ const exclude =
   [ "_headers"
   , "_redirects"
   , "CORS"
-  , "version.js"
   ]
 
 
@@ -30,7 +29,7 @@ self.addEventListener("install", event => {
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))
-      const whatToCache = [ "" ].concat(filteredTree)
+      const whatToCache = [ "", ".", "/" ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
 
@@ -39,9 +38,9 @@ self.addEventListener("install", event => {
 
 
 self.addEventListener("fetch", event => {
-  const isNotLocal =
-    !event.request.url.match(new RegExp("^https?\:\/\/127.0.0.1")) &&
-    !event.request.url.match(new RegExp("^https?\:\/\/localhost"))
+  // const isNotLocal =
+  //   !event.request.url.match(new RegExp("^https?\:\/\/127.0.0.1")) &&
+  //   !event.request.url.match(new RegExp("^https?\:\/\/localhost"))
 
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
@@ -49,8 +48,8 @@ self.addEventListener("fetch", event => {
   const isOffline =
     !self.navigator.onLine
 
-  // Use cache if offline and requesting something non-local and identified as cached (internal)
-  if (isNotLocal && isInternal && isOffline) {
+  // Use cache if offline and identified as cached (internal)
+  if (isInternal && isOffline) {
     const promise = caches
       .match(event.request)
       .then(r => r || fetch(event.request))
