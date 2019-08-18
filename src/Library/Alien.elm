@@ -52,6 +52,7 @@ type Tag
     | SaveTracks
     | SignIn
     | SignOut
+    | StopProcessing
     | StoreTracksInCache
     | ToCache
     | UpdateEncryptionKey
@@ -103,6 +104,7 @@ enum =
         , ( "SAVE_TRACKS", SaveTracks )
         , ( "SIGN_IN", SignIn )
         , ( "SIGN_OUT", SignOut )
+        , ( "STOP_PROCESSING", StopProcessing )
         , ( "STORE_TRACKS_IN_CACHE", StoreTracksInCache )
         , ( "TO_CACHE", ToCache )
         , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )

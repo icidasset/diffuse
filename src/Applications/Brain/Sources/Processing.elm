@@ -86,6 +86,10 @@ update msg model =
                         { model | status = NotProcessing }
                         [ NudgeUI Alien.FinishedProcessingSources ]
 
+        {- STOP! -}
+        StopProcessing ->
+            return { model | status = NotProcessing }
+
         -----------------------------------------
         -- Phase 1
         -- Prepare for processing.

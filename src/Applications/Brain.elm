@@ -578,6 +578,9 @@ translateAlienData tag data =
         Alien.SignOut ->
             UserLayerMsg User.PerformSignOut
 
+        Alien.StopProcessing ->
+            ProcessingMsg Processing.StopProcessing
+
         Alien.StoreTracksInCache ->
             Cmd (Brain.Ports.storeTracksInCache data)
 

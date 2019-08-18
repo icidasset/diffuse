@@ -32,6 +32,7 @@ type alias Model =
 type Msg
     = Process { origin : String, sources : List Source, tracks : List Track }
     | NextInLine
+    | StopProcessing
       -----------------------------------------
       -- Steps
       -----------------------------------------

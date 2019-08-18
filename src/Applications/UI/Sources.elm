@@ -1,5 +1,6 @@
 module UI.Sources exposing (Model, Msg(..), initialModel, sourcesToProcess, update, view)
 
+import Alien
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
 import Coordinates exposing (Coordinates)
@@ -24,6 +25,7 @@ import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
+import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Sources.Form as Form
 import UI.Sources.Page as Sources exposing (..)
@@ -64,6 +66,7 @@ type Msg
     | FinishedProcessing
     | Process
     | ReportProcessingError Json.Value
+    | StopProcessing
       -----------------------------------------
       -- Children
       -----------------------------------------
@@ -126,6 +129,22 @@ update msg model =
                     "Could not decode processing error"
                         |> ShowStickyErrorNotification
                         |> returnReplyWithModel model
+
+        StopProcessing ->
+            case model.processingNotificationId of
+                Just notificationId ->
+                    Alien.StopProcessing
+                        |> Alien.trigger
+                        |> Ports.toBrain
+                        |> returnCommandWithModel
+                            { model
+                                | isProcessing = []
+                                , processingNotificationId = Nothing
+                            }
+                        |> addReply (DismissNotification { id = notificationId })
+
+                Nothing ->
+                    return model
 
         -----------------------------------------
         -- Children
@@ -286,8 +305,8 @@ index model =
 
               else
                 ( Icon Icons.sync
-                , Label "Processing sources ..." Shown
-                , PerformMsg Bypass
+                , Label "Stop processing ..." Shown
+                , PerformMsg StopProcessing
                 )
             ]
 
