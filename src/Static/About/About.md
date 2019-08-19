@@ -198,7 +198,7 @@ cors:
 
 ## UI
 
-The user interface should be self explanatory, but there are a few "hidden" features:
+There are a few "hidden" features:
 
 - You can reorder items in the queue or a playlist with drag-and-drop.
   Select the item you want to move by tapping on it, then tap and hold to move it around.
