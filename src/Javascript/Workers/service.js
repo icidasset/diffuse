@@ -24,12 +24,13 @@ const exclude =
 
 
 self.addEventListener("install", event => {
+  const href = self.location.href.replace("service-worker.js", "")
   const promise = removeAllCaches()
     .then(_ => fetch("tree.json"))
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))
-      const whatToCache = [ self.location.origin, "application.js", "brain.js" ].concat(filteredTree)
+      const whatToCache = [ href, "application.js", "brain.js" ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
 
