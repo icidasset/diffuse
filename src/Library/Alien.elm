@@ -41,6 +41,7 @@ type Tag
     | ImportLegacyData
     | ProcessSources
     | RedirectToBlockstackSignIn
+    | RemoveEncryptionKey
     | RemoveTracksBySourceId
     | RemoveTracksFromCache
     | SaveEnclosedUserData
@@ -54,6 +55,7 @@ type Tag
     | SignOut
     | StopProcessing
     | StoreTracksInCache
+    | SyncHypaethralData
     | ToCache
     | UpdateEncryptionKey
       -----------------------------------------
@@ -93,6 +95,7 @@ enum =
         , ( "IMPORT_LEGACY_DATA", ImportLegacyData )
         , ( "PROCESS_SOURCES", ProcessSources )
         , ( "REDIRECT_TO_BLOCKSTACK_SIGN_IN", RedirectToBlockstackSignIn )
+        , ( "REMOVE_ENCRYPTION_KEY", RemoveEncryptionKey )
         , ( "REMOVE_TRACKS_BY_SOURCE_ID", RemoveTracksBySourceId )
         , ( "REMOVE_TRACKS_FROM_CACHE", RemoveTracksFromCache )
         , ( "SAVE_ENCLOSED_USER_DATA", SaveEnclosedUserData )
@@ -106,6 +109,7 @@ enum =
         , ( "SIGN_OUT", SignOut )
         , ( "STOP_PROCESSING", StopProcessing )
         , ( "STORE_TRACKS_IN_CACHE", StoreTracksInCache )
+        , ( "SYNC_HYPAETHRAL_DATA", SyncHypaethralData )
         , ( "TO_CACHE", ToCache )
         , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )
 

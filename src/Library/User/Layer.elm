@@ -15,6 +15,7 @@ Which is stored in the location chosen by the user.
 
 -}
 
+import Alien
 import Dict exposing (Dict)
 import Enum exposing (Enum)
 import Equalizer

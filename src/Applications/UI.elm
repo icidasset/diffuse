@@ -258,9 +258,9 @@ type Msg
       -- Authentication
       -----------------------------------------
     | AuthenticationBootFailure String
+    | MissingSecretKey Json.Decode.Value
     | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
-    | SyncUserData
       -----------------------------------------
       -- Children
       -----------------------------------------
@@ -389,19 +389,17 @@ update msg model =
         SetIsOnline False ->
             -- The app went offline, cache everything
             -- (if caching is supported).
-            (case model.authentication of
+            ( { model | isOnline = False }
+            , case model.authentication of
                 Authentication.Authenticated (Dropbox _) ->
-                    saveAllHypaethralData { sync = True }
+                    Ports.toBrain (Alien.trigger Alien.SyncHypaethralData)
 
                 Authentication.Authenticated (RemoteStorage _) ->
-                    saveAllHypaethralData { sync = True }
+                    Ports.toBrain (Alien.trigger Alien.SyncHypaethralData)
 
                 _ ->
-                    identity
+                    Cmd.none
             )
-                ( { model | isOnline = False }
-                , Cmd.none
-                )
 
         SetIsOnline True ->
             andThen
@@ -409,10 +407,10 @@ update msg model =
                 -- If we're back online again, sync all the user's data.
                 (case model.authentication of
                     Authentication.Authenticated (Dropbox _) ->
-                        update SyncUserData
+                        syncHypaethralData
 
                     Authentication.Authenticated (RemoteStorage _) ->
-                        update SyncUserData
+                        syncHypaethralData
 
                     _ ->
                         return
@@ -507,6 +505,13 @@ update msg model =
                 |> showNotification (Notifications.error err)
                 |> andThen (translateReply LoadDefaultBackdrop)
 
+        MissingSecretKey json ->
+            "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
+                |> ShowErrorNotification
+                |> translateReplyWithModel model
+                |> andThen (translateReply <| Reply.LoadDefaultBackdrop)
+                |> andThen (translateReply <| Reply.ToggleLoadingScreen Off)
+
         NotAuthenticated ->
             -- This is the message we get when the app initially
             -- finds out we're not authenticated.
@@ -546,12 +551,6 @@ update msg model =
             RemoteStorage.webfingerError
                 |> Notifications.error
                 |> showNotificationWithModel model
-
-        SyncUserData ->
-            "Syncing"
-                |> Notifications.warning
-                |> showNotificationWithModel model
-                |> saveAllHypaethralData { sync = True }
 
         -----------------------------------------
         -- Children
@@ -674,7 +673,7 @@ update msg model =
                 -----------------------------
                 -- Save all the imported data
                 -----------------------------
-                |> saveAllHypaethralData { sync = False }
+                |> saveAllHypaethralData
 
         -----------------------------------------
         -- Notifications
@@ -859,6 +858,14 @@ showNotification notification model =
 showNotificationWithModel : Model -> Notification Reply -> Return Model Msg
 showNotificationWithModel model notification =
     showNotification notification model
+
+
+syncHypaethralData : Model -> Return Model Msg
+syncHypaethralData model =
+    "Syncing"
+        |> Notifications.warning
+        |> showNotificationWithModel model
+        |> addCommand (Ports.toBrain <| Alien.trigger Alien.SyncHypaethralData)
 
 
 updateTracksModel : (Tracks.Model -> Tracks.Model) -> Model -> Model
@@ -1539,7 +1546,7 @@ translateReply reply model =
                 |> Demo.tape
                 |> LoadHypaethralUserData
                 |> updateWithModel model
-                |> saveAllHypaethralData { sync = False }
+                |> saveAllHypaethralData
 
         LoadDefaultBackdrop ->
             Backdrop.Default
@@ -1614,15 +1621,9 @@ translateReply reply model =
                 |> Ports.toBrain
                 |> returnWithModel model
 
-        SaveTracksFromBrain ->
-            Alien.SaveTracks
-                |> Alien.trigger
-                |> Ports.toBrain
-                |> returnWithModel model
 
-
-saveAllHypaethralData : { sync : Bool } -> Return Model Msg -> Return Model Msg
-saveAllHypaethralData { sync } return =
+saveAllHypaethralData : Return Model Msg -> Return Model Msg
+saveAllHypaethralData return =
     List.foldl
         (\( _, bit ) ->
             case bit of
@@ -1642,11 +1643,7 @@ saveAllHypaethralData { sync } return =
                     andThen (translateReply SaveSources)
 
                 Tracks ->
-                    if sync then
-                        andThen (translateReply SaveTracksFromBrain)
-
-                    else
-                        andThen (translateReply SaveTracks)
+                    andThen (translateReply SaveTracks)
         )
         return
         hypaethralBit.list
@@ -1758,11 +1755,7 @@ translateAlienData event =
             LoadHypaethralUserData event.data
 
         Just Alien.MissingSecretKey ->
-            event.data
-                |> Json.Decode.decodeValue (Json.Decode.field "alienMethodTag" Alien.tagDecoder)
-                |> Result.map (\tag -> Authentication.MissingSecretKey tag event.data)
-                |> Result.map AuthenticationMsg
-                |> Result.withDefault Bypass
+            MissingSecretKey event.data
 
         Just Alien.NotAuthenticated ->
             NotAuthenticated

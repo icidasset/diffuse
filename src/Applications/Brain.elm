@@ -134,6 +134,7 @@ type Msg
       -----------------------------------------
       -- User layer #2
       -----------------------------------------
+    | RemoveEncryptionKey
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
     | SaveHypaethralData HypaethralBit
 
@@ -247,6 +248,13 @@ update msg model =
         -----------------------------------------
         -- User layer #2
         -----------------------------------------
+        RemoveEncryptionKey ->
+            Alien.AuthSecretKey
+                |> Alien.trigger
+                |> Brain.Ports.removeCache
+                |> returnWithModel model
+                |> andThen saveAllHypaethralData
+
         SaveHypaethralDataSlowly debouncerMsg ->
             Return3.wieldNested
                 update
@@ -541,6 +549,9 @@ translateAlienData tag data =
 
         Alien.RedirectToBlockstackSignIn ->
             Cmd (Brain.Ports.redirectToBlockstackSignIn ())
+
+        Alien.RemoveEncryptionKey ->
+            RemoveEncryptionKey
 
         Alien.RemoveTracksBySourceId ->
             data

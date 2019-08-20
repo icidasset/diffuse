@@ -120,4 +120,3 @@ type Reply
     | SaveSettings
     | SaveSources
     | SaveTracks
-    | SaveTracksFromBrain

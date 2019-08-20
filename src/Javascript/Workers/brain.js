@@ -91,17 +91,12 @@ function removeCache(key) {
 
 
 function fromCache(key) {
-  if (isAuthMethodService(key)) {
-    return getFromIndex({ key: key })
-      .then(r => getSecretKey().then(s => [r, s]))
-      .then(([r, s]) => typeof r === "string" ? decrypt(s, r) : r)
-      .then(d => typeof d === "string" ? JSON.parse(d) : d)
-      .then(a => a === undefined ? null : a)
-
-  } else {
-    return getFromIndex({ key: key })
-
-  }
+  return isAuthMethodService(key)
+    ? getFromIndex({ key: key })
+        .then(decryptIfNeeded)
+        .then(d => typeof d === "string" ? JSON.parse(d) : d)
+        .then(a => a === undefined ? null : a)
+    : getFromIndex({ key: key })
 }
 
 
@@ -109,8 +104,7 @@ function toCache(key, data) {
   if (isAuthMethodService(key)) {
     const json = JSON.stringify(data)
 
-    return getSecretKey()
-      .then(secretKey => encrypt(secretKey, json))
+    return encryptWithSecretKey(json)
       .then(encryptedData => setInIndex({ key: key, data: encryptedData }))
 
   } else {

@@ -146,7 +146,7 @@ app.ports.requestDropbox.subscribe(event => {
       })
         .then(r => r.ok ? r.text() : r.json())
         .then(r => r.error ? null : r)
-        .then(decryptWithSecretKey)
+        .then(decryptIfNeeded)
 
   dataPromise
     .then( sendJsonData(event) )
@@ -196,7 +196,7 @@ app.ports.requestIpfs.subscribe(event => {
   fetch(apiOrigin + "/api/v0/files/read?arg=" + path)
     .then(r => r.ok ? r.text() : r.json())
     .then(r => r.Code === 0 ? null : r)
-    .then(decryptWithSecretKey)
+    .then(decryptIfNeeded)
     .then( sendJsonData(event) )
     .catch( reportError(event) )
 })
@@ -303,11 +303,11 @@ app.ports.requestRemoteStorage.subscribe(event => {
     : remoteStorage(event)
         .then(_ => rsClient.getFile(event.data.file))
         .then(r => r.data)
-        .then(decryptWithSecretKey)
+        .then(decryptIfNeeded)
 
   dataPromise
     .then( sendJsonData(event) )
-    .then( reportError(event) )
+    .catch( reportError(event) )
 })
 
 
@@ -353,7 +353,7 @@ app.ports.requestTextile.subscribe(event => {
     .then(f => f ? Textile.readFile(apiOrigin, f) : null)
 
     .then( sendJsonData(event) )
-    .then( reportError(event) )
+    .catch( reportError(event) )
 })
 
 
@@ -379,16 +379,27 @@ app.ports.toTextile.subscribe(event => {
 // 🛠
 
 
-function decryptWithSecretKey(encryptedData) {
-  return encryptedData
-    ? getSecretKey().then(secretKey => decrypt(secretKey, encryptedData))
-    : null
+function decryptIfNeeded(data) {
+  if (typeof data !== "string") {
+    return Promise.resolve(data)
+
+  } else if (data.startsWith("{") || data.startsWith("[")) {
+    return Promise.resolve(data)
+
+  } else {
+    return data
+      ? getSecretKey().then(secretKey => decrypt(secretKey, data))
+      : Promise.resolve(null)
+
+  }
 }
 
 
 function encryptWithSecretKey(unencryptedData) {
   return unencryptedData
-    ? getSecretKey().then(secretKey => encrypt(secretKey, unencryptedData))
+    ? getSecretKey()
+        .then(secretKey => encrypt(secretKey, unencryptedData))
+        .catch(_ => unencryptedData)
     : null
 }
 

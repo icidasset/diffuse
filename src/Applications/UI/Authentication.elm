@@ -15,12 +15,14 @@ import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, target, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
+import Html.Styled.Ext exposing (onClickStopPropagation)
 import Http
 import Json.Decode
 import Json.Encode
 import Markdown
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
+import Material.Icons.Alert as Icons
 import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
@@ -150,6 +152,7 @@ type Msg
       -- Encryption
       -----------------------------------------
     | KeepPassphraseInMemory String
+    | RemoveEncryptionKey Method
     | ShowNewEncryptionKeyScreen Method
     | ShowUpdateEncryptionKeyScreen Method
     | UpdateEncryptionKey Method String
@@ -160,10 +163,6 @@ type Msg
     | PingIpfsCallback (Result Http.Error ())
     | PingOtherIpfs String
     | PingOtherIpfsCallback String (Result Http.Error ())
-      -----------------------------------------
-      -- Missing secret key
-      -----------------------------------------
-    | MissingSecretKey Alien.Tag Json.Decode.Value
       -----------------------------------------
       -- More Input
       -----------------------------------------
@@ -228,7 +227,7 @@ update msg model =
             )
 
         SignIn method ->
-            ( Unauthenticated
+            ( model
               --
             , [ ( "method", encodeMethod method )
               , ( "passphrase", Json.Encode.null )
@@ -247,7 +246,7 @@ update msg model =
                     (return model)
 
             else
-                ( Unauthenticated
+                ( model
                   --
                 , [ ( "method", encodeMethod method )
                   , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
@@ -279,6 +278,14 @@ update msg model =
                 _ ->
                     return model
 
+        RemoveEncryptionKey method ->
+            Alien.RemoveEncryptionKey
+                |> Alien.trigger
+                |> Ports.toBrain
+                |> returnCommandWithModel (Authenticated method)
+                |> addReply ForceTracksRerender
+                |> addReply (ShowSuccessNotification "Saving data without encryption ...")
+
         ShowNewEncryptionKeyScreen method ->
             return (NewEncryptionKeyScreen method Nothing)
 
@@ -292,14 +299,14 @@ update msg model =
                     (return model)
 
             else
-                ( Authenticated method
-                , passphrase
+                passphrase
                     |> hashPassphrase
                     |> Json.Encode.string
                     |> Alien.broadcast Alien.UpdateEncryptionKey
                     |> Ports.toBrain
-                , [ ForceTracksRerender ]
-                )
+                    |> returnCommandWithModel (Authenticated method)
+                    |> addReply ForceTracksRerender
+                    |> addReply (ShowSuccessNotification "Encrypting data with new passphrase ...")
 
         -----------------------------------------
         -- IPFS
@@ -350,29 +357,6 @@ update msg model =
             "Can't reach this IPFS API, maybe it's offline? Or I don't have access?"
                 |> ShowErrorNotification
                 |> returnReplyWithModel model
-
-        -----------------------------------------
-        -- Missing secret key
-        -----------------------------------------
-        MissingSecretKey Alien.AuthAnonymous data ->
-            returnRepliesWithModel
-                (NewEncryptionKeyScreen Local Nothing)
-                [ LoadDefaultBackdrop
-                , ShowStickySuccessNotification """
-                    Thanks for upgrading from Diffuse V1!
-
-                    In this newer version all your __data is encrypted__, for this we'll need a __passphrase__.
-                  """
-                , ToggleLoadingScreen Off
-                ]
-
-        MissingSecretKey _ data ->
-            data
-                |> Json.Decode.decodeValue (Json.Decode.field "fallbackError" Json.Decode.string)
-                |> Result.withDefault "I seem to be missing your encrypted passphrase, please reauthenticate."
-                |> ShowErrorNotification
-                |> returnReplyWithModel model
-                |> addReply LoadDefaultBackdrop
 
         -----------------------------------------
         -- More Input
@@ -598,17 +582,17 @@ view model =
             InputScreen method opts ->
                 inputScreen opts
 
-            NewEncryptionKeyScreen method Nothing ->
-                encryptionKeyScreen (SignInWithPassphrase method "")
+            NewEncryptionKeyScreen method pass ->
+                encryptionKeyScreen
+                    { withEncryption = SignInWithPassphrase method (Maybe.withDefault "" pass)
+                    , withoutEncryption = SignIn method
+                    }
 
-            NewEncryptionKeyScreen method (Just passphrase) ->
-                encryptionKeyScreen (SignInWithPassphrase method passphrase)
-
-            UpdateEncryptionKeyScreen method Nothing ->
-                encryptionKeyScreen (UpdateEncryptionKey method "")
-
-            UpdateEncryptionKeyScreen method (Just passphrase) ->
-                encryptionKeyScreen (UpdateEncryptionKey method passphrase)
+            UpdateEncryptionKeyScreen method pass ->
+                encryptionKeyScreen
+                    { withEncryption = UpdateEncryptionKey method (Maybe.withDefault "" pass)
+                    , withoutEncryption = RemoveEncryptionKey method
+                    }
 
             Unauthenticated ->
                 choicesScreen
@@ -832,11 +816,11 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
 -- ENCRYPTION KEY
 
 
-encryptionKeyScreen : Msg -> Html Msg
-encryptionKeyScreen msg =
+encryptionKeyScreen : { withEncryption : Msg, withoutEncryption : Msg } -> Html Msg
+encryptionKeyScreen { withEncryption, withoutEncryption } =
     slab
         Html.form
-        [ onSubmit msg ]
+        [ onSubmit withEncryption ]
         [ T.flex
         , T.flex_column
         ]
@@ -856,6 +840,20 @@ encryptionKeyScreen msg =
             Filled
             Bypass
             (text "Continue")
+        , brick
+            [ onClickStopPropagation withoutEncryption ]
+            [ T.f7
+            , T.flex
+            , T.items_center
+            , T.justify_center
+            , T.lh_title
+            , T.mt3
+            , T.pointer
+            , T.white_50
+            ]
+            [ inline [ T.dib, C.lh_0, T.mr2 ] [ fromUnstyled (Icons.warning 13 Inherit) ]
+            , text "Continue without encryption"
+            ]
         ]
 
 

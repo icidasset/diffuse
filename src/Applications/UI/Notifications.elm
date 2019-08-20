@@ -70,7 +70,7 @@ show notification collection =
           else
             Task.perform
                 (\_ -> DismissNotification { id = Notifications.id notification })
-                (Process.sleep 5000)
+                (Process.sleep 7500)
         )
 
 
