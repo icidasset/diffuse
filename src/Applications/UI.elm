@@ -1321,7 +1321,7 @@ translateReply reply model =
                 |> returnWithModel (updateTracksModel (\m -> { m | cached = [] }) model)
                 |> andThen (update <| TracksMsg Tracks.Harvest)
                 |> andThen (translateReply SaveEnclosedUserData)
-                |> andThen (translateReply <| ShowSuccessNotification "Tracks cache was cleared")
+                |> andThen (translateReply <| ShowWarningNotification "Tracks cache was cleared")
 
         DisableTracksGrouping ->
             Tracks.DisableGrouping

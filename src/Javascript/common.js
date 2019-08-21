@@ -16,3 +16,8 @@ const throttle =
     if (wasCalledBefore) { return } else { wasCalledBefore = true }
     setTimeout(() => { callback(...lastestArgs); wasCalledBefore = false }, time)
   }
+
+
+function identity(a) {
+  return a
+}

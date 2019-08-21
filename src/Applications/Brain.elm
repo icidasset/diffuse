@@ -12,6 +12,7 @@ import EverySet
 import Json.Decode as Json
 import Json.Encode
 import List.Extra as List
+import List.Zipper as Zipper exposing (Zipper)
 import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Return2 exposing (..)
@@ -49,6 +50,7 @@ main =
 
 type alias Model =
     { hypaethralDebouncer : Debouncer HypaethralBit (List HypaethralBit)
+    , hypaethralStorage : List HypaethralBit
     , hypaethralUserData : User.HypaethralData
 
     -- Children
@@ -83,6 +85,7 @@ init flags =
       -- Initial model
       -----------------------------------------
       { hypaethralDebouncer = hypDebouncer
+      , hypaethralStorage = []
       , hypaethralUserData = User.emptyHypaethralData
 
       -- Children
@@ -136,7 +139,8 @@ type Msg
       -----------------------------------------
     | RemoveEncryptionKey
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
-    | SaveHypaethralData HypaethralBit
+    | SaveHypaethralData (List HypaethralBit)
+    | SaveNextHypaethralBit
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -272,19 +276,37 @@ update msg model =
                             |> Maybe.withDefault []
                             |> EverySet.fromList
                             |> EverySet.toList
-                            |> List.map SaveHypaethralData
+                            |> SaveHypaethralData
+                            |> List.singleton
                         )
                 }
                 { model = model.hypaethralDebouncer
                 , msg = debouncerMsg
                 }
 
-        SaveHypaethralData bit ->
-            model.hypaethralUserData
-                |> User.encodeHypaethralBit bit
-                |> User.SaveHypaethralData bit
-                |> UserLayerMsg
-                |> updateWithModel model
+        SaveHypaethralData bits ->
+            case model.hypaethralStorage ++ bits of
+                bit :: rest ->
+                    model.hypaethralUserData
+                        |> User.encodeHypaethralBit bit
+                        |> User.SaveHypaethralData bit
+                        |> UserLayerMsg
+                        |> updateWithModel { model | hypaethralStorage = rest }
+
+                _ ->
+                    return model
+
+        SaveNextHypaethralBit ->
+            case model.hypaethralStorage of
+                bit :: rest ->
+                    model.hypaethralUserData
+                        |> User.encodeHypaethralBit bit
+                        |> User.SaveHypaethralData bit
+                        |> UserLayerMsg
+                        |> updateWithModel { model | hypaethralStorage = rest }
+
+                _ ->
+                    return model
 
 
 saveTracks : Model -> List Tracks.Track -> Return Model Msg
@@ -445,15 +467,10 @@ makeHypaethralLens setter model value =
 
 saveAllHypaethralData : Model -> ( Model, Cmd Msg )
 saveAllHypaethralData model =
-    List.foldl
-        (\bit ->
-            bit
-                |> SaveHypaethralData
-                |> update
-                |> andThen
-        )
-        (return model)
-        (List.map Tuple.second User.hypaethralBit.list)
+    User.hypaethralBit.list
+        |> List.map Tuple.second
+        |> SaveHypaethralData
+        |> updateWithModel model
 
 
 saveHypaethralDataBitWithDelay : User.HypaethralBit -> Model -> ( Model, Cmd Msg )
@@ -472,6 +489,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Brain.Ports.fromAlien alien
+        , Brain.Ports.savedHypaethralBit (always SaveNextHypaethralBit)
 
         -----------------------------------------
         -- Children

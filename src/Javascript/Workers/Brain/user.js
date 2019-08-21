@@ -121,6 +121,7 @@ app.ports.toBlockstack.subscribe(event => {
 
   bl
     .putFile(event.data.file, json)
+    .then( storageCallback(event) )
     .catch( reportError(event) )
 })
 
@@ -175,9 +176,11 @@ app.ports.toDropbox.subscribe(event => {
         body: data
       })
     })
+    .then( storageCallback(event) )
     .catch(reporter)
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
+    .then( !navigator.onLine ? storageCallback(event) : identity )
     .catch(reporter)
 })
 
@@ -223,11 +226,9 @@ app.ports.toIpfs.subscribe(event => {
         apiOrigin + "/api/v0/files/write?" + params,
         { method: "POST", body: formData }
       )
-
-    }).catch(
-      reportError(event)
-
-    )
+    })
+    .then( storageCallback(event) )
+    .catch( reportError(event) )
 })
 
 
@@ -319,9 +320,11 @@ app.ports.toRemoteStorage.subscribe(event => {
   !isOffline && remoteStorage(event)
     .then(doEncryption)
     .then(data => rsClient.storeFile("application/json", event.data.file, data))
+    .then( storageCallback(event) )
     .catch( reportError(event) )
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
+    .then( isOffline ? storageCallback(event) : identity )
     .catch( reportError(event) )
 })
 
@@ -371,6 +374,7 @@ app.ports.toTextile.subscribe(event => {
     .then(_ => Textile.useMill(apiOrigin, event.data.file, json))
     .then(m => Textile.addFileToThread(apiOrigin, m))
 
+    .then( storageCallback(event) )
     .catch( reportError(event) )
 })
 
@@ -447,4 +451,11 @@ function sendData(event, opts) {
 
 function sendJsonData(event) {
   return sendData(event, { parseJSON: true })
+}
+
+
+function storageCallback(event) {
+  return _ => {
+    app.ports.savedHypaethralBit.send()
+  }
 }

@@ -8,6 +8,7 @@ importScripts("../vendor/musicmetadata.min.js")
 importScripts("../vendor/subworkers-polyfill.min.js")
 
 importScripts("../brain.js")
+importScripts("../common.js")
 importScripts("../crypto.js")
 importScripts("../indexed-db.js")
 importScripts("../processing.js")
@@ -81,6 +82,7 @@ app.ports.toCache.subscribe(event => {
     : event.tag
 
   toCache(key, event.data.data || event.data)
+    .then( storageCallback(event) )
     .catch( reportError(event) )
 })
 
