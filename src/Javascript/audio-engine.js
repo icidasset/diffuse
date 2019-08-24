@@ -305,6 +305,13 @@ function audioTimeUpdateEvent(event) {
 
   setProgressBarWidth(progress)
 
+  if (navigator.mediaSession && navigator.mediaSession.setPositionState) {
+    navigator.mediaSession.setPositionState({
+      duration: node.duration,
+      position: node.currentTime
+    })
+  }
+
   if (node.duration >= 30 * 60) {
     sendProgress(this, progress)
   }
@@ -344,11 +351,13 @@ function audioLoaded(event) {
 
 function audioPlayEvent(event) {
   this.app.ports.setAudioIsPlaying.send(true)
+  if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing"
 }
 
 
 function audioPauseEvent(event) {
   this.app.ports.setAudioIsPlaying.send(false)
+  if (navigator.mediaSession) navigator.mediaSession.playbackState = "paused"
 }
 
 

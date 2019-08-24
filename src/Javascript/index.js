@@ -332,6 +332,12 @@ if ("mediaSession" in navigator) {
     if (audio) audio.currentTime = Math.min(audio.currentTime + 10, audio.duration)
   })
 
+
+  // navigator.mediaSession.setActionHandler("seekto", event => {
+  //   const audio = orchestrion.audio
+  //   if (audio) audio.currentTime = event.seekTime
+  // })
+
 }
 
 
