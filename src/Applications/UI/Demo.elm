@@ -1,5 +1,6 @@
 module UI.Demo exposing (tape)
 
+import Base64
 import Dict
 import Json.Encode as Json
 import Sources exposing (Service(..), Source)
@@ -36,15 +37,26 @@ favourites =
 
 sources : List Source
 sources =
+    let
+        key =
+            "QUtJQTZPUTNFVk1BWFZDRFFINkI="
+                |> Base64.decode
+                |> Result.withDefault ""
+
+        secret =
+            "Z0hPQkdHRzU1aXc0a0RDbjdjWlRJYTVTUDRZWnpERkRzQnFCYWI4Mg=="
+                |> Base64.decode
+                |> Result.withDefault ""
+    in
     [ { id = "15076402187342"
       , data =
             Dict.fromList
-                [ ( "accessKey", "AKIAJQCH57YFJ3UERXIA" )
+                [ ( "accessKey", key )
                 , ( "bucketName", "ongaku-ryoho-demo" )
                 , ( "directoryPath", "/" )
                 , ( "name", "Demo" )
                 , ( "region", "us-east-1" )
-                , ( "secretKey", "/jIC6DA9kc2DZSw3KGsF7Vft/xTARTptGb96kkP2" )
+                , ( "secretKey", secret )
                 ]
       , directoryPlaylists = True
       , enabled = True
