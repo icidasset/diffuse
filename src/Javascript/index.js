@@ -6,7 +6,7 @@
 // and connect the other bits to it.
 
 
-const app = Elm.UI.init({
+var app = Elm.UI.init({
   node: document.getElementById("elm"),
   flags: {
     initialTime: Date.now(),

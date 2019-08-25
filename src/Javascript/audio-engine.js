@@ -9,7 +9,7 @@
 // Audio context
 // -------------
 
-let context
+var context
 
 if (window.AudioContext) {
   context = new window.AudioContext()

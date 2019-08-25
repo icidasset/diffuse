@@ -44,17 +44,12 @@
 
     -->
     <noscript>
-      <div class="f5 fixed fw6 lh-copy tc w-90 white" style="
-        left: 50%;
-        top: 50%;
-
-        -webkit-transform: translate(-50%, -50%);
-        transform: translate(-50%, -50%);
-
-        font-family: 'Source Sans Pro', sans-serif;
-      ">
+      <div
+        class="f4 flex items-center i justify-center lh-copy ph3 min-vh-100 white-90"
+        style="font-family: 'Source Sans Pro', sans-serif;"
+      >
         <p>
-          Damn it, this application needs Javascript in order to operate.
+          Damn it, I need some Javascript for this thing.
         </p>
       </div>
     </noscript>
@@ -88,6 +83,32 @@
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js")
+    }
+  </script>
+
+  <!--
+
+    YE OLDEN BROWSER
+    ================
+
+    This `if` condition will be run for older browsers.
+
+  -->
+  <script>
+    if (!window.app || !window.context) {
+      // Add note
+      const note = document.createElement("div")
+
+      note.className = "f4 flex items-center i justify-center lh-copy ph3 min-vh-100 white-90"
+      note.style.fontFamily = "\"Source Sans Pro\", sans-serif"
+      note.innerHTML = "<p>Damn it, I need a modern browser for this thing.</p>"
+
+      document.body.appendChild(note)
+
+      // Remove loader
+      const elm = document.querySelector("#elm")
+
+      elm.parentNode.removeChild(elm)
     }
   </script>
 
