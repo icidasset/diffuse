@@ -524,7 +524,7 @@ update msg model =
                     go to the [import page](#/settings/import-export).
                     """
             in
-            model
+            { model | isUpgrading = False }
                 |> update (BackdropMsg Backdrop.Default)
                 |> andThen
                     (if model.isUpgrading then
