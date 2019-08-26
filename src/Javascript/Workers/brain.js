@@ -27,7 +27,7 @@ const flags = location
 
 const app = Elm.Brain.init({
   flags: {
-    initialUrl: flags.appHref || ""
+    initialUrl: decodeURIComponent(flags.appHref) || ""
   }
 })
 
