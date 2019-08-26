@@ -11,20 +11,26 @@
 function processContext(context) {
   const initialPromise = Promise.resolve([])
 
-  return context.urlsForTags.reduce((accumulator, urls) => {
+  return context.urlsForTags.reduce((accumulator, urls, idx) => {
     let getUrl
     let headUrl
 
-    return accumulator.then(col =>
-      transformUrl(urls.getUrl)
+    return accumulator.then(col => {
+      const filename = context
+        .receivedFilePaths[idx]
+        .split("/")
+        .reverse()[0]
+        .replace(/\.\w+$/, "")
+
+      return transformUrl(urls.getUrl)
         .then(url => { getUrl = url; return transformUrl(urls.headUrl) })
-        .then(url => { headUrl = url; return getTags(getUrl, headUrl) })
+        .then(url => { headUrl = url; return getTags(getUrl, headUrl, filename) })
         .then(r => col.concat(r))
         .catch(e => {
           console.error(e)
           return col.concat(null)
         })
-    )
+    })
 
   }, initialPromise).then(col => {
     context.receivedTags = col
@@ -52,7 +58,7 @@ const parserConfiguration = Object.assign(
 
 
 
-function getTags(getUrl, headUrl) {
+function getTags(getUrl, headUrl, filename) {
   const reader = new StreamingHttpTokenReader(headUrl, readerConfiguration)
 
   return reader.init().then(_ => {
@@ -63,7 +69,9 @@ function getTags(getUrl, headUrl) {
       reader.contentType,
       parserConfiguration
     )
-  }).then(pickTags)
+  })
+  .then(pickTags)
+  .catch(_ => fallbackTags(filename))
 }
 
 
@@ -79,6 +87,20 @@ function pickTags(result) {
     title: tags.title && tags.title.length ? tags.title : "Unknown",
     genre: (tags.genre && tags.genre[0]) || null,
     year: tags.year || null,
+    picture: null
+  }
+}
+
+
+function fallbackTags(filename) {
+  return {
+    disc: 1,
+    nr: 1,
+    album: "Unknown",
+    artist: "Unknown",
+    title: filename,
+    genre: null,
+    year: null,
     picture: null
   }
 }
