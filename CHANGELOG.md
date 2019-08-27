@@ -32,5 +32,5 @@
 - Removed the "authenticating" wording (eg. "Store data on ..." instead of "Authenticate with ...")
 - Select background-image using thumbnail grid
 - Simpler setup (easier to build)
-- Support for [Media Keys](https://github.com/borismus/keysocket) in the browser and [Media Session API](https://developer.mozilla.org/en-US/docs/Web/API/Media_Session_API)
+- Support for [Media Keys](https://github.com/borismus/keysocket) in the browser and the [Media Session API](https://developer.mozilla.org/en-US/docs/Web/API/Media_Session_API)
 - Uses hash/fragment based routing for easier hosting
