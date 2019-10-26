@@ -62,7 +62,7 @@ defaultContext =
 
 defaultService : Service
 defaultService =
-    AmazonS3
+    Dropbox
 
 
 
