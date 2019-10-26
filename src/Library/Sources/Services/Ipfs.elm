@@ -100,6 +100,8 @@ prepare _ srcData _ toMsg =
                 |> String.chopStart "http://"
                 |> String.chopStart "https://"
                 |> String.chopEnd "/"
+                |> String.chopStart "_dnslink."
+                |> String.append "_dnslink."
     in
     case isDnsLink of
         Just True ->
