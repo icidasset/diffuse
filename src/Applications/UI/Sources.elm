@@ -264,10 +264,13 @@ view page model =
                 List.map (Html.map FormMsg) (Form.edit model.form)
 
             New ->
-                List.map (Html.map FormMsg) (Form.new model.form)
+                List.map (Html.map FormMsg) (Form.new { onboarding = False } model.form)
+
+            NewOnboarding ->
+                List.map (Html.map FormMsg) (Form.new { onboarding = True } model.form)
 
             NewThroughRedirect _ _ ->
-                List.map (Html.map FormMsg) (Form.new model.form)
+                List.map (Html.map FormMsg) (Form.new { onboarding = False } model.form)
         )
 
 

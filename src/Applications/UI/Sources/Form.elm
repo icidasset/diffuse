@@ -188,11 +188,15 @@ takeStepBackwards currentStep =
 -- NEW
 
 
-new : Model -> List (Html Msg)
-new model =
+type alias Arguments =
+    { onboarding : Bool }
+
+
+new : Arguments -> Model -> List (Html Msg)
+new args model =
     case model.step of
         Where ->
-            newWhere model
+            newWhere args model
 
         How ->
             newHow model
@@ -201,15 +205,20 @@ new model =
             newBy model
 
 
-newWhere : Model -> List (Html Msg)
-newWhere { context } =
+newWhere : Arguments -> Model -> List (Html Msg)
+newWhere { onboarding } { context } =
     [ -----------------------------------------
       -- Navigation
       -----------------------------------------
       UI.Navigation.local
         [ ( Icon Icons.arrow_back
           , Label "Back to list" Hidden
-          , NavigateToPage (Page.Sources Sources.Index)
+            --
+          , if onboarding then
+                NavigateToPage Page.Index
+
+            else
+                NavigateToPage (Page.Sources Sources.Index)
           )
         ]
 

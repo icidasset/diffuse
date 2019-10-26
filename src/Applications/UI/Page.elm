@@ -113,6 +113,9 @@ toString_ page =
         Sources Sources.New ->
             "sources/new"
 
+        Sources Sources.NewOnboarding ->
+            "sources/welcome"
+
         Sources (Sources.NewThroughRedirect Dropbox _) ->
             "sources/new/dropbox"
 
@@ -204,6 +207,7 @@ route =
         , map (Sources Sources.Index) (s "sources")
         , map (Sources << Sources.Edit) (s "sources" </> s "edit" </> string)
         , map (Sources Sources.New) (s "sources" </> s "new")
+        , map (Sources Sources.NewOnboarding) (s "sources" </> s "welcome")
 
         -- Oauth
         --------

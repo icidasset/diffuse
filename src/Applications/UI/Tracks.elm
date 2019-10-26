@@ -47,6 +47,7 @@ import UI.Playlists.Page
 import UI.Ports
 import UI.Queue.Page
 import UI.Reply as UI exposing (Reply(..))
+import UI.Sources.Page as Sources
 import UI.Tracks.Reply as Tracks exposing (Reply(..))
 import UI.Tracks.Scene.List
 import User.Layer exposing (HypaethralData)
@@ -841,7 +842,10 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     [ inline
                         [ T.dib, T.mb2 ]
                         [ UI.Kit.buttonLink
-                            "#/sources/new"
+                            (Sources.NewOnboarding
+                                |> UI.Page.Sources
+                                |> UI.Page.toString
+                            )
                             UI.Kit.Normal
                             (inline
                                 []
