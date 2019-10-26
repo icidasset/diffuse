@@ -332,7 +332,8 @@ let enteredElement
 
 
 tocca({
-  dbltapThreshold: 400
+  dbltapThreshold: 400,
+  tapThreshold: 250
 })
 
 
