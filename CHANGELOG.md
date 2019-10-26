@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0
+
+- **Added ability to cache an entire playlist** (for offline usage)
+- **Automatically prepend `_dnslink.` when using a domain name with a IPFS source**
+- Explain more things in the UI and on the about page
+- Fixed navigation issue regarding onboarding
+- Slightly improved onboarding
+- Slightly improved tap/click events on tracks
+- Smaller javascript files, ie. improved load tim
+
 ## 2.0.0
 
 - **Ability to store tracks in your browser cache (ie. play offline)**
