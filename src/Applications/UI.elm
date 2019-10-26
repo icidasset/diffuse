@@ -1278,10 +1278,14 @@ translateReply reply model =
                 |> updateWithModel model
 
         MoveQueueItemToFirst args ->
-            return { model | queue = Queue.moveQueueItemToFirst model.queue args }
+            translateReply
+                FillQueue
+                { model | queue = Queue.moveQueueItemToFirst model.queue args }
 
         MoveQueueItemToLast args ->
-            return { model | queue = Queue.moveQueueItemToLast model.queue args }
+            translateReply
+                FillQueue
+                { model | queue = Queue.moveQueueItemToLast model.queue args }
 
         PlayTrack identifiedTrack ->
             identifiedTrack
