@@ -159,7 +159,7 @@ watch-elm:
 watch-js:
 	@watchexec -p \
 		-w $(SRC_DIR)/Javascript \
-		-- make javascript
+		-- make js
 
 
 watch-system:
