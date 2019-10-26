@@ -208,6 +208,10 @@ There are a few "hidden" features:
 - Double tap on a EQ setting to reset it to its default value.
 - Use the ALT key whilst right clicking on a track to show the alternative track-context menu.
 
+### Playlists
+
+To add something to a playlist, and create that playlist if it doesn't exist yet, you **open the context menu of a track**. Opening the context menu can be done by right clicking on a track, or a long tap on mobile devices. To move tracks around in a playlist, first select the track, then drag it.
+
 ### Search
 
 ```shell
