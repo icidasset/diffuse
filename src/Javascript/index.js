@@ -5,8 +5,16 @@
 // The bit where we launch the Elm app,
 // and connect the other bits to it.
 
+import "subworkers"
+import "tocca"
 
-var app = Elm.UI.init({
+import "../../vendor/pep"
+
+import * as audioEngine from "./audio-engine.js"
+import { debounce } from "./common.js"
+
+
+const app = Elm.UI.init({
   node: document.getElementById("elm"),
   flags: {
     initialTime: Date.now(),
@@ -20,15 +28,12 @@ var app = Elm.UI.init({
 })
 
 
-addAudioContainer()
-
-
 
 // Brain
 // =====
 
 const brain = new Worker(
-  "workers/brain.js#appHref=" +
+  "brain.js#appHref=" +
   encodeURIComponent(window.location.href)
 )
 
@@ -61,20 +66,7 @@ const orchestrion = {
 }
 
 
-if (SINGLE_AUDIO_NODE) {
-  // Try to avoid the "couldn't play automatically" error,
-  // which seems to happen with audio nodes using an url created by `createObjectURL`.
-  const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
-
-  insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
-    const temporaryClickHandler = () => {
-      orchestrion.audio.play()
-      document.body.removeEventListener("click", temporaryClickHandler)
-    }
-
-    document.body.addEventListener("click", temporaryClickHandler)
-  })
-}
+audioEngine.setup(orchestrion)
 
 
 app.ports.activeQueueItemChanged.subscribe(item => {
@@ -83,31 +75,21 @@ app.ports.activeQueueItemChanged.subscribe(item => {
   orchestrion.activeQueueItem = item
   orchestrion.audio = null
 
-  SINGLE_AUDIO_NODE ? false : removeOlderAudioElements(timestampInMilliseconds)
+  audioEngine.usesSingleAudioNode()
+    ? false
+    : audioEngine.removeOlderAudioElements(timestampInMilliseconds)
 
   if (item) {
-    insertTrack(orchestrion, item)
+    audioEngine.insertTrack(orchestrion, item)
   } else {
     app.ports.setAudioIsPlaying.send(false)
-    setProgressBarWidth(0)
+    audioEngine.setProgressBarWidth(0)
   }
 })
 
 
 app.ports.adjustEqualizerSetting.subscribe(e => {
-  let node
-
-  switch (e.knob) {
-    case "LOW"      : node = low; break
-    case "MID"      : node = mid; break
-    case "HIGH"     : node = high; break
-    case "VOLUME"   : node = volume; break
-  }
-
-  node.gain.setValueAtTime(
-    determineNodeGainValue(e.knob, e.value),
-    context.currentTime
-  )
+  audioEngine.adjustEqualizerSetting(e.knob, e.value)
 })
 
 
@@ -125,9 +107,9 @@ app.ports.preloadAudio.subscribe(debounce(item => {
   // Wait 15 seconds to preload something.
   // This is particularly useful when quickly shifting through tracks,
   // or when moving things around in the queue.
-  (SINGLE_AUDIO_NODE || item.isCached)
+  (audioEngine.usesSingleAudioNode() || item.isCached)
     ? false
-    : preloadAudioElement(orchestrion, item)
+    : audioEngine.preloadAudioElement(orchestrion, item)
 }, 15000))
 
 

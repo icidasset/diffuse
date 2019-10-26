@@ -4,11 +4,16 @@
 //
 // Audio processing, getting metadata, etc.
 
+import * as musicMetadata from "music-metadata-browser"
+import { StreamingHttpTokenReader } from "streaming-http-token-reader"
+
+import { transformUrl } from "./urls"
+
 
 // Contexts
 // --------
 
-function processContext(context) {
+export function processContext(context) {
   const initialPromise = Promise.resolve([])
 
   return context.urlsForTags.reduce((accumulator, urls, idx) => {
@@ -59,7 +64,10 @@ const parserConfiguration = Object.assign(
 
 
 function getTags(getUrl, headUrl, filename) {
-  const reader = new StreamingHttpTokenReader(headUrl, readerConfiguration)
+  const reader = StreamingHttpTokenReader.fromUrl(
+    headUrl,
+    readerConfiguration
+  )
 
   return reader.init().then(_ => {
     reader.url = getUrl

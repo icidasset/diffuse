@@ -4,6 +4,9 @@
 //
 // Creates audio elements and interacts with the Web Audio API.
 
+import * as db from "./indexed-db.js"
+import { throttle } from "./common.js"
+import { transformUrl } from "./urls.js"
 
 
 // Audio context
@@ -20,6 +23,11 @@ if (window.AudioContext) {
 
 let SINGLE_AUDIO_NODE = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
                         !!navigator.userAgent.includes("AppleWebKit")
+
+
+export function usesSingleAudioNode() {
+  return SINGLE_AUDIO_NODE
+}
 
 
 
@@ -45,6 +53,30 @@ const audioElementsContainer = (() => {
 
 function addAudioContainer() {
   document.body.appendChild(audioElementsContainer)
+}
+
+
+
+// Setup
+// -----
+
+export function setup(orchestrion) {
+  addAudioContainer()
+
+  if (SINGLE_AUDIO_NODE) {
+    // Try to avoid the "couldn't play automatically" error,
+    // which seems to happen with audio nodes using an url created by `createObjectURL`.
+    const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
+
+    insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
+      const temporaryClickHandler = () => {
+        orchestrion.audio.play()
+        document.body.removeEventListener("click", temporaryClickHandler)
+      }
+
+      document.body.addEventListener("click", temporaryClickHandler)
+    })
+  }
 }
 
 
@@ -92,11 +124,28 @@ function determineNodeGainValue(knobType, value) {
 }
 
 
+export function adjustEqualizerSetting(knobType, value) {
+  let node
+
+  switch (knobType) {
+    case "LOW"      : node = low; break
+    case "MID"      : node = mid; break
+    case "HIGH"     : node = high; break
+    case "VOLUME"   : node = volume; break
+  }
+
+  node.gain.setValueAtTime(
+    determineNodeGainValue(knobType, value),
+    context.currentTime
+  )
+}
+
+
 
 // Playback
 // --------
 
-function insertTrack(orchestrion, queueItem) {
+export function insertTrack(orchestrion, queueItem) {
   if (queueItem.url == undefined) console.error("insertTrack, missing `url`");
   if (queueItem.trackId == undefined) console.error("insertTrack, missing `trackId`");
 
@@ -123,7 +172,7 @@ function insertTrack(orchestrion, queueItem) {
 
   // initial promise
   const initialPromise = queueItem.isCached
-    ? getFromIndex({ key: queueItem.trackId, store: storeNames.tracks }).then(blobUrl)
+    ? db.getFromIndex({ key: queueItem.trackId, store: db.storeNames.tracks }).then(blobUrl)
     : transformUrl(queueItem.url)
 
   // find or create audio node
@@ -209,7 +258,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
 }
 
 
-function preloadAudioElement(orchestrion, queueItem) {
+export function preloadAudioElement(orchestrion, queueItem) {
   // already loaded?
   if (findExistingAudioElement(queueItem)) return
 
@@ -329,7 +378,7 @@ function audioEndEvent(event) {
 
 
 function audioLoading(event) {
-  clearTimeout(orchestrion.loadingTimeoutId)
+  clearTimeout(this.loadingTimeoutId)
 
   this.loadingTimeoutId = setTimeout(() => {
     if (this.audio.readyState === 4 && this.audio.currentTime === 0) {
@@ -436,7 +485,7 @@ function unstallAudio(node) {
 
 let progressBarNode
 
-function setProgressBarWidth(float) {
+export function setProgressBarWidth(float) {
   if (!progressBarNode || !progressBarNode.offsetParent) {
     progressBarNode = document.querySelector(".progressBarValue")
   }
@@ -452,7 +501,7 @@ function setProgressBarWidth(float) {
 // --
 // Remove all the audio elements with a timestamp older than the given one.
 
-function removeOlderAudioElements(timestamp) {
+export function removeOlderAudioElements(timestamp) {
   const nodes = audioElementsContainer.querySelectorAll("audio[data-timestamp]")
 
   nodes.forEach(node => {

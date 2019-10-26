@@ -1,8 +1,11 @@
 .DS_Store
 .tmp.js
 *.cabal
+*.log
+*.yaml.lock
 /.deploy*
 /.stack-work
 /build
 /elm-stuff
+/node_modules
 /vendor

@@ -155,3 +155,10 @@ Textile.useMill = (apiOrigin, file_name, data) => {
   })
     .then(r => r.json())
 }
+
+
+
+// Export
+// ------
+
+export default Textile

@@ -66,18 +66,8 @@
 
 
   <!-- Scripts -->
-  <script src="vendor/pep.min.js"></script>
-  <script src="vendor/subworkers-polyfill.min.js"></script>
-  <script src="vendor/tocca.min.js"></script>
-
-  <script src="common.js"></script>
-  <script src="urls.js"></script>
-  <script src="indexed-db.js"></script>
-  <script src="audio-engine.js"></script>
-  <script src="application.js"></script>
-
-  <!-- Initialize Boot Procedure -->
-  <script src="index.js"></script>
+  <script src="ui.elm.js"></script>
+  <script src="ui.js"></script>
 
   <!-- Service worker -->
   <script>
@@ -108,7 +98,7 @@
       // Remove loader
       const elm = document.querySelector("#elm")
 
-      elm.parentNode.removeChild(elm)
+      elm && elm.parentNode.removeChild(elm)
     }
   </script>
 

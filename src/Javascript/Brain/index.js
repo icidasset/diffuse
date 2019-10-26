@@ -4,15 +4,19 @@
 //
 // This worker is responsible for everything non-UI.
 
-importScripts("../vendor/musicmetadata.min.js")
-importScripts("../vendor/subworkers-polyfill.min.js")
+import "subworkers"
+import { StreamingHttpTokenReader } from "streaming-http-token-reader"
 
-importScripts("../brain.js")
-importScripts("../common.js")
-importScripts("../crypto.js")
-importScripts("../indexed-db.js")
-importScripts("../processing.js")
-importScripts("../urls.js")
+import * as crypto from "../crypto.js"
+import * as db from "../indexed-db.js"
+import * as processing from "../processing.js"
+import * as urls from "../urls.js"
+import * as user from "./user.js"
+
+import { fromCache, removeCache, reportError } from "./common.js"
+import { sendData, storageCallback, toCache } from "./common.js"
+
+importScripts("../brain.elm.js")
 
 
 const flags = location
@@ -32,7 +36,7 @@ const app = Elm.Brain.init({
 })
 
 
-importScripts("brain/user.js")
+user.setupPorts(app)
 
 
 
@@ -61,7 +65,7 @@ function handleAction(action, data) { switch (action) {
 
 app.ports.removeCache.subscribe(event => {
   removeCache(event.tag)
-    .catch( reportError(event) )
+    .catch( reportError(app, event) )
 })
 
 
@@ -71,8 +75,8 @@ app.ports.requestCache.subscribe(event => {
     : event.tag
 
   fromCache(key)
-    .then( sendData(event) )
-    .catch( reportError(event) )
+    .then( sendData(app, event) )
+    .catch( reportError(app, event) )
 })
 
 
@@ -82,48 +86,18 @@ app.ports.toCache.subscribe(event => {
     : event.tag
 
   toCache(key, event.data.data || event.data)
-    .then( storageCallback(event) )
-    .catch( reportError(event) )
+    .then( storageCallback(app, event) )
+    .catch( reportError(app, event) )
 })
-
-
-function removeCache(key) {
-  return deleteFromIndex({ key: key })
-}
-
-
-function fromCache(key) {
-  return isAuthMethodService(key)
-    ? getFromIndex({ key: key })
-        .then(decryptIfNeeded)
-        .then(d => typeof d === "string" ? JSON.parse(d) : d)
-        .then(a => a === undefined ? null : a)
-    : getFromIndex({ key: key })
-}
-
-
-function toCache(key, data) {
-  if (isAuthMethodService(key)) {
-    const json = JSON.stringify(data)
-
-    return encryptWithSecretKey(json)
-      .then(encryptedData => setInIndex({ key: key, data: encryptedData }))
-
-  } else {
-    return setInIndex({ key: key, data: data })
-
-  }
-}
 
 
 
 // Cache (Tracks)
 // --------------
 
-
 app.ports.removeTracksFromCache.subscribe(trackIds => {
   trackIds.reduce(
-    (acc, id) => acc.then(_ => deleteFromIndex({ key: id, store: storeNames.tracks })),
+    (acc, id) => acc.then(_ => db.deleteFromIndex({ key: id, store: db.storeNames.tracks })),
     Promise.resolve()
 
   ).catch(
@@ -140,7 +114,7 @@ app.ports.storeTracksInCache.subscribe(list => {
     (acc, item) => { return acc
       .then(_ => fetch(item.url))
       .then(r => r.blob())
-      .then(b => setInIndex({ key: item.trackId, data: b, store: storeNames.tracks }))
+      .then(b => db.setInIndex({ key: item.trackId, data: b, store: db.storeNames.tracks }))
     },
     Promise.resolve()
 
@@ -202,22 +176,7 @@ search.onmessage = event => {
 // ----
 
 app.ports.requestTags.subscribe(context => {
-  processContext(context).then(newContext => {
+  processing.processContext(context).then(newContext => {
     app.ports.receiveTags.send(newContext)
   })
 })
-
-
-
-// 🛠
-
-
-function reportError(event) {
-  return e => {
-    const err = e ? e.message || e : null
-    if (err) {
-      console.error(err, e.stack)
-      app.ports.fromAlien.send({ tag: event.tag, data: null, error: err })
-    }
-  }
-}

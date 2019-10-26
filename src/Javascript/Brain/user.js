@@ -4,15 +4,22 @@
 //
 // Related to the user layer.
 
+import * as crypto from "../crypto.js"
+import * as db from "../indexed-db.js"
 
-const SECRET_KEY_LOCATION = "AUTH_SECRET_KEY"
+import { SECRET_KEY_LOCATION } from "./common.js"
+import { decryptIfNeeded, fromCache, removeCache } from "./common.js"
+import { reportError, storageCallback, toCache } from "./common.js"
+
+
+const ports = []
 
 
 // Crypto
 // ======
 
-app.ports.fabricateSecretKey.subscribe(event => {
-  keyFromPassphrase(event.data)
+ports.fabricateSecretKey = app => event => {
+  crypto.keyFromPassphrase(event.data)
     .then(data => toCache(SECRET_KEY_LOCATION, data))
     .then(_ => {
       app.ports.fromAlien.send({
@@ -21,8 +28,8 @@ app.ports.fabricateSecretKey.subscribe(event => {
         error: null
       })
     })
-    .catch(reportError(event))
-})
+    .catch(reportError(app, event))
+}
 
 
 
@@ -56,13 +63,13 @@ const BLOCKSTACK_SESSION_STORE = {
 }
 
 
-app.ports.deconstructBlockstack.subscribe(_ => {
+ports.deconstructBlockstack = app => _ => {
   BLOCKSTACK_SESSION_STORE.deleteSessionData()
   bl = null
-})
+}
 
 
-app.ports.handlePendingBlockstackSignIn.subscribe(authResponse => {
+ports.handlePendingBlockstackSignIn = app => authResponse => {
   const session = bl0ckst4ck()
 
   session.handlePendingSignIn(authResponse).then(_ => {
@@ -76,10 +83,10 @@ app.ports.handlePendingBlockstackSignIn.subscribe(authResponse => {
     reportError({ tag: "AUTH_BLOCKSTACK" })
 
   )
-})
+}
 
 
-app.ports.redirectToBlockstackSignIn.subscribe(event => {
+ports.redirectToBlockstackSignIn = app => event => {
   const session = bl0ckst4ck()
 
   session.generateAndStoreTransitKey().then(transitKey => {
@@ -99,38 +106,38 @@ app.ports.redirectToBlockstackSignIn.subscribe(event => {
     })
 
   }).catch(
-    reportError(event)
+    reportError(app, event)
 
   )
-})
+}
 
 
-app.ports.requestBlockstack.subscribe(event => {
+ports.requestBlockstack = app => event => {
   const session = bl0ckst4ck()
 
   bl
     .getFile(event.data.file)
-    .then( sendJsonData(event) )
-    .catch( reportError(event) )
-})
+    .then( sendJsonData(app, event) )
+    .catch( reportError(app, event) )
+}
 
 
-app.ports.toBlockstack.subscribe(event => {
+ports.toBlockstack = app => event => {
   const json = JSON.stringify(event.data.data)
   const session = bl0ckst4ck()
 
   bl
     .putFile(event.data.file, json)
     .then( storageCallback(event) )
-    .catch( reportError(event) )
-})
+    .catch( reportError(app, event) )
+}
 
 
 
 // Dropbox
 // -------
 
-app.ports.requestDropbox.subscribe(event => {
+ports.requestDropbox = app => event => {
   const params = {
     path: "/" + event.data.file
   }
@@ -150,14 +157,14 @@ app.ports.requestDropbox.subscribe(event => {
         .then(decryptIfNeeded)
 
   dataPromise
-    .then( sendJsonData(event) )
-    .catch( reportError(event) )
-})
+    .then( sendJsonData(app, event) )
+    .catch( reportError(app, event) )
+}
 
 
-app.ports.toDropbox.subscribe(event => {
+ports.toDropbox = app => event => {
   const json = JSON.stringify(event.data.data)
-  const reporter = reportError(event)
+  const reporter = reportError(app, event)
   const params = {
     path: "/" + event.data.file,
     mode: "overwrite",
@@ -182,7 +189,7 @@ app.ports.toDropbox.subscribe(event => {
   toCache(event.tag + "_" + event.data.file, event.data.data)
     .then( !navigator.onLine ? storageCallback(event) : identity )
     .catch(reporter)
-})
+}
 
 
 
@@ -192,7 +199,7 @@ app.ports.toDropbox.subscribe(event => {
 const IPFS_ROOT = "/Applications/Diffuse/"
 
 
-app.ports.requestIpfs.subscribe(event => {
+ports.requestIpfs = app => event => {
   const apiOrigin = event.data.apiOrigin
   const path = IPFS_ROOT + event.data.file
 
@@ -200,12 +207,12 @@ app.ports.requestIpfs.subscribe(event => {
     .then(r => r.ok ? r.text() : r.json())
     .then(r => r.Code === 0 ? null : r)
     .then(decryptIfNeeded)
-    .then( sendJsonData(event) )
-    .catch( reportError(event) )
-})
+    .then( sendJsonData(app, event) )
+    .catch( reportError(app, event) )
+}
 
 
-app.ports.toIpfs.subscribe(event => {
+ports.toIpfs = app => event => {
   const apiOrigin = event.data.apiOrigin
   const json = JSON.stringify(event.data.data)
   const params = new URLSearchParams({
@@ -228,15 +235,15 @@ app.ports.toIpfs.subscribe(event => {
       )
     })
     .then( storageCallback(event) )
-    .catch( reportError(event) )
-})
+    .catch( reportError(app, event) )
+}
 
 
 
 // Legacy
 // ------
 
-app.ports.requestLegacyLocalData.subscribe(event => {
+ports.requestLegacyLocalData = app => event => {
   let oldIdx
   let key = location.hostname + ".json"
 
@@ -247,10 +254,10 @@ app.ports.requestLegacyLocalData.subscribe(event => {
     const req = tra.objectStore(key).get(key)
 
     req.onsuccess = _ => {
-      if (req.result) sendJsonData(event)(req.result)
+      if (req.result) sendJsonData(app, event)(req.result)
     }
   }
-})
+}
 
 
 
@@ -288,13 +295,13 @@ function remoteStorageIsUnavailable(event) {
 }
 
 
-app.ports.deconstructRemoteStorage.subscribe(_ => {
+ports.deconstructRemoteStorage = app => _ => {
   rs = null
   rsClient = null
-})
+}
 
 
-app.ports.requestRemoteStorage.subscribe(event => {
+ports.requestRemoteStorage = app => event => {
   const isOffline =
     remoteStorageIsUnavailable(event)
 
@@ -307,12 +314,12 @@ app.ports.requestRemoteStorage.subscribe(event => {
         .then(decryptIfNeeded)
 
   dataPromise
-    .then( sendJsonData(event) )
-    .catch( reportError(event) )
-})
+    .then( sendJsonData(app, event) )
+    .catch( reportError(app, event) )
+}
 
 
-app.ports.toRemoteStorage.subscribe(event => {
+ports.toRemoteStorage = app => event => {
   const json = JSON.stringify(event.data.data)
   const doEncryption = _ => encryptWithSecretKey(json)
   const isOffline = remoteStorageIsUnavailable(event)
@@ -321,12 +328,12 @@ app.ports.toRemoteStorage.subscribe(event => {
     .then(doEncryption)
     .then(data => rsClient.storeFile("application/json", event.data.file, data))
     .then( storageCallback(event) )
-    .catch( reportError(event) )
+    .catch( reportError(app, event) )
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
     .then( isOffline ? storageCallback(event) : identity )
-    .catch( reportError(event) )
-})
+    .catch( reportError(app, event) )
+}
 
 
 
@@ -344,7 +351,7 @@ function textile() {
 }
 
 
-app.ports.requestTextile.subscribe(event => {
+ports.requestTextile = app => event => {
   const apiOrigin = event.data.apiOrigin
 
   textile()
@@ -355,12 +362,12 @@ app.ports.requestTextile.subscribe(event => {
     .then(_ => Textile.getFile(apiOrigin, event.data.file))
     .then(f => f ? Textile.readFile(apiOrigin, f) : null)
 
-    .then( sendJsonData(event) )
-    .catch( reportError(event) )
-})
+    .then( sendJsonData(app, event) )
+    .catch( reportError(app, event) )
+}
 
 
-app.ports.toTextile.subscribe(event => {
+ports.toTextile = app => event => {
   const apiOrigin = event.data.apiOrigin
   const json = JSON.stringify(event.data.data)
 
@@ -375,87 +382,17 @@ app.ports.toTextile.subscribe(event => {
     .then(m => Textile.addFileToThread(apiOrigin, m))
 
     .then( storageCallback(event) )
-    .catch( reportError(event) )
-})
-
-
-
-// 🛠
-
-
-function decryptIfNeeded(data) {
-  if (typeof data !== "string") {
-    return Promise.resolve(data)
-
-  } else if (data.startsWith("{") || data.startsWith("[")) {
-    return Promise.resolve(data)
-
-  } else {
-    return data
-      ? getSecretKey().then(secretKey => decrypt(secretKey, data))
-      : Promise.resolve(null)
-
-  }
+    .catch( reportError(app, event) )
 }
 
 
-function encryptWithSecretKey(unencryptedData) {
-  return unencryptedData
-    ? getSecretKey()
-        .then(secretKey => encrypt(secretKey, unencryptedData))
-        .catch(_ => unencryptedData)
-    : null
-}
 
+// EXPORT
+// ======
 
-function getSecretKey() {
-  return getFromIndex({
-    key: SECRET_KEY_LOCATION
-  }).then(key => {
-    return key ? key : Promise.reject(new Error("MISSING_SECRET_KEY"))
+export function setupPorts(app) {
+  Object.keys(ports).forEach(name => {
+    const fn = ports[name](app)
+    app.ports[name].subscribe(fn)
   })
-}
-
-
-function isAuthMethodService(eventTag) {
-  return (
-    eventTag.startsWith("AUTH_") &&
-    eventTag !== "AUTH_BLOCKSTACK_SESSION" &&
-    eventTag !== "AUTH_ENCLOSED_DATA" &&
-    eventTag !== "AUTH_METHOD" &&
-    eventTag !== "AUTH_SECRET_KEY"
-  )
-}
-
-
-function isLocalHost(url) {
-  return (
-    url.startsWith("localhost") ||
-    url.startsWith("localhost") ||
-    url.startsWith("127.0.0.1") ||
-    url.startsWith("127.0.0.1")
-  )
-}
-
-
-function sendData(event, opts) {
-  return data => {
-    app.ports.fromAlien.send({
-      tag: event.tag,
-      data: (opts && opts.parseJSON && typeof data === "string") ? JSON.parse(data) : data,
-      error: null
-    })
-  }
-}
-
-
-function sendJsonData(event) {
-  return sendData(event, { parseJSON: true })
-}
-
-
-function storageCallback(event) {
-  return _ => {
-    app.ports.savedHypaethralBit.send()
-  }
 }

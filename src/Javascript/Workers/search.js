@@ -4,7 +4,7 @@
 //
 // This worker is responsible for searching through a `Track` collection.
 
-importScripts("../vendor/lunr.min.js")
+import lunr from "lunr"
 
 
 let index

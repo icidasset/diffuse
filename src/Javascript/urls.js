@@ -4,7 +4,7 @@
 //
 // Some URLs are special you know.
 
-function transformUrl(url) {
+export function transformUrl(url) {
   const parts = url.split("://")
 
   switch (parts[0]) {

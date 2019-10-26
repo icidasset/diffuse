@@ -9,7 +9,7 @@ const crypto = (self.crypto || self.msCrypto)
 const extractable = false
 
 
-function keyFromPassphrase(passphrase) {
+export function keyFromPassphrase(passphrase) {
   return crypto.subtle.importKey(
     "raw",
     stringToArrayBuffer(passphrase),
@@ -38,7 +38,7 @@ function keyFromPassphrase(passphrase) {
 }
 
 
-function encrypt(key, string) {
+export function encrypt(key, string) {
   let iv = crypto.getRandomValues(new Uint8Array(12))
 
   return crypto.subtle.encrypt(
@@ -59,7 +59,7 @@ function encrypt(key, string) {
 }
 
 
-function decrypt(key, string) {
+export function decrypt(key, string) {
   const iv_b64 = string.substring(0, 16)
   const buf_b64 = string.substring(16)
 

@@ -15,7 +15,7 @@ const indexedDB =
   self.msIndexedDB
 
 
-const storeNames = {
+export const storeNames = {
   main: "main",
   tracks: "tracks"
 }
@@ -48,7 +48,7 @@ idx.onerror = event => {
 // Get
 // ---
 
-function getFromIndex(args) {
+export function getFromIndex(args) {
   if (!db && tries < 20) {
     tries++
 
@@ -85,7 +85,7 @@ function getFromIndex(args) {
 // Set
 // ---
 
-function setInIndex(args) {
+export function setInIndex(args) {
   return new Promise((resolve, reject) => {
     const sto = args.store || storeNames.main
     const key = args.key
@@ -104,7 +104,7 @@ function setInIndex(args) {
 // Delete
 // ------
 
-function deleteFromIndex(args) {
+export function deleteFromIndex(args) {
   return new Promise((resolve, reject) => {
     const sto = args.store || storeNames.main
     const key = args.key

@@ -3,13 +3,13 @@
 // ʕ•ᴥ•ʔ
 
 
-const debounce =
+export const debounce =
   (callback, time = 250, timeoutId) =>
   (...args) =>
   clearTimeout(timeoutId, timeoutId = setTimeout(callback, time, ...args))
 
 
-const throttle =
+export const throttle =
   (callback, time = 250, wasCalledBefore, lastestArgs) =>
   (...args) => {
     lastestArgs = args
@@ -18,6 +18,6 @@ const throttle =
   }
 
 
-function identity(a) {
+export function identity(a) {
   return a
 }

@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "devDependencies": {
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
+  },
+  "dependencies": {
+    "fast-text-encoding": "^1.0.0",
+    "lunr": "^2.3.8",
+    "music-metadata-browser": "^1.6.0",
+    "remotestoragejs": "^1.2.2",
+    "streaming-http-token-reader": "^0.3.0",
+    "subworkers": "^1.0.1",
+    "tachyons": "^4.11.1",
+    "tocca": "^2.0.4"
+  }
+}

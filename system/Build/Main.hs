@@ -35,6 +35,7 @@ main =
         -- and then write to disk
         dictionary
             |> insertTree
+            |> insertVersion (de !~> "timestamp")
             |> write "../build"
 
 
@@ -54,7 +55,6 @@ data Sequence
     | Hosting
     | Html
     | Images
-    | Js
     | Manifests
     | Vendor
     -- About Pages
@@ -70,7 +70,6 @@ sequences = lsequence
     , ( Hosting,        list "Static/Hosting/**/*"      )
     , ( Html,           list "Static/Html/**/*.html"    )
     , ( Images,         list "Static/Images/**/*.*"     )
-    , ( Js,             list "Javascript/**/*.js"       )
     , ( Manifests,      list "Static/Manifests/*.*"     )
     , ( Vendor,         list "../vendor/*.*"            )
 
@@ -95,14 +94,6 @@ flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
 flow _ (Hosting, dict)        = dict
 flow _ (Images, dict)         = prefixDirname "images/" dict
 flow _ (Vendor, dict)         = prefixDirname "vendor/" dict
-
-
-{-| Javascript -}
-flow x (Js, dict) =
-    dict
-        |> map lowerCasePath
-        |> rename "workers/service.js" "service-worker.js"
-        |> insertVersion (x !~> "timestamp")
 
 
 {-| Manifests -}
