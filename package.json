@@ -5,9 +5,11 @@
     "webpack-cli": "^3.3.9"
   },
   "dependencies": {
+    "blockstack": "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git",
     "fast-text-encoding": "^1.0.0",
     "lunr": "^2.3.8",
     "music-metadata-browser": "^1.6.0",
+    "pep": "mpizenberg/elm-pep#071616d75ca61e261fdefc7b55bc46c34e44ea22",
     "remotestoragejs": "^1.2.2",
     "streaming-http-token-reader": "^0.3.0",
     "subworkers": "^1.0.1",

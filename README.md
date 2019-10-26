@@ -77,8 +77,8 @@ All of these, except the last one, can be install using [homebrew](https://brew.
 # 1. Install programming languages:
 #    Elm 0.19.1 & Haskell (Stack), see links above
 
-# 2. Install vendor dependencies
-make install
+# 2. Install Javascript dependencies
+yarn install
 
 # 3. Build, start server & watch for changes
 make

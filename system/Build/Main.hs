@@ -56,7 +56,6 @@ data Sequence
     | Html
     | Images
     | Manifests
-    | Vendor
     -- About Pages
     | AboutCss
     | AboutPages
@@ -71,7 +70,6 @@ sequences = lsequence
     , ( Html,           list "Static/Html/**/*.html"    )
     , ( Images,         list "Static/Images/**/*.*"     )
     , ( Manifests,      list "Static/Manifests/*.*"     )
-    , ( Vendor,         list "../vendor/*.*"            )
 
     -- About Pages
     , ( AboutPages,     list "Static/About/**/*.md"    )
@@ -93,7 +91,6 @@ flow _ (Favicons, dict)       = dict
 flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
 flow _ (Hosting, dict)        = dict
 flow _ (Images, dict)         = prefixDirname "images/" dict
-flow _ (Vendor, dict)         = prefixDirname "vendor/" dict
 
 
 {-| Manifests -}

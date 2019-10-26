@@ -6,7 +6,6 @@
 NPM_DIR=./node_modules
 SRC_DIR=./src
 BUILD_DIR=./build
-VENDOR_DIR=./vendor
 
 
 # Default task
@@ -18,17 +17,23 @@ all: dev
 # Build tasks
 #
 
-build: clean elm js system
+build: clean css elm js system
 	@echo "> Build completed ⚡"
 
 
-build-prod: clean elm-prod js-prod system
+build-prod: clean css elm-prod js-prod system
 	@echo "> Production build completed 🛳"
 
 
 clean:
 	@echo "> Cleaning build directory"
 	@rm -rf $(BUILD_DIR) || true
+
+
+css:
+	@echo "> Copying CSS dependencies"
+	@mkdir -p $(BUILD_DIR)/vendor
+	@cp $(NPM_DIR)/tachyons/css/tachyons.min.css $(BUILD_DIR)/vendor/tachyons.min.css
 
 
 elm:
@@ -49,7 +54,7 @@ elm-prod:
 	@mv $(BUILD_DIR)/ui.elm.tmp.js $(BUILD_DIR)/ui.elm.js
 
 
-js:
+js: vendor-js
 	@echo "> Compiling Javascript code"
 
 	@# Service worker
@@ -73,7 +78,7 @@ js:
 		--output $(BUILD_DIR)/search.js
 
 
-js-prod:
+js-prod: vendor-js
 	@echo "> Compiling Javascript code (optimized)"
 
 	@# Service worker
@@ -102,6 +107,13 @@ system:
 	@stack build && stack exec build
 
 
+vendor-js:
+	@mkdir -p $(BUILD_DIR)/vendor
+	@cp $(NPM_DIR)/remotestoragejs/release/remotestorage.js $(BUILD_DIR)/vendor/remotestorage.min.js
+	@cp $(NPM_DIR)/blockstack/blockstack.min.js $(BUILD_DIR)/vendor/blockstack.min.js
+	@cp $(NPM_DIR)/pep/elm-pep.js $(BUILD_DIR)/vendor/pep.js
+
+
 #
 # Dev tasks
 #
@@ -116,19 +128,6 @@ doc-tests:
 		find . -name "*.elm" -print0 | \
 		xargs -0 -n 1 sh -c 'elm-proofread -- $0 || exit 255; echo "\n\n"'
 	)
-
-
-install:
-	@echo "> Downloading dependencies"
-	@mkdir -p $(VENDOR_DIR)
-
-	@# NPM dependencies
-	@cp $(NPM_DIR)/tachyons/css/tachyons.min.css $(VENDOR_DIR)/tachyons.min.css
-	@cp $(NPM_DIR)/remotestoragejs/release/remotestorage.js $(VENDOR_DIR)/remotestorage.min.js
-
-	@# Non-NPM dependencies
-	@curl https://gist.githubusercontent.com/icidasset/a888e02d7441aeb2af99263a3add0f73/raw/e4ca77c02e91a29e0c3c749d2ba80983a137a7aa/blockstack.min.js -o $(VENDOR_DIR)/blockstack.min.js
-	@curl https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js -o $(VENDOR_DIR)/pep.js
 
 
 server:

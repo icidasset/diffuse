@@ -8,7 +8,7 @@
 import "subworkers"
 import "tocca"
 
-import "../../vendor/pep"
+import "../../build/vendor/pep"
 
 import * as audioEngine from "./audio-engine.js"
 import { debounce } from "./common.js"

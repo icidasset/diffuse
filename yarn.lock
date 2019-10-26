@@ -326,6 +326,10 @@ binary-extensions@^1.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.13.1.tgz#598afe54755b2868a5330d2aff9d4ebb53209b65"
   integrity sha512-Un7MIEDdUC5gNpcGDV97op1Ywk748MpHcFTHoYs6qnj1Z3j7I53VG3nwZhKzoBZmbdRNnb6WRdFlwl7tSDuZGw==
 
+"blockstack@https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git":
+  version "0.0.0"
+  resolved "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git#e4ca77c02e91a29e0c3c749d2ba80983a137a7aa"
+
 bluebird@^3.5.5:
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.1.tgz#df70e302b471d7473489acf26a93d63b53f874de"
@@ -2276,6 +2280,10 @@ pbkdf2@^3.0.3:
     ripemd160 "^2.0.1"
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
+
+pep@mpizenberg/elm-pep#071616d75ca61e261fdefc7b55bc46c34e44ea22:
+  version "0.0.0"
+  resolved "https://codeload.github.com/mpizenberg/elm-pep/tar.gz/071616d75ca61e261fdefc7b55bc46c34e44ea22"
 
 pify@^4.0.1:
   version "4.0.1"
