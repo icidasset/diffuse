@@ -13,6 +13,7 @@ import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Alert as Icons
 import Material.Icons.Content as Icons
+import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Material.Icons.Notification as Icons
 import Return3 as Return exposing (..)
@@ -355,14 +356,15 @@ index model =
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
                 [ T.color_inherit, T.db, T.link, T.o_30 ]
-                [ fromUnstyled (Icons.add 64 Inherit) ]
+                [ fromUnstyled (Icons.music_note 64 Inherit) ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
                 [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
-                [ text "No sources have been added yet,"
+                [ text "A source is a place where music is stored,"
                 , lineBreak
-                , text "add one to get started."
+                , text "add one so you can play some music "
+                , inline [ T.v_mid ] [ fromUnstyled (Icons.add 14 Inherit) ]
                 ]
             ]
 
