@@ -1029,7 +1029,7 @@ translateReply reply model =
             return { model | contextMenu = Just (Authentication.moreOptionsMenu coordinates) }
 
         ShowPlaylistListMenu coordinates playlist ->
-            return { model | contextMenu = Just (Playlists.listMenu playlist coordinates) }
+            return { model | contextMenu = Just (Playlists.listMenu playlist model.tracks.collection.identified coordinates) }
 
         ShowQueueFutureMenu coordinates { item, itemIndex } ->
             return { model | contextMenu = Just (Queue.futureMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress, itemIndex = itemIndex } item coordinates) }

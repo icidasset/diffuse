@@ -5,6 +5,7 @@ import Dict exposing (Dict)
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists exposing (..)
+import Playlists.Matching
 import Time
 import Time.Ext as Time
 import Tracks exposing (..)
@@ -250,52 +251,11 @@ groupByYearFolder ( i, t ) =
 arrangeByPlaylist : Parcel -> Playlist -> Parcel
 arrangeByPlaylist ( deps, collection ) playlist =
     collection.identified
-        |> matchWithPlaylist deps playlist
+        |> Playlists.Matching.match playlist
         |> dealWithMissingPlaylistTracks
         |> Sorting.sort PlaylistIndex Asc
         |> (\x -> { collection | arranged = x })
         |> (\x -> ( deps, x ))
-
-
-matchWithPlaylist : CollectionDependencies -> Playlist -> List IdentifiedTrack -> ( List IdentifiedTrack, List IdentifiedPlaylistTrack )
-matchWithPlaylist deps playlist =
-    List.foldl
-        (\( i, t ) ( identifiedTracks, remainingPlaylistTracks ) ->
-            let
-                imaginaryPlaylistTrack =
-                    { album = t.tags.album
-                    , artist = t.tags.artist
-                    , title = t.tags.title
-                    }
-
-                ( matches, remainingPlaylistTracksWithoutMatches ) =
-                    List.foldl
-                        (\( pi, pt ) ->
-                            if imaginaryPlaylistTrack == pt then
-                                Tuple.mapBoth
-                                    ((::) ( playlistTrackIdentifiers i pi, t ))
-                                    identity
-
-                            else
-                                Tuple.mapBoth
-                                    identity
-                                    ((::) ( pi, pt ))
-                        )
-                        ( [], [] )
-                        remainingPlaylistTracks
-            in
-            ( identifiedTracks ++ matches
-            , remainingPlaylistTracksWithoutMatches
-            )
-        )
-        ( []
-        , List.indexedMap (\idx -> Tuple.pair { index = idx }) playlist.tracks
-        )
-
-
-playlistTrackIdentifiers : Tracks.Identifiers -> Playlists.Identifiers -> Tracks.Identifiers
-playlistTrackIdentifiers i pi =
-    { i | indexInPlaylist = Just pi.index }
 
 
 dealWithMissingPlaylistTracks : ( List IdentifiedTrack, List IdentifiedPlaylistTrack ) -> List IdentifiedTrack
