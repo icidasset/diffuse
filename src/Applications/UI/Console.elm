@@ -9,7 +9,7 @@ import Css.Ext as Css
 import Css.Media
 import Html as UnstyledHtml
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (class, css, style)
+import Html.Styled.Attributes exposing (class, css, style, title)
 import Html.Styled.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Material.Icons exposing (Coloring(..))
@@ -58,7 +58,10 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
                 case Maybe.map .identifiedTrack activeQueueItem of
                     Just ( _, { tags } ) ->
                         Html.span
-                            [ onClick ScrollToNowPlaying, class T.pointer ]
+                            [ onClick ScrollToNowPlaying
+                            , class T.pointer
+                            , title "Scroll to track"
+                            ]
                             [ text (tags.artist ++ " - " ++ tags.title) ]
 
                     Nothing ->
@@ -95,19 +98,19 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
             , T.mt3
             , T.pb1
             ]
-            [ button (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
-            , button lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
-            , button (largeLight isPlaying) play TogglePlayPause
-            , button lightPlaceHolder (icon Icons.fast_forward 20) ShiftQueue
-            , button (smallLight shuffle) (icon Icons.shuffle 18) ToggleShuffle
+            [ button "Toggle repeat" (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
+            , button "Play previous track" lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
+            , button "" (largeLight isPlaying) play TogglePlayPause
+            , button "Play next track" lightPlaceHolder (icon Icons.fast_forward 20) ShiftQueue
+            , button "Toggle shuffle" (smallLight shuffle) (icon Icons.shuffle 18) ToggleShuffle
             ]
         ]
 
 
-button : Html msg -> Html msg -> msg -> Html msg
-button light content msg =
+button : String -> Html msg -> Html msg -> msg -> Html msg
+button t light content msg =
     brick
-        [ onClick msg ]
+        [ onClick msg, title t ]
         [ T.flex, T.flex_column, T.items_center, T.mh1, T.mh4_ns, T.ph1, T.pointer ]
         [ brick
             [ css [ Css.height (Css.px 4) ] ]
