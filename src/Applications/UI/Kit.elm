@@ -1,4 +1,4 @@
-module UI.Kit exposing (ButtonType(..), borderRadius, button, buttonFocus, buttonLink, buttonWithColor, buttonWithOptions, canister, canisterForm, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, headerFontStyles, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, onOverlayShadow, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus)
+module UI.Kit exposing (ButtonType(..), borderRadius, button, buttonFocus, buttonLink, buttonLinkWithColor, buttonWithColor, buttonWithOptions, canister, canisterForm, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, headerFontStyles, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, onOverlayShadow, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus)
 
 import Chunky exposing (..)
 import Color
@@ -198,6 +198,11 @@ button =
 buttonLink : String -> ButtonType -> Html msg -> Html msg
 buttonLink theHref buttonType =
     buttonWithOptions Html.a [ href theHref ] colorKit.accent buttonType Nothing
+
+
+buttonLinkWithColor : Color.Color -> String -> ButtonType -> Html msg -> Html msg
+buttonLinkWithColor color theHref buttonType =
+    buttonWithOptions Html.a [ href theHref ] color buttonType Nothing
 
 
 buttonWithColor : Color.Color -> ButtonType -> msg -> Html msg -> Html msg

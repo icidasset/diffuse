@@ -6,7 +6,7 @@
 - **Automatically prepend `_dnslink.` when using a domain name with a IPFS source**
 - Explain more things in the UI and on the about page
 - Fixed navigation issue regarding onboarding
-- Slightly improved onboarding
+- Improve onboarding
 - Slightly improved tap/click events on tracks
 - Smaller javascript files, ie. improved load tim
 

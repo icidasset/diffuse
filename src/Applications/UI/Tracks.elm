@@ -12,7 +12,7 @@ import Css
 import Css.Transitions exposing (transition)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, fromUnstyled, placeholder, tabindex, title, value)
+import Html.Styled.Attributes exposing (css, fromUnstyled, href, placeholder, tabindex, target, title, value)
 import Html.Styled.Events exposing (onBlur, onClick, onInput)
 import Html.Styled.Ext exposing (onEnterKey)
 import Html.Styled.Lazy exposing (..)
@@ -839,14 +839,16 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
               else if amountOfSources == 0 then
                 chunk
                     [ T.flex, T.items_start, T.ph3 ]
-                    [ inline
+                    [ -- Add
+                      ------
+                      inline
                         [ T.dib, T.mb2 ]
                         [ UI.Kit.buttonLink
                             (Sources.NewOnboarding
                                 |> UI.Page.Sources
                                 |> UI.Page.toString
                             )
-                            UI.Kit.Normal
+                            UI.Kit.Filled
                             (inline
                                 []
                                 [ UI.Kit.inlineIcon Icons.add
@@ -854,6 +856,9 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                                 ]
                             )
                         ]
+
+                    -- Demo
+                    -------
                     , slab
                         Html.span
                         []
@@ -867,6 +872,28 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                             []
                             [ UI.Kit.inlineIcon Icons.music_note
                             , text "Insert demo"
+                            ]
+                        )
+
+                    -- How
+                    ------
+                    , slab
+                        Html.span
+                        []
+                        [ T.dib, T.w1 ]
+                        []
+                    , UI.Kit.buttonWithOptions
+                        Html.a
+                        [ href "about"
+                        , target "_blank"
+                        ]
+                        UI.Kit.colorKit.base04
+                        UI.Kit.Normal
+                        Nothing
+                        (inline
+                            []
+                            [ UI.Kit.inlineIcon Icons.help
+                            , text "More info"
                             ]
                         )
                     ]
