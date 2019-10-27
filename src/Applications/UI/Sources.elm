@@ -253,13 +253,13 @@ sourcesToProcess model =
 -- 🗺
 
 
-view : Sources.Page -> Model -> Html Msg
-view page model =
+view : { amountOfTracks : Int } -> Sources.Page -> Model -> Html Msg
+view { amountOfTracks } page model =
     UI.Kit.receptacle
         { scrolling = True }
         (case page of
             Index ->
-                index model
+                index amountOfTracks model
 
             Edit sourceId ->
                 List.map (Html.map FormMsg) (Form.edit model.form)
@@ -279,8 +279,8 @@ view page model =
 -- INDEX
 
 
-index : Model -> List (Html Msg)
-index model =
+index : Int -> Model -> List (Html Msg)
+index amountOfTracks model =
     [ -----------------------------------------
       -- Navigation
       -----------------------------------------
@@ -331,7 +331,7 @@ index model =
 
             -- Intro
             --------
-            , intro
+            , intro amountOfTracks
 
             -- List
             -------
@@ -373,13 +373,17 @@ index model =
     ]
 
 
-intro : Html Msg
-intro =
+intro : Int -> Html Msg
+intro amountOfTracks =
     [ text "A source is a place where your music is stored."
     , lineBreak
     , text "By connecting a source, the application will scan it and keep a list of all the music in it."
     , lineBreak
-    , text "It will not copy anything."
+    , text "You currently have "
+    , text (String.fromInt amountOfTracks)
+    , text " "
+    , text (ifThenElse (amountOfTracks == 1) "track" "tracks")
+    , text " in your collection."
     ]
         |> raw
         |> UI.Kit.intro

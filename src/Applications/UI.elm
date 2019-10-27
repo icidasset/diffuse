@@ -2002,8 +2002,12 @@ defaultScreen model =
                     |> Html.map Reply
 
             Page.Sources subPage ->
+                let
+                    amountOfTracks =
+                        List.length model.tracks.collection.untouched
+                in
                 model.sources
-                    |> Lazy.lazy2 Sources.view subPage
+                    |> Lazy.lazy3 Sources.view { amountOfTracks = amountOfTracks } subPage
                     |> Html.map SourcesMsg
         ]
 
