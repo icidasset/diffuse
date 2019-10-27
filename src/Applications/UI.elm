@@ -20,6 +20,7 @@ import Css.Media
 import Css.Transitions
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
+import Dict.Ext as Dict
 import File exposing (File)
 import File.Download
 import File.Select
@@ -1413,9 +1414,14 @@ translateReply reply model =
                 sources =
                     model.sources
 
+                isProcessing =
+                    sourcesToProcess
+                        |> List.sortBy (.data >> Dict.fetch "name" "")
+                        |> List.map (\{ id } -> ( id, 0 ))
+
                 newSources =
                     { sources
-                        | isProcessing = List.map (\{ id } -> ( id, 0 )) sourcesToProcess
+                        | isProcessing = isProcessing
                         , processingError = Nothing
                         , processingNotificationId = Just notificationId
                     }

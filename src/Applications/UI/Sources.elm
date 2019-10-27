@@ -427,16 +427,29 @@ intro amountOfTracks =
 
 sourceActions : List ( String, Float ) -> Maybe { error : String, sourceId : String } -> Source -> List (UI.List.Action Msg)
 sourceActions isProcessing processingError source =
+    let
+        processIndex =
+            List.findIndex (Tuple.first >> (==) source.id) isProcessing
+
+        process =
+            Maybe.andThen (\idx -> List.getAt idx isProcessing) processIndex
+    in
     List.append
-        (case ( List.find (Tuple.first >> (==) source.id) isProcessing, processingError ) of
+        (case ( process, processingError ) of
             ( Just ( _, progress ), _ ) ->
                 [ { color = Inherit
                   , icon =
                         \_ _ ->
                             if progress < 0.05 then
                                 UnstyledHtml.span
-                                    [ UnstyledHtml.class "div fw4 o-50 ph1" ]
-                                    [ UnstyledHtml.text "Building file tree" ]
+                                    [ UnstyledHtml.class "dib o-70 ph1" ]
+                                    [ case processIndex of
+                                        Just 0 ->
+                                            UnstyledHtml.text "Building"
+
+                                        _ ->
+                                            UnstyledHtml.text "Waiting"
+                                    ]
 
                             else
                                 progress
@@ -447,7 +460,7 @@ sourceActions isProcessing processingError source =
                                     |> UnstyledHtml.text
                                     |> List.singleton
                                     |> UnstyledHtml.span
-                                        [ UnstyledHtml.class "div fw4 o-50 ph1" ]
+                                        [ UnstyledHtml.class "dib o-70 ph1" ]
                   , msg = Nothing
                   , title = ""
                   }
