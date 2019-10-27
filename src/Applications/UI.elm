@@ -1415,7 +1415,7 @@ translateReply reply model =
 
                 newSources =
                     { sources
-                        | isProcessing = List.map .id sourcesToProcess
+                        | isProcessing = List.map (\{ id } -> ( id, 0 )) sourcesToProcess
                         , processingError = Nothing
                         , processingNotificationId = Just notificationId
                     }
@@ -1791,6 +1791,9 @@ translateAlienData event =
         Just Alien.ReportProcessingError ->
             SourcesMsg (Sources.ReportProcessingError event.data)
 
+        Just Alien.ReportProcessingProgress ->
+            SourcesMsg (Sources.ReportProcessingProgress event.data)
+
         Just Alien.SearchTracks ->
             TracksMsg (Tracks.SetSearchResults event.data)
 
@@ -1964,7 +1967,7 @@ defaultScreen model =
         [ { amountOfSources = List.length model.sources.collection
           , bgColor = model.backdrop.bgColor
           , isOnIndexPage = model.page == Page.Index
-          , sourceIdsBeingProcessed = model.sources.isProcessing
+          , sourceIdsBeingProcessed = List.map Tuple.first model.sources.isProcessing
           , viewport = model.viewport
           }
             |> Tracks.view model.tracks

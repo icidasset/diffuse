@@ -5,10 +5,13 @@ import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
 import Coordinates exposing (Coordinates)
 import Dict.Ext as Dict
+import Html as UnstyledHtml
+import Html.Attributes as UnstyledHtml
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (href)
 import Json.Decode as Json
+import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Alert as Icons
@@ -40,7 +43,7 @@ type alias Model =
     { collection : List Source
     , currentTime : Time.Posix
     , form : Form.Model
-    , isProcessing : List String
+    , isProcessing : List ( String, Float )
     , processingError : Maybe { error : String, sourceId : String }
     , processingNotificationId : Maybe Int
     }
@@ -67,6 +70,7 @@ type Msg
     | FinishedProcessing
     | Process
     | ReportProcessingError Json.Value
+    | ReportProcessingProgress Json.Value
     | StopProcessing
       -----------------------------------------
       -- Children
@@ -99,7 +103,7 @@ update msg model =
                 |> Return.repliesWithModel { model | isProcessing = [] }
 
         FinishedProcessingSource sourceId ->
-            return { model | isProcessing = List.filter ((/=) sourceId) model.isProcessing }
+            return { model | isProcessing = List.filter (Tuple.first >> (/=) sourceId) model.isProcessing }
 
         Process ->
             model
@@ -128,6 +132,38 @@ update msg model =
 
                 Err _ ->
                     "Could not decode processing error"
+                        |> ShowStickyErrorNotification
+                        |> returnReplyWithModel model
+
+        ReportProcessingProgress json ->
+            case
+                Json.decodeValue
+                    (Json.map2
+                        (\p s ->
+                            { progress = p
+                            , sourceId = s
+                            }
+                        )
+                        (Json.field "progress" Json.float)
+                        (Json.field "sourceId" Json.string)
+                    )
+                    json
+            of
+                Ok { progress, sourceId } ->
+                    model.isProcessing
+                        |> List.map
+                            (\( sid, pro ) ->
+                                ifThenElse (sid == sourceId)
+                                    ( sid, progress )
+                                    ( sid, pro )
+                            )
+                        |> (\isProcessing ->
+                                { model | isProcessing = isProcessing }
+                           )
+                        |> return
+
+                Err _ ->
+                    "Could not decode processing progress"
                         |> ShowStickyErrorNotification
                         |> returnReplyWithModel model
 
@@ -389,19 +425,40 @@ intro amountOfTracks =
         |> UI.Kit.intro
 
 
-sourceActions : List String -> Maybe { error : String, sourceId : String } -> Source -> List (UI.List.Action Msg)
+sourceActions : List ( String, Float ) -> Maybe { error : String, sourceId : String } -> Source -> List (UI.List.Action Msg)
 sourceActions isProcessing processingError source =
     List.append
-        (case ( List.member source.id isProcessing, processingError ) of
-            ( True, _ ) ->
+        (case ( List.find (Tuple.first >> (==) source.id) isProcessing, processingError ) of
+            ( Just ( _, progress ), _ ) ->
                 [ { color = Inherit
+                  , icon =
+                        \_ _ ->
+                            if progress < 0.05 then
+                                UnstyledHtml.span
+                                    [ UnstyledHtml.class "div fw4 o-50 ph1" ]
+                                    [ UnstyledHtml.text "Building File Tree" ]
+
+                            else
+                                progress
+                                    |> (*) 100
+                                    |> round
+                                    |> String.fromInt
+                                    |> (\s -> s ++ "%")
+                                    |> UnstyledHtml.text
+                                    |> List.singleton
+                                    |> UnstyledHtml.span
+                                        [ UnstyledHtml.class "div fw4 o-50 ph1" ]
+                  , msg = Nothing
+                  , title = ""
+                  }
+                , { color = Inherit
                   , icon = Icons.sync
                   , msg = Nothing
                   , title = "Currently processing"
                   }
                 ]
 
-            ( False, Just { error, sourceId } ) ->
+            ( Nothing, Just { error, sourceId } ) ->
                 if sourceId == source.id then
                     [ { color = Color UI.Kit.colors.error
                       , icon = Icons.error_outline

@@ -55,7 +55,8 @@ type alias Context =
 
 
 type alias ContextForTags =
-    { nextFilePaths : List String
+    { amount : Int
+    , nextFilePaths : List String
     , receivedFilePaths : List String
     , receivedTags : List (Maybe Tags)
     , sourceId : String

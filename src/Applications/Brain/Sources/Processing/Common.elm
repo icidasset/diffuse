@@ -52,7 +52,8 @@ type Msg
 
 contextToTagsContext : Context -> ContextForTags
 contextToTagsContext context =
-    { nextFilePaths = context.filePaths
+    { amount = List.length context.filePaths
+    , nextFilePaths = context.filePaths
     , receivedFilePaths = []
     , receivedTags = []
     , sourceId = context.source.id

@@ -168,7 +168,14 @@ update msg model =
               --------
             , case List.isEmpty (List.filter Maybe.isJust tagsContext.receivedTags) of
                 True ->
-                    []
+                    let
+                        progress =
+                            [ ( "progress", Encode.float 0.05 )
+                            , ( "sourceId", Encode.string tagsContext.sourceId )
+                            ]
+                    in
+                    [ GiveUI Alien.ReportProcessingProgress (Encode.object progress)
+                    ]
 
                 False ->
                     let
@@ -176,8 +183,20 @@ update msg model =
                             tagsContext
                                 |> tracksFromTagsContext
                                 |> List.map (\track -> { track | insertedAt = model.currentTime })
+
+                        amountLeft =
+                            List.length tagsContext.nextFilePaths
+
+                        progressPercentage =
+                            0.05 + 0.95 * (1 - toFloat amountLeft / toFloat tagsContext.amount)
+
+                        progress =
+                            [ ( "progress", Encode.float progressPercentage )
+                            , ( "sourceId", Encode.string tagsContext.sourceId )
+                            ]
                     in
                     [ GiveUI Alien.AddTracks (Encode.list Tracks.Encoding.encodeTrack tracksToAdd)
+                    , GiveUI Alien.ReportProcessingProgress (Encode.object progress)
                     , AddTracks tracksToAdd
                     ]
             )

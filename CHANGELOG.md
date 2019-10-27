@@ -6,6 +6,7 @@
 - **Automatically prepend `_dnslink.` when using a domain name with an IPFS source**
 - Explain more things in the UI and on the about page
 - Improve onboarding
+- Show processing progress on sources screen
 - Show the amount of tracks you have
 - Show time and duration of the current track after hovering over the progress bar for a while
 - Slightly improved tap/click events on tracks

@@ -43,13 +43,13 @@ import Tracks exposing (Track)
 {-| How much tags do we want to process
 before we send them back to Elm.
 
-    eg. After we got the tags for 50 tracks,
+    eg. After we got the tags for 20 tracks,
     we store these and continue with the rest.
 
 -}
 tagsBatchSize : Int
 tagsBatchSize =
-    50
+    20
 
 
 
@@ -103,7 +103,8 @@ takeTagsStep currentTime tagsCtx source =
             List.splitAt tagsBatchSize tagsCtx.nextFilePaths
 
         newTagsCtx =
-            { nextFilePaths = nextFiles
+            { amount = tagsCtx.amount
+            , nextFilePaths = nextFiles
             , receivedFilePaths = filesToProcess
             , receivedTags = []
             , sourceId = source.id
