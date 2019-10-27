@@ -53,6 +53,7 @@ global items alfred activePage =
     brick
         [ css globalStyles ]
         [ T.f7
+        , T.fw6
         , T.mb5
         , T.mt4
         , T.tracked
@@ -101,7 +102,7 @@ globalColors : { active : Css.Color, border : Css.Color, default : Css.Color }
 globalColors =
     { active = Color.toElmCssColor UI.Kit.colorKit.base01
     , border = Color.toElmCssColor (Color.Manipulate.fadeOut 0.875 UI.Kit.colorKit.base01)
-    , default = Color.toElmCssColor (Color.Manipulate.fadeOut 0.275 UI.Kit.colorKit.base01)
+    , default = Color.toElmCssColor (Color.Manipulate.fadeOut 0.45 UI.Kit.colorKit.base01)
     }
 
 
@@ -114,6 +115,8 @@ globalItemStyles : Bool -> List Css.Style
 globalItemStyles isActivePage =
     [ Css.borderBottomColor (ifThenElse isActivePage globalColors.border <| Css.rgba 0 0 0 0)
     , Css.color (ifThenElse isActivePage globalColors.active globalColors.default)
+
+    --
     , UI.Kit.textFocus
     ]
 
