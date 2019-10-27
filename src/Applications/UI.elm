@@ -2193,7 +2193,7 @@ globalCss =
 placeholderStyles : List Css.Style
 placeholderStyles =
     [ Css.color (Css.rgb 0 0 0)
-    , Css.opacity (Css.num 0.2)
+    , Css.opacity (Css.num 0.225)
     ]
 
 
