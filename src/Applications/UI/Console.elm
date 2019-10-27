@@ -3,6 +3,7 @@ module UI.Console exposing (view)
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
+import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css
 import Css.Ext as Css
@@ -28,8 +29,8 @@ import UI.Tracks as Tracks
 -- 🗺
 
 
-view : Maybe Queue.Item -> Bool -> Bool -> Bool -> Bool -> Bool -> Html Reply
-view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
+view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> { showTime : Bool } -> Html Reply
+view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) { showTime } =
     brick
         [ css consoleStyles ]
         [ T.mt1, T.tc, T.w_100 ]
@@ -44,15 +45,55 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
             , T.pt3
             , T.white
             ]
-            [ if hasStalled then
+            [ if stalled then
                 slab
                     Html.span
                     []
                     [ T.dib ]
                     [ text "Audio connection got interrupted, trying to reconnect ..." ]
 
-              else if isLoading then
+              else if loading then
                 text "Loading track ..."
+
+              else if showTime && Maybe.isJust activeQueueItem then
+                let
+                    minutes =
+                        floor (position / 60)
+
+                    seconds =
+                        max 0 (floor position - minutes * 60)
+
+                    m =
+                        minutes
+                            |> String.fromInt
+                            |> String.padLeft 2 '0'
+
+                    s =
+                        seconds
+                            |> String.fromInt
+                            |> String.padLeft 2 '0'
+
+                    totalMinutes =
+                        floor (duration / 60)
+
+                    totalSeconds =
+                        max 0 (floor duration - totalMinutes * 60)
+
+                    tm =
+                        totalMinutes
+                            |> String.fromInt
+                            |> String.padLeft 2 '0'
+
+                    ts =
+                        totalSeconds
+                            |> String.fromInt
+                            |> String.padLeft 2 '0'
+                in
+                raw
+                    [ text (m ++ ":" ++ s)
+                    , inline [ T.dib, T.mh1 ] [ text "of" ]
+                    , text (tm ++ ":" ++ ts)
+                    ]
 
               else
                 case Maybe.map .identifiedTrack activeQueueItem of
@@ -71,8 +112,19 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
         -----------------------------------------
         -- Progress Bar
         -----------------------------------------
-        , brick
-            [ on "click" (clickLocationDecoder Seek) ]
+        , let
+            progress =
+                if duration <= 0 then
+                    0
+
+                else
+                    (position / duration) * 100
+          in
+          brick
+            [ on "click" (clickLocationDecoder Seek)
+            , Html.Styled.Events.onMouseOver (ToggleTimeDisplay On)
+            , Html.Styled.Events.onMouseOut (ToggleTimeDisplay Off)
+            ]
             [ T.pointer
             , T.pv1
             ]
@@ -80,7 +132,7 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
                 [ css progressBarStyles ]
                 [ T.br1 ]
                 [ brick
-                    [ css progressBarInnerStyles, style "width" "0" ]
+                    [ css progressBarInnerStyles, style "width" (String.fromFloat progress ++ "%") ]
                     [ "progressBarValue" ]
                     []
                 ]
@@ -100,7 +152,7 @@ view activeQueueItem repeat shuffle hasStalled isLoading isPlaying =
             ]
             [ button "Toggle repeat" (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
             , button "Play previous track" lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
-            , button "" (largeLight isPlaying) play TogglePlayPause
+            , button "" (largeLight playing) play TogglePlayPause
             , button "Play next track" lightPlaceHolder (icon Icons.fast_forward 20) ShiftQueue
             , button "Toggle shuffle" (smallLight shuffle) (icon Icons.shuffle 18) ToggleShuffle
             ]

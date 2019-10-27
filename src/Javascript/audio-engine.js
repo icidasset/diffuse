@@ -151,8 +151,8 @@ export function insertTrack(orchestrion, queueItem) {
 
   // reset
   orchestrion.app.ports.setAudioHasStalled.send(false)
+  orchestrion.app.ports.setAudioPosition.send(0)
   clearTimeout(orchestrion.unstallTimeout)
-  setProgressBarWidth(0)
   didShowNetworkError = false
   timesStalled = 0
 
@@ -347,12 +347,10 @@ function audioTimeUpdateEvent(event) {
     isNaN(node.duration) ||
     isNaN(node.currentTime) ||
     node.duration === 0) {
-    return setProgressBarWidth(0)
+    return this.app.ports.setAudioPosition.send(0)
   }
 
-  const progress = node.currentTime / node.duration
-
-  setProgressBarWidth(progress)
+  this.app.ports.setAudioPosition.send(node.currentTime)
 
   if (navigator.mediaSession && navigator.mediaSession.setPositionState) {
     navigator.mediaSession.setPositionState({
@@ -476,23 +474,6 @@ function unstallAudio(node) {
 
   node.load()
   node.currentTime = time
-}
-
-
-
-// Progress Bar
-// ------------
-
-let progressBarNode
-
-export function setProgressBarWidth(float) {
-  if (!progressBarNode || !progressBarNode.offsetParent) {
-    progressBarNode = document.querySelector(".progressBarValue")
-  }
-
-  if (progressBarNode) {
-    progressBarNode.style.width = (float * 100).toString() + "%"
-  }
 }
 
 

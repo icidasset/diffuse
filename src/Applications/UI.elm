@@ -140,10 +140,12 @@ type alias Model =
     , audioHasStalled : Bool
     , audioIsLoading : Bool
     , audioIsPlaying : Bool
+    , audioPosition : Float
 
     --
     , progress : Dict String Float
     , rememberProgress : Bool
+    , showTime : Bool
 
     -----------------------------------------
     -- Children
@@ -191,10 +193,12 @@ init flags url key =
     , audioHasStalled = False
     , audioIsLoading = False
     , audioIsPlaying = False
+    , audioPosition = 0
 
     --
     , progress = Dict.empty
     , rememberProgress = True
+    , showTime = False
 
     -- Children
     -----------
@@ -253,6 +257,8 @@ type Msg
     | SetAudioHasStalled Bool
     | SetAudioIsLoading Bool
     | SetAudioIsPlaying Bool
+    | SetAudioPosition Float
+    | SetShowTime Bool
     | Stop
       -----------------------------------------
       -- Authentication
@@ -493,6 +499,12 @@ update msg model =
 
         SetAudioIsPlaying isPlaying ->
             return { model | audioIsPlaying = isPlaying }
+
+        SetAudioPosition position ->
+            return { model | audioPosition = position }
+
+        SetShowTime bool ->
+            return { model | showTime = bool }
 
         Stop ->
             returnWithModel model (Ports.pause ())
@@ -919,6 +931,14 @@ translateReply reply model =
 
         ToggleRememberProgress ->
             translateReply SaveSettings { model | rememberProgress = not model.rememberProgress }
+
+        ToggleTimeDisplay switch ->
+            switch
+                == On
+                |> SetShowTime
+                |> Debouncer.provideInput
+                |> Debounce
+                |> updateWithModel model
 
         -----------------------------------------
         -- Authentication
@@ -1675,6 +1695,7 @@ subscriptions model =
         , Ports.setAudioHasStalled SetAudioHasStalled
         , Ports.setAudioIsLoading SetAudioIsLoading
         , Ports.setAudioIsPlaying SetAudioIsPlaying
+        , Ports.setAudioPosition SetAudioPosition
 
         -- Remote
         ---------
@@ -1990,14 +2011,19 @@ defaultScreen model =
     -- Controls
     -----------------------------------------
     , Html.map Reply
-        (Lazy.lazy6
-            UI.Console.view
+        (UI.Console.view
             model.queue.activeItem
             model.queue.repeat
             model.queue.shuffle
-            model.audioHasStalled
-            model.audioIsLoading
-            model.audioIsPlaying
+            { stalled = model.audioHasStalled
+            , loading = model.audioIsLoading
+            , playing = model.audioIsPlaying
+            }
+            ( model.audioPosition
+            , model.audioDuration
+            )
+            { showTime = model.showTime
+            }
         )
     ]
 

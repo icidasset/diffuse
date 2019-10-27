@@ -83,7 +83,7 @@ app.ports.activeQueueItemChanged.subscribe(item => {
     audioEngine.insertTrack(orchestrion, item)
   } else {
     app.ports.setAudioIsPlaying.send(false)
-    audioEngine.setProgressBarWidth(0)
+    app.ports.setAudioPosition.send(0)
   }
 })
 
