@@ -5,7 +5,6 @@ import Classes as C
 import Color.Ext as Color
 import Css
 import Css.Global
-import Css.Transitions exposing (transition)
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes exposing (css, rel)
 import Html.Styled.Events exposing (onDoubleClick)

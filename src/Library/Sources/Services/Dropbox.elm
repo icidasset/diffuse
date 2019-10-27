@@ -10,7 +10,6 @@ import Dict.Ext as Dict
 import Http
 import Json.Decode
 import Json.Encode
-import Regex
 import Sources exposing (Property, SourceData)
 import Sources.Pick
 import Sources.Processing exposing (..)

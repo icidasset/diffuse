@@ -4,7 +4,7 @@ import Chunky exposing (..)
 import Color.Ext as Color
 import Common
 import Conditional exposing (..)
-import Coordinates exposing (Coordinates)
+import Coordinates
 import Css
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
@@ -17,7 +17,7 @@ import Material.Icons.Content as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Queue exposing (..)
-import Return3 as Return exposing (..)
+import Return3 exposing (..)
 import Tachyons.Classes as T
 import Time
 import Tracks exposing (IdentifiedTrack)

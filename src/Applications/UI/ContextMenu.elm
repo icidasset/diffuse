@@ -2,17 +2,15 @@ module UI.ContextMenu exposing (view)
 
 import Chunky exposing (..)
 import Classes as C
-import Color exposing (Color)
 import Conditional exposing (..)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Css
 import Html.Styled exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (css, style)
-import Html.Styled.Events exposing (custom, onClick)
+import Html.Styled.Events exposing (custom)
 import Json.Decode
 import Material.Icons exposing (Coloring(..))
-import Svg exposing (Svg)
 import Tachyons.Classes as T
 import UI.Kit
 import UI.Reply exposing (Reply)

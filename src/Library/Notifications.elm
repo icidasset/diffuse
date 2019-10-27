@@ -2,7 +2,7 @@ module Notifications exposing (Action, Kind(..), Notification, Options, contents
 
 import Chunky exposing (..)
 import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (class, style)
+import Html.Styled.Attributes exposing (style)
 import Markdown
 import Murmur3 exposing (..)
 import Tachyons.Classes as T

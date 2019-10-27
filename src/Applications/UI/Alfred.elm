@@ -4,7 +4,6 @@ import Alfred exposing (Alfred)
 import Browser.Dom as Dom
 import Chunky exposing (..)
 import Classes as C
-import Conditional exposing (ifThenElse)
 import Css
 import Html.Styled as Html exposing (Html, fromUnstyled, text)
 import Html.Styled.Attributes exposing (autofocus, css, id, placeholder, type_)
@@ -15,7 +14,7 @@ import Keyboard
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
-import Return3 as Return exposing (..)
+import Return3 exposing (..)
 import Tachyons.Classes as T
 import Task
 import UI.Kit

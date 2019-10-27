@@ -13,7 +13,7 @@ import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
-import Coordinates exposing (Coordinates, Viewport)
+import Coordinates exposing (Viewport)
 import Css exposing (url)
 import Css.Global
 import Css.Media
@@ -25,10 +25,9 @@ import File exposing (File)
 import File.Download
 import File.Select
 import Html.Events.Extra.Pointer as Pointer
-import Html.Events.Extra.Touch as Touch
 import Html.Styled as Html exposing (Html, section, toUnstyled)
-import Html.Styled.Attributes as Attributes exposing (class, css, id, style)
-import Html.Styled.Events as Events exposing (on, onClick)
+import Html.Styled.Attributes as Attributes exposing (class, css, id)
+import Html.Styled.Events exposing (on, onClick)
 import Html.Styled.Lazy as Lazy
 import Http
 import Json.Decode

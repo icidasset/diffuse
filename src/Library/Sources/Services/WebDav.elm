@@ -16,7 +16,7 @@ import Http
 import Sources exposing (Property, SourceData)
 import Sources.Pick exposing (selectMusicFiles)
 import Sources.Processing exposing (..)
-import Sources.Services.Common exposing (cleanPath, noPrep)
+import Sources.Services.Common exposing (noPrep)
 import Sources.Services.WebDav.Marker as Marker
 import Sources.Services.WebDav.Parser as Parser
 import String.Ext as String

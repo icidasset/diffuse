@@ -1,6 +1,5 @@
 module UI.Playlists.ContextMenu exposing (listMenu)
 
-import Conditional exposing (ifThenElse)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Material.Icons.Action as Icons
@@ -10,7 +9,6 @@ import Playlists exposing (Playlist)
 import Playlists.Matching
 import Tracks exposing (IdentifiedTrack)
 import UI.Page
-import UI.Playlists as Playlists
 import UI.Playlists.Page
 import UI.Reply exposing (Reply(..))
 import Url

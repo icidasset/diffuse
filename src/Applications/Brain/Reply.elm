@@ -3,7 +3,6 @@ module Brain.Reply exposing (Reply(..))
 import Alien
 import Json.Encode as Json
 import Tracks exposing (Track)
-import User.Layer
 
 
 

@@ -5,19 +5,18 @@ import Base64
 import Binary
 import Chunky exposing (..)
 import Classes as C
-import Color exposing (Color)
+import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
 import Css.Global
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, a, button, em, fromUnstyled, img, span, text)
+import Html.Styled as Html exposing (Html, a, button, fromUnstyled, img, span, text)
 import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, target, title, value, width)
 import Html.Styled.Events exposing (onClick, onSubmit)
 import Html.Styled.Ext exposing (onClickStopPropagation)
 import Http
-import Json.Decode
 import Json.Encode
 import Markdown
 import Material.Icons exposing (Coloring(..))
@@ -27,7 +26,7 @@ import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Material.Icons.Navigation as Icons
 import Maybe.Extra as Maybe
-import Return3 as Return exposing (..)
+import Return3 exposing (..)
 import SHA
 import String.Ext as String
 import Svg exposing (Svg)

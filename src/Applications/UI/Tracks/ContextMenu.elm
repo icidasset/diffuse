@@ -9,7 +9,6 @@ import Material.Icons.Content as Icons
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Sources exposing (Source)
-import Sources.Services
 import Time
 import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Queue as Queue

@@ -16,7 +16,6 @@ import Http
 import Json.Decode as Json
 import Sources exposing (Property, SourceData)
 import Sources.Processing exposing (..)
-import Sources.Services.Common exposing (cleanPath, noPrep)
 import Sources.Services.Ipfs.Marker as Marker
 import Sources.Services.Ipfs.Parser as Parser
 import String.Ext as String

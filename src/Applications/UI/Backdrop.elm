@@ -9,7 +9,7 @@ import Html.Styled.Attributes exposing (class, css, src, style)
 import Html.Styled.Events exposing (on)
 import Html.Styled.Lazy as Lazy
 import Json.Decode
-import Return3 as Return exposing (..)
+import Return3 exposing (..)
 import Tachyons.Classes as T
 import UI.Animations
 import UI.Ports as Ports

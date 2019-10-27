@@ -7,7 +7,6 @@ module Sources.Services.Azure.Authorization exposing (Computation(..), Signature
 
 -}
 
-import Base64
 import Binary
 import BinaryBase64
 import Common
@@ -18,7 +17,6 @@ import Dict.Ext as Dict
 import SHA
 import Sources exposing (SourceData)
 import Sources.Processing exposing (HttpMethod)
-import Sources.Services.Common as Utils
 import String.Ext as String
 import Time
 import Url

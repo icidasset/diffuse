@@ -130,6 +130,16 @@ doc-tests:
 	)
 
 
+quality:
+	@echo "> Running elm-review"
+	@$(NPM_DIR)/.bin/elm-review src --config system/Review
+
+
+quality-fix:
+	@echo "> Running elm-review"
+	@$(NPM_DIR)/.bin/elm-review src --config system/Review --fix
+
+
 server:
 	@echo "> Booting up web server on port 5000"
 	@devd --port 5000 --all --crossdomain --quiet --notfound=301.html $(BUILD_DIR)

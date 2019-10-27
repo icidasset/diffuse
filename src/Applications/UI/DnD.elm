@@ -1,7 +1,6 @@
 module UI.DnD exposing (Environment, Model, Msg, hasDropped, initialModel, isBeingDraggedOver, isDragging, isDraggingOver, listenToEnterLeave, listenToStart, modelSubject, modelTarget, startDragging, stoppedDragging, update)
 
 import Html exposing (Attribute)
-import Html.Attributes as Attributes
 import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
 import UI.Reply as Reply exposing (Reply)

@@ -3,7 +3,7 @@ module UI.Sources exposing (Model, Msg(..), initialModel, sourcesToProcess, upda
 import Alien
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
-import Coordinates exposing (Coordinates)
+import Coordinates
 import Dict.Ext as Dict
 import Html as UnstyledHtml
 import Html.Attributes as UnstyledHtml

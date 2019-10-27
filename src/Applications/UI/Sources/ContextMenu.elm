@@ -10,7 +10,6 @@ import Material.Icons.Notification as Icons
 import Sources exposing (Source)
 import UI.Page
 import UI.Reply exposing (Reply(..))
-import UI.Sources as Sources
 import UI.Sources.Page
 
 

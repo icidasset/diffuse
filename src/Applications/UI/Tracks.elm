@@ -2,14 +2,13 @@ module UI.Tracks exposing (Dependencies, Model, Msg(..), Scene(..), importHypaet
 
 import Alien
 import Chunky exposing (..)
-import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Coordinates exposing (Coordinates, Viewport)
 import Css
-import Css.Transitions exposing (transition)
+import Css.Transitions
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, href, placeholder, tabindex, target, title, value)
@@ -32,7 +31,7 @@ import Material.Icons.Navigation as Icons
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Return3 as Return exposing (..)
-import Sources exposing (Source)
+import Sources
 import Tachyons.Classes as T
 import Task.Extra as Task
 import Tracks exposing (..)
@@ -42,7 +41,7 @@ import Tracks.Favourites as Favourites
 import UI.DnD as DnD
 import UI.Kit
 import UI.Navigation exposing (..)
-import UI.Page exposing (Page)
+import UI.Page
 import UI.Playlists.Page
 import UI.Ports
 import UI.Queue.Page
@@ -175,19 +174,6 @@ update msg model =
             returnReplyWithModel model reply
 
         ScrollToNowPlaying ->
-            let
-                -- The index identifier might be out-of-date,
-                -- so we get the latest version.
-                it =
-                    model.nowPlaying
-                        |> Maybe.map (Tuple.second >> .id)
-                        |> Maybe.andThen
-                            (\id ->
-                                List.find
-                                    (Tuple.second >> .id >> (==) id)
-                                    model.collection.harvested
-                            )
-            in
             model.nowPlaying
                 |> Maybe.map (Tuple.second >> .id)
                 |> Maybe.andThen

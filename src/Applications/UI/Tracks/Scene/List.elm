@@ -14,7 +14,6 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (class, style)
 import Html.Events
 import Html.Events.Extra.Mouse as Mouse
-import Html.Events.Extra.Touch as Touch
 import Html.Styled
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
@@ -26,8 +25,7 @@ import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
 import Maybe.Extra as Maybe
-import Playlists exposing (Playlist)
-import Return3 as Return exposing (..)
+import Return3 exposing (..)
 import Tachyons
 import Tachyons.Classes as T
 import Task

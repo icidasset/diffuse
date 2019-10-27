@@ -5,14 +5,13 @@ import Color.Ext as Color
 import Conditional exposing (ifThenElse)
 import Css
 import Css.Media
-import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, selected, value)
+import Html.Styled exposing (Html, text)
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
-import Settings exposing (Settings)
-import String.Ext as String
+import Settings
 import Tachyons.Classes as T
 import UI.Backdrop as Backdrop
 import UI.Css

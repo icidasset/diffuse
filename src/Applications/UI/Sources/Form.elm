@@ -1,20 +1,18 @@
 module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, edit, initialModel, new, takeStepBackwards, takeStepForwards, update)
 
-import Browser.Navigation as Nav
 import Chunky exposing (..)
-import Color
 import Common exposing (boolFromString, boolToString)
 import Conditional exposing (..)
 import Dict
 import Dict.Ext as Dict
 import Html.Styled as Html exposing (Html, strong, text)
-import Html.Styled.Attributes exposing (for, name, placeholder, required, selected, style, type_, value)
+import Html.Styled.Attributes exposing (for, name, placeholder, required, selected, type_, value)
 import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
-import Return3 as Return exposing (..)
+import Return3 exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services
 import Sources.Services.Dropbox
@@ -23,7 +21,7 @@ import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Reply as Reply exposing (Reply(..))
+import UI.Reply exposing (Reply(..))
 import UI.Sources.Page as Sources
 
 

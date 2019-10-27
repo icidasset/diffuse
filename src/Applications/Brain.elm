@@ -12,7 +12,6 @@ import EverySet
 import Json.Decode as Json
 import Json.Encode
 import List.Extra as List
-import List.Zipper as Zipper exposing (Zipper)
 import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Return2 exposing (..)
@@ -328,14 +327,6 @@ saveTracks model tracks =
 updateWithModel : Model -> Msg -> Return Model Msg
 updateWithModel model msg =
     update msg model
-
-
-updateSearchIndex : Json.Value -> Model -> Return Model Msg
-updateSearchIndex value model =
-    value
-        |> Tracks.UpdateSearchIndex
-        |> TracksMsg
-        |> updateWithModel model
 
 
 

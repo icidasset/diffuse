@@ -1,8 +1,6 @@
 module Sources.Services.Azure.FileParser exposing (parseErrorResponse, parseTreeResponse)
 
-import Dict.Ext as Dict
 import Sources.Processing exposing (Marker(..), TreeAnswer)
-import Sources.Services.Azure.BlobParser
 import Sources.Services.Azure.FileMarker as FileMarker exposing (MarkerItem(..))
 import Sources.Services.Common exposing (cleanPath)
 import Xml.Decode exposing (..)
