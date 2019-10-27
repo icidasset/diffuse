@@ -308,22 +308,6 @@ update msg model =
                     return model
 
 
-saveTracks : Model -> List Tracks.Track -> Return Model Msg
-saveTracks model tracks =
-    tracks
-        -- Store in model
-        |> hypaethralLenses.setTracks model
-        -- Update search index
-        |> update
-            (tracks
-                |> Json.Encode.list Tracks.encodeTrack
-                |> Tracks.UpdateSearchIndex
-                |> TracksMsg
-            )
-        -- Save with delay
-        |> andThen (saveHypaethralDataBitWithDelay Tracks)
-
-
 updateWithModel : Model -> Msg -> Return Model Msg
 updateWithModel model msg =
     update msg model
@@ -435,6 +419,26 @@ updateTracks model sub =
         { model = model.tracks
         , msg = sub
         }
+
+
+
+-- 📣  ░░  FUNCTIONS
+
+
+saveTracks : Model -> List Tracks.Track -> Return Model Msg
+saveTracks model tracks =
+    tracks
+        -- Store in model
+        |> hypaethralLenses.setTracks model
+        -- Update search index
+        |> update
+            (tracks
+                |> Json.Encode.list Tracks.encodeTrack
+                |> Tracks.UpdateSearchIndex
+                |> TracksMsg
+            )
+        -- Save with delay
+        |> andThen (saveHypaethralDataBitWithDelay Tracks)
 
 
 

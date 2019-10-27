@@ -8,7 +8,7 @@ import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Classes as C
-import Color
+import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
@@ -244,6 +244,7 @@ type Msg
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
     | ResizedWindow ( Int, Int )
+    | ShowNotification (Notification Reply)
     | SetCurrentTime Time.Posix
     | SetIsOnline Bool
     | StoppedDragging
@@ -284,10 +285,6 @@ type Msg
     | Import File
     | ImportJson String
       -----------------------------------------
-      -- Notifications
-      -----------------------------------------
-    | ShowNotification (Notification Reply)
-      -----------------------------------------
       -- Page Transitions
       -----------------------------------------
     | PageChanged Page
@@ -326,16 +323,16 @@ update msg model =
                 }
 
         HideOverlay ->
-            return { model | alfred = { instance = Nothing }, contextMenu = Nothing }
+            hideOverlay model
 
         KeyboardMsg subMsg ->
-            { model | pressedKeys = Keyboard.update subMsg model.pressedKeys }
-                |> (\m ->
-                        ifThenElse
-                            (List.member Keyboard.Escape m.pressedKeys)
-                            (update HideOverlay m)
-                            (return m)
-                   )
+            (\m ->
+                ifThenElse
+                    (List.member Keyboard.Escape m.pressedKeys)
+                    (hideOverlay m)
+                    (return m)
+            )
+                { model | pressedKeys = Keyboard.update subMsg model.pressedKeys }
 
         LoadEnclosedUserData json ->
             model
@@ -377,6 +374,7 @@ update msg model =
                 | contextMenu = Nothing
                 , viewport = { height = toFloat height, width = toFloat width }
               }
+              --
             , Cmd.none
             )
 
@@ -389,6 +387,7 @@ update msg model =
                 | currentTime = time
                 , sources = { sources | currentTime = time }
               }
+              --
             , Cmd.none
             )
 
@@ -408,28 +407,30 @@ update msg model =
             )
 
         SetIsOnline True ->
-            andThen
-                -- We're caching the user's data in the browser while offline.
-                -- If we're back online again, sync all the user's data.
-                (case model.authentication of
-                    Authentication.Authenticated (Dropbox _) ->
-                        syncHypaethralData
+            -- We're caching the user's data in the browser while offline.
+            -- If we're back online again, sync all the user's data.
+            (case model.authentication of
+                Authentication.Authenticated (Dropbox _) ->
+                    syncHypaethralData
 
-                    Authentication.Authenticated (RemoteStorage _) ->
-                        syncHypaethralData
+                Authentication.Authenticated (RemoteStorage _) ->
+                    syncHypaethralData
 
-                    _ ->
-                        return
-                )
-                ( { model | isOnline = True }
-                , Cmd.none
-                )
+                _ ->
+                    return
+            )
+                { model | isOnline = True }
+
+        ShowNotification notification ->
+            showNotification notification model
 
         StoppedDragging ->
             let
                 notDragging =
                     { model | isDragging = False }
             in
+            -- Depending on where we stopped dragging something,
+            -- do the appropriate thing.
             case model.page of
                 Page.Queue _ ->
                     DnD.stoppedDragging
@@ -519,32 +520,23 @@ update msg model =
 
         MissingSecretKey json ->
             "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
-                |> ShowErrorNotification
-                |> translateReplyWithModel model
+                |> Notifications.error
+                |> showNotificationWithModel model
                 |> andThen (translateReply <| Reply.LoadDefaultBackdrop)
                 |> andThen (translateReply <| Reply.ToggleLoadingScreen Off)
 
         NotAuthenticated ->
             -- This is the message we get when the app initially
             -- finds out we're not authenticated.
-            let
-                upgradeNote =
-                    """
-                    Thank you for using Diffuse V1!
-                    If you want to import your old data,
-                    please pick the storage method you used before and
-                    go to the [import page](#/settings/import-export).
-                    """
-            in
-            { model | isUpgrading = False }
-                |> update (BackdropMsg Backdrop.Default)
-                |> andThen
-                    (if model.isUpgrading then
-                        translateReply (ShowStickySuccessNotification upgradeNote)
-
-                     else
-                        return
-                    )
+            """
+            Thank you for using Diffuse V1!
+            If you want to import your old data,
+            please pick the storage method you used before and
+            go to the [import page](#/settings/import-export).
+            """
+                |> Notifications.stickySuccess
+                |> showNotificationWithModel { model | isUpgrading = False }
+                |> andThen (update <| BackdropMsg Backdrop.Default)
 
         RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
             let
@@ -686,12 +678,6 @@ update msg model =
                 -- Save all the imported data
                 -----------------------------
                 |> saveAllHypaethralData
-
-        -----------------------------------------
-        -- Notifications
-        -----------------------------------------
-        ShowNotification notification ->
-            showNotification notification model
 
         -----------------------------------------
         -- Page Transitions
@@ -854,32 +840,6 @@ update msg model =
                     returnWithModel model (resetUrl model.navKey url Page.Index)
 
 
-resetUrl : Nav.Key -> Url -> Page.Page -> Cmd Msg
-resetUrl key url page =
-    Nav.replaceUrl key (url.path ++ Page.toString page)
-
-
-showNotification : Notification Reply -> Model -> Return Model Msg
-showNotification notification model =
-    model.notifications
-        |> UI.Notifications.show notification
-        |> mapModel (\n -> { model | isLoading = False, notifications = n })
-        |> mapCommand Reply
-
-
-showNotificationWithModel : Model -> Notification Reply -> Return Model Msg
-showNotificationWithModel model notification =
-    showNotification notification model
-
-
-syncHypaethralData : Model -> Return Model Msg
-syncHypaethralData model =
-    "Syncing"
-        |> Notifications.warning
-        |> showNotificationWithModel model
-        |> addCommand (Ports.toBrain <| Alien.trigger Alien.SyncHypaethralData)
-
-
 updateTracksModel : (Tracks.Model -> Tracks.Model) -> Model -> Model
 updateTracksModel fn model =
     { model | tracks = fn model.tracks }
@@ -891,7 +851,7 @@ updateWithModel model msg =
 
 
 
--- 📣  ░░  CHILDREN & REPLIES
+-- 📣  ░░  REPLIES
 
 
 translateReply : Reply -> Model -> Return Model Msg
@@ -1344,7 +1304,7 @@ translateReply reply model =
                 |> Ports.toBrain
                 |> returnWithModel (updateTracksModel (\m -> { m | cached = [] }) model)
                 |> andThen (update <| TracksMsg Tracks.Harvest)
-                |> andThen (translateReply SaveEnclosedUserData)
+                |> andThen (translateReply <| SaveEnclosedUserData)
                 |> andThen (translateReply <| ShowWarningNotification "Tracks cache was cleared")
 
         DisableTracksGrouping ->
@@ -1651,6 +1611,31 @@ translateReply reply model =
                 |> returnWithModel model
 
 
+translateReplyWithModel : Model -> Reply -> Return Model Msg
+translateReplyWithModel model reply =
+    translateReply reply model
+
+
+
+-- 📣  ░░  FUNCTIONS
+
+
+hideOverlay : Model -> Return Model Msg
+hideOverlay model =
+    ( { model
+        | alfred = { instance = Nothing }
+        , contextMenu = Nothing
+      }
+      --
+    , Cmd.none
+    )
+
+
+resetUrl : Nav.Key -> Url -> Page.Page -> Cmd Msg
+resetUrl key url page =
+    Nav.replaceUrl key (url.path ++ Page.toString page)
+
+
 saveAllHypaethralData : Return Model Msg -> Return Model Msg
 saveAllHypaethralData return =
     List.foldl
@@ -1678,9 +1663,25 @@ saveAllHypaethralData return =
         hypaethralBit.list
 
 
-translateReplyWithModel : Model -> Reply -> Return Model Msg
-translateReplyWithModel model reply =
-    translateReply reply model
+showNotification : Notification Reply -> Model -> Return Model Msg
+showNotification notification model =
+    model.notifications
+        |> UI.Notifications.show notification
+        |> mapModel (\n -> { model | isLoading = False, notifications = n })
+        |> mapCommand Reply
+
+
+showNotificationWithModel : Model -> Notification Reply -> Return Model Msg
+showNotificationWithModel model notification =
+    showNotification notification model
+
+
+syncHypaethralData : Model -> Return Model Msg
+syncHypaethralData model =
+    "Syncing"
+        |> Notifications.warning
+        |> showNotificationWithModel model
+        |> addCommand (Ports.toBrain <| Alien.trigger Alien.SyncHypaethralData)
 
 
 
@@ -1716,8 +1717,8 @@ subscriptions model =
             (Sub.map AlfredMsg <| Alfred.subscriptions model.alfred)
             Sub.none
 
-        -- ...
-        ------
+        -- Resize
+        ---------
         , Browser.Events.onResize
             (\w h ->
                 ( w, h )
@@ -1749,7 +1750,9 @@ alien event =
 
 translateAlienData : Alien.Event -> Msg
 translateAlienData event =
-    case Alien.tagFromString event.tag of
+    case
+        Alien.tagFromString event.tag
+    of
         Just Alien.AddTracks ->
             TracksMsg (Tracks.Add event.data)
 
@@ -1803,7 +1806,11 @@ translateAlienData event =
             TracksMsg (Tracks.SetSearchResults event.data)
 
         Just Alien.StoreTracksInCache ->
-            case Json.Decode.decodeValue (Json.Decode.list Json.Decode.string) event.data of
+            case
+                Json.Decode.decodeValue
+                    (Json.Decode.list Json.Decode.string)
+                    event.data
+            of
                 Ok list ->
                     FinishedStoringTracksInCache list
 
@@ -1822,7 +1829,9 @@ translateAlienData event =
 
 translateAlienError : Alien.Event -> String -> Msg
 translateAlienError event err =
-    case Alien.tagFromString event.tag of
+    case
+        Alien.tagFromString event.tag
+    of
         Just Alien.AuthAnonymous ->
             AuthenticationBootFailure err
 
@@ -1842,7 +1851,11 @@ translateAlienError event err =
             AuthenticationBootFailure err
 
         Just Alien.StoreTracksInCache ->
-            case Json.Decode.decodeValue (Json.Decode.list Json.Decode.string) event.data of
+            case
+                Json.Decode.decodeValue
+                    (Json.Decode.list Json.Decode.string)
+                    event.data
+            of
                 Ok trackIds ->
                     FailedToStoreTracksInCache trackIds
 
@@ -1991,7 +2004,11 @@ defaultScreen model =
 
             Page.Playlists subPage ->
                 model.backdrop.bgColor
-                    |> Lazy.lazy4 Playlists.view subPage model.playlists model.tracks.selectedPlaylist
+                    |> Lazy.lazy4
+                        Playlists.view
+                        subPage
+                        model.playlists
+                        model.tracks.selectedPlaylist
                     |> Html.map PlaylistsMsg
 
             Page.Queue subPage ->
@@ -2177,10 +2194,10 @@ globalCss =
     -----------------------------------------
     -- Bits & Pieces
     -----------------------------------------
-    , Css.Global.selector ".bg-accent" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.accent) ]
-    , Css.Global.selector ".bg-base-00" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base00) ]
-    , Css.Global.selector ".bg-base-01" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base01) ]
-    , Css.Global.selector ".bg-base-0D" [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.base0D) ]
+    , Css.Global.selector ".bg-accent" [ backgroundColor UI.Kit.colorKit.accent ]
+    , Css.Global.selector ".bg-base-00" [ backgroundColor UI.Kit.colorKit.base00 ]
+    , Css.Global.selector ".bg-base-01" [ backgroundColor UI.Kit.colorKit.base01 ]
+    , Css.Global.selector ".bg-base-0D" [ backgroundColor UI.Kit.colorKit.base0D ]
     , Css.Global.selector ".dragging-something" [ Css.cursor Css.grabbing ]
     , Css.Global.selector ".dragging-something *" [ Css.important (Css.cursor Css.grabbing) ]
     , Css.Global.selector ".grab-cursor" [ Css.cursor Css.grab ]
@@ -2196,6 +2213,11 @@ globalCss =
         , Css.property "user-select" "none"
         ]
     ]
+
+
+backgroundColor : Color -> Css.Style
+backgroundColor =
+    Color.toElmCssColor >> Css.backgroundColor
 
 
 placeholderStyles : List Css.Style
@@ -2232,8 +2254,7 @@ vesselStyles =
 
 vesselInnerStyles : List Css.Style
 vesselInnerStyles =
-    [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)"
-    ]
+    [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
 
 
 
@@ -2289,10 +2310,12 @@ importHypaethral value model =
                 , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
                 , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
               }
+              --
             , Cmd.batch
                 [ Cmd.map PlaylistsMsg playlistsCmd
                 , Cmd.map TracksMsg tracksCmd
                 ]
+              --
             , playlistsReplies ++ tracksReplies
             )
 
@@ -2377,10 +2400,12 @@ importEnclosed value model =
                 , queue = newQueue
                 , tracks = newTracks
               }
+              --
             , Cmd.batch
                 [ Cmd.map EqualizerMsg (Equalizer.adjustAllKnobs newEqualizer)
                 , Ports.setRepeat data.repeat
                 ]
+              --
             , []
             )
 
