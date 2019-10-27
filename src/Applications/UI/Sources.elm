@@ -436,7 +436,7 @@ sourceActions isProcessing processingError source =
                             if progress < 0.05 then
                                 UnstyledHtml.span
                                     [ UnstyledHtml.class "div fw4 o-50 ph1" ]
-                                    [ UnstyledHtml.text "Building File Tree" ]
+                                    [ UnstyledHtml.text "Building file tree" ]
 
                             else
                                 progress
