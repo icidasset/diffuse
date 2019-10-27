@@ -16,7 +16,7 @@ import * as user from "./user.js"
 import { fromCache, removeCache, reportError } from "./common.js"
 import { sendData, storageCallback, toCache } from "./common.js"
 
-importScripts("../brain.elm.js")
+importScripts("brain.elm.js")
 
 
 const flags = location
