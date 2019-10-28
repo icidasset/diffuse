@@ -294,14 +294,14 @@ function audioErrorEvent(event) {
       break
     case event.target.error.MEDIA_ERR_NETWORK:
       console.error("A network error caused the audio download to fail.")
-      showNetworkErrorNotificationIfNeeded()
+      showNetworkErrorNotificationIfNeeded.call(this)
       break
     case event.target.error.MEDIA_ERR_DECODE:
       console.error("The audio playback was aborted due to a corruption problem or because the video used features your browser did not support.")
       break
     case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
       console.error("The audio not be loaded, either because the server or network failed or because the format is not supported.")
-      showNetworkErrorNotificationIfNeeded()
+      showNetworkErrorNotificationIfNeeded.call(this)
       audioStalledEvent.call(this, event)
       break
     default:
@@ -314,7 +314,7 @@ function audioErrorEvent(event) {
       if (didShowNetworkError) return
       didShowNetworkError = true
 
-      app.ports.showErrorNotification.send(
+      this.app.ports.showErrorNotification.send(
         navigator.onLine
           ? "I can't play this track because of a network error. I'll try to reconnect."
           : "I can't play this track because we're offline. I'll try to reconnect."

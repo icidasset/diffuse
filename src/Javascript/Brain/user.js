@@ -8,7 +8,7 @@ import * as crypto from "../crypto.js"
 import * as db from "../indexed-db.js"
 
 import { SECRET_KEY_LOCATION } from "./common.js"
-import { decryptIfNeeded, fromCache, removeCache } from "./common.js"
+import { decryptIfNeeded, encryptWithSecretKey, fromCache, removeCache } from "./common.js"
 import { reportError, sendJsonData, storageCallback, toCache } from "./common.js"
 
 
