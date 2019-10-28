@@ -194,7 +194,7 @@ export function insertTrack(orchestrion, queueItem) {
       audioNode.context.connect(volume)
 
       if (audioNode.readyState >= 4) {
-        playAudio(audioNode, queueItem)
+        playAudio(audioNode, queueItem, orchestrion.app)
       } else {
         orchestrion.app.ports.setAudioIsLoading.send(true)
         audioNode.load()
@@ -369,7 +369,7 @@ function audioTimeUpdateEvent(event) {
 
 function audioEndEvent(event) {
   if (this.repeat) {
-    playAudio(event.target, this.activeQueueItem)
+    playAudio(event.target, this.activeQueueItem, this.app)
   } else {
     this.app.ports.noteProgress.send({ trackId: this.activeQueueItem.trackId, progress: 1 })
     this.app.ports.activeQueueItemEnded.send(null)
@@ -394,7 +394,7 @@ function audioLoaded(event) {
   clearTimeout(this.loadingTimeoutId)
   this.app.ports.setAudioHasStalled.send(false)
   this.app.ports.setAudioIsLoading.send(false)
-  if (event.target.paused) playAudio(event.target, this.activeQueueItem)
+  if (event.target.paused) playAudio(event.target, this.activeQueueItem, this.app)
 }
 
 
@@ -446,7 +446,7 @@ function isActiveAudioElement(orchestrion, node) {
 }
 
 
-function playAudio(element, queueItem) {
+function playAudio(element, queueItem, app) {
   if (queueItem.progress && element.duration) {
     element.currentTime = queueItem.progress * element.duration
   }

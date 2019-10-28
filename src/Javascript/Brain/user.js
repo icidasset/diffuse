@@ -8,8 +8,8 @@ import * as crypto from "../crypto.js"
 import * as db from "../indexed-db.js"
 
 import { SECRET_KEY_LOCATION } from "./common.js"
-import { decryptIfNeeded, encryptWithSecretKey, fromCache, removeCache } from "./common.js"
-import { reportError, sendJsonData, storageCallback, toCache } from "./common.js"
+import { decryptIfNeeded, encryptWithSecretKey, fromCache, identity } from "./common.js"
+import { removeCache, reportError, sendJsonData, storageCallback, toCache } from "./common.js"
 
 
 const ports = []
