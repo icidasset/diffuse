@@ -528,15 +528,21 @@ update msg model =
         NotAuthenticated ->
             -- This is the message we get when the app initially
             -- finds out we're not authenticated.
-            """
-            Thank you for using Diffuse V1!
-            If you want to import your old data,
-            please pick the storage method you used before and
-            go to the [import page](#/settings/import-export).
-            """
-                |> Notifications.stickySuccess
-                |> showNotificationWithModel { model | isUpgrading = False }
-                |> andThen (update <| BackdropMsg Backdrop.Default)
+            andThen
+                (update <| BackdropMsg Backdrop.Default)
+                (if model.isUpgrading then
+                    """
+                    Thank you for using Diffuse V1!
+                    If you want to import your old data,
+                    please pick the storage method you used before and
+                    go to the [import page](#/settings/import-export).
+                    """
+                        |> Notifications.stickySuccess
+                        |> showNotificationWithModel { model | isUpgrading = False }
+
+                 else
+                    return model
+                )
 
         RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
             let
