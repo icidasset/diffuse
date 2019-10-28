@@ -27,7 +27,6 @@ type Reply
     | Seek Float
     | TogglePlayPause
     | ToggleRememberProgress
-    | ToggleTimeDisplay Switch
       -----------------------------------------
       -- Authentication
       -----------------------------------------

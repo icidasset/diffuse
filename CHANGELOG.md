@@ -9,7 +9,6 @@
 - Improve onboarding
 - Show processing progress on sources screen
 - Show the amount of tracks you have
-- Show time and duration of the current track after hovering over the progress bar for a while
 - Slightly improved tap/click events on tracks
 - Smaller javascript files, ie. improved load time
 

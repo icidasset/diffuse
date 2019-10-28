@@ -28,8 +28,8 @@ import UI.Reply exposing (Reply(..))
 -- 🗺
 
 
-view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> { showTime : Bool } -> Html Reply
-view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) { showTime } =
+view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> Html Reply
+view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
     brick
         [ css consoleStyles ]
         [ T.mt1, T.tc, T.w_100 ]
@@ -53,46 +53,6 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
 
               else if loading then
                 text "Loading track ..."
-
-              else if showTime && Maybe.isJust activeQueueItem then
-                let
-                    minutes =
-                        floor (position / 60)
-
-                    seconds =
-                        max 0 (floor position - minutes * 60)
-
-                    m =
-                        minutes
-                            |> String.fromInt
-                            |> String.padLeft 2 '0'
-
-                    s =
-                        seconds
-                            |> String.fromInt
-                            |> String.padLeft 2 '0'
-
-                    totalMinutes =
-                        floor (duration / 60)
-
-                    totalSeconds =
-                        max 0 (floor duration - totalMinutes * 60)
-
-                    tm =
-                        totalMinutes
-                            |> String.fromInt
-                            |> String.padLeft 2 '0'
-
-                    ts =
-                        totalSeconds
-                            |> String.fromInt
-                            |> String.padLeft 2 '0'
-                in
-                raw
-                    [ text (m ++ ":" ++ s)
-                    , inline [ T.dib, T.mh1 ] [ text "of" ]
-                    , text (tm ++ ":" ++ ts)
-                    ]
 
               else
                 case Maybe.map .identifiedTrack activeQueueItem of
@@ -120,10 +80,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                     (position / duration) * 100
           in
           brick
-            [ on "click" (clickLocationDecoder Seek)
-            , Html.Styled.Events.onMouseOver (ToggleTimeDisplay On)
-            , Html.Styled.Events.onMouseOut (ToggleTimeDisplay Off)
-            ]
+            [ on "click" (clickLocationDecoder Seek) ]
             [ T.pointer
             , T.pv1
             ]

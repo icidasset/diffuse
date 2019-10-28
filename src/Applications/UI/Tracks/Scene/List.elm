@@ -188,7 +188,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
 
         derivedColors =
             { default = Color.toCssString color
-            , dark = Color.toCssString (Color.darken 0.325 color)
+            , dark = Color.toCssString (Color.darken 0.3 color)
             , light = Color.toCssString (Color.fadeOut 0.625 color)
             }
     in

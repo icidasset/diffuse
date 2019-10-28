@@ -145,7 +145,6 @@ type alias Model =
     --
     , progress : Dict String Float
     , rememberProgress : Bool
-    , showTime : Bool
 
     -----------------------------------------
     -- Children
@@ -198,7 +197,6 @@ init flags url key =
     --
     , progress = Dict.empty
     , rememberProgress = True
-    , showTime = False
 
     -- Children
     -----------
@@ -259,7 +257,6 @@ type Msg
     | SetAudioIsLoading Bool
     | SetAudioIsPlaying Bool
     | SetAudioPosition Float
-    | SetShowTime Bool
     | Stop
       -----------------------------------------
       -- Authentication
@@ -503,9 +500,6 @@ update msg model =
 
         SetAudioPosition position ->
             return { model | audioPosition = position }
-
-        SetShowTime bool ->
-            return { model | showTime = bool }
 
         Stop ->
             returnWithModel model (Ports.pause ())
@@ -897,14 +891,6 @@ translateReply reply model =
 
         ToggleRememberProgress ->
             translateReply SaveSettings { model | rememberProgress = not model.rememberProgress }
-
-        ToggleTimeDisplay switch ->
-            switch
-                == On
-                |> SetShowTime
-                |> Debouncer.provideInput
-                |> Debounce
-                |> updateWithModel model
 
         -----------------------------------------
         -- Authentication
@@ -2057,8 +2043,6 @@ defaultScreen model =
             ( model.audioPosition
             , model.audioDuration
             )
-            { showTime = model.showTime
-            }
         )
     ]
 
