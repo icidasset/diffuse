@@ -445,7 +445,7 @@ sourceActions isProcessing processingError source =
                                     [ UnstyledHtml.class "dib o-70 ph1" ]
                                     [ case processIndex of
                                         Just 0 ->
-                                            UnstyledHtml.text "Building"
+                                            UnstyledHtml.text "Listing"
 
                                         _ ->
                                             UnstyledHtml.text "Waiting"
