@@ -359,6 +359,8 @@ function audioTimeUpdateEvent(event) {
     })
   }
 
+  const progress = node.currentTime / node.duration
+
   if (node.duration >= 30 * 60) {
     sendProgress(this, progress)
   }
