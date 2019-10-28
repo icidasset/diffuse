@@ -913,7 +913,8 @@ listView model deps =
                     Just model.listScene.dnd
             )
         |> UI.Tracks.Scene.List.view
-            { height = deps.viewport.height
+            { bgColor = deps.bgColor
+            , height = deps.viewport.height
             , isVisible = deps.isOnIndexPage
             , showAlbum = deps.viewport.width >= 720
             }

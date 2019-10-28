@@ -3,7 +3,7 @@ module UI.Tracks.Scene.List exposing (Model, Msg(..), containerId, initialModel,
 import Browser.Dom as Dom
 import Chunky exposing (..)
 import Classes as C
-import Color
+import Color exposing (Color)
 import Color.Ext as Color
 import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
@@ -105,9 +105,17 @@ update msg model =
 
 
 type alias Dependencies =
-    { height : Float
+    { bgColor : Maybe Color
+    , height : Float
     , isVisible : Bool
     , showAlbum : Bool
+    }
+
+
+type alias DerivedColors =
+    { default : String
+    , dark : String
+    , light : String
     }
 
 
@@ -174,6 +182,16 @@ containerId =
 
 infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe IdentifiedTrack, List Int ) -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
 infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
+    let
+        color =
+            Maybe.withDefault UI.Kit.colors.text deps.bgColor
+
+        derivedColors =
+            { default = Color.toCssString color
+            , dark = Color.toCssString (Color.darken 0.325 color)
+            , light = Color.toCssString (Color.fadeOut 0.625 color)
+            }
+    in
     Html.Styled.fromUnstyled
         (InfiniteList.view
             (InfiniteList.withCustomContainer
@@ -189,6 +207,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
                                     selectedTrackIndexes
                                     dnd
                                     deps.showAlbum
+                                    derivedColors
 
                             _ ->
                                 defaultItemView
@@ -196,6 +215,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
                                     nowPlaying
                                     selectedTrackIndexes
                                     deps.showAlbum
+                                    derivedColors
 
                     --
                     , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
@@ -413,8 +433,8 @@ dynamicRowHeight _ ( i, t ) =
 -- INFINITE LIST ITEM
 
 
-defaultItemView : Bool -> Maybe IdentifiedTrack -> List Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
-defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum _ idx identifiedTrack =
+defaultItemView : Bool -> Maybe IdentifiedTrack -> List Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
+defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derivedColors _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -451,7 +471,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum _ idx i
         --
         , Html.div
             (List.concat
-                [ rowStyles idx rowIdentifiers
+                [ rowStyles idx rowIdentifiers derivedColors
 
                 --
                 , List.append
@@ -479,14 +499,14 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum _ idx i
                 ]
             )
             (if showAlbum then
-                [ favouriteColumn favouritesOnly favIdentifiers
+                [ favouriteColumn favouritesOnly favIdentifiers derivedColors
                 , otherColumn "37.5%" False track.tags.title
                 , otherColumn "29.0%" False track.tags.artist
                 , otherColumn "29.0%" True track.tags.album
                 ]
 
              else
-                [ favouriteColumn favouritesOnly favIdentifiers
+                [ favouriteColumn favouritesOnly favIdentifiers derivedColors
                 , otherColumn "52%" False track.tags.title
                 , otherColumn "43.5%" False track.tags.artist
                 ]
@@ -494,8 +514,8 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum _ idx i
         ]
 
 
-playlistItemView : Bool -> Maybe IdentifiedTrack -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Int -> Int -> IdentifiedTrack -> Html Msg
-playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd showAlbum _ idx identifiedTrack =
+playlistItemView : Bool -> Maybe IdentifiedTrack -> Maybe String -> List Int -> DnD.Model Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd showAlbum derivedColors _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -526,7 +546,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
     in
     Html.div
         (List.concat
-            [ rowStyles idx rowIdentifiers
+            [ rowStyles idx rowIdentifiers derivedColors
 
             --
             , List.append
@@ -570,7 +590,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
             ]
         )
         (if showAlbum then
-            [ favouriteColumn favouritesOnly favIdentifiers
+            [ favouriteColumn favouritesOnly favIdentifiers derivedColors
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "36.0%" False track.tags.title
             , otherColumn "27.5%" False track.tags.artist
@@ -578,7 +598,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
             ]
 
          else
-            [ favouriteColumn favouritesOnly favIdentifiers
+            [ favouriteColumn favouritesOnly favIdentifiers derivedColors
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "49.75%" False track.tags.title
             , otherColumn "41.25%" False track.tags.artist
@@ -733,12 +753,12 @@ rowHeight =
     35
 
 
-rowStyles : Int -> { isMissing : Bool, isNowPlaying : Bool, isSelected : Bool } -> List (Html.Attribute msg)
-rowStyles idx { isMissing, isNowPlaying, isSelected } =
+rowStyles : Int -> { isMissing : Bool, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> List (Html.Attribute msg)
+rowStyles idx { isMissing, isNowPlaying, isSelected } derivedColors =
     let
         bgColor =
             if isNowPlaying then
-                rowBackgroundColors.selection
+                derivedColors.light
 
             else if modBy 2 idx == 1 then
                 rowBackgroundColors.whiteNear
@@ -751,7 +771,7 @@ rowStyles idx { isMissing, isNowPlaying, isSelected } =
                 rowFontColors.selection
 
             else if isNowPlaying then
-                rowFontColors.white
+                derivedColors.dark
 
             else if isMissing then
                 rowFontColors.grey
@@ -773,14 +793,14 @@ columnMinWidth =
     "28px"
 
 
-favouriteColumn : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> Html Msg
-favouriteColumn favouritesOnly identifiers =
+favouriteColumn : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> Html Msg
+favouriteColumn favouritesOnly identifiers derivedColors =
     Html.div
         ((++)
             [ Html.Events.onClick (Reply <| ToggleFavourite identifiers.indexInList)
             , Tachyons.classes [ T.flex_shrink_0, T.fw4, T.pl3 ]
             ]
-            (favouriteColumnStyles favouritesOnly identifiers)
+            (favouriteColumnStyles favouritesOnly identifiers derivedColors)
         )
         [ if identifiers.isFavourite then
             text "t"
@@ -790,8 +810,8 @@ favouriteColumn favouritesOnly identifiers =
         ]
 
 
-favouriteColumnStyles : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> List (Html.Attribute msg)
-favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } =
+favouriteColumnStyles : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> List (Html.Attribute msg)
+favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } derivedColors =
     let
         color =
             if isNowPlaying && isFavourite then
@@ -799,14 +819,14 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } =
                     favColors.selection
 
                 else
-                    favColors.white
+                    derivedColors.dark
 
             else if isNowPlaying then
                 if isSelected then
-                    favColors.selectionFaded
+                    favColors.selectionFadedMore
 
                 else
-                    favColors.whiteFaded
+                    favColors.blackFaded
 
             else if favouritesOnly || not isFavourite then
                 if isSelected then
@@ -881,8 +901,7 @@ favColors =
 
 
 rowBackgroundColors =
-    { selection = Color.toCssString UI.Kit.colors.selection
-    , white = favColors.white
+    { white = favColors.white
     , whiteNear = Color.toCssString (Color.rgb255 252 252 252)
     }
 

@@ -59,7 +59,7 @@ colors =
     , background = rgb 2 7 14
     , focus = rgb 0 0 0
     , selection = colorKit.base0D
-    , selectionAlt = Color.darken 0.275 colorKit.base0D -- rgb 3 48 63
+    , selectionAlt = colorKit.base01
     , text = colorKit.base01
     }
 

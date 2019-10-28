@@ -4,6 +4,7 @@
 
 - **Added ability to cache an entire playlist** (for offline usage)
 - **Automatically prepend `_dnslink.` when using a domain name with an IPFS source**
+- Better color for the current-playing track
 - Explain more things in the UI and on the about page
 - Improve onboarding
 - Show processing progress on sources screen
