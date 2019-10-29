@@ -21,7 +21,7 @@ build: clean css elm js system
 	@echo "> Build completed ⚡"
 
 
-build-prod: clean css elm-prod js-prod system
+build-prod: quality clean css elm-prod js-prod system
 	@echo "> Production build completed 🛳"
 
 
@@ -141,6 +141,8 @@ doc-tests:
 
 
 quality:
+	@echo "> Running es-lint"
+	@$(NPM_DIR)/.bin/eslint src/Javascript/**
 	@echo "> Running elm-review"
 	@$(NPM_DIR)/.bin/elm-review src --config system/Review
 

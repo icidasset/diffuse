@@ -5,6 +5,7 @@
 // The local database.
 // This is used instead of localStorage.
 
+
 self.importScripts && importScripts("version.js")
 
 

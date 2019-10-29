@@ -4,6 +4,7 @@
 //
 // This worker is responsible for searching through a `Track` collection.
 
+
 import lunr from "lunr"
 
 
@@ -48,13 +49,13 @@ function performSearch(rawSearchTerm) {
     []
 
   const searchTerm = rawSearchTerm
-    .replace(/\-\s+/g, "-")
+    .replace(/-\s+/g, "-")
     .replace(/\+\s+/g, "+")
     .split(/ +/)
     .reduce(
       ([ acc, previousOperator, previousPrefix ], chunk) => {
-        const operator = (a => a && a[0])( chunk.match(/^(\+|\-)/) )
-        const chunkWithoutOperator = chunk.replace(/^(\+|\-)/, "")
+        const operator = (a => a && a[0])( chunk.match(/^(\+|-)/) )
+        const chunkWithoutOperator = chunk.replace(/^(\+|-)/, "")
         const prefix = (a => a && a[1])( chunkWithoutOperator.match(/^([^:]+:)/) )
         const chunkWithoutPrefix = chunkWithoutOperator.replace(/^([^:]+:)/, "")
 

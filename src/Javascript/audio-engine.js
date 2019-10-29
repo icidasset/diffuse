@@ -4,9 +4,10 @@
 //
 // Creates audio elements and interacts with the Web Audio API.
 
-import * as db from "./indexed-db.js"
-import { throttle } from "./common.js"
-import { transformUrl } from "./urls.js"
+
+import * as db from "./indexed-db"
+import { throttle } from "./common"
+import { transformUrl } from "./urls"
 
 
 // Audio context
@@ -377,7 +378,7 @@ function audioEndEvent(event) {
 }
 
 
-function audioLoading(event) {
+function audioLoading(_event) {
   clearTimeout(this.loadingTimeoutId)
 
   this.loadingTimeoutId = setTimeout(() => {
@@ -398,13 +399,13 @@ function audioLoaded(event) {
 }
 
 
-function audioPlayEvent(event) {
+function audioPlayEvent(_event) {
   this.app.ports.setAudioIsPlaying.send(true)
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing"
 }
 
 
-function audioPauseEvent(event) {
+function audioPauseEvent(_event) {
   this.app.ports.setAudioIsPlaying.send(false)
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "paused"
 }

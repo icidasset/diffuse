@@ -10,8 +10,11 @@ import "tocca"
 
 import "../../build/vendor/pep"
 
-import * as audioEngine from "./audio-engine.js"
-import { debounce } from "./common.js"
+import * as audioEngine from "./audio-engine"
+import { debounce } from "./common"
+
+
+// 🍱
 
 
 const app = Elm.UI.init({
@@ -303,13 +306,13 @@ if ("mediaSession" in navigator) {
   })
 
 
-  navigator.mediaSession.setActionHandler("seekbackward", event => {
+  navigator.mediaSession.setActionHandler("seekbackward", _ => {
     const audio = orchestrion.audio
     if (audio) audio.currentTime = Math.max(audio.currentTime - 10, 0)
   })
 
 
-  navigator.mediaSession.setActionHandler("seekforward", event => {
+  navigator.mediaSession.setActionHandler("seekforward", _ => {
     const audio = orchestrion.audio
     if (audio) audio.currentTime = Math.min(audio.currentTime + 10, audio.duration)
   })

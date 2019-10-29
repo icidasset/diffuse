@@ -2,11 +2,15 @@
 // Common stuff
 // ʕ•ᴥ•ʔ
 
-import * as crypto from "../crypto.js"
-import * as db from "../indexed-db.js"
+
+import * as crypto from "../crypto"
+import * as db from "../indexed-db"
 
 
 export const SECRET_KEY_LOCATION = "AUTH_SECRET_KEY"
+
+
+// 🔱
 
 
 export function isAuthMethodService(eventTag) {
@@ -57,7 +61,7 @@ export function sendJsonData(app, event) {
 }
 
 
-export function storageCallback(app, event) {
+export function storageCallback(app, _) {
   return _ => {
     app.ports.savedHypaethralBit.send()
   }

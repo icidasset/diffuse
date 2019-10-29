@@ -2,6 +2,7 @@
   "private": true,
   "devDependencies": {
     "elm-review": "^1.0.1",
+    "eslint": "^6.6.0",
     "terser": "^4.3.9",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.9"

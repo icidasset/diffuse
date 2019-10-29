@@ -4,12 +4,13 @@
 //
 // Some URLs are special you know.
 
+
 export function transformUrl(url) {
   const parts = url.split("://")
 
   switch (parts[0]) {
 
-    case "dropbox":
+    case "dropbox": {
       const dropboxBits = parts[1].split("@")
       const accessToken = dropboxBits[0]
       const filePath = dropboxBits[1]
@@ -28,6 +29,7 @@ export function transformUrl(url) {
       ).then(
         response => response.link
       )
+    }
 
     default:
       return Promise.resolve(url)

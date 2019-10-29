@@ -4,12 +4,13 @@
 //
 // Related to the user layer.
 
-import * as crypto from "../crypto.js"
-import * as db from "../indexed-db.js"
 
-import { SECRET_KEY_LOCATION } from "./common.js"
-import { decryptIfNeeded, encryptWithSecretKey, fromCache, identity } from "./common.js"
-import { removeCache, reportError, sendJsonData, storageCallback, toCache } from "./common.js"
+import * as crypto from "../crypto"
+import { identity } from "../common"
+
+import { SECRET_KEY_LOCATION, decryptIfNeeded, encryptWithSecretKey } from "./common"
+import { fromCache, isLocalHost, removeCache, reportError } from "./common"
+import { sendJsonData, storageCallback, toCache } from "./common"
 
 
 const ports = []
@@ -63,7 +64,7 @@ const BLOCKSTACK_SESSION_STORE = {
 }
 
 
-ports.deconstructBlockstack = app => _ => {
+ports.deconstructBlockstack = _app => _ => {
   BLOCKSTACK_SESSION_STORE.deleteSessionData()
   bl = null
 }
@@ -115,7 +116,7 @@ ports.redirectToBlockstackSignIn = app => event => {
 ports.requestBlockstack = app => event => {
   const session = bl0ckst4ck()
 
-  bl
+  session
     .getFile(event.data.file)
     .then( sendJsonData(app, event) )
     .catch( reportError(app, event) )
@@ -126,7 +127,7 @@ ports.toBlockstack = app => event => {
   const json = JSON.stringify(event.data.data)
   const session = bl0ckst4ck()
 
-  bl
+  session
     .putFile(event.data.file, json)
     .then( storageCallback(event) )
     .catch( reportError(app, event) )
@@ -295,7 +296,7 @@ function remoteStorageIsUnavailable(event) {
 }
 
 
-ports.deconstructRemoteStorage = app => _ => {
+ports.deconstructRemoteStorage = _app => _ => {
   rs = null
   rsClient = null
 }

@@ -1,0 +1,30 @@
+env:
+  browser: true
+  es6: true
+  worker: true
+
+extends:
+  eslint:recommended
+
+parserOptions:
+  ecmaVersion: 2018
+  sourceType: module
+
+globals:
+  blockstack: readonly
+  Elm: readonly
+  MediaMetadata: readonly
+  RemoteStorage: readonly
+  Textile: readonly
+  tocca: readonly
+
+rules:
+  no-cond-assign:
+    0
+
+  no-unexpected-multiline:
+    0
+
+  no-unused-vars:
+    - error
+    - argsIgnorePattern: "^_"
