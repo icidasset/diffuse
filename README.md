@@ -65,7 +65,6 @@ All of these, except the last one, can be install using [homebrew](https://brew.
 - [Elm](https://elm-lang.org/) programming language
 - [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
 - [Node.js](https://nodejs.org/) programming language with the [Yarn](https://yarnpkg.com/) package manager
-- [Google Closure Compiler](https://github.com/google/closure-compiler#getting-started) minifying assets
 - [Devd](https://github.com/cortesi/devd) web server for development (optional)
 - [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
 - [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
@@ -77,7 +76,7 @@ All of these, except the last one, can be install using [homebrew](https://brew.
 # 1. Install programming languages:
 #    Elm 0.19.1 & Haskell (Stack), see links above
 
-# 2. Install Javascript dependencies
+# 2. Install dependencies
 yarn install
 
 # 3. Build, start server & watch for changes

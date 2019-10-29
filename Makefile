@@ -46,8 +46,15 @@ elm-prod:
 	@echo "> Compiling Elm application (optimized)"
 	@elm make $(SRC_DIR)/Applications/Brain.elm --output $(BUILD_DIR)/brain.elm.js --optimize
 	@elm make $(SRC_DIR)/Applications/UI.elm --output $(BUILD_DIR)/ui.elm.js --optimize
-	@closure-compiler --js=$(BUILD_DIR)/brain.elm.js --js_output_file=$(BUILD_DIR)/brain.elm.tmp.js
-	@closure-compiler --js=$(BUILD_DIR)/ui.elm.js --js_output_file=$(BUILD_DIR)/ui.elm.tmp.js
+
+	@$(NPM_DIR)/.bin/terser $(BUILD_DIR)/brain.elm.js \
+		--output $(BUILD_DIR)/brain.elm.tmp.js \
+		--compress --mangle
+
+	@$(NPM_DIR)/.bin/terser $(BUILD_DIR)/ui.elm.js \
+		--output $(BUILD_DIR)/ui.elm.tmp.js \
+		--compress --mangle
+
 	@rm $(BUILD_DIR)/brain.elm.js
 	@mv $(BUILD_DIR)/brain.elm.tmp.js $(BUILD_DIR)/brain.elm.js
 	@rm $(BUILD_DIR)/ui.elm.js
@@ -111,7 +118,10 @@ vendor-js:
 	@mkdir -p $(BUILD_DIR)/vendor
 	@cp $(NPM_DIR)/remotestoragejs/release/remotestorage.js $(BUILD_DIR)/vendor/remotestorage.min.js
 	@cp $(NPM_DIR)/blockstack/blockstack.min.js $(BUILD_DIR)/vendor/blockstack.min.js
-	@cp $(NPM_DIR)/pep/elm-pep.js $(BUILD_DIR)/vendor/pep.js
+
+	@$(NPM_DIR)/.bin/terser $(NPM_DIR)/pep/elm-pep.js \
+		--output $(BUILD_DIR)/vendor/pep.js \
+		--compress --mangle
 
 
 #
