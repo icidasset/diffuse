@@ -129,7 +129,7 @@ ports.toBlockstack = app => event => {
 
   session
     .putFile(event.data.file, json)
-    .then( storageCallback(event) )
+    .then( storageCallback(app, event) )
     .catch( reportError(app, event) )
 }
 
@@ -184,11 +184,11 @@ ports.toDropbox = app => event => {
         body: data
       })
     })
-    .then( storageCallback(event) )
+    .then( storageCallback(app, event) )
     .catch(reporter)
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
-    .then( !navigator.onLine ? storageCallback(event) : identity )
+    .then( !navigator.onLine ? storageCallback(app, event) : identity )
     .catch(reporter)
 }
 
@@ -235,7 +235,7 @@ ports.toIpfs = app => event => {
         { method: "POST", body: formData }
       )
     })
-    .then( storageCallback(event) )
+    .then( storageCallback(app, event) )
     .catch( reportError(app, event) )
 }
 
@@ -328,11 +328,11 @@ ports.toRemoteStorage = app => event => {
   !isOffline && remoteStorage(event)
     .then(doEncryption)
     .then(data => rsClient.storeFile("application/json", event.data.file, data))
-    .then( storageCallback(event) )
+    .then( storageCallback(app, event) )
     .catch( reportError(app, event) )
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
-    .then( isOffline ? storageCallback(event) : identity )
+    .then( isOffline ? storageCallback(app, event) : identity )
     .catch( reportError(app, event) )
 }
 
@@ -382,7 +382,7 @@ ports.toTextile = app => event => {
     .then(_ => Textile.useMill(apiOrigin, event.data.file, json))
     .then(m => Textile.addFileToThread(apiOrigin, m))
 
-    .then( storageCallback(event) )
+    .then( storageCallback(app, event) )
     .catch( reportError(app, event) )
 }
 
