@@ -351,6 +351,7 @@ function audioTimeUpdateEvent(event) {
     return this.app.ports.setAudioPosition.send(0)
   }
 
+  setDurationIfNecessary(node, this.app)
   this.app.ports.setAudioPosition.send(node.currentTime)
 
   if (navigator.mediaSession && navigator.mediaSession.setPositionState) {
@@ -411,14 +412,8 @@ function audioPauseEvent(_event) {
 }
 
 
-let lastSetDuration = 0
-
-
 function audioCanPlayEvent(event) {
-  if (event.target.duration != lastSetDuration) {
-    this.app.ports.setAudioDuration.send(event.target.duration || 0)
-    lastSetDuration = event.target.duration
-  }
+  setDurationIfNecessary(event.target, this.app)
 }
 
 
@@ -470,6 +465,17 @@ const sendProgress = throttle((orchestrion, progress) => {
     progress: progress
   })
 }, 30000)
+
+
+let lastSetDuration = 0
+
+
+function setDurationIfNecessary(audio, app) {
+  if (audio.duration != lastSetDuration) {
+    app.ports.setAudioDuration.send(audio.duration || 0)
+    lastSetDuration = audio.duration
+  }
+}
 
 
 function unstallAudio(node) {

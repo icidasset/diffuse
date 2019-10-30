@@ -77,7 +77,10 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                     0
 
                 else
-                    (position / duration) * 100
+                    (position / duration)
+                        |> (*) 100
+                        |> min 100
+                        |> max 0
           in
           brick
             [ on "click" (clickLocationDecoder Seek) ]
