@@ -105,7 +105,6 @@ function customLunr(config) {
   const builder = new lunr.Builder
 
   builder.pipeline.add(
-    lunr.trimmer,
     lunr.stemmer
   )
 
