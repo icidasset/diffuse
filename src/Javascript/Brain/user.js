@@ -7,6 +7,7 @@
 
 import * as crypto from "../crypto"
 import { identity } from "../common"
+import Textile from "../textile"
 
 import { SECRET_KEY_LOCATION, decryptIfNeeded, encryptWithSecretKey } from "./common"
 import { fromCache, isLocalHost, removeCache, reportError } from "./common"
@@ -91,7 +92,7 @@ ports.redirectToBlockstackSignIn = app => event => {
   const session = bl0ckst4ck()
 
   session.generateAndStoreTransitKey().then(transitKey => {
-    const dir = location.pathname.replace("workers/brain.js", "")
+    const dir = location.pathname.replace("brain.js", "")
 
     return session.makeAuthRequest(
       transitKey,
@@ -341,21 +342,9 @@ ports.toRemoteStorage = app => event => {
 // Textile
 // -------
 
-let tt
-
-
-function textile() {
-  if (!tt) {
-    importScripts("../textile.js")
-    tt = true
-  }
-}
-
 
 ports.requestTextile = app => event => {
   const apiOrigin = event.data.apiOrigin
-
-  textile()
 
   Textile.ensureThread
     (apiOrigin)
@@ -371,8 +360,6 @@ ports.requestTextile = app => event => {
 ports.toTextile = app => event => {
   const apiOrigin = event.data.apiOrigin
   const json = JSON.stringify(event.data.data)
-
-  textile()
 
   Textile.ensureThread
     (apiOrigin)

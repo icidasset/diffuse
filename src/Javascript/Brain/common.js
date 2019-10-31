@@ -49,7 +49,9 @@ export function sendData(app, event, opts) {
   return data => {
     app.ports.fromAlien.send({
       tag: event.tag,
-      data: (opts && opts.parseJSON && typeof data === "string") ? JSON.parse(data) : data,
+      data: (opts && opts.parseJSON && typeof data === "string")
+        ? JSON.parse(data)
+        : (data || null),
       error: null
     })
   }
