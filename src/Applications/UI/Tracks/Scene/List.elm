@@ -116,6 +116,7 @@ type alias DerivedColors =
     { default : String
     , dark : String
     , light : String
+    , subtle : String
     }
 
 
@@ -190,6 +191,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
             { default = Color.toCssString color
             , dark = Color.toCssString (Color.darken 0.3 color)
             , light = Color.toCssString (Color.fadeOut 0.625 color)
+            , subtle = Color.toCssString (Color.fadeOut 0.575 color)
             }
     in
     Html.Styled.fromUnstyled
@@ -815,28 +817,13 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } d
     let
         color =
             if isNowPlaying && isFavourite then
-                if isSelected then
-                    favColors.selection
-
-                else
-                    derivedColors.dark
+                derivedColors.dark
 
             else if isNowPlaying then
-                if isSelected then
-                    favColors.selectionFadedMore
-
-                else
-                    favColors.blackFaded
+                derivedColors.subtle
 
             else if favouritesOnly || not isFavourite then
-                if isSelected then
-                    favColors.selectionFadedMore
-
-                else
-                    favColors.blackFaded
-
-            else if isSelected then
-                favColors.selection
+                favColors.blackFaded
 
             else
                 favColors.red
@@ -892,16 +879,11 @@ otherColumnStyles columnWidth =
 favColors =
     { blackFaded = Color.toCssString (Color.rgba 0 0 0 0.125)
     , red = Color.toCssString UI.Kit.colorKit.base08
-    , selection = Color.toCssString UI.Kit.colors.selectionAlt
-    , selectionFaded = Color.toCssString (Color.fadeOut 0.6 UI.Kit.colors.selectionAlt)
-    , selectionFadedMore = Color.toCssString (Color.fadeOut 0.875 UI.Kit.colors.selectionAlt)
-    , white = Color.toCssString (Color.rgb 1 1 1)
-    , whiteFaded = Color.toCssString (Color.rgba 1 1 1 0.4)
     }
 
 
 rowBackgroundColors =
-    { white = favColors.white
+    { white = Color.toCssString (Color.rgb 1 1 1)
     , whiteNear = Color.toCssString (Color.rgb255 252 252 252)
     }
 
@@ -909,8 +891,8 @@ rowBackgroundColors =
 rowFontColors =
     { default = Color.toCssString UI.Kit.colors.text
     , grey = Color.toCssString UI.Kit.colorKit.base04
-    , selection = favColors.selection
-    , white = favColors.white
+    , selection = Color.toCssString UI.Kit.colors.selectionAlt
+    , white = Color.toCssString (Color.rgb 1 1 1)
     }
 
 
