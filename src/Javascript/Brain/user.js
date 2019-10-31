@@ -42,7 +42,7 @@ let bl
 
 function bl0ckst4ck() {
   if (!bl) {
-    importScripts("../vendor/blockstack.min.js")
+    importScripts("vendor/blockstack.min.js")
 
     bl = new blockstack.UserSession({
       appConfig: new blockstack.AppConfig({
@@ -271,7 +271,7 @@ let rsClient
 
 function remoteStorage(event) {
   if (!rs) {
-    importScripts("../vendor/remotestorage.min.js")
+    importScripts("vendor/remotestorage.min.js")
 
     rs = new RemoteStorage({ cache: false })
     rs.access.claim("diffuse", "rw")
