@@ -824,11 +824,16 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
 
               else if amountOfSources == 0 then
                 chunk
-                    [ T.flex, T.items_start, T.ph3 ]
+                    [ T.flex
+                    , T.flex_wrap
+                    , T.items_start
+                    , T.justify_center
+                    , T.ph3
+                    ]
                     [ -- Add
                       ------
                       inline
-                        [ T.dib, T.mb2 ]
+                        [ T.mb3, T.mh2, T.nowrap ]
                         [ UI.Kit.buttonLink
                             (Sources.NewOnboarding
                                 |> UI.Page.Sources
@@ -836,7 +841,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                             )
                             UI.Kit.Filled
                             (inline
-                                []
+                                [ T.flex, T.items_center ]
                                 [ UI.Kit.inlineIcon Icons.add
                                 , text "Add some music"
                                 ]
@@ -845,43 +850,39 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
 
                     -- Demo
                     -------
-                    , slab
-                        Html.span
-                        []
-                        [ T.dib, T.w1 ]
-                        []
-                    , UI.Kit.buttonWithColor
-                        UI.Kit.colorKit.base04
-                        UI.Kit.Normal
-                        (Reply InsertDemo)
-                        (inline
-                            []
-                            [ UI.Kit.inlineIcon Icons.music_note
-                            , text "Insert demo"
-                            ]
-                        )
+                    , inline
+                        [ T.mb3, T.mh2, T.nowrap ]
+                        [ UI.Kit.buttonWithColor
+                            UI.Kit.colorKit.base04
+                            UI.Kit.Normal
+                            (Reply InsertDemo)
+                            (inline
+                                [ T.flex, T.items_center ]
+                                [ UI.Kit.inlineIcon Icons.music_note
+                                , text "Insert demo"
+                                ]
+                            )
+                        ]
 
                     -- How
                     ------
-                    , slab
-                        Html.span
-                        []
-                        [ T.dib, T.w1 ]
-                        []
-                    , UI.Kit.buttonWithOptions
-                        Html.a
-                        [ href "about"
-                        , target "_blank"
-                        ]
-                        UI.Kit.colorKit.base04
-                        UI.Kit.Normal
-                        Nothing
-                        (inline
-                            []
-                            [ UI.Kit.inlineIcon Icons.help
-                            , text "More info"
+                    , inline
+                        [ T.mb3, T.mh2, T.nowrap ]
+                        [ UI.Kit.buttonWithOptions
+                            Html.a
+                            [ href "about"
+                            , target "_blank"
                             ]
-                        )
+                            UI.Kit.colorKit.base04
+                            UI.Kit.Normal
+                            Nothing
+                            (inline
+                                [ T.flex, T.items_center ]
+                                [ UI.Kit.inlineIcon Icons.help
+                                , text "More info"
+                                ]
+                            )
+                        ]
                     ]
 
               else if amountOfTracks == 0 then

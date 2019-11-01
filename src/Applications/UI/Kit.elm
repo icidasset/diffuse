@@ -242,7 +242,6 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
         , T.no_underline
         , T.ph3
         , T.pointer
-        , T.pv2
         , T.tc
         ]
         [ case buttonType of
@@ -535,12 +534,16 @@ buttonStyles buttonType buttonColor =
             [ Css.backgroundColor (Color.toElmCssColor buttonColor)
             , Css.borderColor Css.transparent
             , Css.color (Css.rgb 255 255 255)
+            , Css.paddingBottom (Css.rem 0.45)
+            , Css.paddingTop (Css.rem 0.575)
             , buttonFocus
             ]
 
         _ ->
             [ Css.borderColor (Color.toElmCssColor buttonColor)
             , Css.color (Color.toElmCssColor buttonColor)
+            , Css.paddingBottom (Css.rem 0.45)
+            , Css.paddingTop (Css.rem 0.575)
             , buttonFocus
             ]
 
