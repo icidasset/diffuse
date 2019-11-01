@@ -10,6 +10,7 @@ import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
 import Html.Styled exposing (Html, fromUnstyled)
 import Html.Styled.Attributes as Attributes exposing (css, title)
 import Html.Styled.Events exposing (onClick)
+import List.Ext as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Tachyons.Classes as T
@@ -173,15 +174,14 @@ listStyles =
 itemStyles : { dragTarget : Bool, isSelected : Bool } -> List Css.Style
 itemStyles { dragTarget, isSelected } =
     if dragTarget then
-        List.append
-            itemBaseStyles
-            [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent)
-            ]
+        itemBaseStyles
+            |> List.add [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent) ]
+            |> List.add (ifThenElse isSelected [ Css.color selectionColor ] [])
 
     else if isSelected then
         List.append
             itemBaseStyles
-            [ Css.color (Color.toElmCssColor UI.Kit.colors.selectionAlt)
+            [ Css.color selectionColor
             ]
 
     else
@@ -195,3 +195,8 @@ itemBaseStyles =
     , Css.marginTop (px -1)
     , Css.touchAction Css.none
     ]
+
+
+selectionColor : Css.Color
+selectionColor =
+    Color.toElmCssColor UI.Kit.colors.selection

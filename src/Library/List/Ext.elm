@@ -3,6 +3,17 @@ module List.Ext exposing (..)
 import List.Extra as List
 
 
+{-| Flipped version of `append`.
+
+    >>> add [2, 3] [1]
+    [1, 2, 3]
+
+-}
+add : List a -> List a -> List a
+add a b =
+    List.append b a
+
+
 {-| Flipped version of (::).
 
     >>> addTo [2, 3] 1

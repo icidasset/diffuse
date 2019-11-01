@@ -692,7 +692,7 @@ selectEvent ( i, _ ) =
 
                         _ ->
                             Bypass
-                , stopPropagation = False
+                , stopPropagation = True
                 , preventDefault = False
                 }
             )

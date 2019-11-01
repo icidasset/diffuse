@@ -58,7 +58,7 @@ colors =
     -- Other
     , background = rgb 2 7 14
     , focus = rgb 0 0 0
-    , selection = colorKit.base0D
+    , selection = colorKit.base08
     , selectionAlt = colorKit.base01
     , text = colorKit.base01
     }

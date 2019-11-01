@@ -241,6 +241,8 @@ type Msg
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
+    | RemoveQueueSelection
+    | RemoveTrackSelection
     | ResizedWindow ( Int, Int )
     | ShowNotification (Notification Reply)
     | SetCurrentTime Time.Posix
@@ -365,6 +367,28 @@ update msg model =
                         else
                             return m
                     )
+
+        RemoveQueueSelection ->
+            let
+                queue =
+                    model.queue
+            in
+            ( { model
+                | queue = { queue | selection = Nothing }
+              }
+            , Cmd.none
+            )
+
+        RemoveTrackSelection ->
+            let
+                tracks =
+                    model.tracks
+            in
+            ( { model
+                | tracks = { tracks | selectedTrackIndexes = [] }
+              }
+            , Cmd.none
+            )
 
         ResizedWindow ( width, height ) ->
             ( { model
@@ -1893,6 +1917,12 @@ body model =
             , on "touchcancel" (Json.Decode.succeed StoppedDragging)
             , on "touchend" (Json.Decode.succeed StoppedDragging)
             ]
+
+         else if Maybe.isJust model.queue.selection then
+            [ on "tap" (Json.Decode.succeed RemoveQueueSelection) ]
+
+         else if not (List.isEmpty model.tracks.selectedTrackIndexes) then
+            [ on "tap" (Json.Decode.succeed RemoveTrackSelection) ]
 
          else
             []
