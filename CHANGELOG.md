@@ -6,8 +6,10 @@
 - **Automatically prepend `_dnslink.` when using a domain name with an IPFS source**
 - Better color for the current-playing track
 - Explain more things in the UI and on the about page
+- Fixed issue with moving things in the queue
 - Fixed issue with symbols in search
 - Improve onboarding
+- Replaced black favicon with a grey one
 - Show processing progress on sources screen
 - Show the amount of tracks you have
 - Slightly improved tap/click events on tracks
