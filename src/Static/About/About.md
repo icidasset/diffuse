@@ -200,17 +200,19 @@ cors:
 
 There are a few "hidden" features:
 
-- You can reorder items in the queue or a playlist with drag-and-drop.
+- **Tracks have a context menu** which can be opened by either right clicking,
+  or holding it (ie. a long tap). Use the ALT key whilst right clicking
+  on a track to show the alternative track-context menu with more options.
+- **You can reorder items** in the queue or a playlist with drag-and-drop.
   Select the item you want to move by tapping on it, then tap and hold to move it around.
 - You can select multiple tracks using the SHIFT key and then add that selection
-  to the queue or a playlist by right clicking on the selection (desktop only).
+  to the queue or a playlist using the context menu.
 - Click on the now-playing bit to scroll to that track.
 - Double tap on a EQ setting to reset it to its default value.
-- Use the ALT key whilst right clicking on a track to show the alternative track-context menu.
 
 ### Playlists
 
-To add something to a playlist, and create that playlist if it doesn't exist yet, you **open the context menu of a track**. Opening the context menu can be done by right clicking on a track, or a long tap on mobile devices. To move tracks around in a playlist, first select the track, then drag it.
+To add something to a playlist, and create that playlist if it doesn't exist yet, you open the context menu of a track. To move tracks around in a playlist, first select the track, then drag it.
 
 ### Search
 
