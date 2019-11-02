@@ -534,16 +534,16 @@ buttonStyles buttonType buttonColor =
             [ Css.backgroundColor (Color.toElmCssColor buttonColor)
             , Css.borderColor Css.transparent
             , Css.color (Css.rgb 255 255 255)
-            , Css.paddingBottom (Css.rem 0.45)
-            , Css.paddingTop (Css.rem 0.575)
+            , Css.paddingBottom (Css.rem 0.525)
+            , Css.paddingTop (Css.rem 0.6)
             , buttonFocus
             ]
 
         _ ->
             [ Css.borderColor (Color.toElmCssColor buttonColor)
             , Css.color (Color.toElmCssColor buttonColor)
-            , Css.paddingBottom (Css.rem 0.45)
-            , Css.paddingTop (Css.rem 0.575)
+            , Css.paddingBottom (Css.rem 0.525)
+            , Css.paddingTop (Css.rem 0.6)
             , buttonFocus
             ]
 

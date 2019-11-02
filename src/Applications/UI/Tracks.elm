@@ -2,6 +2,7 @@ module UI.Tracks exposing (Dependencies, Model, Msg(..), Scene(..), importHypaet
 
 import Alien
 import Chunky exposing (..)
+import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
@@ -11,7 +12,7 @@ import Css
 import Css.Transitions
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, fromUnstyled, href, placeholder, tabindex, target, title, value)
+import Html.Styled.Attributes exposing (css, fromUnstyled, href, placeholder, style, tabindex, target, title, value)
 import Html.Styled.Events exposing (onBlur, onClick, onInput)
 import Html.Styled.Ext exposing (onEnterKey)
 import Html.Styled.Lazy exposing (..)
@@ -840,8 +841,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                                 |> UI.Page.toString
                             )
                             UI.Kit.Filled
-                            (inline
-                                [ T.flex, T.items_center ]
+                            (buttonContents
                                 [ UI.Kit.inlineIcon Icons.add
                                 , text "Add some music"
                                 ]
@@ -856,8 +856,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                             UI.Kit.colorKit.base04
                             UI.Kit.Normal
                             (Reply InsertDemo)
-                            (inline
-                                [ T.flex, T.items_center ]
+                            (buttonContents
                                 [ UI.Kit.inlineIcon Icons.music_note
                                 , text "Insert demo"
                                 ]
@@ -876,8 +875,7 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                             UI.Kit.colorKit.base04
                             UI.Kit.Normal
                             Nothing
-                            (inline
-                                [ T.flex, T.items_center ]
+                            (buttonContents
                                 [ UI.Kit.inlineIcon Icons.help
                                 , text "More info"
                                 ]
@@ -892,6 +890,14 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                 message "No sources available"
             ]
         ]
+
+
+buttonContents : List (Html Msg) -> Html Msg
+buttonContents =
+    slab
+        Html.span
+        [ style "height" "21px" ]
+        [ T.flex, T.items_center, C.lh_0 ]
 
 
 message : String -> Html Msg
