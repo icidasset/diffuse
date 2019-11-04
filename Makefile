@@ -64,9 +64,6 @@ elm-prod:
 js: vendor-js
 	@echo "> Compiling Javascript code"
 
-	@# Service worker
-	@cp $(SRC_DIR)/Javascript/workers/service.js $(BUILD_DIR)/service-worker.js
-
 	@# Main builds
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/index.js \
@@ -83,14 +80,16 @@ js: vendor-js
 		--entry ./src/Javascript/Workers/search.js \
 		--mode none \
 		--output $(BUILD_DIR)/search.js
+
+	@$(NPM_DIR)/.bin/webpack-cli \
+		--entry ./src/Javascript/Workers/service.js \
+		--mode none \
+		--output $(BUILD_DIR)/service-worker.js
 
 
 js-prod: vendor-js
 	@echo "> Compiling Javascript code (optimized)"
 
-	@# Service worker
-	@cp $(SRC_DIR)/Javascript/workers/service.js $(BUILD_DIR)/service-worker.js
-
 	@# Main builds
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/index.js \
@@ -107,6 +106,11 @@ js-prod: vendor-js
 		--entry ./src/Javascript/Workers/search.js \
 		--mode production \
 		--output $(BUILD_DIR)/search.js
+
+	@$(NPM_DIR)/.bin/webpack-cli \
+		--entry ./src/Javascript/Workers/service.js \
+		--mode production \
+		--output $(BUILD_DIR)/service-worker.js
 
 
 system:

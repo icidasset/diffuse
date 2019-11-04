@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.0
+
+- Fixed issue with IPFS request timeout duration
+- IPFS DNSLink lookups are done through the IPFS gateway instead of Cloudflare.
+
 ## 2.1.0
 
 - **Added ability to cache an entire playlist** (for offline usage)

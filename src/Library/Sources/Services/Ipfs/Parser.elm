@@ -1,4 +1,4 @@
-module Sources.Services.Ipfs.Parser exposing (Link, linkDecoder, parseCloudflareDnsResult, parseErrorResponse, parseTreeResponse, treeDecoder)
+module Sources.Services.Ipfs.Parser exposing (Link, linkDecoder, parseDnsLookup, parseErrorResponse, parseTreeResponse, treeDecoder)
 
 import Dict
 import Json.Decode exposing (..)
@@ -13,19 +13,12 @@ import String.Ext as String
 -- PREPARATION
 
 
-parseCloudflareDnsResult : String -> SourceData -> Marker -> PrepationAnswer Marker
-parseCloudflareDnsResult response srcData _ =
+parseDnsLookup : String -> SourceData -> Marker -> PrepationAnswer Marker
+parseDnsLookup response srcData _ =
     case decodeString dnsResultDecoder response of
-        Ok txt ->
-            let
-                dirHash =
-                    txt
-                        |> String.chopEnd "\""
-                        |> String.chopStart "\""
-                        |> String.chopStart "dnslink=/ipfs/"
-            in
+        Ok hash ->
             srcData
-                |> Dict.insert "directoryHashFromDnsLink" dirHash
+                |> Dict.insert "directoryHashFromDnsLink" hash
                 |> (\s -> { sourceData = s, marker = TheEnd })
 
         Err _ ->
@@ -34,7 +27,23 @@ parseCloudflareDnsResult response srcData _ =
 
 dnsResultDecoder : Decoder String
 dnsResultDecoder =
-    at [ "Answer", "0", "data" ] string
+    oneOf
+        [ at [ "Path" ] string
+        , cloudflareDnsResultDecoder
+        ]
+
+
+cloudflareDnsResultDecoder : Decoder String
+cloudflareDnsResultDecoder =
+    string
+        |> at [ "Answer", "0", "data" ]
+        |> map
+            (\txt ->
+                txt
+                    |> String.chopEnd "\""
+                    |> String.chopStart "\""
+                    |> String.chopStart "dnslink=/ipfs/"
+            )
 
 
 

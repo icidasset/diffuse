@@ -29,11 +29,15 @@ import Time
 
 
 defaults =
-    { gateway = "http://127.0.0.1:8080"
+    { gateway = ""
     , local = boolToString False
     , name = "Music from IPFS"
     , ipns = boolToString False
     }
+
+
+defaultGateway =
+    "http://127.0.0.1:8080"
 
 
 {-| The list of properties we need from the user.
@@ -55,8 +59,8 @@ properties =
       , password = False
       }
     , { key = "gateway"
-      , label = "Gateway"
-      , placeholder = defaults.gateway
+      , label = "Gateway (Optional)"
+      , placeholder = defaultGateway
       , password = False
       }
     , { key = "local"
@@ -100,14 +104,13 @@ prepare _ srcData _ toMsg =
                 |> String.chopStart "https://"
                 |> String.chopEnd "/"
                 |> String.chopStart "_dnslink."
-                |> String.append "_dnslink."
     in
     case isDnsLink of
         Just True ->
             (Just << Http.request)
                 { method = "GET"
-                , headers = [ Http.header "Accept" "application/dns-json" ]
-                , url = "https://cloudflare-dns.com/dns-query?type=TXT&name=" ++ domainName
+                , headers = []
+                , url = extractGateway srcData ++ "/api/v0/dns?arg=" ++ domainName
                 , body = Http.emptyBody
                 , expect = Http.expectString toMsg
                 , timeout = Nothing
@@ -128,18 +131,7 @@ makeTree : SourceData -> Marker -> Time.Posix -> (Result Http.Error String -> ms
 makeTree srcData marker _ resultMsg =
     let
         gateway =
-            srcData
-                |> Dict.get "gateway"
-                |> Maybe.withDefault defaults.gateway
-                |> String.foldr
-                    (\char acc ->
-                        if String.isEmpty acc && char == '/' then
-                            acc
-
-                        else
-                            String.cons char acc
-                    )
-                    ""
+            extractGateway srcData
 
         resolveWithIpns =
             case marker of
@@ -184,7 +176,7 @@ makeTree srcData marker _ resultMsg =
             , url = gateway ++ "/api/v0/name/resolve?arg=" ++ hash ++ "&local=" ++ resolveLocally ++ "&encoding=json"
             , body = Http.emptyBody
             , resolver = Http.stringResolver ipnsResolver
-            , timeout = Just (60 * 15)
+            , timeout = Just (60 * 15 * 1000)
             }
 
      else
@@ -198,7 +190,7 @@ makeTree srcData marker _ resultMsg =
                     , url = gateway ++ "/api/v0/ls?arg=" ++ ipfsHash ++ "&encoding=json"
                     , body = Http.emptyBody
                     , resolver = Http.stringResolver Common.translateHttpResponse
-                    , timeout = Just (60 * 15)
+                    , timeout = Just (60 * 15 * 1000)
                     }
             )
         |> Task.attempt resultMsg
@@ -230,7 +222,7 @@ ipnsResolver response =
 -}
 parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse =
-    Parser.parseCloudflareDnsResult
+    Parser.parseDnsLookup
 
 
 parseTreeResponse : String -> Marker -> TreeAnswer Marker
@@ -268,19 +260,26 @@ We need this to play the track.
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl _ srcData _ hash =
-    let
-        gateway =
-            srcData
-                |> Dict.get "gateway"
-                |> Maybe.withDefault defaults.gateway
-                |> String.foldr
-                    (\char acc ->
-                        if String.isEmpty acc && char == '/' then
-                            acc
+    extractGateway srcData ++ "/ipfs/" ++ hash
 
-                        else
-                            String.cons char acc
-                    )
-                    ""
-    in
-    gateway ++ "/ipfs/" ++ hash
+
+
+-- ⚗️
+
+
+extractGateway : SourceData -> String
+extractGateway srcData =
+    srcData
+        |> Dict.get "gateway"
+        |> Maybe.map String.trim
+        |> Maybe.andThen
+            (\s ->
+                case s of
+                    "" ->
+                        Nothing
+
+                    _ ->
+                        Just s
+            )
+        |> Maybe.map (String.chopEnd "/")
+        |> Maybe.withDefault defaultGateway

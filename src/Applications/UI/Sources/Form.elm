@@ -583,13 +583,10 @@ note service =
 
         Ipfs ->
             howNote
-                [ inline [ T.fw6 ] [ text "This is using the default gateway address." ]
+                [ inline [ T.fw6 ] [ text "Diffuse will try to use the default local gateway" ]
+                , text "."
                 , lineBreak
-                , text " If you use a different gateway, please change it here."
-                , lineBreak
-                , text " You can find your gateway address on the IPFS Web UI."
-                , lineBreak
-                , text "DNSLinks are resolved through Cloudflare."
+                , text "If you would like to use another gateway, please provide it below."
                 ]
 
         WebDav ->
