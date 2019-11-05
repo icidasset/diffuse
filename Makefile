@@ -140,7 +140,7 @@ doc-tests:
 	@echo "> Running documentation tests"
 	@( cd src && \
 		find . -name "*.elm" -print0 | \
-		xargs -0 -n 1 sh -c 'elm-proofread -- $0 || exit 255; echo "\n\n"'
+		xargs -0 -n 1 -I % sh -c 'elm-proofread -- % || exit 255; echo "\n\n"' \
 	)
 
 
