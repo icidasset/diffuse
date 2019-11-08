@@ -64,6 +64,9 @@ elm-prod:
 js: vendor-js
 	@echo "> Compiling Javascript code"
 
+	@# ...
+	@cp $(NPM_DIR)/subworkers/subworkers.js $(BUILD_DIR)/subworkers.js
+
 	@# Main builds
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/index.js \
@@ -73,23 +76,29 @@ js: vendor-js
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/Brain/index.js \
 		--mode none \
+		--target webworker \
 		--output $(BUILD_DIR)/brain.js
 
-	@# Additional builds
+	@# Workers
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/Workers/search.js \
 		--mode none \
+		--target webworker \
 		--output $(BUILD_DIR)/search.js
 
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/Workers/service.js \
 		--mode none \
+		--target webworker \
 		--output $(BUILD_DIR)/service-worker.js
 
 
 js-prod: vendor-js
 	@echo "> Compiling Javascript code (optimized)"
 
+	@# ...
+	@cp $(NPM_DIR)/subworkers/subworkers.js $(BUILD_DIR)/subworkers.js
+
 	@# Main builds
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/index.js \
@@ -99,17 +108,20 @@ js-prod: vendor-js
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/Brain/index.js \
 		--mode production \
+		--target webworker \
 		--output $(BUILD_DIR)/brain.js
 
-	@# Additional builds
+	@# Workers
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/Workers/search.js \
 		--mode production \
+		--target webworker \
 		--output $(BUILD_DIR)/search.js
 
 	@$(NPM_DIR)/.bin/webpack-cli \
 		--entry ./src/Javascript/Workers/service.js \
 		--mode production \
+		--target webworker \
 		--output $(BUILD_DIR)/service-worker.js
 
 

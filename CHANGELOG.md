@@ -1,8 +1,9 @@
 # Changelog
 
-## 2.2.0
+## 2.1.1
 
 - Fixed issue with IPFS request timeout duration
+- Fixed issue with Safari (ie. nested web workers)
 - IPFS DNSLink lookups are done through the IPFS gateway instead of Cloudflare.
 
 ## 2.1.0

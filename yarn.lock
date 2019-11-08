@@ -1396,10 +1396,10 @@ file-entry-cache@^5.0.1:
   dependencies:
     flat-cache "^2.0.1"
 
-file-type@^12.1.0:
-  version "12.3.1"
-  resolved "https://registry.yarnpkg.com/file-type/-/file-type-12.3.1.tgz#8a13bb49332295e5b02c2d6bba6a6a179bd5898c"
-  integrity sha512-FXxY5h6vSYMjrRal4YqbtfuoKD/oE0AMjJ7E5Hm+BdaQECcFVD03B41RAWYJ7wyuLr/wRnCtFo7y37l+nh+TAA==
+file-type@^12.4.0:
+  version "12.4.0"
+  resolved "https://registry.yarnpkg.com/file-type/-/file-type-12.4.0.tgz#a9a399459e1940d9f34b3973039958f1f36a565e"
+  integrity sha512-WTvyKq8yjtNmUtVAD8LGcTkvtCdJglM6ks2HTqEClm6+65XTqM6MoZYA1Vtra50DLRWLiM38fEs1y56f5VhnUA==
 
 fill-range@^4.0.0:
   version "4.0.0"
@@ -2485,31 +2485,31 @@ ms@^2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-music-metadata-browser@^1.6.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/music-metadata-browser/-/music-metadata-browser-1.6.0.tgz#1844222f3a5fc841fa46af44b46f248bc5ff613d"
-  integrity sha512-ylatZ0i/IbvJYZ4mCAaC1mYnqYL/CWDNrPjT/gi9QW/+CBEn4/AyNyabs7fD0/WBrwkA8yb2WQDMrWKWKL2ung==
+music-metadata-browser@^1.6.3:
+  version "1.6.3"
+  resolved "https://registry.yarnpkg.com/music-metadata-browser/-/music-metadata-browser-1.6.3.tgz#52d8eda380d6ddfc9d15f331b3cceb90992dcd58"
+  integrity sha512-lnWeTosMllaSAGrgx63P29t1QWbuCmpa8lzUR1j1iNxT+TQ0lSRqpswmGr0o9lCRs4FD5M9Tf9UYtAj2QDazwA==
   dependencies:
     assert "^2.0.0"
     buffer "^5.2.1"
     debug "^4.0.1"
-    music-metadata "^4.8.0"
+    music-metadata "^4.8.4"
     readable-stream "^3.3.0"
-    readable-web-to-node-stream "^1.1.4"
+    readable-web-to-node-stream "^2.0.0"
     remove "^0.1.5"
     typedarray-to-buffer "^3.1.5"
 
-music-metadata@^4.8.0:
-  version "4.8.2"
-  resolved "https://registry.yarnpkg.com/music-metadata/-/music-metadata-4.8.2.tgz#4070a1e41203087063e6f797f8e89b881936a150"
-  integrity sha512-8Z/tqNRY8O35+bkYd5yAzKBEqkL/mZdWcwyYJ2o7rMpHoAYNASOI/cUGKAKip7biweYuzNEUh709zpvS3yQsHw==
+music-metadata@^4.8.4:
+  version "4.8.4"
+  resolved "https://registry.yarnpkg.com/music-metadata/-/music-metadata-4.8.4.tgz#e4d1dd285b47ce6dde2388509f85c2f13f8672d5"
+  integrity sha512-Di6EVUG7BT/acgr7U+b2U89DtzQRLOV5LvjsnPzY0riqEDqio3lCJ15QNDoG7dQfT5bV0VL/ocLk7tUeh9fubA==
   dependencies:
     content-type "^1.0.4"
     debug "^4.1.0"
-    file-type "^12.1.0"
+    file-type "^12.4.0"
     media-typer "^1.1.0"
-    strtok3 "^3.0.4"
-    token-types "^1.0.4"
+    strtok3 "^3.0.6"
+    token-types "^1.1.0"
 
 mustache@^3.0.1:
   version "3.1.0"
@@ -3106,10 +3106,10 @@ readable-stream@^3.3.0:
     string_decoder "^1.1.1"
     util-deprecate "^1.0.1"
 
-readable-web-to-node-stream@^1.1.4:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/readable-web-to-node-stream/-/readable-web-to-node-stream-1.1.4.tgz#5857d32fb9f791d1c4ca3c297ff028acb41218c6"
-  integrity sha512-DfwzynATtPmyLSMETPMlgVAB4b/0NNPePAEFEjSzw8VkqUZfx75gjNkaSqa0fP6iul2TL+jheLn2np0SWtW4iw==
+readable-web-to-node-stream@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/readable-web-to-node-stream/-/readable-web-to-node-stream-2.0.0.tgz#751e632f466552ac0d5c440cc01470352f93c4b7"
+  integrity sha512-+oZJurc4hXpaaqsN68GoZGQAQIA3qr09Or4fqEsargABnbe5Aau8hFn6ISVleT3cpY/0n/8drn7huyyEvTbghA==
 
 readdirp@^2.2.1:
   version "2.2.1"
@@ -3569,10 +3569,10 @@ stream-shift@^1.0.0:
   resolved "https://registry.yarnpkg.com/stream-shift/-/stream-shift-1.0.0.tgz#d5c752825e5367e786f78e18e445ea223a155952"
   integrity sha1-1cdSgl5TZ+eG944Y5EXqIjoVWVI=
 
-streaming-http-token-reader@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/streaming-http-token-reader/-/streaming-http-token-reader-0.3.0.tgz#bea08cd4aa2a7c669f9fae3ff2f698b39226b56c"
-  integrity sha512-9Tr/dElmMBAQIn5KLtCnCjfIEOIyOQSffkGYA21JR8j+lNfr/JIPmj6MBhnoBq3RwPqj2F8nGk/8UROtn28Jmg==
+streaming-http-token-reader@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/streaming-http-token-reader/-/streaming-http-token-reader-0.3.1.tgz#fab384060fb214d7ffa70f00a4c669413695370f"
+  integrity sha512-8HLGXNvGvGWgwACaHXbj5DSPCItXn9rbXkzz6q3uDYTjjx1lqhCGKttHUC8iqDFPY7U2FcpXh3A4WKr6EiXntg==
   dependencies:
     debug "^4.1.1"
     node-fetch "^2.6.0"
@@ -3688,6 +3688,15 @@ strtok3@^3.0.4:
     then-read-stream "^2.0.7"
     token-types "^1.0.4"
 
+strtok3@^3.0.6:
+  version "3.0.6"
+  resolved "https://registry.yarnpkg.com/strtok3/-/strtok3-3.0.6.tgz#b75ad4bd00146b8bc56507266cc08df0a02b4fec"
+  integrity sha512-suDDUDB4vP0YN6xuPGDY3DZAITzzNc2kNZ+TSshi5UsD6lc/XgRAx6bdN8DD67382lxdgBNFfzLUmpRGqr5EuA==
+  dependencies:
+    debug "^4.1.1"
+    then-read-stream "^2.0.8"
+    token-types "^1.1.0"
+
 subworkers@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/subworkers/-/subworkers-1.0.1.tgz#38d35968c0cece0ae1c2b4492325ac27e10ef8b3"
@@ -3781,6 +3790,11 @@ then-read-stream@^2.0.7:
   resolved "https://registry.yarnpkg.com/then-read-stream/-/then-read-stream-2.0.7.tgz#23ee72659ae27ab8d986a68cc6059e3a688b79e3"
   integrity sha512-UhIYV6kjtqlnmb/3Pzk4U5c27Bx45XQgLhgKRkMRO/uFR2V9YN25zvXFh5Qzu5lGJul4fSHQI74Sw96wFB6ZpA==
 
+then-read-stream@^2.0.8:
+  version "2.0.8"
+  resolved "https://registry.yarnpkg.com/then-read-stream/-/then-read-stream-2.0.8.tgz#1d2c29e46af1327101875abef183e43313876c1b"
+  integrity sha512-OIQn3/zF2J/gp6mAQTbBb1AR+3yoSRqjaij0gGnEUcTl93T840mWIZ9sJWwubjwP7VUDwJpT+Tdl7T9RrQmMlw==
+
 through2@^2.0.0:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/through2/-/through2-2.0.5.tgz#01c1e39eb31d07cb7d03a96a70823260b23132cd"
@@ -3847,6 +3861,11 @@ token-types@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/token-types/-/token-types-1.0.4.tgz#954d935616e4c5c01c94d4953ff10fd4f21d6177"
   integrity sha512-Qhg+62OTm+ip8f6Ko1ylxas2G0ailgvIsHk0gvTmNWDNdQfcN30niH5MoRcVbKdHrHpiWhY159FBUiZkaNzh1w==
+
+token-types@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/token-types/-/token-types-1.1.0.tgz#8bf60f633583089a8653005bdff96020e44f947e"
+  integrity sha512-CgM5GmtJaZ+uTOiZHzs9pwUa/udjEVl/cxQ2KGpl88Hh7k71sdBz9j95dYjx83O68B6CGvefm29l4rBZq1PeuQ==
 
 tough-cookie@^2.3.3:
   version "2.5.0"
@@ -4075,10 +4094,10 @@ webfinger.js@^2.7.0:
   dependencies:
     xhr2 "^0.1.4"
 
-webpack-cli@^3.3.9:
-  version "3.3.9"
-  resolved "https://registry.yarnpkg.com/webpack-cli/-/webpack-cli-3.3.9.tgz#79c27e71f94b7fe324d594ab64a8e396b9daa91a"
-  integrity sha512-xwnSxWl8nZtBl/AFJCOn9pG7s5CYUYdZxmmukv+fAHLcBIHM36dImfpQg3WfShZXeArkWlf6QRw24Klcsv8a5A==
+webpack-cli@^3.3.10:
+  version "3.3.10"
+  resolved "https://registry.yarnpkg.com/webpack-cli/-/webpack-cli-3.3.10.tgz#17b279267e9b4fb549023fae170da8e6e766da13"
+  integrity sha512-u1dgND9+MXaEt74sJR4PR7qkPxXUSQ0RXYq8x1L6Jg1MYVEmGPrH6Ah6C4arD4r0J1P5HKjRqpab36k0eIzPqg==
   dependencies:
     chalk "2.4.2"
     cross-spawn "6.0.5"

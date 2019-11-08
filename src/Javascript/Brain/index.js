@@ -5,8 +5,6 @@
 // This worker is responsible for everything non-UI.
 
 
-import "subworkers"
-
 import * as db from "../indexed-db"
 import * as processing from "../processing"
 import * as user from "./user"
@@ -15,6 +13,7 @@ import { fromCache, removeCache, reportError } from "./common"
 import { sendData, storageCallback, toCache } from "./common"
 
 importScripts("brain.elm.js")
+importScripts("subworkers.js")
 
 
 // 🍱

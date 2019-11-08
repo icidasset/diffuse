@@ -5,7 +5,7 @@
 // The bit where we launch the Elm app,
 // and connect the other bits to it.
 
-import "subworkers"
+
 import "tocca"
 
 import "../../build/vendor/pep"
