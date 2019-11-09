@@ -84,7 +84,7 @@ import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
-import Url exposing (Url)
+import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
 
@@ -965,9 +965,19 @@ translateReply reply model =
                     )
 
         PingIpfsForAuth ->
-            Authentication.PingIpfs
-                |> AuthenticationMsg
-                |> updateWithModel model
+            case model.url.protocol of
+                Https ->
+                    """
+                    Unfortunately the local IPFS API doesn't work with HTTPS.
+                    Install the [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion#release-channel) browser extension to get around this issue.
+                    """
+                        |> Notifications.error
+                        |> showNotificationWithModel model
+
+                Http ->
+                    Authentication.PingIpfs
+                        |> AuthenticationMsg
+                        |> updateWithModel model
 
         PingTextileForAuth ->
             Authentication.PingTextile

@@ -311,20 +311,20 @@ update msg model =
         -- IPFS
         -----------------------------------------
         PingIpfs ->
-            { url = "http://localhost:5001/api/v0/id"
+            { url = "//localhost:5001/api/v0/id"
             , expect = Http.expectWhatever PingIpfsCallback
             }
                 |> Http.get
                 |> returnCommandWithModel model
 
         PingIpfsCallback (Ok _) ->
-            { apiOrigin = "http://localhost:5001" }
+            { apiOrigin = "//localhost:5001" }
                 |> Ipfs
                 |> ShowNewEncryptionKeyScreen
                 |> updateWithModel model
 
         PingIpfsCallback (Err _) ->
-            { placeholder = "http://localhost:5001"
+            { placeholder = "//localhost:5001"
             , question = """
                 Where's your IPFS API located?<br />
                 <span class="fw4 white-60">
@@ -334,7 +334,7 @@ update msg model =
                     <a href="about#CORS__IPFS" target="_blank" class="bb color-inherit fw6 link">here</a>.
                 </span>
               """
-            , value = "http://localhost:5001"
+            , value = "//localhost:5001"
             }
                 |> AskForInput (Ipfs { apiOrigin = "" })
                 |> updateWithModel model
@@ -402,29 +402,30 @@ update msg model =
         -- Textile
         -----------------------------------------
         PingTextile ->
-            { url = "http://localhost:40600/api/v0/summary"
+            { url = "//localhost:40600/api/v0/summary"
             , expect = Http.expectWhatever PingTextileCallback
             }
                 |> Http.get
                 |> returnCommandWithModel model
 
         PingTextileCallback (Ok _) ->
-            { apiOrigin = "http://localhost:40600" }
+            { apiOrigin = "//localhost:40600" }
                 |> Textile
                 |> SignIn
                 |> updateWithModel model
 
         PingTextileCallback (Err _) ->
-            { placeholder = "http://localhost:40600"
+            { placeholder = "//localhost:40600"
             , question = """
                 Where's your Textile API located?<br />
                 <span class="fw4 white-60">
                     You might need to do some CORS configuration.<br />
                     You can find the instructions for that
-                    <a href="about#CORS__Textile" target="_blank" class="bb color-inherit fw6 link">here</a>.
+                    <a href="about#CORS__Textile" target="_blank" class="bb color-inherit fw6 link">here</a>.<br />
+                    You can't connect to a HTTP server while on HTTPS.
                 </span>
               """
-            , value = "http://localhost:40600"
+            , value = "//localhost:40600"
             }
                 |> AskForInput (Textile { apiOrigin = "" })
                 |> updateWithModel model
