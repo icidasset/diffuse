@@ -4,18 +4,20 @@
 @font-face {
   font-family: "Hack";
   src: url("fonts/hack/regular-subset.woff2") format("woff2");
-       font-weight: 400;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Hack";
   src: url("fonts/hack/bold-subset.woff2") format("woff2");
-       font-weight: 700;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
@@ -26,81 +28,90 @@
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/light.woff2") format("woff2");
-       font-weight: 300;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/light-italic.woff2") format("woff2");
-       font-weight: 300;
-       font-stretch: normal;
-       font-style: italic;
+  font-weight: 300;
+  font-stretch: normal;
+  font-style: italic;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/regular.woff2") format("woff2");
-       font-weight: 400;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/italic.woff2") format("woff2");
-       font-weight: 400;
-       font-stretch: normal;
-       font-style: italic;
+  font-weight: 400;
+  font-stretch: normal;
+  font-style: italic;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/semibold.woff2") format("woff2");
-       font-weight: 600;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/semibold-italic.woff2") format("woff2");
-       font-weight: 600;
-       font-stretch: normal;
-       font-style: italic;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: italic;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/bold.woff2") format("woff2");
-       font-weight: 700;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/bold-italic.woff2") format("woff2");
-       font-weight: 700;
-       font-stretch: normal;
-       font-style: italic;
+  font-weight: 700;
+  font-stretch: normal;
+  font-style: italic;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Source Sans Pro";
   src: url("fonts/sourcesanspro/black.woff2") format("woff2");
-       font-weight: 900;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 900;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
@@ -111,54 +122,60 @@
 @font-face {
   font-family: "Montserrat";
   src: url("fonts/montserrat/light.woff2") format("woff2");
-       font-weight: 300;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Montserrat";
   src: url("fonts/montserrat/regular.woff2") format("woff2");
-       font-weight: 400;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Montserrat";
   src: url("fonts/montserrat/medium.woff2") format("woff2");
-       font-weight: 500;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Montserrat";
   src: url("fonts/montserrat/semibold.woff2") format("woff2");
-       font-weight: 600;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Montserrat";
   src: url("fonts/montserrat/bold.woff2") format("woff2");
-       font-weight: 700;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: "Montserrat";
   src: url("fonts/montserrat/extrabold.woff2") format("woff2");
-       font-weight: 800;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 800;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
@@ -169,9 +186,10 @@
 @font-face {
   font-family: "Playfair Display";
   src: url("fonts/playfairdisplay/bold.woff2") format("woff2");
-       font-weight: 700;
-       font-stretch: normal;
-       font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 
