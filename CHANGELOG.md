@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.2
+
+- Fixed issue with WebDAV (the parser assumed tags in the form of `<D:` instead of allowing both upper and lower case)
+- No longer listens to the `stalled` audio event (the behavior for this event is not consistent across browsers)
+- Shows warning for IPFS MFS auth when using HTTPS
+
 ## 2.1.1
 
 - Fixed issue with IPFS request timeout duration
