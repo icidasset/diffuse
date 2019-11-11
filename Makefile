@@ -3,9 +3,10 @@
 
 # Variables
 
+BUILD_DIR=./build
 NPM_DIR=./node_modules
 SRC_DIR=./src
-BUILD_DIR=./build
+SYSTEM_DIR=./system
 
 
 # Default task
@@ -21,7 +22,7 @@ build: clean css elm js system
 	@echo "> Build completed ⚡"
 
 
-build-prod: quality clean css elm-prod js-prod system
+build-prod: quality clean css-prod elm-prod js-prod system
 	@echo "> Production build completed 🛳"
 
 
@@ -31,9 +32,21 @@ clean:
 
 
 css:
-	@echo "> Copying CSS dependencies"
-	@mkdir -p $(BUILD_DIR)/vendor
-	@cp $(NPM_DIR)/tachyons/css/tachyons.min.css $(BUILD_DIR)/vendor/tachyons.min.css
+	@echo "> Compiling CSS"
+	@$(NPM_DIR)/.bin/postcss \
+		"${SRC_DIR}/Static/Css/Application.css" \
+		--output "${BUILD_DIR}/application.css" \
+		--config "${SYSTEM_DIR}/Css/Post.js"
+
+
+css-prod: css
+	@echo "> Optimizing CSS"
+	@$(NPM_DIR)/.bin/purgecss \
+		--config $(SYSTEM_DIR)/Css/Purge.js \
+		--out $(BUILD_DIR)
+	@$(NPM_DIR)/.bin/csso \
+		"${BUILD_DIR}/application.css" \
+		--output "${BUILD_DIR}/application.css"
 
 
 elm:

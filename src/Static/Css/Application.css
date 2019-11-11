@@ -1,19 +1,49 @@
+@charset "UTF-8";
+
+
+/* Tailwind
+   -------- */
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+
+
+/* Base
+   ---- */
+
 html, body {
   height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
   overscroll-behavior: none;
 }
 
+
 body {
+  @apply text-base00 font-body px-5 pt-px;
+
   background-color: rgb(2, 7, 14);
   background-image: url(images/ep_naturalblack_pattern.jpg);
+  font-feature-settings: kern, liga;
+  min-width: 300px;
+  text-rendering: optimizeLegibility;
 }
 
 
 
-/***********
- * Loading *
- ***********/
+/* Dragging
+   -------- */
+
+.dragging-something {
+  cursor: grabbing;
+  & * { cursor: grabbing !important }
+}
+
+
+
+/* Loading
+   ------- */
 
 .loading-animation {
   animation: loading-rotator 2s linear infinite;

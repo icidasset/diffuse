@@ -4,12 +4,12 @@ import Alien
 import Base64
 import Binary
 import Chunky exposing (..)
-import Classes as C
 import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
+import Css.Classes as C
 import Css.Global
 import Html.Events.Extra.Mouse as Mouse
 import Html.Styled as Html exposing (Html, a, button, fromUnstyled, img, span, text)
@@ -470,17 +470,19 @@ hashPassphrase phrase =
 view : Model -> Html Msg
 view model =
     chunk
-        [ T.flex
-        , T.flex_column
-        , T.h_100
-        , T.items_center
+        [ C.flex
+        , C.flex_col
+        , C.h_full
+        , C.items_center
         ]
         [ brick
             [ style "height" "42%" ]
-            [ T.flex
-            , T.items_center
-            , T.pb4
-            , T.pb0_ns
+            [ C.flex
+            , C.items_center
+            , C.p_4
+
+            --
+            , C.md__pb_0
             ]
             [ chunk
                 [ T.pv3, T.relative ]
@@ -733,7 +735,7 @@ choicesScreen =
                 [ title "More options"
                 , Attributes.fromUnstyled (Mouse.onClick ShowMoreOptions)
                 ]
-                [ T.dib, T.ph1, T.pointer, C.lh_0 ]
+                [ T.dib, T.ph1, T.pointer, C.leading_none ]
                 [ chunk
                     [ C.pointer_events_none ]
                     [ fromUnstyled (Icons.more_horiz 22 Inherit) ]
@@ -804,7 +806,7 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
                     , target "_blank"
                     , title ("Learn more about " ++ label)
                     ]
-                    [ T.absolute, T.glow, C.lh_0, T.ml3, T.o_40, T.pl3, T.pointer, T.white ]
+                    [ T.absolute, T.glow, C.leading_none, T.ml3, T.o_40, T.pl3, T.pointer, T.white ]
                     [ fromUnstyled (Icons.help 17 Inherit) ]
 
             Nothing ->
@@ -851,7 +853,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             , T.pointer
             , T.white_50
             ]
-            [ inline [ T.dib, C.lh_0, T.mr2 ] [ fromUnstyled (Icons.warning 13 Inherit) ]
+            [ inline [ T.dib, C.leading_none, T.mr2 ] [ fromUnstyled (Icons.warning 13 Inherit) ]
             , text "Continue without encryption"
             ]
         ]

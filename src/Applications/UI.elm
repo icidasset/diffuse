@@ -1937,12 +1937,10 @@ body model =
          else
             []
         )
-        [ Css.Global.global globalCss
-
-        -----------------------------------------
-        -- Alfred
-        -----------------------------------------
-        , model.alfred
+        [ -----------------------------------------
+          -- Alfred
+          -----------------------------------------
+          model.alfred
             |> Lazy.lazy Alfred.view
             |> Html.map AlfredMsg
 
@@ -2183,78 +2181,6 @@ vessel =
             , T.w_100
             ]
         )
-
-
-
--- 🖼  ░░  GLOBAL
-
-
-globalCss : List Css.Global.Snippet
-globalCss =
-    [ -----------------------------------------
-      -- Body
-      -----------------------------------------
-      Css.Global.body
-        [ Css.color (Color.toElmCssColor UI.Kit.colors.text)
-        , Css.fontFamilies UI.Kit.defaultFontFamilies
-        , Css.minWidth (Css.px 300)
-        , Css.textRendering Css.optimizeLegibility
-
-        -- Font smoothing
-        -----------------
-        , Css.property "-webkit-font-smoothing" "antialiased"
-        , Css.property "-moz-osx-font-smoothing" "grayscale"
-        , Css.property "font-smoothing" "antialiased"
-
-        -- Font features
-        ----------------
-        , Css.property "-moz-font-feature-settings" "\"kern\", \"liga\""
-        , Css.property "font-feature-settings" "\"kern\", \"liga\""
-        ]
-
-    -----------------------------------------
-    -- Placeholders
-    -----------------------------------------
-    , Css.Global.selector "::-webkit-input-placeholder" placeholderStyles
-    , Css.Global.selector "::-moz-placeholder" placeholderStyles
-    , Css.Global.selector ":-ms-input-placeholder" placeholderStyles
-    , Css.Global.selector ":-moz-placeholder" placeholderStyles
-    , Css.Global.selector "::placeholder" placeholderStyles
-
-    -----------------------------------------
-    -- Bits & Pieces
-    -----------------------------------------
-    , Css.Global.selector ".bg-accent" [ backgroundColor UI.Kit.colorKit.accent ]
-    , Css.Global.selector ".bg-base-00" [ backgroundColor UI.Kit.colorKit.base00 ]
-    , Css.Global.selector ".bg-base-01" [ backgroundColor UI.Kit.colorKit.base01 ]
-    , Css.Global.selector ".bg-base-0D" [ backgroundColor UI.Kit.colorKit.base0D ]
-    , Css.Global.selector ".dragging-something" [ Css.cursor Css.grabbing ]
-    , Css.Global.selector ".dragging-something *" [ Css.important (Css.cursor Css.grabbing) ]
-    , Css.Global.selector ".grab-cursor" [ Css.cursor Css.grab ]
-    , Css.Global.selector ".lh-0" [ Css.lineHeight Css.zero ]
-    , Css.Global.selector ".pointer-events-none" [ Css.pointerEvents Css.none ]
-
-    --
-    , Css.Global.selector ".disable-selection"
-        [ Css.property "-webkit-touch-callout" "none"
-        , Css.property "-webkit-user-select" "none"
-        , Css.property "-moz-user-select" "none"
-        , Css.property "-ms-user-select" "none"
-        , Css.property "user-select" "none"
-        ]
-    ]
-
-
-backgroundColor : Color -> Css.Style
-backgroundColor =
-    Color.toElmCssColor >> Css.backgroundColor
-
-
-placeholderStyles : List Css.Style
-placeholderStyles =
-    [ Css.color (Css.rgb 0 0 0)
-    , Css.opacity (Css.num 0.225)
-    ]
 
 
 
