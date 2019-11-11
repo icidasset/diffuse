@@ -1,4 +1,4 @@
-module Sources.Services.WebDav.Parser exposing (parseErrorResponse, parseTreeResponse)
+module Sources.Services.WebDav.Parser exposing (..)
 
 import Maybe.Extra as Maybe
 import Sources.Processing exposing (Marker(..), TreeAnswer)
@@ -20,7 +20,9 @@ parseTreeResponse response previousMarker =
 
         entries =
             response
-                |> run treeDecoder
+                |> String.replace "<d:" "<D:"
+                |> String.replace "</d:" "</D:"
+                |> decodeString treeDecoder
                 |> Result.withDefault []
                 |> List.map Url.percentDecode
                 |> Maybe.values
@@ -40,7 +42,7 @@ parseTreeResponse response previousMarker =
 
 treeDecoder : Decoder (List String)
 treeDecoder =
-    path [ "D:response" ] (leakyList treeItemDecoder)
+    path [ "D:response" ] (list treeItemDecoder)
 
 
 treeItemDecoder : Decoder String
