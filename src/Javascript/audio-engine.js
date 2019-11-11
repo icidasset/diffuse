@@ -154,8 +154,7 @@ export function insertTrack(orchestrion, queueItem) {
   orchestrion.app.ports.setAudioHasStalled.send(false)
   orchestrion.app.ports.setAudioPosition.send(0)
   clearTimeout(orchestrion.unstallTimeout)
-  didShowNetworkError = false
-  timesStalled = 0
+  timesStalled = 1
 
   // resume audio context if it's suspended
   if (context.resume && context.state !== "running") {
@@ -230,20 +229,18 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
 
   audio = new Audio()
   audio.setAttribute("crossorigin", "anonymous")
-  audio.setAttribute("preload", SINGLE_AUDIO_NODE ? "none" : "auto")
-  audio.setAttribute("src", queueItem.url)
-  audio.setAttribute("rel", queueItem.trackId)
-  audio.setAttribute("data-timestamp", timestampInMilliseconds)
   audio.setAttribute("data-preload", isPreload ? "t" : "f")
+  audio.setAttribute("data-timestamp", timestampInMilliseconds)
+  audio.setAttribute("preload", SINGLE_AUDIO_NODE ? "none" : "auto")
+  audio.setAttribute("rel", queueItem.trackId)
+  audio.setAttribute("src", queueItem.url)
 
   audio.crossorigin = "anonymous"
   audio.volume = 1
 
-  audio.addEventListener("error", bind(audioErrorEvent))
-  audio.addEventListener("stalled", bind(audioStalledEvent))
-
   audio.addEventListener("canplay", bind(audioCanPlayEvent))
   audio.addEventListener("ended", bind(audioEndEvent))
+  audio.addEventListener("error", bind(audioErrorEvent))
   audio.addEventListener("loadstart", bind(audioLoading))
   audio.addEventListener("loadeddata", bind(audioLoaded))
   audio.addEventListener("pause", bind(audioPauseEvent))
@@ -282,8 +279,7 @@ export function preloadAudioElement(orchestrion, queueItem) {
 // Audio events
 // ------------
 
-let didShowNetworkError = false
-let timesStalled = 0
+let timesStalled = 1
 
 
 function audioErrorEvent(event) {
@@ -296,6 +292,7 @@ function audioErrorEvent(event) {
     case event.target.error.MEDIA_ERR_NETWORK:
       console.error("A network error caused the audio download to fail.")
       showNetworkErrorNotificationIfNeeded.call(this)
+      audioStalledEvent.call(this, event)
       break
     case event.target.error.MEDIA_ERR_DECODE:
       console.error("The audio playback was aborted due to a corruption problem or because the video used features your browser did not support.")
@@ -312,9 +309,6 @@ function audioErrorEvent(event) {
 
 
     function showNetworkErrorNotificationIfNeeded() {
-      if (didShowNetworkError) return
-      didShowNetworkError = true
-
       this.app.ports.showErrorNotification.send(
         navigator.onLine
           ? "I can't play this track because of a network error. I'll try to reconnect."
@@ -439,6 +433,19 @@ function isActiveAudioElement(orchestrion, node) {
   )
   ? false
   : orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
+}
+
+
+function mimeType(fileExtension) {
+  switch (fileExtension) {
+    case ".mp3": return "audio/mpeg";
+    case ".mp4": return "audio/mp4";
+    case ".m4a": return "audio/mp4";
+    case ".flac": return "audio/flac";
+    case ".ogg": return "audio/ogg";
+    case ".wav": return "audio/wave";
+    case ".webm": return "audio/webm";
+  }
 }
 
 
