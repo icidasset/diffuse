@@ -8,6 +8,8 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@import "Fonts.css";
+
 
 
 /* Base
@@ -28,6 +30,11 @@ body {
   font-feature-settings: kern, liga;
   min-width: 300px;
   text-rendering: optimizeLegibility;
+}
+
+
+.text-white-60 {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 

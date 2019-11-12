@@ -196,21 +196,20 @@ watch: build
 
 watch-wo-build:
 	@echo "> Watching"
-	@make -j watch-elm watch-js watch-system
+	@make -j watch-css watch-elm watch-js watch-system
+
+
+watch-css:
+	@watchexec -p -w $(SRC_DIR) -e css -- make css
 
 
 watch-elm:
-	@watchexec -p \
-		-w $(SRC_DIR)/Applications \
-		-w $(SRC_DIR)/Library \
-		-- make elm
+	@watchexec -p -w $(SRC_DIR) -e elm -- make elm
 
 
 watch-js:
-	@watchexec -p \
-		-w $(SRC_DIR)/Javascript \
-		-- make js
+	@watchexec -p -w $(SRC_DIR) -e js -- make js
 
 
 watch-system:
-	@watchexec -p --ignore *.elm --ignore *.js -- make system
+	@watchexec -p --ignore *.elm --ignore *.js --ignore *.css -- make system

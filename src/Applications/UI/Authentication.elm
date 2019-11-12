@@ -11,11 +11,11 @@ import Conditional exposing (..)
 import Css exposing (pct, px, solid, transparent)
 import Css.Classes as C
 import Css.Global
+import Html exposing (Html, a, button, img, span, text)
+import Html.Attributes exposing (attribute, href, placeholder, src, style, target, title, value, width)
+import Html.Events exposing (onClick, onSubmit)
+import Html.Events.Extra exposing (onClickStopPropagation)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, a, button, fromUnstyled, img, span, text)
-import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, target, title, value, width)
-import Html.Styled.Events exposing (onClick, onSubmit)
-import Html.Styled.Ext exposing (onClickStopPropagation)
 import Http
 import Json.Encode
 import Markdown
@@ -485,7 +485,7 @@ view model =
             , C.md__pb_0
             ]
             [ chunk
-                [ T.pv3, T.relative ]
+                [ C.py_4, C.relative ]
                 [ img
                     [ onClick Cancel
                     , src "images/diffuse-light.svg"
@@ -524,15 +524,13 @@ view model =
                                 , smartypants = True
                                 }
                                 []
-                            |> Html.fromUnstyled
-                            |> bricky [ css inputSpeechStyles ] []
                             |> speechBubble
 
                     NewEncryptionKeyScreen _ _ ->
                         [ text "I need a passphrase to encrypt your personal data."
                         , lineBreak
                         , inline
-                            [ T.fw4, T.white_60 ]
+                            [ C.font_normal, C.text_white_60 ]
                             [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
@@ -542,7 +540,7 @@ view model =
                         [ text "I need a new passphrase to encrypt your personal data."
                         , lineBreak
                         , inline
-                            [ T.fw4, T.white_60 ]
+                            [ C.font_normal, C.text_white_60 ]
                             [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
@@ -550,8 +548,8 @@ view model =
 
                     Welcome ->
                         [ text "Diffuse plays music"
-                        , inline [ T.fs_normal, T.fw4 ] [ text " ♫ " ]
-                        , inline [ T.fw4, T.white_60 ]
+                        , inline [ C.not_italic, C.font_normal, C.mr_px ] [ text " ♫ " ]
+                        , inline [ C.font_normal, C.text_white_60 ]
                             [ text "from your Dropbox,"
                             , lineBreak
                             , text "IPFS node, Amazon S3 bucket, or any other"
@@ -566,7 +564,7 @@ view model =
                         [ text "Where would you like to keep your personal data?"
                         , lineBreak
                         , inline
-                            [ T.fw4, T.white_60 ]
+                            [ C.font_normal, C.text_white_60 ]
                             [ text "That's things like your favourites, your playlists, etc."
                             , lineBreak
                             , text "After this you'll be able add some music ♫"
@@ -733,12 +731,12 @@ choicesScreen =
             [ slab
                 Html.span
                 [ title "More options"
-                , Attributes.fromUnstyled (Mouse.onClick ShowMoreOptions)
+                , Mouse.onClick ShowMoreOptions
                 ]
                 [ T.dib, T.ph1, T.pointer, C.leading_none ]
                 [ chunk
                     [ C.pointer_events_none ]
-                    [ fromUnstyled (Icons.more_horiz 22 Inherit) ]
+                    [ Icons.more_horiz 22 Inherit ]
                 ]
             ]
         ]
@@ -761,31 +759,28 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
           -----------------------------------------
           slab
             button
-            [ css (choiceButtonStyles { border = not isLast })
-            , onClick action
-            ]
-            [ T.b__none
-            , T.f6
-            , T.flex
-            , T.items_center
-            , T.lh_solid
-            , T.outline_0
-            , T.pointer
-            , T.pv3
-            , T.tl
+            [ onClick action ]
+            [ C.cursor_pointer
+            , C.flex
+            , C.items_center
+            , C.leading_none
+            , C.outline_none
+            , C.py_4
+            , C.text_left
+            , C.text_sm
             ]
             [ chunk
-                [ T.flex
-                , T.items_center
+                [ C.flex
+                , C.items_center
 
                 --
-                , ifThenElse outOfOrder T.o_20 T.o_100
+                , ifThenElse outOfOrder C.opacity_20 C.opacity_100
                 ]
                 [ slab
                     span
                     []
-                    [ T.inline_flex, T.mr3 ]
-                    [ fromUnstyled (icon 16 Inherit) ]
+                    [ C.inline_flex, C.mr_4 ]
+                    [ icon 16 Inherit ]
                 , text label
                 ]
             ]
@@ -807,7 +802,7 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
                     , title ("Learn more about " ++ label)
                     ]
                     [ T.absolute, T.glow, C.leading_none, T.ml3, T.o_40, T.pl3, T.pointer, T.white ]
-                    [ fromUnstyled (Icons.help 17 Inherit) ]
+                    [ Icons.help 17 Inherit ]
 
             Nothing ->
                 nothing
@@ -836,7 +831,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
 
             --
-            , Html.Styled.Events.onInput KeepPassphraseInMemory
+            , Html.Events.onInput KeepPassphraseInMemory
             ]
         , UI.Kit.button
             Filled
@@ -853,7 +848,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             , T.pointer
             , T.white_50
             ]
-            [ inline [ T.dib, C.leading_none, T.mr2 ] [ fromUnstyled (Icons.warning 13 Inherit) ]
+            [ inline [ T.dib, C.leading_none, T.mr2 ] [ Icons.warning 13 Inherit ]
             , text "Continue without encryption"
             ]
         ]
@@ -874,7 +869,7 @@ inputScreen question =
         [ UI.Kit.textFieldAlt
             [ attribute "autocapitalize" "off"
             , placeholder question.placeholder
-            , Html.Styled.Events.onInput Input
+            , Html.Events.onInput Input
             , value question.value
             ]
         , UI.Kit.button
@@ -890,26 +885,38 @@ inputScreen question =
 
 speechBubble : Html msg -> Html msg
 speechBubble contents =
-    brick
-        [ css speechBubbleStyles ]
-        [ T.absolute
-        , T.br2
-        , T.f6
-        , T.fw6
-        , T.i
-        , T.lh_copy
-        , T.nowrap
-        , T.ph3
-        , T.pv2
-        , T.tc
-        , T.white
+    chunk
+        [ C.absolute
+        , C.antialiased
+        , C.bg_background
+        , C.border_b
+        , C.border_transparent
+        , C.font_semibold
+        , C.italic
+        , C.leading_snug
+        , C.left_half_way
+        , C.neg_translate_x_half_way
+        , C.px_4
+        , C.py_2
+        , C.rounded
+        , C.text_center
+        , C.text_sm
+        , C.text_white
+        , C.top_full
+        , C.translate_put_on_top
+        , C.whitespace_no_wrap
         ]
         [ contents
 
         --
         , brick
-            [ css speechBubbleArrowStyles ]
-            [ T.absolute, T.top_0 ]
+            speechBubbleArrowStyles
+            [ C.absolute
+            , C.h_0
+            , C.left_half_way
+            , C.top_0
+            , C.w_0
+            ]
             []
         ]
 
@@ -929,30 +936,12 @@ choiceButtonStyles { border } =
     ]
 
 
-speechBubbleStyles : List Css.Style
-speechBubbleStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.background)
-    , Css.borderBottom3 (px 1) solid transparent
-    , Css.left (pct 50)
-    , Css.lineHeight (Css.num 1.4)
-    , Css.top (pct 100)
-    , Css.transform (Css.translateX <| pct -50)
-    ]
-
-
-speechBubbleArrowStyles : List Css.Style
+speechBubbleArrowStyles : List (Html.Attribute Msg)
 speechBubbleArrowStyles =
     let
         color =
             Color.toCssString UI.Kit.colors.background
     in
-    [ Css.height (px 0)
-    , Css.left (pct 50)
-    , Css.transform (Css.translate2 (pct -50) (pct -100))
-    , Css.width (px 0)
-
-    --
-    , Css.property "border-color" ("transparent transparent " ++ color ++ " transparent")
-    , Css.property "border-style" "solid"
-    , Css.property "border-width" "0 6px 5px 6px"
+    [ style "border-color" ("transparent transparent " ++ color ++ " transparent")
+    , style "border-width" "0 6px 5px 6px"
     ]

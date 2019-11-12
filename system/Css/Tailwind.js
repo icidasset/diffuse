@@ -1,3 +1,9 @@
+const defaultTheme = require("tailwindcss/defaultTheme")
+
+
+// Colors
+// ------
+
 const colors = {
   base00: "rgb(45, 45, 45)",
   base01: "rgb(63, 63, 63)",
@@ -20,7 +26,16 @@ const colors = {
 }
 
 
+
+// Config
+// ------
+
 module.exports = {
+
+  plugins: [
+    require("tailwindcss-transforms")(),
+  ],
+
   theme: {
 
     // Fonts
@@ -37,7 +52,11 @@ module.exports = {
     // ------
 
     colors: {
-      ...colors
+      ...defaultTheme.colors,
+      ...colors,
+
+      background: "rgb(2, 7, 14)",
+      inherit: "inherit",
     },
 
 
@@ -48,9 +67,51 @@ module.exports = {
       screens: {
         "dark": { "raw": "(prefers-color-scheme: dark)" }
       }
-    }
+    },
+
+
+    // Inset
+    // -----
+
+    inset: {
+      "0": 0,
+      "1/2": "50%",
+      "full": "100%",
+    },
+
+
+    // Opacity
+    // -------
+
+    opacity: {
+      '0': '0',
+      '10': '.1',
+      '20': '.2',
+      '30': '.3',
+      '40': '.4',
+      '50': '.5',
+      '60': '.6',
+      '70': '.7',
+      '80': '.8',
+      '90': '.9',
+      '100': '1'
+    },
+
+
+    // Transforms
+    // ----------
+
+    translate: {
+      "1/2": "50%",
+      "-1/2": "-50%",
+      "put-on-top": ["-50%", "-100%"],
+    },
+
+    transformOrigin: {},
+    perspectiveOrigin: {}
 
   },
+
   variants: {
 
     // Variants
@@ -59,4 +120,5 @@ module.exports = {
     margin: [ "first", "last", "responsive" ]
 
   }
+
 }

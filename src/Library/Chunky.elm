@@ -6,9 +6,8 @@ Convenience functions to build UIs with Tachyons.
 
 -}
 
-import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes
-import Tachyons
+import Html exposing (Html)
+import Html.Attributes exposing (class)
 
 
 
@@ -24,7 +23,10 @@ slab :
 slab typ attributes classes children =
     typ
         (List.append
-            [ Html.Styled.Attributes.fromUnstyled (Tachyons.classes classes) ]
+            [ classes
+                |> String.join " "
+                |> class
+            ]
             attributes
         )
         children
