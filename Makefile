@@ -42,7 +42,7 @@ css:
 css-prod: css
 	@echo "> Optimizing CSS"
 	@$(NPM_DIR)/.bin/purgecss \
-		--config $(SYSTEM_DIR)/Css/Purge.js \
+		--config $(SYSTEM_DIR)/Css/purgecss.config.js \
 		--out $(BUILD_DIR)
 	@$(NPM_DIR)/.bin/csso \
 		"${BUILD_DIR}/application.css" \

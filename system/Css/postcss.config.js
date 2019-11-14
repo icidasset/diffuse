@@ -8,6 +8,8 @@ const postcss = require("postcss")
 const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result) => {
 
   const functions = []
+  const lookup = {}
+
   let lastCls
 
   root.walkRules(rule => {
@@ -40,13 +42,16 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
       `${elmVariable} : String\n` +
       `${elmVariable} = "${cls}"\n`
     )
+
+    lookup[elmVariable] = cls
   })
 
   const header = "module Css.Classes exposing (..)\n\n"
   const contents = header + functions.join("\n\n")
+  const table = JSON.stringify(lookup)
 
   fs.writeFileSync("src/Library/Css/Classes.elm", contents)
-
+  fs.writeFileSync("build/css-table.json", table)
 })
 
 

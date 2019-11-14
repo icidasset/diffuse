@@ -250,43 +250,43 @@ canister children =
 canisterForm : List (Html msg) -> Html msg
 canisterForm children =
     chunk
-        [ T.measure, T.mh1, T.ph3, T.pb3, T.w_100 ]
+        [ T.measure, T.mh1, T.ph3, T.pb3, C.w_full ]
         children
 
 
 centeredContent : List (Html msg) -> Html msg
 centeredContent children =
     chunk
-        [ T.flex
-        , T.flex_grow_1
-        , T.overflow_hidden
-        , T.relative
+        [ C.flex
+        , C.flex_grow
+        , C.overflow_hidden
+        , C.relative
         ]
         [ Html.map never logoBackdrop
         , chunk
-            [ T.flex
-            , T.flex_column
-            , T.flex_grow_1
-            , T.items_center
-            , T.justify_center
-            , T.relative
-            , T.z_1
+            [ C.flex
+            , C.flex_col
+            , C.flex_grow
+            , C.items_center
+            , C.justify_center
             ]
             children
         ]
 
 
-checkbox : { checked : Bool, toggleMsg : msg } -> Html msg
-checkbox opts =
-    brick
-        [ css checkboxStyles, onClick opts.toggleMsg ]
-        [ T.dib, T.pointer, T.relative ]
-        [ if opts.checked then
-            Html.fromUnstyled (Icons.check_box 22 Inherit)
 
-          else
-            Html.fromUnstyled (Icons.check_box_outline_blank 22 Inherit)
-        ]
+--
+-- checkbox : { checked : Bool, toggleMsg : msg } -> Html msg
+-- checkbox opts =
+--     brick
+--         [ css checkboxStyles, onClick opts.toggleMsg ]
+--         [ C.inline_block, T.pointer, C.relative ]
+--         [ if opts.checked then
+--             Html.fromUnstyled (Icons.check_box 22 Inherit)
+--
+--           else
+--             Html.fromUnstyled (Icons.check_box_outline_blank 22 Inherit)
+--         ]
 
 
 h1 : String -> Html msg
@@ -296,13 +296,13 @@ h1 text =
         [ css h1Styles ]
         [ borderRadius
         , T.br__bottom
-        , T.dib
-        , T.fw6
-        , T.lh_title
+        , C.inline_block
+        , C.font_semibold
+        , C.leading_tight
         , T.ma0
         , T.ph2
         , T.pv1
-        , T.relative
+        , C.relative
         , T.ttu
         , T.white
         ]
@@ -316,8 +316,8 @@ h2 text =
         [ css headerFontStyles ]
         [ T.center
         , T.f3
-        , T.fw7
-        , T.lh_title
+        , C.font_bold
+        , C.leading_tight
         , T.mb4
         , T.mt3
         , T.tc
@@ -331,8 +331,8 @@ h3 text =
         Html.h2
         [ css headerFontStyles ]
         [ T.f4
-        , T.fw7
-        , T.lh_title
+        , C.font_bold
+        , C.leading_tight
         , T.mb4
         ]
         [ Html.text text ]
@@ -343,7 +343,7 @@ inlineIcon icon =
     slab
         Html.span
         [ css inlineIconStyles ]
-        [ T.dib, T.mr1 ]
+        [ C.inline_block, T.mr1 ]
         [ Html.fromUnstyled (icon 14 Inherit) ]
 
 
@@ -359,17 +359,19 @@ intro child =
         [ child ]
 
 
-label : List (Html.Attribute msg) -> String -> Html msg
-label attributes t =
-    slab
-        Html.label
-        (css labelStyles :: attributes)
-        [ T.db
-        , T.fw7
-        , T.o_90
-        , T.ttu
-        ]
-        [ Html.text t ]
+
+--
+-- label : List (Html.Attribute msg) -> String -> Html msg
+-- label attributes t =
+--     slab
+--         Html.label
+--         (css labelStyles :: attributes)
+--         [ C.block
+--         , C.font_bold
+--         , T.o_90
+--         , T.ttu
+--         ]
+--         [ Html.text t ]
 
 
 link : { label : String, url : String } -> Html msg
@@ -377,16 +379,19 @@ link params =
     slab
         Html.a
         [ css linkStyles, href params.url ]
-        [ T.color_inherit, C.no_underline ]
+        [ C.color_inherit, C.no_underline ]
         [ Html.text params.label ]
 
 
-logoBackdrop : Html Never
-logoBackdrop =
-    brick
-        [ css logoBackdropStyles ]
-        [ C.absolute, C.top_0, C.z_0 ]
-        []
+
+--
+-- logoBackdrop : Html Never
+-- logoBackdrop =
+--     brick
+--         [ css logoBackdropStyles ]
+--         [ C.absolute, C.top_0, C.z_0 ]
+--         []
+--
 
 
 receptacle : { scrolling : Bool } -> List (Html msg) -> Html msg
@@ -406,101 +411,100 @@ receptacle { scrolling } =
         ]
 
 
-select : (String -> msg) -> List (Html msg) -> Html msg
-select inputHandler options =
-    brick
-        [ css selectStyles.container ]
-        [ T.relative
-        , T.w_100
-        ]
-        [ slab
-            Html.select
-            [ css selectStyles.field, onInput inputHandler ]
-            [ T.bn
-            , T.bg_transparent
-            , T.br0
-            , T.db
-            , T.f5
-            , T.input_reset
-            , T.lh_copy
-            , T.ma0
-            , T.outline_0
-            , T.pv2
-            , T.ph0
-            , T.w_100
-            ]
-            options
-        , brick
-            [ css selectStyles.arrow ]
-            [ T.absolute, T.right_0 ]
-            [ Html.fromUnstyled <| Icons.keyboard_arrow_down 20 (Color colorKit.base05) ]
-        ]
 
-
-textArea : List (Html.Attribute msg) -> Html msg
-textArea attributes =
-    slab
-        Html.textarea
-        (css textAreaStyles :: attributes)
-        [ T.bn
-        , T.bg_white
-        , T.br2
-        , T.db
-        , T.f6
-        , T.lh_copy
-        , T.mb3
-        , T.pa3
-        , T.w_100
-        ]
-        []
-
-
-textButton : { label : String, onClick : msg } -> Html msg
-textButton params =
-    slab
-        Html.button
-        [ css linkStyles, onClick params.onClick ]
-        [ T.bg_transparent, T.color_inherit, T.bn, T.lh_title, T.ma0, T.pa0, T.pointer ]
-        [ Html.text params.label ]
-
-
-textField : List (Html.Attribute msg) -> Html msg
-textField attributes =
-    slab
-        Html.input
-        (css textFieldStyles :: attributes)
-        [ T.bn
-        , T.bg_transparent
-        , T.br0
-        , T.db
-        , T.f6
-        , T.lh_copy
-        , T.mt1
-        , T.pv2
-        , T.w_100
-        ]
-        []
-
-
-textFieldAlt : List (Html.Attribute msg) -> Html msg
-textFieldAlt attributes =
-    slab
-        Html.input
-        (css textFieldAltStyles :: attributes)
-        [ T.bn
-        , T.bg_white
-        , T.br2
-        , T.db
-        , T.f6
-        , T.lh_copy
-        , T.mb3
-        , T.pa3
-        , T.w_100
-        ]
-        []
-
-
-
+--
+-- select : (String -> msg) -> List (Html msg) -> Html msg
+-- select inputHandler options =
+--     brick
+--         [ css selectStyles.container ]
+--         [ C.relative
+--         , C.w_full
+--         ]
+--         [ slab
+--             Html.select
+--             [ css selectStyles.field, onInput inputHandler ]
+--             [ T.bn
+--             , C.bg_transparent
+--             , T.br0
+--             , C.block
+--             , T.f5
+--             , T.input_reset
+--             , C.leading_normal
+--             , T.ma0
+--             , T.outline_0
+--             , T.pv2
+--             , T.ph0
+--             , C.w_full
+--             ]
+--             options
+--         , brick
+--             [ css selectStyles.arrow ]
+--             [ T.absolute, T.right_0 ]
+--             [ Html.fromUnstyled <| Icons.keyboard_arrow_down 20 (Color colorKit.base05) ]
+--         ]
+--
+--
+-- textArea : List (Html.Attribute msg) -> Html msg
+-- textArea attributes =
+--     slab
+--         Html.textarea
+--         (css textAreaStyles :: attributes)
+--         [ T.bn
+--         , C.bg_white
+--         , T.br2
+--         , C.block
+--         , T.f6
+--         , C.leading_normal
+--         , T.mb3
+--         , T.pa3
+--         , C.w_full
+--         ]
+--         []
+--
+--
+-- textButton : { label : String, onClick : msg } -> Html msg
+-- textButton params =
+--     slab
+--         Html.button
+--         [ css linkStyles, onClick params.onClick ]
+--         [ C.bg_transparent, C.color_inherit, T.bn, C.leading_tight, T.ma0, T.pa0, T.pointer ]
+--         [ Html.text params.label ]
+--
+--
+-- textField : List (Html.Attribute msg) -> Html msg
+-- textField attributes =
+--     slab
+--         Html.input
+--         (css textFieldStyles :: attributes)
+--         [ T.bn
+--         , C.bg_transparent
+--         , T.br0
+--         , C.block
+--         , T.f6
+--         , C.leading_normal
+--         , T.mt1
+--         , T.pv2
+--         , C.w_full
+--         ]
+--         []
+--
+--
+-- textFieldAlt : List (Html.Attribute msg) -> Html msg
+-- textFieldAlt attributes =
+--     slab
+--         Html.input
+--         (css textFieldAltStyles :: attributes)
+--         [ T.bn
+--         , C.bg_white
+--         , T.br2
+--         , C.block
+--         , T.f6
+--         , C.leading_normal
+--         , T.mb3
+--         , T.pa3
+--         , C.w_full
+--         ]
+--         []
 -----------------------------------------
 -- ㊙️
 -----------------------------------------
