@@ -5,9 +5,9 @@ import Common exposing (boolFromString, boolToString)
 import Conditional exposing (..)
 import Dict
 import Dict.Ext as Dict
-import Html.Styled as Html exposing (Html, strong, text)
-import Html.Styled.Attributes exposing (for, name, placeholder, required, selected, type_, value)
-import Html.Styled.Events exposing (onInput, onSubmit)
+import Html exposing (Html, strong, text)
+import Html.Attributes exposing (for, name, placeholder, required, selected, type_, value)
+import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Alert as Icons
@@ -251,7 +251,7 @@ newWhere { onboarding } { context } =
             [ UI.Kit.button
                 IconOnly
                 Bypass
-                (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
+                (Icons.arrow_forward 17 Inherit)
             ]
         ]
     ]
@@ -314,7 +314,7 @@ newHow { context } =
             [ UI.Kit.button
                 IconOnly
                 Bypass
-                (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
+                (Icons.arrow_forward 17 Inherit)
             ]
         ]
     ]
@@ -489,45 +489,47 @@ edit { context } =
 
 renderProperty : Source -> Property -> Html Msg
 renderProperty context property =
-    chunk
-        [ T.mb4 ]
-        [ UI.Kit.label
-            [ for property.key ]
-            property.label
-
-        --
-        , if
-            (property.placeholder == boolToString True)
-                || (property.placeholder == boolToString False)
-          then
-            let
-                bool =
-                    context.data
-                        |> Dict.fetch property.key property.placeholder
-                        |> boolFromString
-            in
-            chunk
-                [ T.mt2, T.pt1 ]
-                [ UI.Kit.checkbox
-                    { checked = bool
-                    , toggleMsg =
-                        bool
-                            |> not
-                            |> boolToString
-                            |> SetData property.key
-                    }
-                ]
-
-          else
-            UI.Kit.textField
-                [ name property.key
-                , onInput (SetData property.key)
-                , placeholder property.placeholder
-                , required (property.label |> String.toLower |> String.contains "optional" |> not)
-                , type_ (ifThenElse property.password "password" "text")
-                , value (Dict.fetch property.key "" context.data)
-                ]
-        ]
+    -- TODO
+    -- chunk
+    --     [ T.mb4 ]
+    --     [ UI.Kit.label
+    --         [ for property.key ]
+    --         property.label
+    --
+    --     --
+    --     , if
+    --         (property.placeholder == boolToString True)
+    --             || (property.placeholder == boolToString False)
+    --       then
+    --         let
+    --             bool =
+    --                 context.data
+    --                     |> Dict.fetch property.key property.placeholder
+    --                     |> boolFromString
+    --         in
+    --         chunk
+    --             [ T.mt2, T.pt1 ]
+    --             [ UI.Kit.checkbox
+    --                 { checked = bool
+    --                 , toggleMsg =
+    --                     bool
+    --                         |> not
+    --                         |> boolToString
+    --                         |> SetData property.key
+    --                 }
+    --             ]
+    --
+    --       else
+    --         UI.Kit.textField
+    --             [ name property.key
+    --             , onInput (SetData property.key)
+    --             , placeholder property.placeholder
+    --             , required (property.label |> String.toLower |> String.contains "optional" |> not)
+    --             , type_ (ifThenElse property.password "password" "text")
+    --             , value (Dict.fetch property.key "" context.data)
+    --             ]
+    --     ]
+    nothing
 
 
 

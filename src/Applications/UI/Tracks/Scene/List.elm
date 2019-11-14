@@ -2,22 +2,19 @@ module UI.Tracks.Scene.List exposing (Model, Msg(..), containerId, initialModel,
 
 import Browser.Dom as Dom
 import Chunky exposing (..)
-import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Coordinates
 import Css
+import Css.Classes as C
 import Css.Media
 import Html exposing (Html, text)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (class, id, style, tabindex)
 import Html.Events
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled
-import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events
-import Html.Styled.Lazy
+import Html.Lazy
 import InfiniteList
 import Json.Decode as Decode
 import List.Ext as List
@@ -120,42 +117,44 @@ type alias DerivedColors =
     }
 
 
-view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe IdentifiedTrack -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
+view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe IdentifiedTrack -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html Msg
 view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
     brick
         ((::)
-            (Html.Styled.Attributes.tabindex (ifThenElse deps.isVisible 0 -1))
+            (tabindex (ifThenElse deps.isVisible 0 -1))
             viewAttributes
         )
-        [ C.disable_selection
-        , T.flex_grow_1
-        , T.outline_0
-        , T.overflow_x_hidden
-        , T.relative
-        , T.vh_25
+        [ C.flex_grow
+        , C.h_screen
+        , C.outline_none
+        , C.overflow_x_hidden
+        , C.relative
+        , C.select_none
+        , C.scrolling_touch
 
         --
         , case maybeDnD of
             Just dnd ->
                 if DnD.isDragging dnd then
-                    T.overflow_y_hidden
+                    C.overflow_y_hidden
 
                 else
-                    T.overflow_y_auto
+                    C.overflow_y_auto
 
             Nothing ->
-                T.overflow_y_auto
+                C.overflow_y_auto
         ]
         [ -- Shadow
           ---------
           brick
-            [ css shadowStyles ]
-            [ T.left_0, T.right_0, T.top_0, T.z_4 ]
+            []
+            -- TODO: [ css shadowStyles ]
+            [ C.left_0, C.right_0, C.top_0, C.z_10 ]
             []
 
         -- Header
         ---------
-        , Html.Styled.Lazy.lazy4
+        , Html.Lazy.lazy4
             header
             (Maybe.isJust maybeDnD)
             deps.showAlbum
@@ -164,7 +163,7 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
 
         -- List
         -------
-        , Html.Styled.Lazy.lazy7
+        , Html.Lazy.lazy7
             infiniteListView
             deps
             harvest
@@ -181,7 +180,7 @@ containerId =
     "diffuse__track-list"
 
 
-infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe IdentifiedTrack, List Int ) -> Maybe (DnD.Model Int) -> Html.Styled.Html Msg
+infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe IdentifiedTrack, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
 infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
     let
         color =
@@ -194,40 +193,38 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
             , subtle = Color.toCssString (Color.fadeOut 0.575 color)
             }
     in
-    Html.Styled.fromUnstyled
-        (InfiniteList.view
-            (InfiniteList.withCustomContainer
-                infiniteListContainer
-                (InfiniteList.config
-                    { itemView =
-                        case maybeDnD of
-                            Just dnd ->
-                                playlistItemView
-                                    favouritesOnly
-                                    nowPlaying
-                                    searchTerm
-                                    selectedTrackIndexes
-                                    dnd
-                                    deps.showAlbum
-                                    derivedColors
+    { itemView =
+        case maybeDnD of
+            Just dnd ->
+                playlistItemView
+                    favouritesOnly
+                    nowPlaying
+                    searchTerm
+                    selectedTrackIndexes
+                    dnd
+                    deps.showAlbum
+                    derivedColors
 
-                            _ ->
-                                defaultItemView
-                                    favouritesOnly
-                                    nowPlaying
-                                    selectedTrackIndexes
-                                    deps.showAlbum
-                                    derivedColors
+            _ ->
+                defaultItemView
+                    favouritesOnly
+                    nowPlaying
+                    selectedTrackIndexes
+                    deps.showAlbum
+                    derivedColors
 
-                    --
-                    , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
-                    , containerHeight = round deps.height
-                    }
-                )
-            )
-            infiniteList
-            harvest
-        )
+    --
+    , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
+    , containerHeight = round deps.height
+    }
+        |> InfiniteList.config
+        |> InfiniteList.withCustomContainer infiniteListContainer
+        |> (\config ->
+                InfiniteList.view
+                    config
+                    infiniteList
+                    harvest
+           )
 
 
 scrollToNowPlaying : List IdentifiedTrack -> IdentifiedTrack -> Cmd Msg
@@ -245,30 +242,27 @@ scrollToTop =
     Task.attempt (always Bypass) (Dom.setViewportOf containerId 0 0)
 
 
-viewAttributes : List (Html.Styled.Attribute Msg)
+viewAttributes : List (Html.Attribute Msg)
 viewAttributes =
-    [ Html.Styled.Attributes.css viewStyles
-    , Html.Styled.Attributes.fromUnstyled (InfiniteList.onScroll InfiniteListMsg)
-    , Html.Styled.Attributes.id containerId
-    , Html.Styled.Attributes.style "-webkit-overflow-scrolling" "touch"
-    , Html.Styled.Attributes.style "overscroll-behavior" "none"
-    ]
-
-
-viewStyles : List Css.Style
-viewStyles =
-    [ Css.fontSize (Css.px 11.5)
-    , Css.Media.withMedia
-        [ UI.Css.notSmallMediaQuery ]
-        [ Css.fontSize (Css.px 12.5) ]
+    [ -- TODO: Html.Styled.Attributes.css viewStyles
+      InfiniteList.onScroll InfiniteListMsg
+    , id containerId
+    , style "overscroll-behavior" "none"
     ]
 
 
 
+-- viewStyles : List Css.Style
+-- viewStyles =
+--     [ Css.fontSize (Css.px 11.5)
+--     , Css.Media.withMedia
+--         [ UI.Css.notSmallMediaQuery ]
+--         [ Css.fontSize (Css.px 12.5) ]
+--     ]
 -- HEADERS
 
 
-header : Bool -> Bool -> SortBy -> SortDirection -> Html.Styled.Html Msg
+header : Bool -> Bool -> SortBy -> SortDirection -> Html Msg
 header isPlaylist showAlbum sortBy sortDirection =
     let
         sortIcon =
@@ -281,15 +275,13 @@ header isPlaylist showAlbum sortBy sortDirection =
                 15
                 Inherit
 
-        sortIconHtml =
-            Html.Styled.fromUnstyled sortIcon
-
         maybeSortIcon s =
-            ifThenElse (sortBy == s) (Just sortIconHtml) Nothing
+            ifThenElse (sortBy == s) (Just sortIcon) Nothing
     in
     brick
-        [ Html.Styled.Attributes.css headerStyles ]
-        [ T.bg_white, T.flex, T.fw6, T.relative, T.z_5 ]
+        []
+        -- TODO: [ Html.Styled.Attributes.css headerStyles ]
+        [ C.bg_white, C.flex, C.font_semibold, C.relative, C.z_20 ]
         (if isPlaylist && showAlbum then
             [ headerColumn "" 4.5 First Nothing Bypass
             , headerColumn "#" 4.5 Between Nothing Bypass
@@ -347,39 +339,43 @@ headerColumn :
     String
     -> Float
     -> Pos
-    -> Maybe (Html.Styled.Html msg)
+    -> Maybe (Html msg)
     -> msg
-    -> Html.Styled.Html msg
+    -> Html msg
 headerColumn text_ width pos maybeSortIcon msg =
     brick
-        [ Html.Styled.Events.onClick msg
-        , Html.Styled.Attributes.css
-            [ Css.borderLeft3
-                (Css.px <| ifThenElse (pos /= First) 1 0)
-                Css.solid
-                (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-            , Css.property "min-width" columnMinWidth
-            , Css.width (Css.pct width)
-            ]
+        [ Html.Events.onClick msg
+
+        -- TODO:
+        -- , Html.Styled.Attributes.css
+        --     [ Css.borderLeft3
+        --         (Css.px <| ifThenElse (pos /= First) 1 0)
+        --         Css.solid
+        --         (Color.toElmCssColor UI.Kit.colors.subtleBorder)
+        --     , Css.property "min-width" columnMinWidth
+        --     , Css.width (Css.pct width)
+        --     ]
         ]
-        [ T.lh_title
-        , T.pv1
-        , T.relative
+        [ C.leading_snug
+        , C.py_1
+        , C.relative
 
         --
-        , ifThenElse (pos == First) T.pl3 T.pl2
-        , ifThenElse (pos == Last) T.pr3 T.pr2
-        , ifThenElse (pos == First) "" T.pointer
+        , ifThenElse (pos == First) C.pl_3 C.pl_2
+        , ifThenElse (pos == Last) C.pr_3 C.pr_2
+        , ifThenElse (pos == First) "" C.cursor_pointer
         ]
         [ brick
-            [ Html.Styled.Attributes.css [ Css.top (Css.px 1) ] ]
-            [ T.relative ]
-            [ Html.Styled.text text_ ]
+            []
+            -- TODO: [ Html.Styled.Attributes.css [ Css.top (Css.px 1) ] ]
+            [ C.relative ]
+            [ Html.text text_ ]
         , case maybeSortIcon of
             Just sortIcon ->
                 brick
-                    [ Html.Styled.Attributes.css sortIconStyles ]
-                    [ T.absolute, T.mr1, T.right_0 ]
+                    []
+                    -- TODO: [ Html.Styled.Attributes.css sortIconStyles ]
+                    [ C.absolute, C.mr_1, C.right_0 ]
                     [ sortIcon ]
 
             Nothing ->
@@ -413,7 +409,10 @@ infiniteListContainer styles =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ Tachyons.classes [ T.pb1, T.pt1 ] ]
+    [ C.pb_1, C.pt_1 ]
+        |> String.join " "
+        |> class
+        |> List.singleton
 
 
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
@@ -489,12 +488,12 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
                     ]
 
                 --
-                , [ T.flex
-                  , T.items_center
+                , [ C.flex
+                  , C.items_center
 
                   --
-                  , ifThenElse identifiers.isMissing "" T.pointer
-                  , ifThenElse isSelected T.fw6 ""
+                  , ifThenElse identifiers.isMissing "" C.cursor_pointer
+                  , ifThenElse isSelected C.font_semibold ""
                   ]
                     |> Tachyons.classes
                     |> List.singleton
@@ -570,12 +569,12 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
                 ]
 
             --
-            , [ T.flex
-              , T.items_center
+            , [ C.flex
+              , C.items_center
 
               --
-              , ifThenElse identifiers.isMissing "" T.pointer
-              , ifThenElse isSelected T.fw6 ""
+              , ifThenElse identifiers.isMissing "" C.cursor_pointer
+              , ifThenElse isSelected C.font_semibold ""
               ]
                 |> Tachyons.classes
                 |> List.singleton
@@ -718,33 +717,34 @@ groupNode idx identifiers =
                 |> Maybe.withDefault "Unknown"
     in
     Html.div
-        ([ T.f7
-         , T.fw7
-         , T.lh_copy
-         , T.pb3
-         , T.ph3
-         , ifThenElse (0 == idx) T.pt3 T.pt4
-         , T.truncate
+        ([ C.text_xs
+         , C.font_bold
+         , C.leading_normal
+         , C.pb_3
+         , C.px_3
+         , ifThenElse (0 == idx) C.pt_3 C.pt_4
+         , C.truncate
          ]
             |> Tachyons.classes
             |> List.addTo groupStyles
         )
         [ groupIcon
-        , Html.span [ class T.v_mid ] [ text groupName ]
+        , Html.span [ class C.align_middle ] [ text groupName ]
         ]
 
 
 groupIcon : Html msg
 groupIcon =
     Html.span
-        [ Tachyons.classes [ T.dib, T.pr2, T.v_mid, C.lh_0 ] ]
+        [ Tachyons.classes [ C.align_middle, C.inline_block, C.pr_2, C.leading_0 ] ]
         [ Icons.library_music 16 Inherit ]
 
 
 groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ style "color" rowFontColors.grey
-    , style "font-family" (String.join ", " UI.Kit.headerFontFamilies)
+
+    -- Use class <<< , style "font-family" (String.join ", " UI.Kit.headerFontFamilies)
     , style "font-size" "11px"
     , style "letter-spacing" "0.005em"
     ]
@@ -800,7 +800,7 @@ favouriteColumn favouritesOnly identifiers derivedColors =
     Html.div
         ((++)
             [ Html.Events.onClick (Reply <| ToggleFavourite identifiers.indexInList)
-            , Tachyons.classes [ T.flex_shrink_0, T.fw4, T.pl3 ]
+            , Tachyons.classes [ C.flex_shrink_0, C.font_normal, C.pl_3 ]
             ]
             (favouriteColumnStyles favouritesOnly identifiers derivedColors)
         )
@@ -837,10 +837,10 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } d
 
 playlistIndexColumn : Int -> Html msg
 playlistIndexColumn indexInPlaylist =
-    [ T.pl2
-    , T.pr2
+    [ C.pl_2
+    , C.pr_2
     , C.pointer_events_none
-    , T.truncate
+    , C.truncate
     ]
         |> Tachyons.classes
         |> List.addTo (otherColumnStyles "4.5%")
@@ -853,12 +853,12 @@ playlistIndexColumn indexInPlaylist =
 
 otherColumn : String -> Bool -> String -> Html msg
 otherColumn width isLast text_ =
-    [ T.pl2
+    [ C.pl_2
     , C.pointer_events_none
-    , T.truncate
+    , C.truncate
 
     --
-    , ifThenElse isLast T.pr3 T.pr2
+    , ifThenElse isLast C.pr_3 C.pr_2
     ]
         |> Tachyons.classes
         |> List.addTo (otherColumnStyles width)

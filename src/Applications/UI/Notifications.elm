@@ -1,15 +1,15 @@
 module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
 import Chunky exposing (..)
-import Classes as C
 import Color.Ext as Color
 import Css
+import Css.Classes as C
 import Css.Global
-import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (css, rel)
-import Html.Styled.Events exposing (onDoubleClick)
-import Html.Styled.Ext exposing (onDoubleTap)
-import Html.Styled.Lazy
+import Html exposing (Html)
+import Html.Attributes exposing (rel)
+import Html.Events exposing (onDoubleClick)
+import Html.Ext exposing (onDoubleTap)
+import Html.Lazy
 import Notifications exposing (..)
 import Process
 import Tachyons.Classes as T
@@ -85,19 +85,20 @@ showWithModel model notification =
 view : Model -> Html Reply
 view collection =
     brick
-        [ css containerStyles ]
-        [ T.absolute
-        , T.bottom_0
+        -- TODO: [ css containerStyles ]
+        []
+        [ C.absolute
+        , C.bottom_0
         , T.f6
         , T.hide_child
-        , T.lh_title
-        , T.mb3
-        , T.mr3
-        , T.right_0
-        , T.z_9999
+        , C.leading_snug
+        , C.mb_3
+        , C.mr_3
+        , C.right_0
+        , C.z_50
         ]
         (List.map
-            (Html.Styled.Lazy.lazy notificationView)
+            (Html.Lazy.lazy notificationView)
             (List.reverse collection)
         )
 
@@ -118,18 +119,18 @@ notificationView notification =
             DismissNotification { id = id }
     in
     brick
-        [ case kind of
-            Error ->
-                css errorStyles
-
-            Success ->
-                css successStyles
-
-            Warning ->
-                css warningStyles
-
+        -- [ case kind of
+        --     Error ->
+        --         css errorStyles
         --
-        , onDoubleClick dismissMsg
+        --     Success ->
+        --         css successStyles
+        --
+        --     Warning ->
+        --         css warningStyles
+        --  TODO
+        --
+        [ onDoubleClick dismissMsg
         , onDoubleTap dismissMsg
 
         --
@@ -160,7 +161,7 @@ notificationView notification =
         [ contents notification
         , if options.sticky && kind /= Warning then
             chunk
-                [ C.disable_selection, T.f7, T.i, T.mt2, T.o_60, T.pointer ]
+                [ C.select_none, T.f7, T.i, T.mt2, T.o_60, T.pointer ]
                 [ Html.text "Double click to dismiss" ]
 
           else

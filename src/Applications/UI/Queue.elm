@@ -6,9 +6,10 @@ import Common
 import Conditional exposing (..)
 import Coordinates
 import Css
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (href)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (css, href)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
@@ -553,7 +554,7 @@ futureView model =
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
                 [ T.color_inherit, T.db, T.link, T.o_30 ]
-                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+                [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
@@ -588,22 +589,23 @@ futureItem selection idx item =
                 Color UI.Kit.colorKit.base07
     in
     { label =
-        slab
-            Html.span
-            (if item.manualEntry || isSelected then
-                []
+        inline
+            [ T.db
+            , T.truncate
 
-             else
-                [ UI.Kit.colorKit.base05
-                    |> Color.toElmCssColor
-                    |> Css.color
-                    |> List.singleton
-                    |> css
-                ]
-            )
-            [ T.db, T.truncate ]
+            --
+            , if item.manualEntry || isSelected then
+                C.text_inherit
+
+              else
+                C.text_base05
+            ]
             [ inline
-                [ T.dib, T.f7, T.mr2, T.o_60 ]
+                [ T.dib
+                , T.f7
+                , T.mr2
+                , T.o_60
+                ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
@@ -680,7 +682,7 @@ historyView model =
         UI.Kit.centeredContent
             [ chunk
                 [ T.o_30 ]
-                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+                [ Icons.music_note 64 Inherit ]
             , chunk
                 [ T.lh_copy, T.mt2, T.o_40, T.tc ]
                 [ text "Nothing here yet,"

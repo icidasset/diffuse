@@ -33,10 +33,29 @@ const colors = {
 module.exports = {
 
   plugins: [
+    require("tailwindcss-animations")(),
     require("tailwindcss-transforms")(),
+    require("tailwindcss-transitions")()
   ],
 
   theme: {
+
+    // Animations
+    // ----------
+
+    animations: {
+
+      "fadeIn": {
+        from: { opacity: "0" },
+        to: { opacity: "1" },
+      }
+
+    },
+
+    animationDelay: {
+      "50ms": "50ms"
+    },
+
 
     // Fonts
     // -----
@@ -64,6 +83,9 @@ module.exports = {
     // ----------
 
     extend: {
+      lineHeight: {
+        "0": 0
+      },
       screens: {
         "dark": { "raw": "(prefers-color-scheme: dark)" }
       }
@@ -78,6 +100,18 @@ module.exports = {
       "1/2": "50%",
       "full": "100%",
     },
+
+
+    // Min & Max
+    // ---------
+
+    maxWidth : {
+      ...defaultTheme.maxWidth,
+
+      "insulation": "107.5vh"
+    },
+
+    minWidth: defaultTheme.maxWidth,
 
 
     // Opacity

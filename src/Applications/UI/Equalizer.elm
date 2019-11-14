@@ -8,15 +8,15 @@ import Coordinates exposing (Coordinates)
 import Css
 import Css.Ext as Css
 import Equalizer exposing (..)
+import Html exposing (Html, text)
+import Html.Attributes exposing (style)
+import Html.Events
 import Html.Events.Extra.Pointer as Pointer
-import Html.Styled exposing (Html, text)
-import Html.Styled.Attributes exposing (css, style)
-import Html.Styled.Events
 import Json.Decode as Decode
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
-import Svg.Styled exposing (Svg, polygon, svg)
-import Svg.Styled.Attributes
+import Svg exposing (Svg, polygon, svg)
+import Svg.Attributes
 import Tachyons.Classes as T
 import UI.Kit
 import UI.Navigation exposing (..)
@@ -220,164 +220,167 @@ reset newModel knobType value =
 
 view : Model -> Html Msg
 view model =
-    UI.Kit.receptacle
-        { scrolling = True }
-        [ -----------------------------------------
-          -- Navigation
-          -----------------------------------------
-          UI.Navigation.local
-            [ ( Icon Icons.arrow_back
-              , Label Common.backToIndex Hidden
-              , NavigateToPage UI.Page.Index
-              )
-            ]
-
-        -----------------------------------------
-        -- Content
-        -----------------------------------------
-        , brick
-            [ css eqStyles ]
-            [ T.relative ]
-            [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
-                [ UI.Kit.canister [ UI.Kit.h1 "Equalizer" ]
-                ]
-            ]
-
-        --
-        , UI.Kit.centeredContent
-            [ eqView model ]
-        ]
-
-
-eqView : Model -> Html Msg
-eqView model =
-    chunk
-        [ T.tc ]
-        [ brick
-            [ css groupStyles ]
-            [ T.ba, T.br2, T.flex ]
-            [ knob Volume model.volume
-            ]
-
-        --
-        , brick
-            [ css groupStyles ]
-            [ T.ba, T.br2, T.flex, T.mt3 ]
-            [ knob Low model.low
-            , knob Mid model.mid
-            , knob High model.high
-            ]
-        ]
+    nothing
 
 
 
--- KNOB
-
-
-knob : Knob -> Float -> Html Msg
-knob knobType value =
-    brick
-        [ css columnStyles ]
-        [ T.flex_grow_1, T.flex_shrink_0, T.ph4, T.ph5_ns, T.pv3 ]
-        [ knob_ knobType value
-        , knobLines
-        , knobLabel knobType
-        ]
-
-
-knob_ : Knob -> Float -> Html Msg
-knob_ knobType value =
-    let
-        angle =
-            case knobType of
-                Volume ->
-                    (value * maxAngle * 2) - maxAngle
-
-                _ ->
-                    value * maxAngle
-
-        resetDecoder =
-            Decode.succeed
-                { message = ResetKnob knobType
-                , stopPropagation = True
-                , preventDefault = True
-                }
-    in
-    brick
-        [ css knobStyles
-
-        --
-        , [ "rotate(", String.fromFloat angle, "deg)" ]
-            |> String.concat
-            |> style "transform"
-
-        --
-        , Html.Styled.Events.custom "dblclick" resetDecoder
-        , Html.Styled.Events.custom "dbltap" resetDecoder
-
-        --
-        , knobType
-            |> ActivateKnob
-            |> Pointer.onDown
-            |> Html.Styled.Attributes.fromUnstyled
-        ]
-        [ T.br_100, T.center, T.pointer, T.relative ]
-        [ Html.Styled.map never knob__ ]
-
-
-knob__ : Html Never
-knob__ =
-    raw
-        [ decagonSvg
-        , brick
-            [ css layerAStyles ]
-            [ T.absolute, T.absolute__fill, T.br_100, T.z_1 ]
-            [ brick
-                [ css layerBStyles ]
-                [ T.center ]
-                []
-            ]
-        ]
-
-
-knobLabel : Knob -> Html Msg
-knobLabel knobType =
-    brick
-        [ css knobLabelStyles ]
-        [ T.fw6, T.mt3, T.o_70 ]
-        [ case knobType of
-            Low ->
-                text "LOW"
-
-            Mid ->
-                text "MID"
-
-            High ->
-                text "HIGH"
-
-            Volume ->
-                text "VOLUME"
-        ]
-
-
-knobLines : Html Msg
-knobLines =
-    brick
-        [ css knobLineContainerStyles ]
-        [ T.center, T.relative ]
-        [ brick
-            [ css (knobLineStyles 45) ]
-            [ T.absolute, T.left_0, T.top_0 ]
-            []
-        , brick
-            [ css (knobLineStyles -45) ]
-            [ T.absolute, T.right_0, T.top_0 ]
-            []
-        ]
-
-
-
+-- TODO
+-- view : Model -> Html Msg
+-- view model =
+--     UI.Kit.receptacle
+--         { scrolling = True }
+--         [ -----------------------------------------
+--           -- Navigation
+--           -----------------------------------------
+--           UI.Navigation.local
+--             [ ( Icon Icons.arrow_back
+--               , Label Common.backToIndex Hidden
+--               , NavigateToPage UI.Page.Index
+--               )
+--             ]
+--
+--         -----------------------------------------
+--         -- Content
+--         -----------------------------------------
+--         , brick
+--             [ css eqStyles ]
+--             [ T.relative ]
+--             [ chunk
+--                 [ T.absolute, T.left_0, T.top_0 ]
+--                 [ UI.Kit.canister [ UI.Kit.h1 "Equalizer" ]
+--                 ]
+--             ]
+--
+--         --
+--         , UI.Kit.centeredContent
+--             [ eqView model ]
+--         ]
+--
+--
+-- eqView : Model -> Html Msg
+-- eqView model =
+--     chunk
+--         [ T.tc ]
+--         [ brick
+--             [ css groupStyles ]
+--             [ T.ba, T.br2, T.flex ]
+--             [ knob Volume model.volume
+--             ]
+--
+--         --
+--         , brick
+--             [ css groupStyles ]
+--             [ T.ba, T.br2, T.flex, T.mt3 ]
+--             [ knob Low model.low
+--             , knob Mid model.mid
+--             , knob High model.high
+--             ]
+--         ]
+--
+--
+--
+-- -- KNOB
+--
+--
+-- knob : Knob -> Float -> Html Msg
+-- knob knobType value =
+--     brick
+--         [ css columnStyles ]
+--         [ T.flex_grow_1, T.flex_shrink_0, T.ph4, T.ph5_ns, T.pv3 ]
+--         [ knob_ knobType value
+--         , knobLines
+--         , knobLabel knobType
+--         ]
+--
+--
+-- knob_ : Knob -> Float -> Html Msg
+-- knob_ knobType value =
+--     let
+--         angle =
+--             case knobType of
+--                 Volume ->
+--                     (value * maxAngle * 2) - maxAngle
+--
+--                 _ ->
+--                     value * maxAngle
+--
+--         resetDecoder =
+--             Decode.succeed
+--                 { message = ResetKnob knobType
+--                 , stopPropagation = True
+--                 , preventDefault = True
+--                 }
+--     in
+--     brick
+--         [ css knobStyles
+--
+--         --
+--         , [ "rotate(", String.fromFloat angle, "deg)" ]
+--             |> String.concat
+--             |> style "transform"
+--
+--         --
+--         , Html.Events.custom "dblclick" resetDecoder
+--         , Html.Events.custom "dbltap" resetDecoder
+--
+--         --
+--         , knobType
+--             |> ActivateKnob
+--             |> Pointer.onDown
+--         ]
+--         [ T.br_100, T.center, T.pointer, T.relative ]
+--         [ Html.map never knob__ ]
+--
+--
+-- knob__ : Html Never
+-- knob__ =
+--     raw
+--         [ decagonSvg
+--         , brick
+--             [ css layerAStyles ]
+--             [ T.absolute, T.absolute__fill, T.br_100, T.z_1 ]
+--             [ brick
+--                 [ css layerBStyles ]
+--                 [ T.center ]
+--                 []
+--             ]
+--         ]
+--
+--
+-- knobLabel : Knob -> Html Msg
+-- knobLabel knobType =
+--     brick
+--         [ css knobLabelStyles ]
+--         [ T.fw6, T.mt3, T.o_70 ]
+--         [ case knobType of
+--             Low ->
+--                 text "LOW"
+--
+--             Mid ->
+--                 text "MID"
+--
+--             High ->
+--                 text "HIGH"
+--
+--             Volume ->
+--                 text "VOLUME"
+--         ]
+--
+--
+-- knobLines : Html Msg
+-- knobLines =
+--     brick
+--         [ css knobLineContainerStyles ]
+--         [ T.center, T.relative ]
+--         [ brick
+--             [ css (knobLineStyles 45) ]
+--             [ T.absolute, T.left_0, T.top_0 ]
+--             []
+--         , brick
+--             [ css (knobLineStyles -45) ]
+--             [ T.absolute, T.right_0, T.top_0 ]
+--             []
+--         ]
 -- VARIABLES
 
 
@@ -510,17 +513,17 @@ layerBStyles =
 decagonSvg : Svg msg
 decagonSvg =
     svg
-        [ Svg.Styled.Attributes.css decagonStyles
-        , Svg.Styled.Attributes.fill "transparent"
-        , Svg.Styled.Attributes.height "200"
-        , Svg.Styled.Attributes.stroke (knobColor |> Color.setOpacity knobOpacity |> Color.toCssString)
-        , Svg.Styled.Attributes.strokeLinejoin "miter"
-        , Svg.Styled.Attributes.strokeWidth "7px"
-        , Svg.Styled.Attributes.viewBox "0 0 200 200"
-        , Svg.Styled.Attributes.width "200"
+        [ -- TODO: Svg.Attributes.css decagonStyles
+          Svg.Attributes.fill "transparent"
+        , Svg.Attributes.height "200"
+        , Svg.Attributes.stroke (knobColor |> Color.setOpacity knobOpacity |> Color.toCssString)
+        , Svg.Attributes.strokeLinejoin "miter"
+        , Svg.Attributes.strokeWidth "7px"
+        , Svg.Attributes.viewBox "0 0 200 200"
+        , Svg.Attributes.width "200"
         ]
         [ polygon
-            [ Svg.Styled.Attributes.points "129.665631459995,191.301425564335 70.3343685400051,191.301425564335 22.3343685400051,156.427384220077 4,100 22.334368540005,43.5726157799226 70.334368540005,8.69857443566526 129.665631459995,8.69857443566525 177.665631459995,43.5726157799226 196,100 177.665631459995,156.427384220077" ]
+            [ Svg.Attributes.points "129.665631459995,191.301425564335 70.3343685400051,191.301425564335 22.3343685400051,156.427384220077 4,100 22.334368540005,43.5726157799226 70.334368540005,8.69857443566526 129.665631459995,8.69857443566525 177.665631459995,43.5726157799226 196,100 177.665631459995,156.427384220077" ]
             []
         ]
 

@@ -14,18 +14,15 @@ const table = JSON.parse(fs.readFileSync(
 // Extractor
 // ---------
 
-class PurgeFromElm {
-  static extract(content) {
-    const results = content.match(/ (C\.\w+)/g) || []
-    const classNames = results.reduce((acc, r) => {
-      const key = r.replace(/^ C\./, "")
-      const entry = table[key]
-      return entry ? acc.concat([ entry ]) : acc
-    }, [])
+function purgeFromElm(elmCode) {
+  const results = elmCode.match(/ (C\.\w+)/g) || []
+  const classNames = results.reduce((acc, r) => {
+    const key = r.replace(/^ C\./, "")
+    const entry = table[key]
+    return entry ? acc.concat([ entry ]) : acc
+  }, [])
 
-    classNames ? console.log(classNames) : null
-    return classNames
-  }
+  return classNames
 }
 
 
@@ -34,15 +31,19 @@ class PurgeFromElm {
 // ------
 
 module.exports = {
-  // defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
+  // defaultExtractor: ,
 
-  content: [ "src/Applications/**/*.elm" ],
+  content: [ "src/Applications/**/*.elm", "build/**/*.html" ],
   css: [ "build/application.css" ],
 
   extractors: [
     {
-      extractor: PurgeFromElm,
-      extensions: ["elm"]
+      extractor: purgeFromElm,
+      extensions: [ "elm" ]
+    },
+    {
+      extractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
+      extensions: [ "html" ]
     }
   ]
 }

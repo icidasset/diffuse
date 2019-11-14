@@ -23,10 +23,15 @@ slab :
 slab typ attributes classes children =
     typ
         (List.append
-            [ classes
-                |> String.join " "
-                |> class
-            ]
+            (if List.isEmpty classes then
+                []
+
+             else
+                [ classes
+                    |> String.join " "
+                    |> class
+                ]
+            )
             attributes
         )
         children

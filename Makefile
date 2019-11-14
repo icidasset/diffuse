@@ -33,6 +33,7 @@ clean:
 
 css:
 	@echo "> Compiling CSS"
+	@mkdir -p $(BUILD_DIR)
 	@$(NPM_DIR)/.bin/postcss \
 		"${SRC_DIR}/Static/Css/Application.css" \
 		--output "${BUILD_DIR}/application.css" \

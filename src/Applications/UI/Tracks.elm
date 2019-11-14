@@ -2,20 +2,20 @@ module UI.Tracks exposing (Dependencies, Model, Msg(..), Scene(..), importHypaet
 
 import Alien
 import Chunky exposing (..)
-import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Coordinates exposing (Coordinates, Viewport)
 import Css
+import Css.Classes as C
 import Css.Transitions
+import Html exposing (Html, text)
+import Html.Attributes exposing (href, placeholder, style, tabindex, target, title, value)
+import Html.Events exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, fromUnstyled, href, placeholder, style, tabindex, target, title, value)
-import Html.Styled.Events exposing (onBlur, onClick, onInput)
-import Html.Styled.Ext exposing (onEnterKey)
-import Html.Styled.Lazy exposing (..)
+import Html.Ext exposing (onEnterKey)
+import Html.Lazy exposing (..)
 import InfiniteList
 import Json.Decode as Json
 import Json.Encode
@@ -638,305 +638,309 @@ type alias Dependencies =
 
 view : Model -> Dependencies -> Html Msg
 view model deps =
-    chunk
-        viewClasses
-        [ lazy6
-            navigation
-            model.grouping
-            model.favouritesOnly
-            model.searchTerm
-            model.selectedPlaylist
-            deps.isOnIndexPage
-            deps.bgColor
-
-        --
-        , if List.isEmpty model.collection.harvested then
-            lazy4
-                noTracksView
-                deps.sourceIdsBeingProcessed
-                deps.amountOfSources
-                (List.length model.collection.harvested)
-                (List.length model.favourites)
-
-          else
-            case model.scene of
-                List ->
-                    listView model deps
-        ]
-
-
-viewClasses : List String
-viewClasses =
-    [ T.flex
-    , T.flex_column
-    , T.flex_grow_1
-    ]
-
-
-navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Bool -> Maybe Color -> Html Msg
-navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPage bgColor =
-    let
-        tabindex_ =
-            ifThenElse isOnIndexPage 0 -1
-    in
-    chunk
-        [ T.flex ]
-        [ -----------------------------------------
-          -- Part 1
-          -----------------------------------------
-          brick
-            [ css searchStyles ]
-            [ T.flex
-            , T.flex_grow_1
-            , T.overflow_hidden
-            , T.relative
-            ]
-            [ -- Input
-              --------
-              slab
-                Html.input
-                [ css searchInputStyles
-                , onBlur Search
-                , onEnterKey Search
-                , onInput SetSearchTerm
-                , placeholder "Search"
-                , tabindex tabindex_
-                , value (Maybe.withDefault "" searchTerm)
-                ]
-                [ T.bg_transparent
-                , T.bn
-                , T.color_inherit
-                , T.flex_grow_1
-                , T.h_100
-                , T.outline_0
-                , T.pr2
-                , T.w_100
-                ]
-                []
-
-            -- Search icon
-            --------------
-            , brick
-                [ css searchIconStyles ]
-                [ T.absolute
-                , T.bottom_0
-                , T.flex
-                , T.items_center
-                , T.left_0
-                , T.top_0
-                , T.z_0
-                ]
-                [ Html.fromUnstyled (Icons.search 16 searchIconColoring) ]
-
-            -- Actions
-            ----------
-            , brick
-                [ css searchActionsStyles ]
-                [ T.flex
-                , T.items_center
-                ]
-                [ -- 1
-                  case searchTerm of
-                    Just _ ->
-                        brick
-                            [ css searchActionIconStyle
-                            , onClick ClearSearch
-                            , title "Clear search"
-                            ]
-                            [ T.pointer ]
-                            [ Html.fromUnstyled (Icons.clear 16 searchIconColoring) ]
-
-                    Nothing ->
-                        nothing
-
-                -- 2
-                , brick
-                    [ css searchActionIconStyle
-                    , onClick ToggleFavouritesOnly
-                    , title "Toggle favourites-only"
-                    ]
-                    [ T.pointer ]
-                    [ case favouritesOnly of
-                        True ->
-                            Html.fromUnstyled (Icons.favorite 16 <| Color UI.Kit.colorKit.base08)
-
-                        False ->
-                            Html.fromUnstyled (Icons.favorite_border 16 searchIconColoring)
-                    ]
-
-                -- 3
-                , brick
-                    [ css searchActionIconStyle
-                    , fromUnstyled (Mouse.onClick <| ShowViewMenu maybeGrouping)
-                    , title "View settings"
-                    ]
-                    [ T.pointer ]
-                    [ Html.fromUnstyled (Icons.more_vert 16 searchIconColoring) ]
-
-                -- 4
-                , case selectedPlaylist of
-                    Just playlist ->
-                        brick
-                            [ css (selectedPlaylistStyles bgColor)
-                            , onClick DeselectPlaylist
-                            ]
-                            [ T.br2
-                            , T.f7
-                            , T.fw7
-                            , T.lh_solid
-                            , T.pointer
-                            , T.truncate
-                            , T.white_90
-                            ]
-                            [ text playlist.name ]
-
-                    Nothing ->
-                        nothing
-                ]
-            ]
-        , -----------------------------------------
-          -- Part 2
-          -----------------------------------------
-          UI.Navigation.localWithTabindex
-            tabindex_
-            [ ( Icon Icons.waves
-              , Label "Playlists" Hidden
-              , NavigateToPage (UI.Page.Playlists UI.Playlists.Page.Index)
-              )
-            , ( Icon Icons.schedule
-              , Label "Queue" Hidden
-              , NavigateToPage (UI.Page.Queue UI.Queue.Page.Index)
-              )
-            , ( Icon Icons.equalizer
-              , Label "Equalizer" Hidden
-              , NavigateToPage UI.Page.Equalizer
-              )
-            ]
-        ]
-
-
-noTracksView : List String -> Int -> Int -> Int -> Html Msg
-noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
-    chunk
-        [ T.flex, T.flex_grow_1 ]
-        [ UI.Kit.centeredContent
-            [ if List.length isProcessing > 0 then
-                message "Processing Tracks"
-
-              else if amountOfSources == 0 then
-                chunk
-                    [ T.flex
-                    , T.flex_wrap
-                    , T.items_start
-                    , T.justify_center
-                    , T.ph3
-                    ]
-                    [ -- Add
-                      ------
-                      inline
-                        [ T.mb3, T.mh2, T.nowrap ]
-                        [ UI.Kit.buttonLink
-                            (Sources.NewOnboarding
-                                |> UI.Page.Sources
-                                |> UI.Page.toString
-                            )
-                            UI.Kit.Filled
-                            (buttonContents
-                                [ UI.Kit.inlineIcon Icons.add
-                                , text "Add some music"
-                                ]
-                            )
-                        ]
-
-                    -- Demo
-                    -------
-                    , inline
-                        [ T.mb3, T.mh2, T.nowrap ]
-                        [ UI.Kit.buttonWithColor
-                            UI.Kit.colorKit.base04
-                            UI.Kit.Normal
-                            (Reply InsertDemo)
-                            (buttonContents
-                                [ UI.Kit.inlineIcon Icons.music_note
-                                , text "Insert demo"
-                                ]
-                            )
-                        ]
-
-                    -- How
-                    ------
-                    , inline
-                        [ T.mb3, T.mh2, T.nowrap ]
-                        [ UI.Kit.buttonWithOptions
-                            Html.a
-                            [ href "about"
-                            , target "_blank"
-                            ]
-                            UI.Kit.colorKit.base04
-                            UI.Kit.Normal
-                            Nothing
-                            (buttonContents
-                                [ UI.Kit.inlineIcon Icons.help
-                                , text "More info"
-                                ]
-                            )
-                        ]
-                    ]
-
-              else if amountOfTracks == 0 then
-                message "No tracks found"
-
-              else
-                message "No sources available"
-            ]
-        ]
-
-
-buttonContents : List (Html Msg) -> Html Msg
-buttonContents =
-    slab
-        Html.span
-        [ style "height" "21px" ]
-        [ T.flex, T.items_center, C.lh_0 ]
-
-
-message : String -> Html Msg
-message m =
-    chunk
-        [ T.bb, T.bw1, T.f6, T.fw6, T.lh_title, T.pb1 ]
-        [ text m ]
-
-
-listView : Model -> Dependencies -> Html Msg
-listView model deps =
-    model.selectedPlaylist
-        |> Maybe.map .autoGenerated
-        |> Maybe.andThen
-            (\bool ->
-                if bool then
-                    Nothing
-
-                else
-                    Just model.listScene.dnd
-            )
-        |> UI.Tracks.Scene.List.view
-            { bgColor = deps.bgColor
-            , height = deps.viewport.height
-            , isVisible = deps.isOnIndexPage
-            , showAlbum = deps.viewport.width >= 720
-            }
-            model.collection.harvested
-            model.listScene.infiniteList
-            model.favouritesOnly
-            model.nowPlaying
-            model.searchTerm
-            model.sortBy
-            model.sortDirection
-            model.selectedTrackIndexes
-        |> Html.map ListSceneMsg
+    nothing
 
 
 
+-- TODO:
+-- view : Model -> Dependencies -> Html Msg
+-- view model deps =
+--     chunk
+--         viewClasses
+--         [ lazy6
+--             navigation
+--             model.grouping
+--             model.favouritesOnly
+--             model.searchTerm
+--             model.selectedPlaylist
+--             deps.isOnIndexPage
+--             deps.bgColor
+--
+--         --
+--         , if List.isEmpty model.collection.harvested then
+--             lazy4
+--                 noTracksView
+--                 deps.sourceIdsBeingProcessed
+--                 deps.amountOfSources
+--                 (List.length model.collection.harvested)
+--                 (List.length model.favourites)
+--
+--           else
+--             case model.scene of
+--                 List ->
+--                     listView model deps
+--         ]
+--
+--
+-- viewClasses : List String
+-- viewClasses =
+--     [ T.flex
+--     , T.flex_column
+--     , T.flex_grow_1
+--     ]
+--
+--
+-- navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Bool -> Maybe Color -> Html Msg
+-- navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPage bgColor =
+--     let
+--         tabindex_ =
+--             ifThenElse isOnIndexPage 0 -1
+--     in
+--     chunk
+--         [ T.flex ]
+--         [ -----------------------------------------
+--           -- Part 1
+--           -----------------------------------------
+--           brick
+--             [ css searchStyles ]
+--             [ T.flex
+--             , T.flex_grow_1
+--             , T.overflow_hidden
+--             , T.relative
+--             ]
+--             [ -- Input
+--               --------
+--               slab
+--                 Html.input
+--                 [ css searchInputStyles
+--                 , onBlur Search
+--                 , onEnterKey Search
+--                 , onInput SetSearchTerm
+--                 , placeholder "Search"
+--                 , tabindex tabindex_
+--                 , value (Maybe.withDefault "" searchTerm)
+--                 ]
+--                 [ T.bg_transparent
+--                 , T.bn
+--                 , T.color_inherit
+--                 , T.flex_grow_1
+--                 , T.h_100
+--                 , T.outline_0
+--                 , T.pr2
+--                 , T.w_100
+--                 ]
+--                 []
+--
+--             -- Search icon
+--             --------------
+--             , brick
+--                 [ css searchIconStyles ]
+--                 [ T.absolute
+--                 , T.bottom_0
+--                 , T.flex
+--                 , T.items_center
+--                 , T.left_0
+--                 , T.top_0
+--                 , T.z_0
+--                 ]
+--                 [ Icons.search 16 searchIconColoring ]
+--
+--             -- Actions
+--             ----------
+--             , brick
+--                 [ css searchActionsStyles ]
+--                 [ T.flex
+--                 , T.items_center
+--                 ]
+--                 [ -- 1
+--                   case searchTerm of
+--                     Just _ ->
+--                         brick
+--                             [ css searchActionIconStyle
+--                             , onClick ClearSearch
+--                             , title "Clear search"
+--                             ]
+--                             [ T.pointer ]
+--                             [ Icons.clear 16 searchIconColoring ]
+--
+--                     Nothing ->
+--                         nothing
+--
+--                 -- 2
+--                 , brick
+--                     [ css searchActionIconStyle
+--                     , onClick ToggleFavouritesOnly
+--                     , title "Toggle favourites-only"
+--                     ]
+--                     [ T.pointer ]
+--                     [ case favouritesOnly of
+--                         True ->
+--                             Icons.favorite 16 <| Color UI.Kit.colorKit.base08
+--
+--                         False ->
+--                             Icons.favorite_border 16 searchIconColoring
+--                     ]
+--
+--                 -- 3
+--                 , brick
+--                     [ css searchActionIconStyle
+--                     , Mouse.onClick (ShowViewMenu maybeGrouping)
+--                     , title "View settings"
+--                     ]
+--                     [ T.pointer ]
+--                     [ Icons.more_vert 16 searchIconColoring ]
+--
+--                 -- 4
+--                 , case selectedPlaylist of
+--                     Just playlist ->
+--                         brick
+--                             [ css (selectedPlaylistStyles bgColor)
+--                             , onClick DeselectPlaylist
+--                             ]
+--                             [ T.br2
+--                             , T.f7
+--                             , T.fw7
+--                             , T.lh_solid
+--                             , T.pointer
+--                             , T.truncate
+--                             , T.white_90
+--                             ]
+--                             [ text playlist.name ]
+--
+--                     Nothing ->
+--                         nothing
+--                 ]
+--             ]
+--         , -----------------------------------------
+--           -- Part 2
+--           -----------------------------------------
+--           UI.Navigation.localWithTabindex
+--             tabindex_
+--             [ ( Icon Icons.waves
+--               , Label "Playlists" Hidden
+--               , NavigateToPage (UI.Page.Playlists UI.Playlists.Page.Index)
+--               )
+--             , ( Icon Icons.schedule
+--               , Label "Queue" Hidden
+--               , NavigateToPage (UI.Page.Queue UI.Queue.Page.Index)
+--               )
+--             , ( Icon Icons.equalizer
+--               , Label "Equalizer" Hidden
+--               , NavigateToPage UI.Page.Equalizer
+--               )
+--             ]
+--         ]
+--
+--
+-- noTracksView : List String -> Int -> Int -> Int -> Html Msg
+-- noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
+--     chunk
+--         [ T.flex, T.flex_grow_1 ]
+--         [ UI.Kit.centeredContent
+--             [ if List.length isProcessing > 0 then
+--                 message "Processing Tracks"
+--
+--               else if amountOfSources == 0 then
+--                 chunk
+--                     [ T.flex
+--                     , T.flex_wrap
+--                     , T.items_start
+--                     , T.justify_center
+--                     , T.ph3
+--                     ]
+--                     [ -- Add
+--                       ------
+--                       inline
+--                         [ T.mb3, T.mh2, T.nowrap ]
+--                         [ UI.Kit.buttonLink
+--                             (Sources.NewOnboarding
+--                                 |> UI.Page.Sources
+--                                 |> UI.Page.toString
+--                             )
+--                             UI.Kit.Filled
+--                             (buttonContents
+--                                 [ UI.Kit.inlineIcon Icons.add
+--                                 , text "Add some music"
+--                                 ]
+--                             )
+--                         ]
+--
+--                     -- Demo
+--                     -------
+--                     , inline
+--                         [ T.mb3, T.mh2, T.nowrap ]
+--                         [ UI.Kit.buttonWithColor
+--                             UI.Kit.colorKit.base04
+--                             UI.Kit.Normal
+--                             (Reply InsertDemo)
+--                             (buttonContents
+--                                 [ UI.Kit.inlineIcon Icons.music_note
+--                                 , text "Insert demo"
+--                                 ]
+--                             )
+--                         ]
+--
+--                     -- How
+--                     ------
+--                     , inline
+--                         [ T.mb3, T.mh2, T.nowrap ]
+--                         [ UI.Kit.buttonWithOptions
+--                             Html.a
+--                             [ href "about"
+--                             , target "_blank"
+--                             ]
+--                             UI.Kit.colorKit.base04
+--                             UI.Kit.Normal
+--                             Nothing
+--                             (buttonContents
+--                                 [ UI.Kit.inlineIcon Icons.help
+--                                 , text "More info"
+--                                 ]
+--                             )
+--                         ]
+--                     ]
+--
+--               else if amountOfTracks == 0 then
+--                 message "No tracks found"
+--
+--               else
+--                 message "No sources available"
+--             ]
+--         ]
+--
+--
+-- buttonContents : List (Html Msg) -> Html Msg
+-- buttonContents =
+--     slab
+--         Html.span
+--         [ style "height" "21px" ]
+--         [ T.flex, T.items_center, C.leading_0 ]
+--
+--
+-- message : String -> Html Msg
+-- message m =
+--     chunk
+--         [ T.bb, T.bw1, T.f6, T.fw6, T.lh_title, T.pb1 ]
+--         [ text m ]
+--
+--
+-- listView : Model -> Dependencies -> Html Msg
+-- listView model deps =
+--     model.selectedPlaylist
+--         |> Maybe.map .autoGenerated
+--         |> Maybe.andThen
+--             (\bool ->
+--                 if bool then
+--                     Nothing
+--
+--                 else
+--                     Just model.listScene.dnd
+--             )
+--         |> UI.Tracks.Scene.List.view
+--             { bgColor = deps.bgColor
+--             , height = deps.viewport.height
+--             , isVisible = deps.isOnIndexPage
+--             , showAlbum = deps.viewport.width >= 720
+--             }
+--             model.collection.harvested
+--             model.listScene.infiniteList
+--             model.favouritesOnly
+--             model.nowPlaying
+--             model.searchTerm
+--             model.sortBy
+--             model.sortDirection
+--             model.selectedTrackIndexes
+--         |> Html.map ListSceneMsg
 -- 🖼
 
 

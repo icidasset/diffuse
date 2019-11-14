@@ -5,11 +5,9 @@ import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
 import Coordinates
 import Dict.Ext as Dict
-import Html as UnstyledHtml
-import Html.Attributes as UnstyledHtml
+import Html exposing (Html, text)
+import Html.Attributes exposing (class, href)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (href)
 import Json.Decode as Json
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
@@ -392,7 +390,7 @@ index amountOfTracks model =
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
                 [ T.color_inherit, T.db, T.link, T.o_30 ]
-                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+                [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
@@ -400,7 +398,7 @@ index amountOfTracks model =
                 [ text "A source is a place where music is stored,"
                 , lineBreak
                 , text "add one so you can play some music "
-                , inline [ T.v_mid ] [ fromUnstyled (Icons.add 14 Inherit) ]
+                , inline [ T.v_mid ] [ Icons.add 14 Inherit ]
                 ]
             ]
 
@@ -441,14 +439,15 @@ sourceActions isProcessing processingError source =
                   , icon =
                         \_ _ ->
                             if progress < 0.05 then
-                                UnstyledHtml.span
-                                    [ UnstyledHtml.class "dib o-70 ph1" ]
+                                Html.span
+                                    -- TODO
+                                    [ class "dib o-70 ph1" ]
                                     [ case processIndex of
                                         Just 0 ->
-                                            UnstyledHtml.text "Listing"
+                                            Html.text "Listing"
 
                                         _ ->
-                                            UnstyledHtml.text "Waiting"
+                                            Html.text "Waiting"
                                     ]
 
                             else
@@ -457,10 +456,11 @@ sourceActions isProcessing processingError source =
                                     |> round
                                     |> String.fromInt
                                     |> (\s -> s ++ "%")
-                                    |> UnstyledHtml.text
+                                    |> Html.text
                                     |> List.singleton
-                                    |> UnstyledHtml.span
-                                        [ UnstyledHtml.class "dib o-70 ph1" ]
+                                    |> Html.span
+                                        -- TODO
+                                        [ class "dib o-70 ph1" ]
                   , msg = Nothing
                   , title = ""
                   }

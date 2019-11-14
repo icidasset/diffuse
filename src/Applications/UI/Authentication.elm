@@ -936,7 +936,7 @@ choiceButtonStyles { border } =
     ]
 
 
-speechBubbleArrowStyles : List (Html.Attribute Msg)
+speechBubbleArrowStyles : List (Html.Attribute msg)
 speechBubbleArrowStyles =
     let
         color =

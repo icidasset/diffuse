@@ -1,7 +1,7 @@
-module Html.Styled.Ext exposing (ifEnterKey, onClickStopPropagation, onDoubleTap, onEnterKey, onTap, onTapPreventDefault, onTapStopPropagation)
+module Html.Ext exposing (ifEnterKey, onClickStopPropagation, onDoubleTap, onEnterKey, onTap, onTapPreventDefault, onTapStopPropagation)
 
-import Html.Styled exposing (Attribute)
-import Html.Styled.Events exposing (keyCode, on, preventDefaultOn, stopPropagationOn)
+import Html exposing (Attribute)
+import Html.Events exposing (keyCode, on, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Json
 
 

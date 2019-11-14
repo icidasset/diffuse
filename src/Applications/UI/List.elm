@@ -1,15 +1,15 @@
 module UI.List exposing (Action, Item, Variant(..), view)
 
 import Chunky exposing (..)
-import Classes as C
 import Color
 import Color.Ext as Color
 import Conditional exposing (..)
 import Css exposing (px, solid)
+import Css.Classes as C
+import Html exposing (Html)
+import Html.Attributes as Attributes exposing (style, title)
+import Html.Events exposing (onClick)
 import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
-import Html.Styled exposing (Html, fromUnstyled)
-import Html.Styled.Attributes as Attributes exposing (css, title)
-import Html.Styled.Events exposing (onClick)
 import List.Ext as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
@@ -49,11 +49,14 @@ type Variant context msg
 
 
 view : Variant Int msg -> List (Item msg) -> Html msg
-view variant =
-    List.indexedMap (item variant) >> brick [ css listStyles ] [ T.lh_title ]
+view variant items =
+    items
+        |> List.indexedMap (item variant)
+        |> brick [ style "font-size" "13p" ] [ T.lh_title ]
 
 
 
+-- TODO
 -----------------------------------------
 -- ㊙️
 -----------------------------------------
@@ -62,23 +65,25 @@ view variant =
 item : Variant Int msg -> Int -> Item msg -> Html msg
 item variant idx { label, actions, msg, isSelected } =
     brick
-        (case variant of
-            Normal ->
-                [ { dragTarget = False
-                  , isSelected = isSelected
-                  }
-                    |> itemStyles
-                    |> css
-                ]
-
-            Draggable env ->
-                [ { dragTarget = DnD.isDraggingOver idx env.model
-                  , isSelected = isSelected
-                  }
-                    |> itemStyles
-                    |> css
-                ]
-        )
+        []
+        -- TODO:
+        -- (case variant of
+        --     Normal ->
+        --         [ { dragTarget = False
+        --           , isSelected = isSelected
+        --           }
+        --             |> itemStyles
+        --             |> css
+        --         ]
+        --
+        --     Draggable env ->
+        --         [ { dragTarget = DnD.isDraggingOver idx env.model
+        --           , isSelected = isSelected
+        --           }
+        --             |> itemStyles
+        --             |> css
+        --         ]
+        -- )
         [ T.flex
         , T.fw6
         , T.items_center
@@ -99,19 +104,18 @@ item variant idx { label, actions, msg, isSelected } =
                             []
 
                 Draggable env ->
-                    DnD.listenToEnterLeave env idx
-                        |> List.map Attributes.fromUnstyled
-                        |> List.append
-                            (case ( isSelected, msg ) of
-                                ( True, _ ) ->
-                                    [ Attributes.fromUnstyled (DnD.listenToStart env idx) ]
+                    List.append
+                        (case ( isSelected, msg ) of
+                            ( True, _ ) ->
+                                [ DnD.listenToStart env idx ]
 
-                                ( False, Just m ) ->
-                                    [ onClick m ]
+                            ( False, Just m ) ->
+                                [ onClick m ]
 
-                                ( False, Nothing ) ->
-                                    []
-                            )
+                            ( False, Nothing ) ->
+                                []
+                        )
+                        (DnD.listenToEnterLeave env idx)
             )
             [ T.flex_grow_1, T.pv3, T.overflow_hidden ]
             [ label ]
@@ -146,29 +150,22 @@ actionView action =
                 [ title action.title
 
                 --
-                , msg
-                    |> onWithOptions "click" { stopPropagation = True, preventDefault = True }
-                    |> Attributes.fromUnstyled
+                , onWithOptions "click" { stopPropagation = True, preventDefault = True } msg
                 ]
 
             Nothing ->
                 [ title action.title ]
         )
-        [ C.lh_0
+        [ C.leading_0
         , T.ml1
         , T.pl1
         , ifThenElse (Maybe.isJust action.msg) T.pointer ""
         ]
-        [ fromUnstyled (action.icon 16 action.color) ]
+        [ action.icon 16 action.color ]
 
 
 
 -- 🖼
-
-
-listStyles : List Css.Style
-listStyles =
-    [ Css.fontSize (px 13) ]
 
 
 itemStyles : { dragTarget : Bool, isSelected : Bool } -> List Css.Style

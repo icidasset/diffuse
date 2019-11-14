@@ -23,7 +23,7 @@ html, body {
 
 
 body {
-  @apply text-base00 font-body px-5 pt-px;
+  @apply text-base00 font-body;
 
   background-color: rgb(2, 7, 14);
   background-image: url(images/ep_naturalblack_pattern.jpg);

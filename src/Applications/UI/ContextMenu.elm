@@ -1,14 +1,14 @@
 module UI.ContextMenu exposing (view)
 
 import Chunky exposing (..)
-import Classes as C
 import Conditional exposing (..)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Css
-import Html.Styled exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (css, style)
-import Html.Styled.Events exposing (custom)
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (style)
+import Html.Events exposing (custom)
 import Json.Decode
 import Material.Icons exposing (Coloring(..))
 import Tachyons.Classes as T
@@ -25,11 +25,12 @@ view m =
     case m of
         Just (ContextMenu items coordinates) ->
             brick
-                [ css (menuStyles coordinates) ]
+                -- TODO: [ css (menuStyles coordinates) ]
+                []
                 [ T.absolute
                 , T.br2
                 , T.bg_white
-                , C.disable_selection
+                , C.select_none
                 , T.f7
                 , T.overflow_hidden
                 , T.z_9999
@@ -79,15 +80,15 @@ itemView lastIndex index { icon, label, msg, active } =
 
         --
         , ifThenElse (active || isLast) T.b__transparent T.b__near_white
-        , ifThenElse active C.bg_base_00 ""
+        , ifThenElse active C.bg_base00 ""
         , ifThenElse active T.white T.color_inherit
         , ifThenElse active T.fw6 T.fw4
         ]
         [ inline
-            [ T.dib, C.lh_0, T.v_mid ]
-            [ fromUnstyled (icon 14 Inherit) ]
+            [ T.dib, C.leading_0, T.v_mid ]
+            [ icon 14 Inherit ]
         , slab
-            Html.Styled.span
+            Html.span
             [ style "top" "-0.5px" ]
             [ T.dib, T.ml2, T.pl1, T.relative, T.v_mid ]
             [ text label ]
@@ -105,5 +106,6 @@ menuStyles { x, y } =
     , Css.minWidth (Css.px 170)
     , Css.transform (Css.translate2 (Css.pct -50) (Css.pct -50))
     , Css.top (Css.px y)
-    , UI.Kit.onOverlayShadow
+
+    -- TODO: , UI.Kit.onOverlayShadow
     ]

@@ -3,12 +3,12 @@ module UI.Alfred exposing (Model, Msg(..), initialModel, subscriptions, update, 
 import Alfred exposing (Alfred)
 import Browser.Dom as Dom
 import Chunky exposing (..)
-import Classes as C
 import Css
-import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (autofocus, css, id, placeholder, type_)
-import Html.Styled.Events exposing (onInput)
-import Html.Styled.Ext exposing (onTapPreventDefault)
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (autofocus, id, placeholder, type_)
+import Html.Events exposing (onInput)
+import Html.Ext exposing (onTapPreventDefault)
 import Json.Decode
 import Keyboard
 import List.Extra as List
@@ -182,7 +182,7 @@ view model =
                 -- Search
                 -----------------------------------------
                 , brick
-                    [ Html.Styled.Events.custom
+                    [ Html.Events.custom
                         "tap"
                         (Json.Decode.succeed
                             { message = Bypass
@@ -199,7 +199,8 @@ view model =
                     [ slab
                         Html.input
                         [ autofocus True
-                        , css shadowStyles
+
+                        -- TODO: , css shadowStyles
                         , id searchId
                         , onInput DetermineResults
                         , placeholder "Type to search or create"
@@ -222,7 +223,8 @@ view model =
                 -- Results
                 -----------------------------------------
                 , brick
-                    [ css shadowStyles ]
+                    -- TODO: [ css shadowStyles ]
+                    []
                     [ T.bg_white
                     , T.br2
                     , T.f6
@@ -250,7 +252,7 @@ view model =
 
                                 --
                                 , if idx == instance.focus then
-                                    C.bg_base_0D
+                                    C.bg_base0d
 
                                   else if modBy 2 idx == 0 then
                                     T.bg_transparent
@@ -263,14 +265,14 @@ view model =
                                 --
                                 , if idx == instance.focus then
                                     brick
-                                        [ css activeItemIndicatorStyles ]
+                                        -- TODO: [ css activeItemIndicatorStyles ]
+                                        []
                                         [ T.absolute
-                                        , C.lh_0
+                                        , C.leading_0
                                         , T.mr3
                                         , T.right_0
                                         ]
-                                        [ fromUnstyled
-                                            (Icons.keyboard_return 13 Inherit)
+                                        [ Icons.keyboard_return 13 Inherit
                                         ]
 
                                   else
@@ -302,4 +304,5 @@ activeItemIndicatorStyles =
 
 shadowStyles : List Css.Style
 shadowStyles =
-    [ UI.Kit.onOverlayShadow ]
+    -- TODO: [ UI.Kit.onOverlayShadow ]
+    []

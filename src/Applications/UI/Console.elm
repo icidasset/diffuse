@@ -8,10 +8,9 @@ import Conditional exposing (..)
 import Css
 import Css.Ext as Css
 import Css.Media
-import Html as UnstyledHtml
-import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (class, css, style, title)
-import Html.Styled.Events exposing (on, onClick)
+import Html exposing (Html, text)
+import Html.Attributes exposing (class, style, title)
+import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
@@ -31,7 +30,8 @@ import UI.Reply exposing (Reply(..))
 view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> Html Reply
 view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
     brick
-        [ css consoleStyles ]
+        -- TODO: [ css consoleStyles ]
+        []
         [ T.mt1, T.tc, T.w_100 ]
         [ -----------------------------------------
           -- Now Playing
@@ -88,10 +88,13 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
             , T.pv1
             ]
             [ brick
-                [ css progressBarStyles ]
+                -- TODO: [ css progressBarStyles ]
+                []
                 [ T.br1 ]
                 [ brick
-                    [ css progressBarInnerStyles, style "width" (String.fromFloat progress ++ "%") ]
+                    [ -- TODO: css progressBarInnerStyles
+                      style "width" (String.fromFloat progress ++ "%")
+                    ]
                     [ "progressBarValue" ]
                     []
                 ]
@@ -101,7 +104,8 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
         -- Buttons
         -----------------------------------------
         , brick
-            [ css buttonsContainerStyles ]
+            -- TODO: [ css buttonsContainerStyles ]
+            []
             [ T.flex
             , T.justify_between
             , T.justify_center_ns
@@ -124,11 +128,11 @@ button t light content msg =
         [ onClick msg, title t ]
         [ T.flex, T.flex_column, T.items_center, T.mh1, T.mh4_ns, T.ph1, T.pointer ]
         [ brick
-            [ css [ Css.height (Css.px 4) ] ]
+            [ style "height" "4px" ]
             []
             [ light ]
         , brick
-            [ css [ Css.height (Css.px 25) ] ]
+            [ style "height" "25px" ]
             [ T.flex, T.items_center, T.mv2 ]
             [ content ]
         ]
@@ -137,13 +141,15 @@ button t light content msg =
 smallLight : Bool -> Html msg
 smallLight isOn =
     brick
-        [ css
-            [ Css.backgroundColor
-                (ifThenElse isOn (Css.rgb 157 174 255) (Css.rgba 255 255 255 0.25))
-            , Css.height (Css.px 4)
-            , Css.width (Css.px 4)
-            ]
-        ]
+        -- TODO:
+        -- [ css
+        --     [ Css.backgroundColor
+        --         (ifThenElse isOn (Css.rgb 157 174 255) (Css.rgba 255 255 255 0.25))
+        --     , Css.height (Css.px 4)
+        --     , Css.width (Css.px 4)
+        --     ]
+        -- ]
+        []
         [ T.br_100 ]
         []
 
@@ -151,14 +157,16 @@ smallLight isOn =
 largeLight : Bool -> Html msg
 largeLight isOn =
     brick
-        [ css
-            [ Css.backgroundColor
-                (ifThenElse isOn (Css.rgb 198 254 153) (Css.rgba 255 255 255 0.25))
-            , Css.height (Css.px 4)
-            , Css.left (Css.px -2)
-            , Css.width (Css.px 17)
-            ]
-        ]
+        -- TODO:
+        -- [ css
+        --     [ Css.backgroundColor
+        --         (ifThenElse isOn (Css.rgb 198 254 153) (Css.rgba 255 255 255 0.25))
+        --     , Css.height (Css.px 4)
+        --     , Css.left (Css.px -2)
+        --     , Css.width (Css.px 17)
+        --     ]
+        -- ]
+        []
         [ T.br_pill, T.relative ]
         []
 
@@ -166,7 +174,8 @@ largeLight isOn =
 lightPlaceHolder : Html msg
 lightPlaceHolder =
     brick
-        [ css [ Css.height (Css.px 4) ] ]
+        -- TODO: [ css [ Css.height (Css.px 4) ] ]
+        []
         []
         []
 
@@ -174,14 +183,15 @@ lightPlaceHolder =
 play : Html msg
 play =
     brick
-        [ css playTextStyles ]
+        -- TODO: [ css playTextStyles ]
+        []
         [ T.fw7, T.nowrap, T.relative ]
         [ text "PLAY" ]
 
 
-icon : (Int -> Coloring -> UnstyledHtml.Html msg) -> Int -> Html msg
+icon : (Int -> Coloring -> Html msg) -> Int -> Html msg
 icon iconFunction int =
-    Html.fromUnstyled (iconFunction int <| Color iconColor)
+    iconFunction int (Color iconColor)
 
 
 
@@ -211,7 +221,8 @@ iconColor =
 playTextStyles : List Css.Style
 playTextStyles =
     [ Css.color (Color.toElmCssColor iconColor)
-    , Css.fontFamilies UI.Kit.headerFontFamilies
+
+    -- TODO: , Css.fontFamilies UI.Kit.headerFontFamilies
     , Css.fontSize (Css.px 11.25)
     , Css.letterSpacing (Css.px 3.75)
     ]

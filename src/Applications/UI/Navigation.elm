@@ -8,9 +8,9 @@ import Color.Manipulate
 import Conditional exposing (..)
 import Css exposing (px, solid, transparent, zero)
 import Css.Media
-import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (attribute, css, href, tabindex, target, title)
-import Html.Styled.Events exposing (onClick)
+import Html exposing (Html, text)
+import Html.Attributes exposing (attribute, href, tabindex, target, title)
+import Html.Events exposing (onClick)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
@@ -51,7 +51,8 @@ type LabelType
 global : List ( Page, String ) -> Maybe (Alfred reply) -> Page -> Html msg
 global items alfred activePage =
     brick
-        [ css globalStyles ]
+        -- TODO: [ css globalStyles ]
+        []
         [ T.f7
         , T.fw6
         , T.mb5
@@ -81,7 +82,8 @@ globalItem activePage totalItems idx ( page, label ) =
         [ slab
             Html.a
             [ attribute "data-keep-focus" "t"
-            , css (globalItemStyles isActivePage)
+
+            --, TODO: css (globalItemStyles isActivePage)
             , href (Page.toString page)
             ]
             [ T.dib
@@ -117,7 +119,7 @@ globalItemStyles isActivePage =
     , Css.color (ifThenElse isActivePage globalColors.active globalColors.default)
 
     --
-    , UI.Kit.textFocus
+    -- TODO: , UI.Kit.textFocus
     ]
 
 
@@ -133,7 +135,8 @@ local =
 localWithTabindex : Int -> List ( Icon msg, Label, Action msg ) -> Html msg
 localWithTabindex tabindex_ items =
     brick
-        [ css localStyles ]
+        -- TODO: [ css localStyles ]
+        []
         [ T.bb ]
         [ chunk
             [ T.flex ]
@@ -185,7 +188,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                 target "_self"
 
         --
-        , css localItemStyles
+        -- TODO: , css localItemStyles
         , tabindex tabindex_
         ]
         [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
@@ -200,7 +203,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , T.pointer
         , T.ph3
         ]
-        [ Html.fromUnstyled (icon 16 Inherit)
+        [ icon 16 Inherit
 
         --
         , case labelType of
@@ -243,8 +246,8 @@ localItemStyles =
     , Css.color (Color.toElmCssColor localColors.text)
     , Css.flexBasis (px 0)
     , Css.height (px 43)
-    , UI.Kit.navFocus
 
+    -- TODO: , UI.Kit.navFocus
     -- Last one
     -----------
     , Css.lastChild [ Css.borderRightWidth zero ]

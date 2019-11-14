@@ -1,8 +1,8 @@
 module Notifications exposing (Action, Kind(..), Notification, Options, contents, dismiss, error, errorWithCode, id, kind, options, stickyError, stickySuccess, stickyWarning, success, warning)
 
 import Chunky exposing (..)
-import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (style)
+import Html exposing (Html)
+import Html.Attributes exposing (style)
 import Markdown
 import Murmur3 exposing (..)
 import Tachyons.Classes as T
@@ -176,4 +176,3 @@ render content =
         |> List.map String.trimLeft
         |> String.join "\n"
         |> Markdown.toHtml []
-        |> Html.fromUnstyled

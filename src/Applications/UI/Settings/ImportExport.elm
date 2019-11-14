@@ -1,7 +1,7 @@
 module UI.Settings.ImportExport exposing (view)
 
 import Chunky exposing (..)
-import Html.Styled as Html exposing (Html, text)
+import Html exposing (Html, text)
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
 import Tachyons.Classes as T

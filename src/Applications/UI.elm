@@ -24,11 +24,11 @@ import Dict.Ext as Dict
 import File exposing (File)
 import File.Download
 import File.Select
+import Html exposing (Html, section)
+import Html.Attributes as Attributes exposing (class, id, style)
+import Html.Events exposing (on, onClick)
 import Html.Events.Extra.Pointer as Pointer
-import Html.Styled as Html exposing (Html, section, toUnstyled)
-import Html.Styled.Attributes as Attributes exposing (class, css, id)
-import Html.Styled.Events exposing (on, onClick)
-import Html.Styled.Lazy as Lazy
+import Html.Lazy as Lazy
 import Http
 import Json.Decode
 import Json.Encode
@@ -1899,7 +1899,7 @@ translateAlienError event err =
 view : Model -> Browser.Document Msg
 view model =
     { title = "Diffuse"
-    , body = [ toUnstyled (body model) ]
+    , body = [ body model ]
     }
 
 
@@ -1910,15 +1910,9 @@ body model =
             [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
-            [ (EqualizerMsg << Equalizer.AdjustKnob)
-                |> Pointer.onMove
-                |> Attributes.fromUnstyled
-            , (EqualizerMsg << Equalizer.DeactivateKnob)
-                |> Pointer.onUp
-                |> Attributes.fromUnstyled
-            , (EqualizerMsg << Equalizer.DeactivateKnob)
-                |> Pointer.onCancel
-                |> Attributes.fromUnstyled
+            [ Pointer.onMove (EqualizerMsg << Equalizer.AdjustKnob)
+            , Pointer.onUp (EqualizerMsg << Equalizer.DeactivateKnob)
+            , Pointer.onCancel (EqualizerMsg << Equalizer.DeactivateKnob)
             ]
 
          else if model.isDragging then
@@ -1940,36 +1934,41 @@ body model =
         [ -----------------------------------------
           -- Alfred
           -----------------------------------------
-          -- model.alfred
-          --   |> Lazy.lazy Alfred.view
-          --   |> Html.map AlfredMsg
-          -----------------------------------------
-          -- Backdrop
-          -----------------------------------------
-          -- , model.backdrop
-          --     |> Lazy.lazy Backdrop.view
-          --     |> Html.map BackdropMsg
-          -----------------------------------------
-          -- Context Menu
-          -----------------------------------------
-          -- , model.contextMenu
-          --     |> Lazy.lazy UI.ContextMenu.view
-          --     |> Html.map Reply
-          -----------------------------------------
-          -- Notifications
-          -----------------------------------------
-          -- , model.notifications
-          --     |> Lazy.lazy UI.Notifications.view
-          --     |> Html.map Reply
-          -----------------------------------------
-          -- Overlay
-          -----------------------------------------
-          -- , model.contextMenu
-          --     |> Lazy.lazy2 overlay model.alfred.instance
-          -----------------------------------------
-          -- Content
-          -----------------------------------------
-          let
+          model.alfred
+            |> Lazy.lazy Alfred.view
+            |> Html.map AlfredMsg
+
+        -----------------------------------------
+        -- Backdrop
+        -----------------------------------------
+        , model.backdrop
+            |> Lazy.lazy Backdrop.view
+            |> Html.map BackdropMsg
+
+        -----------------------------------------
+        -- Context Menu
+        -----------------------------------------
+        , model.contextMenu
+            |> Lazy.lazy UI.ContextMenu.view
+            |> Html.map Reply
+
+        -----------------------------------------
+        -- Notifications
+        -----------------------------------------
+        , model.notifications
+            |> Lazy.lazy UI.Notifications.view
+            |> Html.map Reply
+
+        -----------------------------------------
+        -- Overlay
+        -----------------------------------------
+        , model.contextMenu
+            |> Lazy.lazy2 overlay model.alfred.instance
+
+        -----------------------------------------
+        -- Content
+        -----------------------------------------
+        , let
             opts =
                 { justifyCenter = False
                 , scrolling = not model.isDragging
@@ -1992,94 +1991,96 @@ body model =
         ]
 
 
+defaultScreen : Model -> List (Html Msg)
+defaultScreen model =
+    [ Lazy.lazy2
+        (Navigation.global
+            [ ( Page.Index, "Tracks" )
+            , ( Page.Sources UI.Sources.Page.Index, "Sources" )
+            , ( Page.Settings UI.Settings.Page.Index, "Settings" )
+            ]
+        )
+        model.alfred.instance
+        model.page
 
--- defaultScreen : Model -> List (Html Msg)
--- defaultScreen model =
---     [ Lazy.lazy2
---         (Navigation.global
---             [ ( Page.Index, "Tracks" )
---             , ( Page.Sources UI.Sources.Page.Index, "Sources" )
---             , ( Page.Settings UI.Settings.Page.Index, "Settings" )
---             ]
---         )
---         model.alfred.instance
---         model.page
---
---     -----------------------------------------
---     -- Main
---     -----------------------------------------
---     , vessel
---         [ { amountOfSources = List.length model.sources.collection
---           , bgColor = model.backdrop.bgColor
---           , isOnIndexPage = model.page == Page.Index
---           , sourceIdsBeingProcessed = List.map Tuple.first model.sources.isProcessing
---           , viewport = model.viewport
---           }
---             |> Tracks.view model.tracks
---             |> Html.map TracksMsg
---
---         -- Pages
---         --------
---         , case model.page of
---             Page.Equalizer ->
---                 model.equalizer
---                     |> Lazy.lazy Equalizer.view
---                     |> Html.map EqualizerMsg
---
---             Page.Index ->
---                 nothing
---
---             Page.Playlists subPage ->
---                 model.backdrop.bgColor
---                     |> Lazy.lazy4
---                         Playlists.view
---                         subPage
---                         model.playlists
---                         model.tracks.selectedPlaylist
---                     |> Html.map PlaylistsMsg
---
---             Page.Queue subPage ->
---                 model.queue
---                     |> Lazy.lazy2 Queue.view subPage
---                     |> Html.map QueueMsg
---
---             Page.Settings subPage ->
---                 { authenticationMethod = Authentication.extractMethod model.authentication
---                 , chosenBackgroundImage = model.backdrop.chosen
---                 , hideDuplicateTracks = model.tracks.hideDuplicates
---                 , processAutomatically = model.processAutomatically
---                 , rememberProgress = model.rememberProgress
---                 }
---                     |> Lazy.lazy2 Settings.view subPage
---                     |> Html.map Reply
---
---             Page.Sources subPage ->
---                 let
---                     amountOfTracks =
---                         List.length model.tracks.collection.untouched
---                 in
---                 model.sources
---                     |> Lazy.lazy3 Sources.view { amountOfTracks = amountOfTracks } subPage
---                     |> Html.map SourcesMsg
---         ]
---
---     -----------------------------------------
---     -- Controls
---     -----------------------------------------
---     , Html.map Reply
---         (UI.Console.view
---             model.queue.activeItem
---             model.queue.repeat
---             model.queue.shuffle
---             { stalled = model.audioHasStalled
---             , loading = model.audioIsLoading
---             , playing = model.audioIsPlaying
---             }
---             ( model.audioPosition
---             , model.audioDuration
---             )
---         )
---     ]
+    -----------------------------------------
+    -- Main
+    -----------------------------------------
+    , vessel
+        [ { amountOfSources = List.length model.sources.collection
+          , bgColor = model.backdrop.bgColor
+          , isOnIndexPage = model.page == Page.Index
+          , sourceIdsBeingProcessed = List.map Tuple.first model.sources.isProcessing
+          , viewport = model.viewport
+          }
+            |> Tracks.view model.tracks
+            |> Html.map TracksMsg
+
+        -- Pages
+        --------
+        , case model.page of
+            Page.Equalizer ->
+                model.equalizer
+                    |> Lazy.lazy Equalizer.view
+                    |> Html.map EqualizerMsg
+
+            Page.Index ->
+                nothing
+
+            Page.Playlists subPage ->
+                model.backdrop.bgColor
+                    |> Lazy.lazy4
+                        Playlists.view
+                        subPage
+                        model.playlists
+                        model.tracks.selectedPlaylist
+                    |> Html.map PlaylistsMsg
+
+            Page.Queue subPage ->
+                model.queue
+                    |> Lazy.lazy2 Queue.view subPage
+                    |> Html.map QueueMsg
+
+            Page.Settings subPage ->
+                { authenticationMethod = Authentication.extractMethod model.authentication
+                , chosenBackgroundImage = model.backdrop.chosen
+                , hideDuplicateTracks = model.tracks.hideDuplicates
+                , processAutomatically = model.processAutomatically
+                , rememberProgress = model.rememberProgress
+                }
+                    |> Lazy.lazy2 Settings.view subPage
+                    |> Html.map Reply
+
+            Page.Sources subPage ->
+                let
+                    amountOfTracks =
+                        List.length model.tracks.collection.untouched
+                in
+                model.sources
+                    |> Lazy.lazy3 Sources.view { amountOfTracks = amountOfTracks } subPage
+                    |> Html.map SourcesMsg
+        ]
+
+    -----------------------------------------
+    -- Controls
+    -----------------------------------------
+    , Html.map Reply
+        (UI.Console.view
+            model.queue.activeItem
+            model.queue.repeat
+            model.queue.shuffle
+            { stalled = model.audioHasStalled
+            , loading = model.audioIsLoading
+            , playing = model.audioIsPlaying
+            }
+            ( model.audioPosition
+            , model.audioDuration
+            )
+        )
+    ]
+
+
+
 -- 🗺  ░░  BITS
 
 
@@ -2090,7 +2091,7 @@ content { justifyCenter, scrolling } nodes =
         [ C.overflow_x_hidden
         , C.relative
         , C.scrolling_touch
-        , C.w_full
+        , C.w_screen
         , C.z_10
 
         --
@@ -2112,53 +2113,61 @@ content { justifyCenter, scrolling } nodes =
 
 loadingAnimation : Html msg
 loadingAnimation =
-    Html.map never (Html.fromUnstyled UI.Svg.Elements.loading)
+    Html.map never UI.Svg.Elements.loading
+
+
+overlay : Maybe (Alfred Reply) -> Maybe (ContextMenu Reply) -> Html Msg
+overlay maybeAlfred maybeContextMenu =
+    let
+        isShown =
+            Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
+    in
+    brick
+        [ -- TODO: css overlayStyles
+          onClick HideOverlay
+        ]
+        [ C.inset_0
+        , C.bg_black
+        , C.fixed
+        , C.z_50
+
+        --
+        , ifThenElse isShown "" C.pointer_events_none
+        , ifThenElse isShown C.opacity_40 C.opacity_0
+        ]
+        []
+
+
+vessel : List (Html Msg) -> Html Msg
+vessel =
+    (>>)
+        (brick
+            [ style "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
+            [ C.bg_white
+            , C.flex
+            , C.flex_col
+            , C.flex_grow
+            , C.overflow_hidden
+            , C.relative
+            , C.rounded
+            ]
+        )
+        (bricky
+            [ style "min-height" "296px" ]
+            [ C.flex
+            , C.flex_grow
+            , C.rounded
+            , C.shadow_md
+            , C.w_full
+
+            --
+            , C.lg__max_w_insulation
+            , C.lg__min_w_3xl
+            ]
+        )
 
 
 
--- overlay : Maybe (Alfred Reply) -> Maybe (ContextMenu Reply) -> Html Msg
--- overlay maybeAlfred maybeContextMenu =
---     let
---         isShown =
---             Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
---     in
---     brick
---         [ css overlayStyles
---         , onClick HideOverlay
---         ]
---         [ T.absolute__fill
---         , T.bg_black_40
---         , T.fixed
---         , T.z_999
---
---         --
---         , ifThenElse isShown "" C.pointer_events_none
---         , ifThenElse isShown T.o_100 T.o_0
---         ]
---         []
---
--- vessel : List (Html Msg) -> Html Msg
--- vessel =
---     (>>)
---         (brick
---             [ css vesselInnerStyles ]
---             [ UI.Kit.borderRadius
---             , T.bg_white
---             , T.flex
---             , T.flex_column
---             , T.flex_grow_1
---             , T.overflow_hidden
---             , T.relative
---             ]
---         )
---         (bricky
---             [ css vesselStyles ]
---             [ UI.Kit.borderRadius
---             , T.flex
---             , T.flex_grow_1
---             , T.w_100
---             ]
---         )
 -- 🖼  ░░  OTHER
 
 
@@ -2167,25 +2176,6 @@ overlayStyles =
     [ Css.Transitions.transition
         [ Css.Transitions.opacity3 1000 0 Css.Transitions.ease ]
     ]
-
-
-vesselStyles : List Css.Style
-vesselStyles =
-    [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
-    , Css.minHeight (Css.px 296)
-
-    --
-    , Css.Media.withMedia
-        [ UI.Css.largeMediaQuery ]
-        [ Css.maxWidth (Css.vh UI.Kit.insulationWidth)
-        , Css.minWidth (Css.px 840)
-        ]
-    ]
-
-
-vesselInnerStyles : List Css.Style
-vesselInnerStyles =
-    [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
 
 
 
