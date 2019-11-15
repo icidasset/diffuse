@@ -131,12 +131,12 @@ view page deps =
 --         -- Clear cache
 --         --------------
 --         , chunk
---             [ T.flex, T.flex_wrap ]
+--             [ C.flex, C.flex_wrap ]
 --             [ chunk
 --                 [ T.w_50_ns, T.w_100 ]
 --                 [ label "Downloaded tracks"
 --                 , UI.Kit.buttonWithColor
---                     UI.Kit.colorKit.base04
+--                     UI.Kit.Gray
 --                     UI.Kit.Normal
 --                     ClearTracksCache
 --                     (text "Clear cache")
@@ -154,7 +154,7 @@ view page deps =
 --         -- Check it
 --         -----------
 --         , chunk
---             [ T.flex, T.flex_wrap ]
+--             [ C.flex, C.flex_wrap ]
 --             [ chunk
 --                 [ T.w_50_ns, T.w_100 ]
 --                 [ label "Process sources automatically"
@@ -213,7 +213,7 @@ view page deps =
 -- backgroundImage : Maybe String -> Html Reply
 -- backgroundImage chosenBackground =
 --     chunk
---         [ T.flex, T.flex_wrap ]
+--         [ C.flex, C.flex_wrap ]
 --         (List.map
 --             (\( filename, backdropLabel ) ->
 --                 let
@@ -225,30 +225,30 @@ view page deps =
 --                     , onClick (ChooseBackdrop filename)
 --                     ]
 --                     [ T.overflow_hidden
---                     , T.pointer
---                     , T.relative
+--                     , C.cursor_pointer
+--                     , C.relative
 --                     ]
 --                     [ if isActive then
 --                         brick
 --                             [ css backgroundThumbnailColorStyles ]
---                             [ T.absolute
---                             , T.absolute__fill
+--                             [ C.absolute
+--                             , C.inset_0
 --                             , T.br1
 --                             , T.mb1
 --                             , T.mr1
---                             , T.z_1
+--                             , C.z_10
 --                             ]
 --                             []
 --
 --                       else
 --                         chunk
---                             [ T.absolute
---                             , T.absolute__fill
+--                             [ C.absolute
+--                             , C.inset_0
 --                             , T.bg_black_05
 --                             , T.br1
 --                             , T.mb1
 --                             , T.mr1
---                             , T.z_1
+--                             , C.z_10
 --                             ]
 --                             []
 --
@@ -257,8 +257,8 @@ view page deps =
 --                         [ css (backgroundThumbnailInnerStyles filename)
 --                         , Backdrop.backgroundPositioning filename
 --                         ]
---                         [ T.absolute
---                         , T.absolute__fill
+--                         [ C.absolute
+--                         , C.inset_0
 --                         , T.br1
 --                         , T.mb1
 --                         , T.mr1
@@ -270,18 +270,18 @@ view page deps =
 --                     --
 --                     , if isActive then
 --                         chunk
---                             [ T.absolute
---                             , T.absolute__fill
---                             , T.f7
---                             , T.flex
+--                             [ C.absolute
+--                             , C.inset_0
+--                             , C.text_xs
+--                             , C.flex
 --                             , T.fw7
---                             , T.items_center
---                             , T.justify_center
---                             , T.lh_title
+--                             , C.items_center
+--                             , C.justify_center
+--                             , C.leading_snug
 --                             , T.mb1
 --                             , T.mr1
 --                             , T.ph2
---                             , T.tc
+--                             , C.text_center
 --                             , T.white
 --                             , T.z_3
 --                             ]

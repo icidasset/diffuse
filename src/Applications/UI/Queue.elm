@@ -527,9 +527,9 @@ futureView model =
     -----------------------------------------
     , if List.isEmpty model.future then
         chunk
-            [ T.relative ]
+            [ C.relative ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, T.left_0, T.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Up next" ] ]
             ]
 
@@ -544,7 +544,7 @@ futureView model =
                         , toMsg = DragMsg
                         }
                     )
-                |> chunky [ T.mt3 ]
+                |> chunky [ C.mt_3 ]
             ]
 
     --
@@ -558,7 +558,7 @@ futureView model =
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "add some music first."
@@ -601,9 +601,9 @@ futureItem selection idx item =
                 C.text_base05
             ]
             [ inline
-                [ T.dib
-                , T.f7
-                , T.mr2
+                [ C.inline_block
+                , C.text_xs
+                , C.mr_2
                 , T.o_60
                 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
@@ -661,9 +661,9 @@ historyView model =
     -----------------------------------------
     , if List.isEmpty model.past then
         chunk
-            [ T.relative ]
+            [ C.relative ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, T.left_0, T.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "History" ] ]
             ]
 
@@ -674,7 +674,7 @@ historyView model =
                 |> List.reverse
                 |> List.indexedMap historyItem
                 |> UI.List.view UI.List.Normal
-                |> chunky [ T.mt3 ]
+                |> chunky [ C.mt_3 ]
             ]
 
     --
@@ -684,7 +684,7 @@ historyView model =
                 [ T.o_30 ]
                 [ Icons.music_note 64 Inherit ]
             , chunk
-                [ T.lh_copy, T.mt2, T.o_40, T.tc ]
+                [ T.lh_copy, T.mt2, T.o_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "play some music first."
@@ -706,7 +706,7 @@ historyItem idx ({ identifiedTrack, manualEntry } as item) =
         inline
             [ T.db, T.truncate ]
             [ inline
-                [ T.dib, T.f7, T.mr2 ]
+                [ C.inline_block, C.text_xs, C.mr_2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]

@@ -33,10 +33,32 @@ const colors = {
 module.exports = {
 
   plugins: [
+
     require("tailwindcss-animations")(),
+    require("tailwindcss-interaction-variants")(),
     require("tailwindcss-transforms")(),
-    require("tailwindcss-transitions")()
+    require("tailwindcss-transitions")(),
+
+    // Add variant for `:focus:not(:active)`
+    function({ addVariant, e }) {
+      addVariant("inactive-focus", ({ modifySelectors, separator }) => {
+        modifySelectors(({ className }) => {
+          return `.${e(`fixate${separator}${className}`)}:focus:not(:active)`
+        })
+      })
+    }
+
   ],
+
+  variants: {
+
+    backgroundColor: [ "focus", "hover", "inactive-focus", "responsive" ],
+    borderColor: [ "focus", "hover", "inactive-focus", "responsive" ],
+    margin: [ "first", "last", "responsive" ],
+    opacity: [ "focus", "hocus", "hover", "responsive" ],
+    textColor: [ "focus", "hover", "inactive-focus", "responsive" ],
+
+  },
 
   theme: {
 
@@ -74,8 +96,10 @@ module.exports = {
       ...defaultTheme.colors,
       ...colors,
 
-      background: "rgb(2, 7, 14)",
-      inherit: "inherit",
+      "background": "rgb(2, 7, 14)",
+      "inherit": "inherit",
+      "subtle": "rgb(238, 238, 238)",
+      "white-60": "rgba(255, 255, 255, 0.6)",
     },
 
 
@@ -111,7 +135,11 @@ module.exports = {
       "insulation": "107.5vh"
     },
 
-    minWidth: defaultTheme.maxWidth,
+    minWidth: {
+      ...defaultTheme.maxWidth,
+
+      "tiny": "13.125rem"
+    },
 
 
     // Opacity
@@ -143,15 +171,6 @@ module.exports = {
 
     transformOrigin: {},
     perspectiveOrigin: {}
-
-  },
-
-  variants: {
-
-    // Variants
-    // --------
-
-    margin: [ "first", "last", "responsive" ]
 
   }
 

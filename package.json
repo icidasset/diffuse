@@ -12,6 +12,7 @@
     "purgecss": "^1.4.1",
     "tailwindcss": "^1.1.3",
     "tailwindcss-animations": "^1.0.0",
+    "tailwindcss-interaction-variants": "^2.2.0",
     "tailwindcss-transforms": "^2.2.0",
     "tailwindcss-transitions": "^2.1.0",
     "terser": "^4.3.9",

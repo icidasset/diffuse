@@ -35,7 +35,7 @@ css:
 	@echo "> Compiling CSS"
 	@mkdir -p $(BUILD_DIR)
 	@$(NPM_DIR)/.bin/postcss \
-		"${SRC_DIR}/Static/Css/Application.css" \
+		"${SRC_DIR}/Css/Application.css" \
 		--output "${BUILD_DIR}/application.css" \
 		--config "${SYSTEM_DIR}/Css/Post.js"
 
@@ -192,7 +192,7 @@ test:
 
 
 watch: build
-	@make watch_wo_build
+	@make watch-wo-build
 
 
 watch-wo-build:
@@ -201,7 +201,7 @@ watch-wo-build:
 
 
 watch-css:
-	@watchexec -p -w $(SRC_DIR) -e css -- make css
+	@watchexec -p -w $(SRC_DIR)/Css -w $(SYSTEM_DIR)/Css -- make css
 
 
 watch-elm:

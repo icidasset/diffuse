@@ -7,6 +7,7 @@ import Color.Ext as Color
 import Color.Manipulate
 import Conditional exposing (..)
 import Css exposing (px, solid, transparent, zero)
+import Css.Classes as C
 import Css.Media
 import Html exposing (Html, text)
 import Html.Attributes exposing (attribute, href, tabindex, target, title)
@@ -53,7 +54,7 @@ global items alfred activePage =
     brick
         -- TODO: [ css globalStyles ]
         []
-        [ T.f7
+        [ C.text_xs
         , T.fw6
         , T.mb5
         , T.mt4
@@ -76,7 +77,7 @@ globalItem activePage totalItems idx ( page, label ) =
             idx + 1 == totalItems
     in
     chunk
-        [ T.dib
+        [ C.inline_block
         , ifThenElse isLastItem T.mr0 T.mr1
         ]
         [ slab
@@ -86,10 +87,10 @@ globalItem activePage totalItems idx ( page, label ) =
             --, TODO: css (globalItemStyles isActivePage)
             , href (Page.toString page)
             ]
-            [ T.dib
+            [ C.inline_block
             , T.lh_copy
             , T.no_underline
-            , T.pointer
+            , C.cursor_pointer
             , T.pt2
 
             --
@@ -139,7 +140,7 @@ localWithTabindex tabindex_ items =
         []
         [ T.bb ]
         [ chunk
-            [ T.flex ]
+            [ C.flex ]
             (items
                 |> List.reverse
                 |> List.map (localItem tabindex_)
@@ -191,17 +192,17 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         -- TODO: , css localItemStyles
         , tabindex tabindex_
         ]
-        [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
+        [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
         , T.bg_transparent
         , T.bl_0
         , T.fw6
-        , T.flex
-        , T.items_center
-        , T.justify_center
+        , C.flex
+        , C.items_center
+        , C.justify_center
         , T.lh_solid
         , T.no_underline
-        , T.pointer
-        , T.ph3
+        , C.cursor_pointer
+        , C.px_3
         ]
         [ icon 16 Inherit
 
@@ -214,7 +215,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                 slab
                     Html.span
                     []
-                    [ T.dib, T.ml1, T.pv2, T.truncate ]
+                    [ C.inline_block, T.ml1, C.py_2, T.truncate ]
                     [ text labelText ]
         ]
 

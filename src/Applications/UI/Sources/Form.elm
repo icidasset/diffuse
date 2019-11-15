@@ -3,6 +3,7 @@ module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, e
 import Chunky exposing (..)
 import Common exposing (boolFromString, boolToString)
 import Conditional exposing (..)
+import Css.Classes as C
 import Dict
 import Dict.Ext as Dict
 import Html exposing (Html, strong, text)
@@ -298,19 +299,19 @@ newHow { context } =
                 List.splitAt (ceiling dividingPoint) properties
           in
           chunk
-            [ T.flex, T.pt3 ]
+            [ C.flex, C.pt_3 ]
             [ chunk
-                [ T.flex_grow_1, T.pr3 ]
+                [ C.flex_grow, T.pr3 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ T.flex_grow_1, T.pl3 ]
+                [ C.flex_grow, T.pl3 ]
                 (List.map (renderProperty context) listB)
             ]
 
         -- Button
         ---------
         , chunk
-            [ T.mt3, T.tc ]
+            [ C.mt_3, C.text_center ]
             [ UI.Kit.button
                 IconOnly
                 Bypass
@@ -354,7 +355,7 @@ newBy { context } =
                 Dict.fetch "name" "" context.data
           in
           chunk
-            [ T.flex, T.mt4, T.justify_center, T.w_100 ]
+            [ C.flex, T.mt4, C.justify_center, T.w_100 ]
             [ UI.Kit.textField
                 [ name "name"
                 , onInput (SetData "name")
@@ -402,14 +403,14 @@ newBy { context } =
 corsWarning : String -> List (Html Msg)
 corsWarning id =
     [ chunk
-        [ T.f6, T.flex, T.items_center, T.justify_center, T.lh_title, T.o_50 ]
+        [ T.f6, C.flex, C.items_center, C.justify_center, C.leading_snug, T.o_50 ]
         [ UI.Kit.inlineIcon Icons.warning
         , strong
             []
             [ text "Make sure CORS is enabled" ]
         ]
     , chunk
-        [ T.f6, T.lh_title, T.mb4, T.mt1, T.o_50 ]
+        [ T.f6, C.leading_snug, T.mb4, T.mt1, T.o_50 ]
         [ text "You can find the instructions over "
         , UI.Kit.link { label = "here", url = "about#" ++ id }
         ]
@@ -461,19 +462,19 @@ edit { context } =
                 List.splitAt (ceiling dividingPoint) properties
           in
           chunk
-            [ T.flex, T.pt3 ]
+            [ C.flex, C.pt_3 ]
             [ chunk
-                [ T.flex_grow_1, T.pr3 ]
+                [ C.flex_grow, T.pr3 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ T.flex_grow_1, T.pl3 ]
+                [ C.flex_grow, T.pl3 ]
                 (List.map (renderProperty context) listB)
             ]
 
         -- Button
         ---------
         , chunk
-            [ T.mt3, T.tc ]
+            [ C.mt_3, C.text_center ]
             [ UI.Kit.button
                 Normal
                 Bypass
@@ -541,10 +542,10 @@ form msg html =
     slab
         Html.form
         [ onSubmit msg ]
-        [ T.flex
-        , T.flex_grow_1
-        , T.flex_shrink_0
-        , T.tc
+        [ C.flex
+        , C.flex_grow
+        , C.flex_shrink_0
+        , C.text_center
         ]
         [ UI.Kit.centeredContent html ]
 

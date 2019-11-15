@@ -4370,6 +4370,14 @@ tailwindcss-animations@^1.0.0:
   dependencies:
     lodash "^4.17.15"
 
+tailwindcss-interaction-variants@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/tailwindcss-interaction-variants/-/tailwindcss-interaction-variants-2.2.0.tgz#a6667af19f7ba39d841e5b8dc668eac68fd8b01c"
+  integrity sha512-ZKi0YF4QZSyvL6V2+Y94KsyocynI6hSot6e8m6eSrnEg2KLl/begfsB2CnZ+s83EgWEL2/zA+cC3nNCVnT2mTA==
+  dependencies:
+    lodash "^4.17.15"
+    postcss-selector-parser "^6.0.2"
+
 tailwindcss-transforms@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/tailwindcss-transforms/-/tailwindcss-transforms-2.2.0.tgz#3e0e594a2b34a056714d5fe539e2ace3226edf28"

@@ -1,6 +1,7 @@
 module UI.Settings.ImportExport exposing (view)
 
 import Chunky exposing (..)
+import Css.Classes as C
 import Html exposing (Html, text)
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
@@ -47,9 +48,9 @@ view userLayerMethod =
 
             -- Import
             ---------
-            , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Import" ]
+            , chunk [ C.mb_2, T.mt4 ] [ UI.Kit.label [] "Import" ]
             , UI.Kit.buttonWithColor
-                UI.Kit.colorKit.base04
+                UI.Kit.Gray
                 Normal
                 RequestImport
                 (text "Choose file")
@@ -68,7 +69,7 @@ view userLayerMethod =
 
             -- Export
             ---------
-            , chunk [ T.mb2, T.mt4 ] [ UI.Kit.label [] "Export" ]
+            , chunk [ C.mb_2, T.mt4 ] [ UI.Kit.label [] "Export" ]
             , UI.Kit.button
                 Normal
                 Export
@@ -81,11 +82,11 @@ otherImportOptions : Html Reply
 otherImportOptions =
     raw
         [ chunk
-            [ T.f7, T.i, T.lh_copy, T.mt3 ]
+            [ C.text_xs, T.i, T.lh_copy, C.mt_3 ]
             [ text "Other options:" ]
         , chunk
             [ T.f6, T.lh_copy, T.mt2 ]
-            [ inline [ T.mr2 ] [ text "•" ]
+            [ inline [ C.mr_2 ] [ text "•" ]
             , UI.Kit.textButton
                 { label = "Import Diffuse V1 data"
                 , onClick = ImportLegacyData

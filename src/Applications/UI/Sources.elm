@@ -4,6 +4,7 @@ import Alien
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
 import Coordinates
+import Css.Classes as C
 import Dict.Ext as Dict
 import Html exposing (Html, text)
 import Html.Attributes exposing (class, href)
@@ -353,9 +354,9 @@ index amountOfTracks model =
     -----------------------------------------
     , if List.isEmpty model.collection then
         chunk
-            [ T.relative ]
+            [ C.relative ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, T.left_0, T.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Sources" ] ]
             ]
 
@@ -394,11 +395,11 @@ index amountOfTracks model =
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, C.text_center ]
                 [ text "A source is a place where music is stored,"
                 , lineBreak
                 , text "add one so you can play some music "
-                , inline [ T.v_mid ] [ Icons.add 14 Inherit ]
+                , inline [ C.align_middle ] [ Icons.add 14 Inherit ]
                 ]
             ]
 

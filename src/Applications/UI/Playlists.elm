@@ -311,9 +311,9 @@ view page model selectedPlaylist bgColor =
 --     -----------------------------------------
 --     , if List.isEmpty model.collection then
 --         chunk
---             [ T.relative ]
+--             [ C.relative ]
 --             [ chunk
---                 [ T.absolute, T.left_0, T.top_0 ]
+--                 [ C.absolute, T.left_0, T.top_0 ]
 --                 [ UI.Kit.canister [ UI.Kit.h1 "Playlists" ] ]
 --             ]
 --
@@ -363,7 +363,7 @@ view page model selectedPlaylist bgColor =
 --             , slab
 --                 Html.a
 --                 [ href (Page.toString <| Page.Playlists New) ]
---                 [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+--                 [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, C.text_center ]
 --                 [ text "No playlists found, create one"
 --                 , lineBreak
 --                 , text "or enable directory playlists."
@@ -390,7 +390,7 @@ view page model selectedPlaylist bgColor =
 -- category cat =
 --     brick
 --         [ css categoryStyles ]
---         [ T.f7, T.mb3, T.mt4, T.truncate, T.ttu ]
+--         [ C.text_xs, T.mb3, T.mt4, T.truncate, T.ttu ]
 --         [ UI.Kit.inlineIcon Icons.folder
 --         , inline [ T.fw7, T.ml2 ] [ text cat ]
 --         ]
@@ -474,9 +474,9 @@ view page model selectedPlaylist bgColor =
 --         |> slab
 --             Html.form
 --             [ onSubmit Create ]
---             [ T.flex
---             , T.flex_grow_1
---             , T.tc
+--             [ C.flex
+--             , C.flex_grow
+--             , C.text_center
 --             ]
 --     ]
 --
@@ -537,8 +537,8 @@ view page model selectedPlaylist bgColor =
 --         |> slab
 --             Html.form
 --             [ onSubmit Modify ]
---             [ T.flex
---             , T.flex_grow_1
---             , T.tc
+--             [ C.flex
+--             , C.flex_grow
+--             , C.text_center
 --             ]
 --     ]

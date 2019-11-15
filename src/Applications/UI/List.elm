@@ -52,7 +52,7 @@ view : Variant Int msg -> List (Item msg) -> Html msg
 view variant items =
     items
         |> List.indexedMap (item variant)
-        |> brick [ style "font-size" "13p" ] [ T.lh_title ]
+        |> brick [ style "font-size" "13p" ] [ C.leading_snug ]
 
 
 
@@ -84,12 +84,12 @@ item variant idx { label, actions, msg, isSelected } =
         --             |> css
         --         ]
         -- )
-        [ T.flex
+        [ C.flex
         , T.fw6
-        , T.items_center
+        , C.items_center
 
         --
-        , ifThenElse (Maybe.isJust msg) T.pointer ""
+        , ifThenElse (Maybe.isJust msg) C.cursor_pointer ""
         ]
         [ -- Label
           --------
@@ -117,14 +117,14 @@ item variant idx { label, actions, msg, isSelected } =
                         )
                         (DnD.listenToEnterLeave env idx)
             )
-            [ T.flex_grow_1, T.pv3, T.overflow_hidden ]
+            [ C.flex_grow, T.pv3, T.overflow_hidden ]
             [ label ]
 
         -- Actions
         ----------
         , chunk
-            [ T.flex
-            , T.items_center
+            [ C.flex
+            , C.items_center
 
             --
             , case variant of
@@ -159,7 +159,7 @@ actionView action =
         [ C.leading_0
         , T.ml1
         , T.pl1
-        , ifThenElse (Maybe.isJust action.msg) T.pointer ""
+        , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer ""
         ]
         [ action.icon 16 action.color ]
 

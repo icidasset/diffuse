@@ -87,15 +87,6 @@ rgb =
 --
 -- FOCUSING, Pt. II
 --
--- buttonFocus : Css.Style
--- buttonFocus =
---     focusWhileNotActive
---         [ Css.backgroundColor (Css.rgb 255 255 255)
---         , Css.borderColor (Color.toElmCssColor colors.focus)
---         , Css.color (Color.toElmCssColor colors.focus)
---         , iconFocusStyle
---         ]
---
 --
 -- inputFocus : Css.Style
 -- inputFocus =
@@ -107,7 +98,6 @@ rgb =
 -- navFocus =
 --     focusWhileNotActive
 --         [ Css.borderTopColor (Color.toElmCssColor colors.focus)
---         , iconFocusStyle
 --         ]
 --
 --
@@ -125,23 +115,6 @@ rgb =
 --         [ Css.color (Color.toElmCssColor colors.focus)
 --         ]
 --
--- FONTS
---
--- defaultFontFamilies : List String
--- defaultFontFamilies =
---     [ "Source Sans Pro", "sans-serif" ]
---
--- defaultFontStyles : List Css.Style
--- defaultFontStyles =
---     [ Css.fontFamilies defaultFontFamilies ]
---
--- headerFontFamilies : List String
--- headerFontFamilies =
---     [ "Montserrat", "Futura", "\"Trebuchet MS\"", "Arial", "sans-serif" ]
---
--- headerFontStyles : List Css.Style
--- headerFontStyles =
---     [ Css.fontFamilies headerFontFamilies ]
 --
 -- SHADOWS
 --
@@ -155,7 +128,7 @@ rgb =
 --
 -- borderRadius : String
 -- borderRadius =
---     T.br2
+--     C.rounded
 
 
 insulationWidth : Float
@@ -167,6 +140,12 @@ insulationWidth =
 -- NODES
 
 
+type ButtonColor
+    = Accent
+    | Gray
+    | White
+
+
 type ButtonType
     = Filled
     | IconOnly
@@ -175,20 +154,20 @@ type ButtonType
 
 button : ButtonType -> msg -> Html msg -> Html msg
 button =
-    buttonWithColor colorKit.accent
+    buttonWithColor Accent
 
 
 buttonLink : String -> ButtonType -> Html msg -> Html msg
 buttonLink theHref buttonType =
-    buttonWithOptions Html.a [ href theHref ] colorKit.accent buttonType Nothing
+    buttonWithOptions Html.a [ href theHref ] Accent buttonType Nothing
 
 
-buttonLinkWithColor : Color.Color -> String -> ButtonType -> Html msg -> Html msg
+buttonLinkWithColor : ButtonColor -> String -> ButtonType -> Html msg -> Html msg
 buttonLinkWithColor color theHref buttonType =
     buttonWithOptions Html.a [ href theHref ] color buttonType Nothing
 
 
-buttonWithColor : Color.Color -> ButtonType -> msg -> Html msg -> Html msg
+buttonWithColor : ButtonColor -> ButtonType -> msg -> Html msg -> Html msg
 buttonWithColor color buttonType msg =
     buttonWithOptions Html.button [] color buttonType (Just msg)
 
@@ -196,35 +175,69 @@ buttonWithColor color buttonType msg =
 buttonWithOptions :
     (List (Html.Attribute msg) -> List (Html msg) -> Html msg)
     -> List (Html.Attribute msg)
-    -> Color.Color
+    -> ButtonColor
     -> ButtonType
     -> Maybe msg
     -> Html msg
     -> Html msg
 buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
+    let
+        defaultClasses =
+            [ C.bg_transparent
+            , C.cursor_pointer
+            , C.font_bold
+            , C.inline_block
+            , C.no_underline
+            , C.pb_2
+            , C.pt_3
+            , C.px_4
+            , C.rounded
+            , C.text_center
+            , C.text_sm
+
+            --
+            , C.fixate__bg_white
+            , C.fixate__border_black
+            , C.fixate__text_black
+            ]
+
+        specificClasses =
+            case buttonType of
+                Filled ->
+                    case buttonColor of
+                        Accent ->
+                            [ C.bg_accent, C.border_transparent, C.text_white ]
+
+                        Gray ->
+                            [ C.bg_base04, C.border_transparent, C.text_white ]
+
+                        White ->
+                            [ C.bg_white, C.border_transparent, C.text_white ]
+
+                _ ->
+                    case buttonColor of
+                        Accent ->
+                            [ C.border_accent, C.text_accent ]
+
+                        Gray ->
+                            [ C.border_base04, C.text_base04 ]
+
+                        White ->
+                            [ C.border_white, C.text_white ]
+    in
     slab
         tag
-        (List.append
-            attributes
-            [ -- TODO: css (buttonStyles buttonType buttonColor)
-              case maybeMsg of
-                Just msg ->
-                    onClick msg
+        (case maybeMsg of
+            Just msg ->
+                [ onClick msg ]
 
-                Nothing ->
-                    style "carry" "on"
-            ]
+            Nothing ->
+                []
         )
-        [ C.bg_transparent
-        , C.cursor_pointer
-        , C.font_bold
-        , C.inline_block
-        , C.no_underline
-        , C.px_4
-        , C.rounded
-        , C.text_center
-        , C.text_sm
-        ]
+        (List.append
+            defaultClasses
+            specificClasses
+        )
         [ case buttonType of
             IconOnly ->
                 slab
@@ -235,7 +248,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 
             _ ->
                 inline
-                    [ C.leading_normal ]
+                    [ C.inline_block, C.leading_normal, C.pb_px ]
                     [ child ]
         ]
 
@@ -280,7 +293,7 @@ centeredContent children =
 -- checkbox opts =
 --     brick
 --         [ css checkboxStyles, onClick opts.toggleMsg ]
---         [ C.inline_block, T.pointer, C.relative ]
+--         [ C.inline_block, C.cursor_pointer, C.relative ]
 --         [ if opts.checked then
 --             Icons.check_box 22 Inherit
 --
@@ -434,7 +447,7 @@ select inputHandler options =
             , C.leading_normal
             , T.ma0
             , T.outline_0
-            , T.pv2
+            , C.py_2
             , T.ph0
             , C.w_full
             ]
@@ -477,7 +490,7 @@ textButton params =
         , C.leading_tight
         , T.ma0
         , T.pa0
-        , T.pointer
+        , C.cursor_pointer
         ]
         [ Html.text params.label ]
 
@@ -495,7 +508,7 @@ textField attributes =
         , T.f6
         , C.leading_normal
         , T.mt1
-        , T.pv2
+        , C.py_2
         , C.w_full
         ]
         []
@@ -523,29 +536,6 @@ textFieldAlt attributes =
 -----------------------------------------
 -- ㊙️
 -----------------------------------------
---
---
--- buttonStyles : ButtonType -> Color.Color -> List Css.Style
--- buttonStyles buttonType buttonColor =
---     case buttonType of
---         Filled ->
---             [ Css.backgroundColor (Color.toElmCssColor buttonColor)
---             , Css.borderColor Css.transparent
---             , Css.color (Css.rgb 255 255 255)
---             , Css.paddingBottom (Css.rem 0.525)
---             , Css.paddingTop (Css.rem 0.6)
---             , buttonFocus
---             ]
---
---         _ ->
---             [ Css.borderColor (Color.toElmCssColor buttonColor)
---             , Css.color (Color.toElmCssColor buttonColor)
---             , Css.paddingBottom (Css.rem 0.525)
---             , Css.paddingTop (Css.rem 0.6)
---             , buttonFocus
---             ]
---
---
 -- checkboxStyles : List Css.Style
 -- checkboxStyles =
 --     [ Css.left (Css.px -3)
@@ -671,13 +661,3 @@ textFieldAlt attributes =
 --     , Css.width (px 292)
 --     , textAreaFocus
 --     ]
---
---
--- ⚗️
---
--- iconFocusStyle : Css.Style
--- iconFocusStyle =
---     [ Css.fill (Color.toElmCssColor colors.focus) ]
---         |> Css.Global.selector "svg > g"
---         |> List.singleton
---         |> Css.Global.descendants

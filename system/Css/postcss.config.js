@@ -1,9 +1,13 @@
+const crypto = require("crypto")
 const fs = require("fs")
 const postcss = require("postcss")
 
 
 // Elm
 // ---
+// This'll generate an Elm module with a function for each CSS class we have.
+// It will also generate a "CSS table" with the "css_class <=> elm_function" relation.
+// This "CSS table" makes it possible to only keep the CSS that's actually used.
 
 const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result) => {
 
@@ -18,18 +22,19 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
 
     const cls = rule
       .selector
+      .split(",")[0]
       .replace(/^\./, "")
       .replace(/\\/g, "")
       .replace("::placeholder", "")
       .replace(
-        /\:(responsive|group-hover|focus-within|first|last|odd|even|hover|focus|active|visited|disabled)$/,
+        /\:(active|disabled|even|first|focus|focus-within|focus:not\(:active\)|group-hover|hover|last|odd|responsive|visited)$/,
         ""
       )
 
     const elmVariable = cls
       .replace(/:/g, "__")
-      .replace(/__-/g, "__neg_")
-      .replace(/^-/g, "neg_")
+      .replace(/__-/g, "__minus_")
+      .replace(/^-/g, "minus_")
       .replace(/-/g, "_")
       .replace(/\//g, "_div_")
       .replace(/_1_div_2$/, "_half_way")
@@ -49,7 +54,12 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
   const header = "module Css.Classes exposing (..)\n\n"
   const contents = header + functions.join("\n\n")
   const table = JSON.stringify(lookup)
+  const hash = crypto.createHash("sha1").update(table).digest("base64")
+  const previousHash = fs.readFileSync("tmp/css-table.cache", { flag: "a+", encoding: "utf-8" })
 
+  if (hash === previousHash) return;
+
+  fs.writeFileSync("tmp/css-table.cache", hash)
   fs.writeFileSync("src/Library/Css/Classes.elm", contents)
   fs.writeFileSync("build/css-table.json", table)
 })

@@ -1,6 +1,7 @@
 module Notifications exposing (Action, Kind(..), Notification, Options, contents, dismiss, error, errorWithCode, id, kind, options, stickyError, stickySuccess, stickyWarning, success, warning)
 
 import Chunky exposing (..)
+import Css.Classes as C
 import Html exposing (Html)
 import Html.Attributes exposing (style)
 import Markdown
@@ -107,8 +108,8 @@ errorWithCode content code _ =
                 slab
                     Html.pre
                     [ style "font-size" "11px" ]
-                    [ T.bg_black_50, T.br2, T.mb0, T.mt3, T.pa2 ]
-                    [ slab Html.code [] [ T.ws_normal, T.v_mid ] [ Html.text code ] ]
+                    [ T.bg_black_50, C.rounded, C.mb_0, C.mt_3, C.p_2 ]
+                    [ slab Html.code [] [ T.ws_normal, C.align_middle ] [ Html.text code ] ]
             ]
         )
 

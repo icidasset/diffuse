@@ -674,9 +674,9 @@ view model deps =
 --
 -- viewClasses : List String
 -- viewClasses =
---     [ T.flex
---     , T.flex_column
---     , T.flex_grow_1
+--     [ C.flex
+--     , C.flex_col
+--     , C.flex_grow
 --     ]
 --
 --
@@ -687,16 +687,16 @@ view model deps =
 --             ifThenElse isOnIndexPage 0 -1
 --     in
 --     chunk
---         [ T.flex ]
+--         [ C.flex ]
 --         [ -----------------------------------------
 --           -- Part 1
 --           -----------------------------------------
 --           brick
 --             [ css searchStyles ]
---             [ T.flex
---             , T.flex_grow_1
+--             [ C.flex
+--             , C.flex_grow
 --             , T.overflow_hidden
---             , T.relative
+--             , C.relative
 --             ]
 --             [ -- Input
 --               --------
@@ -713,7 +713,7 @@ view model deps =
 --                 [ T.bg_transparent
 --                 , T.bn
 --                 , T.color_inherit
---                 , T.flex_grow_1
+--                 , C.flex_grow
 --                 , T.h_100
 --                 , T.outline_0
 --                 , T.pr2
@@ -725,10 +725,10 @@ view model deps =
 --             --------------
 --             , brick
 --                 [ css searchIconStyles ]
---                 [ T.absolute
+--                 [ C.absolute
 --                 , T.bottom_0
---                 , T.flex
---                 , T.items_center
+--                 , C.flex
+--                 , C.items_center
 --                 , T.left_0
 --                 , T.top_0
 --                 , T.z_0
@@ -739,8 +739,8 @@ view model deps =
 --             ----------
 --             , brick
 --                 [ css searchActionsStyles ]
---                 [ T.flex
---                 , T.items_center
+--                 [ C.flex
+--                 , C.items_center
 --                 ]
 --                 [ -- 1
 --                   case searchTerm of
@@ -750,7 +750,7 @@ view model deps =
 --                             , onClick ClearSearch
 --                             , title "Clear search"
 --                             ]
---                             [ T.pointer ]
+--                             [ C.cursor_pointer ]
 --                             [ Icons.clear 16 searchIconColoring ]
 --
 --                     Nothing ->
@@ -762,7 +762,7 @@ view model deps =
 --                     , onClick ToggleFavouritesOnly
 --                     , title "Toggle favourites-only"
 --                     ]
---                     [ T.pointer ]
+--                     [ C.cursor_pointer ]
 --                     [ case favouritesOnly of
 --                         True ->
 --                             Icons.favorite 16 <| Color UI.Kit.colorKit.base08
@@ -777,7 +777,7 @@ view model deps =
 --                     , Mouse.onClick (ShowViewMenu maybeGrouping)
 --                     , title "View settings"
 --                     ]
---                     [ T.pointer ]
+--                     [ C.cursor_pointer ]
 --                     [ Icons.more_vert 16 searchIconColoring ]
 --
 --                 -- 4
@@ -787,11 +787,11 @@ view model deps =
 --                             [ css (selectedPlaylistStyles bgColor)
 --                             , onClick DeselectPlaylist
 --                             ]
---                             [ T.br2
---                             , T.f7
+--                             [ C.rounded
+--                             , C.text_xs
 --                             , T.fw7
 --                             , T.lh_solid
---                             , T.pointer
+--                             , C.cursor_pointer
 --                             , T.truncate
 --                             , T.white_90
 --                             ]
@@ -825,18 +825,18 @@ view model deps =
 -- noTracksView : List String -> Int -> Int -> Int -> Html Msg
 -- noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
 --     chunk
---         [ T.flex, T.flex_grow_1 ]
+--         [ C.flex, C.flex_grow ]
 --         [ UI.Kit.centeredContent
 --             [ if List.length isProcessing > 0 then
 --                 message "Processing Tracks"
 --
 --               else if amountOfSources == 0 then
 --                 chunk
---                     [ T.flex
---                     , T.flex_wrap
+--                     [ C.flex
+--                     , C.flex_wrap
 --                     , T.items_start
---                     , T.justify_center
---                     , T.ph3
+--                     , C.justify_center
+--                     , C.px_3
 --                     ]
 --                     [ -- Add
 --                       ------
@@ -860,7 +860,7 @@ view model deps =
 --                     , inline
 --                         [ T.mb3, T.mh2, T.nowrap ]
 --                         [ UI.Kit.buttonWithColor
---                             UI.Kit.colorKit.base04
+--                             UI.Kit.Gray
 --                             UI.Kit.Normal
 --                             (Reply InsertDemo)
 --                             (buttonContents
@@ -904,13 +904,13 @@ view model deps =
 --     slab
 --         Html.span
 --         [ style "height" "21px" ]
---         [ T.flex, T.items_center, C.leading_0 ]
+--         [ C.flex, C.items_center, C.leading_0 ]
 --
 --
 -- message : String -> Html Msg
 -- message m =
 --     chunk
---         [ T.bb, T.bw1, T.f6, T.fw6, T.lh_title, T.pb1 ]
+--         [ T.bb, T.bw1, T.f6, T.fw6, C.leading_snug, C.pb_1 ]
 --         [ text m ]
 --
 --

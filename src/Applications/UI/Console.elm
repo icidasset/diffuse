@@ -6,6 +6,7 @@ import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css
+import Css.Classes as C
 import Css.Ext as Css
 import Css.Media
 import Html exposing (Html, text)
@@ -32,7 +33,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
     brick
         -- TODO: [ css consoleStyles ]
         []
-        [ T.mt1, T.tc, T.w_100 ]
+        [ T.mt1, C.text_center, T.w_100 ]
         [ -----------------------------------------
           -- Now Playing
           -----------------------------------------
@@ -41,14 +42,14 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
             , T.i
             , T.lh_copy
             , T.pb3
-            , T.pt3
+            , C.pt_3
             , T.white
             ]
             [ if stalled then
                 slab
                     Html.span
                     []
-                    [ T.dib ]
+                    [ C.inline_block ]
                     [ text "Audio connection got interrupted, trying to reconnect ..." ]
 
               else if loading then
@@ -59,7 +60,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                     Just ( _, { tags } ) ->
                         Html.span
                             [ onClick ScrollToNowPlaying
-                            , class T.pointer
+                            , class C.cursor_pointer
                             , title "Scroll to track"
                             ]
                             [ text (tags.artist ++ " - " ++ tags.title) ]
@@ -84,7 +85,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
           in
           brick
             [ on "click" (clickLocationDecoder Seek) ]
-            [ T.pointer
+            [ C.cursor_pointer
             , T.pv1
             ]
             [ brick
@@ -106,12 +107,14 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
         , brick
             -- TODO: [ css buttonsContainerStyles ]
             []
-            [ T.flex
-            , T.justify_between
-            , T.justify_center_ns
-            , T.mb2
-            , T.mt3
-            , T.pb1
+            [ C.flex
+            , C.justify_between
+            , C.mb_2
+            , C.mt_3
+            , C.pb_1
+
+            --
+            , C.md__justify_center
             ]
             [ button "Toggle repeat" (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
             , button "Play previous track" lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
@@ -126,14 +129,14 @@ button : String -> Html msg -> Html msg -> msg -> Html msg
 button t light content msg =
     brick
         [ onClick msg, title t ]
-        [ T.flex, T.flex_column, T.items_center, T.mh1, T.mh4_ns, T.ph1, T.pointer ]
+        [ C.flex, C.flex_col, C.items_center, T.mh1, T.mh4_ns, C.px_1, C.cursor_pointer ]
         [ brick
             [ style "height" "4px" ]
             []
             [ light ]
         , brick
             [ style "height" "25px" ]
-            [ T.flex, T.items_center, T.mv2 ]
+            [ C.flex, C.items_center, T.mv2 ]
             [ content ]
         ]
 
@@ -167,7 +170,7 @@ largeLight isOn =
         --     ]
         -- ]
         []
-        [ T.br_pill, T.relative ]
+        [ T.br_pill, C.relative ]
         []
 
 
@@ -185,7 +188,7 @@ play =
     brick
         -- TODO: [ css playTextStyles ]
         []
-        [ T.fw7, T.nowrap, T.relative ]
+        [ T.fw7, T.nowrap, C.relative ]
         [ text "PLAY" ]
 
 

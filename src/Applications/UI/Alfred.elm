@@ -162,20 +162,20 @@ view model =
     case model.instance of
         Just instance ->
             chunk
-                [ T.absolute__fill
-                , T.flex
-                , T.flex_column
+                [ C.inset_0
+                , C.flex
+                , C.flex_col
                 , T.fixed
-                , T.items_center
-                , T.ph3
-                , T.pointer
+                , C.items_center
+                , C.px_3
+                , C.cursor_pointer
                 , T.z_9999
                 ]
                 [ -----------------------------------------
                   -- Message
                   -----------------------------------------
                   chunk
-                    [ T.i, T.lh_copy, T.mt4, T.pt3, T.tc, T.white ]
+                    [ T.i, T.lh_copy, T.mt4, C.pt_3, C.text_center, T.white ]
                     [ text instance.message ]
 
                 -----------------------------------------
@@ -207,8 +207,8 @@ view model =
                         , type_ "text"
                         ]
                         [ T.bn
-                        , T.bg_white
-                        , T.br2
+                        , C.bg_white
+                        , C.rounded
                         , T.db
                         , T.f3
                         , T.lh_copy
@@ -225,8 +225,8 @@ view model =
                 , brick
                     -- TODO: [ css shadowStyles ]
                     []
-                    [ T.bg_white
-                    , T.br2
+                    [ C.bg_white
+                    , C.rounded
                     , T.f6
                     , T.lh_solid
                     , T.measure_wide
@@ -240,7 +240,7 @@ view model =
                             brick
                                 [ onTapPreventDefault (RunAction idx) ]
                                 [ T.pa3
-                                , T.relative
+                                , C.relative
                                 , T.truncate
 
                                 --
@@ -267,7 +267,7 @@ view model =
                                     brick
                                         -- TODO: [ css activeItemIndicatorStyles ]
                                         []
-                                        [ T.absolute
+                                        [ C.absolute
                                         , C.leading_0
                                         , T.mr3
                                         , T.right_0

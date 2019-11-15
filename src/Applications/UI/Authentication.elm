@@ -470,7 +470,8 @@ hashPassphrase phrase =
 view : Model -> Html Msg
 view model =
     chunk
-        [ C.flex
+        [ C.antialiased
+        , C.flex
         , C.flex_col
         , C.h_full
         , C.items_center
@@ -485,8 +486,9 @@ view model =
             , C.md__pb_0
             ]
             [ chunk
-                [ C.py_4, C.relative ]
-                [ img
+                [ C.py_5, C.relative ]
+                [ slab
+                    Html.img
                     [ onClick Cancel
                     , src "images/diffuse-light.svg"
                     , width 190
@@ -498,14 +500,13 @@ view model =
 
                         _ ->
                             title "Go back"
-
-                    --
-                    , case model of
+                    ]
+                    [ case model of
                         Welcome ->
-                            style "cursor" "default"
+                            C.cursor_default
 
                         _ ->
-                            style "cursor" "pointer"
+                            C.cursor_pointer
                     ]
                     []
 
@@ -607,22 +608,23 @@ view model =
         -- Link to about page
         -----------------------------------------
         , chunk
-            [ T.f6
-            , T.fw6
-            , T.flex
-            , T.flex_grow_1
-            , T.items_end
-            , T.lh_title
-            , T.pb4
-            , T.pt3
+            [ C.font_semibold
+            , C.flex
+            , C.flex_grow
+            , C.items_end
+            , C.leading_snug
+            , C.pb_8
+            , C.pt_3
+            , C.text_sm
             ]
             [ slab
                 a
                 [ href "about" ]
-                [ T.bb
-                , T.i
-                , T.no_underline
-                , T.white_60
+                [ C.border_b
+                , C.border_white_60
+                , C.italic
+                , C.no_underline
+                , C.text_white_60
                 ]
                 [ text "More info" ]
             ]
@@ -645,21 +647,22 @@ inputSpeechStyles =
 welcomeScreen : Html Msg
 welcomeScreen =
     chunk
-        [ T.mt3
-        , T.relative
-        , T.z_1
+        [ C.mt_3
+        , C.relative
+        , C.z_10
         ]
         [ UI.Kit.buttonWithColor
-            (Color.rgb 1 1 1)
+            UI.Kit.White
             Filled
             GetStarted
             (slab
                 Html.span
                 [ style "color" "#A19B9D"
                 , style "font-size" "13px"
+                , style "letter-spacing" "0.25em"
                 , style "line-height" "20px"
                 ]
-                [ T.tracked_mega ]
+                []
                 [ text "SIGN IN" ]
             )
         ]
@@ -672,12 +675,12 @@ welcomeScreen =
 choicesScreen : Html Msg
 choicesScreen =
     chunk
-        [ T.bg_white
-        , T.br2
-        , T.ph3
-        , T.pv2
-        , T.relative
-        , T.z_1
+        [ C.bg_white
+        , C.rounded
+        , C.px_4
+        , C.py_2
+        , C.relative
+        , C.z_10
         ]
         [ choiceButton
             { action = ShowNewEncryptionKeyScreen Local
@@ -727,13 +730,13 @@ choicesScreen =
         -- More options
         ---------------
         , chunk
-            [ T.pb1, T.pt3, T.tc ]
+            [ C.pb_px, C.pt_4, C.text_center ]
             [ slab
                 Html.span
                 [ title "More options"
                 , Mouse.onClick ShowMoreOptions
                 ]
-                [ T.dib, T.ph1, T.pointer, C.leading_none ]
+                [ C.inline_block, C.px_1, C.cursor_pointer, C.leading_none ]
                 [ chunk
                     [ C.pointer_events_none ]
                     [ Icons.more_horiz 22 Inherit ]
@@ -753,18 +756,30 @@ choiceButton :
     -> Html msg
 choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
     chunk
-        [ T.relative ]
+        [ C.border_subtle
+        , C.relative
+
+        --
+        , if isLast then
+            C.border_b_0
+
+          else
+            C.border_b
+        ]
         [ -----------------------------------------
           -- Button
           -----------------------------------------
           slab
             button
             [ onClick action ]
-            [ C.cursor_pointer
+            [ C.bg_transparent
+            , C.cursor_pointer
             , C.flex
             , C.items_center
             , C.leading_none
+            , C.min_w_tiny
             , C.outline_none
+            , C.px_2
             , C.py_4
             , C.text_left
             , C.text_sm
@@ -776,9 +791,7 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
                 --
                 , ifThenElse outOfOrder C.opacity_20 C.opacity_100
                 ]
-                [ slab
-                    span
-                    []
+                [ inline
                     [ C.inline_flex, C.mr_4 ]
                     [ icon 16 Inherit ]
                 , text label
@@ -801,7 +814,19 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
                     , target "_blank"
                     , title ("Learn more about " ++ label)
                     ]
-                    [ T.absolute, T.glow, C.leading_none, T.ml3, T.o_40, T.pl3, T.pointer, T.white ]
+                    [ C.absolute
+                    , C.cursor_pointer
+                    , C.leading_none
+                    , C.ml_4
+                    , C.minus_translate_y_half_way
+                    , C.opacity_40
+                    , C.pl_4
+                    , C.text_white
+                    , C.transition_100
+
+                    --
+                    , C.hocus__opacity_100
+                    ]
                     [ Icons.help 17 Inherit ]
 
             Nothing ->
@@ -818,8 +843,8 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
     slab
         Html.form
         [ onSubmit withEncryption ]
-        [ T.flex
-        , T.flex_column
+        [ C.flex
+        , C.flex_col
         ]
         [ UI.Kit.textArea
             [ attribute "autocapitalize" "none"
@@ -839,16 +864,17 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             (text "Continue")
         , brick
             [ onClickStopPropagation withoutEncryption ]
-            [ T.f7
-            , T.flex
-            , T.items_center
-            , T.justify_center
-            , T.lh_title
-            , T.mt3
-            , T.pointer
-            , T.white_50
+            [ C.cursor_pointer
+            , C.flex
+            , C.items_center
+            , C.justify_center
+            , C.leading_snug
+            , C.mt_3
+            , C.opacity_50
+            , C.text_white
+            , C.text_xs
             ]
-            [ inline [ T.dib, C.leading_none, T.mr2 ] [ Icons.warning 13 Inherit ]
+            [ inline [ C.inline_block, C.leading_none, C.mr_2 ] [ Icons.warning 13 Inherit ]
             , text "Continue without encryption"
             ]
         ]
@@ -863,8 +889,8 @@ inputScreen question =
     slab
         Html.form
         [ onSubmit ConfirmInput ]
-        [ T.flex
-        , T.flex_column
+        [ C.flex
+        , C.flex_col
         ]
         [ UI.Kit.textFieldAlt
             [ attribute "autocapitalize" "off"
@@ -887,7 +913,6 @@ speechBubble : Html msg -> Html msg
 speechBubble contents =
     chunk
         [ C.absolute
-        , C.antialiased
         , C.bg_background
         , C.border_b
         , C.border_transparent
@@ -895,7 +920,7 @@ speechBubble contents =
         , C.italic
         , C.leading_snug
         , C.left_half_way
-        , C.neg_translate_x_half_way
+        , C.minus_translate_x_half_way
         , C.px_4
         , C.py_2
         , C.rounded
@@ -903,7 +928,6 @@ speechBubble contents =
         , C.text_sm
         , C.text_white
         , C.top_full
-        , C.translate_put_on_top
         , C.whitespace_no_wrap
         ]
         [ contents
@@ -915,6 +939,7 @@ speechBubble contents =
             , C.h_0
             , C.left_half_way
             , C.top_0
+            , C.translate_put_on_top
             , C.w_0
             ]
             []
@@ -923,17 +948,6 @@ speechBubble contents =
 
 
 -- 🖼
-
-
-choiceButtonStyles : { border : Bool } -> List Css.Style
-choiceButtonStyles { border } =
-    [ Css.backgroundColor transparent
-    , Css.borderBottom3
-        (ifThenElse border (px 1) (px 0))
-        solid
-        (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    , Css.minWidth (px 210)
-    ]
 
 
 speechBubbleArrowStyles : List (Html.Attribute msg)

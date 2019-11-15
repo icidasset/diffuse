@@ -27,11 +27,11 @@ view m =
             brick
                 -- TODO: [ css (menuStyles coordinates) ]
                 []
-                [ T.absolute
-                , T.br2
-                , T.bg_white
+                [ C.absolute
+                , C.rounded
+                , C.bg_white
                 , C.select_none
-                , T.f7
+                , C.text_xs
                 , T.overflow_hidden
                 , T.z_9999
                 ]
@@ -75,7 +75,7 @@ itemView lastIndex index { icon, label, msg, active } =
         [ T.bb
         , T.pa3
         , T.pr4
-        , T.pointer
+        , C.cursor_pointer
         , T.truncate
 
         --
@@ -85,12 +85,12 @@ itemView lastIndex index { icon, label, msg, active } =
         , ifThenElse active T.fw6 T.fw4
         ]
         [ inline
-            [ T.dib, C.leading_0, T.v_mid ]
+            [ C.inline_block, C.leading_0, C.align_middle ]
             [ icon 14 Inherit ]
         , slab
             Html.span
             [ style "top" "-0.5px" ]
-            [ T.dib, T.ml2, T.pl1, T.relative, T.v_mid ]
+            [ C.inline_block, T.ml2, T.pl1, C.relative, C.align_middle ]
             [ text label ]
         ]
 

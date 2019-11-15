@@ -136,7 +136,7 @@ notificationView notification =
         --
         , rel (String.fromInt id)
         ]
-        [ T.br2
+        [ C.rounded
         , T.cb
         , T.fr
         , T.measure_narrow
@@ -161,7 +161,7 @@ notificationView notification =
         [ contents notification
         , if options.sticky && kind /= Warning then
             chunk
-                [ C.select_none, T.f7, T.i, T.mt2, T.o_60, T.pointer ]
+                [ C.select_none, C.text_xs, T.i, T.mt2, T.o_60, C.cursor_pointer ]
                 [ Html.text "Double click to dismiss" ]
 
           else

@@ -244,9 +244,9 @@ view model =
 --         -----------------------------------------
 --         , brick
 --             [ css eqStyles ]
---             [ T.relative ]
+--             [ C.relative ]
 --             [ chunk
---                 [ T.absolute, T.left_0, T.top_0 ]
+--                 [ C.absolute, T.left_0, T.top_0 ]
 --                 [ UI.Kit.canister [ UI.Kit.h1 "Equalizer" ]
 --                 ]
 --             ]
@@ -260,17 +260,17 @@ view model =
 -- eqView : Model -> Html Msg
 -- eqView model =
 --     chunk
---         [ T.tc ]
+--         [ C.text_center ]
 --         [ brick
 --             [ css groupStyles ]
---             [ T.ba, T.br2, T.flex ]
+--             [ T.ba, C.rounded, C.flex ]
 --             [ knob Volume model.volume
 --             ]
 --
 --         --
 --         , brick
 --             [ css groupStyles ]
---             [ T.ba, T.br2, T.flex, T.mt3 ]
+--             [ T.ba, C.rounded, C.flex, C.mt_3 ]
 --             [ knob Low model.low
 --             , knob Mid model.mid
 --             , knob High model.high
@@ -286,7 +286,7 @@ view model =
 -- knob knobType value =
 --     brick
 --         [ css columnStyles ]
---         [ T.flex_grow_1, T.flex_shrink_0, T.ph4, T.ph5_ns, T.pv3 ]
+--         [ C.flex_grow, C.flex_shrink_0, T.ph4, T.ph5_ns, T.pv3 ]
 --         [ knob_ knobType value
 --         , knobLines
 --         , knobLabel knobType
@@ -328,7 +328,7 @@ view model =
 --             |> ActivateKnob
 --             |> Pointer.onDown
 --         ]
---         [ T.br_100, T.center, T.pointer, T.relative ]
+--         [ T.br_100, T.center, C.cursor_pointer, C.relative ]
 --         [ Html.map never knob__ ]
 --
 --
@@ -338,7 +338,7 @@ view model =
 --         [ decagonSvg
 --         , brick
 --             [ css layerAStyles ]
---             [ T.absolute, T.absolute__fill, T.br_100, T.z_1 ]
+--             [ C.absolute, C.inset_0, T.br_100, C.z_10 ]
 --             [ brick
 --                 [ css layerBStyles ]
 --                 [ T.center ]
@@ -351,7 +351,7 @@ view model =
 -- knobLabel knobType =
 --     brick
 --         [ css knobLabelStyles ]
---         [ T.fw6, T.mt3, T.o_70 ]
+--         [ T.fw6, C.mt_3, T.o_70 ]
 --         [ case knobType of
 --             Low ->
 --                 text "LOW"
@@ -371,14 +371,14 @@ view model =
 -- knobLines =
 --     brick
 --         [ css knobLineContainerStyles ]
---         [ T.center, T.relative ]
+--         [ T.center, C.relative ]
 --         [ brick
 --             [ css (knobLineStyles 45) ]
---             [ T.absolute, T.left_0, T.top_0 ]
+--             [ C.absolute, T.left_0, T.top_0 ]
 --             []
 --         , brick
 --             [ css (knobLineStyles -45) ]
---             [ T.absolute, T.right_0, T.top_0 ]
+--             [ C.absolute, T.right_0, T.top_0 ]
 --             []
 --         ]
 -- VARIABLES
