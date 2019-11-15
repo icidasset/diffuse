@@ -363,7 +363,7 @@ view page model selectedPlaylist bgColor =
 --             , slab
 --                 Html.a
 --                 [ href (Page.toString <| Page.Playlists New) ]
---                 [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, C.text_center ]
+--                 [ T.color_inherit, T.db, C.leading_normal, T.link, T.mt2, T.o_40, C.text_center ]
 --                 [ text "No playlists found, create one"
 --                 , lineBreak
 --                 , text "or enable directory playlists."
@@ -390,9 +390,9 @@ view page model selectedPlaylist bgColor =
 -- category cat =
 --     brick
 --         [ css categoryStyles ]
---         [ C.text_xs, T.mb3, T.mt4, T.truncate, T.ttu ]
+--         [ C.text_xs, T.mb3, T.mt4, C.truncate, T.ttu ]
 --         [ UI.Kit.inlineIcon Icons.folder
---         , inline [ T.fw7, T.ml2 ] [ text cat ]
+--         , inline [ T.fw7, C.ml_2 ] [ text cat ]
 --         ]
 --
 --
@@ -460,7 +460,7 @@ view page model selectedPlaylist bgColor =
 --       -- Button
 --       ---------
 --       , chunk
---             [ T.mt4, T.pt2 ]
+--             [ T.mt4, C.pt_2 ]
 --             [ UI.Kit.button
 --                 Normal
 --                 Bypass
@@ -523,7 +523,7 @@ view page model selectedPlaylist bgColor =
 --       -- Button
 --       ---------
 --       , chunk
---             [ T.mt4, T.pt2 ]
+--             [ T.mt4, C.pt_2 ]
 --             [ UI.Kit.button
 --                 Normal
 --                 Bypass

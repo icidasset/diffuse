@@ -558,7 +558,7 @@ futureView model =
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, C.text_center ]
+                [ T.color_inherit, T.db, C.leading_normal, T.link, T.mt2, T.o_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "add some music first."
@@ -591,7 +591,7 @@ futureItem selection idx item =
     { label =
         inline
             [ T.db
-            , T.truncate
+            , C.truncate
 
             --
             , if item.manualEntry || isSelected then
@@ -684,7 +684,7 @@ historyView model =
                 [ T.o_30 ]
                 [ Icons.music_note 64 Inherit ]
             , chunk
-                [ T.lh_copy, T.mt2, T.o_40, C.text_center ]
+                [ C.leading_normal, T.mt2, T.o_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "play some music first."
@@ -704,7 +704,7 @@ historyItem idx ({ identifiedTrack, manualEntry } as item) =
     in
     { label =
         inline
-            [ T.db, T.truncate ]
+            [ T.db, C.truncate ]
             [ inline
                 [ C.inline_block, C.text_xs, C.mr_2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]

@@ -8,9 +8,7 @@ import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Css exposing (pct, px, solid, transparent)
 import Css.Classes as C
-import Css.Global
 import Html exposing (Html, a, button, img, span, text)
 import Html.Attributes exposing (attribute, href, placeholder, src, style, target, title, value, width)
 import Html.Events exposing (onClick, onSubmit)
@@ -30,8 +28,7 @@ import Return3 exposing (..)
 import SHA
 import String.Ext as String
 import Svg exposing (Svg)
-import Tachyons.Classes as T
-import UI.Kit exposing (ButtonType(..))
+import UI.Kit
 import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
@@ -480,12 +477,14 @@ view model =
             [ style "height" "42%" ]
             [ C.flex
             , C.items_center
-            , C.p_4
+            , C.pb_8
 
             --
             , C.md__pb_0
             ]
-            [ chunk
+            [ -- Logo
+              -------
+              chunk
                 [ C.py_5, C.relative ]
                 [ slab
                     Html.img
@@ -631,15 +630,6 @@ view model =
         ]
 
 
-inputSpeechStyles : List Css.Style
-inputSpeechStyles =
-    [ Css.Global.descendants
-        [ Css.Global.p
-            [ Css.margin Css.zero ]
-        ]
-    ]
-
-
 
 -- WELCOME
 
@@ -653,7 +643,7 @@ welcomeScreen =
         ]
         [ UI.Kit.buttonWithColor
             UI.Kit.White
-            Filled
+            UI.Kit.Filled
             GetStarted
             (slab
                 Html.span
@@ -859,7 +849,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             , Html.Events.onInput KeepPassphraseInMemory
             ]
         , UI.Kit.button
-            Filled
+            UI.Kit.Filled
             Bypass
             (text "Continue")
         , brick

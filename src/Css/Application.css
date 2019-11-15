@@ -38,6 +38,11 @@ body {
 }
 
 
+.all-small-caps {
+  font-variant-caps: all-small-caps;
+}
+
+
 
 /* Dragging
    -------- */

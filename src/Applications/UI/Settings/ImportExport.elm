@@ -82,10 +82,10 @@ otherImportOptions : Html Reply
 otherImportOptions =
     raw
         [ chunk
-            [ C.text_xs, T.i, T.lh_copy, C.mt_3 ]
+            [ C.text_xs, T.i, C.leading_normal, C.mt_3 ]
             [ text "Other options:" ]
         , chunk
-            [ T.f6, T.lh_copy, T.mt2 ]
+            [ C.text_sm, C.leading_normal, T.mt2 ]
             [ inline [ C.mr_2 ] [ text "•" ]
             , UI.Kit.textButton
                 { label = "Import Diffuse V1 data"

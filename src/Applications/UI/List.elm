@@ -85,7 +85,7 @@ item variant idx { label, actions, msg, isSelected } =
         --         ]
         -- )
         [ C.flex
-        , T.fw6
+        , C.font_semibold
         , C.items_center
 
         --
@@ -157,7 +157,7 @@ actionView action =
                 [ title action.title ]
         )
         [ C.leading_0
-        , T.ml1
+        , C.ml_1
         , T.pl1
         , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer ""
         ]

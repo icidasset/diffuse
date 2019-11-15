@@ -108,7 +108,7 @@ view : Model -> Html Msg
 view model =
     chunk
         [ C.fixed
-        , C.inset_0
+        , C.minus_inset_px
         , C.z_0
         ]
         [ Lazy.lazy chosen model.chosen

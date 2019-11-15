@@ -235,7 +235,7 @@ view page deps =
 --                             , C.inset_0
 --                             , T.br1
 --                             , T.mb1
---                             , T.mr1
+--                             , C.mr_1
 --                             , C.z_10
 --                             ]
 --                             []
@@ -247,7 +247,7 @@ view page deps =
 --                             , T.bg_black_05
 --                             , T.br1
 --                             , T.mb1
---                             , T.mr1
+--                             , C.mr_1
 --                             , C.z_10
 --                             ]
 --                             []
@@ -261,7 +261,7 @@ view page deps =
 --                         , C.inset_0
 --                         , T.br1
 --                         , T.mb1
---                         , T.mr1
+--                         , C.mr_1
 --                         , T.z_2
 --                         , ifThenElse isActive T.o_20 T.o_100
 --                         ]
@@ -279,7 +279,7 @@ view page deps =
 --                             , C.justify_center
 --                             , C.leading_snug
 --                             , T.mb1
---                             , T.mr1
+--                             , C.mr_1
 --                             , T.ph2
 --                             , C.text_center
 --                             , T.white

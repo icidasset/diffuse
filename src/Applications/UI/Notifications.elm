@@ -89,7 +89,7 @@ view collection =
         []
         [ C.absolute
         , C.bottom_0
-        , T.f6
+        , C.text_sm
         , T.hide_child
         , C.leading_snug
         , C.mb_3

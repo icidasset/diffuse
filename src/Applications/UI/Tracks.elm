@@ -710,12 +710,12 @@ view model deps =
 --                 , tabindex tabindex_
 --                 , value (Maybe.withDefault "" searchTerm)
 --                 ]
---                 [ T.bg_transparent
---                 , T.bn
+--                 [ C.bg_transparent
+--                 , C.border_none
 --                 , T.color_inherit
 --                 , C.flex_grow
 --                 , T.h_100
---                 , T.outline_0
+--                 , C.outline_none
 --                 , T.pr2
 --                 , T.w_100
 --                 ]
@@ -790,9 +790,9 @@ view model deps =
 --                             [ C.rounded
 --                             , C.text_xs
 --                             , T.fw7
---                             , T.lh_solid
+--                             , C.leading_none
 --                             , C.cursor_pointer
---                             , T.truncate
+--                             , C.truncate
 --                             , T.white_90
 --                             ]
 --                             [ text playlist.name ]
@@ -910,7 +910,7 @@ view model deps =
 -- message : String -> Html Msg
 -- message m =
 --     chunk
---         [ T.bb, T.bw1, T.f6, T.fw6, C.leading_snug, C.pb_1 ]
+--         [ C.border_b, C.text_sm, C.font_semibold, C.leading_snug, C.pb_1 ]
 --         [ text m ]
 --
 --

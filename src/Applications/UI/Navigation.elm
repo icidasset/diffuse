@@ -10,7 +10,7 @@ import Css exposing (px, solid, transparent, zero)
 import Css.Classes as C
 import Css.Media
 import Html exposing (Html, text)
-import Html.Attributes exposing (attribute, href, tabindex, target, title)
+import Html.Attributes exposing (attribute, href, style, tabindex, target, title)
 import Html.Events exposing (onClick)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
@@ -52,19 +52,21 @@ type LabelType
 global : List ( Page, String ) -> Maybe (Alfred reply) -> Page -> Html msg
 global items alfred activePage =
     brick
-        -- TODO: [ css globalStyles ]
-        []
-        [ C.text_xs
-        , T.fw6
-        , T.mb5
-        , T.mt4
-        , T.tracked
-        , T.ttu
+        [ style "font-size" "11.25px" ]
+        [ C.font_semibold
+        , C.mb_16
+        , C.mt_8
+        , C.text_xs
+        , C.tracking_widest
+        , C.uppercase
 
         --
-        , ifThenElse (Maybe.isJust alfred) T.o_0 T.o_100
+        , ifThenElse (Maybe.isJust alfred) C.opacity_0 C.opacity_100
         ]
-        (List.indexedMap (globalItem activePage <| List.length items) items)
+        (List.indexedMap
+            (globalItem activePage <| List.length items)
+            items
+        )
 
 
 globalItem : Page -> Int -> Int -> ( Page, String ) -> Html msg
@@ -78,7 +80,7 @@ globalItem activePage totalItems idx ( page, label ) =
     in
     chunk
         [ C.inline_block
-        , ifThenElse isLastItem T.mr0 T.mr1
+        , ifThenElse isLastItem C.mr_0 C.mr_1
         ]
         [ slab
             Html.a
@@ -88,14 +90,14 @@ globalItem activePage totalItems idx ( page, label ) =
             , href (Page.toString page)
             ]
             [ C.inline_block
-            , T.lh_copy
-            , T.no_underline
+            , C.leading_normal
+            , C.no_underline
             , C.cursor_pointer
-            , T.pt2
+            , C.pt_2
 
             --
-            , ifThenElse isActivePage T.bb T.bn
-            , ifThenElse isLastItem T.mr0 T.mr4
+            , ifThenElse isActivePage C.border_b C.border_none
+            , ifThenElse isLastItem C.mr_0 C.mr_8
             ]
             [ text label ]
         ]
@@ -107,11 +109,6 @@ globalColors =
     , border = Color.toElmCssColor (Color.Manipulate.fadeOut 0.875 UI.Kit.colorKit.base01)
     , default = Color.toElmCssColor (Color.Manipulate.fadeOut 0.45 UI.Kit.colorKit.base01)
     }
-
-
-globalStyles : List Css.Style
-globalStyles =
-    [ Css.fontSize (px 11.25) ]
 
 
 globalItemStyles : Bool -> List Css.Style
@@ -138,7 +135,7 @@ localWithTabindex tabindex_ items =
     brick
         -- TODO: [ css localStyles ]
         []
-        [ T.bb ]
+        [ C.border_b ]
         [ chunk
             [ C.flex ]
             (items
@@ -193,14 +190,14 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , tabindex tabindex_
         ]
         [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
-        , T.bg_transparent
-        , T.bl_0
-        , T.fw6
+        , C.bg_transparent
+        , C.border_l_0
         , C.flex
+        , C.font_semibold
         , C.items_center
         , C.justify_center
-        , T.lh_solid
-        , T.no_underline
+        , C.leading_none
+        , C.no_underline
         , C.cursor_pointer
         , C.px_3
         ]
@@ -215,7 +212,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                 slab
                     Html.span
                     []
-                    [ C.inline_block, T.ml1, C.py_2, T.truncate ]
+                    [ C.inline_block, C.ml_1, C.py_2, C.truncate ]
                     [ text labelText ]
         ]
 

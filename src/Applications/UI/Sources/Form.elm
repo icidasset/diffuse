@@ -248,7 +248,7 @@ newWhere { onboarding } { context } =
         -- Button
         ---------
         , chunk
-            [ T.mt4, T.pt2 ]
+            [ T.mt4, C.pt_2 ]
             [ UI.Kit.button
                 IconOnly
                 Bypass
@@ -323,7 +323,7 @@ newHow { context } =
 
 howNote : List (Html Msg) -> Html Msg
 howNote =
-    chunk [ T.f6, T.i, T.lh_copy, T.mb4, T.measure_wide ]
+    chunk [ C.text_sm, T.i, C.leading_normal, T.mb4, T.measure_wide ]
 
 
 newBy : Model -> List (Html Msg)
@@ -403,14 +403,14 @@ newBy { context } =
 corsWarning : String -> List (Html Msg)
 corsWarning id =
     [ chunk
-        [ T.f6, C.flex, C.items_center, C.justify_center, C.leading_snug, T.o_50 ]
+        [ C.text_sm, C.flex, C.items_center, C.justify_center, C.leading_snug, T.o_50 ]
         [ UI.Kit.inlineIcon Icons.warning
         , strong
             []
             [ text "Make sure CORS is enabled" ]
         ]
     , chunk
-        [ T.f6, C.leading_snug, T.mb4, T.mt1, T.o_50 ]
+        [ C.text_sm, C.leading_snug, T.mb4, T.mt1, T.o_50 ]
         [ text "You can find the instructions over "
         , UI.Kit.link { label = "here", url = "about#" ++ id }
         ]
@@ -509,7 +509,7 @@ renderProperty context property =
     --                     |> boolFromString
     --         in
     --         chunk
-    --             [ T.mt2, T.pt1 ]
+    --             [ T.mt2, C.pt_1 ]
     --             [ UI.Kit.checkbox
     --                 { checked = bool
     --                 , toggleMsg =
@@ -565,7 +565,7 @@ note service =
         Dropbox ->
             howNote
                 [ inline
-                    [ T.fw6 ]
+                    [ C.font_semibold ]
                     [ text "If you don't know what any of this is, "
                     , text "continue to the next screen."
                     ]
@@ -577,7 +577,7 @@ note service =
         Google ->
             howNote
                 [ inline
-                    [ T.fw6 ]
+                    [ C.font_semibold ]
                     [ text "If you don't know what any of this is, "
                     , text "continue to the next screen."
                     ]
@@ -586,7 +586,7 @@ note service =
 
         Ipfs ->
             howNote
-                [ inline [ T.fw6 ] [ text "Diffuse will try to use the default local gateway" ]
+                [ inline [ C.font_semibold ] [ text "Diffuse will try to use the default local gateway" ]
                 , text "."
                 , lineBreak
                 , text "If you would like to use another gateway, please provide it below."
@@ -595,7 +595,7 @@ note service =
         WebDav ->
             howNote
                 [ inline
-                    [ T.fw6 ]
+                    [ C.font_semibold ]
                     [ UI.Kit.inlineIcon Icons.warning
                     , text "This app requires a proper implementation of "
                     , UI.Kit.link

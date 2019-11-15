@@ -38,9 +38,9 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
           -- Now Playing
           -----------------------------------------
           chunk
-            [ T.f6
+            [ C.text_sm
             , T.i
-            , T.lh_copy
+            , C.leading_normal
             , T.pb3
             , C.pt_3
             , T.white

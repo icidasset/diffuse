@@ -1979,8 +1979,7 @@ body model =
                 content { opts | justifyCenter = True } [ loadingAnimation ]
 
             ( False, Authentication.Authenticated _ ) ->
-                -- content opts (defaultScreen model)
-                nothing
+                content opts (defaultScreen model)
 
             ( False, _ ) ->
                 model.authentication
@@ -2103,6 +2102,11 @@ content { justifyCenter, scrolling } nodes =
             , C.flex_col
             , C.items_center
             , C.h_full
+            , C.px_4
+
+            --
+            , C.md__px_8
+            , C.lg__px_16
 
             --
             , ifThenElse justifyCenter C.justify_center ""
@@ -2123,12 +2127,13 @@ overlay maybeAlfred maybeContextMenu =
             Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
     in
     brick
-        [ -- TODO: css overlayStyles
-          onClick HideOverlay
-        ]
+        [ onClick HideOverlay ]
         [ C.inset_0
         , C.bg_black
         , C.fixed
+        , C.transition_1000
+        , C.transition_ease
+        , C.transition_opacity
         , C.z_50
 
         --
@@ -2165,17 +2170,6 @@ vessel =
             , C.lg__min_w_3xl
             ]
         )
-
-
-
--- 🖼  ░░  OTHER
-
-
-overlayStyles : List Css.Style
-overlayStyles =
-    [ Css.Transitions.transition
-        [ Css.Transitions.opacity3 1000 0 Css.Transitions.ease ]
-    ]
 
 
 

@@ -13,7 +13,6 @@ import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Material.Icons.Toggle as Icons
 import Svg
-import Tachyons.Classes as T
 
 
 
@@ -248,7 +247,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 
             _ ->
                 inline
-                    [ C.inline_block, C.leading_normal, C.pb_px ]
+                    [ C.inline_block, C.leading_normal, C.mb_px, C.pb_px ]
                     [ child ]
         ]
 
@@ -306,17 +305,21 @@ h1 : String -> Html msg
 h1 text =
     slab
         Html.h1
-        []
-        -- [ TODO: css h1Styles ]
-        [ C.rounded_b
+        [ style "font-size" "13.5px" ]
+        [ C.all_small_caps
+        , C.bg_base06
         , C.inline_block
         , C.font_semibold
         , C.leading_tight
         , C.m_0
+        , C.minus_top_px
+        , C.pointer_events_none
         , C.px_2
         , C.py_2
         , C.relative
+        , C.rounded_b
         , C.uppercase
+        , C.text_sm
         , C.text_white
         ]
         [ Html.text text ]
@@ -438,17 +441,16 @@ select inputHandler options =
             Html.select
             -- TODO: [ css selectStyles.field ]
             [ onInput inputHandler ]
-            [ T.bn
+            [ C.appearance_none
             , C.bg_transparent
-            , T.br0
             , C.block
-            , T.f5
-            , T.input_reset
+            , C.text_lg
             , C.leading_normal
-            , T.ma0
-            , T.outline_0
+            , C.m_0
+            , C.rounded_none
+            , C.outline_none
             , C.py_2
-            , T.ph0
+            , C.px_0
             , C.w_full
             ]
             options
@@ -485,11 +487,11 @@ textButton params =
         -- TODO: [ css linkStyles ]
         [ onClick params.onClick ]
         [ C.bg_transparent
+        , C.border_none
         , C.text_inherit
-        , T.bn
         , C.leading_tight
-        , T.ma0
-        , T.pa0
+        , C.m_0
+        , C.p_0
         , C.cursor_pointer
         ]
         [ Html.text params.label ]
@@ -501,14 +503,14 @@ textField attributes =
         Html.input
         -- TODO: (css textFieldStyles :: attributes)
         attributes
-        [ T.bn
+        [ C.border_none
         , C.bg_transparent
-        , T.br0
         , C.block
-        , T.f6
         , C.leading_normal
-        , T.mt1
+        , C.mt_1
         , C.py_2
+        , C.rounded_none
+        , C.text_sm
         , C.w_full
         ]
         []
@@ -539,16 +541,6 @@ textFieldAlt attributes =
 -- checkboxStyles : List Css.Style
 -- checkboxStyles =
 --     [ Css.left (Css.px -3)
---     ]
---
---
--- h1Styles : List Css.Style
--- h1Styles =
---     [ Css.backgroundColor (Color.toElmCssColor colorKit.base06)
---     , Css.fontSize (px 13.5)
---     , Css.fontVariant Css.allSmallCaps
---     , Css.pointerEvents Css.none
---     , Css.top (px -1)
 --     ]
 --
 --

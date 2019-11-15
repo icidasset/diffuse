@@ -175,7 +175,7 @@ view model =
                   -- Message
                   -----------------------------------------
                   chunk
-                    [ T.i, T.lh_copy, T.mt4, C.pt_3, C.text_center, T.white ]
+                    [ T.i, C.leading_normal, T.mt4, C.pt_3, C.text_center, T.white ]
                     [ text instance.message ]
 
                 -----------------------------------------
@@ -191,7 +191,7 @@ view model =
                             }
                         )
                     ]
-                    [ T.f6
+                    [ C.text_sm
                     , T.measure_wide
                     , T.mt4
                     , T.w_100
@@ -206,13 +206,13 @@ view model =
                         , placeholder "Type to search or create"
                         , type_ "text"
                         ]
-                        [ T.bn
+                        [ C.border_none
                         , C.bg_white
                         , C.rounded
                         , T.db
                         , T.f3
-                        , T.lh_copy
-                        , T.outline_0
+                        , C.leading_normal
+                        , C.outline_none
                         , T.pa3
                         , T.w_100
                         ]
@@ -227,8 +227,8 @@ view model =
                     []
                     [ C.bg_white
                     , C.rounded
-                    , T.f6
-                    , T.lh_solid
+                    , C.text_sm
+                    , C.leading_none
                     , T.measure_wide
                     , T.mid_gray
                     , T.mt4
@@ -241,7 +241,7 @@ view model =
                                 [ onTapPreventDefault (RunAction idx) ]
                                 [ T.pa3
                                 , C.relative
-                                , T.truncate
+                                , C.truncate
 
                                 --
                                 , if idx == instance.focus then
@@ -255,7 +255,7 @@ view model =
                                     C.bg_base0d
 
                                   else if modBy 2 idx == 0 then
-                                    T.bg_transparent
+                                    C.bg_transparent
 
                                   else
                                     T.bg_near_white
@@ -269,7 +269,7 @@ view model =
                                         []
                                         [ C.absolute
                                         , C.leading_0
-                                        , T.mr3
+                                        , C.mr_3
                                         , T.right_0
                                         ]
                                         [ Icons.keyboard_return 13 Inherit

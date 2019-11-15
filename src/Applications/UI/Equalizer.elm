@@ -351,7 +351,7 @@ view model =
 -- knobLabel knobType =
 --     brick
 --         [ css knobLabelStyles ]
---         [ T.fw6, C.mt_3, T.o_70 ]
+--         [ C.font_semibold, C.mt_3, T.o_70 ]
 --         [ case knobType of
 --             Low ->
 --                 text "LOW"
