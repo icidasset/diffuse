@@ -6,9 +6,7 @@ import Color exposing (Color)
 import Color.Ext as Color
 import Color.Manipulate
 import Conditional exposing (..)
-import Css exposing (px, solid, transparent, zero)
 import Css.Classes as C
-import Css.Media
 import Html exposing (Html, text)
 import Html.Attributes exposing (attribute, href, style, tabindex, target, title)
 import Html.Events exposing (onClick)
@@ -16,7 +14,6 @@ import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Svg exposing (Svg)
-import Tachyons.Classes as T
 import UI.Css
 import UI.Kit
 import UI.Page as Page exposing (Page)
@@ -53,7 +50,8 @@ global : List ( Page, String ) -> Maybe (Alfred reply) -> Page -> Html msg
 global items alfred activePage =
     brick
         [ style "font-size" "11.25px" ]
-        [ C.font_semibold
+        [ C.antialiased
+        , C.font_semibold
         , C.mb_16
         , C.mt_8
         , C.text_xs
@@ -84,11 +82,7 @@ globalItem activePage totalItems idx ( page, label ) =
         ]
         [ slab
             Html.a
-            [ attribute "data-keep-focus" "t"
-
-            --, TODO: css (globalItemStyles isActivePage)
-            , href (Page.toString page)
-            ]
+            [ href (Page.toString page) ]
             [ C.inline_block
             , C.leading_normal
             , C.no_underline
@@ -96,29 +90,18 @@ globalItem activePage totalItems idx ( page, label ) =
             , C.pt_2
 
             --
-            , ifThenElse isActivePage C.border_b C.border_none
+            , ifThenElse isActivePage C.border_b C.border_b_0
+            , ifThenElse isActivePage C.border_base01_15 C.border_transparent
+            , ifThenElse isActivePage C.text_base01 C.text_base01_55
             , ifThenElse isLastItem C.mr_0 C.mr_8
+
+            --
+            , C.focus__border_black_50
+            , C.focus__outline_none
+            , C.focus__text_black
             ]
             [ text label ]
         ]
-
-
-globalColors : { active : Css.Color, border : Css.Color, default : Css.Color }
-globalColors =
-    { active = Color.toElmCssColor UI.Kit.colorKit.base01
-    , border = Color.toElmCssColor (Color.Manipulate.fadeOut 0.875 UI.Kit.colorKit.base01)
-    , default = Color.toElmCssColor (Color.Manipulate.fadeOut 0.45 UI.Kit.colorKit.base01)
-    }
-
-
-globalItemStyles : Bool -> List Css.Style
-globalItemStyles isActivePage =
-    [ Css.borderBottomColor (ifThenElse isActivePage globalColors.border <| Css.rgba 0 0 0 0)
-    , Css.color (ifThenElse isActivePage globalColors.active globalColors.default)
-
-    --
-    -- TODO: , UI.Kit.textFocus
-    ]
 
 
 
@@ -133,9 +116,11 @@ local =
 localWithTabindex : Int -> List ( Icon msg, Label, Action msg ) -> Html msg
 localWithTabindex tabindex_ items =
     brick
-        -- TODO: [ css localStyles ]
-        []
-        [ C.border_b ]
+        [ style "font-size" "12.5px" ]
+        [ C.antialiased
+        , C.border_b
+        , C.border_subtle
+        ]
         [ chunk
             [ C.flex ]
             (items
@@ -186,67 +171,46 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                 target "_self"
 
         --
-        -- TODO: , css localItemStyles
         , tabindex tabindex_
         ]
         [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
         , C.bg_transparent
-        , C.border_l_0
-        , C.flex
+        , C.border_subtle
+        , C.border_r
+        , C.cursor_pointer
         , C.font_semibold
-        , C.items_center
-        , C.justify_center
         , C.leading_none
         , C.no_underline
-        , C.cursor_pointer
+        , C.pb_1
+        , C.pt_2
         , C.px_3
-        ]
-        [ icon 16 Inherit
+        , C.text_base01
 
         --
-        , case labelType of
-            Hidden ->
-                nothing
-
-            Shown ->
-                slab
-                    Html.span
-                    []
-                    [ C.inline_block, C.ml_1, C.py_2, C.truncate ]
-                    [ text labelText ]
+        , C.last__border_r_0
         ]
+        [ chunk
+            [ C.border_b
+            , C.border_t
+            , C.border_transparent
+            , C.flex
+            , C.items_center
+            , C.justify_center
+            , C.mb_px
+            , C.pb_px
+            ]
+            [ icon 16 Inherit
 
+            --
+            , case labelType of
+                Hidden ->
+                    nothing
 
-localColors : { border : Color, text : Color }
-localColors =
-    { border = UI.Kit.colors.subtleBorder
-    , text = UI.Kit.colors.text
-    }
-
-
-localStyles : List Css.Style
-localStyles =
-    [ Css.borderBottomColor (Color.toElmCssColor localColors.border)
-    , Css.fontSize (px 12)
-
-    --
-    , Css.Media.withMedia
-        [ UI.Css.notSmallMediaQuery ]
-        [ Css.fontSize (px 12.5) ]
-    ]
-
-
-localItemStyles : List Css.Style
-localItemStyles =
-    [ Css.borderBottom3 (px 1) solid transparent
-    , Css.borderRight3 (px 1) solid (Color.toElmCssColor localColors.border)
-    , Css.borderTop3 (px 2) solid transparent
-    , Css.color (Color.toElmCssColor localColors.text)
-    , Css.flexBasis (px 0)
-    , Css.height (px 43)
-
-    -- TODO: , UI.Kit.navFocus
-    -- Last one
-    -----------
-    , Css.lastChild [ Css.borderRightWidth zero ]
-    ]
+                Shown ->
+                    slab
+                        Html.span
+                        []
+                        [ C.inline_block, C.ml_1, C.py_2, C.truncate ]
+                        [ text labelText ]
+            ]
+        ]

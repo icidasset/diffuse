@@ -27,7 +27,7 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
       .replace(/\\/g, "")
       .replace("::placeholder", "")
       .replace(
-        /\:(active|disabled|even|first|focus|focus-within|focus:not\(:active\)|group-hover|hover|last|odd|responsive|visited)$/,
+        /\:(active|disabled|even|first-child|focus|focus-within|focus:not\(:active\)|group-hover|hover|last-child|odd|responsive|visited)$/,
         ""
       )
 
@@ -42,8 +42,17 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
     if (cls === lastCls) return;
     lastCls = cls
 
+    const css = rule
+      .toString()
+      .replace(/\s+/g, " ")
+      .replace(/(\w)\{/g, "$1 {")
+
     functions.push(
-      `{-| This represents the \`.${cls}\` class. -}\n` +
+      `{-| This represents the \`.${cls}\` class.\n` +
+      `\n    \`\`\`` +
+      `\n    ${css}` +
+      `\n    \`\`\`` +
+      `\n-}\n` +
       `${elmVariable} : String\n` +
       `${elmVariable} = "${cls}"\n`
     )

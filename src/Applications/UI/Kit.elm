@@ -307,6 +307,7 @@ h1 text =
         Html.h1
         [ style "font-size" "13.5px" ]
         [ C.all_small_caps
+        , C.antialiased
         , C.bg_base06
         , C.inline_block
         , C.font_semibold
@@ -315,7 +316,7 @@ h1 text =
         , C.minus_top_px
         , C.pointer_events_none
         , C.px_2
-        , C.py_2
+        , C.py_1
         , C.relative
         , C.rounded_b
         , C.uppercase
@@ -370,11 +371,10 @@ intro : Html msg -> Html msg
 intro child =
     slab
         Html.p
-        []
-        -- TODO: [ css introStyles ]
-        [ C.text_sm
-        , C.my_3
-        , C.py_1
+        [ style "line-height" "1.75" ]
+        [ C.my_5
+        , C.text_base05
+        , C.text_sm
         ]
         [ child ]
 
@@ -555,13 +555,6 @@ textFieldAlt attributes =
 --         [ Css.Global.selector "svg > g"
 --             [ Css.fill Css.currentColor ]
 --         ]
---     ]
---
---
--- introStyles : List Css.Style
--- introStyles =
---     [ Css.color (Color.toElmCssColor colorKit.base05)
---     , Css.lineHeight (em 1.75)
 --     ]
 --
 --
