@@ -248,7 +248,7 @@ newWhere { onboarding } { context } =
         -- Button
         ---------
         , chunk
-            [ T.mt4, C.pt_2 ]
+            [ C.mt_4, C.pt_2 ]
             [ UI.Kit.button
                 IconOnly
                 Bypass
@@ -276,7 +276,7 @@ newHow { context } =
     , (\h ->
         form TakeStep
             [ chunk
-                [ T.tl, T.w_100 ]
+                [ T.tl, C.w_full ]
                 [ UI.Kit.canister h ]
             ]
       )
@@ -323,7 +323,7 @@ newHow { context } =
 
 howNote : List (Html Msg) -> Html Msg
 howNote =
-    chunk [ C.text_sm, T.i, C.leading_normal, T.mb4, T.measure_wide ]
+    chunk [ C.text_sm, C.italic, C.leading_normal, C.mb_4, T.measure_wide ]
 
 
 newBy : Model -> List (Html Msg)
@@ -355,7 +355,7 @@ newBy { context } =
                 Dict.fetch "name" "" context.data
           in
           chunk
-            [ C.flex, T.mt4, C.justify_center, T.w_100 ]
+            [ C.flex, C.mt_4, C.justify_center, C.w_full ]
             [ UI.Kit.textField
                 [ name "name"
                 , onInput (SetData "name")
@@ -366,7 +366,7 @@ newBy { context } =
         -- Note
         -------
         , chunk
-            [ T.mt5 ]
+            [ C.mt_5 ]
             (case context.service of
                 AmazonS3 ->
                     corsWarning "CORS__S3"
@@ -403,14 +403,14 @@ newBy { context } =
 corsWarning : String -> List (Html Msg)
 corsWarning id =
     [ chunk
-        [ C.text_sm, C.flex, C.items_center, C.justify_center, C.leading_snug, T.o_50 ]
+        [ C.text_sm, C.flex, C.items_center, C.justify_center, C.leading_snug, C.opacity_50 ]
         [ UI.Kit.inlineIcon Icons.warning
         , strong
             []
             [ text "Make sure CORS is enabled" ]
         ]
     , chunk
-        [ C.text_sm, C.leading_snug, T.mb4, T.mt1, T.o_50 ]
+        [ C.text_sm, C.leading_snug, C.mb_4, C.mt_1, C.opacity_50 ]
         [ text "You can find the instructions over "
         , UI.Kit.link { label = "here", url = "about#" ++ id }
         ]
@@ -439,7 +439,7 @@ edit { context } =
     , (\h ->
         form EditSource
             [ chunk
-                [ T.tl, T.w_100 ]
+                [ T.tl, C.w_full ]
                 [ UI.Kit.canister h ]
             ]
       )
@@ -492,7 +492,7 @@ renderProperty : Source -> Property -> Html Msg
 renderProperty context property =
     -- TODO
     -- chunk
-    --     [ T.mb4 ]
+    --     [ C.mb_4 ]
     --     [ UI.Kit.label
     --         [ for property.key ]
     --         property.label
@@ -509,7 +509,7 @@ renderProperty context property =
     --                     |> boolFromString
     --         in
     --         chunk
-    --             [ T.mt2, C.pt_1 ]
+    --             [ C.mt_2, C.pt_1 ]
     --             [ UI.Kit.checkbox
     --                 { checked = bool
     --                 , toggleMsg =

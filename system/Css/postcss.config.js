@@ -36,8 +36,9 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
       .replace(/__-/g, "__minus_")
       .replace(/^-/g, "minus_")
       .replace(/-/g, "_")
+      .replace(/\./g, "_")
       .replace(/\//g, "_div_")
-      .replace(/_1_div_2$/, "_half_way")
+      .replace(/_1_div_2$/, "_half")
 
     if (cls === lastCls) return;
     lastCls = cls

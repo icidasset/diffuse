@@ -175,7 +175,7 @@ view model =
                   -- Message
                   -----------------------------------------
                   chunk
-                    [ T.i, C.leading_normal, T.mt4, C.pt_3, C.text_center, T.white ]
+                    [ C.italic, C.leading_normal, C.mt_4, C.pt_3, C.text_center, T.white ]
                     [ text instance.message ]
 
                 -----------------------------------------
@@ -193,8 +193,8 @@ view model =
                     ]
                     [ C.text_sm
                     , T.measure_wide
-                    , T.mt4
-                    , T.w_100
+                    , C.mt_4
+                    , C.w_full
                     ]
                     [ slab
                         Html.input
@@ -214,7 +214,7 @@ view model =
                         , C.leading_normal
                         , C.outline_none
                         , T.pa3
-                        , T.w_100
+                        , C.w_full
                         ]
                         []
                     ]
@@ -231,9 +231,9 @@ view model =
                     , C.leading_none
                     , T.measure_wide
                     , T.mid_gray
-                    , T.mt4
-                    , T.overflow_hidden
-                    , T.w_100
+                    , C.mt_4
+                    , C.overflow_hidden
+                    , C.w_full
                     ]
                     (List.indexedMap
                         (\idx result ->

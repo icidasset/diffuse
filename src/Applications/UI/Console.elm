@@ -33,13 +33,13 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
     brick
         -- TODO: [ css consoleStyles ]
         []
-        [ T.mt1, C.text_center, T.w_100 ]
+        [ C.mt_1, C.text_center, C.w_full ]
         [ -----------------------------------------
           -- Now Playing
           -----------------------------------------
           chunk
             [ C.text_sm
-            , T.i
+            , C.italic
             , C.leading_normal
             , T.pb3
             , C.pt_3
@@ -188,7 +188,7 @@ play =
     brick
         -- TODO: [ css playTextStyles ]
         []
-        [ T.fw7, T.nowrap, C.relative ]
+        [ C.font_bold, T.nowrap, C.relative ]
         [ text "PLAY" ]
 
 
@@ -210,8 +210,7 @@ consoleStyles : List Css.Style
 consoleStyles =
     [ Css.Media.withMedia
         [ UI.Css.largeMediaQuery ]
-        [ Css.maxWidth (Css.vh UI.Kit.insulationWidth)
-        , Css.minWidth (Css.px 840)
+        [ Css.minWidth (Css.px 840)
         ]
     ]
 

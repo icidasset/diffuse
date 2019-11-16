@@ -67,76 +67,7 @@ rgb =
 
 
 
--- FOCUSING
---
--- focusWhileNotActive : List Css.Style -> Css.Style
--- focusWhileNotActive styles =
---     Css.batch
---         [ Css.outline none
---         , Css.pseudoClass "focus:not(:active)" styles
---         ]
---
---
--- focus : List Css.Style -> Css.Style
--- focus styles =
---     Css.batch
---         [ Css.outline none
---         , Css.focus styles
---         ]
---
--- FOCUSING, Pt. II
---
---
--- inputFocus : Css.Style
--- inputFocus =
---     focusWhileNotActive
---         [ Css.borderBottomColor (Color.toElmCssColor colors.focus) ]
---
---
--- navFocus : Css.Style
--- navFocus =
---     focusWhileNotActive
---         [ Css.borderTopColor (Color.toElmCssColor colors.focus)
---         ]
---
---
--- textFocus : Css.Style
--- textFocus =
---     focus
---         [ Css.borderBottomColor (Css.rgba 0 0 0 0.475)
---         , Css.color (Color.toElmCssColor colors.focus)
---         ]
---
---
--- textAreaFocus : Css.Style
--- textAreaFocus =
---     focus
---         [ Css.color (Color.toElmCssColor colors.focus)
---         ]
---
---
--- SHADOWS
---
--- onOverlayShadow : Css.Style
--- onOverlayShadow =
---     Css.property
---         "box-shadow"
---         "0 1px 3px 0 rgba(0, 0, 0, 0.175), 0 3px 15px 0 rgba(0, 0, 0, 0.075)"
---
--- SPACE PROPERTIES
---
--- borderRadius : String
--- borderRadius =
---     C.rounded
-
-
-insulationWidth : Float
-insulationWidth =
-    107.5
-
-
-
--- NODES
+-- 🍱  ░░  BUTTON
 
 
 type ButtonColor
@@ -182,13 +113,13 @@ buttonWithOptions :
 buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
     let
         defaultClasses =
-            [ C.bg_transparent
+            [ C.antialiased
+            , C.border_2
             , C.cursor_pointer
             , C.font_bold
             , C.inline_block
             , C.no_underline
-            , C.pb_2
-            , C.pt_3
+            , C.py_2
             , C.px_4
             , C.rounded
             , C.text_center
@@ -216,13 +147,13 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                 _ ->
                     case buttonColor of
                         Accent ->
-                            [ C.border_accent, C.text_accent ]
+                            [ C.bg_transparent, C.border_accent, C.text_accent ]
 
                         Gray ->
-                            [ C.border_base04, C.text_base04 ]
+                            [ C.bg_transparent, C.border_base04, C.text_base04 ]
 
                         White ->
-                            [ C.border_white, C.text_white ]
+                            [ C.bg_transparent, C.border_white, C.text_white ]
     in
     slab
         tag
@@ -247,9 +178,13 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 
             _ ->
                 inline
-                    [ C.inline_block, C.leading_normal, C.mb_px, C.pb_px ]
+                    [ C.inline_block, C.leading_normal, C.pt_px ]
                     [ child ]
         ]
+
+
+
+-- 🍱  ░░  OTHER
 
 
 canister : List (Html msg) -> Html msg
@@ -286,19 +221,19 @@ centeredContent children =
         ]
 
 
+checkbox : { checked : Bool, toggleMsg : msg } -> Html msg
+checkbox opts =
+    brick
+        [ onClick opts.toggleMsg
+        , style "left" "-3px"
+        ]
+        [ C.inline_block, C.cursor_pointer, C.relative ]
+        [ if opts.checked then
+            Icons.check_box 22 Inherit
 
---
--- checkbox : { checked : Bool, toggleMsg : msg } -> Html msg
--- checkbox opts =
---     brick
---         [ css checkboxStyles, onClick opts.toggleMsg ]
---         [ C.inline_block, C.cursor_pointer, C.relative ]
---         [ if opts.checked then
---             Icons.check_box 22 Inherit
---
---           else
---             Icons.check_box_outline_blank 22 Inherit
---         ]
+          else
+            Icons.check_box_outline_blank 22 Inherit
+        ]
 
 
 h1 : String -> Html msg
@@ -314,6 +249,7 @@ h1 text =
         , C.leading_tight
         , C.m_0
         , C.minus_top_px
+        , C.overflow_hidden
         , C.pointer_events_none
         , C.px_2
         , C.py_1
@@ -359,11 +295,13 @@ h3 text =
 
 inlineIcon : (Int -> Coloring -> Svg.Svg msg) -> Html msg
 inlineIcon icon =
-    slab
-        Html.span
-        []
-        -- TODO: [ css inlineIconStyles ]
-        [ C.inline_block, C.mr_1 ]
+    inline
+        [ C.align_sub
+        , C.inline_block
+        , C.leading_0
+        , C.mr_1
+        , C.text_0
+        ]
         [ icon 14 Inherit ]
 
 
@@ -372,7 +310,7 @@ intro child =
     slab
         Html.p
         [ style "line-height" "1.75" ]
-        [ C.my_5
+        [ C.my_3
         , C.text_base05
         , C.text_sm
         ]
@@ -383,9 +321,9 @@ label : List (Html.Attribute msg) -> String -> Html msg
 label attributes t =
     slab
         Html.label
-        -- TODO: (css labelStyles :: attributes)
-        attributes
-        [ C.block
+        (style "font-size" "11.25px" :: attributes)
+        [ C.antialiased
+        , C.block
         , C.font_bold
         , C.opacity_90
         , C.uppercase
@@ -538,29 +476,6 @@ textFieldAlt attributes =
 -----------------------------------------
 -- ㊙️
 -----------------------------------------
--- checkboxStyles : List Css.Style
--- checkboxStyles =
---     [ Css.left (Css.px -3)
---     ]
---
---
--- inlineIconStyles : List Css.Style
--- inlineIconStyles =
---     [ Css.fontSize (px 0)
---     , Css.lineHeight (px 0)
---     , Css.verticalAlign Css.sub
---
---     --
---     , Css.Global.descendants
---         [ Css.Global.selector "svg > g"
---             [ Css.fill Css.currentColor ]
---         ]
---     ]
---
---
--- labelStyles : List Css.Style
--- labelStyles =
---     [ Css.fontSize (px 11.25) ]
 --
 --
 -- linkStyles : List Css.Style

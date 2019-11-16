@@ -117,7 +117,7 @@ item variant idx { label, actions, msg, isSelected } =
                         )
                         (DnD.listenToEnterLeave env idx)
             )
-            [ C.flex_grow, T.pv3, T.overflow_hidden ]
+            [ C.flex_grow, T.pv3, C.overflow_hidden ]
             [ label ]
 
         -- Actions

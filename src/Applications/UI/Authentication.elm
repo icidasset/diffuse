@@ -808,7 +808,7 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
                     , C.cursor_pointer
                     , C.leading_none
                     , C.ml_4
-                    , C.minus_translate_y_half_way
+                    , C.minus_translate_y_half
                     , C.opacity_40
                     , C.pl_4
                     , C.text_white
@@ -909,8 +909,8 @@ speechBubble contents =
         , C.font_semibold
         , C.italic
         , C.leading_snug
-        , C.left_half_way
-        , C.minus_translate_x_half_way
+        , C.left_half
+        , C.minus_translate_x_half
         , C.px_4
         , C.py_2
         , C.rounded
@@ -927,7 +927,7 @@ speechBubble contents =
             speechBubbleArrowStyles
             [ C.absolute
             , C.h_0
-            , C.left_half_way
+            , C.left_half
             , C.top_0
             , C.translate_put_on_top
             , C.w_0

@@ -553,12 +553,12 @@ futureView model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, T.link, T.o_30 ]
+                [ T.color_inherit, T.db, T.link, C.opacity_30 ]
                 [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, C.leading_normal, T.link, T.mt2, T.o_40, C.text_center ]
+                [ T.color_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "add some music first."
@@ -604,7 +604,7 @@ futureItem selection idx item =
                 [ C.inline_block
                 , C.text_xs
                 , C.mr_2
-                , T.o_60
+                , C.opacity_60
                 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
@@ -681,10 +681,10 @@ historyView model =
     , if List.isEmpty model.past then
         UI.Kit.centeredContent
             [ chunk
-                [ T.o_30 ]
+                [ C.opacity_30 ]
                 [ Icons.music_note 64 Inherit ]
             , chunk
-                [ C.leading_normal, T.mt2, T.o_40, C.text_center ]
+                [ C.leading_normal, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "play some music first."

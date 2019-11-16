@@ -171,6 +171,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                 target "_self"
 
         --
+        , style "flex-basis" "0"
         , tabindex tabindex_
         ]
         [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
@@ -181,9 +182,8 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , C.font_semibold
         , C.leading_none
         , C.no_underline
-        , C.pb_1
-        , C.pt_2
-        , C.px_3
+        , C.px_4
+        , C.py_3
         , C.text_base01
 
         --
@@ -196,8 +196,8 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
             , C.flex
             , C.items_center
             , C.justify_center
-            , C.mb_px
-            , C.pb_px
+            , C.mt_px
+            , C.pt_px
             ]
             [ icon 16 Inherit
 
@@ -210,7 +210,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                     slab
                         Html.span
                         []
-                        [ C.inline_block, C.ml_1, C.py_2, C.truncate ]
+                        [ C.inline_block, C.ml_1, C.truncate ]
                         [ text labelText ]
             ]
         ]

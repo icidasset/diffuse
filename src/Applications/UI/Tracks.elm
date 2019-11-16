@@ -695,7 +695,7 @@ view model deps =
 --             [ css searchStyles ]
 --             [ C.flex
 --             , C.flex_grow
---             , T.overflow_hidden
+--             , C.overflow_hidden
 --             , C.relative
 --             ]
 --             [ -- Input
@@ -717,7 +717,7 @@ view model deps =
 --                 , T.h_100
 --                 , C.outline_none
 --                 , T.pr2
---                 , T.w_100
+--                 , C.w_full
 --                 ]
 --                 []
 --
@@ -789,7 +789,7 @@ view model deps =
 --                             ]
 --                             [ C.rounded
 --                             , C.text_xs
---                             , T.fw7
+--                             , C.font_bold
 --                             , C.leading_none
 --                             , C.cursor_pointer
 --                             , C.truncate
@@ -834,14 +834,14 @@ view model deps =
 --                 chunk
 --                     [ C.flex
 --                     , C.flex_wrap
---                     , T.items_start
+--                     , C.italictems_start
 --                     , C.justify_center
 --                     , C.px_3
 --                     ]
 --                     [ -- Add
 --                       ------
 --                       inline
---                         [ T.mb3, T.mh2, T.nowrap ]
+--                         [ C.mb_3, T.mh2, T.nowrap ]
 --                         [ UI.Kit.buttonLink
 --                             (Sources.NewOnboarding
 --                                 |> UI.Page.Sources
@@ -858,7 +858,7 @@ view model deps =
 --                     -- Demo
 --                     -------
 --                     , inline
---                         [ T.mb3, T.mh2, T.nowrap ]
+--                         [ C.mb_3, T.mh2, T.nowrap ]
 --                         [ UI.Kit.buttonWithColor
 --                             UI.Kit.Gray
 --                             UI.Kit.Normal
@@ -873,7 +873,7 @@ view model deps =
 --                     -- How
 --                     ------
 --                     , inline
---                         [ T.mb3, T.mh2, T.nowrap ]
+--                         [ C.mb_3, T.mh2, T.nowrap ]
 --                         [ UI.Kit.buttonWithOptions
 --                             Html.a
 --                             [ href "about"

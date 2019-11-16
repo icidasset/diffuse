@@ -390,12 +390,12 @@ index amountOfTracks model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ T.color_inherit, T.db, T.link, T.o_30 ]
+                [ T.color_inherit, T.db, T.link, C.opacity_30 ]
                 [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ T.color_inherit, T.db, C.leading_normal, T.link, T.mt2, T.o_40, C.text_center ]
+                [ T.color_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "A source is a place where music is stored,"
                 , lineBreak
                 , text "add one so you can play some music "

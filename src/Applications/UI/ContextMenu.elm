@@ -32,7 +32,7 @@ view m =
                 , C.bg_white
                 , C.select_none
                 , C.text_xs
-                , T.overflow_hidden
+                , C.overflow_hidden
                 , T.z_9999
                 ]
                 (let

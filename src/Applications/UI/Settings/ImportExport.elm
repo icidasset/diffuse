@@ -41,14 +41,16 @@ view userLayerMethod =
             -- Intro
             --------
             , [ UI.Kit.inlineIcon Icons.warning
-              , Html.strong [] [ text "All your data will be replaced when you import something." ]
+              , inline
+                    [ C.font_semibold ]
+                    [ text "All your data will be replaced when you import something." ]
               ]
                 |> raw
                 |> UI.Kit.intro
 
             -- Import
             ---------
-            , chunk [ C.mb_2, T.mt4 ] [ UI.Kit.label [] "Import" ]
+            , chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Import" ]
             , UI.Kit.buttonWithColor
                 UI.Kit.Gray
                 Normal
@@ -69,7 +71,7 @@ view userLayerMethod =
 
             -- Export
             ---------
-            , chunk [ C.mb_2, T.mt4 ] [ UI.Kit.label [] "Export" ]
+            , chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Export" ]
             , UI.Kit.button
                 Normal
                 Export
@@ -82,10 +84,10 @@ otherImportOptions : Html Reply
 otherImportOptions =
     raw
         [ chunk
-            [ C.text_xs, T.i, C.leading_normal, C.mt_3 ]
+            [ C.italic, C.leading_normal, C.mt_5, C.text_xs ]
             [ text "Other options:" ]
         , chunk
-            [ C.text_sm, C.leading_normal, T.mt2 ]
+            [ C.leading_normal, C.mt_2, C.text_sm ]
             [ inline [ C.mr_2 ] [ text "•" ]
             , UI.Kit.textButton
                 { label = "Import Diffuse V1 data"

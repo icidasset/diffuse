@@ -140,7 +140,7 @@ notificationView notification =
         , T.cb
         , T.fr
         , T.measure_narrow
-        , T.mt2
+        , C.mt_2
         , T.pa3
         , T.white_90
 
@@ -153,15 +153,15 @@ notificationView notification =
 
         --
         , if options.wasDismissed then
-            T.o_0
+            C.opacity_0
 
           else
-            T.o_100
+            C.opacity_100
         ]
         [ contents notification
         , if options.sticky && kind /= Warning then
             chunk
-                [ C.select_none, C.text_xs, T.i, T.mt2, T.o_60, C.cursor_pointer ]
+                [ C.select_none, C.text_xs, C.italic, C.mt_2, C.opacity_60, C.cursor_pointer ]
                 [ Html.text "Double click to dismiss" ]
 
           else
