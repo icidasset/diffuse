@@ -116,7 +116,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
             , C.text_white_90
 
             --
-            , C.md__justify_center
+            , C.sm__justify_center
             ]
             [ button "Toggle repeat" (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
             , button "Play previous track" lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
@@ -137,8 +137,10 @@ button t light content msg =
         , C.flex
         , C.flex_col
         , C.items_center
-        , C.mx_8
         , C.px_1
+
+        --
+        , C.sm__mx_8
         ]
         [ brick
             [ style "height" "4px" ]

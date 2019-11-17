@@ -356,7 +356,7 @@ index amountOfTracks model =
         chunk
             [ C.relative ]
             [ chunk
-                [ C.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Sources" ] ]
             ]
 
@@ -382,6 +382,7 @@ index amountOfTracks model =
                         }
                     )
                 |> UI.List.view UI.List.Normal
+                |> chunky [ C.mt_5 ]
             ]
 
     --
@@ -390,16 +391,27 @@ index amountOfTracks model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ T.color_inherit, T.db, T.link, C.opacity_30 ]
+                [ C.block
+                , C.opacity_30
+                , C.text_inherit
+                ]
                 [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ T.color_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
+                [ C.block
+                , C.leading_normal
+                , C.mt_2
+                , C.opacity_40
+                , C.text_center
+                , C.text_inherit
+                ]
                 [ text "A source is a place where music is stored,"
                 , lineBreak
                 , text "add one so you can play some music "
-                , inline [ C.align_middle ] [ Icons.add 14 Inherit ]
+                , inline
+                    [ C.align_middle, C.inline_block, C.minus_mt_px ]
+                    [ Icons.add 14 Inherit ]
                 ]
             ]
 

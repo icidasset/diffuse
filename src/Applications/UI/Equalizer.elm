@@ -246,7 +246,7 @@ view model =
 --             [ css eqStyles ]
 --             [ C.relative ]
 --             [ chunk
---                 [ C.absolute, T.left_0, T.top_0 ]
+--                 [ C.absolute, C.left_0, C.top_0 ]
 --                 [ UI.Kit.canister [ UI.Kit.h1 "Equalizer" ]
 --                 ]
 --             ]
@@ -374,11 +374,11 @@ view model =
 --         [ T.center, C.relative ]
 --         [ brick
 --             [ css (knobLineStyles 45) ]
---             [ C.absolute, T.left_0, T.top_0 ]
+--             [ C.absolute, C.left_0, C.top_0 ]
 --             []
 --         , brick
 --             [ css (knobLineStyles -45) ]
---             [ C.absolute, T.right_0, T.top_0 ]
+--             [ C.absolute, T.right_0, C.top_0 ]
 --             []
 --         ]
 -- VARIABLES

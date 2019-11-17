@@ -282,7 +282,7 @@ backgroundImage chosenBackground =
                             , C.inset_0
                             , C.text_xs
                             , C.flex
-                            , C.font_bold
+                            , C.font_semibold
                             , C.items_center
                             , C.justify_center
                             , C.leading_snug
@@ -295,7 +295,8 @@ backgroundImage chosenBackground =
                             ]
                             [ chunk
                                 [ C.hidden
-                                , C.md__visible
+                                , C.md__block
+                                , C.mt_px
                                 ]
                                 [ text "Selected" ]
                             ]

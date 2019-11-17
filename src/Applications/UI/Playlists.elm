@@ -313,7 +313,7 @@ view page model selectedPlaylist bgColor =
 --         chunk
 --             [ C.relative ]
 --             [ chunk
---                 [ C.absolute, T.left_0, T.top_0 ]
+--                 [ C.absolute, C.left_0, C.top_0 ]
 --                 [ UI.Kit.canister [ UI.Kit.h1 "Playlists" ] ]
 --             ]
 --
@@ -358,12 +358,12 @@ view page model selectedPlaylist bgColor =
 --             [ slab
 --                 Html.a
 --                 [ href (Page.toString <| Page.Playlists New) ]
---                 [ T.color_inherit, T.db, T.link, C.opacity_30 ]
+--                 [ C.text_inherit, T.db, T.link, C.opacity_30 ]
 --                 [ Icons.waves 64 Inherit ]
 --             , slab
 --                 Html.a
 --                 [ href (Page.toString <| Page.Playlists New) ]
---                 [ T.color_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
+--                 [ C.text_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
 --                 [ text "No playlists found, create one"
 --                 , lineBreak
 --                 , text "or enable directory playlists."

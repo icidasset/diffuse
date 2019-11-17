@@ -2134,7 +2134,7 @@ overlay maybeAlfred maybeContextMenu =
         , C.transition_1000
         , C.transition_ease
         , C.transition_opacity
-        , C.z_50
+        , C.z_30
 
         --
         , ifThenElse isShown "" C.pointer_events_none

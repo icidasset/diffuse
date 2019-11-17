@@ -248,7 +248,7 @@ view model =
                                     C.text_white
 
                                   else
-                                    T.color_inherit
+                                    C.text_inherit
 
                                 --
                                 , if idx == instance.focus then

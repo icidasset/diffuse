@@ -529,7 +529,7 @@ futureView model =
         chunk
             [ C.relative ]
             [ chunk
-                [ C.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Up next" ] ]
             ]
 
@@ -553,12 +553,12 @@ futureView model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, T.link, C.opacity_30 ]
+                [ C.text_inherit, T.db, T.link, C.opacity_30 ]
                 [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
+                [ C.text_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "add some music first."
@@ -663,7 +663,7 @@ historyView model =
         chunk
             [ C.relative ]
             [ chunk
-                [ C.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "History" ] ]
             ]
 

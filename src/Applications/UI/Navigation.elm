@@ -210,7 +210,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                     slab
                         Html.span
                         []
-                        [ C.inline_block, C.ml_1, C.truncate ]
+                        [ C.inline_block, C.leading_tight, C.ml_1, C.truncate ]
                         [ text labelText ]
             ]
         ]

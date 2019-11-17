@@ -13,7 +13,6 @@ import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
 import List.Ext as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
-import Tachyons.Classes as T
 import UI.DnD as DnD
 import UI.Kit
 import VirtualDom
@@ -52,7 +51,7 @@ view : Variant Int msg -> List (Item msg) -> Html msg
 view variant items =
     items
         |> List.indexedMap (item variant)
-        |> brick [ style "font-size" "13p" ] [ C.leading_snug ]
+        |> brick [ style "font-size" "13px" ] [ C.antialiased, C.font_semibold, C.leading_snug ]
 
 
 
@@ -84,8 +83,9 @@ item variant idx { label, actions, msg, isSelected } =
         --             |> css
         --         ]
         -- )
-        [ C.flex
-        , C.font_semibold
+        [ C.border_b
+        , C.border_very_subtle
+        , C.flex
         , C.items_center
 
         --
@@ -117,7 +117,10 @@ item variant idx { label, actions, msg, isSelected } =
                         )
                         (DnD.listenToEnterLeave env idx)
             )
-            [ C.flex_grow, C.py_3, C.overflow_hidden ]
+            [ C.flex_grow
+            , C.py_4
+            , C.overflow_hidden
+            ]
             [ label ]
 
         -- Actions

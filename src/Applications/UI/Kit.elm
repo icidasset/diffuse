@@ -170,10 +170,8 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
         )
         [ case buttonType of
             IconOnly ->
-                slab
-                    Html.span
-                    [ style "font-size" "0" ]
-                    [ C.inline_block, C.leading_none, C.align_top ]
+                inline
+                    [ C.align_middle, C.inline_block, C.leading_none, C.text_0 ]
                     [ child ]
 
             _ ->

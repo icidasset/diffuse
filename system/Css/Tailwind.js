@@ -104,6 +104,7 @@ module.exports = {
       "black_50": "rgba(0, 0, 0, 0.5)",
       "inherit": "inherit",
       "subtle": "rgb(238, 238, 238)",
+      "very-subtle": "rgb(248, 248, 248)",
       "white-60": "rgba(255, 255, 255, 0.6)",
       "white-90": "rgba(255, 255, 255, 0.9)",
     },

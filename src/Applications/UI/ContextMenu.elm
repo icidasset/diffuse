@@ -33,7 +33,7 @@ view m =
                 , C.select_none
                 , C.text_xs
                 , C.overflow_hidden
-                , T.z_9999
+                , C.z_50
                 ]
                 (let
                     lastIndex =
@@ -81,7 +81,7 @@ itemView lastIndex index { icon, label, msg, active } =
         --
         , ifThenElse (active || isLast) T.b__transparent T.b__near_white
         , ifThenElse active C.bg_base00 ""
-        , ifThenElse active C.text_white T.color_inherit
+        , ifThenElse active C.text_white C.text_inherit
         , ifThenElse active C.font_semibold T.fw4
         ]
         [ inline
