@@ -74,14 +74,14 @@ itemView lastIndex index { icon, label, msg, active } =
         ]
         [ C.border_b
         , T.pa3
-        , T.pr4
+        , C.pr_4
         , C.cursor_pointer
         , C.truncate
 
         --
         , ifThenElse (active || isLast) T.b__transparent T.b__near_white
         , ifThenElse active C.bg_base00 ""
-        , ifThenElse active T.white T.color_inherit
+        , ifThenElse active C.text_white T.color_inherit
         , ifThenElse active C.font_semibold T.fw4
         ]
         [ inline
@@ -90,7 +90,7 @@ itemView lastIndex index { icon, label, msg, active } =
         , slab
             Html.span
             [ style "top" "-0.5px" ]
-            [ C.inline_block, C.ml_2, T.pl1, C.relative, C.align_middle ]
+            [ C.inline_block, C.ml_2, C.pl_1, C.relative, C.align_middle ]
             [ text label ]
         ]
 

@@ -117,7 +117,7 @@ item variant idx { label, actions, msg, isSelected } =
                         )
                         (DnD.listenToEnterLeave env idx)
             )
-            [ C.flex_grow, T.pv3, C.overflow_hidden ]
+            [ C.flex_grow, C.py_3, C.overflow_hidden ]
             [ label ]
 
         -- Actions
@@ -158,7 +158,7 @@ actionView action =
         )
         [ C.leading_0
         , C.ml_1
-        , T.pl1
+        , C.pl_1
         , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer ""
         ]
         [ action.icon 16 action.color ]

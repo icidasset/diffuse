@@ -286,7 +286,7 @@ view model =
 -- knob knobType value =
 --     brick
 --         [ css columnStyles ]
---         [ C.flex_grow, C.flex_shrink_0, T.ph4, T.ph5_ns, T.pv3 ]
+--         [ C.flex_grow, C.flex_shrink_0, C.px_4, C.px_5_ns, C.py_3 ]
 --         [ knob_ knobType value
 --         , knobLines
 --         , knobLabel knobType

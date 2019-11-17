@@ -301,10 +301,10 @@ newHow { context } =
           chunk
             [ C.flex, C.pt_3 ]
             [ chunk
-                [ C.flex_grow, T.pr3 ]
+                [ C.flex_grow, C.pr_3 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ C.flex_grow, T.pl3 ]
+                [ C.flex_grow, C.pl_3 ]
                 (List.map (renderProperty context) listB)
             ]
 
@@ -464,10 +464,10 @@ edit { context } =
           chunk
             [ C.flex, C.pt_3 ]
             [ chunk
-                [ C.flex_grow, T.pr3 ]
+                [ C.flex_grow, C.pr_3 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ C.flex_grow, T.pl3 ]
+                [ C.flex_grow, C.pl_3 ]
                 (List.map (renderProperty context) listB)
             ]
 

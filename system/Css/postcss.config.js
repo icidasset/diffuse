@@ -50,9 +50,7 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
 
     functions.push(
       `{-| This represents the \`.${cls}\` class.\n` +
-      `\n    \`\`\`` +
       `\n    ${css}` +
-      `\n    \`\`\`` +
       `\n-}\n` +
       `${elmVariable} : String\n` +
       `${elmVariable} = "${cls}"\n`

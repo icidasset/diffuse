@@ -175,7 +175,7 @@ view model =
                   -- Message
                   -----------------------------------------
                   chunk
-                    [ C.italic, C.leading_normal, C.mt_4, C.pt_3, C.text_center, T.white ]
+                    [ C.italic, C.leading_normal, C.mt_4, C.pt_3, C.text_center, C.text_white ]
                     [ text instance.message ]
 
                 -----------------------------------------
@@ -245,7 +245,7 @@ view model =
 
                                 --
                                 , if idx == instance.focus then
-                                    T.white
+                                    C.text_white
 
                                   else
                                     T.color_inherit

@@ -17,7 +17,6 @@ import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue
-import Tachyons.Classes as T
 import UI.Css
 import UI.Kit
 import UI.Queue as Queue
@@ -30,10 +29,15 @@ import UI.Reply exposing (Reply(..))
 
 view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> Html Reply
 view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
-    brick
-        -- TODO: [ css consoleStyles ]
-        []
-        [ C.mt_1, C.text_center, C.w_full ]
+    chunk
+        [ C.antialiased
+        , C.mt_1
+        , C.text_center
+        , C.w_full
+
+        --
+        , C.lg__max_w_insulation
+        ]
         [ -----------------------------------------
           -- Now Playing
           -----------------------------------------
@@ -41,16 +45,11 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
             [ C.text_sm
             , C.italic
             , C.leading_normal
-            , T.pb3
-            , C.pt_3
-            , T.white
+            , C.py_4
+            , C.text_white
             ]
             [ if stalled then
-                slab
-                    Html.span
-                    []
-                    [ C.inline_block ]
-                    [ text "Audio connection got interrupted, trying to reconnect ..." ]
+                text "Audio connection got interrupted, trying to reconnect ..."
 
               else if loading then
                 text "Loading track ..."
@@ -86,15 +85,19 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
           brick
             [ on "click" (clickLocationDecoder Seek) ]
             [ C.cursor_pointer
-            , T.pv1
+            , C.py_1
             ]
             [ brick
-                -- TODO: [ css progressBarStyles ]
-                []
-                [ T.br1 ]
+                [ style "background-color" "rgba(255, 255, 255, 0.25)"
+                , style "height" "3px"
+                ]
+                [ C.rounded_sm
+                , C.select_none
+                ]
                 [ brick
-                    [ -- TODO: css progressBarInnerStyles
-                      style "width" (String.fromFloat progress ++ "%")
+                    [ style "background-color" "rgba(255, 255, 255, 0.325)"
+                    , style "height" "3px"
+                    , style "width" (String.fromFloat progress ++ "%")
                     ]
                     [ "progressBarValue" ]
                     []
@@ -104,14 +107,13 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
         -----------------------------------------
         -- Buttons
         -----------------------------------------
-        , brick
-            -- TODO: [ css buttonsContainerStyles ]
-            []
+        , chunk
             [ C.flex
             , C.justify_between
-            , C.mb_2
-            , C.mt_3
-            , C.pb_1
+            , C.mb_3
+            , C.mt_4
+            , C.select_none
+            , C.text_white_90
 
             --
             , C.md__justify_center
@@ -128,15 +130,26 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
 button : String -> Html msg -> Html msg -> msg -> Html msg
 button t light content msg =
     brick
-        [ onClick msg, title t ]
-        [ C.flex, C.flex_col, C.items_center, T.mh1, T.mh4_ns, C.px_1, C.cursor_pointer ]
+        [ onClick msg
+        , title t
+        ]
+        [ C.cursor_pointer
+        , C.flex
+        , C.flex_col
+        , C.items_center
+        , C.mx_8
+        , C.px_1
+        ]
         [ brick
             [ style "height" "4px" ]
             []
             [ light ]
         , brick
             [ style "height" "25px" ]
-            [ C.flex, C.items_center, T.mv2 ]
+            [ C.flex
+            , C.items_center
+            , C.my_2
+            ]
             [ content ]
         ]
 
@@ -144,105 +157,66 @@ button t light content msg =
 smallLight : Bool -> Html msg
 smallLight isOn =
     brick
-        -- TODO:
-        -- [ css
-        --     [ Css.backgroundColor
-        --         (ifThenElse isOn (Css.rgb 157 174 255) (Css.rgba 255 255 255 0.25))
-        --     , Css.height (Css.px 4)
-        --     , Css.width (Css.px 4)
-        --     ]
-        -- ]
-        []
-        [ T.br_100 ]
+        [ style "height" "4px"
+        , style "width" "4px"
+
+        --
+        , style "background-color" <|
+            ifThenElse
+                isOn
+                "rgb(157, 174, 255)"
+                "rgba(255, 255, 255, 0.25)"
+        ]
+        [ C.rounded_full ]
         []
 
 
 largeLight : Bool -> Html msg
 largeLight isOn =
     brick
-        -- TODO:
-        -- [ css
-        --     [ Css.backgroundColor
-        --         (ifThenElse isOn (Css.rgb 198 254 153) (Css.rgba 255 255 255 0.25))
-        --     , Css.height (Css.px 4)
-        --     , Css.left (Css.px -2)
-        --     , Css.width (Css.px 17)
-        --     ]
-        -- ]
-        []
-        [ T.br_pill, C.relative ]
+        [ style "height" "4px"
+        , style "left" "-2px"
+        , style "width" "17px"
+
+        --
+        , style "background-color" <|
+            ifThenElse
+                isOn
+                "rgb(198, 254, 153)"
+                "rgba(255, 255, 255, 0.25)"
+        ]
+        [ C.relative, C.rounded_full ]
         []
 
 
 lightPlaceHolder : Html msg
 lightPlaceHolder =
-    brick
-        -- TODO: [ css [ Css.height (Css.px 4) ] ]
-        []
-        []
+    Html.div
+        [ style "height" "4px" ]
         []
 
 
 play : Html msg
 play =
     brick
-        -- TODO: [ css playTextStyles ]
-        []
-        [ C.font_bold, T.nowrap, C.relative ]
+        [ style "font-size" "11.25px"
+        , style "letter-spacing" "3.75px"
+        ]
+        [ C.font_bold
+        , C.font_display
+        , C.relative
+        , C.whitespace_no_wrap
+        ]
         [ text "PLAY" ]
+
+
+
+-- ⚗️
 
 
 icon : (Int -> Coloring -> Html msg) -> Int -> Html msg
 icon iconFunction int =
-    iconFunction int (Color iconColor)
-
-
-
--- 🖼
-
-
-buttonsContainerStyles : List Css.Style
-buttonsContainerStyles =
-    [ Css.disableUserSelection ]
-
-
-consoleStyles : List Css.Style
-consoleStyles =
-    [ Css.Media.withMedia
-        [ UI.Css.largeMediaQuery ]
-        [ Css.minWidth (Css.px 840)
-        ]
-    ]
-
-
-iconColor : Color.Color
-iconColor =
-    Color.rgba 1 1 1 0.875
-
-
-playTextStyles : List Css.Style
-playTextStyles =
-    [ Css.color (Color.toElmCssColor iconColor)
-
-    -- TODO: , Css.fontFamilies UI.Kit.headerFontFamilies
-    , Css.fontSize (Css.px 11.25)
-    , Css.letterSpacing (Css.px 3.75)
-    ]
-
-
-progressBarStyles : List Css.Style
-progressBarStyles =
-    [ Css.backgroundColor (Css.rgba 255 255 255 0.25)
-    , Css.disableUserSelection
-    , Css.height (Css.px 3)
-    ]
-
-
-progressBarInnerStyles : List Css.Style
-progressBarInnerStyles =
-    [ Css.backgroundColor (Css.rgba 255 255 255 0.325)
-    , Css.height (Css.px 3)
-    ]
+    iconFunction int Inherit
 
 
 

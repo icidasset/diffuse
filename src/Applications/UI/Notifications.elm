@@ -142,7 +142,7 @@ notificationView notification =
         , T.measure_narrow
         , C.mt_2
         , T.pa3
-        , T.white_90
+        , C.text_white_90
 
         --
         , if options.wasDismissed then

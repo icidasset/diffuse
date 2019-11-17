@@ -716,7 +716,7 @@ view model deps =
 --                 , C.flex_grow
 --                 , T.h_100
 --                 , C.outline_none
---                 , T.pr2
+--                 , C.pr_2
 --                 , C.w_full
 --                 ]
 --                 []
@@ -793,7 +793,7 @@ view model deps =
 --                             , C.leading_none
 --                             , C.cursor_pointer
 --                             , C.truncate
---                             , T.white_90
+--                             , C.text_white_90
 --                             ]
 --                             [ text playlist.name ]
 --
@@ -841,7 +841,7 @@ view model deps =
 --                     [ -- Add
 --                       ------
 --                       inline
---                         [ C.mb_3, T.mh2, T.nowrap ]
+--                         [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
 --                         [ UI.Kit.buttonLink
 --                             (Sources.NewOnboarding
 --                                 |> UI.Page.Sources
@@ -858,7 +858,7 @@ view model deps =
 --                     -- Demo
 --                     -------
 --                     , inline
---                         [ C.mb_3, T.mh2, T.nowrap ]
+--                         [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
 --                         [ UI.Kit.buttonWithColor
 --                             UI.Kit.Gray
 --                             UI.Kit.Normal
@@ -873,7 +873,7 @@ view model deps =
 --                     -- How
 --                     ------
 --                     , inline
---                         [ C.mb_3, T.mh2, T.nowrap ]
+--                         [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
 --                         [ UI.Kit.buttonWithOptions
 --                             Html.a
 --                             [ href "about"
