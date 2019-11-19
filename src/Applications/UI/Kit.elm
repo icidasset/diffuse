@@ -420,10 +420,11 @@ textButton : { label : String, onClick : msg } -> Html msg
 textButton params =
     slab
         Html.button
-        -- TODO: [ css linkStyles ]
         [ onClick params.onClick ]
-        [ C.bg_transparent
-        , C.border_none
+        [ C.appearance_none
+        , C.bg_transparent
+        , C.border_accent
+        , C.border_b_2
         , C.text_inherit
         , C.leading_tight
         , C.m_0

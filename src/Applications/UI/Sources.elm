@@ -382,7 +382,6 @@ index amountOfTracks model =
                         }
                     )
                 |> UI.List.view UI.List.Normal
-                |> chunky [ C.mt_5 ]
             ]
 
     --
