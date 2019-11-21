@@ -165,11 +165,11 @@ view model =
                 [ C.inset_0
                 , C.flex
                 , C.flex_col
-                , T.fixed
+                , C.fixed
                 , C.items_center
                 , C.px_3
                 , C.cursor_pointer
-                , T.z_9999
+                , C.z_50
                 ]
                 [ -----------------------------------------
                   -- Message
@@ -208,12 +208,12 @@ view model =
                         ]
                         [ C.border_none
                         , C.bg_white
-                        , C.rounded
-                        , T.db
-                        , T.f3
+                        , C.block
                         , C.leading_normal
+                        , C.rounded
                         , C.outline_none
-                        , T.pa3
+                        , C.p_3
+                        , C.text_lg
                         , C.w_full
                         ]
                         []
@@ -239,7 +239,7 @@ view model =
                         (\idx result ->
                             brick
                                 [ onTapPreventDefault (RunAction idx) ]
-                                [ T.pa3
+                                [ C.p_3
                                 , C.relative
                                 , C.truncate
 

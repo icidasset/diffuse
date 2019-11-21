@@ -187,6 +187,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , C.text_base01
 
         --
+        , C.fixate__text_black
         , C.last__border_r_0
         ]
         [ chunk

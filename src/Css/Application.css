@@ -33,8 +33,14 @@ body {
 }
 
 
-*:focus:not(:active) svg > g {
-  fill: black;
+*:active {
+  outline: none;
+}
+
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(0, 0, 0, 0.45);
 }
 
 

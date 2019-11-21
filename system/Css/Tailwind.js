@@ -53,10 +53,12 @@ module.exports = {
   variants: {
 
     backgroundColor: [ "focus", "hover", "inactive-focus", "responsive" ],
-    borderColor: [ "focus", "hover", "inactive-focus", "responsive" ],
+    borderColor: [ "first", "focus", "hover", "inactive-focus", "last", "responsive" ],
     borderWidth: [ "first", "last" ],
+    cursor: [ "first", "last" ],
     margin: [ "first", "last", "responsive" ],
     opacity: [ "focus", "hocus", "hover", "responsive" ],
+    padding: [ "first", "last", "responsive" ],
     textColor: [ "focus", "hover", "inactive-focus", "responsive" ],
 
   },
@@ -116,7 +118,9 @@ module.exports = {
     extend: {
 
       fontSize: {
-        "0": 0
+        "0": 0,
+        "almost-sm": "0.78125rem",
+        "xxs": "0.6875rem",
       },
 
       lineHeight: {
@@ -155,6 +159,7 @@ module.exports = {
         "9/12": "75%",
         "10/12": "83.333333%",
         "11/12": "91.666667%",
+        "-full": "-100%",
       }
 
     },
@@ -211,6 +216,9 @@ module.exports = {
     translate: {
       "1/2": "50%",
       "-1/2": "-50%",
+      "full": "100%",
+      "-full": "-100%",
+      "centered": ["-50%", "-50%"],
       "put-on-top": ["-50%", "-100%"],
     },
 

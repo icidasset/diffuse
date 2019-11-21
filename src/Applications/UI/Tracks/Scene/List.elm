@@ -7,9 +7,7 @@ import Color.Ext as Color
 import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Coordinates
-import Css
 import Css.Classes as C
-import Css.Media
 import Html exposing (Html, text)
 import Html.Attributes exposing (class, id, style, tabindex)
 import Html.Events
@@ -23,8 +21,6 @@ import Material.Icons.Av as Icons
 import Material.Icons.Navigation as Icons
 import Maybe.Extra as Maybe
 import Return3 exposing (..)
-import Tachyons
-import Tachyons.Classes as T
 import Task
 import Tracks exposing (..)
 import UI.Css
@@ -131,6 +127,10 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
         , C.relative
         , C.select_none
         , C.scrolling_touch
+        , C.text_xs
+
+        --
+        , C.md__text_almost_sm
 
         --
         , case maybeDnD of
@@ -146,10 +146,18 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
         ]
         [ -- Shadow
           ---------
-          brick
-            []
-            -- TODO: [ css shadowStyles ]
-            [ C.left_0, C.right_0, C.top_0, C.z_10 ]
+          chunk
+            [ C.h_10
+            , C.left_0
+            , C.minus_mt_10
+            , C.opacity_30
+            , C.right_0
+            , C.shadow_md
+            , C.sticky
+            , C.top_0
+            , C.minus_translate_y_full
+            , C.z_10
+            ]
             []
 
         -- Header
@@ -244,21 +252,13 @@ scrollToTop =
 
 viewAttributes : List (Html.Attribute Msg)
 viewAttributes =
-    [ -- TODO: Html.Styled.Attributes.css viewStyles
-      InfiniteList.onScroll InfiniteListMsg
+    [ InfiniteList.onScroll InfiniteListMsg
     , id containerId
     , style "overscroll-behavior" "none"
     ]
 
 
 
--- viewStyles : List Css.Style
--- viewStyles =
---     [ Css.fontSize (Css.px 11.5)
---     , Css.Media.withMedia
---         [ UI.Css.notSmallMediaQuery ]
---         [ Css.fontSize (Css.px 12.5) ]
---     ]
 -- HEADERS
 
 
@@ -278,118 +278,93 @@ header isPlaylist showAlbum sortBy sortDirection =
         maybeSortIcon s =
             ifThenElse (sortBy == s) (Just sortIcon) Nothing
     in
-    brick
-        []
-        -- TODO: [ Html.Styled.Attributes.css headerStyles ]
-        [ C.bg_white, C.flex, C.font_semibold, C.relative, C.z_20 ]
+    chunk
+        [ C.antialiased
+        , C.bg_white
+        , C.border_b
+        , C.border_subtle
+        , C.flex
+        , C.font_semibold
+        , C.relative
+        , C.text_base06
+        , C.text_xxs
+        , C.z_20
+        ]
         (if isPlaylist && showAlbum then
-            [ headerColumn "" 4.5 First Nothing Bypass
-            , headerColumn "#" 4.5 Between Nothing Bypass
-            , headerColumn "Title" 36.0 Between Nothing Bypass
-            , headerColumn "Artist" 27.5 Between Nothing Bypass
-            , headerColumn "Album" 27.5 Last Nothing Bypass
+            [ headerColumn "" 4.5 Nothing Bypass
+            , headerColumn "#" 4.5 Nothing Bypass
+            , headerColumn "Title" 36.0 Nothing Bypass
+            , headerColumn "Artist" 27.5 Nothing Bypass
+            , headerColumn "Album" 27.5 Nothing Bypass
             ]
 
          else if isPlaylist then
-            [ headerColumn "" 4.5 First Nothing Bypass
-            , headerColumn "#" 4.5 Between Nothing Bypass
-            , headerColumn "Title" 49.75 Between Nothing Bypass
-            , headerColumn "Artist" 41.25 Last Nothing Bypass
+            [ headerColumn "" 4.5 Nothing Bypass
+            , headerColumn "#" 4.5 Nothing Bypass
+            , headerColumn "Title" 49.75 Nothing Bypass
+            , headerColumn "Artist" 41.25 Nothing Bypass
             ]
 
          else if showAlbum then
-            [ headerColumn "" 4.5 First Nothing Bypass
-            , headerColumn "Title" 37.5 Between (maybeSortIcon Title) (Reply <| SortBy Title)
-            , headerColumn "Artist" 29.0 Between (maybeSortIcon Artist) (Reply <| SortBy Artist)
-            , headerColumn "Album" 29.0 Last (maybeSortIcon Album) (Reply <| SortBy Album)
+            [ headerColumn "" 4.5 Nothing Bypass
+            , headerColumn "Title" 37.5 (maybeSortIcon Title) (Reply <| SortBy Title)
+            , headerColumn "Artist" 29.0 (maybeSortIcon Artist) (Reply <| SortBy Artist)
+            , headerColumn "Album" 29.0 (maybeSortIcon Album) (Reply <| SortBy Album)
             ]
 
          else
-            [ headerColumn "" 4.5 First Nothing Bypass
-            , headerColumn "Title" 52 Between (maybeSortIcon Title) (Reply <| SortBy Title)
-            , headerColumn "Artist" 43.5 Last (maybeSortIcon Artist) (Reply <| SortBy Artist)
+            [ headerColumn "" 4.5 Nothing Bypass
+            , headerColumn "Title" 52 (maybeSortIcon Title) (Reply <| SortBy Title)
+            , headerColumn "Artist" 43.5 (maybeSortIcon Artist) (Reply <| SortBy Artist)
             ]
         )
-
-
-headerStyles : List Css.Style
-headerStyles =
-    [ Css.borderBottom3 (Css.px 1) Css.solid (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    , Css.color (Color.toElmCssColor headerTextColor)
-    , Css.fontSize (Css.px 11)
-    ]
-
-
-headerTextColor : Color.Color
-headerTextColor =
-    Color.rgb255 207 207 207
 
 
 
 -- HEADER COLUMN
 
 
-type Pos
-    = First
-    | Between
-    | Last
-
-
-headerColumn :
-    String
-    -> Float
-    -> Pos
-    -> Maybe (Html msg)
-    -> msg
-    -> Html msg
-headerColumn text_ width pos maybeSortIcon msg =
+headerColumn : String -> Float -> Maybe (Html msg) -> msg -> Html msg
+headerColumn text_ width maybeSortIcon msg =
     brick
         [ Html.Events.onClick msg
 
-        -- TODO:
-        -- , Html.Styled.Attributes.css
-        --     [ Css.borderLeft3
-        --         (Css.px <| ifThenElse (pos /= First) 1 0)
-        --         Css.solid
-        --         (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-        --     , Css.property "min-width" columnMinWidth
-        --     , Css.width (Css.pct width)
-        --     ]
+        --
+        , style "min-width" columnMinWidth
+        , style "width" (String.fromFloat width ++ "%")
         ]
-        [ C.leading_snug
-        , C.py_1
-        , C.relative
+        [ C.border_l
+        , C.border_subtle
+        , C.cursor_default
+        , C.leading_relaxed
+        , C.pl_2
+        , C.pr_2
+        , C.pt_px
 
         --
-        , ifThenElse (pos == First) C.pl_3 C.pl_2
-        , ifThenElse (pos == Last) C.pr_3 C.pr_2
-        , ifThenElse (pos == First) "" C.cursor_pointer
+        , C.first__border_l_0
+        , C.first__cursor_default
+        , C.first__pl_4
+        , C.last__pr_4
         ]
-        [ brick
-            []
-            -- TODO: [ Html.Styled.Attributes.css [ Css.top (Css.px 1) ] ]
-            [ C.relative ]
+        [ chunk
+            [ C.mt_px, C.opacity_90, C.pt_px ]
             [ Html.text text_ ]
         , case maybeSortIcon of
             Just sortIcon ->
-                brick
-                    []
-                    -- TODO: [ Html.Styled.Attributes.css sortIconStyles ]
-                    [ C.absolute, C.mr_1, C.right_0 ]
+                chunk
+                    [ C.absolute
+                    , C.minus_translate_y_half
+                    , C.mr_1
+                    , C.opacity_90
+                    , C.right_0
+                    , C.top_half
+                    ]
                     [ sortIcon ]
 
             Nothing ->
                 nothing
         ]
-
-
-sortIconStyles : List Css.Style
-sortIconStyles =
-    [ Css.fontSize (Css.px 0)
-    , Css.lineHeight (Css.px 0)
-    , Css.top (Css.pct 50)
-    , Css.transform (Css.translateY <| Css.pct -50)
-    ]
 
 
 
@@ -402,7 +377,14 @@ infiniteListContainer :
     -> Html msg
 infiniteListContainer styles =
     styles
-        |> List.map (\( k, v ) -> style k v)
+        |> List.filterMap
+            (\( k, v ) ->
+                if k == "padding" then
+                    Nothing
+
+                else
+                    Just (style k v)
+            )
         |> List.append listStyles
         |> Html.div
 
@@ -470,7 +452,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
             text ""
 
         --
-        , Html.div
+        , brick
             (List.concat
                 [ rowStyles idx rowIdentifiers derivedColors
 
@@ -486,19 +468,15 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
                     , playEvent identifiedTrack
                     , selectEvent identifiedTrack
                     ]
-
-                --
-                , [ C.flex
-                  , C.items_center
-
-                  --
-                  , ifThenElse identifiers.isMissing "" C.cursor_pointer
-                  , ifThenElse isSelected C.font_semibold ""
-                  ]
-                    |> Tachyons.classes
-                    |> List.singleton
                 ]
             )
+            [ C.flex
+            , C.items_center
+
+            --
+            , ifThenElse identifiers.isMissing "" C.cursor_pointer
+            , ifThenElse isSelected C.font_semibold ""
+            ]
             (if showAlbum then
                 [ favouriteColumn favouritesOnly favIdentifiers derivedColors
                 , otherColumn "37.5%" False track.tags.title
@@ -545,7 +523,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
             , isSelected = isSelected
             }
     in
-    Html.div
+    brick
         (List.concat
             [ rowStyles idx rowIdentifiers derivedColors
 
@@ -569,17 +547,6 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
                 ]
 
             --
-            , [ C.flex
-              , C.items_center
-
-              --
-              , ifThenElse identifiers.isMissing "" C.cursor_pointer
-              , ifThenElse isSelected C.font_semibold ""
-              ]
-                |> Tachyons.classes
-                |> List.singleton
-
-            --
             , DnD.listenToEnterLeave dragEnv listIdx
 
             --
@@ -590,6 +557,13 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
                 []
             ]
         )
+        [ C.flex
+        , C.items_center
+
+        --
+        , ifThenElse identifiers.isMissing "" C.cursor_pointer
+        , ifThenElse isSelected C.font_semibold ""
+        ]
         (if showAlbum then
             [ favouriteColumn favouritesOnly favIdentifiers derivedColors
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
@@ -716,37 +690,35 @@ groupNode idx identifiers =
                 |> Maybe.map .name
                 |> Maybe.withDefault "Unknown"
     in
-    Html.div
-        ([ C.text_xs
-         , C.font_bold
-         , C.leading_normal
-         , C.pb_3
-         , C.px_3
-         , ifThenElse (0 == idx) C.pt_3 C.pt_4
-         , C.truncate
-         ]
-            |> Tachyons.classes
-            |> List.addTo groupStyles
-        )
+    brick
+        groupStyles
+        [ C.font_display
+        , C.font_semibold
+        , C.leading_normal
+        , C.pb_3
+        , C.px_4
+        , C.text_xxs
+        , C.truncate
+
+        --
+        , ifThenElse (0 == idx) C.pt_3 C.pt_4
+        ]
         [ groupIcon
-        , Html.span [ class C.align_middle ] [ text groupName ]
+        , inline [ C.align_middle ] [ text groupName ]
         ]
 
 
 groupIcon : Html msg
 groupIcon =
-    Html.span
-        [ Tachyons.classes [ C.align_middle, C.inline_block, C.pr_2, C.leading_0 ] ]
+    inline
+        [ C.align_middle, C.inline_block, C.leading_0, C.pr_2 ]
         [ Icons.library_music 16 Inherit ]
 
 
 groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ style "color" rowFontColors.grey
-
-    -- Use class <<< , style "font-family" (String.join ", " UI.Kit.headerFontFamilies)
-    , style "font-size" "11px"
-    , style "letter-spacing" "0.005em"
+    , style "letter-spacing" "0.015em"
     ]
 
 
@@ -797,13 +769,19 @@ columnMinWidth =
 
 favouriteColumn : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> Html Msg
 favouriteColumn favouritesOnly identifiers derivedColors =
-    Html.div
+    brick
         ((++)
-            [ Html.Events.onClick (Reply <| ToggleFavourite identifiers.indexInList)
-            , Tachyons.classes [ C.flex_shrink_0, C.font_normal, C.pl_3 ]
+            [ identifiers.indexInList
+                |> ToggleFavourite
+                |> Reply
+                |> Html.Events.onClick
             ]
             (favouriteColumnStyles favouritesOnly identifiers derivedColors)
         )
+        [ C.flex_shrink_0
+        , C.font_normal
+        , C.pl_4
+        ]
         [ if identifiers.isFavourite then
             text "t"
 
@@ -823,7 +801,7 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } d
                 derivedColors.subtle
 
             else if favouritesOnly || not isFavourite then
-                favColors.blackFaded
+                favColors.gray
 
             else
                 favColors.red
@@ -837,32 +815,33 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } d
 
 playlistIndexColumn : Int -> Html msg
 playlistIndexColumn indexInPlaylist =
-    [ C.pl_2
-    , C.pr_2
-    , C.pointer_events_none
-    , C.truncate
-    ]
-        |> Tachyons.classes
-        |> List.addTo (otherColumnStyles "4.5%")
-        |> (\attributes ->
-                Html.div
-                    attributes
-                    [ text (String.fromInt <| indexInPlaylist + 1) ]
-           )
+    brick
+        (otherColumnStyles "4.5%")
+        [ C.pl_2
+        , C.pr_2
+        , C.pointer_events_none
+        , C.truncate
+        ]
+        [ indexInPlaylist
+            |> (+) 1
+            |> String.fromInt
+            |> text
+        ]
 
 
 otherColumn : String -> Bool -> String -> Html msg
 otherColumn width isLast text_ =
-    [ C.pl_2
-    , C.pointer_events_none
-    , C.truncate
+    brick
+        (otherColumnStyles width)
+        [ C.pl_2
+        , C.pr_2
+        , C.pointer_events_none
+        , C.truncate
 
-    --
-    , ifThenElse isLast C.pr_3 C.pr_2
-    ]
-        |> Tachyons.classes
-        |> List.addTo (otherColumnStyles width)
-        |> (\attributes -> Html.div attributes [ text text_ ])
+        --
+        , C.last__pr_4
+        ]
+        [ text text_ ]
 
 
 otherColumnStyles : String -> List (Html.Attribute msg)
@@ -877,7 +856,7 @@ otherColumnStyles columnWidth =
 
 
 favColors =
-    { blackFaded = Color.toCssString (Color.rgba 0 0 0 0.125)
+    { gray = Color.toCssString (Color.rgb255 220 220 220)
     , red = Color.toCssString UI.Kit.colorKit.base08
     }
 
@@ -899,16 +878,3 @@ rowFontColors =
 dragIndicator : Html.Attribute msg
 dragIndicator =
     style "box-shadow" ("0 1px 0 0 " ++ Color.toCssString UI.Kit.colorKit.accent ++ " inset")
-
-
-shadowStyles : List Css.Style
-shadowStyles =
-    [ Css.boxShadow5 (Css.px 0) (Css.px 0) (Css.px 10) (Css.px 1) (Css.rgba 0 0 0 0.05)
-    , Css.height (Css.px 44)
-    , Css.marginTop (Css.px -44)
-    , Css.transform (Css.translateY <| Css.px -44)
-
-    --
-    , Css.property "position" "-webkit-sticky"
-    , Css.property "position" "sticky"
-    ]

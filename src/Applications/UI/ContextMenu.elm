@@ -4,14 +4,12 @@ import Chunky exposing (..)
 import Conditional exposing (..)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
-import Css
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (custom)
 import Json.Decode
 import Material.Icons exposing (Coloring(..))
-import Tachyons.Classes as T
 import UI.Kit
 import UI.Reply exposing (Reply)
 
@@ -25,25 +23,27 @@ view m =
     case m of
         Just (ContextMenu items coordinates) ->
             brick
-                -- TODO: [ css (menuStyles coordinates) ]
-                []
+                [ style "left" (String.fromFloat coordinates.x ++ "px")
+                , style "top" (String.fromFloat coordinates.y ++ "px")
+
+                --
+                , style "min-width" "170px"
+                ]
                 [ C.absolute
-                , C.rounded
                 , C.bg_white
-                , C.select_none
-                , C.text_xs
                 , C.overflow_hidden
+                , C.rounded
+                , C.shadow_md
+                , C.select_none
+                , C.text_almost_sm
+                , C.translate_centered
                 , C.z_50
                 ]
-                (let
-                    lastIndex =
-                        List.length items - 1
-                 in
-                 List.indexedMap
-                    (\idx item ->
+                (List.map
+                    (\item ->
                         case item of
                             Item i ->
-                                itemView lastIndex idx i
+                                itemView i
 
                             Divider ->
                                 -- NOTE: Not needed at the moment
@@ -56,12 +56,8 @@ view m =
             nothing
 
 
-itemView : Int -> Int -> ContextMenu.ItemProperties Reply -> Html Reply
-itemView lastIndex index { icon, label, msg, active } =
-    let
-        isLast =
-            index == lastIndex
-    in
+itemView : ContextMenu.ItemProperties Reply -> Html Reply
+itemView { icon, label, msg, active } =
     brick
         [ custom
             "tap"
@@ -73,39 +69,34 @@ itemView lastIndex index { icon, label, msg, active } =
             )
         ]
         [ C.border_b
-        , T.pa3
+        , C.border_very_subtle
+        , C.p_3
         , C.pr_4
         , C.cursor_pointer
         , C.truncate
 
         --
-        , ifThenElse (active || isLast) T.b__transparent T.b__near_white
+        , C.last__border_transparent
+
+        --
+        , ifThenElse active C.antialiased ""
+        , ifThenElse active C.border_transparent ""
         , ifThenElse active C.bg_base00 ""
         , ifThenElse active C.text_white C.text_inherit
-        , ifThenElse active C.font_semibold T.fw4
+        , ifThenElse active C.font_semibold C.font_normal
         ]
         [ inline
-            [ C.inline_block, C.leading_0, C.align_middle ]
+            [ C.align_middle
+            , C.inline_block
+            , C.leading_0
+            ]
             [ icon 14 Inherit ]
-        , slab
-            Html.span
-            [ style "top" "-0.5px" ]
-            [ C.inline_block, C.ml_2, C.pl_1, C.relative, C.align_middle ]
+        , inline
+            [ C.align_middle
+            , C.inline_block
+            , C.ml_2
+            , C.pl_1
+            , C.relative
+            ]
             [ text label ]
         ]
-
-
-
--- 🖼
-
-
-menuStyles : Coordinates -> List Css.Style
-menuStyles { x, y } =
-    [ Css.fontSize (Css.px 12.5)
-    , Css.left (Css.px x)
-    , Css.minWidth (Css.px 170)
-    , Css.transform (Css.translate2 (Css.pct -50) (Css.pct -50))
-    , Css.top (Css.px y)
-
-    -- TODO: , UI.Kit.onOverlayShadow
-    ]

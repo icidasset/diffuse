@@ -276,7 +276,7 @@ newHow { context } =
     , (\h ->
         form TakeStep
             [ chunk
-                [ T.tl, C.w_full ]
+                [ C.text_left, C.w_full ]
                 [ UI.Kit.canister h ]
             ]
       )
@@ -439,7 +439,7 @@ edit { context } =
     , (\h ->
         form EditSource
             [ chunk
-                [ T.tl, C.w_full ]
+                [ C.text_left, C.w_full ]
                 [ UI.Kit.canister h ]
             ]
       )

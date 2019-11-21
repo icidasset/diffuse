@@ -141,7 +141,7 @@ notificationView notification =
         , T.fr
         , T.measure_narrow
         , C.mt_2
-        , T.pa3
+        , C.p_3
         , C.text_white_90
 
         --

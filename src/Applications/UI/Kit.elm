@@ -308,7 +308,8 @@ intro child =
     slab
         Html.p
         [ style "line-height" "1.75" ]
-        [ C.my_3
+        [ C.mb_6
+        , C.mt_3
         , C.text_base05
         , C.text_sm
         ]

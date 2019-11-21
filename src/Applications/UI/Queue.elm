@@ -553,12 +553,12 @@ futureView model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ C.text_inherit, T.db, T.link, C.opacity_30 ]
+                [ C.text_inherit, C.block, T.link, C.opacity_30 ]
                 [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ C.text_inherit, T.db, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
+                [ C.text_inherit, C.block, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "add some music first."
@@ -590,7 +590,7 @@ futureItem selection idx item =
     in
     { label =
         inline
-            [ T.db
+            [ C.block
             , C.truncate
 
             --
@@ -704,7 +704,7 @@ historyItem idx ({ identifiedTrack, manualEntry } as item) =
     in
     { label =
         inline
-            [ T.db, C.truncate ]
+            [ C.block, C.truncate ]
             [ inline
                 [ C.inline_block, C.text_xs, C.mr_2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]

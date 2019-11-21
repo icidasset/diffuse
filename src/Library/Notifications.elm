@@ -107,9 +107,20 @@ errorWithCode content code _ =
               else
                 slab
                     Html.pre
-                    [ style "font-size" "11px" ]
-                    [ T.bg_black_50, C.rounded, C.mb_0, C.mt_3, C.p_2 ]
-                    [ slab Html.code [] [ T.ws_normal, C.align_middle ] [ Html.text code ] ]
+                    []
+                    [ C.bg_black_50
+                    , C.rounded
+                    , C.mb_0
+                    , C.mt_3
+                    , C.p_2
+                    , C.text_xxs
+                    ]
+                    [ slab
+                        Html.code
+                        []
+                        [ T.ws_normal, C.align_middle ]
+                        [ Html.text code ]
+                    ]
             ]
         )
 

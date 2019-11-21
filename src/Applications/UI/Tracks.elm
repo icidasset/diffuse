@@ -683,11 +683,13 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
-          brick
-            -- TODO: [ css searchStyles ]
-            []
-            [ C.flex
+          chunk
+            [ C.border_b
+            , C.border_r
+            , C.border_subtle
+            , C.flex
             , C.flex_grow
+            , C.mt_px
             , C.overflow_hidden
             , C.relative
             ]
@@ -695,7 +697,6 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
               --------
               slab
                 Html.input
-                -- TODO: [ css searchInputStyles
                 [ onBlur Search
                 , onEnterKey Search
                 , onInput SetSearchTerm
@@ -708,22 +709,27 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , C.text_inherit
                 , C.flex_grow
                 , C.h_full
+                , C.ml_1
+                , C.mt_px
                 , C.outline_none
+                , C.pl_8
                 , C.pr_2
+                , C.pt_px
+                , C.text_sm
                 , C.w_full
                 ]
                 []
 
             -- Search icon
             --------------
-            , brick
-                -- TODO: [ css searchIconStyles ]
-                []
+            , chunk
                 [ C.absolute
                 , C.bottom_0
                 , C.flex
                 , C.items_center
                 , C.left_0
+                , C.ml_3
+                , C.mt_px
                 , C.top_0
                 , C.z_0
                 ]
@@ -731,21 +737,24 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 
             -- Actions
             ----------
-            , brick
-                -- TODO: [ css searchActionsStyles ]
-                []
+            , chunk
                 [ C.flex
                 , C.items_center
+                , C.mr_3
+                , C.mt_px
+                , C.pt_px
                 ]
                 [ -- 1
                   case searchTerm of
                     Just _ ->
                         brick
-                            -- TODO: [ css searchActionIconStyle
                             [ onClick ClearSearch
                             , title "Clear search"
                             ]
-                            [ C.cursor_pointer ]
+                            [ C.cursor_pointer
+                            , C.ml_1
+                            , C.mt_px
+                            ]
                             [ Icons.clear 16 searchIconColoring ]
 
                     Nothing ->
@@ -753,14 +762,15 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 
                 -- 2
                 , brick
-                    -- TODO: [ css searchActionIconStyle
                     [ onClick ToggleFavouritesOnly
                     , title "Toggle favourites-only"
                     ]
-                    [ C.cursor_pointer ]
+                    [ C.cursor_pointer
+                    , C.ml_1
+                    ]
                     [ case favouritesOnly of
                         True ->
-                            Icons.favorite 16 <| Color UI.Kit.colorKit.base08
+                            Icons.favorite 16 (Color UI.Kit.colorKit.base08)
 
                         False ->
                             Icons.favorite_border 16 searchIconColoring
@@ -768,29 +778,43 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 
                 -- 3
                 , brick
-                    -- TODO: [ css searchActionIconStyle
                     [ Mouse.onClick (ShowViewMenu maybeGrouping)
                     , title "View settings"
                     ]
-                    [ C.cursor_pointer ]
+                    [ C.cursor_pointer
+                    , C.ml_1
+                    ]
                     [ Icons.more_vert 16 searchIconColoring ]
 
                 -- 4
                 , case selectedPlaylist of
                     Just playlist ->
                         brick
-                            -- TODO: [ css (selectedPlaylistStyles bgColor)
                             [ onClick DeselectPlaylist
+
+                            --
+                            , bgColor
+                                |> Maybe.withDefault UI.Kit.colorKit.base01
+                                |> Color.toCssString
+                                |> style "background-color"
                             ]
-                            [ C.rounded
-                            , C.text_xs
+                            [ C.antialiased
+                            , C.cursor_pointer
                             , C.font_bold
                             , C.leading_none
-                            , C.cursor_pointer
+                            , C.ml_1
+                            , C.px_1
+                            , C.py_1
+                            , C.rounded
                             , C.truncate
                             , C.text_white_90
+                            , C.text_xxs
+                            , C.transition_500
                             ]
-                            [ text playlist.name ]
+                            [ chunk
+                                [ C.px_px, C.pt_px ]
+                                [ text playlist.name ]
+                            ]
 
                     Nothing ->
                         nothing
@@ -899,13 +923,23 @@ buttonContents =
     slab
         Html.span
         [ style "height" "21px" ]
-        [ C.flex, C.items_center, C.leading_0, C.mt_px, C.pt_1 ]
+        [ C.flex
+        , C.items_center
+        , C.leading_0
+        , C.mt_px
+        , C.pt_1
+        ]
 
 
 message : String -> Html Msg
 message m =
     chunk
-        [ C.border_b, C.text_sm, C.font_semibold, C.leading_snug, C.pb_1 ]
+        [ C.border_b
+        , C.text_sm
+        , C.font_semibold
+        , C.leading_snug
+        , C.pb_1
+        ]
         [ text m ]
 
 
@@ -942,54 +976,6 @@ listView model deps =
 -- 🖼
 
 
-searchStyles : List Css.Style
-searchStyles =
-    [ Css.borderBottom3 (Css.px 1) Css.solid (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    , Css.borderRight3 (Css.px 1) Css.solid (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    ]
-
-
-searchActionsStyles : List Css.Style
-searchActionsStyles =
-    [ Css.fontSize (Css.px 0)
-    , Css.lineHeight (Css.px 0)
-    , Css.paddingRight (Css.px <| 13 - 6)
-    ]
-
-
-searchActionIconStyle : List Css.Style
-searchActionIconStyle =
-    [ Css.height (Css.px 15)
-    , Css.marginRight (Css.px 6)
-    ]
-
-
 searchIconColoring : Coloring
 searchIconColoring =
-    Color (Color.rgb255 205 205 205)
-
-
-searchIconStyles : List Css.Style
-searchIconStyles =
-    [ Css.marginTop (Css.px 1)
-    , Css.paddingLeft (Css.px 13)
-    ]
-
-
-searchInputStyles : List Css.Style
-searchInputStyles =
-    [ Css.fontSize (Css.px 14)
-    , Css.height (Css.pct 98)
-    , Css.minWidth (Css.px 59)
-    , Css.paddingLeft (Css.px <| 13 + 16 + 9)
-    ]
-
-
-selectedPlaylistStyles : Maybe Color -> List Css.Style
-selectedPlaylistStyles bgColor =
-    [ Css.backgroundColor (Color.toElmCssColor <| Maybe.withDefault UI.Kit.colorKit.base01 bgColor)
-    , Css.fontSize (Css.px 11)
-    , Css.marginRight (Css.px 6)
-    , Css.padding3 (Css.px 5) (Css.px 5.5) (Css.px 4)
-    , Css.Transitions.transition [ Css.Transitions.backgroundColor 450 ]
-    ]
+    Color (Color.rgb255 198 198 198)
