@@ -38,12 +38,6 @@ body {
 }
 
 
-input::placeholder,
-textarea::placeholder {
-  color: rgba(0, 0, 0, 0.45);
-}
-
-
 .align-sub { vertical-align: sub }
 .all-small-caps { font-variant-caps: all-small-caps }
 .flex-basis-0 { flex-basis: 0 }
@@ -56,6 +50,31 @@ textarea::placeholder {
 .dragging-something {
   cursor: grabbing;
   & * { cursor: grabbing !important }
+}
+
+
+
+/* Forms
+   ----- */
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+
+input:invalid,
+textarea:invalid {
+  box-shadow: none;
+  outline: none;
+
+  &:focus { @apply border-base08; }
+}
+
+
+select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 rgb(0, 0, 0);
 }
 
 

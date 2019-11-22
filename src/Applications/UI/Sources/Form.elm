@@ -18,7 +18,6 @@ import Sources exposing (..)
 import Sources.Services as Services
 import Sources.Services.Dropbox
 import Sources.Services.Google
-import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
@@ -248,7 +247,7 @@ newWhere { onboarding } { context } =
         -- Button
         ---------
         , chunk
-            [ C.mt_4, C.pt_2 ]
+            [ C.mt_10 ]
             [ UI.Kit.button
                 IconOnly
                 Bypass
@@ -301,10 +300,10 @@ newHow { context } =
           chunk
             [ C.flex, C.pt_3 ]
             [ chunk
-                [ C.flex_grow, C.pr_3 ]
+                [ C.flex_grow, C.pr_4 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ C.flex_grow, C.pl_3 ]
+                [ C.flex_grow, C.pl_4 ]
                 (List.map (renderProperty context) listB)
             ]
 
@@ -323,7 +322,13 @@ newHow { context } =
 
 howNote : List (Html Msg) -> Html Msg
 howNote =
-    chunk [ C.text_sm, C.italic, C.leading_normal, C.mb_4, T.measure_wide ]
+    chunk
+        [ C.text_sm
+        , C.italic
+        , C.leading_normal
+        , C.max_w_lg
+        , C.mb_8
+        ]
 
 
 newBy : Model -> List (Html Msg)
@@ -355,7 +360,13 @@ newBy { context } =
                 Dict.fetch "name" "" context.data
           in
           chunk
-            [ C.flex, C.mt_4, C.justify_center, C.w_full ]
+            [ C.flex
+            , C.max_w_md
+            , C.mt_8
+            , C.mx_auto
+            , C.justify_center
+            , C.w_full
+            ]
             [ UI.Kit.textField
                 [ name "name"
                 , onInput (SetData "name")
@@ -366,7 +377,7 @@ newBy { context } =
         -- Note
         -------
         , chunk
-            [ C.mt_5 ]
+            [ C.mt_16 ]
             (case context.service of
                 AmazonS3 ->
                     corsWarning "CORS__S3"
@@ -410,7 +421,7 @@ corsWarning id =
             [ text "Make sure CORS is enabled" ]
         ]
     , chunk
-        [ C.text_sm, C.leading_snug, C.mb_4, C.mt_1, C.opacity_50 ]
+        [ C.text_sm, C.leading_snug, C.mb_8, C.mt_1, C.opacity_50 ]
         [ text "You can find the instructions over "
         , UI.Kit.link { label = "here", url = "about#" ++ id }
         ]
@@ -464,10 +475,10 @@ edit { context } =
           chunk
             [ C.flex, C.pt_3 ]
             [ chunk
-                [ C.flex_grow, C.pr_3 ]
+                [ C.flex_grow, C.pr_4 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ C.flex_grow, C.pl_3 ]
+                [ C.flex_grow, C.pl_4 ]
                 (List.map (renderProperty context) listB)
             ]
 
@@ -490,47 +501,45 @@ edit { context } =
 
 renderProperty : Source -> Property -> Html Msg
 renderProperty context property =
-    -- TODO
-    -- chunk
-    --     [ C.mb_4 ]
-    --     [ UI.Kit.label
-    --         [ for property.key ]
-    --         property.label
-    --
-    --     --
-    --     , if
-    --         (property.placeholder == boolToString True)
-    --             || (property.placeholder == boolToString False)
-    --       then
-    --         let
-    --             bool =
-    --                 context.data
-    --                     |> Dict.fetch property.key property.placeholder
-    --                     |> boolFromString
-    --         in
-    --         chunk
-    --             [ C.mt_2, C.pt_1 ]
-    --             [ UI.Kit.checkbox
-    --                 { checked = bool
-    --                 , toggleMsg =
-    --                     bool
-    --                         |> not
-    --                         |> boolToString
-    --                         |> SetData property.key
-    --                 }
-    --             ]
-    --
-    --       else
-    --         UI.Kit.textField
-    --             [ name property.key
-    --             , onInput (SetData property.key)
-    --             , placeholder property.placeholder
-    --             , required (property.label |> String.toLower |> String.contains "optional" |> not)
-    --             , type_ (ifThenElse property.password "password" "text")
-    --             , value (Dict.fetch property.key "" context.data)
-    --             ]
-    --     ]
-    nothing
+    chunk
+        [ C.mb_8 ]
+        [ UI.Kit.label
+            [ for property.key ]
+            property.label
+
+        --
+        , if
+            (property.placeholder == boolToString True)
+                || (property.placeholder == boolToString False)
+          then
+            let
+                bool =
+                    context.data
+                        |> Dict.fetch property.key property.placeholder
+                        |> boolFromString
+            in
+            chunk
+                [ C.mt_2, C.pt_1 ]
+                [ UI.Kit.checkbox
+                    { checked = bool
+                    , toggleMsg =
+                        bool
+                            |> not
+                            |> boolToString
+                            |> SetData property.key
+                    }
+                ]
+
+          else
+            UI.Kit.textField
+                [ name property.key
+                , onInput (SetData property.key)
+                , placeholder property.placeholder
+                , required (property.label |> String.toLower |> String.contains "optional" |> not)
+                , type_ (ifThenElse property.password "password" "text")
+                , value (Dict.fetch property.key "" context.data)
+                ]
+        ]
 
 
 

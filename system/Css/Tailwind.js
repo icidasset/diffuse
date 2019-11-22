@@ -59,7 +59,7 @@ module.exports = {
     margin: [ "first", "last", "responsive" ],
     opacity: [ "focus", "hocus", "hover", "responsive" ],
     padding: [ "first", "last", "responsive" ],
-    textColor: [ "focus", "hover", "inactive-focus", "responsive" ],
+    textColor: [ "focus", "focus-within", "hover", "inactive-focus", "responsive" ],
 
   },
 
@@ -106,6 +106,7 @@ module.exports = {
       "black_50": "rgba(0, 0, 0, 0.5)",
       "current-color": "currentColor",
       "inherit": "inherit",
+      "less-subtle": "rgb(225, 225, 225)",
       "subtle": "rgb(238, 238, 238)",
       "very-subtle": "rgb(248, 248, 248)",
       "white-60": "rgba(255, 255, 255, 0.6)",

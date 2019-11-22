@@ -47,20 +47,14 @@ colorKit =
 
 
 colors =
-    { errorBorder = colorKit.base08
-    , inputBorder = rgb 225 225 225
-    , subtleBorder = rgb 238 238 238
-    , verySubtleBorder = rgb 248 248 248
-
-    -- States
-    , success = colorKit.base0B
+    { -- States
+      success = colorKit.base0B
     , error = colorKit.base08
     , warning = colorKit.base0A
 
     -- Other
     , background = rgb 2 7 14
-    , focus = rgb 0 0 0
-    , selection = colorKit.base08
+    , selection = colorKit.accent
     , selectionAlt = colorKit.base01
     , text = colorKit.base01
     }
@@ -220,6 +214,8 @@ centeredContent children =
             , C.flex_grow
             , C.items_center
             , C.justify_center
+            , C.relative
+            , C.z_10
             ]
             children
         ]
@@ -271,13 +267,14 @@ h2 text =
     slab
         Html.h2
         []
-        -- TODO: [ css headerFontStyles ]
-        [ C.mx_auto
-        , C.text_2xl
+        [ C.antialiased
         , C.font_bold
+        , C.font_display
         , C.leading_tight
-        , C.mb_6
-        , C.mt_3
+        , C.mb_8
+        , C.mt_4
+        , C.mx_auto
+        , C.text_2xl
         , C.text_center
         ]
         [ Html.text text ]
@@ -288,11 +285,13 @@ h3 text =
     slab
         Html.h2
         []
-        -- TODO: [ css headerFontStyles ]
-        [ C.text_lg
+        [ C.antialiased
         , C.font_bold
+        , C.font_display
         , C.leading_tight
-        , C.mb_6
+        , C.mb_8
+        , C.mt_4
+        , C.text_xl
         ]
         [ Html.text text ]
 
@@ -330,6 +329,7 @@ label attributes t =
         [ C.antialiased
         , C.block
         , C.font_bold
+        , C.leading_normal
         , C.opacity_90
         , C.uppercase
         ]
@@ -341,8 +341,7 @@ link params =
     slab
         Html.a
         [ href params.url ]
-        -- TODO: [ css linkStyles, href params.url ]
-        [ C.no_underline, C.text_inherit ]
+        [ C.border_b_2, C.border_accent, C.no_underline, C.text_inherit ]
         [ Html.text params.label ]
 
 
@@ -381,34 +380,50 @@ receptacle { scrolling } =
 
 select : (String -> msg) -> List (Html msg) -> Html msg
 select inputHandler options =
-    brick
-        -- TODO: [ css selectStyles.container ]
-        []
-        [ C.relative
+    chunk
+        [ C.max_w_md
+        , C.mx_auto
+        , C.relative
+        , C.text_base05
         , C.w_full
+
+        --
+        , C.focus_within__text_black
         ]
         [ slab
             Html.select
-            -- TODO: [ css selectStyles.field ]
             [ onInput inputHandler ]
             [ C.appearance_none
+            , C.border_b
+            , C.border_l_0
+            , C.border_r_0
+            , C.border_t_0
+            , C.border_less_subtle
             , C.bg_transparent
             , C.block
-            , C.text_lg
             , C.leading_normal
             , C.m_0
-            , C.rounded_none
             , C.outline_none
             , C.py_2
             , C.px_0
+            , C.rounded_none
+            , C.text_base01
+            , C.text_lg
             , C.w_full
+
+            --
+            , C.focus__border_black
             ]
             options
-        , brick
-            -- TODO: [ css selectStyles.arrow ]
-            []
-            [ C.absolute, C.right_0 ]
-            [ Icons.keyboard_arrow_down 20 (Color colorKit.base05) ]
+        , chunk
+            [ C.absolute
+            , C.minus_translate_y_half
+            , C.mt_px
+            , C.right_0
+            , C.text_0
+            , C.top_half
+            ]
+            [ Icons.keyboard_arrow_down 20 Inherit ]
         ]
 
 
@@ -452,17 +467,25 @@ textField : List (Html.Attribute msg) -> Html msg
 textField attributes =
     slab
         Html.input
-        -- TODO: (css textFieldStyles :: attributes)
         attributes
-        [ C.border_none
+        [ C.appearance_none
+        , C.border_b
+        , C.border_l_0
+        , C.border_r_0
+        , C.border_t_0
+        , C.border_less_subtle
         , C.bg_transparent
         , C.block
         , C.leading_normal
         , C.mt_1
         , C.py_2
         , C.rounded_none
+        , C.text_base01
         , C.text_sm
         , C.w_full
+
+        --
+        , C.focus__border_black
         ]
         []
 
@@ -489,13 +512,6 @@ textFieldAlt attributes =
 -----------------------------------------
 -- ㊙️
 -----------------------------------------
---
---
--- linkStyles : List Css.Style
--- linkStyles =
---     [ Css.borderBottom3 (px 2) solid (Color.toElmCssColor colorKit.accent) ]
---
---
 
 
 logoBackdropStyles : List Css.Style
@@ -510,31 +526,6 @@ logoBackdropStyles =
 
 
 
--- selectStyles : { arrow : List Css.Style, container : List Css.Style, field : List Css.Style }
--- selectStyles =
---     { arrow =
---         [ Css.fontSize (px 0)
---         , Css.marginTop (px 1)
---         , Css.top (pct 50)
---         , Css.transform (Css.translateY <| pct -50)
---         ]
---     , container =
---         []
---     , field =
---         [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
---         , Css.color (Color.toElmCssColor colors.text)
---         , inputFocus
---
---         --
---         , Css.pseudoClass
---             "-moz-focusring"
---             [ Css.color Css.transparent
---             , Css.textShadow4 zero zero zero (Css.rgb 0 0 0)
---             ]
---         ]
---     }
---
---
 -- textAreaStyles : List Css.Style
 -- textAreaStyles =
 --     [ Css.color (Color.toElmCssColor colors.text)
@@ -543,24 +534,6 @@ logoBackdropStyles =
 --     , Css.resize Css.none
 --     , Css.width (px 292)
 --     , textAreaFocus
---     ]
---
---
--- textFieldStyles : List Css.Style
--- textFieldStyles =
---     [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
---     , Css.color (Color.toElmCssColor colors.text)
---     , inputFocus
---
---     --
---     , Css.invalid
---         [ Css.boxShadow none
---         , Css.outline none
---         ]
---
---     --
---     , (Css.focus << List.singleton << Css.invalid)
---         [ Css.borderBottomColor (Color.toElmCssColor colors.error) ]
 --     ]
 --
 --
