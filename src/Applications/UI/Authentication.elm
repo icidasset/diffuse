@@ -467,8 +467,7 @@ hashPassphrase phrase =
 view : Model -> Html Msg
 view model =
     chunk
-        [ C.antialiased
-        , C.flex
+        [ C.flex
         , C.flex_col
         , C.h_full
         , C.items_center
@@ -607,7 +606,8 @@ view model =
         -- Link to about page
         -----------------------------------------
         , chunk
-            [ C.font_semibold
+            [ C.antialiased
+            , C.font_semibold
             , C.flex
             , C.flex_grow
             , C.items_end
@@ -903,6 +903,7 @@ speechBubble : Html msg -> Html msg
 speechBubble contents =
     chunk
         [ C.absolute
+        , C.antialiased
         , C.bg_background
         , C.border_b
         , C.border_transparent

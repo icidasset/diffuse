@@ -8,8 +8,10 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Html.Lazy
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
+import Material.Icons.Navigation as Icons
 import Settings
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Css
@@ -280,7 +282,6 @@ backgroundImage chosenBackground =
                         chunk
                             [ C.absolute
                             , C.inset_0
-                            , C.text_xs
                             , C.flex
                             , C.font_semibold
                             , C.items_center
@@ -291,6 +292,7 @@ backgroundImage chosenBackground =
                             , C.px_2
                             , C.text_center
                             , C.text_white
+                            , C.text_xs
                             , C.z_30
                             ]
                             [ chunk
@@ -298,7 +300,8 @@ backgroundImage chosenBackground =
                                 , C.md__block
                                 , C.mt_px
                                 ]
-                                [ text "Selected" ]
+                                [ Icons.check 16 Inherit
+                                ]
                             ]
 
                       else

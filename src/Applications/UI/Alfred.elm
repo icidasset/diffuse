@@ -270,7 +270,7 @@ view model =
                                         [ C.absolute
                                         , C.leading_0
                                         , C.mr_3
-                                        , T.right_0
+                                        , C.right_0
                                         ]
                                         [ Icons.keyboard_return 13 Inherit
                                         ]

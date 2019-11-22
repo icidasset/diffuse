@@ -1,14 +1,18 @@
 module UI.Kit exposing (..)
 
 import Chunky exposing (..)
+import Chunky.Styled
 import Color
 import Color.Ext as Color
 import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
+import Css
 import Css.Classes as C
 import Html exposing (Html)
 import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick, onInput)
+import Html.Styled
+import Html.Styled.Attributes exposing (css)
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Material.Icons.Toggle as Icons
@@ -207,8 +211,10 @@ centeredContent children =
         , C.overflow_hidden
         , C.relative
         ]
-        [ -- TODO: Html.map never logoBackdrop
-          chunk
+        [ logoBackdrop
+            |> Html.Styled.map never
+            |> Html.Styled.toUnstyled
+        , chunk
             [ C.flex
             , C.flex_col
             , C.flex_grow
@@ -340,12 +346,19 @@ link params =
         [ Html.text params.label ]
 
 
-logoBackdrop : Html Never
+logoBackdrop : Html.Styled.Html Never
 logoBackdrop =
-    brick
-        -- TODO: [ css logoBackdropStyles ]
-        []
-        [ C.absolute, C.top_0, C.z_0 ]
+    Chunky.Styled.brick
+        [ css logoBackdropStyles ]
+        [ C.absolute
+        , C.bg_cover
+        , C.bg_no_repeat
+        , C.h_0
+        , C.left_full
+        , C.pt_full
+        , C.top_0
+        , C.z_0
+        ]
         []
 
 
@@ -483,22 +496,20 @@ textFieldAlt attributes =
 --     [ Css.borderBottom3 (px 2) solid (Color.toElmCssColor colorKit.accent) ]
 --
 --
--- logoBackdropStyles : List Css.Style
--- logoBackdropStyles =
---     [ Css.backgroundImage (url "images/diffuse__icon-dark.svg")
---     , Css.backgroundPosition2 (pct -43.5) (px 98)
---     , Css.backgroundRepeat Css.noRepeat
---     , Css.backgroundSize Css.cover
---     , Css.height zero
---     , Css.left (pct 100)
---     , Css.opacity (num 0.025)
---     , Css.paddingTop (pct 100)
---     , Css.property "transform-origin" "left top"
---     , Css.transform (Css.rotate (deg 90))
---     , Css.width (Css.vh 105)
---     ]
---
---
+
+
+logoBackdropStyles : List Css.Style
+logoBackdropStyles =
+    [ Css.backgroundImage (Css.url "images/diffuse__icon-dark.svg")
+    , Css.backgroundPosition2 (Css.pct -43.5) (Css.px 98)
+    , Css.opacity (Css.num 0.025)
+    , Css.property "transform-origin" "left top"
+    , Css.transform (Css.rotate (Css.deg 90))
+    , Css.width (Css.vh 105)
+    ]
+
+
+
 -- selectStyles : { arrow : List Css.Style, container : List Css.Style, field : List Css.Style }
 -- selectStyles =
 --     { arrow =

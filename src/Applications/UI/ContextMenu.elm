@@ -31,6 +31,7 @@ view m =
                 ]
                 [ C.absolute
                 , C.bg_white
+                , C.leading_loose
                 , C.overflow_hidden
                 , C.rounded
                 , C.shadow_md
@@ -70,9 +71,10 @@ itemView { icon, label, msg, active } =
         ]
         [ C.border_b
         , C.border_very_subtle
-        , C.p_3
-        , C.pr_4
         , C.cursor_pointer
+        , C.pl_4
+        , C.pr_8
+        , C.py_3
         , C.truncate
 
         --

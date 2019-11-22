@@ -1,4 +1,4 @@
-module Chunky exposing (brick, bricky, chunk, chunky, inline, lineBreak, nothing, raw, rawy, slab, slaby)
+module Chunky.Styled exposing (brick, bricky, chunk, chunky, inline, lineBreak, nothing, raw, rawy, slab, slaby)
 
 {-| Chunks, blocks and slabs.
 
@@ -6,8 +6,8 @@ Convenience functions to build UIs with composable CSS classes.
 
 -}
 
-import Html exposing (Html)
-import Html.Attributes exposing (class)
+import Html.Styled as Html exposing (Html)
+import Html.Styled.Attributes exposing (class)
 
 
 

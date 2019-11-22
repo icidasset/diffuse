@@ -104,6 +104,7 @@ module.exports = {
       "base01-55": "rgba(63, 63, 63, 0.55)",
       "black_05": "rgba(0, 0, 0, 0.05)",
       "black_50": "rgba(0, 0, 0, 0.5)",
+      "current-color": "currentColor",
       "inherit": "inherit",
       "subtle": "rgb(238, 238, 238)",
       "very-subtle": "rgb(248, 248, 248)",
@@ -160,6 +161,7 @@ module.exports = {
         "10/12": "83.333333%",
         "11/12": "91.666667%",
         "-full": "-100%",
+        "full": "100%",
       }
 
     },

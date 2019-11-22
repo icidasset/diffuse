@@ -934,7 +934,8 @@ buttonContents =
 message : String -> Html Msg
 message m =
     chunk
-        [ C.border_b
+        [ C.border_b_2
+        , C.border_current_color
         , C.text_sm
         , C.font_semibold
         , C.leading_snug
