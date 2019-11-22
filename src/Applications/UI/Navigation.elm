@@ -171,7 +171,6 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                 target "_self"
 
         --
-        , style "flex-basis" "0"
         , tabindex tabindex_
         ]
         [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
@@ -179,6 +178,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , C.border_subtle
         , C.border_r
         , C.cursor_pointer
+        , C.flex_basis_0
         , C.font_semibold
         , C.leading_none
         , C.no_underline

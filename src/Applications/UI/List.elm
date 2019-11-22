@@ -55,7 +55,6 @@ view variant items =
 
 
 
--- TODO
 -----------------------------------------
 -- ㊙️
 -----------------------------------------
@@ -77,7 +76,7 @@ item variant idx { label, actions, msg, isSelected } =
 
         --
         , if dragTarget then
-            C.border_base08
+            C.border_accent
 
           else
             C.border_transparent
@@ -91,7 +90,7 @@ item variant idx { label, actions, msg, isSelected } =
 
             --
             , ifThenElse (Maybe.isJust msg) C.cursor_pointer ""
-            , ifThenElse isSelected C.text_base08 ""
+            , ifThenElse isSelected C.text_accent ""
             ]
             [ -- Label
               --------

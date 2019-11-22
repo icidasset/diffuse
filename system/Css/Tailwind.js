@@ -124,6 +124,11 @@ module.exports = {
         "xxs": "0.6875rem",
       },
 
+      letterSpacing: {
+        "tad-closer": "-0.015em",
+        "tad-further": "0.015em",
+      },
+
       lineHeight: {
         "0": 0
       },

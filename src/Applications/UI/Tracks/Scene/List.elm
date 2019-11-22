@@ -120,8 +120,8 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
             (tabindex (ifThenElse deps.isVisible 0 -1))
             viewAttributes
         )
-        [ C.flex_grow
-        , C.h_screen
+        [ C.flex_basis_0
+        , C.flex_grow
         , C.outline_none
         , C.overflow_x_hidden
         , C.relative
@@ -690,14 +690,15 @@ groupNode idx identifiers =
                 |> Maybe.map .name
                 |> Maybe.withDefault "Unknown"
     in
-    brick
-        groupStyles
+    chunk
         [ C.font_display
         , C.font_semibold
         , C.leading_normal
         , C.pb_3
         , C.px_4
+        , C.text_base04
         , C.text_xxs
+        , C.tracking_tad_further
         , C.truncate
 
         --
@@ -713,13 +714,6 @@ groupIcon =
     inline
         [ C.align_middle, C.inline_block, C.leading_0, C.pr_2 ]
         [ Icons.library_music 16 Inherit ]
-
-
-groupStyles : List (Html.Attribute msg)
-groupStyles =
-    [ style "color" rowFontColors.grey
-    , style "letter-spacing" "0.015em"
-    ]
 
 
 rowHeight : Int

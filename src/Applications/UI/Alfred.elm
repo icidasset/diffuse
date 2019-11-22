@@ -3,7 +3,6 @@ module UI.Alfred exposing (Model, Msg(..), initialModel, subscriptions, update, 
 import Alfred exposing (Alfred)
 import Browser.Dom as Dom
 import Chunky exposing (..)
-import Css
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (autofocus, id, placeholder, type_)
@@ -15,7 +14,6 @@ import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Return3 exposing (..)
-import Tachyons.Classes as T
 import Task
 import UI.Kit
 import UI.Reply exposing (Reply)
@@ -175,7 +173,12 @@ view model =
                   -- Message
                   -----------------------------------------
                   chunk
-                    [ C.italic, C.leading_normal, C.mt_4, C.pt_3, C.text_center, C.text_white ]
+                    [ C.italic
+                    , C.leading_normal
+                    , C.mt_12
+                    , C.text_center
+                    , C.text_white
+                    ]
                     [ text instance.message ]
 
                 -----------------------------------------
@@ -192,15 +195,13 @@ view model =
                         )
                     ]
                     [ C.text_sm
-                    , T.measure_wide
-                    , C.mt_4
+                    , C.max_w_md
+                    , C.mt_8
                     , C.w_full
                     ]
                     [ slab
                         Html.input
                         [ autofocus True
-
-                        -- TODO: , css shadowStyles
                         , id searchId
                         , onInput DetermineResults
                         , placeholder "Type to search or create"
@@ -212,8 +213,10 @@ view model =
                         , C.leading_normal
                         , C.rounded
                         , C.outline_none
-                        , C.p_3
-                        , C.text_lg
+                        , C.p_4
+                        , C.shadow_md
+                        , C.text_2xl
+                        , C.tracking_tad_closer
                         , C.w_full
                         ]
                         []
@@ -222,24 +225,22 @@ view model =
                 -----------------------------------------
                 -- Results
                 -----------------------------------------
-                , brick
-                    -- TODO: [ css shadowStyles ]
-                    []
+                , chunk
                     [ C.bg_white
                     , C.rounded
                     , C.text_sm
                     , C.leading_none
-                    , T.measure_wide
-                    , T.mid_gray
-                    , C.mt_4
+                    , C.max_w_md
+                    , C.mt_8
                     , C.overflow_hidden
+                    , C.shadow_md
                     , C.w_full
                     ]
                     (List.indexedMap
                         (\idx result ->
                             brick
                                 [ onTapPreventDefault (RunAction idx) ]
-                                [ C.p_3
+                                [ C.p_4
                                 , C.relative
                                 , C.truncate
 
@@ -252,25 +253,25 @@ view model =
 
                                 --
                                 , if idx == instance.focus then
-                                    C.bg_base0d
+                                    C.bg_accent
 
                                   else if modBy 2 idx == 0 then
                                     C.bg_transparent
 
                                   else
-                                    T.bg_near_white
+                                    C.bg_gray_100
                                 ]
                                 [ text result
 
                                 --
                                 , if idx == instance.focus then
-                                    brick
-                                        -- TODO: [ css activeItemIndicatorStyles ]
-                                        []
+                                    chunk
                                         [ C.absolute
                                         , C.leading_0
+                                        , C.minus_translate_y_half
                                         , C.mr_3
                                         , C.right_0
+                                        , C.top_half
                                         ]
                                         [ Icons.keyboard_return 13 Inherit
                                         ]
@@ -289,20 +290,3 @@ view model =
 
 searchId =
     "diffuse__alfred"
-
-
-
--- 🖼
-
-
-activeItemIndicatorStyles : List Css.Style
-activeItemIndicatorStyles =
-    [ Css.top (Css.pct 50)
-    , Css.transform (Css.translateY <| Css.pct -50)
-    ]
-
-
-shadowStyles : List Css.Style
-shadowStyles =
-    -- TODO: [ UI.Kit.onOverlayShadow ]
-    []

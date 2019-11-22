@@ -46,6 +46,7 @@ textarea::placeholder {
 
 .align-sub { vertical-align: sub }
 .all-small-caps { font-variant-caps: all-small-caps }
+.flex-basis-0 { flex-basis: 0 }
 
 
 
