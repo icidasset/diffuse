@@ -190,7 +190,8 @@ module.exports = {
     maxWidth : {
       ...defaultTheme.maxWidth,
 
-      "insulation": "107.5vh"
+      "insulation": "107.5vh",
+      "screen": "100vw"
     },
 
     minWidth: {

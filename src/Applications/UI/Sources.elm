@@ -451,9 +451,8 @@ sourceActions isProcessing processingError source =
                   , icon =
                         \_ _ ->
                             if progress < 0.05 then
-                                Html.span
-                                    -- TODO
-                                    [ class "dib o-70 ph1" ]
+                                inline
+                                    [ C.inline_block, C.opacity_70, C.px_1 ]
                                     [ case processIndex of
                                         Just 0 ->
                                             Html.text "Listing"
@@ -470,9 +469,7 @@ sourceActions isProcessing processingError source =
                                     |> (\s -> s ++ "%")
                                     |> Html.text
                                     |> List.singleton
-                                    |> Html.span
-                                        -- TODO
-                                        [ class "dib o-70 ph1" ]
+                                    |> inline [ C.inline_block, C.opacity_70, C.px_1 ]
                   , msg = Nothing
                   , title = ""
                   }

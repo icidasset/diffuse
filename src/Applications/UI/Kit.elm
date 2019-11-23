@@ -432,14 +432,15 @@ textArea attributes =
     slab
         Html.textarea
         attributes
-        -- TODO: (css textAreaStyles :: attributes)
         [ C.bg_white
         , C.block
-        , C.text_sm
         , C.leading_normal
-        , C.mb_3
-        , C.p_3
+        , C.mb_4
+        , C.p_4
+        , C.resize_none
         , C.rounded
+        , C.text_base01
+        , C.text_sm
         , C.w_full
         ]
         []
@@ -495,13 +496,14 @@ textFieldAlt attributes =
     slab
         Html.input
         attributes
-        -- TODO: (css textFieldAltStyles :: attributes)
         [ C.bg_white
         , C.block
         , C.leading_normal
         , C.mb_3
         , C.p_3
+        , C.resize_none
         , C.rounded
+        , C.text_base01
         , C.text_sm
         , C.w_full
         ]
@@ -523,25 +525,3 @@ logoBackdropStyles =
     , Css.transform (Css.rotate (Css.deg 90))
     , Css.width (Css.vh 105)
     ]
-
-
-
--- textAreaStyles : List Css.Style
--- textAreaStyles =
---     [ Css.color (Color.toElmCssColor colors.text)
---     , Css.height (px 109)
---     , Css.maxWidth (Css.vw 87.5)
---     , Css.resize Css.none
---     , Css.width (px 292)
---     , textAreaFocus
---     ]
---
---
--- textFieldAltStyles : List Css.Style
--- textFieldAltStyles =
---     [ Css.color (Color.toElmCssColor colors.text)
---     , Css.maxWidth (Css.vw 87.5)
---     , Css.resize Css.none
---     , Css.width (px 292)
---     , textAreaFocus
---     ]

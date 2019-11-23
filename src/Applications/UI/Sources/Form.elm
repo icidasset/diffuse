@@ -416,8 +416,8 @@ corsWarning id =
     [ chunk
         [ C.text_sm, C.flex, C.items_center, C.justify_center, C.leading_snug, C.opacity_50 ]
         [ UI.Kit.inlineIcon Icons.warning
-        , strong
-            []
+        , inline
+            [ C.font_semibold ]
             [ text "Make sure CORS is enabled" ]
         ]
     , chunk

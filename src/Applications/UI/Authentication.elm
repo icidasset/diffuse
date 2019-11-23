@@ -324,11 +324,11 @@ update msg model =
             { placeholder = "//localhost:5001"
             , question = """
                 Where's your IPFS API located?<br />
-                <span class="fw4 white-60">
+                <span class="font-normal text-white-60">
                     You can find this address on the IPFS Web UI.<br />
                     Most likely you'll also need to setup CORS.<br />
                     You can find the instructions for that
-                    <a href="about#CORS__IPFS" target="_blank" class="bb color-inherit fw6 link">here</a>.
+                    <a href="about#CORS__IPFS" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.
                 </span>
               """
             , value = "//localhost:5001"
@@ -415,10 +415,10 @@ update msg model =
             { placeholder = "//localhost:40600"
             , question = """
                 Where's your Textile API located?<br />
-                <span class="fw4 white-60">
+                <span class="font-normal text-white-60">
                     You might need to do some CORS configuration.<br />
                     You can find the instructions for that
-                    <a href="about#CORS__Textile" target="_blank" class="bb color-inherit fw6 link">here</a>.<br />
+                    <a href="about#CORS__Textile" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.<br />
                     You can't connect to a HTTP server while on HTTPS.
                 </span>
               """
@@ -703,9 +703,9 @@ choicesScreen =
                     { placeholder = "example@5apps.com"
                     , question = """
                         What's your user address?
-                        <span class="fw4 white-60">
+                        <span class="font-normal text-white-60">
                             <br />The format's
-                            <span class="fw6">username@server.domain</span>
+                            <span class="font-semibold">username@server.domain</span>
                         </span>
                       """
                     , value = ""
@@ -835,11 +835,18 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
         [ onSubmit withEncryption ]
         [ C.flex
         , C.flex_col
+        , C.max_w_xs
+        , C.px_3
+        , C.w_screen
+
+        --
+        , C.sm__px_0
         ]
         [ UI.Kit.textArea
             [ attribute "autocapitalize" "none"
             , attribute "autocomplete" "off"
             , attribute "autocorrect" "off"
+            , attribute "rows" "4"
             , attribute "spellcheck" "false"
 
             --
@@ -881,6 +888,12 @@ inputScreen question =
         [ onSubmit ConfirmInput ]
         [ C.flex
         , C.flex_col
+        , C.max_w_xs
+        , C.px_3
+        , C.w_screen
+
+        --
+        , C.sm__px_0
         ]
         [ UI.Kit.textFieldAlt
             [ attribute "autocapitalize" "off"
@@ -911,6 +924,7 @@ speechBubble contents =
         , C.italic
         , C.leading_snug
         , C.left_half
+        , C.max_w_screen
         , C.minus_translate_x_half
         , C.px_4
         , C.py_2

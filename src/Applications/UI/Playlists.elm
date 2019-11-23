@@ -6,7 +6,6 @@ import Color.Ext as Color
 import Common
 import Conditional exposing (ifThenElse)
 import Coordinates
-import Css
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (href, placeholder, style, value)
@@ -19,7 +18,6 @@ import Material.Icons.File as Icons
 import Material.Icons.Navigation as Icons
 import Playlists exposing (..)
 import Return3 exposing (..)
-import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
@@ -352,12 +350,21 @@ index model selectedPlaylist bgColor =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Playlists New) ]
-                [ C.text_inherit, C.block, T.link, C.opacity_30 ]
+                [ C.block
+                , C.opacity_30
+                , C.text_inherit
+                ]
                 [ Icons.waves 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Playlists New) ]
-                [ C.text_inherit, C.block, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
+                [ C.block
+                , C.leading_normal
+                , C.mt_2
+                , C.opacity_40
+                , C.text_center
+                , C.text_inherit
+                ]
                 [ text "No playlists found, create one"
                 , lineBreak
                 , text "or enable directory playlists."
@@ -445,15 +452,16 @@ new _ =
     , [ UI.Kit.h2 "Name your playlist"
 
       --
-      , UI.Kit.textField
-            [ onInput SetCreationContext
-            , placeholder "The Classics"
-            ]
+      , [ onInput SetCreationContext
+        , placeholder "The Classics"
+        ]
+            |> UI.Kit.textField
+            |> chunky [ C.max_w_md, C.mx_auto ]
 
       -- Button
       ---------
       , chunk
-            [ C.mt_4, C.pt_2 ]
+            [ C.mt_10 ]
             [ UI.Kit.button
                 Normal
                 Bypass
@@ -496,27 +504,28 @@ edit model playlist =
     , [ UI.Kit.h2 "Name your playlist"
 
       --
-      , UI.Kit.textField
-            [ onInput (SetModificationContext playlist.name)
-            , placeholder "The Classics"
+      , [ onInput (SetModificationContext playlist.name)
+        , placeholder "The Classics"
 
-            --
-            , case model.editContext of
-                Just { oldName, newName } ->
-                    if playlist.name == oldName then
-                        value newName
+        --
+        , case model.editContext of
+            Just { oldName, newName } ->
+                if playlist.name == oldName then
+                    value newName
 
-                    else
-                        value playlist.name
-
-                Nothing ->
+                else
                     value playlist.name
-            ]
+
+            Nothing ->
+                value playlist.name
+        ]
+            |> UI.Kit.textField
+            |> chunky [ C.max_w_md, C.mx_auto ]
 
       -- Button
       ---------
       , chunk
-            [ C.mt_4, C.pt_2 ]
+            [ C.mt_10 ]
             [ UI.Kit.button
                 Normal
                 Bypass
