@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="fixed left-0 overflow-hidden top-0 vh-100 w-100" lang="en">
+<html class="fixed h-screen left-0 overflow-hidden top-0 w-full" lang="en">
 <head>
 
   <meta charset="utf-8" />
@@ -42,16 +42,16 @@
 
       This `noscript` element will be shown if Javascript is disabled.
 
-      TODO
-
     -->
     <noscript data-nosnippet>
-      <div
-        class="f4 flex items-center i justify-center lh-copy ph3 min-vh-100 white-90"
-        style="font-family: 'Source Sans Pro', sans-serif;"
+      <div class="flex flex-col font-body items-center h-screen italic justify-center leading-relaxed px-4 text-center text-base text-white"
       >
-        <p>
-          Damn it, I need some Javascript for this thing.
+        <a class="block logo mb-5" href="../">
+          <img src="../images/diffuse-light.svg" />
+        </a>
+
+        <p class="opacity-60">
+          We'll need some Javascript to liven the place up a bit.
         </p>
       </div>
     </noscript>
@@ -69,7 +69,7 @@
 
   <!-- Scripts -->
   <script src="ui.elm.js"></script>
-  <script src="ui.js"></script>
+  <!-- <script src="ui.js"></script> -->
 
   <!-- Service worker -->
   <script>
@@ -91,9 +91,16 @@
       // Add note
       const note = document.createElement("div")
 
-      note.className = "f4 flex items-center i justify-center lh-copy ph3 min-vh-100 white-90"
-      note.style.fontFamily = "\"Source Sans Pro\", sans-serif"
-      note.innerHTML = "<p>Damn it, I need a modern browser for this thing.</p>"
+      note.className = "flex flex-col font-body items-center h-screen italic justify-center leading-relaxed px-4 text-center text-base text-white"
+      note.innerHTML = `
+        <a class="block logo mb-5" href="../">
+          <img src="../images/diffuse-light.svg" />
+        </a>
+
+        <p class="opacity-60">
+          We'll need a more modern browser to liven the place up a bit.
+        </p>
+      `
 
       document.body.appendChild(note)
 

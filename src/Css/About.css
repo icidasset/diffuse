@@ -9,6 +9,7 @@
 @import "tailwindcss/utilities";
 
 @import "Fonts.css";
+@import "Logo.css";
 
 
 
@@ -104,18 +105,4 @@ pre {
 
 code {
   @apply font-mono;
-}
-
-
-
-/* Logo
-   ---- */
-
-.logo {
-  opacity: 0.85;
-
-  & img {
-    display: block;
-    width: 154px;
-  }
 }
