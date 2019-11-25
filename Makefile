@@ -37,16 +37,26 @@ css:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(TEMPORARY_DIR)
 	@$(NPM_DIR)/.bin/postcss \
+		"${SRC_DIR}/Css/About.css" \
+		--output "${BUILD_DIR}/about.css" \
+		--config "${SYSTEM_DIR}/Css/"
+	@$(NPM_DIR)/.bin/postcss \
 		"${SRC_DIR}/Css/Application.css" \
 		--output "${BUILD_DIR}/application.css" \
-		--config "${SYSTEM_DIR}/Css/Post.js"
+		--config "${SYSTEM_DIR}/Css/"
 
 
 css-prod: css
 	@echo "> Optimizing CSS"
 	@$(NPM_DIR)/.bin/purgecss \
-		--config $(SYSTEM_DIR)/Css/purgecss.config.js \
+		--config $(SYSTEM_DIR)/Css/purgecss.about.js \
 		--out $(BUILD_DIR)
+	@$(NPM_DIR)/.bin/purgecss \
+		--config $(SYSTEM_DIR)/Css/purgecss.application.js \
+		--out $(BUILD_DIR)
+	@$(NPM_DIR)/.bin/csso \
+		"${BUILD_DIR}/about.css" \
+		--output "${BUILD_DIR}/about.css"
 	@$(NPM_DIR)/.bin/csso \
 		"${BUILD_DIR}/application.css" \
 		--output "${BUILD_DIR}/application.css"
@@ -207,11 +217,11 @@ watch-css:
 
 
 watch-elm:
-	@watchexec -p -w $(SRC_DIR) -e elm -- make elm
+	# @watchexec -p -w $(SRC_DIR) -e elm -- make elm
 
 
 watch-js:
-	@watchexec -p -w $(SRC_DIR) -e js -- make js
+	# @watchexec -p -w $(SRC_DIR) -e js -- make js
 
 
 watch-system:

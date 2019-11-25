@@ -5,7 +5,6 @@ import Color.Ext as Color
 import Common
 import Conditional exposing (..)
 import Coordinates
-import Css
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (href)
@@ -19,7 +18,6 @@ import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Queue exposing (..)
 import Return3 exposing (..)
-import Tachyons.Classes as T
 import Time
 import Tracks exposing (IdentifiedTrack)
 import UI.DnD as DnD
@@ -553,12 +551,12 @@ futureView model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ C.text_inherit, C.block, T.link, C.opacity_30 ]
+                [ C.text_inherit, C.block, C.opacity_30 ]
                 [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ C.text_inherit, C.block, C.leading_normal, T.link, C.mt_2, C.opacity_40, C.text_center ]
+                [ C.text_inherit, C.block, C.leading_normal, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "add some music first."

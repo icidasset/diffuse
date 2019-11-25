@@ -109,6 +109,7 @@ module.exports = {
       "less-subtle": "rgb(225, 225, 225)",
       "subtle": "rgb(238, 238, 238)",
       "very-subtle": "rgb(248, 248, 248)",
+      "white-20": "rgba(255, 255, 255, 0.2)",
       "white-60": "rgba(255, 255, 255, 0.6)",
       "white-90": "rgba(255, 255, 255, 0.9)",
     },

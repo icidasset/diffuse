@@ -31,9 +31,7 @@ function purgeFromElm(elmCode) {
 // ------
 
 module.exports = {
-  // defaultExtractor: ,
-
-  content: [ "src/Applications/**/*.elm", "src/Library/Notifications.elm", "build/**/*.html" ],
+  content: [ "src/Applications/**/*.elm", "src/Library/Notifications.elm", "build/index.html" ],
   css: [ "build/application.css" ],
 
   extractors: [

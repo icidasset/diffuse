@@ -1,0 +1,121 @@
+@charset "UTF-8";
+
+
+/* Imports
+   ------- */
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@import "Fonts.css";
+
+
+
+/* Basic
+   ----- */
+
+p a,
+ul a,
+ol a {
+  @apply underline;
+  text-underline-offset: 2px;
+}
+
+blockquote {
+  @apply font-display font-bold max-w-xl mb-12 ml-0 mt-12 pl-0 tracking-tight;
+
+  & p {
+    @apply leading-tight text-5xl;
+    background: url(images/Background/7.jpg);
+    background-position: center top;
+    background-size: cover;
+    color: #B7C2D4;
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply antialiased font-bold leading-tight;
+  font-family: "Playfair Display", serif;
+  letter-spacing: -0.005em;
+}
+
+h1 { display: none }
+h2 { @apply mb-6 mt-12 text-2xl }
+h3 { @apply mb-5 mt-8 text-xl }
+h4 { @apply mb-4 mt-6 text-lg }
+h5 { @apply mb-5 mt-6 text-base }
+
+p {
+  @apply leading-relaxed my-3
+}
+
+strong {
+  @apply font-semibold;
+}
+
+
+
+/* Links
+   ----- */
+
+h5 + p a {
+  @apply inline-block mb-2;
+}
+
+
+
+/* Lists
+   ----- */
+
+ul, ol {
+  @apply leading-relaxed ml-3;
+
+  & li { @apply mb-1 }
+}
+
+ol {
+  counter-reset: ol;
+
+  & li::before {
+    @apply pr-3 inline-block text-base06;
+    counter-increment: ol;
+    content: counters(ol, ".") ".";
+  }
+}
+
+ul li::before {
+  @apply pr-3 inline-block text-base06;
+  content: "•";
+}
+
+
+
+/* Code
+   ---- */
+
+pre {
+  @apply border-2 border-less-subtle leading-relaxed overflow-x-auto overflow-y-hidden p-6 rounded text-sm;
+}
+
+code {
+  @apply font-mono;
+}
+
+
+
+/* Logo
+   ---- */
+
+.logo {
+  opacity: 0.85;
+
+  & img {
+    display: block;
+    width: 154px;
+  }
+}

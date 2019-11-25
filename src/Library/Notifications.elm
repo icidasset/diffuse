@@ -6,7 +6,6 @@ import Html exposing (Html)
 import Html.Attributes exposing (style)
 import Markdown
 import Murmur3 exposing (..)
-import Tachyons.Classes as T
 
 
 
@@ -118,7 +117,7 @@ errorWithCode content code _ =
                     [ slab
                         Html.code
                         []
-                        [ T.ws_normal, C.align_middle ]
+                        [ C.align_middle ]
                         [ Html.text code ]
                     ]
             ]
