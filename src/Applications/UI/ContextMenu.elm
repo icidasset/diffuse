@@ -3,14 +3,12 @@ module UI.ContextMenu exposing (view)
 import Chunky exposing (..)
 import Conditional exposing (..)
 import ContextMenu exposing (..)
-import Coordinates exposing (Coordinates)
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (custom)
 import Json.Decode
 import Material.Icons exposing (Coloring(..))
-import UI.Kit
 import UI.Reply exposing (Reply)
 
 

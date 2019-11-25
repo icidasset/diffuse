@@ -2,20 +2,15 @@ module UI.Navigation exposing (Action(..), Icon(..), Label(..), LabelType(..), g
 
 import Alfred exposing (Alfred)
 import Chunky exposing (..)
-import Color exposing (Color)
-import Color.Ext as Color
-import Color.Manipulate
 import Conditional exposing (..)
 import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (attribute, href, style, tabindex, target, title)
+import Html.Attributes exposing (href, style, tabindex, target, title)
 import Html.Events exposing (onClick)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Svg exposing (Svg)
-import UI.Css
-import UI.Kit
 import UI.Page as Page exposing (Page)
 
 

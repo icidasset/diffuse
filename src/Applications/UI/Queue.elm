@@ -1,7 +1,6 @@
 module UI.Queue exposing (Model, Msg(..), initialModel, moveQueueItemToFirst, moveQueueItemToLast, update, view)
 
 import Chunky exposing (..)
-import Color.Ext as Color
 import Common
 import Conditional exposing (..)
 import Coordinates

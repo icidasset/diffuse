@@ -9,7 +9,7 @@ import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css.Classes as C
-import Html exposing (Html, a, button, img, span, text)
+import Html exposing (Html, a, button, text)
 import Html.Attributes exposing (attribute, href, placeholder, src, style, target, title, value, width)
 import Html.Events exposing (onClick, onSubmit)
 import Html.Events.Extra exposing (onClickStopPropagation)

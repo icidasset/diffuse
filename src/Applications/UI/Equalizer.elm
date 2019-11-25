@@ -10,9 +10,7 @@ import Css
 import Css.Classes as C
 import Css.Ext as Css
 import Equalizer exposing (..)
-import Html exposing (Html, text)
-import Html.Attributes exposing (style)
-import Html.Events
+import Html exposing (Html)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Styled
 import Html.Styled.Attributes exposing (css)

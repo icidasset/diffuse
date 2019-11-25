@@ -2,11 +2,9 @@ module UI.Backdrop exposing (Model, Msg(..), backgroundPositioning, default, ini
 
 import Chunky exposing (..)
 import Color exposing (Color)
-import Css exposing (int, num, pct, px)
 import Css.Classes as C
-import Css.Global
-import Html exposing (Html, div)
-import Html.Attributes exposing (class, src, style)
+import Html exposing (Html)
+import Html.Attributes exposing (src, style)
 import Html.Events exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode

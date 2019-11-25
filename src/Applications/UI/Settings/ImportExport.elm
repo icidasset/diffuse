@@ -5,7 +5,6 @@ import Css.Classes as C
 import Html exposing (Html, text)
 import Material.Icons.Alert as Icons
 import Material.Icons.Navigation as Icons
-import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..))
 import UI.Navigation exposing (..)
 import UI.Page

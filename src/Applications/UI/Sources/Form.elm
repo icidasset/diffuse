@@ -6,7 +6,7 @@ import Conditional exposing (..)
 import Css.Classes as C
 import Dict
 import Dict.Ext as Dict
-import Html exposing (Html, strong, text)
+import Html exposing (Html, text)
 import Html.Attributes exposing (for, name, placeholder, required, selected, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List

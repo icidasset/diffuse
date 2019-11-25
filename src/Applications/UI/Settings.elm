@@ -1,7 +1,6 @@
 module UI.Settings exposing (Dependencies, view)
 
 import Chunky exposing (..)
-import Color.Ext as Color
 import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html, text)
@@ -14,7 +13,6 @@ import Material.Icons.Communication as Icons
 import Material.Icons.Navigation as Icons
 import Settings
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
-import UI.Css
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page

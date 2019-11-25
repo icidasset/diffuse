@@ -1,7 +1,6 @@
 module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
 import Chunky.Styled exposing (..)
-import Color.Ext as Color
 import Css
 import Css.Classes as C
 import Css.Global
@@ -9,13 +8,10 @@ import Html exposing (Html)
 import Html.Ext exposing (onDoubleTap)
 import Html.Styled exposing (text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, rel)
-import Html.Styled.Events exposing (onDoubleClick)
 import Html.Styled.Lazy
 import Notifications exposing (..)
 import Process
-import Tachyons.Classes as T
 import Task
-import UI.Kit
 import UI.Reply exposing (Reply(..))
 
 

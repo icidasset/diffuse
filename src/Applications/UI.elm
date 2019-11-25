@@ -7,17 +7,12 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
-import Color exposing (Color)
-import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Css exposing (url)
 import Css.Classes as C
-import Css.Global
-import Css.Media
-import Css.Transitions
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
 import Dict.Ext as Dict
@@ -25,7 +20,7 @@ import File exposing (File)
 import File.Download
 import File.Select
 import Html exposing (Html, section)
-import Html.Attributes as Attributes exposing (class, id, style)
+import Html.Attributes exposing (class, id, style)
 import Html.Events exposing (on, onClick)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
@@ -46,7 +41,6 @@ import Sources
 import Sources.Encoding as Sources
 import Sources.Services.Dropbox
 import Sources.Services.Google
-import Tachyons.Classes as T
 import Task
 import Time
 import Tracks
@@ -57,11 +51,9 @@ import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
-import UI.Css
 import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer as Equalizer
-import UI.Kit
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)

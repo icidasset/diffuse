@@ -7,7 +7,7 @@ import Coordinates
 import Css.Classes as C
 import Dict.Ext as Dict
 import Html exposing (Html, text)
-import Html.Attributes exposing (class, href)
+import Html.Attributes exposing (href)
 import Html.Events.Extra.Mouse as Mouse
 import Json.Decode as Json
 import List.Extra as List
@@ -21,7 +21,6 @@ import Material.Icons.Notification as Icons
 import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Encoding
-import Tachyons.Classes as T
 import Time
 import Time.Ext as Time
 import UI.Kit exposing (ButtonType(..))

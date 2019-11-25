@@ -15,7 +15,6 @@ import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Return3 exposing (..)
 import Task
-import UI.Kit
 import UI.Reply exposing (Reply)
 
 

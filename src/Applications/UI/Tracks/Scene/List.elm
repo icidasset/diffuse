@@ -23,7 +23,6 @@ import Maybe.Extra as Maybe
 import Return3 exposing (..)
 import Task
 import Tracks exposing (..)
-import UI.Css
 import UI.DnD as DnD
 import UI.Kit
 import UI.Reply as UI

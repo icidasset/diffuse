@@ -1,20 +1,16 @@
 module UI.List exposing (Action, Item, Variant(..), view)
 
 import Chunky exposing (..)
-import Color
-import Color.Ext as Color
 import Conditional exposing (..)
-import Css exposing (px, solid)
 import Css.Classes as C
 import Html exposing (Html)
-import Html.Attributes as Attributes exposing (style, title)
+import Html.Attributes exposing (style, title)
 import Html.Events exposing (onClick)
 import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
 import List.Ext as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import UI.DnD as DnD
-import UI.Kit
 import VirtualDom
 
 

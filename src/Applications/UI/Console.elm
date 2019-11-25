@@ -1,14 +1,9 @@
 module UI.Console exposing (view)
 
 import Chunky exposing (..)
-import Color
-import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Css
 import Css.Classes as C
-import Css.Ext as Css
-import Css.Media
 import Html exposing (Html, text)
 import Html.Attributes exposing (class, style, title)
 import Html.Events exposing (on, onClick)
@@ -17,8 +12,6 @@ import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue
-import UI.Css
-import UI.Kit
 import UI.Queue as Queue
 import UI.Reply exposing (Reply(..))
 
