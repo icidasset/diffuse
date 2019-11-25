@@ -217,11 +217,11 @@ watch-css:
 
 
 watch-elm:
-	# @watchexec -p -w $(SRC_DIR) -e elm -- make elm
+	@watchexec -p -w $(SRC_DIR) -e elm -- make elm
 
 
 watch-js:
-	# @watchexec -p -w $(SRC_DIR) -e js -- make js
+	@watchexec -p -w $(SRC_DIR) -e js -- make js
 
 
 watch-system:
