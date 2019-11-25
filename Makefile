@@ -19,11 +19,11 @@ all: dev
 # Build tasks
 #
 
-build: clean css elm js system
+build: clean system css elm js
 	@echo "> Build completed ⚡"
 
 
-build-prod: quality clean css-prod elm-prod js-prod system
+build-prod: clean system css-prod elm-prod js-prod
 	@echo "> Production build completed 🛳"
 
 

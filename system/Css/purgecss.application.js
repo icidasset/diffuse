@@ -6,8 +6,8 @@ const fs = require("fs")
 
 const table = JSON.parse(fs.readFileSync(
   "build/css-table.json",
-  { encoding: "utf-8" }
-))
+  { encoding: "utf-8", flag: "a+" }
+) || "{}")
 
 
 

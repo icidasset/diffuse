@@ -11,6 +11,8 @@ const postcss = require("postcss")
 
 const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result) => {
 
+  if (result.opts.from.endsWith("/Css/About.css")) return;
+
   const functions = []
   const lookup = {}
 
@@ -64,8 +66,9 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
   const table = JSON.stringify(lookup)
   const hash = crypto.createHash("sha1").update(table).digest("base64")
   const previousHash = fs.readFileSync("tmp/css-table.cache", { flag: "a+", encoding: "utf-8" })
+  const tableWasRemoved = fs.existsSync("build/css-table.json")
 
-  if (hash === previousHash) return;
+  if (hash === previousHash && !tableWasRemoved) return;
 
   fs.writeFileSync("tmp/css-table.cache", hash)
   fs.writeFileSync("src/Library/Css/Classes.elm", contents)
