@@ -341,7 +341,13 @@ link params =
     slab
         Html.a
         [ href params.url ]
-        [ C.border_b_2, C.border_accent, C.no_underline, C.text_inherit ]
+        [ C.border_b_2
+        , C.border_accent
+        , C.inline_block
+        , C.leading_none
+        , C.no_underline
+        , C.text_inherit
+        ]
         [ Html.text params.label ]
 
 

@@ -6,7 +6,7 @@ const fs = require("fs")
 
 const table = JSON.parse(fs.readFileSync(
   "build/css-table.json",
-  { encoding: "utf-8", flag: "a+" }
+  { flag: "a+", encoding: "utf-8" }
 ) || "{}")
 
 
@@ -23,6 +23,7 @@ function purgeFromElm(elmCode) {
   }, [])
 
   return classNames
+    .concat([ "input", "select", "textarea" ])
 }
 
 

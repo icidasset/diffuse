@@ -7,7 +7,6 @@ BUILD_DIR=./build
 NPM_DIR=./node_modules
 SRC_DIR=./src
 SYSTEM_DIR=./system
-TEMPORARY_DIR=./tmp
 
 
 # Default task
@@ -35,7 +34,6 @@ clean:
 css:
 	@echo "> Compiling CSS"
 	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(TEMPORARY_DIR)
 	@$(NPM_DIR)/.bin/postcss \
 		"${SRC_DIR}/Css/About.css" \
 		--output "${BUILD_DIR}/about.css" \
@@ -54,12 +52,12 @@ css-prod: css
 	@$(NPM_DIR)/.bin/purgecss \
 		--config $(SYSTEM_DIR)/Css/purgecss.application.js \
 		--out $(BUILD_DIR)
-	@$(NPM_DIR)/.bin/csso \
-		"${BUILD_DIR}/about.css" \
-		--output "${BUILD_DIR}/about.css"
-	@$(NPM_DIR)/.bin/csso \
-		"${BUILD_DIR}/application.css" \
-		--output "${BUILD_DIR}/application.css"
+	# @$(NPM_DIR)/.bin/csso \
+	# 	"${BUILD_DIR}/about.css" \
+	# 	--output "${BUILD_DIR}/about.css"
+	# @$(NPM_DIR)/.bin/csso \
+	# 	"${BUILD_DIR}/application.css" \
+	# 	--output "${BUILD_DIR}/application.css"
 
 
 elm:
