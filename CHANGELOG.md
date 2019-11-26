@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+- Improved text readability (contrast, etc.)
+
 ## 2.1.2
 
 - Fixed issue with WebDAV (the parser assumed tags in the form of `<D:` instead of allowing both upper and lower case)
