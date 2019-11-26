@@ -1,23 +1,25 @@
 module UI.Equalizer exposing (Model, Msg(..), adjustAllKnobs, initialModel, update, view)
 
 import Chunky exposing (..)
+import Chunky.Styled
 import Color exposing (Color)
 import Color.Ext as Color
 import Common
 import Coordinates exposing (Coordinates)
 import Css
+import Css.Classes as C
 import Css.Ext as Css
 import Equalizer exposing (..)
+import Html exposing (Html)
 import Html.Events.Extra.Pointer as Pointer
-import Html.Styled exposing (Html, text)
-import Html.Styled.Attributes exposing (css, style)
+import Html.Styled
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
 import Json.Decode as Decode
 import Material.Icons.Navigation as Icons
 import Return3 as Return exposing (..)
-import Svg.Styled exposing (Svg, polygon, svg)
+import Svg.Styled
 import Svg.Styled.Attributes
-import Tachyons.Classes as T
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page
@@ -235,11 +237,10 @@ view model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , brick
-            [ css eqStyles ]
-            [ T.relative ]
+        , chunk
+            [ C.relative, C.select_none ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Equalizer" ]
                 ]
             ]
@@ -253,17 +254,15 @@ view model =
 eqView : Model -> Html Msg
 eqView model =
     chunk
-        [ T.tc ]
-        [ brick
-            [ css groupStyles ]
-            [ T.ba, T.br2, T.flex ]
+        [ C.text_center ]
+        [ chunk
+            [ C.border, C.border_black_05, C.rounded, C.flex ]
             [ knob Volume model.volume
             ]
 
         --
-        , brick
-            [ css groupStyles ]
-            [ T.ba, T.br2, T.flex, T.mt3 ]
+        , chunk
+            [ C.border, C.border_black_05, C.rounded, C.flex, C.mt_4 ]
             [ knob Low model.low
             , knob Mid model.mid
             , knob High model.high
@@ -277,16 +276,25 @@ eqView model =
 
 knob : Knob -> Float -> Html Msg
 knob knobType value =
-    brick
-        [ css columnStyles ]
-        [ T.flex_grow_1, T.flex_shrink_0, T.ph4, T.ph5_ns, T.pv3 ]
-        [ knob_ knobType value
-        , knobLines
-        , knobLabel knobType
-        ]
+    [ knob_ knobType value
+    , knobLines
+    , knobLabel knobType
+    ]
+        |> Chunky.Styled.chunk
+            [ C.border_black_05
+            , C.border_r
+            , C.flex_grow
+            , C.flex_shrink_0
+            , C.px_16
+            , C.py_4
+
+            --
+            , C.last__border_r_0
+            ]
+        |> Html.Styled.toUnstyled
 
 
-knob_ : Knob -> Float -> Html Msg
+knob_ : Knob -> Float -> Html.Styled.Html Msg
 knob_ knobType value =
     let
         angle =
@@ -304,13 +312,13 @@ knob_ knobType value =
                 , preventDefault = True
                 }
     in
-    brick
+    Chunky.Styled.brick
         [ css knobStyles
 
         --
         , [ "rotate(", String.fromFloat angle, "deg)" ]
             |> String.concat
-            |> style "transform"
+            |> Html.Styled.Attributes.style "transform"
 
         --
         , Html.Styled.Events.custom "dblclick" resetDecoder
@@ -322,68 +330,72 @@ knob_ knobType value =
             |> Pointer.onDown
             |> Html.Styled.Attributes.fromUnstyled
         ]
-        [ T.br_100, T.center, T.pointer, T.relative ]
+        [ C.cursor_pointer
+        , C.mx_auto
+        , C.overflow_hidden
+        , C.relative
+        , C.rounded_full
+        ]
         [ Html.Styled.map never knob__ ]
 
 
-knob__ : Html Never
+knob__ : Html.Styled.Html Never
 knob__ =
-    raw
+    Chunky.Styled.raw
         [ decagonSvg
-        , brick
+        , Chunky.Styled.brick
             [ css layerAStyles ]
-            [ T.absolute, T.absolute__fill, T.br_100, T.z_1 ]
-            [ brick
+            [ C.absolute, C.inset_0, C.rounded_full, C.z_10 ]
+            [ Chunky.Styled.brick
                 [ css layerBStyles ]
-                [ T.center ]
+                [ C.mx_auto ]
                 []
             ]
         ]
 
 
-knobLabel : Knob -> Html Msg
+knobLabel : Knob -> Html.Styled.Html Msg
 knobLabel knobType =
-    brick
+    Chunky.Styled.brick
         [ css knobLabelStyles ]
-        [ T.fw6, T.mt3, T.o_70 ]
+        [ C.font_semibold
+        , C.mt_3
+        , C.opacity_70
+        , C.tracking_wide
+        ]
         [ case knobType of
             Low ->
-                text "LOW"
+                Html.Styled.text "LOW"
 
             Mid ->
-                text "MID"
+                Html.Styled.text "MID"
 
             High ->
-                text "HIGH"
+                Html.Styled.text "HIGH"
 
             Volume ->
-                text "VOLUME"
+                Html.Styled.text "VOLUME"
         ]
 
 
-knobLines : Html Msg
+knobLines : Html.Styled.Html Msg
 knobLines =
-    brick
+    Chunky.Styled.brick
         [ css knobLineContainerStyles ]
-        [ T.center, T.relative ]
-        [ brick
+        [ C.mx_auto, C.relative ]
+        [ Chunky.Styled.brick
             [ css (knobLineStyles 45) ]
-            [ T.absolute, T.left_0, T.top_0 ]
+            [ C.absolute, C.left_0, C.top_0 ]
             []
-        , brick
+        , Chunky.Styled.brick
             [ css (knobLineStyles -45) ]
-            [ T.absolute, T.right_0, T.top_0 ]
+            [ C.absolute, C.right_0, C.top_0 ]
             []
         ]
 
 
 
 -- VARIABLES
-
-
-borderColor : Css.Color
-borderColor =
-    Css.rgba 0 0 0 0.075
 
 
 knobColor : Color
@@ -410,23 +422,6 @@ maxAngle =
 -- 🖼
 
 
-eqStyles : List Css.Style
-eqStyles =
-    [ Css.disableUserSelection ]
-
-
-columnStyles : List Css.Style
-columnStyles =
-    [ Css.borderRight3 (Css.px 1) Css.solid borderColor
-    , Css.lastChild [ Css.borderRightWidth Css.zero ]
-    ]
-
-
-groupStyles : List Css.Style
-groupStyles =
-    [ Css.borderColor borderColor ]
-
-
 knobStyles : List Css.Style
 knobStyles =
     [ Css.height (Css.px knobSize)
@@ -449,7 +444,6 @@ knobStyles =
 knobLabelStyles : List Css.Style
 knobLabelStyles =
     [ Css.fontSize (Css.px 9.5)
-    , Css.letterSpacing (Css.em 0.025)
     ]
 
 
@@ -507,10 +501,11 @@ layerBStyles =
 -- DECAGON
 
 
-decagonSvg : Svg msg
+decagonSvg : Svg.Styled.Svg msg
 decagonSvg =
-    svg
-        [ Svg.Styled.Attributes.css decagonStyles
+    Svg.Styled.svg
+        [ Svg.Styled.Attributes.class C.mx_auto
+        , Svg.Styled.Attributes.css decagonStyles
         , Svg.Styled.Attributes.fill "transparent"
         , Svg.Styled.Attributes.height "200"
         , Svg.Styled.Attributes.stroke (knobColor |> Color.setOpacity knobOpacity |> Color.toCssString)
@@ -519,7 +514,7 @@ decagonSvg =
         , Svg.Styled.Attributes.viewBox "0 0 200 200"
         , Svg.Styled.Attributes.width "200"
         ]
-        [ polygon
+        [ Svg.Styled.polygon
             [ Svg.Styled.Attributes.points "129.665631459995,191.301425564335 70.3343685400051,191.301425564335 22.3343685400051,156.427384220077 4,100 22.334368540005,43.5726157799226 70.334368540005,8.69857443566526 129.665631459995,8.69857443566525 177.665631459995,43.5726157799226 196,100 177.665631459995,156.427384220077" ]
             []
         ]

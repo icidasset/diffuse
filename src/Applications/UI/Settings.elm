@@ -1,20 +1,18 @@
 module UI.Settings exposing (Dependencies, view)
 
 import Chunky exposing (..)
-import Color.Ext as Color
 import Conditional exposing (ifThenElse)
-import Css
-import Css.Media
-import Html.Styled exposing (Html, text)
-import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events exposing (onClick)
-import Html.Styled.Lazy
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (style)
+import Html.Events exposing (onClick)
+import Html.Lazy
+import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
 import Material.Icons.Communication as Icons
+import Material.Icons.Navigation as Icons
 import Settings
-import Tachyons.Classes as T
-import UI.Backdrop as Backdrop
-import UI.Css
+import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
@@ -130,18 +128,18 @@ index deps =
         -- Clear cache
         --------------
         , chunk
-            [ T.flex, T.flex_wrap ]
+            [ C.flex, C.flex_wrap ]
             [ chunk
-                [ T.w_50_ns, T.w_100 ]
+                [ C.w_full, C.md__w_half ]
                 [ label "Downloaded tracks"
                 , UI.Kit.buttonWithColor
-                    UI.Kit.colorKit.base04
+                    UI.Kit.Gray
                     UI.Kit.Normal
                     ClearTracksCache
                     (text "Clear cache")
                 ]
             , chunk
-                [ T.w_50_ns, T.w_100 ]
+                [ C.w_full, C.md__w_half ]
                 [ label "Hide Duplicates"
                 , UI.Kit.checkbox
                     { checked = deps.hideDuplicateTracks
@@ -153,9 +151,9 @@ index deps =
         -- Check it
         -----------
         , chunk
-            [ T.flex, T.flex_wrap ]
+            [ C.flex, C.flex_wrap ]
             [ chunk
-                [ T.w_50_ns, T.w_100 ]
+                [ C.w_full, C.md__w_half ]
                 [ label "Process sources automatically"
                 , UI.Kit.checkbox
                     { checked = deps.processAutomatically
@@ -163,7 +161,7 @@ index deps =
                     }
                 ]
             , chunk
-                [ T.w_50_ns, T.w_100 ]
+                [ C.w_full, C.md__w_half ]
                 [ label "Remember position on long tracks"
                 , UI.Kit.checkbox
                     { checked = deps.rememberProgress
@@ -175,7 +173,7 @@ index deps =
         -- Background image
         -------------------
         , label "Background Image"
-        , Html.Styled.Lazy.lazy backgroundImage deps.chosenBackgroundImage
+        , Html.Lazy.lazy backgroundImage deps.chosenBackgroundImage
         ]
     ]
 
@@ -183,7 +181,7 @@ index deps =
 label : String -> Html msg
 label l =
     chunk
-        [ T.mb3, T.mt4 ]
+        [ C.mb_3, C.mt_6, C.pb_px ]
         [ UI.Kit.label [] l ]
 
 
@@ -212,7 +210,7 @@ changePassphrase method =
 backgroundImage : Maybe String -> Html Reply
 backgroundImage chosenBackground =
     chunk
-        [ T.flex, T.flex_wrap ]
+        [ C.flex, C.flex_wrap ]
         (List.map
             (\( filename, backdropLabel ) ->
                 let
@@ -220,75 +218,88 @@ backgroundImage chosenBackground =
                         chosenBackground == Just filename
                 in
                 brick
-                    [ css backgroundThumbnailStyles
-                    , onClick (ChooseBackdrop filename)
-                    ]
-                    [ T.overflow_hidden
-                    , T.pointer
-                    , T.relative
+                    [ onClick (ChooseBackdrop filename) ]
+                    [ C.cursor_pointer
+                    , C.h_0
+                    , C.overflow_hidden
+                    , C.pt_1_div_5
+                    , C.relative
+                    , C.w_1_div_3
+
+                    --
+                    , C.md__pt_1_div_12
+                    , C.md__w_1_div_7
                     ]
                     [ if isActive then
-                        brick
-                            [ css backgroundThumbnailColorStyles ]
-                            [ T.absolute
-                            , T.absolute__fill
-                            , T.br1
-                            , T.mb1
-                            , T.mr1
-                            , T.z_1
+                        chunk
+                            [ C.absolute
+                            , C.bg_accent
+                            , C.inset_0
+                            , C.mb_1
+                            , C.mr_1
+                            , C.rounded_sm
+                            , C.z_10
                             ]
                             []
 
                       else
                         chunk
-                            [ T.absolute
-                            , T.absolute__fill
-                            , T.bg_black_05
-                            , T.br1
-                            , T.mb1
-                            , T.mr1
-                            , T.z_1
+                            [ C.absolute
+                            , C.inset_0
+                            , C.bg_black_05
+                            , C.mb_1
+                            , C.mr_1
+                            , C.rounded_sm
+                            , C.z_10
                             ]
                             []
 
                     --
                     , brick
-                        [ css (backgroundThumbnailInnerStyles filename)
-                        , Backdrop.backgroundPositioning filename
+                        [ backgroundPositioning filename
+
+                        --
+                        , ")"
+                            |> String.append filename
+                            |> String.append "url(images/Background/Thumbnails/"
+                            |> style "background-image"
                         ]
-                        [ T.absolute
-                        , T.absolute__fill
-                        , T.br1
-                        , T.mb1
-                        , T.mr1
-                        , T.z_2
-                        , ifThenElse isActive T.o_20 T.o_100
+                        [ C.absolute
+                        , C.bg_cover
+                        , C.inset_0
+                        , C.mb_1
+                        , C.mr_1
+                        , C.rounded_sm
+                        , C.z_20
+                        , ifThenElse isActive C.opacity_20 C.opacity_100
                         ]
                         []
 
                     --
                     , if isActive then
                         chunk
-                            [ T.absolute
-                            , T.absolute__fill
-                            , T.f7
-                            , T.flex
-                            , T.fw7
-                            , T.items_center
-                            , T.justify_center
-                            , T.lh_title
-                            , T.mb1
-                            , T.mr1
-                            , T.ph2
-                            , T.tc
-                            , T.white
-                            , T.z_3
+                            [ C.absolute
+                            , C.inset_0
+                            , C.flex
+                            , C.font_semibold
+                            , C.items_center
+                            , C.justify_center
+                            , C.leading_snug
+                            , C.mb_1
+                            , C.mr_1
+                            , C.px_2
+                            , C.text_center
+                            , C.text_white
+                            , C.text_xs
+                            , C.z_30
                             ]
                             [ chunk
-                                [ T.dn
-                                , T.db_ns
+                                [ C.hidden
+                                , C.md__block
+                                , C.mt_px
                                 ]
-                                [ text "Selected" ]
+                                [ Icons.check 16 Inherit
+                                ]
                             ]
 
                       else
@@ -297,30 +308,3 @@ backgroundImage chosenBackground =
             )
             Backdrop.options
         )
-
-
-backgroundThumbnailStyles : List Css.Style
-backgroundThumbnailStyles =
-    [ Css.height Css.zero
-    , Css.paddingTop (Css.pct 19.3083198175)
-    , Css.width (Css.pct 33.33333)
-
-    --
-    , Css.Media.withMedia
-        [ UI.Css.notSmallMediaQuery ]
-        [ Css.paddingTop (Css.pct 8.275)
-        , Css.width (Css.pct 14.28571)
-        ]
-    ]
-
-
-backgroundThumbnailColorStyles : List Css.Style
-backgroundThumbnailColorStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colorKit.accent) ]
-
-
-backgroundThumbnailInnerStyles : String -> List Css.Style
-backgroundThumbnailInnerStyles filename =
-    [ Css.backgroundImage (Css.url <| "images/Background/Thumbnails/" ++ filename)
-    , Css.backgroundSize Css.cover
-    ]

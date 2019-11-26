@@ -1,20 +1,22 @@
-module UI.Kit exposing (ButtonType(..), borderRadius, button, buttonFocus, buttonLink, buttonLinkWithColor, buttonWithColor, buttonWithOptions, canister, canisterForm, centeredContent, checkbox, colorKit, colors, defaultFontFamilies, defaultFontStyles, h1, h2, h3, headerFontFamilies, headerFontStyles, inlineIcon, inputFocus, insulationWidth, intro, label, link, logoBackdrop, navFocus, onOverlayShadow, receptacle, select, textArea, textButton, textField, textFieldAlt, textFocus)
+module UI.Kit exposing (..)
 
 import Chunky exposing (..)
+import Chunky.Styled
 import Color
 import Color.Ext as Color
 import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
-import Css exposing (deg, em, none, num, pct, px, solid, url, zero)
-import Css.Global
-import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (css, href, style)
-import Html.Styled.Events exposing (onClick, onInput)
+import Css
+import Css.Classes as C
+import Html exposing (Html)
+import Html.Attributes exposing (href, style)
+import Html.Events exposing (onClick, onInput)
+import Html.Styled
+import Html.Styled.Attributes exposing (css)
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Material.Icons.Toggle as Icons
 import Svg
-import Tachyons.Classes as T
 
 
 
@@ -45,20 +47,14 @@ colorKit =
 
 
 colors =
-    { errorBorder = colorKit.base08
-    , inputBorder = rgb 225 225 225
-    , subtleBorder = rgb 238 238 238
-    , verySubtleBorder = rgb 248 248 248
-
-    -- States
-    , success = colorKit.base0B
+    { -- States
+      success = colorKit.base0B
     , error = colorKit.base08
     , warning = colorKit.base0A
 
     -- Other
     , background = rgb 2 7 14
-    , focus = rgb 0 0 0
-    , selection = colorKit.base08
+    , selection = colorKit.accent
     , selectionAlt = colorKit.base01
     , text = colorKit.base01
     }
@@ -69,119 +65,13 @@ rgb =
 
 
 
--- FOCUSING
+-- 🍱  ░░  BUTTON
 
 
-focusWhileNotActive : List Css.Style -> Css.Style
-focusWhileNotActive styles =
-    Css.batch
-        [ Css.outline none
-        , Css.pseudoClass "focus:not(:active)" styles
-        ]
-
-
-focus : List Css.Style -> Css.Style
-focus styles =
-    Css.batch
-        [ Css.outline none
-        , Css.focus styles
-        ]
-
-
-
--- FOCUSING, Pt. II
-
-
-buttonFocus : Css.Style
-buttonFocus =
-    focusWhileNotActive
-        [ Css.backgroundColor (Css.rgb 255 255 255)
-        , Css.borderColor (Color.toElmCssColor colors.focus)
-        , Css.color (Color.toElmCssColor colors.focus)
-        , iconFocusStyle
-        ]
-
-
-inputFocus : Css.Style
-inputFocus =
-    focusWhileNotActive
-        [ Css.borderBottomColor (Color.toElmCssColor colors.focus) ]
-
-
-navFocus : Css.Style
-navFocus =
-    focusWhileNotActive
-        [ Css.borderTopColor (Color.toElmCssColor colors.focus)
-        , iconFocusStyle
-        ]
-
-
-textFocus : Css.Style
-textFocus =
-    focus
-        [ Css.borderBottomColor (Css.rgba 0 0 0 0.475)
-        , Css.color (Color.toElmCssColor colors.focus)
-        ]
-
-
-textAreaFocus : Css.Style
-textAreaFocus =
-    focus
-        [ Css.color (Color.toElmCssColor colors.focus)
-        ]
-
-
-
--- FONTS
-
-
-defaultFontFamilies : List String
-defaultFontFamilies =
-    [ "Source Sans Pro", "sans-serif" ]
-
-
-defaultFontStyles : List Css.Style
-defaultFontStyles =
-    [ Css.fontFamilies defaultFontFamilies ]
-
-
-headerFontFamilies : List String
-headerFontFamilies =
-    [ "Montserrat", "Futura", "\"Trebuchet MS\"", "Arial", "sans-serif" ]
-
-
-headerFontStyles : List Css.Style
-headerFontStyles =
-    [ Css.fontFamilies headerFontFamilies ]
-
-
-
--- SHADOWS
-
-
-onOverlayShadow : Css.Style
-onOverlayShadow =
-    Css.property
-        "box-shadow"
-        "0 1px 3px 0 rgba(0, 0, 0, 0.175), 0 3px 15px 0 rgba(0, 0, 0, 0.075)"
-
-
-
--- SPACE PROPERTIES
-
-
-borderRadius : String
-borderRadius =
-    T.br2
-
-
-insulationWidth : Float
-insulationWidth =
-    107.5
-
-
-
--- NODES
+type ButtonColor
+    = Accent
+    | Gray
+    | White
 
 
 type ButtonType
@@ -192,20 +82,20 @@ type ButtonType
 
 button : ButtonType -> msg -> Html msg -> Html msg
 button =
-    buttonWithColor colorKit.accent
+    buttonWithColor Accent
 
 
 buttonLink : String -> ButtonType -> Html msg -> Html msg
 buttonLink theHref buttonType =
-    buttonWithOptions Html.a [ href theHref ] colorKit.accent buttonType Nothing
+    buttonWithOptions Html.a [ href theHref ] Accent buttonType Nothing
 
 
-buttonLinkWithColor : Color.Color -> String -> ButtonType -> Html msg -> Html msg
+buttonLinkWithColor : ButtonColor -> String -> ButtonType -> Html msg -> Html msg
 buttonLinkWithColor color theHref buttonType =
     buttonWithOptions Html.a [ href theHref ] color buttonType Nothing
 
 
-buttonWithColor : Color.Color -> ButtonType -> msg -> Html msg -> Html msg
+buttonWithColor : ButtonColor -> ButtonType -> msg -> Html msg -> Html msg
 buttonWithColor color buttonType msg =
     buttonWithOptions Html.button [] color buttonType (Just msg)
 
@@ -213,83 +103,119 @@ buttonWithColor color buttonType msg =
 buttonWithOptions :
     (List (Html.Attribute msg) -> List (Html msg) -> Html msg)
     -> List (Html.Attribute msg)
-    -> Color.Color
+    -> ButtonColor
     -> ButtonType
     -> Maybe msg
     -> Html msg
     -> Html msg
 buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
+    let
+        defaultClasses =
+            [ C.antialiased
+            , C.border_2
+            , C.cursor_pointer
+            , C.font_bold
+            , C.inline_block
+            , C.no_underline
+            , C.py_2
+            , C.px_4
+            , C.rounded
+            , C.text_center
+            , C.text_sm
+
+            --
+            , C.fixate__bg_white
+            , C.fixate__border_black
+            , C.fixate__text_black
+            ]
+
+        specificClasses =
+            case buttonType of
+                Filled ->
+                    case buttonColor of
+                        Accent ->
+                            [ C.bg_accent, C.border_transparent, C.text_white ]
+
+                        Gray ->
+                            [ C.bg_base04, C.border_transparent, C.text_white ]
+
+                        White ->
+                            [ C.bg_white, C.border_transparent, C.text_white ]
+
+                _ ->
+                    case buttonColor of
+                        Accent ->
+                            [ C.bg_transparent, C.border_accent, C.text_accent ]
+
+                        Gray ->
+                            [ C.bg_transparent, C.border_base04, C.text_base04 ]
+
+                        White ->
+                            [ C.bg_transparent, C.border_white, C.text_white ]
+    in
     slab
         tag
-        (List.append
-            attributes
-            [ css (buttonStyles buttonType buttonColor)
-            , case maybeMsg of
-                Just msg ->
-                    onClick msg
+        (case maybeMsg of
+            Just msg ->
+                [ onClick msg ]
 
-                Nothing ->
-                    style "carry" "on"
-            ]
+            Nothing ->
+                []
         )
-        [ borderRadius
-        , T.b__solid
-        , T.bg_transparent
-        , T.bw1
-        , T.dib
-        , T.f6
-        , T.fw7
-        , T.no_underline
-        , T.ph3
-        , T.pointer
-        , T.tc
-        ]
+        (List.append
+            defaultClasses
+            specificClasses
+        )
         [ case buttonType of
             IconOnly ->
-                slab
-                    Html.span
-                    [ style "font-size" "0" ]
-                    [ T.dib, T.lh_solid, T.v_top ]
+                inline
+                    [ C.align_middle, C.inline_block, C.leading_none, C.text_0 ]
                     [ child ]
 
             _ ->
                 inline
-                    [ T.lh_copy ]
+                    [ C.inline_block, C.leading_normal, C.pt_px ]
                     [ child ]
         ]
+
+
+
+-- 🍱  ░░  OTHER
 
 
 canister : List (Html msg) -> Html msg
 canister children =
     chunk
-        [ T.mh1, T.ph3, T.pb3 ]
+        [ C.mx_1, C.px_4, C.pb_4 ]
         children
 
 
 canisterForm : List (Html msg) -> Html msg
 canisterForm children =
     chunk
-        [ T.measure, T.mh1, T.ph3, T.pb3, T.w_100 ]
+        [ C.mx_1, C.px_4, C.pb_4, C.w_full ]
         children
 
 
 centeredContent : List (Html msg) -> Html msg
 centeredContent children =
     chunk
-        [ T.flex
-        , T.flex_grow_1
-        , T.overflow_hidden
-        , T.relative
+        [ C.flex
+        , C.flex_grow
+        , C.overflow_hidden
+        , C.relative
         ]
-        [ Html.map never logoBackdrop
+        [ logoBackdrop
+            |> Html.Styled.map never
+            |> Html.Styled.toUnstyled
         , chunk
-            [ T.flex
-            , T.flex_column
-            , T.flex_grow_1
-            , T.items_center
-            , T.justify_center
-            , T.relative
-            , T.z_1
+            [ C.flex
+            , C.flex_col
+            , C.flex_grow
+            , C.items_center
+            , C.justify_center
+            , C.relative
+            , C.z_10
             ]
             children
         ]
@@ -298,13 +224,15 @@ centeredContent children =
 checkbox : { checked : Bool, toggleMsg : msg } -> Html msg
 checkbox opts =
     brick
-        [ css checkboxStyles, onClick opts.toggleMsg ]
-        [ T.dib, T.pointer, T.relative ]
+        [ onClick opts.toggleMsg
+        , style "left" "-3px"
+        ]
+        [ C.inline_block, C.cursor_pointer, C.relative ]
         [ if opts.checked then
-            Html.fromUnstyled (Icons.check_box 22 Inherit)
+            Icons.check_box 22 Inherit
 
           else
-            Html.fromUnstyled (Icons.check_box_outline_blank 22 Inherit)
+            Icons.check_box_outline_blank 22 Inherit
         ]
 
 
@@ -312,18 +240,24 @@ h1 : String -> Html msg
 h1 text =
     slab
         Html.h1
-        [ css h1Styles ]
-        [ borderRadius
-        , T.br__bottom
-        , T.dib
-        , T.fw6
-        , T.lh_title
-        , T.ma0
-        , T.ph2
-        , T.pv1
-        , T.relative
-        , T.ttu
-        , T.white
+        [ style "font-size" "13.5px" ]
+        [ C.all_small_caps
+        , C.antialiased
+        , C.bg_base06
+        , C.inline_block
+        , C.font_semibold
+        , C.leading_tight
+        , C.m_0
+        , C.minus_top_px
+        , C.overflow_hidden
+        , C.pointer_events_none
+        , C.px_2
+        , C.py_1
+        , C.relative
+        , C.rounded_b
+        , C.uppercase
+        , C.text_sm
+        , C.text_white
         ]
         [ Html.text text ]
 
@@ -332,14 +266,16 @@ h2 : String -> Html msg
 h2 text =
     slab
         Html.h2
-        [ css headerFontStyles ]
-        [ T.center
-        , T.f3
-        , T.fw7
-        , T.lh_title
-        , T.mb4
-        , T.mt3
-        , T.tc
+        []
+        [ C.antialiased
+        , C.font_bold
+        , C.font_display
+        , C.leading_tight
+        , C.mb_8
+        , C.mt_4
+        , C.mx_auto
+        , C.text_2xl
+        , C.text_center
         ]
         [ Html.text text ]
 
@@ -348,32 +284,39 @@ h3 : String -> Html msg
 h3 text =
     slab
         Html.h2
-        [ css headerFontStyles ]
-        [ T.f4
-        , T.fw7
-        , T.lh_title
-        , T.mb4
+        []
+        [ C.antialiased
+        , C.font_bold
+        , C.font_display
+        , C.leading_tight
+        , C.mb_8
+        , C.mt_4
+        , C.text_xl
         ]
         [ Html.text text ]
 
 
 inlineIcon : (Int -> Coloring -> Svg.Svg msg) -> Html msg
 inlineIcon icon =
-    slab
-        Html.span
-        [ css inlineIconStyles ]
-        [ T.dib, T.mr1 ]
-        [ Html.fromUnstyled (icon 14 Inherit) ]
+    inline
+        [ C.align_sub
+        , C.inline_block
+        , C.leading_0
+        , C.mr_1
+        , C.text_0
+        ]
+        [ icon 14 Inherit ]
 
 
 intro : Html msg -> Html msg
 intro child =
     slab
         Html.p
-        [ css introStyles ]
-        [ T.f6
-        , T.mv3
-        , T.pv1
+        [ style "line-height" "1.75" ]
+        [ C.mb_6
+        , C.mt_3
+        , C.text_base05
+        , C.text_sm
         ]
         [ child ]
 
@@ -382,11 +325,13 @@ label : List (Html.Attribute msg) -> String -> Html msg
 label attributes t =
     slab
         Html.label
-        (css labelStyles :: attributes)
-        [ T.db
-        , T.fw7
-        , T.o_90
-        , T.ttu
+        (style "font-size" "11.25px" :: attributes)
+        [ C.antialiased
+        , C.block
+        , C.font_bold
+        , C.leading_normal
+        , C.opacity_90
+        , C.uppercase
         ]
         [ Html.text t ]
 
@@ -395,66 +340,96 @@ link : { label : String, url : String } -> Html msg
 link params =
     slab
         Html.a
-        [ css linkStyles, href params.url ]
-        [ T.color_inherit, T.no_underline ]
+        [ href params.url ]
+        [ C.border_b_2
+        , C.border_accent
+        , C.inline_block
+        , C.leading_none
+        , C.no_underline
+        , C.text_inherit
+        ]
         [ Html.text params.label ]
 
 
-logoBackdrop : Html Never
+logoBackdrop : Html.Styled.Html Never
 logoBackdrop =
-    brick
+    Chunky.Styled.brick
         [ css logoBackdropStyles ]
-        [ T.absolute, T.top_0, T.z_0 ]
+        [ C.absolute
+        , C.bg_cover
+        , C.bg_no_repeat
+        , C.h_0
+        , C.left_full
+        , C.pt_full
+        , C.top_0
+        , C.z_0
+        ]
         []
 
 
 receptacle : { scrolling : Bool } -> List (Html msg) -> Html msg
 receptacle { scrolling } =
-    brick
-        [ css
-            [ Css.property "-webkit-overflow-scrolling" "touch" ]
-        ]
-        [ T.absolute
-        , T.absolute__fill
-        , T.bg_white
-        , T.flex
-        , T.flex_column
-        , T.overflow_x_hidden
-        , T.z_999
+    chunk
+        [ C.absolute
+        , C.bg_white
+        , C.flex
+        , C.flex_col
+        , C.inset_0
+        , C.overflow_x_hidden
+        , C.scrolling_touch
+        , C.z_50
 
         --
-        , ifThenElse scrolling T.overflow_y_auto T.overflow_y_hidden
+        , ifThenElse scrolling C.overflow_y_auto C.overflow_y_hidden
         ]
 
 
 select : (String -> msg) -> List (Html msg) -> Html msg
 select inputHandler options =
-    brick
-        [ css selectStyles.container ]
-        [ T.relative
-        , T.w_100
+    chunk
+        [ C.max_w_md
+        , C.mx_auto
+        , C.relative
+        , C.text_base05
+        , C.w_full
+
+        --
+        , C.focus_within__text_black
         ]
         [ slab
             Html.select
-            [ css selectStyles.field, onInput inputHandler ]
-            [ T.bn
-            , T.bg_transparent
-            , T.br0
-            , T.db
-            , T.f5
-            , T.input_reset
-            , T.lh_copy
-            , T.ma0
-            , T.outline_0
-            , T.pv2
-            , T.ph0
-            , T.w_100
+            [ onInput inputHandler ]
+            [ C.appearance_none
+            , C.border_b
+            , C.border_l_0
+            , C.border_r_0
+            , C.border_t_0
+            , C.border_less_subtle
+            , C.bg_transparent
+            , C.block
+            , C.leading_normal
+            , C.m_0
+            , C.outline_none
+            , C.py_2
+            , C.px_0
+            , C.rounded_none
+            , C.text_base01
+            , C.text_lg
+            , C.w_full
+
+            --
+            , C.focus__border_black
             ]
             options
-        , brick
-            [ css selectStyles.arrow ]
-            [ T.absolute, T.right_0 ]
-            [ Html.fromUnstyled <| Icons.keyboard_arrow_down 20 (Color colorKit.base05) ]
+        , chunk
+            [ C.absolute
+            , C.minus_translate_y_half
+            , C.mt_px
+            , C.right_0
+            , C.text_0
+            , C.top_half
+            ]
+            [ Icons.keyboard_arrow_down 20 Inherit ]
         ]
 
 
@@ -462,16 +437,17 @@ textArea : List (Html.Attribute msg) -> Html msg
 textArea attributes =
     slab
         Html.textarea
-        (css textAreaStyles :: attributes)
-        [ T.bn
-        , T.bg_white
-        , T.br2
-        , T.db
-        , T.f6
-        , T.lh_copy
-        , T.mb3
-        , T.pa3
-        , T.w_100
+        attributes
+        [ C.bg_white
+        , C.block
+        , C.leading_normal
+        , C.mb_4
+        , C.p_4
+        , C.resize_none
+        , C.rounded
+        , C.text_base01
+        , C.text_sm
+        , C.w_full
         ]
         []
 
@@ -480,8 +456,17 @@ textButton : { label : String, onClick : msg } -> Html msg
 textButton params =
     slab
         Html.button
-        [ css linkStyles, onClick params.onClick ]
-        [ T.bg_transparent, T.color_inherit, T.bn, T.lh_title, T.ma0, T.pa0, T.pointer ]
+        [ onClick params.onClick ]
+        [ C.appearance_none
+        , C.bg_transparent
+        , C.border_accent
+        , C.border_b_2
+        , C.text_inherit
+        , C.leading_tight
+        , C.m_0
+        , C.p_0
+        , C.cursor_pointer
+        ]
         [ Html.text params.label ]
 
 
@@ -489,16 +474,25 @@ textField : List (Html.Attribute msg) -> Html msg
 textField attributes =
     slab
         Html.input
-        (css textFieldStyles :: attributes)
-        [ T.bn
-        , T.bg_transparent
-        , T.br0
-        , T.db
-        , T.f6
-        , T.lh_copy
-        , T.mt1
-        , T.pv2
-        , T.w_100
+        attributes
+        [ C.appearance_none
+        , C.border_b
+        , C.border_l_0
+        , C.border_r_0
+        , C.border_t_0
+        , C.border_less_subtle
+        , C.bg_transparent
+        , C.block
+        , C.leading_normal
+        , C.mt_1
+        , C.py_2
+        , C.rounded_none
+        , C.text_base01
+        , C.text_sm
+        , C.w_full
+
+        --
+        , C.focus__border_black
         ]
         []
 
@@ -507,16 +501,17 @@ textFieldAlt : List (Html.Attribute msg) -> Html msg
 textFieldAlt attributes =
     slab
         Html.input
-        (css textFieldAltStyles :: attributes)
-        [ T.bn
-        , T.bg_white
-        , T.br2
-        , T.db
-        , T.f6
-        , T.lh_copy
-        , T.mb3
-        , T.pa3
-        , T.w_100
+        attributes
+        [ C.bg_white
+        , C.block
+        , C.leading_normal
+        , C.mb_3
+        , C.p_3
+        , C.resize_none
+        , C.rounded
+        , C.text_base01
+        , C.text_sm
+        , C.w_full
         ]
         []
 
@@ -527,161 +522,12 @@ textFieldAlt attributes =
 -----------------------------------------
 
 
-buttonStyles : ButtonType -> Color.Color -> List Css.Style
-buttonStyles buttonType buttonColor =
-    case buttonType of
-        Filled ->
-            [ Css.backgroundColor (Color.toElmCssColor buttonColor)
-            , Css.borderColor Css.transparent
-            , Css.color (Css.rgb 255 255 255)
-            , Css.paddingBottom (Css.rem 0.525)
-            , Css.paddingTop (Css.rem 0.6)
-            , buttonFocus
-            ]
-
-        _ ->
-            [ Css.borderColor (Color.toElmCssColor buttonColor)
-            , Css.color (Color.toElmCssColor buttonColor)
-            , Css.paddingBottom (Css.rem 0.525)
-            , Css.paddingTop (Css.rem 0.6)
-            , buttonFocus
-            ]
-
-
-checkboxStyles : List Css.Style
-checkboxStyles =
-    [ Css.left (Css.px -3)
-    ]
-
-
-h1Styles : List Css.Style
-h1Styles =
-    [ Css.backgroundColor (Color.toElmCssColor colorKit.base06)
-    , Css.fontSize (px 13.5)
-    , Css.fontVariant Css.allSmallCaps
-    , Css.pointerEvents Css.none
-    , Css.top (px -1)
-    ]
-
-
-inlineIconStyles : List Css.Style
-inlineIconStyles =
-    [ Css.fontSize (px 0)
-    , Css.lineHeight (px 0)
-    , Css.verticalAlign Css.sub
-
-    --
-    , Css.Global.descendants
-        [ Css.Global.selector "svg > g"
-            [ Css.fill Css.currentColor ]
-        ]
-    ]
-
-
-introStyles : List Css.Style
-introStyles =
-    [ Css.color (Color.toElmCssColor colorKit.base05)
-    , Css.lineHeight (em 1.75)
-    ]
-
-
-labelStyles : List Css.Style
-labelStyles =
-    [ Css.fontSize (px 11.25) ]
-
-
-linkStyles : List Css.Style
-linkStyles =
-    [ Css.borderBottom3 (px 2) solid (Color.toElmCssColor colorKit.accent) ]
-
-
 logoBackdropStyles : List Css.Style
 logoBackdropStyles =
-    [ Css.backgroundImage (url "images/diffuse__icon-dark.svg")
-    , Css.backgroundPosition2 (pct -43.5) (px 98)
-    , Css.backgroundRepeat Css.noRepeat
-    , Css.backgroundSize Css.cover
-    , Css.height zero
-    , Css.left (pct 100)
-    , Css.opacity (num 0.025)
-    , Css.paddingTop (pct 100)
+    [ Css.backgroundImage (Css.url "images/diffuse__icon-dark.svg")
+    , Css.backgroundPosition2 (Css.pct -43.5) (Css.px 98)
+    , Css.opacity (Css.num 0.025)
     , Css.property "transform-origin" "left top"
-    , Css.transform (Css.rotate (deg 90))
+    , Css.transform (Css.rotate (Css.deg 90))
     , Css.width (Css.vh 105)
     ]
-
-
-selectStyles : { arrow : List Css.Style, container : List Css.Style, field : List Css.Style }
-selectStyles =
-    { arrow =
-        [ Css.fontSize (px 0)
-        , Css.marginTop (px 1)
-        , Css.top (pct 50)
-        , Css.transform (Css.translateY <| pct -50)
-        ]
-    , container =
-        []
-    , field =
-        [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
-        , Css.color (Color.toElmCssColor colors.text)
-        , inputFocus
-
-        --
-        , Css.pseudoClass
-            "-moz-focusring"
-            [ Css.color Css.transparent
-            , Css.textShadow4 zero zero zero (Css.rgb 0 0 0)
-            ]
-        ]
-    }
-
-
-textAreaStyles : List Css.Style
-textAreaStyles =
-    [ Css.color (Color.toElmCssColor colors.text)
-    , Css.height (px 109)
-    , Css.maxWidth (Css.vw 87.5)
-    , Css.resize Css.none
-    , Css.width (px 292)
-    , textAreaFocus
-    ]
-
-
-textFieldStyles : List Css.Style
-textFieldStyles =
-    [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor colors.inputBorder)
-    , Css.color (Color.toElmCssColor colors.text)
-    , inputFocus
-
-    --
-    , Css.invalid
-        [ Css.boxShadow none
-        , Css.outline none
-        ]
-
-    --
-    , (Css.focus << List.singleton << Css.invalid)
-        [ Css.borderBottomColor (Color.toElmCssColor colors.error) ]
-    ]
-
-
-textFieldAltStyles : List Css.Style
-textFieldAltStyles =
-    [ Css.color (Color.toElmCssColor colors.text)
-    , Css.maxWidth (Css.vw 87.5)
-    , Css.resize Css.none
-    , Css.width (px 292)
-    , textAreaFocus
-    ]
-
-
-
--- ⚗️
-
-
-iconFocusStyle : Css.Style
-iconFocusStyle =
-    [ Css.fill (Color.toElmCssColor colors.focus) ]
-        |> Css.Global.selector "svg > g"
-        |> List.singleton
-        |> Css.Global.descendants

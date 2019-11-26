@@ -1,25 +1,17 @@
 module UI.Console exposing (view)
 
 import Chunky exposing (..)
-import Color
-import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Css
-import Css.Ext as Css
-import Css.Media
-import Html as UnstyledHtml
-import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (class, css, style, title)
-import Html.Styled.Events exposing (on, onClick)
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (class, style, title)
+import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Av as Icons
 import Maybe.Extra as Maybe
 import Queue
-import Tachyons.Classes as T
-import UI.Css
-import UI.Kit
 import UI.Queue as Queue
 import UI.Reply exposing (Reply(..))
 
@@ -30,26 +22,27 @@ import UI.Reply exposing (Reply(..))
 
 view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> Html Reply
 view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
-    brick
-        [ css consoleStyles ]
-        [ T.mt1, T.tc, T.w_100 ]
+    chunk
+        [ C.antialiased
+        , C.mt_1
+        , C.text_center
+        , C.w_full
+
+        --
+        , C.lg__max_w_insulation
+        ]
         [ -----------------------------------------
           -- Now Playing
           -----------------------------------------
           chunk
-            [ T.f6
-            , T.i
-            , T.lh_copy
-            , T.pb3
-            , T.pt3
-            , T.white
+            [ C.text_sm
+            , C.italic
+            , C.leading_normal
+            , C.py_4
+            , C.text_white
             ]
             [ if stalled then
-                slab
-                    Html.span
-                    []
-                    [ T.dib ]
-                    [ text "Audio connection got interrupted, trying to reconnect ..." ]
+                text "Audio connection got interrupted, trying to reconnect ..."
 
               else if loading then
                 text "Loading track ..."
@@ -59,7 +52,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                     Just ( _, { tags } ) ->
                         Html.span
                             [ onClick ScrollToNowPlaying
-                            , class T.pointer
+                            , class C.cursor_pointer
                             , title "Scroll to track"
                             ]
                             [ text (tags.artist ++ " - " ++ tags.title) ]
@@ -84,14 +77,21 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
           in
           brick
             [ on "click" (clickLocationDecoder Seek) ]
-            [ T.pointer
-            , T.pv1
+            [ C.cursor_pointer
+            , C.py_1
             ]
             [ brick
-                [ css progressBarStyles ]
-                [ T.br1 ]
+                [ style "background-color" "rgba(255, 255, 255, 0.25)"
+                , style "height" "3px"
+                ]
+                [ C.rounded_sm
+                , C.select_none
+                ]
                 [ brick
-                    [ css progressBarInnerStyles, style "width" (String.fromFloat progress ++ "%") ]
+                    [ style "background-color" "rgba(255, 255, 255, 0.325)"
+                    , style "height" "3px"
+                    , style "width" (String.fromFloat progress ++ "%")
+                    ]
                     [ "progressBarValue" ]
                     []
                 ]
@@ -100,14 +100,16 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
         -----------------------------------------
         -- Buttons
         -----------------------------------------
-        , brick
-            [ css buttonsContainerStyles ]
-            [ T.flex
-            , T.justify_between
-            , T.justify_center_ns
-            , T.mb2
-            , T.mt3
-            , T.pb1
+        , chunk
+            [ C.flex
+            , C.justify_between
+            , C.mb_3
+            , C.mt_4
+            , C.select_none
+            , C.text_white_90
+
+            --
+            , C.sm__justify_center
             ]
             [ button "Toggle repeat" (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
             , button "Play previous track" lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
@@ -121,15 +123,28 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
 button : String -> Html msg -> Html msg -> msg -> Html msg
 button t light content msg =
     brick
-        [ onClick msg, title t ]
-        [ T.flex, T.flex_column, T.items_center, T.mh1, T.mh4_ns, T.ph1, T.pointer ]
+        [ onClick msg
+        , title t
+        ]
+        [ C.cursor_pointer
+        , C.flex
+        , C.flex_col
+        , C.items_center
+        , C.px_1
+
+        --
+        , C.sm__mx_8
+        ]
         [ brick
-            [ css [ Css.height (Css.px 4) ] ]
+            [ style "height" "4px" ]
             []
             [ light ]
         , brick
-            [ css [ Css.height (Css.px 25) ] ]
-            [ T.flex, T.items_center, T.mv2 ]
+            [ style "height" "25px" ]
+            [ C.flex
+            , C.items_center
+            , C.my_2
+            ]
             [ content ]
         ]
 
@@ -137,99 +152,66 @@ button t light content msg =
 smallLight : Bool -> Html msg
 smallLight isOn =
     brick
-        [ css
-            [ Css.backgroundColor
-                (ifThenElse isOn (Css.rgb 157 174 255) (Css.rgba 255 255 255 0.25))
-            , Css.height (Css.px 4)
-            , Css.width (Css.px 4)
-            ]
+        [ style "height" "4px"
+        , style "width" "4px"
+
+        --
+        , style "background-color" <|
+            ifThenElse
+                isOn
+                "rgb(157, 174, 255)"
+                "rgba(255, 255, 255, 0.25)"
         ]
-        [ T.br_100 ]
+        [ C.rounded_full ]
         []
 
 
 largeLight : Bool -> Html msg
 largeLight isOn =
     brick
-        [ css
-            [ Css.backgroundColor
-                (ifThenElse isOn (Css.rgb 198 254 153) (Css.rgba 255 255 255 0.25))
-            , Css.height (Css.px 4)
-            , Css.left (Css.px -2)
-            , Css.width (Css.px 17)
-            ]
+        [ style "height" "4px"
+        , style "left" "-2px"
+        , style "width" "17px"
+
+        --
+        , style "background-color" <|
+            ifThenElse
+                isOn
+                "rgb(198, 254, 153)"
+                "rgba(255, 255, 255, 0.25)"
         ]
-        [ T.br_pill, T.relative ]
+        [ C.relative, C.rounded_full ]
         []
 
 
 lightPlaceHolder : Html msg
 lightPlaceHolder =
-    brick
-        [ css [ Css.height (Css.px 4) ] ]
-        []
+    Html.div
+        [ style "height" "4px" ]
         []
 
 
 play : Html msg
 play =
     brick
-        [ css playTextStyles ]
-        [ T.fw7, T.nowrap, T.relative ]
+        [ style "font-size" "11.25px"
+        , style "letter-spacing" "3.75px"
+        ]
+        [ C.font_bold
+        , C.font_display
+        , C.relative
+        , C.whitespace_no_wrap
+        ]
         [ text "PLAY" ]
 
 
-icon : (Int -> Coloring -> UnstyledHtml.Html msg) -> Int -> Html msg
+
+-- ⚗️
+
+
+icon : (Int -> Coloring -> Html msg) -> Int -> Html msg
 icon iconFunction int =
-    Html.fromUnstyled (iconFunction int <| Color iconColor)
-
-
-
--- 🖼
-
-
-buttonsContainerStyles : List Css.Style
-buttonsContainerStyles =
-    [ Css.disableUserSelection ]
-
-
-consoleStyles : List Css.Style
-consoleStyles =
-    [ Css.Media.withMedia
-        [ UI.Css.largeMediaQuery ]
-        [ Css.maxWidth (Css.vh UI.Kit.insulationWidth)
-        , Css.minWidth (Css.px 840)
-        ]
-    ]
-
-
-iconColor : Color.Color
-iconColor =
-    Color.rgba 1 1 1 0.875
-
-
-playTextStyles : List Css.Style
-playTextStyles =
-    [ Css.color (Color.toElmCssColor iconColor)
-    , Css.fontFamilies UI.Kit.headerFontFamilies
-    , Css.fontSize (Css.px 11.25)
-    , Css.letterSpacing (Css.px 3.75)
-    ]
-
-
-progressBarStyles : List Css.Style
-progressBarStyles =
-    [ Css.backgroundColor (Css.rgba 255 255 255 0.25)
-    , Css.disableUserSelection
-    , Css.height (Css.px 3)
-    ]
-
-
-progressBarInnerStyles : List Css.Style
-progressBarInnerStyles =
-    [ Css.backgroundColor (Css.rgba 255 255 255 0.325)
-    , Css.height (Css.px 3)
-    ]
+    iconFunction int Inherit
 
 
 

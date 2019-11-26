@@ -3,9 +3,10 @@
 
 # Variables
 
+BUILD_DIR=./build
 NPM_DIR=./node_modules
 SRC_DIR=./src
-BUILD_DIR=./build
+SYSTEM_DIR=./system
 
 
 # Default task
@@ -17,11 +18,11 @@ all: dev
 # Build tasks
 #
 
-build: clean css elm js system
+build: clean system css elm js
 	@echo "> Build completed ⚡"
 
 
-build-prod: quality clean css elm-prod js-prod system
+build-prod: clean system css-prod elm-prod js-prod
 	@echo "> Production build completed 🛳"
 
 
@@ -31,9 +32,32 @@ clean:
 
 
 css:
-	@echo "> Copying CSS dependencies"
-	@mkdir -p $(BUILD_DIR)/vendor
-	@cp $(NPM_DIR)/tachyons/css/tachyons.min.css $(BUILD_DIR)/vendor/tachyons.min.css
+	@echo "> Compiling CSS"
+	@mkdir -p $(BUILD_DIR)
+	@$(NPM_DIR)/.bin/postcss \
+		"${SRC_DIR}/Css/About.css" \
+		--output "${BUILD_DIR}/about.css" \
+		--config "${SYSTEM_DIR}/Css/"
+	@$(NPM_DIR)/.bin/postcss \
+		"${SRC_DIR}/Css/Application.css" \
+		--output "${BUILD_DIR}/application.css" \
+		--config "${SYSTEM_DIR}/Css/"
+
+
+css-prod: css
+	@echo "> Optimizing CSS"
+	@$(NPM_DIR)/.bin/purgecss \
+		--config $(SYSTEM_DIR)/Css/purgecss.about.js \
+		--out $(BUILD_DIR)
+	@$(NPM_DIR)/.bin/purgecss \
+		--config $(SYSTEM_DIR)/Css/purgecss.application.js \
+		--out $(BUILD_DIR)
+	# @$(NPM_DIR)/.bin/csso \
+	# 	"${BUILD_DIR}/about.css" \
+	# 	--output "${BUILD_DIR}/about.css"
+	# @$(NPM_DIR)/.bin/csso \
+	# 	"${BUILD_DIR}/application.css" \
+	# 	--output "${BUILD_DIR}/application.css"
 
 
 elm:
@@ -178,26 +202,25 @@ test:
 
 
 watch: build
-	@make watch_wo_build
+	@make watch-wo-build
 
 
 watch-wo-build:
 	@echo "> Watching"
-	@make -j watch-elm watch-js watch-system
+	@make -j watch-css watch-elm watch-js watch-system
+
+
+watch-css:
+	@watchexec -p -w $(SRC_DIR)/Css -w $(SYSTEM_DIR)/Css -- make css
 
 
 watch-elm:
-	@watchexec -p \
-		-w $(SRC_DIR)/Applications \
-		-w $(SRC_DIR)/Library \
-		-- make elm
+	@watchexec -p -w $(SRC_DIR) -e elm -- make elm
 
 
 watch-js:
-	@watchexec -p \
-		-w $(SRC_DIR)/Javascript \
-		-- make js
+	@watchexec -p -w $(SRC_DIR) -e js -- make js
 
 
 watch-system:
-	@watchexec -p --ignore *.elm --ignore *.js -- make system
+	@watchexec -p --ignore *.elm --ignore *.js --ignore *.css -- make system

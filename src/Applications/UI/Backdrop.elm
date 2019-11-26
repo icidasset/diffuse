@@ -2,16 +2,13 @@ module UI.Backdrop exposing (Model, Msg(..), backgroundPositioning, default, ini
 
 import Chunky exposing (..)
 import Color exposing (Color)
-import Css exposing (int, num, pct, px)
-import Css.Global
-import Html.Styled as Html exposing (Html, div)
-import Html.Styled.Attributes exposing (class, css, src, style)
-import Html.Styled.Events exposing (on)
-import Html.Styled.Lazy as Lazy
+import Css.Classes as C
+import Html exposing (Html)
+import Html.Attributes exposing (src, style)
+import Html.Events exposing (on)
+import Html.Lazy as Lazy
 import Json.Decode
 import Return3 exposing (..)
-import Tachyons.Classes as T
-import UI.Animations
 import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply)
 
@@ -108,9 +105,9 @@ update msg model =
 view : Model -> Html Msg
 view model =
     chunk
-        [ T.absolute__fill
-        , T.fixed
-        , T.z_0
+        [ C.fixed
+        , C.minus_inset_px
+        , C.z_0
         ]
         [ Lazy.lazy chosen model.chosen
         , Lazy.lazy2 loaded model.loaded model.fadeIn
@@ -119,15 +116,19 @@ view model =
         ---------
         , brick
             [ style "background" "linear-gradient(#0000, rgba(0, 0, 0, 0.175))" ]
-            [ T.absolute
-            , T.bottom_0
-            , T.h5
-            , T.left_0
-            , T.right_0
-            , T.z_1
+            [ C.absolute
+            , C.bottom_0
+            , C.h_64
+            , C.inset_x_0
+            , C.z_10
             ]
             []
         ]
+
+
+backgroundImage : String -> Html.Attribute msg
+backgroundImage backdrop =
+    style "background-image" ("url(images/Background/" ++ backdrop ++ ")")
 
 
 backgroundPositioning : String -> Html.Attribute msg
@@ -179,12 +180,16 @@ chosen maybeChosen =
             in
             slab
                 Html.img
-                [ css chosenStyles
-                , on "load" loadingDecoder
+                [ on "load" loadingDecoder
                 , src ("images/Background/" ++ c)
+                , style "opacity" "0.00001"
                 ]
-                [ T.fixed
-                , T.overflow_hidden
+                [ C.fixed
+                , C.h_px
+                , C.left_full
+                , C.overflow_hidden
+                , C.top_full
+                , C.w_px
                 ]
                 []
 
@@ -198,78 +203,49 @@ loaded list fadeIn =
         amount =
             List.length list
 
-        indexedMapFn idx item =
-            div (imageStyles fadeIn (idx + 1 < amount) item) []
+        indexedMapFn idx =
+            image fadeIn (idx + 1 < amount)
     in
     list
         |> List.indexedMap indexedMapFn
-        |> div [ css imageContainerStyles ]
+        |> raw
 
 
+image : Bool -> Bool -> String -> Html msg
+image fadeIn isPrevious loadedBackdrop =
+    let
+        defaultClasses =
+            [ C.bg_cover
+            , C.fixed
+            , C.inset_0
 
--- 🖼
+            -- Opacity
+            ----------
+            , if isPrevious || not fadeIn then
+                C.opacity_100
 
+              else
+                C.opacity_0
+            ]
 
-chosenStyles : List Css.Style
-chosenStyles =
-    [ Css.height (px 1)
-    , Css.left (pct 100)
-    , Css.opacity (num 0.00001)
-    , Css.top (pct 100)
-    , Css.transform (Css.translate2 (px -1) (px -1))
-    , Css.width (px 1)
-    , Css.zIndex (int -10000)
-    ]
+        animationClasses =
+            if not isPrevious && fadeIn then
+                [ C.animation_2s
+                , C.animation_delay_50ms
+                , C.animation_fadeIn
+                , C.animation_fill_forwards
+                , C.animation_once
+                ]
 
-
-imageContainerStyles : List Css.Style
-imageContainerStyles =
-    [ Css.Global.descendants
-        [ Css.Global.selector
-            ".bg-image--with-fadein"
-            imageAnimation
+            else
+                []
+    in
+    brick
+        [ backgroundImage loadedBackdrop
+        , backgroundPositioning loadedBackdrop
         ]
-    ]
-
-
-imageAnimation : List Css.Style
-imageAnimation =
-    [ Css.animationName UI.Animations.fadeIn
-    , Css.animationDuration (Css.ms 2000)
-    , Css.animationDelay (Css.ms 50)
-    , Css.property "animation-fill-mode" "forwards"
-    ]
-
-
-imageStyles : Bool -> Bool -> String -> List (Html.Attribute msg)
-imageStyles fadeIn isPrevious loadedBackdrop =
-    [ -- Animation
-      ------------
-      if not isPrevious && fadeIn then
-        class "bg-image--with-fadein"
-
-      else
-        class ""
-
-    -- Background
-    -------------
-    , backgroundPositioning loadedBackdrop
-
-    -- Opacity
-    ----------
-    , if isPrevious || not fadeIn then
-        style "opacity" "1"
-
-      else
-        style "opacity" "0"
-
-    --
-    , style "background-image" ("url(images/Background/" ++ loadedBackdrop ++ ")")
-    , style "background-size" "cover"
-    , style "bottom" "-1px"
-    , style "left" "-1px"
-    , style "position" "fixed"
-    , style "right" "-1px"
-    , style "top" "-1px"
-    , style "z-index" "-9"
-    ]
+        (List.append
+            defaultClasses
+            animationClasses
+        )
+        []

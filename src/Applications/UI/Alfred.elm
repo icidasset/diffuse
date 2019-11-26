@@ -3,21 +3,18 @@ module UI.Alfred exposing (Model, Msg(..), initialModel, subscriptions, update, 
 import Alfred exposing (Alfred)
 import Browser.Dom as Dom
 import Chunky exposing (..)
-import Classes as C
-import Css
-import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (autofocus, css, id, placeholder, type_)
-import Html.Styled.Events exposing (onInput)
-import Html.Styled.Ext exposing (onTapPreventDefault)
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (autofocus, id, placeholder, type_)
+import Html.Events exposing (onInput)
+import Html.Ext exposing (onTapPreventDefault)
 import Json.Decode
 import Keyboard
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Return3 exposing (..)
-import Tachyons.Classes as T
 import Task
-import UI.Kit
 import UI.Reply exposing (Reply)
 
 
@@ -162,27 +159,32 @@ view model =
     case model.instance of
         Just instance ->
             chunk
-                [ T.absolute__fill
-                , T.flex
-                , T.flex_column
-                , T.fixed
-                , T.items_center
-                , T.ph3
-                , T.pointer
-                , T.z_9999
+                [ C.inset_0
+                , C.flex
+                , C.flex_col
+                , C.fixed
+                , C.items_center
+                , C.px_3
+                , C.cursor_pointer
+                , C.z_50
                 ]
                 [ -----------------------------------------
                   -- Message
                   -----------------------------------------
                   chunk
-                    [ T.i, T.lh_copy, T.mt4, T.pt3, T.tc, T.white ]
+                    [ C.italic
+                    , C.leading_normal
+                    , C.mt_12
+                    , C.text_center
+                    , C.text_white
+                    ]
                     [ text instance.message ]
 
                 -----------------------------------------
                 -- Search
                 -----------------------------------------
                 , brick
-                    [ Html.Styled.Events.custom
+                    [ Html.Events.custom
                         "tap"
                         (Json.Decode.succeed
                             { message = Bypass
@@ -191,29 +193,30 @@ view model =
                             }
                         )
                     ]
-                    [ T.f6
-                    , T.measure_wide
-                    , T.mt4
-                    , T.w_100
+                    [ C.text_sm
+                    , C.max_w_md
+                    , C.mt_8
+                    , C.w_full
                     ]
                     [ slab
                         Html.input
                         [ autofocus True
-                        , css shadowStyles
                         , id searchId
                         , onInput DetermineResults
                         , placeholder "Type to search or create"
                         , type_ "text"
                         ]
-                        [ T.bn
-                        , T.bg_white
-                        , T.br2
-                        , T.db
-                        , T.f3
-                        , T.lh_copy
-                        , T.outline_0
-                        , T.pa3
-                        , T.w_100
+                        [ C.border_none
+                        , C.bg_white
+                        , C.block
+                        , C.leading_normal
+                        , C.rounded
+                        , C.outline_none
+                        , C.p_4
+                        , C.shadow_md
+                        , C.text_2xl
+                        , C.tracking_tad_closer
+                        , C.w_full
                         ]
                         []
                     ]
@@ -221,56 +224,55 @@ view model =
                 -----------------------------------------
                 -- Results
                 -----------------------------------------
-                , brick
-                    [ css shadowStyles ]
-                    [ T.bg_white
-                    , T.br2
-                    , T.f6
-                    , T.lh_solid
-                    , T.measure_wide
-                    , T.mid_gray
-                    , T.mt4
-                    , T.overflow_hidden
-                    , T.w_100
+                , chunk
+                    [ C.bg_white
+                    , C.rounded
+                    , C.text_sm
+                    , C.leading_none
+                    , C.max_w_md
+                    , C.mt_8
+                    , C.overflow_hidden
+                    , C.shadow_md
+                    , C.w_full
                     ]
                     (List.indexedMap
                         (\idx result ->
                             brick
                                 [ onTapPreventDefault (RunAction idx) ]
-                                [ T.pa3
-                                , T.relative
-                                , T.truncate
+                                [ C.p_4
+                                , C.relative
+                                , C.truncate
 
                                 --
                                 , if idx == instance.focus then
-                                    T.white
+                                    C.text_white
 
                                   else
-                                    T.color_inherit
+                                    C.text_inherit
 
                                 --
                                 , if idx == instance.focus then
-                                    C.bg_base_0D
+                                    C.bg_accent
 
                                   else if modBy 2 idx == 0 then
-                                    T.bg_transparent
+                                    C.bg_transparent
 
                                   else
-                                    T.bg_near_white
+                                    C.bg_gray_100
                                 ]
                                 [ text result
 
                                 --
                                 , if idx == instance.focus then
-                                    brick
-                                        [ css activeItemIndicatorStyles ]
-                                        [ T.absolute
-                                        , C.lh_0
-                                        , T.mr3
-                                        , T.right_0
+                                    chunk
+                                        [ C.absolute
+                                        , C.leading_0
+                                        , C.minus_translate_y_half
+                                        , C.mr_3
+                                        , C.right_0
+                                        , C.top_half
                                         ]
-                                        [ fromUnstyled
-                                            (Icons.keyboard_return 13 Inherit)
+                                        [ Icons.keyboard_return 13 Inherit
                                         ]
 
                                   else
@@ -287,19 +289,3 @@ view model =
 
 searchId =
     "diffuse__alfred"
-
-
-
--- 🖼
-
-
-activeItemIndicatorStyles : List Css.Style
-activeItemIndicatorStyles =
-    [ Css.top (Css.pct 50)
-    , Css.transform (Css.translateY <| Css.pct -50)
-    ]
-
-
-shadowStyles : List Css.Style
-shadowStyles =
-    [ UI.Kit.onOverlayShadow ]

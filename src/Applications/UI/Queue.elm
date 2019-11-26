@@ -1,14 +1,13 @@
 module UI.Queue exposing (Model, Msg(..), initialModel, moveQueueItemToFirst, moveQueueItemToLast, update, view)
 
 import Chunky exposing (..)
-import Color.Ext as Color
 import Common
 import Conditional exposing (..)
 import Coordinates
-import Css
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (href)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (css, href)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
@@ -18,7 +17,6 @@ import Material.Icons.Image as Icons
 import Material.Icons.Navigation as Icons
 import Queue exposing (..)
 import Return3 exposing (..)
-import Tachyons.Classes as T
 import Time
 import Tracks exposing (IdentifiedTrack)
 import UI.DnD as DnD
@@ -526,9 +524,9 @@ futureView model =
     -----------------------------------------
     , if List.isEmpty model.future then
         chunk
-            [ T.relative ]
+            [ C.relative ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Up next" ] ]
             ]
 
@@ -543,7 +541,7 @@ futureView model =
                         , toMsg = DragMsg
                         }
                     )
-                |> chunky [ T.mt3 ]
+                |> chunky [ C.mt_3 ]
             ]
 
     --
@@ -552,12 +550,12 @@ futureView model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, T.link, T.o_30 ]
-                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+                [ C.text_inherit, C.block, C.opacity_30 ]
+                [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+                [ C.text_inherit, C.block, C.leading_normal, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "add some music first."
@@ -588,22 +586,23 @@ futureItem selection idx item =
                 Color UI.Kit.colorKit.base07
     in
     { label =
-        slab
-            Html.span
-            (if item.manualEntry || isSelected then
-                []
+        inline
+            [ C.block
+            , C.truncate
 
-             else
-                [ UI.Kit.colorKit.base05
-                    |> Color.toElmCssColor
-                    |> Css.color
-                    |> List.singleton
-                    |> css
-                ]
-            )
-            [ T.db, T.truncate ]
+            --
+            , if item.manualEntry || isSelected then
+                C.text_inherit
+
+              else
+                C.text_base05
+            ]
             [ inline
-                [ T.dib, T.f7, T.mr2, T.o_60 ]
+                [ C.inline_block
+                , C.text_xs
+                , C.mr_2
+                , C.opacity_60
+                ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
@@ -659,9 +658,9 @@ historyView model =
     -----------------------------------------
     , if List.isEmpty model.past then
         chunk
-            [ T.relative ]
+            [ C.relative ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "History" ] ]
             ]
 
@@ -672,17 +671,17 @@ historyView model =
                 |> List.reverse
                 |> List.indexedMap historyItem
                 |> UI.List.view UI.List.Normal
-                |> chunky [ T.mt3 ]
+                |> chunky [ C.mt_3 ]
             ]
 
     --
     , if List.isEmpty model.past then
         UI.Kit.centeredContent
             [ chunk
-                [ T.o_30 ]
-                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+                [ C.opacity_30 ]
+                [ Icons.music_note 64 Inherit ]
             , chunk
-                [ T.lh_copy, T.mt2, T.o_40, T.tc ]
+                [ C.leading_normal, C.mt_2, C.opacity_40, C.text_center ]
                 [ text "Nothing here yet,"
                 , lineBreak
                 , text "play some music first."
@@ -702,9 +701,9 @@ historyItem idx ({ identifiedTrack, manualEntry } as item) =
     in
     { label =
         inline
-            [ T.db, T.truncate ]
+            [ C.block, C.truncate ]
             [ inline
-                [ T.dib, T.f7, T.mr2 ]
+                [ C.inline_block, C.text_xs, C.mr_2 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]

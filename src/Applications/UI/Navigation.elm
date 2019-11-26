@@ -2,22 +2,15 @@ module UI.Navigation exposing (Action(..), Icon(..), Label(..), LabelType(..), g
 
 import Alfred exposing (Alfred)
 import Chunky exposing (..)
-import Color exposing (Color)
-import Color.Ext as Color
-import Color.Manipulate
 import Conditional exposing (..)
-import Css exposing (px, solid, transparent, zero)
-import Css.Media
-import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (attribute, css, href, tabindex, target, title)
-import Html.Styled.Events exposing (onClick)
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (href, style, tabindex, target, title)
+import Html.Events exposing (onClick)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Svg exposing (Svg)
-import Tachyons.Classes as T
-import UI.Css
-import UI.Kit
 import UI.Page as Page exposing (Page)
 
 
@@ -51,18 +44,22 @@ type LabelType
 global : List ( Page, String ) -> Maybe (Alfred reply) -> Page -> Html msg
 global items alfred activePage =
     brick
-        [ css globalStyles ]
-        [ T.f7
-        , T.fw6
-        , T.mb5
-        , T.mt4
-        , T.tracked
-        , T.ttu
+        [ style "font-size" "11.25px" ]
+        [ C.antialiased
+        , C.font_semibold
+        , C.mb_16
+        , C.mt_8
+        , C.text_xs
+        , C.tracking_widest
+        , C.uppercase
 
         --
-        , ifThenElse (Maybe.isJust alfred) T.o_0 T.o_100
+        , ifThenElse (Maybe.isJust alfred) C.opacity_0 C.opacity_100
         ]
-        (List.indexedMap (globalItem activePage <| List.length items) items)
+        (List.indexedMap
+            (globalItem activePage <| List.length items)
+            items
+        )
 
 
 globalItem : Page -> Int -> Int -> ( Page, String ) -> Html msg
@@ -75,50 +72,31 @@ globalItem activePage totalItems idx ( page, label ) =
             idx + 1 == totalItems
     in
     chunk
-        [ T.dib
-        , ifThenElse isLastItem T.mr0 T.mr1
+        [ C.inline_block
+        , ifThenElse isLastItem C.mr_0 C.mr_1
         ]
         [ slab
             Html.a
-            [ attribute "data-keep-focus" "t"
-            , css (globalItemStyles isActivePage)
-            , href (Page.toString page)
-            ]
-            [ T.dib
-            , T.lh_copy
-            , T.no_underline
-            , T.pointer
-            , T.pt2
+            [ href (Page.toString page) ]
+            [ C.inline_block
+            , C.leading_normal
+            , C.no_underline
+            , C.cursor_pointer
+            , C.pt_2
 
             --
-            , ifThenElse isActivePage T.bb T.bn
-            , ifThenElse isLastItem T.mr0 T.mr4
+            , ifThenElse isActivePage C.border_b C.border_b_0
+            , ifThenElse isActivePage C.border_base01_15 C.border_transparent
+            , ifThenElse isActivePage C.text_base01 C.text_base01_55
+            , ifThenElse isLastItem C.mr_0 C.mr_8
+
+            --
+            , C.focus__border_black_50
+            , C.focus__outline_none
+            , C.focus__text_black
             ]
             [ text label ]
         ]
-
-
-globalColors : { active : Css.Color, border : Css.Color, default : Css.Color }
-globalColors =
-    { active = Color.toElmCssColor UI.Kit.colorKit.base01
-    , border = Color.toElmCssColor (Color.Manipulate.fadeOut 0.875 UI.Kit.colorKit.base01)
-    , default = Color.toElmCssColor (Color.Manipulate.fadeOut 0.45 UI.Kit.colorKit.base01)
-    }
-
-
-globalStyles : List Css.Style
-globalStyles =
-    [ Css.fontSize (px 11.25) ]
-
-
-globalItemStyles : Bool -> List Css.Style
-globalItemStyles isActivePage =
-    [ Css.borderBottomColor (ifThenElse isActivePage globalColors.border <| Css.rgba 0 0 0 0)
-    , Css.color (ifThenElse isActivePage globalColors.active globalColors.default)
-
-    --
-    , UI.Kit.textFocus
-    ]
 
 
 
@@ -133,10 +111,13 @@ local =
 localWithTabindex : Int -> List ( Icon msg, Label, Action msg ) -> Html msg
 localWithTabindex tabindex_ items =
     brick
-        [ css localStyles ]
-        [ T.bb ]
+        [ style "font-size" "12.5px" ]
+        [ C.antialiased
+        , C.border_b
+        , C.border_subtle
+        ]
         [ chunk
-            [ T.flex ]
+            [ C.flex ]
             (items
                 |> List.reverse
                 |> List.map (localItem tabindex_)
@@ -185,67 +166,47 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                 target "_self"
 
         --
-        , css localItemStyles
         , tabindex tabindex_
         ]
-        [ ifThenElse (labelType == Hidden) T.flex_shrink_0 T.flex_grow_1
-        , T.bg_transparent
-        , T.bl_0
-        , T.fw6
-        , T.flex
-        , T.items_center
-        , T.justify_center
-        , T.lh_solid
-        , T.no_underline
-        , T.pointer
-        , T.ph3
-        ]
-        [ Html.fromUnstyled (icon 16 Inherit)
+        [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
+        , C.bg_transparent
+        , C.border_subtle
+        , C.border_r
+        , C.cursor_pointer
+        , C.flex_basis_0
+        , C.font_semibold
+        , C.leading_none
+        , C.no_underline
+        , C.px_4
+        , C.py_3
+        , C.text_base01
 
         --
-        , case labelType of
-            Hidden ->
-                nothing
-
-            Shown ->
-                slab
-                    Html.span
-                    []
-                    [ T.dib, T.ml1, T.pv2, T.truncate ]
-                    [ text labelText ]
+        , C.fixate__text_black
+        , C.last__border_r_0
         ]
+        [ chunk
+            [ C.border_b
+            , C.border_t
+            , C.border_transparent
+            , C.flex
+            , C.items_center
+            , C.justify_center
+            , C.mt_px
+            , C.pt_px
+            ]
+            [ icon 16 Inherit
 
+            --
+            , case labelType of
+                Hidden ->
+                    nothing
 
-localColors : { border : Color, text : Color }
-localColors =
-    { border = UI.Kit.colors.subtleBorder
-    , text = UI.Kit.colors.text
-    }
-
-
-localStyles : List Css.Style
-localStyles =
-    [ Css.borderBottomColor (Color.toElmCssColor localColors.border)
-    , Css.fontSize (px 12)
-
-    --
-    , Css.Media.withMedia
-        [ UI.Css.notSmallMediaQuery ]
-        [ Css.fontSize (px 12.5) ]
-    ]
-
-
-localItemStyles : List Css.Style
-localItemStyles =
-    [ Css.borderBottom3 (px 1) solid transparent
-    , Css.borderRight3 (px 1) solid (Color.toElmCssColor localColors.border)
-    , Css.borderTop3 (px 2) solid transparent
-    , Css.color (Color.toElmCssColor localColors.text)
-    , Css.flexBasis (px 0)
-    , Css.height (px 43)
-    , UI.Kit.navFocus
-
-    -- Last one
-    -----------
-    , Css.lastChild [ Css.borderRightWidth zero ]
-    ]
+                Shown ->
+                    slab
+                        Html.span
+                        []
+                        [ C.inline_block, C.leading_tight, C.ml_1, C.truncate ]
+                        [ text labelText ]
+            ]
+        ]

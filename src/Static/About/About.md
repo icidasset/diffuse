@@ -1,45 +1,17 @@
-<blockquote class="f1 fw7 lh-title moon-gray">
-  <p>
-    A music player that connects to your
-    cloud &amp; distributed storage
-  </p>
-</blockquote>
+> A music player that connects to your cloud &amp; distributed storage
 
 [Return to the application](../)
 
-#### Links
-
-🕸 [Web version](https://diffuse.sh/)  
-🖥 [Native version](https://github.com/icidasset/diffuse/releases)  
-⚗️ [Github repository](https://github.com/icidasset/diffuse)  
 
 
+## What makes it different?
 
-## Which services does it use?
-
-Diffuse uses two layers of services, these layers are:
-
-1. User layer
-2. Music layer
-
-
-### User layer
-
-This layer will use a service to store data from a user, such as the user's favourites, their playlists and data from the processed music files.
-
-You can choose between these services:
-
-- [Blockstack](https://blockstack.org/)
-- [Dropbox](https://www.dropbox.com/)
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
-- [IPFS](https://ipfs.io/) <small>(using MFS)</small>
-- [RemoteStorage](https://remotestorage.io/)
-- [Textile](https://github.com/textileio/go-textile)
+Diffuse is a decentralized music player consisting out of two main parts. One part is the music and the other is your data <small>(eg. playlists)</small>, both of which are in locations of your choice. Meaning that there's no central server for Diffuse, all of the processing happens on your device and all the data is in your control. You can use the [web version](https://diffuse.sh), the [native version](https://github.com/icidasset/diffuse/releases) or host it yourself by downloading the pre-built packages from [Github](https://github.com/icidasset/diffuse).
 
 
 ### Music layer
 
-This layer connects with the services the user has on which music can be found. No data is written to these services. You can combine all of the following services:
+This layer connects to the services on which your music is stored, no data is written to these services. You can combine all of the following:
 
 - [Amazon S3](https://aws.amazon.com/s3/)
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
@@ -50,12 +22,24 @@ This layer connects with the services the user has on which music can be found. 
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
 
+### User layer
+
+This layer will use a single service on which to store your data. Your data being your settings, favourites, playlists, etc. You can choose between these services:
+
+- [Blockstack](https://blockstack.org/)
+- [Dropbox](https://www.dropbox.com/)
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(Browser)</small>
+- [IPFS](https://ipfs.io/) <small>(using MFS)</small>
+- [RemoteStorage](https://remotestorage.io/)
+- [Textile](https://github.com/textileio/go-textile)
+
+
 
 <div id="How" />
 
 ## How does it work?
 
-Diffuse locates all the music files on the given services, extracts the metadata and then stores it via the user layer (which was explained before).
+Diffuse locates all the music files on the given services, extracts the metadata and then stores it via the previously-explained user layer.
 
 
 ### Supported File Formats
@@ -67,12 +51,14 @@ Diffuse locates all the music files on the given services, extracts the metadata
 - WAV
 - WEBM
 
+<small><em>Note, support may vary depending on your <a href="https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers#Index_of_media_container_formats_file_types">browser</a>.</em></small>
+
 
 <div id="CORS" />
 
 ### CORS
 
-There's only one thing you need to do yourself so that your service will work with the application, and that's setting up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing). Here are the instructions you'll need for each service:
+There's only one thing you need to do yourself so that the service you chose will work with the application, and that's setting up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing). Here are the instructions you'll need for each service:
 
 <div id="CORS__S3" />
 

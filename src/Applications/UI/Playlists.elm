@@ -6,11 +6,11 @@ import Color.Ext as Color
 import Common
 import Conditional exposing (ifThenElse)
 import Coordinates
-import Css
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (href, placeholder, style, value)
+import Html.Events exposing (onInput, onSubmit)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (css, href, placeholder, style, value)
-import Html.Styled.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Content as Icons
@@ -18,7 +18,6 @@ import Material.Icons.File as Icons
 import Material.Icons.Navigation as Icons
 import Playlists exposing (..)
 import Return3 exposing (..)
-import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
@@ -304,9 +303,9 @@ index model selectedPlaylist bgColor =
     -----------------------------------------
     , if List.isEmpty model.collection then
         chunk
-            [ T.relative ]
+            [ C.relative ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Playlists" ] ]
             ]
 
@@ -351,12 +350,21 @@ index model selectedPlaylist bgColor =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Playlists New) ]
-                [ T.color_inherit, T.db, T.link, T.o_30 ]
-                [ fromUnstyled (Icons.waves 64 Inherit) ]
+                [ C.block
+                , C.opacity_30
+                , C.text_inherit
+                ]
+                [ Icons.waves 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Playlists New) ]
-                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+                [ C.block
+                , C.leading_normal
+                , C.mt_2
+                , C.opacity_40
+                , C.text_center
+                , C.text_inherit
+                ]
                 [ text "No playlists found, create one"
                 , lineBreak
                 , text "or enable directory playlists."
@@ -381,20 +389,19 @@ intro =
 
 category : String -> Html Msg
 category cat =
-    brick
-        [ css categoryStyles ]
-        [ T.f7, T.mb3, T.mt4, T.truncate, T.ttu ]
-        [ UI.Kit.inlineIcon Icons.folder
-        , inline [ T.fw7, T.ml2 ] [ text cat ]
+    chunk
+        [ C.antialiased
+        , C.font_display
+        , C.mb_3
+        , C.mt_10
+        , C.text_base06
+        , C.text_xxs
+        , C.truncate
+        , C.uppercase
         ]
-
-
-categoryStyles : List Css.Style
-categoryStyles =
-    [ Css.color (Color.toElmCssColor UI.Kit.colorKit.base06)
-    , Css.fontFamilies UI.Kit.headerFontFamilies
-    , Css.fontSize (Css.px 11)
-    ]
+        [ UI.Kit.inlineIcon Icons.folder
+        , inline [ C.font_bold, C.ml_2 ] [ text cat ]
+        ]
 
 
 selectedPlaylistListItem : Playlist -> Maybe Color -> UI.List.Item Msg
@@ -445,15 +452,16 @@ new _ =
     , [ UI.Kit.h2 "Name your playlist"
 
       --
-      , UI.Kit.textField
-            [ onInput SetCreationContext
-            , placeholder "The Classics"
-            ]
+      , [ onInput SetCreationContext
+        , placeholder "The Classics"
+        ]
+            |> UI.Kit.textField
+            |> chunky [ C.max_w_md, C.mx_auto ]
 
       -- Button
       ---------
       , chunk
-            [ T.mt4, T.pt2 ]
+            [ C.mt_10 ]
             [ UI.Kit.button
                 Normal
                 Bypass
@@ -467,9 +475,9 @@ new _ =
         |> slab
             Html.form
             [ onSubmit Create ]
-            [ T.flex
-            , T.flex_grow_1
-            , T.tc
+            [ C.flex
+            , C.flex_grow
+            , C.text_center
             ]
     ]
 
@@ -496,27 +504,28 @@ edit model playlist =
     , [ UI.Kit.h2 "Name your playlist"
 
       --
-      , UI.Kit.textField
-            [ onInput (SetModificationContext playlist.name)
-            , placeholder "The Classics"
+      , [ onInput (SetModificationContext playlist.name)
+        , placeholder "The Classics"
 
-            --
-            , case model.editContext of
-                Just { oldName, newName } ->
-                    if playlist.name == oldName then
-                        value newName
+        --
+        , case model.editContext of
+            Just { oldName, newName } ->
+                if playlist.name == oldName then
+                    value newName
 
-                    else
-                        value playlist.name
-
-                Nothing ->
+                else
                     value playlist.name
-            ]
+
+            Nothing ->
+                value playlist.name
+        ]
+            |> UI.Kit.textField
+            |> chunky [ C.max_w_md, C.mx_auto ]
 
       -- Button
       ---------
       , chunk
-            [ T.mt4, T.pt2 ]
+            [ C.mt_10 ]
             [ UI.Kit.button
                 Normal
                 Bypass
@@ -530,8 +539,8 @@ edit model playlist =
         |> slab
             Html.form
             [ onSubmit Modify ]
-            [ T.flex
-            , T.flex_grow_1
-            , T.tc
+            [ C.flex
+            , C.flex_grow
+            , C.text_center
             ]
     ]

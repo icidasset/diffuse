@@ -2,20 +2,18 @@ module UI.Tracks exposing (Dependencies, Model, Msg(..), Scene(..), importHypaet
 
 import Alien
 import Chunky exposing (..)
-import Classes as C
 import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Coordinates exposing (Coordinates, Viewport)
-import Css
-import Css.Transitions
+import Css.Classes as C
+import Html exposing (Html, text)
+import Html.Attributes exposing (href, placeholder, style, tabindex, target, title, value)
+import Html.Events exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, text)
-import Html.Styled.Attributes exposing (css, fromUnstyled, href, placeholder, style, tabindex, target, title, value)
-import Html.Styled.Events exposing (onBlur, onClick, onInput)
-import Html.Styled.Ext exposing (onEnterKey)
-import Html.Styled.Lazy exposing (..)
+import Html.Ext exposing (onEnterKey)
+import Html.Lazy exposing (..)
 import InfiniteList
 import Json.Decode as Json
 import Json.Encode
@@ -33,7 +31,6 @@ import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Return3 as Return exposing (..)
 import Sources
-import Tachyons.Classes as T
 import Task.Extra as Task
 import Tracks exposing (..)
 import Tracks.Collection as Collection exposing (..)
@@ -667,9 +664,9 @@ view model deps =
 
 viewClasses : List String
 viewClasses =
-    [ T.flex
-    , T.flex_column
-    , T.flex_grow_1
+    [ C.flex
+    , C.flex_col
+    , C.flex_grow
     ]
 
 
@@ -680,115 +677,142 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
             ifThenElse isOnIndexPage 0 -1
     in
     chunk
-        [ T.flex ]
+        [ C.flex ]
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
-          brick
-            [ css searchStyles ]
-            [ T.flex
-            , T.flex_grow_1
-            , T.overflow_hidden
-            , T.relative
+          chunk
+            [ C.border_b
+            , C.border_r
+            , C.border_subtle
+            , C.flex
+            , C.flex_grow
+            , C.mt_px
+            , C.overflow_hidden
+            , C.relative
             ]
             [ -- Input
               --------
               slab
                 Html.input
-                [ css searchInputStyles
-                , onBlur Search
+                [ onBlur Search
                 , onEnterKey Search
                 , onInput SetSearchTerm
                 , placeholder "Search"
                 , tabindex tabindex_
                 , value (Maybe.withDefault "" searchTerm)
                 ]
-                [ T.bg_transparent
-                , T.bn
-                , T.color_inherit
-                , T.flex_grow_1
-                , T.h_100
-                , T.outline_0
-                , T.pr2
-                , T.w_100
+                [ C.bg_transparent
+                , C.border_none
+                , C.text_inherit
+                , C.flex_grow
+                , C.h_full
+                , C.ml_1
+                , C.mt_px
+                , C.outline_none
+                , C.pl_8
+                , C.pr_2
+                , C.pt_px
+                , C.text_sm
+                , C.w_full
                 ]
                 []
 
             -- Search icon
             --------------
-            , brick
-                [ css searchIconStyles ]
-                [ T.absolute
-                , T.bottom_0
-                , T.flex
-                , T.items_center
-                , T.left_0
-                , T.top_0
-                , T.z_0
+            , chunk
+                [ C.absolute
+                , C.bottom_0
+                , C.flex
+                , C.items_center
+                , C.left_0
+                , C.ml_3
+                , C.mt_px
+                , C.top_0
+                , C.z_0
                 ]
-                [ Html.fromUnstyled (Icons.search 16 searchIconColoring) ]
+                [ Icons.search 16 searchIconColoring ]
 
             -- Actions
             ----------
-            , brick
-                [ css searchActionsStyles ]
-                [ T.flex
-                , T.items_center
+            , chunk
+                [ C.flex
+                , C.items_center
+                , C.mr_3
+                , C.mt_px
+                , C.pt_px
                 ]
                 [ -- 1
                   case searchTerm of
                     Just _ ->
                         brick
-                            [ css searchActionIconStyle
-                            , onClick ClearSearch
+                            [ onClick ClearSearch
                             , title "Clear search"
                             ]
-                            [ T.pointer ]
-                            [ Html.fromUnstyled (Icons.clear 16 searchIconColoring) ]
+                            [ C.cursor_pointer
+                            , C.ml_1
+                            , C.mt_px
+                            ]
+                            [ Icons.clear 16 searchIconColoring ]
 
                     Nothing ->
                         nothing
 
                 -- 2
                 , brick
-                    [ css searchActionIconStyle
-                    , onClick ToggleFavouritesOnly
+                    [ onClick ToggleFavouritesOnly
                     , title "Toggle favourites-only"
                     ]
-                    [ T.pointer ]
+                    [ C.cursor_pointer
+                    , C.ml_1
+                    ]
                     [ case favouritesOnly of
                         True ->
-                            Html.fromUnstyled (Icons.favorite 16 <| Color UI.Kit.colorKit.base08)
+                            Icons.favorite 16 (Color UI.Kit.colorKit.base08)
 
                         False ->
-                            Html.fromUnstyled (Icons.favorite_border 16 searchIconColoring)
+                            Icons.favorite_border 16 searchIconColoring
                     ]
 
                 -- 3
                 , brick
-                    [ css searchActionIconStyle
-                    , fromUnstyled (Mouse.onClick <| ShowViewMenu maybeGrouping)
+                    [ Mouse.onClick (ShowViewMenu maybeGrouping)
                     , title "View settings"
                     ]
-                    [ T.pointer ]
-                    [ Html.fromUnstyled (Icons.more_vert 16 searchIconColoring) ]
+                    [ C.cursor_pointer
+                    , C.ml_1
+                    ]
+                    [ Icons.more_vert 16 searchIconColoring ]
 
                 -- 4
                 , case selectedPlaylist of
                     Just playlist ->
                         brick
-                            [ css (selectedPlaylistStyles bgColor)
-                            , onClick DeselectPlaylist
+                            [ onClick DeselectPlaylist
+
+                            --
+                            , bgColor
+                                |> Maybe.withDefault UI.Kit.colorKit.base01
+                                |> Color.toCssString
+                                |> style "background-color"
                             ]
-                            [ T.br2
-                            , T.f7
-                            , T.fw7
-                            , T.lh_solid
-                            , T.pointer
-                            , T.truncate
-                            , T.white_90
+                            [ C.antialiased
+                            , C.cursor_pointer
+                            , C.font_bold
+                            , C.leading_none
+                            , C.ml_1
+                            , C.px_1
+                            , C.py_1
+                            , C.rounded
+                            , C.truncate
+                            , C.text_white_90
+                            , C.text_xxs
+                            , C.transition_500
                             ]
-                            [ text playlist.name ]
+                            [ chunk
+                                [ C.px_px, C.pt_px ]
+                                [ text playlist.name ]
+                            ]
 
                     Nothing ->
                         nothing
@@ -818,23 +842,23 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 noTracksView : List String -> Int -> Int -> Int -> Html Msg
 noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
     chunk
-        [ T.flex, T.flex_grow_1 ]
+        [ C.flex, C.flex_grow ]
         [ UI.Kit.centeredContent
             [ if List.length isProcessing > 0 then
                 message "Processing Tracks"
 
               else if amountOfSources == 0 then
                 chunk
-                    [ T.flex
-                    , T.flex_wrap
-                    , T.items_start
-                    , T.justify_center
-                    , T.ph3
+                    [ C.flex
+                    , C.flex_wrap
+                    , C.items_start
+                    , C.justify_center
+                    , C.px_3
                     ]
                     [ -- Add
                       ------
                       inline
-                        [ T.mb3, T.mh2, T.nowrap ]
+                        [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
                         [ UI.Kit.buttonLink
                             (Sources.NewOnboarding
                                 |> UI.Page.Sources
@@ -851,9 +875,9 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     -- Demo
                     -------
                     , inline
-                        [ T.mb3, T.mh2, T.nowrap ]
+                        [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
                         [ UI.Kit.buttonWithColor
-                            UI.Kit.colorKit.base04
+                            UI.Kit.Gray
                             UI.Kit.Normal
                             (Reply InsertDemo)
                             (buttonContents
@@ -866,13 +890,13 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
                     -- How
                     ------
                     , inline
-                        [ T.mb3, T.mh2, T.nowrap ]
+                        [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
                         [ UI.Kit.buttonWithOptions
                             Html.a
                             [ href "about"
                             , target "_blank"
                             ]
-                            UI.Kit.colorKit.base04
+                            UI.Kit.Gray
                             UI.Kit.Normal
                             Nothing
                             (buttonContents
@@ -897,13 +921,24 @@ buttonContents =
     slab
         Html.span
         [ style "height" "21px" ]
-        [ T.flex, T.items_center, C.lh_0 ]
+        [ C.flex
+        , C.items_center
+        , C.leading_0
+        , C.mt_px
+        , C.pt_1
+        ]
 
 
 message : String -> Html Msg
 message m =
     chunk
-        [ T.bb, T.bw1, T.f6, T.fw6, T.lh_title, T.pb1 ]
+        [ C.border_b_2
+        , C.border_current_color
+        , C.text_sm
+        , C.font_semibold
+        , C.leading_snug
+        , C.pb_1
+        ]
         [ text m ]
 
 
@@ -940,54 +975,6 @@ listView model deps =
 -- 🖼
 
 
-searchStyles : List Css.Style
-searchStyles =
-    [ Css.borderBottom3 (Css.px 1) Css.solid (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    , Css.borderRight3 (Css.px 1) Css.solid (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    ]
-
-
-searchActionsStyles : List Css.Style
-searchActionsStyles =
-    [ Css.fontSize (Css.px 0)
-    , Css.lineHeight (Css.px 0)
-    , Css.paddingRight (Css.px <| 13 - 6)
-    ]
-
-
-searchActionIconStyle : List Css.Style
-searchActionIconStyle =
-    [ Css.height (Css.px 15)
-    , Css.marginRight (Css.px 6)
-    ]
-
-
 searchIconColoring : Coloring
 searchIconColoring =
-    Color (Color.rgb255 205 205 205)
-
-
-searchIconStyles : List Css.Style
-searchIconStyles =
-    [ Css.marginTop (Css.px 1)
-    , Css.paddingLeft (Css.px 13)
-    ]
-
-
-searchInputStyles : List Css.Style
-searchInputStyles =
-    [ Css.fontSize (Css.px 14)
-    , Css.height (Css.pct 98)
-    , Css.minWidth (Css.px 59)
-    , Css.paddingLeft (Css.px <| 13 + 16 + 9)
-    ]
-
-
-selectedPlaylistStyles : Maybe Color -> List Css.Style
-selectedPlaylistStyles bgColor =
-    [ Css.backgroundColor (Color.toElmCssColor <| Maybe.withDefault UI.Kit.colorKit.base01 bgColor)
-    , Css.fontSize (Css.px 11)
-    , Css.marginRight (Css.px 6)
-    , Css.padding3 (Css.px 5) (Css.px 5.5) (Css.px 4)
-    , Css.Transitions.transition [ Css.Transitions.backgroundColor 450 ]
-    ]
+    Color (Color.rgb255 198 198 198)

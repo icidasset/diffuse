@@ -1,19 +1,87 @@
+@charset "UTF-8";
+
+
+/* Imports
+   ------- */
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@import "Fonts.css";
+@import "Logo.css";
+
+
+
+/* Base
+   ---- */
+
 html, body {
   height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
   overscroll-behavior: none;
 }
 
+
 body {
+  @apply text-base01 font-body;
+
   background-color: rgb(2, 7, 14);
   background-image: url(images/ep_naturalblack_pattern.jpg);
+  font-feature-settings: kern, liga;
+  min-width: 300px;
+  text-rendering: optimizeLegibility;
+}
+
+
+*:active {
+  outline: none;
+}
+
+
+.align-sub { vertical-align: sub }
+.all-small-caps { font-variant-caps: all-small-caps }
+.flex-basis-0 { flex-basis: 0 }
+
+
+
+/* Dragging
+   -------- */
+
+.dragging-something {
+  cursor: grabbing;
+  & * { cursor: grabbing !important }
 }
 
 
 
-/***********
- * Loading *
- ***********/
+/* Forms
+   ----- */
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+
+input:invalid,
+textarea:invalid {
+  box-shadow: none;
+  outline: none;
+
+  &:focus { @apply border-base08; }
+}
+
+
+select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 rgb(0, 0, 0);
+}
+
+
+
+/* Loading
+   ------- */
 
 .loading-animation {
   animation: loading-rotator 2s linear infinite;

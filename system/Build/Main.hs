@@ -49,8 +49,7 @@ list pattern =
 
 
 data Sequence
-    = Css
-    | Favicons
+    = Favicons
     | Fonts
     | Hosting
     | Html
@@ -63,8 +62,7 @@ data Sequence
 
 sequences :: IO [( Sequence, Dictionary )]
 sequences = lsequence
-    [ ( Css,            list "Static/Css/**/*.css"      )
-    , ( Favicons,       list "Static/Favicons/**/*.*"   )
+    [ ( Favicons,       list "Static/Favicons/**/*.*"   )
     , ( Fonts,          list "Static/Fonts/**/*.*"      )
     , ( Hosting,        list "Static/Hosting/**/*"      )
     , ( Html,           list "Static/Html/**/*.html"    )
@@ -86,7 +84,6 @@ flow _ (Html, dict) =
     rename "Application.html" "index.html" dict
 
 
-flow _ (Css, dict)            = dict |> map lowerCasePath
 flow _ (Favicons, dict)       = dict
 flow _ (Fonts, dict)          = prefixDirname "fonts/" dict
 flow _ (Hosting, dict)        = dict

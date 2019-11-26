@@ -3,11 +3,12 @@ module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, e
 import Chunky exposing (..)
 import Common exposing (boolFromString, boolToString)
 import Conditional exposing (..)
+import Css.Classes as C
 import Dict
 import Dict.Ext as Dict
-import Html.Styled as Html exposing (Html, strong, text)
-import Html.Styled.Attributes exposing (for, name, placeholder, required, selected, type_, value)
-import Html.Styled.Events exposing (onInput, onSubmit)
+import Html exposing (Html, text)
+import Html.Attributes exposing (for, name, placeholder, required, selected, type_, value)
+import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Alert as Icons
@@ -17,7 +18,6 @@ import Sources exposing (..)
 import Sources.Services as Services
 import Sources.Services.Dropbox
 import Sources.Services.Google
-import Tachyons.Classes as T
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
@@ -247,11 +247,11 @@ newWhere { onboarding } { context } =
         -- Button
         ---------
         , chunk
-            [ T.mt4, T.pt2 ]
+            [ C.mt_10 ]
             [ UI.Kit.button
                 IconOnly
                 Bypass
-                (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
+                (Icons.arrow_forward 17 Inherit)
             ]
         ]
     ]
@@ -275,7 +275,7 @@ newHow { context } =
     , (\h ->
         form TakeStep
             [ chunk
-                [ T.tl, T.w_100 ]
+                [ C.text_left, C.w_full ]
                 [ UI.Kit.canister h ]
             ]
       )
@@ -298,23 +298,23 @@ newHow { context } =
                 List.splitAt (ceiling dividingPoint) properties
           in
           chunk
-            [ T.flex, T.pt3 ]
+            [ C.flex, C.pt_3 ]
             [ chunk
-                [ T.flex_grow_1, T.pr3 ]
+                [ C.flex_grow, C.pr_4 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ T.flex_grow_1, T.pl3 ]
+                [ C.flex_grow, C.pl_4 ]
                 (List.map (renderProperty context) listB)
             ]
 
         -- Button
         ---------
         , chunk
-            [ T.mt3, T.tc ]
+            [ C.mt_3, C.text_center ]
             [ UI.Kit.button
                 IconOnly
                 Bypass
-                (Html.fromUnstyled <| Icons.arrow_forward 17 Inherit)
+                (Icons.arrow_forward 17 Inherit)
             ]
         ]
     ]
@@ -322,7 +322,13 @@ newHow { context } =
 
 howNote : List (Html Msg) -> Html Msg
 howNote =
-    chunk [ T.f6, T.i, T.lh_copy, T.mb4, T.measure_wide ]
+    chunk
+        [ C.text_sm
+        , C.italic
+        , C.leading_normal
+        , C.max_w_lg
+        , C.mb_8
+        ]
 
 
 newBy : Model -> List (Html Msg)
@@ -354,7 +360,13 @@ newBy { context } =
                 Dict.fetch "name" "" context.data
           in
           chunk
-            [ T.flex, T.mt4, T.justify_center, T.w_100 ]
+            [ C.flex
+            , C.max_w_md
+            , C.mt_8
+            , C.mx_auto
+            , C.justify_center
+            , C.w_full
+            ]
             [ UI.Kit.textField
                 [ name "name"
                 , onInput (SetData "name")
@@ -365,7 +377,7 @@ newBy { context } =
         -- Note
         -------
         , chunk
-            [ T.mt5 ]
+            [ C.mt_16 ]
             (case context.service of
                 AmazonS3 ->
                     corsWarning "CORS__S3"
@@ -402,14 +414,14 @@ newBy { context } =
 corsWarning : String -> List (Html Msg)
 corsWarning id =
     [ chunk
-        [ T.f6, T.flex, T.items_center, T.justify_center, T.lh_title, T.o_50 ]
+        [ C.text_sm, C.flex, C.items_center, C.justify_center, C.leading_snug, C.opacity_50 ]
         [ UI.Kit.inlineIcon Icons.warning
-        , strong
-            []
+        , inline
+            [ C.font_semibold ]
             [ text "Make sure CORS is enabled" ]
         ]
     , chunk
-        [ T.f6, T.lh_title, T.mb4, T.mt1, T.o_50 ]
+        [ C.text_sm, C.leading_snug, C.mb_8, C.mt_1, C.opacity_50 ]
         [ text "You can find the instructions over "
         , UI.Kit.link { label = "here", url = "about#" ++ id }
         ]
@@ -438,7 +450,7 @@ edit { context } =
     , (\h ->
         form EditSource
             [ chunk
-                [ T.tl, T.w_100 ]
+                [ C.text_left, C.w_full ]
                 [ UI.Kit.canister h ]
             ]
       )
@@ -461,19 +473,19 @@ edit { context } =
                 List.splitAt (ceiling dividingPoint) properties
           in
           chunk
-            [ T.flex, T.pt3 ]
+            [ C.flex, C.pt_3 ]
             [ chunk
-                [ T.flex_grow_1, T.pr3 ]
+                [ C.flex_grow, C.pr_4 ]
                 (List.map (renderProperty context) listA)
             , chunk
-                [ T.flex_grow_1, T.pl3 ]
+                [ C.flex_grow, C.pl_4 ]
                 (List.map (renderProperty context) listB)
             ]
 
         -- Button
         ---------
         , chunk
-            [ T.mt3, T.tc ]
+            [ C.mt_3, C.text_center ]
             [ UI.Kit.button
                 Normal
                 Bypass
@@ -490,7 +502,7 @@ edit { context } =
 renderProperty : Source -> Property -> Html Msg
 renderProperty context property =
     chunk
-        [ T.mb4 ]
+        [ C.mb_8 ]
         [ UI.Kit.label
             [ for property.key ]
             property.label
@@ -507,7 +519,7 @@ renderProperty context property =
                         |> boolFromString
             in
             chunk
-                [ T.mt2, T.pt1 ]
+                [ C.mt_2, C.pt_1 ]
                 [ UI.Kit.checkbox
                     { checked = bool
                     , toggleMsg =
@@ -539,10 +551,10 @@ form msg html =
     slab
         Html.form
         [ onSubmit msg ]
-        [ T.flex
-        , T.flex_grow_1
-        , T.flex_shrink_0
-        , T.tc
+        [ C.flex
+        , C.flex_grow
+        , C.flex_shrink_0
+        , C.text_center
         ]
         [ UI.Kit.centeredContent html ]
 
@@ -562,7 +574,7 @@ note service =
         Dropbox ->
             howNote
                 [ inline
-                    [ T.fw6 ]
+                    [ C.font_semibold ]
                     [ text "If you don't know what any of this is, "
                     , text "continue to the next screen."
                     ]
@@ -574,7 +586,7 @@ note service =
         Google ->
             howNote
                 [ inline
-                    [ T.fw6 ]
+                    [ C.font_semibold ]
                     [ text "If you don't know what any of this is, "
                     , text "continue to the next screen."
                     ]
@@ -583,7 +595,7 @@ note service =
 
         Ipfs ->
             howNote
-                [ inline [ T.fw6 ] [ text "Diffuse will try to use the default local gateway" ]
+                [ inline [ C.font_semibold ] [ text "Diffuse will try to use the default local gateway" ]
                 , text "."
                 , lineBreak
                 , text "If you would like to use another gateway, please provide it below."
@@ -592,7 +604,7 @@ note service =
         WebDav ->
             howNote
                 [ inline
-                    [ T.fw6 ]
+                    [ C.font_semibold ]
                     [ UI.Kit.inlineIcon Icons.warning
                     , text "This app requires a proper implementation of "
                     , UI.Kit.link

@@ -4,12 +4,11 @@ import Alien
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
 import Coordinates
+import Css.Classes as C
 import Dict.Ext as Dict
-import Html as UnstyledHtml
-import Html.Attributes as UnstyledHtml
+import Html exposing (Html, text)
+import Html.Attributes exposing (href)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, fromUnstyled, text)
-import Html.Styled.Attributes exposing (href)
 import Json.Decode as Json
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
@@ -22,7 +21,6 @@ import Material.Icons.Notification as Icons
 import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Encoding
-import Tachyons.Classes as T
 import Time
 import Time.Ext as Time
 import UI.Kit exposing (ButtonType(..))
@@ -355,9 +353,9 @@ index amountOfTracks model =
     -----------------------------------------
     , if List.isEmpty model.collection then
         chunk
-            [ T.relative ]
+            [ C.relative ]
             [ chunk
-                [ T.absolute, T.left_0, T.top_0 ]
+                [ C.absolute, C.left_0, C.top_0 ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Sources" ] ]
             ]
 
@@ -391,16 +389,27 @@ index amountOfTracks model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ T.color_inherit, T.db, T.link, T.o_30 ]
-                [ fromUnstyled (Icons.music_note 64 Inherit) ]
+                [ C.block
+                , C.opacity_30
+                , C.text_inherit
+                ]
+                [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ T.color_inherit, T.db, T.lh_copy, T.link, T.mt2, T.o_40, T.tc ]
+                [ C.block
+                , C.leading_normal
+                , C.mt_2
+                , C.opacity_40
+                , C.text_center
+                , C.text_inherit
+                ]
                 [ text "A source is a place where music is stored,"
                 , lineBreak
                 , text "add one so you can play some music "
-                , inline [ T.v_mid ] [ fromUnstyled (Icons.add 14 Inherit) ]
+                , inline
+                    [ C.align_middle, C.inline_block, C.minus_mt_px ]
+                    [ Icons.add 14 Inherit ]
                 ]
             ]
 
@@ -441,14 +450,14 @@ sourceActions isProcessing processingError source =
                   , icon =
                         \_ _ ->
                             if progress < 0.05 then
-                                UnstyledHtml.span
-                                    [ UnstyledHtml.class "dib o-70 ph1" ]
+                                inline
+                                    [ C.inline_block, C.opacity_70, C.px_1 ]
                                     [ case processIndex of
                                         Just 0 ->
-                                            UnstyledHtml.text "Listing"
+                                            Html.text "Listing"
 
                                         _ ->
-                                            UnstyledHtml.text "Waiting"
+                                            Html.text "Waiting"
                                     ]
 
                             else
@@ -457,10 +466,9 @@ sourceActions isProcessing processingError source =
                                     |> round
                                     |> String.fromInt
                                     |> (\s -> s ++ "%")
-                                    |> UnstyledHtml.text
+                                    |> Html.text
                                     |> List.singleton
-                                    |> UnstyledHtml.span
-                                        [ UnstyledHtml.class "dib o-70 ph1" ]
+                                    |> inline [ C.inline_block, C.opacity_70, C.px_1 ]
                   , msg = Nothing
                   , title = ""
                   }

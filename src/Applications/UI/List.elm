@@ -1,21 +1,16 @@
 module UI.List exposing (Action, Item, Variant(..), view)
 
 import Chunky exposing (..)
-import Classes as C
-import Color
-import Color.Ext as Color
 import Conditional exposing (..)
-import Css exposing (px, solid)
+import Css.Classes as C
+import Html exposing (Html)
+import Html.Attributes exposing (style, title)
+import Html.Events exposing (onClick)
 import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
-import Html.Styled exposing (Html, fromUnstyled)
-import Html.Styled.Attributes as Attributes exposing (css, title)
-import Html.Styled.Events exposing (onClick)
 import List.Ext as List
 import Material.Icons exposing (Coloring(..))
 import Maybe.Extra as Maybe
-import Tachyons.Classes as T
 import UI.DnD as DnD
-import UI.Kit
 import VirtualDom
 
 
@@ -49,8 +44,10 @@ type Variant context msg
 
 
 view : Variant Int msg -> List (Item msg) -> Html msg
-view variant =
-    List.indexedMap (item variant) >> brick [ css listStyles ] [ T.lh_title ]
+view variant items =
+    items
+        |> List.indexedMap (item variant)
+        |> brick [ style "font-size" "13px" ] [ C.antialiased, C.font_semibold, C.leading_snug ]
 
 
 
@@ -61,50 +58,53 @@ view variant =
 
 item : Variant Int msg -> Int -> Item msg -> Html msg
 item variant idx { label, actions, msg, isSelected } =
-    brick
-        (case variant of
-            Normal ->
-                [ { dragTarget = False
-                  , isSelected = isSelected
-                  }
-                    |> itemStyles
-                    |> css
-                ]
-
-            Draggable env ->
-                [ { dragTarget = DnD.isDraggingOver idx env.model
-                  , isSelected = isSelected
-                  }
-                    |> itemStyles
-                    |> css
-                ]
-        )
-        [ T.flex
-        , T.fw6
-        , T.items_center
-
-        --
-        , ifThenElse (Maybe.isJust msg) T.pointer ""
-        ]
-        [ -- Label
-          --------
-          brick
-            (case variant of
+    let
+        dragTarget =
+            case variant of
                 Normal ->
-                    case msg of
-                        Just m ->
-                            [ onClick m ]
-
-                        Nothing ->
-                            []
+                    False
 
                 Draggable env ->
-                    DnD.listenToEnterLeave env idx
-                        |> List.map Attributes.fromUnstyled
-                        |> List.append
+                    DnD.isDraggingOver idx env.model
+    in
+    chunky
+        [ C.border_t
+
+        --
+        , if dragTarget then
+            C.border_accent
+
+          else
+            C.border_transparent
+        ]
+    <|
+        chunk
+            [ C.border_b
+            , C.border_very_subtle
+            , C.flex
+            , C.items_center
+
+            --
+            , ifThenElse (Maybe.isJust msg) C.cursor_pointer ""
+            , ifThenElse isSelected C.text_accent ""
+            ]
+            [ -- Label
+              --------
+              brick
+                (case variant of
+                    Normal ->
+                        case msg of
+                            Just m ->
+                                [ onClick m ]
+
+                            Nothing ->
+                                []
+
+                    Draggable env ->
+                        List.append
                             (case ( isSelected, msg ) of
                                 ( True, _ ) ->
-                                    [ Attributes.fromUnstyled (DnD.listenToStart env idx) ]
+                                    [ DnD.listenToStart env idx ]
 
                                 ( False, Just m ) ->
                                     [ onClick m ]
@@ -112,30 +112,34 @@ item variant idx { label, actions, msg, isSelected } =
                                 ( False, Nothing ) ->
                                     []
                             )
-            )
-            [ T.flex_grow_1, T.pv3, T.overflow_hidden ]
-            [ label ]
+                            (DnD.listenToEnterLeave env idx)
+                )
+                [ C.flex_grow
+                , C.py_4
+                , C.overflow_hidden
+                ]
+                [ label ]
 
-        -- Actions
-        ----------
-        , chunk
-            [ T.flex
-            , T.items_center
+            -- Actions
+            ----------
+            , chunk
+                [ C.flex
+                , C.items_center
 
-            --
-            , case variant of
-                Normal ->
-                    ""
-
-                Draggable env ->
-                    if DnD.isDragging env.model then
-                        C.pointer_events_none
-
-                    else
+                --
+                , case variant of
+                    Normal ->
                         ""
+
+                    Draggable env ->
+                        if DnD.isDragging env.model then
+                            C.pointer_events_none
+
+                        else
+                            ""
+                ]
+                (List.map actionView actions)
             ]
-            (List.map actionView actions)
-        ]
 
 
 actionView : Action msg -> Html msg
@@ -146,57 +150,15 @@ actionView action =
                 [ title action.title
 
                 --
-                , msg
-                    |> onWithOptions "click" { stopPropagation = True, preventDefault = True }
-                    |> Attributes.fromUnstyled
+                , onWithOptions "click" { stopPropagation = True, preventDefault = True } msg
                 ]
 
             Nothing ->
                 [ title action.title ]
         )
-        [ C.lh_0
-        , T.ml1
-        , T.pl1
-        , ifThenElse (Maybe.isJust action.msg) T.pointer ""
+        [ C.leading_0
+        , C.ml_1
+        , C.pl_1
+        , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer ""
         ]
-        [ fromUnstyled (action.icon 16 action.color) ]
-
-
-
--- 🖼
-
-
-listStyles : List Css.Style
-listStyles =
-    [ Css.fontSize (px 13) ]
-
-
-itemStyles : { dragTarget : Bool, isSelected : Bool } -> List Css.Style
-itemStyles { dragTarget, isSelected } =
-    if dragTarget then
-        itemBaseStyles
-            |> List.add [ Css.borderTop3 (px 1) solid (Color.toElmCssColor UI.Kit.colorKit.accent) ]
-            |> List.add (ifThenElse isSelected [ Css.color selectionColor ] [])
-
-    else if isSelected then
-        List.append
-            itemBaseStyles
-            [ Css.color selectionColor
-            ]
-
-    else
-        itemBaseStyles
-
-
-itemBaseStyles : List Css.Style
-itemBaseStyles =
-    [ Css.borderBottom3 (px 1) solid (Color.toElmCssColor UI.Kit.colors.verySubtleBorder)
-    , Css.borderTop3 (px 1) solid Css.transparent
-    , Css.marginTop (px -1)
-    , Css.touchAction Css.none
-    ]
-
-
-selectionColor : Css.Color
-selectionColor =
-    Color.toElmCssColor UI.Kit.colors.selection
+        [ action.icon 16 action.color ]

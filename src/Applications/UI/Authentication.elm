@@ -4,18 +4,16 @@ import Alien
 import Base64
 import Binary
 import Chunky exposing (..)
-import Classes as C
 import Color
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Css exposing (pct, px, solid, transparent)
-import Css.Global
+import Css.Classes as C
+import Html exposing (Html, a, button, text)
+import Html.Attributes exposing (attribute, href, placeholder, src, style, target, title, value, width)
+import Html.Events exposing (onClick, onSubmit)
+import Html.Events.Extra exposing (onClickStopPropagation)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Styled as Html exposing (Html, a, button, fromUnstyled, img, span, text)
-import Html.Styled.Attributes as Attributes exposing (attribute, css, href, placeholder, src, style, target, title, value, width)
-import Html.Styled.Events exposing (onClick, onSubmit)
-import Html.Styled.Ext exposing (onClickStopPropagation)
 import Http
 import Json.Encode
 import Markdown
@@ -30,8 +28,7 @@ import Return3 exposing (..)
 import SHA
 import String.Ext as String
 import Svg exposing (Svg)
-import Tachyons.Classes as T
-import UI.Kit exposing (ButtonType(..))
+import UI.Kit
 import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
@@ -327,11 +324,11 @@ update msg model =
             { placeholder = "//localhost:5001"
             , question = """
                 Where's your IPFS API located?<br />
-                <span class="fw4 white-60">
+                <span class="font-normal text-white-60">
                     You can find this address on the IPFS Web UI.<br />
                     Most likely you'll also need to setup CORS.<br />
                     You can find the instructions for that
-                    <a href="about#CORS__IPFS" target="_blank" class="bb color-inherit fw6 link">here</a>.
+                    <a href="about#CORS__IPFS" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.
                 </span>
               """
             , value = "//localhost:5001"
@@ -418,10 +415,10 @@ update msg model =
             { placeholder = "//localhost:40600"
             , question = """
                 Where's your Textile API located?<br />
-                <span class="fw4 white-60">
+                <span class="font-normal text-white-60">
                     You might need to do some CORS configuration.<br />
                     You can find the instructions for that
-                    <a href="about#CORS__Textile" target="_blank" class="bb color-inherit fw6 link">here</a>.<br />
+                    <a href="about#CORS__Textile" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.<br />
                     You can't connect to a HTTP server while on HTTPS.
                 </span>
               """
@@ -470,21 +467,26 @@ hashPassphrase phrase =
 view : Model -> Html Msg
 view model =
     chunk
-        [ T.flex
-        , T.flex_column
-        , T.h_100
-        , T.items_center
+        [ C.flex
+        , C.flex_col
+        , C.h_full
+        , C.items_center
         ]
         [ brick
             [ style "height" "42%" ]
-            [ T.flex
-            , T.items_center
-            , T.pb4
-            , T.pb0_ns
+            [ C.flex
+            , C.items_center
+            , C.pb_8
+
+            --
+            , C.md__pb_0
             ]
-            [ chunk
-                [ T.pv3, T.relative ]
-                [ img
+            [ -- Logo
+              -------
+              chunk
+                [ C.py_5, C.relative ]
+                [ slab
+                    Html.img
                     [ onClick Cancel
                     , src "images/diffuse-light.svg"
                     , width 190
@@ -496,14 +498,13 @@ view model =
 
                         _ ->
                             title "Go back"
-
-                    --
-                    , case model of
+                    ]
+                    [ case model of
                         Welcome ->
-                            style "cursor" "default"
+                            C.cursor_default
 
                         _ ->
-                            style "cursor" "pointer"
+                            C.cursor_pointer
                     ]
                     []
 
@@ -522,15 +523,13 @@ view model =
                                 , smartypants = True
                                 }
                                 []
-                            |> Html.fromUnstyled
-                            |> bricky [ css inputSpeechStyles ] []
                             |> speechBubble
 
                     NewEncryptionKeyScreen _ _ ->
                         [ text "I need a passphrase to encrypt your personal data."
                         , lineBreak
                         , inline
-                            [ T.fw4, T.white_60 ]
+                            [ C.font_normal, C.text_white_60 ]
                             [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
@@ -540,7 +539,7 @@ view model =
                         [ text "I need a new passphrase to encrypt your personal data."
                         , lineBreak
                         , inline
-                            [ T.fw4, T.white_60 ]
+                            [ C.font_normal, C.text_white_60 ]
                             [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
@@ -548,8 +547,8 @@ view model =
 
                     Welcome ->
                         [ text "Diffuse plays music"
-                        , inline [ T.fs_normal, T.fw4 ] [ text " ♫ " ]
-                        , inline [ T.fw4, T.white_60 ]
+                        , inline [ C.not_italic, C.font_normal, C.mr_px ] [ text " ♫ " ]
+                        , inline [ C.font_normal, C.text_white_60 ]
                             [ text "from your Dropbox,"
                             , lineBreak
                             , text "IPFS node, Amazon S3 bucket, or any other"
@@ -564,7 +563,7 @@ view model =
                         [ text "Where would you like to keep your personal data?"
                         , lineBreak
                         , inline
-                            [ T.fw4, T.white_60 ]
+                            [ C.font_normal, C.text_white_60 ]
                             [ text "That's things like your favourites, your playlists, etc."
                             , lineBreak
                             , text "After this you'll be able add some music ♫"
@@ -607,35 +606,28 @@ view model =
         -- Link to about page
         -----------------------------------------
         , chunk
-            [ T.f6
-            , T.fw6
-            , T.flex
-            , T.flex_grow_1
-            , T.items_end
-            , T.lh_title
-            , T.pb4
-            , T.pt3
+            [ C.antialiased
+            , C.font_semibold
+            , C.flex
+            , C.flex_grow
+            , C.items_end
+            , C.leading_snug
+            , C.pb_8
+            , C.pt_3
+            , C.text_sm
             ]
             [ slab
                 a
                 [ href "about" ]
-                [ T.bb
-                , T.i
-                , T.no_underline
-                , T.white_60
+                [ C.border_b
+                , C.border_white_60
+                , C.italic
+                , C.no_underline
+                , C.text_white_60
                 ]
                 [ text "More info" ]
             ]
         ]
-
-
-inputSpeechStyles : List Css.Style
-inputSpeechStyles =
-    [ Css.Global.descendants
-        [ Css.Global.p
-            [ Css.margin Css.zero ]
-        ]
-    ]
 
 
 
@@ -645,21 +637,22 @@ inputSpeechStyles =
 welcomeScreen : Html Msg
 welcomeScreen =
     chunk
-        [ T.mt3
-        , T.relative
-        , T.z_1
+        [ C.mt_3
+        , C.relative
+        , C.z_10
         ]
         [ UI.Kit.buttonWithColor
-            (Color.rgb 1 1 1)
-            Filled
+            UI.Kit.White
+            UI.Kit.Filled
             GetStarted
             (slab
                 Html.span
                 [ style "color" "#A19B9D"
                 , style "font-size" "13px"
+                , style "letter-spacing" "0.25em"
                 , style "line-height" "20px"
                 ]
-                [ T.tracked_mega ]
+                []
                 [ text "SIGN IN" ]
             )
         ]
@@ -672,12 +665,12 @@ welcomeScreen =
 choicesScreen : Html Msg
 choicesScreen =
     chunk
-        [ T.bg_white
-        , T.br2
-        , T.ph3
-        , T.pv2
-        , T.relative
-        , T.z_1
+        [ C.bg_white
+        , C.rounded
+        , C.px_4
+        , C.py_2
+        , C.relative
+        , C.z_10
         ]
         [ choiceButton
             { action = ShowNewEncryptionKeyScreen Local
@@ -710,9 +703,9 @@ choicesScreen =
                     { placeholder = "example@5apps.com"
                     , question = """
                         What's your user address?
-                        <span class="fw4 white-60">
+                        <span class="font-normal text-white-60">
                             <br />The format's
-                            <span class="fw6">username@server.domain</span>
+                            <span class="font-semibold">username@server.domain</span>
                         </span>
                       """
                     , value = ""
@@ -727,16 +720,16 @@ choicesScreen =
         -- More options
         ---------------
         , chunk
-            [ T.pb1, T.pt3, T.tc ]
+            [ C.pb_px, C.pt_4, C.text_center ]
             [ slab
                 Html.span
                 [ title "More options"
-                , Attributes.fromUnstyled (Mouse.onClick ShowMoreOptions)
+                , Mouse.onClick ShowMoreOptions
                 ]
-                [ T.dib, T.ph1, T.pointer, C.lh_0 ]
+                [ C.inline_block, C.px_1, C.cursor_pointer, C.leading_none ]
                 [ chunk
                     [ C.pointer_events_none ]
-                    [ fromUnstyled (Icons.more_horiz 22 Inherit) ]
+                    [ Icons.more_horiz 22 Inherit ]
                 ]
             ]
         ]
@@ -753,37 +746,44 @@ choiceButton :
     -> Html msg
 choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
     chunk
-        [ T.relative ]
+        [ C.border_subtle
+        , C.relative
+
+        --
+        , if isLast then
+            C.border_b_0
+
+          else
+            C.border_b
+        ]
         [ -----------------------------------------
           -- Button
           -----------------------------------------
           slab
             button
-            [ css (choiceButtonStyles { border = not isLast })
-            , onClick action
-            ]
-            [ T.b__none
-            , T.f6
-            , T.flex
-            , T.items_center
-            , T.lh_solid
-            , T.outline_0
-            , T.pointer
-            , T.pv3
-            , T.tl
+            [ onClick action ]
+            [ C.bg_transparent
+            , C.cursor_pointer
+            , C.flex
+            , C.items_center
+            , C.leading_none
+            , C.min_w_tiny
+            , C.outline_none
+            , C.px_2
+            , C.py_4
+            , C.text_left
+            , C.text_sm
             ]
             [ chunk
-                [ T.flex
-                , T.items_center
+                [ C.flex
+                , C.items_center
 
                 --
-                , ifThenElse outOfOrder T.o_20 T.o_100
+                , ifThenElse outOfOrder C.opacity_20 C.opacity_100
                 ]
-                [ slab
-                    span
-                    []
-                    [ T.inline_flex, T.mr3 ]
-                    [ fromUnstyled (icon 16 Inherit) ]
+                [ inline
+                    [ C.inline_flex, C.mr_4 ]
+                    [ icon 16 Inherit ]
                 , text label
                 ]
             ]
@@ -804,8 +804,20 @@ choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
                     , target "_blank"
                     , title ("Learn more about " ++ label)
                     ]
-                    [ T.absolute, T.glow, C.lh_0, T.ml3, T.o_40, T.pl3, T.pointer, T.white ]
-                    [ fromUnstyled (Icons.help 17 Inherit) ]
+                    [ C.absolute
+                    , C.cursor_pointer
+                    , C.leading_none
+                    , C.ml_4
+                    , C.minus_translate_y_half
+                    , C.opacity_40
+                    , C.pl_4
+                    , C.text_white
+                    , C.transition_100
+
+                    --
+                    , C.hocus__opacity_100
+                    ]
+                    [ Icons.help 17 Inherit ]
 
             Nothing ->
                 nothing
@@ -821,37 +833,45 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
     slab
         Html.form
         [ onSubmit withEncryption ]
-        [ T.flex
-        , T.flex_column
+        [ C.flex
+        , C.flex_col
+        , C.max_w_xs
+        , C.px_3
+        , C.w_screen
+
+        --
+        , C.sm__px_0
         ]
         [ UI.Kit.textArea
             [ attribute "autocapitalize" "none"
             , attribute "autocomplete" "off"
             , attribute "autocorrect" "off"
+            , attribute "rows" "4"
             , attribute "spellcheck" "false"
 
             --
             , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
 
             --
-            , Html.Styled.Events.onInput KeepPassphraseInMemory
+            , Html.Events.onInput KeepPassphraseInMemory
             ]
         , UI.Kit.button
-            Filled
+            UI.Kit.Filled
             Bypass
             (text "Continue")
         , brick
             [ onClickStopPropagation withoutEncryption ]
-            [ T.f7
-            , T.flex
-            , T.items_center
-            , T.justify_center
-            , T.lh_title
-            , T.mt3
-            , T.pointer
-            , T.white_50
+            [ C.cursor_pointer
+            , C.flex
+            , C.items_center
+            , C.justify_center
+            , C.leading_snug
+            , C.mt_3
+            , C.opacity_50
+            , C.text_white
+            , C.text_xs
             ]
-            [ inline [ T.dib, C.lh_0, T.mr2 ] [ fromUnstyled (Icons.warning 13 Inherit) ]
+            [ inline [ C.inline_block, C.leading_none, C.mr_2 ] [ Icons.warning 13 Inherit ]
             , text "Continue without encryption"
             ]
         ]
@@ -866,13 +886,19 @@ inputScreen question =
     slab
         Html.form
         [ onSubmit ConfirmInput ]
-        [ T.flex
-        , T.flex_column
+        [ C.flex
+        , C.flex_col
+        , C.max_w_xs
+        , C.px_3
+        , C.w_screen
+
+        --
+        , C.sm__px_0
         ]
         [ UI.Kit.textFieldAlt
             [ attribute "autocapitalize" "off"
             , placeholder question.placeholder
-            , Html.Styled.Events.onInput Input
+            , Html.Events.onInput Input
             , value question.value
             ]
         , UI.Kit.button
@@ -888,26 +914,39 @@ inputScreen question =
 
 speechBubble : Html msg -> Html msg
 speechBubble contents =
-    brick
-        [ css speechBubbleStyles ]
-        [ T.absolute
-        , T.br2
-        , T.f6
-        , T.fw6
-        , T.i
-        , T.lh_copy
-        , T.nowrap
-        , T.ph3
-        , T.pv2
-        , T.tc
-        , T.white
+    chunk
+        [ C.absolute
+        , C.antialiased
+        , C.bg_background
+        , C.border_b
+        , C.border_transparent
+        , C.font_semibold
+        , C.italic
+        , C.leading_snug
+        , C.left_half
+        , C.max_w_screen
+        , C.minus_translate_x_half
+        , C.px_4
+        , C.py_2
+        , C.rounded
+        , C.text_center
+        , C.text_sm
+        , C.text_white
+        , C.top_full
+        , C.whitespace_no_wrap
         ]
         [ contents
 
         --
         , brick
-            [ css speechBubbleArrowStyles ]
-            [ T.absolute, T.top_0 ]
+            speechBubbleArrowStyles
+            [ C.absolute
+            , C.h_0
+            , C.left_half
+            , C.top_0
+            , C.translate_put_on_top
+            , C.w_0
+            ]
             []
         ]
 
@@ -916,41 +955,12 @@ speechBubble contents =
 -- 🖼
 
 
-choiceButtonStyles : { border : Bool } -> List Css.Style
-choiceButtonStyles { border } =
-    [ Css.backgroundColor transparent
-    , Css.borderBottom3
-        (ifThenElse border (px 1) (px 0))
-        solid
-        (Color.toElmCssColor UI.Kit.colors.subtleBorder)
-    , Css.minWidth (px 210)
-    ]
-
-
-speechBubbleStyles : List Css.Style
-speechBubbleStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.background)
-    , Css.borderBottom3 (px 1) solid transparent
-    , Css.left (pct 50)
-    , Css.lineHeight (Css.num 1.4)
-    , Css.top (pct 100)
-    , Css.transform (Css.translateX <| pct -50)
-    ]
-
-
-speechBubbleArrowStyles : List Css.Style
+speechBubbleArrowStyles : List (Html.Attribute msg)
 speechBubbleArrowStyles =
     let
         color =
             Color.toCssString UI.Kit.colors.background
     in
-    [ Css.height (px 0)
-    , Css.left (pct 50)
-    , Css.transform (Css.translate2 (pct -50) (pct -100))
-    , Css.width (px 0)
-
-    --
-    , Css.property "border-color" ("transparent transparent " ++ color ++ " transparent")
-    , Css.property "border-style" "solid"
-    , Css.property "border-width" "0 6px 5px 6px"
+    [ style "border-color" ("transparent transparent " ++ color ++ " transparent")
+    , style "border-width" "0 6px 5px 6px"
     ]

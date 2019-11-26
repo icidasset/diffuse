@@ -7,28 +7,23 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
-import Classes as C
-import Color exposing (Color)
-import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Css exposing (url)
-import Css.Global
-import Css.Media
-import Css.Transitions
+import Css.Classes as C
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
 import Dict.Ext as Dict
 import File exposing (File)
 import File.Download
 import File.Select
+import Html exposing (Html, section)
+import Html.Attributes exposing (class, id, style)
+import Html.Events exposing (on, onClick)
 import Html.Events.Extra.Pointer as Pointer
-import Html.Styled as Html exposing (Html, section, toUnstyled)
-import Html.Styled.Attributes as Attributes exposing (class, css, id)
-import Html.Styled.Events exposing (on, onClick)
-import Html.Styled.Lazy as Lazy
+import Html.Lazy as Lazy
 import Http
 import Json.Decode
 import Json.Encode
@@ -46,7 +41,6 @@ import Sources
 import Sources.Encoding as Sources
 import Sources.Services.Dropbox
 import Sources.Services.Google
-import Tachyons.Classes as T
 import Task
 import Time
 import Tracks
@@ -57,11 +51,9 @@ import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
-import UI.Css
 import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer as Equalizer
-import UI.Kit
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
@@ -1899,7 +1891,7 @@ translateAlienError event err =
 view : Model -> Browser.Document Msg
 view model =
     { title = "Diffuse"
-    , body = [ toUnstyled (body model) ]
+    , body = [ body model ]
     }
 
 
@@ -1910,19 +1902,13 @@ body model =
             [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
-            [ (EqualizerMsg << Equalizer.AdjustKnob)
-                |> Pointer.onMove
-                |> Attributes.fromUnstyled
-            , (EqualizerMsg << Equalizer.DeactivateKnob)
-                |> Pointer.onUp
-                |> Attributes.fromUnstyled
-            , (EqualizerMsg << Equalizer.DeactivateKnob)
-                |> Pointer.onCancel
-                |> Attributes.fromUnstyled
+            [ Pointer.onMove (EqualizerMsg << Equalizer.AdjustKnob)
+            , Pointer.onUp (EqualizerMsg << Equalizer.DeactivateKnob)
+            , Pointer.onCancel (EqualizerMsg << Equalizer.DeactivateKnob)
             ]
 
          else if model.isDragging then
-            [ class ("dragging-something " ++ C.disable_selection)
+            [ class (C.dragging_something ++ " " ++ C.select_none)
             , on "mouseup" (Json.Decode.succeed StoppedDragging)
             , on "touchcancel" (Json.Decode.succeed StoppedDragging)
             , on "touchend" (Json.Decode.succeed StoppedDragging)
@@ -1937,12 +1923,10 @@ body model =
          else
             []
         )
-        [ Css.Global.global globalCss
-
-        -----------------------------------------
-        -- Alfred
-        -----------------------------------------
-        , model.alfred
+        [ -----------------------------------------
+          -- Alfred
+          -----------------------------------------
+          model.alfred
             |> Lazy.lazy Alfred.view
             |> Html.map AlfredMsg
 
@@ -2094,49 +2078,38 @@ defaultScreen model =
 content : { justifyCenter : Bool, scrolling : Bool } -> List (Html msg) -> Html msg
 content { justifyCenter, scrolling } nodes =
     brick
-        [ css contentStyles ]
-        [ T.overflow_x_hidden
-        , T.relative
-        , T.z_1
+        [ style "height" "calc(var(--vh, 1vh) * 100)" ]
+        [ C.overflow_x_hidden
+        , C.relative
+        , C.scrolling_touch
+        , C.w_screen
+        , C.z_10
 
         --
-        , ifThenElse scrolling T.overflow_y_auto T.overflow_y_hidden
+        , ifThenElse scrolling C.overflow_y_auto C.overflow_y_hidden
         ]
         [ brick
-            [ css contentInnerStyles ]
-            [ T.flex
-            , T.flex_column
-            , T.items_center
-            , T.h_100
-            , T.ph3
-            , T.ph4_m
-            , T.ph5_l
+            [ style "min-width" "280px" ]
+            [ C.flex
+            , C.flex_col
+            , C.items_center
+            , C.h_full
+            , C.px_4
 
             --
-            , ifThenElse justifyCenter T.justify_center ""
+            , C.md__px_8
+            , C.lg__px_16
+
+            --
+            , ifThenElse justifyCenter C.justify_center ""
             ]
             nodes
         ]
 
 
-contentStyles : List Css.Style
-contentStyles =
-    [ Css.width (Css.vw 100)
-
-    --
-    , Css.property "height" "calc(var(--vh, 1vh) * 100)"
-    , Css.property "-webkit-overflow-scrolling" "touch"
-    ]
-
-
-contentInnerStyles : List Css.Style
-contentInnerStyles =
-    [ Css.minWidth (Css.px 280) ]
-
-
 loadingAnimation : Html msg
 loadingAnimation =
-    Html.map never (Html.fromUnstyled UI.Svg.Elements.loading)
+    Html.map never UI.Svg.Elements.loading
 
 
 overlay : Maybe (Alfred Reply) -> Maybe (ContextMenu Reply) -> Html Msg
@@ -2146,17 +2119,18 @@ overlay maybeAlfred maybeContextMenu =
             Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
     in
     brick
-        [ css overlayStyles
-        , onClick HideOverlay
-        ]
-        [ T.absolute__fill
-        , T.bg_black_40
-        , T.fixed
-        , T.z_999
+        [ onClick HideOverlay ]
+        [ C.inset_0
+        , C.bg_black
+        , C.fixed
+        , C.transition_1000
+        , C.transition_ease
+        , C.transition_opacity
+        , C.z_30
 
         --
         , ifThenElse isShown "" C.pointer_events_none
-        , ifThenElse isShown T.o_100 T.o_0
+        , ifThenElse isShown C.opacity_40 C.opacity_0
         ]
         []
 
@@ -2165,126 +2139,29 @@ vessel : List (Html Msg) -> Html Msg
 vessel =
     (>>)
         (brick
-            [ css vesselInnerStyles ]
-            [ UI.Kit.borderRadius
-            , T.bg_white
-            , T.flex
-            , T.flex_column
-            , T.flex_grow_1
-            , T.overflow_hidden
-            , T.relative
+            [ style "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
+            [ C.bg_white
+            , C.flex
+            , C.flex_col
+            , C.flex_grow
+            , C.overflow_hidden
+            , C.relative
+            , C.rounded
             ]
         )
         (bricky
-            [ css vesselStyles ]
-            [ UI.Kit.borderRadius
-            , T.flex
-            , T.flex_grow_1
-            , T.w_100
+            [ style "min-height" "296px" ]
+            [ C.flex
+            , C.flex_grow
+            , C.rounded
+            , C.shadow_md
+            , C.w_full
+
+            --
+            , C.lg__max_w_insulation
+            , C.lg__min_w_3xl
             ]
         )
-
-
-
--- 🖼  ░░  GLOBAL
-
-
-globalCss : List Css.Global.Snippet
-globalCss =
-    [ -----------------------------------------
-      -- Body
-      -----------------------------------------
-      Css.Global.body
-        [ Css.color (Color.toElmCssColor UI.Kit.colors.text)
-        , Css.fontFamilies UI.Kit.defaultFontFamilies
-        , Css.minWidth (Css.px 300)
-        , Css.textRendering Css.optimizeLegibility
-
-        -- Font smoothing
-        -----------------
-        , Css.property "-webkit-font-smoothing" "antialiased"
-        , Css.property "-moz-osx-font-smoothing" "grayscale"
-        , Css.property "font-smoothing" "antialiased"
-
-        -- Font features
-        ----------------
-        , Css.property "-moz-font-feature-settings" "\"kern\", \"liga\""
-        , Css.property "font-feature-settings" "\"kern\", \"liga\""
-        ]
-
-    -----------------------------------------
-    -- Placeholders
-    -----------------------------------------
-    , Css.Global.selector "::-webkit-input-placeholder" placeholderStyles
-    , Css.Global.selector "::-moz-placeholder" placeholderStyles
-    , Css.Global.selector ":-ms-input-placeholder" placeholderStyles
-    , Css.Global.selector ":-moz-placeholder" placeholderStyles
-    , Css.Global.selector "::placeholder" placeholderStyles
-
-    -----------------------------------------
-    -- Bits & Pieces
-    -----------------------------------------
-    , Css.Global.selector ".bg-accent" [ backgroundColor UI.Kit.colorKit.accent ]
-    , Css.Global.selector ".bg-base-00" [ backgroundColor UI.Kit.colorKit.base00 ]
-    , Css.Global.selector ".bg-base-01" [ backgroundColor UI.Kit.colorKit.base01 ]
-    , Css.Global.selector ".bg-base-0D" [ backgroundColor UI.Kit.colorKit.base0D ]
-    , Css.Global.selector ".dragging-something" [ Css.cursor Css.grabbing ]
-    , Css.Global.selector ".dragging-something *" [ Css.important (Css.cursor Css.grabbing) ]
-    , Css.Global.selector ".grab-cursor" [ Css.cursor Css.grab ]
-    , Css.Global.selector ".lh-0" [ Css.lineHeight Css.zero ]
-    , Css.Global.selector ".pointer-events-none" [ Css.pointerEvents Css.none ]
-
-    --
-    , Css.Global.selector ".disable-selection"
-        [ Css.property "-webkit-touch-callout" "none"
-        , Css.property "-webkit-user-select" "none"
-        , Css.property "-moz-user-select" "none"
-        , Css.property "-ms-user-select" "none"
-        , Css.property "user-select" "none"
-        ]
-    ]
-
-
-backgroundColor : Color -> Css.Style
-backgroundColor =
-    Color.toElmCssColor >> Css.backgroundColor
-
-
-placeholderStyles : List Css.Style
-placeholderStyles =
-    [ Css.color (Css.rgb 0 0 0)
-    , Css.opacity (Css.num 0.225)
-    ]
-
-
-
--- 🖼  ░░  OTHER
-
-
-overlayStyles : List Css.Style
-overlayStyles =
-    [ Css.Transitions.transition
-        [ Css.Transitions.opacity3 1000 0 Css.Transitions.ease ]
-    ]
-
-
-vesselStyles : List Css.Style
-vesselStyles =
-    [ Css.boxShadow5 (Css.px 0) (Css.px 2) (Css.px 4) (Css.px 0) (Css.rgba 0 0 0 0.2)
-    , Css.minHeight (Css.px 296)
-
-    --
-    , Css.Media.withMedia
-        [ UI.Css.largeMediaQuery ]
-        [ Css.maxWidth (Css.vh UI.Kit.insulationWidth)
-        , Css.minWidth (Css.px 840)
-        ]
-    ]
-
-
-vesselInnerStyles : List Css.Style
-vesselInnerStyles =
-    [ Css.property "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
 
 
 

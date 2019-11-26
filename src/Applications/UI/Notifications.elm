@@ -1,20 +1,17 @@
 module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
-import Chunky exposing (..)
-import Classes as C
-import Color.Ext as Color
+import Chunky.Styled exposing (..)
 import Css
+import Css.Classes as C
 import Css.Global
-import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes exposing (css, rel)
-import Html.Styled.Events exposing (onDoubleClick)
-import Html.Styled.Ext exposing (onDoubleTap)
+import Html exposing (Html)
+import Html.Ext exposing (onDoubleTap)
+import Html.Styled exposing (text)
+import Html.Styled.Attributes exposing (css, fromUnstyled, rel)
 import Html.Styled.Lazy
 import Notifications exposing (..)
 import Process
-import Tachyons.Classes as T
 import Task
-import UI.Kit
 import UI.Reply exposing (Reply(..))
 
 
@@ -84,25 +81,27 @@ showWithModel model notification =
 
 view : Model -> Html Reply
 view collection =
-    brick
-        [ css containerStyles ]
-        [ T.absolute
-        , T.bottom_0
-        , T.f6
-        , T.hide_child
-        , T.lh_title
-        , T.mb3
-        , T.mr3
-        , T.right_0
-        , T.z_9999
-        ]
-        (List.map
-            (Html.Styled.Lazy.lazy notificationView)
-            (List.reverse collection)
-        )
+    collection
+        |> List.reverse
+        |> List.map (Html.Styled.Lazy.lazy notificationView)
+        |> brick
+            [ css containerStyles ]
+            [ C.absolute
+            , C.bottom_0
+            , C.flex
+            , C.flex_col
+            , C.items_end
+            , C.leading_snug
+            , C.mb_3
+            , C.mr_3
+            , C.right_0
+            , C.text_sm
+            , C.z_50
+            ]
+        |> Html.Styled.toUnstyled
 
 
-notificationView : Notification Reply -> Html Reply
+notificationView : Notification Reply -> Html.Styled.Html Reply
 notificationView notification =
     let
         kind =
@@ -118,50 +117,55 @@ notificationView notification =
             DismissNotification { id = id }
     in
     brick
-        [ case kind of
-            Error ->
-                css errorStyles
-
-            Success ->
-                css successStyles
-
-            Warning ->
-                css warningStyles
-
-        --
-        , onDoubleClick dismissMsg
-        , onDoubleTap dismissMsg
+        [ fromUnstyled (onDoubleTap dismissMsg)
 
         --
         , rel (String.fromInt id)
         ]
-        [ T.br2
-        , T.cb
-        , T.fr
-        , T.measure_narrow
-        , T.mt2
-        , T.pa3
-        , T.white_90
+        [ C.max_w_xs
+        , C.mt_2
+        , C.p_4
+        , C.rounded
+        , C.text_white_90
+
+        --
+        , case kind of
+            Error ->
+                C.bg_base08
+
+            Success ->
+                C.bg_base0b
+
+            Warning ->
+                C.bg_white_20
 
         --
         , if options.wasDismissed then
-            T.child
+            C.transition_250
 
           else
             ""
 
         --
         , if options.wasDismissed then
-            T.o_0
+            C.opacity_0
 
           else
-            T.o_100
+            C.opacity_100
         ]
-        [ contents notification
+        [ Html.Styled.fromUnstyled (contents notification)
+
+        --
         , if options.sticky && kind /= Warning then
             chunk
-                [ C.disable_selection, T.f7, T.i, T.mt2, T.o_60, T.pointer ]
-                [ Html.text "Double click to dismiss" ]
+                [ C.select_none
+                , C.text_xs
+                , C.italic
+                , C.mt_2
+                , C.opacity_60
+                , C.cursor_pointer
+                ]
+                [ text "Double click to dismiss" ]
 
           else
             nothing
@@ -176,6 +180,8 @@ containerStyles : List Css.Style
 containerStyles =
     [ Css.fontSize (Css.px 13)
     , Css.lineHeight (Css.num 1.35)
+
+    --
     , Css.Global.descendants
         [ Css.Global.a
             [ Css.borderBottom3 (Css.px 1) Css.solid (Css.rgba 255 255 255 0.45)
@@ -192,20 +198,8 @@ containerStyles =
             [ Css.borderBottom3 (Css.px 1) Css.solid (Css.rgba 255 255 255 0.45)
             , Css.fontWeight Css.inherit
             ]
+        , Css.Global.strong
+            [ Css.fontWeight (Css.int 600)
+            ]
         ]
     ]
-
-
-errorStyles : List Css.Style
-errorStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.error) ]
-
-
-successStyles : List Css.Style
-successStyles =
-    [ Css.backgroundColor (Color.toElmCssColor UI.Kit.colors.success) ]
-
-
-warningStyles : List Css.Style
-warningStyles =
-    [ Css.backgroundColor (Css.rgba 255 255 255 0.2) ]
