@@ -86,19 +86,19 @@
 
   -->
   <script>
-    if (!window.app || !window.context) {
+    if (!self.app || !self.context) {
       // Add note
       const note = document.createElement("div")
 
       note.className = "flex flex-col font-body items-center h-screen italic justify-center leading-relaxed px-4 text-center text-base text-white"
       note.innerHTML = `
-        <a class="block logo mb-5" href="../">
-          <img src="../images/diffuse-light.svg" />
-        </a>
+        \<a class="block logo mb-5" href="../">
+          \<img src="../images/diffuse-light.svg" />
+        \</a>
 
-        <p class="opacity-60">
+        \<p class="opacity-60">
           We'll need a more modern browser to liven the place up a bit.
-        </p>
+        \</p>
       `
 
       document.body.appendChild(note)

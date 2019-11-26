@@ -94,6 +94,7 @@ itemView { icon, label, msg, active } =
         , inline
             [ C.align_middle
             , C.inline_block
+            , C.leading_0
             , C.ml_2
             , C.pl_1
             , C.relative

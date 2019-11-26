@@ -30,6 +30,8 @@ const app = Elm.UI.init({
   }
 })
 
+self.app = app
+
 
 
 // Brain

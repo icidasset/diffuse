@@ -1908,7 +1908,7 @@ body model =
             ]
 
          else if model.isDragging then
-            [ class (C.dragging_something ++ " " ++ C.select_none)
+            [ class C.dragging_something
             , on "mouseup" (Json.Decode.succeed StoppedDragging)
             , on "touchcancel" (Json.Decode.succeed StoppedDragging)
             , on "touchend" (Json.Decode.succeed StoppedDragging)

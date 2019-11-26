@@ -650,9 +650,8 @@ welcomeScreen =
                 [ style "color" "#A19B9D"
                 , style "font-size" "13px"
                 , style "letter-spacing" "0.25em"
-                , style "line-height" "20px"
                 ]
-                []
+                [ C.align_middle, C.inline_block, C.pt_px ]
                 [ text "SIGN IN" ]
             )
         ]

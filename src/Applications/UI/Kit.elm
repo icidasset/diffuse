@@ -116,6 +116,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
             , C.cursor_pointer
             , C.font_bold
             , C.inline_block
+            , C.leading_relaxed
             , C.no_underline
             , C.py_2
             , C.px_4
@@ -174,7 +175,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 
             _ ->
                 inline
-                    [ C.inline_block, C.leading_normal, C.pt_px ]
+                    [ C.align_middle, C.inline_block, C.leading_none ]
                     [ child ]
         ]
 
@@ -493,6 +494,7 @@ textField attributes =
 
         --
         , C.focus__border_black
+        , C.focus__outline_none
         ]
         []
 

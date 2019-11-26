@@ -49,6 +49,7 @@ body {
    -------- */
 
 .dragging-something {
+  @apply select-none;
   cursor: grabbing;
   & * { cursor: grabbing !important }
 }
@@ -60,7 +61,8 @@ body {
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(0, 0, 0, 0.45);
+  color: rgba(0, 0, 0, 0.275);
+  opacity: 1;
 }
 
 

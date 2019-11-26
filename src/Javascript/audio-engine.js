@@ -21,6 +21,8 @@ if (window.AudioContext) {
   context = new window.webkitAudioContext()
 }
 
+self.context = context
+
 
 let SINGLE_AUDIO_NODE = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
                         !!navigator.userAgent.includes("AppleWebKit")
