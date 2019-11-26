@@ -87,15 +87,7 @@ self.addEventListener("fetch", event => {
 
 
 function newRequestWithAuth(event, urlWithoutToken, authToken) {
-  const newHeaders = new Headers()
-
-  for (const h of event.request.headers.entries()) {
-    switch (h[0]) {
-      case "range":
-        newHeaders.append(h[0], h[1])
-    }
-  }
-
+  const newHeaders = new Headers(event.request.headers)
   newHeaders.set("authorization", authToken)
 
   const newRequest = new Request(event.request, {
