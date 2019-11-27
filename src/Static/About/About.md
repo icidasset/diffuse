@@ -240,6 +240,20 @@ artist:Parkway Drive album:Deep Blue
 artist:Parkway Drive - album:Atlas
 ```
 
+### Keyboard
+
+The app should be usable with only the keyboard, there are various keyboard shortcuts:
+
+```
+P - Play / Pause
+S - Toggle Shuffle
+R - Toggle Repeat
+N - Scroll to currently-playing track
+
+Left / Right - Previous / Next
+Up   / Down  - Seek forwards / Seek backwards
+```
+
 
 
 <div id="QA" />
