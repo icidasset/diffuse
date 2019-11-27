@@ -113,6 +113,7 @@ type alias Model =
     { contextMenu : Maybe (ContextMenu Reply)
     , currentTime : Time.Posix
     , debounce : Debouncer Msg Msg
+    , focusedOnInput : Bool
     , isDragging : Bool
     , isLoading : Bool
     , isOnline : Bool
@@ -166,6 +167,7 @@ init flags url key =
     in
     { contextMenu = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
+    , focusedOnInput = False
     , isDragging = False
     , isLoading = True
     , isOnline = flags.isOnline
@@ -228,7 +230,9 @@ type Msg
     = Bypass
     | Reply Reply
       --
+    | Blur
     | Debounce (Debouncer.Msg Msg)
+    | FocusedOnInput
     | HideOverlay
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Decode.Value
@@ -302,6 +306,9 @@ update msg model =
             translateReply reply model
 
         --
+        Blur ->
+            return { model | focusedOnInput = False }
+
         Debounce debouncerMsg ->
             Return3.wieldNested
                 update
@@ -313,15 +320,61 @@ update msg model =
                 , msg = debouncerMsg
                 }
 
+        FocusedOnInput ->
+            return { model | focusedOnInput = True }
+
         HideOverlay ->
             hideOverlay model
 
         KeyboardMsg subMsg ->
             (\m ->
-                ifThenElse
-                    (List.member Keyboard.Escape m.pressedKeys)
-                    (hideOverlay m)
-                    (return m)
+                let
+                    skip =
+                        return m
+
+                    authenticated =
+                        case model.authentication of
+                            Authentication.Authenticated _ ->
+                                True
+
+                            _ ->
+                                False
+                in
+                if m.focusedOnInput || not authenticated then
+                    -- Stop here if using input or not authenticated
+                    skip
+
+                else
+                    case m.pressedKeys of
+                        [ Keyboard.Escape ] ->
+                            hideOverlay m
+
+                        [ Keyboard.ArrowLeft ] ->
+                            translateReply RewindQueue m
+
+                        [ Keyboard.ArrowRight ] ->
+                            translateReply ShiftQueue m
+
+                        [ Keyboard.ArrowUp ] ->
+                            translateReply (Seek <| (m.audioPosition + 10) / m.audioDuration) m
+
+                        [ Keyboard.ArrowDown ] ->
+                            translateReply (Seek <| (m.audioPosition - 10) / m.audioDuration) m
+
+                        [ Keyboard.Character "N" ] ->
+                            translateReply ScrollToNowPlaying m
+
+                        [ Keyboard.Character "P" ] ->
+                            translateReply TogglePlayPause m
+
+                        [ Keyboard.Character "R" ] ->
+                            translateReply ToggleRepeat m
+
+                        [ Keyboard.Character "S" ] ->
+                            translateReply ToggleShuffle m
+
+                        _ ->
+                            skip
             )
                 { model | pressedKeys = Keyboard.update subMsg model.pressedKeys }
 
@@ -2075,10 +2128,13 @@ defaultScreen model =
 -- 🗺  ░░  BITS
 
 
-content : { justifyCenter : Bool, scrolling : Bool } -> List (Html msg) -> Html msg
+content : { justifyCenter : Bool, scrolling : Bool } -> List (Html Msg) -> Html Msg
 content { justifyCenter, scrolling } nodes =
     brick
-        [ style "height" "calc(var(--vh, 1vh) * 100)" ]
+        [ on "focusout" (Json.Decode.succeed Blur)
+        , on "focusin" inputFocusDecoder
+        , style "height" "calc(var(--vh, 1vh) * 100)"
+        ]
         [ C.overflow_x_hidden
         , C.relative
         , C.scrolling_touch
@@ -2105,6 +2161,24 @@ content { justifyCenter, scrolling } nodes =
             ]
             nodes
         ]
+
+
+inputFocusDecoder : Json.Decode.Decoder Msg
+inputFocusDecoder =
+    Json.Decode.string
+        |> Json.Decode.at [ "target", "tagName" ]
+        |> Json.Decode.andThen
+            (\targetTagName ->
+                case targetTagName of
+                    "INPUT" ->
+                        Json.Decode.succeed FocusedOnInput
+
+                    "TEXTAREA" ->
+                        Json.Decode.succeed FocusedOnInput
+
+                    _ ->
+                        Json.Decode.fail "NOT_INPUT"
+            )
 
 
 loadingAnimation : Html msg
