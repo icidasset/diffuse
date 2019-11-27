@@ -9,6 +9,7 @@ import Sources.Processing exposing (..)
 import Sources.Services.AmazonS3 as AmazonS3
 import Sources.Services.AzureBlob as AzureBlob
 import Sources.Services.AzureFile as AzureFile
+import Sources.Services.Btfs as Btfs
 import Sources.Services.Dropbox as Dropbox
 import Sources.Services.Google as Google
 import Sources.Services.Ipfs as Ipfs
@@ -31,6 +32,9 @@ initialData service =
 
         AzureFile ->
             AzureFile.initialData
+
+        Btfs ->
+            Btfs.initialData
 
         Dropbox ->
             Dropbox.initialData
@@ -56,6 +60,9 @@ makeTrackUrl service =
 
         AzureFile ->
             AzureFile.makeTrackUrl
+
+        Btfs ->
+            Btfs.makeTrackUrl
 
         Dropbox ->
             Dropbox.makeTrackUrl
@@ -88,6 +95,9 @@ makeTree service =
         AzureFile ->
             AzureFile.makeTree
 
+        Btfs ->
+            Btfs.makeTree
+
         Dropbox ->
             Dropbox.makeTree
 
@@ -112,6 +122,9 @@ parseErrorResponse service =
 
         AzureFile ->
             AzureFile.parseErrorResponse
+
+        Btfs ->
+            Btfs.parseErrorResponse
 
         Dropbox ->
             Dropbox.parseErrorResponse
@@ -138,6 +151,9 @@ parsePreparationResponse service =
         AzureFile ->
             AzureFile.parsePreparationResponse
 
+        Btfs ->
+            Btfs.parsePreparationResponse
+
         Dropbox ->
             Dropbox.parsePreparationResponse
 
@@ -163,6 +179,9 @@ parseTreeResponse service =
         AzureFile ->
             AzureFile.parseTreeResponse
 
+        Btfs ->
+            Btfs.parseTreeResponse
+
         Dropbox ->
             Dropbox.parseTreeResponse
 
@@ -187,6 +206,9 @@ postProcessTree service =
 
         AzureFile ->
             AzureFile.postProcessTree
+
+        Btfs ->
+            Btfs.postProcessTree
 
         Dropbox ->
             Dropbox.postProcessTree
@@ -219,6 +241,9 @@ prepare service =
         AzureFile ->
             AzureFile.prepare
 
+        Btfs ->
+            Btfs.prepare
+
         Dropbox ->
             Dropbox.prepare
 
@@ -243,6 +268,9 @@ properties service =
 
         AzureFile ->
             AzureFile.properties
+
+        Btfs ->
+            Btfs.properties
 
         Dropbox ->
             Dropbox.properties
@@ -273,6 +301,9 @@ keyToType str =
         "AzureFile" ->
             Just AzureFile
 
+        "Btfs" ->
+            Just Btfs
+
         "Dropbox" ->
             Just Dropbox
 
@@ -301,6 +332,9 @@ typeToKey service =
         AzureFile ->
             "AzureFile"
 
+        Btfs ->
+            "Btfs"
+
         Dropbox ->
             "Dropbox"
 
@@ -322,6 +356,7 @@ labels =
     [ ( typeToKey AmazonS3, "Amazon S3" )
     , ( typeToKey AzureBlob, "Azure Blob Storage" )
     , ( typeToKey AzureFile, "Azure File Storage" )
+    , ( typeToKey Btfs, "BTFS" )
     , ( typeToKey Dropbox, "Dropbox" )
     , ( typeToKey Google, "Google Drive" )
     , ( typeToKey Ipfs, "IPFS" )

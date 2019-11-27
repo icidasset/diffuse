@@ -81,6 +81,30 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
 </CORSConfiguration>
 ```
 
+<div id="CORS__BTFS" />
+
+#### BTFS
+
+Add the domain of the app, with the protocol, to the __list of allowed origins__.  
+
+```shell
+btfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh"]'
+```
+
+You can also make this change in the Web UI, you'll find it under "Settings → BTFS Config".
+
+```json
+{
+  "API": {
+    "HTTPHeaders": {
+      "Access-Control-Allow-Origin": [
+        "https://diffuse.sh"
+      ]
+    }
+  }
+}
+```
+
 <div id="CORS__Dropbox" />
 
 #### Dropbox

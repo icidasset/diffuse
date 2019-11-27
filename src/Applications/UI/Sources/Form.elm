@@ -388,6 +388,9 @@ newBy { context } =
                 AzureFile ->
                     corsWarning "CORS__Azure"
 
+                Btfs ->
+                    corsWarning "CORS__BTFS"
+
                 Dropbox ->
                     []
 
@@ -570,6 +573,16 @@ note service =
 
         AzureFile ->
             nothing
+
+        Btfs ->
+            howNote
+                [ inline [ C.font_semibold ] [ text "Diffuse will try to use the default local gateway" ]
+                , text "."
+                , lineBreak
+                , text "If you would like to use another gateway, please provide it below."
+                , lineBreak
+                , text "This is basically the same as the IPFS implementation, just with a different prefix."
+                ]
 
         Dropbox ->
             howNote

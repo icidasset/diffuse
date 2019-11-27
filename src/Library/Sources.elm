@@ -42,6 +42,7 @@ type Service
     = AmazonS3
     | AzureBlob
     | AzureFile
+    | Btfs
     | Dropbox
     | Google
     | Ipfs

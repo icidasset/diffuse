@@ -1,4 +1,4 @@
-module Sources.Services.Ipfs exposing (defaults, initialData, makeTrackUrl, makeTree, parseErrorResponse, parsePreparationResponse, parseTreeResponse, postProcessTree, prepare, properties)
+module Sources.Services.Ipfs exposing (..)
 
 {-| IPFS Service.
 
