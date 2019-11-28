@@ -239,20 +239,19 @@ backgroundImage chosenBackground =
                             , C.mr_1
                             , C.rounded_sm
                             , C.z_10
+
+                            --
+                            , C.sm__mb_2
+                            , C.sm__mr_2
+
+                            --
+                            , C.md__mb_1
+                            , C.md__mr_1
                             ]
                             []
 
                       else
-                        chunk
-                            [ C.absolute
-                            , C.inset_0
-                            , C.bg_black_05
-                            , C.mb_1
-                            , C.mr_1
-                            , C.rounded_sm
-                            , C.z_10
-                            ]
-                            []
+                        nothing
 
                     --
                     , brick
@@ -271,6 +270,16 @@ backgroundImage chosenBackground =
                         , C.mr_1
                         , C.rounded_sm
                         , C.z_20
+
+                        --
+                        , C.sm__mb_2
+                        , C.sm__mr_2
+
+                        --
+                        , C.md__mb_1
+                        , C.md__mr_1
+
+                        --
                         , ifThenElse isActive C.opacity_20 C.opacity_100
                         ]
                         []
@@ -292,14 +301,22 @@ backgroundImage chosenBackground =
                             , C.text_white
                             , C.text_xs
                             , C.z_30
+
+                            --
+                            , C.sm__mb_2
+                            , C.sm__mr_2
+
+                            --
+                            , C.md__mb_1
+                            , C.md__mr_1
+
+                            -- Dark mode
+                            ------------
+                            , C.dark__text_base07
                             ]
                             [ chunk
-                                [ C.hidden
-                                , C.md__block
-                                , C.mt_px
-                                ]
-                                [ Icons.check 16 Inherit
-                                ]
+                                [ C.mt_px ]
+                                [ Icons.check 16 Inherit ]
                             ]
 
                       else

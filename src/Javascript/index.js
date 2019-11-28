@@ -20,6 +20,7 @@ import { debounce } from "./common"
 const app = Elm.UI.init({
   node: document.getElementById("elm"),
   flags: {
+    darkMode: preferredSchema().matches,
     initialTime: Date.now(),
     isOnline: navigator.onLine,
     upgrade: viableForUpgrade(),
@@ -224,6 +225,23 @@ app.ports.copyToClipboard.subscribe(text => {
   }
 
 })
+
+
+
+// Dark mode
+// ---------
+
+function preferredSchema() {
+  const m =
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)")
+
+  m && m.addEventListener("change", e => {
+    app.ports.preferredColorSchemaChanged.send({ dark: e.matches })
+  })
+
+  return m
+}
 
 
 

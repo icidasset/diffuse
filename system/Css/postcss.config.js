@@ -29,7 +29,7 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
       .replace(/\\/g, "")
       .replace("::placeholder", "")
       .replace(
-        /\:(active|disabled|even|first-child|focus|focus-within|focus:not\(:active\)|group-hover|hover|last-child|odd|responsive|visited)$/,
+        /\:(active|disabled|even|first-child|focus|focus-within|focus:not\(:active\)|group-hover|hover|last-child|nth-child\(odd\)|odd|responsive|visited)$/,
         ""
       )
 

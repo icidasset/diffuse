@@ -256,13 +256,30 @@ eqView model =
     chunk
         [ C.text_center ]
         [ chunk
-            [ C.border, C.border_black_05, C.rounded, C.flex ]
+            [ C.border
+            , C.border_black_05
+            , C.rounded
+            , C.flex
+
+            -- Dark mode
+            ------------
+            , C.dark__border_base00
+            ]
             [ knob Volume model.volume
             ]
 
         --
         , chunk
-            [ C.border, C.border_black_05, C.rounded, C.flex, C.mt_4 ]
+            [ C.border
+            , C.border_black_05
+            , C.rounded
+            , C.flex
+            , C.mt_4
+
+            -- Dark mode
+            ------------
+            , C.dark__border_base00
+            ]
             [ knob Low model.low
             , knob Mid model.mid
             , knob High model.high

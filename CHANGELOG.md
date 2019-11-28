@@ -2,6 +2,7 @@
 
 ## 2.2.0
 
+- Added dark mode
 - Added keyboard shortcuts for play/pause, toggle shuffle, etc.  
   See UI section on the about page for more info.
 - Added support for BTFS (an IPFS fork)

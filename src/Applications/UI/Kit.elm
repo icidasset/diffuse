@@ -55,7 +55,6 @@ colors =
     -- Other
     , background = rgb 2 7 14
     , selection = colorKit.accent
-    , selectionAlt = colorKit.base01
     , text = colorKit.base01
     }
 
@@ -70,8 +69,8 @@ rgb =
 
 type ButtonColor
     = Accent
+    | Blank
     | Gray
-    | White
 
 
 type ButtonType
@@ -135,24 +134,56 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                 Filled ->
                     case buttonColor of
                         Accent ->
-                            [ C.bg_accent, C.border_transparent, C.text_white ]
+                            [ C.bg_accent
+                            , C.border_transparent
+                            , C.text_white
+                            ]
+
+                        Blank ->
+                            [ C.bg_white
+                            , C.border_transparent
+                            , C.text_accent_light
+
+                            -- Dark mode
+                            ------------
+                            , C.dark__bg_darkest_hour
+                            , C.dark__text_accent_dark
+                            ]
 
                         Gray ->
-                            [ C.bg_base04, C.border_transparent, C.text_white ]
+                            [ C.bg_base04
+                            , C.border_transparent
+                            , C.text_white
 
-                        White ->
-                            [ C.bg_white, C.border_transparent, C.text_white ]
+                            -- Dark mode
+                            ------------
+                            , C.dark__bg_base05
+                            ]
 
                 _ ->
                     case buttonColor of
                         Accent ->
-                            [ C.bg_transparent, C.border_accent, C.text_accent ]
+                            [ C.bg_transparent
+                            , C.border_accent
+                            , C.text_accent
+                            ]
+
+                        Blank ->
+                            [ C.bg_transparent
+                            , C.border_white
+                            , C.text_white
+                            ]
 
                         Gray ->
-                            [ C.bg_transparent, C.border_base04, C.text_base04 ]
+                            [ C.bg_transparent
+                            , C.border_base04
+                            , C.text_base04
 
-                        White ->
-                            [ C.bg_transparent, C.border_white, C.text_white ]
+                            -- Dark mode
+                            ------------
+                            , C.dark__border_base05
+                            , C.dark__text_base05
+                            ]
     in
     slab
         tag
@@ -259,6 +290,11 @@ h1 text =
         , C.uppercase
         , C.text_sm
         , C.text_white
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_base01
+        , C.dark__text_base05
         ]
         [ Html.text text ]
 
@@ -318,6 +354,10 @@ intro child =
         , C.mt_3
         , C.text_base05
         , C.text_sm
+
+        -- Dark mode
+        ------------
+        , C.dark__text_base03
         ]
         [ child ]
 
@@ -361,9 +401,16 @@ logoBackdrop =
         , C.bg_no_repeat
         , C.h_0
         , C.left_full
+        , C.opacity_025
         , C.pt_full
         , C.top_0
+        , C.transition_1000
+        , C.transition_opacity
         , C.z_0
+
+        -- Dark mode
+        ------------
+        , C.dark__opacity_40
         ]
         []
 
@@ -379,6 +426,10 @@ receptacle { scrolling } =
         , C.overflow_x_hidden
         , C.scrolling_touch
         , C.z_50
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_darkest_hour
 
         --
         , ifThenElse scrolling C.overflow_y_auto C.overflow_y_hidden
@@ -396,6 +447,11 @@ select inputHandler options =
 
         --
         , C.focus_within__text_black
+
+        -- Dark mode
+        ------------
+        , C.dark__text_gray_600
+        , C.dark__focus_within__text_base07
         ]
         [ slab
             Html.select
@@ -405,7 +461,7 @@ select inputHandler options =
             , C.border_l_0
             , C.border_r_0
             , C.border_t_0
-            , C.border_less_subtle
+            , C.border_gray_400
             , C.bg_transparent
             , C.block
             , C.leading_normal
@@ -420,6 +476,14 @@ select inputHandler options =
 
             --
             , C.focus__border_black
+
+            -- Dark mode
+            ------------
+            , C.dark__border_base02
+            , C.dark__text_gray_600
+
+            --
+            , C.dark__focus__border_base07
             ]
             options
         , chunk
@@ -449,6 +513,11 @@ textArea attributes =
         , C.text_base01
         , C.text_sm
         , C.w_full
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_darkest_hour
+        , C.dark__text_gray_600
         ]
         []
 
@@ -481,7 +550,7 @@ textField attributes =
         , C.border_l_0
         , C.border_r_0
         , C.border_t_0
-        , C.border_less_subtle
+        , C.border_gray_400
         , C.bg_transparent
         , C.block
         , C.leading_normal
@@ -495,6 +564,14 @@ textField attributes =
         --
         , C.focus__border_black
         , C.focus__outline_none
+
+        -- Dark mode
+        ------------
+        , C.dark__border_base02
+        , C.dark__text_gray_600
+
+        --
+        , C.dark__focus__border_base07
         ]
         []
 
@@ -514,6 +591,11 @@ textFieldAlt attributes =
         , C.text_base01
         , C.text_sm
         , C.w_full
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_darkest_hour
+        , C.dark__text_gray_600
         ]
         []
 
@@ -528,7 +610,6 @@ logoBackdropStyles : List Css.Style
 logoBackdropStyles =
     [ Css.backgroundImage (Css.url "images/diffuse__icon-dark.svg")
     , Css.backgroundPosition2 (Css.pct -43.5) (Css.px 98)
-    , Css.opacity (Css.num 0.025)
     , Css.property "transform-origin" "left top"
     , Css.transform (Css.rotate (Css.deg 90))
     , Css.width (Css.vh 105)

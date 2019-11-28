@@ -446,8 +446,7 @@ sourceActions isProcessing processingError source =
     List.append
         (case ( process, processingError ) of
             ( Just ( _, progress ), _ ) ->
-                [ { color = Inherit
-                  , icon =
+                [ { icon =
                         \_ _ ->
                             if progress < 0.05 then
                                 inline
@@ -472,8 +471,7 @@ sourceActions isProcessing processingError source =
                   , msg = Nothing
                   , title = ""
                   }
-                , { color = Inherit
-                  , icon = Icons.sync
+                , { icon = Icons.sync
                   , msg = Nothing
                   , title = "Currently processing"
                   }
@@ -481,8 +479,7 @@ sourceActions isProcessing processingError source =
 
             ( Nothing, Just { error, sourceId } ) ->
                 if sourceId == source.id then
-                    [ { color = Color UI.Kit.colors.error
-                      , icon = Icons.error_outline
+                    [ { icon = \size _ -> Icons.error_outline size (Color UI.Kit.colors.error)
                       , msg = Nothing
                       , title = error
                       }
@@ -494,8 +491,7 @@ sourceActions isProcessing processingError source =
             _ ->
                 []
         )
-        [ { color = Inherit
-          , icon =
+        [ { icon =
                 if source.enabled then
                     Icons.check
 
@@ -515,8 +511,7 @@ sourceActions isProcessing processingError source =
           }
 
         --
-        , { color = Inherit
-          , icon = Icons.more_vert
+        , { icon = Icons.more_vert
           , msg = Just (SourceContextMenu source)
           , title = "Menu"
           }

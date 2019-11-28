@@ -52,6 +52,9 @@ port fromAlien : (Alien.Event -> msg) -> Sub msg
 port noteProgress : ({ trackId : String, progress : Float } -> msg) -> Sub msg
 
 
+port preferredColorSchemaChanged : ({ dark : Bool } -> msg) -> Sub msg
+
+
 port requestNext : (() -> msg) -> Sub msg
 
 

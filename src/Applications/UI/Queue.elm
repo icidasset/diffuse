@@ -8,6 +8,7 @@ import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (href)
 import Html.Events.Extra.Mouse as Mouse
+import Icons
 import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Action as Icons
@@ -30,6 +31,7 @@ import UI.Queue.Fill as Fill
 import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Reply exposing (Reply(..))
 import UI.Sources.Page
+import VirtualDom
 
 
 
@@ -578,12 +580,12 @@ futureItem selection idx item =
                 |> Maybe.map (.identifiedTrack >> Tuple.first >> .indexInList)
                 |> (==) (Just identifiers.indexInList)
 
-        iconColor =
+        iconFn =
             if item.manualEntry then
-                Color UI.Kit.colorKit.base03
+                identity
 
             else
-                Color UI.Kit.colorKit.base07
+                Icons.wrapped subtleFutureIconClasses
     in
     { label =
         inline
@@ -596,12 +598,20 @@ futureItem selection idx item =
 
               else
                 C.text_base05
+
+            -- Dark mode
+            ------------
+            , if item.manualEntry || isSelected then
+                C.dark__text_inherit
+
+              else
+                C.dark__text_base04
             ]
             [ inline
                 [ C.inline_block
-                , C.text_xs
                 , C.mr_2
                 , C.opacity_60
+                , C.text_xs
                 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
@@ -609,21 +619,19 @@ futureItem selection idx item =
     , actions =
         [ -- Remove
           ---------
-          { color = iconColor
-          , icon =
+          { icon =
                 if item.manualEntry then
-                    Icons.remove_circle_outline
+                    iconFn Icons.remove_circle_outline
 
                 else
-                    Icons.not_interested
+                    iconFn Icons.not_interested
           , msg = Just (\_ -> RemoveItem { index = idx, item = item })
           , title = ifThenElse item.manualEntry "Remove" "Ignore"
           }
 
         -- Menu
         -------
-        , { color = iconColor
-          , icon = Icons.more_vert
+        , { icon = iconFn Icons.more_vert
           , msg = Just (ShowFutureMenu item { index = idx })
           , title = "Menu"
           }
@@ -631,6 +639,16 @@ futureItem selection idx item =
     , msg = Just (Select item)
     , isSelected = isSelected
     }
+
+
+subtleFutureIconClasses : List String
+subtleFutureIconClasses =
+    [ C.text_gray_500
+
+    -- Dark mode
+    ------------
+    , C.dark__text_base02
+    ]
 
 
 
@@ -708,8 +726,7 @@ historyItem idx ({ identifiedTrack, manualEntry } as item) =
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]
     , actions =
-        [ { color = Inherit
-          , icon = Icons.more_vert
+        [ { icon = Icons.more_vert
           , msg = Just (ShowHistoryMenu item)
           , title = "Menu"
           }
