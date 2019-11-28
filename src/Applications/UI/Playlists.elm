@@ -258,8 +258,7 @@ index model selectedPlaylist bgColor =
             else
                 { label = text playlist.name
                 , actions =
-                    [ { color = Inherit
-                      , icon = Icons.more_vert
+                    [ { icon = Icons.more_vert
                       , msg = Just (ShowListMenu playlist)
                       , title = "Menu"
                       }
@@ -394,10 +393,14 @@ category cat =
         , C.font_display
         , C.mb_3
         , C.mt_10
-        , C.text_base06
+        , C.text_base05
         , C.text_xxs
         , C.truncate
         , C.uppercase
+
+        -- Dark mode
+        ------------
+        , C.dark__text_base04
         ]
         [ UI.Kit.inlineIcon Icons.folder
         , inline [ C.font_bold, C.ml_2 ] [ text cat ]
@@ -419,8 +422,7 @@ selectedPlaylistListItem playlist bgColor =
             []
             [ text playlist.name ]
     , actions =
-        [ { color = Color selectionColor
-          , icon = Icons.check
+        [ { icon = \size _ -> Icons.check size (Color selectionColor)
           , msg = Nothing
           , title = "Selected playlist"
           }

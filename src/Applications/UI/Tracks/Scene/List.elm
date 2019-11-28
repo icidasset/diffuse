@@ -98,6 +98,7 @@ update msg model =
 
 type alias Dependencies =
     { bgColor : Maybe Color
+    , darkMode : Bool
     , height : Float
     , isVisible : Bool
     , showAlbum : Bool
@@ -105,10 +106,9 @@ type alias Dependencies =
 
 
 type alias DerivedColors =
-    { default : String
-    , dark : String
-    , light : String
+    { background : String
     , subtle : String
+    , text : String
     }
 
 
@@ -194,11 +194,17 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
             Maybe.withDefault UI.Kit.colors.text deps.bgColor
 
         derivedColors =
-            { default = Color.toCssString color
-            , dark = Color.toCssString (Color.darken 0.3 color)
-            , light = Color.toCssString (Color.fadeOut 0.625 color)
-            , subtle = Color.toCssString (Color.fadeOut 0.575 color)
-            }
+            if deps.darkMode then
+                { background = Color.toCssString color
+                , subtle = Color.toCssString (Color.darken 0.1 color)
+                , text = Color.toCssString (Color.darken 0.475 color)
+                }
+
+            else
+                { background = Color.toCssString (Color.fadeOut 0.625 color)
+                , subtle = Color.toCssString (Color.fadeOut 0.575 color)
+                , text = Color.toCssString (Color.darken 0.3 color)
+                }
     in
     { itemView =
         case maybeDnD of
@@ -281,13 +287,19 @@ header isPlaylist showAlbum sortBy sortDirection =
         [ C.antialiased
         , C.bg_white
         , C.border_b
-        , C.border_subtle
+        , C.border_gray_300
         , C.flex
         , C.font_semibold
         , C.relative
         , C.text_base06
         , C.text_xxs
         , C.z_20
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_darkest_hour
+        , C.dark__border_base01
+        , C.dark__text_base03
         ]
         (if isPlaylist && showAlbum then
             [ headerColumn "" 4.5 Nothing Bypass
@@ -333,7 +345,7 @@ headerColumn text_ width maybeSortIcon msg =
         , style "width" (String.fromFloat width ++ "%")
         ]
         [ C.border_l
-        , C.border_subtle
+        , C.border_gray_300
         , C.cursor_default
         , C.leading_relaxed
         , C.pl_2
@@ -345,6 +357,10 @@ headerColumn text_ width maybeSortIcon msg =
         , C.first__cursor_default
         , C.first__pl_4
         , C.last__pr_4
+
+        -- Dark mode
+        ------------
+        , C.dark__border_base01
         ]
         [ chunk
             [ C.mt_px, C.opacity_90, C.pt_px ]
@@ -390,7 +406,9 @@ infiniteListContainer styles =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ C.pb_1, C.pt_1 ]
+    [ C.pb_1
+    , C.pt_1
+    ]
         |> String.join " "
         |> class
         |> List.singleton
@@ -428,6 +446,9 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
 
         isSelected =
             List.member idx selectedTrackIndexes
+
+        isOddRow =
+            modBy 2 idx == 1
 
         rowIdentifiers =
             { isMissing = identifiers.isMissing
@@ -475,6 +496,27 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
             --
             , ifThenElse identifiers.isMissing "" C.cursor_pointer
             , ifThenElse isSelected C.font_semibold ""
+
+            --
+            , ifThenElse
+                rowIdentifiers.isNowPlaying
+                ""
+                (ifThenElse
+                    isOddRow
+                    C.bg_white
+                    C.bg_gray_100
+                )
+
+            -- Dark mode
+            ------------
+            , ifThenElse
+                rowIdentifiers.isNowPlaying
+                ""
+                (ifThenElse
+                    isOddRow
+                    C.dark__bg_darkest_hour
+                    C.dark__bg_near_darkest_hour
+                )
             ]
             (if showAlbum then
                 [ favouriteColumn favouritesOnly favIdentifiers derivedColors
@@ -508,6 +550,9 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
 
         isSelected =
             List.member idx selectedTrackIndexes
+
+        isOddRow =
+            modBy 2 idx == 1
 
         rowIdentifiers =
             { isMissing = identifiers.isMissing
@@ -562,6 +607,27 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
         --
         , ifThenElse identifiers.isMissing "" C.cursor_pointer
         , ifThenElse isSelected C.font_semibold ""
+
+        --
+        , ifThenElse
+            rowIdentifiers.isNowPlaying
+            ""
+            (ifThenElse
+                isOddRow
+                C.bg_white
+                C.bg_gray_100
+            )
+
+        -- Dark mode
+        ------------
+        , ifThenElse
+            rowIdentifiers.isNowPlaying
+            ""
+            (ifThenElse
+                isOddRow
+                C.dark__bg_darkest_hour
+                C.dark__bg_near_darkest_hour
+            )
         ]
         (if showAlbum then
             [ favouriteColumn favouritesOnly favIdentifiers derivedColors
@@ -725,26 +791,20 @@ rowStyles idx { isMissing, isNowPlaying, isSelected } derivedColors =
     let
         bgColor =
             if isNowPlaying then
-                derivedColors.light
-
-            else if modBy 2 idx == 1 then
-                rowBackgroundColors.whiteNear
+                derivedColors.background
 
             else
-                rowBackgroundColors.white
+                ""
 
         color =
-            if isSelected then
-                rowFontColors.selection
-
-            else if isNowPlaying then
-                derivedColors.dark
+            if isNowPlaying then
+                derivedColors.text
 
             else if isMissing then
-                rowFontColors.grey
+                rowFontColors.gray
 
             else
-                rowFontColors.default
+                ""
     in
     [ style "background-color" bgColor
     , style "color" color
@@ -774,6 +834,11 @@ favouriteColumn favouritesOnly identifiers derivedColors =
         [ C.flex_shrink_0
         , C.font_normal
         , C.pl_4
+        , C.text_gray_500
+
+        -- Dark mode
+        ------------
+        , C.dark__text_base02
         ]
         [ if identifiers.isFavourite then
             text "t"
@@ -788,13 +853,13 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } d
     let
         color =
             if isNowPlaying && isFavourite then
-                derivedColors.dark
+                derivedColors.text
 
             else if isNowPlaying then
                 derivedColors.subtle
 
             else if favouritesOnly || not isFavourite then
-                favColors.gray
+                ""
 
             else
                 favColors.red
@@ -861,9 +926,7 @@ rowBackgroundColors =
 
 
 rowFontColors =
-    { default = Color.toCssString UI.Kit.colors.text
-    , grey = Color.toCssString UI.Kit.colorKit.base04
-    , selection = Color.toCssString UI.Kit.colors.selectionAlt
+    { gray = Color.toCssString UI.Kit.colorKit.base04
     , white = Color.toCssString (Color.rgb 1 1 1)
     }
 

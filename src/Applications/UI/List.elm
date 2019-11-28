@@ -19,8 +19,7 @@ import VirtualDom
 
 
 type alias Action msg =
-    { color : Coloring
-    , icon : Int -> Coloring -> VirtualDom.Node msg
+    { icon : Int -> Coloring -> VirtualDom.Node msg
     , msg : Maybe (Mouse.Event -> msg)
     , title : String
     }
@@ -80,13 +79,17 @@ item variant idx { label, actions, msg, isSelected } =
     <|
         chunk
             [ C.border_b
-            , C.border_very_subtle
+            , C.border_gray_200
             , C.flex
             , C.items_center
 
             --
             , ifThenElse (Maybe.isJust msg) C.cursor_pointer ""
             , ifThenElse isSelected C.text_accent ""
+
+            -- Dark mode
+            ------------
+            , C.dark__border_base00
             ]
             [ -- Label
               --------
@@ -161,4 +164,4 @@ actionView action =
         , C.pl_1
         , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer ""
         ]
-        [ action.icon 16 action.color ]
+        [ action.icon 16 Inherit ]

@@ -100,7 +100,7 @@ ul li::before {
    ---- */
 
 pre {
-  @apply border-2 border-less-subtle leading-relaxed overflow-x-auto overflow-y-hidden p-6 rounded text-sm;
+  @apply border-2 border-gray-400 leading-relaxed overflow-x-auto overflow-y-hidden p-6 rounded text-sm;
 }
 
 code {

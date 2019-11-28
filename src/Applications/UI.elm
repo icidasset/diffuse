@@ -86,7 +86,8 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 type alias Flags =
-    { initialTime : Int
+    { darkMode : Bool
+    , initialTime : Int
     , isOnline : Bool
     , upgrade : Bool
     , viewport : Viewport
@@ -112,6 +113,7 @@ main =
 type alias Model =
     { contextMenu : Maybe (ContextMenu Reply)
     , currentTime : Time.Posix
+    , darkMode : Bool
     , debounce : Debouncer Msg Msg
     , focusedOnInput : Bool
     , isDragging : Bool
@@ -167,6 +169,7 @@ init flags url key =
     in
     { contextMenu = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
+    , darkMode = flags.darkMode
     , focusedOnInput = False
     , isDragging = False
     , isLoading = True
@@ -237,6 +240,7 @@ type Msg
     | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
+    | PreferredColorSchemaChanged { dark : Bool }
     | RemoveQueueSelection
     | RemoveTrackSelection
     | ResizedWindow ( Int, Int )
@@ -412,6 +416,9 @@ update msg model =
                         else
                             return m
                     )
+
+        PreferredColorSchemaChanged { dark } ->
+            return { model | darkMode = dark }
 
         RemoveQueueSelection ->
             let
@@ -1799,6 +1806,7 @@ subscriptions model =
             )
 
         --
+        , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
         , Ports.showErrorNotification (Notifications.error >> ShowNotification)
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
         , Ports.setIsOnline SetIsOnline
@@ -2053,6 +2061,7 @@ defaultScreen model =
     , vessel
         [ { amountOfSources = List.length model.sources.collection
           , bgColor = model.backdrop.bgColor
+          , darkMode = model.darkMode
           , isOnIndexPage = model.page == Page.Index
           , sourceIdsBeingProcessed = List.map Tuple.first model.sources.isProcessing
           , viewport = model.viewport
@@ -2221,6 +2230,10 @@ vessel =
             , C.overflow_hidden
             , C.relative
             , C.rounded
+
+            -- Dark mode
+            ------------
+            , C.dark__bg_darkest_hour
             ]
         )
         (bricky
@@ -2228,7 +2241,7 @@ vessel =
             [ C.flex
             , C.flex_grow
             , C.rounded
-            , C.shadow_md
+            , C.shadow_lg
             , C.w_full
 
             --

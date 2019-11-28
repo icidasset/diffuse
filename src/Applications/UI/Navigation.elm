@@ -114,7 +114,11 @@ localWithTabindex tabindex_ items =
         [ style "font-size" "12.5px" ]
         [ C.antialiased
         , C.border_b
-        , C.border_subtle
+        , C.border_gray_300
+
+        -- Dark mode
+        ------------
+        , C.dark__border_base01
         ]
         [ chunk
             [ C.flex ]
@@ -170,7 +174,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         ]
         [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
         , C.bg_transparent
-        , C.border_subtle
+        , C.border_gray_300
         , C.border_r
         , C.cursor_pointer
         , C.flex_basis_0
@@ -179,11 +183,19 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , C.no_underline
         , C.px_4
         , C.py_3
-        , C.text_base01
+        , C.text_base02
 
         --
         , C.fixate__text_black
         , C.last__border_r_0
+
+        -- Dark mode
+        ------------
+        , C.dark__border_base01
+        , C.dark__text_base06
+
+        --
+        , C.dark__fixate__text_base07
         ]
         [ chunk
             [ C.border_b

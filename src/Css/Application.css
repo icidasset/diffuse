@@ -44,6 +44,11 @@ body {
 .flex-basis-0 { flex-basis: 0 }
 
 
+@screen dark {
+  body { @apply text-gray-600; }
+}
+
+
 
 /* Dragging
    -------- */
@@ -77,7 +82,21 @@ textarea:invalid {
 
 select:-moz-focusring {
   color: transparent;
-  text-shadow: 0 0 0 rgb(0, 0, 0);
+  text-shadow: 0 0 0 rgb(63, 63, 63);
+}
+
+
+@screen dark {
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-base03;
+    opacity: 1;
+  }
+
+  select:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 rgb(232, 232, 232);
+  }
 }
 
 

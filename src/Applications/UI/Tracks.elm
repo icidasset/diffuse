@@ -627,6 +627,7 @@ toggleFavourite model ( i, t ) =
 type alias Dependencies =
     { amountOfSources : Int
     , bgColor : Maybe Color
+    , darkMode : Bool
     , isOnIndexPage : Bool
     , sourceIdsBeingProcessed : List String
     , viewport : Viewport
@@ -684,12 +685,18 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
           chunk
             [ C.border_b
             , C.border_r
-            , C.border_subtle
+            , C.border_gray_300
             , C.flex
             , C.flex_grow
             , C.mt_px
             , C.overflow_hidden
             , C.relative
+            , C.text_gray_600
+
+            -- Dark mode
+            ------------
+            , C.dark__border_base01
+            , C.dark__text_base04
             ]
             [ -- Input
               --------
@@ -731,7 +738,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , C.top_0
                 , C.z_0
                 ]
-                [ Icons.search 16 searchIconColoring ]
+                [ Icons.search 16 Inherit ]
 
             -- Actions
             ----------
@@ -753,7 +760,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             , C.ml_1
                             , C.mt_px
                             ]
-                            [ Icons.clear 16 searchIconColoring ]
+                            [ Icons.clear 16 Inherit ]
 
                     Nothing ->
                         nothing
@@ -771,7 +778,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             Icons.favorite 16 (Color UI.Kit.colorKit.base08)
 
                         False ->
-                            Icons.favorite_border 16 searchIconColoring
+                            Icons.favorite_border 16 Inherit
                     ]
 
                 -- 3
@@ -782,7 +789,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                     [ C.cursor_pointer
                     , C.ml_1
                     ]
-                    [ Icons.more_vert 16 searchIconColoring ]
+                    [ Icons.more_vert 16 Inherit ]
 
                 -- 4
                 , case selectedPlaylist of
@@ -808,6 +815,10 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             , C.text_white_90
                             , C.text_xxs
                             , C.transition_500
+
+                            -- Dark mode
+                            ------------
+                            , C.dark__text_white_60
                             ]
                             [ chunk
                                 [ C.px_px, C.pt_px ]
@@ -956,6 +967,7 @@ listView model deps =
             )
         |> UI.Tracks.Scene.List.view
             { bgColor = deps.bgColor
+            , darkMode = deps.darkMode
             , height = deps.viewport.height
             , isVisible = deps.isOnIndexPage
             , showAlbum = deps.viewport.width >= 720
@@ -969,12 +981,3 @@ listView model deps =
             model.sortDirection
             model.selectedTrackIndexes
         |> Html.map ListSceneMsg
-
-
-
--- 🖼
-
-
-searchIconColoring : Coloring
-searchIconColoring =
-    Color (Color.rgb255 198 198 198)

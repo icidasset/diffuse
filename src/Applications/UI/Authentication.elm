@@ -642,16 +642,18 @@ welcomeScreen =
         , C.z_10
         ]
         [ UI.Kit.buttonWithColor
-            UI.Kit.White
+            UI.Kit.Blank
             UI.Kit.Filled
             GetStarted
             (slab
                 Html.span
-                [ style "color" "#A19B9D"
-                , style "font-size" "13px"
+                [ style "font-size" "13px"
                 , style "letter-spacing" "0.25em"
                 ]
-                [ C.align_middle, C.inline_block, C.pt_px ]
+                [ C.align_middle
+                , C.inline_block
+                , C.pt_px
+                ]
                 [ text "SIGN IN" ]
             )
         ]
@@ -670,12 +672,15 @@ choicesScreen =
         , C.py_2
         , C.relative
         , C.z_10
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_darkest_hour
         ]
         [ choiceButton
             { action = ShowNewEncryptionKeyScreen Local
             , icon = Icons.web
             , infoLink = Nothing
-            , isLast = False
             , label = "My Browser"
             , outOfOrder = False
             }
@@ -683,7 +688,6 @@ choicesScreen =
             { action = TriggerExternalAuth Blockstack ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.blockstackLogo
             , infoLink = Just "https://blockstack.org"
-            , isLast = False
             , label = "Blockstack"
             , outOfOrder = False
             }
@@ -691,7 +695,6 @@ choicesScreen =
             { action = TriggerExternalAuth (Dropbox { token = "" }) ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.dropboxLogo
             , infoLink = Just "https://dropbox.com/"
-            , isLast = False
             , label = "Dropbox"
             , outOfOrder = False
             }
@@ -711,7 +714,6 @@ choicesScreen =
                     }
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.remoteStorageLogo
             , infoLink = Just "https://remotestorage.io/"
-            , isLast = False
             , label = "RemoteStorage"
             , outOfOrder = False
             }
@@ -738,22 +740,22 @@ choiceButton :
     { action : msg
     , icon : Int -> Coloring -> Svg msg
     , infoLink : Maybe String
-    , isLast : Bool
     , label : String
     , outOfOrder : Bool
     }
     -> Html msg
-choiceButton { action, icon, infoLink, isLast, label, outOfOrder } =
+choiceButton { action, icon, infoLink, label, outOfOrder } =
     chunk
-        [ C.border_subtle
+        [ C.border_b
+        , C.border_gray_300
         , C.relative
 
         --
-        , if isLast then
-            C.border_b_0
+        , C.last__border_b_0
 
-          else
-            C.border_b
+        -- Dark mode
+        ------------
+        , C.dark__border_base01
         ]
         [ -----------------------------------------
           -- Button
@@ -933,6 +935,11 @@ speechBubble contents =
         , C.text_white
         , C.top_full
         , C.whitespace_no_wrap
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_darkest_hour
+        , C.dark__text_gray_600
         ]
         [ contents
 

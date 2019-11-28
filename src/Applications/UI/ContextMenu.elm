@@ -37,6 +37,10 @@ view m =
                 , C.text_almost_sm
                 , C.translate_centered
                 , C.z_50
+
+                -- Dark mode
+                ------------
+                , C.dark__bg_darkest_hour
                 ]
                 (List.map
                     (\item ->
@@ -68,7 +72,7 @@ itemView { icon, label, msg, active } =
             )
         ]
         [ C.border_b
-        , C.border_very_subtle
+        , C.border_gray_200
         , C.cursor_pointer
         , C.pl_4
         , C.pr_8
@@ -84,6 +88,14 @@ itemView { icon, label, msg, active } =
         , ifThenElse active C.bg_base00 ""
         , ifThenElse active C.text_white C.text_inherit
         , ifThenElse active C.font_semibold C.font_normal
+
+        -- Dark mode
+        ------------
+        , C.dark__border_base00
+
+        --
+        , ifThenElse active C.dark__bg_base07 ""
+        , ifThenElse active C.dark__text_darkest_hour ""
         ]
         [ inline
             [ C.align_middle
