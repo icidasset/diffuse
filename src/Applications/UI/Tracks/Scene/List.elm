@@ -351,6 +351,7 @@ headerColumn text_ width maybeSortIcon msg =
         , C.pl_2
         , C.pr_2
         , C.pt_px
+        , C.relative
 
         --
         , C.first__border_l_0
