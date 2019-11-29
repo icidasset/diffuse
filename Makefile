@@ -52,12 +52,12 @@ css-prod: css
 	@$(NPM_DIR)/.bin/purgecss \
 		--config $(SYSTEM_DIR)/Css/purgecss.application.js \
 		--out $(BUILD_DIR)
-	# @$(NPM_DIR)/.bin/csso \
-	# 	"${BUILD_DIR}/about.css" \
-	# 	--output "${BUILD_DIR}/about.css"
-	# @$(NPM_DIR)/.bin/csso \
-	# 	"${BUILD_DIR}/application.css" \
-	# 	--output "${BUILD_DIR}/application.css"
+	@$(NPM_DIR)/.bin/csso \
+		"${BUILD_DIR}/about.css" \
+		--output "${BUILD_DIR}/about.css"
+	@$(NPM_DIR)/.bin/csso \
+		"${BUILD_DIR}/application.css" \
+		--output "${BUILD_DIR}/application.css"
 
 
 elm:
