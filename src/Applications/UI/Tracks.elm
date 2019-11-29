@@ -929,14 +929,10 @@ noTracksView isProcessing amountOfSources amountOfTracks amountOfFavourites =
 
 buttonContents : List (Html Msg) -> Html Msg
 buttonContents =
-    slab
-        Html.span
-        [ style "height" "21px" ]
+    inline
         [ C.flex
         , C.items_center
         , C.leading_0
-        , C.mt_px
-        , C.pt_1
         ]
 
 
