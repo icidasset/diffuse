@@ -153,7 +153,9 @@ notificationView notification =
           else
             C.opacity_100
         ]
-        [ Html.Styled.fromUnstyled (contents notification)
+        [ chunk
+            [ C.mt_px, C.pt_px ]
+            [ Html.Styled.fromUnstyled (contents notification) ]
 
         --
         , if options.sticky && kind /= Warning then
