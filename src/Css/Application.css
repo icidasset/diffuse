@@ -75,8 +75,12 @@ input:invalid,
 textarea:invalid {
   box-shadow: none;
   outline: none;
+}
 
-  &:focus { @apply border-base08; }
+
+form[changed] input:invalid,
+form[changed] textarea:invalid {
+  @apply border-base08;
 }
 
 

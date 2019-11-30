@@ -201,12 +201,21 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
         [ case buttonType of
             IconOnly ->
                 inline
-                    [ C.align_middle, C.inline_block, C.leading_none, C.text_0 ]
+                    [ C.align_middle
+                    , C.inline_block
+                    , C.leading_none
+                    , C.pointer_events_none
+                    , C.text_0
+                    ]
                     [ child ]
 
             _ ->
                 inline
-                    [ C.align_middle, C.inline_block, C.leading_none ]
+                    [ C.align_middle
+                    , C.inline_block
+                    , C.leading_none
+                    , C.pointer_events_none
+                    ]
                     [ child ]
         ]
 

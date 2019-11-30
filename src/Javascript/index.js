@@ -265,6 +265,31 @@ function removeFocus() {
 
 
 
+// Forms
+// -----
+// Adds a `changed` attribute to a form, if the form was "changed".
+// This is to help with styling, we don't want to show an error immediately.
+
+document.addEventListener("keyup", e => {
+  const form = e.target.closest("form")
+  if (form) form.setAttribute("changed", "")
+})
+
+
+document.addEventListener("click", e => {
+  if (e.target.tagName !== "BUTTON") return;
+  const form = e.target.closest("form")
+  if (form) form.setAttribute("changed", "")
+})
+
+
+document.addEventListener("submit", e => {
+  const form = e.target.closest("form")
+  if (form) form.removeAttribute("changed")
+})
+
+
+
 // Internet Connection
 // -------------------
 
