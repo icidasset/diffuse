@@ -149,13 +149,17 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
             [ C.h_10
             , C.left_0
             , C.minus_mt_10
+            , C.minus_translate_y_full
             , C.opacity_30
             , C.right_0
             , C.shadow_md
             , C.sticky
             , C.top_0
-            , C.minus_translate_y_full
             , C.z_10
+
+            -- Dark mode
+            ------------
+            , C.dark__shadow_md_darker
             ]
             []
 
