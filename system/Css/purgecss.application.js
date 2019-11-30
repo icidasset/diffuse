@@ -5,7 +5,7 @@ const fs = require("fs")
 // -----
 
 const table = JSON.parse(fs.readFileSync(
-  "build/css-table.json",
+  "tmp/css-table.json",
   { flag: "a+", encoding: "utf-8" }
 ) || "{}")
 

@@ -65,12 +65,12 @@ const elmCssClasses = postcss.plugin("elm-css-classes", (_opts) => (root, result
   const contents = header + functions.join("\n\n")
   const table = JSON.stringify(lookup)
   const hash = crypto.createHash("sha1").update(table).digest("base64")
-  const previousHash = fs.readFileSync("build/css-table.cache", { flag: "a+", encoding: "utf-8" })
+  const previousHash = fs.readFileSync("tmp/css-table.cache", { flag: "a+", encoding: "utf-8" })
 
   if (hash === previousHash) return;
 
-  fs.writeFileSync("build/css-table.cache", hash)
-  fs.writeFileSync("build/css-table.json", table)
+  fs.writeFileSync("tmp/css-table.cache", hash)
+  fs.writeFileSync("tmp/css-table.json", table)
   fs.writeFileSync("src/Library/Css/Classes.elm", contents)
 })
 
