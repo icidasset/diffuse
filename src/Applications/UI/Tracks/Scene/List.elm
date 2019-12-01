@@ -27,6 +27,7 @@ import UI.DnD as DnD
 import UI.Kit
 import UI.Reply as UI
 import UI.Tracks.Reply exposing (..)
+import UI.Tracks.Scene as Scene
 
 
 
@@ -471,7 +472,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
     Html.div
         []
         [ if shouldRenderGroup then
-            groupNode idx identifiers
+            Scene.group { index = idx } identifiers
 
           else
             text ""
@@ -750,40 +751,6 @@ selectEvent ( i, _ ) =
 
 
 -- ROWS
-
-
-groupNode : Int -> Identifiers -> Html Msg
-groupNode idx identifiers =
-    let
-        groupName =
-            identifiers.group
-                |> Maybe.map .name
-                |> Maybe.withDefault "Unknown"
-    in
-    chunk
-        [ C.font_display
-        , C.font_semibold
-        , C.leading_normal
-        , C.pb_3
-        , C.px_4
-        , C.text_base04
-        , C.text_xxs
-        , C.tracking_tad_further
-        , C.truncate
-
-        --
-        , ifThenElse (0 == idx) C.pt_3 C.pt_4
-        ]
-        [ groupIcon
-        , inline [ C.align_middle ] [ text groupName ]
-        ]
-
-
-groupIcon : Html msg
-groupIcon =
-    inline
-        [ C.align_middle, C.inline_block, C.leading_0, C.pr_2 ]
-        [ Icons.library_music 16 Inherit ]
 
 
 rowHeight : Int
