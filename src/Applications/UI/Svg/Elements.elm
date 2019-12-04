@@ -1,9 +1,7 @@
 module UI.Svg.Elements exposing (blockstackLogo, dropboxLogo, ipfsLogo, loading, remoteStorageLogo, textileLogo, threeBoxLogo)
 
-import Color
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import UI.Kit
 
 
 

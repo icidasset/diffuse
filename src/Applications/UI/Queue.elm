@@ -31,7 +31,6 @@ import UI.Queue.Fill as Fill
 import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Reply exposing (Reply(..))
 import UI.Sources.Page
-import VirtualDom
 
 
 

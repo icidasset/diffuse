@@ -891,12 +891,6 @@ favColors =
     }
 
 
-rowBackgroundColors =
-    { white = Color.toCssString (Color.rgb 1 1 1)
-    , whiteNear = Color.toCssString (Color.rgb255 252 252 252)
-    }
-
-
 rowFontColors =
     { gray = Color.toCssString UI.Kit.colorKit.base04
     , white = Color.toCssString (Color.rgb 1 1 1)
