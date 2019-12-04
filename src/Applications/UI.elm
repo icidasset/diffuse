@@ -223,6 +223,8 @@ init flags url key =
              else
                 Cmd.none
             )
+        |> addCommand
+            (Task.perform SetCurrentTime Time.now)
 
 
 
