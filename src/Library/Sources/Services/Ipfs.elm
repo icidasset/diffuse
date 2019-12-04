@@ -249,7 +249,14 @@ We need this to play the track.
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl _ srcData _ path =
-    extractGateway srcData ++ "/ipfs/" ++ rootHash srcData ++ "/" ++ encodedPath path
+    if not (String.contains "/" path) && not (String.contains "." path) then
+        -- If it still uses the old way of doing things
+        -- (ie. each path was a cid)
+        extractGateway srcData ++ "/ipfs/" ++ path
+
+    else
+        -- Or the new way
+        extractGateway srcData ++ "/ipfs/" ++ rootHash srcData ++ "/" ++ encodedPath path
 
 
 
