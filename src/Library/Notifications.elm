@@ -104,10 +104,9 @@ errorWithCode content code _ =
                 nothing
 
               else
-                slab
-                    Html.pre
-                    []
+                chunk
                     [ C.bg_black_50
+                    , C.break_all
                     , C.rounded
                     , C.mb_0
                     , C.mt_3

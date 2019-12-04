@@ -21,6 +21,7 @@ import Sources.Services.Ipfs.Parser as Parser
 import String.Ext as String
 import Task
 import Time
+import Url
 
 
 
@@ -49,7 +50,7 @@ Will be used for the forms.
 properties : List Property
 properties =
     [ { key = "directoryHash"
-      , label = "Directory object hash / DNSLink domain"
+      , label = "IPFS Path / DNSLink domain"
       , placeholder = "QmVLDAhCY3X9P2u"
       , password = False
       }
@@ -77,10 +78,10 @@ initialData : SourceData
 initialData =
     Dict.fromList
         [ ( "directoryHash", "" )
-        , ( "name", defaults.name )
         , ( "gateway", defaults.gateway )
         , ( "ipns", defaults.ipns )
         , ( "local", defaults.local )
+        , ( "name", defaults.name )
         ]
 
 
@@ -91,11 +92,6 @@ initialData =
 prepare : String -> SourceData -> Marker -> (Result Http.Error String -> msg) -> Maybe (Cmd msg)
 prepare _ srcData _ toMsg =
     let
-        isDnsLink =
-            srcData
-                |> Dict.get "directoryHash"
-                |> Maybe.map (String.contains ".")
-
         domainName =
             srcData
                 |> Dict.get "directoryHash"
@@ -105,20 +101,19 @@ prepare _ srcData _ toMsg =
                 |> String.chopEnd "/"
                 |> String.chopStart "_dnslink."
     in
-    case isDnsLink of
-        Just True ->
-            (Just << Http.request)
-                { method = "GET"
-                , headers = []
-                , url = extractGateway srcData ++ "/api/v0/dns?arg=" ++ domainName
-                , body = Http.emptyBody
-                , expect = Http.expectString toMsg
-                , timeout = Nothing
-                , tracker = Nothing
-                }
+    if isDnsLink srcData then
+        (Just << Http.request)
+            { method = "GET"
+            , headers = []
+            , url = extractGateway srcData ++ "/api/v0/dns?arg=" ++ domainName
+            , body = Http.emptyBody
+            , expect = Http.expectString toMsg
+            , timeout = Nothing
+            , tracker = Nothing
+            }
 
-        _ ->
-            Nothing
+    else
+        Nothing
 
 
 
@@ -149,45 +144,39 @@ makeTree srcData marker _ resultMsg =
                 |> boolFromString
                 |> (\b -> ifThenElse b "true" "false")
 
-        hash =
+        root =
+            rootHash srcData
+
+        path =
             case marker of
                 InProgress _ ->
                     marker
                         |> Marker.takeOne
-                        |> Maybe.withDefault "MISSING_HASH"
+                        |> Maybe.map (\p -> root ++ "/" ++ p)
+                        |> Maybe.withDefault ""
 
                 _ ->
-                    srcData
-                        |> Dict.get "directoryHash"
-                        |> Maybe.andThen
-                            (\h ->
-                                if String.contains "." h then
-                                    Dict.get "directoryHashFromDnsLink" srcData
-
-                                else
-                                    Just h
-                            )
-                        |> Maybe.withDefault "MISSING_HASH"
+                    root
     in
     (if resolveWithIpns then
         Http.task
             { method = "GET"
             , headers = []
-            , url = gateway ++ "/api/v0/name/resolve?arg=" ++ hash ++ "&local=" ++ resolveLocally ++ "&encoding=json"
+            , url = gateway ++ "/api/v0/name/resolve?arg=" ++ encodedPath path ++ "&local=" ++ resolveLocally ++ "&encoding=json"
             , body = Http.emptyBody
             , resolver = Http.stringResolver ipnsResolver
             , timeout = Just (60 * 15 * 1000)
             }
 
      else
-        Task.succeed { ipfsHash = hash }
+        Task.succeed { ipfsPath = path }
     )
         |> Task.andThen
-            (\{ ipfsHash } ->
+            (\{ ipfsPath } ->
                 Http.task
                     { method = "GET"
                     , headers = []
-                    , url = gateway ++ "/api/v0/ls?arg=" ++ ipfsHash ++ "&encoding=json"
+                    , url = gateway ++ "/api/v0/ls?arg=" ++ encodedPath ipfsPath ++ "&encoding=json"
                     , body = Http.emptyBody
                     , resolver = Http.stringResolver Common.translateHttpResponse
                     , timeout = Just (60 * 15 * 1000)
@@ -196,7 +185,7 @@ makeTree srcData marker _ resultMsg =
         |> Task.attempt resultMsg
 
 
-ipnsResolver : Http.Response String -> Result Http.Error { ipfsHash : String }
+ipnsResolver : Http.Response String -> Result Http.Error { ipfsPath : String }
 ipnsResolver response =
     case response of
         Http.BadUrl_ u ->
@@ -214,7 +203,7 @@ ipnsResolver response =
         Http.GoodStatus_ _ body ->
             body
                 |> Json.decodeString (Json.field "Path" Json.string)
-                |> Result.map (\hash -> { ipfsHash = hash })
+                |> Result.map (\path -> { ipfsPath = String.chopStart "/ipfs/" path })
                 |> Result.mapError (Json.errorToString >> Http.BadBody)
 
 
@@ -259,12 +248,20 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ hash =
-    extractGateway srcData ++ "/ipfs/" ++ hash
+makeTrackUrl _ srcData _ path =
+    extractGateway srcData ++ "/ipfs/" ++ rootHash srcData ++ "/" ++ encodedPath path
 
 
 
 -- ⚗️
+
+
+encodedPath : String -> String
+encodedPath path =
+    path
+        |> String.split "/"
+        |> List.map Url.percentEncode
+        |> String.join "/"
 
 
 extractGateway : SourceData -> String
@@ -283,3 +280,32 @@ extractGateway srcData =
             )
         |> Maybe.map (String.chopEnd "/")
         |> Maybe.withDefault defaultGateway
+
+
+isDnsLink : SourceData -> Bool
+isDnsLink srcData =
+    srcData
+        |> Dict.get "directoryHash"
+        |> Maybe.map pathIsDnsLink
+        |> Maybe.withDefault False
+
+
+pathIsDnsLink : String -> Bool
+pathIsDnsLink =
+    String.contains "."
+
+
+rootHash : SourceData -> String
+rootHash srcData =
+    srcData
+        |> Dict.get "directoryHash"
+        |> Maybe.andThen
+            (\path ->
+                if pathIsDnsLink path then
+                    Dict.get "directoryHashFromDnsLink" srcData
+
+                else
+                    Just path
+            )
+        |> Maybe.withDefault ""
+        |> String.chopEnd "/"

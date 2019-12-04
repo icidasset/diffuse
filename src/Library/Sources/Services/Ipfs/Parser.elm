@@ -16,9 +16,9 @@ import String.Ext as String
 parseDnsLookup : String -> SourceData -> Marker -> PrepationAnswer Marker
 parseDnsLookup response srcData _ =
     case decodeString dnsResultDecoder response of
-        Ok hash ->
+        Ok path ->
             srcData
-                |> Dict.insert "directoryHashFromDnsLink" hash
+                |> Dict.insert "directoryHashFromDnsLink" (String.chopStart "/ipfs/" path)
                 |> (\s -> { sourceData = s, marker = TheEnd })
 
         Err _ ->
@@ -53,6 +53,30 @@ cloudflareDnsResultDecoder =
 parseTreeResponse : String -> Marker -> TreeAnswer Marker
 parseTreeResponse response previousMarker =
     let
+        prefix =
+            case previousMarker of
+                TheBeginning ->
+                    ""
+
+                _ ->
+                    response
+                        |> decodeString prefixDecoder
+                        |> Result.map
+                            (String.chopStart "/ipfs/"
+                                >> String.split "/"
+                                >> List.drop 1
+                                >> String.join "/"
+                            )
+                        |> Result.map
+                            (\s ->
+                                if String.isEmpty s then
+                                    ""
+
+                                else
+                                    s ++ "/"
+                            )
+                        |> Result.withDefault ""
+
         links =
             case decodeString treeDecoder response of
                 Ok l ->
@@ -64,13 +88,13 @@ parseTreeResponse response previousMarker =
         dirs =
             links
                 |> List.filter (.typ >> (==) 1)
-                |> List.map .hash
+                |> List.map (\l -> prefix ++ l.name)
 
         files =
             links
                 |> List.filter (.typ >> (==) 2)
                 |> List.filter (.name >> isMusicFile)
-                |> List.map .hash
+                |> List.map (\l -> prefix ++ l.name)
     in
     { filePaths =
         files
@@ -79,6 +103,11 @@ parseTreeResponse response previousMarker =
             |> Marker.removeOne
             |> Marker.concat dirs
     }
+
+
+prefixDecoder : Decoder String
+prefixDecoder =
+    field "Objects" <| index 0 <| field "Hash" <| string
 
 
 treeDecoder : Decoder (List Link)
