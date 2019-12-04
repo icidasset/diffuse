@@ -1,4 +1,4 @@
-module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, edit, initialModel, new, takeStepBackwards, takeStepForwards, update)
+module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, edit, initialModel, new, rename, takeStepBackwards, takeStepForwards, update)
 
 import Chunky exposing (..)
 import Common exposing (boolFromString, boolToString)
@@ -71,6 +71,7 @@ type Msg
     = AddSource
     | Bypass
     | EditSource
+    | RenameSource
     | ReturnToIndex
     | SelectService String
     | SetData String String
@@ -103,6 +104,13 @@ update msg model =
                 { model | step = Where, context = defaultContext }
                 [ ReplaceSourceInCollection model.context
                 , ProcessSources [ model.context ]
+                , GoToPage (Page.Sources Sources.Index)
+                ]
+
+        RenameSource ->
+            returnRepliesWithModel
+                { model | step = Where, context = defaultContext }
+                [ ReplaceSourceInCollection model.context
                 , GoToPage (Page.Sources Sources.Index)
                 ]
 
@@ -642,3 +650,50 @@ note service =
                     }
                 , text "."
                 ]
+
+
+
+-- RENAME
+
+
+rename : Model -> List (Html Msg)
+rename { context } =
+    [ -----------------------------------------
+      -- Navigation
+      -----------------------------------------
+      UI.Navigation.local
+        [ ( Icon Icons.arrow_back
+          , Label "Go Back" Shown
+          , PerformMsg ReturnToIndex
+          )
+        ]
+
+    -----------------------------------------
+    -- Content
+    -----------------------------------------
+    , (\h ->
+        form RenameSource
+            [ UI.Kit.canisterForm h ]
+      )
+        [ UI.Kit.h2 "Name your source"
+
+        -- Input
+        --------
+        , [ name "name"
+          , onInput (SetData "name")
+          , value (Dict.fetch "name" "" context.data)
+          ]
+            |> UI.Kit.textField
+            |> chunky [ C.max_w_md, C.mx_auto ]
+
+        -- Button
+        ---------
+        , chunk
+            [ C.mt_10 ]
+            [ UI.Kit.button
+                Normal
+                Bypass
+                (text "Save")
+            ]
+        ]
+    ]

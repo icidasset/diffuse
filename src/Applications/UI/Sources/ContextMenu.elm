@@ -4,6 +4,7 @@ import Conditional exposing (ifThenElse)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Material.Icons.Action as Icons
+import Material.Icons.Content as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Image as Icons
 import Material.Icons.Notification as Icons
@@ -46,6 +47,16 @@ sourceMenu source =
             { icon = Icons.delete
             , label = "Remove source"
             , msg = RemoveSourceFromCollection { sourceId = source.id }
+            , active = False
+            }
+        , Item
+            { icon = Icons.font_download
+            , label = "Rename source"
+            , msg =
+                source.id
+                    |> UI.Sources.Page.Rename
+                    |> UI.Page.Sources
+                    |> GoToPage
             , active = False
             }
         ]

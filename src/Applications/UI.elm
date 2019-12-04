@@ -758,6 +758,8 @@ update msg model =
         -----------------------------------------
         -- Page Transitions
         -----------------------------------------
+        -- Sources.NewThroughRedirect
+        -----------------------------
         PageChanged (Page.Sources (UI.Sources.Page.NewThroughRedirect service args)) ->
             let
                 ( sources, form, defaultContext ) =
@@ -785,40 +787,17 @@ update msg model =
                 |> (\s -> { model | sources = s })
                 |> return
 
+        -- Sources.Edit
+        ---------------
         PageChanged (Page.Sources (UI.Sources.Page.Edit sourceId)) ->
-            let
-                isLoading =
-                    model.isLoading
+            loadSourceForForm model sourceId
 
-                maybeSource =
-                    List.find (.id >> (==) sourceId) model.sources.collection
-            in
-            case ( isLoading, maybeSource ) of
-                ( False, Just source ) ->
-                    let
-                        ( sources, form ) =
-                            ( model.sources
-                            , model.sources.form
-                            )
+        -- Sources.Rename
+        -----------------
+        PageChanged (Page.Sources (UI.Sources.Page.Rename sourceId)) ->
+            loadSourceForForm model sourceId
 
-                        newForm =
-                            { form | context = source }
-
-                        newSources =
-                            { sources | form = newForm }
-                    in
-                    return { model | sources = newSources }
-
-                ( False, Nothing ) ->
-                    return model
-
-                ( True, _ ) ->
-                    -- Redirect away from edit-source page
-                    UI.Sources.Page.Index
-                        |> Page.Sources
-                        |> ChangeUrlUsingPage
-                        |> updateWithModel model
-
+        --
         PageChanged _ ->
             return model
 
@@ -1707,6 +1686,42 @@ hideOverlay model =
       --
     , Cmd.none
     )
+
+
+loadSourceForForm : Model -> String -> ( Model, Cmd Msg )
+loadSourceForForm model sourceId =
+    let
+        isLoading =
+            model.isLoading
+
+        maybeSource =
+            List.find (.id >> (==) sourceId) model.sources.collection
+    in
+    case ( isLoading, maybeSource ) of
+        ( False, Just source ) ->
+            let
+                ( sources, form ) =
+                    ( model.sources
+                    , model.sources.form
+                    )
+
+                newForm =
+                    { form | context = source }
+
+                newSources =
+                    { sources | form = newForm }
+            in
+            return { model | sources = newSources }
+
+        ( False, Nothing ) ->
+            return model
+
+        ( True, _ ) ->
+            -- Redirect away from edit-source page
+            UI.Sources.Page.Index
+                |> Page.Sources
+                |> ChangeUrlUsingPage
+                |> updateWithModel model
 
 
 resetUrl : Nav.Key -> Url -> Page.Page -> Cmd Msg

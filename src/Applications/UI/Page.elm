@@ -125,6 +125,9 @@ toString_ page =
         Sources (Sources.NewThroughRedirect _ _) ->
             "sources/new"
 
+        Sources (Sources.Rename sourceId) ->
+            "sources/rename/" ++ sourceId
+
 
 {-| Are the bases of these two pages the same?
 -}
@@ -208,6 +211,7 @@ route =
         , map (Sources << Sources.Edit) (s "sources" </> s "edit" </> string)
         , map (Sources Sources.New) (s "sources" </> s "new")
         , map (Sources Sources.NewOnboarding) (s "sources" </> s "welcome")
+        , map (Sources << Sources.Rename) (s "sources" </> s "rename" </> string)
 
         -- Oauth
         --------

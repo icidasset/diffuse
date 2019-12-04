@@ -13,3 +13,4 @@ type Page
     | New
     | NewOnboarding
     | NewThroughRedirect Service { codeOrToken : Maybe String, state : Maybe String }
+    | Rename String

@@ -2,10 +2,11 @@
 
 ## 2.2.0
 
-- Added dark mode
+- **Added dark mode**
+- **Added support for BTFS (an IPFS fork)**
+- Added ability to rename sources (ie. after creation)
 - Added keyboard shortcuts for play/pause, toggle shuffle, etc.  
   See UI section on the about page for more info.
-- Added support for BTFS (an IPFS fork)
 - Improved IPFS support as a music source (now uses paths instead of hashes)
 - Improved text readability (contrast, etc.)
 

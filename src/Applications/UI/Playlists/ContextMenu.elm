@@ -3,6 +3,7 @@ module UI.Playlists.ContextMenu exposing (listMenu)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Material.Icons.Action as Icons
+import Material.Icons.Content as Icons
 import Material.Icons.File as Icons
 import Material.Icons.Image as Icons
 import Playlists exposing (Playlist)
@@ -22,7 +23,7 @@ listMenu : Playlist -> List IdentifiedTrack -> Coordinates -> ContextMenu Reply
 listMenu playlist tracks =
     ContextMenu
         [ Item
-            { icon = Icons.edit
+            { icon = Icons.font_download
             , label = "Rename playlist"
             , msg =
                 playlist.name

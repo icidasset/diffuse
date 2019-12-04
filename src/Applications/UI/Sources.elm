@@ -306,6 +306,9 @@ view { amountOfTracks } page model =
 
             NewThroughRedirect _ _ ->
                 List.map (Html.map FormMsg) (Form.new { onboarding = False } model.form)
+
+            Rename sourceId ->
+                List.map (Html.map FormMsg) (Form.rename model.form)
         )
 
 
