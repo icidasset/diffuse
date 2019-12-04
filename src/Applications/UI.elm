@@ -1002,7 +1002,8 @@ translateReply reply model =
                 Https ->
                     """
                     Unfortunately the local IPFS API doesn't work with HTTPS.
-                    Install the [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion#release-channel) browser extension to get around this issue.
+                    Install the [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion#release-channel) browser extension to get around this issue
+                    (and make sure it redirects to the local gateway).
                     """
                         |> Notifications.error
                         |> showNotificationWithModel model
