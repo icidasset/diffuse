@@ -50,7 +50,7 @@ Will be used for the forms.
 properties : List Property
 properties =
     [ { key = "directoryHash"
-      , label = "IPFS Path / DNSLink domain"
+      , label = "Directory hash / DNSLink domain"
       , placeholder = "QmVLDAhCY3X9P2u"
       , password = False
       }
