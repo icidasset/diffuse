@@ -117,5 +117,5 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ hash =
-    Ipfs.extractGateway srcData ++ "/btfs/" ++ hash
+makeTrackUrl _ srcData _ path =
+    Ipfs.extractGateway srcData ++ "/btfs/" ++ Ipfs.rootHash srcData ++ "/" ++ Ipfs.encodedPath path
