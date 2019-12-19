@@ -42,7 +42,7 @@ parseTreeResponse response previousMarker =
 
 treeDecoder : Decoder (List String)
 treeDecoder =
-    path [ "D:response" ] (list treeItemDecoder)
+    path [ "D:response" ] (leakyList treeItemDecoder)
 
 
 treeItemDecoder : Decoder String
