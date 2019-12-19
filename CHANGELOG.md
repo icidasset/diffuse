@@ -2,7 +2,8 @@
 
 ## 2.2.1
 
-- Fixes processing issue with WebDAV
+- Fixes processing issues with Google Drive
+- Fixes processing issues with WebDAV
 
 ## 2.2.0
 

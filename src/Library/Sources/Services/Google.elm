@@ -12,8 +12,10 @@ import Json.Decode
 import Json.Encode
 import Sources exposing (Property, SourceData)
 import Sources.Processing exposing (..)
+import Sources.Services.Google.Marker as Marker
 import Sources.Services.Google.Parser as Parser
 import Time
+import Url
 
 
 
@@ -186,28 +188,43 @@ makeTree srcData marker currentTime resultMsg =
         folderId =
             Dict.fetch "folderId" "" srcData
 
-        queryBase =
-            [ "mimeType contains 'audio/'" ]
-
         query =
-            case folderId of
+            case String.trim folderId of
                 "" ->
-                    queryBase
+                    [ "mimeType contains 'audio/'" ]
 
                 fid ->
-                    queryBase ++ [ "'" ++ fid ++ "' in parents" ]
+                    let
+                        parentId =
+                            marker
+                                |> Marker.takeOne
+                                |> Maybe.withDefault (Marker.Directory fid)
+                                |> Marker.itemDirectory
+                    in
+                    [ "(mimeType contains 'audio/'"
+                    , "or mimeType = 'application/vnd.google-apps.folder')"
+                    , "and ('" ++ parentId ++ "' in parents)"
+                    ]
 
         paramsBase =
-            [ ( "pageSize", "1000" )
-            , ( "q", String.join " and " query )
+            [ ( "fields"
+              , String.join ", "
+                    [ "nextPageToken"
+                    , "files/id"
+                    , "files/mimeType"
+                    , "files/name"
+                    , "files/trashed"
+                    ]
+              )
+            , ( "pageSize", "1000" )
+            , ( "q", String.concat query )
             , ( "spaces", "drive" )
             ]
 
         queryString =
-            (case marker of
-                InProgress cursor ->
-                    [ ( "pageToken", cursor )
-                    ]
+            (case Marker.takeOne marker of
+                Just (Marker.Param { token }) ->
+                    [ ( "pageToken", token ) ]
 
                 _ ->
                     []
@@ -267,14 +284,20 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentTime srcData method fileId =
+makeTrackUrl currentTime srcData method path =
     let
+        fileId =
+            path
+                |> String.split "?"
+                |> List.head
+                |> Maybe.withDefault path
+
         accessToken =
             Dict.fetch "accessToken" "" srcData
     in
     String.concat
         [ "https://www.googleapis.com/drive/v3/files/"
-        , fileId
+        , Url.percentEncode fileId
         , "?alt=media&access_token="
-        , accessToken
+        , Url.percentEncode accessToken
         ]

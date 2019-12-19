@@ -69,12 +69,16 @@ self.addEventListener("fetch", event => {
     )
 
   // When doing a request with access token in the url, put it in the headers instead
-  } else if (event.request.url.includes("&access_token=")) {
-    const [urlWithoutToken, token] = event.request.url.split("&access_token=")
+  } else if (event.request.url.includes("access_token=")) {
+    const url = new URL(event.request.url)
+    const token = url.searchParams.get("access_token")
+
+    url.searchParams.delete("access_token")
+    url.search = "?" + url.searchParams.toString()
 
     newRequestWithAuth(
       event,
-      urlWithoutToken,
+      url.toString(),
       "Bearer " + token
     )
 

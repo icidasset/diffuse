@@ -612,6 +612,9 @@ note service =
                     , text "continue to the next screen."
                     ]
                 , text " Changing the client stuff allows you to use your own Google OAuth client."
+                , text " Disclaimer: "
+                , text "The Google Drive API is fairly slow and limited, "
+                , text "consider using a different service."
                 ]
 
         Ipfs ->

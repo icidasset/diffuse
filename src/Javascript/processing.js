@@ -6,8 +6,9 @@
 
 
 import * as musicMetadata from "music-metadata-browser"
-import { StreamingHttpTokenReader } from "streaming-http-token-reader"
+import { HttpTokenizer } from "@tokenizer/http"
 
+import { mimeType } from "./common"
 import { transformUrl } from "./urls"
 
 
@@ -18,20 +19,27 @@ export function processContext(context) {
   const initialPromise = Promise.resolve([])
 
   return context.urlsForTags.reduce((accumulator, urls, idx) => {
-    let getUrl
-    let headUrl
-
     return accumulator.then(col => {
+      let get, head
+
       const filename = context
         .receivedFilePaths[idx]
         .split("/")
         .reverse()[0]
-        .replace(/\.\w+$/, "")
 
-      return transformUrl(urls.getUrl)
-        .then(url => { getUrl = url; return transformUrl(urls.headUrl) })
-        .then(url => { headUrl = url; return getTags(getUrl, headUrl, filename) })
+      return transformUrl(urls.headUrl)
+        .then(url => resolveUrl("HEAD", url))
+        .then(res => head = res)
+
+        .then(_ => urls.headUrl === urls.getUrl
+          ? head
+          : transformUrl(urls.getUrl).then(url => resolveUrl("GET", url))
+        )
+        .then(res => get = res)
+
+        .then(_ => getTags(head, get, filename))
         .then(r => col.concat(r))
+
         .catch(e => {
           console.error(e)
           return col.concat(null)
@@ -64,23 +72,41 @@ const parserConfiguration = Object.assign(
 
 
 
-function getTags(getUrl, headUrl, filename) {
-  const reader = StreamingHttpTokenReader.fromUrl(
-    headUrl,
+function getTags(head, get, filename) {
+  const fileExtMatch = filename.match(/\.(\w+)$/)
+  const fileExt = fileExtMatch && fileExtMatch[1]
+
+  // Content type
+  const overrideContentType = (
+    get.url.includes("googleapis.com") ||
+    get.url.includes("googleusercontent.com")
+  )
+
+  const fileMime = overrideContentType
+    ? mimeType(fileExt)
+    : head.mime
+
+  // Reader
+  const reader = HttpTokenizer.fromUrl(
+    get.url,
     readerConfiguration
   )
 
-  return reader.init().then(_ => {
-    reader.url = getUrl
+  reader.contentType = fileMime
+  reader.fileSize = head.size
+  reader.url = get.url
 
-    return musicMetadata.parseFromTokenizer(
-      reader,
-      reader.contentType,
-      parserConfiguration
-    )
-  })
+  // Get tags
+  return musicMetadata.parseFromTokenizer(
+    reader,
+    reader.contentType,
+    parserConfiguration
+  )
   .then(pickTags)
-  .catch(_ => fallbackTags(filename))
+  .catch(err => {
+    console.error(err)
+    return fallbackTags(filename)
+  })
 }
 
 
@@ -102,14 +128,32 @@ function pickTags(result) {
 
 
 function fallbackTags(filename) {
+  const filenameWithoutExt = filename.replace(/\.\w+$/, "")
+
   return {
     disc: 1,
     nr: 1,
     album: "Unknown",
     artist: "Unknown",
-    title: filename,
+    title: filenameWithoutExt,
     genre: null,
     year: null,
     picture: null
   }
+}
+
+
+function resolveUrl(method, url) {
+  return fetch(url, {
+    method: method,
+    headers: method === "HEAD"
+      ? new Headers()
+      : new Headers({ "Range": "bytes=0-0" })
+
+  }).then(resp => ({
+    mime: resp.headers.get("content-type"),
+    size: resp.headers.get("content-length"),
+    url: resp.url
+
+  }))
 }

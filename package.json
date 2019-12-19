@@ -20,13 +20,13 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
+    "@tokenizer/http": "^0.4.0",
     "blockstack": "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git",
     "fast-text-encoding": "^1.0.0",
     "lunr": "^2.3.8",
-    "music-metadata-browser": "^1.8.1",
+    "music-metadata-browser": "^1.9.2",
     "pep": "mpizenberg/elm-pep#071616d75ca61e261fdefc7b55bc46c34e44ea22",
     "remotestoragejs": "^1.2.2",
-    "streaming-http-token-reader": "^0.3.1",
     "subworkers": "^1.0.1",
     "tocca": "^2.0.4"
   }

@@ -1,11 +1,13 @@
-module Sources.Services.Google.Parser exposing (fileDecoder, parseErrorResponse, parsePreparationResponse, parseTreeResponse)
+module Sources.Services.Google.Parser exposing (..)
 
 import Dict
 import Json.Decode exposing (..)
+import Json.Decode.Ext exposing (..)
 import Maybe.Extra
 import Sources exposing (SourceData)
 import Sources.Pick
 import Sources.Processing exposing (Marker(..), PrepationAnswer, TreeAnswer)
+import Sources.Services.Google.Marker as Marker
 
 
 
@@ -45,8 +47,17 @@ parsePreparationResponse response srcData _ =
 -- TREE
 
 
+type alias Properties =
+    { id : String, name : String }
+
+
+type Item
+    = File Properties
+    | Directory Properties
+
+
 parseTreeResponse : String -> Marker -> TreeAnswer Marker
-parseTreeResponse response _ =
+parseTreeResponse response previousMarker =
     let
         nextPageToken =
             response
@@ -54,31 +65,89 @@ parseTreeResponse response _ =
                 |> Result.toMaybe
                 |> Maybe.Extra.join
 
-        files =
-            decodeString
-                (field "files" <| list fileDecoder)
-                response
+        items =
+            response
+                |> decodeString (field "files" <| listIgnore itemDecoder)
+                |> Result.withDefault []
+
+        usedDirectory =
+            previousMarker
+                |> Marker.takeOne
+                |> Maybe.map Marker.itemDirectory
+                |> Maybe.withDefault ""
+
+        ( directories, files ) =
+            List.partition
+                (\item ->
+                    case item of
+                        Directory _ ->
+                            True
+
+                        File _ ->
+                            False
+                )
+                items
     in
     { filePaths =
         files
-            |> Result.withDefault []
-            |> List.filter (Tuple.second >> Sources.Pick.isMusicFile)
-            |> List.map Tuple.first
+            |> List.map itemProperties
+            |> List.filter (.name >> Sources.Pick.isMusicFile)
+            |> List.map (\{ id, name } -> id ++ "?name=" ++ name)
     , marker =
-        case nextPageToken of
-            Just token ->
-                InProgress token
+        previousMarker
+            |> Marker.removeOne
+            |> Marker.concat
+                (List.map
+                    (itemProperties >> .id >> Marker.Directory)
+                    directories
+                )
+            |> (case nextPageToken of
+                    Just token ->
+                        { directory = usedDirectory, token = token }
+                            |> Marker.Param
+                            |> List.singleton
+                            |> Marker.concat
 
-            Nothing ->
-                TheEnd
+                    Nothing ->
+                        identity
+               )
     }
 
 
-fileDecoder : Decoder ( String, String )
-fileDecoder =
-    map2 Tuple.pair
+itemDecoder : Decoder Item
+itemDecoder =
+    map4
+        (\id name mime _ ->
+            case mime of
+                "application/vnd.google-apps.folder" ->
+                    Directory { id = id, name = name }
+
+                _ ->
+                    File { id = id, name = name }
+        )
         (field "id" string)
         (field "name" string)
+        (field "mimeType" string)
+        (andThen
+            (\b ->
+                if b then
+                    fail "Exclude deleted files"
+
+                else
+                    succeed b
+            )
+            (field "trashed" bool)
+        )
+
+
+itemProperties : Item -> Properties
+itemProperties item =
+    case item of
+        Directory props ->
+            props
+
+        File props ->
+            props
 
 
 
