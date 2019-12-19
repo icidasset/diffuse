@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1
+
+- Fixes processing issue with WebDAV
+
 ## 2.2.0
 
 - **Added dark mode**
