@@ -189,10 +189,10 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
         tag
         (case maybeMsg of
             Just msg ->
-                [ onClick msg ]
+                attributes ++ [ onClick msg ]
 
             Nothing ->
-                []
+                attributes
         )
         (List.append
             defaultClasses

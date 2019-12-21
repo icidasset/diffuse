@@ -1,8 +1,12 @@
 # Changelog
 
+## 2.2.2
+
+- Fixes several buttons that weren't working anymore
+
 ## 2.2.1
 
-- Add support for Google Drive nested directories
+- Adds support for Google Drive nested directories
 - Fixes processing issues with Google Drive
 - Fixes processing issues with WebDAV
 
