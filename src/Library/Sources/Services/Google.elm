@@ -5,6 +5,7 @@ module Sources.Services.Google exposing (authorizationSourceData, authorizationU
 
 import Base64
 import Common
+import Conditional exposing (..)
 import Dict
 import Dict.Ext as Dict
 import Http
@@ -14,6 +15,7 @@ import Sources exposing (Property, SourceData)
 import Sources.Processing exposing (..)
 import Sources.Services.Google.Marker as Marker
 import Sources.Services.Google.Parser as Parser
+import String.Path
 import Time
 import Url
 
@@ -188,22 +190,23 @@ makeTree srcData marker currentTime resultMsg =
         folderId =
             Dict.fetch "folderId" "" srcData
 
+        parentId =
+            marker
+                |> Marker.takeOne
+                |> Maybe.map Marker.itemDirectory
+                |> Maybe.andThen (\dir -> ifThenElse (String.isEmpty dir) Nothing <| Just dir)
+                |> Maybe.withDefault folderId
+                |> String.Path.file
+
         query =
-            case String.trim folderId of
+            case parentId of
                 "" ->
                     [ "mimeType contains 'audio/'" ]
 
-                fid ->
-                    let
-                        parentId =
-                            marker
-                                |> Marker.takeOne
-                                |> Maybe.withDefault (Marker.Directory fid)
-                                |> Marker.itemDirectory
-                    in
+                pid ->
                     [ "(mimeType contains 'audio/'"
                     , "or mimeType = 'application/vnd.google-apps.folder')"
-                    , "and ('" ++ parentId ++ "' in parents)"
+                    , "and ('" ++ pid ++ "' in parents)"
                     ]
 
         paramsBase =
@@ -286,11 +289,14 @@ We need this to play the track.
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl currentTime srcData method path =
     let
+        file =
+            String.Path.file path
+
         fileId =
-            path
+            file
                 |> String.split "?"
                 |> List.head
-                |> Maybe.withDefault path
+                |> Maybe.withDefault file
 
         accessToken =
             Dict.fetch "accessToken" "" srcData

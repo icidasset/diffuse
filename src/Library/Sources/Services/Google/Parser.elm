@@ -8,6 +8,7 @@ import Sources exposing (SourceData)
 import Sources.Pick
 import Sources.Processing exposing (Marker(..), PrepationAnswer, TreeAnswer)
 import Sources.Services.Google.Marker as Marker
+import String.Path
 
 
 
@@ -76,6 +77,11 @@ parseTreeResponse response previousMarker =
                 |> Maybe.map Marker.itemDirectory
                 |> Maybe.withDefault ""
 
+        usedPath =
+            usedDirectory
+                |> String.Path.dropRight 1
+                |> String.Path.addSuffix
+
         ( directories, files ) =
             List.partition
                 (\item ->
@@ -92,13 +98,17 @@ parseTreeResponse response previousMarker =
         files
             |> List.map itemProperties
             |> List.filter (.name >> Sources.Pick.isMusicFile)
-            |> List.map (\{ id, name } -> id ++ "?name=" ++ name)
+            |> List.map (\{ id, name } -> usedPath ++ id ++ "?name=" ++ name)
     , marker =
         previousMarker
             |> Marker.removeOne
             |> Marker.concat
                 (List.map
-                    (itemProperties >> .id >> Marker.Directory)
+                    (itemProperties
+                        >> (\props -> props.name ++ "/" ++ props.id)
+                        >> String.append usedPath
+                        >> Marker.Directory
+                    )
                     directories
                 )
             |> (case nextPageToken of

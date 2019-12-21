@@ -2,6 +2,7 @@
 
 ## 2.2.1
 
+- Add support for Google Drive nested directories
 - Fixes processing issues with Google Drive
 - Fixes processing issues with WebDAV
 
