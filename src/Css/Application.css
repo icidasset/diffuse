@@ -24,11 +24,12 @@ html, body {
 
 
 body {
-  @apply text-base01 font-body;
+  @apply text-base01;
 
   background-color: rgb(2, 7, 14);
   background-image: url(images/ep_naturalblack_pattern.jpg);
   font-feature-settings: kern, liga;
+  font-weight: 400;
   min-width: 300px;
   text-rendering: optimizeLegibility;
 }
