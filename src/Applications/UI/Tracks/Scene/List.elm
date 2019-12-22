@@ -340,7 +340,7 @@ header isPlaylist showAlbum sortBy sortDirection =
 -- HEADER COLUMN
 
 
-headerColumn : String -> Float -> Maybe (Html msg) -> msg -> Html msg
+headerColumn : String -> Float -> Maybe (Html Msg) -> Msg -> Html Msg
 headerColumn text_ width maybeSortIcon msg =
     brick
         [ Html.Events.onClick msg
@@ -351,12 +351,19 @@ headerColumn text_ width maybeSortIcon msg =
         ]
         [ C.border_l
         , C.border_gray_300
-        , C.cursor_default
         , C.leading_relaxed
         , C.pl_2
         , C.pr_2
         , C.pt_px
         , C.relative
+
+        --
+        , case msg of
+            Bypass ->
+                C.cursor_default
+
+            _ ->
+                C.cursor_pointer
 
         --
         , C.first__border_l_0
