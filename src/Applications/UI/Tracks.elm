@@ -711,7 +711,6 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 ]
                 [ C.bg_transparent
                 , C.border_none
-                , C.text_inherit
                 , C.flex_grow
                 , C.h_full
                 , C.ml_1
@@ -720,8 +719,13 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , C.pl_8
                 , C.pr_2
                 , C.pt_px
+                , C.text_base02
                 , C.text_sm
                 , C.w_full
+
+                -- Dark mode
+                ------------
+                , C.dark__text_base06
                 ]
                 []
 
