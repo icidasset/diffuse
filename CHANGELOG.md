@@ -2,6 +2,7 @@
 
 ## 2.2.3
 
+- Fixes processing issue
 - Fixes search text color
 - Improves search regarding parentheses
 - Uses variable fonts (loads fonts faster)

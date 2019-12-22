@@ -7,6 +7,7 @@
 
 import * as musicMetadata from "music-metadata-browser"
 import { HttpTokenizer } from "@tokenizer/http"
+import { parseContentRange } from "@tokenizer/range";
 
 import { mimeType } from "./common"
 import { transformUrl } from "./urls"
@@ -31,7 +32,7 @@ export function processContext(context) {
         .then(url => resolveUrl("HEAD", url))
         .then(res => head = res)
 
-        .then(_ => urls.headUrl === urls.getUrl
+        .then(_ => (urls.headUrl === urls.getUrl) && head.mime && head.size
           ? head
           : transformUrl(urls.getUrl).then(url => resolveUrl("GET", url))
         )
@@ -84,7 +85,7 @@ function getTags(head, get, filename) {
 
   const fileMime = overrideContentType
     ? mimeType(fileExt)
-    : head.mime
+    : get.mime
 
   // Reader
   const reader = HttpTokenizer.fromUrl(
@@ -93,7 +94,7 @@ function getTags(head, get, filename) {
   )
 
   reader.contentType = fileMime
-  reader.fileSize = head.size
+  reader.fileSize = get.size
   reader.url = get.url
 
   // Get tags
@@ -150,10 +151,14 @@ function resolveUrl(method, url) {
       ? new Headers()
       : new Headers({ "Range": "bytes=0-0" })
 
-  }).then(resp => ({
-    mime: resp.headers.get("content-type"),
-    size: resp.headers.get("content-length"),
-    url: resp.url
+  }).then(resp => {
+    const length = resp.headers.get("content-length")
+    const range = resp.headers.get("content-range")
 
-  }))
+    return {
+      mime: resp.headers.get("content-type"),
+      size: length ? length : (range ? parseContentRange(range).instanceLength : 0),
+      url: resp.url
+    }
+  })
 }
