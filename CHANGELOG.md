@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.3
+
+- Fixes search text color
+- Improves search regarding parentheses
+- Uses variable fonts (loads fonts faster)
+
 ## 2.2.2
 
 - Fixes several buttons that weren't working anymore

@@ -105,13 +105,20 @@ function customLunr(config) {
   const builder = new lunr.Builder
 
   builder.pipeline.add(
+    removeParenthesesFromToken,
     lunr.stemmer
   )
 
   builder.searchPipeline.add(
+    removeParenthesesFromToken,
     lunr.stemmer
   )
 
   config.call(builder, builder)
   return builder.build()
+}
+
+
+function removeParenthesesFromToken(token) {
+  return token.update(s => s.replace(/\(|\)/, ""))
 }
