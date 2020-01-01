@@ -132,17 +132,17 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
         --
         , C.md__text_almost_sm
 
+        -- TODO
+        -- , case maybeDnD of
+        --     Just dnd ->
+        --         if DnD.isDragging dnd then
+        --             C.overflow_y_hidden
         --
-        , case maybeDnD of
-            Just dnd ->
-                if DnD.isDragging dnd then
-                    C.overflow_y_hidden
-
-                else
-                    C.overflow_y_auto
-
-            Nothing ->
-                C.overflow_y_auto
+        --         else
+        --             C.overflow_y_auto
+        --
+        --     Nothing ->
+        --         C.overflow_y_auto
         ]
         [ -- Shadow
           ---------

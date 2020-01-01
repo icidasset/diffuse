@@ -34,6 +34,7 @@ import Maybe.Extra as Maybe
 import Notifications exposing (Notification)
 import Playlists.Encoding as Playlists
 import Process
+import Queue
 import Return2 exposing (..)
 import Return3
 import Settings
@@ -63,7 +64,6 @@ import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Queue as Queue
-import UI.Queue.Common
 import UI.Queue.ContextMenu as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Settings as Settings
@@ -115,6 +115,7 @@ type alias Model =
     , currentTime : Time.Posix
     , darkMode : Bool
     , debounce : Debouncer Msg Msg
+    , downloading : Maybe { notificationId : Int }
     , focusedOnInput : Bool
     , isDragging : Bool
     , isLoading : Bool
@@ -170,6 +171,7 @@ init flags url key =
     { contextMenu = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
     , darkMode = flags.darkMode
+    , downloading = Nothing
     , focusedOnInput = False
     , isDragging = False
     , isLoading = True
@@ -237,6 +239,7 @@ type Msg
       --
     | Blur
     | Debounce (Debouncer.Msg Msg)
+    | DownloadTracksFinished
     | FocusedOnInput
     | HideOverlay
     | KeyboardMsg Keyboard.Msg
@@ -325,6 +328,16 @@ update msg model =
                 { model = model.debounce
                 , msg = debouncerMsg
                 }
+
+        DownloadTracksFinished ->
+            case model.downloading of
+                Just { notificationId } ->
+                    { id = notificationId }
+                        |> DismissNotification
+                        |> translateReplyWithModel { model | downloading = Nothing }
+
+                Nothing ->
+                    return model
 
         FocusedOnInput ->
             return { model | focusedOnInput = True }
@@ -1283,7 +1296,7 @@ translateReply reply model =
                         |> Maybe.map
                             (.identifiedTrack >> Tuple.second)
                         |> Maybe.map
-                            (UI.Queue.Common.makeEngineItem
+                            (Queue.makeEngineItem
                                 model.currentTime
                                 model.sources.collection
                                 model.tracks.cached
@@ -1372,6 +1385,27 @@ translateReply reply model =
                 |> TracksMsg
                 |> updateWithModel model
 
+        DownloadTracks zipName tracks ->
+            let
+                notification =
+                    Notifications.stickyWarning "Downloading tracks ..."
+
+                downloading =
+                    Just { notificationId = Notifications.id notification }
+            in
+            [ ( "zipName", Json.Encode.string zipName )
+            , ( "trackIds"
+              , tracks
+                    |> List.map .id
+                    |> Json.Encode.list Json.Encode.string
+              )
+            ]
+                |> Json.Encode.object
+                |> Alien.broadcast Alien.DownloadTracks
+                |> Ports.toBrain
+                |> returnWithModel { model | downloading = downloading }
+                |> andThen (showNotification notification)
+
         ExternalSourceAuthorization urlBuilder ->
             model.url
                 |> Common.urlOrigin
@@ -1398,7 +1432,7 @@ translateReply reply model =
                     item
                         |> .identifiedTrack
                         |> Tuple.second
-                        |> UI.Queue.Common.makeEngineItem
+                        |> Queue.makeEngineItem
                             model.currentTime
                             model.sources.collection
                             model.tracks.cached
@@ -1540,7 +1574,7 @@ translateReply reply model =
                               )
                             , ( "url"
                               , track
-                                    |> UI.Queue.Common.makeTrackUrl
+                                    |> Queue.makeTrackUrl
                                         model.currentTime
                                         model.sources.collection
                                     |> Json.Encode.string
@@ -1824,6 +1858,7 @@ subscriptions model =
             )
 
         --
+        , Ports.downloadTracksFinished (always DownloadTracksFinished)
         , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
         , Ports.showErrorNotification (Notifications.error >> ShowNotification)
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)

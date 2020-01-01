@@ -7,11 +7,10 @@ import Array
 import List.Extra as List
 import Maybe.Ext as Maybe
 import Maybe.Extra as Maybe
-import Queue exposing (Item)
+import Queue exposing (Item, makeItem)
 import Random exposing (Generator, Seed)
 import Time
 import Tracks exposing (IdentifiedTrack)
-import UI.Queue.Common exposing (makeItem)
 
 
 

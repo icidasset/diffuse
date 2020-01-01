@@ -7,11 +7,13 @@
 
 
 import "tocca"
+import JSZip from "jszip"
+import { saveAs } from "file-saver"
 
 import "../../build/vendor/pep"
 
 import * as audioEngine from "./audio-engine"
-import { debounce } from "./common"
+import { debounce, fileExtension } from "./common"
 
 
 // 🍱
@@ -56,6 +58,7 @@ brain.onmessage = event => {
 
 
 function handleAction(action, data) { switch (action) {
+  case "DOWNLOAD_TRACKS": return downloadTracks(data)
   case "REDIRECT_TO_BLOCKSTACK": return redirectToBlockstack(data)
 }}
 
@@ -241,6 +244,37 @@ function preferredColorScheme() {
   })
 
   return m
+}
+
+
+
+// Downloading
+// -----------
+
+function downloadTracks(group) {
+  const zip = new JSZip()
+  const folder = zip.folder("Diffuse - " + group.name)
+
+  return group.tracks.reduce(
+    (acc, track) => { return acc
+      .then(_ => fetch(track.url))
+      .then(r => {
+        const mimeType = r.headers.get("content-type")
+        const fileExt = fileExtension(mimeType) || "unknown"
+
+        return r.blob().then(
+          b => folder.file(track.filename + "." + fileExt, b)
+        )
+      })
+    },
+    Promise.resolve()
+
+  ).then(_ => zip.generateAsync({ type: "blob" })
+  ).then(zipFile => {
+    saveAs(zipFile, "Diffuse - " + group.name + ".zip")
+    app.ports.downloadTracksFinished.send(null)
+
+  })
 }
 
 

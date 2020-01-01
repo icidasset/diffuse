@@ -90,6 +90,7 @@ type Reply
     | AddSourceToCollection Source
     | ClearTracksCache
     | DisableTracksGrouping
+    | DownloadTracks String (List Track)
     | ExternalSourceAuthorization (String -> String)
     | ForceTracksRerender
     | GroupTracksBy Tracks.Grouping

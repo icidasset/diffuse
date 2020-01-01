@@ -38,6 +38,7 @@ type Tag
       -----------------------------------------
       -- from UI
       -----------------------------------------
+    | DownloadTracks
     | ImportLegacyData
     | ProcessSources
     | RedirectToBlockstackSignIn
@@ -93,6 +94,7 @@ enum =
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        , ( "DOWNLOAD_TRACKS", DownloadTracks )
         , ( "IMPORT_LEGACY_DATA", ImportLegacyData )
         , ( "PROCESS_SOURCES", ProcessSources )
         , ( "REDIRECT_TO_BLOCKSTACK_SIGN_IN", RedirectToBlockstackSignIn )

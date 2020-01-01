@@ -23,6 +23,8 @@
     "@tokenizer/http": "^0.4.0",
     "blockstack": "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git",
     "fast-text-encoding": "^1.0.0",
+    "file-saver": "^2.0.2",
+    "jszip": "^3.2.2",
     "lunr": "^2.3.8",
     "music-metadata-browser": "^1.9.2",
     "pep": "mpizenberg/elm-pep#071616d75ca61e261fdefc7b55bc46c34e44ea22",

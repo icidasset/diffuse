@@ -46,6 +46,9 @@ port toBrain : Alien.Event -> Cmd msg
 port activeQueueItemEnded : (() -> msg) -> Sub msg
 
 
+port downloadTracksFinished : (() -> msg) -> Sub msg
+
+
 port fromAlien : (Alien.Event -> msg) -> Sub msg
 
 

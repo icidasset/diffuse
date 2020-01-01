@@ -23,8 +23,30 @@ export function identity(a) {
 }
 
 
-export function mimeType(fileExtension) {
-  switch (fileExtension) {
+export function fileExtension(mimeType) {
+  const audioId = mimeType.toLowerCase().split("/")[1]
+
+  switch (audioId) {
+    case "mp3": return "mp3";
+    case "mpeg": return "mp3";
+
+    case "mp4a-latm": return "m4a";
+    case "mp4": return "m4a";
+    case "x-m4a": return "m4a";
+
+    case "flac": return "flac";
+    case "ogg": return "ogg";
+
+    case "wav": return "wav";
+    case "wave": return "wav";
+
+    case "webm": return "webm";
+  }
+}
+
+
+export function mimeType(fileExt) {
+  switch (fileExt) {
     case "mp3": return "audio/mpeg";
     case "mp4": return "audio/mp4";
     case "m4a": return "audio/mp4";

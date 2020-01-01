@@ -134,6 +134,18 @@ app.ports.storeTracksInCache.subscribe(list => {
 
 
 
+// Downloading
+// -----------
+
+app.ports.downloadTracks.subscribe(group => {
+  self.postMessage({
+    action: "DOWNLOAD_TRACKS",
+    data: group
+  })
+})
+
+
+
 // Search
 // ------
 

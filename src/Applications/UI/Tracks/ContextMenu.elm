@@ -8,11 +8,11 @@ import Material.Icons.Av as Icons
 import Material.Icons.Content as Icons
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
+import Queue
 import Sources exposing (Source)
 import Time
 import Tracks exposing (Grouping(..), IdentifiedTrack)
 import UI.Queue as Queue
-import UI.Queue.Common as Queue
 import UI.Reply exposing (Reply(..))
 import UI.Tracks as Tracks
 

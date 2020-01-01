@@ -1,4 +1,4 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, removeByPaths, removeBySourceId, removeFromPlaylist, toPlaylistTracks)
+module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, pick, removeByPaths, removeBySourceId, removeFromPlaylist, toPlaylistTracks)
 
 import Base64
 import List.Extra as List
@@ -81,6 +81,10 @@ type alias Collection =
 
     -- Filtered by search results, favourites, etc.
     , harvested : List IdentifiedTrack
+
+    -- Contexts
+    -----------
+    , scrollContext : String
     }
 
 
@@ -178,6 +182,10 @@ emptyCollection =
     , identified = []
     , arranged = []
     , harvested = []
+
+    -- Contexts
+    -----------
+    , scrollContext = ""
     }
 
 
@@ -201,6 +209,41 @@ makeTrack sourceId ( path, tags ) =
     , sourceId = sourceId
     , tags = tags
     }
+
+
+{-| Given a collection of tracks, pick out the tracks by id in order.
+Note that track ids in the ids list may occur multiple times.
+-}
+pick : List String -> List Track -> List Track
+pick ids collection =
+    collection
+        |> List.foldr
+            (\track ->
+                List.map
+                    (\picking ->
+                        case picking of
+                            PickId id ->
+                                if id == track.id then
+                                    PickTrack track
+
+                                else
+                                    PickId id
+
+                            p ->
+                                p
+                    )
+            )
+            (List.map PickId ids)
+        |> List.foldr
+            (\picking acc ->
+                case picking of
+                    PickId _ ->
+                        acc
+
+                    PickTrack track ->
+                        track :: acc
+            )
+            []
 
 
 removeByPaths : { sourceId : String, paths : List String } -> List Track -> { kept : List Track, removed : List Track }
@@ -269,3 +312,12 @@ toPlaylistTracks =
             , title = t.tags.title
             }
         )
+
+
+
+-- ㊙️
+
+
+type Pick
+    = PickId String
+    | PickTrack Track

@@ -20,9 +20,24 @@ import Url
 
 
 listMenu : Playlist -> List IdentifiedTrack -> Coordinates -> ContextMenu Reply
-listMenu playlist tracks =
+listMenu playlist allTracks =
+    let
+        ( identifiedTracksFromPlaylist, _ ) =
+            Playlists.Matching.match playlist allTracks
+
+        tracksFromPlaylist =
+            identifiedTracksFromPlaylist
+                |> List.sortBy (Tuple.first >> .indexInPlaylist >> Maybe.withDefault 0)
+                |> List.map Tuple.second
+    in
     ContextMenu
         [ Item
+            { icon = Icons.archive
+            , label = "Download as zip file"
+            , msg = DownloadTracks playlist.name tracksFromPlaylist
+            , active = False
+            }
+        , Item
             { icon = Icons.font_download
             , label = "Rename playlist"
             , msg =
@@ -42,12 +57,7 @@ listMenu playlist tracks =
         , Item
             { icon = Icons.offline_bolt
             , label = "Store in cache"
-            , msg =
-                tracks
-                    |> Playlists.Matching.match playlist
-                    |> Tuple.first
-                    |> List.map Tuple.second
-                    |> StoreTracksInCache
+            , msg = StoreTracksInCache tracksFromPlaylist
             , active = False
             }
         ]

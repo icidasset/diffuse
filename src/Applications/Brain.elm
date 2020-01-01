@@ -14,6 +14,7 @@ import Json.Encode
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
+import Queue
 import Return2 exposing (..)
 import Return3
 import Settings
@@ -122,6 +123,7 @@ type Msg
       -----------------------------------------
       -- Sources & Tracks
       -----------------------------------------
+    | DownloadTracks Json.Value
     | Process Processing.Arguments
     | RemoveTracksBySourceId String
       -----------------------------------------
@@ -180,6 +182,57 @@ update msg model =
         -----------------------------------------
         -- Sources & Tracks
         -----------------------------------------
+        DownloadTracks json ->
+            let
+                decoder =
+                    Json.map2
+                        Tuple.pair
+                        (Json.field "zipName" <| Json.string)
+                        (Json.field "trackIds" <| Json.list Json.string)
+
+                ( zipName, trackIds ) =
+                    json
+                        |> Json.decodeValue decoder
+                        |> Result.withDefault ( "?", [] )
+            in
+            model.hypaethralUserData.tracks
+                |> Tracks.pick trackIds
+                |> List.indexedMap Tuple.pair
+                |> Json.Encode.list
+                    (\( idx, track ) ->
+                        Json.Encode.object
+                            [ ( "filename"
+                              , [ (idx + 1)
+                                    |> String.fromInt
+                                    |> String.padLeft 2 '0'
+                                , " - "
+                                , track.tags.artist
+                                , " - "
+                                , track.tags.title
+                                ]
+                                    |> String.concat
+                                    |> Json.Encode.string
+                              )
+
+                            --
+                            , ( "url"
+                              , track
+                                    |> Queue.makeTrackUrl
+                                        model.processing.currentTime
+                                        model.hypaethralUserData.sources
+                                    |> Json.Encode.string
+                              )
+                            ]
+                    )
+                |> (\encodedTracks ->
+                        Json.Encode.object
+                            [ ( "name", Json.Encode.string zipName )
+                            , ( "tracks", encodedTracks )
+                            ]
+                   )
+                |> Brain.Ports.downloadTracks
+                |> returnWithModel model
+
         Process { origin, sources } ->
             { origin = origin
             , sources = sources
@@ -547,6 +600,9 @@ translateAlienData tag data =
         -----------------------------------------
         -- From UI
         -----------------------------------------
+        Alien.DownloadTracks ->
+            DownloadTracks data
+
         Alien.ImportLegacyData ->
             UserLayerMsg User.RetrieveLegacyHypaethralData
 

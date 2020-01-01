@@ -26,7 +26,6 @@ import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Ports as Ports
-import UI.Queue.Common exposing (makeItem)
 import UI.Queue.Fill as Fill
 import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Reply exposing (Reply(..))
