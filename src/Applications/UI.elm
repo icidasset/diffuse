@@ -375,10 +375,10 @@ update msg model =
                             translateReply ShiftQueue m
 
                         [ Keyboard.ArrowUp ] ->
-                            translateReply (Seek <| (m.audioPosition + 10) / m.audioDuration) m
+                            translateReply (Seek <| (m.audioPosition - 10) / m.audioDuration) m
 
                         [ Keyboard.ArrowDown ] ->
-                            translateReply (Seek <| (m.audioPosition - 10) / m.audioDuration) m
+                            translateReply (Seek <| (m.audioPosition + 10) / m.audioDuration) m
 
                         [ Keyboard.Character "N" ] ->
                             translateReply ScrollToNowPlaying m
