@@ -88,7 +88,7 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
 Add the domain of the app, with the protocol, to the __list of allowed origins__.  
 
 ```shell
-btfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh"]'
+btfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://127.0.0.1:8080", "http://127.0.0.1:44999"]'
 ```
 
 You can also make this change in the Web UI, you'll find it under "Settings → BTFS Config".
@@ -98,7 +98,9 @@ You can also make this change in the Web UI, you'll find it under "Settings → 
   "API": {
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": [
-        "https://diffuse.sh"
+        "https://diffuse.sh",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:44999"
       ]
     }
   }
@@ -124,7 +126,7 @@ _Not necessary._
 Add the domain of the app, with the protocol, to the __list of allowed origins__.  
 
 ```shell
-ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh"]'
+ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://127.0.0.1:8080", "http://127.0.0.1:44999"]'
 ```
 
 You can also make this change in the Web UI, you'll find it under "Settings → IPFS Config".
@@ -134,7 +136,9 @@ You can also make this change in the Web UI, you'll find it under "Settings → 
   "API": {
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": [
-        "https://diffuse.sh"
+        "https://diffuse.sh",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:44999"
       ]
     }
   }
@@ -167,7 +171,9 @@ Add the domain of the app, with the protocol, to the __list of allowed origins__
   "API": {
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": [
-        "https://diffuse.sh"
+        "https://diffuse.sh",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:44999"
       ]
     }
   }
@@ -197,6 +203,7 @@ cors:
     - PROPFIND
   allowed_hosts:
     - https://diffuse.sh
+    - http://127.0.0.1:44999
   exposed_headers:
     - Content-Length
     - Content-Type
