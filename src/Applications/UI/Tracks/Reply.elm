@@ -13,7 +13,7 @@ type Reply
     = Transcend (List UI.Reply)
       --
     | MarkAsSelected Int { shiftKey : Bool }
-    | MoveTrackInSelectedPlaylist { from : Int, to : Int }
+    | MoveTrackInSelectedPlaylist { to : Int }
     | ShowTrackMenuWithoutDelay Int { alt : Bool } Coordinates
     | ShowTrackMenuWithSmallDelay Int { alt : Bool } Coordinates
     | SortBy SortBy

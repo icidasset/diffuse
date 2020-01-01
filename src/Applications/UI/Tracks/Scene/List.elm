@@ -81,8 +81,7 @@ update msg model =
                 returnRepliesWithModel
                     { model | dnd = newDnD }
                     [ MoveTrackInSelectedPlaylist
-                        { from = Maybe.withDefault 0 <| DnD.modelSubject newDnD
-                        , to = Maybe.withDefault 0 <| DnD.modelTarget newDnD
+                        { to = Maybe.withDefault 0 (DnD.modelTarget newDnD)
                         }
                     , Transcend uiReplies
                     ]

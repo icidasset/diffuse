@@ -28,45 +28,27 @@ addTo list item =
 {-| Move an item "from" an index "to" another index.
 Putting the item in front of the `to` index.
 
-    >>> move { from = 0, to = 2 } [1, 2, 3]
+    >>> move { from = 0, to = 2, amount = 1 } [1, 2, 3]
     [2, 1, 3]
 
-    >>> move { from = 2, to = 0 } [1, 2, 3]
+    >>> move { from = 2, to = 0, amount = 1 } [1, 2, 3]
     [3, 1, 2]
 
+    >>> move { from = 2, to = 7, amount = 3 } [0, 1, 2, 3, 4, 5, 6, 7]
+    [0, 1, 5, 6, 2, 3, 4, 7]
+
+    >>> move { from = 2, to = 1, amount = 3 } [0, 1, 2, 3, 4, 5, 6, 7]
+    [0, 2, 3, 4, 1, 5, 6, 7]
+
 -}
-move : { from : Int, to : Int } -> List a -> List a
-move opts list =
-    let
-        from =
-            opts.from
-
-        to =
-            if opts.to > from then
-                opts.to - 1
-
-            else
-                opts.to
-
-        maybeItemToMove =
-            List.getAt from list
-    in
-    list
-        |> List.removeAt from
-        |> List.indexedFoldr
-            (\idx existingItem acc ->
-                if idx == to then
-                    case maybeItemToMove of
-                        Just itemToMove ->
-                            List.append [ itemToMove, existingItem ] acc
-
-                        Nothing ->
-                            existingItem :: acc
-
-                else
-                    existingItem :: acc
-            )
-            []
+move : { amount : Int, from : Int, to : Int } -> List a -> List a
+move { from, to, amount } list =
+    []
+        ++ (list |> List.take (min from to))
+        ++ (list |> List.take to |> List.drop (from + amount))
+        ++ (list |> List.drop from |> List.take amount)
+        ++ (list |> List.take from |> List.drop to)
+        ++ (list |> List.drop (max (from + amount) to))
 
 
 pickIndexes : List Int -> List a -> List a

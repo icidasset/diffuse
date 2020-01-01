@@ -5,6 +5,7 @@
 - Adds ability to download a playlist as a zip file
 - Fixes dark styles for add-to-playlist overlay
 - Improves CORS information a little bit
+- Improves playlist drag & drop (now moves selection instead of item under cursor)
 - No longer scrolls track list to the top when moving things in a playlist or when processing tracks
 - Switches key bindings for arrow up and down
 

@@ -451,12 +451,18 @@ translateReply reply model =
             in
             return { model | selectedTrackIndexes = selection }
 
-        MoveTrackInSelectedPlaylist moveFromTo ->
+        MoveTrackInSelectedPlaylist { to } ->
             case model.selectedPlaylist of
                 Just p ->
                     let
+                        moveParams =
+                            { from = Maybe.withDefault 0 (List.head model.selectedTrackIndexes)
+                            , to = to
+                            , amount = List.length model.selectedTrackIndexes
+                            }
+
                         updatedPlaylist =
-                            { p | tracks = List.move moveFromTo p.tracks }
+                            { p | tracks = List.move moveParams p.tracks }
                     in
                     { model | selectedPlaylist = Just updatedPlaylist }
                         |> reviseCollection arrange
