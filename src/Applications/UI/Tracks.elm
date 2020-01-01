@@ -519,7 +519,7 @@ makeParcel model =
 
 
 resolveParcel : Model -> Parcel -> Return Model Msg UI.Reply
-resolveParcel model ( _, newCollection ) =
+resolveParcel model ( deps, newCollection ) =
     let
         scrollObj =
             Json.Encode.object
@@ -529,25 +529,27 @@ resolveParcel model ( _, newCollection ) =
             Json.Encode.object
                 [ ( "target", scrollObj ) ]
 
+        newScrollContext =
+            scrollContext model
+
         collectionChanged =
             Collection.tracksChanged
                 model.collection.untouched
                 newCollection.untouched
 
         harvestChanged =
-            if collectionChanged then
-                True
+            Collection.harvestChanged
+                model.collection.harvested
+                newCollection.harvested
 
-            else
-                Collection.harvestChanged
-                    model.collection.harvested
-                    newCollection.harvested
+        searchChanged =
+            newScrollContext /= model.collection.scrollContext
 
         listSceneModel =
             model.listScene
 
         listScene =
-            if harvestChanged && model.scene == List then
+            if model.scene == List && searchChanged then
                 { listSceneModel | infiniteList = InfiniteList.updateScroll scrollEvent listSceneModel.infiniteList }
 
             else
@@ -555,10 +557,10 @@ resolveParcel model ( _, newCollection ) =
 
         modelWithNewCollection =
             { model
-                | collection = newCollection
+                | collection = { newCollection | scrollContext = newScrollContext }
                 , listScene = listScene
                 , selectedTrackIndexes =
-                    if harvestChanged then
+                    if collectionChanged || harvestChanged then
                         []
 
                     else
@@ -569,7 +571,7 @@ resolveParcel model ( _, newCollection ) =
       ----------
       -- Command
       ----------
-    , if harvestChanged then
+    , if searchChanged then
         case model.scene of
             List ->
                 Cmd.map ListSceneMsg UI.Tracks.Scene.List.scrollToTop
@@ -596,6 +598,14 @@ reviseCollection collector model =
         |> makeParcel
         |> collector
         |> resolveParcel model
+
+
+scrollContext : Model -> String
+scrollContext model =
+    String.concat
+        [ Maybe.withDefault "" <| model.searchTerm
+        , Maybe.withDefault "" <| Maybe.map .name model.selectedPlaylist
+        ]
 
 
 
