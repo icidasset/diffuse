@@ -14,6 +14,7 @@ import List.Extra as List
 import Material.Icons exposing (Coloring(..))
 import Material.Icons.Hardware as Icons
 import Return3 exposing (..)
+import String.Ext as String
 import Task
 import UI.Reply exposing (Reply)
 
@@ -177,6 +178,10 @@ view model =
                     , C.mt_12
                     , C.text_center
                     , C.text_white
+
+                    -- Dark mode
+                    ------------
+                    , C.dark__text_base07
                     ]
                     [ text instance.message ]
 
@@ -217,6 +222,10 @@ view model =
                         , C.text_2xl
                         , C.tracking_tad_closer
                         , C.w_full
+
+                        -- Dark mode
+                        ------------
+                        , C.dark__bg_base00
                         ]
                         []
                     ]
@@ -234,6 +243,10 @@ view model =
                     , C.overflow_hidden
                     , C.shadow_md
                     , C.w_full
+
+                    -- Dark mode
+                    ------------
+                    , C.dark__bg_base00
                     ]
                     (List.indexedMap
                         (\idx result ->
@@ -245,7 +258,7 @@ view model =
 
                                 --
                                 , if idx == instance.focus then
-                                    C.text_white
+                                    String.joinWithSpace [ C.text_white, C.dark__text_base07 ]
 
                                   else
                                     C.text_inherit
@@ -258,7 +271,7 @@ view model =
                                     C.bg_transparent
 
                                   else
-                                    C.bg_gray_100
+                                    String.joinWithSpace [ C.bg_gray_100, C.dark__bg_base01 ]
                                 ]
                                 [ text result
 

@@ -3,6 +3,7 @@
 ## 2.3.0
 
 - Adds ability to download a playlist as a zip file
+- Fixes dark styles for add-to-playlist overlay
 - No longer scrolls track list to the top when moving things in a playlist or when processing tracks
 
 ## 2.2.3

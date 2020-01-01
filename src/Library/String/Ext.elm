@@ -1,4 +1,4 @@
-module String.Ext exposing (addSuffix, chopEnd, chopStart)
+module String.Ext exposing (..)
 
 {-| Flipped version of `append`.
 -}
@@ -6,6 +6,8 @@ module String.Ext exposing (addSuffix, chopEnd, chopStart)
 -- 🔱
 
 
+{-| Flipped version of `append`.
+-}
 addSuffix : String -> String -> String
 addSuffix a b =
     String.append b a
@@ -35,3 +37,10 @@ chopStart needle str =
 
     else
         str
+
+
+{-| Join a list of Strings with a space in between.
+-}
+joinWithSpace : List String -> String
+joinWithSpace =
+    String.join " "
