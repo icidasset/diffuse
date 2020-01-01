@@ -39,6 +39,7 @@ type Reply
       -----------------------------------------
       -- Context Menu
       -----------------------------------------
+    | ContextMenuConfirmation String Reply
     | ReplyViaContextMenu Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowPlaylistListMenu Coordinates Playlist

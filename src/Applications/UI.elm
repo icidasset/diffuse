@@ -112,6 +112,7 @@ main =
 
 type alias Model =
     { contextMenu : Maybe (ContextMenu Reply)
+    , confirmation : Maybe String
     , currentTime : Time.Posix
     , darkMode : Bool
     , debounce : Debouncer Msg Msg
@@ -169,6 +170,7 @@ init flags url key =
             Maybe.withDefault Page.Index maybePage
     in
     { contextMenu = Nothing
+    , confirmation = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
     , darkMode = flags.darkMode
     , downloading = Nothing
@@ -1075,14 +1077,24 @@ translateReply reply model =
         -----------------------------------------
         -- Context Menu
         -----------------------------------------
+        ContextMenuConfirmation conf r ->
+            { model | confirmation = Just conf }
+                |> return
+                |> andThen (translateReply r)
+
         ReplyViaContextMenu r ->
-            translateReply r { model | contextMenu = Nothing }
+            case r of
+                ContextMenuConfirmation _ _ ->
+                    translateReply r model
+
+                _ ->
+                    translateReply r { model | contextMenu = Nothing }
 
         ShowMoreAuthenticationOptions coordinates ->
             return { model | contextMenu = Just (Authentication.moreOptionsMenu coordinates) }
 
         ShowPlaylistListMenu coordinates playlist ->
-            return { model | contextMenu = Just (Playlists.listMenu playlist model.tracks.collection.identified coordinates) }
+            return { model | contextMenu = Just (Playlists.listMenu playlist model.tracks.collection.identified model.confirmation coordinates) }
 
         ShowQueueFutureMenu coordinates { item, itemIndex } ->
             return { model | contextMenu = Just (Queue.futureMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress, itemIndex = itemIndex } item coordinates) }
@@ -1262,7 +1274,7 @@ translateReply reply model =
             args
                 |> Playlists.RemoveFromCollection
                 |> PlaylistsMsg
-                |> updateWithModel model
+                |> updateWithModel { model | confirmation = Nothing }
 
         ReplacePlaylistInCollection playlist ->
             let
@@ -1718,6 +1730,7 @@ hideOverlay : Model -> Return Model Msg
 hideOverlay model =
     ( { model
         | alfred = { instance = Nothing }
+        , confirmation = Nothing
         , contextMenu = Nothing
       }
       --

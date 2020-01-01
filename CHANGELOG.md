@@ -3,6 +3,7 @@
 ## 2.3.0
 
 - Adds ability to download a playlist as a zip file
+- Asks for confirmation when removing a playlist
 - Fixes dark styles for add-to-playlist overlay
 - Improves CORS information a little bit
 - Improves playlist drag & drop (now moves selection instead of item under cursor)

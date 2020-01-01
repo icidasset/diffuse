@@ -19,8 +19,8 @@ import Url
 -- 🔱
 
 
-listMenu : Playlist -> List IdentifiedTrack -> Coordinates -> ContextMenu Reply
-listMenu playlist allTracks =
+listMenu : Playlist -> List IdentifiedTrack -> Maybe String -> Coordinates -> ContextMenu Reply
+listMenu playlist allTracks confirmation coordinates =
     let
         ( identifiedTracksFromPlaylist, _ ) =
             Playlists.Matching.match playlist allTracks
@@ -29,6 +29,15 @@ listMenu playlist allTracks =
             identifiedTracksFromPlaylist
                 |> List.sortBy (Tuple.first >> .indexInPlaylist >> Maybe.withDefault 0)
                 |> List.map Tuple.second
+
+        playlistId =
+            "Playlist - " ++ playlist.name
+
+        menuReply =
+            ShowPlaylistListMenu coordinates playlist
+
+        askForConfirmation =
+            confirmation == Just playlistId
     in
     ContextMenu
         [ Item
@@ -50,9 +59,20 @@ listMenu playlist allTracks =
             }
         , Item
             { icon = Icons.delete
-            , label = "Remove playlist"
-            , msg = RemovePlaylistFromCollection { playlistName = playlist.name }
-            , active = False
+            , label =
+                if askForConfirmation then
+                    "Are you sure?"
+
+                else
+                    "Remove playlist"
+            , msg =
+                if askForConfirmation then
+                    RemovePlaylistFromCollection { playlistName = playlist.name }
+
+                else
+                    ContextMenuConfirmation playlistId menuReply
+            , active =
+                askForConfirmation
             }
         , Item
             { icon = Icons.offline_bolt
@@ -61,3 +81,4 @@ listMenu playlist allTracks =
             , active = False
             }
         ]
+        coordinates
