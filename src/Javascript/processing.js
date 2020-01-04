@@ -6,8 +6,11 @@
 
 
 import * as musicMetadata from "music-metadata-browser"
-import { HttpTokenizer } from "@tokenizer/http"
-import { parseContentRange } from "@tokenizer/range";
+
+import { HttpClient } from "@tokenizer/http/lib/http-client"
+import { parseContentRange } from "@tokenizer/range"
+import { RangeRequestFactory } from "@tokenizer/range/lib/range-request-factory"
+import { RangeRequestTokenizer } from "@tokenizer/range/lib/range-request-tokenizer"
 
 import { mimeType } from "./common"
 import { transformUrl } from "./urls"
@@ -60,17 +63,10 @@ export function processContext(context) {
 // ----
 
 
-const readerConfiguration = {
-  timeoutInSec: 300,
-  avoidHeadRequests: false
-}
-
-
 const parserConfiguration = Object.assign(
   {}, musicMetadata.parsingOptions,
   { duration: false, skipCovers: true, skipPostHeaders: true }
 )
-
 
 
 function getTags(head, get, filename) {
@@ -87,20 +83,16 @@ function getTags(head, get, filename) {
     ? mimeType(fileExt)
     : get.mime
 
-  // Reader
-  const reader = HttpTokenizer.fromUrl(
-    get.url,
-    readerConfiguration
+  // Tokenizer
+  const tokenizer = new RangeRequestTokenizer(
+    new HttpClient(get.url),
+    Object.assign({}, get, { mimeType: fileMime }),
+    1024
   )
-
-  reader.contentType = fileMime
-  reader.fileSize = get.size
-  reader.url = get.url
 
   // Get tags
   return musicMetadata.parseFromTokenizer(
-    reader,
-    reader.contentType,
+    tokenizer,
     parserConfiguration
   )
   .then(pickTags)
@@ -153,11 +145,13 @@ function resolveUrl(method, url) {
 
   }).then(resp => {
     const length = resp.headers.get("content-length")
-    const range = resp.headers.get("content-range")
+    const rangeString = resp.headers.get("content-range")
+    const range = parseContentRange(rangeString)
 
     return {
-      mime: resp.headers.get("content-type"),
-      size: length ? length : (range ? parseContentRange(range).instanceLength : 0),
+      contentRange: range,
+      mimeType: resp.headers.get("content-type"),
+      size: range ? range.instanceLength : parseInt(length, 10),
       url: resp.url
     }
   })

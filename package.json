@@ -1,35 +1,35 @@
 {
   "private": true,
   "devDependencies": {
-    "autoprefixer": "^9.7.2",
+    "autoprefixer": "^9.7.3",
     "csso-cli": "^3.0.0",
     "elm-review": "^1.0.1",
-    "eslint": "^6.7.1",
+    "eslint": "^6.8.0",
     "postcss": "^7.0.23",
     "postcss-cli": "^6.1.3",
     "postcss-import": "^12.0.1",
     "postcss-nesting": "^7.0.1",
-    "purgecss": "^1.4.1",
+    "purgecss": "^1.4.2",
     "tailwindcss": "^1.1.3",
     "tailwindcss-animations": "^1.0.0",
     "tailwindcss-interaction-variants": "^2.2.0",
     "tailwindcss-transforms": "^2.2.0",
     "tailwindcss-transitions": "^2.1.0",
-    "terser": "^4.4.0",
-    "webpack": "^4.41.2",
+    "terser": "^4.5.1",
+    "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "@tokenizer/http": "^0.4.0",
+    "@tokenizer/http": "^0.5.0",
     "blockstack": "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git",
     "fast-text-encoding": "^1.0.0",
     "file-saver": "^2.0.2",
     "jszip": "^3.2.2",
     "lunr": "^2.3.8",
-    "music-metadata-browser": "^1.9.2",
+    "music-metadata-browser": "^2.0.0",
     "pep": "mpizenberg/elm-pep#071616d75ca61e261fdefc7b55bc46c34e44ea22",
     "remotestoragejs": "^1.2.2",
     "subworkers": "^1.0.1",
-    "tocca": "^2.0.4"
+    "tocca": "^2.0.6"
   }
 }
