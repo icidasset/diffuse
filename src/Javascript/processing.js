@@ -9,7 +9,6 @@ import * as musicMetadata from "music-metadata-browser"
 
 import { HttpClient } from "@tokenizer/http/lib/http-client"
 import { parseContentRange } from "@tokenizer/range"
-import { RangeRequestFactory } from "@tokenizer/range/lib/range-request-factory"
 import { RangeRequestTokenizer } from "@tokenizer/range/lib/range-request-tokenizer"
 
 import { mimeType } from "./common"
