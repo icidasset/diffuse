@@ -5,7 +5,7 @@ import Css
 import Css.Classes as C
 import Css.Global
 import Html exposing (Html)
-import Html.Ext exposing (onDoubleTap)
+import Html.Ext exposing (onDoubleTap, onTap)
 import Html.Styled exposing (text)
 import Html.Styled.Attributes exposing (css, fromUnstyled, rel)
 import Html.Styled.Lazy
@@ -117,7 +117,11 @@ notificationView notification =
             DismissNotification { id = id }
     in
     brick
-        [ fromUnstyled (onDoubleTap dismissMsg)
+        [ if options.sticky then
+            fromUnstyled (onDoubleTap dismissMsg)
+
+          else
+            fromUnstyled (onTap dismissMsg)
 
         --
         , rel (String.fromInt id)
@@ -127,6 +131,13 @@ notificationView notification =
         , C.p_4
         , C.rounded
         , C.text_white_90
+
+        --
+        , if options.sticky then
+            ""
+
+          else
+            C.cursor_pointer ++ " " ++ C.select_none
 
         --
         , case kind of
@@ -160,12 +171,12 @@ notificationView notification =
         --
         , if options.sticky && kind /= Warning then
             chunk
-                [ C.select_none
-                , C.text_xs
+                [ C.cursor_pointer
                 , C.italic
                 , C.mt_2
                 , C.opacity_60
-                , C.cursor_pointer
+                , C.select_none
+                , C.text_xs
                 ]
                 [ text "Double click to dismiss" ]
 
