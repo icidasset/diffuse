@@ -100,6 +100,7 @@ type alias Dependencies =
     { bgColor : Maybe Color
     , darkMode : Bool
     , height : Float
+    , isTouchDevice : Bool
     , isVisible : Bool
     , showAlbum : Bool
     }
@@ -131,17 +132,17 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
         --
         , C.md__text_almost_sm
 
-        -- TODO
-        -- , case maybeDnD of
-        --     Just dnd ->
-        --         if DnD.isDragging dnd then
-        --             C.overflow_y_hidden
         --
-        --         else
-        --             C.overflow_y_auto
-        --
-        --     Nothing ->
-        --         C.overflow_y_auto
+        , case maybeDnD of
+            Just dnd ->
+                if deps.isTouchDevice && DnD.isDragging dnd then
+                    C.overflow_y_hidden
+
+                else
+                    C.overflow_y_auto
+
+            Nothing ->
+                C.overflow_y_auto
         ]
         [ -- Shadow
           ---------

@@ -645,6 +645,7 @@ type alias Dependencies =
     , bgColor : Maybe Color
     , darkMode : Bool
     , isOnIndexPage : Bool
+    , isTouchDevice : Bool
     , sourceIdsBeingProcessed : List String
     , viewport : Viewport
     }
@@ -985,6 +986,7 @@ listView model deps =
             { bgColor = deps.bgColor
             , darkMode = deps.darkMode
             , height = deps.viewport.height
+            , isTouchDevice = deps.isTouchDevice
             , isVisible = deps.isOnIndexPage
             , showAlbum = deps.viewport.width >= 720
             }

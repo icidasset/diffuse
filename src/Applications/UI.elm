@@ -121,6 +121,7 @@ type alias Model =
     , isDragging : Bool
     , isLoading : Bool
     , isOnline : Bool
+    , isTouchDevice : Bool
     , isUpgrading : Bool
     , navKey : Nav.Key
     , notifications : UI.Notifications.Model
@@ -178,6 +179,7 @@ init flags url key =
     , isDragging = False
     , isLoading = True
     , isOnline = flags.isOnline
+    , isTouchDevice = False
     , isUpgrading = flags.upgrade
     , navKey = key
     , notifications = []
@@ -254,6 +256,7 @@ type Msg
     | ShowNotification (Notification Reply)
     | SetCurrentTime Time.Posix
     | SetIsOnline Bool
+    | SetIsTouchDevice Bool
     | StoppedDragging
     | ToggleLoadingScreen Switch
       -----------------------------------------
@@ -510,6 +513,9 @@ update msg model =
                     return
             )
                 { model | isOnline = True }
+
+        SetIsTouchDevice bool ->
+            return { model | isTouchDevice = bool }
 
         ShowNotification notification ->
             showNotification notification model
@@ -1871,7 +1877,8 @@ subscriptions model =
             )
 
         --
-        , Ports.downloadTracksFinished (always DownloadTracksFinished)
+        , Ports.downloadTracksFinished (\_ -> DownloadTracksFinished)
+        , Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
         , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
         , Ports.showErrorNotification (Notifications.error >> ShowNotification)
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
@@ -2129,6 +2136,7 @@ defaultScreen model =
           , bgColor = model.backdrop.bgColor
           , darkMode = model.darkMode
           , isOnIndexPage = model.page == Page.Index
+          , isTouchDevice = model.isTouchDevice
           , sourceIdsBeingProcessed = List.map Tuple.first model.sources.isProcessing
           , viewport = model.viewport
           }
