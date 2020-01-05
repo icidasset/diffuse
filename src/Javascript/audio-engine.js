@@ -293,7 +293,7 @@ function audioErrorEvent(event) {
       break
     case event.target.error.MEDIA_ERR_NETWORK:
       console.error("A network error caused the audio download to fail.")
-      showNetworkErrorNotificationIfNeeded.call(this)
+      showNetworkErrorNotification.call(this)
       audioStalledEvent.call(this, event)
       break
     case event.target.error.MEDIA_ERR_DECODE:
@@ -301,8 +301,14 @@ function audioErrorEvent(event) {
       break
     case event.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
       console.error("The audio not be loaded, either because the server or network failed or because the format is not supported.")
-      showNetworkErrorNotificationIfNeeded.call(this)
-      audioStalledEvent.call(this, event)
+      if (event.target.currentTime && event.target.currentTime > 0) {
+        showNetworkErrorNotification.call(this)
+        audioStalledEvent.call(this, event)
+      } else {
+        showUnsupportedSrcErrorNotification.call(this)
+        clearTimeout(this.loadingTimeoutId)
+        this.app.ports.setAudioIsLoading.send(false)
+      }
       break
     default:
       console.error("An unknown error occurred.")
@@ -310,11 +316,18 @@ function audioErrorEvent(event) {
 }
 
 
-    function showNetworkErrorNotificationIfNeeded() {
+    function showNetworkErrorNotification() {
       this.app.ports.showErrorNotification.send(
         navigator.onLine
           ? "I can't play this track because of a network error. I'll try to reconnect."
           : "I can't play this track because we're offline. I'll try to reconnect."
+      )
+    }
+
+
+    function showUnsupportedSrcErrorNotification() {
+      this.app.ports.showErrorNotification.send(
+        "__I can't play this track because your browser didn't recognize it.__ Try checking your developer console for a warning to find out why."
       )
     }
 
