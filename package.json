@@ -20,7 +20,7 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "@tokenizer/http": "^0.5.0",
+    "@tokenizer/http": "^0.5.1",
     "blockstack": "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git",
     "fast-text-encoding": "^1.0.0",
     "file-saver": "^2.0.2",

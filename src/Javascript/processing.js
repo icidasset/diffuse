@@ -6,10 +6,7 @@
 
 
 import * as musicMetadata from "music-metadata-browser"
-
-import { HttpClient } from "@tokenizer/http/lib/http-client"
-import { parseContentRange } from "@tokenizer/range"
-import { RangeRequestTokenizer } from "@tokenizer/range/lib/range-request-tokenizer"
+import { makeTokenizer } from "@tokenizer/http"
 
 import { mimeType } from "./common"
 import { transformUrl } from "./urls"
@@ -23,30 +20,26 @@ export function processContext(context) {
 
   return context.urlsForTags.reduce((accumulator, urls, idx) => {
     return accumulator.then(col => {
-      let get, head
-
       const filename = context
         .receivedFilePaths[idx]
         .split("/")
         .reverse()[0]
 
-      return transformUrl(urls.headUrl)
-        .then(url => resolveUrl("HEAD", url))
-        .then(res => head = res)
+      return Promise.all([
+        transformUrl(urls.headUrl),
+        transformUrl(urls.getUrl)
 
-        .then(_ => (urls.headUrl === urls.getUrl) && head.mime && head.size
-          ? head
-          : transformUrl(urls.getUrl).then(url => resolveUrl("GET", url))
-        )
-        .then(res => get = res)
+      ]).then(([headUrl, getUrl]) => {
+        return getTags(headUrl, getUrl, filename)
 
-        .then(_ => getTags(head, get, filename))
-        .then(r => col.concat(r))
+      }).then(r => {
+        return col.concat(r)
 
-        .catch(e => {
-          console.error(e)
-          return col.concat(null)
-        })
+      }).catch(e => {
+        console.error(e)
+        return col.concat(null)
+
+      })
     })
 
   }, initialPromise).then(col => {
@@ -68,37 +61,36 @@ const parserConfiguration = Object.assign(
 )
 
 
-function getTags(head, get, filename) {
+function getTags(headUrl, getUrl, filename) {
   const fileExtMatch = filename.match(/\.(\w+)$/)
   const fileExt = fileExtMatch && fileExtMatch[1]
 
-  // Content type
   const overrideContentType = (
-    get.url.includes("googleapis.com") ||
-    get.url.includes("googleusercontent.com")
+    getUrl.includes("googleapis.com") ||
+    getUrl.includes("googleusercontent.com")
   )
 
-  const fileMime = overrideContentType
-    ? mimeType(fileExt)
-    : get.mime
+  return makeTokenizer(headUrl)
+    .then(tokenizer => {
+      const fileMime = overrideContentType
+        ? mimeType(fileExt)
+        : tokenizer.fileInfo.mimeType
 
-  // Tokenizer
-  const tokenizer = new RangeRequestTokenizer(
-    new HttpClient(get.url),
-    Object.assign({}, get, { mimeType: fileMime }),
-    1024
-  )
+      tokenizer.fileInfo.mimeType = fileMime
+      tokenizer.fileInfo.url = getUrl
+      tokenizer.rangeRequestClient.url = getUrl
+      tokenizer.rangeRequestClient.resolvedUrl = undefined
 
-  // Get tags
-  return musicMetadata.parseFromTokenizer(
-    tokenizer,
-    parserConfiguration
-  )
-  .then(pickTags)
-  .catch(err => {
-    console.error(err)
-    return fallbackTags(filename)
-  })
+      return musicMetadata.parseFromTokenizer(
+        tokenizer,
+        parserConfiguration
+      )
+    })
+    .then(pickTags)
+    .catch(err => {
+      console.error(err)
+      return fallbackTags(filename)
+    })
 }
 
 
@@ -132,26 +124,4 @@ function fallbackTags(filename) {
     year: null,
     picture: null
   }
-}
-
-
-function resolveUrl(method, url) {
-  return fetch(url, {
-    method: method,
-    headers: method === "HEAD"
-      ? new Headers()
-      : new Headers({ "Range": "bytes=0-0" })
-
-  }).then(resp => {
-    const length = resp.headers.get("content-length")
-    const rangeString = resp.headers.get("content-range")
-    const range = parseContentRange(rangeString)
-
-    return {
-      contentRange: range,
-      mimeType: resp.headers.get("content-type"),
-      size: range ? range.instanceLength : parseInt(length, 10),
-      url: resp.url
-    }
-  })
 }

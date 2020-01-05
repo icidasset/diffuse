@@ -31,20 +31,20 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
   integrity sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==
 
-"@tokenizer/http@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@tokenizer/http/-/http-0.5.0.tgz#3cb0dea6297cc8c0597de69487d5fed713fba20e"
-  integrity sha512-RafHGmPhJXfX9dEXZr23a4Fi5JzLn1D/bd89a4Z96KJ4e6zLDPGDHye1bD80bFYM/KmjzTO3Fc4gKMeIW9T7rw==
+"@tokenizer/http@^0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@tokenizer/http/-/http-0.5.1.tgz#6966ef87b458aa566b37ead3fad47253406d5497"
+  integrity sha512-CdAFhvgAk1TGm/fbPVv9yPIOAkAABWU9xzmyKruiReQu3wCXeaD1tKDJTpczYRk1weivD11qrBsmDRzWm45e3Q==
   dependencies:
-    "@tokenizer/range" "^0.2.0"
+    "@tokenizer/range" "^0.2.1"
     debug "^4.1.1"
     node-fetch "^2.6.0"
     strtok3 "^5.0.0"
 
-"@tokenizer/range@^0.2.0":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@tokenizer/range/-/range-0.2.1.tgz#f50605c2b42936f296d8fd32569fee5c79ee6bbf"
-  integrity sha512-guIiNyR/VXFtYbpMbfQj8zVdbwu5MoRjh2YE/NwFeJJwkBOPBw5FhoHmJ7IAv4btHlFeBGtRDiLuuZtYkr12AA==
+"@tokenizer/range@^0.2.1":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@tokenizer/range/-/range-0.2.2.tgz#c7698af4ae6ca2efb8b06d88f60555fa99256b97"
+  integrity sha512-yzJ7oRzs1kMnpDaBFptCiLZL0AJakLr2q2+EoRVZY3Csg9QKPuN5FRlHfpeipHo0tAp5d3OvJG7s+/bXP2Ntzw==
   dependencies:
     debug "^4.1.1"
     strtok3 "^5.0.0"
