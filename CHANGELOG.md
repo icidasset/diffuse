@@ -6,8 +6,10 @@
 - Asks for confirmation when removing a playlist
 - Fixes dark styles for add-to-playlist overlay
 - Improves CORS information a little bit
+- Improves interaction with notifications
 - Improves playlist drag & drop (now moves selection instead of item under cursor)
 - No longer scrolls track list to the top when moving things in a playlist or when processing tracks
+- Shows the correct error message when the browser cannot play a certain type of audio
 - Switches key bindings for arrow up and down
 
 ## 2.2.3
