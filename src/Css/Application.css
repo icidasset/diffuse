@@ -35,6 +35,12 @@ body {
 }
 
 
+button {
+  color: inherit;
+  font-family: inherit;
+}
+
+
 *:active {
   outline: none;
 }

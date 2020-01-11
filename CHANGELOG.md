@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.1
+
+- Fixes Firefox CSS issue
+
 ## 2.3.0
 
 - Adds ability to download a playlist as a zip file

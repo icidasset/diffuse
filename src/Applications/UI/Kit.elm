@@ -113,7 +113,6 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
             [ C.antialiased
             , C.border_2
             , C.cursor_pointer
-            , C.font_body
             , C.font_bold
             , C.inline_block
             , C.leading_relaxed
