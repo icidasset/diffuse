@@ -2,7 +2,7 @@
 
 ## 2.3.1
 
-- Fixes Firefox CSS issue
+- Fixes Firefox CSS issues
 
 ## 2.3.0
 

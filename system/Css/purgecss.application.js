@@ -23,7 +23,7 @@ function purgeFromElm(elmCode) {
   }, [])
 
   return classNames
-    .concat([ "input", "select", "textarea" ])
+    .concat([ "button", "input", "select", "textarea" ])
 }
 
 
