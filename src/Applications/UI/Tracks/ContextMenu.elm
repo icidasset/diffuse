@@ -3,9 +3,7 @@ module UI.Tracks.ContextMenu exposing (cacheAction, trackMenu, viewMenu)
 import Conditional exposing (ifThenElse)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
-import Material.Icons.Action as Icons
-import Material.Icons.Av as Icons
-import Material.Icons.Content as Icons
+import Material.Icons as Icons
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Queue

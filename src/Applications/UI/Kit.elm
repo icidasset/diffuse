@@ -13,9 +13,8 @@ import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick, onInput)
 import Html.Styled
 import Html.Styled.Attributes exposing (css)
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Hardware as Icons
-import Material.Icons.Toggle as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Svg
 
 

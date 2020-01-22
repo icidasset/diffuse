@@ -3,7 +3,6 @@ module Notifications exposing (Action, Kind(..), Notification, Options, contents
 import Chunky exposing (..)
 import Css.Classes as C
 import Html exposing (Html)
-import Html.Attributes exposing (style)
 import Markdown
 import Murmur3 exposing (..)
 

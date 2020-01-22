@@ -11,13 +11,8 @@ import Html.Attributes exposing (href)
 import Html.Events.Extra.Mouse as Mouse
 import Json.Decode as Json
 import List.Extra as List
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Action as Icons
-import Material.Icons.Alert as Icons
-import Material.Icons.Content as Icons
-import Material.Icons.Image as Icons
-import Material.Icons.Navigation as Icons
-import Material.Icons.Notification as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Return3 as Return exposing (..)
 import Sources exposing (..)
 import Sources.Encoding

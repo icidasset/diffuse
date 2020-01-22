@@ -8,7 +8,7 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (custom)
 import Json.Decode
-import Material.Icons exposing (Coloring(..))
+import Material.Icons.Types exposing (Coloring(..))
 import UI.Reply exposing (Reply)
 
 

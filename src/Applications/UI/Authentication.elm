@@ -17,12 +17,8 @@ import Html.Events.Extra.Mouse as Mouse
 import Http
 import Json.Encode
 import Markdown
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Action as Icons
-import Material.Icons.Alert as Icons
-import Material.Icons.Av as Icons
-import Material.Icons.Content as Icons
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Return3 exposing (..)
 import SHA

@@ -10,12 +10,8 @@ import Html.Attributes exposing (href)
 import Html.Events.Extra.Mouse as Mouse
 import Icons
 import List.Extra as List
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Action as Icons
-import Material.Icons.Av as Icons
-import Material.Icons.Content as Icons
-import Material.Icons.Image as Icons
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Queue exposing (..)
 import Return3 exposing (..)
 import Time

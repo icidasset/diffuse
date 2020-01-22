@@ -7,10 +7,8 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Html.Lazy
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Action as Icons
-import Material.Icons.Communication as Icons
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Settings
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit

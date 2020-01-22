@@ -8,8 +8,8 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (class, style, title)
 import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Av as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Queue
 import UI.Queue as Queue

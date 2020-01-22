@@ -11,8 +11,8 @@ import Html.Ext exposing (onTapPreventDefault)
 import Json.Decode
 import Keyboard
 import List.Extra as List
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Hardware as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Return3 exposing (..)
 import String.Ext as String
 import Task

@@ -16,9 +16,8 @@ import Html.Lazy
 import InfiniteList
 import Json.Decode as Decode
 import List.Ext as List
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Av as Icons
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Return3 exposing (..)
 import Task

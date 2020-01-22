@@ -12,10 +12,8 @@ import Html.Attributes exposing (href, placeholder, style, value)
 import Html.Events exposing (onInput, onSubmit)
 import Html.Events.Extra.Mouse as Mouse
 import List.Extra as List
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Content as Icons
-import Material.Icons.File as Icons
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Playlists exposing (..)
 import Return3 exposing (..)
 import UI.Kit exposing (ButtonType(..))

@@ -8,7 +8,7 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (href, style, tabindex, target, title)
 import Html.Events exposing (onClick)
 import List.Extra as List
-import Material.Icons exposing (Coloring(..))
+import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Svg exposing (Svg)
 import UI.Page as Page exposing (Page)

@@ -10,9 +10,8 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (for, name, placeholder, required, selected, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Alert as Icons
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Return3 exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services

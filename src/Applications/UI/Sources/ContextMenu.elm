@@ -3,11 +3,7 @@ module UI.Sources.ContextMenu exposing (sourceMenu)
 import Conditional exposing (ifThenElse)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
-import Material.Icons.Action as Icons
-import Material.Icons.Content as Icons
-import Material.Icons.File as Icons
-import Material.Icons.Image as Icons
-import Material.Icons.Notification as Icons
+import Material.Icons as Icons
 import Sources exposing (Source)
 import UI.Page
 import UI.Reply exposing (Reply(..))

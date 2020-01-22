@@ -19,14 +19,8 @@ import Json.Decode as Json
 import Json.Encode
 import List.Ext as List
 import List.Extra as List
-import Material.Icons exposing (Coloring(..))
-import Material.Icons.Action as Icons
-import Material.Icons.Av as Icons
-import Material.Icons.Communication as Icons
-import Material.Icons.Content as Icons
-import Material.Icons.Editor as Icons
-import Material.Icons.Image as Icons
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
+import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Return3 as Return exposing (..)

@@ -16,7 +16,7 @@ import Html.Styled
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
 import Json.Decode as Decode
-import Material.Icons.Navigation as Icons
+import Material.Icons as Icons
 import Return3 as Return exposing (..)
 import Svg.Styled
 import Svg.Styled.Attributes
