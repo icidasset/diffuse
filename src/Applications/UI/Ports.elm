@@ -73,7 +73,7 @@ port requestPrevious : (() -> msg) -> Sub msg
 port requestStop : (() -> msg) -> Sub msg
 
 
-port showErrorNotification : (String -> msg) -> Sub msg
+port scrobble : ({ duration : Float, timestamp : Int, trackId : String } -> msg) -> Sub msg
 
 
 port setAudioPosition : (Float -> msg) -> Sub msg
@@ -95,6 +95,9 @@ port setAverageBackgroundColor : ({ r : Int, g : Int, b : Int } -> msg) -> Sub m
 
 
 port setIsOnline : (Bool -> msg) -> Sub msg
+
+
+port showErrorNotification : (String -> msg) -> Sub msg
 
 
 

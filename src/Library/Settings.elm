@@ -13,13 +13,14 @@ import Maybe.Extra as Maybe
 type alias Settings =
     { backgroundImage : Maybe String
     , hideDuplicates : Bool
+    , lastFm : Maybe String
     , processAutomatically : Bool
     , rememberProgress : Bool
     }
 
 
 
--- 🔱
+-- ENCODING
 
 
 encode : Settings -> Json.Value
@@ -31,6 +32,9 @@ encode settings =
         , ( "hideDuplicates"
           , Json.Encode.bool settings.hideDuplicates
           )
+        , ( "lastFm"
+          , Maybe.unwrap Json.Encode.null Json.Encode.string settings.lastFm
+          )
         , ( "processAutomatically"
           , Json.Encode.bool settings.processAutomatically
           )
@@ -40,10 +44,15 @@ encode settings =
         ]
 
 
+
+-- DECODING
+
+
 decoder : Json.Decoder Settings
 decoder =
     Json.succeed Settings
         |> optional "backgroundImage" (Json.maybe Json.string) Nothing
         |> optional "hideDuplicates" Json.bool False
+        |> optional "lastFm" (Json.maybe Json.string) Nothing
         |> optional "processAutomatically" Json.bool True
         |> optional "rememberProgress" Json.bool True

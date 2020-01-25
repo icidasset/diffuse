@@ -28,6 +28,7 @@ import Http
 import Json.Decode
 import Json.Encode
 import Keyboard
+import LastFm
 import List.Ext as List
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -42,6 +43,7 @@ import Sources
 import Sources.Encoding as Sources
 import Sources.Services.Dropbox
 import Sources.Services.Google
+import String.Ext as String
 import Task
 import Time
 import Tracks
@@ -123,6 +125,7 @@ type alias Model =
     , isOnline : Bool
     , isTouchDevice : Bool
     , isUpgrading : Bool
+    , lastFm : LastFm.Model
     , navKey : Nav.Key
     , notifications : UI.Notifications.Model
     , page : Page
@@ -181,6 +184,7 @@ init flags url key =
     , isOnline = flags.isOnline
     , isTouchDevice = False
     , isUpgrading = flags.upgrade
+    , lastFm = LastFm.initialModel url
     , navKey = key
     , notifications = []
     , page = page
@@ -231,6 +235,8 @@ init flags url key =
             )
         |> addCommand
             (Task.perform SetCurrentTime Time.now)
+        |> addCommand
+            (LastFm.authenticationCommand GotLastFmSession url)
 
 
 
@@ -293,6 +299,11 @@ type Msg
       -----------------------------------------
     | Import File
     | ImportJson String
+      -----------------------------------------
+      -- Last.fm
+      -----------------------------------------
+    | GotLastFmSession (Result Http.Error String)
+    | Scrobble { duration : Float, timestamp : Int, trackId : String }
       -----------------------------------------
       -- Page Transitions
       -----------------------------------------
@@ -779,6 +790,35 @@ update msg model =
                 |> saveAllHypaethralData
 
         -----------------------------------------
+        -- Last.fm
+        -----------------------------------------
+        GotLastFmSession (Ok sessionKey) ->
+            { model | lastFm = LastFm.gotSessionKey sessionKey model.lastFm }
+                |> showNotification
+                    (Notifications.success "Connected successfully with Last.fm")
+                |> andThen
+                    (translateReply SaveSettings)
+
+        GotLastFmSession (Err _) ->
+            showNotification
+                (Notifications.stickyError "Could not connect with Last.fm")
+                { model | lastFm = LastFm.failedToAuthenticate model.lastFm }
+
+        Scrobble { duration, timestamp, trackId } ->
+            case model.tracks.nowPlaying of
+                Just ( _, track ) ->
+                    if trackId == track.id then
+                        ( model
+                        , LastFm.scrobble model.lastFm duration timestamp track Bypass
+                        )
+
+                    else
+                        return model
+
+                Nothing ->
+                    return model
+
+        -----------------------------------------
         -- Page Transitions
         -----------------------------------------
         -- Sources.NewThroughRedirect
@@ -1129,6 +1169,28 @@ translateReply reply model =
             return { model | contextMenu = Just (Tracks.viewMenu model.tracks.cachedOnly maybeGrouping coordinates) }
 
         -----------------------------------------
+        -- Last.fm
+        -----------------------------------------
+        ConnectLastFm ->
+            model.url
+                |> Common.urlOrigin
+                |> String.addSuffix "?action=authenticate/lastfm"
+                |> Url.percentEncode
+                |> String.append "&cb="
+                |> String.append
+                    (String.append
+                        "http://www.last.fm/api/auth/?api_key="
+                        LastFm.apiKey
+                    )
+                |> Nav.load
+                |> returnWithModel model
+
+        DisconnectLastFm ->
+            translateReply
+                SaveSettings
+                { model | lastFm = LastFm.disconnect model.lastFm }
+
+        -----------------------------------------
         -- Notifications
         -----------------------------------------
         DismissNotification options ->
@@ -1330,6 +1392,13 @@ translateReply reply model =
             model
                 |> update (TracksMsg <| Tracks.SetNowPlaying nowPlaying)
                 |> addCommand portCmd
+                |> (case nowPlaying of
+                        Just identifiedTrack ->
+                            addCommand (LastFm.nowPlaying model.lastFm identifiedTrack Bypass)
+
+                        Nothing ->
+                            identity
+                   )
 
         AddToQueue { inFront, tracks } ->
             (if inFront then
@@ -1880,9 +1949,10 @@ subscriptions model =
         , Ports.downloadTracksFinished (\_ -> DownloadTracksFinished)
         , Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
         , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
-        , Ports.showErrorNotification (Notifications.error >> ShowNotification)
+        , Ports.scrobble Scrobble
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
         , Ports.setIsOnline SetIsOnline
+        , Ports.showErrorNotification (Notifications.error >> ShowNotification)
 
         --
         , Sub.map KeyboardMsg Keyboard.subscriptions
@@ -2172,6 +2242,7 @@ defaultScreen model =
                 { authenticationMethod = Authentication.extractMethod model.authentication
                 , chosenBackgroundImage = model.backdrop.chosen
                 , hideDuplicateTracks = model.tracks.hideDuplicates
+                , lastFm = model.lastFm
                 , processAutomatically = model.processAutomatically
                 , rememberProgress = model.rememberProgress
                 }
@@ -2330,9 +2401,10 @@ vessel =
 
 
 gatherSettings : Model -> Settings.Settings
-gatherSettings { backdrop, processAutomatically, rememberProgress, tracks } =
+gatherSettings { backdrop, lastFm, processAutomatically, rememberProgress, tracks } =
     { backgroundImage = backdrop.chosen
     , hideDuplicates = tracks.hideDuplicates
+    , lastFm = lastFm.sessionKey
     , processAutomatically = processAutomatically
     , rememberProgress = rememberProgress
     }
@@ -2366,6 +2438,9 @@ importHypaethral value model =
 
                 ( tracksModel, tracksCmd, tracksReplies ) =
                     Tracks.importHypaethral model.tracks data selectedPlaylist
+
+                lastFmModel =
+                    model.lastFm
             in
             ( { model
                 | backdrop = backdropModel
@@ -2375,6 +2450,7 @@ importHypaethral value model =
                 , tracks = tracksModel
 
                 --
+                , lastFm = { lastFmModel | sessionKey = Maybe.andThen .lastFm data.settings }
                 , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
                 , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
               }

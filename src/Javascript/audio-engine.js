@@ -155,6 +155,7 @@ export function insertTrack(orchestrion, queueItem) {
   // reset
   orchestrion.app.ports.setAudioHasStalled.send(false)
   orchestrion.app.ports.setAudioPosition.send(0)
+  clearTimeout(orchestrion.scrobbleTimeout)
   clearTimeout(orchestrion.unstallTimeout)
   timesStalled = 1
 
@@ -409,9 +410,25 @@ function audioLoaded(event) {
 }
 
 
-function audioPlayEvent(_event) {
+function audioPlayEvent(event) {
   this.app.ports.setAudioIsPlaying.send(true)
-  if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing"
+
+  if (navigator.mediaSession) {
+    navigator.mediaSession.playbackState = "playing"
+  }
+
+  if (event.target.duration && event.target.duration >= 30) {
+    const timestamp = Math.floor( Date.now() / 1000 )
+    const scrobbleTimeoutDuration = Math.min(240 + 0.5, event.target.duration / 1.95)
+
+    this.scrobbleTimeout = setTimeout(_ => {
+      this.app.ports.scrobble.send({
+        duration: event.target.duration,
+        timestamp: timestamp,
+        trackId: event.target.getAttribute("rel")
+      })
+    }, scrobbleTimeoutDuration * 1000)
+  }
 }
 
 

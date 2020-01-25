@@ -4,11 +4,13 @@ import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (..)
+import Html.Events exposing (onClick, onInput)
 import Html.Lazy
+import LastFm
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
+import Maybe.Extra as Maybe
 import Settings
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit
@@ -28,6 +30,7 @@ type alias Dependencies =
     { authenticationMethod : Maybe User.Layer.Method
     , chosenBackgroundImage : Maybe String
     , hideDuplicateTracks : Bool
+    , lastFm : LastFm.Model
     , processAutomatically : Bool
     , rememberProgress : Bool
     }
@@ -70,108 +73,165 @@ index deps =
     -----------------------------------------
     -- Content
     -----------------------------------------
-    , UI.Kit.canister
-        [ UI.Kit.h1 "Settings"
-        , [ text "Changes are saved automatically."
-          , lineBreak
-          , text "You're storing the data for this application "
-          , case deps.authenticationMethod of
-                Just Blockstack ->
-                    text "on Blockstack."
+    , deps
+        |> content
+        |> chunk [ C.pb_4 ]
+        |> List.singleton
+        |> UI.Kit.canister
+    ]
 
-                Just (Dropbox _) ->
-                    text "on Dropbox."
 
-                Just (Ipfs _) ->
-                    text "on IPFS."
+content : Dependencies -> List (Html Reply)
+content deps =
+    [ -----------------------------------------
+      -- Title
+      -----------------------------------------
+      UI.Kit.h1 "Settings"
 
-                Just Local ->
-                    text "in this browser."
+    -----------------------------------------
+    -- Intro
+    -----------------------------------------
+    , [ text "Changes are saved automatically."
+      , lineBreak
+      , text "You're storing the data for this application "
+      , case deps.authenticationMethod of
+            Just Blockstack ->
+                text "on Blockstack."
 
-                Just (RemoteStorage _) ->
-                    text "on a RemoteStorage server."
+            Just (Dropbox _) ->
+                text "on Dropbox."
 
-                Just (Textile _) ->
-                    text "on Textile."
+            Just (Ipfs _) ->
+                text "on IPFS."
 
-                Nothing ->
-                    text "on nothing, wtf?"
+            Just Local ->
+                text "in this browser."
 
-          -- Change passphrase (if applicable)
-          , case deps.authenticationMethod of
-                Just Blockstack ->
-                    nothing
+            Just (RemoteStorage _) ->
+                text "on a RemoteStorage server."
 
-                Just (Dropbox d) ->
-                    changePassphrase (Dropbox d)
+            Just (Textile _) ->
+                text "on Textile."
 
-                Just (Ipfs i) ->
-                    changePassphrase (Ipfs i)
+            Nothing ->
+                text "on nothing, wtf?"
 
-                Just Local ->
-                    changePassphrase Local
+      -- Change passphrase (if applicable)
+      , case deps.authenticationMethod of
+            Just Blockstack ->
+                nothing
 
-                Just (RemoteStorage r) ->
-                    changePassphrase (RemoteStorage r)
+            Just (Dropbox d) ->
+                changePassphrase (Dropbox d)
 
-                Just (Textile _) ->
-                    nothing
+            Just (Ipfs i) ->
+                changePassphrase (Ipfs i)
 
-                Nothing ->
-                    nothing
-          ]
-            |> raw
-            |> UI.Kit.intro
+            Just Local ->
+                changePassphrase Local
 
-        -- Clear cache
-        --------------
-        , chunk
-            [ C.flex, C.flex_wrap ]
-            [ chunk
-                [ C.w_full, C.md__w_half ]
-                [ label "Downloaded tracks"
-                , UI.Kit.buttonWithColor
-                    UI.Kit.Gray
-                    UI.Kit.Normal
-                    ClearTracksCache
-                    (text "Clear cache")
-                ]
-            , chunk
-                [ C.w_full, C.md__w_half ]
-                [ label "Hide Duplicates"
-                , UI.Kit.checkbox
-                    { checked = deps.hideDuplicateTracks
-                    , toggleMsg = ToggleHideDuplicates
-                    }
-                ]
-            ]
+            Just (RemoteStorage r) ->
+                changePassphrase (RemoteStorage r)
 
-        -- Check it
-        -----------
-        , chunk
-            [ C.flex, C.flex_wrap ]
-            [ chunk
-                [ C.w_full, C.md__w_half ]
-                [ label "Process sources automatically"
-                , UI.Kit.checkbox
-                    { checked = deps.processAutomatically
-                    , toggleMsg = ToggleProcessAutomatically
-                    }
-                ]
-            , chunk
-                [ C.w_full, C.md__w_half ]
-                [ label "Remember position on long tracks"
-                , UI.Kit.checkbox
-                    { checked = deps.rememberProgress
-                    , toggleMsg = ToggleRememberProgress
-                    }
-                ]
-            ]
+            Just (Textile _) ->
+                nothing
 
-        -- Background image
-        -------------------
-        , label "Background Image"
+            Nothing ->
+                nothing
+      ]
+        |> raw
+        |> UI.Kit.intro
+
+    -----------------------------------------
+    -- Background
+    -----------------------------------------
+    , chunk
+        [ C.mt_8 ]
+        [ label "Background Image"
         , Html.Lazy.lazy backgroundImage deps.chosenBackgroundImage
+        ]
+
+    -----------------------------------------
+    -- Row 1
+    -----------------------------------------
+    , chunk
+        [ C.flex, C.flex_wrap, C.pt_2 ]
+        [ chunk
+            [ C.w_full, C.md__w_half ]
+            [ label "Downloaded tracks"
+            , UI.Kit.buttonWithColor
+                UI.Kit.Gray
+                UI.Kit.Normal
+                ClearTracksCache
+                (text "Clear cache")
+            ]
+
+        -- Last.fm
+        ----------
+        , chunk
+            [ C.w_half ]
+            [ label "Last.fm scrobbling"
+
+            --
+            , case ( deps.lastFm.authenticating, deps.lastFm.sessionKey ) of
+                ( _, Just _ ) ->
+                    UI.Kit.checkbox
+                        { checked = True
+                        , toggleMsg = DisconnectLastFm
+                        }
+
+                ( True, Nothing ) ->
+                    UI.Kit.buttonWithColor
+                        UI.Kit.Gray
+                        UI.Kit.Normal
+                        Shunt
+                        (text "Connecting")
+
+                ( False, Nothing ) ->
+                    UI.Kit.buttonWithColor
+                        UI.Kit.Gray
+                        UI.Kit.Normal
+                        ConnectLastFm
+                        (text "Connect")
+            ]
+        ]
+
+    -----------------------------------------
+    -- Row 2
+    -----------------------------------------
+    , chunk
+        [ C.flex, C.flex_wrap ]
+        [ chunk
+            [ C.w_full, C.md__w_half ]
+            [ label "Hide Duplicates"
+            , UI.Kit.checkbox
+                { checked = deps.hideDuplicateTracks
+                , toggleMsg = ToggleHideDuplicates
+                }
+            ]
+        , chunk
+            [ C.w_full, C.md__w_half ]
+            [ label "Process sources automatically"
+            , UI.Kit.checkbox
+                { checked = deps.processAutomatically
+                , toggleMsg = ToggleProcessAutomatically
+                }
+            ]
+        ]
+
+    -----------------------------------------
+    -- Row 3
+    -----------------------------------------
+    , chunk
+        [ C.flex, C.flex_wrap ]
+        [ chunk
+            [ C.w_full, C.md__w_half ]
+            [ label "Remember position on long tracks"
+            , UI.Kit.checkbox
+                { checked = deps.rememberProgress
+                , toggleMsg = ToggleRememberProgress
+                }
+            ]
         ]
     ]
 
@@ -181,6 +241,13 @@ label l =
     chunk
         [ C.mb_3, C.mt_6, C.pb_px ]
         [ UI.Kit.label [] l ]
+
+
+textField : List (Html.Attribute Reply) -> Html Reply
+textField attributes =
+    chunk
+        [ C.max_w_xs ]
+        [ UI.Kit.textField attributes ]
 
 
 

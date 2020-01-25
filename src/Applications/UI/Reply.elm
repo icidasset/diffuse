@@ -49,6 +49,11 @@ type Reply
     | ShowTracksContextMenu Coordinates { alt : Bool } (List IdentifiedTrack)
     | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)
       -----------------------------------------
+      -- Last.fm
+      -----------------------------------------
+    | ConnectLastFm
+    | DisconnectLastFm
+      -----------------------------------------
       -- Notifications
       -----------------------------------------
     | DismissNotification { id : Int }

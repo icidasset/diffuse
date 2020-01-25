@@ -1,7 +1,8 @@
 # Changelog
 
-## 2.3.2
+## 2.4.0
 
+- **Adds Last.fm integration**
 - Fixes Amazon S3 processing issue in Chrome (max call stack)
 
 ## 2.3.1

@@ -43,6 +43,7 @@
             "rtfeldman/elm-hex": "1.0.0",
             "ryannhg/date-format": "2.3.0",
             "truqu/elm-base64": "2.0.4",
+            "truqu/elm-md5": "1.1.0",
             "wernerdegroot/listzipper": "4.0.0",
             "ymtszw/elm-xml-decode": "3.1.0"
         },
@@ -50,7 +51,8 @@
             "elm/parser": "1.1.0",
             "fredcy/elm-parseint": "2.0.1",
             "jinjor/elm-xml-parser": "2.0.0",
-            "pzp1997/assoc-list": "1.0.0"
+            "pzp1997/assoc-list": "1.0.0",
+            "zwilias/elm-utf-tools": "2.0.1"
         }
     },
     "test-dependencies": {
