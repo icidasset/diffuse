@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.2
+
+- Fixes Amazon S3 processing issue in Chrome (max call stack)
+
 ## 2.3.1
 
 - Fixes Firefox CSS issues

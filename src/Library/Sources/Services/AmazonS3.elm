@@ -114,7 +114,7 @@ makeTree srcData marker currentTime resultMsg =
 
         initialParams =
             [ ( "list-type", "2" )
-            , ( "max-keys", "1000" )
+            , ( "max-keys", "750" )
             ]
 
         prefix =
