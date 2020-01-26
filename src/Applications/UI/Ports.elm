@@ -100,6 +100,9 @@ port setIsOnline : (Bool -> msg) -> Sub msg
 port showErrorNotification : (String -> msg) -> Sub msg
 
 
+port showStickyErrorNotification : (String -> msg) -> Sub msg
+
+
 
 -- 🔱
 

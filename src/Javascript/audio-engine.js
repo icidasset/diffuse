@@ -63,14 +63,15 @@ function addAudioContainer() {
 // Setup
 // -----
 
+const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
+
+
 export function setup(orchestrion) {
   addAudioContainer()
 
   if (SINGLE_AUDIO_NODE) {
     // Try to avoid the "couldn't play automatically" error,
     // which seems to happen with audio nodes using an url created by `createObjectURL`.
-    const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
-
     insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
       const temporaryClickHandler = () => {
         orchestrion.audio.play()
@@ -228,8 +229,6 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
     if (is) fn.call(orchestrion, event)
   }
 
-  const timeUpdateFunc = bind(audioTimeUpdateEvent)
-
   audio = new Audio()
   audio.setAttribute("crossorigin", "anonymous")
   audio.setAttribute("data-preload", isPreload ? "t" : "f")
@@ -250,7 +249,8 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.addEventListener("play", bind(audioPlayEvent))
   audio.addEventListener("seeking", bind(audioLoading))
   audio.addEventListener("seeked", bind(audioLoaded))
-  audio.addEventListener("timeupdate", timeUpdateFunc)
+  audio.addEventListener("stalled", bind(audioStalledEvent))
+  audio.addEventListener("timeupdate", bind(audioTimeUpdateEvent))
 
   audio.load()
   audioElementsContainer.appendChild(audio)
@@ -333,16 +333,19 @@ function audioErrorEvent(event) {
     }
 
 
-function audioStalledEvent(event) {
+function audioStalledEvent(event, notifyAppImmediately) {
   this.app.ports.setAudioIsLoading.send(true)
-  this.app.ports.setAudioHasStalled.send(true)
-
   clearTimeout(this.unstallTimeout)
+
+  // Notify app
+  if (timesStalled >= 3 || notifyAppImmediately) {
+    this.app.ports.setAudioHasStalled.send(true)
+  }
 
   // Timeout
   setTimeout(_ => {
     if (isActiveAudioElement(this, event.target)) {
-      unstallAudio(event.target)
+      unstallAudio.call(this, event.target)
     }
   }, timesStalled * 2500)
 
@@ -357,9 +360,8 @@ function audioTimeUpdateEvent(event) {
   if (
     isNaN(node.duration) ||
     isNaN(node.currentTime) ||
-    node.duration === 0) {
-    return this.app.ports.setAudioPosition.send(0)
-  }
+    node.duration === 0
+  ) return;
 
   setDurationIfNecessary.call(this, node)
   this.app.ports.setAudioPosition.send(node.currentTime)
@@ -506,6 +508,14 @@ function unstallAudio(node) {
 
   node.load()
   node.currentTime = time
+
+  if (timesStalled >= 6) {
+    this.app.ports.showStickyErrorNotification.send(
+      "You loaded too many tracks too quickly, " +
+      "which the browser can't handle. " +
+      "You'll most likely have to reload the browser."
+    )
+  }
 }
 
 
@@ -526,6 +536,10 @@ export function removeOlderAudioElements(timestamp) {
       node.context = null
     }
 
+    // Force browser to stop loading
+    node.src = silentMp3File
+
+    // Remove element
     audioElementsContainer.removeChild(node)
   })
 }

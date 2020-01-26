@@ -1975,6 +1975,7 @@ subscriptions model =
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
         , Ports.setIsOnline SetIsOnline
         , Ports.showErrorNotification (Notifications.error >> ShowNotification)
+        , Ports.showStickyErrorNotification (Notifications.stickyError >> ShowNotification)
 
         --
         , Sub.map KeyboardMsg Keyboard.subscriptions
