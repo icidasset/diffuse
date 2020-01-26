@@ -322,7 +322,7 @@ type Msg
 
 update : Msg -> Model -> Return Model Msg
 update msg model =
-    case Debug.log "" msg of
+    case msg of
         Bypass ->
             return model
 
