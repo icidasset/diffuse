@@ -4,6 +4,7 @@
 
 - **Adds Last.fm integration**
 - Fixes Amazon S3 processing issue in Chrome (max call stack)
+- Improves audio loading/unloading
 
 ## 2.3.1
 
