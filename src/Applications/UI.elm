@@ -303,7 +303,7 @@ type Msg
       -- Last.fm
       -----------------------------------------
     | GotLastFmSession (Result Http.Error String)
-    | Scrobble { duration : Float, timestamp : Int, trackId : String }
+    | Scrobble { duration : Int, timestamp : Int, trackId : String }
       -----------------------------------------
       -- Page Transitions
       -----------------------------------------
@@ -597,7 +597,19 @@ update msg model =
                 returnWithModel model (Ports.play ())
 
         SetAudioDuration duration ->
-            return { model | audioDuration = duration }
+            (case model.tracks.nowPlaying of
+                Just ( _, track ) ->
+                    { duration = round duration
+                    , msg = Bypass
+                    , track = track
+                    }
+                        |> LastFm.nowPlaying model.lastFm
+                        |> returnWithCommand
+
+                Nothing ->
+                    return
+            )
+                { model | audioDuration = duration }
 
         SetAudioHasStalled hasStalled ->
             return { model | audioHasStalled = hasStalled }
@@ -809,7 +821,12 @@ update msg model =
                 Just ( _, track ) ->
                     if trackId == track.id then
                         ( model
-                        , LastFm.scrobble model.lastFm duration timestamp track Bypass
+                        , LastFm.scrobble model.lastFm
+                            { duration = duration
+                            , msg = Bypass
+                            , timestamp = timestamp
+                            , track = track
+                            }
                         )
 
                     else
@@ -1392,13 +1409,6 @@ translateReply reply model =
             model
                 |> update (TracksMsg <| Tracks.SetNowPlaying nowPlaying)
                 |> addCommand portCmd
-                |> (case nowPlaying of
-                        Just identifiedTrack ->
-                            addCommand (LastFm.nowPlaying model.lastFm identifiedTrack Bypass)
-
-                        Nothing ->
-                            identity
-                   )
 
         AddToQueue { inFront, tracks } ->
             (if inFront then

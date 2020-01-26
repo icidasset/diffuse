@@ -73,7 +73,7 @@ port requestPrevious : (() -> msg) -> Sub msg
 port requestStop : (() -> msg) -> Sub msg
 
 
-port scrobble : ({ duration : Float, timestamp : Int, trackId : String } -> msg) -> Sub msg
+port scrobble : ({ duration : Int, timestamp : Int, trackId : String } -> msg) -> Sub msg
 
 
 port setAudioPosition : (Float -> msg) -> Sub msg

@@ -6,7 +6,7 @@ import Json.Decode as Json
 import List.Ext as List
 import MD5
 import String.Ext as String
-import Tracks exposing (IdentifiedTrack, Track)
+import Tracks exposing (Track)
 import Tuple.Ext as Tuple
 import Url exposing (Url)
 import Url.Ext as Url
@@ -100,8 +100,8 @@ gotSessionKey sessionKey model =
 -- 🎵
 
 
-nowPlaying : Model -> IdentifiedTrack -> msg -> Cmd msg
-nowPlaying model ( _, track ) msg =
+nowPlaying : Model -> { duration : Int, msg : msg, track : Track } -> Cmd msg
+nowPlaying model { duration, msg, track } =
     case model.sessionKey of
         Just sessionKey ->
             Http.post
@@ -109,9 +109,10 @@ nowPlaying model ( _, track ) msg =
                     apiUrl
                 , body =
                     authenticatedBody
-                        [ ( "artist", track.tags.artist )
+                        [ ( "album", track.tags.album )
+                        , ( "artist", track.tags.artist )
+                        , ( "duration", String.fromInt duration )
                         , ( "track", track.tags.title )
-                        , ( "album", track.tags.album )
                         , ( "trackNumber", String.fromInt track.tags.nr )
 
                         --
@@ -126,8 +127,8 @@ nowPlaying model ( _, track ) msg =
             Cmd.none
 
 
-scrobble : Model -> Float -> Int -> Track -> msg -> Cmd msg
-scrobble model duration timestamp track msg =
+scrobble : Model -> { duration : Int, msg : msg, timestamp : Int, track : Track } -> Cmd msg
+scrobble model { duration, msg, timestamp, track } =
     case model.sessionKey of
         Just sessionKey ->
             Http.post
@@ -135,13 +136,13 @@ scrobble model duration timestamp track msg =
                     apiUrl
                 , body =
                     authenticatedBody
-                        [ ( "artist", track.tags.artist )
+                        [ ( "album", track.tags.album )
+                        , ( "artist", track.tags.artist )
+                        , ( "duration", String.fromInt duration )
                         , ( "track", track.tags.title )
-                        , ( "album", track.tags.album )
                         , ( "trackNumber", String.fromInt track.tags.nr )
 
                         --
-                        , ( "duration", String.fromInt <| round duration )
                         , ( "method", "track.scrobble" )
                         , ( "sk", sessionKey )
                         , ( "timestamp", String.fromInt timestamp )

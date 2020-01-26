@@ -361,7 +361,7 @@ function audioTimeUpdateEvent(event) {
     return this.app.ports.setAudioPosition.send(0)
   }
 
-  setDurationIfNecessary(node, this.app)
+  setDurationIfNecessary.call(this, node)
   this.app.ports.setAudioPosition.send(node.currentTime)
 
   if (navigator.mediaSession && navigator.mediaSession.setPositionState) {
@@ -412,23 +412,7 @@ function audioLoaded(event) {
 
 function audioPlayEvent(event) {
   this.app.ports.setAudioIsPlaying.send(true)
-
-  if (navigator.mediaSession) {
-    navigator.mediaSession.playbackState = "playing"
-  }
-
-  if (event.target.duration && event.target.duration >= 30) {
-    const timestamp = Math.floor( Date.now() / 1000 )
-    const scrobbleTimeoutDuration = Math.min(240 + 0.5, event.target.duration / 1.95)
-
-    this.scrobbleTimeout = setTimeout(_ => {
-      this.app.ports.scrobble.send({
-        duration: event.target.duration,
-        timestamp: timestamp,
-        trackId: event.target.getAttribute("rel")
-      })
-    }, scrobbleTimeoutDuration * 1000)
-  }
+  if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing"
 }
 
 
@@ -439,7 +423,7 @@ function audioPauseEvent(_event) {
 
 
 function audioCanPlayEvent(event) {
-  setDurationIfNecessary(event.target, this.app)
+  setDurationIfNecessary.call(this, event.target)
 }
 
 
@@ -496,11 +480,24 @@ const sendProgress = throttle((orchestrion, progress) => {
 let lastSetDuration = 0
 
 
-function setDurationIfNecessary(audio, app) {
-  if (audio.duration != lastSetDuration) {
-    app.ports.setAudioDuration.send(audio.duration || 0)
-    lastSetDuration = audio.duration
-  }
+function setDurationIfNecessary(audio) {
+  if (audio.duration === lastSetDuration) return;
+
+  this.app.ports.setAudioDuration.send(audio.duration || 0)
+  lastSetDuration = audio.duration
+
+  if (!lastSetDuration || lastSetDuration < 30) return;
+
+  const timestamp = Math.floor(Date.now() / 1000)
+  const scrobbleTimeoutDuration = Math.min(240 + 0.5, lastSetDuration / 1.95)
+
+  this.scrobbleTimeout = setTimeout(_ => {
+    this.app.ports.scrobble.send({
+      duration: Math.round(lastSetDuration),
+      timestamp: timestamp,
+      trackId: audio.getAttribute("rel")
+    })
+  }, scrobbleTimeoutDuration * 1000)
 }
 
 

@@ -1,4 +1,4 @@
-module Return2 exposing (Return, addCommand, andThen, mapCommand, mapModel, return, returnWithModel, withModel)
+module Return2 exposing (..)
 
 -- 🌳
 
@@ -30,6 +30,11 @@ return model =
 returnWithModel : model -> Cmd msg -> Return model msg
 returnWithModel =
     Tuple.pair
+
+
+returnWithCommand : Cmd msg -> model -> Return model msg
+returnWithCommand cmd model =
+    ( model, cmd )
 
 
 
