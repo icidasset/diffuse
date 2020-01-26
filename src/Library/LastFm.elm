@@ -38,42 +38,30 @@ type alias Model =
     }
 
 
-initialModel : Url -> Model
-initialModel url =
-    case Url.action url of
-        [ "authenticate", "lastfm" ] ->
-            { authenticating = True
-            , sessionKey = Nothing
-            }
-
-        _ ->
-            { authenticating = False
-            , sessionKey = Nothing
-            }
+initialModel : Model
+initialModel =
+    { authenticating = False
+    , sessionKey = Nothing
+    }
 
 
 authenticationCommand : (Result Http.Error String -> msg) -> Url -> Cmd msg
 authenticationCommand msg url =
-    case Url.action url of
-        [ "authenticate", "lastfm" ] ->
-            case Url.extractQueryParam "token" url of
-                Just token ->
-                    Http.get
-                        { url =
-                            authenticatedUrl
-                                [ ( "method", "auth.getSession" )
-                                , ( "token", token )
-                                ]
-                        , expect =
-                            Json.string
-                                |> Json.at [ "session", "key" ]
-                                |> Http.expectJson msg
-                        }
+    case Url.extractQueryParam "token" url of
+        Just token ->
+            Http.get
+                { url =
+                    authenticatedUrl
+                        [ ( "method", "auth.getSession" )
+                        , ( "token", token )
+                        ]
+                , expect =
+                    Json.string
+                        |> Json.at [ "session", "key" ]
+                        |> Http.expectJson msg
+                }
 
-                Nothing ->
-                    Cmd.none
-
-        _ ->
+        Nothing ->
             Cmd.none
 
 

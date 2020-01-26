@@ -79,6 +79,7 @@ import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
 import Url exposing (Protocol(..), Url)
+import Url.Ext as Url
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
 
@@ -184,7 +185,7 @@ init flags url key =
     , isOnline = flags.isOnline
     , isTouchDevice = False
     , isUpgrading = flags.upgrade
-    , lastFm = LastFm.initialModel url
+    , lastFm = LastFm.initialModel
     , navKey = key
     , notifications = []
     , page = page
@@ -235,8 +236,6 @@ init flags url key =
             )
         |> addCommand
             (Task.perform SetCurrentTime Time.now)
-        |> addCommand
-            (LastFm.authenticationCommand GotLastFmSession url)
 
 
 
@@ -323,7 +322,7 @@ type Msg
 
 update : Msg -> Model -> Return Model Msg
 update msg model =
-    case msg of
+    case Debug.log "" msg of
         Bypass ->
             return model
 
@@ -422,6 +421,19 @@ update msg model =
             model
                 |> importHypaethral json
                 |> Return3.wield translateReply
+                |> andThen
+                    (\m ->
+                        case Url.action m.url of
+                            [ "authenticate", "lastfm" ] ->
+                                { authenticating = True
+                                , sessionKey = Nothing
+                                }
+                                    |> (\n -> { m | lastFm = n })
+                                    |> returnWithCommand (LastFm.authenticationCommand GotLastFmSession m.url)
+
+                            _ ->
+                                return m
+                    )
                 |> andThen
                     (\m ->
                         if m.isUpgrading then
