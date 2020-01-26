@@ -21,7 +21,7 @@ apiKey =
 
 
 apiUrl =
-    "http://ws.audioscrobbler.com/2.0"
+    "https://ws.audioscrobbler.com/2.0"
 
 
 notSoSecret =
