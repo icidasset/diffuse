@@ -528,7 +528,6 @@ document.body.addEventListener("touchmove", event => {
 // ------------
 
 window.addEventListener("touchstart", function onFirstTouch() {
-  console.log("TOUCH")
   app.ports.indicateTouchDevice.send(null)
   window.removeEventListener("touchstart", onFirstTouch, false)
 }, false)

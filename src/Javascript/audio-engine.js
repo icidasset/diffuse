@@ -5,6 +5,7 @@
 // Creates audio elements and interacts with the Web Audio API.
 
 
+import Timer from "timer.js"
 import * as db from "./indexed-db"
 import { throttle } from "./common"
 import { transformUrl } from "./urls"
@@ -415,12 +416,14 @@ function audioLoaded(event) {
 function audioPlayEvent(event) {
   this.app.ports.setAudioIsPlaying.send(true)
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing"
+  if (this.scrobbleTimer) this.scrobbleTimer.start()
 }
 
 
 function audioPauseEvent(_event) {
   this.app.ports.setAudioIsPlaying.send(false)
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "paused"
+  if (this.scrobbleTimer) this.scrobbleTimer.pause()
 }
 
 
@@ -488,18 +491,22 @@ function setDurationIfNecessary(audio) {
   this.app.ports.setAudioDuration.send(audio.duration || 0)
   lastSetDuration = audio.duration
 
+  // Scrobble
   if (!lastSetDuration || lastSetDuration < 30) return;
 
   const timestamp = Math.floor(Date.now() / 1000)
   const scrobbleTimeoutDuration = Math.min(240 + 0.5, lastSetDuration / 1.95)
+  const trackId = audio.getAttribute("rel")
 
-  this.scrobbleTimeout = setTimeout(_ => {
-    this.app.ports.scrobble.send({
+  this.scrobbleTimer = new Timer({
+    onend: _ => this.app.ports.scrobble.send({
       duration: Math.round(lastSetDuration),
       timestamp: timestamp,
-      trackId: audio.getAttribute("rel")
+      trackId: trackId
     })
-  }, scrobbleTimeoutDuration * 1000)
+  })
+
+  this.scrobbleTimer.start(scrobbleTimeoutDuration)
 }
 
 
