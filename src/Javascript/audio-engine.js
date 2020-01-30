@@ -157,7 +157,6 @@ export function insertTrack(orchestrion, queueItem) {
   // reset
   orchestrion.app.ports.setAudioHasStalled.send(false)
   orchestrion.app.ports.setAudioPosition.send(0)
-  clearTimeout(orchestrion.scrobbleTimeout)
   clearTimeout(orchestrion.unstallTimeout)
   timesStalled = 1
 

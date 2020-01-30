@@ -84,7 +84,10 @@ app.ports.activeQueueItemChanged.subscribe(item => {
   orchestrion.activeQueueItem = item
   orchestrion.audio = null
 
-  clearTimeout(orchestrion.scrobbleTimeout)
+  if (orchestrion.scrobbleTimer) {
+    orchestrion.scrobbleTimer.stop()
+    orchestrion.scrobbleTimer = null
+  }
 
   audioEngine.usesSingleAudioNode()
     ? false
