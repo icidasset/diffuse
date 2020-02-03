@@ -8,6 +8,7 @@
     "dependencies": {
         "direct": {
             "FabienHenon/elm-infinite-list-view": "3.1.1",
+            "Fresheyeball/elm-return": "7.1.0",
             "Gizra/elm-all-set": "1.0.1",
             "Gizra/elm-debouncer": "2.0.0",
             "Herteby/enum": "1.0.0",

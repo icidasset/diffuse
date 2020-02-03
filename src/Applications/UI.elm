@@ -10,13 +10,12 @@ import Chunky exposing (..)
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
-import Coordinates exposing (Viewport)
 import Css exposing (url)
 import Css.Classes as C
-import Debouncer.Basic as Debouncer exposing (Debouncer)
-import Dict exposing (Dict)
+import Debouncer.Basic as Debouncer
+import Dict
 import Dict.Ext as Dict
-import File exposing (File)
+import File
 import File.Download
 import File.Select
 import Html exposing (Html, section)
@@ -24,7 +23,6 @@ import Html.Attributes exposing (class, id, style)
 import Html.Events exposing (on, onClick)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
-import Http
 import Json.Decode
 import Json.Encode
 import Keyboard
@@ -49,6 +47,8 @@ import Time
 import Tracks
 import Tracks.Encoding as Tracks
 import UI.Alfred as Alfred
+import UI.Audio.State as Audio
+import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
@@ -59,7 +59,7 @@ import UI.DnD as DnD
 import UI.Equalizer as Equalizer
 import UI.Navigation as Navigation
 import UI.Notifications
-import UI.Page as Page exposing (Page)
+import UI.Page as Page
 import UI.Playlists as Playlists
 import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
@@ -78,6 +78,7 @@ import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
+import UI.Types exposing (..)
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
 import User.Layer exposing (..)
@@ -86,15 +87,6 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 -- ⛩
-
-
-type alias Flags =
-    { darkMode : Bool
-    , initialTime : Int
-    , isOnline : Bool
-    , upgrade : Bool
-    , viewport : Viewport
-    }
 
 
 main : Program Flags Model Msg
@@ -111,55 +103,6 @@ main =
 
 
 -- 🌳
-
-
-type alias Model =
-    { contextMenu : Maybe (ContextMenu Reply)
-    , confirmation : Maybe String
-    , currentTime : Time.Posix
-    , darkMode : Bool
-    , debounce : Debouncer Msg Msg
-    , downloading : Maybe { notificationId : Int }
-    , focusedOnInput : Bool
-    , isDragging : Bool
-    , isLoading : Bool
-    , isOnline : Bool
-    , isTouchDevice : Bool
-    , isUpgrading : Bool
-    , lastFm : LastFm.Model
-    , navKey : Nav.Key
-    , notifications : UI.Notifications.Model
-    , page : Page
-    , pressedKeys : List Keyboard.Key
-    , processAutomatically : Bool
-    , url : Url
-    , viewport : Viewport
-
-    -----------------------------------------
-    -- Audio
-    -----------------------------------------
-    , audioDuration : Float
-    , audioHasStalled : Bool
-    , audioIsLoading : Bool
-    , audioIsPlaying : Bool
-    , audioPosition : Float
-
-    --
-    , progress : Dict String Float
-    , rememberProgress : Bool
-
-    -----------------------------------------
-    -- Children
-    -----------------------------------------
-    , alfred : Alfred.Model
-    , authentication : Authentication.Model
-    , backdrop : Backdrop.Model
-    , equalizer : Equalizer.Model
-    , queue : Queue.Model
-    , playlists : Playlists.Model
-    , sources : Sources.Model
-    , tracks : Tracks.Model
-    }
 
 
 init : Flags -> Url -> Nav.Key -> Return Model Msg
@@ -240,84 +183,6 @@ init flags url key =
 
 
 -- 📣
-
-
-type Msg
-    = Bypass
-    | Reply Reply
-      --
-    | Blur
-    | Debounce (Debouncer.Msg Msg)
-    | DownloadTracksFinished
-    | FocusedOnInput
-    | HideOverlay
-    | KeyboardMsg Keyboard.Msg
-    | LoadEnclosedUserData Json.Decode.Value
-    | LoadHypaethralUserData Json.Decode.Value
-    | PreferredColorSchemaChanged { dark : Bool }
-    | RemoveQueueSelection
-    | RemoveTrackSelection
-    | ResizedWindow ( Int, Int )
-    | ShowNotification (Notification Reply)
-    | SetCurrentTime Time.Posix
-    | SetIsOnline Bool
-    | SetIsTouchDevice Bool
-    | StoppedDragging
-    | ToggleLoadingScreen Switch
-      -----------------------------------------
-      -- Audio
-      -----------------------------------------
-    | NoteProgress { trackId : String, progress : Float }
-    | PlayPause
-    | SetAudioDuration Float
-    | SetAudioHasStalled Bool
-    | SetAudioIsLoading Bool
-    | SetAudioIsPlaying Bool
-    | SetAudioPosition Float
-    | Stop
-      -----------------------------------------
-      -- Authentication
-      -----------------------------------------
-    | AuthenticationBootFailure String
-    | MissingSecretKey Json.Decode.Value
-    | NotAuthenticated
-    | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
-      -----------------------------------------
-      -- Children
-      -----------------------------------------
-    | AlfredMsg Alfred.Msg
-    | AuthenticationMsg Authentication.Msg
-    | BackdropMsg Backdrop.Msg
-    | EqualizerMsg Equalizer.Msg
-    | PlaylistsMsg Playlists.Msg
-    | QueueMsg Queue.Msg
-    | SourcesMsg Sources.Msg
-    | TracksMsg Tracks.Msg
-      -----------------------------------------
-      -- Import / Export
-      -----------------------------------------
-    | Import File
-    | ImportJson String
-      -----------------------------------------
-      -- Last.fm
-      -----------------------------------------
-    | GotLastFmSession (Result Http.Error String)
-    | Scrobble { duration : Int, timestamp : Int, trackId : String }
-      -----------------------------------------
-      -- Page Transitions
-      -----------------------------------------
-    | PageChanged Page
-      -----------------------------------------
-      -- Tracks Cache
-      -----------------------------------------
-    | FailedToStoreTracksInCache (List String)
-    | FinishedStoringTracksInCache (List String)
-      -----------------------------------------
-      -- URL
-      -----------------------------------------
-    | ChangeUrlUsingPage Page
-    | LinkClicked Browser.UrlRequest
-    | UrlChanged Url
 
 
 update : Msg -> Model -> Return Model Msg
@@ -569,74 +434,11 @@ update msg model =
                 _ ->
                     return notDragging
 
-        ToggleLoadingScreen On ->
+        UI.Types.ToggleLoadingScreen On ->
             return { model | isLoading = True }
 
-        ToggleLoadingScreen Off ->
+        UI.Types.ToggleLoadingScreen Off ->
             return { model | isLoading = False }
-
-        -----------------------------------------
-        -- Audio
-        -----------------------------------------
-        NoteProgress { trackId, progress } ->
-            let
-                updatedProgressTable =
-                    if not model.rememberProgress then
-                        model.progress
-
-                    else if progress > 0.975 then
-                        Dict.remove trackId model.progress
-
-                    else
-                        Dict.insert trackId progress model.progress
-            in
-            if model.rememberProgress then
-                translateReply
-                    SaveProgress
-                    { model | progress = updatedProgressTable }
-
-            else
-                return model
-
-        PlayPause ->
-            if Maybe.isNothing model.queue.activeItem then
-                update (QueueMsg Queue.Shift) model
-
-            else if model.audioIsPlaying then
-                returnWithModel model (Ports.pause ())
-
-            else
-                returnWithModel model (Ports.play ())
-
-        SetAudioDuration duration ->
-            (case model.tracks.nowPlaying of
-                Just ( _, track ) ->
-                    { duration = round duration
-                    , msg = Bypass
-                    , track = track
-                    }
-                        |> LastFm.nowPlaying model.lastFm
-                        |> returnWithCommand
-
-                Nothing ->
-                    return
-            )
-                { model | audioDuration = duration }
-
-        SetAudioHasStalled hasStalled ->
-            return { model | audioHasStalled = hasStalled }
-
-        SetAudioIsLoading isLoading ->
-            return { model | audioIsLoading = isLoading }
-
-        SetAudioIsPlaying isPlaying ->
-            return { model | audioIsPlaying = isPlaying }
-
-        SetAudioPosition position ->
-            return { model | audioPosition = position }
-
-        Stop ->
-            returnWithModel model (Ports.pause ())
 
         -----------------------------------------
         -- Authentication
@@ -986,6 +788,12 @@ update msg model =
                 _ ->
                     returnWithModel model (resetUrl model.navKey url Page.Index)
 
+        -----------------------------------------
+        -- TARGET => Pieces
+        -----------------------------------------
+        Audio a ->
+            Audio.update a model
+
 
 updateTracksModel : (Tracks.Model -> Tracks.Model) -> Model -> Model
 updateTracksModel fn model =
@@ -1034,7 +842,7 @@ translateReply reply model =
             returnWithModel model (Ports.seek percentage)
 
         TogglePlayPause ->
-            update PlayPause model
+            Audio.playPause model
 
         ToggleRememberProgress ->
             translateReply SaveSettings { model | rememberProgress = not model.rememberProgress }
@@ -1936,19 +1744,19 @@ subscriptions model =
         -- Audio
         --------
         , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
-        , Ports.noteProgress NoteProgress
-        , Ports.setAudioDuration SetAudioDuration
-        , Ports.setAudioHasStalled SetAudioHasStalled
-        , Ports.setAudioIsLoading SetAudioIsLoading
-        , Ports.setAudioIsPlaying SetAudioIsPlaying
-        , Ports.setAudioPosition SetAudioPosition
+        , Ports.noteProgress (Audio << Audio.NoteProgress)
+        , Ports.setAudioDuration (Audio << Audio.SetDuration)
+        , Ports.setAudioHasStalled (Audio << Audio.SetHasStalled)
+        , Ports.setAudioIsLoading (Audio << Audio.SetIsLoading)
+        , Ports.setAudioIsPlaying (Audio << Audio.SetIsPlaying)
+        , Ports.setAudioPosition (Audio << Audio.SetPosition)
 
         -- Remote
         ---------
         , Ports.requestNext <| always (QueueMsg Queue.Shift)
-        , Ports.requestPlayPause <| always PlayPause
+        , Ports.requestPlayPause <| always (Audio Audio.PlayPause)
         , Ports.requestPrevious <| always (QueueMsg Queue.Rewind)
-        , Ports.requestStop <| always Stop
+        , Ports.requestStop <| always (Audio Audio.Stop)
 
         -- Children
         -----------
@@ -2021,7 +1829,7 @@ translateAlienData event =
             SourcesMsg Sources.FinishedProcessing
 
         Just Alien.HideLoadingScreen ->
-            ToggleLoadingScreen Off
+            UI.Types.ToggleLoadingScreen Off
 
         Just Alien.ImportLegacyData ->
             ShowNotification (Notifications.success "Imported data successfully!")

@@ -5,12 +5,11 @@ import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick)
 import Html.Lazy
 import LastFm
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Maybe.Extra as Maybe
 import Settings
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit
@@ -241,13 +240,6 @@ label l =
     chunk
         [ C.mb_3, C.mt_6, C.pb_px ]
         [ UI.Kit.label [] l ]
-
-
-textField : List (Html.Attribute Reply) -> Html Reply
-textField attributes =
-    chunk
-        [ C.max_w_xs ]
-        [ UI.Kit.textField attributes ]
 
 
 
