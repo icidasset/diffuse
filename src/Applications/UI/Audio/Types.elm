@@ -1,5 +1,29 @@
 module UI.Audio.Types exposing (..)
 
+import Dict exposing (Dict)
+import Management
+
+
+
+-- 🌳
+
+
+type alias Model =
+    { duration : Float
+    , hasStalled : Bool
+    , isLoading : Bool
+    , isPlaying : Bool
+    , position : Float
+
+    -----------------------------------------
+    -- Progress
+    -----------------------------------------
+    , progress : Dict String Float
+    , rememberProgress : Bool
+    }
+
+
+
 -- 📣
 
 

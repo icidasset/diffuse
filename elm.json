@@ -14,6 +14,7 @@
             "Herteby/enum": "1.0.0",
             "NoRedInk/elm-json-decode-pipeline": "1.0.0",
             "Skinney/murmur3": "2.0.8",
+            "arturopala/elm-monocle": "2.1.0",
             "avh4/elm-color": "1.0.0",
             "elm/browser": "1.0.2",
             "elm/bytes": "1.0.8",

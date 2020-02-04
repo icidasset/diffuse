@@ -2,14 +2,41 @@ module UI.Audio.State exposing (..)
 
 import Dict
 import LastFm
+import Management
 import Maybe.Extra as Maybe
+import Monocle.Lens as Lens exposing (Lens)
 import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
-import UI.Audio.Types as Audio exposing (..)
+import UI.Audio.Types as Audio exposing (Msg(..))
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Reply as Reply
-import UI.Types as UI exposing (Manager)
+import UI.Types as UI exposing (Manager, Organizer)
+
+
+
+-- 🌳
+
+
+initialModel : Audio.Model
+initialModel =
+    { duration = 0
+    , hasStalled = False
+    , isLoading = False
+    , isPlaying = False
+    , position = 0
+
+    --
+    , progress = Dict.empty
+    , rememberProgress = True
+    }
+
+
+lens : Lens UI.Model Audio.Model
+lens =
+    { get = .audio
+    , set = \audio ui -> { ui | audio = audio }
+    }
 
 
 
@@ -20,7 +47,7 @@ update : Audio.Msg -> Manager
 update msg =
     case msg of
         NoteProgress a ->
-            noteProgress a
+            organize (noteProgress a)
 
         PlayPause ->
             playPause
@@ -29,26 +56,31 @@ update msg =
             setDuration a
 
         SetHasStalled a ->
-            setHasStalled a
+            organize (setHasStalled a)
 
         SetIsLoading a ->
-            setIsLoading a
+            organize (setIsLoading a)
 
         SetIsPlaying a ->
-            setIsPlaying a
+            organize (setIsPlaying a)
 
         SetPosition a ->
-            setPosition a
+            organize (setPosition a)
 
         Stop ->
             stop
+
+
+organize : Organizer Audio.Model -> Manager
+organize =
+    Management.organize lens
 
 
 
 -- 🔱
 
 
-noteProgress : { trackId : String, progress : Float } -> Manager
+noteProgress : { trackId : String, progress : Float } -> Organizer Audio.Model
 noteProgress { trackId, progress } model =
     let
         updatedProgressTable =
@@ -77,7 +109,7 @@ playPause model =
         -- TODO!
         Return.performance (UI.QueueMsg Queue.Shift) model
 
-    else if model.audioIsPlaying then
+    else if model.audio.isPlaying then
         communicate (Ports.pause ()) model
 
     else
@@ -86,39 +118,42 @@ playPause model =
 
 setDuration : Float -> Manager
 setDuration duration model =
-    (case model.tracks.nowPlaying of
-        Just ( _, track ) ->
-            { duration = round duration
-            , msg = UI.Bypass
-            , track = track
-            }
-                |> LastFm.nowPlaying model.lastFm
-                |> communicate
+    let
+        cmd =
+            case model.tracks.nowPlaying of
+                Just ( _, track ) ->
+                    LastFm.nowPlaying model.lastFm
+                        { duration = round duration
+                        , msg = UI.Bypass
+                        , track = track
+                        }
 
-        Nothing ->
-            Return.singleton
-    )
-        { model | audioDuration = duration }
+                Nothing ->
+                    Cmd.none
+    in
+    model
+        |> Lens.modify lens (\audio -> { audio | duration = duration })
+        |> Return.communicate cmd
 
 
-setHasStalled : Bool -> Manager
+setHasStalled : Bool -> Organizer Audio.Model
 setHasStalled hasStalled model =
-    Return.singleton { model | audioHasStalled = hasStalled }
+    Return.singleton { model | hasStalled = hasStalled }
 
 
-setIsLoading : Bool -> Manager
+setIsLoading : Bool -> Organizer Audio.Model
 setIsLoading isLoading model =
-    Return.singleton { model | audioIsLoading = isLoading }
+    Return.singleton { model | isLoading = isLoading }
 
 
-setIsPlaying : Bool -> Manager
+setIsPlaying : Bool -> Organizer Audio.Model
 setIsPlaying isPlaying model =
-    Return.singleton { model | audioIsPlaying = isPlaying }
+    Return.singleton { model | isPlaying = isPlaying }
 
 
-setPosition : Float -> Manager
+setPosition : Float -> Organizer Audio.Model
 setPosition position model =
-    Return.singleton { model | audioPosition = position }
+    Return.singleton { model | position = position }
 
 
 stop : Manager

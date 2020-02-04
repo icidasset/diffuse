@@ -31,6 +31,7 @@ import Keyboard
 import LastFm
 import List.Ext as List
 import List.Extra as List
+import Management
 import Maybe.Extra as Maybe
 import Notifications exposing (Notification)
 import Playlists.Encoding as Playlists
@@ -125,19 +126,6 @@ type alias Model =
     , viewport : Viewport
 
     -----------------------------------------
-    -- Audio
-    -----------------------------------------
-    , audioDuration : Float
-    , audioHasStalled : Bool
-    , audioIsLoading : Bool
-    , audioIsPlaying : Bool
-    , audioPosition : Float
-
-    --
-    , progress : Dict String Float
-    , rememberProgress : Bool
-
-    -----------------------------------------
     -- Children
     -----------------------------------------
     , alfred : Alfred.Model
@@ -148,6 +136,11 @@ type alias Model =
     , playlists : Playlists.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
+
+    -----------------------------------------
+    -- Pieces
+    -----------------------------------------
+    , audio : Audio.Model
     }
 
 
@@ -226,5 +219,9 @@ type Msg
     | Audio Audio.Msg
 
 
+type alias Organizer model =
+    Management.Manager Msg model
+
+
 type alias Manager =
-    Model -> ( Model, Cmd Msg )
+    Organizer Model
