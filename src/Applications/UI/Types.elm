@@ -13,7 +13,7 @@ import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Css exposing (url)
 import Css.Classes as C
-import Debouncer.Basic as Debouncer exposing (Debouncer)
+import Debouncer.Basic exposing (Debouncer)
 import Dict exposing (Dict)
 import Dict.Ext as Dict
 import File exposing (File)
@@ -59,6 +59,7 @@ import UI.ContextMenu
 import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer as Equalizer
+import UI.Interface.Types as Interface
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
@@ -108,7 +109,7 @@ type alias Model =
     , confirmation : Maybe String
     , currentTime : Time.Posix
     , darkMode : Bool
-    , debounce : Debouncer Msg Msg
+    , debounce : Debouncer Interface.Msg Interface.Msg
     , downloading : Maybe { notificationId : Int }
     , focusedOnInput : Bool
     , isDragging : Bool
@@ -152,24 +153,9 @@ type Msg
     = Bypass
     | Reply Reply
       --
-    | Blur
-    | Debounce (Debouncer.Msg Msg)
     | DownloadTracksFinished
-    | FocusedOnInput
-    | HideOverlay
-    | KeyboardMsg Keyboard.Msg
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
-    | PreferredColorSchemaChanged { dark : Bool }
-    | RemoveQueueSelection
-    | RemoveTrackSelection
-    | ResizedWindow ( Int, Int )
-    | ShowNotification (Notification Reply)
-    | SetCurrentTime Time.Posix
-    | SetIsOnline Bool
-    | SetIsTouchDevice Bool
-    | StoppedDragging
-    | ToggleLoadingScreen Switch
       -----------------------------------------
       -- Authentication
       -----------------------------------------
@@ -217,6 +203,7 @@ type Msg
       -- TARGET => Pieces
       -----------------------------------------
     | Audio Audio.Msg
+    | Interface Interface.Msg
 
 
 type alias Organizer model =

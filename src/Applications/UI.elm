@@ -4,7 +4,6 @@ import Alfred exposing (Alfred)
 import Alien
 import Browser
 import Browser.Dom
-import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Common exposing (Switch(..))
@@ -25,13 +24,12 @@ import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
 import Json.Decode
 import Json.Encode
-import Keyboard
 import LastFm
 import List.Ext as List
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Monocle.Lens as Lens
-import Notifications exposing (Notification)
+import Notifications
 import Playlists.Encoding as Playlists
 import Process
 import Queue
@@ -53,11 +51,13 @@ import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
+import UI.Common.State exposing (showNotification, showNotificationWithModel)
 import UI.Console
 import UI.ContextMenu
 import UI.Demo as Demo
-import UI.DnD as DnD
 import UI.Equalizer as Equalizer
+import UI.Interface.State as Interface
+import UI.Interface.Types as Interface
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
@@ -79,7 +79,7 @@ import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
-import UI.Types exposing (..)
+import UI.Types as UI exposing (..)
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
 import User.Layer exposing (..)
@@ -171,7 +171,10 @@ init flags url key =
                 Cmd.none
             )
         |> addCommand
-            (Task.perform SetCurrentTime Time.now)
+            (Task.perform
+                (Interface.SetCurrentTime >> Interface)
+                Time.now
+            )
 
 
 
@@ -188,20 +191,6 @@ update msg model =
             translateReply reply model
 
         --
-        Blur ->
-            return { model | focusedOnInput = False }
-
-        Debounce debouncerMsg ->
-            Return3.wieldNested
-                update
-                { mapCmd = Debounce
-                , mapModel = \child -> { model | debounce = child }
-                , update = \m -> Debouncer.update m >> Return3.fromDebouncer
-                }
-                { model = model.debounce
-                , msg = debouncerMsg
-                }
-
         DownloadTracksFinished ->
             case model.downloading of
                 Just { notificationId } ->
@@ -211,64 +200,6 @@ update msg model =
 
                 Nothing ->
                     return model
-
-        FocusedOnInput ->
-            return { model | focusedOnInput = True }
-
-        HideOverlay ->
-            hideOverlay model
-
-        KeyboardMsg subMsg ->
-            (\m ->
-                let
-                    skip =
-                        return m
-
-                    authenticated =
-                        case model.authentication of
-                            Authentication.Authenticated _ ->
-                                True
-
-                            _ ->
-                                False
-                in
-                if m.focusedOnInput || not authenticated then
-                    -- Stop here if using input or not authenticated
-                    skip
-
-                else
-                    case m.pressedKeys of
-                        [ Keyboard.Escape ] ->
-                            hideOverlay m
-
-                        [ Keyboard.ArrowLeft ] ->
-                            translateReply RewindQueue m
-
-                        [ Keyboard.ArrowRight ] ->
-                            translateReply ShiftQueue m
-
-                        [ Keyboard.ArrowUp ] ->
-                            translateReply (Seek <| (m.audio.position - 10) / m.audio.duration) m
-
-                        [ Keyboard.ArrowDown ] ->
-                            translateReply (Seek <| (m.audio.position + 10) / m.audio.duration) m
-
-                        [ Keyboard.Character "N" ] ->
-                            translateReply ScrollToNowPlaying m
-
-                        [ Keyboard.Character "P" ] ->
-                            translateReply TogglePlayPause m
-
-                        [ Keyboard.Character "R" ] ->
-                            translateReply ToggleRepeat m
-
-                        [ Keyboard.Character "S" ] ->
-                            translateReply ToggleShuffle m
-
-                        _ ->
-                            skip
-            )
-                { model | pressedKeys = Keyboard.update subMsg model.pressedKeys }
 
         LoadEnclosedUserData json ->
             model
@@ -317,121 +248,6 @@ update msg model =
                         else
                             return m
                     )
-
-        PreferredColorSchemaChanged { dark } ->
-            return { model | darkMode = dark }
-
-        RemoveQueueSelection ->
-            let
-                queue =
-                    model.queue
-            in
-            ( { model
-                | queue = { queue | selection = Nothing }
-              }
-            , Cmd.none
-            )
-
-        RemoveTrackSelection ->
-            let
-                tracks =
-                    model.tracks
-            in
-            ( { model
-                | tracks = { tracks | selectedTrackIndexes = [] }
-              }
-            , Cmd.none
-            )
-
-        ResizedWindow ( width, height ) ->
-            ( { model
-                | contextMenu = Nothing
-                , viewport = { height = toFloat height, width = toFloat width }
-              }
-              --
-            , Cmd.none
-            )
-
-        SetCurrentTime time ->
-            let
-                sources =
-                    model.sources
-            in
-            ( { model
-                | currentTime = time
-                , sources = { sources | currentTime = time }
-              }
-              --
-            , Cmd.none
-            )
-
-        SetIsOnline False ->
-            -- The app went offline, cache everything
-            -- (if caching is supported).
-            ( { model | isOnline = False }
-            , case model.authentication of
-                Authentication.Authenticated (Dropbox _) ->
-                    Ports.toBrain (Alien.trigger Alien.SyncHypaethralData)
-
-                Authentication.Authenticated (RemoteStorage _) ->
-                    Ports.toBrain (Alien.trigger Alien.SyncHypaethralData)
-
-                _ ->
-                    Cmd.none
-            )
-
-        SetIsOnline True ->
-            -- We're caching the user's data in the browser while offline.
-            -- If we're back online again, sync all the user's data.
-            (case model.authentication of
-                Authentication.Authenticated (Dropbox _) ->
-                    syncHypaethralData
-
-                Authentication.Authenticated (RemoteStorage _) ->
-                    syncHypaethralData
-
-                _ ->
-                    return
-            )
-                { model | isOnline = True }
-
-        SetIsTouchDevice bool ->
-            return { model | isTouchDevice = bool }
-
-        ShowNotification notification ->
-            showNotification notification model
-
-        StoppedDragging ->
-            let
-                notDragging =
-                    { model | isDragging = False }
-            in
-            -- Depending on where we stopped dragging something,
-            -- do the appropriate thing.
-            case model.page of
-                Page.Queue _ ->
-                    DnD.stoppedDragging
-                        |> Queue.DragMsg
-                        |> QueueMsg
-                        |> updateWithModel notDragging
-
-                Page.Index ->
-                    case model.tracks.scene of
-                        Tracks.List ->
-                            DnD.stoppedDragging
-                                |> UI.Tracks.Scene.List.DragAndDropMsg
-                                |> Tracks.ListSceneMsg
-                                |> TracksMsg
-                                |> updateWithModel notDragging
-
-                _ ->
-                    return notDragging
-
-        UI.Types.ToggleLoadingScreen On ->
-            return { model | isLoading = True }
-
-        UI.Types.ToggleLoadingScreen Off ->
-            return { model | isLoading = False }
 
         -----------------------------------------
         -- Authentication
@@ -786,6 +602,9 @@ update msg model =
         -----------------------------------------
         Audio a ->
             Audio.update a model
+
+        Interface a ->
+            Interface.update a model
 
 
 updateTracksModel : (Tracks.Model -> Tracks.Model) -> Model -> Model
@@ -1629,18 +1448,6 @@ translateReplyWithModel model reply =
 -- 📣  ░░  FUNCTIONS
 
 
-hideOverlay : Model -> Return Model Msg
-hideOverlay model =
-    ( { model
-        | alfred = { instance = Nothing }
-        , confirmation = Nothing
-        , contextMenu = Nothing
-      }
-      --
-    , Cmd.none
-    )
-
-
 loadSourceForForm : Model -> String -> ( Model, Cmd Msg )
 loadSourceForForm model sourceId =
     let
@@ -1709,27 +1516,6 @@ saveAllHypaethralData return =
         hypaethralBit.list
 
 
-showNotification : Notification Reply -> Model -> Return Model Msg
-showNotification notification model =
-    model.notifications
-        |> UI.Notifications.show notification
-        |> mapModel (\n -> { model | isLoading = False, notifications = n })
-        |> mapCommand Reply
-
-
-showNotificationWithModel : Model -> Notification Reply -> Return Model Msg
-showNotificationWithModel model notification =
-    showNotification notification model
-
-
-syncHypaethralData : Model -> Return Model Msg
-syncHypaethralData model =
-    "Syncing"
-        |> Notifications.warning
-        |> showNotificationWithModel model
-        |> addCommand (Ports.toBrain <| Alien.trigger Alien.SyncHypaethralData)
-
-
 
 -- 📰
 
@@ -1763,29 +1549,13 @@ subscriptions model =
             (Sub.map AlfredMsg <| Alfred.subscriptions model.alfred)
             Sub.none
 
-        -- Resize
-        ---------
-        , Browser.Events.onResize
-            (\w h ->
-                ( w, h )
-                    |> ResizedWindow
-                    |> Debouncer.provideInput
-                    |> Debounce
-            )
-
         --
         , Ports.downloadTracksFinished (\_ -> DownloadTracksFinished)
-        , Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
-        , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
         , Ports.scrobble Scrobble
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
-        , Ports.setIsOnline SetIsOnline
-        , Ports.showErrorNotification (Notifications.error >> ShowNotification)
-        , Ports.showStickyErrorNotification (Notifications.stickyError >> ShowNotification)
 
         --
-        , Sub.map KeyboardMsg Keyboard.subscriptions
-        , Time.every (60 * 1000) SetCurrentTime
+        , Interface.subscriptions model
         ]
 
 
@@ -1827,10 +1597,13 @@ translateAlienData event =
             SourcesMsg Sources.FinishedProcessing
 
         Just Alien.HideLoadingScreen ->
-            UI.Types.ToggleLoadingScreen Off
+            Interface (Interface.ToggleLoadingScreen Off)
 
         Just Alien.ImportLegacyData ->
-            ShowNotification (Notifications.success "Imported data successfully!")
+            "Imported data successfully!"
+                |> Notifications.success
+                |> Interface.ShowNotification
+                |> Interface
 
         Just Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData event.data
@@ -1869,7 +1642,8 @@ translateAlienData event =
                     err
                         |> Json.Decode.errorToString
                         |> Notifications.error
-                        |> ShowNotification
+                        |> Interface.ShowNotification
+                        |> Interface
 
         Just Alien.UpdateSourceData ->
             SourcesMsg (Sources.UpdateSourceData event.data)
@@ -1911,10 +1685,16 @@ translateAlienError event err =
                     FailedToStoreTracksInCache trackIds
 
                 Err _ ->
-                    ShowNotification (Notifications.error err)
+                    err
+                        |> Notifications.error
+                        |> Interface.ShowNotification
+                        |> Interface
 
         _ ->
-            ShowNotification (Notifications.error err)
+            err
+                |> Notifications.error
+                |> Interface.ShowNotification
+                |> Interface
 
 
 
@@ -1932,7 +1712,7 @@ body : Model -> Html Msg
 body model =
     section
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred.instance then
-            [ on "tap" (Json.Decode.succeed HideOverlay) ]
+            [ on "tap" (interfaceEventHandler Interface.HideOverlay) ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
             [ Pointer.onMove (EqualizerMsg << Equalizer.AdjustKnob)
@@ -1942,16 +1722,16 @@ body model =
 
          else if model.isDragging then
             [ class C.dragging_something
-            , on "mouseup" (Json.Decode.succeed StoppedDragging)
-            , on "touchcancel" (Json.Decode.succeed StoppedDragging)
-            , on "touchend" (Json.Decode.succeed StoppedDragging)
+            , on "mouseup" (interfaceEventHandler Interface.StoppedDragging)
+            , on "touchcancel" (interfaceEventHandler Interface.StoppedDragging)
+            , on "touchend" (interfaceEventHandler Interface.StoppedDragging)
             ]
 
          else if Maybe.isJust model.queue.selection then
-            [ on "tap" (Json.Decode.succeed RemoveQueueSelection) ]
+            [ on "tap" (interfaceEventHandler Interface.RemoveQueueSelection) ]
 
          else if not (List.isEmpty model.tracks.selectedTrackIndexes) then
-            [ on "tap" (Json.Decode.succeed RemoveTrackSelection) ]
+            [ on "tap" (interfaceEventHandler Interface.RemoveTrackSelection) ]
 
          else
             []
@@ -2114,7 +1894,7 @@ defaultScreen model =
 content : { justifyCenter : Bool, scrolling : Bool } -> List (Html Msg) -> Html Msg
 content { justifyCenter, scrolling } nodes =
     brick
-        [ on "focusout" (Json.Decode.succeed Blur)
+        [ on "focusout" (interfaceEventHandler Interface.Blur)
         , on "focusin" inputFocusDecoder
         , style "height" "calc(var(--vh, 1vh) * 100)"
         ]
@@ -2154,14 +1934,19 @@ inputFocusDecoder =
             (\targetTagName ->
                 case targetTagName of
                     "INPUT" ->
-                        Json.Decode.succeed FocusedOnInput
+                        interfaceEventHandler Interface.FocusedOnInput
 
                     "TEXTAREA" ->
-                        Json.Decode.succeed FocusedOnInput
+                        interfaceEventHandler Interface.FocusedOnInput
 
                     _ ->
                         Json.Decode.fail "NOT_INPUT"
             )
+
+
+interfaceEventHandler : Interface.Msg -> Json.Decode.Decoder UI.Msg
+interfaceEventHandler =
+    Interface >> Json.Decode.succeed
 
 
 loadingAnimation : Html msg
@@ -2176,7 +1961,7 @@ overlay maybeAlfred maybeContextMenu =
             Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
     in
     brick
-        [ onClick HideOverlay ]
+        [ onClick (Interface Interface.HideOverlay) ]
         [ C.inset_0
         , C.bg_black
         , C.fixed

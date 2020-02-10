@@ -20,3 +20,8 @@ performance msg model =
         |> Task.succeed
         |> Task.perform identity
         |> Tuple.pair model
+
+
+performanceF : model -> msg -> ( model, Cmd msg )
+performanceF model msg =
+    performance msg model
