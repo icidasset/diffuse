@@ -77,6 +77,25 @@ organize =
 
 
 
+-- 📰
+
+
+subscriptions : UI.Model -> Sub UI.Msg
+subscriptions _ =
+    [ Ports.noteProgress NoteProgress
+    , Ports.requestPlayPause (always PlayPause)
+    , Ports.requestStop (always Stop)
+    , Ports.setAudioDuration SetDuration
+    , Ports.setAudioHasStalled SetHasStalled
+    , Ports.setAudioIsLoading SetIsLoading
+    , Ports.setAudioIsPlaying SetIsPlaying
+    , Ports.setAudioPosition SetPosition
+    ]
+        |> Sub.batch
+        |> Sub.map UI.Audio
+
+
+
 -- 🔱
 
 

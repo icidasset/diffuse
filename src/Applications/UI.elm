@@ -1525,22 +1525,11 @@ subscriptions model =
     Sub.batch
         [ Ports.fromAlien alien
 
-        -- Audio
+        -- Queue
         --------
         , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
-        , Ports.noteProgress (Audio << Audio.NoteProgress)
-        , Ports.setAudioDuration (Audio << Audio.SetDuration)
-        , Ports.setAudioHasStalled (Audio << Audio.SetHasStalled)
-        , Ports.setAudioIsLoading (Audio << Audio.SetIsLoading)
-        , Ports.setAudioIsPlaying (Audio << Audio.SetIsPlaying)
-        , Ports.setAudioPosition (Audio << Audio.SetPosition)
-
-        -- Remote
-        ---------
         , Ports.requestNext <| always (QueueMsg Queue.Shift)
-        , Ports.requestPlayPause <| always (Audio Audio.PlayPause)
         , Ports.requestPrevious <| always (QueueMsg Queue.Rewind)
-        , Ports.requestStop <| always (Audio Audio.Stop)
 
         -- Children
         -----------
@@ -1555,6 +1544,7 @@ subscriptions model =
         , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
 
         --
+        , Audio.subscriptions model
         , Interface.subscriptions model
         ]
 

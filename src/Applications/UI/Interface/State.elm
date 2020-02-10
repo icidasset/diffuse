@@ -88,28 +88,28 @@ update msg =
 
 subscriptions : UI.Model -> Sub UI.Msg
 subscriptions _ =
-    Sub.map UI.Interface <|
-        Sub.batch
-            [ Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
-            , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
-            , Ports.setIsOnline SetIsOnline
-            , Ports.showErrorNotification (Notifications.error >> ShowNotification)
-            , Ports.showStickyErrorNotification (Notifications.stickyError >> ShowNotification)
+    [ Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
+    , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
+    , Ports.setIsOnline SetIsOnline
+    , Ports.showErrorNotification (Notifications.error >> ShowNotification)
+    , Ports.showStickyErrorNotification (Notifications.stickyError >> ShowNotification)
 
-            -- Resize
-            ---------
-            , Browser.Events.onResize
-                (\w h ->
-                    ( w, h )
-                        |> ResizedWindow
-                        |> Debouncer.provideInput
-                        |> Debounce
-                )
+    -- Resize
+    ---------
+    , Browser.Events.onResize
+        (\w h ->
+            ( w, h )
+                |> ResizedWindow
+                |> Debouncer.provideInput
+                |> Debounce
+        )
 
-            --
-            , Sub.map KeyboardMsg Keyboard.subscriptions
-            , Time.every (60 * 1000) SetCurrentTime
-            ]
+    --
+    , Sub.map KeyboardMsg Keyboard.subscriptions
+    , Time.every (60 * 1000) SetCurrentTime
+    ]
+        |> Sub.batch
+        |> Sub.map UI.Interface
 
 
 
