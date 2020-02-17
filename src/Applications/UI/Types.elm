@@ -153,9 +153,8 @@ type Msg
     = Bypass
     | Reply Reply
       --
-    | DownloadTracksFinished
-    | LoadEnclosedUserData Json.Decode.Value
-    | LoadHypaethralUserData Json.Decode.Value
+    | Audio Audio.Msg
+    | Interface Interface.Msg
       -----------------------------------------
       -- Authentication
       -----------------------------------------
@@ -175,35 +174,30 @@ type Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
       -----------------------------------------
-      -- Import / Export
+      -- Routing
       -----------------------------------------
-    | Import File
-    | ImportJson String
+    | ChangeUrlUsingPage Page
+    | LinkClicked Browser.UrlRequest
+    | PageChanged Page
+    | UrlChanged Url
       -----------------------------------------
-      -- Last.fm
+      -- Services
       -----------------------------------------
     | GotLastFmSession (Result Http.Error String)
     | Scrobble { duration : Int, timestamp : Int, trackId : String }
       -----------------------------------------
-      -- Page Transitions
+      -- Tracks
       -----------------------------------------
-    | PageChanged Page
-      -----------------------------------------
-      -- Tracks Cache
-      -----------------------------------------
+    | DownloadTracksFinished
     | FailedToStoreTracksInCache (List String)
     | FinishedStoringTracksInCache (List String)
       -----------------------------------------
-      -- URL
+      -- User
       -----------------------------------------
-    | ChangeUrlUsingPage Page
-    | LinkClicked Browser.UrlRequest
-    | UrlChanged Url
-      -----------------------------------------
-      -- TARGET => Pieces
-      -----------------------------------------
-    | Audio Audio.Msg
-    | Interface Interface.Msg
+    | ImportFile File
+    | ImportJson String
+    | LoadEnclosedUserData Json.Decode.Value
+    | LoadHypaethralUserData Json.Decode.Value
 
 
 type alias Organizer model =
