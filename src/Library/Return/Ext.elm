@@ -16,12 +16,16 @@ communicate c m =
 -}
 performance : msg -> model -> ( model, Cmd msg )
 performance msg model =
-    msg
-        |> Task.succeed
-        |> Task.perform identity
-        |> Tuple.pair model
+    ( model, task msg )
 
 
 performanceF : model -> msg -> ( model, Cmd msg )
 performanceF model msg =
     performance msg model
+
+
+task : msg -> Cmd msg
+task msg =
+    msg
+        |> Task.succeed
+        |> Task.perform identity

@@ -71,6 +71,7 @@ import UI.Queue.ContextMenu as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Reply.Translate as Reply
 import UI.Routing.State as Routing
+import UI.Services.State as Services
 import UI.Settings as Settings
 import UI.Settings.Page
 import UI.Sources as Sources
@@ -193,7 +194,7 @@ update msg model =
             return model
 
         Reply reply ->
-            translateReply reply model
+            Reply.translate reply model
 
         --
         Audio a ->
@@ -208,14 +209,14 @@ update msg model =
         AuthenticationBootFailure err ->
             model
                 |> showNotification (Notifications.error err)
-                |> andThen (translateReply LoadDefaultBackdrop)
+                |> andThen (Reply.translate LoadDefaultBackdrop)
 
         MissingSecretKey json ->
             "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
                 |> Notifications.error
                 |> showNotificationWithModel model
-                |> andThen (translateReply <| Reply.LoadDefaultBackdrop)
-                |> andThen (translateReply <| Reply.ToggleLoadingScreen Off)
+                |> andThen (Reply.translate <| Reply.LoadDefaultBackdrop)
+                |> andThen (Reply.translate <| Reply.ToggleLoadingScreen Off)
 
         NotAuthenticated ->
             -- This is the message we get when the app initially
@@ -259,7 +260,7 @@ update msg model =
         -----------------------------------------
         AlfredMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = AlfredMsg
                 , mapModel = \child -> { model | alfred = child }
                 , update = Alfred.update
@@ -270,7 +271,7 @@ update msg model =
 
         AuthenticationMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = AuthenticationMsg
                 , mapModel = \child -> { model | authentication = child }
                 , update = Authentication.update
@@ -281,7 +282,7 @@ update msg model =
 
         BackdropMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = BackdropMsg
                 , mapModel = \child -> { model | backdrop = child }
                 , update = Backdrop.update
@@ -292,7 +293,7 @@ update msg model =
 
         EqualizerMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = EqualizerMsg
                 , mapModel = \child -> { model | equalizer = child }
                 , update = Equalizer.update
@@ -303,7 +304,7 @@ update msg model =
 
         PlaylistsMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = PlaylistsMsg
                 , mapModel = \child -> { model | playlists = child }
                 , update = Playlists.update
@@ -314,7 +315,7 @@ update msg model =
 
         QueueMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = QueueMsg
                 , mapModel = \child -> { model | queue = child }
                 , update = Queue.update
@@ -325,7 +326,7 @@ update msg model =
 
         SourcesMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = SourcesMsg
                 , mapModel = \child -> { model | sources = child }
                 , update = Sources.update
@@ -336,7 +337,7 @@ update msg model =
 
         TracksMsg sub ->
             Return3.wieldNested
-                translateReply
+                Reply.translate
                 { mapCmd = TracksMsg
                 , mapModel = \child -> { model | tracks = child }
                 , update = Tracks.update
@@ -363,95 +364,23 @@ update msg model =
         -----------------------------------------
         -- Services
         -----------------------------------------
-        GotLastFmSession (Ok sessionKey) ->
-            { model | lastFm = LastFm.gotSessionKey sessionKey model.lastFm }
-                |> showNotification
-                    (Notifications.success "Connected successfully with Last.fm")
-                |> andThen
-                    (translateReply SaveSettings)
+        GotLastFmSession a ->
+            Services.gotLastFmSession a model
 
-        GotLastFmSession (Err _) ->
-            showNotification
-                (Notifications.stickyError "Could not connect with Last.fm")
-                { model | lastFm = LastFm.failedToAuthenticate model.lastFm }
-
-        Scrobble { duration, timestamp, trackId } ->
-            case model.tracks.nowPlaying of
-                Just ( _, track ) ->
-                    if trackId == track.id then
-                        ( model
-                        , LastFm.scrobble model.lastFm
-                            { duration = duration
-                            , msg = Bypass
-                            , timestamp = timestamp
-                            , track = track
-                            }
-                        )
-
-                    else
-                        return model
-
-                Nothing ->
-                    return model
+        Scrobble a ->
+            Services.scrobble a model
 
         -----------------------------------------
         -- Tracks
         -----------------------------------------
         DownloadTracksFinished ->
-            case model.downloading of
-                Just { notificationId } ->
-                    { id = notificationId }
-                        |> DismissNotification
-                        |> Reply.translateWithModel { model | downloading = Nothing }
+            Tracks.downloadTracksFinished model
 
-                Nothing ->
-                    return model
+        FailedToStoreTracksInCache a ->
+            Tracks.failedToStoreTracksInCache a model
 
-        FailedToStoreTracksInCache trackIds ->
-            model
-                |> Lens.modify Tracks.lens
-                    (\m -> { m | cachingInProgress = List.without trackIds m.cachingInProgress })
-                |> showNotification
-                    (Notifications.error "Failed to store track in cache")
-
-        FinishedStoringTracksInCache trackIds ->
-            model
-                |> Lens.modify Tracks.lens
-                    (\t ->
-                        { t
-                            | cached = t.cached ++ trackIds
-                            , cachingInProgress = List.without trackIds t.cachingInProgress
-                        }
-                    )
-                |> (\m ->
-                        -- When a context menu of a track is open,
-                        -- it should be "rerendered" in case
-                        -- the track is no longer being downloaded.
-                        case m.contextMenu of
-                            Just contextMenu ->
-                                let
-                                    isTrackContextMenu =
-                                        ContextMenu.anyItem
-                                            (.label >> (==) "Downloading ...")
-                                            contextMenu
-
-                                    coordinates =
-                                        ContextMenu.coordinates contextMenu
-                                in
-                                if isTrackContextMenu then
-                                    m.tracks.collection.harvested
-                                        |> List.pickIndexes m.tracks.selectedTrackIndexes
-                                        |> ShowTracksContextMenu coordinates { alt = False }
-                                        |> Reply.translateWithModel m
-
-                                else
-                                    return m
-
-                            Nothing ->
-                                return m
-                   )
-                |> andThen (update <| TracksMsg Tracks.Harvest)
-                |> andThen (translateReply SaveEnclosedUserData)
+        FinishedStoringTracksInCache a ->
+            Tracks.finishedStoringTracksInCache a model
 
         -----------------------------------------
         -- User
@@ -467,10 +396,6 @@ update msg model =
 
         LoadHypaethralUserData a ->
             User.loadHypaethralUserData a model
-
-
-translateReply =
-    Reply.translate
 
 
 
