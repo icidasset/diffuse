@@ -1,31 +1,15 @@
 module UI.Equalizer.State exposing (..)
 
-import Chunky exposing (..)
-import Chunky.Styled
 import Color exposing (Color)
 import Color.Ext as Color
-import Common
 import Coordinates exposing (Coordinates)
-import Css
-import Css.Classes as C
-import Css.Ext as Css
 import Equalizer exposing (..)
-import Html exposing (Html)
-import Html.Events.Extra.Pointer as Pointer
-import Html.Styled
-import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events
 import Json.Decode as Decode
 import Management
 import Material.Icons as Icons
 import Monocle.Lens as Lens exposing (Lens)
 import Return exposing (return)
-import Svg.Styled
-import Svg.Styled.Attributes
 import UI.Equalizer.Types as Equalizer exposing (..)
-import UI.Kit
-import UI.Navigation exposing (..)
-import UI.Page
 import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Types as UI exposing (..)

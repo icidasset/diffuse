@@ -2,7 +2,6 @@ module UI.Services.State exposing (..)
 
 import Http
 import LastFm
-import Management
 import Monocle.Lens as Lens
 import Notifications
 import Return exposing (andThen, return)

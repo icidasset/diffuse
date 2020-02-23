@@ -1,11 +1,8 @@
 module UI.EtCetera.State exposing (..)
 
 import Alien
-import Browser.Events
 import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
-import Keyboard
-import Management
 import Maybe.Extra as Maybe
 import Monocle.Lens as Lens
 import Notifications
@@ -22,7 +19,6 @@ import UI.Queue.State as Queue
 import UI.Reply as Reply
 import UI.Sources.State as Sources
 import UI.Tracks as Tracks
-import UI.Tracks.Scene.List
 import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)

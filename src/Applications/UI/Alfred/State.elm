@@ -8,7 +8,6 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (autofocus, id, placeholder, type_)
 import Html.Events exposing (onInput)
 import Html.Ext exposing (onTapPreventDefault)
-import Json.Decode
 import Keyboard
 import List.Extra as List
 import Material.Icons as Icons

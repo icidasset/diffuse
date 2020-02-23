@@ -1,7 +1,6 @@
 module UI.Playlists.State exposing (..)
 
 import List.Extra as List
-import Management
 import Monocle.Lens as Lens
 import Notifications
 import Playlists exposing (PlaylistTrack)

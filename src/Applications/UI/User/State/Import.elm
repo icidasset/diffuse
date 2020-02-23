@@ -5,7 +5,6 @@ import Json.Decode
 import Json.Encode
 import LastFm
 import List.Extra as List
-import Management
 import Maybe.Extra as Maybe
 import Monocle.Lens as Lens
 import Notifications

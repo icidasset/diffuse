@@ -1,11 +1,8 @@
 module UI.Tracks.State exposing (..)
 
 import ContextMenu
-import Http
-import LastFm
 import List.Ext as List
 import List.Extra as List
-import Management
 import Monocle.Lens as Lens exposing (Lens)
 import Notifications
 import Return exposing (andThen, return)
