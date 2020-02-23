@@ -15,7 +15,6 @@ import Time
 import UI.Authentication as Authentication
 import UI.Common.State as Common exposing (modifySingleton)
 import UI.DnD as DnD
-import UI.Interface.Types as Interface exposing (Msg(..))
 import UI.Page as Page
 import UI.Ports as Ports
 import UI.Queue as Queue
@@ -33,102 +32,19 @@ import User.Layer exposing (..)
 -- 📣
 
 
-update : Interface.Msg -> Manager
-update msg =
-    case msg of
-        Blur ->
-            blur
-
-        Debounce a ->
-            debounce a
-
-        FocusedOnInput ->
-            focusedOnInput
-
-        HideOverlay ->
-            hideOverlay
-
-        KeyboardMsg a ->
-            keyboardMsg a
-
-        PreferredColorSchemaChanged a ->
-            preferredColorSchemaChanged a
-
-        RemoveQueueSelection ->
-            removeQueueSelection
-
-        RemoveTrackSelection ->
-            removeTrackSelection
-
-        ResizedWindow a ->
-            resizedWindow a
-
-        SetCurrentTime a ->
-            setCurrentTime a
-
-        SetIsOnline a ->
-            setIsOnline a
-
-        SetIsTouchDevice a ->
-            setIsTouchDevice a
-
-        ShowNotification a ->
-            Common.showNotification a
-
-        StoppedDragging ->
-            stoppedDragging
-
-        ToggleLoadingScreen a ->
-            toggleLoadingScreen a
-
-
-
--- 📰
-
-
-subscriptions : UI.Model -> Sub UI.Msg
-subscriptions _ =
-    [ Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
-    , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
-    , Ports.setIsOnline SetIsOnline
-    , Ports.showErrorNotification (Notifications.error >> ShowNotification)
-    , Ports.showStickyErrorNotification (Notifications.stickyError >> ShowNotification)
-
-    -- Resize
-    ---------
-    , Browser.Events.onResize
-        (\w h ->
-            ( w, h )
-                |> ResizedWindow
-                |> Debouncer.provideInput
-                |> Debounce
-        )
-
-    --
-    , Sub.map KeyboardMsg Keyboard.subscriptions
-    , Time.every (60 * 1000) SetCurrentTime
-    ]
-        |> Sub.batch
-        |> Sub.map UI.Interface
-
-
-
--- 🔱
-
-
 blur : UI.Manager
 blur model =
     Return.singleton { model | focusedOnInput = False }
 
 
-debounce : Debouncer.Msg Interface.Msg -> UI.Manager
-debounce debouncerMsg model =
+debounce : (Msg -> Model -> ( Model, Cmd Msg )) -> Debouncer.Msg Msg -> UI.Manager
+debounce update debouncerMsg model =
     let
         ( subModel, subCmd, emittedMsg ) =
             Debouncer.update debouncerMsg model.debounce
 
         mappedCmd =
-            Cmd.map (Debounce >> UI.Interface) subCmd
+            Cmd.map Debounce subCmd
 
         updatedModel =
             { model | debounce = subModel }
@@ -236,47 +152,6 @@ resizedWindow ( width, height ) model =
         }
 
 
-setIsOnline : Bool -> UI.Manager
-setIsOnline bool model =
-    if bool then
-        -- We're caching the user's data in the browser while offline.
-        -- If we're back online again, sync all the user's data.
-        (case model.authentication of
-            Authentication.Authenticated (Dropbox _) ->
-                syncHypaethralData
-
-            Authentication.Authenticated (RemoteStorage _) ->
-                syncHypaethralData
-
-            _ ->
-                Return.singleton
-        )
-            { model | isOnline = True }
-
-    else
-        -- The app went offline, cache everything
-        -- (if caching is supported).
-        ( { model | isOnline = False }
-        , case model.authentication of
-            Authentication.Authenticated (Dropbox _) ->
-                Ports.toBrain (Alien.trigger Alien.SyncHypaethralData)
-
-            Authentication.Authenticated (RemoteStorage _) ->
-                Ports.toBrain (Alien.trigger Alien.SyncHypaethralData)
-
-            _ ->
-                Cmd.none
-        )
-
-
-setCurrentTime : Time.Posix -> UI.Manager
-setCurrentTime time model =
-    model
-        |> (\m -> { m | currentTime = time })
-        |> Lens.modify Sources.lens (\s -> { s | currentTime = time })
-        |> Return.singleton
-
-
 setIsTouchDevice : Bool -> UI.Manager
 setIsTouchDevice bool model =
     Return.singleton { model | isTouchDevice = bool }
@@ -320,14 +195,3 @@ toggleLoadingScreen switch model =
 
         Off ->
             Return.singleton { model | isLoading = False }
-
-
-
--- ⚗️
-
-
-syncHypaethralData : UI.Manager
-syncHypaethralData model =
-    model
-        |> Common.showNotification (Notifications.warning "Syncing")
-        |> Return.command (Ports.toBrain <| Alien.trigger Alien.SyncHypaethralData)

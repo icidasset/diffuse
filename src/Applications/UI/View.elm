@@ -31,8 +31,6 @@ import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
 import UI.Equalizer as Equalizer
-import UI.Interface.State as Interface
-import UI.Interface.Types as Interface
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
@@ -49,8 +47,7 @@ import UI.Sources.Page
 import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
-import UI.Tracks.State as Tracks
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 import Url exposing (Protocol(..))
 import User.Layer exposing (..)
 
@@ -70,7 +67,7 @@ body : Model -> Html Msg
 body model =
     section
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred.instance then
-            [ on "tap" (interfaceEventHandler Interface.HideOverlay) ]
+            [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
             [ Pointer.onMove (EqualizerMsg << Equalizer.AdjustKnob)
@@ -80,16 +77,16 @@ body model =
 
          else if model.isDragging then
             [ class C.dragging_something
-            , on "mouseup" (interfaceEventHandler Interface.StoppedDragging)
-            , on "touchcancel" (interfaceEventHandler Interface.StoppedDragging)
-            , on "touchend" (interfaceEventHandler Interface.StoppedDragging)
+            , on "mouseup" (Json.Decode.succeed StoppedDragging)
+            , on "touchcancel" (Json.Decode.succeed StoppedDragging)
+            , on "touchend" (Json.Decode.succeed StoppedDragging)
             ]
 
          else if Maybe.isJust model.queue.selection then
-            [ on "tap" (interfaceEventHandler Interface.RemoveQueueSelection) ]
+            [ on "tap" (Json.Decode.succeed RemoveQueueSelection) ]
 
          else if not (List.isEmpty model.tracks.selectedTrackIndexes) then
-            [ on "tap" (interfaceEventHandler Interface.RemoveTrackSelection) ]
+            [ on "tap" (Json.Decode.succeed RemoveTrackSelection) ]
 
          else
             []
@@ -252,7 +249,7 @@ defaultScreen model =
 content : { justifyCenter : Bool, scrolling : Bool } -> List (Html Msg) -> Html Msg
 content { justifyCenter, scrolling } nodes =
     brick
-        [ on "focusout" (interfaceEventHandler Interface.Blur)
+        [ on "focusout" (Json.Decode.succeed Blur)
         , on "focusin" inputFocusDecoder
         , style "height" "calc(var(--vh, 1vh) * 100)"
         ]
@@ -292,19 +289,14 @@ inputFocusDecoder =
             (\targetTagName ->
                 case targetTagName of
                     "INPUT" ->
-                        interfaceEventHandler Interface.FocusedOnInput
+                        Json.Decode.succeed FocusedOnInput
 
                     "TEXTAREA" ->
-                        interfaceEventHandler Interface.FocusedOnInput
+                        Json.Decode.succeed FocusedOnInput
 
                     _ ->
                         Json.Decode.fail "NOT_INPUT"
             )
-
-
-interfaceEventHandler : Interface.Msg -> Json.Decode.Decoder UI.Msg
-interfaceEventHandler =
-    Interface >> Json.Decode.succeed
 
 
 loadingAnimation : Html msg
@@ -319,7 +311,7 @@ overlay maybeAlfred maybeContextMenu =
             Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
     in
     brick
-        [ onClick (Interface Interface.HideOverlay) ]
+        [ onClick HideOverlay ]
         [ C.inset_0
         , C.bg_black
         , C.fixed

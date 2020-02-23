@@ -58,7 +58,6 @@ import UI.ContextMenu
 import UI.Demo as Demo
 import UI.Equalizer as Equalizer
 import UI.Interface.State as Interface
-import UI.Interface.Types as Interface
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
@@ -111,7 +110,7 @@ translate reply model =
         StartedDragging ->
             Return.singleton { model | isDragging = True }
 
-        ToggleLoadingScreen a ->
+        Reply.ToggleLoadingScreen a ->
             Interface.toggleLoadingScreen a model
 
         -----------------------------------------

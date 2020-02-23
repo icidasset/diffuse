@@ -7,13 +7,13 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
-import Common exposing (Switch(..))
+import Common exposing (Switch)
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Css exposing (url)
 import Css.Classes as C
-import Debouncer.Basic exposing (Debouncer)
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
 import Dict.Ext as Dict
 import File exposing (File)
@@ -59,7 +59,6 @@ import UI.ContextMenu
 import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer as Equalizer
-import UI.Interface.Types as Interface
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
@@ -109,7 +108,7 @@ type alias Model =
     , confirmation : Maybe String
     , currentTime : Time.Posix
     , darkMode : Bool
-    , debounce : Debouncer Interface.Msg Interface.Msg
+    , debounce : Debouncer Msg Msg
     , downloading : Maybe { notificationId : Int }
     , focusedOnInput : Bool
     , isDragging : Bool
@@ -154,7 +153,6 @@ type Msg
     | Reply Reply
       --
     | Audio Audio.Msg
-    | Interface Interface.Msg
       -----------------------------------------
       -- Authentication
       -----------------------------------------
@@ -173,6 +171,22 @@ type Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
+      -----------------------------------------
+      -- Interface
+      -----------------------------------------
+    | Blur
+    | Debounce (Debouncer.Msg Msg)
+    | FocusedOnInput
+    | HideOverlay
+    | KeyboardMsg Keyboard.Msg
+    | PreferredColorSchemaChanged { dark : Bool }
+    | RemoveQueueSelection
+    | RemoveTrackSelection
+    | ResizedWindow ( Int, Int )
+    | ShowNotification (Notification Reply)
+    | SetIsTouchDevice Bool
+    | StoppedDragging
+    | ToggleLoadingScreen Switch
       -----------------------------------------
       -- Routing
       -----------------------------------------
@@ -198,6 +212,11 @@ type Msg
     | ImportJson String
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
+      -----------------------------------------
+      -- 📭 Et Cetera
+      -----------------------------------------
+    | SetCurrentTime Time.Posix
+    | SetIsOnline Bool
 
 
 type alias Organizer model =

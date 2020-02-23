@@ -3,6 +3,7 @@ module UI exposing (main)
 import Alfred
 import Alien
 import Browser
+import Browser.Events
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Common exposing (Switch(..))
@@ -10,6 +11,7 @@ import Conditional exposing (..)
 import Css exposing (url)
 import Debouncer.Basic as Debouncer
 import Json.Decode
+import Keyboard
 import LastFm
 import Maybe.Extra as Maybe
 import Notifications
@@ -28,11 +30,12 @@ import UI.Audio.State as Audio
 import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
+import UI.Authentication.State as Authentication
 import UI.Backdrop as Backdrop
-import UI.Common.State exposing (showNotification, showNotificationWithModel)
+import UI.Common.State as Common
 import UI.Equalizer as Equalizer
+import UI.EtCetera.State as EtCetera
 import UI.Interface.State as Interface
-import UI.Interface.Types as Interface
 import UI.Page as Page
 import UI.Playlists as Playlists
 import UI.Playlists.ContextMenu as Playlists
@@ -48,12 +51,11 @@ import UI.Sources.ContextMenu as Sources
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.State as Tracks
-import UI.Types exposing (..)
+import UI.Types as UI exposing (..)
 import UI.User.State as User
 import UI.View exposing (view)
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
-import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 
@@ -141,10 +143,7 @@ init flags url key =
                 Cmd.none
             )
         |> addCommand
-            (Task.perform
-                (Interface.SetCurrentTime >> Interface)
-                Time.now
-            )
+            (Task.perform SetCurrentTime Time.now)
 
 
 
@@ -152,214 +151,233 @@ init flags url key =
 
 
 update : Msg -> Model -> Return Model Msg
-update msg model =
+update msg =
     case msg of
         Bypass ->
-            return model
+            return
 
         Reply reply ->
-            Reply.translate reply model
+            Reply.translate reply
 
         --
         Audio a ->
-            Audio.update a model
-
-        Interface a ->
-            Interface.update a model
+            Audio.update a
 
         -----------------------------------------
         -- Authentication
         -----------------------------------------
-        AuthenticationBootFailure err ->
-            model
-                |> showNotification (Notifications.error err)
-                |> andThen (Reply.translate LoadDefaultBackdrop)
+        AuthenticationBootFailure a ->
+            Authentication.authenticationBootFailure a
 
-        MissingSecretKey json ->
-            "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
-                |> Notifications.error
-                |> showNotificationWithModel model
-                |> andThen (Reply.translate <| Reply.LoadDefaultBackdrop)
-                |> andThen (Reply.translate <| Reply.ToggleLoadingScreen Off)
+        MissingSecretKey a ->
+            Authentication.missingSecretKey a
 
         NotAuthenticated ->
-            -- This is the message we get when the app initially
-            -- finds out we're not authenticated.
-            andThen
-                (update <| BackdropMsg Backdrop.Default)
-                (if model.isUpgrading then
-                    """
-                    Thank you for using Diffuse V1!
-                    If you want to import your old data,
-                    please pick the storage method you used before and
-                    go to the [import page](#/settings/import-export).
-                    """
-                        |> Notifications.stickySuccess
-                        |> showNotificationWithModel { model | isUpgrading = False }
+            Authentication.notAuthenticated
 
-                 else
-                    return model
-                )
-
-        RemoteStorageWebfinger remoteStorage (Ok oauthOrigin) ->
-            let
-                origin =
-                    Common.urlOrigin model.url
-            in
-            remoteStorage
-                |> RemoteStorage.oauthAddress
-                    { oauthOrigin = oauthOrigin
-                    , origin = origin
-                    }
-                |> Nav.load
-                |> returnWithModel model
-
-        RemoteStorageWebfinger _ (Err _) ->
-            RemoteStorage.webfingerError
-                |> Notifications.error
-                |> showNotificationWithModel model
+        RemoteStorageWebfinger a b ->
+            Authentication.remoteStorageWebfinger a b
 
         -----------------------------------------
         -- Children
         -----------------------------------------
         AlfredMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = AlfredMsg
-                , mapModel = \child -> { model | alfred = child }
-                , update = Alfred.update
-                }
-                { model = model.alfred
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = AlfredMsg
+                    , mapModel = \child -> { model | alfred = child }
+                    , update = Alfred.update
+                    }
+                    { model = model.alfred
+                    , msg = sub
+                    }
 
         AuthenticationMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = AuthenticationMsg
-                , mapModel = \child -> { model | authentication = child }
-                , update = Authentication.update
-                }
-                { model = model.authentication
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = AuthenticationMsg
+                    , mapModel = \child -> { model | authentication = child }
+                    , update = Authentication.update
+                    }
+                    { model = model.authentication
+                    , msg = sub
+                    }
 
         BackdropMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = BackdropMsg
-                , mapModel = \child -> { model | backdrop = child }
-                , update = Backdrop.update
-                }
-                { model = model.backdrop
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = BackdropMsg
+                    , mapModel = \child -> { model | backdrop = child }
+                    , update = Backdrop.update
+                    }
+                    { model = model.backdrop
+                    , msg = sub
+                    }
 
         EqualizerMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = EqualizerMsg
-                , mapModel = \child -> { model | equalizer = child }
-                , update = Equalizer.update
-                }
-                { model = model.equalizer
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = EqualizerMsg
+                    , mapModel = \child -> { model | equalizer = child }
+                    , update = Equalizer.update
+                    }
+                    { model = model.equalizer
+                    , msg = sub
+                    }
 
         PlaylistsMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = PlaylistsMsg
-                , mapModel = \child -> { model | playlists = child }
-                , update = Playlists.update
-                }
-                { model = model.playlists
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = PlaylistsMsg
+                    , mapModel = \child -> { model | playlists = child }
+                    , update = Playlists.update
+                    }
+                    { model = model.playlists
+                    , msg = sub
+                    }
 
         QueueMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = QueueMsg
-                , mapModel = \child -> { model | queue = child }
-                , update = Queue.update
-                }
-                { model = model.queue
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = QueueMsg
+                    , mapModel = \child -> { model | queue = child }
+                    , update = Queue.update
+                    }
+                    { model = model.queue
+                    , msg = sub
+                    }
 
         SourcesMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = SourcesMsg
-                , mapModel = \child -> { model | sources = child }
-                , update = Sources.update
-                }
-                { model = model.sources
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = SourcesMsg
+                    , mapModel = \child -> { model | sources = child }
+                    , update = Sources.update
+                    }
+                    { model = model.sources
+                    , msg = sub
+                    }
 
         TracksMsg sub ->
-            Return3.wieldNested
-                Reply.translate
-                { mapCmd = TracksMsg
-                , mapModel = \child -> { model | tracks = child }
-                , update = Tracks.update
-                }
-                { model = model.tracks
-                , msg = sub
-                }
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = TracksMsg
+                    , mapModel = \child -> { model | tracks = child }
+                    , update = Tracks.update
+                    }
+                    { model = model.tracks
+                    , msg = sub
+                    }
+
+        -----------------------------------------
+        -- Interface
+        -----------------------------------------
+        Blur ->
+            Interface.blur
+
+        Debounce a ->
+            Interface.debounce update a
+
+        FocusedOnInput ->
+            Interface.focusedOnInput
+
+        HideOverlay ->
+            Interface.hideOverlay
+
+        KeyboardMsg a ->
+            Interface.keyboardMsg a
+
+        PreferredColorSchemaChanged a ->
+            Interface.preferredColorSchemaChanged a
+
+        RemoveQueueSelection ->
+            Interface.removeQueueSelection
+
+        RemoveTrackSelection ->
+            Interface.removeTrackSelection
+
+        ResizedWindow a ->
+            Interface.resizedWindow a
+
+        SetIsTouchDevice a ->
+            Interface.setIsTouchDevice a
+
+        ShowNotification a ->
+            Common.showNotification a
+
+        StoppedDragging ->
+            Interface.stoppedDragging
+
+        UI.ToggleLoadingScreen a ->
+            Interface.toggleLoadingScreen a
 
         -----------------------------------------
         -- Routing
         -----------------------------------------
         ChangeUrlUsingPage a ->
-            Routing.changeUrlUsingPage a model
+            Routing.changeUrlUsingPage a
 
         LinkClicked a ->
-            Routing.linkClicked a model
+            Routing.linkClicked a
 
         PageChanged a ->
-            Routing.transition a model
+            Routing.transition a
 
         UrlChanged a ->
-            Routing.urlChanged a model
+            Routing.urlChanged a
 
         -----------------------------------------
         -- Services
         -----------------------------------------
         GotLastFmSession a ->
-            Services.gotLastFmSession a model
+            Services.gotLastFmSession a
 
         Scrobble a ->
-            Services.scrobble a model
+            Services.scrobble a
 
         -----------------------------------------
         -- Tracks
         -----------------------------------------
         DownloadTracksFinished ->
-            Tracks.downloadTracksFinished model
+            Tracks.downloadTracksFinished
 
         FailedToStoreTracksInCache a ->
-            Tracks.failedToStoreTracksInCache a model
+            Tracks.failedToStoreTracksInCache a
 
         FinishedStoringTracksInCache a ->
-            Tracks.finishedStoringTracksInCache a model
+            Tracks.finishedStoringTracksInCache a
 
         -----------------------------------------
         -- User
         -----------------------------------------
         ImportFile a ->
-            User.importFile a model
+            User.importFile a
 
         ImportJson a ->
-            User.importJson a model
+            User.importJson a
 
         LoadEnclosedUserData a ->
-            User.loadEnclosedUserData a model
+            User.loadEnclosedUserData a
 
         LoadHypaethralUserData a ->
-            User.loadHypaethralUserData a model
+            User.loadHypaethralUserData a
+
+        -----------------------------------------
+        -- 📭 Et Cetera
+        -----------------------------------------
+        SetCurrentTime a ->
+            EtCetera.setCurrentTime a
+
+        SetIsOnline a ->
+            EtCetera.setIsOnline a
 
 
 
@@ -369,29 +387,65 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Ports.fromAlien alien
+        [ Audio.subscriptions model
+        , Ports.fromAlien alien
 
+        -----------------------------------------
+        -- Alfred
+        -----------------------------------------
+        , case model.alfred.instance of
+            Just _ ->
+                Sub.map AlfredMsg (Alfred.subscriptions model.alfred)
+
+            Nothing ->
+                Sub.none
+
+        -----------------------------------------
+        -- Backdrop
+        -----------------------------------------
+        , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
+
+        -----------------------------------------
+        -- Interface
+        -----------------------------------------
+        , Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
+        , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
+        , Ports.showErrorNotification (Notifications.error >> ShowNotification)
+        , Ports.showStickyErrorNotification (Notifications.stickyError >> ShowNotification)
+
+        -----------------------------------------
         -- Queue
-        --------
+        -----------------------------------------
         , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
         , Ports.requestNext <| always (QueueMsg Queue.Shift)
         , Ports.requestPrevious <| always (QueueMsg Queue.Rewind)
 
-        -- Children
-        -----------
-        , ifThenElse
-            (Maybe.isJust model.alfred.instance)
-            (Sub.map AlfredMsg <| Alfred.subscriptions model.alfred)
-            Sub.none
-
-        --
-        , Ports.downloadTracksFinished (\_ -> DownloadTracksFinished)
+        -----------------------------------------
+        -- Services
+        -----------------------------------------
         , Ports.scrobble Scrobble
-        , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
 
-        --
-        , Audio.subscriptions model
-        , Interface.subscriptions model
+        -----------------------------------------
+        -- Tracks
+        -----------------------------------------
+        , Ports.downloadTracksFinished (\_ -> DownloadTracksFinished)
+
+        -----------------------------------------
+        -- 📭 Et Cetera
+        -----------------------------------------
+        , Ports.setIsOnline SetIsOnline
+        , Sub.map KeyboardMsg Keyboard.subscriptions
+        , Time.every (60 * 1000) SetCurrentTime
+
+        -- Resize
+        ---------
+        , Browser.Events.onResize
+            (\w h ->
+                ( w, h )
+                    |> ResizedWindow
+                    |> Debouncer.provideInput
+                    |> Debounce
+            )
         ]
 
 
@@ -433,13 +487,12 @@ translateAlienData event =
             SourcesMsg Sources.FinishedProcessing
 
         Just Alien.HideLoadingScreen ->
-            Interface (Interface.ToggleLoadingScreen Off)
+            UI.ToggleLoadingScreen Off
 
         Just Alien.ImportLegacyData ->
             "Imported data successfully!"
                 |> Notifications.success
-                |> Interface.ShowNotification
-                |> Interface
+                |> ShowNotification
 
         Just Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData event.data
@@ -475,11 +528,7 @@ translateAlienData event =
                     FinishedStoringTracksInCache list
 
                 Err err ->
-                    err
-                        |> Json.Decode.errorToString
-                        |> Notifications.error
-                        |> Interface.ShowNotification
-                        |> Interface
+                    showErrorNotification (Json.Decode.errorToString err)
 
         Just Alien.UpdateSourceData ->
             SourcesMsg (Sources.UpdateSourceData event.data)
@@ -521,13 +570,16 @@ translateAlienError event err =
                     FailedToStoreTracksInCache trackIds
 
                 Err _ ->
-                    err
-                        |> Notifications.error
-                        |> Interface.ShowNotification
-                        |> Interface
+                    showErrorNotification err
 
         _ ->
-            err
-                |> Notifications.error
-                |> Interface.ShowNotification
-                |> Interface
+            showErrorNotification err
+
+
+
+-- ⚗️
+
+
+showErrorNotification : String -> Msg
+showErrorNotification =
+    Notifications.error >> ShowNotification
