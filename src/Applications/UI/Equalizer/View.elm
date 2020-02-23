@@ -5,7 +5,6 @@ import Chunky.Styled
 import Color exposing (Color)
 import Color.Ext as Color
 import Common
-import Coordinates exposing (Coordinates)
 import Css
 import Css.Classes as C
 import Css.Ext as Css
@@ -23,7 +22,6 @@ import UI.Equalizer.Types as Equalizer
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page
-import UI.Ports as Ports
 import UI.Types exposing (Msg(..))
 
 
