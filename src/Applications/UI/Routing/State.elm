@@ -13,7 +13,7 @@ import UI.Page as Page exposing (Page)
 import UI.Sources.Form
 import UI.Sources.Page
 import UI.Sources.State as Sources
-import UI.Types as UI
+import UI.Types as UI exposing (Manager)
 import Url exposing (Url)
 
 
@@ -21,7 +21,7 @@ import Url exposing (Url)
 -- 📣
 
 
-changeUrlUsingPage : Page -> UI.Manager
+changeUrlUsingPage : Page -> Manager
 changeUrlUsingPage page model =
     page
         |> Page.toString
@@ -29,7 +29,7 @@ changeUrlUsingPage page model =
         |> return model
 
 
-linkClicked : UrlRequest -> UI.Manager
+linkClicked : UrlRequest -> Manager
 linkClicked urlRequest model =
     case urlRequest of
         Browser.Internal urlWithFragment ->
@@ -51,7 +51,7 @@ linkClicked urlRequest model =
             return model (Nav.load href)
 
 
-urlChanged : Url -> UI.Manager
+urlChanged : Url -> Manager
 urlChanged url model =
     let
         rewrittenUrl =
@@ -72,7 +72,7 @@ urlChanged url model =
 -- TRANSITIONING
 
 
-transition : Page -> UI.Manager
+transition : Page -> Manager
 transition page model =
     case page of
         -----------------------------------------
@@ -137,7 +137,7 @@ resetUrl key url page =
 -- ㊙️
 
 
-loadSourceForForm : String -> UI.Manager
+loadSourceForForm : String -> Manager
 loadSourceForForm sourceId model =
     let
         isLoading =

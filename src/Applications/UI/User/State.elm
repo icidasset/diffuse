@@ -35,7 +35,7 @@ import User.Layer exposing (..)
 -- 🔱
 
 
-importFile : File -> UI.Manager
+importFile : File -> Manager
 importFile file model =
     250
         |> Process.sleep
@@ -44,7 +44,7 @@ importFile file model =
         |> return { model | isLoading = True }
 
 
-importJson : String -> UI.Manager
+importJson : String -> Manager
 importJson json model =
     json
         -- Load data on main thread (this app)
@@ -68,14 +68,14 @@ importJson json model =
         |> Reply.saveAllHypaethralData
 
 
-loadEnclosedUserData : Json.Decode.Value -> UI.Manager
+loadEnclosedUserData : Json.Decode.Value -> Manager
 loadEnclosedUserData json model =
     model
         |> importEnclosed json
         |> Return3.wield Reply.translate
 
 
-loadHypaethralUserData : Json.Decode.Value -> UI.Manager
+loadHypaethralUserData : Json.Decode.Value -> Manager
 loadHypaethralUserData json model =
     model
         |> importHypaethral json

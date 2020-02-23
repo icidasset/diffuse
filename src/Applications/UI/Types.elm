@@ -34,6 +34,7 @@ import List.Extra as List
 import Management
 import Maybe.Extra as Maybe
 import Notifications exposing (Notification)
+import Playlists exposing (PlaylistTrack)
 import Playlists.Encoding as Playlists
 import Process
 import Queue
@@ -49,7 +50,7 @@ import Task
 import Time
 import Tracks
 import Tracks.Encoding as Tracks
-import UI.Alfred as Alfred
+import UI.Alfred.Types as Alfred
 import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
@@ -63,7 +64,6 @@ import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Playlists as Playlists
-import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Directory
 import UI.Ports as Ports
@@ -104,7 +104,8 @@ type alias Flags =
 
 
 type alias Model =
-    { contextMenu : Maybe (ContextMenu Reply)
+    { alfred : Maybe (Alfred Msg)
+    , contextMenu : Maybe (ContextMenu Reply)
     , confirmation : Maybe String
     , currentTime : Time.Posix
     , darkMode : Bool
@@ -128,7 +129,6 @@ type alias Model =
     -----------------------------------------
     -- Children
     -----------------------------------------
-    , alfred : Alfred.Model
     , authentication : Authentication.Model
     , backdrop : Backdrop.Model
     , equalizer : Equalizer.Model
@@ -152,6 +152,7 @@ type Msg
     = Bypass
     | Reply Reply
       --
+    | Alfred (Alfred.Msg Msg)
     | Audio Audio.Msg
       -----------------------------------------
       -- Authentication
@@ -161,9 +162,8 @@ type Msg
     | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
       -----------------------------------------
-      -- Children
+      -- Children (TODO)
       -----------------------------------------
-    | AlfredMsg Alfred.Msg
     | AuthenticationMsg Authentication.Msg
     | BackdropMsg Backdrop.Msg
     | EqualizerMsg Equalizer.Msg
@@ -187,6 +187,10 @@ type Msg
     | SetIsTouchDevice Bool
     | StoppedDragging
     | ToggleLoadingScreen Switch
+      -----------------------------------------
+      -- Playlists
+      -----------------------------------------
+    | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
       -----------------------------------------
       -- Routing
       -----------------------------------------

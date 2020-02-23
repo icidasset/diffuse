@@ -19,6 +19,8 @@ performance msg model =
     ( model, task msg )
 
 
+{-| TODO: Remove when finished with refactor
+-}
 performanceF : model -> msg -> ( model, Cmd msg )
 performanceF model msg =
     performance msg model

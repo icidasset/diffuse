@@ -16,7 +16,7 @@ import UI.Types as UI exposing (Manager, Msg(..))
 -- 📣
 
 
-gotLastFmSession : Result Http.Error String -> UI.Manager
+gotLastFmSession : Result Http.Error String -> Manager
 gotLastFmSession result model =
     case result of
         Err _ ->
@@ -32,7 +32,7 @@ gotLastFmSession result model =
                     (Return.performance <| Reply SaveSettings)
 
 
-scrobble : { duration : Int, timestamp : Int, trackId : String } -> UI.Manager
+scrobble : { duration : Int, timestamp : Int, trackId : String } -> Manager
 scrobble { duration, timestamp, trackId } model =
     case model.tracks.nowPlaying of
         Just ( _, track ) ->

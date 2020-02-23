@@ -24,7 +24,8 @@ import Sources
 import Sources.Encoding as Sources
 import Tracks
 import Tracks.Encoding as Tracks
-import UI.Alfred as Alfred
+import UI.Alfred.Types as Alfred
+import UI.Alfred.View as Alfred
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
@@ -66,7 +67,7 @@ view model =
 body : Model -> Html Msg
 body model =
     section
-        (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred.instance then
+        (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred then
             [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
@@ -94,9 +95,7 @@ body model =
         [ -----------------------------------------
           -- Alfred
           -----------------------------------------
-          model.alfred
-            |> Lazy.lazy Alfred.view
-            |> Html.map AlfredMsg
+          Lazy.lazy Alfred.view model.alfred
 
         -----------------------------------------
         -- Backdrop
@@ -123,7 +122,7 @@ body model =
         -- Overlay
         -----------------------------------------
         , model.contextMenu
-            |> Lazy.lazy2 overlay model.alfred.instance
+            |> Lazy.lazy2 overlay model.alfred
 
         -----------------------------------------
         -- Content
@@ -159,7 +158,7 @@ defaultScreen model =
             , ( Page.Settings UI.Settings.Page.Index, "Settings" )
             ]
         )
-        model.alfred.instance
+        model.alfred
         model.page
 
     -----------------------------------------
@@ -304,7 +303,7 @@ loadingAnimation =
     Html.map never UI.Svg.Elements.loading
 
 
-overlay : Maybe (Alfred Reply) -> Maybe (ContextMenu Reply) -> Html Msg
+overlay : Maybe (Alfred Msg) -> Maybe (ContextMenu Reply) -> Html Msg
 overlay maybeAlfred maybeContextMenu =
     let
         isShown =

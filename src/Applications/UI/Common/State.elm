@@ -5,14 +5,14 @@ import Notifications exposing (Notification)
 import Return
 import UI.Notifications
 import UI.Reply exposing (Reply)
-import UI.Types as UI
+import UI.Types as UI exposing (Manager)
 
 
 
 -- 📣
 
 
-showNotification : Notification Reply -> UI.Manager
+showNotification : Notification Reply -> Manager
 showNotification notification model =
     model.notifications
         |> UI.Notifications.show notification

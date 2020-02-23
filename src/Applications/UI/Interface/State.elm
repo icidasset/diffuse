@@ -32,12 +32,12 @@ import User.Layer exposing (..)
 -- 📣
 
 
-blur : UI.Manager
+blur : Manager
 blur model =
     Return.singleton { model | focusedOnInput = False }
 
 
-debounce : (Msg -> Model -> ( Model, Cmd Msg )) -> Debouncer.Msg Msg -> UI.Manager
+debounce : (Msg -> Model -> ( Model, Cmd Msg )) -> Debouncer.Msg Msg -> Manager
 debounce update debouncerMsg model =
     let
         ( subModel, subCmd, emittedMsg ) =
@@ -59,22 +59,22 @@ debounce update debouncerMsg model =
             return updatedModel mappedCmd
 
 
-focusedOnInput : UI.Manager
+focusedOnInput : Manager
 focusedOnInput model =
     Return.singleton { model | focusedOnInput = True }
 
 
-hideOverlay : UI.Manager
+hideOverlay : Manager
 hideOverlay model =
     Return.singleton
         { model
-            | alfred = { instance = Nothing }
+            | alfred = Nothing
             , confirmation = Nothing
             , contextMenu = Nothing
         }
 
 
-keyboardMsg : Keyboard.Msg -> UI.Manager
+keyboardMsg : Keyboard.Msg -> Manager
 keyboardMsg msg model =
     (\m ->
         let
@@ -128,22 +128,22 @@ keyboardMsg msg model =
         { model | pressedKeys = Keyboard.update msg model.pressedKeys }
 
 
-preferredColorSchemaChanged : { dark : Bool } -> UI.Manager
+preferredColorSchemaChanged : { dark : Bool } -> Manager
 preferredColorSchemaChanged { dark } model =
     Return.singleton { model | darkMode = dark }
 
 
-removeQueueSelection : UI.Manager
+removeQueueSelection : Manager
 removeQueueSelection =
     modifySingleton Queue.lens (\q -> { q | selection = Nothing })
 
 
-removeTrackSelection : UI.Manager
+removeTrackSelection : Manager
 removeTrackSelection =
     modifySingleton Tracks.lens (\t -> { t | selectedTrackIndexes = [] })
 
 
-resizedWindow : ( Int, Int ) -> UI.Manager
+resizedWindow : ( Int, Int ) -> Manager
 resizedWindow ( width, height ) model =
     Return.singleton
         { model
@@ -152,12 +152,12 @@ resizedWindow ( width, height ) model =
         }
 
 
-setIsTouchDevice : Bool -> UI.Manager
+setIsTouchDevice : Bool -> Manager
 setIsTouchDevice bool model =
     Return.singleton { model | isTouchDevice = bool }
 
 
-stoppedDragging : UI.Manager
+stoppedDragging : Manager
 stoppedDragging model =
     let
         notDragging =
@@ -187,7 +187,7 @@ stoppedDragging model =
             Return.singleton notDragging
 
 
-toggleLoadingScreen : Switch -> UI.Manager
+toggleLoadingScreen : Switch -> Manager
 toggleLoadingScreen switch model =
     case switch of
         On ->

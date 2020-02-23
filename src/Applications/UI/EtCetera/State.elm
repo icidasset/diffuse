@@ -32,7 +32,7 @@ import User.Layer exposing (..)
 -- 📣
 
 
-setIsOnline : Bool -> UI.Manager
+setIsOnline : Bool -> Manager
 setIsOnline bool model =
     if bool then
         -- We're caching the user's data in the browser while offline.
@@ -65,7 +65,7 @@ setIsOnline bool model =
         )
 
 
-setCurrentTime : Time.Posix -> UI.Manager
+setCurrentTime : Time.Posix -> Manager
 setCurrentTime time model =
     model
         |> (\m -> { m | currentTime = time })
@@ -77,7 +77,7 @@ setCurrentTime time model =
 -- ⚗️
 
 
-syncHypaethralData : UI.Manager
+syncHypaethralData : Manager
 syncHypaethralData model =
     model
         |> Common.showNotification (Notifications.warning "Syncing")

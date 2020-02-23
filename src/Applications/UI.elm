@@ -1,6 +1,5 @@
 module UI exposing (main)
 
-import Alfred
 import Alien
 import Browser
 import Browser.Events
@@ -25,7 +24,7 @@ import Task
 import Time
 import Tracks
 import Tracks.Encoding as Tracks
-import UI.Alfred as Alfred
+import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
 import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
@@ -39,6 +38,7 @@ import UI.Interface.State as Interface
 import UI.Page as Page
 import UI.Playlists as Playlists
 import UI.Playlists.ContextMenu as Playlists
+import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.ContextMenu as Queue
@@ -90,7 +90,8 @@ init flags url key =
         page =
             Maybe.withDefault Page.Index maybePage
     in
-    { contextMenu = Nothing
+    { alfred = Nothing
+    , contextMenu = Nothing
     , confirmation = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
     , darkMode = flags.darkMode
@@ -112,7 +113,6 @@ init flags url key =
 
     -- Children
     -----------
-    , alfred = Alfred.initialModel
     , authentication = Authentication.initialModel url
     , backdrop = Backdrop.initialModel
     , equalizer = Equalizer.initialModel
@@ -160,6 +160,9 @@ update msg =
             Reply.translate reply
 
         --
+        Alfred a ->
+            Alfred.update a
+
         Audio a ->
             Audio.update a
 
@@ -181,18 +184,6 @@ update msg =
         -----------------------------------------
         -- Children
         -----------------------------------------
-        AlfredMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = AlfredMsg
-                    , mapModel = \child -> { model | alfred = child }
-                    , update = Alfred.update
-                    }
-                    { model = model.alfred
-                    , msg = sub
-                    }
-
         AuthenticationMsg sub ->
             \model ->
                 Return3.wieldNested
@@ -320,6 +311,12 @@ update msg =
             Interface.toggleLoadingScreen a
 
         -----------------------------------------
+        -- Playlists
+        -----------------------------------------
+        UI.AddTracksToPlaylist a ->
+            Playlists.addTracksToPlaylist a
+
+        -----------------------------------------
         -- Routing
         -----------------------------------------
         ChangeUrlUsingPage a ->
@@ -393,9 +390,9 @@ subscriptions model =
         -----------------------------------------
         -- Alfred
         -----------------------------------------
-        , case model.alfred.instance of
+        , case model.alfred of
             Just _ ->
-                Sub.map AlfredMsg (Alfred.subscriptions model.alfred)
+                Alfred.subscriptions
 
             Nothing ->
                 Sub.none

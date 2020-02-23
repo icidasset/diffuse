@@ -20,14 +20,14 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 -- 📣
 
 
-authenticationBootFailure : String -> UI.Manager
+authenticationBootFailure : String -> Manager
 authenticationBootFailure err model =
     model
         |> showNotification (Notifications.error err)
         |> andThen (Reply.translate LoadDefaultBackdrop)
 
 
-missingSecretKey : Json.Value -> UI.Manager
+missingSecretKey : Json.Value -> Manager
 missingSecretKey _ model =
     "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
         |> Notifications.error
@@ -36,7 +36,7 @@ missingSecretKey _ model =
         |> andThen (Reply.translate <| Reply.ToggleLoadingScreen Off)
 
 
-notAuthenticated : UI.Manager
+notAuthenticated : Manager
 notAuthenticated model =
     -- This is the message we get when the app initially
     -- finds out we're not authenticated.
@@ -57,7 +57,7 @@ notAuthenticated model =
         )
 
 
-remoteStorageWebfinger : RemoteStorage.Attributes -> Result Http.Error String -> UI.Manager
+remoteStorageWebfinger : RemoteStorage.Attributes -> Result Http.Error String -> Manager
 remoteStorageWebfinger remoteStorage result model =
     case result of
         Ok oauthOrigin ->

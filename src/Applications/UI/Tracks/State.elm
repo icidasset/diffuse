@@ -30,7 +30,7 @@ lens =
 -- 📣
 
 
-downloadTracksFinished : UI.Manager
+downloadTracksFinished : Manager
 downloadTracksFinished model =
     case model.downloading of
         Just { notificationId } ->
@@ -43,7 +43,7 @@ downloadTracksFinished model =
             Return.singleton model
 
 
-failedToStoreTracksInCache : List String -> UI.Manager
+failedToStoreTracksInCache : List String -> Manager
 failedToStoreTracksInCache trackIds model =
     model
         |> Lens.modify lens
@@ -52,7 +52,7 @@ failedToStoreTracksInCache trackIds model =
             (Notifications.error "Failed to store track in cache")
 
 
-finishedStoringTracksInCache : List String -> UI.Manager
+finishedStoringTracksInCache : List String -> Manager
 finishedStoringTracksInCache trackIds model =
     model
         |> Lens.modify lens
