@@ -18,7 +18,7 @@ import Url exposing (Url)
 
 
 
--- 📣
+-- 🔱
 
 
 changeUrlUsingPage : Page -> Manager

@@ -1,4 +1,4 @@
-module UI.User.State exposing (..)
+module UI.User.State.Import exposing (..)
 
 import File exposing (File)
 import Json.Decode
@@ -17,7 +17,7 @@ import Task
 import UI.Audio.State as Audio
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
-import UI.Equalizer as Equalizer
+import UI.Equalizer.State as Equalizer
 import UI.Page as Page exposing (Page)
 import UI.Playlists as Playlists
 import UI.Ports as Ports
@@ -241,7 +241,7 @@ importEnclosed value model =
               }
               --
             , Cmd.batch
-                [ Cmd.map EqualizerMsg (Equalizer.adjustAllKnobs newEqualizer)
+                [ Equalizer.adjustAllKnobs newEqualizer
                 , Ports.setRepeat data.repeat
                 ]
               --

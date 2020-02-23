@@ -16,6 +16,7 @@ import Css.Classes as C
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
 import Dict.Ext as Dict
+import Equalizer exposing (Knob)
 import File exposing (File)
 import File.Download
 import File.Select
@@ -59,7 +60,7 @@ import UI.Console
 import UI.ContextMenu
 import UI.Demo as Demo
 import UI.DnD as DnD
-import UI.Equalizer as Equalizer
+import UI.Equalizer.Types as Equalizer
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
@@ -151,9 +152,6 @@ type alias Model =
 type Msg
     = Bypass
     | Reply Reply
-      --
-    | Alfred (Alfred.Msg Msg)
-    | Audio Audio.Msg
       -----------------------------------------
       -- Authentication
       -----------------------------------------
@@ -166,11 +164,17 @@ type Msg
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg
     | BackdropMsg Backdrop.Msg
-    | EqualizerMsg Equalizer.Msg
     | PlaylistsMsg Playlists.Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
+      -----------------------------------------
+      -- Equalizer
+      -----------------------------------------
+    | ActivateKnob Knob Pointer.Event
+    | AdjustKnob Pointer.Event
+    | DeactivateKnob Pointer.Event
+    | ResetKnob Knob
       -----------------------------------------
       -- Interface
       -----------------------------------------
@@ -216,11 +220,17 @@ type Msg
     | ImportJson String
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
+    | SaveEnclosedUserData
       -----------------------------------------
       -- 📭 Et Cetera
       -----------------------------------------
     | SetCurrentTime Time.Posix
     | SetIsOnline Bool
+      -----------------------------------------
+      -- 🦉 Nested
+      -----------------------------------------
+    | Alfred (Alfred.Msg Msg)
+    | Audio Audio.Msg
 
 
 type alias Organizer model =

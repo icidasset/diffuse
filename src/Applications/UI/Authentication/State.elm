@@ -17,7 +17,7 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 
--- 📣
+-- 🔱
 
 
 authenticationBootFailure : String -> Manager

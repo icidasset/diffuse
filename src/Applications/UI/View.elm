@@ -31,7 +31,7 @@ import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
-import UI.Equalizer as Equalizer
+import UI.Equalizer.View as Equalizer
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
@@ -71,9 +71,9 @@ body model =
             [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
          else if Maybe.isJust model.equalizer.activeKnob then
-            [ Pointer.onMove (EqualizerMsg << Equalizer.AdjustKnob)
-            , Pointer.onUp (EqualizerMsg << Equalizer.DeactivateKnob)
-            , Pointer.onCancel (EqualizerMsg << Equalizer.DeactivateKnob)
+            [ Pointer.onMove AdjustKnob
+            , Pointer.onUp DeactivateKnob
+            , Pointer.onCancel DeactivateKnob
             ]
 
          else if model.isDragging then
@@ -180,9 +180,7 @@ defaultScreen model =
         --------
         , case model.page of
             Page.Equalizer ->
-                model.equalizer
-                    |> Lazy.lazy Equalizer.view
-                    |> Html.map EqualizerMsg
+                Lazy.lazy Equalizer.view model.equalizer
 
             Page.Index ->
                 nothing

@@ -55,7 +55,6 @@ import UI.Common.State exposing (showNotification, showNotificationWithModel)
 import UI.Console
 import UI.ContextMenu
 import UI.Demo as Demo
-import UI.Equalizer as Equalizer
 import UI.Interface.State as Interface
 import UI.Navigation as Navigation
 import UI.Notifications
@@ -531,7 +530,7 @@ translate reply model =
                 |> Ports.toBrain
                 |> return (Lens.modify Tracks.lens (\m -> { m | cached = [] }) model)
                 |> andThen (Return.performance <| TracksMsg Tracks.Harvest)
-                |> andThen (translate <| SaveEnclosedUserData)
+                |> andThen (translate <| Reply.SaveEnclosedUserData)
                 |> andThen (translate <| ShowWarningNotification "Tracks cache was cleared")
 
         DisableTracksGrouping ->
@@ -670,7 +669,7 @@ translate reply model =
                         model
                     )
                 |> andThen (Return.performance <| TracksMsg Tracks.Harvest)
-                |> andThen (translate SaveEnclosedUserData)
+                |> andThen (translate Reply.SaveEnclosedUserData)
 
         RemoveTracksWithSourceId sourceId ->
             let
@@ -795,12 +794,8 @@ translate reply model =
                 |> File.Select.file [ "application/json" ]
                 |> return model
 
-        SaveEnclosedUserData ->
-            model
-                |> exportEnclosed
-                |> Alien.broadcast Alien.SaveEnclosedUserData
-                |> Ports.toBrain
-                |> return model
+        Reply.SaveEnclosedUserData ->
+            Return.performance UI.SaveEnclosedUserData model
 
         SaveFavourites ->
             model.tracks.favourites
@@ -893,31 +888,6 @@ saveAllHypaethralData return =
 
 
 -- USER
-
-
-exportEnclosed : Model -> Json.Encode.Value
-exportEnclosed model =
-    let
-        equalizerSettings =
-            { low = model.equalizer.low
-            , mid = model.equalizer.mid
-            , high = model.equalizer.high
-            , volume = model.equalizer.volume
-            }
-    in
-    encodeEnclosedData
-        { cachedTracks = model.tracks.cached
-        , equalizerSettings = equalizerSettings
-        , grouping = model.tracks.grouping
-        , onlyShowCachedTracks = model.tracks.cachedOnly
-        , onlyShowFavourites = model.tracks.favouritesOnly
-        , repeat = model.queue.repeat
-        , searchTerm = model.tracks.searchTerm
-        , selectedPlaylist = Maybe.map .name model.tracks.selectedPlaylist
-        , shuffle = model.queue.shuffle
-        , sortBy = model.tracks.sortBy
-        , sortDirection = model.tracks.sortDirection
-        }
 
 
 gatherSettings : Model -> Settings.Settings

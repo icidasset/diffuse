@@ -13,7 +13,7 @@ import UI.Types as UI exposing (Manager, Msg(..))
 
 
 
--- 📣
+-- 🔱
 
 
 gotLastFmSession : Result Http.Error String -> Manager

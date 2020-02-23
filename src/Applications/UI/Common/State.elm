@@ -9,7 +9,7 @@ import UI.Types as UI exposing (Manager)
 
 
 
--- 📣
+-- 🔱
 
 
 showNotification : Notification Reply -> Manager

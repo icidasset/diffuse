@@ -32,7 +32,8 @@ import UI.Authentication.ContextMenu as Authentication
 import UI.Authentication.State as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
-import UI.Equalizer as Equalizer
+import UI.Equalizer.State as Equalizer
+import UI.Equalizer.View as Equalizer
 import UI.EtCetera.State as EtCetera
 import UI.Interface.State as Interface
 import UI.Page as Page
@@ -52,7 +53,8 @@ import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
-import UI.User.State as User
+import UI.User.State.Export as User
+import UI.User.State.Import as User
 import UI.View exposing (view)
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
@@ -159,13 +161,6 @@ update msg =
         Reply reply ->
             Reply.translate reply
 
-        --
-        Alfred a ->
-            Alfred.update a
-
-        Audio a ->
-            Audio.update a
-
         -----------------------------------------
         -- Authentication
         -----------------------------------------
@@ -205,18 +200,6 @@ update msg =
                     , update = Backdrop.update
                     }
                     { model = model.backdrop
-                    , msg = sub
-                    }
-
-        EqualizerMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = EqualizerMsg
-                    , mapModel = \child -> { model | equalizer = child }
-                    , update = Equalizer.update
-                    }
-                    { model = model.equalizer
                     , msg = sub
                     }
 
@@ -267,6 +250,21 @@ update msg =
                     { model = model.tracks
                     , msg = sub
                     }
+
+        -----------------------------------------
+        -- Equalizer
+        -----------------------------------------
+        ActivateKnob a b ->
+            Equalizer.organize (Equalizer.activateKnob a b)
+
+        AdjustKnob a ->
+            Equalizer.organize (Equalizer.adjustKnob a)
+
+        DeactivateKnob _ ->
+            Equalizer.deactivateKnob
+
+        ResetKnob a ->
+            Equalizer.resetKnob a
 
         -----------------------------------------
         -- Interface
@@ -367,6 +365,9 @@ update msg =
         LoadHypaethralUserData a ->
             User.loadHypaethralUserData a
 
+        UI.SaveEnclosedUserData ->
+            User.saveEnclosedUserData
+
         -----------------------------------------
         -- 📭 Et Cetera
         -----------------------------------------
@@ -375,6 +376,15 @@ update msg =
 
         SetIsOnline a ->
             EtCetera.setIsOnline a
+
+        -----------------------------------------
+        -- 🦉 Nested
+        -----------------------------------------
+        Alfred a ->
+            Alfred.update a
+
+        Audio a ->
+            Audio.update a
 
 
 
