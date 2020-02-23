@@ -1,46 +1,24 @@
 module UI exposing (main)
 
-import Alfred exposing (Alfred)
+import Alfred
 import Alien
 import Browser
-import Browser.Dom
 import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import ContextMenu exposing (ContextMenu)
 import Css exposing (url)
-import Css.Classes as C
 import Debouncer.Basic as Debouncer
-import Dict
-import Dict.Ext as Dict
-import File
-import File.Download
-import File.Select
-import Html exposing (Html, section)
-import Html.Attributes exposing (class, id, style)
-import Html.Events exposing (on, onClick)
-import Html.Events.Extra.Pointer as Pointer
-import Html.Lazy as Lazy
 import Json.Decode
-import Json.Encode
 import LastFm
-import List.Ext as List
-import List.Extra as List
 import Maybe.Extra as Maybe
-import Monocle.Lens as Lens
 import Notifications
 import Playlists.Encoding as Playlists
-import Process
 import Queue
 import Return2 exposing (..)
 import Return3
-import Settings
 import Sources
 import Sources.Encoding as Sources
-import Sources.Services.Dropbox
-import Sources.Services.Google
-import String.Ext as String
 import Task
 import Time
 import Tracks
@@ -52,19 +30,12 @@ import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State exposing (showNotification, showNotificationWithModel)
-import UI.Console
-import UI.ContextMenu
-import UI.Demo as Demo
 import UI.Equalizer as Equalizer
 import UI.Interface.State as Interface
 import UI.Interface.Types as Interface
-import UI.Navigation as Navigation
-import UI.Notifications
 import UI.Page as Page
 import UI.Playlists as Playlists
-import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
-import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.ContextMenu as Queue
@@ -72,22 +43,15 @@ import UI.Reply as Reply exposing (Reply(..))
 import UI.Reply.Translate as Reply
 import UI.Routing.State as Routing
 import UI.Services.State as Services
-import UI.Settings as Settings
-import UI.Settings.Page
 import UI.Sources as Sources
 import UI.Sources.ContextMenu as Sources
-import UI.Sources.Form
-import UI.Sources.Page
-import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
-import UI.Tracks.Scene.List
 import UI.Tracks.State as Tracks
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 import UI.User.State as User
 import UI.View exposing (view)
 import Url exposing (Protocol(..), Url)
-import Url.Ext as Url
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
 

@@ -3,10 +3,9 @@ module UI.Routing.State exposing (changeUrlUsingPage, linkClicked, resetUrl, tra
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Nav
 import List.Extra as List
-import Management
 import Monocle.Lens as Lens
 import Return exposing (return)
-import Return.Ext as Return exposing (communicate)
+import Return.Ext as Return
 import Sources
 import Sources.Services.Dropbox
 import Sources.Services.Google
@@ -14,8 +13,7 @@ import UI.Page as Page exposing (Page)
 import UI.Sources.Form
 import UI.Sources.Page
 import UI.Sources.State as Sources
-import UI.Tracks.State as Tracks
-import UI.Types as UI exposing (Manager)
+import UI.Types as UI
 import Url exposing (Url)
 
 
