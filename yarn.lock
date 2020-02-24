@@ -529,7 +529,7 @@ binary@^0.3.0:
     buffers "~0.1.1"
     chainsaw "~0.1.0"
 
-binwrap@^0.2.0:
+binwrap@^0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/binwrap/-/binwrap-0.2.2.tgz#7d1ea74b28332f18dfdc75548aef993041ffafc9"
   integrity sha512-Y+Wvypk3JhH5GPZAvlwJAWOVH/OsOhQMSj37vySuWHwQivoALplPxfBA8b973rFJI7OS+O+1YmmYXIiEXVMAcw==
@@ -1338,21 +1338,21 @@ elliptic@^6.0.0:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.0"
 
-elm-json@^0.2.1:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/elm-json/-/elm-json-0.2.2.tgz#fc8d2331c506a261ad56172ee3db23f879ddb41a"
-  integrity sha512-5xAEWQfw0jsWUYC7Xz2fN1VN8raLu14s2qo51IGpL/dnMW8N9vnOUy9cGoxfQDQshBmgT9GJvpATzFZNwHYzmA==
+elm-json@^0.2.6:
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/elm-json/-/elm-json-0.2.6.tgz#d73305fe1ed1e833508d1a614b083360aab089ac"
+  integrity sha512-ExZYy9bml4EnHr0fRU/Wt907o7MqHsHWQj7e6j3vqRTK0Uod3bXFCR79N9MQkHm9ko8tY6nkjRQJ87O0X7ZE/Q==
   dependencies:
-    binwrap "^0.2.0"
+    binwrap "^0.2.2"
 
-elm-review@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/elm-review/-/elm-review-1.0.1.tgz#9769baf54fc4f735b34f7d6b3d6e7b65b07a17bb"
-  integrity sha512-TqXgbwTm/CpN+ZzjnvJyenl5U0+rzHoEeUnfW05IOx2ajgeeu2ibOXAZQLmRl6fDiVG0gIHRRsmBreQjoVq/0Q==
+elm-review@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/elm-review/-/elm-review-1.0.2.tgz#48c297a55b93fcc54ca3ee62e0aca5089172bdd2"
+  integrity sha512-DkDRJUchPsopoUduZAeHFZb3aHToPCPXcpu51QiCYCWMB8YqH9njk79PH/kR26i1yC2kQ4p3PMsDwuSVhDRG/A==
   dependencies:
     chalk "^2.4.2"
     cross-spawn "^6.0.5"
-    elm-json "^0.2.1"
+    elm-json "^0.2.6"
     find-up "^4.1.0"
     fs-extra "^7.0.1"
     glob "^7.1.4"

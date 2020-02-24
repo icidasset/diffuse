@@ -4,6 +4,7 @@ import Color exposing (Color)
 import Color.Ext as Color
 import Coordinates exposing (Coordinates)
 import Equalizer exposing (..)
+import Html.Events.Extra.Pointer as Pointer
 import Json.Decode as Decode
 import Management
 import Material.Icons as Icons

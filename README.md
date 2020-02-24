@@ -65,6 +65,7 @@ All of these, except the last one, can be install using [homebrew](https://brew.
 - [Elm](https://elm-lang.org/) programming language
 - [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
 - [Node.js](https://nodejs.org/) programming language with the [Yarn](https://yarnpkg.com/) package manager
+- [Just](https://github.com/casey/just) command runner (improved `make`)
 - [Devd](https://github.com/cortesi/devd) web server for development (optional)
 - [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
 - [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
@@ -80,5 +81,5 @@ All of these, except the last one, can be install using [homebrew](https://brew.
 yarn install
 
 # 3. Build, start server & watch for changes
-make
+just
 ```
