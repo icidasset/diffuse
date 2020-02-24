@@ -31,11 +31,13 @@ view m =
                 , C.bg_white
                 , C.leading_loose
                 , C.overflow_hidden
+                , C.minus_translate_x_half
+                , C.minus_translate_y_half
                 , C.rounded
                 , C.shadow_md
                 , C.select_none
                 , C.text_almost_sm
-                , C.translate_centered
+                , C.transform
                 , C.z_50
 
                 -- Dark mode

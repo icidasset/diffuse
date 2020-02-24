@@ -820,6 +820,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             ]
                             [ C.antialiased
                             , C.cursor_pointer
+                            , C.duration_500
                             , C.font_bold
                             , C.leading_none
                             , C.ml_1
@@ -829,7 +830,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             , C.truncate
                             , C.text_white_90
                             , C.text_xxs
-                            , C.transition_500
+                            , C.transition
 
                             -- Dark mode
                             ------------

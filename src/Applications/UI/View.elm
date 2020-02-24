@@ -311,9 +311,10 @@ overlay maybeAlfred maybeContextMenu =
         [ onClick HideOverlay ]
         [ C.inset_0
         , C.bg_black
+        , C.duration_1000
+        , C.ease_in_out
         , C.fixed
-        , C.transition_1000
-        , C.transition_ease
+        , C.transition
         , C.transition_opacity
         , C.z_30
 

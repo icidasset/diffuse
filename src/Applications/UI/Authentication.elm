@@ -803,13 +803,14 @@ choiceButton { action, icon, infoLink, label, outOfOrder } =
                     ]
                     [ C.absolute
                     , C.cursor_pointer
+                    , C.duration_100
                     , C.leading_none
                     , C.ml_4
                     , C.minus_translate_y_half
                     , C.opacity_40
                     , C.pl_4
                     , C.text_white
-                    , C.transition_100
+                    , C.transition
 
                     --
                     , C.hocus__opacity_100
@@ -930,6 +931,7 @@ speechBubble contents =
         , C.text_sm
         , C.text_white
         , C.top_full
+        , C.transform
         , C.whitespace_no_wrap
 
         -- Dark mode
@@ -945,8 +947,10 @@ speechBubble contents =
             [ C.absolute
             , C.h_0
             , C.left_half
+            , C.minus_translate_x_half
+            , C.minus_translate_y_full
             , C.top_0
-            , C.translate_put_on_top
+            , C.transform
             , C.w_0
             ]
             []

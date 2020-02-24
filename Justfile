@@ -163,7 +163,7 @@ default: dev
 #
 
 @dev: build
-	make -j watch-wo-build server
+	just watch-wo-build & just server
 
 
 @doc-tests:
@@ -191,30 +191,28 @@ default: dev
 	devd --port 5000 --all --crossdomain --quiet --notfound=301.html {{BUILD_DIR}}
 
 
-@test:
-	make -j doc-tests
+@test: doc-tests
 
 
-@watch: build
-	make watch-wo-build
+@watch: build watch-wo-build
 
 
 @watch-wo-build:
 	echo "> Watching"
-	make -j watch-css watch-elm watch-js watch-system
+	just watch-css & just watch-elm & just watch-js & just watch-system
 
 
 @watch-css:
-	watchexec -p -w {{SRC_DIR}}/Css -w {{SYSTEM_DIR}}/Css -- make css
+	watchexec -p -w {{SRC_DIR}}/Css -w {{SYSTEM_DIR}}/Css -- just css
 
 
 @watch-elm:
-	watchexec -p -w {{SRC_DIR}} -e elm -- make elm
+	watchexec -p -w {{SRC_DIR}} -e elm -- just elm
 
 
 @watch-js:
-	watchexec -p -w {{SRC_DIR}} -e js -- make js
+	watchexec -p -w {{SRC_DIR}} -e js -- just js
 
 
 @watch-system:
-	watchexec -p --ignore *.elm --ignore *.js --ignore *.css -- make system
+	watchexec -p --ignore *.elm --ignore *.js --ignore *.css -- just system

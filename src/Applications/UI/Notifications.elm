@@ -126,7 +126,8 @@ notificationView notification =
         --
         , rel (String.fromInt id)
         ]
-        [ C.max_w_xs
+        [ C.duration_200
+        , C.max_w_xs
         , C.mt_2
         , C.p_4
         , C.rounded
@@ -152,7 +153,7 @@ notificationView notification =
 
         --
         , if options.wasDismissed then
-            C.transition_250
+            C.transition
 
           else
             ""

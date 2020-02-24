@@ -34,10 +34,8 @@ module.exports = {
 
   plugins: [
 
-    require("tailwindcss-animations")(),
-    require("tailwindcss-interaction-variants")(),
-    require("tailwindcss-transforms")(),
-    require("tailwindcss-transitions")(),
+    require("tailwindcss-animations"),
+    require("tailwindcss-interaction-variants"),
 
     // Add variant for `:focus:not(:active)`
     function({ addVariant, e }) {
@@ -154,6 +152,16 @@ module.exports = {
         "0": 0
       },
 
+      maxWidth : {
+        "insulation": "107.5vh",
+        "screen": "100vw"
+      },
+
+      minWidth: {
+        "3xl": "48rem",
+        "tiny": "13.125rem"
+      },
+
       screens: {
         "dark": { "raw": "(prefers-color-scheme: dark)" }
       },
@@ -204,23 +212,6 @@ module.exports = {
     },
 
 
-    // Min & Max
-    // ---------
-
-    maxWidth : {
-      ...defaultTheme.maxWidth,
-
-      "insulation": "107.5vh",
-      "screen": "100vw"
-    },
-
-    minWidth: {
-      ...defaultTheme.maxWidth,
-
-      "tiny": "13.125rem"
-    },
-
-
     // Opacity
     // -------
 
@@ -239,22 +230,6 @@ module.exports = {
       "90": ".9",
       "100": "1"
     },
-
-
-    // Transforms
-    // ----------
-
-    translate: {
-      "1/2": "50%",
-      "-1/2": "-50%",
-      "full": "100%",
-      "-full": "-100%",
-      "centered": ["-50%", "-50%"],
-      "put-on-top": ["-50%", "-100%"],
-    },
-
-    transformOrigin: {},
-    perspectiveOrigin: {}
 
   }
 
