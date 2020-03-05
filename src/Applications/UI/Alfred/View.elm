@@ -12,7 +12,6 @@ import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import String.Ext as String
-import UI.Alfred.Types exposing (..)
 import UI.Types as UI
 
 
@@ -72,7 +71,7 @@ view maybeInstance =
                         Html.input
                         [ autofocus True
                         , id "diffuse__alfred"
-                        , onInput (UI.Alfred << DetermineResults)
+                        , onInput UI.GotAlfredInput
                         , placeholder "Type to search or create"
                         , type_ "text"
                         ]
@@ -116,7 +115,7 @@ view maybeInstance =
                     (List.indexedMap
                         (\idx result ->
                             brick
-                                [ onTapPreventDefault (UI.Alfred <| RunAction idx) ]
+                                [ onTapPreventDefault (UI.SelectAlfredItem idx) ]
                                 [ C.p_4
                                 , C.relative
                                 , C.truncate

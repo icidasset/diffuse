@@ -24,7 +24,6 @@ import Sources
 import Sources.Encoding as Sources
 import Tracks
 import Tracks.Encoding as Tracks
-import UI.Alfred.Types as Alfred
 import UI.Alfred.View as Alfred
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication

@@ -39,7 +39,6 @@ import String.Ext as String
 import Time
 import Tracks
 import Tracks.Encoding as Tracks
-import UI.Alfred.Types as Alfred
 import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
@@ -133,6 +132,12 @@ type Msg
     = Bypass
     | Reply Reply
       -----------------------------------------
+      -- Alfred
+      -----------------------------------------
+    | AssignAlfred (Alfred Msg)
+    | GotAlfredInput String
+    | SelectAlfredItem Int
+      -----------------------------------------
       -- Authentication
       -----------------------------------------
     | AuthenticationBootFailure String
@@ -162,7 +167,6 @@ type Msg
     | Debounce (Debouncer.Msg Msg)
     | FocusedOnInput
     | HideOverlay
-    | KeyboardMsg Keyboard.Msg
     | PreferredColorSchemaChanged { dark : Bool }
     | RemoveQueueSelection
     | RemoveTrackSelection
@@ -202,14 +206,17 @@ type Msg
     | LoadHypaethralUserData Json.Decode.Value
     | SaveEnclosedUserData
       -----------------------------------------
+      -- 🦉 Adjunct
+      -----------------------------------------
+    | KeyboardMsg Keyboard.Msg
+      -----------------------------------------
       -- 📭 Et Cetera
       -----------------------------------------
     | SetCurrentTime Time.Posix
     | SetIsOnline Bool
       -----------------------------------------
-      -- 🦉 Nested
+      -- TODO
       -----------------------------------------
-    | Alfred (Alfred.Msg Msg)
     | Audio Audio.Msg
 
 

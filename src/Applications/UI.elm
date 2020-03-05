@@ -24,6 +24,7 @@ import Task
 import Time
 import Tracks
 import Tracks.Encoding as Tracks
+import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
 import UI.Audio.Types as Audio
@@ -162,6 +163,18 @@ update msg =
             Reply.translate reply
 
         -----------------------------------------
+        -- Alfred
+        -----------------------------------------
+        AssignAlfred a ->
+            Alfred.assign a
+
+        GotAlfredInput a ->
+            Alfred.gotInput a
+
+        SelectAlfredItem a ->
+            Alfred.runAction a
+
+        -----------------------------------------
         -- Authentication
         -----------------------------------------
         AuthenticationBootFailure a ->
@@ -281,9 +294,6 @@ update msg =
         HideOverlay ->
             Interface.hideOverlay
 
-        KeyboardMsg a ->
-            Interface.keyboardMsg a
-
         PreferredColorSchemaChanged a ->
             Interface.preferredColorSchemaChanged a
 
@@ -369,6 +379,12 @@ update msg =
             User.saveEnclosedUserData
 
         -----------------------------------------
+        -- 🦉 Adjunct
+        -----------------------------------------
+        KeyboardMsg a ->
+            Adjunct.keyboardInput a
+
+        -----------------------------------------
         -- 📭 Et Cetera
         -----------------------------------------
         SetCurrentTime a ->
@@ -378,11 +394,8 @@ update msg =
             EtCetera.setIsOnline a
 
         -----------------------------------------
-        -- 🦉 Nested
+        -- TODO
         -----------------------------------------
-        Alfred a ->
-            Alfred.update a
-
         Audio a ->
             Audio.update a
 
@@ -396,16 +409,6 @@ subscriptions model =
     Sub.batch
         [ Audio.subscriptions model
         , Ports.fromAlien alien
-
-        -----------------------------------------
-        -- Alfred
-        -----------------------------------------
-        , case model.alfred of
-            Just _ ->
-                Alfred.subscriptions
-
-            Nothing ->
-                Sub.none
 
         -----------------------------------------
         -- Backdrop

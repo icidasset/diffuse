@@ -16,32 +16,11 @@ import Return exposing (andThen, return)
 import Return.Ext as Return
 import String.Ext as String
 import Task
-import UI.Alfred.Types as Alfred exposing (..)
 import UI.Types as UI exposing (Manager)
 
 
 
 -- 📣
-
-
-update : Alfred.Msg UI.Msg -> Manager
-update msg =
-    case msg of
-        Assign a ->
-            assign a
-
-        DetermineResults a ->
-            determineResults a
-
-        KeyDown a ->
-            keyDown a
-
-        RunAction a ->
-            runAction a
-
-
-
--- 🔱
 
 
 assign : Alfred UI.Msg -> Manager
@@ -54,10 +33,10 @@ assign instance model =
         )
 
 
-determineResults : String -> Manager
-determineResults searchTerm model =
+gotInput : String -> Manager
+gotInput searchTerm model =
     model.alfred
-        |> Maybe.map (determineResults_ searchTerm)
+        |> Maybe.map (determineResults searchTerm)
         |> (\a -> Return.singleton { model | alfred = a })
 
 
@@ -77,40 +56,39 @@ runAction index model =
             Return.singleton { model | alfred = Nothing }
 
 
-keyDown : Maybe Keyboard.Key -> Manager
-keyDown maybeKey model =
-    case maybeKey of
-        Just Keyboard.ArrowDown ->
-            case model.alfred of
-                Just instance ->
-                    instance
-                        |> (\i -> { i | focus = min (i.focus + 1) (List.length i.results - 1) })
-                        |> (\i -> { model | alfred = Just i })
-                        |> Return.singleton
+runSelectedAction : Manager
+runSelectedAction model =
+    case model.alfred of
+        Just instance ->
+            runAction instance.focus model
 
-                Nothing ->
-                    Return.singleton model
+        Nothing ->
+            Return.singleton model
 
-        Just Keyboard.ArrowUp ->
-            case model.alfred of
-                Just instance ->
-                    instance
-                        |> (\i -> { i | focus = max (i.focus - 1) 0 })
-                        |> (\i -> { model | alfred = Just i })
-                        |> Return.singleton
 
-                Nothing ->
-                    Return.singleton model
+selectNext : Manager
+selectNext model =
+    case model.alfred of
+        Just instance ->
+            instance
+                |> (\i -> { i | focus = min (i.focus + 1) (List.length i.results - 1) })
+                |> (\i -> { model | alfred = Just i })
+                |> Return.singleton
 
-        Just Keyboard.Enter ->
-            case model.alfred of
-                Just instance ->
-                    update (RunAction instance.focus) model
+        Nothing ->
+            Return.singleton model
 
-                Nothing ->
-                    Return.singleton model
 
-        _ ->
+selectPrevious : Manager
+selectPrevious model =
+    case model.alfred of
+        Just instance ->
+            instance
+                |> (\i -> { i | focus = max (i.focus - 1) 0 })
+                |> (\i -> { model | alfred = Just i })
+                |> Return.singleton
+
+        Nothing ->
             Return.singleton model
 
 
@@ -118,8 +96,8 @@ keyDown maybeKey model =
 -- ⚗️
 
 
-determineResults_ : String -> Alfred UI.Msg -> Alfred UI.Msg
-determineResults_ searchTerm alfred =
+determineResults : String -> Alfred UI.Msg -> Alfred UI.Msg
+determineResults searchTerm alfred =
     let
         lowerSearchTerm =
             searchTerm
@@ -141,12 +119,3 @@ determineResults_ searchTerm alfred =
             | searchTerm = Nothing
             , results = alfred.index
         }
-
-
-
--- 📰
-
-
-subscriptions : Sub UI.Msg
-subscriptions =
-    Keyboard.downs (Keyboard.anyKeyUpper >> KeyDown >> UI.Alfred)

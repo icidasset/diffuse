@@ -2,19 +2,16 @@ module UI.Interface.State exposing (..)
 
 import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
-import Keyboard
 import Maybe.Extra as Maybe
 import Monocle.Lens as Lens
 import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
-import UI.Authentication as Authentication
 import UI.Common.State as Common exposing (modifySingleton)
 import UI.DnD as DnD
 import UI.Page as Page
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.State as Queue
-import UI.Reply as Reply
 import UI.Sources.State as Sources
 import UI.Tracks as Tracks
 import UI.Tracks.Scene.List
@@ -67,60 +64,6 @@ hideOverlay model =
             , confirmation = Nothing
             , contextMenu = Nothing
         }
-
-
-keyboardMsg : Keyboard.Msg -> Manager
-keyboardMsg msg model =
-    (\m ->
-        let
-            skip =
-                Return.singleton m
-
-            authenticated =
-                case model.authentication of
-                    Authentication.Authenticated _ ->
-                        True
-
-                    _ ->
-                        False
-        in
-        if m.focusedOnInput || not authenticated then
-            -- Stop here if using input or not authenticated
-            skip
-
-        else
-            case m.pressedKeys of
-                [ Keyboard.Escape ] ->
-                    hideOverlay m
-
-                [ Keyboard.ArrowLeft ] ->
-                    Return.performance (Reply Reply.RewindQueue) m
-
-                [ Keyboard.ArrowRight ] ->
-                    Return.performance (Reply Reply.ShiftQueue) m
-
-                [ Keyboard.ArrowUp ] ->
-                    Return.performance (Reply (Reply.Seek <| (m.audio.position - 10) / m.audio.duration)) m
-
-                [ Keyboard.ArrowDown ] ->
-                    Return.performance (Reply (Reply.Seek <| (m.audio.position + 10) / m.audio.duration)) m
-
-                [ Keyboard.Character "N" ] ->
-                    Return.performance (Reply Reply.ScrollToNowPlaying) m
-
-                [ Keyboard.Character "P" ] ->
-                    Return.performance (Reply Reply.TogglePlayPause) m
-
-                [ Keyboard.Character "R" ] ->
-                    Return.performance (Reply Reply.ToggleRepeat) m
-
-                [ Keyboard.Character "S" ] ->
-                    Return.performance (Reply Reply.ToggleShuffle) m
-
-                _ ->
-                    skip
-    )
-        { model | pressedKeys = Keyboard.update msg model.pressedKeys }
 
 
 preferredColorSchemaChanged : { dark : Bool } -> Manager
