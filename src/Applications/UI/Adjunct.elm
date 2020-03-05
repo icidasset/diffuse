@@ -60,10 +60,10 @@ keyboardInput msg model =
                     Return.performance (Reply Reply.ShiftQueue) m
 
                 [ Keyboard.ArrowUp ] ->
-                    Return.performance (Reply (Reply.Seek <| (m.audio.position - 10) / m.audio.duration)) m
+                    Return.performance (Reply (Reply.Seek <| (m.audioPosition - 10) / m.audioDuration)) m
 
                 [ Keyboard.ArrowDown ] ->
-                    Return.performance (Reply (Reply.Seek <| (m.audio.position + 10) / m.audio.duration)) m
+                    Return.performance (Reply (Reply.Seek <| (m.audioPosition + 10) / m.audioDuration)) m
 
                 [ Keyboard.Character "N" ] ->
                     Return.performance (Reply Reply.ScrollToNowPlaying) m

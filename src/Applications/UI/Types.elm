@@ -39,7 +39,6 @@ import String.Ext as String
 import Time
 import Tracks
 import Tracks.Encoding as Tracks
-import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Backdrop as Backdrop
@@ -84,12 +83,9 @@ type alias Flags =
 
 
 type alias Model =
-    { alfred : Maybe (Alfred Msg)
-    , contextMenu : Maybe (ContextMenu Reply)
-    , confirmation : Maybe String
+    { confirmation : Maybe String
     , currentTime : Time.Posix
     , darkMode : Bool
-    , debounce : Debouncer Msg Msg
     , downloading : Maybe { notificationId : Int }
     , focusedOnInput : Bool
     , isDragging : Bool
@@ -99,7 +95,6 @@ type alias Model =
     , isUpgrading : Bool
     , lastFm : LastFm.Model
     , navKey : Nav.Key
-    , notifications : UI.Notifications.Model
     , page : Page
     , pressedKeys : List Keyboard.Key
     , processAutomatically : Bool
@@ -107,7 +102,34 @@ type alias Model =
     , viewport : Viewport
 
     -----------------------------------------
-    -- Children
+    -- Audio
+    -----------------------------------------
+    , audioDuration : Float
+    , audioHasStalled : Bool
+    , audioIsLoading : Bool
+    , audioIsPlaying : Bool
+    , audioPosition : Float
+
+    -----------------------------------------
+    -- Debouncing
+    -----------------------------------------
+    , debounce : Debouncer Msg Msg
+
+    -----------------------------------------
+    -- Instances
+    -----------------------------------------
+    , alfred : Maybe (Alfred Msg)
+    , contextMenu : Maybe (ContextMenu Reply)
+    , notifications : UI.Notifications.Model
+
+    -----------------------------------------
+    -- Progress
+    -----------------------------------------
+    , progress : Dict String Float
+    , rememberProgress : Bool
+
+    -----------------------------------------
+    -- Children (TODO)
     -----------------------------------------
     , authentication : Authentication.Model
     , backdrop : Backdrop.Model
@@ -116,11 +138,6 @@ type alias Model =
     , playlists : Playlists.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
-
-    -----------------------------------------
-    -- Pieces
-    -----------------------------------------
-    , audio : Audio.Model
     }
 
 
@@ -138,21 +155,23 @@ type Msg
     | GotAlfredInput String
     | SelectAlfredItem Int
       -----------------------------------------
+      -- Audio
+      -----------------------------------------
+    | NoteProgress { trackId : String, progress : Float }
+    | SetAudioDuration Float
+    | SetAudioHasStalled Bool
+    | SetAudioIsLoading Bool
+    | SetAudioIsPlaying Bool
+    | SetAudioPosition Float
+    | Stop
+    | TogglePlay
+      -----------------------------------------
       -- Authentication
       -----------------------------------------
     | AuthenticationBootFailure String
     | MissingSecretKey Json.Decode.Value
     | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
-      -----------------------------------------
-      -- Children (TODO)
-      -----------------------------------------
-    | AuthenticationMsg Authentication.Msg
-    | BackdropMsg Backdrop.Msg
-    | PlaylistsMsg Playlists.Msg
-    | QueueMsg Queue.Msg
-    | SourcesMsg Sources.Msg
-    | TracksMsg Tracks.Msg
       -----------------------------------------
       -- Equalizer
       -----------------------------------------
@@ -215,9 +234,14 @@ type Msg
     | SetCurrentTime Time.Posix
     | SetIsOnline Bool
       -----------------------------------------
-      -- TODO
+      -- Children (TODO)
       -----------------------------------------
-    | Audio Audio.Msg
+    | AuthenticationMsg Authentication.Msg
+    | BackdropMsg Backdrop.Msg
+    | PlaylistsMsg Playlists.Msg
+    | QueueMsg Queue.Msg
+    | SourcesMsg Sources.Msg
+    | TracksMsg Tracks.Msg
 
 
 type alias Organizer model =

@@ -204,7 +204,7 @@ defaultScreen model =
                 , hideDuplicateTracks = model.tracks.hideDuplicates
                 , lastFm = model.lastFm
                 , processAutomatically = model.processAutomatically
-                , rememberProgress = model.audio.rememberProgress
+                , rememberProgress = model.rememberProgress
                 }
                     |> Lazy.lazy2 Settings.view subPage
                     |> Html.map Reply
@@ -227,12 +227,12 @@ defaultScreen model =
             model.queue.activeItem
             model.queue.repeat
             model.queue.shuffle
-            { stalled = model.audio.hasStalled
-            , loading = model.audio.isLoading
-            , playing = model.audio.isPlaying
+            { stalled = model.audioHasStalled
+            , loading = model.audioIsLoading
+            , playing = model.audioIsPlaying
             }
-            ( model.audio.position
-            , model.audio.duration
+            ( model.audioPosition
+            , model.audioDuration
             )
         )
     ]

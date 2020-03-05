@@ -9,6 +9,7 @@ import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css exposing (url)
 import Debouncer.Basic as Debouncer
+import Dict
 import Json.Decode
 import Keyboard
 import LastFm
@@ -27,7 +28,6 @@ import Tracks.Encoding as Tracks
 import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
-import UI.Audio.Types as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Authentication.State as Authentication
@@ -93,9 +93,7 @@ init flags url key =
         page =
             Maybe.withDefault Page.Index maybePage
     in
-    { alfred = Nothing
-    , contextMenu = Nothing
-    , confirmation = Nothing
+    { confirmation = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
     , darkMode = flags.darkMode
     , downloading = Nothing
@@ -107,15 +105,42 @@ init flags url key =
     , isUpgrading = flags.upgrade
     , lastFm = LastFm.initialModel
     , navKey = key
-    , notifications = []
     , page = page
     , pressedKeys = []
     , processAutomatically = True
     , url = url
     , viewport = flags.viewport
 
-    -- Children
-    -----------
+    -----------------------------------------
+    -- Audio
+    -----------------------------------------
+    , audioDuration = 0
+    , audioHasStalled = False
+    , audioIsLoading = False
+    , audioIsPlaying = False
+    , audioPosition = 0
+    , progress = Dict.empty
+    , rememberProgress = True
+
+    -----------------------------------------
+    -- Debouncing
+    -----------------------------------------
+    , debounce =
+        0.25
+            |> Debouncer.fromSeconds
+            |> Debouncer.debounce
+            |> Debouncer.toDebouncer
+
+    -----------------------------------------
+    -- Instances
+    -----------------------------------------
+    , alfred = Nothing
+    , contextMenu = Nothing
+    , notifications = []
+
+    -----------------------------------------
+    -- Children (TODO)
+    -----------------------------------------
     , authentication = Authentication.initialModel url
     , backdrop = Backdrop.initialModel
     , equalizer = Equalizer.initialModel
@@ -123,18 +148,6 @@ init flags url key =
     , queue = Queue.initialModel
     , sources = Sources.initialModel
     , tracks = Tracks.initialModel
-
-    -- Parts
-    --------
-    , audio = Audio.initialModel
-
-    -- Debouncing
-    -------------
-    , debounce =
-        0.25
-            |> Debouncer.fromSeconds
-            |> Debouncer.debounce
-            |> Debouncer.toDebouncer
     }
         |> update
             (PageChanged page)
@@ -175,6 +188,33 @@ update msg =
             Alfred.runAction a
 
         -----------------------------------------
+        -- Audio
+        -----------------------------------------
+        NoteProgress a ->
+            Audio.noteProgress a
+
+        SetAudioDuration a ->
+            Audio.setDuration a
+
+        SetAudioHasStalled a ->
+            Audio.setHasStalled a
+
+        SetAudioIsLoading a ->
+            Audio.setIsLoading a
+
+        SetAudioIsPlaying a ->
+            Audio.setIsPlaying a
+
+        SetAudioPosition a ->
+            Audio.setPosition a
+
+        Stop ->
+            Audio.stop
+
+        TogglePlay ->
+            Audio.playPause
+
+        -----------------------------------------
         -- Authentication
         -----------------------------------------
         AuthenticationBootFailure a ->
@@ -188,81 +228,6 @@ update msg =
 
         RemoteStorageWebfinger a b ->
             Authentication.remoteStorageWebfinger a b
-
-        -----------------------------------------
-        -- Children
-        -----------------------------------------
-        AuthenticationMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = AuthenticationMsg
-                    , mapModel = \child -> { model | authentication = child }
-                    , update = Authentication.update
-                    }
-                    { model = model.authentication
-                    , msg = sub
-                    }
-
-        BackdropMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = BackdropMsg
-                    , mapModel = \child -> { model | backdrop = child }
-                    , update = Backdrop.update
-                    }
-                    { model = model.backdrop
-                    , msg = sub
-                    }
-
-        PlaylistsMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = PlaylistsMsg
-                    , mapModel = \child -> { model | playlists = child }
-                    , update = Playlists.update
-                    }
-                    { model = model.playlists
-                    , msg = sub
-                    }
-
-        QueueMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = QueueMsg
-                    , mapModel = \child -> { model | queue = child }
-                    , update = Queue.update
-                    }
-                    { model = model.queue
-                    , msg = sub
-                    }
-
-        SourcesMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = SourcesMsg
-                    , mapModel = \child -> { model | sources = child }
-                    , update = Sources.update
-                    }
-                    { model = model.sources
-                    , msg = sub
-                    }
-
-        TracksMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = TracksMsg
-                    , mapModel = \child -> { model | tracks = child }
-                    , update = Tracks.update
-                    }
-                    { model = model.tracks
-                    , msg = sub
-                    }
 
         -----------------------------------------
         -- Equalizer
@@ -394,10 +359,79 @@ update msg =
             EtCetera.setIsOnline a
 
         -----------------------------------------
-        -- TODO
+        -- Children (TODO)
         -----------------------------------------
-        Audio a ->
-            Audio.update a
+        AuthenticationMsg sub ->
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = AuthenticationMsg
+                    , mapModel = \child -> { model | authentication = child }
+                    , update = Authentication.update
+                    }
+                    { model = model.authentication
+                    , msg = sub
+                    }
+
+        BackdropMsg sub ->
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = BackdropMsg
+                    , mapModel = \child -> { model | backdrop = child }
+                    , update = Backdrop.update
+                    }
+                    { model = model.backdrop
+                    , msg = sub
+                    }
+
+        PlaylistsMsg sub ->
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = PlaylistsMsg
+                    , mapModel = \child -> { model | playlists = child }
+                    , update = Playlists.update
+                    }
+                    { model = model.playlists
+                    , msg = sub
+                    }
+
+        QueueMsg sub ->
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = QueueMsg
+                    , mapModel = \child -> { model | queue = child }
+                    , update = Queue.update
+                    }
+                    { model = model.queue
+                    , msg = sub
+                    }
+
+        SourcesMsg sub ->
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = SourcesMsg
+                    , mapModel = \child -> { model | sources = child }
+                    , update = Sources.update
+                    }
+                    { model = model.sources
+                    , msg = sub
+                    }
+
+        TracksMsg sub ->
+            \model ->
+                Return3.wieldNested
+                    Reply.translate
+                    { mapCmd = TracksMsg
+                    , mapModel = \child -> { model | tracks = child }
+                    , update = Tracks.update
+                    }
+                    { model = model.tracks
+                    , msg = sub
+                    }
 
 
 
@@ -407,8 +441,19 @@ update msg =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Audio.subscriptions model
-        , Ports.fromAlien alien
+        [ Ports.fromAlien alien
+
+        -----------------------------------------
+        -- Audio
+        -----------------------------------------
+        , Ports.noteProgress NoteProgress
+        , Ports.requestPlayPause (always TogglePlay)
+        , Ports.requestStop (always Stop)
+        , Ports.setAudioDuration SetAudioDuration
+        , Ports.setAudioHasStalled SetAudioHasStalled
+        , Ports.setAudioIsLoading SetAudioIsLoading
+        , Ports.setAudioIsPlaying SetAudioIsPlaying
+        , Ports.setAudioPosition SetAudioPosition
 
         -----------------------------------------
         -- Backdrop
@@ -431,6 +476,17 @@ subscriptions model =
         , Ports.requestPrevious <| always (QueueMsg Queue.Rewind)
 
         -----------------------------------------
+        -- Resize
+        -----------------------------------------
+        , Browser.Events.onResize
+            (\w h ->
+                ( w, h )
+                    |> ResizedWindow
+                    |> Debouncer.provideInput
+                    |> Debounce
+            )
+
+        -----------------------------------------
         -- Services
         -----------------------------------------
         , Ports.scrobble Scrobble
@@ -446,16 +502,6 @@ subscriptions model =
         , Ports.setIsOnline SetIsOnline
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
-
-        -- Resize
-        ---------
-        , Browser.Events.onResize
-            (\w h ->
-                ( w, h )
-                    |> ResizedWindow
-                    |> Debouncer.provideInput
-                    |> Debounce
-            )
         ]
 
 

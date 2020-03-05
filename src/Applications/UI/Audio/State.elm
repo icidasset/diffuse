@@ -7,7 +7,6 @@ import Maybe.Extra as Maybe
 import Monocle.Lens as Lens exposing (Lens)
 import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
-import UI.Audio.Types as Audio exposing (Msg(..))
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Reply as Reply
@@ -15,91 +14,10 @@ import UI.Types as UI exposing (Manager, Organizer)
 
 
 
--- 🌳
-
-
-initialModel : Audio.Model
-initialModel =
-    { duration = 0
-    , hasStalled = False
-    , isLoading = False
-    , isPlaying = False
-    , position = 0
-
-    --
-    , progress = Dict.empty
-    , rememberProgress = True
-    }
-
-
-lens : Lens UI.Model Audio.Model
-lens =
-    { get = .audio
-    , set = \audio ui -> { ui | audio = audio }
-    }
-
-
-
 -- 📣
 
 
-update : Audio.Msg -> Manager
-update msg =
-    case msg of
-        NoteProgress a ->
-            organize (noteProgress a)
-
-        PlayPause ->
-            playPause
-
-        SetDuration a ->
-            setDuration a
-
-        SetHasStalled a ->
-            organize (setHasStalled a)
-
-        SetIsLoading a ->
-            organize (setIsLoading a)
-
-        SetIsPlaying a ->
-            organize (setIsPlaying a)
-
-        SetPosition a ->
-            organize (setPosition a)
-
-        Stop ->
-            stop
-
-
-organize : Organizer Audio.Model -> Manager
-organize =
-    Management.organize lens
-
-
-
--- 📰
-
-
-subscriptions : UI.Model -> Sub UI.Msg
-subscriptions _ =
-    [ Ports.noteProgress NoteProgress
-    , Ports.requestPlayPause (always PlayPause)
-    , Ports.requestStop (always Stop)
-    , Ports.setAudioDuration SetDuration
-    , Ports.setAudioHasStalled SetHasStalled
-    , Ports.setAudioIsLoading SetIsLoading
-    , Ports.setAudioIsPlaying SetIsPlaying
-    , Ports.setAudioPosition SetPosition
-    ]
-        |> Sub.batch
-        |> Sub.map UI.Audio
-
-
-
--- 🔱
-
-
-noteProgress : { trackId : String, progress : Float } -> Organizer Audio.Model
+noteProgress : { trackId : String, progress : Float } -> Manager
 noteProgress { trackId, progress } model =
     let
         updatedProgressTable =
@@ -128,7 +46,7 @@ playPause model =
         -- TODO!
         Return.performance (UI.QueueMsg Queue.Shift) model
 
-    else if model.audio.isPlaying then
+    else if model.audioIsPlaying then
         communicate (Ports.pause ()) model
 
     else
@@ -150,29 +68,27 @@ setDuration duration model =
                 Nothing ->
                     Cmd.none
     in
-    model
-        |> Lens.modify lens (\audio -> { audio | duration = duration })
-        |> Return.communicate cmd
+    return { model | audioDuration = duration } cmd
 
 
-setHasStalled : Bool -> Organizer Audio.Model
+setHasStalled : Bool -> Manager
 setHasStalled hasStalled model =
-    Return.singleton { model | hasStalled = hasStalled }
+    Return.singleton { model | audioHasStalled = hasStalled }
 
 
-setIsLoading : Bool -> Organizer Audio.Model
+setIsLoading : Bool -> Manager
 setIsLoading isLoading model =
-    Return.singleton { model | isLoading = isLoading }
+    Return.singleton { model | audioIsLoading = isLoading }
 
 
-setIsPlaying : Bool -> Organizer Audio.Model
+setIsPlaying : Bool -> Manager
 setIsPlaying isPlaying model =
-    Return.singleton { model | isPlaying = isPlaying }
+    Return.singleton { model | audioIsPlaying = isPlaying }
 
 
-setPosition : Float -> Organizer Audio.Model
+setPosition : Float -> Manager
 setPosition position model =
-    Return.singleton { model | position = position }
+    Return.singleton { model | audioPosition = position }
 
 
 stop : Manager

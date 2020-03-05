@@ -164,15 +164,9 @@ importHypaethral value model =
                 --
                 , lastFm = { lastFmModel | sessionKey = Maybe.andThen .lastFm data.settings }
                 , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
+                , progress = data.progress
+                , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
               }
-                |> Lens.modify
-                    Audio.lens
-                    (\a ->
-                        { a
-                            | progress = data.progress
-                            , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
-                        }
-                    )
               --
             , Cmd.batch
                 [ Cmd.map PlaylistsMsg playlistsCmd
