@@ -502,6 +502,7 @@ select inputHandler options =
             , C.right_0
             , C.text_0
             , C.top_half
+            , C.transform
             ]
             [ Icons.keyboard_arrow_down 20 Inherit ]
         ]

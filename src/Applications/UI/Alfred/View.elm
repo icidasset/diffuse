@@ -149,6 +149,7 @@ view maybeInstance =
                                         , C.mr_3
                                         , C.right_0
                                         , C.top_half
+                                        , C.transform
                                         ]
                                         [ Icons.keyboard_return 13 Inherit
                                         ]

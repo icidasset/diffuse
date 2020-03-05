@@ -811,6 +811,7 @@ choiceButton { action, icon, infoLink, label, outOfOrder } =
                     , C.pl_4
                     , C.text_white
                     , C.transition
+                    , C.transform
 
                     --
                     , C.hocus__opacity_100

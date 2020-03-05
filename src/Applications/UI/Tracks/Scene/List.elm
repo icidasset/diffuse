@@ -155,6 +155,7 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
             , C.shadow_md
             , C.sticky
             , C.top_0
+            , C.transform
             , C.z_10
 
             -- Dark mode
@@ -386,6 +387,7 @@ headerColumn text_ width maybeSortIcon msg =
                     , C.opacity_90
                     , C.right_0
                     , C.top_half
+                    , C.transform
                     ]
                     [ sortIcon ]
 
