@@ -1,7 +1,6 @@
 module Return3 exposing (Return, addCommand, addReplies, addReply, andThen, cast, castNested, commandWithModel, from2, fromDebouncer, mapCmd, mapModel, mapReplies, repliesWithModel, replyWithModel, return, returnCommandWithModel, returnRepliesWithModel, returnReplyWithModel, three, wield, wieldNested)
 
 import Maybe.Extra as Maybe
-import Return2
 
 
 
@@ -28,7 +27,7 @@ andThen update ( model, cmd, replies ) =
     )
 
 
-from2 : Return2.Return model msg -> Return model msg reply
+from2 : ( model, Cmd msg ) -> Return model msg reply
 from2 ( model, cmd ) =
     ( model, cmd, [] )
 
@@ -121,9 +120,9 @@ mapReplies fn ( model, cmd, replies ) =
 
 
 wield :
-    (reply -> model -> Return2.Return model msg)
+    (reply -> model -> ( model, Cmd msg ))
     -> Return model msg reply
-    -> Return2.Return model msg
+    -> ( model, Cmd msg )
 wield replyTransformer ( model, cmd, replies ) =
     List.foldl
         (\reply ( accModel, accCmd ) ->
@@ -138,7 +137,7 @@ wield replyTransformer ( model, cmd, replies ) =
 
 
 wieldNested :
-    (reply -> model -> Return2.Return model msg)
+    (reply -> model -> ( model, Cmd msg ))
     ->
         { mapCmd : subMsg -> msg
         , mapModel : subModel -> model
@@ -148,7 +147,7 @@ wieldNested :
         { model : subModel
         , msg : subMsg
         }
-    -> Return2.Return model msg
+    -> ( model, Cmd msg )
 wieldNested replyTransformer a b =
     let
         cmdTransformer =

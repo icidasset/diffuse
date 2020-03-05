@@ -15,7 +15,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Queue
-import Return2 exposing (..)
+import Return exposing (andThen, return)
 import Return3
 import Settings
 import Sources.Encoding as Sources
@@ -148,18 +148,18 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Bypass ->
-            return model
+            Return.singleton model
 
         -----------------------------------------
         -- 🂡
         -----------------------------------------
         Cmd cmd ->
-            returnWithModel model cmd
+            return model cmd
 
         ToCache alienEvent ->
             alienEvent
                 |> Brain.Ports.toCache
-                |> returnWithModel model
+                |> return model
 
         -----------------------------------------
         -- Children
@@ -231,7 +231,7 @@ update msg model =
                             ]
                    )
                 |> Brain.Ports.downloadTracks
-                |> returnWithModel model
+                |> return model
 
         Process { origin, sources } ->
             { origin = origin
@@ -308,7 +308,7 @@ update msg model =
             Alien.AuthSecretKey
                 |> Alien.trigger
                 |> Brain.Ports.removeCache
-                |> returnWithModel model
+                |> return model
                 |> andThen saveAllHypaethralData
 
         SaveHypaethralDataSlowly debouncerMsg ->
@@ -346,7 +346,7 @@ update msg model =
                         |> updateWithModel { model | hypaethralStorage = rest }
 
                 _ ->
-                    return model
+                    Return.singleton model
 
         SaveNextHypaethralBit ->
             case model.hypaethralStorage of
@@ -358,10 +358,10 @@ update msg model =
                         |> updateWithModel { model | hypaethralStorage = rest }
 
                 _ ->
-                    return model
+                    Return.singleton model
 
 
-updateWithModel : Model -> Msg -> Return Model Msg
+updateWithModel : Model -> Msg -> ( Model, Cmd Msg )
 updateWithModel model msg =
     update msg model
 
@@ -370,7 +370,7 @@ updateWithModel model msg =
 -- 📣  ░░  REPLIES
 
 
-translateReply : Reply -> Model -> Return Model Msg
+translateReply : Reply -> Model -> ( Model, Cmd Msg )
 translateReply reply model =
     case reply of
         FabricatedNewSecretKey ->
@@ -403,7 +403,7 @@ translateReply reply model =
             data
                 |> Alien.broadcast Alien.LoadHypaethralUserData
                 |> Brain.Ports.toUI
-                |> returnWithModel
+                |> return
                     { model | hypaethralUserData = decodedData }
                 |> andThen
                     (decodedData.tracks
@@ -417,18 +417,18 @@ translateReply reply model =
             data
                 |> Alien.broadcast tag
                 |> Brain.Ports.toUI
-                |> returnWithModel model
+                |> return model
 
         NudgeUI Alien.ImportLegacyData ->
-            model
-                |> saveAllHypaethralData
-                |> addCommand (Brain.Ports.toUI <| Alien.trigger Alien.ImportLegacyData)
+            Return.command
+                (Brain.Ports.toUI <| Alien.trigger Alien.ImportLegacyData)
+                (saveAllHypaethralData model)
 
         NudgeUI tag ->
             tag
                 |> Alien.trigger
                 |> Brain.Ports.toUI
-                |> returnWithModel model
+                |> return model
 
 
 
@@ -478,7 +478,7 @@ updateTracks model sub =
 -- 📣  ░░  FUNCTIONS
 
 
-saveTracks : Model -> List Tracks.Track -> Return Model Msg
+saveTracks : Model -> List Tracks.Track -> ( Model, Cmd Msg )
 saveTracks model tracks =
     tracks
         -- Store in model

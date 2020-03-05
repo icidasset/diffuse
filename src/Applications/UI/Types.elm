@@ -32,7 +32,6 @@ import Notifications exposing (Notification)
 import Playlists exposing (PlaylistTrack)
 import Playlists.Encoding as Playlists
 import Queue
-import Return2 exposing (..)
 import Sources
 import Sources.Encoding as Sources
 import String.Ext as String

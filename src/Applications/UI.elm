@@ -17,7 +17,7 @@ import Maybe.Extra as Maybe
 import Notifications
 import Playlists.Encoding as Playlists
 import Queue
-import Return2 exposing (..)
+import Return
 import Return3
 import Sources
 import Sources.Encoding as Sources
@@ -81,7 +81,7 @@ main =
 -- 🌳
 
 
-init : Flags -> Url -> Nav.Key -> Return Model Msg
+init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
         rewrittenUrl =
@@ -151,14 +151,14 @@ init flags url key =
     }
         |> update
             (PageChanged page)
-        |> addCommand
+        |> Return.command
             (if Maybe.isNothing maybePage then
                 Routing.resetUrl key url page
 
              else
                 Cmd.none
             )
-        |> addCommand
+        |> Return.command
             (Task.perform SetCurrentTime Time.now)
 
 
@@ -166,11 +166,11 @@ init flags url key =
 -- 📣
 
 
-update : Msg -> Model -> Return Model Msg
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg =
     case msg of
         Bypass ->
-            return
+            Return.singleton
 
         Reply reply ->
             Reply.translate reply

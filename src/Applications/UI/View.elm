@@ -18,7 +18,6 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Queue
-import Return2 exposing (..)
 import Settings
 import Sources
 import Sources.Encoding as Sources
