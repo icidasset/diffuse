@@ -10,7 +10,6 @@ import Conditional exposing (..)
 import Css exposing (url)
 import Debouncer.Basic as Debouncer
 import Dict
-import Json.Decode
 import Keyboard
 import LastFm
 import Maybe.Extra as Maybe
@@ -27,6 +26,7 @@ import Tracks
 import Tracks.Encoding as Tracks
 import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
+import UI.Alien as Alien
 import UI.Audio.State as Audio
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
@@ -149,14 +149,12 @@ init flags url key =
     , sources = Sources.initialModel
     , tracks = Tracks.initialModel
     }
-        |> update
-            (PageChanged page)
+        |> Routing.transition page
         |> Return.command
-            (if Maybe.isNothing maybePage then
-                Routing.resetUrl key url page
-
-             else
+            (Maybe.unwrap
                 Cmd.none
+                (Routing.resetUrl key url)
+                maybePage
             )
         |> Return.command
             (Task.perform SetCurrentTime Time.now)
@@ -441,7 +439,7 @@ update msg =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Ports.fromAlien alien
+        [ Ports.fromAlien Alien.translate
 
         -----------------------------------------
         -- Audio
@@ -472,19 +470,13 @@ subscriptions model =
         -- Queue
         -----------------------------------------
         , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
-        , Ports.requestNext <| always (QueueMsg Queue.Shift)
-        , Ports.requestPrevious <| always (QueueMsg Queue.Rewind)
+        , Ports.requestNext (\_ -> QueueMsg Queue.Shift)
+        , Ports.requestPrevious (\_ -> QueueMsg Queue.Rewind)
 
         -----------------------------------------
         -- Resize
         -----------------------------------------
-        , Browser.Events.onResize
-            (\w h ->
-                ( w, h )
-                    |> ResizedWindow
-                    |> Debouncer.provideInput
-                    |> Debounce
-            )
+        , Browser.Events.onResize Interface.onResize
 
         -----------------------------------------
         -- Services
@@ -503,139 +495,3 @@ subscriptions model =
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]
-
-
-alien : Alien.Event -> Msg
-alien event =
-    case event.error of
-        Nothing ->
-            translateAlienData event
-
-        Just err ->
-            translateAlienError event err
-
-
-translateAlienData : Alien.Event -> Msg
-translateAlienData event =
-    case
-        Alien.tagFromString event.tag
-    of
-        Just Alien.AddTracks ->
-            TracksMsg (Tracks.Add event.data)
-
-        Just Alien.AuthMethod ->
-            -- My brain told me which auth method we're using,
-            -- so we can tell the user in the UI.
-            case decodeMethod event.data of
-                Just method ->
-                    AuthenticationMsg (Authentication.SignedIn method)
-
-                Nothing ->
-                    Bypass
-
-        Just Alien.FinishedProcessingSource ->
-            event.data
-                |> Json.Decode.decodeValue Json.Decode.string
-                |> Result.map (Sources.FinishedProcessingSource >> SourcesMsg)
-                |> Result.withDefault Bypass
-
-        Just Alien.FinishedProcessingSources ->
-            SourcesMsg Sources.FinishedProcessing
-
-        Just Alien.HideLoadingScreen ->
-            UI.ToggleLoadingScreen Off
-
-        Just Alien.ImportLegacyData ->
-            "Imported data successfully!"
-                |> Notifications.success
-                |> ShowNotification
-
-        Just Alien.LoadEnclosedUserData ->
-            LoadEnclosedUserData event.data
-
-        Just Alien.LoadHypaethralUserData ->
-            LoadHypaethralUserData event.data
-
-        Just Alien.MissingSecretKey ->
-            MissingSecretKey event.data
-
-        Just Alien.NotAuthenticated ->
-            NotAuthenticated
-
-        Just Alien.RemoveTracksByPath ->
-            TracksMsg (Tracks.RemoveByPaths event.data)
-
-        Just Alien.ReportProcessingError ->
-            SourcesMsg (Sources.ReportProcessingError event.data)
-
-        Just Alien.ReportProcessingProgress ->
-            SourcesMsg (Sources.ReportProcessingProgress event.data)
-
-        Just Alien.SearchTracks ->
-            TracksMsg (Tracks.SetSearchResults event.data)
-
-        Just Alien.StoreTracksInCache ->
-            case
-                Json.Decode.decodeValue
-                    (Json.Decode.list Json.Decode.string)
-                    event.data
-            of
-                Ok list ->
-                    FinishedStoringTracksInCache list
-
-                Err err ->
-                    showErrorNotification (Json.Decode.errorToString err)
-
-        Just Alien.UpdateSourceData ->
-            SourcesMsg (Sources.UpdateSourceData event.data)
-
-        _ ->
-            Bypass
-
-
-translateAlienError : Alien.Event -> String -> Msg
-translateAlienError event err =
-    case
-        Alien.tagFromString event.tag
-    of
-        Just Alien.AuthAnonymous ->
-            AuthenticationBootFailure err
-
-        Just Alien.AuthBlockstack ->
-            AuthenticationBootFailure err
-
-        Just Alien.AuthDropbox ->
-            AuthenticationBootFailure err
-
-        Just Alien.AuthIpfs ->
-            AuthenticationBootFailure err
-
-        Just Alien.AuthRemoteStorage ->
-            AuthenticationBootFailure err
-
-        Just Alien.AuthTextile ->
-            AuthenticationBootFailure err
-
-        Just Alien.StoreTracksInCache ->
-            case
-                Json.Decode.decodeValue
-                    (Json.Decode.list Json.Decode.string)
-                    event.data
-            of
-                Ok trackIds ->
-                    FailedToStoreTracksInCache trackIds
-
-                Err _ ->
-                    showErrorNotification err
-
-        _ ->
-            showErrorNotification err
-
-
-
--- ⚗️
-
-
-showErrorNotification : String -> Msg
-showErrorNotification =
-    Notifications.error >> ShowNotification

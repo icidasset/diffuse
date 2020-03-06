@@ -133,3 +133,15 @@ toggleLoadingScreen switch model =
 
         Off ->
             Return.singleton { model | isLoading = False }
+
+
+
+-- MESSAGES
+
+
+onResize : Int -> Int -> Msg
+onResize w h =
+    ( w, h )
+        |> ResizedWindow
+        |> Debouncer.provideInput
+        |> Debounce
