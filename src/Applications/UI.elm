@@ -44,7 +44,6 @@ import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.ContextMenu as Queue
-import UI.Reply as Reply exposing (Reply(..))
 import UI.Reply.Translate as Reply
 import UI.Routing.State as Routing
 import UI.Services.State as Services
@@ -123,6 +122,14 @@ init flags url key =
     , rememberProgress = True
 
     -----------------------------------------
+    -- Backdrop
+    -----------------------------------------
+    , chosenBackdrop = Nothing
+    , extractedBackdropColor = Nothing
+    , fadeInBackdrop = True
+    , loadedBackdrops = []
+
+    -----------------------------------------
     -- Debouncing
     -----------------------------------------
     , debounce =
@@ -142,7 +149,6 @@ init flags url key =
     -- Children (TODO)
     -----------------------------------------
     , authentication = Authentication.initialModel url
-    , backdrop = Backdrop.initialModel
     , equalizer = Equalizer.initialModel
     , playlists = Playlists.initialModel
     , queue = Queue.initialModel
@@ -226,6 +232,18 @@ update msg =
 
         RemoteStorageWebfinger a b ->
             Authentication.remoteStorageWebfinger a b
+
+        -----------------------------------------
+        -- Backdrop
+        -----------------------------------------
+        ExtractedBackdropColor a ->
+            Backdrop.extractedBackdropColor a
+
+        ChooseBackdrop a ->
+            Backdrop.chooseBackdrop a
+
+        LoadBackdrop a ->
+            Backdrop.loadBackdrop a
 
         -----------------------------------------
         -- Equalizer
@@ -371,18 +389,6 @@ update msg =
                     , msg = sub
                     }
 
-        BackdropMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = BackdropMsg
-                    , mapModel = \child -> { model | backdrop = child }
-                    , update = Backdrop.update
-                    }
-                    { model = model.backdrop
-                    , msg = sub
-                    }
-
         PlaylistsMsg sub ->
             \model ->
                 Return3.wieldNested
@@ -456,7 +462,7 @@ subscriptions model =
         -----------------------------------------
         -- Backdrop
         -----------------------------------------
-        , Ports.setAverageBackgroundColor (Backdrop.BackgroundColor >> BackdropMsg)
+        , Ports.setAverageBackgroundColor ExtractedBackdropColor
 
         -----------------------------------------
         -- Interface

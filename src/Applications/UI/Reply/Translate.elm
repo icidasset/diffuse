@@ -213,7 +213,7 @@ translate reply model =
                         , searchResults = Nothing
                     }
             }
-                |> Return.performance (BackdropMsg Backdrop.Default)
+                |> Backdrop.setDefault
                 |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
                 |> Return.command (Ports.toBrain <| Alien.trigger Alien.StopProcessing)
                 |> Return.command (Ports.activeQueueItemChanged Nothing)
@@ -738,10 +738,9 @@ translate reply model =
         -----------------------------------------
         -- User Data
         -----------------------------------------
-        ChooseBackdrop filename ->
+        Reply.ChooseBackdrop filename ->
             filename
-                |> Backdrop.Choose
-                |> BackdropMsg
+                |> UI.ChooseBackdrop
                 |> Return.performanceF model
 
         Export ->
@@ -765,9 +764,7 @@ translate reply model =
                 |> saveAllHypaethralData
 
         LoadDefaultBackdrop ->
-            Backdrop.Default
-                |> BackdropMsg
-                |> Return.performanceF model
+            Backdrop.setDefault model
 
         RequestImport ->
             ImportFile
@@ -871,8 +868,8 @@ saveAllHypaethralData return =
 
 
 gatherSettings : Model -> Settings.Settings
-gatherSettings { backdrop, lastFm, processAutomatically, rememberProgress, tracks } =
-    { backgroundImage = backdrop.chosen
+gatherSettings { chosenBackdrop, lastFm, processAutomatically, rememberProgress, tracks } =
+    { backgroundImage = chosenBackdrop
     , hideDuplicates = tracks.hideDuplicates
     , lastFm = lastFm.sessionKey
     , processAutomatically = processAutomatically

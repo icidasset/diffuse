@@ -4,6 +4,7 @@ import Alfred exposing (Alfred)
 import Browser
 import Browser.Navigation as Nav
 import Chunky exposing (..)
+import Color exposing (Color)
 import Common exposing (Switch)
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
@@ -40,7 +41,6 @@ import Tracks
 import Tracks.Encoding as Tracks
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
-import UI.Backdrop as Backdrop
 import UI.Demo as Demo
 import UI.DnD as DnD
 import UI.Equalizer.Types as Equalizer
@@ -53,7 +53,6 @@ import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.ContextMenu as Queue
 import UI.Reply as Reply exposing (Reply(..))
-import UI.Settings as Settings
 import UI.Sources as Sources
 import UI.Sources.ContextMenu as Sources
 import UI.Tracks as Tracks
@@ -108,6 +107,16 @@ type alias Model =
     , audioIsLoading : Bool
     , audioIsPlaying : Bool
     , audioPosition : Float
+    , progress : Dict String Float
+    , rememberProgress : Bool
+
+    -----------------------------------------
+    -- Backdrop
+    -----------------------------------------
+    , chosenBackdrop : Maybe String
+    , extractedBackdropColor : Maybe Color
+    , fadeInBackdrop : Bool
+    , loadedBackdrops : List String
 
     -----------------------------------------
     -- Debouncing
@@ -122,16 +131,9 @@ type alias Model =
     , notifications : UI.Notifications.Model
 
     -----------------------------------------
-    -- Progress
-    -----------------------------------------
-    , progress : Dict String Float
-    , rememberProgress : Bool
-
-    -----------------------------------------
     -- Children (TODO)
     -----------------------------------------
     , authentication : Authentication.Model
-    , backdrop : Backdrop.Model
     , equalizer : Equalizer.Model
     , queue : Queue.Model
     , playlists : Playlists.Model
@@ -171,6 +173,12 @@ type Msg
     | MissingSecretKey Json.Decode.Value
     | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
+      -----------------------------------------
+      -- Backdrop
+      -----------------------------------------
+    | ExtractedBackdropColor { r : Int, g : Int, b : Int }
+    | ChooseBackdrop String
+    | LoadBackdrop String
       -----------------------------------------
       -- Equalizer
       -----------------------------------------
@@ -236,7 +244,6 @@ type Msg
       -- Children (TODO)
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg
-    | BackdropMsg Backdrop.Msg
     | PlaylistsMsg Playlists.Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg

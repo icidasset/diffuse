@@ -98,9 +98,7 @@ body model =
         -----------------------------------------
         -- Backdrop
         -----------------------------------------
-        , model.backdrop
-            |> Lazy.lazy Backdrop.view
-            |> Html.map BackdropMsg
+        , Lazy.lazy Backdrop.view model
 
         -----------------------------------------
         -- Context Menu
@@ -164,7 +162,7 @@ defaultScreen model =
     -----------------------------------------
     , vessel
         [ { amountOfSources = List.length model.sources.collection
-          , bgColor = model.backdrop.bgColor
+          , bgColor = model.extractedBackdropColor
           , darkMode = model.darkMode
           , isOnIndexPage = model.page == Page.Index
           , isTouchDevice = model.isTouchDevice
@@ -184,7 +182,7 @@ defaultScreen model =
                 nothing
 
             Page.Playlists subPage ->
-                model.backdrop.bgColor
+                model.extractedBackdropColor
                     |> Lazy.lazy4
                         Playlists.view
                         subPage
@@ -199,7 +197,7 @@ defaultScreen model =
 
             Page.Settings subPage ->
                 { authenticationMethod = Authentication.extractMethod model.authentication
-                , chosenBackgroundImage = model.backdrop.chosen
+                , chosenBackgroundImage = model.chosenBackdrop
                 , hideDuplicateTracks = model.tracks.hideDuplicates
                 , lastFm = model.lastFm
                 , processAutomatically = model.processAutomatically

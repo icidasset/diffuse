@@ -128,15 +128,14 @@ importHypaethral value model =
     case decodeHypaethralData value of
         Ok data ->
             let
-                { backdrop, sources } =
+                { sources } =
                     model
 
-                backdropModel =
+                chosenBackdrop =
                     data.settings
                         |> Maybe.andThen .backgroundImage
                         |> Maybe.withDefault Backdrop.default
                         |> Just
-                        |> (\c -> { backdrop | chosen = c })
 
                 sourcesModel =
                     { sources | collection = data.sources }
@@ -156,12 +155,12 @@ importHypaethral value model =
                     model.lastFm
             in
             ( { model
-                | backdrop = backdropModel
-                , playlists = playlistsModel
+                | playlists = playlistsModel
                 , sources = sourcesModel
                 , tracks = tracksModel
 
                 --
+                , chosenBackdrop = chosenBackdrop
                 , lastFm = { lastFmModel | sessionKey = Maybe.andThen .lastFm data.settings }
                 , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
                 , progress = data.progress

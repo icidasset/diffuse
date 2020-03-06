@@ -1,4 +1,4 @@
-module UI.Backdrop exposing (Model, Msg(..), backgroundPositioning, default, initialModel, options, update, view)
+module UI.Backdrop exposing (..)
 
 import Chunky exposing (..)
 import Color exposing (Color)
@@ -8,9 +8,11 @@ import Html.Attributes exposing (src, style)
 import Html.Events exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode
-import Return3 exposing (..)
+import Return exposing (andThen, return)
+import Return.Ext as Return
 import UI.Ports as Ports
-import UI.Reply as Reply exposing (Reply)
+import UI.Reply as Reply exposing (Reply(..))
+import UI.Types exposing (..)
 
 
 
@@ -49,53 +51,31 @@ options =
 
 
 
--- 🌳
-
-
-type alias Model =
-    { bgColor : Maybe Color
-    , chosen : Maybe String
-    , fadeIn : Bool
-    , loaded : List String
-    }
-
-
-initialModel : Model
-initialModel =
-    { bgColor = Nothing
-    , chosen = Nothing
-    , fadeIn = True
-    , loaded = []
-    }
-
-
-
 -- 📣
 
 
-type Msg
-    = BackgroundColor { r : Int, g : Int, b : Int }
-    | Choose String
-    | Default
-    | Load String
+extractedBackdropColor : { r : Int, g : Int, b : Int } -> Manager
+extractedBackdropColor { r, g, b } model =
+    Return.singleton { model | extractedBackdropColor = Just (Color.rgb255 r g b) }
 
 
-update : Msg -> Model -> Return Model Msg Reply
-update msg model =
-    case msg of
-        BackgroundColor { r, g, b } ->
-            return { model | bgColor = Just (Color.rgb255 r g b) }
+chooseBackdrop : String -> Manager
+chooseBackdrop backdrop model =
+    Return.performance
+        (Reply SaveSettings)
+        { model | chosenBackdrop = Just backdrop }
 
-        Choose backdrop ->
-            return { model | chosen = Just backdrop } |> addReply Reply.SaveSettings
 
-        Default ->
-            return { model | chosen = Just default }
+loadBackdrop : String -> Manager
+loadBackdrop backdrop model =
+    return
+        { model | loadedBackdrops = model.loadedBackdrops ++ [ backdrop ] }
+        (Ports.pickAverageBackgroundColor backdrop)
 
-        Load backdrop ->
-            returnCommandWithModel
-                { model | loaded = model.loaded ++ [ backdrop ] }
-                (Ports.pickAverageBackgroundColor backdrop)
+
+setDefault : Manager
+setDefault model =
+    Return.singleton { model | chosenBackdrop = Just default }
 
 
 
@@ -109,8 +89,8 @@ view model =
         , C.minus_inset_px
         , C.z_0
         ]
-        [ Lazy.lazy chosen model.chosen
-        , Lazy.lazy2 loaded model.loaded model.fadeIn
+        [ Lazy.lazy chosen model.chosenBackdrop
+        , Lazy.lazy2 loaded model.loadedBackdrops model.fadeInBackdrop
 
         -- Shadow
         ---------
@@ -175,7 +155,7 @@ chosen maybeChosen =
             let
                 loadingDecoder =
                     c
-                        |> Load
+                        |> LoadBackdrop
                         |> Json.Decode.succeed
             in
             slab
