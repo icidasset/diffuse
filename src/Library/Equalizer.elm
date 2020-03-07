@@ -1,5 +1,6 @@
 module Equalizer exposing (..)
 
+import Coordinates exposing (Coordinates)
 import Json.Decode
 import Json.Encode
 
@@ -13,6 +14,12 @@ type Knob
     | Mid
     | High
     | Volume
+
+
+type alias KnobOperation =
+    { knob : Knob
+    , startingPosition : Coordinates
+    }
 
 
 type alias Settings =

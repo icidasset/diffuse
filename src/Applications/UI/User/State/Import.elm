@@ -189,14 +189,17 @@ importHypaethral value model =
 importEnclosed : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
 importEnclosed value model =
     let
-        { equalizer, playlists, queue, tracks } =
+        { playlists, queue, tracks } =
             model
+
+        equalizerSettings =
+            model.eqSettings
     in
     case decodeEnclosedData value of
         Ok data ->
             let
-                newEqualizer =
-                    { equalizer
+                newEqualizerSettings =
+                    { equalizerSettings
                         | low = data.equalizerSettings.low
                         , mid = data.equalizerSettings.mid
                         , high = data.equalizerSettings.high
@@ -226,14 +229,14 @@ importEnclosed value model =
                     }
             in
             ( { model
-                | equalizer = newEqualizer
+                | eqSettings = newEqualizerSettings
                 , playlists = newPlaylists
                 , queue = newQueue
                 , tracks = newTracks
               }
               --
             , Cmd.batch
-                [ Equalizer.adjustAllKnobs newEqualizer
+                [ Equalizer.adjustAllKnobs newEqualizerSettings
                 , Ports.setRepeat data.repeat
                 ]
               --

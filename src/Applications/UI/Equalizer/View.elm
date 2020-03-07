@@ -18,7 +18,6 @@ import Json.Decode as Decode
 import Material.Icons as Icons
 import Svg.Styled
 import Svg.Styled.Attributes
-import UI.Equalizer.Types as Equalizer
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page
@@ -29,8 +28,8 @@ import UI.Types exposing (Msg(..))
 -- 🗺
 
 
-view : Equalizer.Model -> Html Msg
-view model =
+view : Settings -> Html Msg
+view settings =
     UI.Kit.receptacle
         { scrolling = True }
         [ -----------------------------------------
@@ -56,12 +55,12 @@ view model =
 
         --
         , UI.Kit.centeredContent
-            [ eqView model ]
+            [ eqView settings ]
         ]
 
 
-eqView : Equalizer.Model -> Html Msg
-eqView model =
+eqView : Settings -> Html Msg
+eqView settings =
     chunk
         [ C.text_center ]
         [ chunk
@@ -74,7 +73,7 @@ eqView model =
             ------------
             , C.dark__border_base00
             ]
-            [ knob Volume model.volume
+            [ knob Volume settings.volume
             ]
 
         --
@@ -89,9 +88,9 @@ eqView model =
             ------------
             , C.dark__border_base00
             ]
-            [ knob Low model.low
-            , knob Mid model.mid
-            , knob High model.high
+            [ knob Low settings.low
+            , knob Mid settings.mid
+            , knob High settings.high
             ]
         ]
 

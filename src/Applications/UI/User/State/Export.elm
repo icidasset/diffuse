@@ -13,16 +13,8 @@ import User.Layer exposing (..)
 
 saveEnclosedUserData : Manager
 saveEnclosedUserData model =
-    let
-        equalizerSettings =
-            { low = model.equalizer.low
-            , mid = model.equalizer.mid
-            , high = model.equalizer.high
-            , volume = model.equalizer.volume
-            }
-    in
     { cachedTracks = model.tracks.cached
-    , equalizerSettings = equalizerSettings
+    , equalizerSettings = model.eqSettings
     , grouping = model.tracks.grouping
     , onlyShowCachedTracks = model.tracks.cachedOnly
     , onlyShowFavourites = model.tracks.favouritesOnly

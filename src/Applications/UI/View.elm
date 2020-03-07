@@ -68,7 +68,7 @@ body model =
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred then
             [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
-         else if Maybe.isJust model.equalizer.activeKnob then
+         else if Maybe.isJust model.eqKnobOperation then
             [ Pointer.onMove AdjustKnob
             , Pointer.onUp DeactivateKnob
             , Pointer.onCancel DeactivateKnob
@@ -176,7 +176,7 @@ defaultScreen model =
         --------
         , case model.page of
             Page.Equalizer ->
-                Lazy.lazy Equalizer.view model.equalizer
+                Lazy.lazy Equalizer.view model.eqSettings
 
             Page.Index ->
                 nothing

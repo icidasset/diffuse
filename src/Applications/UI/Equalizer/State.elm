@@ -8,9 +8,7 @@ import Html.Events.Extra.Pointer as Pointer
 import Json.Decode as Decode
 import Management
 import Material.Icons as Icons
-import Monocle.Lens as Lens exposing (Lens)
-import Return exposing (return)
-import UI.Equalizer.Types as Equalizer exposing (..)
+import Return exposing (andThen, return)
 import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Types as UI exposing (..)
@@ -18,69 +16,28 @@ import UI.User.State.Export as User
 
 
 
--- 🌳
-
-
-type alias Model =
-    { low : Float
-    , mid : Float
-    , high : Float
-    , volume : Float
-
-    --
-    , activeKnob : Maybe Knob
-    , startCoordinates : Coordinates
-    }
-
-
-initialModel : Model
-initialModel =
-    { low = defaultSettings.low
-    , mid = defaultSettings.mid
-    , high = defaultSettings.high
-    , volume = defaultSettings.volume
-
-    -- Knob interactions
-    --------------------
-    , activeKnob = Nothing
-    , startCoordinates = { x = 0, y = 0 }
-    }
-
-
-lens : Lens UI.Model Equalizer.Model
-lens =
-    { get = .equalizer
-    , set = \equalizer ui -> { ui | equalizer = equalizer }
-    }
-
-
-
 -- 📣
 
 
-organize : Organizer Equalizer.Model -> Manager
-organize =
-    Management.organize lens
-
-
-
--- 🔱
-
-
-activateKnob : Knob -> Pointer.Event -> Organizer Equalizer.Model
+activateKnob : Knob -> Pointer.Event -> Manager
 activateKnob theKnob { pointer } model =
-    Return.singleton
-        { model
-            | activeKnob = Just theKnob
-            , startCoordinates = Coordinates.fromTuple pointer.clientPos
-        }
+    { knob = theKnob
+    , startingPosition = Coordinates.fromTuple pointer.clientPos
+    }
+        |> (\m -> { model | eqKnobOperation = Just m })
+        |> Return.singleton
 
 
-adjustKnob : Pointer.Event -> Organizer Equalizer.Model
+adjustKnob : Pointer.Event -> Manager
 adjustKnob { pointer } model =
     let
         start =
-            model.startCoordinates
+            case model.eqKnobOperation of
+                Just { startingPosition } ->
+                    startingPosition
+
+                Nothing ->
+                    { x = 0, y = 0 }
 
         end =
             (\( a, b ) -> { x = a, y = b })
@@ -102,7 +59,7 @@ adjustKnob { pointer } model =
                 |> min maxAngle
 
         value =
-            case ( distance > 10, model.activeKnob ) of
+            case ( distance > 10, Maybe.map .knob model.eqKnobOperation ) of
                 ( True, Just Volume ) ->
                     Just ( Volume, (maxAngle + angle) / (maxAngle * 2) )
 
@@ -112,43 +69,44 @@ adjustKnob { pointer } model =
                 _ ->
                     Nothing
 
-        newModel =
+        settings =
+            model.eqSettings
+
+        newSettings =
             case value of
                 Just ( Low, v ) ->
-                    { model | low = v }
+                    { settings | low = v }
 
                 Just ( Mid, v ) ->
-                    { model | mid = v }
+                    { settings | mid = v }
 
                 Just ( High, v ) ->
-                    { model | high = v }
+                    { settings | high = v }
 
                 Just ( Volume, v ) ->
-                    { model | volume = v }
+                    { settings | volume = v }
 
                 Nothing ->
-                    model
+                    settings
     in
     case value of
         Just ( knobType, v ) ->
-            return newModel (adjustKnobUsingPort knobType v)
+            return { model | eqSettings = newSettings } (adjustKnobUsingPort knobType v)
 
         Nothing ->
-            Return.singleton newModel
+            Return.singleton { model | eqSettings = newSettings }
 
 
 deactivateKnob : Manager
 deactivateKnob model =
-    model
-        |> organize (\m -> Return.singleton { m | activeKnob = Nothing })
-        |> Return.andThen User.saveEnclosedUserData
+    User.saveEnclosedUserData { model | eqKnobOperation = Nothing }
 
 
 resetKnob : Knob -> Manager
 resetKnob knob model =
     model
-        |> organize (resetKnobOrganizer knob)
-        |> Return.andThen User.saveEnclosedUserData
+        |> resetKnobOrganizer knob
+        |> andThen User.saveEnclosedUserData
 
 
 
@@ -175,13 +133,13 @@ adjustKnobUsingPort knobType value =
         }
 
 
-adjustAllKnobs : Equalizer.Model -> Cmd Msg
-adjustAllKnobs model =
+adjustAllKnobs : Settings -> Cmd Msg
+adjustAllKnobs eqSettings =
     Cmd.batch
-        [ adjustKnobUsingPort Low model.low
-        , adjustKnobUsingPort Mid model.mid
-        , adjustKnobUsingPort High model.high
-        , adjustKnobUsingPort Volume model.volume
+        [ adjustKnobUsingPort Low eqSettings.low
+        , adjustKnobUsingPort Mid eqSettings.mid
+        , adjustKnobUsingPort High eqSettings.high
+        , adjustKnobUsingPort Volume eqSettings.volume
         ]
 
 
@@ -189,24 +147,31 @@ adjustAllKnobs model =
 -- ㊙️
 
 
-resetKnobOrganizer : Knob -> Organizer Equalizer.Model
+resetKnobOrganizer : Knob -> Manager
 resetKnobOrganizer knob model =
+    let
+        d =
+            defaultSettings
+
+        s =
+            model.eqSettings
+    in
     case knob of
         Low ->
-            reset { model | low = defaultSettings.low } Low defaultSettings.low
+            reset Low { s | low = d.low } d.low model
 
         Mid ->
-            reset { model | mid = defaultSettings.mid } Mid defaultSettings.mid
+            reset Mid { s | mid = d.mid } d.mid model
 
         High ->
-            reset { model | high = defaultSettings.high } High defaultSettings.high
+            reset High { s | high = d.high } d.high model
 
         Volume ->
-            reset { model | volume = defaultSettings.volume } Volume defaultSettings.volume
+            reset Volume { s | volume = d.volume } d.volume model
 
 
-reset : Equalizer.Model -> Knob -> Float -> ( Equalizer.Model, Cmd Msg )
-reset newModel knobType value =
-    ( newModel
+reset : Knob -> Equalizer.Settings -> Float -> Manager
+reset knobType newSettings value model =
+    ( { model | eqSettings = newSettings }
     , adjustKnobUsingPort knobType value
     )

@@ -10,6 +10,7 @@ import Conditional exposing (..)
 import Css exposing (url)
 import Debouncer.Basic as Debouncer
 import Dict
+import Equalizer
 import Keyboard
 import LastFm
 import Maybe.Extra as Maybe
@@ -139,6 +140,12 @@ init flags url key =
             |> Debouncer.toDebouncer
 
     -----------------------------------------
+    -- Equalizer
+    -----------------------------------------
+    , eqKnobOperation = Nothing
+    , eqSettings = Equalizer.defaultSettings
+
+    -----------------------------------------
     -- Instances
     -----------------------------------------
     , alfred = Nothing
@@ -149,7 +156,6 @@ init flags url key =
     -- Children (TODO)
     -----------------------------------------
     , authentication = Authentication.initialModel url
-    , equalizer = Equalizer.initialModel
     , playlists = Playlists.initialModel
     , queue = Queue.initialModel
     , sources = Sources.initialModel
@@ -249,10 +255,10 @@ update msg =
         -- Equalizer
         -----------------------------------------
         ActivateKnob a b ->
-            Equalizer.organize (Equalizer.activateKnob a b)
+            Equalizer.activateKnob a b
 
         AdjustKnob a ->
-            Equalizer.organize (Equalizer.adjustKnob a)
+            Equalizer.adjustKnob a
 
         DeactivateKnob _ ->
             Equalizer.deactivateKnob

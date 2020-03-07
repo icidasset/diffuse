@@ -43,7 +43,6 @@ import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
 import UI.Demo as Demo
 import UI.DnD as DnD
-import UI.Equalizer.Types as Equalizer
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
@@ -124,6 +123,12 @@ type alias Model =
     , debounce : Debouncer Msg Msg
 
     -----------------------------------------
+    -- Equalizer
+    -----------------------------------------
+    , eqKnobOperation : Maybe Equalizer.KnobOperation
+    , eqSettings : Equalizer.Settings
+
+    -----------------------------------------
     -- Instances
     -----------------------------------------
     , alfred : Maybe (Alfred Msg)
@@ -134,7 +139,6 @@ type alias Model =
     -- Children (TODO)
     -----------------------------------------
     , authentication : Authentication.Model
-    , equalizer : Equalizer.Model
     , queue : Queue.Model
     , playlists : Playlists.Model
     , sources : Sources.Model
