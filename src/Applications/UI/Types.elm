@@ -19,6 +19,7 @@ import File exposing (File)
 import Html exposing (Html, section)
 import Html.Attributes exposing (class, id, style)
 import Html.Events exposing (on, onClick)
+import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
 import Http
@@ -30,7 +31,7 @@ import List.Extra as List
 import Management
 import Maybe.Extra as Maybe
 import Notifications exposing (Notification)
-import Playlists exposing (PlaylistTrack)
+import Playlists exposing (Playlist, PlaylistTrack)
 import Playlists.Encoding as Playlists
 import Queue
 import Sources
@@ -46,7 +47,6 @@ import UI.DnD as DnD
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
-import UI.Playlists as Playlists
 import UI.Playlists.ContextMenu as Playlists
 import UI.Ports as Ports
 import UI.Queue as Queue
@@ -136,11 +136,19 @@ type alias Model =
     , notifications : UI.Notifications.Model
 
     -----------------------------------------
+    -- Playlists
+    -----------------------------------------
+    , editPlaylistContext : Maybe { oldName : String, newName : String }
+    , lastModifiedPlaylist : Maybe String
+    , newPlaylistContext : Maybe String
+    , playlists : List Playlist
+    , playlistToActivate : Maybe String
+
+    -----------------------------------------
     -- Children (TODO)
     -----------------------------------------
     , authentication : Authentication.Model
     , queue : Queue.Model
-    , playlists : Playlists.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
     }
@@ -208,7 +216,15 @@ type Msg
       -----------------------------------------
       -- Playlists
       -----------------------------------------
+    | ActivatePlaylist Playlist
     | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
+    | CreatePlaylist
+    | DeactivatePlaylist
+    | DeletePlaylist { playlistName : String }
+    | ModifyPlaylist
+    | SetPlaylistCreationContext String
+    | SetPlaylistModificationContext String String
+    | ShowPlaylistListMenu Playlist Mouse.Event
       -----------------------------------------
       -- Routing
       -----------------------------------------
@@ -248,7 +264,6 @@ type Msg
       -- Children (TODO)
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg
-    | PlaylistsMsg Playlists.Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg

@@ -39,7 +39,6 @@ import UI.Equalizer.View as Equalizer
 import UI.EtCetera.State as EtCetera
 import UI.Interface.State as Interface
 import UI.Page as Page
-import UI.Playlists as Playlists
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.State as Playlists
 import UI.Ports as Ports
@@ -153,10 +152,18 @@ init flags url key =
     , notifications = []
 
     -----------------------------------------
+    -- Playlists
+    -----------------------------------------
+    , editPlaylistContext = Nothing
+    , lastModifiedPlaylist = Nothing
+    , newPlaylistContext = Nothing
+    , playlists = []
+    , playlistToActivate = Nothing
+
+    -----------------------------------------
     -- Children (TODO)
     -----------------------------------------
     , authentication = Authentication.initialModel url
-    , playlists = Playlists.initialModel
     , queue = Queue.initialModel
     , sources = Sources.initialModel
     , tracks = Tracks.initialModel
@@ -308,8 +315,32 @@ update msg =
         -----------------------------------------
         -- Playlists
         -----------------------------------------
+        ActivatePlaylist a ->
+            Playlists.activate a
+
         UI.AddTracksToPlaylist a ->
             Playlists.addTracksToPlaylist a
+
+        CreatePlaylist ->
+            Playlists.create
+
+        DeactivatePlaylist ->
+            Playlists.deactivate
+
+        DeletePlaylist a ->
+            Playlists.delete a
+
+        ModifyPlaylist ->
+            Playlists.modify
+
+        SetPlaylistCreationContext a ->
+            Playlists.setCreationContext a
+
+        SetPlaylistModificationContext a b ->
+            Playlists.setModificationContext a b
+
+        ShowPlaylistListMenu a b ->
+            Playlists.showListMenu a b
 
         -----------------------------------------
         -- Routing
@@ -392,18 +423,6 @@ update msg =
                     , update = Authentication.update
                     }
                     { model = model.authentication
-                    , msg = sub
-                    }
-
-        PlaylistsMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = PlaylistsMsg
-                    , mapModel = \child -> { model | playlists = child }
-                    , update = Playlists.update
-                    }
-                    { model = model.playlists
                     , msg = sub
                     }
 

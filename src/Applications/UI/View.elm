@@ -33,8 +33,8 @@ import UI.Equalizer.View as Equalizer
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
-import UI.Playlists as Playlists
 import UI.Playlists.ContextMenu as Playlists
+import UI.Playlists.View as Playlists
 import UI.Queue as Queue
 import UI.Queue.ContextMenu as Queue
 import UI.Reply exposing (Reply(..))
@@ -182,13 +182,13 @@ defaultScreen model =
                 nothing
 
             Page.Playlists subPage ->
-                model.extractedBackdropColor
-                    |> Lazy.lazy4
-                        Playlists.view
-                        subPage
-                        model.playlists
-                        model.tracks.selectedPlaylist
-                    |> Html.map PlaylistsMsg
+                Lazy.lazy5
+                    Playlists.view
+                    subPage
+                    model.playlists
+                    model.tracks.selectedPlaylist
+                    model.editPlaylistContext
+                    model.extractedBackdropColor
 
             Page.Queue subPage ->
                 model.queue

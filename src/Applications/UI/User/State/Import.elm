@@ -18,7 +18,8 @@ import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
 import UI.Equalizer.State as Equalizer
 import UI.Page as Page exposing (Page)
-import UI.Playlists as Playlists
+import UI.Playlists.Directory
+import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Reply exposing (..)
 import UI.Reply.Translate as Reply
@@ -140,13 +141,15 @@ importHypaethral value model =
                 sourcesModel =
                     { sources | collection = data.sources }
 
-                ( playlistsModel, playlistsCmd, playlistsReplies ) =
-                    Playlists.importHypaethral model.playlists data
+                newPlaylistsCollection =
+                    List.append
+                        data.playlists
+                        (UI.Playlists.Directory.generate data.sources data.tracks)
 
                 selectedPlaylist =
                     Maybe.andThen
-                        (\n -> List.find (.name >> (==) n) playlistsModel.collection)
-                        model.playlists.playlistToActivate
+                        (\n -> List.find (.name >> (==) n) newPlaylistsCollection)
+                        model.playlistToActivate
 
                 ( tracksModel, tracksCmd, tracksReplies ) =
                     Tracks.importHypaethral model.tracks data selectedPlaylist
@@ -155,24 +158,22 @@ importHypaethral value model =
                     model.lastFm
             in
             ( { model
-                | playlists = playlistsModel
-                , sources = sourcesModel
+                | sources = sourcesModel
                 , tracks = tracksModel
 
                 --
                 , chosenBackdrop = chosenBackdrop
                 , lastFm = { lastFmModel | sessionKey = Maybe.andThen .lastFm data.settings }
+                , playlists = newPlaylistsCollection
+                , playlistToActivate = Nothing
                 , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
                 , progress = data.progress
                 , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
               }
               --
-            , Cmd.batch
-                [ Cmd.map PlaylistsMsg playlistsCmd
-                , Cmd.map TracksMsg tracksCmd
-                ]
+            , Cmd.map TracksMsg tracksCmd
               --
-            , playlistsReplies ++ tracksReplies
+            , tracksReplies
             )
 
         Err err ->
@@ -189,7 +190,7 @@ importHypaethral value model =
 importEnclosed : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
 importEnclosed value model =
     let
-        { playlists, queue, tracks } =
+        { queue, tracks } =
             model
 
         equalizerSettings =
@@ -204,11 +205,6 @@ importEnclosed value model =
                         , mid = data.equalizerSettings.mid
                         , high = data.equalizerSettings.high
                         , volume = data.equalizerSettings.volume
-                    }
-
-                newPlaylists =
-                    { playlists
-                        | playlistToActivate = data.selectedPlaylist
                     }
 
                 newQueue =
@@ -229,10 +225,12 @@ importEnclosed value model =
                     }
             in
             ( { model
-                | eqSettings = newEqualizerSettings
-                , playlists = newPlaylists
-                , queue = newQueue
+                | queue = newQueue
                 , tracks = newTracks
+
+                --
+                , eqSettings = newEqualizerSettings
+                , playlistToActivate = data.selectedPlaylist
               }
               --
             , Cmd.batch
