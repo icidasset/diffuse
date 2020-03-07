@@ -2,9 +2,7 @@ module UI.Audio.State exposing (..)
 
 import Dict
 import LastFm
-import Management
 import Maybe.Extra as Maybe
-import Monocle.Lens as Lens exposing (Lens)
 import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
 import UI.Ports as Ports

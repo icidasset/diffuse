@@ -174,16 +174,20 @@ default: dev
 	)
 
 
+@elm-housekeeping:
+	echo "> Running elm-impfix"
+	{{NPM_DIR}}/.bin/elm-impfix "{{SRC_DIR}}/**/*.elm" --replace
+	# echo "> Running elm-review"
+	# {{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix
+	echo "> Running elm-format"
+	elm-format {{SRC_DIR}} --yes
+
+
 @quality:
 	echo "> Running es-lint"
 	{{NPM_DIR}}/.bin/eslint src/Javascript/**
 	echo "> Running elm-review"
-	{{NPM_DIR}}/.bin/elm-review src --config system/Review
-
-
-@quality-fix:
-	echo "> Running elm-review"
-	{{NPM_DIR}}/.bin/elm-review src --config system/Review --fix
+	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review
 
 
 @server:

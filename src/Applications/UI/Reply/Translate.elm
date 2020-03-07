@@ -6,19 +6,11 @@ import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import ContextMenu exposing (ContextMenu)
-import Css exposing (url)
-import Css.Classes as C
-import Debouncer.Basic as Debouncer
 import Dict
 import Dict.Ext as Dict
 import File.Download
 import File.Select
-import Html exposing (Html, section)
-import Html.Attributes exposing (class, id, style)
-import Html.Events exposing (on, onClick)
-import Html.Events.Extra.Pointer as Pointer
-import Html.Lazy as Lazy
+import Html.Attributes exposing (id)
 import Json.Encode
 import LastFm
 import List.Ext as List
@@ -44,9 +36,7 @@ import UI.Backdrop as Backdrop
 import UI.Common.State exposing (showNotification, showNotificationWithModel)
 import UI.Demo as Demo
 import UI.Interface.State as Interface
-import UI.Navigation as Navigation
 import UI.Notifications
-import UI.Page as Page
 import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Directory
@@ -63,7 +53,7 @@ import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
 import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
-import Url exposing (Protocol(..), Url)
+import Url exposing (Protocol(..))
 import Url.Ext as Url
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage

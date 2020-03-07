@@ -4,10 +4,9 @@ import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import Http
 import Json.Decode as Json
-import Monocle.Lens as Lens
 import Notifications
 import Return exposing (andThen, return)
-import Return.Ext as Return exposing (communicate)
+import Return.Ext as Return
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Reply.Translate as Reply

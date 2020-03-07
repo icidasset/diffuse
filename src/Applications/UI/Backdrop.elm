@@ -1,14 +1,14 @@
 module UI.Backdrop exposing (..)
 
 import Chunky exposing (..)
-import Color exposing (Color)
+import Color
 import Css.Classes as C
 import Html exposing (Html)
 import Html.Attributes exposing (src, style)
 import Html.Events exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode
-import Return exposing (andThen, return)
+import Return exposing (return)
 import Return.Ext as Return
 import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))

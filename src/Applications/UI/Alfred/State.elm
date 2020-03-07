@@ -3,16 +3,9 @@ module UI.Alfred.State exposing (..)
 import Alfred exposing (Alfred)
 import Browser.Dom as Dom
 import Chunky exposing (..)
-import Css.Classes as C
-import Html exposing (Html, text)
-import Html.Attributes exposing (autofocus, id, placeholder, type_)
-import Html.Events exposing (onInput)
-import Html.Ext exposing (onTapPreventDefault)
-import Keyboard
 import List.Extra as List
-import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Return exposing (andThen, return)
+import Return exposing (return)
 import Return.Ext as Return
 import String.Ext as String
 import Task

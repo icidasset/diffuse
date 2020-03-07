@@ -10,45 +10,29 @@ import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Css exposing (url)
-import Css.Classes as C
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
-import Dict.Ext as Dict
 import Equalizer exposing (Knob)
 import File exposing (File)
-import Html exposing (Html, section)
-import Html.Attributes exposing (class, id, style)
-import Html.Events exposing (on, onClick)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
-import Html.Lazy as Lazy
 import Http
 import Json.Decode
 import Keyboard
 import LastFm
-import List.Ext as List
-import List.Extra as List
 import Management
-import Maybe.Extra as Maybe
 import Notifications exposing (Notification)
 import Playlists exposing (Playlist, PlaylistTrack)
-import Playlists.Encoding as Playlists
 import Queue
 import Sources
 import Sources.Encoding as Sources
-import String.Ext as String
 import Time
 import Tracks
 import Tracks.Encoding as Tracks
 import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
-import UI.Demo as Demo
-import UI.DnD as DnD
-import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page exposing (Page)
-import UI.Playlists.ContextMenu as Playlists
-import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.ContextMenu as Queue
 import UI.Reply as Reply exposing (Reply(..))
@@ -57,7 +41,6 @@ import UI.Sources.ContextMenu as Sources
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import Url exposing (Protocol(..), Url)
-import Url.Ext as Url
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
 

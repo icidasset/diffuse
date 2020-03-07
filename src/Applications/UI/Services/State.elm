@@ -2,10 +2,9 @@ module UI.Services.State exposing (..)
 
 import Http
 import LastFm
-import Monocle.Lens as Lens
 import Notifications
-import Return exposing (andThen, return)
-import Return.Ext as Return exposing (communicate)
+import Return exposing (andThen)
+import Return.Ext as Return
 import UI.Common.State as Common exposing (showNotification)
 import UI.Reply exposing (Reply(..))
 import UI.Types as UI exposing (Manager, Msg(..))

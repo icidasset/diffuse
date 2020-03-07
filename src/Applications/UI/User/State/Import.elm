@@ -6,20 +6,17 @@ import Json.Encode
 import LastFm
 import List.Extra as List
 import Maybe.Extra as Maybe
-import Monocle.Lens as Lens
 import Notifications
 import Process
 import Return exposing (andThen, return)
 import Return.Ext as Return exposing (communicate)
 import Return3
 import Task
-import UI.Audio.State as Audio
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
 import UI.Equalizer.State as Equalizer
-import UI.Page as Page exposing (Page)
+import UI.Page as Page
 import UI.Playlists.Directory
-import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Reply exposing (..)
 import UI.Reply.Translate as Reply

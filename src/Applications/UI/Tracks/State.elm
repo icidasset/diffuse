@@ -3,10 +3,10 @@ module UI.Tracks.State exposing (..)
 import ContextMenu
 import List.Ext as List
 import List.Extra as List
-import Monocle.Lens as Lens exposing (Lens)
+import Monocle.Lens as Lens
 import Notifications
-import Return exposing (andThen, return)
-import Return.Ext as Return exposing (communicate)
+import Return
+import Return.Ext as Return
 import UI.Common.State as Common exposing (showNotification)
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Tracks as Tracks

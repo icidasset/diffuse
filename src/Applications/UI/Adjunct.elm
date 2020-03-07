@@ -3,7 +3,7 @@ module UI.Adjunct exposing (..)
 import Keyboard
 import Maybe.Extra as Maybe
 import Return
-import Return.Ext as Return exposing (communicate)
+import Return.Ext as Return
 import UI.Alfred.State as Alfred
 import UI.Authentication as Authentication
 import UI.Interface.State exposing (hideOverlay)

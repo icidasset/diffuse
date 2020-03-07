@@ -6,12 +6,11 @@ import Coordinates
 import Html.Events.Extra.Mouse as Mouse
 import Json.Encode
 import List.Extra as List
-import Monocle.Lens as Lens
 import Notifications
 import Playlists exposing (..)
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
-import Return.Ext as Return exposing (communicate)
+import Return.Ext as Return
 import UI.Common.State as Common
 import UI.Page as Page
 import UI.Playlists.ContextMenu as Playlists

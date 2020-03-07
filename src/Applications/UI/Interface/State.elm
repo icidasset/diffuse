@@ -2,17 +2,13 @@ module UI.Interface.State exposing (..)
 
 import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
-import Maybe.Extra as Maybe
-import Monocle.Lens as Lens
 import Return exposing (return)
-import Return.Ext as Return exposing (communicate)
+import Return.Ext as Return
 import UI.Common.State as Common exposing (modifySingleton)
 import UI.DnD as DnD
 import UI.Page as Page
-import UI.Ports as Ports
 import UI.Queue as Queue
 import UI.Queue.State as Queue
-import UI.Sources.State as Sources
 import UI.Tracks as Tracks
 import UI.Tracks.Scene.List
 import UI.Tracks.State as Tracks

@@ -3,6 +3,7 @@
   "devDependencies": {
     "autoprefixer": "^9.7.4",
     "csso-cli": "^3.0.0",
+    "elm-impfix": "^1.0.8",
     "elm-review": "^1.0.2",
     "eslint": "^6.8.0",
     "postcss": "^7.0.27",
