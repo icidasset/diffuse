@@ -36,8 +36,8 @@ import UI.Backdrop as Backdrop
 import UI.Common.State as Common
 import UI.Equalizer.State as Equalizer
 import UI.Equalizer.View as Equalizer
-import UI.EtCetera.State as EtCetera
 import UI.Interface.State as Interface
+import UI.Other.State as Other
 import UI.Page as Page
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.State as Playlists
@@ -403,13 +403,13 @@ update msg =
             Adjunct.keyboardInput a
 
         -----------------------------------------
-        -- 📭 Et Cetera
+        -- 📭 Other
         -----------------------------------------
         SetCurrentTime a ->
-            EtCetera.setCurrentTime a
+            Other.setCurrentTime a
 
         SetIsOnline a ->
-            EtCetera.setIsOnline a
+            Other.setIsOnline a
 
         -----------------------------------------
         -- Children (TODO)

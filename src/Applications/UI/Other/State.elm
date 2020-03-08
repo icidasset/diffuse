@@ -1,4 +1,4 @@
-module UI.EtCetera.State exposing (..)
+module UI.Other.State exposing (..)
 
 import Alien
 import Common exposing (Switch(..))
