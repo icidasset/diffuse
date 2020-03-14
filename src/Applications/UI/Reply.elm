@@ -30,7 +30,6 @@ type Reply
       -----------------------------------------
       -- Authentication
       -----------------------------------------
-    | ExternalAuth User.Layer.Method String
     | ImportLegacyData
     | PingIpfsForAuth
     | PingTextileForAuth

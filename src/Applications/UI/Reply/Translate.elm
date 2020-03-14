@@ -101,37 +101,6 @@ translate reply model =
         -----------------------------------------
         -- Authentication
         -----------------------------------------
-        ExternalAuth Blockstack _ ->
-            Alien.RedirectToBlockstackSignIn
-                |> Alien.trigger
-                |> Ports.toBrain
-                |> return model
-
-        ExternalAuth (Dropbox _) _ ->
-            [ ( "response_type", "token" )
-            , ( "client_id", "te0c9pbeii8f8bw" )
-            , ( "redirect_uri", Common.urlOrigin model.url ++ "?action=authenticate/dropbox" )
-            ]
-                |> Common.queryString
-                |> String.append "https://www.dropbox.com/oauth2/authorize"
-                |> Nav.load
-                |> return model
-
-        ExternalAuth (RemoteStorage _) input ->
-            input
-                |> RemoteStorage.parseUserAddress
-                |> Maybe.map
-                    (RemoteStorage.webfingerRequest RemoteStorageWebfinger)
-                |> Maybe.unwrap
-                    (translate
-                        (ShowErrorNotification RemoteStorage.userAddressError)
-                        model
-                    )
-                    (return model)
-
-        ExternalAuth _ _ ->
-            Return.singleton model
-
         ImportLegacyData ->
             Alien.ImportLegacyData
                 |> Alien.trigger

@@ -24,6 +24,7 @@ import Return.Ext as Return
 import SHA
 import String.Ext as String
 import UI.Authentication.Types as Authentication exposing (..)
+import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Interface.State as Interface
 import UI.Ports as Ports
@@ -209,7 +210,7 @@ bootFailure : String -> Manager
 bootFailure err model =
     model
         |> showNotification (Notifications.error err)
-        |> andThen (Reply.translate LoadDefaultBackdrop)
+        |> andThen Backdrop.setDefault
 
 
 cancelFlow : Manager
@@ -241,9 +242,37 @@ cancelFlow model =
 
 externalAuth : Method -> String -> Manager
 externalAuth method string model =
-    string
-        |> Reply.ExternalAuth method
-        |> Reply.translateWithModel model
+    case method of
+        Blockstack ->
+            Alien.RedirectToBlockstackSignIn
+                |> Alien.trigger
+                |> Ports.toBrain
+                |> return model
+
+        Dropbox _ ->
+            [ ( "response_type", "token" )
+            , ( "client_id", "te0c9pbeii8f8bw" )
+            , ( "redirect_uri", Common.urlOrigin model.url ++ "?action=authenticate/dropbox" )
+            ]
+                |> Common.queryString
+                |> String.append "https://www.dropbox.com/oauth2/authorize"
+                |> Nav.load
+                |> return model
+
+        RemoteStorage _ ->
+            string
+                |> RemoteStorage.parseUserAddress
+                |> Maybe.map
+                    (RemoteStorage.webfingerRequest RemoteStorageWebfinger)
+                |> Maybe.unwrap
+                    (RemoteStorage.userAddressError
+                        |> Notifications.error
+                        |> Common.showNotificationWithModel model
+                    )
+                    (return model)
+
+        _ ->
+            Return.singleton model
 
 
 missingSecretKey : Json.Value -> Manager
@@ -251,8 +280,8 @@ missingSecretKey _ model =
     "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
         |> Notifications.error
         |> showNotificationWithModel model
-        |> andThen (Reply.translate <| Reply.LoadDefaultBackdrop)
-        |> andThen (Reply.translate <| Reply.ToggleLoadingScreen Off)
+        |> andThen Backdrop.setDefault
+        |> andThen (Interface.toggleLoadingScreen Off)
 
 
 notAuthenticated : Manager
@@ -260,7 +289,7 @@ notAuthenticated model =
     -- This is the message we get when the app initially
     -- finds out we're not authenticated.
     andThen
-        (Reply.translate Reply.LoadDefaultBackdrop)
+        Backdrop.setDefault
         (if model.isUpgrading then
             """
             Thank you for using Diffuse V1!
@@ -512,11 +541,7 @@ confirmInput model =
             pingOtherIpfs (String.chopEnd "/" value) model
 
         InputScreen (RemoteStorage r) { value } ->
-            -- TODO:
-            -- addReply
-            --     (ExternalAuth (RemoteStorage r) value)
-            --     (return model)
-            Return.singleton model
+            externalAuth (RemoteStorage r) value model
 
         InputScreen (Textile t) { value } ->
             pingOtherTextile (String.chopEnd "/" value) model
