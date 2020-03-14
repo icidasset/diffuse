@@ -29,8 +29,7 @@ import Sources.Encoding as Sources
 import Time
 import Tracks
 import Tracks.Encoding as Tracks
-import UI.Authentication as Authentication
-import UI.Authentication.ContextMenu as Authentication
+import UI.Authentication.Types as Authentication
 import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Queue as Queue
@@ -128,9 +127,13 @@ type alias Model =
     , playlistToActivate : Maybe String
 
     -----------------------------------------
+    -- 🦉 Nested
+    -----------------------------------------
+    , authentication : Authentication.State
+
+    -----------------------------------------
     -- Children (TODO)
     -----------------------------------------
-    , authentication : Authentication.Model
     , queue : Queue.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
@@ -235,18 +238,21 @@ type Msg
     | LoadHypaethralUserData Json.Decode.Value
     | SaveEnclosedUserData
       -----------------------------------------
-      -- 🦉 Adjunct
+      -- ⚗️ Adjunct
       -----------------------------------------
     | KeyboardMsg Keyboard.Msg
       -----------------------------------------
-      -- 📭 Et Cetera
+      -- 📭 Other
       -----------------------------------------
     | SetCurrentTime Time.Posix
     | SetIsOnline Bool
       -----------------------------------------
-      -- Children (TODO)
+      -- 🦉 Nested
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg
+      -----------------------------------------
+      -- Children (TODO)
+      -----------------------------------------
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg

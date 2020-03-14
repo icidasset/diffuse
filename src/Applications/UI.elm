@@ -29,8 +29,6 @@ import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
 import UI.Alien as Alien
 import UI.Audio.State as Audio
-import UI.Authentication as Authentication
-import UI.Authentication.ContextMenu as Authentication
 import UI.Authentication.State as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
@@ -235,7 +233,7 @@ update msg =
         -- Authentication
         -----------------------------------------
         AuthenticationBootFailure a ->
-            Authentication.authenticationBootFailure a
+            Authentication.bootFailure a
 
         MissingSecretKey a ->
             Authentication.missingSecretKey a
@@ -397,7 +395,7 @@ update msg =
             User.saveEnclosedUserData
 
         -----------------------------------------
-        -- 🦉 Adjunct
+        -- ⚗️ Adjunct
         -----------------------------------------
         KeyboardMsg a ->
             Adjunct.keyboardInput a
@@ -412,20 +410,14 @@ update msg =
             Other.setIsOnline a
 
         -----------------------------------------
+        -- 🦉 Nested
+        -----------------------------------------
+        AuthenticationMsg a ->
+            Authentication.update a
+
+        -----------------------------------------
         -- Children (TODO)
         -----------------------------------------
-        AuthenticationMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = AuthenticationMsg
-                    , mapModel = \child -> { model | authentication = child }
-                    , update = Authentication.update
-                    }
-                    { model = model.authentication
-                    , msg = sub
-                    }
-
         QueueMsg sub ->
             \model ->
                 Return3.wieldNested

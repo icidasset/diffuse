@@ -4,7 +4,7 @@ import Alien
 import Common exposing (Switch(..))
 import Json.Decode
 import Notifications
-import UI.Authentication as Authentication
+import UI.Authentication.Types as Authentication
 import UI.Sources as Sources
 import UI.Tracks as Tracks
 import UI.Types exposing (..)

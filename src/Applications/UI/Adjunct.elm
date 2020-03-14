@@ -5,7 +5,7 @@ import Maybe.Extra as Maybe
 import Return
 import Return.Ext as Return
 import UI.Alfred.State as Alfred
-import UI.Authentication as Authentication
+import UI.Authentication.Types as Authentication
 import UI.Interface.State exposing (hideOverlay)
 import UI.Reply as Reply exposing (Reply)
 import UI.Types as UI exposing (..)

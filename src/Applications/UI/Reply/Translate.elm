@@ -30,8 +30,8 @@ import Task
 import Tracks
 import Tracks.Encoding as Tracks
 import UI.Audio.State as Audio
-import UI.Authentication as Authentication
 import UI.Authentication.ContextMenu as Authentication
+import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State exposing (showNotification, showNotificationWithModel)
 import UI.Demo as Demo

@@ -24,8 +24,10 @@ import Sources.Encoding as Sources
 import Tracks
 import Tracks.Encoding as Tracks
 import UI.Alfred.View as Alfred
-import UI.Authentication as Authentication
+import UI.Authentication.Common as Authentication
 import UI.Authentication.ContextMenu as Authentication
+import UI.Authentication.Types as Authentication
+import UI.Authentication.View as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
@@ -137,11 +139,7 @@ body model =
                 content opts (defaultScreen model)
 
             ( False, _ ) ->
-                model.authentication
-                    |> Lazy.lazy Authentication.view
-                    |> Html.map AuthenticationMsg
-                    |> List.singleton
-                    |> content opts
+                content opts [ Authentication.view model ]
         ]
 
 

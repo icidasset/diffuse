@@ -1,8 +1,5 @@
-module UI.Authentication exposing (Model(..), Msg(..), extractMethod, initialModel, update, view)
+module UI.Authentication.View exposing (view)
 
-import Alien
-import Base64
-import Binary
 import Chunky exposing (..)
 import Color
 import Color.Ext as Color
@@ -14,454 +11,33 @@ import Html.Attributes exposing (attribute, href, placeholder, src, style, targe
 import Html.Events exposing (onClick, onSubmit)
 import Html.Events.Extra exposing (onClickStopPropagation)
 import Html.Events.Extra.Mouse as Mouse
-import Http
-import Json.Encode
+import Html.Lazy as Lazy
 import Markdown
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Return3 exposing (..)
-import SHA
 import String.Ext as String
 import Svg exposing (Svg)
+import UI.Authentication.Types as Authentication exposing (..)
 import UI.Kit
-import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
-import Url exposing (Url)
-import Url.Ext as Url
+import UI.Types as UI exposing (..)
 import User.Layer exposing (..)
-
-
-
--- ⛩
-
-
-minimumPassphraseLength =
-    16
-
-
-passphraseLengthErrorMessage =
-    "Your passphrase should be atleast *16 characters* long."
-
-
-
--- 🌳
-
-
-type Model
-    = Authenticated Method
-    | InputScreen Method Question
-    | NewEncryptionKeyScreen Method (Maybe String)
-    | UpdateEncryptionKeyScreen Method (Maybe String)
-    | Unauthenticated
-    | Welcome
-
-
-type alias Question =
-    { placeholder : String
-    , question : String
-    , value : String
-    }
-
-
-initialModel : Url -> Model
-initialModel url =
-    case Url.action url of
-        [ "authenticate", "dropbox" ] ->
-            url.fragment
-                |> Maybe.map (String.split "&")
-                |> Maybe.map (List.filter <| String.startsWith "access_token=")
-                |> Maybe.andThen List.head
-                |> Maybe.withDefault ""
-                |> String.replace "access_token=" ""
-                |> (\t ->
-                        NewEncryptionKeyScreen
-                            (Dropbox { token = t })
-                            Nothing
-                   )
-
-        [ "authenticate", "remotestorage", encodedUserAddress ] ->
-            let
-                userAddress =
-                    encodedUserAddress
-                        |> Url.percentDecode
-                        |> Maybe.andThen (Base64.decode >> Result.toMaybe)
-                        |> Maybe.withDefault encodedUserAddress
-            in
-            url.fragment
-                |> Maybe.map (String.split "&")
-                |> Maybe.map (List.filter <| String.startsWith "access_token=")
-                |> Maybe.andThen List.head
-                |> Maybe.withDefault ""
-                |> String.replace "access_token=" ""
-                |> (\t ->
-                        NewEncryptionKeyScreen
-                            (RemoteStorage { userAddress = userAddress, token = t })
-                            Nothing
-                   )
-
-        _ ->
-            Welcome
-
-
-extractMethod : Model -> Maybe Method
-extractMethod model =
-    case model of
-        Authenticated method ->
-            Just method
-
-        InputScreen method _ ->
-            Just method
-
-        NewEncryptionKeyScreen method _ ->
-            Just method
-
-        UpdateEncryptionKeyScreen method _ ->
-            Just method
-
-        Unauthenticated ->
-            Nothing
-
-        Welcome ->
-            Nothing
-
-
-
--- 📣
-
-
-type Msg
-    = Bypass
-    | Cancel
-    | GetStarted
-    | ShowMoreOptions Mouse.Event
-    | SignIn Method
-    | SignInWithPassphrase Method String
-    | SignedIn Method
-    | TriggerExternalAuth Method String
-      -----------------------------------------
-      -- Encryption
-      -----------------------------------------
-    | KeepPassphraseInMemory String
-    | RemoveEncryptionKey Method
-    | ShowNewEncryptionKeyScreen Method
-    | ShowUpdateEncryptionKeyScreen Method
-    | UpdateEncryptionKey Method String
-      -----------------------------------------
-      -- IPFS
-      -----------------------------------------
-    | PingIpfs
-    | PingIpfsCallback (Result Http.Error ())
-    | PingOtherIpfs String
-    | PingOtherIpfsCallback String (Result Http.Error ())
-      -----------------------------------------
-      -- More Input
-      -----------------------------------------
-    | AskForInput Method Question
-    | Input String
-    | ConfirmInput
-      -----------------------------------------
-      -- Textile
-      -----------------------------------------
-    | PingTextile
-    | PingTextileCallback (Result Http.Error ())
-    | PingOtherTextile String
-    | PingOtherTextileCallback String (Result Http.Error ())
-
-
-update : Msg -> Model -> Return Model Msg Reply
-update msg model =
-    case msg of
-        Bypass ->
-            return model
-
-        Cancel ->
-            ( case model of
-                Authenticated method ->
-                    Authenticated method
-
-                InputScreen _ _ ->
-                    Unauthenticated
-
-                NewEncryptionKeyScreen _ _ ->
-                    Unauthenticated
-
-                UpdateEncryptionKeyScreen method _ ->
-                    Authenticated method
-
-                Unauthenticated ->
-                    Welcome
-
-                Welcome ->
-                    Welcome
-              --
-            , Cmd.none
-            , [ ForceTracksRerender ]
-            )
-
-        GetStarted ->
-            return Unauthenticated
-
-        ShowMoreOptions mouseEvent ->
-            ( model
-            , Cmd.none
-            , ( mouseEvent.clientPos
-              , mouseEvent.offsetPos
-              )
-                |> (\( ( a, b ), ( c, d ) ) ->
-                        { x = a - c + 15
-                        , y = b - d + 12
-                        }
-                   )
-                |> ShowMoreAuthenticationOptions
-                |> List.singleton
-            )
-
-        SignIn method ->
-            ( model
-              --
-            , [ ( "method", encodeMethod method )
-              , ( "passphrase", Json.Encode.null )
-              ]
-                |> Json.Encode.object
-                |> Alien.broadcast Alien.SignIn
-                |> Ports.toBrain
-              --
-            , [ ToggleLoadingScreen On ]
-            )
-
-        SignInWithPassphrase method passphrase ->
-            if String.length passphrase < minimumPassphraseLength then
-                addReply
-                    (ShowErrorNotification passphraseLengthErrorMessage)
-                    (return model)
-
-            else
-                ( model
-                  --
-                , [ ( "method", encodeMethod method )
-                  , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
-                  ]
-                    |> Json.Encode.object
-                    |> Alien.broadcast Alien.SignIn
-                    |> Ports.toBrain
-                  --
-                , [ ToggleLoadingScreen On ]
-                )
-
-        SignedIn method ->
-            return (Authenticated method)
-
-        TriggerExternalAuth method string ->
-            returnReplyWithModel model (ExternalAuth method string)
-
-        -----------------------------------------
-        -- Encryption
-        -----------------------------------------
-        KeepPassphraseInMemory passphrase ->
-            case model of
-                NewEncryptionKeyScreen method _ ->
-                    return (NewEncryptionKeyScreen method <| Just passphrase)
-
-                UpdateEncryptionKeyScreen method _ ->
-                    return (UpdateEncryptionKeyScreen method <| Just passphrase)
-
-                _ ->
-                    return model
-
-        RemoveEncryptionKey method ->
-            Alien.RemoveEncryptionKey
-                |> Alien.trigger
-                |> Ports.toBrain
-                |> returnCommandWithModel (Authenticated method)
-                |> addReply ForceTracksRerender
-                |> addReply (ShowSuccessNotification "Saving data without encryption ...")
-
-        ShowNewEncryptionKeyScreen method ->
-            return (NewEncryptionKeyScreen method Nothing)
-
-        ShowUpdateEncryptionKeyScreen method ->
-            return (UpdateEncryptionKeyScreen method Nothing)
-
-        UpdateEncryptionKey method passphrase ->
-            if String.length passphrase < minimumPassphraseLength then
-                addReply
-                    (ShowErrorNotification passphraseLengthErrorMessage)
-                    (return model)
-
-            else
-                passphrase
-                    |> hashPassphrase
-                    |> Json.Encode.string
-                    |> Alien.broadcast Alien.UpdateEncryptionKey
-                    |> Ports.toBrain
-                    |> returnCommandWithModel (Authenticated method)
-                    |> addReply ForceTracksRerender
-                    |> addReply (ShowSuccessNotification "Encrypting data with new passphrase ...")
-
-        -----------------------------------------
-        -- IPFS
-        -----------------------------------------
-        PingIpfs ->
-            { url = "//localhost:5001/api/v0/id"
-            , expect = Http.expectWhatever PingIpfsCallback
-            }
-                |> Http.get
-                |> returnCommandWithModel model
-
-        PingIpfsCallback (Ok _) ->
-            { apiOrigin = "//localhost:5001" }
-                |> Ipfs
-                |> ShowNewEncryptionKeyScreen
-                |> updateWithModel model
-
-        PingIpfsCallback (Err _) ->
-            { placeholder = "//localhost:5001"
-            , question = """
-                Where's your IPFS API located?<br />
-                <span class="font-normal text-white-60">
-                    You can find this address on the IPFS Web UI.<br />
-                    Most likely you'll also need to setup CORS.<br />
-                    You can find the instructions for that
-                    <a href="about#CORS__IPFS" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.
-                </span>
-              """
-            , value = "//localhost:5001"
-            }
-                |> AskForInput (Ipfs { apiOrigin = "" })
-                |> updateWithModel model
-
-        PingOtherIpfs origin ->
-            { url = origin ++ "/api/v0/id"
-            , expect = Http.expectWhatever (PingOtherIpfsCallback origin)
-            }
-                |> Http.get
-                |> returnCommandWithModel model
-
-        PingOtherIpfsCallback origin (Ok _) ->
-            { apiOrigin = origin }
-                |> Ipfs
-                |> ShowNewEncryptionKeyScreen
-                |> updateWithModel model
-
-        PingOtherIpfsCallback origin (Err _) ->
-            "Can't reach this IPFS API, maybe it's offline? Or I don't have access?"
-                |> ShowErrorNotification
-                |> returnReplyWithModel model
-
-        -----------------------------------------
-        -- More Input
-        -----------------------------------------
-        AskForInput method opts ->
-            { placeholder = opts.placeholder
-            , question = opts.question
-            , value = opts.value
-            }
-                |> InputScreen method
-                |> return
-
-        Input string ->
-            case model of
-                InputScreen method opts ->
-                    return (InputScreen method { opts | value = string })
-
-                m ->
-                    return m
-
-        ConfirmInput ->
-            case model of
-                InputScreen (Ipfs i) { value } ->
-                    value
-                        |> String.chopEnd "/"
-                        |> PingOtherIpfs
-                        |> updateWithModel model
-
-                InputScreen (RemoteStorage r) { value } ->
-                    addReply
-                        (ExternalAuth (RemoteStorage r) value)
-                        (return model)
-
-                InputScreen (Textile t) { value } ->
-                    value
-                        |> String.chopEnd "/"
-                        |> PingOtherTextile
-                        |> updateWithModel model
-
-                _ ->
-                    return model
-
-        -----------------------------------------
-        -- Textile
-        -----------------------------------------
-        PingTextile ->
-            { url = "//localhost:40600/api/v0/summary"
-            , expect = Http.expectWhatever PingTextileCallback
-            }
-                |> Http.get
-                |> returnCommandWithModel model
-
-        PingTextileCallback (Ok _) ->
-            { apiOrigin = "//localhost:40600" }
-                |> Textile
-                |> SignIn
-                |> updateWithModel model
-
-        PingTextileCallback (Err _) ->
-            { placeholder = "//localhost:40600"
-            , question = """
-                Where's your Textile API located?<br />
-                <span class="font-normal text-white-60">
-                    You might need to do some CORS configuration.<br />
-                    You can find the instructions for that
-                    <a href="about#CORS__Textile" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.<br />
-                    You can't connect to a HTTP server while on HTTPS.
-                </span>
-              """
-            , value = "//localhost:40600"
-            }
-                |> AskForInput (Textile { apiOrigin = "" })
-                |> updateWithModel model
-
-        PingOtherTextile origin ->
-            { url = origin ++ "/api/v0/summary"
-            , expect = Http.expectWhatever (PingOtherTextileCallback origin)
-            }
-                |> Http.get
-                |> returnCommandWithModel model
-
-        PingOtherTextileCallback origin (Ok _) ->
-            { apiOrigin = origin }
-                |> Textile
-                |> SignIn
-                |> updateWithModel model
-
-        PingOtherTextileCallback origin (Err _) ->
-            "Can't reach this Textile API, maybe it's offline? Or I don't have access?"
-                |> ShowErrorNotification
-                |> returnReplyWithModel model
-
-
-updateWithModel : Model -> Msg -> Return Model Msg Reply
-updateWithModel model msg =
-    update msg model
-
-
-hashPassphrase : String -> String
-hashPassphrase phrase =
-    phrase
-        |> Binary.fromStringAsUtf8
-        |> SHA.sha256
-        |> Binary.toHex
-        |> String.toLower
 
 
 
 -- 🗺
 
 
-view : Model -> Html Msg
-view model =
+view : Model -> Html UI.Msg
+view =
+    Html.map AuthenticationMsg << Lazy.lazy view_ << .authentication
+
+
+view_ : State -> Html Authentication.Msg
+view_ state =
     chunk
         [ C.flex
         , C.flex_col
@@ -483,19 +59,19 @@ view model =
                 [ C.py_5, C.relative ]
                 [ slab
                     Html.img
-                    [ onClick Cancel
+                    [ onClick CancelFlow
                     , src "images/diffuse-light.svg"
                     , width 190
 
                     --
-                    , case model of
+                    , case state of
                         Welcome ->
                             title "Diffuse"
 
                         _ ->
                             title "Go back"
                     ]
-                    [ case model of
+                    [ case state of
                         Welcome ->
                             C.cursor_default
 
@@ -506,7 +82,7 @@ view model =
 
                 -- Speech bubble
                 ----------------
-                , case model of
+                , case state of
                     InputScreen _ { question } ->
                         question
                             |> String.lines
@@ -573,7 +149,7 @@ view model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , case model of
+        , case state of
             InputScreen method opts ->
                 inputScreen opts
 
@@ -630,7 +206,7 @@ view model =
 -- WELCOME
 
 
-welcomeScreen : Html Msg
+welcomeScreen : Html Authentication.Msg
 welcomeScreen =
     chunk
         [ C.mt_3
@@ -659,7 +235,7 @@ welcomeScreen =
 -- CHOICES
 
 
-choicesScreen : Html Msg
+choicesScreen : Html Authentication.Msg
 choicesScreen =
     chunk
         [ C.bg_white
@@ -827,7 +403,7 @@ choiceButton { action, icon, infoLink, label, outOfOrder } =
 -- ENCRYPTION KEY
 
 
-encryptionKeyScreen : { withEncryption : Msg, withoutEncryption : Msg } -> Html Msg
+encryptionKeyScreen : { withEncryption : Authentication.Msg, withoutEncryption : Authentication.Msg } -> Html Authentication.Msg
 encryptionKeyScreen { withEncryption, withoutEncryption } =
     slab
         Html.form
@@ -856,7 +432,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             ]
         , UI.Kit.button
             UI.Kit.Filled
-            Bypass
+            Authentication.Bypass
             (text "Continue")
         , brick
             [ onClickStopPropagation withoutEncryption ]
@@ -880,7 +456,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
 -- INPUT SCREEN
 
 
-inputScreen : Question -> Html Msg
+inputScreen : Question -> Html Authentication.Msg
 inputScreen question =
     slab
         Html.form
@@ -902,7 +478,7 @@ inputScreen question =
             ]
         , UI.Kit.button
             UI.Kit.Filled
-            Bypass
+            Authentication.Bypass
             (text "Continue")
         ]
 

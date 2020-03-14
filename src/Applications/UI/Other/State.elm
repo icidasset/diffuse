@@ -7,7 +7,7 @@ import Notifications
 import Return
 import Return.Ext as Return
 import Time
-import UI.Authentication as Authentication
+import UI.Authentication.Types as Authentication
 import UI.Common.State as Common
 import UI.Ports as Ports
 import UI.Sources.State as Sources
