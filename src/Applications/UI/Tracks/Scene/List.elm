@@ -73,7 +73,8 @@ update msg model =
 
         DragAndDropMsg subMsg ->
             let
-                ( newDnD, uiReplies ) =
+                -- TODO: Set { model | dragging = True } using `initiated`
+                ( newDnD, { initiated } ) =
                     DnD.update subMsg model.dnd
             in
             if DnD.hasDropped newDnD then
@@ -82,13 +83,12 @@ update msg model =
                     [ MoveTrackInSelectedPlaylist
                         { to = Maybe.withDefault 0 (DnD.modelTarget newDnD)
                         }
-                    , Transcend uiReplies
                     ]
 
             else
                 returnRepliesWithModel
                     { model | dnd = newDnD }
-                    [ Transcend uiReplies ]
+                    []
 
 
 

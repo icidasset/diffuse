@@ -187,7 +187,7 @@ importHypaethral value model =
 importEnclosed : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
 importEnclosed value model =
     let
-        { queue, tracks } =
+        { tracks } =
             model
 
         equalizerSettings =
@@ -204,12 +204,6 @@ importEnclosed value model =
                         , volume = data.equalizerSettings.volume
                     }
 
-                newQueue =
-                    { queue
-                        | repeat = data.repeat
-                        , shuffle = data.shuffle
-                    }
-
                 newTracks =
                     { tracks
                         | cached = data.cachedTracks
@@ -222,12 +216,11 @@ importEnclosed value model =
                     }
             in
             ( { model
-                | queue = newQueue
-                , tracks = newTracks
-
-                --
-                , eqSettings = newEqualizerSettings
+                | eqSettings = newEqualizerSettings
                 , playlistToActivate = data.selectedPlaylist
+                , repeat = data.repeat
+                , shuffle = data.shuffle
+                , tracks = newTracks
               }
               --
             , Cmd.batch

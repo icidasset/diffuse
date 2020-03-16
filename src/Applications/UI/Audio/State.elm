@@ -6,7 +6,7 @@ import Maybe.Extra as Maybe
 import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
 import UI.Ports as Ports
-import UI.Queue as Queue
+import UI.Queue.State as Queue
 import UI.Reply as Reply
 import UI.Types as UI exposing (Manager, Organizer)
 
@@ -40,9 +40,8 @@ noteProgress { trackId, progress } model =
 
 playPause : Manager
 playPause model =
-    if Maybe.isNothing model.queue.activeItem then
-        -- TODO!
-        Return.performance (UI.QueueMsg Queue.Shift) model
+    if Maybe.isNothing model.nowPlaying then
+        Queue.shift model
 
     else if model.audioIsPlaying then
         communicate (Ports.pause ()) model

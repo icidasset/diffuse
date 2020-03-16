@@ -12,7 +12,6 @@ import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Queue
-import UI.Queue as Queue
 import UI.Reply exposing (Reply(..))
 
 

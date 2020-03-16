@@ -37,8 +37,7 @@ import UI.Notifications
 import UI.Page as Page
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.View as Playlists
-import UI.Queue as Queue
-import UI.Queue.ContextMenu as Queue
+import UI.Queue.View as Queue
 import UI.Reply exposing (Reply(..))
 import UI.Settings as Settings
 import UI.Settings.Page
@@ -83,7 +82,7 @@ body model =
             , on "touchend" (Json.Decode.succeed StoppedDragging)
             ]
 
-         else if Maybe.isJust model.queue.selection then
+         else if Maybe.isJust model.selectedQueueItem then
             [ on "tap" (Json.Decode.succeed RemoveQueueSelection) ]
 
          else if not (List.isEmpty model.tracks.selectedTrackIndexes) then
@@ -189,9 +188,7 @@ defaultScreen model =
                     model.extractedBackdropColor
 
             Page.Queue subPage ->
-                model.queue
-                    |> Lazy.lazy2 Queue.view subPage
-                    |> Html.map QueueMsg
+                Queue.view subPage model
 
             Page.Settings subPage ->
                 { authenticationMethod = Authentication.extractMethod model.authentication
@@ -219,9 +216,9 @@ defaultScreen model =
     -----------------------------------------
     , Html.map Reply
         (UI.Console.view
-            model.queue.activeItem
-            model.queue.repeat
-            model.queue.shuffle
+            model.nowPlaying
+            model.repeat
+            model.shuffle
             { stalled = model.audioHasStalled
             , loading = model.audioIsLoading
             , playing = model.audioIsPlaying

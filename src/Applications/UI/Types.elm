@@ -30,10 +30,10 @@ import Time
 import Tracks
 import Tracks.Encoding as Tracks
 import UI.Authentication.Types as Authentication
+import UI.DnD as DnD
 import UI.Notifications
 import UI.Page as Page exposing (Page)
-import UI.Queue as Queue
-import UI.Queue.ContextMenu as Queue
+import UI.Queue.Types as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Sources as Sources
 import UI.Sources.ContextMenu as Sources
@@ -66,6 +66,7 @@ type alias Model =
     , currentTime : Time.Posix
     , darkMode : Bool
     , downloading : Maybe { notificationId : Int }
+    , dnd : DnD.Model Int
     , focusedOnInput : Bool
     , isDragging : Bool
     , isLoading : Bool
@@ -127,6 +128,19 @@ type alias Model =
     , playlistToActivate : Maybe String
 
     -----------------------------------------
+    -- Queue
+    -----------------------------------------
+    , dontPlay : List Queue.Item
+    , nowPlaying : Maybe Queue.Item
+    , playedPreviously : List Queue.Item
+    , playingNext : List Queue.Item
+    , selectedQueueItem : Maybe Queue.Item
+
+    --
+    , repeat : Bool
+    , shuffle : Bool
+
+    -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
     , authentication : Authentication.State
@@ -134,7 +148,6 @@ type alias Model =
     -----------------------------------------
     -- Children (TODO)
     -----------------------------------------
-    , queue : Queue.Model
     , sources : Sources.Model
     , tracks : Tracks.Model
     }
@@ -165,7 +178,7 @@ type Msg
     | Stop
     | TogglePlay
       -----------------------------------------
-      -- Authentication
+      -- Authentication (TODO: Move to Auth.Types)
       -----------------------------------------
     | AuthenticationBootFailure String
     | MissingSecretKey Json.Decode.Value
@@ -189,6 +202,7 @@ type Msg
       -----------------------------------------
     | Blur
     | Debounce (Debouncer.Msg Msg)
+    | DnD (DnD.Msg Int)
     | FocusedOnInput
     | HideOverlay
     | PreferredColorSchemaChanged { dark : Bool }
@@ -250,10 +264,10 @@ type Msg
       -- 🦉 Nested
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg
+    | QueueMsg Queue.Msg
       -----------------------------------------
       -- Children (TODO)
       -----------------------------------------
-    | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
 

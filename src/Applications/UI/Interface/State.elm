@@ -7,7 +7,6 @@ import Return.Ext as Return
 import UI.Common.State as Common exposing (modifySingleton)
 import UI.DnD as DnD
 import UI.Page as Page
-import UI.Queue as Queue
 import UI.Queue.State as Queue
 import UI.Tracks as Tracks
 import UI.Tracks.Scene.List
@@ -47,6 +46,42 @@ debounce update debouncerMsg model =
             return updatedModel mappedCmd
 
 
+dnd : DnD.Msg Int -> Manager
+dnd dragMsg model =
+    let
+        ( d, { initiated } ) =
+            DnD.update dragMsg model.dnd
+
+        m =
+            if initiated then
+                { model | dnd = d, isDragging = True }
+
+            else
+                { model | dnd = d }
+    in
+    if DnD.hasDropped d then
+        case model.page of
+            Page.Queue _ ->
+                let
+                    ( from, to ) =
+                        ( Maybe.withDefault 0 <| DnD.modelSubject d
+                        , Maybe.withDefault 0 <| DnD.modelTarget d
+                        )
+
+                    newFuture =
+                        Queue.moveItem
+                            { from = from, to = to, shuffle = model.shuffle }
+                            model.playingNext
+                in
+                Queue.fill { m | playingNext = newFuture }
+
+            _ ->
+                Return.singleton m
+
+    else
+        Return.singleton m
+
+
 focusedOnInput : Manager
 focusedOnInput model =
     Return.singleton { model | focusedOnInput = True }
@@ -68,8 +103,8 @@ preferredColorSchemaChanged { dark } model =
 
 
 removeQueueSelection : Manager
-removeQueueSelection =
-    modifySingleton Queue.lens (\q -> { q | selection = Nothing })
+removeQueueSelection model =
+    Return.singleton { model | selectedQueueItem = Nothing }
 
 
 removeTrackSelection : Manager
@@ -101,11 +136,7 @@ stoppedDragging model =
     -- do the appropriate thing.
     case model.page of
         Page.Queue _ ->
-            -- TODO!
-            DnD.stoppedDragging
-                |> Queue.DragMsg
-                |> QueueMsg
-                |> Return.performanceF notDragging
+            dnd DnD.stoppedDragging notDragging
 
         Page.Index ->
             case model.tracks.scene of

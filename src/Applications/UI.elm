@@ -32,6 +32,7 @@ import UI.Audio.State as Audio
 import UI.Authentication.State as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
+import UI.DnD as DnD
 import UI.Equalizer.State as Equalizer
 import UI.Equalizer.View as Equalizer
 import UI.Interface.State as Interface
@@ -40,8 +41,8 @@ import UI.Page as Page
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.State as Playlists
 import UI.Ports as Ports
-import UI.Queue as Queue
-import UI.Queue.ContextMenu as Queue
+import UI.Queue.State as Queue
+import UI.Queue.Types as Queue
 import UI.Reply.Translate as Reply
 import UI.Routing.State as Routing
 import UI.Services.State as Services
@@ -94,6 +95,7 @@ init flags url key =
     , currentTime = Time.millisToPosix flags.initialTime
     , darkMode = flags.darkMode
     , downloading = Nothing
+    , dnd = DnD.initialModel
     , focusedOnInput = False
     , isDragging = False
     , isLoading = True
@@ -159,10 +161,26 @@ init flags url key =
     , playlistToActivate = Nothing
 
     -----------------------------------------
-    -- Children (TODO)
+    -- Queue
+    -----------------------------------------
+    , dontPlay = []
+    , nowPlaying = Nothing
+    , playedPreviously = []
+    , playingNext = []
+    , selectedQueueItem = Nothing
+
+    --
+    , repeat = False
+    , shuffle = False
+
+    -----------------------------------------
+    -- 🦉 Nested
     -----------------------------------------
     , authentication = Authentication.initialModel url
-    , queue = Queue.initialModel
+
+    -----------------------------------------
+    -- Children (TODO)
+    -----------------------------------------
     , sources = Sources.initialModel
     , tracks = Tracks.initialModel
     }
@@ -279,6 +297,9 @@ update msg =
 
         Debounce a ->
             Interface.debounce update a
+
+        DnD a ->
+            Interface.dnd a
 
         FocusedOnInput ->
             Interface.focusedOnInput
@@ -415,21 +436,12 @@ update msg =
         AuthenticationMsg a ->
             Authentication.update a
 
+        QueueMsg a ->
+            Queue.update a
+
         -----------------------------------------
         -- Children (TODO)
         -----------------------------------------
-        QueueMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = QueueMsg
-                    , mapModel = \child -> { model | queue = child }
-                    , update = Queue.update
-                    }
-                    { model = model.queue
-                    , msg = sub
-                    }
-
         SourcesMsg sub ->
             \model ->
                 Return3.wieldNested

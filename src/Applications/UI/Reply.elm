@@ -19,7 +19,6 @@ type Reply
       --
     | CopyToClipboard String
     | GoToPage Page
-    | StartedDragging
     | ToggleLoadingScreen Switch
       -----------------------------------------
       -- Audio
@@ -42,8 +41,6 @@ type Reply
     | ReplyViaContextMenu Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowPlaylistListMenu Coordinates Playlist
-    | ShowQueueFutureMenu Coordinates { item : Queue.Item, itemIndex : Int }
-    | ShowQueueHistoryMenu Coordinates { item : Queue.Item }
     | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates { alt : Bool } (List IdentifiedTrack)
     | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)
@@ -78,9 +75,7 @@ type Reply
       -----------------------------------------
       -- Queue
       -----------------------------------------
-    | ActiveQueueItemChanged (Maybe Queue.Item)
     | AddToQueue { inFront : Bool, tracks : List IdentifiedTrack }
-    | FillQueue
     | MoveQueueItemToFirst { itemIndex : Int }
     | MoveQueueItemToLast { itemIndex : Int }
     | PlayTrack IdentifiedTrack
@@ -99,7 +94,6 @@ type Reply
     | ExternalSourceAuthorization (String -> String)
     | ForceTracksRerender
     | GroupTracksBy Tracks.Grouping
-    | PreloadNextTrack
     | ProcessSources (List Source)
     | RemoveSourceFromCollection { sourceId : String }
     | RemoveTracksFromCache (List Track)

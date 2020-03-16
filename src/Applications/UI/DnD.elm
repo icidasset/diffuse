@@ -3,7 +3,6 @@ module UI.DnD exposing (Environment, Model, Msg, hasDropped, initialModel, isBei
 import Html exposing (Attribute)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
-import UI.Reply as Reply exposing (Reply)
 
 
 
@@ -30,6 +29,10 @@ type alias Environment context msg =
     }
 
 
+type alias Response =
+    { initiated : Bool }
+
+
 initialModel : Model context
 initialModel =
     NotDragging
@@ -39,7 +42,7 @@ initialModel =
 -- 📣
 
 
-update : Msg context -> Model context -> ( Model context, List Reply )
+update : Msg context -> Model context -> ( Model context, Response )
 update msg model =
     ( ------------------------------------
       -- Model
@@ -96,10 +99,10 @@ update msg model =
       ------------------------------------
     , case msg of
         Start context ->
-            [ Reply.StartedDragging ]
+            { initiated = True }
 
         _ ->
-            []
+            { initiated = False }
     )
 
 

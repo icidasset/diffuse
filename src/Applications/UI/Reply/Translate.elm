@@ -41,8 +41,9 @@ import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Directory
 import UI.Ports as Ports
-import UI.Queue as Queue
 import UI.Queue.ContextMenu as Queue
+import UI.Queue.State as Queue
+import UI.Queue.Types as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Routing.State as Routing
 import UI.Settings as Settings
@@ -77,9 +78,6 @@ translate reply model =
 
         GoToPage page ->
             Routing.changeUrlUsingPage page model
-
-        StartedDragging ->
-            Return.singleton { model | isDragging = True }
 
         Reply.ToggleLoadingScreen a ->
             Interface.toggleLoadingScreen a model
@@ -153,8 +151,17 @@ translate reply model =
                 , playlistToActivate = Nothing
 
                 --
-                , queue =
-                    Queue.initialModel
+                , dontPlay = []
+                , nowPlaying = Nothing
+                , playedPreviously = []
+                , playingNext = []
+                , selectedQueueItem = Nothing
+
+                --
+                , repeat = False
+                , shuffle = False
+
+                --
                 , sources =
                     { sources
                         | collection = []
@@ -197,12 +204,6 @@ translate reply model =
 
         Reply.ShowPlaylistListMenu coordinates playlist ->
             Return.singleton { model | contextMenu = Just (Playlists.listMenu playlist model.tracks.collection.identified model.confirmation coordinates) }
-
-        ShowQueueFutureMenu coordinates { item, itemIndex } ->
-            Return.singleton { model | contextMenu = Just (Queue.futureMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress, itemIndex = itemIndex } item coordinates) }
-
-        ShowQueueHistoryMenu coordinates { item } ->
-            Return.singleton { model | contextMenu = Just (Queue.historyMenu { cached = model.tracks.cached, cachingInProgress = model.tracks.cachingInProgress } item coordinates) }
 
         ShowSourceContextMenu coordinates source ->
             Return.singleton { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
@@ -360,33 +361,6 @@ translate reply model =
         -----------------------------------------
         -- Queue
         -----------------------------------------
-        ActiveQueueItemChanged maybeQueueItem ->
-            let
-                nowPlaying =
-                    Maybe.map .identifiedTrack maybeQueueItem
-
-                portCmd =
-                    maybeQueueItem
-                        |> Maybe.map
-                            (.identifiedTrack >> Tuple.second)
-                        |> Maybe.map
-                            (Queue.makeEngineItem
-                                model.currentTime
-                                model.sources.collection
-                                model.tracks.cached
-                                (if model.rememberProgress then
-                                    model.progress
-
-                                 else
-                                    Dict.empty
-                                )
-                            )
-                        |> Ports.activeQueueItemChanged
-            in
-            model
-                |> Return.performance (TracksMsg <| Tracks.SetNowPlaying nowPlaying)
-                |> Return.command portCmd
-
         AddToQueue { inFront, tracks } ->
             (if inFront then
                 Queue.InjectFirst
@@ -398,21 +372,11 @@ translate reply model =
                 |> QueueMsg
                 |> Return.performanceF model
 
-        FillQueue ->
-            model.tracks.collection.harvested
-                |> Queue.Fill model.currentTime
-                |> QueueMsg
-                |> Return.performanceF model
-
         MoveQueueItemToFirst args ->
-            translate
-                FillQueue
-                { model | queue = Queue.moveQueueItemToFirst model.queue args }
+            Queue.moveQueueItemToFirst args model
 
         MoveQueueItemToLast args ->
-            translate
-                FillQueue
-                { model | queue = Queue.moveQueueItemToLast model.queue args }
+            Queue.moveQueueItemToLast args model
 
         PlayTrack identifiedTrack ->
             identifiedTrack
@@ -499,28 +463,6 @@ translate reply model =
                 |> Tracks.GroupBy
                 |> TracksMsg
                 |> Return.performanceF model
-
-        PreloadNextTrack ->
-            case List.head model.queue.future of
-                Just item ->
-                    item
-                        |> .identifiedTrack
-                        |> Tuple.second
-                        |> Queue.makeEngineItem
-                            model.currentTime
-                            model.sources.collection
-                            model.tracks.cached
-                            (if model.rememberProgress then
-                                model.progress
-
-                             else
-                                Dict.empty
-                            )
-                        |> Ports.preloadAudio
-                        |> return model
-
-                Nothing ->
-                    Return.singleton model
 
         ProcessSources [] ->
             Return.singleton model

@@ -18,10 +18,10 @@ saveEnclosedUserData model =
     , grouping = model.tracks.grouping
     , onlyShowCachedTracks = model.tracks.cachedOnly
     , onlyShowFavourites = model.tracks.favouritesOnly
-    , repeat = model.queue.repeat
+    , repeat = model.repeat
     , searchTerm = model.tracks.searchTerm
     , selectedPlaylist = Maybe.map .name model.tracks.selectedPlaylist
-    , shuffle = model.queue.shuffle
+    , shuffle = model.shuffle
     , sortBy = model.tracks.sortBy
     , sortDirection = model.tracks.sortDirection
     }
