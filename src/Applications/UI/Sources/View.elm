@@ -1,29 +1,21 @@
 module UI.Sources.View exposing (view)
 
-import Alien
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
-import Coordinates
 import Css.Classes as C
 import Dict.Ext as Dict
 import Html exposing (Html, text)
 import Html.Attributes exposing (href)
-import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy as Lazy
-import Json.Decode as Json
 import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Return3 as Return exposing (..)
 import Sources exposing (..)
-import Sources.Encoding
-import Time
-import Time.Ext as Time
 import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Ports as Ports
 import UI.Reply exposing (Reply(..))
 import UI.Sources.Form as Form
 import UI.Sources.Page as Sources exposing (..)

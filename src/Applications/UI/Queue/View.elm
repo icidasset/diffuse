@@ -3,26 +3,20 @@ module UI.Queue.View exposing (view)
 import Chunky exposing (..)
 import Common
 import Conditional exposing (..)
-import Coordinates
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (href)
-import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy as Lazy
 import Icons
 import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Queue exposing (..)
-import Time
-import Tracks exposing (IdentifiedTrack)
 import UI.DnD as DnD
 import UI.Kit
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Ports as Ports
-import UI.Queue.Fill as Fill
 import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Queue.Types as Queue exposing (..)
 import UI.Reply exposing (Reply(..))

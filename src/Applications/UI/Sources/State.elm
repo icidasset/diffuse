@@ -9,7 +9,7 @@ import Dict.Ext as Dict
 import Html.Events.Extra.Mouse as Mouse
 import Json.Decode as Json
 import Json.Encode
-import Monocle.Lens as Lens exposing (Lens)
+import Monocle.Lens as Lens
 import Notifications
 import Return exposing (andThen, return)
 import Return.Ext as Return

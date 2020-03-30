@@ -2,7 +2,6 @@ module UI.Other.State exposing (..)
 
 import Alien
 import Common exposing (Switch(..))
-import Monocle.Lens as Lens
 import Notifications
 import Return
 import Return.Ext as Return
@@ -10,7 +9,6 @@ import Time
 import UI.Authentication.Types as Authentication
 import UI.Common.State as Common
 import UI.Ports as Ports
-import UI.Sources.State as Sources
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)
 

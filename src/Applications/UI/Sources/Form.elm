@@ -15,8 +15,6 @@ import Material.Icons.Types exposing (Coloring(..))
 import Return3 exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services
-import Sources.Services.Dropbox
-import Sources.Services.Google
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page

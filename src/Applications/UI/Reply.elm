@@ -3,7 +3,6 @@ module UI.Reply exposing (Reply(..))
 import Common exposing (Switch(..))
 import Coordinates exposing (Coordinates)
 import Playlists exposing (Playlist, PlaylistTrack)
-import Queue
 import Sources exposing (Source)
 import Tracks exposing (IdentifiedTrack, Track)
 import UI.Page exposing (Page)

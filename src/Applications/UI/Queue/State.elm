@@ -4,7 +4,6 @@ import Coordinates
 import Dict
 import Html.Events.Extra.Mouse as Mouse
 import List.Extra as List
-import Monocle.Lens as Lens exposing (Lens)
 import Notifications
 import Queue exposing (..)
 import Return exposing (andThen, return)

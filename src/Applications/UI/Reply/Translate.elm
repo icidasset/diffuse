@@ -6,8 +6,6 @@ import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Dict
-import Dict.Ext as Dict
 import File.Download
 import File.Select
 import Html.Attributes exposing (id)
@@ -15,7 +13,6 @@ import Json.Encode
 import LastFm
 import List.Ext as List
 import List.Extra as List
-import Maybe.Extra as Maybe
 import Monocle.Lens as Lens
 import Notifications
 import Playlists.Encoding as Playlists
