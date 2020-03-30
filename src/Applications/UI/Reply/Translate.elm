@@ -33,7 +33,7 @@ import UI.Audio.State as Audio
 import UI.Authentication.ContextMenu as Authentication
 import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop
-import UI.Common.State exposing (showNotification, showNotificationWithModel)
+import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Demo as Demo
 import UI.Interface.State as Interface
 import UI.Notifications
@@ -45,10 +45,10 @@ import UI.Queue.ContextMenu as Queue
 import UI.Queue.State as Queue
 import UI.Queue.Types as Queue
 import UI.Reply as Reply exposing (Reply(..))
-import UI.Routing.State as Routing
 import UI.Settings as Settings
-import UI.Sources as Sources
 import UI.Sources.ContextMenu as Sources
+import UI.Sources.State as Sources
+import UI.Sources.Types as Sources
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
@@ -77,7 +77,7 @@ translate reply model =
                 |> return model
 
         GoToPage page ->
-            Routing.changeUrlUsingPage page model
+            Common.changeUrlUsingPage page model
 
         Reply.ToggleLoadingScreen a ->
             Interface.toggleLoadingScreen a model
@@ -162,11 +162,10 @@ translate reply model =
                 , shuffle = False
 
                 --
-                , sources =
-                    { sources
-                        | collection = []
-                        , isProcessing = []
-                    }
+                , processingContext = []
+                , sources = []
+
+                --
                 , tracks =
                     { tracks
                         | collection = Tracks.emptyCollection
@@ -205,9 +204,6 @@ translate reply model =
         Reply.ShowPlaylistListMenu coordinates playlist ->
             Return.singleton { model | contextMenu = Just (Playlists.listMenu playlist model.tracks.collection.identified model.confirmation coordinates) }
 
-        ShowSourceContextMenu coordinates source ->
-            Return.singleton { model | contextMenu = Just (Sources.sourceMenu source coordinates) }
-
         ShowTracksContextMenu coordinates { alt } tracks ->
             let
                 menuDependencies =
@@ -217,7 +213,7 @@ translate reply model =
                     , selectedPlaylist = model.tracks.selectedPlaylist
                     , lastModifiedPlaylistName = model.lastModifiedPlaylist
                     , showAlternativeMenu = alt
-                    , sources = model.sources.collection
+                    , sources = model.sources
                     }
             in
             Return.singleton { model | contextMenu = Just (Tracks.trackMenu menuDependencies tracks coordinates) }
@@ -309,7 +305,7 @@ translate reply model =
 
                 directoryPlaylists =
                     UI.Playlists.Directory.generate
-                        model.sources.collection
+                        model.sources
                         model.tracks.collection.untouched
             in
             [ nonDirectoryPlaylists
@@ -464,52 +460,8 @@ translate reply model =
                 |> TracksMsg
                 |> Return.performanceF model
 
-        ProcessSources [] ->
-            Return.singleton model
-
-        ProcessSources sourcesToProcess ->
-            let
-                notification =
-                    Notifications.stickyWarning "Processing sources ..."
-
-                notificationId =
-                    Notifications.id notification
-
-                newNotifications =
-                    List.filter
-                        (\n -> Notifications.kind n /= Notifications.Error)
-                        model.notifications
-
-                sources =
-                    model.sources
-
-                isProcessing =
-                    sourcesToProcess
-                        |> List.sortBy (.data >> Dict.fetch "name" "")
-                        |> List.map (\{ id } -> ( id, 0 ))
-
-                newSources =
-                    { sources
-                        | isProcessing = isProcessing
-                        , processingError = Nothing
-                        , processingNotificationId = Just notificationId
-                    }
-
-                newModel =
-                    { model | notifications = newNotifications, sources = newSources }
-            in
-            [ ( "origin"
-              , Json.Encode.string (Common.urlOrigin model.url)
-              )
-            , ( "sources"
-              , Json.Encode.list Sources.encode sourcesToProcess
-              )
-            ]
-                |> Json.Encode.object
-                |> Alien.broadcast Alien.ProcessSources
-                |> Ports.toBrain
-                |> return newModel
-                |> andThen (showNotification notification)
+        ProcessSources sources ->
+            Sources.process model
 
         RemoveSourceFromCollection args ->
             args
@@ -548,18 +500,6 @@ translate reply model =
                 |> Return.performanceF model
                 |> Return.command cmd
 
-        ReplaceSourceInCollection source ->
-            let
-                sources =
-                    model.sources
-            in
-            model.sources.collection
-                |> List.map (\s -> ifThenElse (s.id == source.id) source s)
-                |> (\c -> { sources | collection = c })
-                |> (\s -> { model | sources = s })
-                |> Return.singleton
-                |> andThen (translate SaveSources)
-
         ScrollToNowPlaying ->
             Return.performance (TracksMsg Tracks.ScrollToNowPlaying) model
 
@@ -592,7 +532,7 @@ translate reply model =
                               , track
                                     |> Queue.makeTrackUrl
                                         model.currentTime
-                                        model.sources.collection
+                                        model.sources
                                     |> Json.Encode.string
                               )
                             ]
@@ -631,7 +571,7 @@ translate reply model =
             , playlists = List.filterNot .autoGenerated model.playlists
             , progress = model.progress
             , settings = Just (gatherSettings model)
-            , sources = model.sources.collection
+            , sources = model.sources
             , tracks = model.tracks.collection.untouched
             }
                 |> encodeHypaethralData
@@ -690,7 +630,7 @@ translate reply model =
         SaveSources ->
             let
                 updateEnabledSourceIdsOnTracks =
-                    model.sources.collection
+                    model.sources
                         |> Sources.enabledSourceIds
                         |> Tracks.SetEnabledSourceIds
                         |> TracksMsg
@@ -699,7 +639,7 @@ translate reply model =
                 ( updatedModel, updatedCmd ) =
                     updateEnabledSourceIdsOnTracks model
             in
-            updatedModel.sources.collection
+            updatedModel.sources
                 |> Json.Encode.list Sources.encode
                 |> Alien.broadcast Alien.SaveSources
                 |> Ports.toBrain

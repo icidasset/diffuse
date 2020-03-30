@@ -46,8 +46,9 @@ import UI.Queue.Types as Queue
 import UI.Reply.Translate as Reply
 import UI.Routing.State as Routing
 import UI.Services.State as Services
-import UI.Sources as Sources
 import UI.Sources.ContextMenu as Sources
+import UI.Sources.Form
+import UI.Sources.State as Sources
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.State as Tracks
@@ -174,6 +175,15 @@ init flags url key =
     , shuffle = False
 
     -----------------------------------------
+    -- Sources
+    -----------------------------------------
+    , processingContext = []
+    , processingError = Nothing
+    , processingNotificationId = Nothing
+    , sources = []
+    , sourceForm = UI.Sources.Form.initialModel
+
+    -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
     , authentication = Authentication.initialModel url
@@ -181,7 +191,6 @@ init flags url key =
     -----------------------------------------
     -- Children (TODO)
     -----------------------------------------
-    , sources = Sources.initialModel
     , tracks = Tracks.initialModel
     }
         |> Routing.transition page
@@ -248,7 +257,7 @@ update msg =
             Audio.playPause
 
         -----------------------------------------
-        -- Authentication
+        -- Authentication (TODO: Move)
         -----------------------------------------
         AuthenticationBootFailure a ->
             Authentication.bootFailure a
@@ -365,7 +374,7 @@ update msg =
         -- Routing
         -----------------------------------------
         ChangeUrlUsingPage a ->
-            Routing.changeUrlUsingPage a
+            Common.changeUrlUsingPage a
 
         LinkClicked a ->
             Routing.linkClicked a
@@ -386,7 +395,7 @@ update msg =
             Services.scrobble a
 
         -----------------------------------------
-        -- Tracks
+        -- Tracks (TODO: Move)
         -----------------------------------------
         DownloadTracksFinished ->
             Tracks.downloadTracksFinished
@@ -422,6 +431,18 @@ update msg =
             Adjunct.keyboardInput a
 
         -----------------------------------------
+        -- 🦉 Nested
+        -----------------------------------------
+        AuthenticationMsg a ->
+            Authentication.update a
+
+        QueueMsg a ->
+            Queue.update a
+
+        SourcesMsg a ->
+            Sources.update a
+
+        -----------------------------------------
         -- 📭 Other
         -----------------------------------------
         SetCurrentTime a ->
@@ -431,29 +452,8 @@ update msg =
             Other.setIsOnline a
 
         -----------------------------------------
-        -- 🦉 Nested
-        -----------------------------------------
-        AuthenticationMsg a ->
-            Authentication.update a
-
-        QueueMsg a ->
-            Queue.update a
-
-        -----------------------------------------
         -- Children (TODO)
         -----------------------------------------
-        SourcesMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = SourcesMsg
-                    , mapModel = \child -> { model | sources = child }
-                    , update = Sources.update
-                    }
-                    { model = model.sources
-                    , msg = sub
-                    }
-
         TracksMsg sub ->
             \model ->
                 Return3.wieldNested
@@ -496,6 +496,7 @@ subscriptions model =
         -----------------------------------------
         -- Interface
         -----------------------------------------
+        , Browser.Events.onResize Interface.onResize
         , Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
         , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
         , Ports.showErrorNotification (Notifications.error >> ShowNotification)
@@ -507,11 +508,6 @@ subscriptions model =
         , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
         , Ports.requestNext (\_ -> QueueMsg Queue.Shift)
         , Ports.requestPrevious (\_ -> QueueMsg Queue.Rewind)
-
-        -----------------------------------------
-        -- Resize
-        -----------------------------------------
-        , Browser.Events.onResize Interface.onResize
 
         -----------------------------------------
         -- Services

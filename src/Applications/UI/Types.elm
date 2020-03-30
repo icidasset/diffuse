@@ -24,7 +24,7 @@ import Management
 import Notifications exposing (Notification)
 import Playlists exposing (Playlist, PlaylistTrack)
 import Queue
-import Sources
+import Sources exposing (Source)
 import Sources.Encoding as Sources
 import Time
 import Tracks
@@ -35,8 +35,8 @@ import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Queue.Types as Queue
 import UI.Reply as Reply exposing (Reply(..))
-import UI.Sources as Sources
 import UI.Sources.ContextMenu as Sources
+import UI.Sources.Types as Sources
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import Url exposing (Protocol(..), Url)
@@ -141,6 +141,15 @@ type alias Model =
     , shuffle : Bool
 
     -----------------------------------------
+    -- Sources
+    -----------------------------------------
+    , processingContext : List ( String, Float )
+    , processingError : Maybe { error : String, sourceId : String }
+    , processingNotificationId : Maybe Int
+    , sourceForm : Sources.Form
+    , sources : List Source
+
+    -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
     , authentication : Authentication.State
@@ -148,7 +157,6 @@ type alias Model =
     -----------------------------------------
     -- Children (TODO)
     -----------------------------------------
-    , sources : Sources.Model
     , tracks : Tracks.Model
     }
 
@@ -238,7 +246,7 @@ type Msg
     | GotLastFmSession (Result Http.Error String)
     | Scrobble { duration : Int, timestamp : Int, trackId : String }
       -----------------------------------------
-      -- Tracks
+      -- Tracks (TODO: Move to Tracks.Types)
       -----------------------------------------
     | DownloadTracksFinished
     | FailedToStoreTracksInCache (List String)
@@ -256,20 +264,17 @@ type Msg
       -----------------------------------------
     | KeyboardMsg Keyboard.Msg
       -----------------------------------------
-      -- 📭 Other
-      -----------------------------------------
-    | SetCurrentTime Time.Posix
-    | SetIsOnline Bool
-      -----------------------------------------
       -- 🦉 Nested
       -----------------------------------------
     | AuthenticationMsg Authentication.Msg
     | QueueMsg Queue.Msg
-      -----------------------------------------
-      -- Children (TODO)
-      -----------------------------------------
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg
+      -----------------------------------------
+      -- 📭 Other
+      -----------------------------------------
+    | SetCurrentTime Time.Posix
+    | SetIsOnline Bool
 
 
 type alias Organizer model =

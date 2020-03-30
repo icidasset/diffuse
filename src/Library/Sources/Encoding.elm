@@ -39,7 +39,8 @@ encodeData data =
 
 decode : Decode.Value -> Maybe Source
 decode value =
-    Decode.decodeValue decoder value
+    value
+        |> Decode.decodeValue decoder
         |> Result.toMaybe
 
 

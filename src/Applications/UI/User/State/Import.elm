@@ -20,8 +20,7 @@ import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Reply exposing (..)
 import UI.Reply.Translate as Reply
-import UI.Routing.State as Routing
-import UI.Sources as Sources
+import UI.Sources.State as Sources
 import UI.Tracks as Tracks
 import UI.Types as UI exposing (..)
 import Url.Ext as Url
@@ -58,7 +57,7 @@ importJson json model =
         -- Clear tracks cache
         |> andThen (Reply.translate ClearTracksCache)
         -- Redirect to index page
-        |> andThen (Routing.changeUrlUsingPage Page.Index)
+        |> andThen (Common.changeUrlUsingPage Page.Index)
         -----------------------------
         -- Save all the imported data
         -----------------------------
@@ -107,10 +106,7 @@ loadHypaethralUserData json model =
         |> andThen
             (\m ->
                 if m.processAutomatically then
-                    m.sources
-                        |> Sources.sourcesToProcess
-                        |> ProcessSources
-                        |> Reply.translateWithModel m
+                    Sources.process m
 
                 else
                     Return.singleton m
@@ -135,9 +131,6 @@ importHypaethral value model =
                         |> Maybe.withDefault Backdrop.default
                         |> Just
 
-                sourcesModel =
-                    { sources | collection = data.sources }
-
                 newPlaylistsCollection =
                     List.append
                         data.playlists
@@ -155,8 +148,7 @@ importHypaethral value model =
                     model.lastFm
             in
             ( { model
-                | sources = sourcesModel
-                , tracks = tracksModel
+                | tracks = tracksModel
 
                 --
                 , chosenBackdrop = chosenBackdrop
@@ -166,6 +158,7 @@ importHypaethral value model =
                 , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
                 , progress = data.progress
                 , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
+                , sources = data.sources
               }
               --
             , Cmd.map TracksMsg tracksCmd

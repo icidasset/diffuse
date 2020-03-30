@@ -54,10 +54,7 @@ setIsOnline bool model =
 
 setCurrentTime : Time.Posix -> Manager
 setCurrentTime time model =
-    model
-        |> (\m -> { m | currentTime = time })
-        |> Lens.modify Sources.lens (\s -> { s | currentTime = time })
-        |> Return.singleton
+    Return.singleton { model | currentTime = time }
 
 
 

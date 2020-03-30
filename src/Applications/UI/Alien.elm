@@ -5,7 +5,7 @@ import Common exposing (Switch(..))
 import Json.Decode
 import Notifications
 import UI.Authentication.Types as Authentication
-import UI.Sources as Sources
+import UI.Sources.Types as Sources
 import UI.Tracks as Tracks
 import UI.Types exposing (..)
 import User.Layer exposing (..)
@@ -46,6 +46,7 @@ translateAlienData event =
         Just Alien.FinishedProcessingSource ->
             event.data
                 |> Json.Decode.decodeValue Json.Decode.string
+                |> Result.map (\id -> { sourceId = id })
                 |> Result.map (Sources.FinishedProcessingSource >> SourcesMsg)
                 |> Result.withDefault Bypass
 

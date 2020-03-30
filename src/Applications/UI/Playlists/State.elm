@@ -16,7 +16,6 @@ import UI.Page as Page
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Page exposing (..)
 import UI.Ports as Ports
-import UI.Routing.State as Routing
 import UI.Tracks as Tracks
 import UI.Types as UI exposing (..)
 
@@ -230,4 +229,4 @@ showListMenu playlist mouseEvent model =
 
 redirectToIndexPage : Manager
 redirectToIndexPage =
-    Routing.changeUrlUsingPage (Page.Playlists Index)
+    Common.changeUrlUsingPage (Page.Playlists Index)

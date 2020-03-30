@@ -87,7 +87,7 @@ changeActiveItem maybeItem model =
                 |> Maybe.map
                     (Queue.makeEngineItem
                         model.currentTime
-                        model.sources.collection
+                        model.sources
                         model.tracks.cached
                         (if model.rememberProgress then
                             model.progress
@@ -168,7 +168,7 @@ preloadNext model =
                 |> Tuple.second
                 |> Queue.makeEngineItem
                     model.currentTime
-                    model.sources.collection
+                    model.sources
                     model.tracks.cached
                     (if model.rememberProgress then
                         model.progress

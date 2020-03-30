@@ -41,9 +41,9 @@ import UI.Queue.View as Queue
 import UI.Reply exposing (Reply(..))
 import UI.Settings as Settings
 import UI.Settings.Page
-import UI.Sources as Sources
 import UI.Sources.ContextMenu as Sources
 import UI.Sources.Page
+import UI.Sources.View as Sources
 import UI.Svg.Elements
 import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
@@ -158,12 +158,12 @@ defaultScreen model =
     -- Main
     -----------------------------------------
     , vessel
-        [ { amountOfSources = List.length model.sources.collection
+        [ { amountOfSources = List.length model.sources
           , bgColor = model.extractedBackdropColor
           , darkMode = model.darkMode
           , isOnIndexPage = model.page == Page.Index
           , isTouchDevice = model.isTouchDevice
-          , sourceIdsBeingProcessed = List.map Tuple.first model.sources.isProcessing
+          , sourceIdsBeingProcessed = List.map Tuple.first model.processingContext
           , viewport = model.viewport
           }
             |> Tracks.view model.tracks
@@ -202,13 +202,7 @@ defaultScreen model =
                     |> Html.map Reply
 
             Page.Sources subPage ->
-                let
-                    amountOfTracks =
-                        List.length model.tracks.collection.untouched
-                in
-                model.sources
-                    |> Lazy.lazy3 Sources.view { amountOfTracks = amountOfTracks } subPage
-                    |> Html.map SourcesMsg
+                Sources.view subPage model
         ]
 
     -----------------------------------------

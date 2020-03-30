@@ -41,7 +41,6 @@ type Reply
     | ReplyViaContextMenu Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowPlaylistListMenu Coordinates Playlist
-    | ShowSourceContextMenu Coordinates Source
     | ShowTracksContextMenu Coordinates { alt : Bool } (List IdentifiedTrack)
     | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)
       -----------------------------------------
@@ -98,7 +97,6 @@ type Reply
     | RemoveSourceFromCollection { sourceId : String }
     | RemoveTracksFromCache (List Track)
     | RemoveTracksWithSourceId String
-    | ReplaceSourceInCollection Source
     | ScrollToNowPlaying
     | StoreTracksInCache (List Track)
     | ToggleCachedTracksOnly

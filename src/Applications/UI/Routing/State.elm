@@ -1,4 +1,4 @@
-module UI.Routing.State exposing (changeUrlUsingPage, linkClicked, resetUrl, transition, urlChanged)
+module UI.Routing.State exposing (linkClicked, resetUrl, transition, urlChanged)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Nav
@@ -9,24 +9,18 @@ import Return.Ext as Return
 import Sources
 import Sources.Services.Dropbox
 import Sources.Services.Google
+import UI.Common.State as Common
 import UI.Page as Page exposing (Page)
 import UI.Sources.Form
 import UI.Sources.Page
 import UI.Sources.State as Sources
+import UI.Sources.Types as Sources
 import UI.Types as UI exposing (Manager)
 import Url exposing (Url)
 
 
 
 -- 🔱
-
-
-changeUrlUsingPage : Page -> Manager
-changeUrlUsingPage page model =
-    page
-        |> Page.toString
-        |> Nav.pushUrl model.navKey
-        |> return model
 
 
 linkClicked : UrlRequest -> Manager
@@ -80,9 +74,8 @@ transition page model =
         -----------------------------------------
         Page.Sources (UI.Sources.Page.NewThroughRedirect service args) ->
             let
-                ( sources, form, defaultContext ) =
-                    ( model.sources
-                    , model.sources.form
+                ( form, defaultContext ) =
+                    ( model.sourceForm
                     , UI.Sources.Form.defaultContext
                     )
             in
@@ -100,9 +93,8 @@ transition page model =
                 , service =
                     service
             }
-                |> (\c -> { form | context = c, step = UI.Sources.Form.By })
-                |> (\f -> { sources | form = f })
-                |> (\s -> { model | sources = s })
+                |> (\c -> { form | context = c, step = Sources.By })
+                |> (\f -> { model | sourceForm = f })
                 |> Return.singleton
 
         -----------------------------------------
@@ -144,7 +136,7 @@ loadSourceForForm sourceId model =
             model.isLoading
 
         maybeSource =
-            List.find (.id >> (==) sourceId) model.sources.collection
+            List.find (.id >> (==) sourceId) model.sources
     in
     case ( isLoading, maybeSource ) of
         ( False, Just source ) ->
@@ -157,6 +149,6 @@ loadSourceForForm sourceId model =
 
         ( True, _ ) ->
             -- Redirect away from edit-source page
-            changeUrlUsingPage
+            Common.changeUrlUsingPage
                 (Page.Sources UI.Sources.Page.Index)
                 model
