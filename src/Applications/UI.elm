@@ -211,7 +211,8 @@ init flags url key =
     -----------------------------------------
     , authentication = Authentication.initialModel url
     }
-        |> Routing.transition page
+        |> Routing.transition
+            page
         |> Return.command
             (Maybe.unwrap
                 Cmd.none

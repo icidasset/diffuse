@@ -4,7 +4,6 @@ import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
 import Return exposing (return)
 import Return.Ext as Return
-import UI.Common.State as Common exposing (modifySingleton)
 import UI.DnD as DnD
 import UI.Page as Page
 import UI.Playlists.State as Playlists

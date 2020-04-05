@@ -13,7 +13,6 @@ import Json.Encode
 import LastFm
 import List.Ext as List
 import List.Extra as List
-import Monocle.Lens as Lens
 import Notifications
 import Playlists.Encoding as Playlists
 import Queue
@@ -32,11 +31,9 @@ import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Demo as Demo
-import UI.Interface.State as Interface
 import UI.Notifications
 import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
-import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Queue.ContextMenu as Queue
 import UI.Queue.State as Queue

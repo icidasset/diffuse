@@ -26,7 +26,6 @@ import String.Ext as String
 import UI.Authentication.Types as Authentication exposing (..)
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
-import UI.Interface.State as Interface
 import UI.Ports as Ports
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Reply.Translate as Reply
