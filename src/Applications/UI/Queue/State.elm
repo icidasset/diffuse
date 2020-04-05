@@ -14,7 +14,6 @@ import UI.Ports as Ports
 import UI.Queue.ContextMenu as Queue
 import UI.Queue.Fill as Fill
 import UI.Queue.Types as Queue exposing (..)
-import UI.Tracks as Tracks
 import UI.Types exposing (..)
 import UI.User.State.Export as User exposing (..)
 
@@ -75,36 +74,24 @@ update msg =
 
 changeActiveItem : Maybe Item -> Manager
 changeActiveItem maybeItem model =
-    let
-        nowPlaying =
-            Maybe.map .identifiedTrack maybeItem
+    maybeItem
+        |> Maybe.map
+            (.identifiedTrack >> Tuple.second)
+        |> Maybe.map
+            (Queue.makeEngineItem
+                model.currentTime
+                model.sources
+                model.cachedTracks
+                (if model.rememberProgress then
+                    model.progress
 
-        portCmd =
-            maybeItem
-                |> Maybe.map
-                    (.identifiedTrack >> Tuple.second)
-                |> Maybe.map
-                    (Queue.makeEngineItem
-                        model.currentTime
-                        model.sources
-                        model.tracks.cached
-                        (if model.rememberProgress then
-                            model.progress
-
-                         else
-                            Dict.empty
-                        )
-                    )
-                |> Ports.activeQueueItemChanged
-    in
-    { model | nowPlaying = maybeItem }
-        |> Return.performance
-            (nowPlaying
-                |> Tracks.SetNowPlaying
-                |> TracksMsg
+                 else
+                    Dict.empty
+                )
             )
+        |> Ports.activeQueueItemChanged
+        |> return { model | nowPlaying = maybeItem }
         |> andThen fill
-        |> Return.command portCmd
 
 
 clear : Manager
@@ -116,7 +103,7 @@ fill : Manager
 fill model =
     let
         ( availableTracks, timestamp ) =
-            ( model.tracks.collection.harvested
+            ( model.tracks.harvested
             , model.currentTime
             )
 
@@ -168,7 +155,7 @@ preloadNext model =
                 |> Queue.makeEngineItem
                     model.currentTime
                     model.sources
-                    model.tracks.cached
+                    model.cachedTracks
                     (if model.rememberProgress then
                         model.progress
 
@@ -234,8 +221,8 @@ showFutureMenu item { index } mouseEvent model =
     mouseEvent.clientPos
         |> Coordinates.fromTuple
         |> Queue.futureMenu
-            { cached = model.tracks.cached
-            , cachingInProgress = model.tracks.cachingInProgress
+            { cached = model.cachedTracks
+            , cachingInProgress = model.cachingTracksInProgress
             , itemIndex = index
             }
             item
@@ -249,8 +236,8 @@ showHistoryMenu item mouseEvent model =
     mouseEvent.clientPos
         |> Coordinates.fromTuple
         |> Queue.historyMenu
-            { cached = model.tracks.cached
-            , cachingInProgress = model.tracks.cachingInProgress
+            { cached = model.cachedTracks
+            , cachingInProgress = model.cachingTracksInProgress
             }
             item
         |> Just

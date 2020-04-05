@@ -6,7 +6,7 @@ import Json.Decode
 import Notifications
 import UI.Authentication.Types as Authentication
 import UI.Sources.Types as Sources
-import UI.Tracks as Tracks
+import UI.Tracks.Types as Tracks
 import UI.Types exposing (..)
 import User.Layer exposing (..)
 

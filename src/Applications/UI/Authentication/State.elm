@@ -281,7 +281,7 @@ missingSecretKey _ model =
         |> Notifications.error
         |> showNotificationWithModel model
         |> andThen Backdrop.setDefault
-        |> andThen (Interface.toggleLoadingScreen Off)
+        |> andThen (Common.toggleLoadingScreen Off)
 
 
 notAuthenticated : Manager
@@ -357,7 +357,7 @@ signIn method model =
         |> Ports.toBrain
         --
         |> Return.return model
-        |> Return.andThen (Interface.toggleLoadingScreen On)
+        |> Return.andThen (Common.toggleLoadingScreen On)
 
 
 signInWithPassphrase : Method -> String -> Manager
@@ -376,7 +376,7 @@ signInWithPassphrase method passphrase model =
             |> Ports.toBrain
             --
             |> Return.return model
-            |> Return.andThen (Interface.toggleLoadingScreen On)
+            |> Return.andThen (Common.toggleLoadingScreen On)
 
 
 startFlow : Manager

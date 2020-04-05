@@ -45,7 +45,7 @@ view page model =
             Index ->
                 Lazy.lazy2
                     (\a b -> receptacle <| index a b)
-                    (List.length model.tracks.collection.untouched)
+                    (List.length model.tracks.untouched)
                     { processingContext = model.processingContext
                     , processingError = model.processingError
                     , sources = model.sources

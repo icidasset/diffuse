@@ -11,6 +11,7 @@ import Css exposing (url)
 import Debouncer.Basic as Debouncer
 import Dict
 import Equalizer
+import InfiniteList
 import Keyboard
 import LastFm
 import Maybe.Extra as Maybe
@@ -18,7 +19,6 @@ import Notifications
 import Playlists.Encoding as Playlists
 import Queue
 import Return
-import Return3
 import Sources
 import Sources.Encoding as Sources
 import Task
@@ -49,9 +49,9 @@ import UI.Services.State as Services
 import UI.Sources.ContextMenu as Sources
 import UI.Sources.Form
 import UI.Sources.State as Sources
-import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.State as Tracks
+import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
 import UI.User.State.Export as User
 import UI.User.State.Import as User
@@ -160,6 +160,7 @@ init flags url key =
     , newPlaylistContext = Nothing
     , playlists = []
     , playlistToActivate = Nothing
+    , selectedPlaylist = Nothing
 
     -----------------------------------------
     -- Queue
@@ -184,14 +185,31 @@ init flags url key =
     , sourceForm = UI.Sources.Form.initialModel
 
     -----------------------------------------
+    -- Tracks
+    -----------------------------------------
+    , cachedTracks = []
+    , cachedTracksOnly = False
+    , cachingTracksInProgress = []
+    , favourites = []
+    , favouritesOnly = False
+    , grouping = Nothing
+    , hideDuplicates = False
+    , scene = Tracks.List
+    , searchResults = Nothing
+    , searchTerm = Nothing
+    , selectedTrackIndexes = []
+    , sortBy = Tracks.Artist
+    , sortDirection = Tracks.Asc
+    , tracks = Tracks.emptyCollection
+
+    -- List scene
+    -------------
+    , infiniteList = InfiniteList.init
+
+    -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
     , authentication = Authentication.initialModel url
-
-    -----------------------------------------
-    -- Children (TODO)
-    -----------------------------------------
-    , tracks = Tracks.initialModel
     }
         |> Routing.transition page
         |> Return.command
@@ -338,7 +356,7 @@ update msg =
             Interface.stoppedDragging
 
         UI.ToggleLoadingScreen a ->
-            Interface.toggleLoadingScreen a
+            Common.toggleLoadingScreen a
 
         -----------------------------------------
         -- Playlists
@@ -358,8 +376,17 @@ update msg =
         DeletePlaylist a ->
             Playlists.delete a
 
+        DeselectPlaylist ->
+            Playlists.deselect
+
         ModifyPlaylist ->
             Playlists.modify
+
+        MoveTrackInSelectedPlaylist a ->
+            Playlists.moveTrackInSelectedPlaylist a
+
+        SelectPlaylist a ->
+            Playlists.select a
 
         SetPlaylistCreationContext a ->
             Playlists.setCreationContext a
@@ -442,6 +469,9 @@ update msg =
         SourcesMsg a ->
             Sources.update a
 
+        TracksMsg a ->
+            Tracks.update a
+
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
@@ -450,21 +480,6 @@ update msg =
 
         SetIsOnline a ->
             Other.setIsOnline a
-
-        -----------------------------------------
-        -- Children (TODO)
-        -----------------------------------------
-        TracksMsg sub ->
-            \model ->
-                Return3.wieldNested
-                    Reply.translate
-                    { mapCmd = TracksMsg
-                    , mapModel = \child -> { model | tracks = child }
-                    , update = Tracks.update
-                    }
-                    { model = model.tracks
-                    , msg = sub
-                    }
 
 
 

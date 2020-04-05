@@ -7,10 +7,9 @@ import Return.Ext as Return
 import UI.Common.State as Common exposing (modifySingleton)
 import UI.DnD as DnD
 import UI.Page as Page
+import UI.Playlists.State as Playlists
 import UI.Queue.State as Queue
-import UI.Tracks as Tracks
-import UI.Tracks.Scene.List
-import UI.Tracks.State as Tracks
+import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)
 
@@ -75,6 +74,13 @@ dnd dragMsg model =
                 in
                 Queue.fill { m | playingNext = newFuture }
 
+            Page.Index ->
+                case model.scene of
+                    Tracks.List ->
+                        Playlists.moveTrackInSelectedPlaylist
+                            { to = Maybe.withDefault 0 (DnD.modelTarget d) }
+                            m
+
             _ ->
                 Return.singleton m
 
@@ -108,8 +114,8 @@ removeQueueSelection model =
 
 
 removeTrackSelection : Manager
-removeTrackSelection =
-    modifySingleton Tracks.lens (\t -> { t | selectedTrackIndexes = [] })
+removeTrackSelection model =
+    Return.singleton { model | selectedTrackIndexes = [] }
 
 
 resizedWindow : ( Int, Int ) -> Manager
@@ -139,27 +145,10 @@ stoppedDragging model =
             dnd DnD.stoppedDragging notDragging
 
         Page.Index ->
-            case model.tracks.scene of
-                Tracks.List ->
-                    -- TODO!
-                    DnD.stoppedDragging
-                        |> UI.Tracks.Scene.List.DragAndDropMsg
-                        |> Tracks.ListSceneMsg
-                        |> TracksMsg
-                        |> Return.performanceF notDragging
+            dnd DnD.stoppedDragging notDragging
 
         _ ->
             Return.singleton notDragging
-
-
-toggleLoadingScreen : Switch -> Manager
-toggleLoadingScreen switch model =
-    case switch of
-        On ->
-            Return.singleton { model | isLoading = True }
-
-        Off ->
-            Return.singleton { model | isLoading = False }
 
 
 

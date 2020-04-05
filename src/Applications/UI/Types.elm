@@ -17,6 +17,7 @@ import File exposing (File)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
 import Http
+import InfiniteList
 import Json.Decode
 import Keyboard
 import LastFm
@@ -27,7 +28,7 @@ import Queue
 import Sources exposing (Source)
 import Sources.Encoding as Sources
 import Time
-import Tracks
+import Tracks exposing (..)
 import Tracks.Encoding as Tracks
 import UI.Authentication.Types as Authentication
 import UI.DnD as DnD
@@ -37,8 +38,8 @@ import UI.Queue.Types as Queue
 import UI.Reply as Reply exposing (Reply(..))
 import UI.Sources.ContextMenu as Sources
 import UI.Sources.Types as Sources
-import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
+import UI.Tracks.Types as Tracks exposing (Scene)
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
@@ -126,6 +127,7 @@ type alias Model =
     , newPlaylistContext : Maybe String
     , playlists : List Playlist
     , playlistToActivate : Maybe String
+    , selectedPlaylist : Maybe Playlist
 
     -----------------------------------------
     -- Queue
@@ -136,7 +138,8 @@ type alias Model =
     , playingNext : List Queue.Item
     , selectedQueueItem : Maybe Queue.Item
 
-    --
+    -- Settings
+    -----------
     , repeat : Bool
     , shuffle : Bool
 
@@ -150,14 +153,31 @@ type alias Model =
     , sources : List Source
 
     -----------------------------------------
+    -- Tracks
+    -----------------------------------------
+    , cachedTracks : List String
+    , cachedTracksOnly : Bool
+    , cachingTracksInProgress : List String
+    , favourites : List Favourite
+    , favouritesOnly : Bool
+    , grouping : Maybe Grouping
+    , hideDuplicates : Bool
+    , scene : Scene
+    , searchResults : Maybe (List String)
+    , searchTerm : Maybe String
+    , selectedTrackIndexes : List Int
+    , sortBy : SortBy
+    , sortDirection : SortDirection
+    , tracks : Tracks.Collection
+
+    -- List scene
+    -------------
+    , infiniteList : InfiniteList.Model
+
+    -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
     , authentication : Authentication.State
-
-    -----------------------------------------
-    -- Children (TODO)
-    -----------------------------------------
-    , tracks : Tracks.Model
     }
 
 
@@ -229,7 +249,10 @@ type Msg
     | CreatePlaylist
     | DeactivatePlaylist
     | DeletePlaylist { playlistName : String }
+    | DeselectPlaylist
     | ModifyPlaylist
+    | MoveTrackInSelectedPlaylist { to : Int }
+    | SelectPlaylist Playlist
     | SetPlaylistCreationContext String
     | SetPlaylistModificationContext String String
     | ShowPlaylistListMenu Playlist Mouse.Event

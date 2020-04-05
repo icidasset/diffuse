@@ -54,7 +54,7 @@ setDuration : Float -> Manager
 setDuration duration model =
     let
         cmd =
-            case model.tracks.nowPlaying of
+            case Maybe.map .identifiedTrack model.nowPlaying of
                 Just ( _, track ) ->
                     LastFm.nowPlaying model.lastFm
                         { duration = round duration

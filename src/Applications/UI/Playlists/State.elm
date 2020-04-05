@@ -5,19 +5,24 @@ import Conditional exposing (ifThenElse)
 import Coordinates
 import Html.Events.Extra.Mouse as Mouse
 import Json.Encode
+import List.Ext as List
 import List.Extra as List
 import Notifications
 import Playlists exposing (..)
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
 import Return.Ext as Return
+import Tracks.Collection
 import UI.Common.State as Common
 import UI.Page as Page
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Page exposing (..)
 import UI.Ports as Ports
-import UI.Tracks as Tracks
+import UI.Reply as Reply
+import UI.Tracks.State as Tracks
+import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
+import UI.User.State.Export as User
 
 
 
@@ -26,10 +31,8 @@ import UI.Types as UI exposing (..)
 
 activate : Playlist -> Manager
 activate playlist model =
-    playlist
-        |> Tracks.SelectPlaylist
-        |> TracksMsg
-        |> Return.performanceF model
+    model
+        |> select playlist
         |> andThen redirectToIndexPage
 
 
@@ -114,10 +117,15 @@ create model =
 
 
 deactivate : Manager
-deactivate model =
-    Tracks.DeselectPlaylist
-        |> TracksMsg
-        |> Return.performanceF model
+deactivate =
+    deselect
+
+
+deselect : Manager
+deselect model =
+    { model | selectedPlaylist = Nothing }
+        |> Tracks.reviseCollection Tracks.Collection.arrange
+        |> andThen User.saveEnclosedUserData
 
 
 delete : { playlistName : String } -> Manager
@@ -181,6 +189,36 @@ modify model =
             redirectToIndexPage model
 
 
+moveTrackInSelectedPlaylist : { to : Int } -> Manager
+moveTrackInSelectedPlaylist { to } model =
+    case model.selectedPlaylist of
+        Just playlist ->
+            let
+                moveParams =
+                    { from = Maybe.withDefault 0 (List.head model.selectedTrackIndexes)
+                    , to = to
+                    , amount = List.length model.selectedTrackIndexes
+                    }
+
+                updatedPlaylist =
+                    { playlist | tracks = List.move moveParams playlist.tracks }
+
+                updatedPlaylistCollection =
+                    List.map
+                        (\p -> ifThenElse (p.name == updatedPlaylist.name) updatedPlaylist p)
+                        model.playlists
+            in
+            { model
+                | playlists = updatedPlaylistCollection
+                , selectedPlaylist = Just updatedPlaylist
+            }
+                |> Tracks.reviseCollection Tracks.Collection.arrange
+                |> andThen (Return.performance <| Reply Reply.SavePlaylists)
+
+        Nothing ->
+            Return.singleton model
+
+
 save : Manager
 save model =
     model.playlists
@@ -189,6 +227,13 @@ save model =
         |> Alien.broadcast Alien.SavePlaylists
         |> Ports.toBrain
         |> return model
+
+
+select : Playlist -> Manager
+select playlist model =
+    { model | selectedPlaylist = Just playlist }
+        |> Tracks.reviseCollection Tracks.Collection.arrange
+        |> andThen User.saveEnclosedUserData
 
 
 setCreationContext : String -> Manager
@@ -216,7 +261,7 @@ showListMenu playlist mouseEvent model =
         contextMenu =
             Playlists.listMenu
                 playlist
-                model.tracks.collection.identified
+                model.tracks.identified
                 model.confirmation
                 coordinates
     in

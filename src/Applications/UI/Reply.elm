@@ -40,8 +40,6 @@ type Reply
     | ReplyViaContextMenu Reply
     | ShowMoreAuthenticationOptions Coordinates
     | ShowPlaylistListMenu Coordinates Playlist
-    | ShowTracksContextMenu Coordinates { alt : Bool } (List IdentifiedTrack)
-    | ShowTracksViewMenu Coordinates (Maybe Tracks.Grouping)
       -----------------------------------------
       -- Last.fm
       -----------------------------------------
@@ -65,10 +63,8 @@ type Reply
     | ActivatePlaylist Playlist
     | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
     | DeactivatePlaylist
-    | GenerateDirectoryPlaylists
     | RemoveFromSelectedPlaylist Playlist (List IdentifiedTrack)
     | RemovePlaylistFromCollection { playlistName : String }
-    | ReplacePlaylistInCollection Playlist
     | RequestAssistanceForPlaylists (List IdentifiedTrack)
       -----------------------------------------
       -- Queue
@@ -76,8 +72,6 @@ type Reply
     | AddToQueue { inFront : Bool, tracks : List IdentifiedTrack }
     | MoveQueueItemToFirst { itemIndex : Int }
     | MoveQueueItemToLast { itemIndex : Int }
-    | PlayTrack IdentifiedTrack
-    | ResetQueue
     | RewindQueue
     | ShiftQueue
     | ToggleRepeat

@@ -138,7 +138,7 @@ update msg =
 
 
 
--- 🛠
+-- 🔱
 
 
 finishedProcessing : Manager
@@ -479,7 +479,7 @@ toggleDirectoryPlaylists { sourceId } model =
             )
         |> (\collection -> { model | sources = collection })
         |> Return.performance (UI.Reply Reply.SaveSources)
-        |> andThen (Return.performance <| UI.Reply Reply.GenerateDirectoryPlaylists)
+        |> andThen Common.generateDirectoryPlaylists
 
 
 

@@ -13,17 +13,17 @@ import User.Layer exposing (..)
 
 saveEnclosedUserData : Manager
 saveEnclosedUserData model =
-    { cachedTracks = model.tracks.cached
+    { cachedTracks = model.cachedTracks
     , equalizerSettings = model.eqSettings
-    , grouping = model.tracks.grouping
-    , onlyShowCachedTracks = model.tracks.cachedOnly
-    , onlyShowFavourites = model.tracks.favouritesOnly
+    , grouping = model.grouping
+    , onlyShowCachedTracks = model.cachedTracksOnly
+    , onlyShowFavourites = model.favouritesOnly
     , repeat = model.repeat
-    , searchTerm = model.tracks.searchTerm
-    , selectedPlaylist = Maybe.map .name model.tracks.selectedPlaylist
+    , searchTerm = model.searchTerm
+    , selectedPlaylist = Maybe.map .name model.selectedPlaylist
     , shuffle = model.shuffle
-    , sortBy = model.tracks.sortBy
-    , sortDirection = model.tracks.sortDirection
+    , sortBy = model.sortBy
+    , sortDirection = model.sortDirection
     }
         |> encodeEnclosedData
         |> Alien.broadcast Alien.SaveEnclosedUserData

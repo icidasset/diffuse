@@ -21,7 +21,7 @@ import UI.Ports as Ports
 import UI.Reply exposing (..)
 import UI.Reply.Translate as Reply
 import UI.Sources.State as Sources
-import UI.Tracks as Tracks
+import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
 import Url.Ext as Url
 import User.Layer exposing (..)
@@ -47,7 +47,6 @@ importJson json model =
         |> Json.Decode.decodeString Json.Decode.value
         |> Result.withDefault Json.Encode.null
         |> (\j -> importHypaethral j model)
-        |> Return3.wield Reply.translate
         -- Show notification
         |> andThen
             ("Imported data successfully!"
@@ -75,7 +74,6 @@ loadHypaethralUserData : Json.Decode.Value -> Manager
 loadHypaethralUserData json model =
     model
         |> importHypaethral json
-        |> Return3.wield Reply.translate
         |> andThen
             (\m ->
                 case Url.action m.url of
@@ -117,14 +115,11 @@ loadHypaethralUserData json model =
 -- ⚗️  ░░  HYPAETHRAL DATA
 
 
-importHypaethral : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
+importHypaethral : Json.Decode.Value -> Manager
 importHypaethral value model =
     case decodeHypaethralData value of
         Ok data ->
             let
-                { sources } =
-                    model
-
                 chosenBackdrop =
                     data.settings
                         |> Maybe.andThen .backgroundImage
@@ -141,36 +136,28 @@ importHypaethral value model =
                         (\n -> List.find (.name >> (==) n) newPlaylistsCollection)
                         model.playlistToActivate
 
-                ( tracksModel, tracksCmd, tracksReplies ) =
-                    Tracks.importHypaethral model.tracks data selectedPlaylist
-
                 lastFmModel =
                     model.lastFm
             in
-            ( { model
-                | tracks = tracksModel
-
-                --
-                , chosenBackdrop = chosenBackdrop
-                , lastFm = { lastFmModel | sessionKey = Maybe.andThen .lastFm data.settings }
-                , playlists = newPlaylistsCollection
-                , playlistToActivate = Nothing
-                , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
-                , progress = data.progress
-                , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
-                , sources = data.sources
-              }
-              --
-            , Cmd.map TracksMsg tracksCmd
-              --
-            , tracksReplies
-            )
+            Tracks.importHypaethral
+                data
+                selectedPlaylist
+                { model
+                    | chosenBackdrop = chosenBackdrop
+                    , lastFm = { lastFmModel | sessionKey = Maybe.andThen .lastFm data.settings }
+                    , playlists = newPlaylistsCollection
+                    , playlistToActivate = Nothing
+                    , processAutomatically = Maybe.unwrap True .processAutomatically data.settings
+                    , progress = data.progress
+                    , rememberProgress = Maybe.unwrap True .rememberProgress data.settings
+                    , sources = data.sources
+                }
 
         Err err ->
             err
                 |> Json.Decode.errorToString
-                |> ShowErrorNotification
-                |> Return3.returnReplyWithModel model
+                |> Notifications.error
+                |> Common.showNotificationWithModel model
 
 
 
@@ -180,9 +167,6 @@ importHypaethral value model =
 importEnclosed : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
 importEnclosed value model =
     let
-        { tracks } =
-            model
-
         equalizerSettings =
             model.eqSettings
     in
@@ -196,24 +180,21 @@ importEnclosed value model =
                         , high = data.equalizerSettings.high
                         , volume = data.equalizerSettings.volume
                     }
-
-                newTracks =
-                    { tracks
-                        | cached = data.cachedTracks
-                        , cachedOnly = data.onlyShowCachedTracks
-                        , favouritesOnly = data.onlyShowFavourites
-                        , grouping = data.grouping
-                        , searchTerm = data.searchTerm
-                        , sortBy = data.sortBy
-                        , sortDirection = data.sortDirection
-                    }
             in
             ( { model
                 | eqSettings = newEqualizerSettings
                 , playlistToActivate = data.selectedPlaylist
                 , repeat = data.repeat
                 , shuffle = data.shuffle
-                , tracks = newTracks
+
+                -- Tracks
+                , cachedTracks = data.cachedTracks
+                , cachedTracksOnly = data.onlyShowCachedTracks
+                , favouritesOnly = data.onlyShowFavourites
+                , grouping = data.grouping
+                , searchTerm = data.searchTerm
+                , sortBy = data.sortBy
+                , sortDirection = data.sortDirection
               }
               --
             , Cmd.batch

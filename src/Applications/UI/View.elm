@@ -45,8 +45,8 @@ import UI.Sources.ContextMenu as Sources
 import UI.Sources.Page
 import UI.Sources.View as Sources
 import UI.Svg.Elements
-import UI.Tracks as Tracks
 import UI.Tracks.ContextMenu as Tracks
+import UI.Tracks.View as Tracks
 import UI.Types exposing (..)
 import Url exposing (Protocol(..))
 import User.Layer exposing (..)
@@ -85,7 +85,7 @@ body model =
          else if Maybe.isJust model.selectedQueueItem then
             [ on "tap" (Json.Decode.succeed RemoveQueueSelection) ]
 
-         else if not (List.isEmpty model.tracks.selectedTrackIndexes) then
+         else if not (List.isEmpty model.selectedTrackIndexes) then
             [ on "tap" (Json.Decode.succeed RemoveTrackSelection) ]
 
          else
@@ -158,16 +158,16 @@ defaultScreen model =
     -- Main
     -----------------------------------------
     , vessel
-        [ { amountOfSources = List.length model.sources
-          , bgColor = model.extractedBackdropColor
-          , darkMode = model.darkMode
-          , isOnIndexPage = model.page == Page.Index
-          , isTouchDevice = model.isTouchDevice
-          , sourceIdsBeingProcessed = List.map Tuple.first model.processingContext
-          , viewport = model.viewport
-          }
-            |> Tracks.view model.tracks
-            |> Html.map TracksMsg
+        [ Tracks.view
+            model
+            { amountOfSources = List.length model.sources
+            , bgColor = model.extractedBackdropColor
+            , darkMode = model.darkMode
+            , isOnIndexPage = model.page == Page.Index
+            , isTouchDevice = model.isTouchDevice
+            , sourceIdsBeingProcessed = List.map Tuple.first model.processingContext
+            , viewport = model.viewport
+            }
 
         -- Pages
         --------
@@ -183,7 +183,7 @@ defaultScreen model =
                     Playlists.view
                     subPage
                     model.playlists
-                    model.tracks.selectedPlaylist
+                    model.selectedPlaylist
                     model.editPlaylistContext
                     model.extractedBackdropColor
 
@@ -193,7 +193,7 @@ defaultScreen model =
             Page.Settings subPage ->
                 { authenticationMethod = Authentication.extractMethod model.authentication
                 , chosenBackgroundImage = model.chosenBackdrop
-                , hideDuplicateTracks = model.tracks.hideDuplicates
+                , hideDuplicateTracks = model.hideDuplicates
                 , lastFm = model.lastFm
                 , processAutomatically = model.processAutomatically
                 , rememberProgress = model.rememberProgress
