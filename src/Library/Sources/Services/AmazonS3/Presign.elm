@@ -11,7 +11,7 @@ import Maybe.Extra as Maybe
 import Regex
 import SHA
 import Sources exposing (SourceData)
-import Sources.Processing exposing (httpMethod, HttpMethod)
+import Sources.Processing exposing (HttpMethod, httpMethod)
 import String.Ext as String
 import Time
 import Url

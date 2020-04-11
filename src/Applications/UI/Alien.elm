@@ -66,10 +66,10 @@ translateAlienData event =
             LoadHypaethralUserData event.data
 
         Just Alien.MissingSecretKey ->
-            MissingSecretKey event.data
+            AuthenticationMsg (Authentication.MissingSecretKey event.data)
 
         Just Alien.NotAuthenticated ->
-            NotAuthenticated
+            AuthenticationMsg Authentication.NotAuthenticated
 
         Just Alien.RemoveTracksByPath ->
             TracksMsg (Tracks.RemoveByPaths event.data)
@@ -90,7 +90,7 @@ translateAlienData event =
                     event.data
             of
                 Ok list ->
-                    FinishedStoringTracksInCache list
+                    TracksMsg (Tracks.FinishedStoringInCache list)
 
                 Err err ->
                     showErrorNotification (Json.Decode.errorToString err)
@@ -108,22 +108,22 @@ translateAlienError event err =
         Alien.tagFromString event.tag
     of
         Just Alien.AuthAnonymous ->
-            AuthenticationBootFailure err
+            AuthenticationMsg (Authentication.BootFailure err)
 
         Just Alien.AuthBlockstack ->
-            AuthenticationBootFailure err
+            AuthenticationMsg (Authentication.BootFailure err)
 
         Just Alien.AuthDropbox ->
-            AuthenticationBootFailure err
+            AuthenticationMsg (Authentication.BootFailure err)
 
         Just Alien.AuthIpfs ->
-            AuthenticationBootFailure err
+            AuthenticationMsg (Authentication.BootFailure err)
 
         Just Alien.AuthRemoteStorage ->
-            AuthenticationBootFailure err
+            AuthenticationMsg (Authentication.BootFailure err)
 
         Just Alien.AuthTextile ->
-            AuthenticationBootFailure err
+            AuthenticationMsg (Authentication.BootFailure err)
 
         Just Alien.StoreTracksInCache ->
             case
@@ -132,7 +132,7 @@ translateAlienError event err =
                     event.data
             of
                 Ok trackIds ->
-                    FailedToStoreTracksInCache trackIds
+                    TracksMsg (Tracks.FailedToStoreInCache trackIds)
 
                 Err _ ->
                     showErrorNotification err

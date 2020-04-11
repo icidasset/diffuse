@@ -38,7 +38,6 @@ import UI.Sources.Types as Sources
 import UI.Tracks.Types as Tracks exposing (Scene)
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
-import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 
@@ -203,13 +202,6 @@ type Msg
     | TogglePlay
     | ToggleRememberProgress
       -----------------------------------------
-      -- Authentication (TODO: Move to Auth.Types)
-      -----------------------------------------
-    | AuthenticationBootFailure String
-    | MissingSecretKey Json.Decode.Value
-    | NotAuthenticated
-    | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
-      -----------------------------------------
       -- Backdrop
       -----------------------------------------
     | ExtractedBackdropColor { r : Int, g : Int, b : Int }
@@ -273,12 +265,6 @@ type Msg
     | DisconnectLastFm
     | GotLastFmSession (Result Http.Error String)
     | Scrobble { duration : Int, timestamp : Int, trackId : String }
-      -----------------------------------------
-      -- Tracks (TODO: Move to Tracks.Types)
-      -----------------------------------------
-    | DownloadTracksFinished
-    | FailedToStoreTracksInCache (List String)
-    | FinishedStoringTracksInCache (List String)
       -----------------------------------------
       -- User
       -----------------------------------------

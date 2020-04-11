@@ -109,11 +109,20 @@ update msg =
         Authentication.Bypass ->
             Return.singleton
 
+        BootFailure a ->
+            bootFailure a
+
         CancelFlow ->
             cancelFlow
 
         GetStarted ->
             startFlow
+
+        NotAuthenticated ->
+            notAuthenticated
+
+        RemoteStorageWebfinger a b ->
+            remoteStorageWebfinger a b
 
         ShowMoreOptions a ->
             showMoreOptions a
@@ -138,6 +147,9 @@ update msg =
         -----------------------------------------
         KeepPassphraseInMemory a ->
             keepPassphraseInMemory a
+
+        MissingSecretKey a ->
+            missingSecretKey a
 
         RemoveEncryptionKey a ->
             removeEncryptionKey a
@@ -263,8 +275,8 @@ externalAuth method string model =
         RemoteStorage _ ->
             string
                 |> RemoteStorage.parseUserAddress
-                |> Maybe.map
-                    (RemoteStorage.webfingerRequest RemoteStorageWebfinger)
+                |> Maybe.map (RemoteStorage.webfingerRequest RemoteStorageWebfinger)
+                |> Maybe.map (Cmd.map AuthenticationMsg)
                 |> Maybe.unwrap
                     (RemoteStorage.userAddressError
                         |> Notifications.error

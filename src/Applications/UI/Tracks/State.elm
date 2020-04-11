@@ -46,6 +46,9 @@ update msg =
         Download a b ->
             download a b
 
+        DownloadFinished ->
+            downloadFinished
+
         Harvest ->
             harvest
 
@@ -69,6 +72,12 @@ update msg =
         -----------------------------------------
         ClearCache ->
             clearCache
+
+        FailedToStoreInCache a ->
+            failedToStoreInCache a
+
+        FinishedStoringInCache a ->
+            finishedStoringInCache a
 
         RemoveFromCache a ->
             removeFromCache a
@@ -197,8 +206,8 @@ download zipName tracks model =
         |> andThen (Common.showNotification notification)
 
 
-downloadTracksFinished : Manager
-downloadTracksFinished model =
+downloadFinished : Manager
+downloadFinished model =
     case model.downloading of
         Just { notificationId } ->
             Common.dismissNotification
@@ -216,15 +225,15 @@ disableGrouping model =
         |> andThen User.saveEnclosedUserData
 
 
-failedToStoreTracksInCache : List String -> Manager
-failedToStoreTracksInCache trackIds m =
+failedToStoreInCache : List String -> Manager
+failedToStoreInCache trackIds m =
     showNotification
         (Notifications.error "Failed to store track in cache")
         { m | cachingTracksInProgress = List.without trackIds m.cachingTracksInProgress }
 
 
-finishedStoringTracksInCache : List String -> Manager
-finishedStoringTracksInCache trackIds model =
+finishedStoringInCache : List String -> Manager
+finishedStoringInCache trackIds model =
     { model
         | cachedTracks = model.cachedTracks ++ trackIds
         , cachingTracksInProgress = List.without trackIds model.cachingTracksInProgress

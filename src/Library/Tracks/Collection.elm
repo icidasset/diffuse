@@ -1,6 +1,6 @@
 module Tracks.Collection exposing (add, arrange, harvest, harvestChanged, identify, map, tracksChanged)
 
-import Tracks exposing (emptyCollection, IdentifiedTrack, Parcel, Track)
+import Tracks exposing (IdentifiedTrack, Parcel, Track, emptyCollection)
 import Tracks.Collection.Internal as Internal
 
 

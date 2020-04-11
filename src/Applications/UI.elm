@@ -278,21 +278,6 @@ update msg =
             Audio.toggleRememberProgress
 
         -----------------------------------------
-        -- Authentication (TODO: Move)
-        -----------------------------------------
-        AuthenticationBootFailure a ->
-            Authentication.bootFailure a
-
-        MissingSecretKey a ->
-            Authentication.missingSecretKey a
-
-        NotAuthenticated ->
-            Authentication.notAuthenticated
-
-        RemoteStorageWebfinger a b ->
-            Authentication.remoteStorageWebfinger a b
-
-        -----------------------------------------
         -- Backdrop
         -----------------------------------------
         ExtractedBackdropColor a ->
@@ -449,18 +434,6 @@ update msg =
             Services.scrobble a
 
         -----------------------------------------
-        -- Tracks (TODO: Move)
-        -----------------------------------------
-        DownloadTracksFinished ->
-            Tracks.downloadTracksFinished
-
-        FailedToStoreTracksInCache a ->
-            Tracks.failedToStoreTracksInCache a
-
-        FinishedStoringTracksInCache a ->
-            Tracks.finishedStoringTracksInCache a
-
-        -----------------------------------------
         -- User
         -----------------------------------------
         Export ->
@@ -571,7 +544,7 @@ subscriptions model =
         -----------------------------------------
         -- Tracks
         -----------------------------------------
-        , Ports.downloadTracksFinished (\_ -> DownloadTracksFinished)
+        , Ports.downloadTracksFinished (\_ -> TracksMsg Tracks.DownloadFinished)
 
         -----------------------------------------
         -- 📭 Et Cetera

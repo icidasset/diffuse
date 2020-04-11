@@ -2,7 +2,9 @@ module UI.Authentication.Types exposing (Msg(..), Question, State(..))
 
 import Html.Events.Extra.Mouse as Mouse
 import Http
+import Json.Decode
 import User.Layer exposing (Method(..))
+import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 
@@ -32,8 +34,11 @@ type alias Question =
 type Msg
     = Bypass
       --
+    | BootFailure String
     | CancelFlow
     | GetStarted
+    | NotAuthenticated
+    | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
     | ShowMoreOptions Mouse.Event
     | SignIn Method
     | SignInWithPassphrase Method String
@@ -44,6 +49,7 @@ type Msg
       -- Encryption
       -----------------------------------------
     | KeepPassphraseInMemory String
+    | MissingSecretKey Json.Decode.Value
     | RemoveEncryptionKey Method
     | ShowNewEncryptionKeyScreen Method
     | ShowUpdateEncryptionKeyScreen Method

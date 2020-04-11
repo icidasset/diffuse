@@ -21,6 +21,7 @@ type Scene
 
 type Msg
     = Download String (List Track)
+    | DownloadFinished
     | Harvest
     | MarkAsSelected Int { shiftKey : Bool }
     | ScrollToNowPlaying
@@ -31,6 +32,8 @@ type Msg
       -- Cache
       -----------------------------------------
     | ClearCache
+    | FailedToStoreInCache (List String)
+    | FinishedStoringInCache (List String)
     | RemoveFromCache (List Track)
     | StoreInCache (List Track)
       -----------------------------------------
