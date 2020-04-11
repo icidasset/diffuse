@@ -21,7 +21,7 @@ import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Sources
 import Tracks exposing (..)
-import Tracks.Collection as Collection exposing (..)
+import Tracks.Collection exposing (..)
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page
@@ -29,9 +29,8 @@ import UI.Playlists.Page
 import UI.Queue.Page
 import UI.Sources.Page as Sources
 import UI.Tracks.Scene.List
-import UI.Tracks.Types as Tracks exposing (..)
+import UI.Tracks.Types exposing (..)
 import UI.Types as UI exposing (..)
-import User.Layer exposing (HypaethralData)
 
 
 

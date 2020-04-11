@@ -7,7 +7,7 @@ import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Types as UI exposing (Manager, Organizer)
+import UI.Types as UI exposing (Manager)
 import UI.User.State.Export as User
 
 

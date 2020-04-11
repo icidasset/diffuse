@@ -51,7 +51,7 @@ import UI.Sources.State as Sources
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.State as Tracks
 import UI.Tracks.Types as Tracks
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 import UI.User.State.Export as User
 import UI.User.State.Import as User
 import UI.View exposing (view)

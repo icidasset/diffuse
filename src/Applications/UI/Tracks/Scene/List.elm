@@ -26,7 +26,7 @@ import UI.DnD as DnD
 import UI.Kit
 import UI.Queue.Types as Queue
 import UI.Tracks.Scene as Scene
-import UI.Tracks.Types as Tracks exposing (Msg(..))
+import UI.Tracks.Types exposing (Msg(..))
 import UI.Types as UI exposing (Msg(..))
 
 

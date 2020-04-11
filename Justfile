@@ -15,7 +15,7 @@ default: dev
 	echo "> Build completed ⚡"
 
 
-@build-prod: clean system css-prod elm-prod js-prod
+@build-prod: quality clean system css-prod elm-prod js-prod
 	echo "> Production build completed 🛳"
 
 
@@ -174,20 +174,27 @@ default: dev
 	)
 
 
-@elm-housekeeping:
+@elm-housekeeping: reset-elm-css
 	echo "> Running elm-impfix"
 	{{NPM_DIR}}/.bin/elm-impfix "{{SRC_DIR}}/**/*.elm" --replace
 	# echo "> Running elm-review"
-	# {{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix
+	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
 	echo "> Running elm-format"
 	elm-format {{SRC_DIR}} --yes
 
 
-@quality:
+@quality: reset-elm-css
 	echo "> Running es-lint"
 	{{NPM_DIR}}/.bin/eslint src/Javascript/**
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review
+
+
+@reset-elm-css:
+	# This removes the generated Elm module for the CSS selectors,
+	# and also the `tmp` dir which is related to that.
+	rm -rf {{TEMPORARY_DIR}}
+	rm -f {{SRC_DIR}}/Library/Css/Classes.elm
 
 
 @server:
