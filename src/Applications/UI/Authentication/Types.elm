@@ -31,12 +31,14 @@ type alias Question =
 
 type Msg
     = Bypass
+      --
     | CancelFlow
     | GetStarted
     | ShowMoreOptions Mouse.Event
     | SignIn Method
     | SignInWithPassphrase Method String
     | SignedIn Method
+    | SignOut
     | TriggerExternalAuth Method String
       -----------------------------------------
       -- Encryption

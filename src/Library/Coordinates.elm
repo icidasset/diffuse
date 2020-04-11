@@ -1,4 +1,4 @@
-module Coordinates exposing (Coordinates, Viewport, fromTuple)
+module Coordinates exposing (..)
 
 -- 🌳
 
@@ -22,3 +22,8 @@ fromTuple ( x, y ) =
     { x = x
     , y = y
     }
+
+
+toTuple : Coordinates -> ( Float, Float )
+toTuple { x, y } =
+    ( x, y )

@@ -23,7 +23,10 @@ type Msg
       ------------------------------------
       -- Future
       ------------------------------------
+    | AddTracks { inFront : Bool, tracks : List IdentifiedTrack }
     | InjectFirst { showNotification : Bool } (List IdentifiedTrack)
     | InjectLast { showNotification : Bool } (List IdentifiedTrack)
     | InjectFirstAndPlay IdentifiedTrack
+    | MoveItemToFirst { index : Int }
+    | MoveItemToLast { index : Int }
     | RemoveItem { index : Int, item : Item }

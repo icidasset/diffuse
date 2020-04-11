@@ -16,12 +16,10 @@ import Markdown
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
-import Return3 exposing (..)
 import String.Ext as String
 import Svg exposing (Svg)
 import UI.Authentication.Types as Authentication exposing (..)
 import UI.Kit
-import UI.Reply exposing (Reply(..))
 import UI.Svg.Elements
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)

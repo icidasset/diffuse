@@ -13,6 +13,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Notifications
 import Playlists exposing (Playlist)
+import Queue
 import Return exposing (andThen, return)
 import Return.Ext as Return
 import Sources
@@ -25,10 +26,8 @@ import Tracks.Favourites as Favourites
 import UI.Common.State as Common exposing (showNotification)
 import UI.DnD as DnD
 import UI.Page
-import UI.Ports
+import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Reply as Reply
-import UI.Settings.State as Settings
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Scene.List
 import UI.Tracks.Types as Tracks exposing (..)
@@ -44,6 +43,9 @@ import User.Layer exposing (HypaethralData)
 update : Tracks.Msg -> Manager
 update msg =
     case msg of
+        Download a b ->
+            download a b
+
         Harvest ->
             harvest
 
@@ -61,6 +63,18 @@ update msg =
 
         ToggleHideDuplicates ->
             toggleHideDuplicates
+
+        -----------------------------------------
+        -- Cache
+        -----------------------------------------
+        ClearCache ->
+            clearCache
+
+        RemoveFromCache a ->
+            removeFromCache a
+
+        StoreInCache a ->
+            storeInCache a
 
         -----------------------------------------
         -- Collection
@@ -137,11 +151,50 @@ add encodedTracks =
         )
 
 
+clearCache : Manager
+clearCache model =
+    model.cachedTracks
+        |> Json.Encode.list Json.Encode.string
+        |> Alien.broadcast Alien.RemoveTracksFromCache
+        |> Ports.toBrain
+        |> return { model | cachedTracks = [] }
+        |> andThen harvest
+        |> andThen User.saveEnclosedUserData
+        |> andThen
+            ("Tracks cache was cleared"
+                |> Notifications.warning
+                |> Common.showNotification
+            )
+
+
 clearSearch : Manager
 clearSearch model =
     { model | searchResults = Nothing, searchTerm = Nothing }
         |> reviseCollection Collection.harvest
         |> andThen User.saveEnclosedUserData
+
+
+download : String -> List Track -> Manager
+download zipName tracks model =
+    let
+        notification =
+            Notifications.stickyWarning "Downloading tracks ..."
+
+        downloading =
+            Just { notificationId = Notifications.id notification }
+    in
+    [ ( "zipName", Json.Encode.string zipName )
+    , ( "trackIds"
+      , tracks
+            |> List.map .id
+            |> Json.Encode.list Json.Encode.string
+      )
+    ]
+        |> Json.Encode.object
+        |> Alien.broadcast Alien.DownloadTracks
+        |> Ports.toBrain
+        |> return { model | downloading = downloading }
+        |> andThen (Common.showNotification notification)
 
 
 downloadTracksFinished : Manager
@@ -268,7 +321,7 @@ removeByPaths encodedParams model =
     in
     { model | tracks = newCollection }
         |> reviseCollection Collection.identify
-        |> andThen (Return.performance <| Reply <| Reply.RemoveTracksFromCache removed)
+        |> andThen (removeFromCache removed)
 
 
 removeBySourceId : String -> Manager
@@ -280,9 +333,28 @@ removeBySourceId sourceId model =
         newCollection =
             { emptyCollection | untouched = kept }
     in
-    { model | tracks = newCollection }
-        |> reviseCollection Collection.identify
-        |> andThen (Return.performance <| Reply <| Reply.RemoveTracksFromCache removed)
+    sourceId
+        |> Json.Encode.string
+        |> Alien.broadcast Alien.RemoveTracksBySourceId
+        |> Ports.toBrain
+        |> return { model | tracks = newCollection }
+        |> andThen (reviseCollection Collection.identify)
+        |> andThen (removeFromCache removed)
+
+
+removeFromCache : List Track -> Manager
+removeFromCache tracks model =
+    let
+        trackIds =
+            List.map .id tracks
+    in
+    trackIds
+        |> Json.Encode.list Json.Encode.string
+        |> Alien.broadcast Alien.RemoveTracksFromCache
+        |> Ports.toBrain
+        |> return { model | cachedTracks = List.without trackIds model.cachedTracks }
+        |> andThen harvest
+        |> andThen User.saveEnclosedUserData
 
 
 reviseCollection : (Parcel -> Parcel) -> Manager
@@ -302,7 +374,7 @@ search model =
             term
                 |> String.trim
                 |> Json.Encode.string
-                |> UI.Ports.giveBrain Alien.SearchTracks
+                |> Ports.giveBrain Alien.SearchTracks
                 |> return model
 
         ( Nothing, Just _ ) ->
@@ -439,6 +511,47 @@ sortBy property model =
         |> andThen User.saveEnclosedUserData
 
 
+storeInCache : List Track -> Manager
+storeInCache tracks model =
+    let
+        trackIds =
+            List.map .id tracks
+
+        notification =
+            case tracks of
+                [ t ] ->
+                    ("__" ++ t.tags.title ++ "__ will be stored in the cache")
+                        |> Notifications.success
+
+                list ->
+                    list
+                        |> List.length
+                        |> String.fromInt
+                        |> (\s -> "__" ++ s ++ " tracks__ will be stored in the cache")
+                        |> Notifications.success
+    in
+    tracks
+        |> Json.Encode.list
+            (\track ->
+                Json.Encode.object
+                    [ ( "trackId"
+                      , Json.Encode.string track.id
+                      )
+                    , ( "url"
+                      , track
+                            |> Queue.makeTrackUrl
+                                model.currentTime
+                                model.sources
+                            |> Json.Encode.string
+                      )
+                    ]
+            )
+        |> Alien.broadcast Alien.StoreTracksInCache
+        |> Ports.toBrain
+        |> return { model | cachingTracksInProgress = model.cachingTracksInProgress ++ trackIds }
+        |> andThen (Common.showNotification notification)
+
+
 toggleCachedOnly : Manager
 toggleCachedOnly model =
     { model | cachedTracksOnly = not model.cachedTracksOnly }
@@ -463,7 +576,7 @@ toggleFavourite index model =
             in
             { model | favourites = newFavourites }
                 |> reviseCollection effect
-                |> andThen (Return.performance <| Reply Reply.SaveFavourites)
+                |> andThen User.saveFavourites
 
         Nothing ->
             Return.singleton model
@@ -480,7 +593,7 @@ toggleHideDuplicates : Manager
 toggleHideDuplicates model =
     { model | hideDuplicates = not model.hideDuplicates }
         |> reviseCollection Collection.arrange
-        |> andThen Settings.save
+        |> andThen User.saveSettings
 
 
 

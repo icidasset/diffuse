@@ -32,13 +32,9 @@ import Tracks exposing (..)
 import Tracks.Encoding as Tracks
 import UI.Authentication.Types as Authentication
 import UI.DnD as DnD
-import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Queue.Types as Queue
-import UI.Reply as Reply exposing (Reply(..))
-import UI.Sources.ContextMenu as Sources
 import UI.Sources.Types as Sources
-import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Types as Tracks exposing (Scene)
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
@@ -116,8 +112,8 @@ type alias Model =
     -- Instances
     -----------------------------------------
     , alfred : Maybe (Alfred Msg)
-    , contextMenu : Maybe (ContextMenu Reply)
-    , notifications : UI.Notifications.Model
+    , contextMenu : Maybe (ContextMenu Msg)
+    , notifications : List (Notification Msg)
 
     -----------------------------------------
     -- Playlists
@@ -187,7 +183,6 @@ type alias Model =
 
 type Msg
     = Bypass
-    | Reply Reply
       -----------------------------------------
       -- Alfred
       -----------------------------------------
@@ -198,6 +193,7 @@ type Msg
       -- Audio
       -----------------------------------------
     | NoteProgress { trackId : String, progress : Float }
+    | Seek Float
     | SetAudioDuration Float
     | SetAudioHasStalled Bool
     | SetAudioIsLoading Bool
@@ -205,6 +201,7 @@ type Msg
     | SetAudioPosition Float
     | Stop
     | TogglePlay
+    | ToggleRememberProgress
       -----------------------------------------
       -- Authentication (TODO: Move to Auth.Types)
       -----------------------------------------
@@ -229,15 +226,20 @@ type Msg
       -- Interface
       -----------------------------------------
     | Blur
+    | ContextMenuConfirmation String Msg
+    | CopyToClipboard String
     | Debounce (Debouncer.Msg Msg)
+    | DismissNotification { id : Int }
     | DnD (DnD.Msg Int)
     | FocusedOnInput
     | HideOverlay
+    | MsgViaContextMenu Msg
     | PreferredColorSchemaChanged { dark : Bool }
+    | RemoveNotification { id : Int }
     | RemoveQueueSelection
     | RemoveTrackSelection
     | ResizedWindow ( Int, Int )
-    | ShowNotification (Notification Reply)
+    | ShowNotification (Notification Msg)
     | SetIsTouchDevice Bool
     | StoppedDragging
     | ToggleLoadingScreen Switch
@@ -252,7 +254,8 @@ type Msg
     | DeselectPlaylist
     | ModifyPlaylist
     | MoveTrackInSelectedPlaylist { to : Int }
-    | SelectPlaylist Playlist
+    | RemoveTracksFromPlaylist Playlist (List IdentifiedTrack)
+    | RequestAssistanceForPlaylists (List IdentifiedTrack)
     | SetPlaylistCreationContext String
     | SetPlaylistModificationContext String String
     | ShowPlaylistListMenu Playlist Mouse.Event
@@ -266,6 +269,8 @@ type Msg
       -----------------------------------------
       -- Services
       -----------------------------------------
+    | ConnectLastFm
+    | DisconnectLastFm
     | GotLastFmSession (Result Http.Error String)
     | Scrobble { duration : Int, timestamp : Int, trackId : String }
       -----------------------------------------
@@ -277,10 +282,14 @@ type Msg
       -----------------------------------------
       -- User
       -----------------------------------------
+    | Export
     | ImportFile File
     | ImportJson String
+    | ImportLegacyData
+    | InsertDemo
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
+    | RequestImport
     | SaveEnclosedUserData
       -----------------------------------------
       -- ⚗️ Adjunct

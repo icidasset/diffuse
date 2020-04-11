@@ -10,7 +10,9 @@ import Queue
 import Sources exposing (Source)
 import Time
 import Tracks exposing (Grouping(..), IdentifiedTrack)
-import UI.Reply exposing (Reply(..))
+import UI.Queue.Types as Queue
+import UI.Tracks.Types as Tracks
+import UI.Types exposing (Msg(..))
 
 
 
@@ -28,7 +30,7 @@ trackMenu :
     }
     -> List IdentifiedTrack
     -> Coordinates
-    -> ContextMenu Reply
+    -> ContextMenu Msg
 trackMenu { cached, cachingInProgress, currentTime, selectedPlaylist, lastModifiedPlaylistName, showAlternativeMenu, sources } tracks =
     if showAlternativeMenu then
         [ temporaryUrlActions
@@ -65,7 +67,7 @@ trackMenu { cached, cachingInProgress, currentTime, selectedPlaylist, lastModifi
 cacheAction :
     { cached : List String, cachingInProgress : List String }
     -> List IdentifiedTrack
-    -> ContextMenu.Item Reply
+    -> ContextMenu.Item Msg
 cacheAction { cached, cachingInProgress } tracks =
     case tracks of
         [ ( i, t ) as track ] ->
@@ -73,7 +75,13 @@ cacheAction { cached, cachingInProgress } tracks =
                 Item
                     { icon = Icons.offline_bolt
                     , label = "Remove from cache"
-                    , msg = RemoveTracksFromCache (List.map Tuple.second tracks)
+                    , msg =
+                        tracks
+                            |> List.map Tuple.second
+                            |> Tracks.RemoveFromCache
+                            |> TracksMsg
+
+                    --
                     , active = False
                     }
 
@@ -81,7 +89,7 @@ cacheAction { cached, cachingInProgress } tracks =
                 Item
                     { icon = Icons.offline_bolt
                     , label = "Downloading ..."
-                    , msg = Shunt
+                    , msg = Bypass
                     , active = True
                     }
 
@@ -89,7 +97,13 @@ cacheAction { cached, cachingInProgress } tracks =
                 Item
                     { icon = Icons.offline_bolt
                     , label = "Store in cache"
-                    , msg = StoreTracksInCache (List.map Tuple.second tracks)
+                    , msg =
+                        tracks
+                            |> List.map Tuple.second
+                            |> Tracks.StoreInCache
+                            |> TracksMsg
+
+                    --
                     , active = False
                     }
 
@@ -97,7 +111,13 @@ cacheAction { cached, cachingInProgress } tracks =
             Item
                 { icon = Icons.offline_bolt
                 , label = "Store in cache"
-                , msg = StoreTracksInCache (List.map Tuple.second tracks)
+                , msg =
+                    tracks
+                        |> List.map Tuple.second
+                        |> Tracks.StoreInCache
+                        |> TracksMsg
+
+                --
                 , active = False
                 }
 
@@ -107,7 +127,7 @@ playlistActions :
     , lastModifiedPlaylistName : Maybe String
     }
     -> List IdentifiedTrack
-    -> List (ContextMenu.Item Reply)
+    -> List (ContextMenu.Item Msg)
 playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
     let
         maybeCustomPlaylist =
@@ -124,7 +144,11 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                             , label = "Add to \"" ++ n ++ "\""
                             , msg =
                                 AddTracksToPlaylist
-                                    { playlistName = n, tracks = Tracks.toPlaylistTracks tracks }
+                                    { playlistName = n
+                                    , tracks = Tracks.toPlaylistTracks tracks
+                                    }
+
+                            --
                             , active = False
                             }
 
@@ -142,7 +166,9 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                 [ justAnItem
                     { icon = Icons.waves
                     , label = "Remove from playlist"
-                    , msg = RemoveFromSelectedPlaylist playlist tracks
+                    , msg = RemoveTracksFromPlaylist playlist tracks
+
+                    --
                     , active = False
                     }
                 , maybeAddToLastModifiedPlaylist
@@ -150,6 +176,8 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                     { icon = Icons.waves
                     , label = "Add to another playlist"
                     , msg = RequestAssistanceForPlaylists tracks
+
+                    --
                     , active = False
                     }
                 ]
@@ -169,24 +197,38 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                 ]
 
 
-queueActions : List IdentifiedTrack -> List (ContextMenu.Item Reply)
+queueActions : List IdentifiedTrack -> List (ContextMenu.Item Msg)
 queueActions identifiedTracks =
     [ Item
         { icon = Icons.update
         , label = "Play next"
-        , msg = AddToQueue { inFront = True, tracks = identifiedTracks }
+        , msg =
+            { inFront = True, tracks = identifiedTracks }
+                |> Queue.AddTracks
+                |> QueueMsg
+
+        --
         , active = False
         }
     , Item
         { icon = Icons.update
         , label = "Add to queue"
-        , msg = AddToQueue { inFront = False, tracks = identifiedTracks }
+        , msg =
+            { inFront = False, tracks = identifiedTracks }
+                |> Queue.AddTracks
+                |> QueueMsg
+
+        --
         , active = False
         }
     ]
 
 
-temporaryUrlActions : Time.Posix -> List Source -> List IdentifiedTrack -> List (ContextMenu.Item Reply)
+temporaryUrlActions :
+    Time.Posix
+    -> List Source
+    -> List IdentifiedTrack
+    -> List (ContextMenu.Item Msg)
 temporaryUrlActions timestamp sources tracks =
     case tracks of
         [ ( i, t ) ] ->
@@ -206,7 +248,7 @@ temporaryUrlActions timestamp sources tracks =
 -- VIEW MENU
 
 
-viewMenu : Bool -> Maybe Grouping -> Coordinates -> ContextMenu Reply
+viewMenu : Bool -> Maybe Grouping -> Coordinates -> ContextMenu Msg
 viewMenu onlyCachedTracks maybeGrouping =
     ContextMenu
         [ groupByDirectory (maybeGrouping == Just Directory)
@@ -219,7 +261,7 @@ viewMenu onlyCachedTracks maybeGrouping =
             { icon = Icons.filter_list
             , label = "Cached tracks only"
             , active = onlyCachedTracks
-            , msg = ToggleCachedTracksOnly
+            , msg = TracksMsg Tracks.ToggleCachedOnly
             }
         ]
 
@@ -233,10 +275,10 @@ groupByDirectory isActive =
         --
         , msg =
             if isActive then
-                DisableTracksGrouping
+                TracksMsg Tracks.DisableGrouping
 
             else
-                GroupTracksBy Directory
+                TracksMsg (Tracks.GroupBy Directory)
         }
 
 
@@ -249,10 +291,10 @@ groupByFirstAlphaCharacter isActive =
         --
         , msg =
             if isActive then
-                DisableTracksGrouping
+                TracksMsg Tracks.DisableGrouping
 
             else
-                GroupTracksBy FirstAlphaCharacter
+                TracksMsg (Tracks.GroupBy FirstAlphaCharacter)
         }
 
 
@@ -265,10 +307,10 @@ groupByProcessingDate isActive =
         --
         , msg =
             if isActive then
-                DisableTracksGrouping
+                TracksMsg Tracks.DisableGrouping
 
             else
-                GroupTracksBy AddedOn
+                TracksMsg (Tracks.GroupBy AddedOn)
         }
 
 
@@ -281,8 +323,8 @@ groupByTrackYear isActive =
         --
         , msg =
             if isActive then
-                DisableTracksGrouping
+                TracksMsg Tracks.DisableGrouping
 
             else
-                GroupTracksBy TrackYear
+                TracksMsg (Tracks.GroupBy TrackYear)
         }

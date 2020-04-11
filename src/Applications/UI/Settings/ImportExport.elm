@@ -7,8 +7,8 @@ import Material.Icons as Icons
 import UI.Kit exposing (ButtonType(..))
 import UI.Navigation exposing (..)
 import UI.Page
-import UI.Reply exposing (Reply(..))
 import UI.Settings.Page
+import UI.Types exposing (Msg(..))
 import User.Layer exposing (Method(..))
 
 
@@ -16,7 +16,7 @@ import User.Layer exposing (Method(..))
 -- 🗺
 
 
-view : Maybe Method -> Html Reply
+view : Maybe Method -> Html Msg
 view userLayerMethod =
     UI.Kit.receptacle
         { scrolling = True }
@@ -78,7 +78,7 @@ view userLayerMethod =
         ]
 
 
-otherImportOptions : Html Reply
+otherImportOptions : Html Msg
 otherImportOptions =
     raw
         [ chunk

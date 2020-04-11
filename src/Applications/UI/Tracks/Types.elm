@@ -20,12 +20,19 @@ type Scene
 
 
 type Msg
-    = Harvest
+    = Download String (List Track)
+    | Harvest
     | MarkAsSelected Int { shiftKey : Bool }
     | ScrollToNowPlaying
     | ToggleCachedOnly
     | ToggleFavouritesOnly
     | ToggleHideDuplicates
+      -----------------------------------------
+      -- Cache
+      -----------------------------------------
+    | ClearCache
+    | RemoveFromCache (List Track)
+    | StoreInCache (List Track)
       -----------------------------------------
       -- Collection
       -----------------------------------------

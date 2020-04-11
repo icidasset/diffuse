@@ -1,6 +1,8 @@
 module UI.User.State.Import exposing (..)
 
+import Alien
 import File exposing (File)
+import File.Select
 import Json.Decode
 import Json.Encode
 import LastFm
@@ -10,19 +12,18 @@ import Notifications
 import Process
 import Return exposing (andThen, return)
 import Return.Ext as Return exposing (communicate)
-import Return3
 import Task
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
+import UI.Demo as Demo
 import UI.Equalizer.State as Equalizer
 import UI.Page as Page
 import UI.Playlists.Directory
 import UI.Ports as Ports
-import UI.Reply exposing (..)
-import UI.Reply.Translate as Reply
 import UI.Sources.State as Sources
 import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
+import UI.User.State.Export as User
 import Url.Ext as Url
 import User.Layer exposing (..)
 
@@ -54,20 +55,41 @@ importJson json model =
                 |> showNotification
             )
         -- Clear tracks cache
-        |> andThen (Reply.translate ClearTracksCache)
+        |> andThen Tracks.clearCache
         -- Redirect to index page
         |> andThen (Common.changeUrlUsingPage Page.Index)
         -----------------------------
         -- Save all the imported data
         -----------------------------
-        |> Reply.saveAllHypaethralData
+        |> saveAllHypaethralData
+
+
+importLegacyData : Manager
+importLegacyData model =
+    Alien.ImportLegacyData
+        |> Alien.trigger
+        |> Ports.toBrain
+        |> return model
+        |> andThen
+            ("""
+                I'll try to import data from Diffuse version one.
+                If this was successful, you'll get a notification.
+             """
+                |> Notifications.warning
+                |> Common.showNotification
+            )
+
+
+insertDemo : Manager
+insertDemo model =
+    model
+        |> loadHypaethralUserData (Demo.tape model.currentTime)
+        |> saveAllHypaethralData
 
 
 loadEnclosedUserData : Json.Decode.Value -> Manager
-loadEnclosedUserData json model =
-    model
-        |> importEnclosed json
-        |> Return3.wield Reply.translate
+loadEnclosedUserData =
+    importEnclosed
 
 
 loadHypaethralUserData : Json.Decode.Value -> Manager
@@ -109,6 +131,13 @@ loadHypaethralUserData json model =
                 else
                     Return.singleton m
             )
+
+
+requestImport : Manager
+requestImport model =
+    ImportFile
+        |> File.Select.file [ "application/json" ]
+        |> return model
 
 
 
@@ -160,11 +189,38 @@ importHypaethral value model =
                 |> Common.showNotificationWithModel model
 
 
+saveAllHypaethralData : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+saveAllHypaethralData return =
+    List.foldl
+        (\( _, bit ) ->
+            case bit of
+                Favourites ->
+                    andThen User.saveFavourites
+
+                Playlists ->
+                    andThen User.savePlaylists
+
+                Progress ->
+                    andThen User.saveProgress
+
+                Settings ->
+                    andThen User.saveSettings
+
+                Sources ->
+                    andThen User.saveSources
+
+                Tracks ->
+                    andThen User.saveTracks
+        )
+        return
+        hypaethralBit.list
+
+
 
 -- ⚗️  ░░  ENCLOSED DATA
 
 
-importEnclosed : Json.Decode.Value -> Model -> Return3.Return Model Msg Reply
+importEnclosed : Json.Decode.Value -> Manager
 importEnclosed value model =
     let
         equalizerSettings =
@@ -201,9 +257,7 @@ importEnclosed value model =
                 [ Equalizer.adjustAllKnobs newEqualizerSettings
                 , Ports.setRepeat data.repeat
                 ]
-              --
-            , []
             )
 
         Err err ->
-            Return3.return model
+            Return.singleton model

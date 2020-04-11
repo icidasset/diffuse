@@ -5,7 +5,6 @@ import Equalizer exposing (..)
 import Html.Events.Extra.Pointer as Pointer
 import Return exposing (andThen, return)
 import UI.Ports as Ports
-import UI.Reply exposing (Reply(..))
 import UI.Types as UI exposing (..)
 import UI.User.State.Export as User
 

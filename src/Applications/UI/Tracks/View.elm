@@ -19,7 +19,6 @@ import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
-import Return3 as Return exposing (..)
 import Sources
 import Tracks exposing (..)
 import Tracks.Collection as Collection exposing (..)
@@ -28,7 +27,6 @@ import UI.Navigation exposing (..)
 import UI.Page
 import UI.Playlists.Page
 import UI.Queue.Page
-import UI.Reply as UI exposing (Reply(..))
 import UI.Sources.Page as Sources
 import UI.Tracks.Scene.List
 import UI.Tracks.Types as Tracks exposing (..)
@@ -312,7 +310,7 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
                         [ UI.Kit.buttonWithColor
                             UI.Kit.Gray
                             UI.Kit.Normal
-                            (Reply InsertDemo)
+                            InsertDemo
                             (buttonContents
                                 [ UI.Kit.inlineIcon Icons.music_note
                                 , text "Insert demo"

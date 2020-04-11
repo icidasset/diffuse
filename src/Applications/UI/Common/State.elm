@@ -10,8 +10,7 @@ import Return exposing (return)
 import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Playlists.Directory
-import UI.Reply exposing (Reply)
-import UI.Types as UI exposing (Manager)
+import UI.Types as UI exposing (Manager, Msg)
 
 
 
@@ -31,7 +30,6 @@ dismissNotification options model =
     options
         |> UI.Notifications.dismiss model.notifications
         |> Return.map (\n -> { model | notifications = n })
-        |> Return.mapCmd UI.Reply
 
 
 generateDirectoryPlaylists : Manager
@@ -55,20 +53,19 @@ generateDirectoryPlaylists model =
         |> Return.singleton
 
 
-showContextMenuWithModel : UI.Model -> ContextMenu Reply -> ( UI.Model, Cmd UI.Msg )
+showContextMenuWithModel : UI.Model -> ContextMenu Msg -> ( UI.Model, Cmd UI.Msg )
 showContextMenuWithModel model contextMenu =
     Return.singleton { model | contextMenu = Just contextMenu }
 
 
-showNotification : Notification Reply -> Manager
+showNotification : Notification Msg -> Manager
 showNotification notification model =
     model.notifications
         |> UI.Notifications.show notification
         |> Return.map (\n -> { model | isLoading = False, notifications = n })
-        |> Return.mapCmd UI.Reply
 
 
-showNotificationWithModel : UI.Model -> Notification Reply -> ( UI.Model, Cmd UI.Msg )
+showNotificationWithModel : UI.Model -> Notification Msg -> ( UI.Model, Cmd UI.Msg )
 showNotificationWithModel model notification =
     showNotification notification model
 

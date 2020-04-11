@@ -10,13 +10,11 @@ import Html.Lazy as Lazy
 import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Return3 as Return exposing (..)
 import Sources exposing (..)
 import UI.Kit exposing (ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Reply exposing (Reply(..))
 import UI.Sources.Form as Form
 import UI.Sources.Page as Sources exposing (..)
 import UI.Sources.Types exposing (Msg(..))

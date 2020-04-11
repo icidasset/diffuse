@@ -2,11 +2,13 @@ module UI.Interface.State exposing (..)
 
 import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
+import Notifications
 import Return exposing (return)
 import Return.Ext as Return
 import UI.DnD as DnD
 import UI.Page as Page
 import UI.Playlists.State as Playlists
+import UI.Ports as Ports
 import UI.Queue.State as Queue
 import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
@@ -20,6 +22,20 @@ import User.Layer exposing (..)
 blur : Manager
 blur model =
     Return.singleton { model | focusedOnInput = False }
+
+
+contextMenuConfirmation : String -> Msg -> Manager
+contextMenuConfirmation conf msg model =
+    return
+        { model | confirmation = Just conf }
+        (Return.task msg)
+
+
+copyToClipboard : String -> Manager
+copyToClipboard string =
+    string
+        |> Ports.copyToClipboard
+        |> Return.communicate
 
 
 debounce : (Msg -> Model -> ( Model, Cmd Msg )) -> Debouncer.Msg Msg -> Manager
@@ -76,7 +92,7 @@ dnd dragMsg model =
             Page.Index ->
                 case model.scene of
                     Tracks.List ->
-                        Playlists.moveTrackInSelectedPlaylist
+                        Playlists.moveTrackInSelected
                             { to = Maybe.withDefault 0 (DnD.modelTarget d) }
                             m
 
@@ -105,6 +121,27 @@ hideOverlay model =
 preferredColorSchemaChanged : { dark : Bool } -> Manager
 preferredColorSchemaChanged { dark } model =
     Return.singleton { model | darkMode = dark }
+
+
+msgViaContextMenu : Msg -> Manager
+msgViaContextMenu msg model =
+    return
+        (case msg of
+            ContextMenuConfirmation _ _ ->
+                model
+
+            _ ->
+                { model | confirmation = Nothing, contextMenu = Nothing }
+        )
+        (Return.task msg)
+
+
+removeNotification : { id : Int } -> Manager
+removeNotification { id } model =
+    model.notifications
+        |> List.filter (Notifications.id >> (/=) id)
+        |> (\n -> { model | notifications = n })
+        |> Return.singleton
 
 
 removeQueueSelection : Manager

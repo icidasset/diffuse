@@ -23,14 +23,14 @@ import Return exposing (andThen, return)
 import Return.Ext as Return
 import SHA
 import String.Ext as String
+import Tracks
+import UI.Authentication.ContextMenu as Authentication
 import UI.Authentication.Types as Authentication exposing (..)
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
-import UI.Reply as Reply exposing (Reply(..))
-import UI.Reply.Translate as Reply
 import UI.Types as UI exposing (..)
-import Url exposing (Url)
+import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
@@ -127,6 +127,9 @@ update msg =
         SignedIn a ->
             signedIn a
 
+        SignOut ->
+            signOut
+
         TriggerExternalAuth a b ->
             externalAuth a b
 
@@ -142,7 +145,7 @@ update msg =
         ShowNewEncryptionKeyScreen a ->
             showNewEncryptionKeyScreen a
 
-        Authentication.ShowUpdateEncryptionKeyScreen a ->
+        ShowUpdateEncryptionKeyScreen a ->
             showUpdateEncryptionKeyScreen a
 
         UpdateEncryptionKey a b ->
@@ -236,7 +239,6 @@ cancelFlow model =
     )
         |> Lens.adjust lens model
         |> Return.singleton
-        |> Return.andThen (Reply.translate Reply.ForceTracksRerender)
 
 
 externalAuth : Method -> String -> Manager
@@ -327,7 +329,7 @@ remoteStorageWebfinger remoteStorage result model =
 
 
 showMoreOptions : Mouse.Event -> Manager
-showMoreOptions mouseEvent =
+showMoreOptions mouseEvent model =
     ( mouseEvent.clientPos
     , mouseEvent.offsetPos
     )
@@ -336,9 +338,8 @@ showMoreOptions mouseEvent =
                 , y = b - d + 12
                 }
            )
-        |> ShowMoreAuthenticationOptions
-        |> Reply
-        |> Return.performance
+        |> Authentication.moreOptionsMenu
+        |> Common.showContextMenuWithModel model
 
 
 signedIn : Method -> Manager
@@ -378,6 +379,44 @@ signInWithPassphrase method passphrase model =
             |> Return.andThen (Common.toggleLoadingScreen On)
 
 
+signOut : Manager
+signOut model =
+    { model
+        | authentication = Authentication.Unauthenticated
+        , playlists = []
+        , playlistToActivate = Nothing
+
+        -- Queue
+        --------
+        , dontPlay = []
+        , nowPlaying = Nothing
+        , playedPreviously = []
+        , playingNext = []
+        , selectedQueueItem = Nothing
+
+        --
+        , repeat = False
+        , shuffle = False
+
+        -- Sources
+        ----------
+        , processingContext = []
+        , sources = []
+
+        -- Tracks
+        ---------
+        , favourites = []
+        , hideDuplicates = False
+        , searchResults = Nothing
+        , tracks = Tracks.emptyCollection
+    }
+        |> Backdrop.setDefault
+        |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
+        |> Return.command (Ports.toBrain <| Alien.trigger Alien.StopProcessing)
+        |> Return.command (Ports.activeQueueItemChanged Nothing)
+        |> Return.command (Nav.pushUrl model.navKey "#/")
+
+
 startFlow : Manager
 startFlow =
     replaceState Unauthenticated
@@ -412,7 +451,6 @@ removeEncryptionKey method model =
         --
         |> Return.return (lens.set (Authenticated method) model)
         |> Return.andThen (Common.showNotification <| Notifications.success "Saving data without encryption ...")
-        |> Return.andThen (Reply.translate ForceTracksRerender)
 
 
 showNewEncryptionKeyScreen : Method -> Manager
@@ -441,7 +479,6 @@ updateEncryptionKey method passphrase model =
             --
             |> Return.return (lens.set (Authenticated method) model)
             |> Return.andThen (Common.showNotification <| Notifications.success "Encrypting data with new passphrase ...")
-            |> Return.andThen (Reply.translate ForceTracksRerender)
 
 
 
@@ -450,11 +487,22 @@ updateEncryptionKey method passphrase model =
 
 pingIpfs : Manager
 pingIpfs model =
-    { url = "//localhost:5001/api/v0/id"
-    , expect = Http.expectWhatever (AuthenticationMsg << PingIpfsCallback)
-    }
-        |> Http.get
-        |> return model
+    case model.url.protocol of
+        Https ->
+            """
+            Unfortunately the local IPFS API doesn't work with HTTPS.
+            Install the [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion#release-channel) browser extension to get around this issue
+            (and make sure it redirects to the local gateway).
+            """
+                |> Notifications.error
+                |> Common.showNotificationWithModel model
+
+        Http ->
+            { url = "//localhost:5001/api/v0/id"
+            , expect = Http.expectWhatever (AuthenticationMsg << PingIpfsCallback)
+            }
+                |> Http.get
+                |> return model
 
 
 pingIpfsCallback : Result Http.Error () -> Manager

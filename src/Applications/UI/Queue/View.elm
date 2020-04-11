@@ -19,7 +19,6 @@ import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Queue.Page as Queue exposing (Page(..))
 import UI.Queue.Types as Queue exposing (..)
-import UI.Reply exposing (Reply(..))
 import UI.Sources.Page
 import UI.Types as UI exposing (..)
 

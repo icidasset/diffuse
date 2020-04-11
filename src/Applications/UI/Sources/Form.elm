@@ -12,13 +12,11 @@ import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Return3 exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Reply exposing (Reply(..))
 import UI.Sources.Page as Sources
 import UI.Sources.Types exposing (..)
 import UI.Types exposing (Model)

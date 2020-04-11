@@ -31,6 +31,7 @@ type Msg
     | FinishedProcessingSource { sourceId : String }
     | FinishedProcessing
     | Process
+    | ProcessSpecific (List Source)
     | ReportProcessingError Json.Value
     | ReportProcessingProgress Json.Value
     | StopProcessing
@@ -57,3 +58,4 @@ type Msg
     | SourceContextMenu Source Mouse.Event
     | ToggleActivation { sourceId : String }
     | ToggleDirectoryPlaylists { sourceId : String }
+    | ToggleProcessAutomatically

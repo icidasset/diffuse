@@ -5,9 +5,11 @@ import Maybe.Extra as Maybe
 import Return
 import Return.Ext as Return
 import UI.Alfred.State as Alfred
+import UI.Audio.State as Audio
 import UI.Authentication.Types as Authentication
 import UI.Interface.State exposing (hideOverlay)
-import UI.Reply as Reply exposing (Reply)
+import UI.Queue.State as Queue
+import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
 
 
@@ -54,28 +56,28 @@ keyboardInput msg model =
                     hideOverlay m
 
                 [ Keyboard.ArrowLeft ] ->
-                    Return.performance (Reply Reply.RewindQueue) m
+                    Queue.rewind m
 
                 [ Keyboard.ArrowRight ] ->
-                    Return.performance (Reply Reply.ShiftQueue) m
+                    Queue.shift m
 
                 [ Keyboard.ArrowUp ] ->
-                    Return.performance (Reply (Reply.Seek <| (m.audioPosition - 10) / m.audioDuration)) m
+                    Audio.seek ((m.audioPosition - 10) / m.audioDuration) m
 
                 [ Keyboard.ArrowDown ] ->
-                    Return.performance (Reply (Reply.Seek <| (m.audioPosition + 10) / m.audioDuration)) m
+                    Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
 
                 [ Keyboard.Character "N" ] ->
-                    Return.performance (Reply Reply.ScrollToNowPlaying) m
+                    Tracks.scrollToNowPlaying m
 
                 [ Keyboard.Character "P" ] ->
-                    Return.performance (Reply Reply.TogglePlayPause) m
+                    Audio.playPause m
 
                 [ Keyboard.Character "R" ] ->
-                    Return.performance (Reply Reply.ToggleRepeat) m
+                    Queue.toggleRepeat m
 
                 [ Keyboard.Character "S" ] ->
-                    Return.performance (Reply Reply.ToggleShuffle) m
+                    Queue.toggleShuffle m
 
                 _ ->
                     skip

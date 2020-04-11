@@ -1,17 +1,42 @@
 module UI.Services.State exposing (..)
 
+import Browser.Navigation as Nav
+import Common
 import Http
 import LastFm
 import Notifications
-import Return exposing (andThen)
+import Return exposing (andThen, return)
 import Return.Ext as Return
+import String.Ext as String
 import UI.Common.State as Common exposing (showNotification)
-import UI.Reply exposing (Reply(..))
 import UI.Types as UI exposing (Manager, Msg(..))
+import UI.User.State.Export as User
+import Url
 
 
 
 -- 🔱
+
+
+connectLastFm : Manager
+connectLastFm model =
+    model.url
+        |> Common.urlOrigin
+        |> String.addSuffix "?action=authenticate/lastfm"
+        |> Url.percentEncode
+        |> String.append "&cb="
+        |> String.append
+            (String.append
+                "http://www.last.fm/api/auth/?api_key="
+                LastFm.apiKey
+            )
+        |> Nav.load
+        |> return model
+
+
+disconnectLastFm : Manager
+disconnectLastFm model =
+    User.saveSettings { model | lastFm = LastFm.disconnect model.lastFm }
 
 
 gotLastFmSession : Result Http.Error String -> Manager
@@ -27,7 +52,7 @@ gotLastFmSession result model =
                 |> showNotification
                     (Notifications.success "Connected successfully with Last.fm")
                 |> andThen
-                    (Return.performance <| Reply SaveSettings)
+                    User.saveSettings
 
 
 scrobble : { duration : Int, timestamp : Int, trackId : String } -> Manager

@@ -20,7 +20,6 @@ import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Queue
-import Return3 exposing (..)
 import Task
 import Tracks exposing (..)
 import UI.DnD as DnD

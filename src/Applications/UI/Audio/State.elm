@@ -7,8 +7,8 @@ import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Reply as Reply
 import UI.Types as UI exposing (Manager, Organizer)
+import UI.User.State.Export as User
 
 
 
@@ -29,10 +29,7 @@ noteProgress { trackId, progress } model =
                 Dict.insert trackId progress model.progress
     in
     if model.rememberProgress then
-        -- TODO!
-        Return.performance
-            (UI.Reply Reply.SaveProgress)
-            { model | progress = updatedProgressTable }
+        User.saveProgress { model | progress = updatedProgressTable }
 
     else
         Return.singleton model
@@ -48,6 +45,11 @@ playPause model =
 
     else
         communicate (Ports.play ()) model
+
+
+seek : Float -> Manager
+seek percentage =
+    Return.communicate (Ports.seek percentage)
 
 
 setDuration : Float -> Manager
@@ -91,3 +93,8 @@ setPosition position model =
 stop : Manager
 stop =
     communicate (Ports.pause ())
+
+
+toggleRememberProgress : Manager
+toggleRememberProgress model =
+    User.saveSettings { model | rememberProgress = not model.rememberProgress }

@@ -1,6 +1,7 @@
 module UI.Sources.State exposing (..)
 
 import Alien
+import Browser.Navigation as Nav
 import Common
 import Conditional exposing (ifThenElse)
 import Coordinates
@@ -21,13 +22,14 @@ import Sources.Services.Google
 import UI.Common.State as Common
 import UI.Page as Page
 import UI.Ports as Ports
-import UI.Reply as Reply
 import UI.Sources.ContextMenu as Sources
 import UI.Sources.Form as Form
 import UI.Sources.Page as Sources
 import UI.Sources.Types exposing (..)
+import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (Manager, Model)
 import UI.User.State.Export as User
+import Url
 
 
 
@@ -75,6 +77,9 @@ update msg =
 
         Process ->
             process
+
+        ProcessSpecific a ->
+            processSpecific a
 
         ReportProcessingError a ->
             reportProcessingError a
@@ -136,6 +141,9 @@ update msg =
         ToggleDirectoryPlaylists a ->
             toggleDirectoryPlaylists a
 
+        ToggleProcessAutomatically ->
+            toggleProcessAutomatically
+
 
 
 -- 🔱
@@ -168,43 +176,48 @@ process model =
             Return.singleton model
 
         toProcess ->
-            let
-                notification =
-                    Notifications.stickyWarning "Processing sources ..."
+            processSpecific toProcess model
 
-                notificationId =
-                    Notifications.id notification
 
-                newNotifications =
-                    List.filter
-                        (\n -> Notifications.kind n /= Notifications.Error)
-                        model.notifications
+processSpecific : List Source -> Manager
+processSpecific toProcess model =
+    let
+        notification =
+            Notifications.stickyWarning "Processing sources ..."
 
-                processingContext =
-                    toProcess
-                        |> List.sortBy (.data >> Dict.fetch "name" "")
-                        |> List.map (\{ id } -> ( id, 0 ))
+        notificationId =
+            Notifications.id notification
 
-                newModel =
-                    { model
-                        | notifications = newNotifications
-                        , processingContext = processingContext
-                        , processingError = Nothing
-                        , processingNotificationId = Just notificationId
-                    }
-            in
-            [ ( "origin"
-              , Json.Encode.string (Common.urlOrigin model.url)
-              )
-            , ( "sources"
-              , Json.Encode.list Sources.encode toProcess
-              )
-            ]
-                |> Json.Encode.object
-                |> Alien.broadcast Alien.ProcessSources
-                |> Ports.toBrain
-                |> return newModel
-                |> andThen (Common.showNotification notification)
+        newNotifications =
+            List.filter
+                (\n -> Notifications.kind n /= Notifications.Error)
+                model.notifications
+
+        processingContext =
+            toProcess
+                |> List.sortBy (.data >> Dict.fetch "name" "")
+                |> List.map (\{ id } -> ( id, 0 ))
+
+        newModel =
+            { model
+                | notifications = newNotifications
+                , processingContext = processingContext
+                , processingError = Nothing
+                , processingNotificationId = Just notificationId
+            }
+    in
+    [ ( "origin"
+      , Json.Encode.string (Common.urlOrigin model.url)
+      )
+    , ( "sources"
+      , Json.Encode.list Sources.encode toProcess
+      )
+    ]
+        |> Json.Encode.object
+        |> Alien.broadcast Alien.ProcessSources
+        |> Ports.toBrain
+        |> return newModel
+        |> andThen (Common.showNotification notification)
 
 
 reportProcessingError : Json.Value -> Manager
@@ -299,7 +312,7 @@ addToCollection unsuitableSource model =
                 unsuitableSource
     in
     { model | sources = model.sources ++ [ source ] }
-        |> Return.performance (UI.Reply Reply.SaveSources)
+        |> User.saveSources
         |> andThen process
 
 
@@ -309,8 +322,8 @@ removeFromCollection { sourceId } model =
         |> List.filter (.id >> (/=) sourceId)
         |> (\c -> { model | sources = c })
         |> Return.singleton
-        |> andThen (Return.performance <| UI.Reply Reply.SaveSources)
-        |> andThen (Return.performance <| UI.Reply <| Reply.RemoveTracksWithSourceId sourceId)
+        |> andThen User.saveSources
+        |> andThen (Tracks.removeBySourceId sourceId)
 
 
 updateSourceData : Json.Value -> Manager
@@ -331,7 +344,7 @@ updateSourceData json model =
             )
         |> Maybe.map (\col -> { model | sources = col })
         |> Maybe.withDefault model
-        |> Return.performance (UI.Reply Reply.SaveSources)
+        |> User.saveSources
 
 
 
@@ -417,16 +430,12 @@ takeStep model =
         ( How, Dropbox ) ->
             form.context.data
                 |> Sources.Services.Dropbox.authorizationUrl
-                |> Reply.ExternalSourceAuthorization
-                |> UI.Reply
-                |> Return.performanceF model
+                |> externalAuthorization model
 
         ( How, Google ) ->
             form.context.data
                 |> Sources.Services.Google.authorizationUrl
-                |> Reply.ExternalSourceAuthorization
-                |> UI.Reply
-                |> Return.performanceF model
+                |> externalAuthorization model
 
         _ ->
             model
@@ -463,7 +472,7 @@ toggleActivation { sourceId } model =
                     source
             )
         |> (\collection -> { model | sources = collection })
-        |> Return.performance (UI.Reply Reply.SaveSources)
+        |> User.saveSources
 
 
 toggleDirectoryPlaylists : { sourceId : String } -> Manager
@@ -478,12 +487,26 @@ toggleDirectoryPlaylists { sourceId } model =
                     source
             )
         |> (\collection -> { model | sources = collection })
-        |> Return.performance (UI.Reply Reply.SaveSources)
+        |> User.saveSources
         |> andThen Common.generateDirectoryPlaylists
+
+
+toggleProcessAutomatically : Manager
+toggleProcessAutomatically model =
+    User.saveSettings { model | processAutomatically = not model.processAutomatically }
 
 
 
 -- ⚗️
+
+
+externalAuthorization : Model -> (String -> String) -> ( Model, Cmd UI.Msg )
+externalAuthorization model urlBuilder =
+    model.url
+        |> Common.urlOrigin
+        |> urlBuilder
+        |> Nav.load
+        |> return model
 
 
 replaceSourceInCollection : Source -> Manager
@@ -491,7 +514,7 @@ replaceSourceInCollection source model =
     model.sources
         |> List.map (\s -> ifThenElse (s.id == source.id) source s)
         |> (\s -> { model | sources = s })
-        |> Return.performance (UI.Reply Reply.SaveSources)
+        |> User.saveSources
 
 
 sourcesToProcess : Model -> List Source

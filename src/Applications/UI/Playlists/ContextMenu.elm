@@ -2,13 +2,15 @@ module UI.Playlists.ContextMenu exposing (listMenu)
 
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
+import Html.Events.Extra.Mouse
 import Material.Icons as Icons
 import Playlists exposing (Playlist)
 import Playlists.Matching
 import Tracks exposing (IdentifiedTrack)
 import UI.Page
 import UI.Playlists.Page
-import UI.Reply exposing (Reply(..))
+import UI.Tracks.Types as Tracks
+import UI.Types exposing (Msg(..))
 import Url
 
 
@@ -16,7 +18,7 @@ import Url
 -- 🔱
 
 
-listMenu : Playlist -> List IdentifiedTrack -> Maybe String -> Coordinates -> ContextMenu Reply
+listMenu : Playlist -> List IdentifiedTrack -> Maybe String -> Coordinates -> ContextMenu Msg
 listMenu playlist allTracks confirmation coordinates =
     let
         ( identifiedTracksFromPlaylist, _ ) =
@@ -30,8 +32,16 @@ listMenu playlist allTracks confirmation coordinates =
         playlistId =
             "Playlist - " ++ playlist.name
 
-        menuReply =
-            ShowPlaylistListMenu coordinates playlist
+        menuMsg =
+            ShowPlaylistListMenu
+                playlist
+                { button = Html.Events.Extra.Mouse.MainButton
+                , clientPos = Coordinates.toTuple coordinates
+                , keys = { alt = False, ctrl = False, shift = False }
+                , offsetPos = ( 0, 0 )
+                , pagePos = ( 0, 0 )
+                , screenPos = ( 0, 0 )
+                }
 
         askForConfirmation =
             confirmation == Just playlistId
@@ -40,9 +50,16 @@ listMenu playlist allTracks confirmation coordinates =
         [ Item
             { icon = Icons.archive
             , label = "Download as zip file"
-            , msg = DownloadTracks playlist.name tracksFromPlaylist
+            , msg =
+                tracksFromPlaylist
+                    |> Tracks.Download playlist.name
+                    |> TracksMsg
+
+            --
             , active = False
             }
+
+        --
         , Item
             { icon = Icons.font_download
             , label = "Rename playlist"
@@ -51,9 +68,13 @@ listMenu playlist allTracks confirmation coordinates =
                     |> Url.percentEncode
                     |> UI.Playlists.Page.Edit
                     |> UI.Page.Playlists
-                    |> GoToPage
+                    |> ChangeUrlUsingPage
+
+            --
             , active = False
             }
+
+        --
         , Item
             { icon = Icons.delete
             , label =
@@ -64,17 +85,19 @@ listMenu playlist allTracks confirmation coordinates =
                     "Remove playlist"
             , msg =
                 if askForConfirmation then
-                    RemovePlaylistFromCollection { playlistName = playlist.name }
+                    DeletePlaylist { playlistName = playlist.name }
 
                 else
-                    ContextMenuConfirmation playlistId menuReply
+                    ContextMenuConfirmation playlistId menuMsg
             , active =
                 askForConfirmation
             }
+
+        --
         , Item
             { icon = Icons.offline_bolt
             , label = "Store in cache"
-            , msg = StoreTracksInCache tracksFromPlaylist
+            , msg = TracksMsg (Tracks.StoreInCache tracksFromPlaylist)
             , active = False
             }
         ]

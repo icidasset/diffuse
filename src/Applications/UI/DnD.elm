@@ -95,7 +95,7 @@ update msg model =
                 _ ->
                     NotDragging
       ------------------------------------
-      -- Reply
+      -- Response
       ------------------------------------
     , case msg of
         Start context ->

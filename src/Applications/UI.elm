@@ -43,7 +43,6 @@ import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Queue.State as Queue
 import UI.Queue.Types as Queue
-import UI.Reply.Translate as Reply
 import UI.Routing.State as Routing
 import UI.Services.State as Services
 import UI.Sources.ContextMenu as Sources
@@ -233,9 +232,6 @@ update msg =
         Bypass ->
             Return.singleton
 
-        Reply reply ->
-            Reply.translate reply
-
         -----------------------------------------
         -- Alfred
         -----------------------------------------
@@ -253,6 +249,9 @@ update msg =
         -----------------------------------------
         NoteProgress a ->
             Audio.noteProgress a
+
+        Seek a ->
+            Audio.seek a
 
         SetAudioDuration a ->
             Audio.setDuration a
@@ -274,6 +273,9 @@ update msg =
 
         TogglePlay ->
             Audio.playPause
+
+        ToggleRememberProgress ->
+            Audio.toggleRememberProgress
 
         -----------------------------------------
         -- Authentication (TODO: Move)
@@ -323,8 +325,17 @@ update msg =
         Blur ->
             Interface.blur
 
+        ContextMenuConfirmation a b ->
+            Interface.contextMenuConfirmation a b
+
+        CopyToClipboard a ->
+            Interface.copyToClipboard a
+
         Debounce a ->
             Interface.debounce update a
+
+        DismissNotification a ->
+            Common.dismissNotification a
 
         DnD a ->
             Interface.dnd a
@@ -335,8 +346,14 @@ update msg =
         HideOverlay ->
             Interface.hideOverlay
 
+        MsgViaContextMenu a ->
+            Interface.msgViaContextMenu a
+
         PreferredColorSchemaChanged a ->
             Interface.preferredColorSchemaChanged a
+
+        RemoveNotification a ->
+            Interface.removeNotification a
 
         RemoveQueueSelection ->
             Interface.removeQueueSelection
@@ -356,7 +373,7 @@ update msg =
         StoppedDragging ->
             Interface.stoppedDragging
 
-        UI.ToggleLoadingScreen a ->
+        ToggleLoadingScreen a ->
             Common.toggleLoadingScreen a
 
         -----------------------------------------
@@ -365,7 +382,7 @@ update msg =
         ActivatePlaylist a ->
             Playlists.activate a
 
-        UI.AddTracksToPlaylist a ->
+        AddTracksToPlaylist a ->
             Playlists.addTracksToPlaylist a
 
         CreatePlaylist ->
@@ -384,10 +401,13 @@ update msg =
             Playlists.modify
 
         MoveTrackInSelectedPlaylist a ->
-            Playlists.moveTrackInSelectedPlaylist a
+            Playlists.moveTrackInSelected a
 
-        SelectPlaylist a ->
-            Playlists.select a
+        RemoveTracksFromPlaylist a b ->
+            Playlists.removeTracks a b
+
+        RequestAssistanceForPlaylists a ->
+            Playlists.requestAssistance a
 
         SetPlaylistCreationContext a ->
             Playlists.setCreationContext a
@@ -416,6 +436,12 @@ update msg =
         -----------------------------------------
         -- Services
         -----------------------------------------
+        ConnectLastFm ->
+            Services.connectLastFm
+
+        DisconnectLastFm ->
+            Services.disconnectLastFm
+
         GotLastFmSession a ->
             Services.gotLastFmSession a
 
@@ -437,11 +463,20 @@ update msg =
         -----------------------------------------
         -- User
         -----------------------------------------
+        Export ->
+            User.export
+
         ImportFile a ->
             User.importFile a
 
         ImportJson a ->
             User.importJson a
+
+        ImportLegacyData ->
+            User.importLegacyData
+
+        InsertDemo ->
+            User.insertDemo
 
         LoadEnclosedUserData a ->
             User.loadEnclosedUserData a
@@ -449,7 +484,10 @@ update msg =
         LoadHypaethralUserData a ->
             User.loadHypaethralUserData a
 
-        UI.SaveEnclosedUserData ->
+        RequestImport ->
+            User.requestImport
+
+        SaveEnclosedUserData ->
             User.saveEnclosedUserData
 
         -----------------------------------------

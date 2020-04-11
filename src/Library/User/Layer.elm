@@ -1,4 +1,4 @@
-module User.Layer exposing (EnclosedData, HypaethralBit(..), HypaethralData, Method(..), decodeEnclosedData, decodeHypaethralData, decodeMethod, emptyHypaethralData, enclosedDataDecoder, encodeEnclosedData, encodeHypaethralBit, encodeHypaethralData, encodeMethod, hypaethralBit, hypaethralBitFileName, hypaethralBitKey, hypaethralDataDecoder, methodFromString, methodSeparator, methodToString, putHypaethralJsonBitsTogether)
+module User.Layer exposing (..)
 
 {-| User Layer.
 

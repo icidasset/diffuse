@@ -12,14 +12,16 @@ import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Queue
-import UI.Reply exposing (Reply(..))
+import UI.Queue.Types as Queue
+import UI.Tracks.Types as Tracks
+import UI.Types exposing (Msg(..))
 
 
 
 -- 🗺
 
 
-view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> Html Reply
+view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> Html Msg
 view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
     chunk
         [ C.antialiased
@@ -50,7 +52,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                 case Maybe.map .identifiedTrack activeQueueItem of
                     Just ( _, { tags } ) ->
                         Html.span
-                            [ onClick ScrollToNowPlaying
+                            [ onClick (TracksMsg Tracks.ScrollToNowPlaying)
                             , class C.cursor_pointer
                             , title "Scroll to track"
                             ]
@@ -110,11 +112,38 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
             --
             , C.sm__justify_center
             ]
-            [ button "Toggle repeat" (smallLight repeat) (icon Icons.repeat 18) ToggleRepeat
-            , button "Play previous track" lightPlaceHolder (icon Icons.fast_rewind 20) RewindQueue
-            , button "" (largeLight playing) play TogglePlayPause
-            , button "Play next track" lightPlaceHolder (icon Icons.fast_forward 20) ShiftQueue
-            , button "Toggle shuffle" (smallLight shuffle) (icon Icons.shuffle 18) ToggleShuffle
+            [ button "Toggle repeat"
+                (smallLight repeat)
+                (icon Icons.repeat 18)
+                (QueueMsg Queue.ToggleRepeat)
+
+            --
+            , button
+                "Play previous track"
+                lightPlaceHolder
+                (icon Icons.fast_rewind 20)
+                (QueueMsg Queue.Rewind)
+
+            --
+            , button
+                ""
+                (largeLight playing)
+                play
+                TogglePlay
+
+            --
+            , button
+                "Play next track"
+                lightPlaceHolder
+                (icon Icons.fast_forward 20)
+                (QueueMsg Queue.Shift)
+
+            --
+            , button
+                "Toggle shuffle"
+                (smallLight shuffle)
+                (icon Icons.shuffle 18)
+                (QueueMsg Queue.ToggleShuffle)
             ]
         ]
 

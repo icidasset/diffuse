@@ -11,8 +11,8 @@ import Json.Decode
 import Return exposing (return)
 import Return.Ext as Return
 import UI.Ports as Ports
-import UI.Reply as Reply exposing (Reply(..))
 import UI.Types exposing (..)
+import UI.User.State.Export as User
 
 
 
@@ -61,9 +61,7 @@ extractedBackdropColor { r, g, b } model =
 
 chooseBackdrop : String -> Manager
 chooseBackdrop backdrop model =
-    Return.performance
-        (Reply SaveSettings)
-        { model | chosenBackdrop = Just backdrop }
+    User.saveSettings { model | chosenBackdrop = Just backdrop }
 
 
 loadBackdrop : String -> Manager

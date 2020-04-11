@@ -55,6 +55,9 @@ update msg =
         ------------------------------------
         -- Future
         ------------------------------------
+        AddTracks a ->
+            addTracks a
+
         InjectFirst a b ->
             injectFirst a b
 
@@ -63,6 +66,12 @@ update msg =
 
         InjectFirstAndPlay a ->
             injectFirstAndPlay a
+
+        MoveItemToFirst a ->
+            moveItemToFirst a
+
+        MoveItemToLast a ->
+            moveItemToLast a
 
         RemoveItem a ->
             removeItem a
@@ -263,6 +272,18 @@ toggleShuffle model =
 -- 🛠  ░░  FUTURE
 
 
+addTracks : { inFront : Bool, tracks : List IdentifiedTrack } -> Manager
+addTracks { inFront, tracks } =
+    (if inFront then
+        injectFirst
+
+     else
+        injectLast
+    )
+        { showNotification = True }
+        tracks
+
+
 {-| Add an item in front of the queue.
 -}
 injectFirst : { showNotification : Bool } -> List IdentifiedTrack -> Manager
@@ -360,16 +381,16 @@ injectLast { showNotification } identifiedTracks model =
         |> andThen fill
 
 
-moveQueueItemToFirst : { itemIndex : Int } -> Manager
-moveQueueItemToFirst { itemIndex } model =
+moveItemToFirst : { index : Int } -> Manager
+moveItemToFirst { index } model =
     model.playingNext
-        |> moveItem { from = itemIndex, to = 0, shuffle = model.shuffle }
+        |> moveItem { from = index, to = 0, shuffle = model.shuffle }
         |> (\f -> { model | playingNext = f })
         |> fill
 
 
-moveQueueItemToLast : { itemIndex : Int } -> Manager
-moveQueueItemToLast { itemIndex } model =
+moveItemToLast : { index : Int } -> Manager
+moveItemToLast { index } model =
     let
         to =
             model.playingNext
@@ -377,7 +398,7 @@ moveQueueItemToLast { itemIndex } model =
                 |> List.length
     in
     model.playingNext
-        |> moveItem { from = itemIndex, to = to, shuffle = model.shuffle }
+        |> moveItem { from = index, to = to, shuffle = model.shuffle }
         |> (\f -> { model | playingNext = f })
         |> fill
 

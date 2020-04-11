@@ -38,7 +38,6 @@ import UI.Page as Page
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.View as Playlists
 import UI.Queue.View as Queue
-import UI.Reply exposing (Reply(..))
 import UI.Settings as Settings
 import UI.Settings.Page
 import UI.Sources.ContextMenu as Sources
@@ -104,22 +103,17 @@ body model =
         -----------------------------------------
         -- Context Menu
         -----------------------------------------
-        , model.contextMenu
-            |> Lazy.lazy UI.ContextMenu.view
-            |> Html.map Reply
+        , Lazy.lazy UI.ContextMenu.view model.contextMenu
 
         -----------------------------------------
         -- Notifications
         -----------------------------------------
-        , model.notifications
-            |> Lazy.lazy UI.Notifications.view
-            |> Html.map Reply
+        , Lazy.lazy UI.Notifications.view model.notifications
 
         -----------------------------------------
         -- Overlay
         -----------------------------------------
-        , model.contextMenu
-            |> Lazy.lazy2 overlay model.alfred
+        , Lazy.lazy2 overlay model.alfred model.contextMenu
 
         -----------------------------------------
         -- Content
@@ -191,15 +185,15 @@ defaultScreen model =
                 Queue.view subPage model
 
             Page.Settings subPage ->
-                { authenticationMethod = Authentication.extractMethod model.authentication
-                , chosenBackgroundImage = model.chosenBackdrop
-                , hideDuplicateTracks = model.hideDuplicates
-                , lastFm = model.lastFm
-                , processAutomatically = model.processAutomatically
-                , rememberProgress = model.rememberProgress
-                }
-                    |> Lazy.lazy2 Settings.view subPage
-                    |> Html.map Reply
+                Lazy.lazy2 Settings.view
+                    subPage
+                    { authenticationMethod = Authentication.extractMethod model.authentication
+                    , chosenBackgroundImage = model.chosenBackdrop
+                    , hideDuplicateTracks = model.hideDuplicates
+                    , lastFm = model.lastFm
+                    , processAutomatically = model.processAutomatically
+                    , rememberProgress = model.rememberProgress
+                    }
 
             Page.Sources subPage ->
                 Sources.view subPage model
@@ -208,18 +202,16 @@ defaultScreen model =
     -----------------------------------------
     -- Controls
     -----------------------------------------
-    , Html.map Reply
-        (UI.Console.view
-            model.nowPlaying
-            model.repeat
-            model.shuffle
-            { stalled = model.audioHasStalled
-            , loading = model.audioIsLoading
-            , playing = model.audioIsPlaying
-            }
-            ( model.audioPosition
-            , model.audioDuration
-            )
+    , UI.Console.view
+        model.nowPlaying
+        model.repeat
+        model.shuffle
+        { stalled = model.audioHasStalled
+        , loading = model.audioIsLoading
+        , playing = model.audioIsPlaying
+        }
+        ( model.audioPosition
+        , model.audioDuration
         )
     ]
 
@@ -286,7 +278,7 @@ loadingAnimation =
     Html.map never UI.Svg.Elements.loading
 
 
-overlay : Maybe (Alfred Msg) -> Maybe (ContextMenu Reply) -> Html Msg
+overlay : Maybe (Alfred Msg) -> Maybe (ContextMenu Msg) -> Html Msg
 overlay maybeAlfred maybeContextMenu =
     let
         isShown =
