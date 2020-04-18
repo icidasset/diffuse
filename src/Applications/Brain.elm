@@ -9,18 +9,12 @@ import Brain.Tracks.State as Tracks
 import Brain.Types exposing (..)
 import Brain.User.State as User
 import Brain.User.Types as User
-import Debouncer.Basic as Debouncer exposing (Debouncer)
-import EverySet
+import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import Json.Encode
-import List.Extra as List
 import Maybe.Extra as Maybe
-import Playlists.Encoding as Playlists
-import Queue
-import Return exposing (andThen, return)
+import Return
 import Return.Ext as Return
-import Settings
-import Sources.Encoding as Sources
 import Sources.Processing as Processing
 import Sources.Processing.Encoding as Processing
 import Task

@@ -6,11 +6,11 @@ import Brain.Ports as Ports
 import Brain.Types as Brain exposing (..)
 import Brain.User.Types as User exposing (..)
 import Conditional exposing (..)
-import Debouncer.Basic as Debouncer exposing (Debouncer)
+import Debouncer.Basic as Debouncer
 import EverySet
 import Json.Decode as Decode
 import Json.Encode as Json
-import List.Zipper as Zipper exposing (Zipper)
+import List.Zipper as Zipper
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
 import Return.Ext as Return

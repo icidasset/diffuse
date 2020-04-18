@@ -4,7 +4,7 @@ import Alien
 import Brain.Ports as Ports
 import Brain.Types exposing (..)
 import Json.Decode as Json
-import Return exposing (return)
+import Return
 import Return.Ext as Return
 
 

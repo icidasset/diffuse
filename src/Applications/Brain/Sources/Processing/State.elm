@@ -2,7 +2,6 @@ module Brain.Sources.Processing.State exposing (..)
 
 import Alien
 import Brain.Common.State as Common
-import Brain.Ports
 import Brain.Sources.Processing.Common exposing (..)
 import Brain.Sources.Processing.Steps as Steps
 import Brain.Sources.Processing.Types as Processing exposing (..)
@@ -18,10 +17,6 @@ import Return exposing (..)
 import Sources exposing (Source)
 import Sources.Processing exposing (..)
 import Sources.Processing.Encoding as Processing
-import Task
-import Task.Extra exposing (do)
-import Time
-import Time.Ext as Time
 import Tracks.Encoding
 
 
