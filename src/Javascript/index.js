@@ -306,26 +306,36 @@ function removeFocus() {
 
 // Forms
 // -----
-// Adds a `changed` attribute to a form, if the form was "changed".
+// Adds a `changed` attribute to form fields, if the form was "changed".
 // This is to help with styling, we don't want to show an error immediately.
 
+const FIELD_SELECTOR = "input, textarea"
+
+
 document.addEventListener("keyup", e => {
-  const form = e.target.closest("form")
-  if (form) form.setAttribute("changed", "")
+  const field = e.target.closest(FIELD_SELECTOR)
+  if (field) field.setAttribute("changed", "")
 })
 
 
 document.addEventListener("click", e => {
   if (e.target.tagName !== "BUTTON") return;
   const form = e.target.closest("form")
-  if (form) form.setAttribute("changed", "")
+  if (form) markAllFormFieldsAsChanged(form)
 })
 
 
 document.addEventListener("submit", e => {
   const form = e.target.closest("form")
-  if (form) form.removeAttribute("changed")
+  if (form) markAllFormFieldsAsChanged(form)
 })
+
+
+function markAllFormFieldsAsChanged(form) {
+  [].slice.call(form.querySelectorAll(FIELD_SELECTOR)).forEach(field => {
+    field.setAttribute("changed", "")
+  })
+}
 
 
 
