@@ -32,10 +32,9 @@ type Msg
       -- Cache
       -----------------------------------------
     | ClearCache
-    | FailedToStoreInCache (List String)
-    | FinishedStoringInCache (List String)
     | RemoveFromCache (List Track)
     | StoreInCache (List Track)
+    | StoredInCache Json.Value (Maybe String)
       -----------------------------------------
       -- Collection
       -----------------------------------------

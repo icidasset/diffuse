@@ -354,9 +354,16 @@ showMoreOptions mouseEvent model =
         |> Common.showContextMenuWithModel model
 
 
-signedIn : Method -> Manager
-signedIn method =
-    replaceState (Authenticated method)
+signedIn : Json.Value -> Manager
+signedIn json =
+    -- 🧠 told me which auth method we're using,
+    -- so we can tell the user in the UI.
+    case decodeMethod json of
+        Just method ->
+            replaceState (Authenticated method)
+
+        Nothing ->
+            Return.singleton
 
 
 signIn : Method -> Manager

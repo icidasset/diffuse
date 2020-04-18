@@ -12,6 +12,7 @@ import Debouncer.Basic as Debouncer
 import Dict
 import Equalizer
 import InfiniteList
+import Json.Decode as Json
 import Keyboard
 import LastFm
 import Maybe.Extra as Maybe
@@ -27,9 +28,9 @@ import Tracks
 import Tracks.Encoding as Tracks
 import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
-import UI.Alien as Alien
 import UI.Audio.State as Audio
 import UI.Authentication.State as Authentication
+import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
 import UI.DnD as DnD
@@ -48,6 +49,7 @@ import UI.Services.State as Services
 import UI.Sources.ContextMenu as Sources
 import UI.Sources.Form
 import UI.Sources.State as Sources
+import UI.Sources.Types as Sources
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.State as Tracks
 import UI.Tracks.Types as Tracks
@@ -501,7 +503,7 @@ update msg =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Ports.fromAlien Alien.translate
+        [ Ports.fromAlien alien
 
         -----------------------------------------
         -- Audio
@@ -553,3 +555,103 @@ subscriptions model =
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]
+
+
+
+-- 👽
+
+
+alien : Alien.Event -> Msg
+alien event =
+    case ( event.error, Alien.tagFromString event.tag ) of
+        ( Nothing, Just tag ) ->
+            translateAlienData tag event.data
+
+        ( Just err, Just tag ) ->
+            translateAlienError tag event.data err
+
+        _ ->
+            Bypass
+
+
+translateAlienData : Alien.Tag -> Json.Value -> Msg
+translateAlienData tag data =
+    case tag of
+        Alien.AddTracks ->
+            TracksMsg (Tracks.Add data)
+
+        Alien.AuthMethod ->
+            AuthenticationMsg (Authentication.SignedIn data)
+
+        Alien.FinishedProcessingSource ->
+            SourcesMsg (Sources.FinishedProcessingSource data)
+
+        Alien.FinishedProcessingSources ->
+            SourcesMsg Sources.FinishedProcessing
+
+        Alien.HideLoadingScreen ->
+            ToggleLoadingScreen Off
+
+        Alien.ImportLegacyData ->
+            ShowNotification (Notifications.success "Imported data successfully!")
+
+        Alien.LoadEnclosedUserData ->
+            LoadEnclosedUserData data
+
+        Alien.LoadHypaethralUserData ->
+            LoadHypaethralUserData data
+
+        Alien.MissingSecretKey ->
+            AuthenticationMsg (Authentication.MissingSecretKey data)
+
+        Alien.NotAuthenticated ->
+            AuthenticationMsg Authentication.NotAuthenticated
+
+        Alien.RemoveTracksByPath ->
+            TracksMsg (Tracks.RemoveByPaths data)
+
+        Alien.ReportProcessingError ->
+            SourcesMsg (Sources.ReportProcessingError data)
+
+        Alien.ReportProcessingProgress ->
+            SourcesMsg (Sources.ReportProcessingProgress data)
+
+        Alien.SearchTracks ->
+            TracksMsg (Tracks.SetSearchResults data)
+
+        Alien.StoreTracksInCache ->
+            TracksMsg (Tracks.StoredInCache data Nothing)
+
+        Alien.UpdateSourceData ->
+            SourcesMsg (Sources.UpdateSourceData data)
+
+        _ ->
+            Bypass
+
+
+translateAlienError : Alien.Tag -> Json.Value -> String -> Msg
+translateAlienError tag data err =
+    case tag of
+        Alien.AuthAnonymous ->
+            AuthenticationMsg (Authentication.BootFailure err)
+
+        Alien.AuthBlockstack ->
+            AuthenticationMsg (Authentication.BootFailure err)
+
+        Alien.AuthDropbox ->
+            AuthenticationMsg (Authentication.BootFailure err)
+
+        Alien.AuthIpfs ->
+            AuthenticationMsg (Authentication.BootFailure err)
+
+        Alien.AuthRemoteStorage ->
+            AuthenticationMsg (Authentication.BootFailure err)
+
+        Alien.AuthTextile ->
+            AuthenticationMsg (Authentication.BootFailure err)
+
+        Alien.StoreTracksInCache ->
+            TracksMsg (Tracks.StoredInCache data <| Just err)
+
+        _ ->
+            ShowNotification (Notifications.error err)

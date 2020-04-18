@@ -161,12 +161,17 @@ finishedProcessing model =
         { model | processingContext = [] }
 
 
-finishedProcessingSource : { sourceId : String } -> Manager
-finishedProcessingSource { sourceId } model =
-    model.processingContext
-        |> List.filter (Tuple.first >> (/=) sourceId)
-        |> (\newContext -> { model | processingContext = newContext })
-        |> Return.singleton
+finishedProcessingSource : Json.Value -> Manager
+finishedProcessingSource json model =
+    case Json.decodeValue Json.string json of
+        Ok sourceId ->
+            model.processingContext
+                |> List.filter (Tuple.first >> (/=) sourceId)
+                |> (\newContext -> { model | processingContext = newContext })
+                |> Return.singleton
+
+        Err _ ->
+            Return.singleton model
 
 
 process : Manager

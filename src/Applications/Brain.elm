@@ -175,7 +175,7 @@ alien event =
             translateAlienData tag event.data
 
         ( Just err, Just tag ) ->
-            translateAlienError tag err
+            translateAlienError tag event.data err
 
         _ ->
             Bypass
@@ -281,8 +281,8 @@ translateAlienData tag data =
             Bypass
 
 
-translateAlienError : Alien.Tag -> String -> Msg
-translateAlienError tag err =
+translateAlienError : Alien.Tag -> Json.Value -> String -> Msg
+translateAlienError tag _ err =
     case tag of
         Alien.AuthAnonymous ->
             reportAuthError Alien.AuthAnonymous err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"

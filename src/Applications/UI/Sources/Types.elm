@@ -28,7 +28,7 @@ type FormStep
 type Msg
     = Bypass
       --
-    | FinishedProcessingSource { sourceId : String }
+    | FinishedProcessingSource Json.Value
     | FinishedProcessing
     | Process
     | ProcessSpecific (List Source)

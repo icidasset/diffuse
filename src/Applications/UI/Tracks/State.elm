@@ -73,17 +73,14 @@ update msg =
         ClearCache ->
             clearCache
 
-        FailedToStoreInCache a ->
-            failedToStoreInCache a
-
-        FinishedStoringInCache a ->
-            finishedStoringInCache a
-
         RemoveFromCache a ->
             removeFromCache a
 
         StoreInCache a ->
             storeInCache a
+
+        StoredInCache a b ->
+            storedInCache a b
 
         -----------------------------------------
         -- Collection
@@ -559,6 +556,31 @@ storeInCache tracks model =
         |> Ports.toBrain
         |> return { model | cachingTracksInProgress = model.cachingTracksInProgress ++ trackIds }
         |> andThen (Common.showNotification notification)
+
+
+storedInCache : Json.Value -> Maybe String -> Manager
+storedInCache json maybeError =
+    case
+        ( maybeError
+        , Json.decodeValue (Json.list Json.string) json
+        )
+    of
+        ( Nothing, Ok list ) ->
+            finishedStoringInCache list
+
+        ( Nothing, Err err ) ->
+            err
+                |> Json.errorToString
+                |> Notifications.error
+                |> Common.showNotification
+
+        ( Just _, Ok trackIds ) ->
+            failedToStoreInCache trackIds
+
+        ( Just err, Err _ ) ->
+            err
+                |> Notifications.error
+                |> Common.showNotification
 
 
 toggleCachedOnly : Manager
