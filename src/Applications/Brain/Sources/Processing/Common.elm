@@ -1,7 +1,8 @@
-module Brain.Sources.Processing.Common exposing (Model, Msg(..), contextToTagsContext, isProcessing, reportError, reportHttpError, tracksFromTagsContext, translateHttpError)
+module Brain.Sources.Processing.Common exposing (..)
 
 import Alien
-import Brain.Reply exposing (Reply(..))
+import Brain.Common.State as Common
+import Brain.Types exposing (Manager)
 import Dict.Ext as Dict
 import Http exposing (Error(..))
 import Json.Encode as Encode
@@ -10,40 +11,7 @@ import Maybe.Extra as Maybe
 import Sources exposing (Service, Source)
 import Sources.Processing exposing (..)
 import Sources.Services as Services
-import Time
 import Tracks exposing (Track)
-
-
-
--- 🌳
-
-
-type alias Model =
-    { currentTime : Time.Posix
-    , origin : String
-    , status : Status
-    }
-
-
-
--- 📣
-
-
-type Msg
-    = Process { origin : String, sources : List Source, tracks : List Track }
-    | NextInLine
-    | StopProcessing
-      -----------------------------------------
-      -- Steps
-      -----------------------------------------
-    | PrepareStep Context (Result Http.Error String)
-    | TreeStep Context (Result Http.Error String)
-    | TreeStepRemoveTracks String (List String)
-    | TagsStep ContextForTags
-      -----------------------------------------
-      -- Bits & Pieces
-      -----------------------------------------
-    | SetCurrentTime Time.Posix
 
 
 
@@ -71,21 +39,21 @@ isProcessing status =
             False
 
 
-reportHttpError : Source -> Http.Error -> Reply
+reportHttpError : Source -> Http.Error -> Manager
 reportHttpError source err =
     reportError
         source
         (translateHttpError source.service err)
 
 
-reportError : Source -> String -> Reply
+reportError : Source -> String -> Manager
 reportError source error =
     [ ( "sourceId", Encode.string source.id )
     , ( "sourceName", Encode.string (Dict.fetch "name" "Unnamed" source.data) )
     , ( "error", Encode.string error )
     ]
         |> Encode.object
-        |> GiveUI Alien.ReportProcessingError
+        |> Common.giveUI Alien.ReportProcessingError
 
 
 tracksFromTagsContext : ContextForTags -> List Track

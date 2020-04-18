@@ -4,8 +4,9 @@ import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Material.Icons as Icons
 import Queue
-import UI.Reply exposing (Reply(..))
+import UI.Queue.Types as Queue
 import UI.Tracks.ContextMenu
+import UI.Types exposing (Msg(..))
 
 
 
@@ -16,7 +17,7 @@ futureMenu :
     { cached : List String, cachingInProgress : List String, itemIndex : Int }
     -> Queue.Item
     -> Coordinates
-    -> ContextMenu Reply
+    -> ContextMenu Msg
 futureMenu { cached, cachingInProgress, itemIndex } item =
     let
         tracks =
@@ -26,13 +27,23 @@ futureMenu { cached, cachingInProgress, itemIndex } item =
         [ Item
             { icon = Icons.update
             , label = "Move to the top"
-            , msg = MoveQueueItemToFirst { itemIndex = itemIndex }
+            , msg =
+                { index = itemIndex }
+                    |> Queue.MoveItemToFirst
+                    |> QueueMsg
+
+            --
             , active = False
             }
         , Item
             { icon = Icons.update
             , label = "Move to the end of my picks"
-            , msg = MoveQueueItemToLast { itemIndex = itemIndex }
+            , msg =
+                { index = itemIndex }
+                    |> Queue.MoveItemToLast
+                    |> QueueMsg
+
+            --
             , active = False
             }
         , Item
@@ -51,7 +62,7 @@ historyMenu :
     { cached : List String, cachingInProgress : List String }
     -> Queue.Item
     -> Coordinates
-    -> ContextMenu Reply
+    -> ContextMenu Msg
 historyMenu { cached, cachingInProgress } item =
     let
         tracks =
@@ -61,13 +72,23 @@ historyMenu { cached, cachingInProgress } item =
         [ Item
             { icon = Icons.update
             , label = "Play next"
-            , msg = AddToQueue { inFront = True, tracks = tracks }
+            , msg =
+                { inFront = True, tracks = tracks }
+                    |> Queue.AddTracks
+                    |> QueueMsg
+
+            --
             , active = False
             }
         , Item
             { icon = Icons.update
             , label = "Add to queue"
-            , msg = AddToQueue { inFront = False, tracks = tracks }
+            , msg =
+                { inFront = False, tracks = tracks }
+                    |> Queue.AddTracks
+                    |> QueueMsg
+
+            --
             , active = False
             }
         , Item

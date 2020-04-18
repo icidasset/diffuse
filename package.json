@@ -1,36 +1,35 @@
 {
   "private": true,
   "devDependencies": {
-    "autoprefixer": "^9.7.3",
+    "autoprefixer": "^9.7.4",
     "csso-cli": "^3.0.0",
-    "elm-review": "^1.0.1",
+    "elm-impfix": "^1.0.8",
+    "elm-review": "^2.0.0",
     "eslint": "^6.8.0",
-    "postcss": "^7.0.23",
-    "postcss-cli": "^6.1.3",
+    "postcss": "^7.0.27",
+    "postcss-cli": "^7.1.0",
     "postcss-import": "^12.0.1",
     "postcss-nesting": "^7.0.1",
-    "purgecss": "^1.4.2",
-    "tailwindcss": "^1.1.3",
-    "tailwindcss-animations": "^1.0.0",
-    "tailwindcss-interaction-variants": "^2.2.0",
-    "tailwindcss-transforms": "^2.2.0",
-    "tailwindcss-transitions": "^2.1.0",
-    "terser": "^4.5.1",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
+    "purgecss": "^2.0.6",
+    "tailwindcss": "^1.2.0",
+    "tailwindcss-animations": "^2.0.0",
+    "tailwindcss-interaction-variants": "^3.1.0",
+    "terser": "^4.6.4",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@tokenizer/http": "^0.5.1",
+    "@tokenizer/http": "^0.5.2",
     "blockstack": "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git",
     "fast-text-encoding": "^1.0.0",
     "file-saver": "^2.0.2",
     "jszip": "^3.2.2",
     "lunr": "^2.3.8",
-    "music-metadata-browser": "^2.0.0",
+    "music-metadata-browser": "^2.0.4",
     "pep": "mpizenberg/elm-pep#071616d75ca61e261fdefc7b55bc46c34e44ea22",
-    "remotestoragejs": "^1.2.2",
+    "remotestoragejs": "^1.2.3",
     "subworkers": "^1.0.1",
     "timer.js": "^1.0.4",
-    "tocca": "^2.0.6"
+    "tocca": "^2.0.9"
   }
 }

@@ -1,5 +1,6 @@
-module Equalizer exposing (Settings, defaultSettings, encodeSettings, settingsDecoder)
+module Equalizer exposing (..)
 
+import Coordinates exposing (Coordinates)
 import Json.Decode
 import Json.Encode
 
@@ -8,12 +9,30 @@ import Json.Encode
 -- 🌳
 
 
+type Knob
+    = Low
+    | Mid
+    | High
+    | Volume
+
+
+type alias KnobOperation =
+    { knob : Knob
+    , startingPosition : Coordinates
+    }
+
+
 type alias Settings =
     { low : Float
     , mid : Float
     , high : Float
     , volume : Float
     }
+
+
+maxAngle : Float
+maxAngle =
+    135
 
 
 

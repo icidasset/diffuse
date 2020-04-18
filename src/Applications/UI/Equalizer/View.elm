@@ -1,11 +1,10 @@
-module UI.Equalizer exposing (Model, Msg(..), adjustAllKnobs, initialModel, update, view)
+module UI.Equalizer.View exposing (view)
 
 import Chunky exposing (..)
 import Chunky.Styled
 import Color exposing (Color)
 import Color.Ext as Color
 import Common
-import Coordinates exposing (Coordinates)
 import Css
 import Css.Classes as C
 import Css.Ext as Css
@@ -17,211 +16,20 @@ import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
 import Json.Decode as Decode
 import Material.Icons as Icons
-import Return3 as Return exposing (..)
 import Svg.Styled
 import Svg.Styled.Attributes
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page
-import UI.Ports as Ports
-import UI.Reply exposing (Reply(..))
-
-
-
--- 🌳
-
-
-type Knob
-    = Low
-    | Mid
-    | High
-    | Volume
-
-
-type alias Model =
-    { low : Float
-    , mid : Float
-    , high : Float
-    , volume : Float
-
-    --
-    , activeKnob : Maybe Knob
-    , startCoordinates : Coordinates
-    }
-
-
-initialModel : Model
-initialModel =
-    { low = defaultSettings.low
-    , mid = defaultSettings.mid
-    , high = defaultSettings.high
-    , volume = defaultSettings.volume
-
-    -- Knob interactions
-    --------------------
-    , activeKnob = Nothing
-    , startCoordinates = { x = 0, y = 0 }
-    }
-
-
-
--- 📣
-
-
-type Msg
-    = ActivateKnob Knob Pointer.Event
-    | AdjustKnob Pointer.Event
-    | DeactivateKnob Pointer.Event
-    | ResetKnob Knob
-
-
-update : Msg -> Model -> Return Model Msg Reply
-update msg model =
-    case msg of
-        -----------------------------------------
-        -- Activate
-        -----------------------------------------
-        ActivateKnob theKnob { pointer } ->
-            { model
-                | activeKnob = Just theKnob
-                , startCoordinates = Coordinates.fromTuple pointer.clientPos
-            }
-                |> return
-
-        -----------------------------------------
-        -- Adjust
-        -----------------------------------------
-        AdjustKnob { pointer } ->
-            let
-                start =
-                    model.startCoordinates
-
-                end =
-                    (\( a, b ) -> { x = a, y = b })
-                        pointer.clientPos
-
-                x =
-                    end.x - start.x
-
-                y =
-                    start.y - end.y
-
-                distance =
-                    sqrt (x ^ 2 + y ^ 2)
-
-                angle =
-                    atan2 x y
-                        * (180 / pi)
-                        |> max (maxAngle * -1)
-                        |> min maxAngle
-
-                value =
-                    case ( distance > 10, model.activeKnob ) of
-                        ( True, Just Volume ) ->
-                            Just ( Volume, (maxAngle + angle) / (maxAngle * 2) )
-
-                        ( True, Just knobType ) ->
-                            Just ( knobType, angle / maxAngle )
-
-                        _ ->
-                            Nothing
-
-                newModel =
-                    case value of
-                        Just ( Low, v ) ->
-                            { model | low = v }
-
-                        Just ( Mid, v ) ->
-                            { model | mid = v }
-
-                        Just ( High, v ) ->
-                            { model | high = v }
-
-                        Just ( Volume, v ) ->
-                            { model | volume = v }
-
-                        Nothing ->
-                            model
-            in
-            case value of
-                Just ( knobType, v ) ->
-                    returnCommandWithModel newModel (adjustKnob knobType v)
-
-                Nothing ->
-                    return newModel
-
-        -----------------------------------------
-        -- Deactivate
-        -----------------------------------------
-        DeactivateKnob _ ->
-            Return.replyWithModel
-                { model | activeKnob = Nothing }
-                SaveEnclosedUserData
-
-        -----------------------------------------
-        -- Reset
-        -----------------------------------------
-        ResetKnob Low ->
-            reset { model | low = defaultSettings.low } Low defaultSettings.low
-
-        ResetKnob Mid ->
-            reset { model | mid = defaultSettings.mid } Mid defaultSettings.mid
-
-        ResetKnob High ->
-            reset { model | high = defaultSettings.high } High defaultSettings.high
-
-        ResetKnob Volume ->
-            reset { model | volume = defaultSettings.volume } Volume defaultSettings.volume
-
-
-
--- 📣  ░░  KNOBS & THINGS
-
-
-adjustKnob : Knob -> Float -> Cmd Msg
-adjustKnob knobType value =
-    Ports.adjustEqualizerSetting
-        { value = value
-        , knob =
-            case knobType of
-                Low ->
-                    "LOW"
-
-                Mid ->
-                    "MID"
-
-                High ->
-                    "HIGH"
-
-                Volume ->
-                    "VOLUME"
-        }
-
-
-adjustAllKnobs : Model -> Cmd Msg
-adjustAllKnobs model =
-    Cmd.batch
-        [ adjustKnob Low model.low
-        , adjustKnob Mid model.mid
-        , adjustKnob High model.high
-        , adjustKnob Volume model.volume
-        ]
-
-
-reset : Model -> Knob -> Float -> Return Model Msg Reply
-reset newModel knobType value =
-    ( newModel
-    , adjustKnob knobType value
-    , [ SaveEnclosedUserData ]
-    )
+import UI.Types exposing (Msg(..))
 
 
 
 -- 🗺
 
 
-view : Model -> Html Msg
-view model =
+view : Settings -> Html Msg
+view settings =
     UI.Kit.receptacle
         { scrolling = True }
         [ -----------------------------------------
@@ -247,12 +55,12 @@ view model =
 
         --
         , UI.Kit.centeredContent
-            [ eqView model ]
+            [ eqView settings ]
         ]
 
 
-eqView : Model -> Html Msg
-eqView model =
+eqView : Settings -> Html Msg
+eqView settings =
     chunk
         [ C.text_center ]
         [ chunk
@@ -265,7 +73,7 @@ eqView model =
             ------------
             , C.dark__border_base00
             ]
-            [ knob Volume model.volume
+            [ knob Volume settings.volume
             ]
 
         --
@@ -280,9 +88,9 @@ eqView model =
             ------------
             , C.dark__border_base00
             ]
-            [ knob Low model.low
-            , knob Mid model.mid
-            , knob High model.high
+            [ knob Low settings.low
+            , knob Mid settings.mid
+            , knob High settings.high
             ]
         ]
 
@@ -428,11 +236,6 @@ knobOpacity =
 knobSize : Float
 knobSize =
     36
-
-
-maxAngle : Float
-maxAngle =
-    135
 
 
 

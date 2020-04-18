@@ -412,7 +412,7 @@ function audioLoaded(event) {
 }
 
 
-function audioPlayEvent(event) {
+function audioPlayEvent(_event) {
   this.app.ports.setAudioIsPlaying.send(true)
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing"
   if (this.scrobbleTimer) this.scrobbleTimer.start()

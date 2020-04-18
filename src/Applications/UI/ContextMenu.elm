@@ -9,14 +9,14 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (custom)
 import Json.Decode
 import Material.Icons.Types exposing (Coloring(..))
-import UI.Reply exposing (Reply)
+import UI.Types as UI exposing (Msg)
 
 
 
 -- 🗺
 
 
-view : Maybe (ContextMenu Reply) -> Html Reply
+view : Maybe (ContextMenu Msg) -> Html Msg
 view m =
     case m of
         Just (ContextMenu items coordinates) ->
@@ -31,11 +31,13 @@ view m =
                 , C.bg_white
                 , C.leading_loose
                 , C.overflow_hidden
+                , C.minus_translate_x_half
+                , C.minus_translate_y_half
                 , C.rounded
                 , C.shadow_md
                 , C.select_none
                 , C.text_almost_sm
-                , C.translate_centered
+                , C.transform
                 , C.z_50
 
                 -- Dark mode
@@ -59,13 +61,13 @@ view m =
             nothing
 
 
-itemView : ContextMenu.ItemProperties Reply -> Html Reply
+itemView : ContextMenu.ItemProperties Msg -> Html Msg
 itemView { icon, label, msg, active } =
     brick
         [ custom
             "tap"
             (Json.Decode.succeed
-                { message = UI.Reply.ReplyViaContextMenu msg
+                { message = UI.MsgViaContextMenu msg
                 , stopPropagation = True
                 , preventDefault = True
                 }

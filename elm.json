@@ -8,14 +8,15 @@
     "dependencies": {
         "direct": {
             "FabienHenon/elm-infinite-list-view": "3.1.1",
+            "Fresheyeball/elm-return": "7.1.0",
             "Gizra/elm-all-set": "1.0.1",
             "Gizra/elm-debouncer": "2.0.0",
             "Herteby/enum": "1.0.0",
             "NoRedInk/elm-json-decode-pipeline": "1.0.0",
             "Skinney/murmur3": "2.0.8",
+            "arturopala/elm-monocle": "2.1.0",
             "avh4/elm-color": "1.0.0",
             "elm/browser": "1.0.2",
-            "elm/bytes": "1.0.8",
             "elm/core": "1.0.4",
             "elm/file": "1.0.5",
             "elm/html": "1.0.0",
@@ -32,9 +33,8 @@
             "elm-community/maybe-extra": "5.1.0",
             "elm-explorations/markdown": "1.0.0",
             "icidasset/elm-binary": "2.1.0",
-            "icidasset/elm-material-icons": "3.0.0",
+            "icidasset/elm-material-icons": "3.1.0",
             "icidasset/elm-sha": "2.0.2",
-            "justgage/tachyons-elm": "4.1.3",
             "mpizenberg/elm-pointer-events": "4.0.1",
             "newlandsvalley/elm-binary-base64": "1.0.3",
             "noahzgordon/elm-color-extra": "1.0.2",
@@ -48,6 +48,7 @@
             "ymtszw/elm-xml-decode": "3.1.0"
         },
         "indirect": {
+            "elm/bytes": "1.0.8",
             "elm/parser": "1.1.0",
             "fredcy/elm-parseint": "2.0.1",
             "jinjor/elm-xml-parser": "2.0.0",

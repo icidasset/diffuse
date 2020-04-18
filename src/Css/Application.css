@@ -85,8 +85,8 @@ textarea:invalid {
 }
 
 
-form[changed] input:invalid,
-form[changed] textarea:invalid {
+input[changed]:invalid,
+textarea[changed]:invalid {
   @apply border-base08;
 }
 

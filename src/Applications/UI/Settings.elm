@@ -5,20 +5,22 @@ import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick)
 import Html.Lazy
 import LastFm
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Maybe.Extra as Maybe
 import Settings
+import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Reply exposing (Reply(..))
 import UI.Settings.ImportExport
 import UI.Settings.Page as Settings exposing (..)
+import UI.Sources.Types as Sources
+import UI.Tracks.Types as Tracks
+import UI.Types exposing (Msg(..))
 import User.Layer exposing (Method(..))
 
 
@@ -36,7 +38,7 @@ type alias Dependencies =
     }
 
 
-view : Settings.Page -> Dependencies -> Html Reply
+view : Settings.Page -> Dependencies -> Html Msg
 view page deps =
     case page of
         ImportExport ->
@@ -50,7 +52,7 @@ view page deps =
 -- INDEX
 
 
-index : Dependencies -> List (Html Reply)
+index : Dependencies -> List (Html Msg)
 index deps =
     [ -----------------------------------------
       -- Navigation
@@ -66,7 +68,7 @@ index deps =
           )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown
-          , PerformMsg SignOut
+          , PerformMsg (AuthenticationMsg Authentication.SignOut)
           )
         ]
 
@@ -81,7 +83,7 @@ index deps =
     ]
 
 
-content : Dependencies -> List (Html Reply)
+content : Dependencies -> List (Html Msg)
 content deps =
     [ -----------------------------------------
       -- Title
@@ -162,7 +164,7 @@ content deps =
             , UI.Kit.buttonWithColor
                 UI.Kit.Gray
                 UI.Kit.Normal
-                ClearTracksCache
+                (TracksMsg Tracks.ClearCache)
                 (text "Clear cache")
             ]
 
@@ -184,7 +186,7 @@ content deps =
                     UI.Kit.buttonWithColor
                         UI.Kit.Gray
                         UI.Kit.Normal
-                        Shunt
+                        Bypass
                         (text "Connecting")
 
                 ( False, Nothing ) ->
@@ -206,7 +208,7 @@ content deps =
             [ label "Hide Duplicates"
             , UI.Kit.checkbox
                 { checked = deps.hideDuplicateTracks
-                , toggleMsg = ToggleHideDuplicates
+                , toggleMsg = TracksMsg Tracks.ToggleHideDuplicates
                 }
             ]
         , chunk
@@ -214,7 +216,7 @@ content deps =
             [ label "Process sources automatically"
             , UI.Kit.checkbox
                 { checked = deps.processAutomatically
-                , toggleMsg = ToggleProcessAutomatically
+                , toggleMsg = SourcesMsg Sources.ToggleProcessAutomatically
                 }
             ]
         ]
@@ -243,18 +245,11 @@ label l =
         [ UI.Kit.label [] l ]
 
 
-textField : List (Html.Attribute Reply) -> Html Reply
-textField attributes =
-    chunk
-        [ C.max_w_xs ]
-        [ UI.Kit.textField attributes ]
-
-
 
 -- AUTHENTICATION
 
 
-changePassphrase : User.Layer.Method -> Html Reply
+changePassphrase : User.Layer.Method -> Html Msg
 changePassphrase method =
     inline
         []
@@ -262,7 +257,10 @@ changePassphrase method =
         , text "If you want to, you can "
         , UI.Kit.textButton
             { label = "change your passphrase"
-            , onClick = ShowUpdateEncryptionKeyScreen method
+            , onClick =
+                method
+                    |> Authentication.ShowUpdateEncryptionKeyScreen
+                    |> AuthenticationMsg
             }
         , text "."
         ]
@@ -272,7 +270,7 @@ changePassphrase method =
 -- BACKGROUND IMAGE
 
 
-backgroundImage : Maybe String -> Html Reply
+backgroundImage : Maybe String -> Html Msg
 backgroundImage chosenBackground =
     chunk
         [ C.flex, C.flex_wrap ]

@@ -11,10 +11,12 @@ module Brain.Sources.Processing.Steps exposing
 
     This describes the process for a single source.
 
-    1. Get a file tree/list from the source
+    1. Prepare the source for processing.
+       -> For example, a source could get an access token first.
+    2. Get a file tree/list from the source
        -> This can happen in multiple steps as with Amazon S3.
           A command is issued for each step of this process.
-    2. Get the tags (ie. metadata) for each file that we found.
+    3. Get the tags (ie. metadata) for each file that we found.
        -> This also happens in multiple steps, so that we can flush
           every x tracks while processing.
           A command is issued for each step of this process.
@@ -23,8 +25,9 @@ module Brain.Sources.Processing.Steps exposing
 
 import Alien
 import Brain.Ports as Ports
-import Brain.Reply exposing (Reply(..))
 import Brain.Sources.Processing.Common exposing (..)
+import Brain.Sources.Processing.Types exposing (..)
+import Brain.Types as Brain exposing (..)
 import List.Extra as List
 import Set
 import Sources exposing (Source)
@@ -56,7 +59,7 @@ tagsBatchSize =
 -- 1st STEP
 
 
-takeFirstStep : String -> Time.Posix -> Source -> Cmd Msg
+takeFirstStep : String -> Time.Posix -> Source -> Cmd Brain.Msg
 takeFirstStep origin currentTime source =
     let
         initialContext =
@@ -74,7 +77,7 @@ takeFirstStep origin currentTime source =
 -- 2nd STEP
 
 
-takePrepareStep : Context -> String -> Time.Posix -> ( Cmd Msg, List Reply )
+takePrepareStep : Context -> String -> Time.Posix -> Cmd Brain.Msg
 takePrepareStep context response currentTime =
     context
         |> handlePreparationResponse response
@@ -85,7 +88,7 @@ takePrepareStep context response currentTime =
 -- 3rd STEP
 
 
-takeTreeStep : Context -> String -> List Track -> Time.Posix -> Cmd Msg
+takeTreeStep : Context -> String -> List Track -> Time.Posix -> Cmd Brain.Msg
 takeTreeStep context response associatedTracks currentTime =
     context
         |> handleTreeResponse response
@@ -96,7 +99,7 @@ takeTreeStep context response associatedTracks currentTime =
 -- 4th STEP
 
 
-takeTagsStep : Time.Posix -> ContextForTags -> Source -> Maybe (Cmd Msg)
+takeTagsStep : Time.Posix -> ContextForTags -> Source -> Maybe (Cmd Brain.Msg)
 takeTagsStep currentTime tagsCtx source =
     let
         ( filesToProcess, nextFiles ) =
@@ -125,7 +128,7 @@ takeTagsStep currentTime tagsCtx source =
 -- PREPARE
 
 
-prepare : Context -> Time.Posix -> Cmd Msg
+prepare : Context -> Time.Posix -> Cmd Brain.Msg
 prepare context currentTime =
     let
         maybePreparationCommand =
@@ -134,7 +137,7 @@ prepare context currentTime =
                 context.origin
                 context.source.data
                 context.preparationMarker
-                (PrepareStep context)
+                (ProcessingMsg << PrepareStep context)
     in
     case maybePreparationCommand of
         Just cmd ->
@@ -165,21 +168,17 @@ handlePreparationResponse response context =
     }
 
 
-intoPreparationCommands : Time.Posix -> Context -> ( Cmd Msg, List Reply )
+intoPreparationCommands : Time.Posix -> Context -> Cmd Brain.Msg
 intoPreparationCommands currentTime context =
     case context.preparationMarker of
         TheBeginning ->
-            ( Cmd.none
-            , []
-            )
+            Cmd.none
 
         -- Still preparing,
         -- carry on.
         --
         InProgress _ ->
-            ( prepare context currentTime
-            , []
-            )
+            prepare context currentTime
 
         -- The preparation is completed,
         -- continue to the next step.
@@ -189,29 +188,31 @@ intoPreparationCommands currentTime context =
                 updatedSource =
                     context.source
             in
-            ( -- Make a file tree, the next step.
-              -- 🚀
-              makeTree context currentTime
-              -- Update source data.
-            , updatedSource
-                |> Sources.Encoding.encode
-                |> GiveUI Alien.UpdateSourceData
-                |> List.singleton
-            )
+            Cmd.batch
+                [ -- Make a file tree, the next step.
+                  -- 🚀
+                  makeTree context currentTime
+
+                -- Update source data.
+                , updatedSource
+                    |> Sources.Encoding.encode
+                    |> Alien.broadcast Alien.UpdateSourceData
+                    |> Ports.toUI
+                ]
 
 
 
 -- TREE
 
 
-makeTree : Context -> Time.Posix -> Cmd Msg
+makeTree : Context -> Time.Posix -> Cmd Brain.Msg
 makeTree context currentTime =
     Services.makeTree
         context.source.service
         context.source.data
         context.treeMarker
         currentTime
-        (TreeStep context)
+        (ProcessingMsg << TreeStep context)
 
 
 handleTreeResponse : String -> Context -> Context
@@ -229,7 +230,7 @@ handleTreeResponse response context =
     }
 
 
-intoTreeCommand : List Track -> Time.Posix -> Context -> Cmd Msg
+intoTreeCommand : List Track -> Time.Posix -> Context -> Cmd Brain.Msg
 intoTreeCommand associatedTracks currentTime context =
     case context.treeMarker of
         TheBeginning ->
@@ -268,12 +269,14 @@ intoTreeCommand associatedTracks currentTime context =
                     |> (\ctx -> { ctx | filePaths = pathsAdded })
                     |> contextToTagsContext
                     |> TagsStep
+                    |> ProcessingMsg
                     |> do
 
                 -- Remove tracks
                 , if not (List.isEmpty pathsRemoved) then
                     pathsRemoved
                         |> TreeStepRemoveTracks context.source.id
+                        |> ProcessingMsg
                         |> do
 
                   else
@@ -303,7 +306,7 @@ separate current srcOfTruth =
 -- TAGS
 
 
-getTags : ContextForTags -> Cmd Msg
+getTags : ContextForTags -> Cmd Brain.Msg
 getTags =
     Ports.requestTags
 

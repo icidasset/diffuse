@@ -3,14 +3,14 @@ module UI.Playlists.Alfred exposing (action, create)
 import Alfred exposing (..)
 import Playlists exposing (..)
 import Tracks exposing (IdentifiedTrack)
-import UI.Reply exposing (Reply(..))
+import UI.Types as UI
 
 
 
 -- 🔱
 
 
-create : List IdentifiedTrack -> List Playlist -> Alfred Reply
+create : List IdentifiedTrack -> List Playlist -> Alfred UI.Msg
 create tracks playlists =
     let
         playlistNames =
@@ -32,7 +32,7 @@ create tracks playlists =
     }
 
 
-action : List IdentifiedTrack -> { result : Maybe String, searchTerm : Maybe String } -> List Reply
+action : List IdentifiedTrack -> { result : Maybe String, searchTerm : Maybe String } -> List UI.Msg
 action tracks maybe =
     let
         playlistTracks =
@@ -42,7 +42,11 @@ action tracks maybe =
         Just result ->
             -- Add to playlist
             --
-            [ AddTracksToPlaylist { playlistName = result, tracks = playlistTracks } ]
+            [ UI.AddTracksToPlaylist
+                { playlistName = result
+                , tracks = playlistTracks
+                }
+            ]
 
         Nothing ->
             -- Create playlist,
@@ -50,7 +54,11 @@ action tracks maybe =
             --
             case maybe.searchTerm of
                 Just searchTerm ->
-                    [ AddTracksToPlaylist { playlistName = searchTerm, tracks = playlistTracks } ]
+                    [ UI.AddTracksToPlaylist
+                        { playlistName = searchTerm
+                        , tracks = playlistTracks
+                        }
+                    ]
 
                 Nothing ->
                     []

@@ -12,7 +12,7 @@ import Html.Styled.Lazy
 import Notifications exposing (..)
 import Process
 import Task
-import UI.Reply exposing (Reply(..))
+import UI.Types exposing (Msg(..))
 
 
 
@@ -20,14 +20,14 @@ import UI.Reply exposing (Reply(..))
 
 
 type alias Model =
-    List (Notification Reply)
+    List (Notification Msg)
 
 
 
 -- 📣
 
 
-dismiss : Model -> { id : Int } -> ( Model, Cmd Reply )
+dismiss : Model -> { id : Int } -> ( Model, Cmd Msg )
 dismiss collection { id } =
     ( List.map
         (\notification ->
@@ -44,7 +44,7 @@ dismiss collection { id } =
     )
 
 
-show : Notification Reply -> Model -> ( Model, Cmd Reply )
+show : Notification Msg -> Model -> ( Model, Cmd Msg )
 show notification collection =
     let
         existingNotificationIds =
@@ -70,7 +70,7 @@ show notification collection =
         )
 
 
-showWithModel : Model -> Notification Reply -> ( Model, Cmd Reply )
+showWithModel : Model -> Notification Msg -> ( Model, Cmd Msg )
 showWithModel model notification =
     show notification model
 
@@ -79,7 +79,7 @@ showWithModel model notification =
 -- 🗺
 
 
-view : Model -> Html Reply
+view : Model -> Html Msg
 view collection =
     collection
         |> List.reverse
@@ -101,7 +101,11 @@ view collection =
         |> Html.Styled.toUnstyled
 
 
-notificationView : Notification Reply -> Html.Styled.Html Reply
+
+-- TODO: Remove .Styled.Html
+
+
+notificationView : Notification Msg -> Html.Styled.Html Msg
 notificationView notification =
     let
         kind =
@@ -126,7 +130,8 @@ notificationView notification =
         --
         , rel (String.fromInt id)
         ]
-        [ C.max_w_xs
+        [ C.duration_200
+        , C.max_w_xs
         , C.mt_2
         , C.p_4
         , C.rounded
@@ -152,7 +157,7 @@ notificationView notification =
 
         --
         , if options.wasDismissed then
-            C.transition_250
+            C.transition
 
           else
             ""

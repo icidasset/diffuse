@@ -1,7 +1,6 @@
 module Icons exposing (..)
 
 import Chunky exposing (slaby)
-import Color exposing (Color)
 import Html
 import Material.Icons.Types exposing (Coloring)
 import VirtualDom

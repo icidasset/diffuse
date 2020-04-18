@@ -407,12 +407,13 @@ logoBackdrop =
         [ C.absolute
         , C.bg_cover
         , C.bg_no_repeat
+        , C.duration_1000
         , C.h_0
         , C.left_full
         , C.opacity_025
         , C.pt_full
         , C.top_0
-        , C.transition_1000
+        , C.transition
         , C.transition_opacity
         , C.z_0
 
@@ -501,6 +502,7 @@ select inputHandler options =
             , C.right_0
             , C.text_0
             , C.top_half
+            , C.transform
             ]
             [ Icons.keyboard_arrow_down 20 Inherit ]
         ]

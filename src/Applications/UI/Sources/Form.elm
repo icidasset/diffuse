@@ -1,4 +1,4 @@
-module UI.Sources.Form exposing (FormStep(..), Model, Msg(..), defaultContext, edit, initialModel, new, rename, takeStepBackwards, takeStepForwards, update)
+module UI.Sources.Form exposing (..)
 
 import Chunky exposing (..)
 import Common exposing (boolFromString, boolToString)
@@ -12,35 +12,21 @@ import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Return3 exposing (..)
 import Sources exposing (..)
 import Sources.Services as Services
-import Sources.Services.Dropbox
-import Sources.Services.Google
 import UI.Kit exposing (ButtonType(..), select)
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Reply exposing (Reply(..))
 import UI.Sources.Page as Sources
+import UI.Sources.Types exposing (..)
+import UI.Types exposing (Model)
 
 
 
 -- 🌳
 
 
-type alias Model =
-    { step : FormStep
-    , context : Source
-    }
-
-
-type FormStep
-    = Where
-    | How
-    | By
-
-
-initialModel : Model
+initialModel : Form
 initialModel =
     { step = Where
     , context = defaultContext
@@ -63,133 +49,6 @@ defaultService =
 
 
 
--- 📣
-
-
-type Msg
-    = AddSource
-    | Bypass
-    | EditSource
-    | RenameSource
-    | ReturnToIndex
-    | SelectService String
-    | SetData String String
-    | TakeStep
-    | TakeStepBackwards
-
-
-update : Msg -> Model -> Return Model Msg Reply
-update msg model =
-    case msg of
-        AddSource ->
-            let
-                context =
-                    model.context
-
-                cleanContext =
-                    { context | data = Dict.map (always String.trim) context.data }
-            in
-            returnRepliesWithModel
-                { model | step = Where, context = defaultContext }
-                [ GoToPage (Page.Sources Sources.Index)
-                , AddSourceToCollection cleanContext
-                ]
-
-        Bypass ->
-            return model
-
-        EditSource ->
-            returnRepliesWithModel
-                { model | step = Where, context = defaultContext }
-                [ ReplaceSourceInCollection model.context
-                , ProcessSources [ model.context ]
-                , GoToPage (Page.Sources Sources.Index)
-                ]
-
-        RenameSource ->
-            returnRepliesWithModel
-                { model | step = Where, context = defaultContext }
-                [ ReplaceSourceInCollection model.context
-                , GoToPage (Page.Sources Sources.Index)
-                ]
-
-        ReturnToIndex ->
-            returnRepliesWithModel
-                model
-                [ GoToPage (Page.Sources Sources.Index) ]
-
-        SelectService serviceKey ->
-            case Services.keyToType serviceKey of
-                Just service ->
-                    let
-                        ( context, data ) =
-                            ( model.context
-                            , Services.initialData service
-                            )
-
-                        newContext =
-                            { context | data = data, service = service }
-                    in
-                    return { model | context = newContext }
-
-                Nothing ->
-                    return model
-
-        SetData key value ->
-            let
-                context =
-                    model.context
-
-                updatedData =
-                    Dict.insert key value context.data
-
-                newContext =
-                    { context | data = updatedData }
-            in
-            return { model | context = newContext }
-
-        TakeStep ->
-            case ( model.step, model.context.service ) of
-                ( How, Dropbox ) ->
-                    model.context.data
-                        |> Sources.Services.Dropbox.authorizationUrl
-                        |> ExternalSourceAuthorization
-                        |> returnReplyWithModel model
-
-                ( How, Google ) ->
-                    model.context.data
-                        |> Sources.Services.Google.authorizationUrl
-                        |> ExternalSourceAuthorization
-                        |> returnReplyWithModel model
-
-                _ ->
-                    return { model | step = takeStepForwards model.step }
-
-        TakeStepBackwards ->
-            return { model | step = takeStepBackwards model.step }
-
-
-takeStepForwards : FormStep -> FormStep
-takeStepForwards currentStep =
-    case currentStep of
-        Where ->
-            How
-
-        _ ->
-            By
-
-
-takeStepBackwards : FormStep -> FormStep
-takeStepBackwards currentStep =
-    case currentStep of
-        By ->
-            How
-
-        _ ->
-            Where
-
-
-
 -- NEW
 
 
@@ -197,7 +56,7 @@ type alias Arguments =
     { onboarding : Bool }
 
 
-new : Arguments -> Model -> List (Html Msg)
+new : Arguments -> Form -> List (Html Msg)
 new args model =
     case model.step of
         Where ->
@@ -210,7 +69,7 @@ new args model =
             newBy model
 
 
-newWhere : Arguments -> Model -> List (Html Msg)
+newWhere : Arguments -> Form -> List (Html Msg)
 newWhere { onboarding } { context } =
     [ -----------------------------------------
       -- Navigation
@@ -264,7 +123,7 @@ newWhere { onboarding } { context } =
     ]
 
 
-newHow : Model -> List (Html Msg)
+newHow : Form -> List (Html Msg)
 newHow { context } =
     [ -----------------------------------------
       -- Navigation
@@ -338,7 +197,7 @@ howNote =
         ]
 
 
-newBy : Model -> List (Html Msg)
+newBy : Form -> List (Html Msg)
 newBy { context } =
     [ -----------------------------------------
       -- Navigation
@@ -354,7 +213,7 @@ newBy { context } =
     -- Content
     -----------------------------------------
     , (\h ->
-        form AddSource
+        form AddSourceUsingForm
             [ UI.Kit.canisterForm h ]
       )
         [ UI.Kit.h2 "One last thing"
@@ -376,7 +235,7 @@ newBy { context } =
             ]
             [ UI.Kit.textField
                 [ name "name"
-                , onInput (SetData "name")
+                , onInput (SetFormData "name")
                 , value nameValue
                 ]
             ]
@@ -442,7 +301,7 @@ corsWarning id =
 -- EDIT
 
 
-edit : Model -> List (Html Msg)
+edit : Form -> List (Html Msg)
 edit { context } =
     [ -----------------------------------------
       -- Navigation
@@ -458,7 +317,7 @@ edit { context } =
     -- Content
     -----------------------------------------
     , (\h ->
-        form EditSource
+        form EditSourceUsingForm
             [ chunk
                 [ C.text_left, C.w_full ]
                 [ UI.Kit.canister h ]
@@ -536,14 +395,14 @@ renderProperty context property =
                         bool
                             |> not
                             |> boolToString
-                            |> SetData property.key
+                            |> SetFormData property.key
                     }
                 ]
 
           else
             UI.Kit.textField
                 [ name property.key
-                , onInput (SetData property.key)
+                , onInput (SetFormData property.key)
                 , placeholder property.placeholder
                 , required (property.label |> String.toLower |> String.contains "optional" |> not)
                 , type_ (ifThenElse property.password "password" "text")
@@ -658,7 +517,7 @@ note service =
 -- RENAME
 
 
-rename : Model -> List (Html Msg)
+rename : Form -> List (Html Msg)
 rename { context } =
     [ -----------------------------------------
       -- Navigation
@@ -674,7 +533,7 @@ rename { context } =
     -- Content
     -----------------------------------------
     , (\h ->
-        form RenameSource
+        form RenameSourceUsingForm
             [ UI.Kit.canisterForm h ]
       )
         [ UI.Kit.h2 "Name your source"
@@ -682,7 +541,7 @@ rename { context } =
         -- Input
         --------
         , [ name "name"
-          , onInput (SetData "name")
+          , onInput (SetFormData "name")
           , value (Dict.fetch "name" "" context.data)
           ]
             |> UI.Kit.textField

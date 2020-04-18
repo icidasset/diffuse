@@ -1,4 +1,4 @@
-module UI.Tracks.Scene.List exposing (Model, Msg(..), containerId, initialModel, scrollToNowPlaying, scrollToTop, update, view)
+module UI.Tracks.Scene.List exposing (Dependencies, DerivedColors, containerId, scrollToNowPlaying, scrollToTop, view)
 
 import Browser.Dom as Dom
 import Chunky exposing (..)
@@ -19,76 +19,15 @@ import List.Ext as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
-import Return3 exposing (..)
+import Queue
 import Task
 import Tracks exposing (..)
 import UI.DnD as DnD
 import UI.Kit
-import UI.Reply as UI
-import UI.Tracks.Reply exposing (..)
+import UI.Queue.Types as Queue
 import UI.Tracks.Scene as Scene
-
-
-
--- 🌳
-
-
-type alias Model =
-    { dnd : DnD.Model Int
-    , infiniteList : InfiniteList.Model
-    }
-
-
-initialModel : Model
-initialModel =
-    { dnd = DnD.initialModel
-    , infiniteList = InfiniteList.init
-    }
-
-
-
--- 📣
-
-
-type Msg
-    = Bypass
-    | Reply Reply
-      --
-    | DragAndDropMsg (DnD.Msg Int)
-    | InfiniteListMsg InfiniteList.Model
-
-
-update : Msg -> Model -> Return Model Msg Reply
-update msg model =
-    case msg of
-        Bypass ->
-            return model
-
-        Reply reply ->
-            returnReplyWithModel model reply
-
-        --
-        InfiniteListMsg infiniteList ->
-            return { model | infiniteList = infiniteList }
-
-        DragAndDropMsg subMsg ->
-            let
-                ( newDnD, uiReplies ) =
-                    DnD.update subMsg model.dnd
-            in
-            if DnD.hasDropped newDnD then
-                returnRepliesWithModel
-                    { model | dnd = newDnD }
-                    [ MoveTrackInSelectedPlaylist
-                        { to = Maybe.withDefault 0 (DnD.modelTarget newDnD)
-                        }
-                    , Transcend uiReplies
-                    ]
-
-            else
-                returnRepliesWithModel
-                    { model | dnd = newDnD }
-                    [ Transcend uiReplies ]
+import UI.Tracks.Types exposing (Msg(..))
+import UI.Types as UI exposing (Msg(..))
 
 
 
@@ -112,7 +51,7 @@ type alias DerivedColors =
     }
 
 
-view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe IdentifiedTrack -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html Msg
+view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe Queue.Item -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html Msg
 view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
     brick
         ((::)
@@ -155,6 +94,7 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
             , C.shadow_md
             , C.sticky
             , C.top_0
+            , C.transform
             , C.z_10
 
             -- Dark mode
@@ -191,7 +131,7 @@ containerId =
     "diffuse__track-list"
 
 
-infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe IdentifiedTrack, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
+infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe Queue.Item, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
 infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
     let
         color =
@@ -256,12 +196,12 @@ scrollToNowPlaying harvest ( identifiers, _ ) =
 
 scrollToTop : Cmd Msg
 scrollToTop =
-    Task.attempt (always Bypass) (Dom.setViewportOf containerId 0 0)
+    Task.attempt (always UI.Bypass) (Dom.setViewportOf containerId 0 0)
 
 
 viewAttributes : List (Html.Attribute Msg)
 viewAttributes =
-    [ InfiniteList.onScroll InfiniteListMsg
+    [ InfiniteList.onScroll (InfiniteListMsg >> TracksMsg)
     , id containerId
     , style "overscroll-behavior" "none"
     ]
@@ -322,15 +262,15 @@ header isPlaylist showAlbum sortBy sortDirection =
 
          else if showAlbum then
             [ headerColumn "" 4.5 Nothing Bypass
-            , headerColumn "Title" 37.5 (maybeSortIcon Title) (Reply <| SortBy Title)
-            , headerColumn "Artist" 29.0 (maybeSortIcon Artist) (Reply <| SortBy Artist)
-            , headerColumn "Album" 29.0 (maybeSortIcon Album) (Reply <| SortBy Album)
+            , headerColumn "Title" 37.5 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
+            , headerColumn "Artist" 29.0 (maybeSortIcon Artist) (TracksMsg <| SortBy Artist)
+            , headerColumn "Album" 29.0 (maybeSortIcon Album) (TracksMsg <| SortBy Album)
             ]
 
          else
             [ headerColumn "" 4.5 Nothing Bypass
-            , headerColumn "Title" 52 (maybeSortIcon Title) (Reply <| SortBy Title)
-            , headerColumn "Artist" 43.5 (maybeSortIcon Artist) (Reply <| SortBy Artist)
+            , headerColumn "Title" 52 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
+            , headerColumn "Artist" 43.5 (maybeSortIcon Artist) (TracksMsg <| SortBy Artist)
             ]
         )
 
@@ -386,6 +326,7 @@ headerColumn text_ width maybeSortIcon msg =
                     , C.opacity_90
                     , C.right_0
                     , C.top_half
+                    , C.transform
                     ]
                     [ sortIcon ]
 
@@ -445,7 +386,7 @@ dynamicRowHeight _ ( i, t ) =
 -- INFINITE LIST ITEM
 
 
-defaultItemView : Bool -> Maybe IdentifiedTrack -> List Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
+defaultItemView : Bool -> Maybe Queue.Item -> List Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
 defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derivedColors _ idx identifiedTrack =
     let
         ( identifiers, track ) =
@@ -464,7 +405,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
 
         rowIdentifiers =
             { isMissing = identifiers.isMissing
-            , isNowPlaying = Maybe.unwrap False (isNowPlaying identifiedTrack) nowPlaying
+            , isNowPlaying = Maybe.unwrap False (.identifiedTrack >> isNowPlaying identifiedTrack) nowPlaying
             , isSelected = isSelected
             }
 
@@ -546,7 +487,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
         ]
 
 
-playlistItemView : Bool -> Maybe IdentifiedTrack -> Maybe String -> List Int -> DnD.Model Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView : Bool -> Maybe Queue.Item -> Maybe String -> List Int -> DnD.Model Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
 playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd showAlbum derivedColors _ idx identifiedTrack =
     let
         ( identifiers, track ) =
@@ -557,7 +498,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
 
         dragEnv =
             { model = dnd
-            , toMsg = DragAndDropMsg
+            , toMsg = DnD
             }
 
         isSelected =
@@ -568,7 +509,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
 
         rowIdentifiers =
             { isMissing = identifiers.isMissing
-            , isNowPlaying = Maybe.unwrap False (isNowPlaying identifiedTrack) nowPlaying
+            , isNowPlaying = Maybe.unwrap False (.identifiedTrack >> isNowPlaying identifiedTrack) nowPlaying
             , isSelected = isSelected
             }
 
@@ -671,8 +612,12 @@ mouseContextMenuEvent ( i, _ ) =
                     else
                         event.clientPos
                             |> Coordinates.fromTuple
-                            |> ShowTrackMenuWithSmallDelay i.indexInList { alt = event.keys.alt }
-                            |> Reply
+                            |> ShowTracksMenuWithSmallDelay
+                                (Just i.indexInList)
+                                { alt = event.keys.alt }
+                            |> TracksMsg
+
+                --
                 , stopPropagation = True
                 , preventDefault = True
                 }
@@ -695,8 +640,12 @@ touchContextMenuEvent ( i, _ ) maybeDragEnv =
 
                         Nothing ->
                             { x = x, y = y }
-                                |> ShowTrackMenuWithoutDelay i.indexInList { alt = False }
-                                |> Reply
+                                |> ShowTracksMenu
+                                    (Just i.indexInList)
+                                    { alt = False }
+                                |> TracksMsg
+
+                --
                 , stopPropagation = False
                 , preventDefault = False
                 }
@@ -717,10 +666,10 @@ playEvent ( i, t ) =
 
                 else
                     ( i, t )
-                        |> UI.PlayTrack
-                        |> List.singleton
-                        |> Transcend
-                        |> Reply
+                        |> Queue.InjectFirstAndPlay
+                        |> QueueMsg
+
+            --
             , stopPropagation = True
             , preventDefault = True
             }
@@ -738,10 +687,12 @@ selectEvent ( i, _ ) =
                         0 ->
                             { shiftKey = shiftKey }
                                 |> MarkAsSelected i.indexInList
-                                |> Reply
+                                |> TracksMsg
 
                         _ ->
                             Bypass
+
+                --
                 , stopPropagation = True
                 , preventDefault = False
                 }
@@ -804,7 +755,7 @@ favouriteColumn favouritesOnly identifiers derivedColors =
         ((++)
             [ identifiers.indexInList
                 |> ToggleFavourite
-                |> Reply
+                |> TracksMsg
                 |> Html.Events.onClick
             ]
             (favouriteColumnStyles favouritesOnly identifiers derivedColors)
