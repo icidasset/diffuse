@@ -215,10 +215,11 @@ init flags url key =
         |> Routing.transition
             page
         |> Return.command
-            (Maybe.unwrap
+            (if Maybe.isNothing maybePage then
+                Routing.resetUrl key url page
+
+             else
                 Cmd.none
-                (Routing.resetUrl key url)
-                maybePage
             )
         |> Return.command
             (Task.perform SetCurrentTime Time.now)
