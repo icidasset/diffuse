@@ -19,6 +19,7 @@ import Sources.Encoding as Sources
 import Sources.Services as Services
 import Sources.Services.Dropbox
 import Sources.Services.Google
+import Tracks.Collection
 import UI.Common.State as Common
 import UI.Page as Page
 import UI.Ports as Ports
@@ -477,7 +478,8 @@ toggleActivation { sourceId } model =
                     source
             )
         |> (\collection -> { model | sources = collection })
-        |> User.saveSources
+        |> Tracks.reviseCollection Tracks.Collection.identify
+        |> andThen User.saveSources
 
 
 toggleDirectoryPlaylists : { sourceId : String } -> Manager
