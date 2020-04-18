@@ -29,6 +29,7 @@ import UI.Authentication.Types as Authentication exposing (..)
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
+import UI.Sources.State as Sources
 import UI.Types as UI exposing (..)
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
@@ -430,8 +431,8 @@ signOut model =
         , tracks = Tracks.emptyCollection
     }
         |> Backdrop.setDefault
+        |> Return.andThen Sources.stopProcessing
         |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
-        |> Return.command (Ports.toBrain <| Alien.trigger Alien.StopProcessing)
         |> Return.command (Ports.activeQueueItemChanged Nothing)
         |> Return.command (Nav.pushUrl model.navKey "#/")
 
