@@ -547,7 +547,7 @@ subscriptions model =
         , Ports.downloadTracksFinished (\_ -> TracksMsg Tracks.DownloadFinished)
 
         -----------------------------------------
-        -- 📭 Et Cetera
+        -- 📭 Other
         -----------------------------------------
         , Ports.setIsOnline SetIsOnline
         , Sub.map KeyboardMsg Keyboard.subscriptions
