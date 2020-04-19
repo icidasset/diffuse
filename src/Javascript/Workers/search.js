@@ -8,6 +8,12 @@
 import lunr from "lunr"
 
 
+lunr.Pipeline.registerFunction(
+  removeParenthesesFromToken,
+  "Remove parentheses from token"
+)
+
+
 let index
 
 
@@ -103,11 +109,6 @@ function updateSearchIndex(input) {
 
 function customLunr(config) {
   const builder = new lunr.Builder
-
-  lunr.Pipeline.registerFunction(
-    removeParenthesesFromToken,
-    "removeParenthesesFromToken"
-  )
 
   builder.pipeline.add(removeParenthesesFromToken, lunr.stemmer)
   builder.searchPipeline.add(removeParenthesesFromToken, lunr.stemmer)
