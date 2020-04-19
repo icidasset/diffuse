@@ -148,13 +148,15 @@ update msg =
 
 
 add : Json.Value -> Manager
-add encodedTracks =
-    reviseCollection
-        (encodedTracks
-            |> Json.decodeValue (Json.list Encoding.trackDecoder)
-            |> Result.withDefault []
-            |> Collection.add
-        )
+add encodedTracks model =
+    model
+        |> reviseCollection
+            (encodedTracks
+                |> Json.decodeValue (Json.list Encoding.trackDecoder)
+                |> Result.withDefault []
+                |> Collection.add
+            )
+        |> andThen search
 
 
 clearCache : Manager

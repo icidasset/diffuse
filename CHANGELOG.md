@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.0
+
+- Fixes issue with search results not updating while processing sources
+
 ## 2.4.0
 
 - **Adds Last.fm integration**

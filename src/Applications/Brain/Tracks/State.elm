@@ -118,12 +118,12 @@ removeFromCache data =
 
 
 search : Json.Value -> Manager
-search data model =
-    data
+search encodedSearchTerm =
+    encodedSearchTerm
         |> Json.decodeValue Json.string
-        |> Result.withDefault ""
-        |> Ports.requestSearch
-        |> return model
+        |> Result.map Ports.requestSearch
+        |> Result.withDefault Cmd.none
+        |> Return.communicate
 
 
 storeInCache : Json.Value -> Manager
