@@ -269,12 +269,17 @@ export function preloadAudioElement(orchestrion, queueItem) {
   )
 
   // audio element remains valid for 2 hours
-  createAudioElement(
-    orchestrion,
-    queueItem,
-    Date.now() + 1000 * 60 * 60 * 2,
-    true
-  )
+  transformUrl(queueItem.url).then(url => {
+    const queueItemWithTransformedUrl =
+      Object.assign({}, queueItem, { url: url })
+
+    createAudioElement(
+      orchestrion,
+      queueItemWithTransformedUrl,
+      Date.now() + 1000 * 60 * 60 * 2,
+      true
+    )
+  })
 }
 
 
