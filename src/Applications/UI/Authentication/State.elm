@@ -252,6 +252,7 @@ cancelFlow model =
     )
         |> Lens.adjust lens model
         |> Return.singleton
+        |> andThen Common.forceTracksRerender
 
 
 externalAuth : Method -> String -> Manager
@@ -376,8 +377,8 @@ signIn method model =
         |> Alien.broadcast Alien.SignIn
         |> Ports.toBrain
         --
-        |> Return.return model
-        |> Return.andThen (Common.toggleLoadingScreen On)
+        |> return model
+        |> andThen (Common.toggleLoadingScreen On)
 
 
 signInWithPassphrase : Method -> String -> Manager
@@ -395,8 +396,8 @@ signInWithPassphrase method passphrase model =
             |> Alien.broadcast Alien.SignIn
             |> Ports.toBrain
             --
-            |> Return.return model
-            |> Return.andThen (Common.toggleLoadingScreen On)
+            |> return model
+            |> andThen (Common.toggleLoadingScreen On)
 
 
 signOut : Manager
@@ -469,8 +470,15 @@ removeEncryptionKey method model =
         |> Alien.trigger
         |> Ports.toBrain
         --
-        |> Return.return (lens.set (Authenticated method) model)
-        |> Return.andThen (Common.showNotification <| Notifications.success "Saving data without encryption ...")
+        |> return
+            (lens.set (Authenticated method) model)
+        |> andThen
+            ("Saving data without encryption ..."
+                |> Notifications.success
+                |> Common.showNotification
+            )
+        |> andThen
+            Common.forceTracksRerender
 
 
 showNewEncryptionKeyScreen : Method -> Manager
@@ -497,8 +505,15 @@ updateEncryptionKey method passphrase model =
             |> Alien.broadcast Alien.UpdateEncryptionKey
             |> Ports.toBrain
             --
-            |> Return.return (lens.set (Authenticated method) model)
-            |> Return.andThen (Common.showNotification <| Notifications.success "Encrypting data with new passphrase ...")
+            |> return
+                (lens.set (Authenticated method) model)
+            |> andThen
+                ("Encrypting data with new passphrase ..."
+                    |> Notifications.success
+                    |> Common.showNotification
+                )
+            |> andThen
+                Common.forceTracksRerender
 
 
 

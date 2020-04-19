@@ -1,5 +1,6 @@
 module UI.Common.State exposing (..)
 
+import Browser.Dom
 import Browser.Navigation as Nav
 import Common exposing (..)
 import ContextMenu exposing (ContextMenu)
@@ -7,9 +8,12 @@ import List.Extra as List
 import Monocle.Lens as Lens exposing (Lens)
 import Notifications exposing (Notification)
 import Return exposing (return)
+import Return.Ext as Return
+import Task
 import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Playlists.Directory
+import UI.Tracks.Scene.List
 import UI.Types as UI exposing (Manager, Msg)
 
 
@@ -30,6 +34,13 @@ dismissNotification options model =
     options
         |> UI.Notifications.dismiss model.notifications
         |> Return.map (\n -> { model | notifications = n })
+
+
+forceTracksRerender : Manager
+forceTracksRerender =
+    Browser.Dom.setViewportOf UI.Tracks.Scene.List.containerId 0 1
+        |> Task.attempt (always UI.Bypass)
+        |> Return.communicate
 
 
 generateDirectoryPlaylists : Manager

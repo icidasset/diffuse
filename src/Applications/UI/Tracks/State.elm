@@ -590,6 +590,7 @@ toggleCachedOnly model =
     { model | cachedTracksOnly = not model.cachedTracksOnly }
         |> reviseCollection Collection.harvest
         |> andThen User.saveEnclosedUserData
+        |> andThen Common.forceTracksRerender
 
 
 toggleFavourite : Int -> Manager
