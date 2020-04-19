@@ -6,6 +6,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists exposing (..)
 import Playlists.Matching
+import String.Ext as String
 import Time
 import Time.Ext as Time
 import Tracks exposing (..)
@@ -144,6 +145,7 @@ groupByDirectoryFolder deps ( i, t ) =
         directory =
             t.path
                 |> String.dropLeft (String.length prefix)
+                |> String.chopStart "/"
                 |> String.split "/"
                 |> List.init
                 |> Maybe.map (String.join " / ")
