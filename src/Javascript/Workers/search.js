@@ -104,15 +104,13 @@ function updateSearchIndex(input) {
 function customLunr(config) {
   const builder = new lunr.Builder
 
-  builder.pipeline.add(
+  lunr.Pipeline.registerFunction(
     removeParenthesesFromToken,
-    lunr.stemmer
+    "removeParenthesesFromToken"
   )
 
-  builder.searchPipeline.add(
-    removeParenthesesFromToken,
-    lunr.stemmer
-  )
+  builder.pipeline.add(removeParenthesesFromToken, lunr.stemmer)
+  builder.searchPipeline.add(removeParenthesesFromToken, lunr.stemmer)
 
   config.call(builder, builder)
   return builder.build()
