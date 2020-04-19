@@ -50,6 +50,7 @@ type Msg
       -----------------------------------------
       -- z. Data
       -----------------------------------------
+    | SaveAllHypaethralData
     | SaveHypaethralDataBits (List HypaethralBit)
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
     | SaveNextHypaethralBit

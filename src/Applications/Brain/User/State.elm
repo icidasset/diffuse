@@ -146,6 +146,9 @@ update msg =
         -----------------------------------------
         -- z. Data
         -----------------------------------------
+        SaveAllHypaethralData ->
+            saveAllHypaethralData
+
         SaveHypaethralDataSlowly a ->
             saveHypaethralDataSlowly a
 
@@ -731,12 +734,18 @@ fabricateSecretKey passphrase =
 
 
 removeEncryptionKey : Manager
-removeEncryptionKey model =
-    Alien.AuthSecretKey
+removeEncryptionKey =
+    [ Alien.AuthSecretKey
         |> Alien.trigger
         |> Ports.removeCache
-        |> return model
-        |> andThen saveAllHypaethralData
+
+    --
+    , SaveAllHypaethralData
+        |> UserMsg
+        |> do
+    ]
+        |> Cmd.batch
+        |> Return.communicate
 
 
 secretKeyFabricated : Manager
