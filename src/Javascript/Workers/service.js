@@ -60,11 +60,15 @@ self.addEventListener("fetch", event => {
 
   // When doing a request with basic authentication in the url, put it in the headers instead
   } else if (event.request.url.includes("service_worker_authentication=")) {
-    const [urlWithoutToken, token] = event.request.url.split("service_worker_authentication=")
+    const url = new URL(event.request.url)
+    const token = url.searchParams.get("service_worker_authentication")
+
+    url.searchParams.delete("service_worker_authentication")
+    url.search = "?" + url.searchParams.toString()
 
     newRequestWithAuth(
       event,
-      urlWithoutToken,
+      url.toString(),
       "Basic " + token
     )
 
