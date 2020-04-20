@@ -83,7 +83,8 @@ self.addEventListener("fetch", event => {
     newRequestWithAuth(
       event,
       url.toString(),
-      "Bearer " + token
+      "Bearer " + token,
+      "cors"
     )
 
   }
@@ -94,13 +95,13 @@ self.addEventListener("fetch", event => {
 // ⚗️
 
 
-function newRequestWithAuth(event, urlWithoutToken, authToken) {
+function newRequestWithAuth(event, urlWithoutToken, authToken, mode) {
   const newHeaders = new Headers(event.request.headers)
-  newHeaders.set("authorization", authToken)
+  newHeaders.set("Authorization", authToken)
 
-  const newRequest = new Request(event.request, {
+  const newRequest = new Request(new Request(urlWithoutToken, event.request), {
     headers: newHeaders,
-    url: urlWithoutToken
+    mode: mode || "cors"
   })
 
   event.respondWith(fetch(newRequest))
