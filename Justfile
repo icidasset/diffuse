@@ -42,10 +42,10 @@ default: dev
 	echo "> Optimizing CSS"
 	{{NPM_DIR}}/.bin/purgecss \
 		--config {{SYSTEM_DIR}}/Css/purgecss.about.js \
-		--out {{BUILD_DIR}}
+		--output {{BUILD_DIR}}
 	{{NPM_DIR}}/.bin/purgecss \
 		--config {{SYSTEM_DIR}}/Css/purgecss.application.js \
-		--out {{BUILD_DIR}}
+		--output {{BUILD_DIR}}
 	{{NPM_DIR}}/.bin/csso \
 		"{{BUILD_DIR}}/about.css" \
 		--output "{{BUILD_DIR}}/about.css"
