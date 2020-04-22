@@ -24,6 +24,11 @@ const exclude =
 // 📣
 
 
+self.addEventListener("activate", event => {
+  event.waitUntil(self.clients.claim())
+})
+
+
 self.addEventListener("install", event => {
   const href = self.location.href.replace("service-worker.js", "")
   const promise = removeAllCaches()
