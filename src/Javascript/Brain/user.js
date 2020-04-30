@@ -205,7 +205,7 @@ ports.requestIpfs = app => event => {
   const apiOrigin = event.data.apiOrigin
   const path = IPFS_ROOT + event.data.file
 
-  fetch(apiOrigin + "/api/v0/files/read?arg=" + path)
+  fetch(apiOrigin + "/api/v0/files/read?arg=" + path, { method: "POST" })
     .then(r => r.ok ? r.text() : r.json())
     .then(r => r.Code === 0 ? null : r)
     .then(decryptIfNeeded)

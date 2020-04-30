@@ -535,8 +535,9 @@ pingIpfs model =
         Http ->
             { url = "//localhost:5001/api/v0/id"
             , expect = Http.expectWhatever (AuthenticationMsg << PingIpfsCallback)
+            , body = Http.emptyBody
             }
-                |> Http.get
+                |> Http.post
                 |> return model
 
 
@@ -569,8 +570,9 @@ pingOtherIpfs : String -> Manager
 pingOtherIpfs origin model =
     { url = origin ++ "/api/v0/id"
     , expect = Http.expectWhatever (AuthenticationMsg << PingOtherIpfsCallback origin)
+    , body = Http.emptyBody
     }
-        |> Http.get
+        |> Http.post
         |> return model
 
 

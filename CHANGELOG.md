@@ -6,6 +6,7 @@
 - Improves service worker (now claims control immediately)
 - Removes leading slashes from directory groups
 - Fixes Google Drive support (they made some API changes)
+- Fixes IPFS support regarding v0.5.x (user-storage layer)
 - Fixes issue with Dropbox tracks preloading
 - Fixes issue with search results not updating while processing sources
 - Fixes issue with tracks being invisible
