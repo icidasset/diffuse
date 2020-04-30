@@ -153,6 +153,8 @@ type alias Model =
     , cachedTracks : List String
     , cachedTracksOnly : Bool
     , cachingTracksInProgress : List String
+
+    -- , covers : Dict String String
     , favourites : List Favourite
     , favouritesOnly : Bool
     , grouping : Maybe Grouping

@@ -12,7 +12,8 @@ import Tracks exposing (..)
 
 
 type Scene
-    = List
+    = Covers
+    | List
 
 
 

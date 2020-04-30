@@ -131,59 +131,6 @@ containerId =
     "diffuse__track-list"
 
 
-infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe Queue.Item, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
-infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
-    let
-        color =
-            Maybe.withDefault UI.Kit.colors.text deps.bgColor
-
-        derivedColors =
-            if deps.darkMode then
-                { background = Color.toCssString color
-                , subtle = Color.toCssString (Color.darken 0.1 color)
-                , text = Color.toCssString (Color.darken 0.475 color)
-                }
-
-            else
-                { background = Color.toCssString (Color.fadeOut 0.625 color)
-                , subtle = Color.toCssString (Color.fadeOut 0.575 color)
-                , text = Color.toCssString (Color.darken 0.3 color)
-                }
-    in
-    { itemView =
-        case maybeDnD of
-            Just dnd ->
-                playlistItemView
-                    favouritesOnly
-                    nowPlaying
-                    searchTerm
-                    selectedTrackIndexes
-                    dnd
-                    deps.showAlbum
-                    derivedColors
-
-            _ ->
-                defaultItemView
-                    favouritesOnly
-                    nowPlaying
-                    selectedTrackIndexes
-                    deps.showAlbum
-                    derivedColors
-
-    --
-    , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
-    , containerHeight = round deps.height
-    }
-        |> InfiniteList.config
-        |> InfiniteList.withCustomContainer infiniteListContainer
-        |> (\config ->
-                InfiniteList.view
-                    config
-                    infiniteList
-                    harvest
-           )
-
-
 scrollToNowPlaying : List IdentifiedTrack -> IdentifiedTrack -> Cmd Msg
 scrollToNowPlaying harvest ( identifiers, _ ) =
     harvest
@@ -337,6 +284,59 @@ headerColumn text_ width maybeSortIcon msg =
 
 
 -- INFINITE LIST
+
+
+infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe Queue.Item, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
+infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
+    let
+        color =
+            Maybe.withDefault UI.Kit.colors.text deps.bgColor
+
+        derivedColors =
+            if deps.darkMode then
+                { background = Color.toCssString color
+                , subtle = Color.toCssString (Color.darken 0.1 color)
+                , text = Color.toCssString (Color.darken 0.475 color)
+                }
+
+            else
+                { background = Color.toCssString (Color.fadeOut 0.625 color)
+                , subtle = Color.toCssString (Color.fadeOut 0.575 color)
+                , text = Color.toCssString (Color.darken 0.3 color)
+                }
+    in
+    { itemView =
+        case maybeDnD of
+            Just dnd ->
+                playlistItemView
+                    favouritesOnly
+                    nowPlaying
+                    searchTerm
+                    selectedTrackIndexes
+                    dnd
+                    deps.showAlbum
+                    derivedColors
+
+            _ ->
+                defaultItemView
+                    favouritesOnly
+                    nowPlaying
+                    selectedTrackIndexes
+                    deps.showAlbum
+                    derivedColors
+
+    --
+    , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
+    , containerHeight = round deps.height
+    }
+        |> InfiniteList.config
+        |> InfiniteList.withCustomContainer infiniteListContainer
+        |> (\config ->
+                InfiniteList.view
+                    config
+                    infiniteList
+                    harvest
+           )
 
 
 infiniteListContainer :

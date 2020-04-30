@@ -91,6 +91,10 @@ dnd dragMsg model =
 
             Page.Index ->
                 case model.scene of
+                    Tracks.Covers ->
+                        -- TODO
+                        Return.singleton m
+
                     Tracks.List ->
                         Playlists.moveTrackInSelected
                             { to = Maybe.withDefault 0 (DnD.modelTarget d) }

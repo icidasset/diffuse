@@ -152,16 +152,7 @@ defaultScreen model =
     -- Main
     -----------------------------------------
     , vessel
-        [ Tracks.view
-            model
-            { amountOfSources = List.length model.sources
-            , bgColor = model.extractedBackdropColor
-            , darkMode = model.darkMode
-            , isOnIndexPage = model.page == Page.Index
-            , isTouchDevice = model.isTouchDevice
-            , sourceIdsBeingProcessed = List.map Tuple.first model.processingContext
-            , viewport = model.viewport
-            }
+        [ Tracks.view model
 
         -- Pages
         --------

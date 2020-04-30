@@ -195,11 +195,11 @@ init flags url key =
     , favouritesOnly = False
     , grouping = Nothing
     , hideDuplicates = False
-    , scene = Tracks.List
+    , scene = Tracks.Covers
     , searchResults = Nothing
     , searchTerm = Nothing
     , selectedTrackIndexes = []
-    , sortBy = Tracks.Artist
+    , sortBy = Tracks.Album
     , sortDirection = Tracks.Asc
     , tracks = Tracks.emptyCollection
 

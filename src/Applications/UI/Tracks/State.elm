@@ -29,6 +29,7 @@ import UI.Page
 import UI.Ports as Ports
 import UI.Queue.State as Queue
 import UI.Tracks.ContextMenu as Tracks
+import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Tracks.Types as Tracks exposing (..)
 import UI.Types as UI exposing (Manager, Model, Msg(..))
@@ -279,6 +280,10 @@ harvest =
 
 infiniteListMsg : InfiniteList.Model -> Manager
 infiniteListMsg infiniteList model =
+    let
+        _ =
+            Debug.log "" infiniteList
+    in
     Return.singleton { model | infiniteList = infiniteList }
 
 
@@ -488,6 +493,9 @@ scrollToNowPlaying model =
             )
         |> Maybe.map
             (case model.scene of
+                Covers ->
+                    UI.Tracks.Scene.Covers.scrollToNowPlaying model.tracks.harvested
+
                 List ->
                     UI.Tracks.Scene.List.scrollToNowPlaying model.tracks.harvested
             )
@@ -712,6 +720,9 @@ resolveParcel ( deps, newCollection ) model =
           -----------------------------------------
         , if searchChanged then
             case model.scene of
+                Covers ->
+                    UI.Tracks.Scene.Covers.scrollToTop
+
                 List ->
                     UI.Tracks.Scene.List.scrollToTop
 
