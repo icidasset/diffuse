@@ -2,7 +2,7 @@
 
 ## 2.5.0
 
-- **Large overhaul of the core**
+- **Large overhaul of the core code**
 - Improves service worker (now claims control immediately)
 - Removes leading slashes from directory groups
 - Fixes Google Drive support (they made some API changes)
