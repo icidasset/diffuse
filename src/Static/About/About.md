@@ -88,19 +88,19 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
 Add the domain of the app, with the protocol, to the __list of allowed origins__.  
 
 ```shell
-btfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://127.0.0.1:8080", "http://127.0.0.1:44999"]'
+btfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://diffuse.sh.ipns.localhost:8080", "http://127.0.0.1:44999"]'
 ```
 
 You can also make this change in the Web UI, you'll find it under "Settings → BTFS Config".
 
-```json
+```javascript
 {
   "API": {
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": [
-        "https://diffuse.sh",
-        "http://127.0.0.1:8080",
-        "http://127.0.0.1:44999"
+        "https://diffuse.sh",                       // 🎵 Default
+        "http://diffuse.sh.ipns.localhost:8080",    // IPNS
+        "http://127.0.0.1:44999"                    // Electron app
       ]
     }
   }
@@ -126,19 +126,19 @@ _Not necessary._
 Add the domain of the app, with the protocol, to the __list of allowed origins__.  
 
 ```shell
-ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://127.0.0.1:8080", "http://127.0.0.1:44999"]'
+ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://diffuse.sh.ipns.localhost:8080", "http://127.0.0.1:44999"]'
 ```
 
 You can also make this change in the Web UI, you'll find it under "Settings → IPFS Config".
 
-```json
+```javascript
 {
   "API": {
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": [
-        "https://diffuse.sh",
-        "http://127.0.0.1:8080",
-        "http://127.0.0.1:44999"
+        "https://diffuse.sh",                       // 🎵 Default
+        "http://diffuse.sh.ipns.localhost:8080",    // IPNS through IPFS Companion
+        "http://127.0.0.1:44999"                    // Electron app
       ]
     }
   }
