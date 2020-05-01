@@ -67,7 +67,7 @@ sequences = lsequence
     , ( Hosting,        list "Static/Hosting/**/*"      )
     , ( Html,           list "Static/Html/**/*.html"    )
     , ( Images,         list "Static/Images/**/*.*"     )
-    , ( Manifests,      list "Static/Manifests/*.*"     )
+    , ( Manifests,      list "Static/Manifests/**/*.*"  )
 
     -- About Pages
     , ( AboutPages,     list "Static/About/**/*.md"    )
@@ -94,6 +94,7 @@ flow _ (Images, dict)         = prefixDirname "images/" dict
 flow _ (Manifests, dict) =
     dict
         |> clone "manifest.json" "site.webmanifest"
+        |> rename "Nextcloud/appinfo.xml" "appinfo/info.xml"
 
 
 {-| About Pages -}
