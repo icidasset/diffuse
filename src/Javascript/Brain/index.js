@@ -43,14 +43,20 @@ user.setupPorts(app)
 // UI
 // ==
 
+app.ports.toUI.subscribe(event => {
+  self.postMessage(event)
+})
+
+
 self.onmessage = event => {
+  if (event.data.action) return handleAction(event.data.action, event.data.data)
   if (event.data.tag) return app.ports.fromAlien.send(event.data)
 }
 
 
-app.ports.toUI.subscribe(event => {
-  self.postMessage(event)
-})
+function handleAction(action, data) { switch (action) {
+  case "DOWNLOAD_ARTWORK": return downloadArtwork(data)
+}}
 
 
 
@@ -82,6 +88,20 @@ app.ports.toCache.subscribe(event => {
   toCache(key, event.data.data || event.data)
     .then( storageCallback(app, event) )
     .catch( reportError(app, event) )
+})
+
+
+
+// Cache (Artwork)
+// ---------------
+
+function downloadArtwork(list) {
+  app.ports.requestArtworkTrackUrls.send(list)
+}
+
+
+app.ports.receiveArtworkTrackUrls.subscribe(list => {
+  //
 })
 
 

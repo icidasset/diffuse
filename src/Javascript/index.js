@@ -231,6 +231,49 @@ app.ports.copyToClipboard.subscribe(text => {
 
 
 
+// Covers
+// ------
+
+const loadingCovers = {}
+
+
+app.ports.loadAlbumCovers.subscribe(
+  debounce(loadAlbumCovers, 500)
+)
+
+
+function loadAlbumCovers() {
+  const nodes = Array.from(
+    document.querySelectorAll("#diffuse__track-covers [data-key]")
+  )
+
+  if (!nodes.length) return;
+
+  const artworkPrep = nodes.map(node => {
+    return {
+      coverCacheKey:  node.getAttribute("data-key"),
+      trackFilename:  node.getAttribute("data-filename"),
+      trackPath:      node.getAttribute("data-path"),
+      trackSourceId:  node.getAttribute("data-source-id")
+    }
+
+  }).filter(prep => {
+    return !loadingCovers[prep.coverCacheKey]
+
+  })
+
+  artworkPrep.forEach(prep => {
+    loadingCovers[prep.coverCacheKey] = true
+  })
+
+  brain.postMessage({
+    action: "DOWNLOAD_ARTWORK",
+    data: artworkPrep
+  })
+}
+
+
+
 // Dark mode
 // ---------
 

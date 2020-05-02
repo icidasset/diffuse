@@ -188,9 +188,11 @@ init flags url key =
     -----------------------------------------
     -- Tracks
     -----------------------------------------
+    , cachedCovers = Dict.empty
     , cachedTracks = []
     , cachedTracksOnly = False
     , cachingTracksInProgress = []
+    , covers = []
     , favourites = []
     , favouritesOnly = False
     , grouping = Nothing

@@ -1,4 +1,4 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, pick, removeByPaths, removeBySourceId, removeFromPlaylist, toPlaylistTracks)
+module Tracks exposing (..)
 
 import Base64
 import List.Extra as List
@@ -43,6 +43,13 @@ type alias Tags =
 
 
 -- DERIVATIVES & SUPPLEMENTS
+
+
+type alias Cover =
+    { key : String
+    , track : Track
+    , trackFilename : String
+    }
 
 
 type alias Favourite =

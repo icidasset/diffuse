@@ -18,6 +18,9 @@ port adjustEqualizerSetting : { knob : String, value : Float } -> Cmd msg
 port copyToClipboard : String -> Cmd msg
 
 
+port loadAlbumCovers : () -> Cmd msg
+
+
 port pause : () -> Cmd msg
 
 

@@ -69,10 +69,10 @@ view model =
             case model.scene of
                 Covers ->
                     UI.Tracks.Scene.Covers.view
-                        { harvest = model.tracks.harvested
+                        { cachedCovers = model.cachedCovers
+                        , covers = model.covers
                         , infiniteList = model.infiniteList
                         , isVisible = isOnIndexPage
-                        , sortBy = model.sortBy
                         , viewportHeight = model.viewport.height
                         , viewportWidth = model.viewport.width
                         }

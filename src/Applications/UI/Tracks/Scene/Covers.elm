@@ -8,8 +8,9 @@ import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Coordinates
 import Css.Classes as C
+import Dict exposing (Dict)
 import Html exposing (Html, text)
-import Html.Attributes exposing (class, id, style, tabindex)
+import Html.Attributes as A exposing (class, id, style, tabindex)
 import Html.Events
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
@@ -36,21 +37,29 @@ import UI.Types as UI exposing (Msg(..))
 
 
 type alias Dependencies =
-    { harvest : List IdentifiedTrack
+    { cachedCovers : Dict String String
+    , covers : List Cover
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
-    , sortBy : SortBy
     , viewportHeight : Float
     , viewportWidth : Float
     }
 
 
-
--- TODO: Make use of Html.Lazy
+type alias ItemDependencies =
+    { cachedCovers : Dict String String
+    }
 
 
 view : Dependencies -> Html Msg
 view deps =
+    Html.Lazy.lazy
+        view_
+        deps
+
+
+view_ : Dependencies -> Html Msg
+view_ deps =
     brick
         ((::)
             (tabindex (ifThenElse deps.isVisible 0 -1))
@@ -97,34 +106,18 @@ viewAttributes =
 infiniteListView : Dependencies -> Html Msg
 infiniteListView deps =
     let
+        itemDeps =
+            { cachedCovers = deps.cachedCovers }
+
         viewportWidth =
             round deps.viewportWidth
 
-        tagFn =
-            case deps.sortBy of
-                Artist ->
-                    Tuple.second >> .tags >> .artist
-
-                Album ->
-                    Tuple.second >> .tags >> .album
-
-                PlaylistIndex ->
-                    always ""
-
-                Title ->
-                    Tuple.second >> .tags >> .title
-
-        covers =
-            deps.harvest
-                |> List.groupWhile (\a b -> tagFn a == tagFn b)
-                |> List.map (Tuple.mapFirst tagFn)
+        coverGroups =
+            List.greedyGroupsOf 5 deps.covers
     in
-    { itemView =
-        itemView
-
-    --
+    { itemView = rowView itemDeps
     , itemHeight = InfiniteList.withVariableHeight (dynamicItemHeight viewportWidth)
-    , containerHeight = round deps.viewportHeight
+    , containerHeight = round deps.viewportHeight - 262
     }
         |> InfiniteList.config
         |> InfiniteList.withCustomContainer infiniteListContainer
@@ -132,7 +125,7 @@ infiniteListView deps =
                 InfiniteList.view
                     config
                     deps.infiniteList
-                    covers
+                    coverGroups
            )
 
 
@@ -156,9 +149,7 @@ infiniteListContainer styles =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ C.flex
-    , C.flex_wrap
-    , C.pl_4
+    [ C.pl_4
     , C.pt_5
     ]
         |> String.join " "
@@ -166,8 +157,7 @@ listStyles =
         |> List.singleton
 
 
-dynamicItemHeight : Int -> Int -> ( String, List IdentifiedTrack ) -> Int
-dynamicItemHeight viewportWidth _ cover =
+dynamicItemHeight viewportWidth _ coverGroup =
     let
         containerWidth =
             -- TODO: replace 32 with actual horizontal padding
@@ -175,9 +165,6 @@ dynamicItemHeight viewportWidth _ cover =
 
         rowHeight =
             (containerWidth - 16) // 5
-
-        itemHeight =
-            rowHeight // 5
     in
     -- TODO
     -- let
@@ -190,15 +177,50 @@ dynamicItemHeight viewportWidth _ cover =
     --     32 + 18 + 16 + rowHeight
     --
     -- else
-    itemHeight + itemHeight // 2
+    -- itemHeight + itemHeight // 2
+    rowHeight
+
+
+
+-- ROWS
+
+
+rowView :
+    ItemDependencies
+    -> Int
+    -> Int
+    -> List Cover
+    -> Html Msg
+rowView itemDeps _ idx row =
+    chunk
+        [ C.flex, C.flex_wrap ]
+        (List.map (itemView itemDeps) row)
 
 
 
 -- ITEMS
 
 
-itemView _ idx identifiedTrack =
-    chunk
+itemView { cachedCovers } cover =
+    let
+        maybeBlobUrlFromCache =
+            Dict.get cover.key cachedCovers
+    in
+    brick
+        (case maybeBlobUrlFromCache of
+            Just blobUrl ->
+                [ A.style
+                    "background-image"
+                    ("url(" ++ blobUrl ++ ")")
+                ]
+
+            Nothing ->
+                [ A.attribute "data-key" cover.key
+                , A.attribute "data-filename" cover.trackFilename
+                , A.attribute "data-path" cover.track.path
+                , A.attribute "data-source-id" cover.track.sourceId
+                ]
+        )
         [ C.h_0
         , C.overflow_hidden
         , C.pt_1_div_5

@@ -16,9 +16,11 @@ import Playlists exposing (Playlist)
 import Queue
 import Return exposing (andThen, return)
 import Return.Ext as Return
-import Sources
+import Sources exposing (Source)
+import Sources.Processing exposing (HttpMethod(..))
 import Task
 import Task.Extra as Task
+import Time
 import Tracks exposing (..)
 import Tracks.Collection as Collection
 import Tracks.Encoding as Encoding
@@ -266,6 +268,38 @@ finishedStoringInCache trackIds model =
         |> andThen User.saveEnclosedUserData
 
 
+generateCovers : Manager
+generateCovers model =
+    let
+        keyFn =
+            coverKey model.sortBy
+    in
+    model.tracks.harvested
+        -----------------
+        -- Group by cover
+        -----------------
+        |> List.groupWhile
+            (\( _, a ) ( _, b ) -> keyFn a == keyFn b)
+        -------------------------
+        -- Prepare for cover view
+        -------------------------
+        |> List.map
+            (\( ( _, track ), _ ) ->
+                { key = keyFn track
+                , track = track
+
+                --
+                , trackFilename =
+                    track.path
+                        |> String.split "/"
+                        |> List.last
+                        |> Maybe.withDefault track.path
+                }
+            )
+        |> (\covers -> { model | covers = covers })
+        |> Return.communicate (Ports.loadAlbumCovers ())
+
+
 groupBy : Tracks.Grouping -> Manager
 groupBy grouping model =
     { model | grouping = Just grouping }
@@ -280,11 +314,9 @@ harvest =
 
 infiniteListMsg : InfiniteList.Model -> Manager
 infiniteListMsg infiniteList model =
-    let
-        _ =
-            Debug.log "" infiniteList
-    in
-    Return.singleton { model | infiniteList = infiniteList }
+    return
+        { model | infiniteList = infiniteList }
+        (Ports.loadAlbumCovers ())
 
 
 markAsSelected : Int -> { shiftKey : Bool } -> Manager
@@ -709,7 +741,7 @@ resolveParcel ( deps, newCollection ) model =
         andThen Common.generateDirectoryPlaylists >> andThen Queue.reset
 
      else if harvestChanged then
-        andThen Queue.reset
+        andThen Queue.reset >> andThen generateCovers
 
      else
         identity
@@ -768,3 +800,23 @@ importHypaethral data selectedPlaylist model =
                 Nothing ->
                     andThen (Common.toggleLoadingScreen Off)
            )
+
+
+
+-- ⚗️
+
+
+coverKey : SortBy -> Track -> String
+coverKey sort =
+    case sort of
+        Artist ->
+            .tags >> .artist
+
+        Album ->
+            .tags >> .album
+
+        PlaylistIndex ->
+            always ""
+
+        Title ->
+            .tags >> .title

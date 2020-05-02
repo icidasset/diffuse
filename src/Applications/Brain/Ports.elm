@@ -104,4 +104,15 @@ port receiveSearchResults : (List String -> msg) -> Sub msg
 port receiveTags : (ContextForTags -> msg) -> Sub msg
 
 
+port requestArtworkTrackUrls :
+    ({ coverCacheKey : String
+     , trackFilename : String
+     , trackPath : String
+     , trackSourceId : String
+     }
+     -> msg
+    )
+    -> Sub msg
+
+
 port savedHypaethralBit : (Json.Value -> msg) -> Sub msg

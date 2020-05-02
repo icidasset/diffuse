@@ -150,11 +150,11 @@ type alias Model =
     -----------------------------------------
     -- Tracks
     -----------------------------------------
+    , cachedCovers : Dict String String
     , cachedTracks : List String
     , cachedTracksOnly : Bool
     , cachingTracksInProgress : List String
-
-    -- , covers : Dict String String
+    , covers : List Tracks.Cover
     , favourites : List Favourite
     , favouritesOnly : Bool
     , grouping : Maybe Grouping
