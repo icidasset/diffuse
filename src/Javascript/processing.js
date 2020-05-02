@@ -30,7 +30,7 @@ export function processContext(context) {
         transformUrl(urls.getUrl)
 
       ]).then(([headUrl, getUrl]) => {
-        return getTags(headUrl, getUrl, filename)
+        return getTags(headUrl, getUrl, filename, { skipCovers: true })
 
       }).then(r => {
         return col.concat(r)
@@ -57,11 +57,11 @@ export function processContext(context) {
 
 const parserConfiguration = Object.assign(
   {}, musicMetadata.parsingOptions,
-  { duration: false, skipCovers: true, skipPostHeaders: true }
+  { duration: false, skipPostHeaders: true }
 )
 
 
-function getTags(headUrl, getUrl, filename) {
+export function getTags(headUrl, getUrl, filename, options) {
   const fileExtMatch = filename.match(/\.(\w+)$/)
   const fileExt = fileExtMatch && fileExtMatch[1]
 
@@ -91,7 +91,7 @@ function getTags(headUrl, getUrl, filename) {
 
       return musicMetadata.parseFromTokenizer(
         tokenizer,
-        parserConfiguration
+        Object.assign({}, parserConfiguration, options || {})
       )
     })
     .then(pickTags)
@@ -114,7 +114,7 @@ function pickTags(result) {
     title: tags.title && tags.title.length ? tags.title : "Unknown",
     genre: (tags.genre && tags.genre[0]) || null,
     year: tags.year || null,
-    picture: null
+    picture: tags.picture ? tags.picture[0] : null
   }
 }
 

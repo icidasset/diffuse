@@ -49,6 +49,7 @@ type Msg
       -----------------------------------------
     | DownloadTracks Json.Value
     | GotSearchResults (List String)
+    | MakeArtworkTrackUrls Json.Value
     | RemoveTracksBySourceId Json.Value
     | RemoveTracksFromCache Json.Value
     | Search Json.Value

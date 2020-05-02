@@ -251,7 +251,7 @@ function loadAlbumCovers() {
 
   const artworkPrep = nodes.map(node => {
     return {
-      coverCacheKey:  node.getAttribute("data-key"),
+      cacheKey:       node.getAttribute("data-key"),
       trackFilename:  node.getAttribute("data-filename"),
       trackPath:      node.getAttribute("data-path"),
       trackSourceId:  node.getAttribute("data-source-id")

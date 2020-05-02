@@ -110,6 +110,9 @@ update msg =
         GotSearchResults a ->
             Tracks.gotSearchResults a
 
+        MakeArtworkTrackUrls a ->
+            Tracks.makeArtworkTrackUrls a
+
         RemoveTracksBySourceId a ->
             Tracks.removeBySourceId a
 
@@ -155,6 +158,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Ports.fromAlien alien
+        , Ports.makeArtworkTrackUrls MakeArtworkTrackUrls
         , Ports.receiveSearchResults GotSearchResults
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
         , Ports.savedHypaethralBit (\_ -> UserMsg User.SaveNextHypaethralBit)

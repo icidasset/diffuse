@@ -66,8 +66,27 @@ export function getFromIndex(args) {
   return new Promise((resolve, reject) => {
     const sto = args.store || storeNames.main
     const key = args.key
-    const tra = db.transaction([sto], "readwrite")
+    const tra = db.transaction([sto], "readonly")
     const req = tra.objectStore(sto).get(key)
+
+    req.onsuccess = _ => {
+      if (req.result) {
+        resolve(req.result)
+      } else {
+        resolve(null)
+      }
+    }
+
+    req.onerror = reject
+  })
+}
+
+
+export function keys(args) {
+  return new Promise((resolve, reject) => {
+    const sto = args.store || storeNames.main
+    const tra = db.transaction([sto], "readonly")
+    const req = tra.objectStore(sto).getAllKeys()
 
     req.onsuccess = _ => {
       if (req.result) {

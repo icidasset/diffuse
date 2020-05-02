@@ -55,6 +55,9 @@ port deconstructRemoteStorage : () -> Cmd msg
 port handlePendingBlockstackSignIn : String -> Cmd msg
 
 
+port provideArtworkTrackUrls : Json.Value -> Cmd msg
+
+
 port redirectToBlockstackSignIn : () -> Cmd msg
 
 
@@ -98,21 +101,13 @@ port toTextile : Alien.Event -> Cmd msg
 port fromAlien : (Alien.Event -> msg) -> Sub msg
 
 
+port makeArtworkTrackUrls : (Json.Value -> msg) -> Sub msg
+
+
 port receiveSearchResults : (List String -> msg) -> Sub msg
 
 
 port receiveTags : (ContextForTags -> msg) -> Sub msg
-
-
-port requestArtworkTrackUrls :
-    ({ coverCacheKey : String
-     , trackFilename : String
-     , trackPath : String
-     , trackSourceId : String
-     }
-     -> msg
-    )
-    -> Sub msg
 
 
 port savedHypaethralBit : (Json.Value -> msg) -> Sub msg

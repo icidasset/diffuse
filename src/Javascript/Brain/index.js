@@ -96,12 +96,24 @@ app.ports.toCache.subscribe(event => {
 // ---------------
 
 function downloadArtwork(list) {
-  app.ports.requestArtworkTrackUrls.send(list)
+  list.forEach(app.ports.makeArtworkTrackUrls.send)
 }
 
 
-app.ports.receiveArtworkTrackUrls.subscribe(list => {
-  //
+app.ports.provideArtworkTrackUrls.subscribe(cover => {
+  processing
+    .getTags(
+      cover.trackHeadUrl,
+      cover.trackGetUrl,
+      cover.trackFilename,
+      { skipCovers: false }
+    )
+    .then(tags => {
+      console.log(tags.picture.data)
+      // toCache(`cover.${cover.cacheKey}`, )
+      // get blob url
+      // send blob url to UI
+    })
 })
 
 

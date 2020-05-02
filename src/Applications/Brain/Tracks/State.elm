@@ -5,11 +5,18 @@ import Brain.Common.State as Common
 import Brain.Ports as Ports
 import Brain.Types exposing (..)
 import Brain.User.State as User
+import Dict
+import Dict.Ext as Dict
 import Json.Decode as Json exposing (Decoder)
 import Json.Encode
+import List.Extra as List
 import Queue
 import Return exposing (andThen, return)
 import Return.Ext as Return
+import Sources exposing (Source)
+import Sources.Processing exposing (HttpMethod(..))
+import Sources.Services
+import Time
 import Tracks exposing (Track)
 import Tracks.Encoding
 
@@ -87,6 +94,42 @@ gotSearchResults results =
     Common.giveUI Alien.SearchTracks (Json.Encode.list Json.Encode.string results)
 
 
+makeArtworkTrackUrls : Json.Value -> Manager
+makeArtworkTrackUrls json model =
+    json
+        |> Json.decodeValue
+            (Json.dict Json.string)
+        |> Result.map
+            (\dict ->
+                let
+                    maybeSource =
+                        Maybe.andThen
+                            (\trackSourceId ->
+                                List.find
+                                    (.id >> (==) trackSourceId)
+                                    model.hypaethralUserData.sources
+                            )
+                            (Dict.get "trackSourceId" dict)
+
+                    trackPath =
+                        Dict.fetch "trackPath" "" dict
+
+                    mkTrackUrl =
+                        makeTrackUrl model.currentTime trackPath maybeSource
+                in
+                dict
+                    |> Dict.remove "trackPath"
+                    |> Dict.remove "trackSourceId"
+                    |> Dict.insert "trackGetUrl" (mkTrackUrl Get)
+                    |> Dict.insert "trackHeadUrl" (mkTrackUrl Head)
+                    |> Json.Encode.dict identity Json.Encode.string
+                    |> Ports.provideArtworkTrackUrls
+                    |> return model
+            )
+        |> Result.withDefault
+            (Return.singleton model)
+
+
 removeByPaths : { sourceId : String, paths : List String } -> Manager
 removeByPaths args model =
     User.saveTracksAndUpdateSearchIndex
@@ -146,3 +189,18 @@ downloadParamsDecoder =
         Tuple.pair
         (Json.field "zipName" <| Json.string)
         (Json.field "trackIds" <| Json.list Json.string)
+
+
+makeTrackUrl : Time.Posix -> String -> Maybe Source -> HttpMethod -> String
+makeTrackUrl timestamp trackPath maybeSource httpMethod =
+    case maybeSource of
+        Just source ->
+            Sources.Services.makeTrackUrl
+                source.service
+                timestamp
+                source.data
+                httpMethod
+                trackPath
+
+        Nothing ->
+            "<missing-source>"
