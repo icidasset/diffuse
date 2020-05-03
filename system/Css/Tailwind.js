@@ -106,6 +106,7 @@ module.exports = {
       "black_50": "rgba(0, 0, 0, 0.5)",
       "current-color": "currentColor",
       "inherit": "inherit",
+      "white-025": "rgba(255, 255, 255, 0.025)",
       "white-20": "rgba(255, 255, 255, 0.2)",
       "white-60": "rgba(255, 255, 255, 0.6)",
       "white-90": "rgba(255, 255, 255, 0.9)",

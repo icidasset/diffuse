@@ -282,21 +282,21 @@ finishedStoringInCache trackIds model =
 generateCovers : Manager
 generateCovers model =
     let
-        keyFn =
-            coverKey model.sortBy
+        groupFn =
+            coverGroup model.sortBy
     in
     model.tracks.harvested
         -----------------
         -- Group by cover
         -----------------
         |> List.groupWhile
-            (\( _, a ) ( _, b ) -> keyFn a == keyFn b)
+            (\( _, a ) ( _, b ) -> groupFn a == groupFn b)
         -------------------------
         -- Prepare for cover view
         -------------------------
         |> List.map
             (\( ( _, track ), _ ) ->
-                { key = Base64.encode (keyFn track)
+                { key = Base64.encode (coverKey track)
                 , track = track
 
                 --
@@ -854,6 +854,22 @@ importHypaethral data selectedPlaylist model =
 -- ⚗️
 
 
-coverKey : SortBy -> Track -> String
-coverKey sort { tags } =
+coverGroup : SortBy -> Track -> String
+coverGroup sort { tags } =
+    case sort of
+        Artist ->
+            tags.artist
+
+        Album ->
+            tags.album
+
+        PlaylistIndex ->
+            ""
+
+        Title ->
+            tags.title
+
+
+coverKey : Track -> String
+coverKey { tags } =
     tags.artist ++ " --- " ++ tags.album

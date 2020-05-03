@@ -5,6 +5,7 @@
 // This worker is responsible for everything non-UI.
 
 
+import * as artwork from "./artwork"
 import * as db from "../indexed-db"
 import * as processing from "../processing"
 import * as user from "./user"
@@ -101,46 +102,33 @@ let artworkQueue = []
 function downloadArtwork(list) {
   const exe = !artworkQueue[0]
   artworkQueue = artworkQueue.concat(list)
-  if (exe) nextInArtworkQueue()
+  if (exe) shiftArtworkQueue()
 }
 
 
-function nextInArtworkQueue() {
+function shiftArtworkQueue() {
   const next = artworkQueue.shift()
   if (next) app.ports.makeArtworkTrackUrls.send(next)
 }
 
 
-app.ports.provideArtworkTrackUrls.subscribe(cover => {
-  processing
-    .getTags(
-      cover.trackHeadUrl,
-      cover.trackGetUrl,
-      cover.trackFilename,
-      { skipCovers: false }
-    )
-    .then(tags => {
-      if (tags.picture) {
-        const blob = new Blob([ tags.picture.data ], { type: tags.picture.format })
-        const url = URL.createObjectURL(blob)
+app.ports.provideArtworkTrackUrls.subscribe(prep => {
+  artwork
+    .find(prep)
+    .then(blob => {
+      console.log(prep.trackFilename, blob)
+      const url = URL.createObjectURL(blob)
 
-        toCache(`coverCache.${cover.cacheKey}`, blob)
+      toCache(`coverCache.${prep.cacheKey}`, blob)
 
-        self.postMessage({
-          tag: "GOT_CACHED_COVER",
-          data: { key: cover.cacheKey, url: url },
-          error: null
-        })
-
-        nextInArtworkQueue()
-
-      } else {
-        //
-
-        nextInArtworkQueue()
-
-      }
+      self.postMessage({
+        tag: "GOT_CACHED_COVER",
+        data: { key: prep.cacheKey, url: url },
+        error: null
+      })
     })
+    .catch(_ => null)
+    .finally(shiftArtworkQueue)
 })
 
 

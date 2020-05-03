@@ -246,8 +246,7 @@ itemView { cachedCovers } cover =
 
             -- Dark mode
             ------------
-            , C.dark__bg_white
-            , C.dark__opacity_025
+            , C.dark__bg_white_025
             ]
             []
         ]

@@ -292,9 +292,9 @@ db.keys().then(keys => {
     })
   }, Promise.resolve({}))
 
-
   cachePromise.then(cache => {
     app.ports.insertCoverCache.send(cache)
+    setTimeout(loadAlbumCovers, 500)
   })
 })
 
