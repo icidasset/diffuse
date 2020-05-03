@@ -295,7 +295,24 @@ generateCovers model =
         -- Prepare for cover view
         -------------------------
         |> List.map
-            (\( ( _, track ), _ ) ->
+            (\( ( _, fallbackTrack ), identifiedTracks ) ->
+                let
+                    -- Group the tracks by their `coverKey`,
+                    -- and pick a track from the biggest group.
+                    track =
+                        identifiedTracks
+                            |> List.map (\( _, t ) -> ( coverKey t, t ))
+                            |> List.sortBy Tuple.first
+                            |> List.groupWhile (\( a, _ ) ( b, _ ) -> a == b)
+                            |> List.sortBy (Tuple.second >> List.length)
+                            |> List.last
+                            |> Maybe.andThen
+                                (Tuple.second
+                                    >> List.head
+                                    >> Maybe.map Tuple.second
+                                )
+                            |> Maybe.withDefault fallbackTrack
+                in
                 { key = Base64.encode (coverKey track)
                 , track = track
 
