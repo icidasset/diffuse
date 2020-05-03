@@ -116,7 +116,6 @@ app.ports.provideArtworkTrackUrls.subscribe(prep => {
   artwork
     .find(prep)
     .then(blob => {
-      console.log(prep.trackFilename, blob)
       const url = URL.createObjectURL(blob)
 
       toCache(`coverCache.${prep.cacheKey}`, blob)
@@ -127,7 +126,11 @@ app.ports.provideArtworkTrackUrls.subscribe(prep => {
         error: null
       })
     })
-    .catch(_ => null)
+    .catch(_ => {
+      // Indicate that we've tried to find artwork,
+      // so that we don't try to find it each time we launch the app.
+      toCache(`coverCache.${prep.cacheKey}`, "TRIED")
+    })
     .finally(shiftArtworkQueue)
 })
 

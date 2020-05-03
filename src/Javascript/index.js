@@ -269,9 +269,20 @@ function loadAlbumCovers() {
     loadingCovers[prep.cacheKey] = true
   })
 
-  brain.postMessage({
-    action: "DOWNLOAD_ARTWORK",
-    data: artworkPrep
+  artworkPrep.reduce((acc, prep) => {
+    return acc.then(arr => {
+      return db.getFromIndex({ key: `coverCache.${prep.cacheKey}` }).then(a => {
+        if (!a) return arr.concat([ prep ])
+        return arr
+      })
+    })
+
+  }, Promise.resolve([])).then(withoutEarlierAttempts => {
+    brain.postMessage({
+      action: "DOWNLOAD_ARTWORK",
+      data: withoutEarlierAttempts
+    })
+
   })
 }
 
@@ -286,7 +297,11 @@ db.keys().then(keys => {
     return acc.then(cache => {
       return db.getFromIndex({ key: key }).then(blob => {
         const cacheKey = key.slice(11)
-        if (blob) cache[cacheKey] = URL.createObjectURL(blob)
+
+        if (blob && typeof blob !== "string") {
+          cache[cacheKey] = URL.createObjectURL(blob)
+        }
+
         return cache
       })
     })
