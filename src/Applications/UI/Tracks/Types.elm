@@ -36,6 +36,11 @@ type Msg
     | RemoveFromCache (List Track)
     | StoreInCache (List Track)
     | StoredInCache Json.Value (Maybe String)
+      ---------
+      -- Covers
+      ---------
+    | GotCachedCover Json.Value
+    | InsertCoverCache Json.Value
       -----------------------------------------
       -- Collection
       -----------------------------------------

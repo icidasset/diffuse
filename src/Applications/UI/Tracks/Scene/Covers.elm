@@ -37,7 +37,7 @@ import UI.Types as UI exposing (Msg(..))
 
 
 type alias Dependencies =
-    { cachedCovers : Dict String String
+    { cachedCovers : Maybe (Dict String String)
     , covers : List Cover
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
@@ -47,7 +47,7 @@ type alias Dependencies =
 
 
 type alias ItemDependencies =
-    { cachedCovers : Dict String String
+    { cachedCovers : Maybe (Dict String String)
     }
 
 
@@ -201,34 +201,43 @@ rowView itemDeps _ idx row =
 -- ITEMS
 
 
+itemView : ItemDependencies -> Cover -> Html Msg
 itemView { cachedCovers } cover =
     let
         maybeBlobUrlFromCache =
-            Dict.get cover.key cachedCovers
+            cachedCovers
+                |> Maybe.withDefault Dict.empty
+                |> Dict.get cover.key
     in
-    brick
-        (case maybeBlobUrlFromCache of
-            Just blobUrl ->
-                [ A.style
-                    "background-image"
-                    ("url(" ++ blobUrl ++ ")")
-                ]
-
-            Nothing ->
-                [ A.attribute "data-key" cover.key
-                , A.attribute "data-filename" cover.trackFilename
-                , A.attribute "data-path" cover.track.path
-                , A.attribute "data-source-id" cover.track.sourceId
-                ]
-        )
+    chunk
         [ C.h_0
         , C.overflow_hidden
         , C.pt_1_div_5
         , C.relative
         , C.w_1_div_5
         ]
-        [ chunk
+        [ brick
+            (case maybeBlobUrlFromCache of
+                Just blobUrl ->
+                    [ A.style
+                        "background-image"
+                        ("url('" ++ blobUrl ++ "')")
+                    ]
+
+                Nothing ->
+                    if Maybe.isJust cachedCovers then
+                        [ A.attribute "data-key" cover.key
+                        , A.attribute "data-focus" cover.focus
+                        , A.attribute "data-filename" cover.trackFilename
+                        , A.attribute "data-path" cover.track.path
+                        , A.attribute "data-source-id" cover.track.sourceId
+                        ]
+
+                    else
+                        []
+            )
             [ C.absolute
+            , C.bg_cover
             , C.bg_gray_300
             , C.inset_0
             , C.mb_4

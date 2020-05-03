@@ -46,7 +46,8 @@ type alias Tags =
 
 
 type alias Cover =
-    { key : String
+    { focus : String
+    , key : String
     , track : Track
     , trackFilename : String
     }

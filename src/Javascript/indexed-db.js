@@ -6,6 +6,13 @@
 // This is used instead of localStorage.
 
 
+import delay from "delay"
+import retryPromise from "p-retry"
+
+
+const WAITING_MSG = "Waiting for database"
+
+
 self.importScripts && importScripts("version.js")
 
 
@@ -49,21 +56,10 @@ idx.onerror = event => {
 // Get
 // ---
 
-export function getFromIndex(args) {
-  if (!db && tries < 20) {
-    tries++
-
-    return new Promise((resolve, reject) => {
-      setTimeout(
-        () => { getFromIndex(args).then(resolve, reject) },
-        250
-      )
-    })
-  }
-
-  tries = 0
-
+export const getFromIndex = args => retry(() => {
   return new Promise((resolve, reject) => {
+    if (!db) throw new Error(WAITING_MSG)
+
     const sto = args.store || storeNames.main
     const key = args.key
     const tra = db.transaction([sto], "readonly")
@@ -79,12 +75,14 @@ export function getFromIndex(args) {
 
     req.onerror = reject
   })
-}
+})
 
 
-export function keys(args) {
+export const keys = args => retry(() => {
   return new Promise((resolve, reject) => {
-    const sto = args.store || storeNames.main
+    if (!db) throw new Error(WAITING_MSG)
+
+    const sto = (args || {}).store || storeNames.main
     const tra = db.transaction([sto], "readonly")
     const req = tra.objectStore(sto).getAllKeys()
 
@@ -98,15 +96,17 @@ export function keys(args) {
 
     req.onerror = reject
   })
-}
+})
 
 
 
 // Set
 // ---
 
-export function setInIndex(args) {
+export const setInIndex = args => retry(() => {
   return new Promise((resolve, reject) => {
+    if (!db) throw new Error(WAITING_MSG)
+
     const sto = args.store || storeNames.main
     const key = args.key
     const dat = args.data
@@ -117,15 +117,17 @@ export function setInIndex(args) {
     req.onsuccess = resolve
     req.onerror = reject
   })
-}
+})
 
 
 
 // Delete
 // ------
 
-export function deleteFromIndex(args) {
+export const deleteFromIndex = args => retry(() => {
   return new Promise((resolve, reject) => {
+    if (!db) throw new Error(WAITING_MSG)
+
     const sto = args.store || storeNames.main
     const key = args.key
     const tra = db.transaction([sto], "readwrite")
@@ -134,4 +136,13 @@ export function deleteFromIndex(args) {
     req.onsuccess = resolve
     req.onerror = reject
   })
+})
+
+
+
+// ⚗️
+// --
+
+function retry(func) {
+  return retryPromise(func, { onFailedAttempt: _ => delay(250), retries: 20 })
 }

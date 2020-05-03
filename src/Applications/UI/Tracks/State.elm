@@ -1,9 +1,11 @@
 module UI.Tracks.State exposing (..)
 
 import Alien
+import Base64
 import Common exposing (..)
 import ContextMenu
 import Coordinates exposing (Coordinates)
+import Dict
 import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Decode as Json
@@ -84,6 +86,15 @@ update msg =
 
         StoredInCache a b ->
             storedInCache a b
+
+        ---------
+        -- Covers
+        ---------
+        GotCachedCover a ->
+            gotCachedCover a
+
+        InsertCoverCache a ->
+            insertCoverCache a
 
         -----------------------------------------
         -- Collection
@@ -285,8 +296,17 @@ generateCovers model =
         -------------------------
         |> List.map
             (\( ( _, track ), _ ) ->
-                { key = keyFn track
+                { key = Base64.encode (keyFn track)
                 , track = track
+
+                --
+                , focus =
+                    case model.sortBy of
+                        Artist ->
+                            "artist"
+
+                        _ ->
+                            "album"
 
                 --
                 , trackFilename =
@@ -298,6 +318,25 @@ generateCovers model =
             )
         |> (\covers -> { model | covers = covers })
         |> Return.communicate (Ports.loadAlbumCovers ())
+
+
+gotCachedCover : Json.Value -> Manager
+gotCachedCover json model =
+    let
+        cachedCovers =
+            Maybe.withDefault Dict.empty model.cachedCovers
+    in
+    json
+        |> Json.decodeValue
+            (Json.map2
+                Tuple.pair
+                (Json.field "key" Json.string)
+                (Json.field "url" Json.string)
+            )
+        |> Result.map (\( key, url ) -> Dict.insert key url cachedCovers)
+        |> Result.map (\dict -> { model | cachedCovers = Just dict })
+        |> Result.withDefault model
+        |> Return.singleton
 
 
 groupBy : Tracks.Grouping -> Manager
@@ -317,6 +356,15 @@ infiniteListMsg infiniteList model =
     return
         { model | infiniteList = infiniteList }
         (Ports.loadAlbumCovers ())
+
+
+insertCoverCache : Json.Value -> Manager
+insertCoverCache json model =
+    json
+        |> Json.decodeValue (Json.dict Json.string)
+        |> Result.map (\dict -> { model | cachedCovers = Just dict })
+        |> Result.withDefault model
+        |> Return.singleton
 
 
 markAsSelected : Int -> { shiftKey : Bool } -> Manager
@@ -807,16 +855,5 @@ importHypaethral data selectedPlaylist model =
 
 
 coverKey : SortBy -> Track -> String
-coverKey sort =
-    case sort of
-        Artist ->
-            .tags >> .artist
-
-        Album ->
-            .tags >> .album
-
-        PlaylistIndex ->
-            always ""
-
-        Title ->
-            .tags >> .title
+coverKey sort { tags } =
+    tags.artist ++ " --- " ++ tags.album

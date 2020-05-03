@@ -188,7 +188,7 @@ init flags url key =
     -----------------------------------------
     -- Tracks
     -----------------------------------------
-    , cachedCovers = Dict.empty
+    , cachedCovers = Nothing
     , cachedTracks = []
     , cachedTracksOnly = False
     , cachingTracksInProgress = []
@@ -550,6 +550,7 @@ subscriptions model =
         -- Tracks
         -----------------------------------------
         , Ports.downloadTracksFinished (\_ -> TracksMsg Tracks.DownloadFinished)
+        , Ports.insertCoverCache (TracksMsg << Tracks.InsertCoverCache)
 
         -----------------------------------------
         -- 📭 Other
@@ -591,6 +592,9 @@ translateAlienData tag data =
 
         Alien.FinishedProcessingSources ->
             SourcesMsg Sources.FinishedProcessing
+
+        Alien.GotCachedCover ->
+            TracksMsg (Tracks.GotCachedCover data)
 
         Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off

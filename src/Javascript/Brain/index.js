@@ -95,8 +95,19 @@ app.ports.toCache.subscribe(event => {
 // Cache (Artwork)
 // ---------------
 
+let artworkQueue = []
+
+
 function downloadArtwork(list) {
-  list.forEach(app.ports.makeArtworkTrackUrls.send)
+  const exe = !artworkQueue[0]
+  artworkQueue = artworkQueue.concat(list)
+  if (exe) nextInArtworkQueue()
+}
+
+
+function nextInArtworkQueue() {
+  const next = artworkQueue.shift()
+  if (next) app.ports.makeArtworkTrackUrls.send(next)
 }
 
 
@@ -109,10 +120,26 @@ app.ports.provideArtworkTrackUrls.subscribe(cover => {
       { skipCovers: false }
     )
     .then(tags => {
-      console.log(tags.picture.data)
-      // toCache(`cover.${cover.cacheKey}`, )
-      // get blob url
-      // send blob url to UI
+      if (tags.picture) {
+        const blob = new Blob([ tags.picture.data ], { type: tags.picture.format })
+        const url = URL.createObjectURL(blob)
+
+        toCache(`coverCache.${cover.cacheKey}`, blob)
+
+        self.postMessage({
+          tag: "GOT_CACHED_COVER",
+          data: { key: cover.cacheKey, url: url },
+          error: null
+        })
+
+        nextInArtworkQueue()
+
+      } else {
+        //
+
+        nextInArtworkQueue()
+
+      }
     })
 })
 

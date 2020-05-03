@@ -150,7 +150,7 @@ type alias Model =
     -----------------------------------------
     -- Tracks
     -----------------------------------------
-    , cachedCovers : Dict String String
+    , cachedCovers : Maybe (Dict String String)
     , cachedTracks : List String
     , cachedTracksOnly : Bool
     , cachingTracksInProgress : List String

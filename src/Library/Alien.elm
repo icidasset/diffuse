@@ -65,6 +65,7 @@ type Tag
     | AddTracks
     | FinishedProcessingSource
     | FinishedProcessingSources
+    | GotCachedCover
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
@@ -122,6 +123,7 @@ enum =
         , ( "ADD_TRACKS", AddTracks )
         , ( "FINISHED_PROCESSING_SOURCE", FinishedProcessingSource )
         , ( "FINISHED_PROCESSING_SOURCES", FinishedProcessingSources )
+        , ( "GOT_CACHED_COVER", GotCachedCover )
         , ( "HIDE_LOADING_SCREEN", HideLoadingScreen )
         , ( "LOAD_ENCLOSED_USER_DATA", LoadEnclosedUserData )
         , ( "LOAD_HYPAETHRAL_USER_DATA", LoadHypaethralUserData )
