@@ -295,13 +295,13 @@ generateCovers model =
         -- Prepare for cover view
         -------------------------
         |> List.map
-            (\( ( _, fallbackTrack ), identifiedTracks ) ->
+            (\( fallbackIdentifiedTrack, identifiedTracks ) ->
                 let
                     -- Group the tracks by their `coverKey`,
                     -- and pick a track from the biggest group.
-                    track =
+                    ( identifiers, track ) =
                         identifiedTracks
-                            |> List.map (\( _, t ) -> ( coverKey t, t ))
+                            |> List.map (\( i, t ) -> ( coverKey t, ( i, t ) ))
                             |> List.sortBy Tuple.first
                             |> List.groupWhile (\( a, _ ) ( b, _ ) -> a == b)
                             |> List.sortBy (Tuple.second >> List.length)
@@ -311,10 +311,10 @@ generateCovers model =
                                     >> List.head
                                     >> Maybe.map Tuple.second
                                 )
-                            |> Maybe.withDefault fallbackTrack
+                            |> Maybe.withDefault fallbackIdentifiedTrack
                 in
                 { key = Base64.encode (coverKey track)
-                , track = track
+                , identifiedTrack = ( identifiers, track )
 
                 --
                 , focus =

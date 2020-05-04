@@ -9,15 +9,15 @@ import * as processing from "../processing"
 import { toCache } from "./common"
 
 
-const REJECT = Promise.reject("No artwork found")
+const REJECT = () => Promise.reject("No artwork found")
 
 
 export function find(prep) {
   return findUsingTags(prep)
     .then(a => a ? a : findUsingMusicBrainz(prep))
     .then(a => a ? a : findUsingLastFm(prep))
-    .then(a => a ? a : REJECT)
-    .then(a => a.type.startsWith("image/") ? a : REJECT)
+    .then(a => a ? a : REJECT())
+    .then(a => a.type.startsWith("image/") ? a : REJECT())
 }
 
 

@@ -11,7 +11,7 @@ import Css.Classes as C
 import Dict exposing (Dict)
 import Html exposing (Html, text)
 import Html.Attributes as A exposing (class, id, style, tabindex)
-import Html.Events
+import Html.Events as E
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
 import InfiniteList
@@ -73,7 +73,45 @@ view_ deps =
         , C.relative
         , C.scrolling_touch
         ]
-        [ infiniteListView deps
+        [ chunk
+            [ C.antialiased
+            , C.flex
+            , C.font_semibold
+            , C.leading_none
+            , C.pt_5
+            , C.px_4
+            , C.text_xs
+            , C.tracking_wide
+            ]
+            [ chunk
+                [ C.bg_gray_300
+                , C.p_2
+                , C.rounded
+                ]
+                [ chunk
+                    [ C.pb_px
+                    , C.pt_1
+                    , C.px_px
+                    ]
+                    [ text "Artists" ]
+                ]
+
+            --
+            , chunk
+                [ C.p_2
+                , C.rounded
+                ]
+                [ chunk
+                    [ C.pb_px
+                    , C.pt_1
+                    , C.px_px
+                    ]
+                    [ text "Albums" ]
+                ]
+            ]
+
+        --
+        , infiniteListView deps
         ]
 
 
@@ -150,7 +188,7 @@ infiniteListContainer styles =
 listStyles : List (Html.Attribute msg)
 listStyles =
     [ C.pl_4
-    , C.pt_5
+    , C.pt_4
     ]
         |> String.join " "
         |> class
@@ -209,11 +247,19 @@ itemView { cachedCovers } cover =
                 |> Maybe.withDefault Dict.empty
                 |> Dict.get cover.key
     in
-    chunk
-        [ C.h_0
+    brick
+        [ cover.identifiedTrack
+            |> Queue.InjectFirstAndPlay
+            |> QueueMsg
+            |> Decode.succeed
+            |> E.on "dbltap"
+        ]
+        [ C.cursor_pointer
+        , C.h_0
         , C.overflow_hidden
         , C.pt_1_div_5
         , C.relative
+        , C.select_none
         , C.w_1_div_5
         ]
         [ brick
@@ -226,11 +272,15 @@ itemView { cachedCovers } cover =
 
                 Nothing ->
                     if Maybe.isJust cachedCovers then
+                        let
+                            track =
+                                Tuple.second cover.identifiedTrack
+                        in
                         [ A.attribute "data-key" cover.key
                         , A.attribute "data-focus" cover.focus
                         , A.attribute "data-filename" cover.trackFilename
-                        , A.attribute "data-path" cover.track.path
-                        , A.attribute "data-source-id" cover.track.sourceId
+                        , A.attribute "data-path" track.path
+                        , A.attribute "data-source-id" track.sourceId
                         ]
 
                     else
