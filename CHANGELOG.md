@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.1
+
+- Fixes processing issue
+
 ## 2.5.0
 
 - **Large overhaul of the core code**
