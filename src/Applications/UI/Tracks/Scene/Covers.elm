@@ -41,6 +41,7 @@ type alias Dependencies =
     , covers : List Cover
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
+    , sortBy : SortBy
     , viewportHeight : Float
     , viewportWidth : Float
     }
@@ -73,44 +74,7 @@ view_ deps =
         , C.relative
         , C.scrolling_touch
         ]
-        [ chunk
-            [ C.antialiased
-            , C.flex
-            , C.font_semibold
-            , C.leading_none
-            , C.pt_5
-            , C.px_4
-            , C.text_xs
-            , C.tracking_wide
-            ]
-            [ chunk
-                [ C.bg_gray_300
-                , C.p_2
-                , C.rounded
-                ]
-                [ chunk
-                    [ C.pb_px
-                    , C.pt_1
-                    , C.px_px
-                    ]
-                    [ text "Artists" ]
-                ]
-
-            --
-            , chunk
-                [ C.p_2
-                , C.rounded
-                ]
-                [ chunk
-                    [ C.pb_px
-                    , C.pt_1
-                    , C.px_px
-                    ]
-                    [ text "Albums" ]
-                ]
-            ]
-
-        --
+        [ sortGroupButtons deps.sortBy
         , infiniteListView deps
         ]
 
@@ -135,6 +99,56 @@ viewAttributes =
     [ InfiniteList.onScroll (InfiniteListMsg >> TracksMsg)
     , id containerId
     ]
+
+
+
+-- SORTING
+
+
+sortGroupButtons : SortBy -> Html Msg
+sortGroupButtons sortBy =
+    chunk
+        [ C.antialiased
+        , C.flex
+        , C.font_semibold
+        , C.leading_none
+        , C.pt_5
+        , C.px_4
+        , C.text_xs
+        , C.tracking_wide
+        ]
+        [ sortGroupButton { current = sortBy, btn = Artist } "Artists"
+        , sortGroupButton { current = sortBy, btn = Album } "Albums"
+        ]
+
+
+sortGroupButton : { current : SortBy, btn : SortBy } -> String -> Html Msg
+sortGroupButton { current, btn } label =
+    let
+        active =
+            current == btn
+    in
+    brick
+        [ btn
+            |> SortBy
+            |> TracksMsg
+            |> E.onClick
+        ]
+        [ C.p_2
+        , C.rounded
+
+        --
+        , ifThenElse active C.bg_gray_300 C.bg_transparent
+        , ifThenElse active C.dark__bg_base01 C.dark__bg_transparent
+        , ifThenElse active C.cursor_default C.cursor_pointer
+        ]
+        [ chunk
+            [ C.pb_px
+            , C.pt_1
+            , C.px_px
+            ]
+            [ text label ]
+        ]
 
 
 

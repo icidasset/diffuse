@@ -59,8 +59,11 @@ function findUsingMusicBrainz(prep) {
       const release = r.releases[0]
       if (!release) return null
 
-      console.log(`https://coverartarchive.org/release/${release.id}/front-500`)
-      return fetch(`https://coverartarchive.org/release/${release.id}/front-500`).then(r => r.blob())
+      return fetch(
+        `https://coverartarchive.org/release/${release.id}/front-500`
+      ).then(
+        r => r.blob()
+      )
     })
 }
 
