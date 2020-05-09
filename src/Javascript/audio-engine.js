@@ -287,6 +287,14 @@ export function preloadAudioElement(orchestrion, queueItem) {
 }
 
 
+export function seek(audio, percentage) {
+  if (audio && !isNaN(audio.duration)) {
+    if (audio.paused) audio.play()
+    audio.currentTime = audio.duration * percentage
+  }
+}
+
+
 
 // Audio events
 // ------------

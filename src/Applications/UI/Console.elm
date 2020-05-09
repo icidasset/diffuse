@@ -21,7 +21,13 @@ import UI.Types exposing (Msg(..))
 -- 🗺
 
 
-view : Maybe Queue.Item -> Bool -> Bool -> { stalled : Bool, loading : Bool, playing : Bool } -> ( Float, Float ) -> Html Msg
+view :
+    Maybe Queue.Item
+    -> Bool
+    -> Bool
+    -> { stalled : Bool, loading : Bool, playing : Bool }
+    -> ( Float, Float )
+    -> Html Msg
 view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
     chunk
         [ C.antialiased

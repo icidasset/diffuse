@@ -128,12 +128,7 @@ app.ports.preloadAudio.subscribe(debounce(item => {
 
 
 app.ports.seek.subscribe(percentage => {
-  const audio = orchestrion.audio
-
-  if (audio && !isNaN(audio.duration)) {
-    audio.currentTime = audio.duration * percentage
-    if (audio.paused) audio.pause()
-  }
+  audioEngine.seek(orchestrion.audio, percentage)
 })
 
 
