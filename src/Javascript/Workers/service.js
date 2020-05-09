@@ -39,6 +39,7 @@ self.addEventListener("install", event => {
       const whatToCache = [ href, "brain.elm.js", "ui.elm.js" ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
+    .then(_ => self.skipWaiting())
 
   event.waitUntil(promise)
 })
@@ -88,8 +89,7 @@ self.addEventListener("fetch", event => {
     newRequestWithAuth(
       event,
       url.toString(),
-      "Bearer " + token,
-      "cors"
+      "Bearer " + token
     )
 
   }
@@ -102,11 +102,13 @@ self.addEventListener("fetch", event => {
 
 function newRequestWithAuth(event, urlWithoutToken, authToken, mode) {
   const newHeaders = new Headers(event.request.headers)
-  newHeaders.set("Authorization", authToken)
+  newHeaders.set("authorization", authToken)
 
   const newRequest = new Request(new Request(urlWithoutToken, event.request), {
     headers: newHeaders,
-    mode: mode || "cors"
+    mode: mode || "cors",
+    cache: "no-cache",
+    credentials: "include"
   })
 
   event.respondWith(fetch(newRequest))

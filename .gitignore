@@ -4,9 +4,12 @@
 *.cabal
 *.log
 *.yaml.lock
+*.tar.gz
+*.zip
 /.deploy*
 /.stack-work
 /build
+/diffuse
 /elm-stuff
 /node_modules
 /src/Library/Css/Classes.elm

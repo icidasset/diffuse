@@ -229,8 +229,12 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
     if (is) fn.call(orchestrion, event)
   }
 
+  const crossorigin = queueItem.url.includes("service_worker_authentication")
+    ? "use-credentials"
+    : "anonymous"
+
   audio = new Audio()
-  audio.setAttribute("crossorigin", "anonymous")
+  audio.setAttribute("crossorigin", crossorigin)
   audio.setAttribute("data-preload", isPreload ? "t" : "f")
   audio.setAttribute("data-timestamp", timestampInMilliseconds)
   audio.setAttribute("preload", SINGLE_AUDIO_NODE ? "none" : "auto")
