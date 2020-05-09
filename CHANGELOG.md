@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.2
+
+- Fixes authentication issue with WebDAV in Firefox
+- Fixes issue with seeking audio when paused (no longer tries to re-pause, which doesn't work)
+
 ## 2.5.1
 
 - Fixes processing issue
