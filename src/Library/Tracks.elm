@@ -139,6 +139,15 @@ type SortDirection
 
 
 
+-- VIEW
+
+
+type Scene
+    = Covers
+    | List
+
+
+
 -- 🔱
 
 

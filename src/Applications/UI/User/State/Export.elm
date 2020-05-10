@@ -50,6 +50,7 @@ saveEnclosedUserData model =
     , onlyShowCachedTracks = model.cachedTracksOnly
     , onlyShowFavourites = model.favouritesOnly
     , repeat = model.repeat
+    , scene = model.scene
     , searchTerm = model.searchTerm
     , selectedPlaylist = Maybe.map .name model.selectedPlaylist
     , shuffle = model.shuffle

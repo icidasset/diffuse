@@ -8,7 +8,7 @@ import Conditional exposing (ifThenElse)
 import Coordinates exposing (Viewport)
 import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (href, placeholder, style, tabindex, target, title, value)
+import Html.Attributes exposing (attribute, href, placeholder, style, tabindex, target, title, value)
 import Html.Events exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
@@ -234,8 +234,13 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , case scene of
                     Covers ->
                         brick
-                            []
-                            [ C.ml_1, C.mr_px ]
+                            [ attribute "title" "Switch to list view"
+                            , List
+                                |> ChangeScene
+                                |> TracksMsg
+                                |> onClick
+                            ]
+                            [ C.ml_1, C.mr_px, C.cursor_pointer ]
                             [ chunk
                                 [ C.pl_1 ]
                                 [ Icons.featured_play_list 16 Inherit ]
@@ -243,8 +248,13 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 
                     List ->
                         brick
-                            []
-                            [ C.ml_1, C.mr_px ]
+                            [ attribute "title" "Switch to cover view"
+                            , Covers
+                                |> ChangeScene
+                                |> TracksMsg
+                                |> onClick
+                            ]
+                            [ C.ml_1, C.mr_px, C.cursor_pointer ]
                             [ chunk
                                 [ C.pl_1 ]
                                 [ Icons.photo 16 Inherit ]

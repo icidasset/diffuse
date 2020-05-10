@@ -35,7 +35,7 @@ import UI.DnD as DnD
 import UI.Page as Page exposing (Page)
 import UI.Queue.Types as Queue
 import UI.Sources.Types as Sources
-import UI.Tracks.Types as Tracks exposing (Scene)
+import UI.Tracks.Types as Tracks
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
 

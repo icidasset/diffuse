@@ -23,6 +23,7 @@ import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Sources.State as Sources
 import UI.Tracks.State as Tracks
+import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
 import UI.User.State.Export as User
 import Url.Ext as Url
@@ -268,6 +269,7 @@ importEnclosed value model =
                 , cachedTracksOnly = data.onlyShowCachedTracks
                 , favouritesOnly = data.onlyShowFavourites
                 , grouping = data.grouping
+                , scene = data.scene
                 , searchTerm = data.searchTerm
                 , sortBy = data.sortBy
                 , sortDirection = data.sortDirection

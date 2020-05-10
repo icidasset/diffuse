@@ -138,6 +138,9 @@ update msg =
         -----------------------------------------
         -- Scenes
         -----------------------------------------
+        ChangeScene a ->
+            changeScene a
+
         InfiniteListMsg a ->
             infiniteListMsg a
 
@@ -171,6 +174,11 @@ add encodedTracks model =
                 |> Collection.add
             )
         |> andThen search
+
+
+changeScene : Scene -> Manager
+changeScene scene model =
+    User.saveEnclosedUserData { model | scene = scene }
 
 
 clearCache : Manager

@@ -313,6 +313,9 @@ coverView { cachedCovers } cover =
             cachedCovers
                 |> Maybe.withDefault Dict.empty
                 |> Dict.get cover.key
+
+        hasBackgroundImage =
+            Maybe.isJust maybeBlobUrlFromCache
     in
     chunk
         [ C.cursor_pointer
@@ -325,9 +328,7 @@ coverView { cachedCovers } cover =
         [ brick
             (case maybeBlobUrlFromCache of
                 Just blobUrl ->
-                    [ A.style
-                        "background-image"
-                        ("url('" ++ blobUrl ++ "')")
+                    [ A.style "background-image" ("url('" ++ blobUrl ++ "')")
                     ]
 
                 Nothing ->
@@ -358,7 +359,7 @@ coverView { cachedCovers } cover =
             ------------
             , C.dark__bg_white_025
             ]
-            [ if Maybe.isNothing maybeBlobUrlFromCache then
+            [ if not hasBackgroundImage then
                 chunk
                     [ C.absolute
                     , C.left_half

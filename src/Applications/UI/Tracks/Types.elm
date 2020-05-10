@@ -8,15 +8,6 @@ import Tracks exposing (..)
 
 
 
--- 🌳
-
-
-type Scene
-    = Covers
-    | List
-
-
-
 -- 📣
 
 
@@ -63,6 +54,7 @@ type Msg
       -----------------------------------------
       -- Scenes
       -----------------------------------------
+    | ChangeScene Scene
     | InfiniteListMsg InfiniteList.Model
       -----------------------------------------
       -- Search

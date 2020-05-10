@@ -56,6 +56,7 @@ type alias EnclosedData =
     , onlyShowCachedTracks : Bool
     , onlyShowFavourites : Bool
     , repeat : Bool
+    , scene : Tracks.Scene
     , searchTerm : Maybe String
     , selectedPlaylist : Maybe String
     , shuffle : Bool
@@ -188,6 +189,7 @@ enclosedDataDecoder =
         |> optional "onlyShowCachedTracks" Json.bool False
         |> optional "onlyShowFavourites" Json.bool False
         |> optional "repeat" Json.bool False
+        |> optional "scene" Tracks.sceneDecoder Tracks.List
         |> optional "searchTerm" (Json.maybe Json.string) Nothing
         |> optional "selectedPlaylist" (Json.maybe Json.string) Nothing
         |> optional "shuffle" Json.bool False
@@ -196,7 +198,7 @@ enclosedDataDecoder =
 
 
 encodeEnclosedData : EnclosedData -> Json.Value
-encodeEnclosedData { cachedTracks, equalizerSettings, grouping, onlyShowCachedTracks, onlyShowFavourites, repeat, searchTerm, selectedPlaylist, shuffle, sortBy, sortDirection } =
+encodeEnclosedData { cachedTracks, equalizerSettings, grouping, onlyShowCachedTracks, onlyShowFavourites, repeat, scene, searchTerm, selectedPlaylist, shuffle, sortBy, sortDirection } =
     Json.Encode.object
         [ ( "cachedTracks", Json.Encode.list Json.Encode.string cachedTracks )
         , ( "equalizerSettings", Equalizer.encodeSettings equalizerSettings )
@@ -204,6 +206,7 @@ encodeEnclosedData { cachedTracks, equalizerSettings, grouping, onlyShowCachedTr
         , ( "onlyShowCachedTracks", Json.Encode.bool onlyShowCachedTracks )
         , ( "onlyShowFavourites", Json.Encode.bool onlyShowFavourites )
         , ( "repeat", Json.Encode.bool repeat )
+        , ( "scene", Tracks.encodeScene scene )
         , ( "searchTerm", Maybe.unwrap Json.Encode.null Json.Encode.string searchTerm )
         , ( "selectedPlaylist", Maybe.unwrap Json.Encode.null Json.Encode.string selectedPlaylist )
         , ( "shuffle", Json.Encode.bool shuffle )

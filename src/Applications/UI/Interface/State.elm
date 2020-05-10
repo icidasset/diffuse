@@ -5,12 +5,12 @@ import Debouncer.Basic as Debouncer
 import Notifications
 import Return exposing (return)
 import Return.Ext as Return
+import Tracks
 import UI.DnD as DnD
 import UI.Page as Page
 import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)
 
