@@ -49,6 +49,7 @@ type alias Dependencies =
 
 type alias ItemDependencies =
     { cachedCovers : Maybe (Dict String String)
+    , sortBy : SortBy
     }
 
 
@@ -61,20 +62,54 @@ view deps =
 
 view_ : Dependencies -> Html Msg
 view_ deps =
+    let
+        amountOfCovers =
+            List.length deps.covers
+    in
     brick
         ((::)
             (tabindex (ifThenElse deps.isVisible 0 -1))
             viewAttributes
         )
-        [ C.flex_basis_0
+        [ C.antialiased
+        , C.flex_basis_0
         , C.flex_grow
         , C.outline_none
         , C.overflow_x_hidden
         , C.overflow_y_auto
         , C.relative
         , C.scrolling_touch
+        , C.text_almost_sm
         ]
-        [ sortGroupButtons deps.sortBy
+        [ chunk
+            [ C.flex
+            , C.items_center
+            , C.pt_5
+            , C.px_4
+            ]
+            [ sortGroupButtons deps.sortBy
+
+            --
+            , chunk
+                [ C.flex_auto
+                , C.text_base05
+                , C.text_right
+                , C.text_xs
+                ]
+                [ text (String.fromInt amountOfCovers)
+                , case deps.sortBy of
+                    Album ->
+                        text " albums"
+
+                    Artist ->
+                        text " artists"
+
+                    _ ->
+                        nothing
+                ]
+            ]
+
+        --
         , infiniteListView deps
         ]
 
@@ -108,12 +143,9 @@ viewAttributes =
 sortGroupButtons : SortBy -> Html Msg
 sortGroupButtons sortBy =
     chunk
-        [ C.antialiased
-        , C.flex
+        [ C.flex
         , C.font_semibold
         , C.leading_none
-        , C.pt_5
-        , C.px_4
         , C.text_xs
         , C.tracking_wide
         ]
@@ -159,13 +191,15 @@ infiniteListView : Dependencies -> Html Msg
 infiniteListView deps =
     let
         itemDeps =
-            { cachedCovers = deps.cachedCovers }
+            { cachedCovers = deps.cachedCovers
+            , sortBy = deps.sortBy
+            }
 
         viewportWidth =
             round deps.viewportWidth
 
         coverGroups =
-            List.greedyGroupsOf 5 deps.covers
+            List.greedyGroupsOf 4 deps.covers
     in
     { itemView = rowView itemDeps
     , itemHeight = InfiniteList.withVariableHeight (dynamicItemHeight viewportWidth)
@@ -201,7 +235,8 @@ infiniteListContainer styles =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ C.pl_4
+    [ C.leading_tight
+    , C.pl_4
     , C.pt_4
     ]
         |> String.join " "
@@ -216,7 +251,7 @@ dynamicItemHeight viewportWidth _ coverGroup =
             min 768 (viewportWidth - 32)
 
         rowHeight =
-            (containerWidth - 16) // 5
+            (containerWidth - 16) // 4 + (46 + 16)
     in
     -- TODO
     -- let
@@ -254,13 +289,7 @@ rowView itemDeps _ idx row =
 
 
 itemView : ItemDependencies -> Cover -> Html Msg
-itemView { cachedCovers } cover =
-    let
-        maybeBlobUrlFromCache =
-            cachedCovers
-                |> Maybe.withDefault Dict.empty
-                |> Dict.get cover.key
-    in
+itemView deps cover =
     brick
         [ cover.identifiedTrack
             |> Queue.InjectFirstAndPlay
@@ -268,13 +297,30 @@ itemView { cachedCovers } cover =
             |> Decode.succeed
             |> E.on "dbltap"
         ]
+        [ C.font_semibold
+        , C.mb_4
+        , C.w_1_div_4
+        ]
+        [ coverView deps cover
+        , metadataView deps cover
+        ]
+
+
+coverView : ItemDependencies -> Cover -> Html Msg
+coverView { cachedCovers } cover =
+    let
+        maybeBlobUrlFromCache =
+            cachedCovers
+                |> Maybe.withDefault Dict.empty
+                |> Dict.get cover.key
+    in
+    chunk
         [ C.cursor_pointer
         , C.h_0
-        , C.overflow_hidden
-        , C.pt_1_div_5
+        , C.mr_4
+        , C.pt_full
         , C.relative
         , C.select_none
-        , C.w_1_div_5
         ]
         [ brick
             (case maybeBlobUrlFromCache of
@@ -303,14 +349,82 @@ itemView { cachedCovers } cover =
             [ C.absolute
             , C.bg_cover
             , C.bg_gray_300
-            , C.inset_0
             , C.mb_4
-            , C.mr_4
+            , C.inset_0
             , C.rounded_md
+            , C.shadow
 
             -- Dark mode
             ------------
             , C.dark__bg_white_025
             ]
-            []
+            [ if Maybe.isNothing maybeBlobUrlFromCache then
+                chunk
+                    [ C.absolute
+                    , C.left_half
+                    , C.minus_translate_x_half
+                    , C.minus_translate_y_half
+                    , C.text_gray_400
+                    , C.top_half
+                    , C.transform
+
+                    -- Dark mode
+                    ------------
+                    , C.dark__text_base01
+                    ]
+                    [ Icons.album 26 Inherit ]
+
+              else
+                nothing
+            ]
+        ]
+
+
+metadataView : ItemDependencies -> Cover -> Html Msg
+metadataView { cachedCovers, sortBy } cover =
+    let
+        { identifiedTrack } =
+            cover
+
+        ( _, track ) =
+            identifiedTrack
+    in
+    chunk
+        [ C.minus_mt_4
+        , C.mr_4
+        , C.pt_2
+        , C.tracking_tad_closer
+        ]
+        [ chunk
+            [ C.mt_px
+            , C.pt_px
+            , C.truncate
+            ]
+            [ case sortBy of
+                Album ->
+                    text track.tags.album
+
+                Artist ->
+                    text track.tags.artist
+
+                _ ->
+                    nothing
+            ]
+
+        --
+        , chunk
+            [ C.mt_1
+            , C.text_base05
+            , C.truncate
+            ]
+            [ case sortBy of
+                Album ->
+                    text track.tags.artist
+
+                Artist ->
+                    text track.tags.title
+
+                _ ->
+                    nothing
+            ]
         ]
