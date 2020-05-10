@@ -413,8 +413,10 @@ metadataView { cachedCovers, sortBy } cover =
 
         --
         , chunk
-            [ C.mt_1
+            [ C.mt_px
+            , C.pt_px
             , C.text_base05
+            , C.text_xs
             , C.truncate
             ]
             [ case sortBy of
