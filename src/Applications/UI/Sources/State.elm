@@ -319,7 +319,7 @@ addToCollection unsuitableSource model =
     in
     { model | sources = model.sources ++ [ source ] }
         |> User.saveSources
-        |> andThen process
+        |> andThen (processSpecific [ source ])
 
 
 removeFromCollection : { sourceId : String } -> Manager

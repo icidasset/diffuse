@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.3
+
+- Deprecate Blockstack & Textile
+- Only process the new source when adding a new source
+
 ## 2.5.2
 
 - Fixes authentication issue with WebDAV in Firefox
