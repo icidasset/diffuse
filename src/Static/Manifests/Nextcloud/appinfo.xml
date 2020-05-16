@@ -7,10 +7,17 @@
     <description>A music player that connects to your cloud/distributed storage</description>
     <version>2.5.3</version>
     <licence>agpl</licence>
-    <author>Steven Vandevelde</author>
+    <author homepage="https://citric.id">Steven Vandevelde</author>
     <category>multimedia</category>
+    <website>https://diffuse.sh</website>
+    <repository>https://github.com/icidasset/diffuse</repository>
     <bugs>https://github.com/icidasset/diffuse/issues</bugs>
     <dependencies>
       <nextcloud max-version="99" min-version="10"/>
     </dependencies>
+    <documentation>
+      <user>https://diffuse.sh/about</user>
+      <developer>https://github.com/icidasset/diffuse</developer>
+    </documentation>
+    <screenshot>https://icidasset-public.s3.amazonaws.com/diffuse-v2.jpg</screenshot>
 </info>
