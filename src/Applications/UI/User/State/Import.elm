@@ -13,6 +13,7 @@ import Process
 import Return exposing (andThen, return)
 import Return.Ext as Return exposing (communicate)
 import Task
+import UI.Authentication.Common
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
 import UI.Demo as Demo
@@ -122,6 +123,25 @@ loadHypaethralUserData json model =
 
                 else
                     Return.singleton m
+            )
+        |> andThen
+            (\m ->
+                let
+                    notification =
+                        Notifications.stickyWarning
+                            """
+                            Blockstack and Textile support will be removed in v3, please migrate to a different data-storage service (by exporting and then importing). v3 will add support for storing your data on [Fission](https://fission.codes).
+                            """
+                in
+                case UI.Authentication.Common.extractMethod m.authentication of
+                    Just Blockstack ->
+                        Common.showNotificationWithModel m notification
+
+                    Just (Textile _) ->
+                        Common.showNotificationWithModel m notification
+
+                    _ ->
+                        Return.singleton m
             )
         |> andThen
             (\m ->
