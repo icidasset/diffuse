@@ -819,7 +819,9 @@ resolveParcel ( deps, newCollection ) model =
                 }
     in
     (if collectionChanged then
-        andThen Common.generateDirectoryPlaylists >> andThen Queue.reset
+        andThen Common.generateDirectoryPlaylists
+            >> andThen Queue.reset
+            >> andThen generateCovers
 
      else if harvestChanged then
         andThen Queue.reset >> andThen generateCovers
