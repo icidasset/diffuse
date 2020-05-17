@@ -193,7 +193,7 @@ enclosedDataDecoder =
         |> optional "searchTerm" (Json.maybe Json.string) Nothing
         |> optional "selectedPlaylist" (Json.maybe Json.string) Nothing
         |> optional "shuffle" Json.bool False
-        |> optional "sortBy" Tracks.sortByDecoder Tracks.Artist
+        |> optional "sortBy" Tracks.sortByDecoder Tracks.Album
         |> optional "sortDirection" Tracks.sortDirectionDecoder Tracks.Asc
 
 

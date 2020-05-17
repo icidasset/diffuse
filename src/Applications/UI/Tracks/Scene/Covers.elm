@@ -42,6 +42,7 @@ type alias Dependencies =
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
     , sortBy : SortBy
+    , sortDirection : SortDirection
     , viewportHeight : Float
     , viewportWidth : Float
     }
@@ -85,7 +86,7 @@ view_ deps =
             [ C.flex
             , C.items_center
             , C.pt_5
-            , C.px_4
+            , C.px_5
             ]
             [ sortGroupButtons deps.sortBy
 
@@ -106,6 +107,16 @@ view_ deps =
 
                     _ ->
                         nothing
+                , text " "
+                , Html.span
+                    [ A.class C.opacity_60 ]
+                    [ case deps.sortDirection of
+                        Asc ->
+                            text "(ascending)"
+
+                        Desc ->
+                            text "(descending)"
+                    ]
                 ]
             ]
 
@@ -166,13 +177,13 @@ sortGroupButton { current, btn } label =
             |> TracksMsg
             |> E.onClick
         ]
-        [ C.p_2
+        [ C.cursor_pointer
+        , C.p_2
         , C.rounded
 
         --
         , ifThenElse active C.bg_gray_300 C.bg_transparent
         , ifThenElse active C.dark__bg_base01 C.dark__bg_transparent
-        , ifThenElse active C.cursor_default C.cursor_pointer
         ]
         [ chunk
             [ C.pb_px
@@ -236,7 +247,7 @@ infiniteListContainer styles =
 listStyles : List (Html.Attribute msg)
 listStyles =
     [ C.leading_tight
-    , C.pl_4
+    , C.pl_5
     , C.pt_4
     ]
         |> String.join " "
@@ -298,7 +309,7 @@ itemView deps cover =
             |> E.on "dbltap"
         ]
         [ C.font_semibold
-        , C.mb_4
+        , C.mb_5
         , C.w_1_div_4
         ]
         [ coverView deps cover
@@ -320,7 +331,7 @@ coverView { cachedCovers } cover =
     chunk
         [ C.cursor_pointer
         , C.h_0
-        , C.mr_4
+        , C.mr_5
         , C.pt_full
         , C.relative
         , C.select_none
@@ -350,7 +361,7 @@ coverView { cachedCovers } cover =
             [ C.absolute
             , C.bg_cover
             , C.bg_gray_300
-            , C.mb_4
+            , C.mb_5
             , C.inset_0
             , C.rounded_md
             , C.shadow
@@ -391,8 +402,8 @@ metadataView { cachedCovers, sortBy } cover =
             identifiedTrack
     in
     chunk
-        [ C.minus_mt_4
-        , C.mr_4
+        [ C.minus_mt_5
+        , C.mr_5
         , C.pt_2
         , C.tracking_tad_closer
         ]

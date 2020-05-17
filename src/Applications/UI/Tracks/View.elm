@@ -74,6 +74,7 @@ view model =
                         , infiniteList = model.infiniteList
                         , isVisible = isOnIndexPage
                         , sortBy = model.sortBy
+                        , sortDirection = model.sortDirection
                         , viewportHeight = model.viewport.height
                         , viewportWidth = model.viewport.width
                         }
