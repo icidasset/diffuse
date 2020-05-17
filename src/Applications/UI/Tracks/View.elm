@@ -243,7 +243,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             [ C.ml_1, C.mr_px, C.cursor_pointer ]
                             [ chunk
                                 [ C.pl_1 ]
-                                [ Icons.featured_play_list 16 Inherit ]
+                                [ Icons.notes 18 Inherit ]
                             ]
 
                     List ->
@@ -257,7 +257,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             [ C.ml_1, C.mr_px, C.cursor_pointer ]
                             [ chunk
                                 [ C.pl_1 ]
-                                [ Icons.photo 16 Inherit ]
+                                [ Icons.burst_mode 20 Inherit ]
                             ]
 
                 -- 4
