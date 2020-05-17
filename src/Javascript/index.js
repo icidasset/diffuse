@@ -245,8 +245,6 @@ app.ports.loadAlbumCovers.subscribe(
 
 
 function loadAlbumCovers() {
-  console.log("load album covers")
-
   const nodes = Array.from(
     document.querySelectorAll("#diffuse__track-covers [data-key]")
   )
