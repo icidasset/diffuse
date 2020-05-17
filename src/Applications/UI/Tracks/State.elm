@@ -178,7 +178,15 @@ add encodedTracks model =
 
 changeScene : Scene -> Manager
 changeScene scene model =
-    User.saveEnclosedUserData { model | scene = scene }
+    (case scene of
+        Covers ->
+            Ports.loadAlbumCovers ()
+
+        List ->
+            Cmd.none
+    )
+        |> return { model | scene = scene }
+        |> andThen User.saveEnclosedUserData
 
 
 clearCache : Manager
