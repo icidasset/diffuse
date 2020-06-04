@@ -50,6 +50,7 @@ type alias Cover =
     , identifiedTrack : IdentifiedTrack
     , key : String
     , trackFilename : String
+    , trackIds : List String
     }
 
 

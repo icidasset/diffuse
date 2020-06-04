@@ -41,6 +41,7 @@ type alias Dependencies =
     , covers : List Cover
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
+    , nowPlaying : Maybe Queue.Item
     , sortBy : SortBy
     , sortDirection : SortDirection
     , viewportHeight : Float
@@ -50,6 +51,7 @@ type alias Dependencies =
 
 type alias ItemDependencies =
     { cachedCovers : Maybe (Dict String String)
+    , nowPlaying : Maybe Queue.Item
     , sortBy : SortBy
     }
 
@@ -108,8 +110,16 @@ view_ deps =
                     _ ->
                         nothing
                 , text " "
-                , Html.span
-                    [ A.class C.opacity_60 ]
+                , slab
+                    Html.span
+                    [ deps.sortBy
+                        |> SortBy
+                        |> TracksMsg
+                        |> E.onClick
+                    ]
+                    [ C.cursor_pointer
+                    , C.opacity_60
+                    ]
                     [ case deps.sortDirection of
                         Asc ->
                             text "(ascending)"
@@ -203,6 +213,7 @@ infiniteListView deps =
     let
         itemDeps =
             { cachedCovers = deps.cachedCovers
+            , nowPlaying = deps.nowPlaying
             , sortBy = deps.sortBy
             }
 
@@ -318,7 +329,7 @@ itemView deps cover =
 
 
 coverView : ItemDependencies -> Cover -> Html Msg
-coverView { cachedCovers } cover =
+coverView { cachedCovers, nowPlaying } cover =
     let
         maybeBlobUrlFromCache =
             cachedCovers
@@ -327,6 +338,9 @@ coverView { cachedCovers } cover =
 
         hasBackgroundImage =
             Maybe.isJust maybeBlobUrlFromCache
+
+        nowPlayingId =
+            Maybe.unwrap "" (.identifiedTrack >> Tuple.second >> .id) nowPlaying
     in
     chunk
         [ C.cursor_pointer
@@ -385,6 +399,21 @@ coverView { cachedCovers } cover =
                     , C.dark__text_base01
                     ]
                     [ Icons.album 26 Inherit ]
+
+              else
+                nothing
+
+            -- Now playing?
+            , if List.member nowPlayingId cover.trackIds then
+                chunk
+                    [ C.absolute
+                    , C.bottom_0
+                    , C.mb_3
+                    , C.mr_3
+                    , C.right_0
+                    , C.text_white
+                    ]
+                    [ Icons.headset 16 Inherit ]
 
               else
                 nothing

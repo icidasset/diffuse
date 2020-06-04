@@ -73,6 +73,7 @@ view model =
                         , covers = model.covers
                         , infiniteList = model.infiniteList
                         , isVisible = isOnIndexPage
+                        , nowPlaying = model.nowPlaying
                         , sortBy = model.sortBy
                         , sortDirection = model.sortDirection
                         , viewportHeight = model.viewport.height

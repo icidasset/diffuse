@@ -313,10 +313,13 @@ generateCovers model =
         |> List.map
             (\( fallbackIdentifiedTrack, identifiedTracks ) ->
                 let
+                    allIdentifiedTracks =
+                        fallbackIdentifiedTrack :: identifiedTracks
+
                     -- Group the tracks by their `coverKey`,
                     -- and pick a track from the biggest group.
                     ( identifiers, track ) =
-                        identifiedTracks
+                        allIdentifiedTracks
                             |> List.map (\( i, t ) -> ( coverKey t, ( i, t ) ))
                             |> List.sortBy Tuple.first
                             |> List.groupWhile (\( a, _ ) ( b, _ ) -> a == b)
@@ -347,6 +350,9 @@ generateCovers model =
                         |> String.split "/"
                         |> List.last
                         |> Maybe.withDefault track.path
+
+                --
+                , trackIds = List.map (Tuple.second >> .id) allIdentifiedTracks
                 }
             )
         |> (\covers -> { model | covers = covers })
