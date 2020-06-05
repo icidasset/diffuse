@@ -200,6 +200,7 @@ init flags url key =
     , scene = Tracks.Covers
     , searchResults = Nothing
     , searchTerm = Nothing
+    , selectedCover = Nothing
     , selectedTrackIndexes = []
     , sortBy = Tracks.Album
     , sortDirection = Tracks.Asc

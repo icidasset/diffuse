@@ -55,7 +55,9 @@ type Msg
       -- Scenes
       -----------------------------------------
     | ChangeScene Scene
+    | DeselectCover
     | InfiniteListMsg InfiniteList.Model
+    | SelectCover Cover
       -----------------------------------------
       -- Search
       -----------------------------------------

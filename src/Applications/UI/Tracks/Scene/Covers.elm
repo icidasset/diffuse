@@ -28,6 +28,7 @@ import UI.DnD as DnD
 import UI.Kit
 import UI.Queue.Types as Queue
 import UI.Tracks.Scene as Scene
+import UI.Tracks.Scene.List
 import UI.Tracks.Types exposing (Msg(..))
 import UI.Types as UI exposing (Msg(..))
 
@@ -37,11 +38,14 @@ import UI.Types as UI exposing (Msg(..))
 
 
 type alias Dependencies =
-    { cachedCovers : Maybe (Dict String String)
+    { bgColor : Maybe Color
+    , cachedCovers : Maybe (Dict String String)
     , covers : List Cover
+    , darkMode : Bool
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
     , nowPlaying : Maybe Queue.Item
+    , selectedCover : Maybe Cover
     , sortBy : SortBy
     , sortDirection : SortDirection
     , viewportHeight : Float
@@ -59,12 +63,22 @@ type alias ItemDependencies =
 view : Dependencies -> Html Msg
 view deps =
     Html.Lazy.lazy
-        view_
+        (case deps.selectedCover of
+            Just cover ->
+                singleCoverView cover
+
+            Nothing ->
+                collectionView
+        )
         deps
 
 
-view_ : Dependencies -> Html Msg
-view_ deps =
+
+-- 🏞  ░░  COLLECTION
+
+
+collectionView : Dependencies -> Html Msg
+collectionView deps =
     let
         amountOfCovers =
             List.length deps.covers
@@ -158,6 +172,116 @@ viewAttributes =
 
 
 
+-- 🏞  ░░  SINGLE COVER
+
+
+singleCoverView : Cover -> Dependencies -> Html Msg
+singleCoverView cover deps =
+    let
+        derivedColors =
+            UI.Tracks.Scene.List.deriveColors
+                { bgColor = deps.bgColor
+                , darkMode = deps.darkMode
+                }
+    in
+    brick
+        [ tabindex (ifThenElse deps.isVisible 0 -1)
+        ]
+        [ C.antialiased
+        , C.flex_basis_0
+        , C.flex_grow
+        , C.leading_tight
+        , C.outline_none
+        , C.overflow_x_hidden
+        , C.overflow_y_auto
+        , C.text_almost_sm
+        ]
+        [ chunk
+            [ C.flex
+            , C.font_semibold
+            , C.pt_5
+            , C.px_5
+            ]
+            [ headerButton
+                [ E.onClick (TracksMsg DeselectCover) ]
+                { active = False
+                , label = Icons.arrow_back 16 Inherit
+                }
+
+            --
+            , headerButton
+                [ cover.tracks
+                    |> List.head
+                    |> Maybe.withDefault cover.identifiedTrackCover
+                    |> Queue.InjectFirstAndPlay
+                    |> QueueMsg
+                    |> E.onClick
+                ]
+                { active = True
+                , label = text "Play"
+                }
+            ]
+
+        --
+        , chunk
+            [ C.mb_6
+            , C.flex
+            , C.ml_5
+            , C.mt_3
+            ]
+            [ itemView
+                (compileItemDependencies deps)
+                cover
+
+            --
+            , chunk
+                [ C.flex_auto
+                , C.ml_5
+                , C.select_none
+                ]
+                (List.indexedMap
+                    (UI.Tracks.Scene.List.defaultItemView
+                        { derivedColors = derivedColors
+                        , favouritesOnly = False
+                        , nowPlaying = deps.nowPlaying
+                        , selectedTrackIndexes = []
+                        , showAlbum = False
+                        , showArtist = False
+                        , showGroup = False
+                        }
+                        0
+                    )
+                    cover.tracks
+                )
+            ]
+        ]
+
+
+
+-- 🧕
+
+
+headerButton attributes { active, label } =
+    brick
+        attributes
+        [ C.cursor_pointer
+        , C.p_2
+        , C.rounded
+
+        --
+        , ifThenElse active C.bg_gray_300 C.bg_transparent
+        , ifThenElse active C.dark__bg_base01 C.dark__bg_transparent
+        ]
+        [ chunk
+            [ C.pb_px
+            , C.pt_1
+            , C.px_px
+            ]
+            [ label ]
+        ]
+
+
+
 -- SORTING
 
 
@@ -177,31 +301,15 @@ sortGroupButtons sortBy =
 
 sortGroupButton : { current : SortBy, btn : SortBy } -> String -> Html Msg
 sortGroupButton { current, btn } label =
-    let
-        active =
-            current == btn
-    in
-    brick
+    headerButton
         [ btn
             |> SortBy
             |> TracksMsg
             |> E.onClick
         ]
-        [ C.cursor_pointer
-        , C.p_2
-        , C.rounded
-
-        --
-        , ifThenElse active C.bg_gray_300 C.bg_transparent
-        , ifThenElse active C.dark__bg_base01 C.dark__bg_transparent
-        ]
-        [ chunk
-            [ C.pb_px
-            , C.pt_1
-            , C.px_px
-            ]
-            [ text label ]
-        ]
+        { active = current == btn
+        , label = text label
+        }
 
 
 
@@ -212,10 +320,7 @@ infiniteListView : Dependencies -> Html Msg
 infiniteListView deps =
     let
         itemDeps =
-            { cachedCovers = deps.cachedCovers
-            , nowPlaying = deps.nowPlaying
-            , sortBy = deps.sortBy
-            }
+            compileItemDependencies deps
 
         viewportWidth =
             round deps.viewportWidth
@@ -253,6 +358,14 @@ infiniteListContainer styles =
             )
         |> List.append listStyles
         |> Html.div
+
+
+compileItemDependencies : Dependencies -> ItemDependencies
+compileItemDependencies deps =
+    { cachedCovers = deps.cachedCovers
+    , nowPlaying = deps.nowPlaying
+    , sortBy = deps.sortBy
+    }
 
 
 listStyles : List (Html.Attribute msg)
@@ -313,11 +426,17 @@ rowView itemDeps _ idx row =
 itemView : ItemDependencies -> Cover -> Html Msg
 itemView deps cover =
     brick
-        [ cover.identifiedTrack
-            |> Queue.InjectFirstAndPlay
-            |> QueueMsg
+        -- [ cover.identifiedTrack
+        --     |> Queue.InjectFirstAndPlay
+        --     |> QueueMsg
+        --     |> Decode.succeed
+        --     |> E.on "dbltap"
+        -- ]
+        [ cover
+            |> SelectCover
+            |> TracksMsg
             |> Decode.succeed
-            |> E.on "dbltap"
+            |> E.on "tap"
         ]
         [ C.font_semibold
         , C.mb_5
@@ -360,7 +479,7 @@ coverView { cachedCovers, nowPlaying } cover =
                     if Maybe.isJust cachedCovers then
                         let
                             track =
-                                Tuple.second cover.identifiedTrack
+                                Tuple.second cover.identifiedTrackCover
                         in
                         [ A.attribute "data-key" cover.key
                         , A.attribute "data-focus" cover.focus
@@ -424,11 +543,11 @@ coverView { cachedCovers, nowPlaying } cover =
 metadataView : ItemDependencies -> Cover -> Html Msg
 metadataView { cachedCovers, sortBy } cover =
     let
-        { identifiedTrack } =
+        { identifiedTrackCover } =
             cover
 
         ( _, track ) =
-            identifiedTrack
+            identifiedTrackCover
     in
     chunk
         [ C.minus_mt_5

@@ -69,11 +69,14 @@ view model =
             case model.scene of
                 Covers ->
                     UI.Tracks.Scene.Covers.view
-                        { cachedCovers = model.cachedCovers
+                        { bgColor = model.extractedBackdropColor
+                        , cachedCovers = model.cachedCovers
                         , covers = model.covers
+                        , darkMode = model.darkMode
                         , infiniteList = model.infiniteList
                         , isVisible = isOnIndexPage
                         , nowPlaying = model.nowPlaying
+                        , selectedCover = model.selectedCover
                         , sortBy = model.sortBy
                         , sortDirection = model.sortDirection
                         , viewportHeight = model.viewport.height

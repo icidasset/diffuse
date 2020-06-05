@@ -162,6 +162,7 @@ type alias Model =
     , scene : Scene
     , searchResults : Maybe (List String)
     , searchTerm : Maybe String
+    , selectedCover : Maybe Cover
     , selectedTrackIndexes : List Int
     , sortBy : SortBy
     , sortDirection : SortDirection

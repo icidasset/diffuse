@@ -141,8 +141,14 @@ update msg =
         ChangeScene a ->
             changeScene a
 
+        DeselectCover ->
+            deselectCover
+
         InfiniteListMsg a ->
             infiniteListMsg a
+
+        SelectCover a ->
+            selectCover a
 
         -----------------------------------------
         -- Search
@@ -185,7 +191,7 @@ changeScene scene model =
         List ->
             Cmd.none
     )
-        |> return { model | scene = scene }
+        |> return { model | scene = scene, selectedCover = Nothing }
         |> andThen User.saveEnclosedUserData
 
 
@@ -210,6 +216,11 @@ clearSearch model =
     { model | searchResults = Nothing, searchTerm = Nothing }
         |> reviseCollection Collection.harvest
         |> andThen User.saveEnclosedUserData
+
+
+deselectCover : Manager
+deselectCover model =
+    Return.singleton { model | selectedCover = Nothing }
 
 
 download : String -> List Track -> Manager
@@ -311,10 +322,10 @@ generateCovers model =
         -- Prepare for cover view
         -------------------------
         |> List.map
-            (\( fallbackIdentifiedTrack, identifiedTracks ) ->
+            (\( firstIdentifiedTrack, identifiedTracks ) ->
                 let
                     allIdentifiedTracks =
-                        fallbackIdentifiedTrack :: identifiedTracks
+                        firstIdentifiedTrack :: identifiedTracks
 
                     -- Group the tracks by their `coverKey`,
                     -- and pick a track from the biggest group.
@@ -330,10 +341,10 @@ generateCovers model =
                                     >> List.head
                                     >> Maybe.map Tuple.second
                                 )
-                            |> Maybe.withDefault fallbackIdentifiedTrack
+                            |> Maybe.withDefault firstIdentifiedTrack
                 in
                 { key = Base64.encode (coverKey track)
-                , identifiedTrack = ( identifiers, track )
+                , identifiedTrackCover = ( identifiers, track )
 
                 --
                 , focus =
@@ -353,6 +364,7 @@ generateCovers model =
 
                 --
                 , trackIds = List.map (Tuple.second >> .id) allIdentifiedTracks
+                , tracks = allIdentifiedTracks
                 }
             )
         |> (\covers -> { model | covers = covers })
@@ -514,6 +526,11 @@ search model =
 
         ( Nothing, Nothing ) ->
             Return.singleton model
+
+
+selectCover : Cover -> Manager
+selectCover cover model =
+    Return.singleton { model | selectedCover = Just cover }
 
 
 setSearchResults : Json.Value -> Manager
