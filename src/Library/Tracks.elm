@@ -49,6 +49,7 @@ type alias Cover =
     { focus : String
     , identifiedTrackCover : IdentifiedTrack
     , key : String
+    , sameArtist : Bool
     , trackFilename : String
     , trackIds : List String
     , tracks : List IdentifiedTrack

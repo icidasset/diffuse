@@ -192,6 +192,7 @@ changeScene scene model =
             Cmd.none
     )
         |> return { model | scene = scene, selectedCover = Nothing }
+        |> andThen Common.forceTracksRerender
         |> andThen User.saveEnclosedUserData
 
 
@@ -220,7 +221,7 @@ clearSearch model =
 
 deselectCover : Manager
 deselectCover model =
-    Return.singleton { model | selectedCover = Nothing }
+    Common.forceTracksRerender { model | selectedCover = Nothing }
 
 
 download : String -> List Track -> Manager
@@ -324,14 +325,35 @@ generateCovers model =
         |> List.map
             (\( firstIdentifiedTrack, identifiedTracks ) ->
                 let
+                    firstArtist =
+                        firstIdentifiedTrack
+                            |> Tuple.second
+                            |> .tags
+                            |> .artist
+
                     allIdentifiedTracks =
                         firstIdentifiedTrack :: identifiedTracks
+
+                    ( tracksWithCoverKeys, sameArtist ) =
+                        List.foldl
+                            (\( i, t ) ( acc, sa ) ->
+                                ( ( coverKey t, ( i, t ) ) :: acc
+                                , if sa then
+                                    t.tags.artist == firstArtist
+
+                                  else
+                                    False
+                                )
+                            )
+                            ( []
+                            , True
+                            )
+                            allIdentifiedTracks
 
                     -- Group the tracks by their `coverKey`,
                     -- and pick a track from the biggest group.
                     ( identifiers, track ) =
-                        allIdentifiedTracks
-                            |> List.map (\( i, t ) -> ( coverKey t, ( i, t ) ))
+                        tracksWithCoverKeys
                             |> List.sortBy Tuple.first
                             |> List.groupWhile (\( a, _ ) ( b, _ ) -> a == b)
                             |> List.sortBy (Tuple.second >> List.length)
@@ -356,6 +378,9 @@ generateCovers model =
                             "album"
 
                 --
+                , sameArtist = sameArtist
+
+                --
                 , trackFilename =
                     track.path
                         |> String.split "/"
@@ -367,8 +392,17 @@ generateCovers model =
                 , tracks = allIdentifiedTracks
                 }
             )
-        |> (\covers -> { model | covers = covers })
+        |> (\covers ->
+                { model
+                    | covers = covers
+                    , selectedCover =
+                        Maybe.andThen
+                            (\sc -> List.find (.key >> (==) sc.key) covers)
+                            model.selectedCover
+                }
+           )
         |> Return.communicate (Ports.loadAlbumCovers ())
+        |> andThen Common.forceTracksRerender
 
 
 gotCachedCover : Json.Value -> Manager

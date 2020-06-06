@@ -161,6 +161,9 @@ viewAttributes =
 header : Bool -> Bool -> SortBy -> SortDirection -> Html Msg
 header isPlaylist showAlbum sortBy sortDirection =
     let
+        showArtist =
+            True
+
         sortIcon =
             (if sortDirection == Desc then
                 Icons.expand_less
@@ -214,10 +217,15 @@ header isPlaylist showAlbum sortBy sortDirection =
             , headerColumn "Album" 29.0 (maybeSortIcon Album) (TracksMsg <| SortBy Album)
             ]
 
+         else if not showArtist then
+            [ headerColumn "" 5.75 Nothing Bypass
+            , headerColumn "Title" 94.25 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
+            ]
+
          else
-            [ headerColumn "" 4.5 Nothing Bypass
-            , headerColumn "Title" 52 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
-            , headerColumn "Artist" 43.5 (maybeSortIcon Artist) (TracksMsg <| SortBy Artist)
+            [ headerColumn "" 5.75 Nothing Bypass
+            , headerColumn "Title" 51.25 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
+            , headerColumn "Artist" 43 (maybeSortIcon Artist) (TracksMsg <| SortBy Artist)
             ]
         )
 
@@ -309,6 +317,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
                     { derivedColors = derivedColors
                     , favouritesOnly = favouritesOnly
                     , nowPlaying = nowPlaying
+                    , roundedCorners = False
                     , selectedTrackIndexes = selectedTrackIndexes
                     , showAlbum = deps.showAlbum
                     , showArtist = True
@@ -399,6 +408,7 @@ defaultItemView :
     { derivedColors : DerivedColors
     , favouritesOnly : Bool
     , nowPlaying : Maybe Queue.Item
+    , roundedCorners : Bool
     , selectedTrackIndexes : List Int
     , showAlbum : Bool
     , showArtist : Bool
@@ -410,7 +420,7 @@ defaultItemView :
     -> Html Msg
 defaultItemView args _ idx identifiedTrack =
     let
-        { derivedColors, favouritesOnly, nowPlaying, selectedTrackIndexes, showAlbum, showArtist, showGroup } =
+        { derivedColors, favouritesOnly, nowPlaying, roundedCorners, selectedTrackIndexes, showAlbum, showArtist, showGroup } =
             args
 
         ( identifiers, track ) =
@@ -474,6 +484,7 @@ defaultItemView args _ idx identifiedTrack =
             --
             , ifThenElse identifiers.isMissing "" C.cursor_pointer
             , ifThenElse isSelected C.font_semibold ""
+            , ifThenElse roundedCorners C.rounded_l ""
 
             --
             , ifThenElse
@@ -505,13 +516,13 @@ defaultItemView args _ idx identifiedTrack =
 
              else if not showArtist then
                 [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
-                , otherColumn "80%" False track.tags.title
+                , otherColumn "94.25%" False track.tags.title
                 ]
 
              else
-                [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
-                , otherColumn "52%" False track.tags.title
-                , otherColumn "43.5%" False track.tags.artist
+                [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
+                , otherColumn "51.25%" False track.tags.title
+                , otherColumn "43%" False track.tags.artist
                 ]
             )
         ]

@@ -42,10 +42,12 @@ type alias Dependencies =
     , cachedCovers : Maybe (Dict String String)
     , covers : List Cover
     , darkMode : Bool
+    , favouritesOnly : Bool
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
     , nowPlaying : Maybe Queue.Item
     , selectedCover : Maybe Cover
+    , selectedTrackIndexes : List Int
     , sortBy : SortBy
     , sortDirection : SortDirection
     , viewportHeight : Float
@@ -210,15 +212,13 @@ singleCoverView cover deps =
 
             --
             , headerButton
-                [ cover.tracks
-                    |> List.head
-                    |> Maybe.withDefault cover.identifiedTrackCover
-                    |> Queue.InjectFirstAndPlay
+                [ { inFront = False, tracks = cover.tracks }
+                    |> Queue.AddTracks
                     |> QueueMsg
                     |> E.onClick
                 ]
                 { active = True
-                , label = text "Play"
+                , label = text "Add to queue"
                 }
             ]
 
@@ -238,15 +238,17 @@ singleCoverView cover deps =
                 [ C.flex_auto
                 , C.ml_5
                 , C.select_none
+                , C.subpixel_antialiased
                 ]
                 (List.indexedMap
                     (UI.Tracks.Scene.List.defaultItemView
                         { derivedColors = derivedColors
-                        , favouritesOnly = False
+                        , favouritesOnly = deps.favouritesOnly
                         , nowPlaying = deps.nowPlaying
-                        , selectedTrackIndexes = []
+                        , roundedCorners = True
+                        , selectedTrackIndexes = deps.selectedTrackIndexes
                         , showAlbum = False
-                        , showArtist = False
+                        , showArtist = not cover.sameArtist
                         , showGroup = False
                         }
                         0
@@ -426,19 +428,14 @@ rowView itemDeps _ idx row =
 itemView : ItemDependencies -> Cover -> Html Msg
 itemView deps cover =
     brick
-        -- [ cover.identifiedTrack
-        --     |> Queue.InjectFirstAndPlay
-        --     |> QueueMsg
-        --     |> Decode.succeed
-        --     |> E.on "dbltap"
-        -- ]
         [ cover
             |> SelectCover
             |> TracksMsg
             |> Decode.succeed
             |> E.on "tap"
         ]
-        [ C.font_semibold
+        [ C.flex_shrink_0
+        , C.font_semibold
         , C.mb_5
         , C.w_1_div_4
         ]
