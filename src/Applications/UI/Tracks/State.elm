@@ -325,27 +325,40 @@ generateCovers model =
         |> List.map
             (\( firstIdentifiedTrack, identifiedTracks ) ->
                 let
-                    firstArtist =
+                    keyRaw =
+                        coverKey track
+
+                    firstTags =
                         firstIdentifiedTrack
                             |> Tuple.second
                             |> .tags
-                            |> .artist
+
+                    ( firstArtist, firstAlbum ) =
+                        ( firstTags.artist, firstTags.album )
 
                     allIdentifiedTracks =
                         firstIdentifiedTrack :: identifiedTracks
 
-                    ( tracksWithCoverKeys, sameArtist ) =
+                    ( tracksWithCoverKeys, sameArtist, sameAlbum ) =
                         List.foldl
-                            (\( i, t ) ( acc, sa ) ->
+                            (\( i, t ) ( acc, sar, sal ) ->
                                 ( ( coverKey t, ( i, t ) ) :: acc
-                                , if sa then
+                                  --
+                                , if sar then
                                     t.tags.artist == firstArtist
+
+                                  else
+                                    False
+                                  --
+                                , if sal then
+                                    t.tags.album == firstAlbum
 
                                   else
                                     False
                                 )
                             )
                             ( []
+                            , True
                             , True
                             )
                             allIdentifiedTracks
@@ -364,8 +377,12 @@ generateCovers model =
                                     >> Maybe.map Tuple.second
                                 )
                             |> Maybe.withDefault firstIdentifiedTrack
+
+                    group =
+                        coverGroup model.sortBy track
                 in
-                { key = Base64.encode (coverKey track)
+                { key = Base64.encode keyRaw
+                , keyRaw = keyRaw
                 , identifiedTrackCover = ( identifiers, track )
 
                 --
@@ -378,6 +395,8 @@ generateCovers model =
                             "album"
 
                 --
+                , group = group
+                , sameAlbum = sameAlbum
                 , sameArtist = sameArtist
 
                 --
@@ -392,14 +411,30 @@ generateCovers model =
                 , tracks = allIdentifiedTracks
                 }
             )
+        |> List.sortBy .group
+        |> (if model.sortDirection == Desc then
+                List.reverse
+
+            else
+                identity
+           )
         |> (\covers ->
-                { model
-                    | covers = covers
-                    , selectedCover =
-                        Maybe.andThen
-                            (\sc -> List.find (.key >> (==) sc.key) covers)
-                            model.selectedCover
-                }
+                model.selectedCover
+                    |> Maybe.andThen
+                        (\sc ->
+                            case model.sortBy of
+                                Artist ->
+                                    List.find (.group >> (==) sc.group) covers
+
+                                _ ->
+                                    List.find (.key >> (==) sc.key) covers
+                        )
+                    |> (\selectedCover ->
+                            { model
+                                | covers = covers
+                                , selectedCover = selectedCover
+                            }
+                       )
            )
         |> Return.communicate (Ports.loadAlbumCovers ())
         |> andThen Common.forceTracksRerender
@@ -850,9 +885,22 @@ resolveParcel ( deps, newCollection ) model =
                 newCollection.untouched
 
         harvestChanged =
-            Collection.harvestChanged
-                model.tracks.harvested
-                newCollection.harvested
+            if collectionChanged then
+                True
+
+            else
+                Collection.identifiedTracksChanged
+                    model.tracks.harvested
+                    newCollection.harvested
+
+        arrangementChanged =
+            if collectionChanged || harvestChanged then
+                True
+
+            else
+                Collection.identifiedTracksChanged
+                    model.tracks.arranged
+                    newCollection.arranged
 
         searchChanged =
             newScrollContext /= model.tracks.scrollContext
@@ -882,6 +930,9 @@ resolveParcel ( deps, newCollection ) model =
 
      else if harvestChanged then
         andThen Queue.reset >> andThen generateCovers
+
+     else if arrangementChanged then
+        andThen generateCovers
 
      else
         identity

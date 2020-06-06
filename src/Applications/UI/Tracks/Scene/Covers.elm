@@ -247,7 +247,7 @@ singleCoverView cover deps =
                         , nowPlaying = deps.nowPlaying
                         , roundedCorners = True
                         , selectedTrackIndexes = deps.selectedTrackIndexes
-                        , showAlbum = False
+                        , showAlbum = not cover.sameAlbum
                         , showArtist = not cover.sameArtist
                         , showGroup = False
                         }

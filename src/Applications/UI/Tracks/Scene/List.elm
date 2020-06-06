@@ -217,11 +217,6 @@ header isPlaylist showAlbum sortBy sortDirection =
             , headerColumn "Album" 29.0 (maybeSortIcon Album) (TracksMsg <| SortBy Album)
             ]
 
-         else if not showArtist then
-            [ headerColumn "" 5.75 Nothing Bypass
-            , headerColumn "Title" 94.25 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
-            ]
-
          else
             [ headerColumn "" 5.75 Nothing Bypass
             , headerColumn "Title" 51.25 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
@@ -507,22 +502,28 @@ defaultItemView args _ idx identifiedTrack =
                     C.dark__bg_near_darkest_hour
                 )
             ]
-            (if showAlbum then
-                [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
-                , otherColumn "37.5%" False track.tags.title
-                , otherColumn "29.0%" False track.tags.artist
-                , otherColumn "29.0%" True track.tags.album
-                ]
-
-             else if not showArtist then
+            (if not showArtist && not showAlbum then
                 [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
                 , otherColumn "94.25%" False track.tags.title
                 ]
 
-             else
+             else if not showArtist && showAlbum then
+                [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
+                , otherColumn "51.25%" False track.tags.title
+                , otherColumn "43%" False track.tags.album
+                ]
+
+             else if showArtist && not showAlbum then
                 [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
                 , otherColumn "51.25%" False track.tags.title
                 , otherColumn "43%" False track.tags.artist
+                ]
+
+             else
+                [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
+                , otherColumn "37.5%" False track.tags.title
+                , otherColumn "29.0%" False track.tags.artist
+                , otherColumn "29.0%" True track.tags.album
                 ]
             )
         ]

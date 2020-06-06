@@ -47,8 +47,11 @@ type alias Tags =
 
 type alias Cover =
     { focus : String
+    , group : String
     , identifiedTrackCover : IdentifiedTrack
     , key : String
+    , keyRaw : String
+    , sameAlbum : Bool
     , sameArtist : Bool
     , trackFilename : String
     , trackIds : List String
