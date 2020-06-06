@@ -64,15 +64,26 @@ type alias ItemDependencies =
 
 view : Dependencies -> Html Msg
 view deps =
-    Html.Lazy.lazy
-        (case deps.selectedCover of
+    Html.Lazy.lazy view_ deps
+
+
+view_ : Dependencies -> Html Msg
+view_ deps =
+    chunk
+        [ C.flex
+        , C.flex_basis_0
+        , C.flex_col
+        , C.flex_grow
+        , C.relative
+        ]
+        [ collectionView deps
+        , case deps.selectedCover of
             Just cover ->
-                singleCoverView cover
+                singleCoverView cover deps
 
             Nothing ->
-                collectionView
-        )
-        deps
+                nothing
+        ]
 
 
 
@@ -103,8 +114,8 @@ collectionView deps =
         [ chunk
             [ C.flex
             , C.items_center
-            , C.pt_5
-            , C.px_5
+            , C.mt_5
+            , C.mx_5
             ]
             [ sortGroupButtons deps.sortBy
 
@@ -189,20 +200,32 @@ singleCoverView cover deps =
     brick
         [ tabindex (ifThenElse deps.isVisible 0 -1)
         ]
-        [ C.antialiased
+        [ C.absolute
+        , C.antialiased
+        , C.bg_white
         , C.flex_basis_0
         , C.flex_grow
+        , C.inset_0
         , C.leading_tight
         , C.outline_none
         , C.overflow_x_hidden
         , C.overflow_y_auto
         , C.text_almost_sm
+
+        -- Dark mode
+        ------------
+        , C.dark__bg_darkest_hour
         ]
         [ chunk
             [ C.flex
             , C.font_semibold
-            , C.pt_5
-            , C.px_5
+            , C.h_8
+            , C.items_center
+            , C.leading_none
+            , C.minus_top_px
+            , C.mt_5
+            , C.mx_5
+            , C.relative
             ]
             [ headerButton
                 [ E.onClick (TracksMsg DeselectCover) ]
@@ -226,8 +249,10 @@ singleCoverView cover deps =
         , chunk
             [ C.mb_6
             , C.flex
+            , C.minus_top_px
             , C.ml_5
-            , C.mt_3
+            , C.mt_4
+            , C.relative
             ]
             [ itemView
                 (compileItemDependencies deps)
@@ -267,7 +292,11 @@ headerButton attributes { active, label } =
     brick
         attributes
         [ C.cursor_pointer
-        , C.p_2
+        , C.inline_flex
+        , C.h_8
+        , C.items_center
+        , C.overflow_hidden
+        , C.px_2
         , C.rounded
 
         --
@@ -275,10 +304,7 @@ headerButton attributes { active, label } =
         , ifThenElse active C.dark__bg_base01 C.dark__bg_transparent
         ]
         [ chunk
-            [ C.pb_px
-            , C.pt_1
-            , C.px_px
-            ]
+            [ C.mt_px, C.pt_px ]
             [ label ]
         ]
 
@@ -292,6 +318,8 @@ sortGroupButtons sortBy =
     chunk
         [ C.flex
         , C.font_semibold
+        , C.h_8
+        , C.items_center
         , C.leading_none
         , C.text_xs
         , C.tracking_wide

@@ -221,7 +221,7 @@ clearSearch model =
 
 deselectCover : Manager
 deselectCover model =
-    Common.forceTracksRerender { model | selectedCover = Nothing }
+    Return.singleton { model | selectedCover = Nothing }
 
 
 download : String -> List Track -> Manager
