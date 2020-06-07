@@ -198,8 +198,7 @@ singleCoverView cover deps =
                 }
     in
     brick
-        [ tabindex (ifThenElse deps.isVisible 0 -1)
-        ]
+        [ tabindex (ifThenElse deps.isVisible 0 -1) ]
         [ C.absolute
         , C.antialiased
         , C.bg_white
@@ -222,10 +221,9 @@ singleCoverView cover deps =
             , C.h_8
             , C.items_center
             , C.leading_none
-            , C.minus_top_px
+            , C.minus_ml_2
             , C.mt_5
-            , C.mx_5
-            , C.relative
+            , C.px_5
             ]
             [ headerButton
                 [ E.onClick (TracksMsg DeselectCover) ]
@@ -235,13 +233,9 @@ singleCoverView cover deps =
 
             --
             , headerButton
-                [ { inFront = False, tracks = cover.tracks }
-                    |> Queue.AddTracks
-                    |> QueueMsg
-                    |> E.onClick
-                ]
+                [ Mouse.onClick (showCoverMenu cover) ]
                 { active = True
-                , label = text "Add to queue"
+                , label = Icons.more_horiz 16 Inherit
                 }
             ]
 
@@ -255,6 +249,7 @@ singleCoverView cover deps =
             , C.relative
             ]
             [ itemView
+                { clickable = False }
                 (compileItemDependencies deps)
                 cover
 
@@ -262,6 +257,7 @@ singleCoverView cover deps =
             , chunk
                 [ C.flex_auto
                 , C.ml_5
+                , C.mr_5
                 , C.select_none
                 , C.subpixel_antialiased
                 ]
@@ -309,6 +305,13 @@ headerButton attributes { active, label } =
         ]
 
 
+showCoverMenu : Cover -> Mouse.Event -> Msg
+showCoverMenu cover =
+    .clientPos
+        >> Coordinates.fromTuple
+        >> (TracksMsg << ShowCoverMenu cover)
+
+
 
 -- SORTING
 
@@ -321,6 +324,7 @@ sortGroupButtons sortBy =
         , C.h_8
         , C.items_center
         , C.leading_none
+        , C.minus_ml_2
         , C.text_xs
         , C.tracking_wide
         ]
@@ -446,28 +450,28 @@ rowView :
 rowView itemDeps _ idx row =
     chunk
         [ C.flex, C.flex_wrap ]
-        (List.map (itemView itemDeps) row)
+        (List.map (itemView { clickable = True } itemDeps) row)
 
 
 
 -- ITEMS
 
 
-itemView : ItemDependencies -> Cover -> Html Msg
-itemView deps cover =
+itemView : { clickable : Bool } -> ItemDependencies -> Cover -> Html Msg
+itemView options deps cover =
     chunk
         [ C.flex_shrink_0
         , C.font_semibold
         , C.mb_5
         , C.w_1_div_4
         ]
-        [ coverView deps cover
-        , metadataView deps cover
+        [ coverView options deps cover
+        , metadataView options deps cover
         ]
 
 
-coverView : ItemDependencies -> Cover -> Html Msg
-coverView { cachedCovers, nowPlaying } cover =
+coverView : { clickable : Bool } -> ItemDependencies -> Cover -> Html Msg
+coverView { clickable } { cachedCovers, nowPlaying } cover =
     let
         maybeBlobUrlFromCache =
             cachedCovers
@@ -480,26 +484,10 @@ coverView { cachedCovers, nowPlaying } cover =
         nowPlayingId =
             Maybe.unwrap "" (.identifiedTrack >> Tuple.second >> .id) nowPlaying
 
-        clickEvent =
-            cover
-                |> SelectCover
-                |> TracksMsg
-                |> Decode.succeed
-                |> E.on "tap"
-    in
-    chunk
-        [ C.cursor_pointer
-        , C.h_0
-        , C.mr_5
-        , C.pt_full
-        , C.relative
-        , C.select_none
-        ]
-        [ brick
-            (case maybeBlobUrlFromCache of
+        bgOrDataAttributes =
+            case maybeBlobUrlFromCache of
                 Just blobUrl ->
                     [ A.style "background-image" ("url('" ++ blobUrl ++ "')")
-                    , clickEvent
                     ]
 
                 Nothing ->
@@ -513,11 +501,30 @@ coverView { cachedCovers, nowPlaying } cover =
                         , A.attribute "data-filename" cover.trackFilename
                         , A.attribute "data-path" track.path
                         , A.attribute "data-source-id" track.sourceId
-                        , clickEvent
                         ]
 
                     else
-                        [ clickEvent ]
+                        []
+    in
+    chunk
+        [ C.cursor_pointer
+        , C.h_0
+        , C.mr_5
+        , C.pt_full
+        , C.relative
+        , C.select_none
+        ]
+        [ brick
+            (List.append
+                bgOrDataAttributes
+                (if clickable then
+                    [ E.onClick (TracksMsg <| SelectCover cover)
+                    , Mouse.onContextMenu (showCoverMenu cover)
+                    ]
+
+                 else
+                    []
+                )
             )
             [ C.absolute
             , C.bg_cover
@@ -568,8 +575,8 @@ coverView { cachedCovers, nowPlaying } cover =
         ]
 
 
-metadataView : ItemDependencies -> Cover -> Html Msg
-metadataView { cachedCovers, sortBy } cover =
+metadataView : { clickable : Bool } -> ItemDependencies -> Cover -> Html Msg
+metadataView { clickable } { cachedCovers, sortBy } cover =
     let
         { identifiedTrackCover } =
             cover
@@ -578,12 +585,14 @@ metadataView { cachedCovers, sortBy } cover =
             identifiedTrackCover
     in
     brick
-        [ cover
-            |> SelectCover
-            |> TracksMsg
-            |> Decode.succeed
-            |> E.on "tap"
-        ]
+        (if clickable then
+            [ E.onClick (TracksMsg <| SelectCover cover)
+            , Mouse.onContextMenu (showCoverMenu cover)
+            ]
+
+         else
+            []
+        )
         [ C.cursor_pointer
         , C.minus_mt_5
         , C.mr_5

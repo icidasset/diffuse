@@ -479,7 +479,7 @@ defaultItemView args _ idx identifiedTrack =
             --
             , ifThenElse identifiers.isMissing "" C.cursor_pointer
             , ifThenElse isSelected C.font_semibold ""
-            , ifThenElse roundedCorners C.rounded_l ""
+            , ifThenElse roundedCorners C.rounded ""
 
             --
             , ifThenElse

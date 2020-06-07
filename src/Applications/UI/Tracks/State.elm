@@ -126,6 +126,9 @@ update msg =
         -----------------------------------------
         -- Menus
         -----------------------------------------
+        ShowCoverMenu a b ->
+            showCoverMenu a b
+
         ShowTracksMenu a b c ->
             showTracksMenu a b c
 
@@ -627,6 +630,24 @@ setSearchTerm term model =
             _ ->
                 { model | searchTerm = Just term }
         )
+
+
+showCoverMenu : Cover -> Coordinates -> Manager
+showCoverMenu cover coordinates model =
+    let
+        menuDependencies =
+            { cached = model.cachedTracks
+            , cachingInProgress = model.cachingTracksInProgress
+            , currentTime = model.currentTime
+            , selectedPlaylist = model.selectedPlaylist
+            , lastModifiedPlaylistName = model.lastModifiedPlaylist
+            , showAlternativeMenu = False
+            , sources = model.sources
+            }
+    in
+    coordinates
+        |> Tracks.trackMenu menuDependencies cover.tracks
+        |> Common.showContextMenuWithModel model
 
 
 showTracksMenu : Maybe Int -> { alt : Bool } -> Coordinates -> Manager
