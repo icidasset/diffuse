@@ -455,13 +455,7 @@ rowView itemDeps _ idx row =
 
 itemView : ItemDependencies -> Cover -> Html Msg
 itemView deps cover =
-    brick
-        [ cover
-            |> SelectCover
-            |> TracksMsg
-            |> Decode.succeed
-            |> E.on "tap"
-        ]
+    chunk
         [ C.flex_shrink_0
         , C.font_semibold
         , C.mb_5
@@ -485,6 +479,13 @@ coverView { cachedCovers, nowPlaying } cover =
 
         nowPlayingId =
             Maybe.unwrap "" (.identifiedTrack >> Tuple.second >> .id) nowPlaying
+
+        clickEvent =
+            cover
+                |> SelectCover
+                |> TracksMsg
+                |> Decode.succeed
+                |> E.on "tap"
     in
     chunk
         [ C.cursor_pointer
@@ -498,6 +499,7 @@ coverView { cachedCovers, nowPlaying } cover =
             (case maybeBlobUrlFromCache of
                 Just blobUrl ->
                     [ A.style "background-image" ("url('" ++ blobUrl ++ "')")
+                    , clickEvent
                     ]
 
                 Nothing ->
@@ -511,10 +513,11 @@ coverView { cachedCovers, nowPlaying } cover =
                         , A.attribute "data-filename" cover.trackFilename
                         , A.attribute "data-path" track.path
                         , A.attribute "data-source-id" track.sourceId
+                        , clickEvent
                         ]
 
                     else
-                        []
+                        [ clickEvent ]
             )
             [ C.absolute
             , C.bg_cover
@@ -574,8 +577,15 @@ metadataView { cachedCovers, sortBy } cover =
         ( _, track ) =
             identifiedTrackCover
     in
-    chunk
-        [ C.minus_mt_5
+    brick
+        [ cover
+            |> SelectCover
+            |> TracksMsg
+            |> Decode.succeed
+            |> E.on "tap"
+        ]
+        [ C.cursor_pointer
+        , C.minus_mt_5
         , C.mr_5
         , C.pt_2
         , C.tracking_tad_closer
