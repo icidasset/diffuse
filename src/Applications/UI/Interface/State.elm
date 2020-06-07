@@ -119,6 +119,7 @@ hideOverlay model =
             | alfred = Nothing
             , confirmation = Nothing
             , contextMenu = Nothing
+            , selectedCover = Nothing
         }
 
 

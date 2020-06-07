@@ -52,9 +52,6 @@ keyboardInput msg model =
 
         else
             case m.pressedKeys of
-                [ Keyboard.Escape ] ->
-                    hideOverlay m
-
                 [ Keyboard.ArrowLeft ] ->
                     Queue.rewind m
 
@@ -78,6 +75,9 @@ keyboardInput msg model =
 
                 [ Keyboard.Character "S" ] ->
                     Queue.toggleShuffle m
+
+                [ Keyboard.Escape ] ->
+                    hideOverlay m
 
                 _ ->
                     skip
