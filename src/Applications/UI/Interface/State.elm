@@ -2,6 +2,7 @@ module UI.Interface.State exposing (..)
 
 import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
+import Maybe.Extra as Maybe
 import Notifications
 import Return exposing (return)
 import Return.Ext as Return
@@ -114,13 +115,20 @@ focusedOnInput model =
 
 hideOverlay : Manager
 hideOverlay model =
-    Return.singleton
-        { model
-            | alfred = Nothing
-            , confirmation = Nothing
-            , contextMenu = Nothing
-            , selectedCover = Nothing
-        }
+    if Maybe.isJust model.contextMenu then
+        Return.singleton { model | contextMenu = Nothing }
+
+    else if Maybe.isJust model.confirmation then
+        Return.singleton { model | confirmation = Nothing }
+
+    else if Maybe.isJust model.alfred then
+        Return.singleton { model | alfred = Nothing }
+
+    else if Maybe.isJust model.selectedCover then
+        Return.singleton { model | selectedCover = Nothing }
+
+    else
+        Return.singleton model
 
 
 preferredColorSchemaChanged : { dark : Bool } -> Manager

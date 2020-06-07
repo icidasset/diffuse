@@ -234,7 +234,7 @@ init flags url key =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg =
-    case msg of
+    case Debug.log "" msg of
         Bypass ->
             Return.singleton
 

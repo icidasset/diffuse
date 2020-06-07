@@ -276,7 +276,7 @@ overlay maybeAlfred maybeContextMenu =
             Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
     in
     brick
-        [ onClick HideOverlay ]
+        []
         [ C.inset_0
         , C.bg_black
         , C.duration_1000
