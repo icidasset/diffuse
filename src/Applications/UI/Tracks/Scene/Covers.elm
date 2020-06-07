@@ -266,17 +266,19 @@ singleCoverView cover deps =
                 , C.subpixel_antialiased
                 ]
                 (List.indexedMap
-                    (UI.Tracks.Scene.List.defaultItemView
-                        { derivedColors = derivedColors
-                        , favouritesOnly = deps.favouritesOnly
-                        , nowPlaying = deps.nowPlaying
-                        , roundedCorners = True
-                        , selectedTrackIndexes = deps.selectedTrackIndexes
-                        , showAlbum = not cover.sameAlbum
-                        , showArtist = not cover.sameArtist
-                        , showGroup = False
-                        }
-                        0
+                    (\idx ->
+                        UI.Tracks.Scene.List.defaultItemView
+                            { derivedColors = derivedColors
+                            , favouritesOnly = deps.favouritesOnly
+                            , nowPlaying = deps.nowPlaying
+                            , roundedCorners = True
+                            , selectedTrackIndexes = deps.selectedTrackIndexes
+                            , showAlbum = not cover.sameAlbum
+                            , showArtist = not cover.sameArtist
+                            , showGroup = False
+                            }
+                            0
+                            (Debug.log "idx" idx)
                     )
                     cover.tracks
                 )

@@ -469,7 +469,7 @@ defaultItemView args _ idx identifiedTrack =
                     )
                     [ mouseContextMenuEvent identifiedTrack
                     , playEvent identifiedTrack
-                    , selectEvent identifiedTrack
+                    , selectEvent idx
                     ]
                 ]
             )
@@ -582,7 +582,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
                 )
                 [ mouseContextMenuEvent identifiedTrack
                 , playEvent identifiedTrack
-                , selectEvent identifiedTrack
+                , selectEvent idx
                 ]
 
             --
@@ -718,8 +718,8 @@ playEvent ( i, t ) =
         )
 
 
-selectEvent : IdentifiedTrack -> Html.Attribute Msg
-selectEvent ( i, _ ) =
+selectEvent : Int -> Html.Attribute Msg
+selectEvent idx =
     Html.Events.custom
         "tap"
         (Decode.map2
@@ -728,7 +728,7 @@ selectEvent ( i, _ ) =
                     case button of
                         0 ->
                             { shiftKey = shiftKey }
-                                |> MarkAsSelected i.indexInList
+                                |> MarkAsSelected idx
                                 |> TracksMsg
 
                         _ ->
