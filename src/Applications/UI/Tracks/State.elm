@@ -6,6 +6,7 @@ import Common exposing (..)
 import ContextMenu
 import Coordinates exposing (Coordinates)
 import Dict
+import Dict.Extra as Dict
 import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Decode as Json
@@ -328,8 +329,8 @@ generateCovers model =
         |> List.map
             (\( firstIdentifiedTrack, identifiedTracks ) ->
                 let
-                    keyRaw =
-                        coverKey track
+                    allIdentifiedTracks =
+                        firstIdentifiedTrack :: identifiedTracks
 
                     firstTags =
                         firstIdentifiedTrack
@@ -339,13 +340,26 @@ generateCovers model =
                     ( firstArtist, firstAlbum ) =
                         ( firstTags.artist, firstTags.album )
 
-                    allIdentifiedTracks =
-                        firstIdentifiedTrack :: identifiedTracks
+                    -- Determine if this is an album with various artists
+                    -- (no more than 3 tracks of the same artist and at least 4 tracks)
+                    groupedByArtist =
+                        Dict.groupBy (Tuple.second >> .tags >> .artist) allIdentifiedTracks
+
+                    isVariousArtists =
+                        groupedByArtist
+                            |> Dict.any (\_ a -> List.length a > 3)
+                            |> not
+                            |> (&&) (List.length allIdentifiedTracks > 4)
+                            |> (||) (String.toLower firstArtist == "va")
+
+                    -- Keys
+                    keyRaw =
+                        coverKey isVariousArtists track
 
                     ( tracksWithCoverKeys, sameArtist, sameAlbum ) =
                         List.foldl
                             (\( i, t ) ( acc, sar, sal ) ->
-                                ( ( coverKey t, ( i, t ) ) :: acc
+                                ( ( coverKey isVariousArtists t, ( i, t ) ) :: acc
                                   --
                                 , if sar then
                                     t.tags.artist == firstArtist
@@ -370,8 +384,8 @@ generateCovers model =
                     -- and pick a track from the biggest group.
                     ( identifiers, track ) =
                         tracksWithCoverKeys
-                            |> List.sortBy Tuple.first
-                            |> List.groupWhile (\( a, _ ) ( b, _ ) -> a == b)
+                            |> Dict.groupBy Tuple.first
+                            |> Dict.toList
                             |> List.sortBy (Tuple.second >> List.length)
                             |> List.last
                             |> Maybe.andThen
@@ -412,6 +426,7 @@ generateCovers model =
                 --
                 , trackIds = List.map (Tuple.second >> .id) allIdentifiedTracks
                 , tracks = allIdentifiedTracks
+                , variousArtists = isVariousArtists
                 }
             )
         |> List.sortBy .group
@@ -1020,7 +1035,7 @@ importHypaethral data selectedPlaylist model =
 
 coverGroup : SortBy -> Track -> String
 coverGroup sort { tags } =
-    case sort of
+    (case sort of
         Artist ->
             tags.artist
 
@@ -1032,8 +1047,15 @@ coverGroup sort { tags } =
 
         Title ->
             tags.title
+    )
+        |> String.trim
+        |> String.toLower
 
 
-coverKey : Track -> String
-coverKey { tags } =
-    tags.artist ++ " --- " ++ tags.album
+coverKey : Bool -> Track -> String
+coverKey isVariousArtists { tags } =
+    if isVariousArtists then
+        tags.album
+
+    else
+        tags.artist ++ " --- " ++ tags.album

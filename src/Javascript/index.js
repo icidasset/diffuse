@@ -257,7 +257,8 @@ function loadAlbumCovers() {
       focus:          node.getAttribute("data-focus"),
       trackFilename:  node.getAttribute("data-filename"),
       trackPath:      node.getAttribute("data-path"),
-      trackSourceId:  node.getAttribute("data-source-id")
+      trackSourceId:  node.getAttribute("data-source-id"),
+      variousArtists: node.getAttribute("data-various-artists")
     }
 
   }).filter(prep => {

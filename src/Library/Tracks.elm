@@ -56,6 +56,7 @@ type alias Cover =
     , trackFilename : String
     , trackIds : List String
     , tracks : List IdentifiedTrack
+    , variousArtists : Bool
     }
 
 

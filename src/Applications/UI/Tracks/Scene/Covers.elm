@@ -501,6 +501,7 @@ coverView { clickable } { cachedCovers, nowPlaying } cover =
                         , A.attribute "data-filename" cover.trackFilename
                         , A.attribute "data-path" track.path
                         , A.attribute "data-source-id" track.sourceId
+                        , A.attribute "data-various-artists" (ifThenElse cover.variousArtists "t" "f")
                         ]
 
                     else
@@ -625,7 +626,11 @@ metadataView { clickable } { cachedCovers, sortBy } cover =
             ]
             [ case sortBy of
                 Album ->
-                    text track.tags.artist
+                    if cover.variousArtists then
+                        text "Various Artists"
+
+                    else
+                        text track.tags.artist
 
                 Artist ->
                     text track.tags.title
