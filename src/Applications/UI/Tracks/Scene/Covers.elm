@@ -256,8 +256,10 @@ singleCoverView cover deps =
             --
             , chunk
                 [ C.flex_auto
+                , C.flex_basis_0
                 , C.ml_5
                 , C.mr_5
+                , C.overflow_hidden
                 , C.select_none
                 , C.subpixel_antialiased
                 ]
@@ -269,7 +271,7 @@ singleCoverView cover deps =
                         , roundedCorners = True
                         , selectedTrackIndexes = deps.selectedTrackIndexes
                         , showAlbum = not cover.sameAlbum
-                        , showArtist = not cover.sameArtist
+                        , showArtist = deps.sortBy /= Artist && not cover.sameArtist
                         , showGroup = False
                         }
                         0
@@ -324,7 +326,6 @@ sortGroupButtons sortBy =
         , C.h_8
         , C.items_center
         , C.leading_none
-        , C.minus_ml_2
         , C.text_xs
         , C.tracking_wide
         ]

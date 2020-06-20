@@ -326,7 +326,7 @@ generateCovers model =
         -------------------------
         -- Prepare for cover view
         -------------------------
-        |> List.map
+        |> List.filterMap
             (\( firstIdentifiedTrack, identifiedTracks ) ->
                 let
                     allIdentifiedTracks =
@@ -398,36 +398,42 @@ generateCovers model =
                     group =
                         coverGroup model.sortBy track
                 in
-                { key = Base64.encode keyRaw
-                , keyRaw = keyRaw
-                , identifiedTrackCover = ( identifiers, track )
+                case group of
+                    "<missing>" ->
+                        Nothing
 
-                --
-                , focus =
-                    case model.sortBy of
-                        Artist ->
-                            "artist"
+                    _ ->
+                        Just
+                            { key = Base64.encode keyRaw
+                            , keyRaw = keyRaw
+                            , identifiedTrackCover = ( identifiers, track )
 
-                        _ ->
-                            "album"
+                            --
+                            , focus =
+                                case model.sortBy of
+                                    Artist ->
+                                        "artist"
 
-                --
-                , group = group
-                , sameAlbum = sameAlbum
-                , sameArtist = sameArtist
+                                    _ ->
+                                        "album"
 
-                --
-                , trackFilename =
-                    track.path
-                        |> String.split "/"
-                        |> List.last
-                        |> Maybe.withDefault track.path
+                            --
+                            , group = group
+                            , sameAlbum = sameAlbum
+                            , sameArtist = sameArtist
 
-                --
-                , trackIds = List.map (Tuple.second >> .id) allIdentifiedTracks
-                , tracks = allIdentifiedTracks
-                , variousArtists = isVariousArtists
-                }
+                            --
+                            , trackFilename =
+                                track.path
+                                    |> String.split "/"
+                                    |> List.last
+                                    |> Maybe.withDefault track.path
+
+                            --
+                            , trackIds = List.map (Tuple.second >> .id) allIdentifiedTracks
+                            , tracks = allIdentifiedTracks
+                            , variousArtists = isVariousArtists
+                            }
             )
         |> List.sortBy .group
         |> (if model.sortDirection == Desc then
