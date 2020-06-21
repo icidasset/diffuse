@@ -101,8 +101,7 @@ collectionView deps =
             (tabindex (ifThenElse deps.isVisible 0 -1))
             viewAttributes
         )
-        [ C.antialiased
-        , C.flex_basis_0
+        [ C.flex_basis_0
         , C.flex_grow
         , C.outline_none
         , C.overflow_x_hidden
@@ -200,7 +199,6 @@ singleCoverView cover deps =
     brick
         [ tabindex (ifThenElse deps.isVisible 0 -1) ]
         [ C.absolute
-        , C.antialiased
         , C.bg_white
         , C.flex_basis_0
         , C.flex_grow
@@ -261,7 +259,6 @@ singleCoverView cover deps =
                 , C.mr_5
                 , C.overflow_hidden
                 , C.select_none
-                , C.subpixel_antialiased
                 ]
                 (List.indexedMap
                     (UI.Tracks.Scene.List.defaultItemView
@@ -321,20 +318,37 @@ showCoverMenu cover =
 sortGroupButtons : SortBy -> Html Msg
 sortGroupButtons sortBy =
     chunk
-        [ C.flex
+        [ C.antialiased
+        , C.flex
         , C.font_semibold
         , C.h_8
         , C.items_center
         , C.leading_none
+        , C.mr_3
         , C.text_xs
-        , C.tracking_wide
         ]
-        [ sortGroupButton { current = sortBy, btn = Artist } "Artists"
-        , sortGroupButton { current = sortBy, btn = Album } "Albums"
+        [ sortGroupButton
+            { current = sortBy, btn = Artist }
+            (chunk
+                [ C.inline_flex, C.items_center ]
+                [ inline [ C.mr_px ] [ Icons.people_alt 16 Inherit ]
+                , inline [ C.ml_1, C.mt_px, C.pl_px, C.pt_px ] [ text "Artists" ]
+                ]
+            )
+
+        --
+        , sortGroupButton
+            { current = sortBy, btn = Album }
+            (chunk
+                [ C.inline_flex, C.items_center ]
+                [ inline [ C.mr_px ] [ Icons.album 16 Inherit ]
+                , inline [ C.ml_1, C.mt_px, C.pt_px ] [ text "Albums" ]
+                ]
+            )
         ]
 
 
-sortGroupButton : { current : SortBy, btn : SortBy } -> String -> Html Msg
+sortGroupButton : { current : SortBy, btn : SortBy } -> Html Msg -> Html Msg
 sortGroupButton { current, btn } label =
     headerButton
         [ btn
@@ -343,7 +357,7 @@ sortGroupButton { current, btn } label =
             |> E.onClick
         ]
         { active = current == btn
-        , label = text label
+        , label = label
         }
 
 
@@ -360,11 +374,30 @@ infiniteListView deps =
         viewportWidth =
             round deps.viewportWidth
 
+        ( _, a, b ) =
+            List.foldl
+                (\cover ( trackGroupPrev, coverGroup, acc ) ->
+                    let
+                        trackGroupCurr =
+                            cover.identifiedTrackCover
+                                |> Tuple.first
+                                |> .group
+                                |> Maybe.map .name
+                    in
+                    if List.length coverGroup < 4 && (Maybe.isNothing trackGroupPrev || trackGroupCurr == trackGroupPrev) then
+                        ( trackGroupCurr, coverGroup ++ [ cover ], acc )
+
+                    else
+                        ( trackGroupCurr, [ cover ], acc ++ [ coverGroup ] )
+                )
+                ( Nothing, [], [] )
+                deps.covers
+
         coverGroups =
-            List.greedyGroupsOf 4 deps.covers
+            b ++ [ a ]
     in
     { itemView = rowView itemDeps
-    , itemHeight = InfiniteList.withVariableHeight (dynamicItemHeight viewportWidth)
+    , itemHeight = InfiniteList.withVariableHeight (dynamicRowHeight viewportWidth)
     , containerHeight = round deps.viewportHeight - 262
     }
         |> InfiniteList.config
@@ -414,7 +447,7 @@ listStyles =
         |> List.singleton
 
 
-dynamicItemHeight viewportWidth _ coverGroup =
+dynamicRowHeight viewportWidth _ coverGroup =
     let
         containerWidth =
             -- TODO: replace 32 with actual horizontal padding
@@ -423,19 +456,19 @@ dynamicItemHeight viewportWidth _ coverGroup =
         rowHeight =
             (containerWidth - 16) // 4 + (46 + 16)
     in
-    -- TODO
-    -- let
-    --     shouldRenderGroup =
-    --         i.group
-    --             |> Maybe.map (.firstInGroup >> (==) True)
-    --             |> Maybe.withDefault False
-    -- in
-    -- if shouldRenderGroup then
-    --     32 + 18 + 16 + rowHeight
-    --
-    -- else
-    -- itemHeight + itemHeight // 2
-    rowHeight
+    let
+        shouldRenderGroup =
+            coverGroup
+                |> List.head
+                |> Maybe.andThen (.tracks >> List.head)
+                |> Maybe.map (Tuple.first >> Tracks.shouldRenderGroup)
+                |> Maybe.withDefault False
+    in
+    if shouldRenderGroup then
+        42 + rowHeight
+
+    else
+        rowHeight
 
 
 
@@ -449,9 +482,33 @@ rowView :
     -> List Cover
     -> Html Msg
 rowView itemDeps _ idx row =
-    chunk
-        [ C.flex, C.flex_wrap ]
-        (List.map (itemView { clickable = True } itemDeps) row)
+    let
+        maybeIdentifiers =
+            row
+                |> List.head
+                |> Maybe.andThen (.tracks >> List.head)
+                |> Maybe.map Tuple.first
+
+        shouldRenderGroup =
+            maybeIdentifiers
+                |> Maybe.map Tracks.shouldRenderGroup
+                |> Maybe.withDefault False
+    in
+    raw
+        [ case ( shouldRenderGroup, maybeIdentifiers ) of
+            ( True, Just identifiers ) ->
+                chunk
+                    [ C.minus_ml_4 ]
+                    [ Scene.group { index = idx } identifiers ]
+
+            _ ->
+                nothing
+
+        --
+        , chunk
+            [ C.antialiased, C.flex, C.flex_wrap ]
+            (List.map (itemView { clickable = True } itemDeps) row)
+        ]
 
 
 

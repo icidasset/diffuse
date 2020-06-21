@@ -327,6 +327,13 @@ missingId =
     "<missing>"
 
 
+shouldRenderGroup : Identifiers -> Bool
+shouldRenderGroup identifiers =
+    identifiers.group
+        |> Maybe.map (.firstInGroup >> (==) True)
+        |> Maybe.withDefault False
+
+
 toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrack
 toPlaylistTracks =
     List.map

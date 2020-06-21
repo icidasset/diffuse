@@ -382,13 +382,7 @@ listStyles =
 
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
 dynamicRowHeight _ ( i, t ) =
-    let
-        shouldRenderGroup =
-            i.group
-                |> Maybe.map (.firstInGroup >> (==) True)
-                |> Maybe.withDefault False
-    in
-    if shouldRenderGroup then
+    if Tracks.shouldRenderGroup i then
         32 + 18 + 16 + rowHeight
 
     else
@@ -422,10 +416,7 @@ defaultItemView args _ idx identifiedTrack =
             identifiedTrack
 
         shouldRenderGroup =
-            identifiers.group
-                |> Maybe.map (.firstInGroup >> (==) True)
-                |> Maybe.withDefault False
-                |> (&&) showGroup
+            showGroup && Tracks.shouldRenderGroup identifiers
 
         isSelected =
             List.member idx selectedTrackIndexes

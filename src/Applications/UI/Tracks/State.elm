@@ -435,13 +435,6 @@ generateCovers model =
                             , variousArtists = isVariousArtists
                             }
             )
-        |> List.sortBy .group
-        |> (if model.sortDirection == Desc then
-                List.reverse
-
-            else
-                identity
-           )
         |> (\covers ->
                 model.selectedCover
                     |> Maybe.andThen
