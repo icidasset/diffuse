@@ -120,7 +120,10 @@ collectionView deps =
 
             --
             , chunk
-                [ C.flex_auto
+                [ C.flex
+                , C.flex_auto
+                , C.items_center
+                , C.justify_end
                 , C.text_base05
                 , C.text_right
                 , C.text_xs
@@ -142,16 +145,25 @@ collectionView deps =
                         |> SortBy
                         |> TracksMsg
                         |> E.onClick
+
+                    --
+                    , case deps.sortDirection of
+                        Asc ->
+                            A.title "Sorted alphabetically ascending"
+
+                        Desc ->
+                            A.title "Sorted alphabetically descending"
                     ]
                     [ C.cursor_pointer
+                    , C.ml_1
                     , C.opacity_60
                     ]
                     [ case deps.sortDirection of
                         Asc ->
-                            text "(ascending)"
+                            Icons.arrow_downward 16 Inherit
 
                         Desc ->
-                            text "(descending)"
+                            Icons.arrow_upward 16 Inherit
                     ]
                 ]
             ]
@@ -318,14 +330,13 @@ showCoverMenu cover =
 sortGroupButtons : SortBy -> Html Msg
 sortGroupButtons sortBy =
     chunk
-        [ C.antialiased
-        , C.flex
-        , C.font_semibold
+        [ C.flex
         , C.h_8
         , C.items_center
         , C.leading_none
         , C.mr_3
         , C.text_xs
+        , C.tracking_tad_further
         ]
         [ sortGroupButton
             { current = sortBy, btn = Artist }
@@ -355,6 +366,9 @@ sortGroupButton { current, btn } label =
             |> SortBy
             |> TracksMsg
             |> E.onClick
+
+        --
+        , class C.mr_1
         ]
         { active = current == btn
         , label = label
@@ -506,7 +520,7 @@ rowView itemDeps _ idx row =
 
         --
         , chunk
-            [ C.antialiased, C.flex, C.flex_wrap ]
+            [ C.flex, C.flex_wrap ]
             (List.map (itemView { clickable = True } itemDeps) row)
         ]
 
@@ -518,7 +532,8 @@ rowView itemDeps _ idx row =
 itemView : { clickable : Bool } -> ItemDependencies -> Cover -> Html Msg
 itemView options deps cover =
     chunk
-        [ C.flex_shrink_0
+        [ C.antialiased
+        , C.flex_shrink_0
         , C.font_semibold
         , C.mb_5
         , C.w_1_div_4
@@ -566,12 +581,14 @@ coverView { clickable } { cachedCovers, nowPlaying } cover =
                         []
     in
     chunk
-        [ C.cursor_pointer
-        , C.h_0
+        [ C.h_0
         , C.mr_5
         , C.pt_full
         , C.relative
         , C.select_none
+
+        --
+        , ifThenElse clickable C.cursor_pointer C.cursor_default
         ]
         [ brick
             (List.append
@@ -652,11 +669,13 @@ metadataView { clickable } { cachedCovers, sortBy } cover =
          else
             []
         )
-        [ C.cursor_pointer
-        , C.minus_mt_5
+        [ C.minus_mt_5
         , C.mr_5
         , C.pt_2
         , C.tracking_tad_closer
+
+        --
+        , ifThenElse clickable C.cursor_pointer C.cursor_default
         ]
         [ chunk
             [ C.mt_px
