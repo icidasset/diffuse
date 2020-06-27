@@ -130,6 +130,9 @@ update msg =
         ShowCoverMenu a b ->
             showCoverMenu a b
 
+        ShowCoverMenuWithSmallDelay a b ->
+            showCoverMenuWithDelay a b
+
         ShowTracksMenu a b c ->
             showTracksMenu a b c
 
@@ -654,6 +657,14 @@ showCoverMenu cover coordinates model =
     coordinates
         |> Tracks.trackMenu menuDependencies cover.tracks
         |> Common.showContextMenuWithModel model
+
+
+showCoverMenuWithDelay : Cover -> Coordinates -> Manager
+showCoverMenuWithDelay a b model =
+    Tracks.ShowCoverMenu a b
+        |> TracksMsg
+        |> Task.doDelayed 250
+        |> return model
 
 
 showTracksMenu : Maybe Int -> { alt : Bool } -> Coordinates -> Manager

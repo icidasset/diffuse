@@ -49,6 +49,7 @@ type Msg
       -- Menus
       -----------------------------------------
     | ShowCoverMenu Cover Coordinates
+    | ShowCoverMenuWithSmallDelay Cover Coordinates
     | ShowTracksMenu (Maybe Int) { alt : Bool } Coordinates
     | ShowTracksMenuWithSmallDelay (Maybe Int) { alt : Bool } Coordinates
     | ShowViewMenu (Maybe Grouping) Mouse.Event

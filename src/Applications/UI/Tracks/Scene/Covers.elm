@@ -338,7 +338,7 @@ showCoverMenu : Cover -> Mouse.Event -> Msg
 showCoverMenu cover =
     .clientPos
         >> Coordinates.fromTuple
-        >> (TracksMsg << ShowCoverMenu cover)
+        >> (TracksMsg << ShowCoverMenuWithSmallDelay cover)
 
 
 
