@@ -57,6 +57,8 @@ type alias Dependencies =
 
 type alias ItemDependencies =
     { cachedCovers : Maybe (Dict String String)
+    , columns : Int
+    , containerWidth : Int
     , nowPlaying : Maybe Queue.Item
     , sortBy : SortBy
     }
@@ -181,17 +183,25 @@ containerId =
 scrollToNowPlaying : Float -> List Cover -> IdentifiedTrack -> Cmd Msg
 scrollToNowPlaying viewportWidth covers nowPlaying =
     let
-        cntnrWidth =
-            containerWidth viewportWidth
+        columns =
+            determineColumns viewportWidth
+
+        containerWidth =
+            determineContainerWidth viewportWidth
+
+        rowHeightArgs =
+            { columns = columns
+            , containerWidth = containerWidth
+            }
 
         { rows, nowPlayingRowIndex } =
-            coverRows (Just nowPlaying) viewportWidth covers
+            coverRows (Just nowPlaying) columns covers
     in
     case nowPlayingRowIndex of
         Just idx ->
             rows
                 |> List.take idx
-                |> List.foldl (\a -> (+) <| dynamicRowHeight cntnrWidth 0 a) 0
+                |> List.foldl (\a -> (+) <| dynamicRowHeight rowHeightArgs 0 a) 0
                 |> toFloat
                 |> (+) 46
                 |> Dom.setViewportOf containerId 0
@@ -225,6 +235,12 @@ singleCoverView cover deps =
                 { bgColor = deps.bgColor
                 , darkMode = deps.darkMode
                 }
+
+        columns =
+            determineColumns deps.viewportWidth
+
+        condensedView =
+            columns < 4
     in
     brick
         [ tabindex (ifThenElse deps.isVisible 0 -1) ]
@@ -270,14 +286,16 @@ singleCoverView cover deps =
         --
         , chunk
             [ C.mb_6
-            , C.flex
             , C.minus_top_px
-            , C.ml_5
             , C.mt_4
             , C.relative
+
+            --
+            , ifThenElse condensedView C.block C.flex
+            , ifThenElse condensedView C.mx_5 C.ml_5
             ]
             [ itemView
-                { clickable = False }
+                { clickable = False, horizontal = condensedView }
                 (compileItemDependencies deps)
                 cover
 
@@ -285,10 +303,12 @@ singleCoverView cover deps =
             , chunk
                 [ C.flex_auto
                 , C.flex_basis_0
-                , C.ml_5
-                , C.mr_5
                 , C.overflow_hidden
                 , C.select_none
+
+                --
+                , ifThenElse condensedView C.minus_mx_5 C.mx_5
+                , ifThenElse condensedView C.px_1 C.px_0
                 ]
                 (List.indexedMap
                     (UI.Tracks.Scene.List.defaultItemView
@@ -403,11 +423,13 @@ infiniteListView deps =
         itemDeps =
             compileItemDependencies deps
 
-        cntnrWidth =
-            containerWidth deps.viewportWidth
+        rowHeightArgs =
+            { columns = itemDeps.columns
+            , containerWidth = itemDeps.containerWidth
+            }
     in
     { itemView = rowView itemDeps
-    , itemHeight = InfiniteList.withVariableHeight (dynamicRowHeight cntnrWidth)
+    , itemHeight = InfiniteList.withVariableHeight (dynamicRowHeight rowHeightArgs)
     , containerHeight = round deps.viewportHeight - 262
     }
         |> InfiniteList.config
@@ -417,7 +439,7 @@ infiniteListView deps =
                     config
                     deps.infiniteList
                     (deps.covers
-                        |> coverRows Nothing deps.viewportWidth
+                        |> coverRows Nothing itemDeps.columns
                         |> .rows
                     )
            )
@@ -444,6 +466,8 @@ infiniteListContainer styles =
 compileItemDependencies : Dependencies -> ItemDependencies
 compileItemDependencies deps =
     { cachedCovers = deps.cachedCovers
+    , columns = determineColumns deps.viewportWidth
+    , containerWidth = determineContainerWidth deps.viewportWidth
     , nowPlaying = deps.nowPlaying
     , sortBy = deps.sortBy
     }
@@ -460,11 +484,20 @@ listStyles =
         |> List.singleton
 
 
-dynamicRowHeight : Int -> Int -> List Cover -> Int
-dynamicRowHeight containerWidth_ _ coverRow =
+
+-- ROWS
+
+
+determineContainerWidth : Float -> Int
+determineContainerWidth viewportWidth =
+    min 768 (round viewportWidth - 32)
+
+
+dynamicRowHeight : { columns : Int, containerWidth : Int } -> Int -> List Cover -> Int
+dynamicRowHeight { columns, containerWidth } _ coverRow =
     let
         rowHeight =
-            (containerWidth_ - 16) // 4 + (46 + 16)
+            (containerWidth - 16) // columns + (46 + 16)
     in
     let
         shouldRenderGroup =
@@ -481,76 +514,58 @@ dynamicRowHeight containerWidth_ _ coverRow =
         rowHeight
 
 
-containerWidth : Float -> Int
-containerWidth viewportWidth =
-    -- TODO: replace 32 with actual horizontal padding
-    min 768 (round viewportWidth - 32)
-
-
 coverRows :
     Maybe IdentifiedTrack
-    -> Float
+    -> Int
     -> List Cover
     -> { nowPlayingRowIndex : Maybe Int, rows : List (List Cover) }
-coverRows maybeNowPlaying viewportWidth covers =
-    let
-        cWidth =
-            containerWidth viewportWidth
+coverRows maybeNowPlaying columns covers =
+    covers
+        |> List.foldl
+            (\cover { collection, current, nowPlayingRowIdx, trackGroup } ->
+                let
+                    trackGroupCurr =
+                        cover.identifiedTrackCover
+                            |> Tuple.first
+                            |> .group
+                            |> Maybe.map .name
 
-        columns =
-            -- TODO: Use cWidth
-            4
+                    npr addition =
+                        case ( maybeNowPlaying, nowPlayingRowIdx ) of
+                            ( Just ( _, t ), Nothing ) ->
+                                if List.member t.id cover.trackIds then
+                                    Just (List.length collection + ifThenElse addition 1 0)
 
-        foldResult =
-            List.foldl
-                (\cover { collection, current, nowPlayingRowIdx, trackGroup } ->
-                    let
-                        trackGroupCurr =
-                            cover.identifiedTrackCover
-                                |> Tuple.first
-                                |> .group
-                                |> Maybe.map .name
+                                else
+                                    Nothing
 
-                        npr addition =
-                            case ( maybeNowPlaying, nowPlayingRowIdx ) of
-                                ( Just ( _, t ), Nothing ) ->
-                                    if List.member t.id cover.trackIds then
-                                        Just (List.length collection + ifThenElse addition 1 0)
+                            _ ->
+                                nowPlayingRowIdx
+                in
+                if List.length current < columns && (Maybe.isNothing trackGroup || trackGroupCurr == trackGroup) then
+                    { collection = collection
+                    , current = current ++ [ cover ]
+                    , nowPlayingRowIdx = npr False
+                    , trackGroup = trackGroupCurr
+                    }
 
-                                    else
-                                        Nothing
-
-                                _ ->
-                                    nowPlayingRowIdx
-                    in
-                    if List.length current < columns && (Maybe.isNothing trackGroup || trackGroupCurr == trackGroup) then
-                        { collection = collection
-                        , current = current ++ [ cover ]
-                        , nowPlayingRowIdx = npr False
-                        , trackGroup = trackGroupCurr
-                        }
-
-                    else
-                        { collection = collection ++ [ current ]
-                        , current = [ cover ]
-                        , nowPlayingRowIdx = npr True
-                        , trackGroup = trackGroupCurr
-                        }
-                )
-                { current = []
-                , collection = []
-                , nowPlayingRowIdx = Nothing
-                , trackGroup = Nothing
+                else
+                    { collection = collection ++ [ current ]
+                    , current = [ cover ]
+                    , nowPlayingRowIdx = npr True
+                    , trackGroup = trackGroupCurr
+                    }
+            )
+            { current = []
+            , collection = []
+            , nowPlayingRowIdx = Nothing
+            , trackGroup = Nothing
+            }
+        |> (\foldResult ->
+                { nowPlayingRowIndex = foldResult.nowPlayingRowIdx
+                , rows = foldResult.collection ++ [ foldResult.current ]
                 }
-                covers
-    in
-    { nowPlayingRowIndex = foldResult.nowPlayingRowIdx
-    , rows = foldResult.collection ++ [ foldResult.current ]
-    }
-
-
-
--- ROWS
+           )
 
 
 rowView :
@@ -585,30 +600,72 @@ rowView itemDeps _ idx row =
         --
         , chunk
             [ C.flex, C.flex_wrap ]
-            (List.map (itemView { clickable = True } itemDeps) row)
+            (List.map (itemView { clickable = True, horizontal = False } itemDeps) row)
         ]
 
 
 
--- ITEMS
+-- ITEMS / COLUMNS
 
 
-itemView : { clickable : Bool } -> ItemDependencies -> Cover -> Html Msg
+determineColumns : Float -> Int
+determineColumns viewportWidth =
+    let
+        containerWidth =
+            determineContainerWidth viewportWidth
+    in
+    if containerWidth < 260 then
+        1
+
+    else if containerWidth < 480 then
+        2
+
+    else if containerWidth <= 590 then
+        3
+
+    else
+        4
+
+
+type alias ItemViewOptions =
+    { clickable : Bool, horizontal : Bool }
+
+
+itemView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
 itemView options deps cover =
     chunk
         [ C.antialiased
         , C.flex_shrink_0
         , C.font_semibold
-        , C.mb_5
-        , C.w_1_div_4
+
+        --
+        , ifThenElse options.horizontal C.flex C.block
+        , ifThenElse options.horizontal C.mb_0 C.mb_5
+
+        --
+        , case ( options.horizontal, deps.columns ) of
+            ( True, _ ) ->
+                C.w_auto
+
+            ( False, 1 ) ->
+                C.w_full
+
+            ( False, 2 ) ->
+                C.w_half
+
+            ( False, 3 ) ->
+                C.w_1_div_3
+
+            _ ->
+                C.w_1_div_4
         ]
         [ coverView options deps cover
         , metadataView options deps cover
         ]
 
 
-coverView : { clickable : Bool } -> ItemDependencies -> Cover -> Html Msg
-coverView { clickable } { cachedCovers, nowPlaying } cover =
+coverView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
+coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
     let
         maybeBlobUrlFromCache =
             cachedCovers
@@ -645,14 +702,16 @@ coverView { clickable } { cachedCovers, nowPlaying } cover =
                         []
     in
     chunk
-        [ C.h_0
+        [ C.flex_shrink_0
         , C.mr_5
-        , C.pt_full
         , C.relative
         , C.select_none
 
         --
         , ifThenElse clickable C.cursor_pointer C.cursor_default
+        , ifThenElse horizontal C.h_32 C.h_0
+        , ifThenElse horizontal C.mb_4 C.pt_full
+        , ifThenElse horizontal C.w_32 C.w_auto
         ]
         [ brick
             (List.append
@@ -673,6 +732,9 @@ coverView { clickable } { cachedCovers, nowPlaying } cover =
             , C.inset_0
             , C.rounded_md
             , C.shadow
+
+            --
+            , ifThenElse horizontal C.h_32 C.h_auto
 
             -- Dark mode
             ------------
@@ -722,8 +784,8 @@ coverView { clickable } { cachedCovers, nowPlaying } cover =
         ]
 
 
-metadataView : { clickable : Bool } -> ItemDependencies -> Cover -> Html Msg
-metadataView { clickable } { cachedCovers, sortBy } cover =
+metadataView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
+metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
     let
         { identifiedTrackCover } =
             cover
@@ -740,13 +802,14 @@ metadataView { clickable } { cachedCovers, sortBy } cover =
          else
             []
         )
-        [ C.minus_mt_5
-        , C.mr_5
-        , C.pt_2
+        [ C.mr_5
         , C.tracking_tad_closer
 
         --
         , ifThenElse clickable C.cursor_pointer C.cursor_default
+        , ifThenElse horizontal C.mt_0 C.minus_mt_5
+        , ifThenElse horizontal C.overflow_hidden C.overflow_auto
+        , ifThenElse horizontal C.pt_0 C.pt_2
         ]
         [ chunk
             [ C.mt_px
