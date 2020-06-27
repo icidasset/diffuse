@@ -96,6 +96,7 @@ partTwo favourites track ( acc, remainingFavourites ) =
               , group = Nothing
               , indexInList = 0
               , indexInPlaylist = Nothing
+              , parentDirectory = parentDirectory track
               }
             , track
             )
@@ -151,6 +152,7 @@ makeMissingFavouriteTrack fav =
       , group = Nothing
       , indexInList = 0
       , indexInPlaylist = Nothing
+      , parentDirectory = ""
       }
     , { tags = tags
       , id = missingId

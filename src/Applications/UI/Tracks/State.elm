@@ -322,7 +322,7 @@ generateCovers model =
         -- Group by cover
         -----------------
         |> List.groupWhile
-            (\( _, a ) ( _, b ) -> groupFn a == groupFn b)
+            (\a b -> groupFn a == groupFn b)
         -------------------------
         -- Prepare for cover view
         -------------------------
@@ -340,26 +340,18 @@ generateCovers model =
                     ( firstArtist, firstAlbum ) =
                         ( firstTags.artist, firstTags.album )
 
-                    -- Determine if this is an album with various artists
-                    -- (no more than 3 tracks of the same artist and at least 4 tracks)
-                    groupedByArtist =
-                        Dict.groupBy (Tuple.second >> .tags >> .artist) allIdentifiedTracks
-
-                    isVariousArtists =
-                        groupedByArtist
-                            |> Dict.any (\_ a -> List.length a > 3)
-                            |> not
-                            |> (&&) (List.length allIdentifiedTracks > 4)
-                            |> (||) (String.toLower firstArtist == "va")
+                    -- Various artists
+                    isVariousArtists_ =
+                        isVariousArtists allIdentifiedTracks
 
                     -- Keys
                     keyRaw =
-                        coverKey isVariousArtists track
+                        coverKey isVariousArtists_ track
 
                     ( tracksWithCoverKeys, sameArtist, sameAlbum ) =
                         List.foldl
                             (\( i, t ) ( acc, sar, sal ) ->
-                                ( ( coverKey isVariousArtists t, ( i, t ) ) :: acc
+                                ( ( coverKey isVariousArtists_ t, ( i, t ) ) :: acc
                                   --
                                 , if sar then
                                     t.tags.artist == firstArtist
@@ -396,7 +388,7 @@ generateCovers model =
                             |> Maybe.withDefault firstIdentifiedTrack
 
                     group =
-                        coverGroup model.sortBy track
+                        coverGroup model.sortBy ( identifiers, track )
                 in
                 case group of
                     "<missing>" ->
@@ -432,7 +424,7 @@ generateCovers model =
                             --
                             , trackIds = List.map (Tuple.second >> .id) allIdentifiedTracks
                             , tracks = allIdentifiedTracks
-                            , variousArtists = isVariousArtists
+                            , variousArtists = isVariousArtists_
                             }
             )
         |> (\covers ->
@@ -1034,14 +1026,18 @@ importHypaethral data selectedPlaylist model =
 -- ⚗️
 
 
-coverGroup : SortBy -> Track -> String
-coverGroup sort { tags } =
+coverGroup : SortBy -> IdentifiedTrack -> String
+coverGroup sort ( identifiers, { tags } as track ) =
     (case sort of
         Artist ->
             tags.artist
 
         Album ->
-            tags.album
+            -- There is the possibility of albums with the same name,
+            -- such as "Greatests Hits".
+            -- To make sure we treat those as different albums,
+            -- we prefix the album by its parent directory.
+            identifiers.parentDirectory ++ tags.album
 
         PlaylistIndex ->
             ""
@@ -1054,9 +1050,29 @@ coverGroup sort { tags } =
 
 
 coverKey : Bool -> Track -> String
-coverKey isVariousArtists { tags } =
-    if isVariousArtists then
+coverKey isVariousArtists_ { tags } =
+    if isVariousArtists_ then
         tags.album
 
     else
         tags.artist ++ " --- " ++ tags.album
+
+
+
+-- Determine if this is an album with various artists
+-- (no more than 3 tracks of the same artist and at least 4 tracks)
+
+
+isVariousArtists : List IdentifiedTrack -> Bool
+isVariousArtists identifiedTracks =
+    identifiedTracks
+        |> Dict.groupBy (Tuple.second >> .tags >> .artist)
+        |> Dict.any (\_ a -> List.length a > 3)
+        |> not
+        |> (&&) (List.length identifiedTracks > 4)
+        |> (||)
+            (identifiedTracks
+                |> List.head
+                |> Maybe.map (Tuple.second >> .tags >> .artist >> String.toLower >> (==) "va")
+                |> Maybe.withDefault False
+            )

@@ -285,6 +285,7 @@ makeMissingPlaylistTrack ( identifiers, playlistTrack ) =
         , indexInPlaylist = Just identifiers.index
         , isFavourite = False
         , isMissing = True
+        , parentDirectory = ""
         }
         { tags = tags
         , id = missingId

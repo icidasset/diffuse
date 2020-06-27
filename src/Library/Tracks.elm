@@ -78,6 +78,7 @@ type alias Identifiers =
     , group : Maybe { name : String, firstInGroup : Bool }
     , indexInList : Int
     , indexInPlaylist : Maybe Int
+    , parentDirectory : String
     }
 
 
@@ -197,6 +198,7 @@ emptyIdentifiers =
     , group = Nothing
     , indexInList = 0
     , indexInPlaylist = Nothing
+    , parentDirectory = ""
     }
 
 
@@ -233,6 +235,22 @@ makeTrack sourceId ( path, tags ) =
     , sourceId = sourceId
     , tags = tags
     }
+
+
+parentDirectory : Track -> String
+parentDirectory { path } =
+    let
+        s =
+            String.split "/" path
+
+        l =
+            List.length s
+    in
+    s
+        |> List.take (max 0 <| l - 1)
+        |> List.drop (max 0 <| l - 2)
+        |> List.head
+        |> Maybe.withDefault ""
 
 
 {-| Given a collection of tracks, pick out the tracks by id in order.

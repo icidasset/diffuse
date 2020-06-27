@@ -699,7 +699,10 @@ coverView { clickable } { cachedCovers, nowPlaying } cover =
 
             -- Now playing?
             , if List.member nowPlayingId cover.trackIds then
-                chunk
+                brick
+                    [ style "-webkit-filter" "drop-shadow(1px 1px 2px hsla(0, 0%, 0%, 0.15))"
+                    , style "filter" "drop-shadow(1px 1px 2px hsla(0, 0%, 0%, 0.15))"
+                    ]
                     [ C.absolute
                     , C.bottom_0
                     , C.mb_3
