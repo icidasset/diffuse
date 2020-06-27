@@ -699,9 +699,13 @@ coverView { clickable } { cachedCovers, nowPlaying } cover =
 
             -- Now playing?
             , if List.member nowPlayingId cover.trackIds then
+                let
+                    dropShadow =
+                        "drop-shadow(hsla(0, 0%, 0%, 0.2) 1px 1px 2.5px)"
+                in
                 brick
-                    [ style "-webkit-filter" "drop-shadow(1px 1px 2px hsla(0, 0%, 0%, 0.15))"
-                    , style "filter" "drop-shadow(1px 1px 2px hsla(0, 0%, 0%, 0.15))"
+                    [ style "-webkit-filter" dropShadow
+                    , style "filter" dropShadow
                     ]
                     [ C.absolute
                     , C.bottom_0
