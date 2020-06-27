@@ -734,7 +734,9 @@ scrollToNowPlaying model =
         |> Maybe.map
             (case model.scene of
                 Covers ->
-                    UI.Tracks.Scene.Covers.scrollToNowPlaying model.tracks.harvested
+                    UI.Tracks.Scene.Covers.scrollToNowPlaying
+                        model.viewport.width
+                        model.covers
 
                 List ->
                     UI.Tracks.Scene.List.scrollToNowPlaying model.tracks.harvested

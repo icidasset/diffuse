@@ -178,9 +178,27 @@ containerId =
     "diffuse__track-covers"
 
 
-scrollToNowPlaying : List IdentifiedTrack -> IdentifiedTrack -> Cmd Msg
-scrollToNowPlaying harvest ( identifiers, _ ) =
-    Cmd.none
+scrollToNowPlaying : Float -> List Cover -> IdentifiedTrack -> Cmd Msg
+scrollToNowPlaying viewportWidth covers nowPlaying =
+    let
+        cntnrWidth =
+            containerWidth viewportWidth
+
+        { rows, nowPlayingRowIndex } =
+            coverRows (Just nowPlaying) viewportWidth covers
+    in
+    case nowPlayingRowIndex of
+        Just idx ->
+            rows
+                |> List.take idx
+                |> List.foldl (\a -> (+) <| dynamicRowHeight cntnrWidth 0 a) 0
+                |> toFloat
+                |> (+) 46
+                |> Dom.setViewportOf containerId 0
+                |> Task.attempt (always Bypass)
+
+        Nothing ->
+            Cmd.none
 
 
 scrollToTop : Cmd Msg
@@ -385,33 +403,11 @@ infiniteListView deps =
         itemDeps =
             compileItemDependencies deps
 
-        viewportWidth =
-            round deps.viewportWidth
-
-        ( _, a, b ) =
-            List.foldl
-                (\cover ( trackGroupPrev, coverGroup, acc ) ->
-                    let
-                        trackGroupCurr =
-                            cover.identifiedTrackCover
-                                |> Tuple.first
-                                |> .group
-                                |> Maybe.map .name
-                    in
-                    if List.length coverGroup < 4 && (Maybe.isNothing trackGroupPrev || trackGroupCurr == trackGroupPrev) then
-                        ( trackGroupCurr, coverGroup ++ [ cover ], acc )
-
-                    else
-                        ( trackGroupCurr, [ cover ], acc ++ [ coverGroup ] )
-                )
-                ( Nothing, [], [] )
-                deps.covers
-
-        coverGroups =
-            b ++ [ a ]
+        cntnrWidth =
+            containerWidth deps.viewportWidth
     in
     { itemView = rowView itemDeps
-    , itemHeight = InfiniteList.withVariableHeight (dynamicRowHeight viewportWidth)
+    , itemHeight = InfiniteList.withVariableHeight (dynamicRowHeight cntnrWidth)
     , containerHeight = round deps.viewportHeight - 262
     }
         |> InfiniteList.config
@@ -420,7 +416,10 @@ infiniteListView deps =
                 InfiniteList.view
                     config
                     deps.infiniteList
-                    coverGroups
+                    (deps.covers
+                        |> coverRows Nothing deps.viewportWidth
+                        |> .rows
+                    )
            )
 
 
@@ -461,18 +460,15 @@ listStyles =
         |> List.singleton
 
 
-dynamicRowHeight viewportWidth _ coverGroup =
+dynamicRowHeight : Int -> Int -> List Cover -> Int
+dynamicRowHeight containerWidth_ _ coverRow =
     let
-        containerWidth =
-            -- TODO: replace 32 with actual horizontal padding
-            min 768 (viewportWidth - 32)
-
         rowHeight =
-            (containerWidth - 16) // 4 + (46 + 16)
+            (containerWidth_ - 16) // 4 + (46 + 16)
     in
     let
         shouldRenderGroup =
-            coverGroup
+            coverRow
                 |> List.head
                 |> Maybe.andThen (.tracks >> List.head)
                 |> Maybe.map (Tuple.first >> Tracks.shouldRenderGroup)
@@ -483,6 +479,74 @@ dynamicRowHeight viewportWidth _ coverGroup =
 
     else
         rowHeight
+
+
+containerWidth : Float -> Int
+containerWidth viewportWidth =
+    -- TODO: replace 32 with actual horizontal padding
+    min 768 (round viewportWidth - 32)
+
+
+coverRows :
+    Maybe IdentifiedTrack
+    -> Float
+    -> List Cover
+    -> { nowPlayingRowIndex : Maybe Int, rows : List (List Cover) }
+coverRows maybeNowPlaying viewportWidth covers =
+    let
+        cWidth =
+            containerWidth viewportWidth
+
+        columns =
+            -- TODO: Use cWidth
+            4
+
+        foldResult =
+            List.foldl
+                (\cover { collection, current, nowPlayingRowIdx, trackGroup } ->
+                    let
+                        trackGroupCurr =
+                            cover.identifiedTrackCover
+                                |> Tuple.first
+                                |> .group
+                                |> Maybe.map .name
+
+                        npr addition =
+                            case ( maybeNowPlaying, nowPlayingRowIdx ) of
+                                ( Just ( _, t ), Nothing ) ->
+                                    if List.member t.id cover.trackIds then
+                                        Just (List.length collection + ifThenElse addition 1 0)
+
+                                    else
+                                        Nothing
+
+                                _ ->
+                                    nowPlayingRowIdx
+                    in
+                    if List.length current < columns && (Maybe.isNothing trackGroup || trackGroupCurr == trackGroup) then
+                        { collection = collection
+                        , current = current ++ [ cover ]
+                        , nowPlayingRowIdx = npr False
+                        , trackGroup = trackGroupCurr
+                        }
+
+                    else
+                        { collection = collection ++ [ current ]
+                        , current = [ cover ]
+                        , nowPlayingRowIdx = npr True
+                        , trackGroup = trackGroupCurr
+                        }
+                )
+                { current = []
+                , collection = []
+                , nowPlayingRowIdx = Nothing
+                , trackGroup = Nothing
+                }
+                covers
+    in
+    { nowPlayingRowIndex = foldResult.nowPlayingRowIdx
+    , rows = foldResult.collection ++ [ foldResult.current ]
+    }
 
 
 
