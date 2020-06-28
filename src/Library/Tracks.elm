@@ -50,10 +50,8 @@ type alias Cover =
     , group : String
     , identifiedTrackCover : IdentifiedTrack
     , key : String
-    , keyRaw : String
     , sameAlbum : Bool
     , sameArtist : Bool
-    , trackFilename : String
     , trackIds : List String
     , tracks : List IdentifiedTrack
     , variousArtists : Bool
@@ -75,6 +73,7 @@ type alias Identifiers =
     , isMissing : Bool
 
     --
+    , filename : String
     , group : Maybe { name : String, firstInGroup : Bool }
     , indexInList : Int
     , indexInPlaylist : Maybe Int
@@ -195,6 +194,7 @@ emptyIdentifiers =
     , isMissing = False
 
     --
+    , filename = ""
     , group = Nothing
     , indexInList = 0
     , indexInPlaylist = Nothing
@@ -237,8 +237,8 @@ makeTrack sourceId ( path, tags ) =
     }
 
 
-parentDirectory : Track -> String
-parentDirectory { path } =
+pathParts : Track -> { filename : String, parentDirectory : String }
+pathParts { path } =
     let
         s =
             String.split "/" path
@@ -246,11 +246,15 @@ parentDirectory { path } =
         l =
             List.length s
     in
-    s
-        |> List.take (max 0 <| l - 1)
-        |> List.drop (max 0 <| l - 2)
-        |> List.head
-        |> Maybe.withDefault ""
+    case List.drop (max 0 <| l - 2) s of
+        [ p, f ] ->
+            { filename = f, parentDirectory = p }
+
+        [ f ] ->
+            { filename = f, parentDirectory = "" }
+
+        _ ->
+            { filename = "", parentDirectory = "" }
 
 
 {-| Given a collection of tracks, pick out the tracks by id in order.

@@ -687,12 +687,12 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                 Nothing ->
                     if Maybe.isJust cachedCovers then
                         let
-                            track =
-                                Tuple.second cover.identifiedTrackCover
+                            ( identifiers, track ) =
+                                cover.identifiedTrackCover
                         in
                         [ A.attribute "data-key" cover.key
                         , A.attribute "data-focus" cover.focus
-                        , A.attribute "data-filename" cover.trackFilename
+                        , A.attribute "data-filename" identifiers.filename
                         , A.attribute "data-path" track.path
                         , A.attribute "data-source-id" track.sourceId
                         , A.attribute "data-various-artists" (ifThenElse cover.variousArtists "t" "f")

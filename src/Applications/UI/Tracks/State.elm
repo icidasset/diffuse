@@ -3,6 +3,7 @@ module UI.Tracks.State exposing (..)
 import Alien
 import Base64
 import Common exposing (..)
+import Conditional exposing (ifThenElse)
 import ContextMenu
 import Coordinates exposing (Coordinates)
 import Dict
@@ -319,137 +320,101 @@ generateCovers model =
     let
         groupFn =
             coverGroup model.sortBy
+
+        makeCoverFn =
+            makeCover model.sortBy
     in
     model.tracks.harvested
-        -----------------
-        -- Group by cover
-        -----------------
-        |> List.groupWhile
-            (\a b -> groupFn a == groupFn b)
-        -------------------------
-        -- Prepare for cover view
-        -------------------------
-        |> List.filterMap
-            (\( firstIdentifiedTrack, identifiedTracks ) ->
+        |> List.indexedFoldr
+            (\idx identifiedTrack { covers, gathering } ->
                 let
-                    allIdentifiedTracks =
-                        firstIdentifiedTrack :: identifiedTracks
-
-                    firstTags =
-                        firstIdentifiedTrack
-                            |> Tuple.second
-                            |> .tags
-
-                    ( firstArtist, firstAlbum ) =
-                        ( firstTags.artist, firstTags.album )
-
-                    -- Various artists
-                    isVariousArtists_ =
-                        isVariousArtists allIdentifiedTracks
-
-                    -- Keys
-                    keyRaw =
-                        coverKey isVariousArtists_ track
-
-                    ( tracksWithCoverKeys, sameArtist, sameAlbum ) =
-                        List.foldl
-                            (\( i, t ) ( acc, sar, sal ) ->
-                                ( ( coverKey isVariousArtists_ t, ( i, t ) ) :: acc
-                                  --
-                                , if sar then
-                                    t.tags.artist == firstArtist
-
-                                  else
-                                    False
-                                  --
-                                , if sal then
-                                    t.tags.album == firstAlbum
-
-                                  else
-                                    False
-                                )
-                            )
-                            ( []
-                            , True
-                            , True
-                            )
-                            allIdentifiedTracks
-
-                    -- Group the tracks by their `coverKey`,
-                    -- and pick a track from the biggest group.
-                    ( identifiers, track ) =
-                        tracksWithCoverKeys
-                            |> Dict.groupBy Tuple.first
-                            |> Dict.toList
-                            |> List.sortBy (Tuple.second >> List.length)
-                            |> List.last
-                            |> Maybe.andThen
-                                (Tuple.second
-                                    >> List.head
-                                    >> Maybe.map Tuple.second
-                                )
-                            |> Maybe.withDefault firstIdentifiedTrack
-
                     group =
-                        coverGroup model.sortBy ( identifiers, track )
+                        groupFn identifiedTrack
+
+                    ( identifiers, track ) =
+                        identifiedTrack
+
+                    { artist, album } =
+                        track.tags
                 in
-                case group of
-                    "<missing>" ->
-                        Nothing
+                if group /= gathering.previousGroup then
+                    -- New group, make cover for previous group
+                    { gathering =
+                        { acc = [ identifiedTrack ]
+                        , accIds = [ track.id ]
+                        , previousGroup = group
 
-                    _ ->
-                        Just
-                            { key = Base64.encode keyRaw
-                            , keyRaw = keyRaw
-                            , identifiedTrackCover = ( identifiers, track )
+                        --
+                        , albumCounter =
+                            Dict.fromList [ ( album, { count = 1, it = identifiedTrack } ) ]
+                        , artistCounter =
+                            Dict.fromList [ ( artist, { count = 1, it = identifiedTrack } ) ]
+                        }
+                    , covers =
+                        case ( group, gathering.accIds ) of
+                            ( "<missing>", _ ) ->
+                                covers
 
-                            --
-                            , focus =
-                                case model.sortBy of
-                                    Artist ->
-                                        "artist"
+                            ( _, [] ) ->
+                                covers
 
-                                    _ ->
-                                        "album"
+                            _ ->
+                                makeCoverFn gathering :: covers
+                    }
 
-                            --
-                            , group = group
-                            , sameAlbum = sameAlbum
-                            , sameArtist = sameArtist
+                else
+                    -- Same group
+                    { gathering =
+                        { acc = identifiedTrack :: gathering.acc
+                        , accIds = track.id :: gathering.accIds
+                        , previousGroup = group
 
-                            --
-                            , trackFilename =
-                                track.path
-                                    |> String.split "/"
-                                    |> List.last
-                                    |> Maybe.withDefault track.path
-
-                            --
-                            , trackIds = List.map (Tuple.second >> .id) allIdentifiedTracks
-                            , tracks = allIdentifiedTracks
-                            , variousArtists = isVariousArtists_
-                            }
+                        --
+                        , albumCounter =
+                            Dict.update
+                                album
+                                (increaseCounter identifiedTrack)
+                                gathering.albumCounter
+                        , artistCounter =
+                            Dict.update
+                                artist
+                                (increaseCounter identifiedTrack)
+                                gathering.artistCounter
+                        }
+                    , covers =
+                        covers
+                    }
             )
-        |> (\covers ->
-                model.selectedCover
-                    |> Maybe.andThen
-                        (\sc ->
-                            case model.sortBy of
-                                Artist ->
-                                    List.find (.group >> (==) sc.group) covers
+            { covers =
+                []
+            , gathering =
+                { acc = []
+                , accIds = []
+                , previousGroup = ""
+                , albumCounter = Dict.empty
+                , artistCounter = Dict.empty
+                }
+            }
+        |> (\{ covers, gathering } ->
+                { model
+                    | covers =
+                        if List.isEmpty gathering.accIds then
+                            covers
 
-                                _ ->
-                                    List.find (.key >> (==) sc.key) covers
-                        )
-                    |> (\selectedCover ->
-                            { model
-                                | covers = covers
-                                , selectedCover = selectedCover
-                            }
-                       )
+                        else
+                            makeCoverFn gathering :: covers
+                }
            )
-        |> Return.communicate (Ports.loadAlbumCovers ())
-        |> andThen Common.forceTracksRerender
+        |> Return.communicate
+            (Ports.loadAlbumCovers ())
+        |> andThen
+            (case model.scene of
+                Covers ->
+                    Common.forceTracksRerender
+
+                List ->
+                    Return.singleton
+            )
 
 
 gotCachedCover : Json.Value -> Manager
@@ -1061,29 +1026,73 @@ coverGroup sort ( identifiers, { tags } as track ) =
 
 
 coverKey : Bool -> Track -> String
-coverKey isVariousArtists_ { tags } =
-    if isVariousArtists_ then
+coverKey isVariousArtists { tags } =
+    if isVariousArtists then
         tags.album
 
     else
         tags.artist ++ " --- " ++ tags.album
 
 
+increaseCounter identifiedTrack maybeEntry =
+    case maybeEntry of
+        Just entry ->
+            Just { entry | count = entry.count + 1 }
 
--- Determine if this is an album with various artists
--- (no more than 3 tracks of the same artist and at least 4 tracks)
+        Nothing ->
+            Just { count = 1, it = identifiedTrack }
 
 
-isVariousArtists : List IdentifiedTrack -> Bool
-isVariousArtists identifiedTracks =
-    identifiedTracks
-        |> Dict.groupBy (Tuple.second >> .tags >> .artist)
-        |> Dict.any (\_ a -> List.length a > 3)
-        |> not
-        |> (&&) (List.length identifiedTracks > 4)
-        |> (||)
-            (identifiedTracks
-                |> List.head
-                |> Maybe.map (Tuple.second >> .tags >> .artist >> String.toLower >> (==) "va")
-                |> Maybe.withDefault False
+makeCover sortBy_ gathering =
+    let
+        group =
+            gathering.previousGroup
+
+        identifiedTrack =
+            gathering.albumCounter
+                |> Dict.toList
+                |> List.sortBy (Tuple.second >> .count)
+                |> List.last
+                |> Maybe.map (\( _, a ) -> a.it)
+                |> Maybe.withDefault emptyIdentifiedTrack
+
+        ( identifiers, track ) =
+            identifiedTrack
+
+        ( sameAlbum, sameArtist ) =
+            ( Dict.size gathering.albumCounter == 1
+            , Dict.size gathering.artistCounter == 1
             )
+
+        ( moreThanFourTracks, moreThanThreeTracksOfSameArtist ) =
+            ( List.length gathering.accIds > 4
+            , Dict.any (\_ a -> a.count > 3) gathering.artistCounter
+            )
+
+        isVariousArtists =
+            False
+                || (moreThanFourTracks && not moreThanThreeTracksOfSameArtist)
+                || (String.toLower track.tags.artist == "va")
+    in
+    { key = Base64.encode (coverKey isVariousArtists track)
+    , identifiedTrackCover = identifiedTrack
+
+    --
+    , focus =
+        case sortBy_ of
+            Artist ->
+                "artist"
+
+            _ ->
+                "album"
+
+    --
+    , group = group
+    , sameAlbum = sameAlbum
+    , sameArtist = sameArtist
+
+    --
+    , trackIds = gathering.accIds
+    , tracks = gathering.acc
+    , variousArtists = isVariousArtists
+    }

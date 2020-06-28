@@ -88,15 +88,19 @@ partTwo favourites track ( acc, remainingFavourites ) =
         isFav =
             List.any isFavourite_ favourites
 
+        { filename, parentDirectory } =
+            pathParts track
+
         identifiedTrack =
             ( { isFavourite = isFav
               , isMissing = False
 
               --
+              , filename = filename
               , group = Nothing
               , indexInList = 0
               , indexInPlaylist = Nothing
-              , parentDirectory = parentDirectory track
+              , parentDirectory = parentDirectory
               }
             , track
             )
@@ -149,6 +153,7 @@ makeMissingFavouriteTrack fav =
       , isMissing = True
 
       --
+      , filename = ""
       , group = Nothing
       , indexInList = 0
       , indexInPlaylist = Nothing
