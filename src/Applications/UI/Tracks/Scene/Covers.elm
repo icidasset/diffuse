@@ -844,7 +844,12 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
                         text track.tags.artist
 
                 Artist ->
-                    text track.tags.title
+                    case List.length cover.trackIds of
+                        1 ->
+                            Html.text "1 track"
+
+                        n ->
+                            Html.text (String.fromInt n ++ " tracks")
 
                 _ ->
                     nothing
