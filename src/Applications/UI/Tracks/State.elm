@@ -343,23 +343,27 @@ generateCovers model =
                         { acc = [ identifiedTrack ]
                         , accIds = [ track.id ]
                         , previousGroup = group
+                        , previousTrack = track
 
                         --
-                        , albumCounter =
-                            Dict.fromList [ ( album, { count = 1, it = identifiedTrack } ) ]
-                        , artistCounter =
-                            Dict.fromList [ ( artist, { count = 1, it = identifiedTrack } ) ]
+                        , currentAlbumSequence = Just ( identifiedTrack, 1 )
+                        , largestAlbumSequence = Nothing
+
+                        --
+                        , currentAlbumFavsSequence = Just ( identifiedTrack, ifThenElse identifiers.isFavourite 1 0 )
+                        , largestAlbumFavsSequence = Nothing
+
+                        --
+                        , currentArtistSequence = Just ( identifiedTrack, 1 )
+                        , largestArtistSequence = Nothing
                         }
                     , covers =
-                        case ( group, gathering.accIds ) of
-                            ( "<missing>", _ ) ->
-                                covers
-
-                            ( _, [] ) ->
+                        case group of
+                            "<missing>" ->
                                 covers
 
                             _ ->
-                                makeCoverFn gathering :: covers
+                                makeCoverFn gathering covers
                     }
 
                 else
@@ -368,18 +372,67 @@ generateCovers model =
                         { acc = identifiedTrack :: gathering.acc
                         , accIds = track.id :: gathering.accIds
                         , previousGroup = group
+                        , previousTrack = track
+
+                        -- Album sequence
+                        -----------------
+                        , currentAlbumSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                Just ( identifiedTrack, 1 )
+
+                            else
+                                increaseSequence gathering.currentAlbumSequence
 
                         --
-                        , albumCounter =
-                            Dict.update
-                                album
-                                (increaseCounter identifiedTrack)
-                                gathering.albumCounter
-                        , artistCounter =
-                            Dict.update
-                                artist
-                                (increaseCounter identifiedTrack)
-                                gathering.artistCounter
+                        , largestAlbumSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                resolveLargestSequence
+                                    gathering.currentAlbumSequence
+                                    gathering.largestAlbumSequence
+
+                            else
+                                gathering.largestAlbumSequence
+
+                        -- Album favourites sequence
+                        ----------------------------
+                        , currentAlbumFavsSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                Just ( identifiedTrack, ifThenElse identifiers.isFavourite 1 0 )
+
+                            else if identifiers.isFavourite then
+                                increaseSequence gathering.currentAlbumFavsSequence
+
+                            else
+                                gathering.currentAlbumFavsSequence
+
+                        --
+                        , largestAlbumFavsSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                resolveLargestSequence
+                                    gathering.currentAlbumFavsSequence
+                                    gathering.largestAlbumFavsSequence
+
+                            else
+                                gathering.largestAlbumFavsSequence
+
+                        -- Artist sequence
+                        ------------------
+                        , currentArtistSequence =
+                            if artist /= gathering.previousTrack.tags.artist then
+                                Just ( identifiedTrack, 1 )
+
+                            else
+                                increaseSequence gathering.currentArtistSequence
+
+                        --
+                        , largestArtistSequence =
+                            if artist /= gathering.previousTrack.tags.artist then
+                                resolveLargestSequence
+                                    gathering.currentArtistSequence
+                                    gathering.largestArtistSequence
+
+                            else
+                                gathering.largestArtistSequence
                         }
                     , covers =
                         covers
@@ -391,18 +444,20 @@ generateCovers model =
                 { acc = []
                 , accIds = []
                 , previousGroup = ""
-                , albumCounter = Dict.empty
-                , artistCounter = Dict.empty
+                , previousTrack = emptyTrack
+
+                --
+                , currentAlbumSequence = Nothing
+                , largestAlbumSequence = Nothing
+                , currentAlbumFavsSequence = Nothing
+                , largestAlbumFavsSequence = Nothing
+                , currentArtistSequence = Nothing
+                , largestArtistSequence = Nothing
                 }
             }
         |> (\{ covers, gathering } ->
                 { model
-                    | covers =
-                        if List.isEmpty gathering.accIds then
-                            covers
-
-                        else
-                            makeCoverFn gathering :: covers
+                    | covers = makeCoverFn gathering covers
                 }
            )
         |> Return.communicate
@@ -999,7 +1054,7 @@ importHypaethral data selectedPlaylist model =
 
 
 
--- ⚗️
+-- ⚗️  ░░  COVERS
 
 
 coverGroup : SortBy -> IdentifiedTrack -> String
@@ -1034,44 +1089,68 @@ coverKey isVariousArtists { tags } =
         tags.artist ++ " --- " ++ tags.album
 
 
-increaseCounter identifiedTrack maybeEntry =
-    case maybeEntry of
-        Just entry ->
-            Just { entry | count = entry.count + 1 }
-
-        Nothing ->
-            Just { count = 1, it = identifiedTrack }
-
-
 makeCover sortBy_ gathering =
     let
+        closedGathering =
+            { gathering
+                | largestAlbumSequence =
+                    resolveLargestSequence
+                        gathering.currentAlbumSequence
+                        gathering.largestAlbumSequence
+
+                --
+                , largestAlbumFavsSequence =
+                    resolveLargestSequence
+                        gathering.currentAlbumFavsSequence
+                        gathering.largestAlbumFavsSequence
+
+                --
+                , largestArtistSequence =
+                    resolveLargestSequence
+                        gathering.currentArtistSequence
+                        gathering.largestArtistSequence
+            }
+    in
+    case closedGathering.acc of
+        [] ->
+            identity
+
+        fallback :: _ ->
+            fallback
+                |> makeCoverWithFallback sortBy_ closedGathering
+                |> (::)
+
+
+makeCoverWithFallback sortBy_ gathering fallback =
+    let
+        amountOfTracks =
+            List.length gathering.accIds
+
         group =
             gathering.previousGroup
 
         identifiedTrack =
-            gathering.albumCounter
-                |> Dict.toList
-                |> List.sortBy (Tuple.second >> .count)
-                |> List.last
-                |> Maybe.map (\( _, a ) -> a.it)
-                |> Maybe.withDefault emptyIdentifiedTrack
+            gathering.largestAlbumFavsSequence
+                |> Maybe.orElse gathering.largestAlbumSequence
+                |> Maybe.map Tuple.first
+                |> Maybe.withDefault fallback
 
         ( identifiers, track ) =
             identifiedTrack
 
-        ( sameAlbum, sameArtist ) =
-            ( Dict.size gathering.albumCounter == 1
-            , Dict.size gathering.artistCounter == 1
+        ( largestAlbumSequence, largestArtistSequence ) =
+            ( Maybe.unwrap 0 Tuple.second gathering.largestAlbumSequence
+            , Maybe.unwrap 0 Tuple.second gathering.largestArtistSequence
             )
 
-        ( moreThanFourTracks, moreThanThreeTracksOfSameArtist ) =
-            ( List.length gathering.accIds > 4
-            , Dict.any (\_ a -> a.count > 3) gathering.artistCounter
+        ( sameAlbum, sameArtist ) =
+            ( largestAlbumSequence == amountOfTracks
+            , largestArtistSequence == amountOfTracks
             )
 
         isVariousArtists =
             False
-                || (moreThanFourTracks && not moreThanThreeTracksOfSameArtist)
+                || (amountOfTracks > 4 && largestArtistSequence < 3)
                 || (String.toLower track.tags.artist == "va")
     in
     { key = Base64.encode (coverKey isVariousArtists track)
@@ -1096,3 +1175,26 @@ makeCover sortBy_ gathering =
     , tracks = gathering.acc
     , variousArtists = isVariousArtists
     }
+
+
+
+-- ⚗️  ░░  COVERS → SEQUENCES
+
+
+increaseSequence =
+    Maybe.map (Tuple.mapSecond ((+) 1))
+
+
+resolveLargestSequence curr state =
+    case ( curr, state ) of
+        ( Just ( _, c ), Just ( _, s ) ) ->
+            ifThenElse (c > s) curr state
+
+        ( Just _, Nothing ) ->
+            curr
+
+        ( Nothing, Just _ ) ->
+            state
+
+        ( Nothing, Nothing ) ->
+            Nothing
