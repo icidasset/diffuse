@@ -158,3 +158,15 @@ select:-moz-focusring {
     stroke-dashoffset: -86.25;
   }
 }
+
+
+
+/* Overrides
+   --------- */
+
+.no-tracks-view > div {
+  /* CSS fix for a scrolling issue:
+     Element would appear scrolled even though it's not (virtual-dom issue probably)
+  */
+  overflow: visible !important;
+}

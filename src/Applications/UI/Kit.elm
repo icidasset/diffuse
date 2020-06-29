@@ -407,14 +407,11 @@ logoBackdrop =
         [ C.absolute
         , C.bg_cover
         , C.bg_no_repeat
-        , C.duration_1000
         , C.h_0
         , C.left_full
         , C.opacity_025
         , C.pt_full
         , C.top_0
-        , C.transition
-        , C.transition_opacity
         , C.z_0
 
         -- Dark mode

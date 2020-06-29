@@ -340,7 +340,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 noTracksView : List String -> Int -> Int -> Int -> Html UI.Msg
 noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites =
     chunk
-        [ C.flex, C.flex_grow ]
+        [ "no-tracks-view", C.flex, C.flex_grow ]
         [ UI.Kit.centeredContent
             [ if List.length processingContext > 0 then
                 message "Processing Tracks"
