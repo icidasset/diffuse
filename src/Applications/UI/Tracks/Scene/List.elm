@@ -372,7 +372,7 @@ deriveColors { bgColor, darkMode } =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ C.pb_1
+    [ C.pb_2
     , C.pt_1
     ]
         |> String.join " "
@@ -383,7 +383,7 @@ listStyles =
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
 dynamicRowHeight _ ( i, t ) =
     if Tracks.shouldRenderGroup i then
-        32 + 18 + 16 + rowHeight
+        16 + 18 + 12 + rowHeight
 
     else
         rowHeight
