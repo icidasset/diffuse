@@ -280,11 +280,13 @@ makeMissingPlaylistTrack ( identifiers, playlistTrack ) =
             }
     in
     Tuple.pair
-        { group = Nothing
+        { filename = ""
+        , group = Nothing
         , indexInList = 0
         , indexInPlaylist = Just identifiers.index
         , isFavourite = False
         , isMissing = True
+        , parentDirectory = ""
         }
         { tags = tags
         , id = missingId

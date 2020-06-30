@@ -1,4 +1,4 @@
-module Tracks.Collection exposing (add, arrange, harvest, harvestChanged, identify, map, tracksChanged)
+module Tracks.Collection exposing (add, arrange, harvest, identifiedTracksChanged, identify, map, tracksChanged)
 
 import Tracks exposing (IdentifiedTrack, Parcel, Track, emptyCollection)
 import Tracks.Collection.Internal as Internal
@@ -67,8 +67,8 @@ tracksChanged listA listB =
             True
 
 
-harvestChanged : List IdentifiedTrack -> List IdentifiedTrack -> Bool
-harvestChanged listA listB =
+identifiedTracksChanged : List IdentifiedTrack -> List IdentifiedTrack -> Bool
+identifiedTracksChanged listA listB =
     case ( listA, listB ) of
         ( [], [] ) ->
             False
@@ -78,7 +78,7 @@ harvestChanged listA listB =
                 True
 
             else
-                harvestChanged restA restB
+                identifiedTracksChanged restA restB
 
         _ ->
             True

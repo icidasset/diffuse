@@ -33,8 +33,12 @@ keyboardInput msg model =
                         False
         in
         if m.focusedOnInput || not authenticated then
-            -- Stop here if using input or not authenticated
-            skip
+            case m.pressedKeys of
+                [ Keyboard.Escape ] ->
+                    hideOverlay m
+
+                _ ->
+                    skip
 
         else if Maybe.isJust model.alfred then
             case m.pressedKeys of
@@ -47,14 +51,14 @@ keyboardInput msg model =
                 [ Keyboard.Enter ] ->
                     Alfred.runSelectedAction m
 
+                [ Keyboard.Escape ] ->
+                    hideOverlay m
+
                 _ ->
                     skip
 
         else
             case m.pressedKeys of
-                [ Keyboard.Escape ] ->
-                    hideOverlay m
-
                 [ Keyboard.ArrowLeft ] ->
                     Queue.rewind m
 
@@ -78,6 +82,9 @@ keyboardInput msg model =
 
                 [ Keyboard.Character "S" ] ->
                     Queue.toggleShuffle m
+
+                [ Keyboard.Escape ] ->
+                    hideOverlay m
 
                 _ ->
                     skip

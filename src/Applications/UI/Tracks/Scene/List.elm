@@ -1,4 +1,4 @@
-module UI.Tracks.Scene.List exposing (Dependencies, DerivedColors, containerId, scrollToNowPlaying, scrollToTop, view)
+module UI.Tracks.Scene.List exposing (Dependencies, DerivedColors, containerId, defaultItemView, deriveColors, scrollToNowPlaying, scrollToTop, view)
 
 import Browser.Dom as Dom
 import Chunky exposing (..)
@@ -131,59 +131,6 @@ containerId =
     "diffuse__track-list"
 
 
-infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe Queue.Item, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
-infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
-    let
-        color =
-            Maybe.withDefault UI.Kit.colors.text deps.bgColor
-
-        derivedColors =
-            if deps.darkMode then
-                { background = Color.toCssString color
-                , subtle = Color.toCssString (Color.darken 0.1 color)
-                , text = Color.toCssString (Color.darken 0.475 color)
-                }
-
-            else
-                { background = Color.toCssString (Color.fadeOut 0.625 color)
-                , subtle = Color.toCssString (Color.fadeOut 0.575 color)
-                , text = Color.toCssString (Color.darken 0.3 color)
-                }
-    in
-    { itemView =
-        case maybeDnD of
-            Just dnd ->
-                playlistItemView
-                    favouritesOnly
-                    nowPlaying
-                    searchTerm
-                    selectedTrackIndexes
-                    dnd
-                    deps.showAlbum
-                    derivedColors
-
-            _ ->
-                defaultItemView
-                    favouritesOnly
-                    nowPlaying
-                    selectedTrackIndexes
-                    deps.showAlbum
-                    derivedColors
-
-    --
-    , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
-    , containerHeight = round deps.height
-    }
-        |> InfiniteList.config
-        |> InfiniteList.withCustomContainer infiniteListContainer
-        |> (\config ->
-                InfiniteList.view
-                    config
-                    infiniteList
-                    harvest
-           )
-
-
 scrollToNowPlaying : List IdentifiedTrack -> IdentifiedTrack -> Cmd Msg
 scrollToNowPlaying harvest ( identifiers, _ ) =
     harvest
@@ -214,6 +161,9 @@ viewAttributes =
 header : Bool -> Bool -> SortBy -> SortDirection -> Html Msg
 header isPlaylist showAlbum sortBy sortDirection =
     let
+        showArtist =
+            True
+
         sortIcon =
             (if sortDirection == Desc then
                 Icons.expand_less
@@ -268,9 +218,9 @@ header isPlaylist showAlbum sortBy sortDirection =
             ]
 
          else
-            [ headerColumn "" 4.5 Nothing Bypass
-            , headerColumn "Title" 52 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
-            , headerColumn "Artist" 43.5 (maybeSortIcon Artist) (TracksMsg <| SortBy Artist)
+            [ headerColumn "" 5.75 Nothing Bypass
+            , headerColumn "Title" 51.25 (maybeSortIcon Title) (TracksMsg <| SortBy Title)
+            , headerColumn "Artist" 43 (maybeSortIcon Artist) (TracksMsg <| SortBy Artist)
             ]
         )
 
@@ -339,6 +289,50 @@ headerColumn text_ width maybeSortIcon msg =
 -- INFINITE LIST
 
 
+infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe Queue.Item, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
+infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
+    let
+        derivedColors =
+            deriveColors { bgColor = deps.bgColor, darkMode = deps.darkMode }
+    in
+    { itemView =
+        case maybeDnD of
+            Just dnd ->
+                playlistItemView
+                    favouritesOnly
+                    nowPlaying
+                    searchTerm
+                    selectedTrackIndexes
+                    dnd
+                    deps.showAlbum
+                    derivedColors
+
+            _ ->
+                defaultItemView
+                    { derivedColors = derivedColors
+                    , favouritesOnly = favouritesOnly
+                    , nowPlaying = nowPlaying
+                    , roundedCorners = False
+                    , selectedTrackIndexes = selectedTrackIndexes
+                    , showAlbum = deps.showAlbum
+                    , showArtist = True
+                    , showGroup = True
+                    }
+
+    --
+    , itemHeight = InfiniteList.withVariableHeight dynamicRowHeight
+    , containerHeight = round deps.height
+    }
+        |> InfiniteList.config
+        |> InfiniteList.withCustomContainer infiniteListContainer
+        |> (\config ->
+                InfiniteList.view
+                    config
+                    infiniteList
+                    harvest
+           )
+
+
 infiniteListContainer :
     List ( String, String )
     -> List (Html msg)
@@ -357,9 +351,28 @@ infiniteListContainer styles =
         |> Html.div
 
 
+deriveColors : { bgColor : Maybe Color, darkMode : Bool } -> DerivedColors
+deriveColors { bgColor, darkMode } =
+    let
+        color =
+            Maybe.withDefault UI.Kit.colors.text bgColor
+    in
+    if darkMode then
+        { background = Color.toCssString color
+        , subtle = Color.toCssString (Color.darken 0.1 color)
+        , text = Color.toCssString (Color.darken 0.475 color)
+        }
+
+    else
+        { background = Color.toCssString (Color.fadeOut 0.625 color)
+        , subtle = Color.toCssString (Color.fadeOut 0.575 color)
+        , text = Color.toCssString (Color.darken 0.3 color)
+        }
+
+
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ C.pb_1
+    [ C.pb_2
     , C.pt_1
     ]
         |> String.join " "
@@ -369,14 +382,8 @@ listStyles =
 
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
 dynamicRowHeight _ ( i, t ) =
-    let
-        shouldRenderGroup =
-            i.group
-                |> Maybe.map (.firstInGroup >> (==) True)
-                |> Maybe.withDefault False
-    in
-    if shouldRenderGroup then
-        32 + 18 + 16 + rowHeight
+    if Tracks.shouldRenderGroup i then
+        16 + 18 + 12 + rowHeight
 
     else
         rowHeight
@@ -386,16 +393,30 @@ dynamicRowHeight _ ( i, t ) =
 -- INFINITE LIST ITEM
 
 
-defaultItemView : Bool -> Maybe Queue.Item -> List Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
-defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derivedColors _ idx identifiedTrack =
+defaultItemView :
+    { derivedColors : DerivedColors
+    , favouritesOnly : Bool
+    , nowPlaying : Maybe Queue.Item
+    , roundedCorners : Bool
+    , selectedTrackIndexes : List Int
+    , showAlbum : Bool
+    , showArtist : Bool
+    , showGroup : Bool
+    }
+    -> Int
+    -> Int
+    -> IdentifiedTrack
+    -> Html Msg
+defaultItemView args _ idx identifiedTrack =
     let
+        { derivedColors, favouritesOnly, nowPlaying, roundedCorners, selectedTrackIndexes, showAlbum, showArtist, showGroup } =
+            args
+
         ( identifiers, track ) =
             identifiedTrack
 
         shouldRenderGroup =
-            identifiers.group
-                |> Maybe.map (.firstInGroup >> (==) True)
-                |> Maybe.withDefault False
+            showGroup && Tracks.shouldRenderGroup identifiers
 
         isSelected =
             List.member idx selectedTrackIndexes
@@ -422,7 +443,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
             Scene.group { index = idx } identifiers
 
           else
-            text ""
+            nothing
 
         --
         , brick
@@ -439,7 +460,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
                     )
                     [ mouseContextMenuEvent identifiedTrack
                     , playEvent identifiedTrack
-                    , selectEvent identifiedTrack
+                    , selectEvent idx
                     ]
                 ]
             )
@@ -449,6 +470,7 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
             --
             , ifThenElse identifiers.isMissing "" C.cursor_pointer
             , ifThenElse isSelected C.font_semibold ""
+            , ifThenElse roundedCorners C.rounded ""
 
             --
             , ifThenElse
@@ -471,17 +493,28 @@ defaultItemView favouritesOnly nowPlaying selectedTrackIndexes showAlbum derived
                     C.dark__bg_near_darkest_hour
                 )
             ]
-            (if showAlbum then
-                [ favouriteColumn favouritesOnly favIdentifiers derivedColors
-                , otherColumn "37.5%" False track.tags.title
-                , otherColumn "29.0%" False track.tags.artist
-                , otherColumn "29.0%" True track.tags.album
+            (if not showArtist && not showAlbum then
+                [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
+                , otherColumn "94.25%" False track.tags.title
+                ]
+
+             else if not showArtist && showAlbum then
+                [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
+                , otherColumn "51.25%" False track.tags.title
+                , otherColumn "43%" False track.tags.album
+                ]
+
+             else if showArtist && not showAlbum then
+                [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
+                , otherColumn "51.25%" False track.tags.title
+                , otherColumn "43%" False track.tags.artist
                 ]
 
              else
-                [ favouriteColumn favouritesOnly favIdentifiers derivedColors
-                , otherColumn "52%" False track.tags.title
-                , otherColumn "43.5%" False track.tags.artist
+                [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
+                , otherColumn "37.5%" False track.tags.title
+                , otherColumn "29.0%" False track.tags.artist
+                , otherColumn "29.0%" True track.tags.album
                 ]
             )
         ]
@@ -540,7 +573,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
                 )
                 [ mouseContextMenuEvent identifiedTrack
                 , playEvent identifiedTrack
-                , selectEvent identifiedTrack
+                , selectEvent idx
                 ]
 
             --
@@ -583,7 +616,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
             )
         ]
         (if showAlbum then
-            [ favouriteColumn favouritesOnly favIdentifiers derivedColors
+            [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "36.0%" False track.tags.title
             , otherColumn "27.5%" False track.tags.artist
@@ -591,7 +624,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
             ]
 
          else
-            [ favouriteColumn favouritesOnly favIdentifiers derivedColors
+            [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "49.75%" False track.tags.title
             , otherColumn "41.25%" False track.tags.artist
@@ -676,8 +709,8 @@ playEvent ( i, t ) =
         )
 
 
-selectEvent : IdentifiedTrack -> Html.Attribute Msg
-selectEvent ( i, _ ) =
+selectEvent : Int -> Html.Attribute Msg
+selectEvent idx =
     Html.Events.custom
         "tap"
         (Decode.map2
@@ -686,7 +719,7 @@ selectEvent ( i, _ ) =
                     case button of
                         0 ->
                             { shiftKey = shiftKey }
-                                |> MarkAsSelected i.indexInList
+                                |> MarkAsSelected idx
                                 |> TracksMsg
 
                         _ ->
@@ -745,15 +778,20 @@ rowStyles idx { isMissing, isNowPlaying, isSelected } derivedColors =
 -- COLUMNS
 
 
+defFavColWidth =
+    "4.5%"
+
+
 columnMinWidth =
     "28px"
 
 
-favouriteColumn : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> Html Msg
-favouriteColumn favouritesOnly identifiers derivedColors =
+favouriteColumn : String -> Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> Html Msg
+favouriteColumn columnWidth favouritesOnly identifiers derivedColors =
     brick
         ((++)
-            [ identifiers.indexInList
+            [ style "width" columnWidth
+            , identifiers.indexInList
                 |> ToggleFavourite
                 |> TracksMsg
                 |> Html.Events.onClick
@@ -796,7 +834,6 @@ favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } d
     [ style "color" color
     , style "font-family" "or-favourites"
     , style "min-width" columnMinWidth
-    , style "width" "4.5%"
     ]
 
 

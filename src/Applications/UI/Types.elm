@@ -35,7 +35,7 @@ import UI.DnD as DnD
 import UI.Page as Page exposing (Page)
 import UI.Queue.Types as Queue
 import UI.Sources.Types as Sources
-import UI.Tracks.Types as Tracks exposing (Scene)
+import UI.Tracks.Types as Tracks
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
 
@@ -150,9 +150,11 @@ type alias Model =
     -----------------------------------------
     -- Tracks
     -----------------------------------------
+    , cachedCovers : Maybe (Dict String String)
     , cachedTracks : List String
     , cachedTracksOnly : Bool
     , cachingTracksInProgress : List String
+    , covers : List Tracks.Cover
     , favourites : List Favourite
     , favouritesOnly : Bool
     , grouping : Maybe Grouping
@@ -160,6 +162,7 @@ type alias Model =
     , scene : Scene
     , searchResults : Maybe (List String)
     , searchTerm : Maybe String
+    , selectedCover : Maybe Cover
     , selectedTrackIndexes : List Int
     , sortBy : SortBy
     , sortDirection : SortDirection

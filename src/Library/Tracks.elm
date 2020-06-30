@@ -1,4 +1,4 @@
-module Tracks exposing (Collection, CollectionDependencies, Favourite, Grouping(..), IdentifiedTrack, Identifiers, Parcel, SortBy(..), SortDirection(..), Tags, Track, emptyCollection, emptyIdentifiedTrack, emptyIdentifiers, emptyTags, emptyTrack, isNowPlaying, makeTrack, missingId, pick, removeByPaths, removeBySourceId, removeFromPlaylist, toPlaylistTracks)
+module Tracks exposing (..)
 
 import Base64
 import List.Extra as List
@@ -45,6 +45,19 @@ type alias Tags =
 -- DERIVATIVES & SUPPLEMENTS
 
 
+type alias Cover =
+    { focus : String
+    , group : String
+    , identifiedTrackCover : IdentifiedTrack
+    , key : String
+    , sameAlbum : Bool
+    , sameArtist : Bool
+    , trackIds : List String
+    , tracks : List IdentifiedTrack
+    , variousArtists : Bool
+    }
+
+
 type alias Favourite =
     { artist : String
     , title : String
@@ -60,9 +73,11 @@ type alias Identifiers =
     , isMissing : Bool
 
     --
+    , filename : String
     , group : Maybe { name : String, firstInGroup : Bool }
     , indexInList : Int
     , indexInPlaylist : Maybe Int
+    , parentDirectory : String
     }
 
 
@@ -131,6 +146,15 @@ type SortDirection
 
 
 
+-- VIEW
+
+
+type Scene
+    = Covers
+    | List
+
+
+
 -- 🔱
 
 
@@ -170,9 +194,11 @@ emptyIdentifiers =
     , isMissing = False
 
     --
+    , filename = ""
     , group = Nothing
     , indexInList = 0
     , indexInPlaylist = Nothing
+    , parentDirectory = ""
     }
 
 
@@ -209,6 +235,26 @@ makeTrack sourceId ( path, tags ) =
     , sourceId = sourceId
     , tags = tags
     }
+
+
+pathParts : Track -> { filename : String, parentDirectory : String }
+pathParts { path } =
+    let
+        s =
+            String.split "/" path
+
+        l =
+            List.length s
+    in
+    case List.drop (max 0 <| l - 2) s of
+        [ p, f ] ->
+            { filename = f, parentDirectory = p }
+
+        [ f ] ->
+            { filename = f, parentDirectory = "" }
+
+        _ ->
+            { filename = "", parentDirectory = "" }
 
 
 {-| Given a collection of tracks, pick out the tracks by id in order.
@@ -301,6 +347,13 @@ removeFromPlaylist tracks playlist =
 missingId : String
 missingId =
     "<missing>"
+
+
+shouldRenderGroup : Identifiers -> Bool
+shouldRenderGroup identifiers =
+    identifiers.group
+        |> Maybe.map (.firstInGroup >> (==) True)
+        |> Maybe.withDefault False
 
 
 toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrack

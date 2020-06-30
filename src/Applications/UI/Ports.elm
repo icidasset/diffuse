@@ -18,6 +18,9 @@ port adjustEqualizerSetting : { knob : String, value : Float } -> Cmd msg
 port copyToClipboard : String -> Cmd msg
 
 
+port loadAlbumCovers : () -> Cmd msg
+
+
 port pause : () -> Cmd msg
 
 
@@ -49,10 +52,13 @@ port activeQueueItemEnded : (() -> msg) -> Sub msg
 port downloadTracksFinished : (() -> msg) -> Sub msg
 
 
+port fromAlien : (Alien.Event -> msg) -> Sub msg
+
+
 port indicateTouchDevice : (() -> msg) -> Sub msg
 
 
-port fromAlien : (Alien.Event -> msg) -> Sub msg
+port insertCoverCache : (Json.Value -> msg) -> Sub msg
 
 
 port noteProgress : ({ trackId : String, progress : Float } -> msg) -> Sub msg

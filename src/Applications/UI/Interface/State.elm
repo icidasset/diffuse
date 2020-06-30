@@ -2,15 +2,16 @@ module UI.Interface.State exposing (..)
 
 import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
+import Maybe.Extra as Maybe
 import Notifications
 import Return exposing (return)
 import Return.Ext as Return
+import Tracks
 import UI.DnD as DnD
 import UI.Page as Page
 import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)
 
@@ -91,6 +92,10 @@ dnd dragMsg model =
 
             Page.Index ->
                 case model.scene of
+                    Tracks.Covers ->
+                        -- TODO
+                        Return.singleton m
+
                     Tracks.List ->
                         Playlists.moveTrackInSelected
                             { to = Maybe.withDefault 0 (DnD.modelTarget d) }
@@ -110,12 +115,20 @@ focusedOnInput model =
 
 hideOverlay : Manager
 hideOverlay model =
-    Return.singleton
-        { model
-            | alfred = Nothing
-            , confirmation = Nothing
-            , contextMenu = Nothing
-        }
+    if Maybe.isJust model.contextMenu then
+        Return.singleton { model | contextMenu = Nothing }
+
+    else if Maybe.isJust model.confirmation then
+        Return.singleton { model | confirmation = Nothing }
+
+    else if Maybe.isJust model.alfred then
+        Return.singleton { model | alfred = Nothing }
+
+    else if Maybe.isJust model.selectedCover then
+        Return.singleton { model | selectedCover = Nothing }
+
+    else
+        Return.singleton model
 
 
 preferredColorSchemaChanged : { dark : Bool } -> Manager

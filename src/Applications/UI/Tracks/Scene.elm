@@ -4,6 +4,7 @@ import Chunky exposing (..)
 import Conditional exposing (..)
 import Css.Classes as C
 import Html exposing (Html, text)
+import Html.Attributes as A
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Tracks
@@ -21,8 +22,10 @@ group { index } identifiers =
                 |> Maybe.map .name
                 |> Maybe.withDefault "Unknown"
     in
-    chunk
-        [ C.font_display
+    brick
+        [ A.style "height" "18px" ]
+        [ C.box_content
+        , C.font_display
         , C.font_semibold
         , C.leading_normal
         , C.pb_3

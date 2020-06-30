@@ -259,6 +259,8 @@ N - Scroll to currently-playing track
 
 Left / Right - Previous / Next
 Up   / Down  - Seek forwards / Seek backwards
+
+ESC - Close overlay, close context-menu, deselect album cover, etc.
 ```
 
 

@@ -41,9 +41,10 @@ sort property direction list =
 
 
 sortByAlbum : IdentifiedTrack -> IdentifiedTrack -> Order
-sortByAlbum ( _, a ) ( _, b ) =
+sortByAlbum ( x, a ) ( y, b ) =
     EQ
         |> andThenCompare album a b
+        |> andThenCompare parentDir x y
         |> andThenCompare disc a b
         |> andThenCompare nr a b
         |> andThenCompare artist a b
@@ -51,10 +52,11 @@ sortByAlbum ( _, a ) ( _, b ) =
 
 
 sortByArtist : IdentifiedTrack -> IdentifiedTrack -> Order
-sortByArtist ( _, a ) ( _, b ) =
+sortByArtist ( x, a ) ( y, b ) =
     EQ
         |> andThenCompare artist a b
         |> andThenCompare album a b
+        |> andThenCompare parentDir x y
         |> andThenCompare disc a b
         |> andThenCompare nr a b
         |> andThenCompare title a b
@@ -102,6 +104,11 @@ nr =
     .tags >> .nr
 
 
+parentDir : Identifiers -> String
+parentDir =
+    .parentDirectory >> low
+
+
 
 -- COMMON
 
@@ -117,4 +124,4 @@ andThenCompare fn a b order =
 
 low : String -> String
 low =
-    String.toLower
+    String.trim >> String.toLower

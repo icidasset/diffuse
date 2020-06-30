@@ -152,16 +152,7 @@ defaultScreen model =
     -- Main
     -----------------------------------------
     , vessel
-        [ Tracks.view
-            model
-            { amountOfSources = List.length model.sources
-            , bgColor = model.extractedBackdropColor
-            , darkMode = model.darkMode
-            , isOnIndexPage = model.page == Page.Index
-            , isTouchDevice = model.isTouchDevice
-            , sourceIdsBeingProcessed = List.map Tuple.first model.processingContext
-            , viewport = model.viewport
-            }
+        [ Tracks.view model
 
         -- Pages
         --------
@@ -285,7 +276,7 @@ overlay maybeAlfred maybeContextMenu =
             Maybe.isJust maybeAlfred || Maybe.isJust maybeContextMenu
     in
     brick
-        [ onClick HideOverlay ]
+        []
         [ C.inset_0
         , C.bg_black
         , C.duration_1000

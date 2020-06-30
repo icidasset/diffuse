@@ -10,9 +10,11 @@ import Notifications exposing (Notification)
 import Return exposing (return)
 import Return.Ext as Return
 import Task
+import Tracks
 import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Playlists.Directory
+import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Types as UI exposing (Manager, Msg)
 
@@ -37,10 +39,19 @@ dismissNotification options model =
 
 
 forceTracksRerender : Manager
-forceTracksRerender =
-    Browser.Dom.setViewportOf UI.Tracks.Scene.List.containerId 0 1
+forceTracksRerender model =
+    let
+        containerId =
+            case model.scene of
+                Tracks.Covers ->
+                    UI.Tracks.Scene.Covers.containerId
+
+                Tracks.List ->
+                    UI.Tracks.Scene.List.containerId
+    in
+    Browser.Dom.setViewportOf containerId 0 1
         |> Task.attempt (always UI.Bypass)
-        |> Return.communicate
+        |> return model
 
 
 generateDirectoryPlaylists : Manager

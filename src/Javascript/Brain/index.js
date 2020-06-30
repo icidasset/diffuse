@@ -5,6 +5,7 @@
 // This worker is responsible for everything non-UI.
 
 
+import * as artwork from "./artwork"
 import * as db from "../indexed-db"
 import * as processing from "../processing"
 import * as user from "./user"
@@ -43,14 +44,20 @@ user.setupPorts(app)
 // UI
 // ==
 
+app.ports.toUI.subscribe(event => {
+  self.postMessage(event)
+})
+
+
 self.onmessage = event => {
+  if (event.data.action) return handleAction(event.data.action, event.data.data)
   if (event.data.tag) return app.ports.fromAlien.send(event.data)
 }
 
 
-app.ports.toUI.subscribe(event => {
-  self.postMessage(event)
-})
+function handleAction(action, data) { switch (action) {
+  case "DOWNLOAD_ARTWORK": return downloadArtwork(data)
+}}
 
 
 
@@ -82,6 +89,49 @@ app.ports.toCache.subscribe(event => {
   toCache(key, event.data.data || event.data)
     .then( storageCallback(app, event) )
     .catch( reportError(app, event) )
+})
+
+
+
+// Cache (Artwork)
+// ---------------
+
+let artworkQueue = []
+
+
+function downloadArtwork(list) {
+  const exe = !artworkQueue[0]
+  artworkQueue = artworkQueue.concat(list)
+  if (exe) shiftArtworkQueue()
+}
+
+
+function shiftArtworkQueue() {
+  const next = artworkQueue.shift()
+  if (next) app.ports.makeArtworkTrackUrls.send(next)
+}
+
+
+app.ports.provideArtworkTrackUrls.subscribe(prep => {
+  artwork
+    .find(prep)
+    .then(blob => {
+      const url = URL.createObjectURL(blob)
+
+      toCache(`coverCache.${prep.cacheKey}`, blob)
+
+      self.postMessage({
+        tag: "GOT_CACHED_COVER",
+        data: { key: prep.cacheKey, url: url },
+        error: null
+      })
+    })
+    .catch(_ => {
+      // Indicate that we've tried to find artwork,
+      // so that we don't try to find it each time we launch the app.
+      toCache(`coverCache.${prep.cacheKey}`, "TRIED")
+    })
+    .finally(shiftArtworkQueue)
 })
 
 

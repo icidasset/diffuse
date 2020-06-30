@@ -13,6 +13,7 @@ import { saveAs } from "file-saver"
 import "../../build/vendor/pep"
 
 import * as audioEngine from "./audio-engine"
+import * as db from "./indexed-db"
 import { debounce, fileExtension } from "./common"
 
 
@@ -32,6 +33,7 @@ const app = Elm.UI.init({
     }
   }
 })
+
 
 self.app = app
 
@@ -227,6 +229,89 @@ app.ports.copyToClipboard.subscribe(text => {
     document.getSelection().addRange(selected)
   }
 
+})
+
+
+
+// Covers
+// ------
+
+const loadingCovers = {}
+
+
+app.ports.loadAlbumCovers.subscribe(
+  debounce(loadAlbumCovers, 500)
+)
+
+
+function loadAlbumCovers() {
+  const nodes = Array.from(
+    document.querySelectorAll("#diffuse__track-covers [data-key]")
+  )
+
+  if (!nodes.length) return;
+
+  const artworkPrep = nodes.map(node => {
+    return {
+      cacheKey:       node.getAttribute("data-key"),
+      focus:          node.getAttribute("data-focus"),
+      trackFilename:  node.getAttribute("data-filename"),
+      trackPath:      node.getAttribute("data-path"),
+      trackSourceId:  node.getAttribute("data-source-id"),
+      variousArtists: node.getAttribute("data-various-artists")
+    }
+
+  }).filter(prep => {
+    return !loadingCovers[prep.cacheKey]
+
+  })
+
+  artworkPrep.forEach(prep => {
+    loadingCovers[prep.cacheKey] = true
+  })
+
+  artworkPrep.reduce((acc, prep) => {
+    return acc.then(arr => {
+      return db.getFromIndex({ key: `coverCache.${prep.cacheKey}` }).then(a => {
+        if (!a) return arr.concat([ prep ])
+        return arr
+      })
+    })
+
+  }, Promise.resolve([])).then(withoutEarlierAttempts => {
+    brain.postMessage({
+      action: "DOWNLOAD_ARTWORK",
+      data: withoutEarlierAttempts
+    })
+
+  })
+}
+
+
+// Send a dictionary of the cached covers to the app.
+db.keys().then(keys => {
+  const cacheKeys = keys.filter(
+    k => k.startsWith("coverCache.")
+  )
+
+  const cachePromise = cacheKeys.reduce((acc, key) => {
+    return acc.then(cache => {
+      return db.getFromIndex({ key: key }).then(blob => {
+        const cacheKey = key.slice(11)
+
+        if (blob && typeof blob !== "string") {
+          cache[cacheKey] = URL.createObjectURL(blob)
+        }
+
+        return cache
+      })
+    })
+  }, Promise.resolve({}))
+
+  cachePromise.then(cache => {
+    app.ports.insertCoverCache.send(cache)
+    setTimeout(loadAlbumCovers, 500)
+  })
 })
 
 

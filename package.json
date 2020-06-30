@@ -21,11 +21,13 @@
   "dependencies": {
     "@tokenizer/http": "^0.5.2",
     "blockstack": "https://gist.github.com/a888e02d7441aeb2af99263a3add0f73.git",
+    "delay": "^4.3.0",
     "fast-text-encoding": "^1.0.2",
     "file-saver": "^2.0.2",
     "jszip": "^3.4.0",
     "lunr": "^2.3.8",
     "music-metadata-browser": "^2.0.5",
+    "p-retry": "^4.2.0",
     "pep": "mpizenberg/elm-pep#071616d75ca61e261fdefc7b55bc46c34e44ea22",
     "remotestoragejs": "^1.2.3",
     "subworkers": "^1.0.1",

@@ -1,9 +1,13 @@
 module UI.Tracks.State exposing (..)
 
 import Alien
+import Base64
 import Common exposing (..)
+import Conditional exposing (ifThenElse)
 import ContextMenu
 import Coordinates exposing (Coordinates)
+import Dict
+import Dict.Extra as Dict
 import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Decode as Json
@@ -16,9 +20,11 @@ import Playlists exposing (Playlist)
 import Queue
 import Return exposing (andThen, return)
 import Return.Ext as Return
-import Sources
+import Sources exposing (Source)
+import Sources.Processing exposing (HttpMethod(..))
 import Task
 import Task.Extra as Task
+import Time
 import Tracks exposing (..)
 import Tracks.Collection as Collection
 import Tracks.Encoding as Encoding
@@ -29,6 +35,7 @@ import UI.Page
 import UI.Ports as Ports
 import UI.Queue.State as Queue
 import UI.Tracks.ContextMenu as Tracks
+import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Tracks.Types as Tracks exposing (..)
 import UI.Types as UI exposing (Manager, Model, Msg(..))
@@ -82,6 +89,15 @@ update msg =
         StoredInCache a b ->
             storedInCache a b
 
+        ---------
+        -- Covers
+        ---------
+        GotCachedCover a ->
+            gotCachedCover a
+
+        InsertCoverCache a ->
+            insertCoverCache a
+
         -----------------------------------------
         -- Collection
         -----------------------------------------
@@ -112,6 +128,12 @@ update msg =
         -----------------------------------------
         -- Menus
         -----------------------------------------
+        ShowCoverMenu a b ->
+            showCoverMenu a b
+
+        ShowCoverMenuWithSmallDelay a b ->
+            showCoverMenuWithDelay a b
+
         ShowTracksMenu a b c ->
             showTracksMenu a b c
 
@@ -124,8 +146,17 @@ update msg =
         -----------------------------------------
         -- Scenes
         -----------------------------------------
+        ChangeScene a ->
+            changeScene a
+
+        DeselectCover ->
+            deselectCover
+
         InfiniteListMsg a ->
             infiniteListMsg a
+
+        SelectCover a ->
+            selectCover a
 
         -----------------------------------------
         -- Search
@@ -159,6 +190,20 @@ add encodedTracks model =
         |> andThen search
 
 
+changeScene : Scene -> Manager
+changeScene scene model =
+    (case scene of
+        Covers ->
+            Ports.loadAlbumCovers ()
+
+        List ->
+            Cmd.none
+    )
+        |> return { model | scene = scene, selectedCover = Nothing }
+        |> andThen Common.forceTracksRerender
+        |> andThen User.saveEnclosedUserData
+
+
 clearCache : Manager
 clearCache model =
     model.cachedTracks
@@ -180,6 +225,11 @@ clearSearch model =
     { model | searchResults = Nothing, searchTerm = Nothing }
         |> reviseCollection Collection.harvest
         |> andThen User.saveEnclosedUserData
+
+
+deselectCover : Manager
+deselectCover model =
+    Return.singleton { model | selectedCover = Nothing }
 
 
 download : String -> List Track -> Manager
@@ -265,6 +315,194 @@ finishedStoringInCache trackIds model =
         |> andThen User.saveEnclosedUserData
 
 
+generateCovers : Manager
+generateCovers model =
+    let
+        groupFn =
+            coverGroup model.sortBy
+
+        makeCoverFn =
+            makeCover model.sortBy
+    in
+    model.tracks.harvested
+        |> List.indexedFoldr
+            (\idx identifiedTrack { covers, gathering } ->
+                let
+                    group =
+                        groupFn identifiedTrack
+
+                    ( identifiers, track ) =
+                        identifiedTrack
+
+                    { artist, album } =
+                        track.tags
+                in
+                if group /= gathering.previousGroup then
+                    -- New group, make cover for previous group
+                    let
+                        { collection, selectedCover } =
+                            makeCoverFn gathering covers model.selectedCover
+                    in
+                    { gathering =
+                        { acc = [ identifiedTrack ]
+                        , accIds = [ track.id ]
+                        , previousGroup = group
+                        , previousTrack = track
+                        , selectedCover = selectedCover
+
+                        --
+                        , currentAlbumSequence = Just ( identifiedTrack, 1 )
+                        , largestAlbumSequence = Nothing
+
+                        --
+                        , currentAlbumFavsSequence = Just ( identifiedTrack, ifThenElse identifiers.isFavourite 1 0 )
+                        , largestAlbumFavsSequence = Nothing
+
+                        --
+                        , currentArtistSequence = Just ( identifiedTrack, 1 )
+                        , largestArtistSequence = Nothing
+                        }
+                    , covers =
+                        case group of
+                            "<missing>" ->
+                                covers
+
+                            _ ->
+                                collection
+                    }
+
+                else
+                    -- Same group
+                    { gathering =
+                        { acc = identifiedTrack :: gathering.acc
+                        , accIds = track.id :: gathering.accIds
+                        , previousGroup = group
+                        , previousTrack = track
+                        , selectedCover = gathering.selectedCover
+
+                        -- Album sequence
+                        -----------------
+                        , currentAlbumSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                Just ( identifiedTrack, 1 )
+
+                            else
+                                increaseSequence gathering.currentAlbumSequence
+
+                        --
+                        , largestAlbumSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                resolveLargestSequence
+                                    gathering.currentAlbumSequence
+                                    gathering.largestAlbumSequence
+
+                            else
+                                gathering.largestAlbumSequence
+
+                        -- Album favourites sequence
+                        ----------------------------
+                        , currentAlbumFavsSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                Just ( identifiedTrack, ifThenElse identifiers.isFavourite 1 0 )
+
+                            else if identifiers.isFavourite then
+                                increaseSequence gathering.currentAlbumFavsSequence
+
+                            else
+                                gathering.currentAlbumFavsSequence
+
+                        --
+                        , largestAlbumFavsSequence =
+                            if album /= gathering.previousTrack.tags.album then
+                                resolveLargestSequence
+                                    gathering.currentAlbumFavsSequence
+                                    gathering.largestAlbumFavsSequence
+
+                            else
+                                gathering.largestAlbumFavsSequence
+
+                        -- Artist sequence
+                        ------------------
+                        , currentArtistSequence =
+                            if artist /= gathering.previousTrack.tags.artist then
+                                Just ( identifiedTrack, 1 )
+
+                            else
+                                increaseSequence gathering.currentArtistSequence
+
+                        --
+                        , largestArtistSequence =
+                            if artist /= gathering.previousTrack.tags.artist then
+                                resolveLargestSequence
+                                    gathering.currentArtistSequence
+                                    gathering.largestArtistSequence
+
+                            else
+                                gathering.largestArtistSequence
+                        }
+                    , covers =
+                        covers
+                    }
+            )
+            { covers =
+                []
+            , gathering =
+                { acc = []
+                , accIds = []
+                , previousGroup = ""
+                , previousTrack = emptyTrack
+                , selectedCover = Nothing
+
+                --
+                , currentAlbumSequence = Nothing
+                , largestAlbumSequence = Nothing
+                , currentAlbumFavsSequence = Nothing
+                , largestAlbumFavsSequence = Nothing
+                , currentArtistSequence = Nothing
+                , largestArtistSequence = Nothing
+                }
+            }
+        |> (\{ covers, gathering } ->
+                let
+                    { collection, selectedCover } =
+                        makeCoverFn gathering covers model.selectedCover
+                in
+                { model
+                    | covers = collection
+                    , selectedCover = selectedCover
+                }
+           )
+        |> Return.communicate
+            (Ports.loadAlbumCovers ())
+        |> andThen
+            (case model.scene of
+                Covers ->
+                    Common.forceTracksRerender
+
+                List ->
+                    Return.singleton
+            )
+
+
+gotCachedCover : Json.Value -> Manager
+gotCachedCover json model =
+    let
+        cachedCovers =
+            Maybe.withDefault Dict.empty model.cachedCovers
+    in
+    json
+        |> Json.decodeValue
+            (Json.map2
+                Tuple.pair
+                (Json.field "key" Json.string)
+                (Json.field "url" Json.string)
+            )
+        |> Result.map (\( key, url ) -> Dict.insert key url cachedCovers)
+        |> Result.map (\dict -> { model | cachedCovers = Just dict })
+        |> Result.withDefault model
+        |> Return.singleton
+
+
 groupBy : Tracks.Grouping -> Manager
 groupBy grouping model =
     { model | grouping = Just grouping }
@@ -279,7 +517,18 @@ harvest =
 
 infiniteListMsg : InfiniteList.Model -> Manager
 infiniteListMsg infiniteList model =
-    Return.singleton { model | infiniteList = infiniteList }
+    return
+        { model | infiniteList = infiniteList }
+        (Ports.loadAlbumCovers ())
+
+
+insertCoverCache : Json.Value -> Manager
+insertCoverCache json model =
+    json
+        |> Json.decodeValue (Json.dict Json.string)
+        |> Result.map (\dict -> { model | cachedCovers = Just dict })
+        |> Result.withDefault model
+        |> Return.singleton
 
 
 markAsSelected : Int -> { shiftKey : Bool } -> Manager
@@ -392,6 +641,11 @@ search model =
             Return.singleton model
 
 
+selectCover : Cover -> Manager
+selectCover cover model =
+    Return.singleton { model | selectedCover = Just cover }
+
+
 setSearchResults : Json.Value -> Manager
 setSearchResults json model =
     case model.searchTerm of
@@ -417,6 +671,32 @@ setSearchTerm term model =
             _ ->
                 { model | searchTerm = Just term }
         )
+
+
+showCoverMenu : Cover -> Coordinates -> Manager
+showCoverMenu cover coordinates model =
+    let
+        menuDependencies =
+            { cached = model.cachedTracks
+            , cachingInProgress = model.cachingTracksInProgress
+            , currentTime = model.currentTime
+            , selectedPlaylist = model.selectedPlaylist
+            , lastModifiedPlaylistName = model.lastModifiedPlaylist
+            , showAlternativeMenu = False
+            , sources = model.sources
+            }
+    in
+    coordinates
+        |> Tracks.trackMenu menuDependencies cover.tracks
+        |> Common.showContextMenuWithModel model
+
+
+showCoverMenuWithDelay : Cover -> Coordinates -> Manager
+showCoverMenuWithDelay a b model =
+    Tracks.ShowCoverMenu a b
+        |> TracksMsg
+        |> Task.doDelayed 250
+        |> return model
 
 
 showTracksMenu : Maybe Int -> { alt : Bool } -> Coordinates -> Manager
@@ -488,6 +768,11 @@ scrollToNowPlaying model =
             )
         |> Maybe.map
             (case model.scene of
+                Covers ->
+                    UI.Tracks.Scene.Covers.scrollToNowPlaying
+                        model.viewport.width
+                        model.covers
+
                 List ->
                     UI.Tracks.Scene.List.scrollToNowPlaying model.tracks.harvested
             )
@@ -601,16 +886,34 @@ toggleFavourite index model =
                 newFavourites =
                     Favourites.toggleInFavouritesList ( i, t ) model.favourites
 
-                effect =
-                    if model.favouritesOnly then
-                        Collection.map (Favourites.toggleInTracksList t) >> Collection.harvest
+                effect collection =
+                    collection
+                        |> Collection.map (Favourites.toggleInTracksList t)
+                        |> (if model.favouritesOnly then
+                                Collection.harvest
 
-                    else
-                        Collection.map (Favourites.toggleInTracksList t)
+                            else
+                                identity
+                           )
+
+                selectedCover =
+                    Maybe.map
+                        (\cover ->
+                            cover.tracks
+                                |> Favourites.toggleInTracksList t
+                                |> (\a -> { cover | tracks = a })
+                        )
+                        model.selectedCover
             in
-            { model | favourites = newFavourites }
+            { model | favourites = newFavourites, selectedCover = selectedCover }
                 |> reviseCollection effect
                 |> andThen User.saveFavourites
+                |> (if model.scene == Covers then
+                        andThen generateCovers
+
+                    else
+                        identity
+                   )
 
         Nothing ->
             Return.singleton model
@@ -672,9 +975,22 @@ resolveParcel ( deps, newCollection ) model =
                 newCollection.untouched
 
         harvestChanged =
-            Collection.harvestChanged
-                model.tracks.harvested
-                newCollection.harvested
+            if collectionChanged then
+                True
+
+            else
+                Collection.identifiedTracksChanged
+                    model.tracks.harvested
+                    newCollection.harvested
+
+        arrangementChanged =
+            if collectionChanged || harvestChanged then
+                True
+
+            else
+                Collection.identifiedTracksChanged
+                    model.tracks.arranged
+                    newCollection.arranged
 
         searchChanged =
             newScrollContext /= model.tracks.scrollContext
@@ -698,10 +1014,15 @@ resolveParcel ( deps, newCollection ) model =
                 }
     in
     (if collectionChanged then
-        andThen Common.generateDirectoryPlaylists >> andThen Queue.reset
+        andThen Common.generateDirectoryPlaylists
+            >> andThen Queue.reset
+            >> andThen generateCovers
 
      else if harvestChanged then
-        andThen Queue.reset
+        andThen Queue.reset >> andThen generateCovers
+
+     else if arrangementChanged then
+        andThen generateCovers
 
      else
         identity
@@ -712,6 +1033,9 @@ resolveParcel ( deps, newCollection ) model =
           -----------------------------------------
         , if searchChanged then
             case model.scene of
+                Covers ->
+                    UI.Tracks.Scene.Covers.scrollToTop
+
                 List ->
                     UI.Tracks.Scene.List.scrollToTop
 
@@ -757,3 +1081,178 @@ importHypaethral data selectedPlaylist model =
                 Nothing ->
                     andThen (Common.toggleLoadingScreen Off)
            )
+
+
+
+-- ⚗️  ░░  COVERS
+
+
+coverGroup : SortBy -> IdentifiedTrack -> String
+coverGroup sort ( identifiers, { tags } as track ) =
+    (case sort of
+        Artist ->
+            tags.artist
+
+        Album ->
+            -- There is the possibility of albums with the same name,
+            -- such as "Greatests Hits".
+            -- To make sure we treat those as different albums,
+            -- we prefix the album by its parent directory.
+            identifiers.parentDirectory ++ tags.album
+
+        PlaylistIndex ->
+            ""
+
+        Title ->
+            tags.title
+    )
+        |> String.trim
+        |> String.toLower
+
+
+coverKey : Bool -> Track -> String
+coverKey isVariousArtists { tags } =
+    if isVariousArtists then
+        tags.album
+
+    else
+        tags.artist ++ " --- " ++ tags.album
+
+
+makeCover sortBy_ gathering collection previouslySelectedCover =
+    let
+        closedGathering =
+            { gathering
+                | largestAlbumSequence =
+                    resolveLargestSequence
+                        gathering.currentAlbumSequence
+                        gathering.largestAlbumSequence
+
+                --
+                , largestAlbumFavsSequence =
+                    resolveLargestSequence
+                        gathering.currentAlbumFavsSequence
+                        gathering.largestAlbumFavsSequence
+
+                --
+                , largestArtistSequence =
+                    resolveLargestSequence
+                        gathering.currentArtistSequence
+                        gathering.largestArtistSequence
+            }
+    in
+    case closedGathering.acc of
+        [] ->
+            { collection = collection
+            , selectedCover = closedGathering.selectedCover
+            }
+
+        fallback :: _ ->
+            let
+                cover =
+                    makeCoverWithFallback sortBy_ closedGathering fallback
+            in
+            { collection = cover :: collection
+            , selectedCover =
+                case ( previouslySelectedCover, closedGathering.selectedCover ) of
+                    ( Nothing, _ ) ->
+                        Nothing
+
+                    ( Just _, Just _ ) ->
+                        closedGathering.selectedCover
+
+                    ( Just sc, Nothing ) ->
+                        case sortBy_ of
+                            Artist ->
+                                if cover.group == sc.group then
+                                    Just cover
+
+                                else
+                                    Nothing
+
+                            _ ->
+                                if cover.key == sc.key then
+                                    Just cover
+
+                                else
+                                    Nothing
+            }
+
+
+makeCoverWithFallback sortBy_ gathering fallback =
+    let
+        amountOfTracks =
+            List.length gathering.accIds
+
+        group =
+            gathering.previousGroup
+
+        identifiedTrack =
+            gathering.largestAlbumFavsSequence
+                |> Maybe.orElse gathering.largestAlbumSequence
+                |> Maybe.map Tuple.first
+                |> Maybe.withDefault fallback
+
+        ( identifiers, track ) =
+            identifiedTrack
+
+        ( largestAlbumSequence, largestArtistSequence ) =
+            ( Maybe.unwrap 0 Tuple.second gathering.largestAlbumSequence
+            , Maybe.unwrap 0 Tuple.second gathering.largestArtistSequence
+            )
+
+        ( sameAlbum, sameArtist ) =
+            ( largestAlbumSequence == amountOfTracks
+            , largestArtistSequence == amountOfTracks
+            )
+
+        isVariousArtists =
+            False
+                || (amountOfTracks > 4 && largestArtistSequence < 3)
+                || (String.toLower track.tags.artist == "va")
+    in
+    { key = Base64.encode (coverKey isVariousArtists track)
+    , identifiedTrackCover = identifiedTrack
+
+    --
+    , focus =
+        case sortBy_ of
+            Artist ->
+                "artist"
+
+            _ ->
+                "album"
+
+    --
+    , group = group
+    , sameAlbum = sameAlbum
+    , sameArtist = sameArtist
+
+    --
+    , trackIds = gathering.accIds
+    , tracks = gathering.acc
+    , variousArtists = isVariousArtists
+    }
+
+
+
+-- ⚗️  ░░  COVERS → SEQUENCES
+
+
+increaseSequence =
+    Maybe.map (Tuple.mapSecond ((+) 1))
+
+
+resolveLargestSequence curr state =
+    case ( curr, state ) of
+        ( Just ( _, c ), Just ( _, s ) ) ->
+            ifThenElse (c > s) curr state
+
+        ( Just _, Nothing ) ->
+            curr
+
+        ( Nothing, Just _ ) ->
+            state
+
+        ( Nothing, Nothing ) ->
+            Nothing

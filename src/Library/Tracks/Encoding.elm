@@ -1,4 +1,4 @@
-module Tracks.Encoding exposing (decodeFavourite, decodeTrack, encodeFavourite, encodeGrouping, encodeMaybe, encodeSortBy, encodeSortDirection, encodeTags, encodeTrack, favouriteDecoder, groupingDecoder, sortByDecoder, sortDirectionDecoder, tagsDecoder, trackDecoder)
+module Tracks.Encoding exposing (..)
 
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (optional, required)
@@ -33,6 +33,16 @@ encodeGrouping v =
 
         TrackYear ->
             Encode.string "TRACK_YEAR"
+
+
+encodeScene : Scene -> Encode.Value
+encodeScene scene =
+    case scene of
+        Covers ->
+            Encode.string "COVERS"
+
+        List ->
+            Encode.string "LIST"
 
 
 encodeSortBy : SortBy -> Encode.Value
@@ -139,6 +149,23 @@ groupingDecoder =
 
                 _ ->
                     Decode.fail "Invalid Grouping"
+        )
+        Decode.string
+
+
+sceneDecoder : Decode.Decoder Scene
+sceneDecoder =
+    Decode.andThen
+        (\string ->
+            case string of
+                "COVERS" ->
+                    Decode.succeed Covers
+
+                "LIST" ->
+                    Decode.succeed List
+
+                _ ->
+                    Decode.fail "Invalid Scene"
         )
         Decode.string
 

@@ -188,18 +188,21 @@ init flags url key =
     -----------------------------------------
     -- Tracks
     -----------------------------------------
+    , cachedCovers = Nothing
     , cachedTracks = []
     , cachedTracksOnly = False
     , cachingTracksInProgress = []
+    , covers = []
     , favourites = []
     , favouritesOnly = False
     , grouping = Nothing
     , hideDuplicates = False
-    , scene = Tracks.List
+    , scene = Tracks.Covers
     , searchResults = Nothing
     , searchTerm = Nothing
+    , selectedCover = Nothing
     , selectedTrackIndexes = []
-    , sortBy = Tracks.Artist
+    , sortBy = Tracks.Album
     , sortDirection = Tracks.Asc
     , tracks = Tracks.emptyCollection
 
@@ -548,6 +551,7 @@ subscriptions model =
         -- Tracks
         -----------------------------------------
         , Ports.downloadTracksFinished (\_ -> TracksMsg Tracks.DownloadFinished)
+        , Ports.insertCoverCache (TracksMsg << Tracks.InsertCoverCache)
 
         -----------------------------------------
         -- 📭 Other
@@ -589,6 +593,9 @@ translateAlienData tag data =
 
         Alien.FinishedProcessingSources ->
             SourcesMsg Sources.FinishedProcessing
+
+        Alien.GotCachedCover ->
+            TracksMsg (Tracks.GotCachedCover data)
 
         Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off

@@ -8,14 +8,6 @@ import Tracks exposing (..)
 
 
 
--- 🌳
-
-
-type Scene
-    = List
-
-
-
 -- 📣
 
 
@@ -35,6 +27,11 @@ type Msg
     | RemoveFromCache (List Track)
     | StoreInCache (List Track)
     | StoredInCache Json.Value (Maybe String)
+      ---------
+      -- Covers
+      ---------
+    | GotCachedCover Json.Value
+    | InsertCoverCache Json.Value
       -----------------------------------------
       -- Collection
       -----------------------------------------
@@ -51,13 +48,18 @@ type Msg
       -----------------------------------------
       -- Menus
       -----------------------------------------
+    | ShowCoverMenu Cover Coordinates
+    | ShowCoverMenuWithSmallDelay Cover Coordinates
     | ShowTracksMenu (Maybe Int) { alt : Bool } Coordinates
     | ShowTracksMenuWithSmallDelay (Maybe Int) { alt : Bool } Coordinates
     | ShowViewMenu (Maybe Grouping) Mouse.Event
       -----------------------------------------
       -- Scenes
       -----------------------------------------
+    | ChangeScene Scene
+    | DeselectCover
     | InfiniteListMsg InfiniteList.Model
+    | SelectCover Cover
       -----------------------------------------
       -- Search
       -----------------------------------------
