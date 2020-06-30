@@ -339,11 +339,16 @@ generateCovers model =
                 in
                 if group /= gathering.previousGroup then
                     -- New group, make cover for previous group
+                    let
+                        { collection, selectedCover } =
+                            makeCoverFn gathering covers model.selectedCover
+                    in
                     { gathering =
                         { acc = [ identifiedTrack ]
                         , accIds = [ track.id ]
                         , previousGroup = group
                         , previousTrack = track
+                        , selectedCover = selectedCover
 
                         --
                         , currentAlbumSequence = Just ( identifiedTrack, 1 )
@@ -363,7 +368,7 @@ generateCovers model =
                                 covers
 
                             _ ->
-                                makeCoverFn gathering covers
+                                collection
                     }
 
                 else
@@ -373,6 +378,7 @@ generateCovers model =
                         , accIds = track.id :: gathering.accIds
                         , previousGroup = group
                         , previousTrack = track
+                        , selectedCover = gathering.selectedCover
 
                         -- Album sequence
                         -----------------
@@ -445,6 +451,7 @@ generateCovers model =
                 , accIds = []
                 , previousGroup = ""
                 , previousTrack = emptyTrack
+                , selectedCover = Nothing
 
                 --
                 , currentAlbumSequence = Nothing
@@ -456,8 +463,13 @@ generateCovers model =
                 }
             }
         |> (\{ covers, gathering } ->
+                let
+                    { collection, selectedCover } =
+                        makeCoverFn gathering covers model.selectedCover
+                in
                 { model
-                    | covers = makeCoverFn gathering covers
+                    | covers = collection
+                    , selectedCover = selectedCover
                 }
            )
         |> Return.communicate
@@ -874,16 +886,34 @@ toggleFavourite index model =
                 newFavourites =
                     Favourites.toggleInFavouritesList ( i, t ) model.favourites
 
-                effect =
-                    if model.favouritesOnly then
-                        Collection.map (Favourites.toggleInTracksList t) >> Collection.harvest
+                effect collection =
+                    collection
+                        |> Collection.map (Favourites.toggleInTracksList t)
+                        |> (if model.favouritesOnly then
+                                Collection.harvest
 
-                    else
-                        Collection.map (Favourites.toggleInTracksList t)
+                            else
+                                identity
+                           )
+
+                selectedCover =
+                    Maybe.map
+                        (\cover ->
+                            cover.tracks
+                                |> Favourites.toggleInTracksList t
+                                |> (\a -> { cover | tracks = a })
+                        )
+                        model.selectedCover
             in
-            { model | favourites = newFavourites }
+            { model | favourites = newFavourites, selectedCover = selectedCover }
                 |> reviseCollection effect
                 |> andThen User.saveFavourites
+                |> (if model.scene == Covers then
+                        andThen generateCovers
+
+                    else
+                        identity
+                   )
 
         Nothing ->
             Return.singleton model
@@ -1089,7 +1119,7 @@ coverKey isVariousArtists { tags } =
         tags.artist ++ " --- " ++ tags.album
 
 
-makeCover sortBy_ gathering =
+makeCover sortBy_ gathering collection previouslySelectedCover =
     let
         closedGathering =
             { gathering
@@ -1113,12 +1143,40 @@ makeCover sortBy_ gathering =
     in
     case closedGathering.acc of
         [] ->
-            identity
+            { collection = collection
+            , selectedCover = closedGathering.selectedCover
+            }
 
         fallback :: _ ->
-            fallback
-                |> makeCoverWithFallback sortBy_ closedGathering
-                |> (::)
+            let
+                cover =
+                    makeCoverWithFallback sortBy_ closedGathering fallback
+            in
+            { collection = cover :: collection
+            , selectedCover =
+                case ( previouslySelectedCover, closedGathering.selectedCover ) of
+                    ( Nothing, _ ) ->
+                        Nothing
+
+                    ( Just _, Just _ ) ->
+                        closedGathering.selectedCover
+
+                    ( Just sc, Nothing ) ->
+                        case sortBy_ of
+                            Artist ->
+                                if cover.group == sc.group then
+                                    Just cover
+
+                                else
+                                    Nothing
+
+                            _ ->
+                                if cover.key == sc.key then
+                                    Just cover
+
+                                else
+                                    Nothing
+            }
 
 
 makeCoverWithFallback sortBy_ gathering fallback =

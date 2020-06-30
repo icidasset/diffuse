@@ -443,7 +443,7 @@ defaultItemView args _ idx identifiedTrack =
             Scene.group { index = idx } identifiers
 
           else
-            text ""
+            nothing
 
         --
         , brick
