@@ -9,7 +9,7 @@ import ContextMenu exposing (ContextMenu)
 import Css.Classes as C
 import Html exposing (Html, section)
 import Html.Attributes exposing (class, style)
-import Html.Events exposing (on, onClick)
+import Html.Events exposing (on)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
 import Json.Decode

@@ -20,11 +20,10 @@ import Playlists exposing (Playlist)
 import Queue
 import Return exposing (andThen, return)
 import Return.Ext as Return
-import Sources exposing (Source)
+import Sources
 import Sources.Processing exposing (HttpMethod(..))
 import Task
 import Task.Extra as Task
-import Time
 import Tracks exposing (..)
 import Tracks.Collection as Collection
 import Tracks.Encoding as Encoding

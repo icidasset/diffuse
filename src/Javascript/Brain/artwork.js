@@ -3,10 +3,7 @@
 // (◕‿◕✿)
 
 
-import * as db from "../indexed-db"
 import * as processing from "../processing"
-
-import { toCache } from "./common"
 
 
 const REJECT = () => Promise.reject("No artwork found")
@@ -74,7 +71,7 @@ function musicBrainzCover(remainingReleases) {
       ? r
       : musicBrainzCover(remainingReleases.slice(1))
   ).catch(
-    e => musicBrainzCover(remainingReleases.slice(1))
+    () => musicBrainzCover(remainingReleases.slice(1))
   )
 }
 

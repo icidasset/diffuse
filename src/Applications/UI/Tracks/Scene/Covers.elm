@@ -3,8 +3,6 @@ module UI.Tracks.Scene.Covers exposing (containerId, scrollToNowPlaying, scrollT
 import Browser.Dom as Dom
 import Chunky exposing (..)
 import Color exposing (Color)
-import Color.Ext as Color
-import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Coordinates
 import Css.Classes as C
@@ -15,7 +13,6 @@ import Html.Events as E
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
 import InfiniteList
-import Json.Decode as Decode
 import List.Ext as List
 import List.Extra as List
 import Material.Icons as Icons
@@ -24,8 +21,6 @@ import Maybe.Extra as Maybe
 import Queue
 import Task
 import Tracks exposing (..)
-import UI.DnD as DnD
-import UI.Kit
 import UI.Queue.Types as Queue
 import UI.Tracks.Scene as Scene
 import UI.Tracks.Scene.List

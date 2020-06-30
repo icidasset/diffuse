@@ -29,7 +29,7 @@ export const storeNames = {
 }
 
 
-let db, idx, tries = 0
+let db, idx
 
 
 idx = indexedDB.open("diffuse", 1)

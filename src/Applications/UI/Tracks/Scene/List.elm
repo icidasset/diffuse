@@ -161,9 +161,6 @@ viewAttributes =
 header : Bool -> Bool -> SortBy -> SortDirection -> Html Msg
 header isPlaylist showAlbum sortBy sortDirection =
     let
-        showArtist =
-            True
-
         sortIcon =
             (if sortDirection == Desc then
                 Icons.expand_less

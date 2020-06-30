@@ -5,7 +5,6 @@ import Color exposing (Color)
 import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
-import Coordinates exposing (Viewport)
 import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (attribute, href, placeholder, style, tabindex, target, title, value)
