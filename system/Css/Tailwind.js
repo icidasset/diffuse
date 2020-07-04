@@ -20,9 +20,7 @@ const colors = {
   base0c: "rgb(91, 196, 191)",
   base0d: "rgb(6, 182, 239)",
   base0e: "rgb(129, 91, 164)",
-  base0f: "rgb(233, 107, 168)",
-
-  accent: "rgb(231, 150, 128)",
+  base0f: "rgb(233, 107, 168)"
 }
 
 
@@ -97,13 +95,14 @@ module.exports = {
       ...defaultTheme.colors,
       ...colors,
 
-      "accent-dark": "hsl(240, 8.9%, 82.4%)",
-      "accent-light": "hsl(340, 3.1%, 62%)",
+      "accent-dark": "hsl(304.3, 9.6%, 71.4%)",
+      "accent-light": "hsl(228.4, 15.3%, 60.2%)",
       "background": "rgb(2, 7, 14)",
       "base01-15": "rgba(63, 63, 63, 0.15)",
       "base01-55": "rgba(63, 63, 63, 0.55)",
-      "black_05": "rgba(0, 0, 0, 0.05)",
-      "black_50": "rgba(0, 0, 0, 0.5)",
+      "black-05": "rgba(0, 0, 0, 0.05)",
+      "black-35": "rgba(0, 0, 0, 0.35)",
+      "black-50": "rgba(0, 0, 0, 0.5)",
       "current-color": "currentColor",
       "inherit": "inherit",
       "white-025": "rgba(255, 255, 255, 0.025)",

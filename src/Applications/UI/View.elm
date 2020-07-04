@@ -93,7 +93,7 @@ body model =
         [ -----------------------------------------
           -- Alfred
           -----------------------------------------
-          Lazy.lazy Alfred.view model.alfred
+          Lazy.lazy2 Alfred.view model.alfred model.extractedBackdropColor
 
         -----------------------------------------
         -- Backdrop

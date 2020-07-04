@@ -284,7 +284,7 @@ backgroundImage chosenBackground =
                     [ if isActive then
                         chunk
                             [ C.absolute
-                            , C.bg_accent
+                            , C.bg_base04
                             , C.inset_0
                             , C.mb_1
                             , C.mr_1

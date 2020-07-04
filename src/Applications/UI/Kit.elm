@@ -133,9 +133,9 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                 Filled ->
                     case buttonColor of
                         Accent ->
-                            [ C.bg_accent
+                            [ C.bg_black_35
                             , C.border_transparent
-                            , C.text_white
+                            , C.text_white_90
                             ]
 
                         Blank ->
@@ -163,8 +163,8 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                     case buttonColor of
                         Accent ->
                             [ C.bg_transparent
-                            , C.border_accent
-                            , C.text_accent
+                            , C.border_base04
+                            , C.text_base04
                             ]
 
                         Blank ->
@@ -391,7 +391,7 @@ link params =
         Html.a
         [ href params.url ]
         [ C.border_b_2
-        , C.border_accent
+        , C.border_base04
         , C.inline_block
         , C.leading_none
         , C.no_underline
@@ -536,7 +536,7 @@ textButton params =
         [ onClick params.onClick ]
         [ C.appearance_none
         , C.bg_transparent
-        , C.border_accent
+        , C.border_base04
         , C.border_b_2
         , C.text_inherit
         , C.leading_tight

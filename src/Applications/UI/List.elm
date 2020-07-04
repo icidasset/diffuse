@@ -44,9 +44,10 @@ type Variant context msg
 
 view : Variant Int msg -> List (Item msg) -> Html msg
 view variant items =
-    items
-        |> List.indexedMap (item variant)
-        |> brick [ style "font-size" "13px" ] [ C.antialiased, C.font_semibold, C.leading_snug ]
+    brick
+        [ style "font-size" "13px" ]
+        [ C.antialiased, C.font_semibold, C.leading_snug ]
+        (List.indexedMap (item variant) items)
 
 
 
@@ -71,10 +72,18 @@ item variant idx { label, actions, msg, isSelected } =
 
         --
         , if dragTarget then
-            C.border_accent
+            C.border_base03
 
           else
             C.border_transparent
+
+        -- Dark mode
+        ------------
+        , if dragTarget then
+            C.dark__border_gray_300
+
+          else
+            C.dark__border_transparent
         ]
     <|
         chunk
@@ -85,11 +94,12 @@ item variant idx { label, actions, msg, isSelected } =
 
             --
             , ifThenElse (Maybe.isJust msg) C.cursor_pointer ""
-            , ifThenElse isSelected C.text_accent ""
+            , ifThenElse isSelected C.text_base03 ""
 
             -- Dark mode
             ------------
             , C.dark__border_base00
+            , ifThenElse isSelected C.dark__text_gray_300 ""
             ]
             [ -- Label
               --------

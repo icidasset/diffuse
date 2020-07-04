@@ -2,15 +2,17 @@ module UI.Alfred.View exposing (view)
 
 import Alfred exposing (Alfred)
 import Chunky exposing (..)
+import Color exposing (Color)
 import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (autofocus, id, placeholder, type_)
+import Html.Attributes exposing (autofocus, id, placeholder, style, type_)
 import Html.Events exposing (onInput)
 import Html.Ext exposing (onTapPreventDefault)
 import Json.Decode
 import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
+import Maybe.Extra as Maybe
 import String.Ext as String
 import UI.Types as UI
 
@@ -19,8 +21,12 @@ import UI.Types as UI
 -- 🗺
 
 
-view : Maybe (Alfred UI.Msg) -> Html UI.Msg
-view maybeInstance =
+view : Maybe (Alfred UI.Msg) -> Maybe Color -> Html UI.Msg
+view maybeInstance extractedBackdropColor =
+    let
+        bgColor =
+            Maybe.unwrap "inherit" Color.toCssString extractedBackdropColor
+    in
     case maybeInstance of
         Just instance ->
             chunk
@@ -115,7 +121,15 @@ view maybeInstance =
                     (List.indexedMap
                         (\idx result ->
                             brick
-                                [ onTapPreventDefault (UI.SelectAlfredItem idx) ]
+                                [ onTapPreventDefault (UI.SelectAlfredItem idx)
+
+                                --
+                                , if idx == instance.focus then
+                                    style "background-color" bgColor
+
+                                  else
+                                    style "background-color" "inherit"
+                                ]
                                 [ C.p_4
                                 , C.relative
                                 , C.truncate
@@ -129,7 +143,7 @@ view maybeInstance =
 
                                 --
                                 , if idx == instance.focus then
-                                    C.bg_accent
+                                    C.bg_base00
 
                                   else if modBy 2 idx == 0 then
                                     C.bg_transparent
