@@ -21,7 +21,7 @@ import UI.User.State.Export as User
 
 default : String
 default =
-    "7.jpg"
+    "21.jpg"
 
 
 options : List ( String, String )
@@ -32,7 +32,7 @@ options =
     , ( "4.jpg", "Option 4" )
     , ( "5.jpg", "Option 5" )
     , ( "6.jpg", "Option 6" )
-    , ( "7.jpg", "Option 7 (default)" )
+    , ( "7.jpg", "Option 7" )
     , ( "8.jpg", "Option 8" )
     , ( "9.jpg", "Option 9" )
     , ( "10.jpg", "Option 10" )
@@ -46,7 +46,14 @@ options =
     , ( "18.jpg", "Option 18" )
     , ( "19.jpg", "Option 19" )
     , ( "20.jpg", "Option 20" )
-    , ( "21.jpg", "Option 21" )
+    , ( "21.jpg", "Option 21 (default)" )
+    , ( "22.jpg", "Option 22" )
+    , ( "23.jpg", "Option 23" )
+    , ( "24.jpg", "Option 24" )
+    , ( "25.jpg", "Option 25" )
+    , ( "26.jpg", "Option 26" )
+    , ( "27.jpg", "Option 27" )
+    , ( "28.jpg", "Option 28" )
     ]
 
 
@@ -128,13 +135,31 @@ backgroundPositioning filename =
             style "background-position" "center 67.25%"
 
         "17.jpg" ->
-            style "background-position" "center 87.5%"
+            style "background-position" "center 2.5%"
 
         "19.jpg" ->
             style "background-position" "center 13%"
 
         "20.jpg" ->
             style "background-position" "center 39.75%"
+
+        "21.jpg" ->
+            style "background-position" "center 52.5%"
+
+        "22.jpg" ->
+            style "background-position" "center top"
+
+        "23.jpg" ->
+            style "background-position" "center 92.5%"
+
+        "24.jpg" ->
+            style "background-position" "center top"
+
+        "25.jpg" ->
+            style "background-position" "center 50%"
+
+        "27.jpg" ->
+            style "background-position" "center top"
 
         _ ->
             style "background-position" "center bottom"
