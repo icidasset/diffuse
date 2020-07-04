@@ -778,7 +778,7 @@ scrollToNowPlaying model =
         |> Maybe.map
             (\cmd ->
                 cmd
-                    |> return model
+                    |> return { model | selectedCover = Nothing }
                     |> andThen (Common.changeUrlUsingPage UI.Page.Index)
             )
         |> Maybe.withDefault
