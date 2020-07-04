@@ -19,7 +19,7 @@ generate sources tracks =
         sourceDirectories =
             List.foldl
                 (\s ->
-                    if s.directoryPlaylists then
+                    if s.enabled && s.directoryPlaylists then
                         s.data
                             |> Dict.get "directoryPath"
                             |> Maybe.map fixPath
