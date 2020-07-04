@@ -151,7 +151,6 @@ default: dev
 @vendor-js:
 	mkdir -p {{BUILD_DIR}}/vendor
 	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
-	cp {{NPM_DIR}}/blockstack/blockstack.min.js {{BUILD_DIR}}/vendor/blockstack.min.js
 
 	{{NPM_DIR}}/.bin/terser {{NPM_DIR}}/pep/elm-pep.js \
 		--output {{BUILD_DIR}}/vendor/pep.js \

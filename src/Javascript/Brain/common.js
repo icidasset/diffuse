@@ -16,7 +16,6 @@ export const SECRET_KEY_LOCATION = "AUTH_SECRET_KEY"
 export function isAuthMethodService(eventTag) {
   return (
     eventTag.startsWith("AUTH_") &&
-    eventTag !== "AUTH_BLOCKSTACK_SESSION" &&
     eventTag !== "AUTH_ENCLOSED_DATA" &&
     eventTag !== "AUTH_METHOD" &&
     eventTag !== "AUTH_SECRET_KEY"
