@@ -643,9 +643,6 @@ translateAlienError tag data err =
         Alien.AuthAnonymous ->
             AuthenticationMsg (Authentication.BootFailure err)
 
-        Alien.AuthBlockstack ->
-            AuthenticationMsg (Authentication.BootFailure err)
-
         Alien.AuthDropbox ->
             AuthenticationMsg (Authentication.BootFailure err)
 
@@ -653,9 +650,6 @@ translateAlienError tag data err =
             AuthenticationMsg (Authentication.BootFailure err)
 
         Alien.AuthRemoteStorage ->
-            AuthenticationMsg (Authentication.BootFailure err)
-
-        Alien.AuthTextile ->
             AuthenticationMsg (Authentication.BootFailure err)
 
         Alien.StoreTracksInCache ->

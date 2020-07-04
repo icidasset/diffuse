@@ -7,7 +7,6 @@
 
 import * as crypto from "../crypto"
 import { identity } from "../common"
-import Textile from "../textile"
 
 import { SECRET_KEY_LOCATION, decryptIfNeeded, encryptWithSecretKey } from "./common"
 import { fromCache, isLocalHost, removeCache, reportError } from "./common"
@@ -31,107 +30,6 @@ ports.fabricateSecretKey = app => event => {
       })
     })
     .catch(reportError(app, event))
-}
-
-
-
-// Blockstack
-// ----------
-
-let bl
-
-
-function bl0ckst4ck() {
-  if (!bl) {
-    importScripts("vendor/blockstack.min.js")
-
-    bl = new blockstack.UserSession({
-      appConfig: new blockstack.AppConfig({
-        appDomain: location.origin
-      }),
-      sessionStore: BLOCKSTACK_SESSION_STORE
-    })
-  }
-
-  return bl
-}
-
-
-const BLOCKSTACK_SESSION_STORE = {
-  key: "AUTH_BLOCKSTACK_SESSION",
-  getSessionData() { return fromCache(this.key).then(a => a || {}) },
-  setSessionData(data) { return toCache(this.key, data) },
-  deleteSessionData() { return removeCache(this.key) }
-}
-
-
-ports.deconstructBlockstack = _app => _ => {
-  BLOCKSTACK_SESSION_STORE.deleteSessionData()
-  bl = null
-}
-
-
-ports.handlePendingBlockstackSignIn = app => authResponse => {
-  const session = bl0ckst4ck()
-
-  session.handlePendingSignIn(authResponse).then(_ => {
-    app.ports.fromAlien.send({
-      tag: "SIGN_IN",
-      data: { method: "BLOCKSTACK", passphrase: null },
-      error: null
-    })
-
-  }).catch(
-    reportError({ tag: "AUTH_BLOCKSTACK" })
-
-  )
-}
-
-
-ports.redirectToBlockstackSignIn = app => event => {
-  const session = bl0ckst4ck()
-
-  session.generateAndStoreTransitKey().then(transitKey => {
-    const dir = location.pathname.replace("brain.js", "")
-
-    return session.makeAuthRequest(
-      transitKey,
-      location.origin + dir + "?action=authenticate/blockstack",
-      location.origin + dir + "manifest.json",
-      [ "store_write" ]
-    )
-
-  }).then(authRequest => {
-    self.postMessage({
-      action: "REDIRECT_TO_BLOCKSTACK",
-      data: authRequest
-    })
-
-  }).catch(
-    reportError(app, event)
-
-  )
-}
-
-
-ports.requestBlockstack = app => event => {
-  const session = bl0ckst4ck()
-
-  session
-    .getFile(event.data.file)
-    .then( sendJsonData(app, event) )
-    .catch( reportError(app, event) )
-}
-
-
-ports.toBlockstack = app => event => {
-  const json = JSON.stringify(event.data.data)
-  const session = bl0ckst4ck()
-
-  session
-    .putFile(event.data.file, json)
-    .then( storageCallback(app, event) )
-    .catch( reportError(app, event) )
 }
 
 
@@ -334,42 +232,6 @@ ports.toRemoteStorage = app => event => {
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
     .then( isOffline ? storageCallback(app, event) : identity )
-    .catch( reportError(app, event) )
-}
-
-
-
-// Textile
-// -------
-
-
-ports.requestTextile = app => event => {
-  const apiOrigin = event.data.apiOrigin
-
-  Textile.ensureThread
-    (apiOrigin)
-
-    .then(_ => Textile.getFile(apiOrigin, event.data.file))
-    .then(f => f ? Textile.readFile(apiOrigin, f) : null)
-
-    .then( sendJsonData(app, event) )
-    .catch( reportError(app, event) )
-}
-
-
-ports.toTextile = app => event => {
-  const apiOrigin = event.data.apiOrigin
-  const json = JSON.stringify(event.data.data)
-
-  Textile.ensureThread
-    (apiOrigin)
-
-    .then(_ => Textile.getFile(apiOrigin))
-    .then(f => f ? Textile.deleteBlock(apiOrigin, f) : null)
-    .then(_ => Textile.useMill(apiOrigin, event.data.file, json))
-    .then(m => Textile.addFileToThread(apiOrigin, m))
-
-    .then( storageCallback(app, event) )
     .catch( reportError(app, event) )
 }
 

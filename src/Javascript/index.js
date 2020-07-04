@@ -61,7 +61,6 @@ brain.onmessage = event => {
 
 function handleAction(action, data) { switch (action) {
   case "DOWNLOAD_TRACKS": return downloadTracks(data)
-  case "REDIRECT_TO_BLOCKSTACK": return redirectToBlockstack(data)
 }}
 
 
@@ -137,23 +136,6 @@ app.ports.seek.subscribe(percentage => {
 app.ports.setRepeat.subscribe(repeat => {
   orchestrion.repeat = repeat
 })
-
-
-
-// Authentication
-// --------------
-
-function redirectToBlockstack(authRequest) {
-  switch (location.hostname) {
-    case "0.0.0.0":
-    case "127.0.0.1":
-    case "localhost":
-      return window.location.href = `http://localhost:8888/auth?authRequest=${authRequest}`
-
-    default:
-      return window.location.href = `https://browser.blockstack.org/auth?authRequest=${authRequest}`
-  }
-}
 
 
 

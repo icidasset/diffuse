@@ -63,7 +63,6 @@ type Msg
       -----------------------------------------
       -- 📭 Other
       -----------------------------------------
-    | RedirectToBlockstackSignIn
     | SetCurrentTime Time.Posix
     | ToCache Json.Value
 

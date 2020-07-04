@@ -97,9 +97,6 @@ content deps =
       , lineBreak
       , text "You're storing the data for this application "
       , case deps.authenticationMethod of
-            Just Blockstack ->
-                text "on Blockstack."
-
             Just (Dropbox _) ->
                 text "on Dropbox."
 
@@ -112,17 +109,11 @@ content deps =
             Just (RemoteStorage _) ->
                 text "on a RemoteStorage server."
 
-            Just (Textile _) ->
-                text "on Textile."
-
             Nothing ->
                 text "on nothing, wtf?"
 
       -- Change passphrase (if applicable)
       , case deps.authenticationMethod of
-            Just Blockstack ->
-                nothing
-
             Just (Dropbox d) ->
                 changePassphrase (Dropbox d)
 
@@ -134,9 +125,6 @@ content deps =
 
             Just (RemoteStorage r) ->
                 changePassphrase (RemoteStorage r)
-
-            Just (Textile _) ->
-                nothing
 
             Nothing ->
                 nothing

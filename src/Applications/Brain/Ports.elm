@@ -46,22 +46,10 @@ port updateSearchIndex : Json.Value -> Cmd msg
 -- 📣  ░░  USER LAYER SERVICES
 
 
-port deconstructBlockstack : () -> Cmd msg
-
-
 port deconstructRemoteStorage : () -> Cmd msg
 
 
-port handlePendingBlockstackSignIn : String -> Cmd msg
-
-
 port provideArtworkTrackUrls : Json.Value -> Cmd msg
-
-
-port redirectToBlockstackSignIn : () -> Cmd msg
-
-
-port requestBlockstack : Alien.Event -> Cmd msg
 
 
 port requestDropbox : Alien.Event -> Cmd msg
@@ -76,12 +64,6 @@ port requestLegacyLocalData : Alien.Event -> Cmd msg
 port requestRemoteStorage : Alien.Event -> Cmd msg
 
 
-port requestTextile : Alien.Event -> Cmd msg
-
-
-port toBlockstack : Alien.Event -> Cmd msg
-
-
 port toDropbox : Alien.Event -> Cmd msg
 
 
@@ -89,9 +71,6 @@ port toIpfs : Alien.Event -> Cmd msg
 
 
 port toRemoteStorage : Alien.Event -> Cmd msg
-
-
-port toTextile : Alien.Event -> Cmd msg
 
 
 

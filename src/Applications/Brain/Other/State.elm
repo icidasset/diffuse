@@ -14,11 +14,6 @@ import Time
 -- 🔱
 
 
-redirectToBlockstackSignIn : Manager
-redirectToBlockstackSignIn =
-    Return.communicate (Ports.redirectToBlockstackSignIn ())
-
-
 setCurrentTime : Time.Posix -> Manager
 setCurrentTime time model =
     Return.singleton { model | currentTime = time }

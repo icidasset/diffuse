@@ -140,9 +140,6 @@ update msg =
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
-        RedirectToBlockstackSignIn ->
-            Other.redirectToBlockstackSignIn
-
         SetCurrentTime a ->
             Other.setCurrentTime a
 
@@ -191,9 +188,6 @@ translateAlienData tag data =
         Alien.AuthAnonymous ->
             UserMsg (User.HypaethralDataRetrieved data)
 
-        Alien.AuthBlockstack ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
         Alien.AuthDropbox ->
             UserMsg (User.HypaethralDataRetrieved data)
 
@@ -207,9 +201,6 @@ translateAlienData tag data =
             UserMsg (User.MethodRetrieved data)
 
         Alien.AuthRemoteStorage ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthTextile ->
             UserMsg (User.HypaethralDataRetrieved data)
 
         Alien.FabricateSecretKey ->
@@ -229,9 +220,6 @@ translateAlienData tag data =
 
         Alien.ProcessSources ->
             ProcessingMsg (Processing.Process data)
-
-        Alien.RedirectToBlockstackSignIn ->
-            RedirectToBlockstackSignIn
 
         Alien.RemoveEncryptionKey ->
             UserMsg User.RemoveEncryptionKey
@@ -299,9 +287,6 @@ translateAlienError tag _ err =
 
         Alien.AuthRemoteStorage ->
             reportAuthError Alien.AuthRemoteStorage err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
-
-        Alien.AuthTextile ->
-            reportAuthError Alien.AuthTextile err "Something went wrong regarding Textile. Maybe Textile isn't running?"
 
         _ ->
             case err of

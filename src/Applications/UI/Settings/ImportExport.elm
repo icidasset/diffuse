@@ -55,9 +55,6 @@ view userLayerMethod =
                 RequestImport
                 (text "Choose file")
             , case userLayerMethod of
-                Just Blockstack ->
-                    otherImportOptions
-
                 Just Local ->
                     otherImportOptions
 

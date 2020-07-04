@@ -26,12 +26,10 @@ This layer connects to the services on which your music is stored, no data is wr
 
 This layer will use a single service on which to store your data. Your data being your settings, favourites, playlists, etc. You can choose between these services:
 
-- [Blockstack](https://blockstack.org/)
 - [Dropbox](https://www.dropbox.com/)
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(Browser)</small>
 - [IPFS](https://ipfs.io/) <small>(using MFS)</small>
 - [RemoteStorage](https://remotestorage.io/)
-- [Textile](https://github.com/textileio/go-textile)
 
 
 
@@ -158,26 +156,6 @@ ALLOWED METHODS       GET, HEAD
 ALLOWED HEADERS       Range
 EXPOSED HEADERS       Content-Length, Content-Range
 MAX AGE               0
-```
-
-<div id="CORS__Textile" />
-
-#### Textile
-
-Add the domain of the app, with the protocol, to the __list of allowed origins__ in the configuration.
-
-```json
-{
-  "API": {
-    "HTTPHeaders": {
-      "Access-Control-Allow-Origin": [
-        "https://diffuse.sh",
-        "http://127.0.0.1:8080",
-        "http://127.0.0.1:44999"
-      ]
-    }
-  }
-}
 ```
 
 <div id="CORS__WebDAV" />

@@ -191,21 +191,6 @@ update msg =
         ConfirmInput ->
             confirmInput
 
-        -----------------------------------------
-        -- Textile
-        -----------------------------------------
-        PingTextile ->
-            pingTextile
-
-        PingTextileCallback a ->
-            pingTextileCallback a
-
-        PingOtherTextile a ->
-            pingOtherTextile a
-
-        PingOtherTextileCallback a b ->
-            pingOtherTextileCallback a b
-
 
 organize : Organizer Authentication.State -> Manager
 organize =
@@ -258,12 +243,6 @@ cancelFlow model =
 externalAuth : Method -> String -> Manager
 externalAuth method string model =
     case method of
-        Blockstack ->
-            Alien.RedirectToBlockstackSignIn
-                |> Alien.trigger
-                |> Ports.toBrain
-                |> return model
-
         Dropbox _ ->
             [ ( "response_type", "token" )
             , ( "client_id", "te0c9pbeii8f8bw" )
@@ -627,72 +606,8 @@ confirmInput model =
         InputScreen (RemoteStorage r) { value } ->
             externalAuth (RemoteStorage r) value model
 
-        InputScreen (Textile t) { value } ->
-            pingOtherTextile (String.chopEnd "/" value) model
-
         _ ->
             Return.singleton model
-
-
-
--- TEXTILE
-
-
-pingTextile : Manager
-pingTextile model =
-    { url = "//localhost:40600/api/v0/summary"
-    , expect = Http.expectWhatever (AuthenticationMsg << PingTextileCallback)
-    }
-        |> Http.get
-        |> return model
-
-
-pingTextileCallback : Result Http.Error () -> Manager
-pingTextileCallback result =
-    case result of
-        Ok _ ->
-            { apiOrigin = "//localhost:40600" }
-                |> Textile
-                |> signIn
-
-        Err _ ->
-            askForInput
-                (Textile { apiOrigin = "" })
-                { placeholder = "//localhost:40600"
-                , question = """
-                Where's your Textile API located?<br />
-                <span class="font-normal text-white-60">
-                    You might need to do some CORS configuration.<br />
-                    You can find the instructions for that
-                    <a href="about#CORS__Textile" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.<br />
-                    You can't connect to a HTTP server while on HTTPS.
-                </span>
-              """
-                , value = "//localhost:40600"
-                }
-
-
-pingOtherTextile : String -> Manager
-pingOtherTextile origin model =
-    { url = origin ++ "/api/v0/summary"
-    , expect = Http.expectWhatever (AuthenticationMsg << PingOtherTextileCallback origin)
-    }
-        |> Http.get
-        |> return model
-
-
-pingOtherTextileCallback : String -> Result Http.Error () -> Manager
-pingOtherTextileCallback origin result =
-    case result of
-        Ok _ ->
-            { apiOrigin = origin }
-                |> Textile
-                |> signIn
-
-        Err _ ->
-            "Can't reach this Textile API, maybe it's offline? Or I don't have access?"
-                |> Notifications.error
-                |> Common.showNotification
 
 
 

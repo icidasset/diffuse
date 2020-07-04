@@ -127,25 +127,6 @@ loadHypaethralUserData json model =
             )
         |> andThen
             (\m ->
-                let
-                    notification =
-                        Notifications.stickyWarning
-                            """
-                            Blockstack and Textile support will be removed in v3, please migrate to a different data-storage service (by exporting and then importing). v3 will add support for storing your data on [Fission](https://fission.codes).
-                            """
-                in
-                case UI.Authentication.Common.extractMethod m.authentication of
-                    Just Blockstack ->
-                        Common.showNotificationWithModel m notification
-
-                    Just (Textile _) ->
-                        Common.showNotificationWithModel m notification
-
-                    _ ->
-                        Return.singleton m
-            )
-        |> andThen
-            (\m ->
                 if m.processAutomatically then
                     Sources.process m
 

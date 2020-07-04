@@ -255,13 +255,6 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = TriggerExternalAuth Blockstack ""
-            , icon = \_ _ -> Svg.map never UI.Svg.Elements.blockstackLogo
-            , infoLink = Just "https://blockstack.org"
-            , label = "Blockstack"
-            , outOfOrder = False
-            }
-        , choiceButton
             { action = TriggerExternalAuth (Dropbox { token = "" }) ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.dropboxLogo
             , infoLink = Just "https://dropbox.com/"

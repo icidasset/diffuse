@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.0
+
+- **Adds album-covers view** (switch to and from list view with icon in nav bar)
+- Removes support for Blockstack & Textile
+
 ## 2.5.3
 
 - Deprecate Blockstack & Textile

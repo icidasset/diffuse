@@ -21,10 +21,4 @@ moreOptionsMenu =
             , msg = AuthenticationMsg Authentication.PingIpfs
             , active = False
             }
-        , Item
-            { icon = \_ _ -> Svg.map never UI.Svg.Elements.textileLogo
-            , label = "Textile (Experimental)"
-            , msg = AuthenticationMsg Authentication.PingTextile
-            , active = False
-            }
         ]

@@ -67,10 +67,3 @@ type Msg
     | AskForInput Method Question
     | Input String
     | ConfirmInput
-      -----------------------------------------
-      -- Textile
-      -----------------------------------------
-    | PingTextile
-    | PingTextileCallback (Result Http.Error ())
-    | PingOtherTextile String
-    | PingOtherTextileCallback String (Result Http.Error ())

@@ -11,11 +11,9 @@ parserOptions:
   sourceType: module
 
 globals:
-  blockstack: readonly
   Elm: readonly
   MediaMetadata: readonly
   RemoteStorage: readonly
-  Textile: readonly
   tocca: readonly
 
 rules:

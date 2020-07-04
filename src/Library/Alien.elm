@@ -25,14 +25,12 @@ type alias Event =
 
 type Tag
     = AuthAnonymous
-    | AuthBlockstack
     | AuthDropbox
     | AuthEnclosedData
     | AuthIpfs
     | AuthMethod
     | AuthRemoteStorage
     | AuthSecretKey
-    | AuthTextile
     | FabricateSecretKey
     | SearchTracks
       -----------------------------------------
@@ -41,7 +39,6 @@ type Tag
     | DownloadTracks
     | ImportLegacyData
     | ProcessSources
-    | RedirectToBlockstackSignIn
     | RemoveEncryptionKey
     | RemoveTracksBySourceId
     | RemoveTracksFromCache
@@ -81,14 +78,12 @@ enum : Enum Tag
 enum =
     Enum.create
         [ ( "AUTH_ANONYMOUS", AuthAnonymous )
-        , ( "AUTH_BLOCKSTACK", AuthBlockstack )
         , ( "AUTH_DROPBOX", AuthDropbox )
         , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
         , ( "AUTH_IPFS", AuthIpfs )
         , ( "AUTH_METHOD", AuthMethod )
         , ( "AUTH_REMOTE_STORAGE", AuthRemoteStorage )
         , ( "AUTH_SECRET_KEY", AuthSecretKey )
-        , ( "AUTH_TEXTILE", AuthTextile )
         , ( "FABRICATE_SECRET_KEY", FabricateSecretKey )
         , ( "SEARCH_TRACKS", SearchTracks )
 
@@ -98,7 +93,6 @@ enum =
         , ( "DOWNLOAD_TRACKS", DownloadTracks )
         , ( "IMPORT_LEGACY_DATA", ImportLegacyData )
         , ( "PROCESS_SOURCES", ProcessSources )
-        , ( "REDIRECT_TO_BLOCKSTACK_SIGN_IN", RedirectToBlockstackSignIn )
         , ( "REMOVE_ENCRYPTION_KEY", RemoveEncryptionKey )
         , ( "REMOVE_TRACKS_BY_SOURCE_ID", RemoveTracksBySourceId )
         , ( "REMOVE_TRACKS_FROM_CACHE", RemoveTracksFromCache )

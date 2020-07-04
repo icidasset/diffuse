@@ -29,27 +29,11 @@ import User.Layer as User exposing (..)
 
 
 initialCommand : Url -> Cmd Brain.Msg
-initialCommand initialUrl =
-    case Url.action initialUrl of
-        [ "authenticate", "blockstack" ] ->
-            case Url.extractQueryParam "authResponse" initialUrl of
-                Just authResponse ->
-                    Cmd.batch
-                        [ do (UserMsg RetrieveEnclosedData)
-                        , Ports.handlePendingBlockstackSignIn authResponse
-                        ]
-
-                Nothing ->
-                    Cmd.batch
-                        [ do (UserMsg RetrieveMethod)
-                        , do (UserMsg RetrieveEnclosedData)
-                        ]
-
-        _ ->
-            Cmd.batch
-                [ do (UserMsg RetrieveMethod)
-                , do (UserMsg RetrieveEnclosedData)
-                ]
+initialCommand _ =
+    Cmd.batch
+        [ do (UserMsg RetrieveMethod)
+        , do (UserMsg RetrieveEnclosedData)
+        ]
 
 
 
@@ -207,9 +191,6 @@ signOut model =
 
     --
     , case model.authMethod of
-        Just Blockstack ->
-            Ports.deconstructBlockstack ()
-
         Just (Dropbox _) ->
             Cmd.none
 
@@ -221,9 +202,6 @@ signOut model =
 
         Just (RemoteStorage _) ->
             Ports.deconstructRemoteStorage ()
-
-        Just (Textile _) ->
-            Cmd.none
 
         Nothing ->
             Cmd.none
@@ -359,13 +337,6 @@ retrieveHypaethralData bit model =
     in
     case model.authMethod of
         -- 🚀
-        Just Blockstack ->
-            [ ( "file", file ) ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthBlockstack
-                |> Ports.requestBlockstack
-                |> return model
-
         Just (Dropbox { token }) ->
             [ ( "file", file )
             , ( "token", Json.string token )
@@ -401,15 +372,6 @@ retrieveHypaethralData bit model =
                 |> Ports.requestRemoteStorage
                 |> return model
 
-        Just (Textile { apiOrigin }) ->
-            [ ( "apiOrigin", Json.string apiOrigin )
-            , ( "file", file )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthTextile
-                |> Ports.requestTextile
-                |> return model
-
         -- ✋
         Nothing ->
             Return.singleton model
@@ -423,13 +385,6 @@ retrieveLegacyHypaethralData model =
     in
     case model.authMethod of
         -- 🚀
-        Just Blockstack ->
-            [ ( "file", file ) ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthBlockstack
-                |> Ports.requestBlockstack
-                |> return { model | legacyMode = True }
-
         Just Local ->
             Alien.AuthAnonymous
                 |> Alien.trigger
@@ -466,15 +421,6 @@ saveHypaethralData bit json model =
     in
     case model.authMethod of
         -- 🚀
-        Just Blockstack ->
-            [ ( "data", json )
-            , ( "file", file )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthBlockstack
-                |> Ports.toBlockstack
-                |> return model
-
         Just (Dropbox { token }) ->
             [ ( "data", json )
             , ( "file", file )
@@ -513,16 +459,6 @@ saveHypaethralData bit json model =
                 |> Json.object
                 |> Alien.broadcast Alien.AuthRemoteStorage
                 |> Ports.toRemoteStorage
-                |> return model
-
-        Just (Textile { apiOrigin }) ->
-            [ ( "apiOrigin", Json.string apiOrigin )
-            , ( "data", json )
-            , ( "file", file )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthTextile
-                |> Ports.toTextile
                 |> return model
 
         -- ✋

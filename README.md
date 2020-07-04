@@ -12,17 +12,8 @@ in the form of a static, serverless, web application._
 
 ### Integrations
 
-User layer for user-data storage.  
 Music layer for music storage.
-
-#### User layer
-
-- [Blockstack](https://blockstack.org/)
-- [Dropbox](https://www.dropbox.com/)
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(browser)</small>
-- [IPFS](https://ipfs.io/)
-- [RemoteStorage](https://remotestorage.io/)
-- [Textile](https://github.com/textileio/go-textile)
+User layer for user-data storage.  
 
 #### Music layer
 
@@ -33,6 +24,13 @@ Music layer for music storage.
 - [Google Drive](https://drive.google.com/)
 - [IPFS](https://ipfs.io/)
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
+
+#### User layer
+
+- [Dropbox](https://www.dropbox.com/)
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(Browser)</small>
+- [IPFS](https://ipfs.io/) <small>(using MFS)</small>
+- [RemoteStorage](https://remotestorage.io/)
 
 
 
