@@ -106,3 +106,9 @@ pre {
 code {
   @apply font-mono;
 }
+
+@screen dark {
+  pre {
+    @apply border-base01;
+  }
+}
