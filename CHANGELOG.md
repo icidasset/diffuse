@@ -3,6 +3,7 @@
 ## 3.0.0
 
 - **Adds album-covers view** (switch to and from list view with icon in nav bar)
+- Fixes playback issues (eg. clicking same track multiple times)
 - Removes support for Blockstack & Textile
 
 ## 2.5.3
