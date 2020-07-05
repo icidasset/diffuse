@@ -4,7 +4,7 @@ import Chunky exposing (..)
 import Conditional exposing (..)
 import Css.Classes as C
 import Html exposing (Html)
-import Html.Attributes exposing (style, title)
+import Html.Attributes exposing (title)
 import Html.Events exposing (onClick)
 import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
 import List.Ext as List
