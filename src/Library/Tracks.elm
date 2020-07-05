@@ -237,6 +237,11 @@ makeTrack sourceId ( path, tags ) =
     }
 
 
+missingAlbumPlaceholder : String
+missingAlbumPlaceholder =
+    "⌁"
+
+
 pathParts : Track -> { filename : String, parentDirectory : String }
 pathParts { path } =
     let

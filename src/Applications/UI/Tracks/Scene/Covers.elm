@@ -662,24 +662,36 @@ itemView options deps cover =
 coverView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
 coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
     let
+        nowPlayingId =
+            Maybe.unwrap "" (.identifiedTrack >> Tuple.second >> .id) nowPlaying
+
+        album =
+            cover.identifiedTrackCover
+                |> Tuple.second
+                |> .tags
+                |> .album
+
+        missingTracks =
+            album == Tracks.missingAlbumPlaceholder
+
         maybeBlobUrlFromCache =
             cachedCovers
                 |> Maybe.withDefault Dict.empty
                 |> Dict.get cover.key
 
         hasBackgroundImage =
-            Maybe.isJust maybeBlobUrlFromCache
-
-        nowPlayingId =
-            Maybe.unwrap "" (.identifiedTrack >> Tuple.second >> .id) nowPlaying
+            Maybe.isJust maybeBlobUrlFromCache && not missingTracks
 
         bgOrDataAttributes =
-            case maybeBlobUrlFromCache of
-                Just blobUrl ->
+            case ( missingTracks, maybeBlobUrlFromCache ) of
+                ( True, _ ) ->
+                    []
+
+                ( False, Just blobUrl ) ->
                     [ A.style "background-image" ("url('" ++ blobUrl ++ "')")
                     ]
 
-                Nothing ->
+                ( False, Nothing ) ->
                     if Maybe.isJust cachedCovers then
                         let
                             ( identifiers, track ) =
@@ -787,6 +799,9 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
 
         ( _, track ) =
             identifiedTrackCover
+
+        missingTracks =
+            track.tags.album == Tracks.missingAlbumPlaceholder
     in
     brick
         (if clickable then
@@ -832,7 +847,10 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
             ]
             [ case sortBy of
                 Album ->
-                    if cover.variousArtists then
+                    if missingTracks then
+                        text "Missing tracks"
+
+                    else if cover.variousArtists then
                         text "Various Artists"
 
                     else

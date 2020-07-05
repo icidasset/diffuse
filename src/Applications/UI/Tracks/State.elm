@@ -362,12 +362,7 @@ generateCovers model =
                         , largestArtistSequence = Nothing
                         }
                     , covers =
-                        case group of
-                            "<missing>" ->
-                                covers
-
-                            _ ->
-                                collection
+                        collection
                     }
 
                 else
@@ -1151,7 +1146,8 @@ makeCover sortBy_ gathering collection previouslySelectedCover =
                 cover =
                     makeCoverWithFallback sortBy_ closedGathering fallback
             in
-            { collection = cover :: collection
+            { collection =
+                cover :: collection
             , selectedCover =
                 case ( previouslySelectedCover, closedGathering.selectedCover ) of
                     ( Nothing, _ ) ->
