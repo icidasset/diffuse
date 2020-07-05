@@ -3,7 +3,10 @@
 ## 3.0.0
 
 - **Adds album-covers view** (switch to and from list view with icon in nav bar)
+- Added new background images and replaced two older ones
+- Dark mode for the about page
 - Fixes playback issues (eg. clicking same track multiple times)
+- Only generated playlists for enabled sources
 - Removes support for Blockstack & Textile
 
 ## 2.5.3
