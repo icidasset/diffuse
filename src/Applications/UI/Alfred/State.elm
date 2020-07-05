@@ -99,7 +99,8 @@ determineResults searchTerm alfred =
     in
     if String.length lowerSearchTerm > 0 then
         { alfred
-            | searchTerm =
+            | focus = 0
+            , searchTerm =
                 Just searchTerm
             , results =
                 alfred.index
@@ -109,6 +110,7 @@ determineResults searchTerm alfred =
 
     else
         { alfred
-            | searchTerm = Nothing
+            | focus = 0
+            , searchTerm = Nothing
             , results = alfred.index
         }

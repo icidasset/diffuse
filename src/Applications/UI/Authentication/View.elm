@@ -217,12 +217,12 @@ welcomeScreen =
             GetStarted
             (slab
                 Html.span
-                [ style "font-size" "13px"
-                , style "letter-spacing" "0.25em"
+                [ style "letter-spacing" "0.25em"
                 ]
                 [ C.align_middle
                 , C.inline_block
                 , C.pt_px
+                , C.text_nearly_sm
                 ]
                 [ text "SIGN IN" ]
             )

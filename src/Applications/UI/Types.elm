@@ -243,6 +243,7 @@ type Msg
       -----------------------------------------
     | ActivatePlaylist Playlist
     | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
+    | AssistWithAddingTracksToPlaylist (List IdentifiedTrack)
     | CreatePlaylist
     | DeactivatePlaylist
     | DeletePlaylist { playlistName : String }
@@ -250,7 +251,7 @@ type Msg
     | ModifyPlaylist
     | MoveTrackInSelectedPlaylist { to : Int }
     | RemoveTracksFromPlaylist Playlist (List IdentifiedTrack)
-    | RequestAssistanceForPlaylists (List IdentifiedTrack)
+    | SelectPlaylist Playlist
     | SetPlaylistCreationContext String
     | SetPlaylistModificationContext String String
     | ShowPlaylistListMenu Playlist Mouse.Event

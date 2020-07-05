@@ -8,6 +8,7 @@ import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
 import UI.Authentication.Types as Authentication
 import UI.Interface.State exposing (hideOverlay)
+import UI.Playlists.State as Playlists
 import UI.Queue.State as Queue
 import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
@@ -32,7 +33,7 @@ keyboardInput msg model =
                     _ ->
                         False
         in
-        if m.focusedOnInput || not authenticated then
+        if not authenticated || (m.focusedOnInput && Maybe.isNothing model.alfred) then
             case m.pressedKeys of
                 [ Keyboard.Escape ] ->
                     hideOverlay m
@@ -43,10 +44,10 @@ keyboardInput msg model =
         else if Maybe.isJust model.alfred then
             case m.pressedKeys of
                 [ Keyboard.ArrowDown ] ->
-                    Alfred.selectPrevious m
+                    Alfred.selectNext m
 
                 [ Keyboard.ArrowUp ] ->
-                    Alfred.selectNext m
+                    Alfred.selectPrevious m
 
                 [ Keyboard.Enter ] ->
                     Alfred.runSelectedAction m
@@ -70,6 +71,9 @@ keyboardInput msg model =
 
                 [ Keyboard.ArrowDown ] ->
                     Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
+
+                [ Keyboard.Character "L" ] ->
+                    Playlists.assistWithSelectingPlaylist m
 
                 [ Keyboard.Character "N" ] ->
                     Tracks.scrollToNowPlaying m

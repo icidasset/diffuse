@@ -140,6 +140,7 @@ module.exports = {
       fontSize: {
         "0": 0,
         "almost-sm": "0.78125rem",
+        "nearly-sm": "0.8125rem",
         "xxs": "0.6875rem",
       },
 

@@ -49,7 +49,7 @@ futureMenu { cached, cachingInProgress, itemIndex } item =
         , Item
             { icon = Icons.waves
             , label = "Add to playlist"
-            , msg = RequestAssistanceForPlaylists tracks
+            , msg = AssistWithAddingTracksToPlaylist tracks
             , active = False
             }
         , UI.Tracks.ContextMenu.cacheAction
@@ -94,7 +94,7 @@ historyMenu { cached, cachingInProgress } item =
         , Item
             { icon = Icons.waves
             , label = "Add to playlist"
-            , msg = RequestAssistanceForPlaylists tracks
+            , msg = AssistWithAddingTracksToPlaylist tracks
             , active = False
             }
         , UI.Tracks.ContextMenu.cacheAction

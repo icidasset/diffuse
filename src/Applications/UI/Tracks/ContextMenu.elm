@@ -175,7 +175,7 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                 , justAnItem
                     { icon = Icons.waves
                     , label = "Add to another playlist"
-                    , msg = RequestAssistanceForPlaylists tracks
+                    , msg = AssistWithAddingTracksToPlaylist tracks
 
                     --
                     , active = False
@@ -191,7 +191,7 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                 , justAnItem
                     { icon = Icons.waves
                     , label = "Add to playlist"
-                    , msg = RequestAssistanceForPlaylists tracks
+                    , msg = AssistWithAddingTracksToPlaylist tracks
                     , active = False
                     }
                 ]

@@ -44,9 +44,8 @@ type Variant context msg
 
 view : Variant Int msg -> List (Item msg) -> Html msg
 view variant items =
-    brick
-        [ style "font-size" "13px" ]
-        [ C.antialiased, C.font_semibold, C.leading_snug ]
+    chunk
+        [ C.antialiased, C.font_semibold, C.leading_snug, C.text_nearly_sm ]
         (List.indexedMap (item variant) items)
 
 

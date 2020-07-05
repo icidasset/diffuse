@@ -376,6 +376,9 @@ update msg =
         AddTracksToPlaylist a ->
             Playlists.addTracksToPlaylist a
 
+        AssistWithAddingTracksToPlaylist a ->
+            Playlists.assistWithAddingTracksToPlaylist a
+
         CreatePlaylist ->
             Playlists.create
 
@@ -397,8 +400,8 @@ update msg =
         RemoveTracksFromPlaylist a b ->
             Playlists.removeTracks a b
 
-        RequestAssistanceForPlaylists a ->
-            Playlists.requestAssistance a
+        SelectPlaylist a ->
+            Playlists.select a
 
         SetPlaylistCreationContext a ->
             Playlists.setCreationContext a

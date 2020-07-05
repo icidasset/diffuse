@@ -69,7 +69,7 @@ view maybeInstance extractedBackdropColor =
                         )
                     ]
                     [ C.text_sm
-                    , C.max_w_md
+                    , C.max_w_lg
                     , C.mt_8
                     , C.w_full
                     ]
@@ -104,14 +104,15 @@ view maybeInstance extractedBackdropColor =
                 -- Results
                 -----------------------------------------
                 , chunk
-                    [ C.bg_white
-                    , C.rounded
-                    , C.text_sm
+                    [ C.rounded
                     , C.leading_none
-                    , C.max_w_md
+                    , C.max_w_lg
+                    , C.mb_32
                     , C.mt_8
-                    , C.overflow_hidden
+                    , C.overflow_x_hidden
+                    , C.overflow_y_auto
                     , C.shadow_md
+                    , C.text_nearly_sm
                     , C.w_full
 
                     -- Dark mode
@@ -128,7 +129,7 @@ view maybeInstance extractedBackdropColor =
                                     style "background-color" bgColor
 
                                   else
-                                    style "background-color" "inherit"
+                                    style "" ""
                                 ]
                                 [ C.p_4
                                 , C.relative
@@ -142,11 +143,8 @@ view maybeInstance extractedBackdropColor =
                                     C.text_inherit
 
                                 --
-                                , if idx == instance.focus then
-                                    C.bg_base00
-
-                                  else if modBy 2 idx == 0 then
-                                    C.bg_transparent
+                                , if modBy 2 idx == 0 then
+                                    C.bg_white
 
                                   else
                                     String.joinWithSpace [ C.bg_gray_100, C.dark__bg_base01 ]

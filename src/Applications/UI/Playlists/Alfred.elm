@@ -1,13 +1,14 @@
-module UI.Playlists.Alfred exposing (action, create)
+module UI.Playlists.Alfred exposing (create, select)
 
 import Alfred exposing (..)
+import List.Extra as List
 import Playlists exposing (..)
 import Tracks exposing (IdentifiedTrack)
 import UI.Types as UI
 
 
 
--- 🔱
+-- CREATE
 
 
 create : List IdentifiedTrack -> List Playlist -> Alfred UI.Msg
@@ -16,9 +17,9 @@ create tracks playlists =
         playlistNames =
             playlists
                 |> List.map .name
-                |> List.sort
+                |> List.sortBy String.toLower
     in
-    { action = action tracks
+    { action = createAction tracks
     , focus = 0
     , index = playlistNames
     , message =
@@ -27,13 +28,13 @@ create tracks playlists =
 
         else
             "Choose or create a playlist to add these tracks to."
-    , results = List.sort playlistNames
+    , results = playlistNames
     , searchTerm = Nothing
     }
 
 
-action : List IdentifiedTrack -> { result : Maybe String, searchTerm : Maybe String } -> List UI.Msg
-action tracks maybe =
+createAction : List IdentifiedTrack -> { result : Maybe String, searchTerm : Maybe String } -> List UI.Msg
+createAction tracks maybe =
     let
         playlistTracks =
             Tracks.toPlaylistTracks tracks
@@ -62,3 +63,34 @@ action tracks maybe =
 
                 Nothing ->
                     []
+
+
+
+-- SELECT
+
+
+select : List Playlist -> Alfred UI.Msg
+select playlists =
+    let
+        playlistNames =
+            playlists
+                |> List.map .name
+                |> List.sortBy String.toLower
+    in
+    { action = selectAction playlists
+    , focus = 0
+    , index = playlistNames
+    , message = "Select a playlist to play tracks from"
+    , results = playlistNames
+    , searchTerm = Nothing
+    }
+
+
+selectAction : List Playlist -> { result : Maybe String, searchTerm : Maybe String } -> List UI.Msg
+selectAction playlists { result } =
+    case Maybe.andThen (\r -> List.find (.name >> (==) r) playlists) result of
+        Just playlist ->
+            [ UI.SelectPlaylist playlist ]
+
+        Nothing ->
+            []
