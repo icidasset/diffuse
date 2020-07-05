@@ -80,7 +80,7 @@ select playlists =
     { action = selectAction playlists
     , focus = 0
     , index = playlistNames
-    , message = "Select a playlist to play tracks from"
+    , message = "Select a playlist to play tracks from."
     , results = playlistNames
     , searchTerm = Nothing
     }
