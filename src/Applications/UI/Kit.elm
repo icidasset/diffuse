@@ -39,9 +39,6 @@ colorKit =
     , base0D = rgb 6 182 239
     , base0E = rgb 129 91 164
     , base0F = rgb 233 107 168
-
-    -- ~(˘▾˘~)
-    , accent = rgb 231 150 128
     }
 
 
@@ -51,9 +48,17 @@ colors =
     , error = colorKit.base08
     , warning = colorKit.base0A
 
+    -- Gray
+    , gray_100 = Color.hsl 0 0 0.988
+    , gray_200 = Color.hsl 0 0 0.973
+    , gray_300 = Color.hsl 0 0 0.933
+    , gray_400 = Color.hsl 0 0 0.882
+    , gray_500 = Color.hsl 0 0 0.863
+    , gray_600 = Color.hsl 0 0 0.776
+
     -- Other
     , background = rgb 2 7 14
-    , selection = colorKit.accent
+    , selection = colorKit.base04
     , text = colorKit.base01
     }
 

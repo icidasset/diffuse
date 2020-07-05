@@ -302,6 +302,7 @@ infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlayin
                     selectedTrackIndexes
                     dnd
                     deps.showAlbum
+                    deps.darkMode
                     derivedColors
 
             _ ->
@@ -517,8 +518,8 @@ defaultItemView args _ idx identifiedTrack =
         ]
 
 
-playlistItemView : Bool -> Maybe Queue.Item -> Maybe String -> List Int -> DnD.Model Int -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
-playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd showAlbum derivedColors _ idx identifiedTrack =
+playlistItemView : Bool -> Maybe Queue.Item -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd showAlbum darkMode derivedColors _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -578,7 +579,7 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
 
             --
             , if DnD.isBeingDraggedOver listIdx dnd then
-                [ dragIndicator ]
+                [ dragIndicator darkMode ]
 
               else
                 []
@@ -888,6 +889,14 @@ rowFontColors =
     }
 
 
-dragIndicator : Html.Attribute msg
-dragIndicator =
-    style "box-shadow" ("0 1px 0 0 " ++ Color.toCssString UI.Kit.colorKit.accent ++ " inset")
+dragIndicator : Bool -> Html.Attribute msg
+dragIndicator darkMode =
+    let
+        color =
+            if darkMode then
+                UI.Kit.colors.gray_300
+
+            else
+                UI.Kit.colorKit.base03
+    in
+    style "box-shadow" ("0 1px 0 0 " ++ Color.toCssString color ++ " inset")

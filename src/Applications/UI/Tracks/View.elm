@@ -164,6 +164,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , C.border_none
                 , C.flex_grow
                 , C.h_full
+                , C.min_w_0
                 , C.ml_1
                 , C.mt_px
                 , C.outline_none

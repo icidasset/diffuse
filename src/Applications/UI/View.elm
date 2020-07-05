@@ -233,7 +233,7 @@ content { justifyCenter, scrolling } nodes =
             , C.flex_col
             , C.items_center
             , C.h_full
-            , C.px_4
+            , C.px_3
 
             --
             , C.md__px_8
