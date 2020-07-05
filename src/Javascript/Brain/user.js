@@ -9,7 +9,7 @@ import * as crypto from "../crypto"
 import { identity } from "../common"
 
 import { SECRET_KEY_LOCATION, decryptIfNeeded, encryptWithSecretKey } from "./common"
-import { fromCache, isLocalHost, removeCache, reportError } from "./common"
+import { fromCache, isLocalHost, reportError } from "./common"
 import { sendJsonData, storageCallback, toCache } from "./common"
 
 
