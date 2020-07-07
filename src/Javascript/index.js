@@ -17,6 +17,16 @@ import * as db from "./indexed-db"
 import { debounce, fileExtension } from "./common"
 
 
+// 🔐
+
+
+// Redirect to HTTPS if using the `diffuse.sh` domain (subdomains included)
+if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
+  location.href = location.href.replace("http://", "https://")
+}
+
+
+
 // 🍱
 
 
