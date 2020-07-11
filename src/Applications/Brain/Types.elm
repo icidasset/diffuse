@@ -31,6 +31,7 @@ type alias Model =
     , hypaethralStorage : List HypaethralBit
     , hypaethralUserData : User.HypaethralData
     , legacyMode : Bool
+    , migratingData : Bool
     , origin : String
     , performingSignIn : Bool
     , processingStatus : Processing.Status

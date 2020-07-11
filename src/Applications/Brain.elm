@@ -74,6 +74,7 @@ init flags =
       , hypaethralStorage = []
       , hypaethralUserData = User.emptyHypaethralData
       , legacyMode = False
+      , migratingData = False
       , origin = "ORIGIN_UNKNOWN"
       , performingSignIn = False
       , processingStatus = Processing.NotProcessing

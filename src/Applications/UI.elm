@@ -54,6 +54,7 @@ import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.State as Tracks
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (..)
+import UI.User.State as User
 import UI.User.State.Export as User
 import UI.User.State.Import as User
 import UI.View exposing (view)
@@ -105,6 +106,7 @@ init flags url key =
     , isTouchDevice = False
     , isUpgrading = flags.upgrade
     , lastFm = LastFm.initialModel
+    , migratingData = False
     , navKey = key
     , page = page
     , pressedKeys = []
@@ -465,6 +467,9 @@ update msg =
 
         LoadHypaethralUserData a ->
             User.loadHypaethralUserData a
+
+        MigrateHypaethralUserData ->
+            User.migrateHypaethralUserData
 
         RequestImport ->
             User.requestImport

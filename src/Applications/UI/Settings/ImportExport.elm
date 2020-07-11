@@ -46,31 +46,56 @@ view userLayerMethod =
                 |> raw
                 |> UI.Kit.intro
 
-            -- Import
-            ---------
-            , chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Import" ]
-            , UI.Kit.buttonWithColor
-                UI.Kit.Gray
-                Normal
-                RequestImport
-                (text "Choose file")
-            , case userLayerMethod of
-                Just Local ->
-                    otherImportOptions
+            --
+            , chunk
+                [ C.sm__flex, C.sm__minus_mt_6 ]
+                [ -- Import
+                  ---------
+                  chunk
+                    [ C.flex_auto, C.pr_2 ]
+                    [ chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Import" ]
+                    , UI.Kit.buttonWithColor
+                        UI.Kit.Gray
+                        Normal
+                        RequestImport
+                        (text "Choose file")
 
-                Just (RemoteStorage _) ->
-                    otherImportOptions
+                    --
+                    , case userLayerMethod of
+                        Just Local ->
+                            otherImportOptions
 
-                _ ->
-                    nothing
+                        Just (RemoteStorage _) ->
+                            otherImportOptions
 
-            -- Export
-            ---------
-            , chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Export" ]
-            , UI.Kit.button
-                Normal
-                Export
-                (text "Export data")
+                        _ ->
+                            nothing
+                    ]
+
+                -- Export
+                ---------
+                , chunk
+                    [ C.flex_auto, C.pl_2 ]
+                    [ chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Export" ]
+                    , UI.Kit.button
+                        Normal
+                        Export
+                        (text "Export data")
+
+                    --
+                    , chunk
+                        [ C.italic, C.leading_normal, C.mt_5, C.text_xs ]
+                        [ text "Other options:" ]
+                    , chunk
+                        [ C.leading_normal, C.mt_2, C.text_sm ]
+                        [ inline [ C.mr_2 ] [ text "•" ]
+                        , UI.Kit.textButton
+                            { label = "Migrate to another storage"
+                            , onClick = MigrateHypaethralUserData
+                            }
+                        ]
+                    ]
+                ]
             ]
         ]
 

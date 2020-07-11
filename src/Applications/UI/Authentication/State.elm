@@ -31,6 +31,7 @@ import UI.Common.State as Common exposing (showNotification, showNotificationWit
 import UI.Ports as Ports
 import UI.Sources.State as Sources
 import UI.Types as UI exposing (..)
+import UI.User.State.Import as User
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
 import User.Layer exposing (..)
@@ -336,20 +337,34 @@ showMoreOptions mouseEvent model =
 
 
 signedIn : Json.Value -> Manager
-signedIn json =
+signedIn json model =
     -- 🧠 told me which auth method we're using,
     -- so we can tell the user in the UI.
     case decodeMethod json of
         Just method ->
-            replaceState (Authenticated method)
+            model
+                |> replaceState
+                    (Authenticated method)
+                |> andThen
+                    (\m ->
+                        if m.migratingData then
+                            "Migrated data successfully"
+                                |> Notifications.success
+                                |> showNotificationWithModel { m | migratingData = False }
+                                |> User.saveAllHypaethralData
+
+                        else
+                            Return.singleton m
+                    )
 
         Nothing ->
-            Return.singleton
+            Return.singleton model
 
 
 signIn : Method -> Manager
 signIn method model =
     [ ( "method", encodeMethod method )
+    , ( "migratingData", Json.Encode.bool model.migratingData )
     , ( "passphrase", Json.Encode.null )
     ]
         |> Json.Encode.object
@@ -369,6 +384,7 @@ signInWithPassphrase method passphrase model =
 
     else
         [ ( "method", encodeMethod method )
+        , ( "migratingData", Json.Encode.bool model.migratingData )
         , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
         ]
             |> Json.Encode.object
@@ -381,40 +397,46 @@ signInWithPassphrase method passphrase model =
 
 signOut : Manager
 signOut model =
-    { model
-        | authentication = Authentication.Unauthenticated
-        , playlists = []
-        , playlistToActivate = Nothing
+    if model.migratingData then
+        return
+            { model | authentication = Authentication.Unauthenticated }
+            (Ports.toBrain <| Alien.trigger Alien.SignOut)
 
-        -- Queue
-        --------
-        , dontPlay = []
-        , nowPlaying = Nothing
-        , playedPreviously = []
-        , playingNext = []
-        , selectedQueueItem = Nothing
+    else
+        { model
+            | authentication = Authentication.Unauthenticated
+            , playlists = []
+            , playlistToActivate = Nothing
 
-        --
-        , repeat = False
-        , shuffle = False
+            -- Queue
+            --------
+            , dontPlay = []
+            , nowPlaying = Nothing
+            , playedPreviously = []
+            , playingNext = []
+            , selectedQueueItem = Nothing
 
-        -- Sources
-        ----------
-        , processingContext = []
-        , sources = []
+            --
+            , repeat = False
+            , shuffle = False
 
-        -- Tracks
-        ---------
-        , favourites = []
-        , hideDuplicates = False
-        , searchResults = Nothing
-        , tracks = Tracks.emptyCollection
-    }
-        |> Backdrop.setDefault
-        |> Return.andThen Sources.stopProcessing
-        |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
-        |> Return.command (Ports.activeQueueItemChanged Nothing)
-        |> Return.command (Nav.pushUrl model.navKey "#/")
+            -- Sources
+            ----------
+            , processingContext = []
+            , sources = []
+
+            -- Tracks
+            ---------
+            , favourites = []
+            , hideDuplicates = False
+            , searchResults = Nothing
+            , tracks = Tracks.emptyCollection
+        }
+            |> Backdrop.setDefault
+            |> Return.andThen Sources.stopProcessing
+            |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
+            |> Return.command (Ports.activeQueueItemChanged Nothing)
+            |> Return.command (Nav.pushUrl model.navKey "#/")
 
 
 startFlow : Manager

@@ -163,20 +163,34 @@ signIn json model =
     -- and retrieve data.
     let
         decoder =
-            Decode.map2
-                Tuple.pair
+            Decode.map3
+                (\a b c -> ( a, Maybe.withDefault False b, c ))
                 (Decode.field "method" <| Decode.map methodFromString Decode.string)
+                (Decode.field "migratingData" <| Decode.maybe Decode.bool)
                 (Decode.field "passphrase" <| Decode.maybe Decode.string)
     in
     case Decode.decodeValue decoder json of
-        Ok ( maybeMethod, Just passphrase ) ->
+        Ok ( maybeMethod, migratingData, Just passphrase ) ->
             fabricateSecretKey
                 passphrase
-                { model | authMethod = maybeMethod, performingSignIn = True }
+                { model
+                    | authMethod = maybeMethod
+                    , migratingData = migratingData
+                    , performingSignIn = True
+                }
 
-        Ok ( maybeMethod, Nothing ) ->
-            retrieveAllHypaethralData
-                { model | authMethod = maybeMethod, performingSignIn = True }
+        Ok ( maybeMethod, migratingData, Nothing ) ->
+            (if migratingData then
+                hypaethralDataRetrieved Json.null
+
+             else
+                retrieveAllHypaethralData
+            )
+                { model
+                    | authMethod = maybeMethod
+                    , migratingData = migratingData
+                    , performingSignIn = True
+                }
 
         _ ->
             Return.singleton model
@@ -687,7 +701,11 @@ removeEncryptionKey =
 secretKeyFabricated : Manager
 secretKeyFabricated model =
     if model.performingSignIn then
-        retrieveAllHypaethralData model
+        if model.migratingData then
+            hypaethralDataRetrieved Json.null model
+
+        else
+            retrieveAllHypaethralData model
 
     else
         saveAllHypaethralData model
@@ -716,15 +734,20 @@ terminate : Termination -> Manager
 terminate t model =
     case t of
         Authenticated method encodedData ->
-            let
-                decodedData =
-                    encodedData
-                        |> User.decodeHypaethralData
-                        |> Result.withDefault model.hypaethralUserData
-            in
-            model
-                |> sendHypaethralDataToUI encodedData decodedData
-                |> andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
+            { model | migratingData = False }
+                |> (if model.migratingData then
+                        Return.singleton
+
+                    else
+                        encodedData
+                            |> User.decodeHypaethralData
+                            |> Result.withDefault model.hypaethralUserData
+                            |> sendHypaethralDataToUI encodedData
+                   )
+                |> (encodeMethod method
+                        |> Common.giveUI Alien.AuthMethod
+                        |> andThen
+                   )
 
         NotAuthenticated ->
             model
