@@ -199,18 +199,16 @@ generateIndexes generator howMany squirrel seed =
 -- PURIFY
 
 
-purifier : List IdentifiedTrack -> ( List IdentifiedTrack, List String ) -> ( List IdentifiedTrack, List String )
+purifier :
+    List IdentifiedTrack
+    -> ( List IdentifiedTrack, List String )
+    -> ( List IdentifiedTrack, List String )
 purifier tracks ( acc, idsToIgnore ) =
     case idsToIgnore of
         [] ->
             -- Nothing more to ignore,
             -- stop here.
-            case acc of
-                [] ->
-                    ( tracks, idsToIgnore )
-
-                _ ->
-                    ( acc, idsToIgnore )
+            ( acc ++ tracks, [] )
 
         _ ->
             case tracks of

@@ -6,6 +6,7 @@
 - Added new background images and replaced two older ones
 - Adds a keyboard shortcut `L` to quickly select a playlist
 - Dark mode for the about page
+- Fixes issue with shuffle algorithm
 - Fixes playback issues (eg. clicking same track multiple times)
 - Fixes various issues with add-to-playlist overlay
 - Only generated playlists for enabled sources
