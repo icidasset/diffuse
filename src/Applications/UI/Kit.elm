@@ -138,7 +138,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                 Filled ->
                     case buttonColor of
                         Accent ->
-                            [ C.bg_black_35
+                            [ C.bg_accent_btn
                             , C.border_transparent
                             , C.text_white_90
                             ]

@@ -95,6 +95,7 @@ module.exports = {
       ...defaultTheme.colors,
       ...colors,
 
+      "accent-btn": "hsl(219, 20.2%, 38.8%)",
       "accent-dark": "hsl(304.3, 9.6%, 71.4%)",
       "accent-light": "hsl(228.4, 15.3%, 60.2%)",
       "background": "rgb(2, 7, 14)",
