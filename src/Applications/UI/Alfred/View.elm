@@ -105,7 +105,8 @@ view maybeInstance extractedBackdropColor =
                 -----------------------------------------
                 , brick
                     [ id "alfred__results" ]
-                    [ C.rounded
+                    [ C.bg_white
+                    , C.rounded
                     , C.leading_none
                     , C.max_w_lg
                     , C.mb_32
@@ -153,10 +154,10 @@ view maybeInstance extractedBackdropColor =
 
                                 --
                                 , if modBy 2 idx == 0 then
-                                    C.bg_white
+                                    ""
 
                                   else
-                                    String.joinWithSpace [ C.bg_gray_100, C.dark__bg_base01 ]
+                                    String.joinWithSpace [ C.bg_gray_100, C.dark__bg_base01_15 ]
                                 ]
                                 [ text result
 

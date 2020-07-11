@@ -5,6 +5,7 @@ import Browser.Dom as Dom
 import Chunky exposing (..)
 import List.Extra as List
 import Material.Icons.Types exposing (Coloring(..))
+import Process
 import Return exposing (return)
 import Return.Ext as Return
 import String.Ext as String
@@ -18,12 +19,11 @@ import UI.Types as UI exposing (Manager)
 
 assign : Alfred UI.Msg -> Manager
 assign instance model =
-    return
-        { model | alfred = Just instance }
-        (Task.attempt
-            (always UI.Bypass)
-            (Dom.focus "diffuse__alfred")
-        )
+    250
+        |> Process.sleep
+        |> Task.andThen (\_ -> Dom.focus "diffuse__alfred")
+        |> Task.attempt (\_ -> UI.Bypass)
+        |> return { model | alfred = Just instance }
 
 
 gotInput : String -> Manager
