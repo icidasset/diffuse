@@ -532,7 +532,7 @@ function unstallAudio(node) {
   node.load()
   node.currentTime = time
 
-  if (timesStalled >= 6) {
+  if (timesStalled > 5 && navigator.onLine) {
     this.app.ports.showStickyErrorNotification.send(
       "You loaded too many tracks too quickly, " +
       "which the browser can't handle. " +
