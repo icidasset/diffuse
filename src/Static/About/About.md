@@ -230,7 +230,7 @@ artist:Parkway Drive - album:Atlas
 The app should be usable with only the keyboard, there are various keyboard shortcuts:
 
 ```
-L - Select playlist
+L - Select playlist using autocompletion
 N - Scroll to currently-playing track
 P - Play / Pause
 R - Toggle Repeat
@@ -240,6 +240,14 @@ Left / Right - Previous / Next
 Up   / Down  - Seek forwards / Seek backwards
 
 ESC - Close overlay, close context-menu, deselect album cover, etc.
+
+1 - Tracks
+2 - Playlists
+3 - Queue
+4 - EQ
+
+8 - Sources
+9 - Settings
 ```
 
 
