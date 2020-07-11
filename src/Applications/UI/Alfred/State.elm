@@ -59,6 +59,24 @@ runSelectedAction model =
             Return.singleton model
 
 
+scrollToFocus : Manager
+scrollToFocus model =
+    let
+        task =
+            Task.map3
+                (\innerE outerE outerV ->
+                    outerV.viewport.y + innerE.element.y - outerE.element.y - 9
+                )
+                (Dom.getElement "alfred__results__focus")
+                (Dom.getElement "alfred__results")
+                (Dom.getViewportOf "alfred__results")
+    in
+    task
+        |> Task.andThen (\a -> Dom.setViewportOf "alfred__results" 0 a)
+        |> Task.attempt (\_ -> UI.Bypass)
+        |> return model
+
+
 selectNext : Manager
 selectNext model =
     case model.alfred of
@@ -66,7 +84,7 @@ selectNext model =
             instance
                 |> (\i -> { i | focus = min (i.focus + 1) (List.length i.results - 1) })
                 |> (\i -> { model | alfred = Just i })
-                |> Return.singleton
+                |> scrollToFocus
 
         Nothing ->
             Return.singleton model
@@ -79,7 +97,7 @@ selectPrevious model =
             instance
                 |> (\i -> { i | focus = max (i.focus - 1) 0 })
                 |> (\i -> { model | alfred = Just i })
-                |> Return.singleton
+                |> scrollToFocus
 
         Nothing ->
             Return.singleton model

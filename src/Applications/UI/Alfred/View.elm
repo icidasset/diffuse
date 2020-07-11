@@ -103,7 +103,8 @@ view maybeInstance extractedBackdropColor =
                 -----------------------------------------
                 -- Results
                 -----------------------------------------
-                , chunk
+                , brick
+                    [ id "alfred__results" ]
                     [ C.rounded
                     , C.leading_none
                     , C.max_w_lg
@@ -112,6 +113,7 @@ view maybeInstance extractedBackdropColor =
                     , C.overflow_x_hidden
                     , C.overflow_y_auto
                     , C.shadow_md
+                    , C.smooth_scrolling
                     , C.text_nearly_sm
                     , C.w_full
 
@@ -123,6 +125,13 @@ view maybeInstance extractedBackdropColor =
                         (\idx result ->
                             brick
                                 [ onTapPreventDefault (UI.SelectAlfredItem idx)
+
+                                --
+                                , if idx == instance.focus then
+                                    id "alfred__results__focus"
+
+                                  else
+                                    id ("alfred__results__" ++ String.fromInt idx)
 
                                 --
                                 , if idx == instance.focus then

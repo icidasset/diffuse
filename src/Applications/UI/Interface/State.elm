@@ -22,7 +22,7 @@ import User.Layer exposing (..)
 
 blur : Manager
 blur model =
-    Return.singleton { model | focusedOnInput = False }
+    Return.singleton { model | focusedOnInput = False, pressedKeys = [] }
 
 
 contextMenuConfirmation : String -> Msg -> Manager
