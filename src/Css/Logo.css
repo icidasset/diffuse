@@ -2,7 +2,6 @@
   opacity: 0.85;
 
   & img {
-    display: block;
     width: 154px;
   }
 }

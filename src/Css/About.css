@@ -28,8 +28,8 @@ blockquote {
 
   & p {
     @apply leading-tight text-5xl;
-    background: url(images/Background/7.jpg);
-    background-position: center top;
+    background: url(images/Background/21.jpg);
+    background-position: center 33%;
     background-size: cover;
     color: #B7C2D4;
 

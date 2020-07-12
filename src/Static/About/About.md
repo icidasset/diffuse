@@ -197,7 +197,7 @@ There are a few "hidden" features:
 
 - **Tracks have a context menu** which can be opened by either right clicking,
   or holding it (ie. a long tap). Use the ALT key whilst right clicking
-  on a track to show the alternative track-context menu with more options.
+  on a track to show the alternative track-context menu with more specialized options.
 - **You can reorder items** in the queue or a playlist with drag-and-drop.
   Select the item you want to move by tapping on it, then tap and hold to move it around.
 - You can select multiple tracks using the SHIFT key and then add that selection
