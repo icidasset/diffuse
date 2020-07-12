@@ -1,6 +1,6 @@
 module UI.Alfred.View exposing (view)
 
-import Alfred exposing (Alfred)
+import Alfred exposing (..)
 import Chunky exposing (..)
 import Color exposing (Color)
 import Css.Classes as C
@@ -78,8 +78,18 @@ view maybeInstance extractedBackdropColor =
                         [ autofocus True
                         , id "diffuse__alfred"
                         , onInput UI.GotAlfredInput
-                        , placeholder "Type to search or create"
                         , type_ "text"
+
+                        --
+                        , case instance.operation of
+                            Query ->
+                                placeholder "Type to search"
+
+                            QueryOrMutation ->
+                                placeholder "Type to search or create"
+
+                            Mutation ->
+                                placeholder "Type to create"
                         ]
                         [ C.border_none
                         , C.bg_white

@@ -28,6 +28,7 @@ create tracks playlists =
 
         else
             "Choose or create a playlist to add these tracks to."
+    , operation = QueryOrMutation
     , results = playlistNames
     , searchTerm = Nothing
     }
@@ -81,6 +82,7 @@ select playlists =
     , focus = 0
     , index = playlistNames
     , message = "Select a playlist to play tracks from."
+    , operation = Query
     , results = playlistNames
     , searchTerm = Nothing
     }
