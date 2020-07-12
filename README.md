@@ -57,8 +57,6 @@ In short:
 
 ### Building it yourself
 
-_There are prebuilt packages available on the [Github releases page](https://github.com/icidasset/diffuse/releases/latest), named `diffuse-web`._
-
 For version numbers, see `.tool-versions` and `stack.yaml`.  
 All of these, except the last one, can be install using [homebrew](https://brew.sh/).
 
