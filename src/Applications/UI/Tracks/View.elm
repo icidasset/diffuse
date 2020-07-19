@@ -70,7 +70,7 @@ view model =
                     UI.Tracks.Scene.Covers.view
                         { bgColor = model.extractedBackdropColor
                         , cachedCovers = model.cachedCovers
-                        , covers = model.covers
+                        , covers = model.covers.harvested
                         , darkMode = model.darkMode
                         , favouritesOnly = model.favouritesOnly
                         , infiniteList = model.infiniteList

@@ -155,7 +155,7 @@ type alias Model =
     , cachedTracks : List String
     , cachedTracksOnly : Bool
     , cachingTracksInProgress : List String
-    , covers : List Tracks.Cover
+    , covers : { arranged : List Tracks.Cover, harvested : List Tracks.Cover }
     , favourites : List Favourite
     , favouritesOnly : Bool
     , grouping : Maybe Grouping

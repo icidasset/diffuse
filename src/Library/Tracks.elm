@@ -122,6 +122,12 @@ type alias Parcel =
     ( CollectionDependencies, Collection )
 
 
+type alias CoverCollection =
+    { arranged : List Cover
+    , harvested : List Cover
+    }
+
+
 
 -- GROUPING & SORTING
 

@@ -194,7 +194,7 @@ init flags url key =
     , cachedTracks = []
     , cachedTracksOnly = False
     , cachingTracksInProgress = []
-    , covers = []
+    , covers = { arranged = [], harvested = [] }
     , favourites = []
     , favouritesOnly = False
     , grouping = Nothing
