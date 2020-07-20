@@ -2,6 +2,7 @@ module UI.Tracks.Covers exposing (..)
 
 import Base64
 import Conditional exposing (ifThenElse)
+import Dict
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Tracks exposing (..)
@@ -13,10 +14,9 @@ import Tracks exposing (..)
 
 generate :
     SortBy
-    -> Maybe Cover
     -> Tracks.Collection
-    -> { collection : CoverCollection, selectedCover : Maybe Cover }
-generate sortBy previouslySelectedCover tracks =
+    -> CoverCollection
+generate sortBy tracks =
     let
         groupFn =
             coverGroup sortBy
@@ -40,15 +40,14 @@ generate sortBy previouslySelectedCover tracks =
                 if group /= gathering.previousGroup then
                     -- New group, make cover for previous group
                     let
-                        { collection, selectedCover } =
-                            makeCoverFn gathering covers previouslySelectedCover
+                        collection =
+                            makeCoverFn gathering covers
                     in
                     { gathering =
                         { acc = [ identifiedTrack ]
                         , accIds = [ track.id ]
                         , previousGroup = group
                         , previousTrack = track
-                        , selectedCover = selectedCover
 
                         --
                         , currentAlbumSequence = Just ( identifiedTrack, 1 )
@@ -73,7 +72,6 @@ generate sortBy previouslySelectedCover tracks =
                         , accIds = track.id :: gathering.accIds
                         , previousGroup = group
                         , previousTrack = track
-                        , selectedCover = gathering.selectedCover
 
                         -- Album sequence
                         -----------------
@@ -146,7 +144,6 @@ generate sortBy previouslySelectedCover tracks =
                 , accIds = []
                 , previousGroup = ""
                 , previousTrack = emptyTrack
-                , selectedCover = Nothing
 
                 --
                 , currentAlbumSequence = Nothing
@@ -158,42 +155,91 @@ generate sortBy previouslySelectedCover tracks =
                 }
             }
         |> (\{ covers, gathering } ->
-                makeCoverFn gathering covers previouslySelectedCover
+                makeCoverFn gathering covers
            )
-        |> (\{ collection, selectedCover } ->
-                { collection = { arranged = collection, harvested = [] }
-                , selectedCover = selectedCover
-                }
+        |> (\collection ->
+                { arranged = collection, harvested = [] }
            )
 
 
-harvest : SortBy -> Tracks.Collection -> CoverCollection -> List Cover
-harvest sortBy tracks covers =
+harvest :
+    Maybe Cover
+    -> SortBy
+    -> Tracks.Collection
+    -> CoverCollection
+    -> ( CoverCollection, Maybe Cover )
+harvest previouslySelectedCover sortBy tracks covers =
     let
         groupFn =
             coverGroup sortBy
 
-        ( _, groups ) =
+        ( _, groups, tracksPerGroup ) =
             List.foldr
-                (\identifiedTrack ( previousGroup, acc ) ->
+                (\identifiedTrack ( previousGroup, acc, dict ) ->
                     let
                         group =
                             groupFn identifiedTrack
                     in
                     ( group
+                      --
                     , if group /= previousGroup then
                         group :: acc
 
                       else
                         acc
+                      --
+                    , Dict.update group
+                        (Maybe.unwrap [ identifiedTrack ] ((::) identifiedTrack) >> Just)
+                        dict
                     )
                 )
-                ( "", [] )
+                ( "", [], Dict.empty )
                 tracks.harvested
     in
-    List.filter
-        (\cover -> List.member cover.group groups)
-        covers.arranged
+    covers.arranged
+        |> List.foldr
+            (\cover ( acc, sel ) ->
+                if List.member cover.group groups then
+                    let
+                        groupTracks =
+                            Maybe.withDefault [] (Dict.get cover.group tracksPerGroup)
+
+                        trackIds =
+                            List.map (Tuple.second >> .id) groupTracks
+
+                        harvestedCover =
+                            { cover | tracks = groupTracks, trackIds = trackIds }
+                    in
+                    case ( previouslySelectedCover, sel ) of
+                        ( Just pre, Nothing ) ->
+                            ( harvestedCover :: acc
+                            , if pre.key == harvestedCover.key then
+                                Just harvestedCover
+
+                              else
+                                Nothing
+                            )
+
+                        ( Just _, Just s ) ->
+                            ( harvestedCover :: acc
+                            , Just s
+                            )
+
+                        ( Nothing, _ ) ->
+                            ( harvestedCover :: acc
+                            , Nothing
+                            )
+
+                else
+                    ( acc
+                    , sel
+                    )
+            )
+            ( []
+            , Nothing
+            )
+        |> Tuple.mapFirst
+            (\h -> { covers | harvested = h })
 
 
 
@@ -232,7 +278,7 @@ coverKey isVariousArtists { tags } =
         tags.artist ++ " --- " ++ tags.album
 
 
-makeCover sortBy_ gathering collection previouslySelectedCover =
+makeCover sortBy_ gathering collection =
     let
         closedGathering =
             { gathering
@@ -256,41 +302,10 @@ makeCover sortBy_ gathering collection previouslySelectedCover =
     in
     case closedGathering.acc of
         [] ->
-            { collection = collection
-            , selectedCover = closedGathering.selectedCover
-            }
+            collection
 
         fallback :: _ ->
-            let
-                cover =
-                    makeCoverWithFallback sortBy_ closedGathering fallback
-            in
-            { collection =
-                cover :: collection
-            , selectedCover =
-                case ( previouslySelectedCover, closedGathering.selectedCover ) of
-                    ( Nothing, _ ) ->
-                        Nothing
-
-                    ( Just _, Just _ ) ->
-                        closedGathering.selectedCover
-
-                    ( Just sc, Nothing ) ->
-                        case sortBy_ of
-                            Artist ->
-                                if cover.group == sc.group then
-                                    Just cover
-
-                                else
-                                    Nothing
-
-                            _ ->
-                                if cover.key == sc.key then
-                                    Just cover
-
-                                else
-                                    Nothing
-            }
+            makeCoverWithFallback sortBy_ closedGathering fallback :: collection
 
 
 makeCoverWithFallback sortBy_ gathering fallback =

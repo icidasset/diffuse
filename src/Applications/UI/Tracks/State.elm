@@ -318,15 +318,8 @@ finishedStoringInCache trackIds model =
 generateCovers : Manager
 generateCovers model =
     model.tracks
-        |> Covers.generate
-            model.sortBy
-            model.selectedCover
-        |> (\{ collection, selectedCover } ->
-                { model
-                    | covers = collection
-                    , selectedCover = selectedCover
-                }
-           )
+        |> Covers.generate model.sortBy
+        |> (\c -> { model | covers = c })
         |> Return.singleton
 
 
@@ -363,12 +356,9 @@ harvest =
 
 harvestCovers : Manager
 harvestCovers model =
-    let
-        covers =
-            model.covers
-    in
-    { covers | harvested = Covers.harvest model.sortBy model.tracks covers }
-        |> (\c -> { model | covers = c })
+    model.covers
+        |> Covers.harvest model.selectedCover model.sortBy model.tracks
+        |> (\( c, s ) -> { model | covers = c, selectedCover = s })
         |> Return.communicate
             (Ports.loadAlbumCovers ())
         |> andThen
