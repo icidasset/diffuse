@@ -15,43 +15,61 @@ default: dev
 	echo "> Build completed ⚡"
 
 
-@build-prod: quality clean system css-prod elm-prod js-prod
+@build-prod: quality clean system css elm-prod css-prod js-prod
 	echo "> Production build completed 🛳"
 
 
 @clean:
 	echo "> Cleaning build directory"
 	rm -rf {{BUILD_DIR}} || true
+	mkdir -p {{BUILD_DIR}}
 
 
 @css:
 	echo "> Compiling CSS"
-	mkdir -p {{BUILD_DIR}}
-	mkdir -p {{TEMPORARY_DIR}}
-	{{NPM_DIR}}/.bin/postcss \
-		"{{SRC_DIR}}/Css/About.css" \
-		--output "{{BUILD_DIR}}/about.css" \
-		--config "{{SYSTEM_DIR}}/Css/"
-	{{NPM_DIR}}/.bin/postcss \
-		"{{SRC_DIR}}/Css/Application.css" \
-		--output "{{BUILD_DIR}}/application.css" \
-		--config "{{SYSTEM_DIR}}/Css/"
+
+	{{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/About.css \
+	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
+	  --output {{BUILD_DIR}}/about.css \
+		\
+		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-nesting
+
+	{{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/Application.css \
+	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
+		--elm-module Css.Classes \
+	  --elm-path {{SRC_DIR}}/Library/Css/Classes.elm \
+	  --output {{BUILD_DIR}}/application.css \
+		\
+		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-nesting
 
 
-@css-prod: css
+@css-prod:
 	echo "> Optimizing CSS"
-	{{NPM_DIR}}/.bin/purgecss \
-		--config {{SYSTEM_DIR}}/Css/purgecss.about.js \
-		--output {{BUILD_DIR}}
-	{{NPM_DIR}}/.bin/purgecss \
-		--config {{SYSTEM_DIR}}/Css/purgecss.application.js \
-		--output {{BUILD_DIR}}
-	{{NPM_DIR}}/.bin/csso \
-		"{{BUILD_DIR}}/about.css" \
-		--output "{{BUILD_DIR}}/about.css"
-	{{NPM_DIR}}/.bin/csso \
-		"{{BUILD_DIR}}/application.css" \
-		--output "{{BUILD_DIR}}/application.css"
+
+	NODE_ENV=production {{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/About.css \
+	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
+	  --output {{BUILD_DIR}}/about.css \
+		\
+		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-nesting \
+		\
+		--purge-content {{BUILD_DIR}}/about/**/*.html
+
+	NODE_ENV=production {{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/Application.css \
+	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
+	  --output {{BUILD_DIR}}/application.css \
+		\
+		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-nesting \
+		\
+	  --purge-content {{BUILD_DIR}}/ui.elm.js \
+		--purge-content {{BUILD_DIR}}/index.html \
+		--purge-whitelist button \
+		--purge-whitelist input \
+		--purge-whitelist select \
+		--purge-whitelist textarea
 
 
 @elm:

@@ -1,6 +1,7 @@
 module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
 import Chunky.Styled exposing (..)
+import Conditional exposing (ifThenElse)
 import Css
 import Css.Classes as C
 import Css.Global
@@ -138,11 +139,8 @@ notificationView notification =
         , C.text_white_90
 
         --
-        , if options.sticky then
-            ""
-
-          else
-            C.cursor_pointer ++ " " ++ C.select_none
+        , ifThenElse options.sticky C.cursor_pointer C.cursor_default
+        , ifThenElse options.sticky C.select_none C.select_auto
 
         --
         , case kind of
@@ -160,7 +158,7 @@ notificationView notification =
             C.transition
 
           else
-            ""
+            C.transition_none
 
         --
         , if options.wasDismissed then

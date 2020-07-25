@@ -48,7 +48,7 @@ view userLayerMethod =
 
             --
             , chunk
-                [ C.sm__flex, C.sm__minus_mt_6 ]
+                [ C.sm__flex, C.sm__neg_mt_6 ]
                 [ -- Import
                   ---------
                   chunk

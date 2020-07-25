@@ -8,7 +8,7 @@ import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Css.Classes as C
 import Html exposing (Html, section)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (style)
 import Html.Events exposing (on)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
@@ -75,7 +75,7 @@ body model =
             ]
 
          else if model.isDragging then
-            [ class C.dragging_something
+            [ C.dragging_something
             , on "mouseup" (Json.Decode.succeed StoppedDragging)
             , on "touchcancel" (Json.Decode.succeed StoppedDragging)
             , on "touchend" (Json.Decode.succeed StoppedDragging)
@@ -240,7 +240,7 @@ content { justifyCenter, scrolling } nodes =
             , C.lg__px_16
 
             --
-            , ifThenElse justifyCenter C.justify_center ""
+            , ifThenElse justifyCenter C.justify_center C.justify_start
             ]
             nodes
         ]
@@ -287,7 +287,7 @@ overlay maybeAlfred maybeContextMenu =
         , C.z_30
 
         --
-        , ifThenElse isShown "" C.pointer_events_none
+        , ifThenElse isShown C.pointer_events_auto C.pointer_events_none
         , ifThenElse isShown C.opacity_40 C.opacity_0
         ]
         []

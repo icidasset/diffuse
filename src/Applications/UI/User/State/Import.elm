@@ -13,7 +13,6 @@ import Process
 import Return exposing (andThen, return)
 import Return.Ext as Return exposing (communicate)
 import Task
-import UI.Authentication.Common
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
 import UI.Demo as Demo

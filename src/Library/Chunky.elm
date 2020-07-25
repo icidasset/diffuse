@@ -7,7 +7,6 @@ Convenience functions to build UIs with composable CSS classes.
 -}
 
 import Html exposing (Html)
-import Html.Attributes exposing (class)
 
 
 
@@ -17,21 +16,13 @@ import Html.Attributes exposing (class)
 slab :
     (List (Html.Attribute msg) -> List (Html msg) -> Html msg)
     -> List (Html.Attribute msg)
-    -> List String
+    -> List (Html.Attribute msg)
     -> List (Html msg)
     -> Html msg
-slab typ attributes classes children =
+slab typ attributes stylingAttributes children =
     typ
         (List.append
-            (if List.isEmpty classes then
-                []
-
-             else
-                [ classes
-                    |> String.join " "
-                    |> class
-                ]
-            )
+            stylingAttributes
             attributes
         )
         children
@@ -40,7 +31,7 @@ slab typ attributes classes children =
 slaby :
     (List (Html.Attribute msg) -> List (Html msg) -> Html msg)
     -> List (Html.Attribute msg)
-    -> List String
+    -> List (Html.Attribute msg)
     -> Html msg
     -> Html msg
 slaby a b c =
@@ -51,12 +42,12 @@ slaby a b c =
 -- 2
 
 
-brick : List (Html.Attribute msg) -> List String -> List (Html msg) -> Html msg
+brick : List (Html.Attribute msg) -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 brick =
     slab Html.div
 
 
-bricky : List (Html.Attribute msg) -> List String -> Html msg -> Html msg
+bricky : List (Html.Attribute msg) -> List (Html.Attribute msg) -> Html msg -> Html msg
 bricky a b =
     List.singleton >> brick a b
 
@@ -65,17 +56,17 @@ bricky a b =
 -- 3
 
 
-chunk : List String -> List (Html msg) -> Html msg
+chunk : List (Html.Attribute msg) -> List (Html msg) -> Html msg
 chunk =
     brick []
 
 
-chunky : List String -> Html msg -> Html msg
+chunky : List (Html.Attribute msg) -> Html msg -> Html msg
 chunky a =
     List.singleton >> chunk a
 
 
-inline : List String -> List (Html msg) -> Html msg
+inline : List (Html.Attribute msg) -> List (Html msg) -> Html msg
 inline =
     slab Html.span []
 

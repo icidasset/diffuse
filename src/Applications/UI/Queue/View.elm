@@ -203,7 +203,7 @@ futureItem selectedQueueItem idx item =
     }
 
 
-subtleFutureIconClasses : List String
+subtleFutureIconClasses : List (Html.Attribute UI.Msg)
 subtleFutureIconClasses =
     [ C.text_gray_500
 

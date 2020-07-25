@@ -59,8 +59,8 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                     Just ( _, { tags } ) ->
                         Html.span
                             [ onClick (TracksMsg Tracks.ScrollToNowPlaying)
-                            , class C.cursor_pointer
                             , title "Scroll to track"
+                            , C.cursor_pointer
                             ]
                             [ text (tags.artist ++ " - " ++ tags.title) ]
 
@@ -99,7 +99,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                     , style "height" "3px"
                     , style "width" (String.fromFloat progress ++ "%")
                     ]
-                    [ "progressBarValue" ]
+                    [ class "progressBarValue" ]
                     []
                 ]
             ]

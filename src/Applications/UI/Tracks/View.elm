@@ -7,7 +7,7 @@ import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (attribute, href, placeholder, style, tabindex, target, title, value)
+import Html.Attributes exposing (attribute, class, href, placeholder, style, tabindex, target, title, value)
 import Html.Events exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
@@ -114,7 +114,7 @@ view model =
         ]
 
 
-viewClasses : List String
+viewClasses : List (Html.Attribute UI.Msg)
 viewClasses =
     [ C.flex
     , C.flex_col
@@ -340,7 +340,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 noTracksView : List String -> Int -> Int -> Int -> Html UI.Msg
 noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites =
     chunk
-        [ "no-tracks-view", C.flex, C.flex_grow ]
+        [ class "no-tracks-view", C.flex, C.flex_grow ]
         [ UI.Kit.centeredContent
             [ if List.length processingContext > 0 then
                 message "Processing Tracks"

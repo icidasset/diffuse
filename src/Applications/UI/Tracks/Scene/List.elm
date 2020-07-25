@@ -9,7 +9,7 @@ import Conditional exposing (ifThenElse)
 import Coordinates
 import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (class, id, style, tabindex)
+import Html.Attributes exposing (id, style, tabindex)
 import Html.Events
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
@@ -87,8 +87,8 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
           chunk
             [ C.h_10
             , C.left_0
-            , C.minus_mt_10
-            , C.minus_translate_y_full
+            , C.neg_mt_10
+            , C.neg_translate_y_full
             , C.opacity_30
             , C.right_0
             , C.shadow_md
@@ -268,11 +268,11 @@ headerColumn text_ width maybeSortIcon msg =
             Just sortIcon ->
                 chunk
                     [ C.absolute
-                    , C.minus_translate_y_half
+                    , C.neg_translate_y_1over2
                     , C.mr_1
                     , C.opacity_90
                     , C.right_0
-                    , C.top_half
+                    , C.top_1over2
                     , C.transform
                     ]
                     [ sortIcon ]
@@ -373,9 +373,6 @@ listStyles =
     [ C.pb_2
     , C.pt_1
     ]
-        |> String.join " "
-        |> class
-        |> List.singleton
 
 
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
@@ -466,30 +463,22 @@ defaultItemView args _ idx identifiedTrack =
             , C.items_center
 
             --
-            , ifThenElse identifiers.isMissing "" C.cursor_pointer
-            , ifThenElse isSelected C.font_semibold ""
-            , ifThenElse roundedCorners C.rounded ""
+            , ifThenElse identifiers.isMissing C.cursor_default C.cursor_pointer
+            , ifThenElse isSelected C.font_semibold C.font_normal
+            , ifThenElse roundedCorners C.rounded C.border_r_0
 
             --
             , ifThenElse
-                rowIdentifiers.isNowPlaying
-                ""
-                (ifThenElse
-                    isOddRow
-                    C.bg_white
-                    C.bg_gray_100
-                )
+                isOddRow
+                C.bg_white
+                C.bg_gray_100
 
             -- Dark mode
             ------------
             , ifThenElse
-                rowIdentifiers.isNowPlaying
-                ""
-                (ifThenElse
-                    isOddRow
-                    C.dark__bg_darkest_hour
-                    C.dark__bg_near_darkest_hour
-                )
+                isOddRow
+                C.dark__bg_darkest_hour
+                C.dark__bg_near_darkest_hour
             ]
             (if not showArtist && not showAlbum then
                 [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
@@ -589,29 +578,21 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
         , C.items_center
 
         --
-        , ifThenElse identifiers.isMissing "" C.cursor_pointer
-        , ifThenElse isSelected C.font_semibold ""
+        , ifThenElse identifiers.isMissing C.cursor_default C.cursor_pointer
+        , ifThenElse isSelected C.font_semibold C.font_normal
 
         --
         , ifThenElse
-            rowIdentifiers.isNowPlaying
-            ""
-            (ifThenElse
-                isOddRow
-                C.bg_white
-                C.bg_gray_100
-            )
+            isOddRow
+            C.bg_white
+            C.bg_gray_100
 
         -- Dark mode
         ------------
         , ifThenElse
-            rowIdentifiers.isNowPlaying
-            ""
-            (ifThenElse
-                isOddRow
-                C.dark__bg_darkest_hour
-                C.dark__bg_near_darkest_hour
-            )
+            isOddRow
+            C.dark__bg_darkest_hour
+            C.dark__bg_near_darkest_hour
         ]
         (if showAlbum then
             [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors

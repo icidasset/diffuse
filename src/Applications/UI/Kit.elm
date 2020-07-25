@@ -293,7 +293,7 @@ h1 text =
         , C.font_semibold
         , C.leading_tight
         , C.m_0
-        , C.minus_top_px
+        , C.neg_top_px
         , C.overflow_hidden
         , C.pointer_events_none
         , C.px_2
@@ -499,11 +499,11 @@ select inputHandler options =
             options
         , chunk
             [ C.absolute
-            , C.minus_translate_y_half
+            , C.neg_translate_y_1over2
             , C.mt_px
             , C.right_0
             , C.text_0
-            , C.top_half
+            , C.top_1over2
             , C.transform
             ]
             [ Icons.keyboard_arrow_down 20 Inherit ]

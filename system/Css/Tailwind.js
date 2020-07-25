@@ -30,35 +30,6 @@ const colors = {
 
 module.exports = {
 
-  plugins: [
-
-    require("tailwindcss-animations"),
-    require("tailwindcss-interaction-variants"),
-
-    // Add variant for `:focus:not(:active)`
-    function({ addVariant, e }) {
-      addVariant("inactive-focus", ({ modifySelectors, separator }) => {
-        modifySelectors(({ className }) => {
-          return `.${e(`fixate${separator}${className}`)}:focus:not(:active)`
-        })
-      })
-    }
-
-  ],
-
-  variants: {
-
-    backgroundColor: [ "focus", "hover", "inactive-focus", "responsive" ],
-    borderColor: [ "first", "focus", "hover", "inactive-focus", "last", "responsive" ],
-    borderWidth: [ "first", "last" ],
-    cursor: [ "first", "last" ],
-    margin: [ "first", "last", "responsive" ],
-    opacity: [ "focus", "hocus", "hover", "responsive" ],
-    padding: [ "first", "last", "responsive" ],
-    textColor: [ "focus", "focus-within", "hover", "inactive-focus", "responsive" ],
-
-  },
-
   theme: {
 
     // Animations
@@ -232,6 +203,45 @@ module.exports = {
       "90": ".9",
       "100": "1"
     },
+
+  },
+
+
+
+  // PLUGINS
+
+
+  plugins: [
+
+    require("tailwindcss-animations"),
+    require("tailwindcss-interaction-variants"),
+
+    // Add variant for `:focus:not(:active)`
+    function({ addVariant, e }) {
+      addVariant("inactive-focus", ({ modifySelectors, separator }) => {
+        modifySelectors(({ className }) => {
+          return `.${e(`fixate${separator}${className}`)}:focus:not(:active)`
+        })
+      })
+    }
+
+  ],
+
+
+
+  // VARIANTS
+
+
+  variants: {
+
+    backgroundColor: [ "focus", "hover", "inactive-focus", "responsive" ],
+    borderColor: [ "first", "focus", "hover", "inactive-focus", "last", "responsive" ],
+    borderWidth: [ "first", "last" ],
+    cursor: [ "first", "last" ],
+    margin: [ "first", "last", "responsive" ],
+    opacity: [ "focus", "hocus", "hover", "responsive" ],
+    padding: [ "first", "last", "responsive" ],
+    textColor: [ "focus", "focus-within", "hover", "inactive-focus", "responsive" ],
 
   }
 

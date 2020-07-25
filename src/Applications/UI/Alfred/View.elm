@@ -151,24 +151,27 @@ view maybeInstance extractedBackdropColor =
                                   else
                                     style "" ""
                                 ]
-                                [ C.p_4
-                                , C.relative
-                                , C.truncate
+                                (List.concat
+                                    [ [ C.p_4
+                                      , C.relative
+                                      , C.truncate
+                                      ]
 
-                                --
-                                , if idx == instance.focus then
-                                    String.joinWithSpace [ C.text_white, C.dark__text_base07 ]
+                                    --
+                                    , if idx == instance.focus then
+                                        [ C.text_white, C.dark__text_base07 ]
 
-                                  else
-                                    C.text_inherit
+                                      else
+                                        [ C.text_inherit ]
 
-                                --
-                                , if modBy 2 idx == 0 then
-                                    ""
+                                    --
+                                    , if modBy 2 idx == 0 then
+                                        []
 
-                                  else
-                                    String.joinWithSpace [ C.bg_gray_100, C.dark__bg_base01_15 ]
-                                ]
+                                      else
+                                        [ C.bg_gray_100, C.dark__bg_base01_15 ]
+                                    ]
+                                )
                                 [ text result
 
                                 --
@@ -176,10 +179,10 @@ view maybeInstance extractedBackdropColor =
                                     chunk
                                         [ C.absolute
                                         , C.leading_0
-                                        , C.minus_translate_y_half
+                                        , C.neg_translate_y_1over2
                                         , C.mr_3
                                         , C.right_0
-                                        , C.top_half
+                                        , C.top_1over2
                                         , C.transform
                                         ]
                                         [ Icons.keyboard_return 13 Inherit

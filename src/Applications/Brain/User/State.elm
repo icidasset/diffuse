@@ -20,7 +20,6 @@ import Task.Extra exposing (do)
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
 import Url exposing (Url)
-import Url.Ext as Url
 import User.Layer as User exposing (..)
 
 

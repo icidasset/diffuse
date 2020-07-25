@@ -324,7 +324,7 @@ layerBStyles =
 decagonSvg : Svg.Styled.Svg msg
 decagonSvg =
     Svg.Styled.svg
-        [ Svg.Styled.Attributes.class C.mx_auto
+        [ Svg.Styled.Attributes.class "mx-auto"
         , Svg.Styled.Attributes.css decagonStyles
         , Svg.Styled.Attributes.fill "transparent"
         , Svg.Styled.Attributes.height "200"

@@ -1,6 +1,5 @@
 module UI.User.State exposing (..)
 
-import Return exposing (return)
 import UI.Authentication.State as Authentication
 import UI.Types as UI exposing (..)
 

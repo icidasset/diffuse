@@ -8,7 +8,7 @@ import Coordinates
 import Css.Classes as C
 import Dict exposing (Dict)
 import Html exposing (Html, text)
-import Html.Attributes as A exposing (class, id, style, tabindex)
+import Html.Attributes as A exposing (id, style, tabindex)
 import Html.Events as E
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
@@ -260,7 +260,7 @@ singleCoverView cover deps =
             , C.h_8
             , C.items_center
             , C.leading_none
-            , C.minus_ml_2
+            , C.neg_ml_2
             , C.mt_5
             , C.px_5
             ]
@@ -281,7 +281,7 @@ singleCoverView cover deps =
         --
         , chunk
             [ C.mb_6
-            , C.minus_top_px
+            , C.neg_top_px
             , C.mt_4
             , C.relative
 
@@ -302,7 +302,7 @@ singleCoverView cover deps =
                 , C.select_none
 
                 --
-                , ifThenElse condensedView C.minus_mx_5 C.mx_5
+                , ifThenElse condensedView C.neg_mx_5 C.mx_5
                 , ifThenElse condensedView C.px_1 C.px_0
                 ]
                 (List.indexedMap
@@ -401,7 +401,7 @@ sortGroupButton { current, btn } label =
             |> E.onClick
 
         --
-        , class C.mr_1
+        , C.mr_1
         ]
         { active = current == btn
         , label = label
@@ -474,9 +474,6 @@ listStyles =
     , C.pl_5
     , C.pt_4
     ]
-        |> String.join " "
-        |> class
-        |> List.singleton
 
 
 
@@ -586,7 +583,7 @@ rowView itemDeps _ idx row =
         [ case ( shouldRenderGroup, maybeIdentifiers ) of
             ( True, Just identifiers ) ->
                 chunk
-                    [ C.minus_ml_4 ]
+                    [ C.neg_ml_4 ]
                     [ Scene.group { index = idx } identifiers ]
 
             _ ->
@@ -646,13 +643,13 @@ itemView options deps cover =
                 C.w_full
 
             ( False, 2 ) ->
-                C.w_half
+                C.w_1over2
 
             ( False, 3 ) ->
-                C.w_1_div_3
+                C.w_1over3
 
             _ ->
-                C.w_1_div_4
+                C.w_1over4
         ]
         [ coverView options deps cover
         , metadataView options deps cover
@@ -750,11 +747,11 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
             [ if not hasBackgroundImage then
                 chunk
                     [ C.absolute
-                    , C.left_half
-                    , C.minus_translate_x_half
-                    , C.minus_translate_y_half
+                    , C.left_1over2
+                    , C.neg_translate_x_1over2
+                    , C.neg_translate_y_1over2
                     , C.text_gray_400
-                    , C.top_half
+                    , C.top_1over2
                     , C.transform
 
                     -- Dark mode
@@ -817,7 +814,7 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
 
         --
         , ifThenElse clickable C.cursor_pointer C.cursor_default
-        , ifThenElse horizontal C.mt_0 C.minus_mt_5
+        , ifThenElse horizontal C.mt_0 C.neg_mt_5
         , ifThenElse horizontal C.overflow_hidden C.overflow_auto
         , ifThenElse horizontal C.pt_0 C.pt_2
         ]

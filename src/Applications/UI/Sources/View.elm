@@ -173,7 +173,7 @@ index amountOfTracks model =
                 , lineBreak
                 , text "add one so you can play some music "
                 , inline
-                    [ C.align_middle, C.inline_block, C.minus_mt_px ]
+                    [ C.align_middle, C.inline_block, C.neg_mt_px ]
                     [ Icons.add 14 Inherit ]
                 ]
             ]

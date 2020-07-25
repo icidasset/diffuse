@@ -373,7 +373,7 @@ choiceButton { action, icon, infoLink, label, outOfOrder } =
                     , C.duration_100
                     , C.leading_none
                     , C.ml_4
-                    , C.minus_translate_y_half
+                    , C.neg_translate_y_1over2
                     , C.opacity_40
                     , C.pl_4
                     , C.text_white
@@ -489,9 +489,9 @@ speechBubble contents =
         , C.font_semibold
         , C.italic
         , C.leading_snug
-        , C.left_half
+        , C.left_1over2
         , C.max_w_screen
-        , C.minus_translate_x_half
+        , C.neg_translate_x_1over2
         , C.px_4
         , C.py_2
         , C.rounded
@@ -514,9 +514,9 @@ speechBubble contents =
             speechBubbleArrowStyles
             [ C.absolute
             , C.h_0
-            , C.left_half
-            , C.minus_translate_x_half
-            , C.minus_translate_y_full
+            , C.left_1over2
+            , C.neg_translate_x_1over2
+            , C.neg_translate_y_full
             , C.top_0
             , C.transform
             , C.w_0

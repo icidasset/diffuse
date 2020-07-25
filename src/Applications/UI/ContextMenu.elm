@@ -31,8 +31,8 @@ view m =
                 , C.bg_white
                 , C.leading_loose
                 , C.overflow_hidden
-                , C.minus_translate_x_half
-                , C.minus_translate_y_half
+                , C.neg_translate_x_1over2
+                , C.neg_translate_y_1over2
                 , C.rounded
                 , C.shadow_md
                 , C.select_none
@@ -74,7 +74,6 @@ itemView { icon, label, msg, active } =
             )
         ]
         [ C.border_b
-        , C.border_gray_200
         , C.cursor_pointer
         , C.pl_4
         , C.pr_8
@@ -85,9 +84,9 @@ itemView { icon, label, msg, active } =
         , C.last__border_transparent
 
         --
-        , ifThenElse active C.antialiased ""
-        , ifThenElse active C.border_transparent ""
-        , ifThenElse active C.bg_base00 ""
+        , ifThenElse active C.antialiased C.subpixel_antialiased
+        , ifThenElse active C.border_transparent C.border_gray_200
+        , ifThenElse active C.bg_base00 C.bg_transparent
         , ifThenElse active C.text_white C.text_inherit
         , ifThenElse active C.font_semibold C.font_normal
 
@@ -96,8 +95,8 @@ itemView { icon, label, msg, active } =
         , C.dark__border_base00
 
         --
-        , ifThenElse active C.dark__bg_base07 ""
-        , ifThenElse active C.dark__text_darkest_hour ""
+        , ifThenElse active C.dark__bg_base07 C.dark__bg_transparent
+        , ifThenElse active C.dark__text_darkest_hour C.dark__text_inherit
         ]
         [ inline
             [ C.align_middle

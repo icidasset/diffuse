@@ -92,13 +92,13 @@ item variant idx { label, actions, msg, isSelected } =
             , C.items_center
 
             --
-            , ifThenElse (Maybe.isJust msg) C.cursor_pointer ""
-            , ifThenElse isSelected C.text_base03 ""
+            , ifThenElse (Maybe.isJust msg) C.cursor_pointer C.cursor_default
+            , ifThenElse isSelected C.text_base03 C.text_inherit
 
             -- Dark mode
             ------------
             , C.dark__border_base00
-            , ifThenElse isSelected C.dark__text_gray_300 ""
+            , ifThenElse isSelected C.dark__text_gray_300 C.dark__text_inherit
             ]
             [ -- Label
               --------
@@ -141,14 +141,14 @@ item variant idx { label, actions, msg, isSelected } =
                 --
                 , case variant of
                     Normal ->
-                        ""
+                        C.pointer_events_auto
 
                     Draggable env ->
                         if DnD.isDragging env.model then
                             C.pointer_events_none
 
                         else
-                            ""
+                            C.pointer_events_auto
                 ]
                 (List.map actionView actions)
             ]
@@ -171,6 +171,6 @@ actionView action =
         [ C.leading_0
         , C.ml_1
         , C.pl_1
-        , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer ""
+        , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer C.cursor_default
         ]
         [ action.icon 16 Inherit ]

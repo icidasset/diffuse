@@ -147,7 +147,7 @@ content deps =
     , chunk
         [ C.flex, C.flex_wrap, C.pt_2 ]
         [ chunk
-            [ C.w_full, C.md__w_half ]
+            [ C.w_full, C.md__w_1over2 ]
             [ label "Downloaded tracks"
             , UI.Kit.buttonWithColor
                 UI.Kit.Gray
@@ -159,7 +159,7 @@ content deps =
         -- Last.fm
         ----------
         , chunk
-            [ C.w_half ]
+            [ C.w_1over2 ]
             [ label "Last.fm scrobbling"
 
             --
@@ -192,7 +192,7 @@ content deps =
     , chunk
         [ C.flex, C.flex_wrap ]
         [ chunk
-            [ C.w_full, C.md__w_half ]
+            [ C.w_full, C.md__w_1over2 ]
             [ label "Hide Duplicates"
             , UI.Kit.checkbox
                 { checked = deps.hideDuplicateTracks
@@ -200,7 +200,7 @@ content deps =
                 }
             ]
         , chunk
-            [ C.w_full, C.md__w_half ]
+            [ C.w_full, C.md__w_1over2 ]
             [ label "Process sources automatically"
             , UI.Kit.checkbox
                 { checked = deps.processAutomatically
@@ -215,7 +215,7 @@ content deps =
     , chunk
         [ C.flex, C.flex_wrap ]
         [ chunk
-            [ C.w_full, C.md__w_half ]
+            [ C.w_full, C.md__w_1over2 ]
             [ label "Remember position on long tracks"
             , UI.Kit.checkbox
                 { checked = deps.rememberProgress
@@ -273,13 +273,13 @@ backgroundImage chosenBackground =
                     [ C.cursor_pointer
                     , C.h_0
                     , C.overflow_hidden
-                    , C.pt_1_div_5
+                    , C.pt_1over5
                     , C.relative
-                    , C.w_1_div_3
+                    , C.w_1over3
 
                     --
-                    , C.md__pt_1_div_12
-                    , C.md__w_1_div_7
+                    , C.md__pt_1over12
+                    , C.md__w_1over7
                     ]
                     [ if isActive then
                         chunk

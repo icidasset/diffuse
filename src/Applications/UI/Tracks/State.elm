@@ -1,9 +1,7 @@
 module UI.Tracks.State exposing (..)
 
 import Alien
-import Base64
 import Common exposing (..)
-import Conditional exposing (ifThenElse)
 import ContextMenu
 import Coordinates exposing (Coordinates)
 import Dict

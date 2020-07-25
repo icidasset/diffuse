@@ -1,7 +1,7 @@
 .logo {
   opacity: 0.85;
+}
 
-  & img {
-    width: 154px;
-  }
+.logo img {
+  width: 154px;
 }
