@@ -295,17 +295,8 @@ singleCoverView cover deps =
                 cover
 
             --
-            , chunk
-                [ C.flex_auto
-                , C.flex_basis_0
-                , C.overflow_hidden
-                , C.select_none
-
-                --
-                , ifThenElse condensedView C.neg_mx_5 C.mx_5
-                , ifThenElse condensedView C.px_1 C.px_0
-                ]
-                (List.indexedMap
+            , cover.tracks
+                |> List.indexedMap
                     (UI.Tracks.Scene.List.defaultItemView
                         { derivedColors = derivedColors
                         , favouritesOnly = deps.favouritesOnly
@@ -318,8 +309,18 @@ singleCoverView cover deps =
                         }
                         0
                     )
-                    cover.tracks
-                )
+                |> chunk
+                    [ ifThenElse condensedView C.px_px C.px_0 ]
+                |> chunky
+                    [ C.flex_auto
+                    , C.flex_basis_0
+                    , C.overflow_hidden
+                    , C.select_none
+
+                    --
+                    , ifThenElse condensedView C.neg_mx_5 C.mx_5
+                    , ifThenElse condensedView C.px_1 C.px_0
+                    ]
             ]
         ]
 
