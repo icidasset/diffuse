@@ -1,0 +1,30 @@
+.notifications {
+  font-size: 13px;
+  line-height: 1.35;
+
+  & a,
+  & em {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+    display: inline-block;
+  }
+
+  & a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  & p {
+    margin: 0;
+    padding: 0;
+  }
+
+  & em {
+    font-weight: inherit;
+  }
+
+  & strong {
+    font-weight: 600;
+  }
+
+}

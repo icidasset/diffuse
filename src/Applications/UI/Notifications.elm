@@ -1,15 +1,14 @@
 module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
-import Chunky.Styled exposing (..)
+import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
 import Css
 import Css.Classes as C
 import Css.Global
-import Html exposing (Html)
+import Html exposing (Html, text)
+import Html.Attributes exposing (class, rel)
 import Html.Ext exposing (onDoubleTap, onTap)
-import Html.Styled exposing (text)
-import Html.Styled.Attributes exposing (css, fromUnstyled, rel)
-import Html.Styled.Lazy
+import Html.Lazy
 import Notifications exposing (..)
 import Process
 import Task
@@ -84,10 +83,12 @@ view : Model -> Html Msg
 view collection =
     collection
         |> List.reverse
-        |> List.map (Html.Styled.Lazy.lazy notificationView)
-        |> brick
-            [ css containerStyles ]
-            [ C.absolute
+        |> List.map (Html.Lazy.lazy notificationView)
+        |> Html.div
+            [ class "notifications"
+
+            --
+            , C.absolute
             , C.bottom_0
             , C.flex
             , C.flex_col
@@ -99,14 +100,9 @@ view collection =
             , C.text_sm
             , C.z_50
             ]
-        |> Html.Styled.toUnstyled
 
 
-
--- TODO: Remove .Styled.Html
-
-
-notificationView : Notification Msg -> Html.Styled.Html Msg
+notificationView : Notification Msg -> Html Msg
 notificationView notification =
     let
         kind =
@@ -121,17 +117,18 @@ notificationView notification =
         dismissMsg =
             DismissNotification { id = id }
     in
-    brick
+    Html.div
         [ if options.sticky then
-            fromUnstyled (onDoubleTap dismissMsg)
+            onDoubleTap dismissMsg
 
           else
-            fromUnstyled (onTap dismissMsg)
+            onTap dismissMsg
 
         --
         , rel (String.fromInt id)
-        ]
-        [ C.duration_200
+
+        --
+        , C.duration_200
         , C.max_w_xs
         , C.mt_2
         , C.p_4
@@ -167,13 +164,13 @@ notificationView notification =
           else
             C.opacity_100
         ]
-        [ chunk
+        [ Html.div
             [ C.mt_px, C.pt_px ]
-            [ Html.Styled.fromUnstyled (contents notification) ]
+            [ contents notification ]
 
         --
         , if options.sticky && kind /= Warning then
-            chunk
+            Html.div
                 [ C.cursor_pointer
                 , C.italic
                 , C.mt_2
@@ -186,36 +183,3 @@ notificationView notification =
           else
             nothing
         ]
-
-
-
--- 🖼
-
-
-containerStyles : List Css.Style
-containerStyles =
-    [ Css.fontSize (Css.px 13)
-    , Css.lineHeight (Css.num 1.35)
-
-    --
-    , Css.Global.descendants
-        [ Css.Global.a
-            [ Css.borderBottom3 (Css.px 1) Css.solid (Css.rgba 255 255 255 0.45)
-            , Css.color Css.inherit
-            , Css.display Css.inlineBlock
-            , Css.fontWeight (Css.int 600)
-            , Css.textDecoration Css.none
-            ]
-        , Css.Global.p
-            [ Css.margin Css.zero
-            , Css.padding Css.zero
-            ]
-        , Css.Global.em
-            [ Css.borderBottom3 (Css.px 1) Css.solid (Css.rgba 255 255 255 0.45)
-            , Css.fontWeight Css.inherit
-            ]
-        , Css.Global.strong
-            [ Css.fontWeight (Css.int 600)
-            ]
-        ]
-    ]
