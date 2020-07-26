@@ -107,11 +107,19 @@ collectionView deps =
         , C.scrolling_touch
         , C.text_almost_sm
         ]
-        [ chunk
-            [ C.flex
+        [ Scene.shadow
+        , chunk
+            [ C.bg_white
+            , C.flex
             , C.items_center
-            , C.mt_5
-            , C.mx_5
+            , C.pt_5
+            , C.px_5
+            , C.relative
+            , C.z_20
+
+            -- Dark mode
+            ------------
+            , C.dark__bg_darkest_hour
             ]
             [ sortGroupButtons deps.sortBy
 

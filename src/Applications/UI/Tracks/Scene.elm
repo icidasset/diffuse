@@ -1,6 +1,5 @@
 module UI.Tracks.Scene exposing (..)
 
-import Chunky exposing (..)
 import Conditional exposing (..)
 import Css.Classes as C
 import Html exposing (Html, text)
@@ -22,9 +21,11 @@ group { index } identifiers =
                 |> Maybe.map .name
                 |> Maybe.withDefault "Unknown"
     in
-    brick
-        [ A.style "height" "18px" ]
-        [ C.box_content
+    Html.div
+        [ A.style "height" "18px"
+
+        --
+        , C.box_content
         , C.font_display
         , C.font_semibold
         , C.leading_normal
@@ -39,8 +40,30 @@ group { index } identifiers =
         , ifThenElse (0 == index) C.pt_3 C.pt_4
         ]
         [ groupIcon
-        , inline [ C.align_middle ] [ text groupName ]
+        , Html.span [ C.align_middle ] [ text groupName ]
         ]
+
+
+shadow : Html msg
+shadow =
+    Html.div
+        [ C.h_10
+        , C.left_0
+        , C.neg_mt_10
+        , C.neg_translate_y_full
+        , C.opacity_30
+        , C.right_0
+        , C.shadow_md
+        , C.sticky
+        , C.top_0
+        , C.transform
+        , C.z_10
+
+        -- Dark mode
+        ------------
+        , C.dark__shadow_md_darker
+        ]
+        []
 
 
 
@@ -49,6 +72,6 @@ group { index } identifiers =
 
 groupIcon : Html msg
 groupIcon =
-    inline
+    Html.span
         [ C.align_middle, C.inline_block, C.leading_0, C.pr_2 ]
         [ Icons.library_music 16 Inherit ]

@@ -82,26 +82,7 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
             Nothing ->
                 C.overflow_y_auto
         ]
-        [ -- Shadow
-          ---------
-          chunk
-            [ C.h_10
-            , C.left_0
-            , C.neg_mt_10
-            , C.neg_translate_y_full
-            , C.opacity_30
-            , C.right_0
-            , C.shadow_md
-            , C.sticky
-            , C.top_0
-            , C.transform
-            , C.z_10
-
-            -- Dark mode
-            ------------
-            , C.dark__shadow_md_darker
-            ]
-            []
+        [ Scene.shadow
 
         -- Header
         ---------
