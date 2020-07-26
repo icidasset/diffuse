@@ -103,7 +103,7 @@ body model =
         -----------------------------------------
         -- Context Menu
         -----------------------------------------
-        , Lazy.lazy UI.ContextMenu.view model.contextMenu
+        , Lazy.lazy2 UI.ContextMenu.view model.viewport.width model.contextMenu
 
         -----------------------------------------
         -- Notifications

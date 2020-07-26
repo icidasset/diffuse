@@ -16,13 +16,26 @@ import UI.Types as UI exposing (Msg)
 -- 🗺
 
 
-view : Maybe (ContextMenu Msg) -> Html Msg
-view m =
+view : Float -> Maybe (ContextMenu Msg) -> Html Msg
+view viewportWidth m =
     case m of
         Just (ContextMenu items coordinates) ->
+            let
+                ( height, width ) =
+                    ( 250, 170 )
+
+                left =
+                    coordinates.x
+                        |> max (width / 2 + 12)
+                        |> min (viewportWidth - width / 2 - 12)
+
+                top =
+                    coordinates.y
+                        |> max (250 / 2 + 12)
+            in
             brick
-                [ style "left" (String.fromFloat coordinates.x ++ "px")
-                , style "top" (String.fromFloat coordinates.y ++ "px")
+                [ style "left" (String.fromFloat left ++ "px")
+                , style "top" (String.fromFloat top ++ "px")
 
                 --
                 , style "min-width" "170px"
