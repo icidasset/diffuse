@@ -257,6 +257,7 @@ singleCoverView cover deps =
         , C.overflow_x_hidden
         , C.overflow_y_auto
         , C.text_almost_sm
+        , C.z_30
 
         -- Dark mode
         ------------
@@ -776,7 +777,7 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
             , if List.member nowPlayingId cover.trackIds then
                 let
                     dropShadow =
-                        "drop-shadow(hsla(0, 0%, 0%, 0.2) 1px 1px 2.5px)"
+                        "drop-shadow(hsla(0, 0%, 0%, 0.275) 0px 0px 2.5px)"
                 in
                 brick
                     [ style "-webkit-filter" dropShadow
