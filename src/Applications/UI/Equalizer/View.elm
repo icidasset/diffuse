@@ -110,11 +110,15 @@ knob knobType value =
             , C.border_r
             , C.flex_grow
             , C.flex_shrink_0
-            , C.px_16
+            , C.px_10
             , C.py_4
 
             --
             , C.last__border_r_0
+
+            --
+            , C.sm__px_12
+            , C.md__px_16
             ]
         |> Html.Styled.toUnstyled
 
