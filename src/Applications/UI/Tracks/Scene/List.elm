@@ -3,7 +3,6 @@ module UI.Tracks.Scene.List exposing (Dependencies, DerivedColors, containerId, 
 import Browser.Dom as Dom
 import Chunky exposing (..)
 import Color exposing (Color)
-
 import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Coordinates

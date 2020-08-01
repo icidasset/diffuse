@@ -1,6 +1,5 @@
 module UI.Equalizer.View exposing (view)
 
-import Color exposing (Color)
 import Common
 import Css.Classes as C
 import Equalizer exposing (..)

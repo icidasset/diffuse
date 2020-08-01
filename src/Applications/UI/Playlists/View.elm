@@ -2,7 +2,6 @@ module UI.Playlists.View exposing (view)
 
 import Chunky exposing (..)
 import Color exposing (Color)
-
 import Common
 import Css.Classes as C
 import Html exposing (Html, text)

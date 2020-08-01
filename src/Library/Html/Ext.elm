@@ -1,4 +1,4 @@
-module Html.Ext exposing (ifEnterKey, onClickStopPropagation, onDoubleTap, onEnterKey, onTap, onTapPreventDefault, onTapStopPropagation)
+module Html.Ext exposing (..)
 
 import Html exposing (Attribute, Html)
 import Html.Events exposing (keyCode, on, preventDefaultOn, stopPropagationOn)
