@@ -7,7 +7,6 @@ import Browser.Navigation as Nav
 import Chunky exposing (..)
 import Common exposing (Switch(..))
 import Conditional exposing (..)
-import Css exposing (url)
 import Debouncer.Basic as Debouncer
 import Dict
 import Equalizer

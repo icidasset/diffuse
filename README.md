@@ -66,8 +66,8 @@ This project uses [Nix](https://nixos.org/features.html) to manage the project's
 # 1. Setup Nix environment
 # https://nixos.org/download.html
 
-# 2. Install dependencies
-yarn install
+# 2. Install js dependencies
+just install-deps
 
 # 3. Build, start server & watch for changes
 just

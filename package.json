@@ -3,8 +3,9 @@
   "devDependencies": {
     "elm-impfix": "^1.0.8",
     "elm-review": "^2.2.6",
-    "elm-tailwind-css": "^0.4.2",
+    "elm-tailwind-css": "^0.4.4",
     "eslint": "^7.5.0",
+    "postcss-custom-properties": "^9.1.1",
     "postcss-import": "^12.0.1",
     "postcss-nesting": "^7.0.1",
     "tailwindcss": "^1.5.2",

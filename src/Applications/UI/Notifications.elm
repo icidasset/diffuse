@@ -2,9 +2,7 @@ module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
-import Css
 import Css.Classes as C
-import Css.Global
 import Html exposing (Html, text)
 import Html.Attributes exposing (class, rel)
 import Html.Ext exposing (onDoubleTap, onTap)

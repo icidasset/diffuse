@@ -33,6 +33,7 @@ default: dev
 	  --output {{BUILD_DIR}}/about.css \
 		\
 		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-custom-properties \
 		--post-plugin-after postcss-nesting
 
 	{{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/Application.css \
@@ -42,6 +43,7 @@ default: dev
 	  --output {{BUILD_DIR}}/application.css \
 		\
 		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-custom-properties \
 		--post-plugin-after postcss-nesting
 
 
@@ -53,6 +55,7 @@ default: dev
 	  --output {{BUILD_DIR}}/about.css \
 		\
 		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-custom-properties \
 		--post-plugin-after postcss-nesting \
 		\
 		--purge-content {{BUILD_DIR}}/about/**/*.html
@@ -62,6 +65,7 @@ default: dev
 	  --output {{BUILD_DIR}}/application.css \
 		\
 		--post-plugin-before postcss-import \
+		--post-plugin-after postcss-custom-properties \
 		--post-plugin-after postcss-nesting \
 		\
 	  --purge-content {{BUILD_DIR}}/ui.elm.js \
@@ -198,6 +202,10 @@ default: dev
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
 	echo "> Running elm-format"
 	elm-format {{SRC_DIR}} --yes
+
+
+@install-deps:
+	yarn install --ignore-engines
 
 
 @quality: reset-elm-css

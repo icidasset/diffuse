@@ -8,6 +8,7 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@import "Equalizer.css";
 @import "Fonts.css";
 @import "Logo.css";
 @import "Notifications.css";

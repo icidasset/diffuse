@@ -2,7 +2,6 @@ module UI.Authentication.View exposing (view)
 
 import Chunky exposing (..)
 import Color
-import Color.Ext as Color
 import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css.Classes as C

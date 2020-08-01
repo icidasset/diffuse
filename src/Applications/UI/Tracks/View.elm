@@ -2,7 +2,7 @@ module UI.Tracks.View exposing (view)
 
 import Chunky exposing (..)
 import Color exposing (Color)
-import Color.Ext as Color
+
 import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Css.Classes as C
