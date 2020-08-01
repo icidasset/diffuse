@@ -57,24 +57,14 @@ In short:
 
 ### Building it yourself
 
-For version numbers, see `.tool-versions` and `stack.yaml`.  
-All of these, except the last one, can be install using [homebrew](https://brew.sh/).
-
-- [Elm](https://elm-lang.org/) programming language
-- [Haskell](https://docs.haskellstack.org/en/stable/README/) programming language
-- [Node.js](https://nodejs.org/) programming language with the [Yarn](https://yarnpkg.com/) package manager
-- [Just](https://github.com/casey/just) command runner (improved `make`)
-- [Devd](https://github.com/cortesi/devd) web server for development (optional)
-- [Elm Format](https://github.com/avh4/elm-format) elm code formatter (optional)
-- [Watchexec](https://github.com/watchexec/watchexec) watching for file changes (optional)
-- [Elm Proofread](https://github.com/icidasset/elm-proofread) documentation tests (optional)
+This project uses [Nix](https://nixos.org/features.html) to manage the project's environment. If you'd like to build this project without Nix, check out the dependencies in the `shell.nix` file (most are available through Homebrew as well).
 
 
 ```shell
 # 🍱
 
-# 1. Install programming languages:
-#    Elm 0.19.1 & Haskell (Stack), see links above
+# 1. Setup Nix environment
+# https://nixos.org/download.html
 
 # 2. Install dependencies
 yarn install
