@@ -480,6 +480,7 @@ toggleActivation { sourceId } model =
         |> (\collection -> { model | sources = collection })
         |> Tracks.reviseCollection Tracks.Collection.identify
         |> andThen Common.forceTracksRerender
+        |> andThen Common.generateDirectoryPlaylists
         |> andThen User.saveSources
 
 
