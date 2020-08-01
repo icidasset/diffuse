@@ -1,8 +1,13 @@
 module Html.Ext exposing (ifEnterKey, onClickStopPropagation, onDoubleTap, onEnterKey, onTap, onTapPreventDefault, onTapStopPropagation)
 
-import Html exposing (Attribute)
+import Html exposing (Attribute, Html)
 import Html.Events exposing (keyCode, on, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Json
+
+
+lineBreak : Html msg
+lineBreak =
+    Html.br [] []
 
 
 onClickStopPropagation : msg -> Attribute msg

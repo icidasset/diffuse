@@ -66,7 +66,7 @@ view deps =
 
 view_ : Dependencies -> Html Msg
 view_ deps =
-    chunk
+    Html.div
         [ C.flex
         , C.flex_basis_0
         , C.flex_col
@@ -108,7 +108,7 @@ collectionView deps =
         , C.text_almost_sm
         ]
         [ Scene.shadow
-        , chunk
+        , Html.div
             [ C.bg_white
             , C.flex
             , C.items_center
@@ -124,7 +124,7 @@ collectionView deps =
             [ sortGroupButtons deps.sortBy
 
             --
-            , chunk
+            , Html.div
                 [ C.flex
                 , C.flex_auto
                 , C.items_center
@@ -263,7 +263,7 @@ singleCoverView cover deps =
         ------------
         , C.dark__bg_darkest_hour
         ]
-        [ chunk
+        [ Html.div
             [ C.flex
             , C.font_semibold
             , C.h_8
@@ -288,7 +288,7 @@ singleCoverView cover deps =
             ]
 
         --
-        , chunk
+        , Html.div
             [ C.mb_6
             , C.neg_top_px
             , C.mt_4
@@ -318,9 +318,10 @@ singleCoverView cover deps =
                         }
                         0
                     )
-                |> chunk
+                |> Html.div
                     [ ifThenElse condensedView C.px_px C.px_0 ]
-                |> chunky
+                |> List.singleton
+                |> Html.div
                     [ C.flex_auto
                     , C.flex_basis_0
                     , C.overflow_hidden
@@ -353,7 +354,7 @@ headerButton attributes { active, label } =
         , ifThenElse active C.bg_gray_300 C.bg_transparent
         , ifThenElse active C.dark__bg_base01 C.dark__bg_transparent
         ]
-        [ chunk
+        [ Html.div
             [ C.mt_px, C.pt_px ]
             [ label ]
         ]
@@ -372,7 +373,7 @@ showCoverMenu cover =
 
 sortGroupButtons : SortBy -> Html Msg
 sortGroupButtons sortBy =
-    chunk
+    Html.div
         [ C.flex
         , C.h_8
         , C.items_center
@@ -383,7 +384,7 @@ sortGroupButtons sortBy =
         ]
         [ sortGroupButton
             { current = sortBy, btn = Artist }
-            (chunk
+            (Html.div
                 [ C.inline_flex, C.items_center ]
                 [ inline [ C.mr_px ] [ Icons.people_alt 16 Inherit ]
                 , inline [ C.ml_1, C.mt_px, C.pl_px, C.pt_px ] [ text "Artists" ]
@@ -393,7 +394,7 @@ sortGroupButtons sortBy =
         --
         , sortGroupButton
             { current = sortBy, btn = Album }
-            (chunk
+            (Html.div
                 [ C.inline_flex, C.items_center ]
                 [ inline [ C.mr_px ] [ Icons.album 16 Inherit ]
                 , inline [ C.ml_1, C.mt_px, C.pt_px ] [ text "Albums" ]
@@ -592,7 +593,7 @@ rowView itemDeps _ idx row =
     raw
         [ case ( shouldRenderGroup, maybeIdentifiers ) of
             ( True, Just identifiers ) ->
-                chunk
+                Html.div
                     [ C.neg_ml_4 ]
                     [ Scene.group { index = idx } identifiers ]
 
@@ -600,7 +601,7 @@ rowView itemDeps _ idx row =
                 nothing
 
         --
-        , chunk
+        , Html.div
             [ C.flex, C.flex_wrap ]
             (List.map (itemView { clickable = True, horizontal = False } itemDeps) row)
         ]
@@ -635,7 +636,7 @@ type alias ItemViewOptions =
 
 itemView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
 itemView options deps cover =
-    chunk
+    Html.div
         [ C.antialiased
         , C.flex_shrink_0
         , C.font_semibold
@@ -715,11 +716,10 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                     else
                         []
     in
-    chunk
+    Html.div
         [ C.flex_shrink_0
         , C.mr_5
         , C.relative
-        , C.select_none
 
         --
         , ifThenElse clickable C.cursor_pointer C.cursor_default
@@ -755,7 +755,7 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
             , C.dark__bg_white_025
             ]
             [ if not hasBackgroundImage then
-                chunk
+                Html.div
                     [ C.absolute
                     , C.left_1over2
                     , C.neg_translate_x_1over2
@@ -820,7 +820,9 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
             []
         )
         [ C.mr_5
+        , C.relative
         , C.tracking_tad_closer
+        , C.z_10
 
         --
         , ifThenElse clickable C.cursor_pointer C.cursor_default
@@ -828,7 +830,7 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
         , ifThenElse horizontal C.overflow_hidden C.overflow_auto
         , ifThenElse horizontal C.pt_0 C.pt_2
         ]
-        [ chunk
+        [ Html.div
             [ C.mt_px
             , C.pt_px
             , C.truncate
@@ -845,7 +847,7 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
             ]
 
         --
-        , chunk
+        , Html.div
             [ C.mt_px
             , C.pt_px
             , C.text_base05
