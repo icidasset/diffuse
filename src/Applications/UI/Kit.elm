@@ -9,10 +9,8 @@ import Conditional exposing (ifThenElse)
 import Css
 import Css.Classes as C
 import Html exposing (Html)
-import Html.Attributes exposing (href, style)
+import Html.Attributes as A exposing (href, style)
 import Html.Events exposing (onClick, onInput)
-import Html.Styled
-import Html.Styled.Attributes exposing (css)
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Svg
@@ -250,9 +248,7 @@ centeredContent children =
         , C.overflow_hidden
         , C.relative
         ]
-        [ logoBackdrop
-            |> Html.Styled.map never
-            |> Html.Styled.toUnstyled
+        [ Html.map never logoBackdrop
         , chunk
             [ C.flex
             , C.flex_col
@@ -405,11 +401,13 @@ link params =
         [ Html.text params.label ]
 
 
-logoBackdrop : Html.Styled.Html Never
+logoBackdrop : Html Never
 logoBackdrop =
-    Chunky.Styled.brick
-        [ css logoBackdropStyles ]
-        [ C.absolute
+    Html.div
+        [ A.class "logo-backdrop"
+
+        --
+        , C.absolute
         , C.bg_cover
         , C.bg_no_repeat
         , C.h_0
@@ -610,19 +608,3 @@ textFieldAlt attributes =
         , C.dark__text_gray_600
         ]
         []
-
-
-
------------------------------------------
--- ㊙️
------------------------------------------
-
-
-logoBackdropStyles : List Css.Style
-logoBackdropStyles =
-    [ Css.backgroundImage (Css.url "images/diffuse__icon-dark.svg")
-    , Css.backgroundPosition2 (Css.pct -43.5) (Css.px 98)
-    , Css.property "transform-origin" "left top"
-    , Css.transform (Css.rotate (Css.deg 90))
-    , Css.width (Css.vh 105)
-    ]

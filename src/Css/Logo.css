@@ -5,3 +5,11 @@
 .logo img {
   width: 154px;
 }
+
+.logo-backdrop {
+  background-image: url("images/diffuse__icon-dark.svg");
+  background-position: -43.5% 98px;
+  transform-origin: left top;
+  transform: rotate(90deg);
+  width: 105vh;
+}
