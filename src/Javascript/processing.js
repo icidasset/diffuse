@@ -81,14 +81,6 @@ export function getTags(headUrl, getUrl, filename, options) {
       tokenizer.rangeRequestClient.url = getUrl
       tokenizer.rangeRequestClient.resolvedUrl = undefined
 
-      const originalGetResponse = tokenizer.rangeRequestClient.getResponse
-
-      tokenizer.rangeRequestClient.getResponse =
-        function() {
-          this.resolvedUrl = getUrl
-          return originalGetResponse.apply(this, arguments)
-        }
-
       return musicMetadata.parseFromTokenizer(
         tokenizer,
         Object.assign({}, parserConfiguration, options || {})
