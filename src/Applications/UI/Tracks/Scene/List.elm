@@ -130,7 +130,7 @@ viewAttributes : List (Html.Attribute Msg)
 viewAttributes =
     [ InfiniteList.onScroll (InfiniteListMsg >> TracksMsg)
     , id containerId
-    , style "overscroll-behavior" "none"
+    , C.overscroll_none
     ]
 
 
