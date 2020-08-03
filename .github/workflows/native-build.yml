@@ -15,5 +15,6 @@ jobs:
       - uses: cachix/install-nix-action@v10
         with:
           nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-shell --command "just install-deps"
       - run: nix-shell --command "just build-prod"
       - run: ls ./build
