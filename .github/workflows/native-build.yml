@@ -15,7 +15,7 @@ jobs:
       - uses: cachix/install-nix-action@v10
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      - run: sudo apt-get install build-essential g++ gcc libc6-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg netbase
-      - run: nix-shell --command "just install-deps"
-      - run: nix-shell --command "just build-prod"
+      - run: nix-shell --run "sudo apt-get install g++ gcc libc6-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg netbase"
+      - run: nix-shell --run "just install-deps"
+      - run: nix-shell --run "just build-prod"
       - run: ls ./build
