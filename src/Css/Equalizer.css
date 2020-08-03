@@ -3,50 +3,58 @@
 }
 
 
-.equalizer {
 
-  & .knob {
-    box-shadow: inset 0 0 5px 1px rgba(119, 119, 119, 0.35);
-    height: var(--knob-size);
-    width: var(--knob-size);
+/* Knob
+   ---- */
 
-    & svg {
-      height: calc(100% - 8px);
-      margin-top: 4px;
-      stroke: rgba(119, 119, 119, 0.7);
-      width: calc(100% - 8px);
-    }
-
-    & .layer-a {
-      box-shadow: 0 0 6px 1px rgba(119, 119, 119, 1);
-      margin: 8px;
-    }
-
-    & .layer-b {
-      background-color: rgba(119, 119, 119, 0.8);
-      height: 9px;
-      width: 2px;
-    }
-  }
-
-
-  & .knob-label {
-    font-size: 9.5px;
-  }
-
-
-  & .knob-lines {
-    top: calc(var(--knob-size) / -4.5);
-    width: var(--knob-size);
-
-    & > div {
-      background-color: rgba(119, 119, 119, 0.8);
-      height: 9px;
-      width: 1px;
-    }
-
-    & > div:first-child { transform: rotate(45deg) }
-    & > div:last-child { transform: rotate(-45deg) }
-  }
-
+.equalizer .knob {
+  box-shadow: inset 0 0 5px 1px rgba(119, 119, 119, 0.35);
+  height: var(--knob-size);
+  width: var(--knob-size);
 }
+
+.equalizer .knob  svg {
+  height: calc(100% - 8px);
+  margin-top: 4px;
+  stroke: rgba(119, 119, 119, 0.7);
+  width: calc(100% - 8px);
+}
+
+.equalizer .knob  .layer-a {
+  box-shadow: 0 0 6px 1px rgba(119, 119, 119, 1);
+  margin: 8px;
+}
+
+.equalizer .knob  .layer-b {
+  background-color: rgba(119, 119, 119, 0.8);
+  height: 9px;
+  width: 2px;
+}
+
+
+
+/* Knob Label
+   ---------- */
+
+.equalizer .knob-label {
+  font-size: 9.5px;
+}
+
+
+
+/* Knob Lines
+   ---------- */
+
+.equalizer .knob-lines {
+  top: calc(var(--knob-size) / -4.5);
+  width: var(--knob-size);
+}
+
+.equalizer .knob-lines > div {
+  background-color: rgba(119, 119, 119, 0.8);
+  height: 9px;
+  width: 1px;
+}
+
+.equalizer .knob-lines > div:first-child { transform: rotate(45deg) }
+.equalizer .knob-lines > div:last-child { transform: rotate(-45deg) }

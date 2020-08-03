@@ -33,8 +33,7 @@ default: dev
 	  --output {{BUILD_DIR}}/about.css \
 		\
 		--post-plugin-before postcss-import \
-		--post-plugin-after postcss-custom-properties \
-		--post-plugin-after postcss-nesting
+		--post-plugin-after postcss-custom-properties
 
 	{{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/Application.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
@@ -43,8 +42,7 @@ default: dev
 	  --output {{BUILD_DIR}}/application.css \
 		\
 		--post-plugin-before postcss-import \
-		--post-plugin-after postcss-custom-properties \
-		--post-plugin-after postcss-nesting
+		--post-plugin-after postcss-custom-properties
 
 
 @css-prod:
@@ -56,7 +54,6 @@ default: dev
 		\
 		--post-plugin-before postcss-import \
 		--post-plugin-after postcss-custom-properties \
-		--post-plugin-after postcss-nesting \
 		\
 		--purge-content {{BUILD_DIR}}/about/**/*.html
 
@@ -66,7 +63,6 @@ default: dev
 		\
 		--post-plugin-before postcss-import \
 		--post-plugin-after postcss-custom-properties \
-		--post-plugin-after postcss-nesting \
 		\
 	  --purge-content {{BUILD_DIR}}/ui.elm.js \
 		--purge-content {{BUILD_DIR}}/index.html \

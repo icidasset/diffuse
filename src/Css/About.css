@@ -97,20 +97,17 @@ h5 + p a {
 /* Lists
    ----- */
 
-ul, ol {
-  @apply leading-relaxed ml-3;
-
-  & li { @apply mb-1 }
-}
+ul, ol { @apply leading-relaxed ml-3 }
+ul li, ol li { @apply mb-1 }
 
 ol {
   counter-reset: ol;
+}
 
-  & li::before {
-    @apply pr-3 inline-block text-base06;
-    counter-increment: ol;
-    content: counters(ol, ".") ".";
-  }
+ol li::before {
+  @apply pr-3 inline-block text-base06;
+  counter-increment: ol;
+  content: counters(ol, ".") ".";
 }
 
 ul li::before {
