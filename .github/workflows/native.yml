@@ -2,7 +2,8 @@ name: Build Native Version
 
 
 on: 
-  workflow_dispatch: true
+  workflow_dispatch:
+    inputs: []
 
 
 jobs:
