@@ -3,7 +3,7 @@ name: Build Native Version
 
 on: 
   workflow_dispatch:
-    inputs: []
+    inputs:
 
 
 jobs:
