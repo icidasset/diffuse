@@ -1,0 +1,20 @@
+name: Build Native Version
+
+
+on: 
+  workflow_dispatch:
+    inputs:
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v10
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-build
+      - run: just build-prod
+      - run: ls ./build
