@@ -2,7 +2,7 @@ port module Brain.Ports exposing (..)
 
 import Alien
 import Json.Encode as Json
-import Sources.Processing exposing (ContextForTags)
+import Sources.Processing exposing (ContextForTags, ContextForTagsSync)
 
 
 
@@ -31,6 +31,9 @@ port requestTags : ContextForTags -> Cmd msg
 
 
 port storeTracksInCache : Json.Value -> Cmd msg
+
+
+port syncTags : ContextForTagsSync -> Cmd msg
 
 
 port toCache : Alien.Event -> Cmd msg
@@ -87,6 +90,9 @@ port receiveSearchResults : (List String -> msg) -> Sub msg
 
 
 port receiveTags : (ContextForTags -> msg) -> Sub msg
+
+
+port replaceTags : (ContextForTagsSync -> msg) -> Sub msg
 
 
 port savedHypaethralBit : (Json.Value -> msg) -> Sub msg

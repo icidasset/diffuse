@@ -33,7 +33,7 @@ trackMenu :
     -> ContextMenu Msg
 trackMenu { cached, cachingInProgress, currentTime, selectedPlaylist, lastModifiedPlaylistName, showAlternativeMenu, sources } tracks =
     if showAlternativeMenu then
-        [ temporaryUrlActions
+        [ alternativeMenuActions
             currentTime
             sources
             tracks
@@ -62,6 +62,34 @@ trackMenu { cached, cachingInProgress, currentTime, selectedPlaylist, lastModifi
         ]
             |> List.concat
             |> ContextMenu
+
+
+alternativeMenuActions :
+    Time.Posix
+    -> List Source
+    -> List IdentifiedTrack
+    -> List (ContextMenu.Item Msg)
+alternativeMenuActions timestamp sources tracks =
+    case tracks of
+        [ ( i, t ) ] ->
+            [ Item
+                { icon = Icons.link
+                , label = "Copy temporary url"
+                , msg = CopyToClipboard (Queue.makeTrackUrl timestamp sources t)
+                , active = False
+                }
+
+            --
+            , Item
+                { icon = Icons.sync
+                , label = "Sync tags"
+                , msg = TracksMsg (Tracks.SyncTags [ t ])
+                , active = False
+                }
+            ]
+
+        _ ->
+            []
 
 
 cacheAction :
@@ -222,26 +250,6 @@ queueActions identifiedTracks =
         , active = False
         }
     ]
-
-
-temporaryUrlActions :
-    Time.Posix
-    -> List Source
-    -> List IdentifiedTrack
-    -> List (ContextMenu.Item Msg)
-temporaryUrlActions timestamp sources tracks =
-    case tracks of
-        [ ( i, t ) ] ->
-            [ Item
-                { icon = Icons.link
-                , label = "Copy temporary url"
-                , msg = CopyToClipboard (Queue.makeTrackUrl timestamp sources t)
-                , active = False
-                }
-            ]
-
-        _ ->
-            []
 
 
 

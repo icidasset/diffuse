@@ -1,4 +1,4 @@
-module Sources.Processing exposing (Arguments, Context, ContextForTags, HttpMethod(..), Marker(..), PrepationAnswer, Status(..), TagUrls, TreeAnswer, httpMethod)
+module Sources.Processing exposing (..)
 
 import Sources exposing (Source, SourceData)
 import Tracks exposing (Tags, Track)
@@ -60,6 +60,14 @@ type alias ContextForTags =
     , receivedFilePaths : List String
     , receivedTags : List (Maybe Tags)
     , sourceId : String
+    , urlsForTags : List TagUrls
+    }
+
+
+type alias ContextForTagsSync =
+    { receivedFilePaths : List String
+    , receivedTags : List (Maybe Tags)
+    , trackIds : List String
     , urlsForTags : List TagUrls
     }
 

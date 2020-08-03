@@ -17,6 +17,7 @@ type Msg
     | Harvest
     | MarkAsSelected Int { shiftKey : Bool }
     | ScrollToNowPlaying
+    | SyncTags (List Track)
     | ToggleCachedOnly
     | ToggleFavouritesOnly
     | ToggleHideDuplicates
@@ -36,6 +37,7 @@ type Msg
       -- Collection
       -----------------------------------------
     | Add Json.Value
+    | Reload Json.Value
     | RemoveByPaths Json.Value
     | RemoveBySourceId String
     | SortBy SortBy

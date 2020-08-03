@@ -120,11 +120,17 @@ update msg =
         RemoveTracksFromCache a ->
             Tracks.removeFromCache a
 
+        ReplaceTrackTags a ->
+            Tracks.replaceTags a
+
         Search a ->
             Tracks.search a
 
         StoreTracksInCache a ->
             Tracks.storeInCache a
+
+        SyncTrackTags a ->
+            Tracks.syncTrackTags a
 
         UpdateSearchIndex a ->
             Tracks.updateSearchIndex a
@@ -159,6 +165,7 @@ subscriptions model =
         , Ports.makeArtworkTrackUrls MakeArtworkTrackUrls
         , Ports.receiveSearchResults GotSearchResults
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
+        , Ports.replaceTags ReplaceTrackTags
         , Ports.savedHypaethralBit (\_ -> UserMsg User.SaveNextHypaethralBit)
 
         --
@@ -263,6 +270,9 @@ translateAlienData tag data =
 
         Alien.StoreTracksInCache ->
             StoreTracksInCache data
+
+        Alien.SyncTrackTags ->
+            SyncTrackTags data
 
         Alien.ToCache ->
             ToCache data

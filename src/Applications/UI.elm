@@ -622,6 +622,9 @@ translateAlienData tag data =
         Alien.NotAuthenticated ->
             AuthenticationMsg Authentication.NotAuthenticated
 
+        Alien.ReloadTracks ->
+            TracksMsg (Tracks.Reload data)
+
         Alien.RemoveTracksByPath ->
             TracksMsg (Tracks.RemoveByPaths data)
 

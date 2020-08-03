@@ -236,3 +236,11 @@ app.ports.requestTags.subscribe(context => {
     app.ports.receiveTags.send(newContext)
   })
 })
+
+
+app.ports.syncTags.subscribe(context => {
+  processing.processContext(context).then(newContext => {
+    console.log(newContext)
+    app.ports.replaceTags.send(newContext)
+  })
+})

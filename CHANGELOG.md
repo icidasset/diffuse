@@ -5,13 +5,14 @@
 - **Adds album-covers view** (switch to and from list view with icon in nav bar)
 - Added new background images and replaced two older ones
 - Adds a keyboard shortcut `L` to quickly select a playlist
+- Adds ability to sync tags for individual tracks
 - Adds keyboard shortcuts to switch screens
 - Adds the ability to migrate between data-storage methods
 - Dark mode for the about page
 - Fixes issue with shuffle algorithm
 - Fixes playback issues (eg. clicking same track multiple times)
 - Fixes various issues with add-to-playlist overlay
-- Only generated playlists for enabled sources
+- Only show generated playlists for enabled sources
 - Removes support for Blockstack & Textile
 
 ## 2.5.3

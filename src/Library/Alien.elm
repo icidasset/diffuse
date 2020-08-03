@@ -54,6 +54,7 @@ type Tag
     | StopProcessing
     | StoreTracksInCache
     | SyncHypaethralData
+    | SyncTrackTags
     | ToCache
     | UpdateEncryptionKey
       -----------------------------------------
@@ -68,6 +69,7 @@ type Tag
     | LoadHypaethralUserData
     | MissingSecretKey
     | NotAuthenticated
+    | ReloadTracks
     | RemoveTracksByPath
     | ReportProcessingError
     | ReportProcessingProgress
@@ -108,6 +110,7 @@ enum =
         , ( "STOP_PROCESSING", StopProcessing )
         , ( "STORE_TRACKS_IN_CACHE", StoreTracksInCache )
         , ( "SYNC_HYPAETHRAL_DATA", SyncHypaethralData )
+        , ( "SYNC_TRACK_TAGS", SyncTrackTags )
         , ( "TO_CACHE", ToCache )
         , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )
 
@@ -123,6 +126,7 @@ enum =
         , ( "LOAD_HYPAETHRAL_USER_DATA", LoadHypaethralUserData )
         , ( "MISSING_SECRET_KEY", MissingSecretKey )
         , ( "NOT_AUTHENTICATED", NotAuthenticated )
+        , ( "RELOAD_TRACKS", ReloadTracks )
         , ( "REMOVE_TRACKS_BY_PATH", RemoveTracksByPath )
         , ( "REPORT_PROCESSING_ERROR", ReportProcessingError )
         , ( "REPORT_PROCESSING_PROGRESS", ReportProcessingProgress )

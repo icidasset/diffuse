@@ -53,8 +53,10 @@ type Msg
     | MakeArtworkTrackUrls Json.Value
     | RemoveTracksBySourceId Json.Value
     | RemoveTracksFromCache Json.Value
+    | ReplaceTrackTags Processing.ContextForTagsSync
     | Search Json.Value
     | StoreTracksInCache Json.Value
+    | SyncTrackTags Json.Value
     | UpdateSearchIndex Json.Value
       -----------------------------------------
       -- 🦉 Nested

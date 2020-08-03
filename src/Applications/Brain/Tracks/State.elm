@@ -14,7 +14,7 @@ import Queue
 import Return exposing (andThen, return)
 import Return.Ext as Return
 import Sources exposing (Source)
-import Sources.Processing exposing (HttpMethod(..))
+import Sources.Processing exposing (ContextForTagsSync, HttpMethod(..), TagUrls)
 import Sources.Services
 import Time
 import Tracks exposing (Track)
@@ -160,6 +160,46 @@ removeFromCache data =
     Return.communicate (Ports.removeTracksFromCache data)
 
 
+replaceTags : ContextForTagsSync -> Manager
+replaceTags context model =
+    model.hypaethralUserData.tracks
+        |> List.foldr
+            (\track ( acc, trackIds, tags ) ->
+                case List.elemIndex track.id trackIds of
+                    Just idx ->
+                        let
+                            newTags =
+                                tags
+                                    |> List.getAt idx
+                                    |> Maybe.andThen identity
+                                    |> Maybe.withDefault track.tags
+                        in
+                        ( { track | tags = newTags } :: acc
+                        , List.removeAt idx trackIds
+                        , List.removeAt idx tags
+                        )
+
+                    Nothing ->
+                        ( track :: acc
+                        , trackIds
+                        , tags
+                        )
+            )
+            ( []
+            , context.trackIds
+            , context.receivedTags
+            )
+        |> (\( a, _, _ ) ->
+                User.saveTracksAndUpdateSearchIndex a model
+           )
+        |> andThen
+            (\m ->
+                m.hypaethralUserData.tracks
+                    |> Json.Encode.list Tracks.Encoding.encodeTrack
+                    |> (\data -> Common.giveUI Alien.ReloadTracks data m)
+            )
+
+
 search : Json.Value -> Manager
 search encodedSearchTerm =
     encodedSearchTerm
@@ -172,6 +212,74 @@ search encodedSearchTerm =
 storeInCache : Json.Value -> Manager
 storeInCache data =
     Return.communicate (Ports.storeTracksInCache data)
+
+
+syncTrackTags : Json.Value -> Manager
+syncTrackTags data model =
+    let
+        result =
+            Json.decodeValue
+                (Json.list <|
+                    Json.map3
+                        (\path sourceId trackId ->
+                            { path = path
+                            , sourceId = sourceId
+                            , trackId = trackId
+                            }
+                        )
+                        (Json.field "path" Json.string)
+                        (Json.field "sourceId" Json.string)
+                        (Json.field "trackId" Json.string)
+                )
+                data
+
+        ( sources, _ ) =
+            result
+                |> Result.withDefault []
+                |> List.foldl
+                    (\{ path, sourceId } ( dict, acc ) ->
+                        if List.member sourceId acc then
+                            ( dict, acc )
+
+                        else
+                            case List.find (.id >> (==) sourceId) model.hypaethralUserData.sources of
+                                Just source ->
+                                    ( Dict.insert sourceId source dict, sourceId :: acc )
+
+                                Nothing ->
+                                    ( dict, sourceId :: acc )
+                    )
+                    ( Dict.empty, [] )
+    in
+    case result of
+        Ok list ->
+            list
+                |> List.foldr
+                    (\{ path, sourceId, trackId } ( accPaths, accUrls, accIds ) ->
+                        sources
+                            |> Dict.get sourceId
+                            |> Maybe.map
+                                (tagUrls model.currentTime path)
+                            |> Maybe.map
+                                (\urls ->
+                                    ( path :: accPaths, urls :: accUrls, trackId :: accIds )
+                                )
+                            |> Maybe.withDefault
+                                ( accPaths, accUrls, accIds )
+                    )
+                    ( [], [], [] )
+                |> (\( accPaths, accUrls, accIds ) ->
+                        Ports.syncTags
+                            { receivedFilePaths = accPaths
+                            , receivedTags = []
+                            , trackIds = accIds
+                            , urlsForTags = accUrls
+                            }
+                   )
+                |> return model
+
+        Err _ ->
+            Return.singleton model
 
 
 updateSearchIndex : Json.Value -> Manager
@@ -204,3 +312,14 @@ makeTrackUrl timestamp trackPath maybeSource httpMethod =
 
         Nothing ->
             "<missing-source>"
+
+
+tagUrls : Time.Posix -> String -> Source -> TagUrls
+tagUrls currentTime path source =
+    let
+        maker =
+            Sources.Services.makeTrackUrl source.service currentTime source.data
+    in
+    { getUrl = maker Get path
+    , headUrl = maker Head path
+    }

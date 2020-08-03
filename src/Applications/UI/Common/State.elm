@@ -84,7 +84,7 @@ showNotification : Notification Msg -> Manager
 showNotification notification model =
     model.notifications
         |> UI.Notifications.show notification
-        |> Return.map (\n -> { model | isLoading = False, notifications = n })
+        |> Return.map (\n -> { model | notifications = n })
 
 
 showNotificationWithModel : UI.Model -> Notification Msg -> ( UI.Model, Cmd UI.Msg )

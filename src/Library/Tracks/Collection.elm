@@ -1,4 +1,4 @@
-module Tracks.Collection exposing (add, arrange, harvest, identifiedTracksChanged, identify, map, tracksChanged)
+module Tracks.Collection exposing (add, arrange, harvest, identifiedTracksChanged, identify, map, replace, tracksChanged)
 
 import Tracks exposing (IdentifiedTrack, Parcel, Track, emptyCollection)
 import Tracks.Collection.Internal as Internal
@@ -43,6 +43,14 @@ add tracks ( deps, { untouched } ) =
     identify
         ( deps
         , { emptyCollection | untouched = untouched ++ tracks }
+        )
+
+
+replace : List Track -> Parcel -> Parcel
+replace tracks ( deps, { untouched } ) =
+    identify
+        ( deps
+        , { emptyCollection | untouched = tracks }
         )
 
 

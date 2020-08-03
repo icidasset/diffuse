@@ -63,6 +63,9 @@ update msg =
         ScrollToNowPlaying ->
             scrollToNowPlaying
 
+        SyncTags a ->
+            syncTags a
+
         ToggleCachedOnly ->
             toggleCachedOnly
 
@@ -101,6 +104,9 @@ update msg =
         -----------------------------------------
         Add a ->
             add a
+
+        Reload a ->
+            reload a
 
         RemoveByPaths a ->
             removeByPaths a
@@ -178,14 +184,13 @@ update msg =
 
 add : Json.Value -> Manager
 add encodedTracks model =
-    model
-        |> reviseCollection
-            (encodedTracks
-                |> Json.decodeValue (Json.list Encoding.trackDecoder)
-                |> Result.withDefault []
-                |> Collection.add
-            )
-        |> andThen search
+    reviseCollection
+        (encodedTracks
+            |> Json.decodeValue (Json.list Encoding.trackDecoder)
+            |> Result.withDefault []
+            |> Collection.add
+        )
+        model
 
 
 changeScene : Scene -> Manager
@@ -406,6 +411,17 @@ markAsSelected indexInList { shiftKey } model =
                 [ indexInList ]
     in
     Return.singleton { model | selectedTrackIndexes = selection }
+
+
+reload : Json.Value -> Manager
+reload encodedTracks model =
+    reviseCollection
+        (encodedTracks
+            |> Json.decodeValue (Json.list Encoding.trackDecoder)
+            |> Result.withDefault model.tracks.untouched
+            |> Collection.replace
+        )
+        model
 
 
 removeByPaths : Json.Value -> Manager
@@ -724,6 +740,22 @@ storedInCache json maybeError =
                 |> Common.showNotification
 
 
+syncTags : List Track -> Manager
+syncTags tracks =
+    tracks
+        |> Json.Encode.list
+            (\track ->
+                Json.Encode.object
+                    [ ( "path", Json.Encode.string track.path )
+                    , ( "sourceId", Json.Encode.string track.sourceId )
+                    , ( "trackId", Json.Encode.string track.id )
+                    ]
+            )
+        |> Alien.broadcast Alien.SyncTrackTags
+        |> Ports.toBrain
+        |> Return.communicate
+
+
 toggleCachedOnly : Manager
 toggleCachedOnly model =
     { model | cachedTracksOnly = not model.cachedTracksOnly }
@@ -905,7 +937,7 @@ whenArrangementChanges =
 
 
 whenCollectionChanges =
-    andThen Common.generateDirectoryPlaylists >> whenArrangementChanges
+    andThen search >> andThen Common.generateDirectoryPlaylists >> whenArrangementChanges
 
 
 scrollContext : Model -> String
@@ -922,21 +954,13 @@ scrollContext model =
 
 importHypaethral : HypaethralData -> Maybe Playlist -> Manager
 importHypaethral data selectedPlaylist model =
-    let
-        adjustedModel =
-            { model
-                | favourites = data.favourites
-                , hideDuplicates = Maybe.unwrap False .hideDuplicates data.settings
-                , selectedPlaylist = selectedPlaylist
-                , tracks = { emptyCollection | untouched = data.tracks }
-            }
-    in
-    adjustedModel
-        |> resolveParcel
-            (adjustedModel
-                |> makeParcel
-                |> Collection.identify
-            )
+    { model
+        | favourites = data.favourites
+        , hideDuplicates = Maybe.unwrap False .hideDuplicates data.settings
+        , selectedPlaylist = selectedPlaylist
+        , tracks = { emptyCollection | untouched = data.tracks }
+    }
+        |> reviseCollection Collection.identify
         |> andThen search
         |> (case model.searchTerm of
                 Just _ ->
