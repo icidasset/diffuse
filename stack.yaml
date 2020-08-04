@@ -3,3 +3,6 @@ recommend-stack-upgrade: false
 
 extra-deps:
   - shikensu-0.3.11
+
+nix:
+  enable: true
