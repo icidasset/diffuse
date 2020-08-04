@@ -1,5 +1,11 @@
 {
-  "private": true,
+  "name": "Diffuse",
+  "description": "A music player that connects to your cloud/distributed storage",
+  "version": "3.0.0-alpha.1",
+  "author": "Steven Vandevelde <icid.asset@gmail.com>",
+  "homepage": "https://diffuse.sh",
+  "repository": "github:icidasset/diffuse",
+  "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "elm-impfix": "^1.0.8",
     "elm-review": "^2.2.6",
