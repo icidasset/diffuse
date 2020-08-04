@@ -8,14 +8,165 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     
     steps:
       - uses: actions/checkout@v2
+      
+      # Cache
+      - id: stack_cache_key
+        run: echo ::set-output name=key::$(md5sum stack.yaml.lock | awk '{print $1}')
+      
+      - uses: actions/cache@v2
+        with:
+          path: ~/.stack
+          key: ${{ matrix.os }}-${{ steps.stack_cache_key.outputs.key }}
+          
+      - id: cache_key
+        run: echo ::set-output name=key::$(git branch)
+        
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ./.stack-work/dist
+            **/node_modules
+          key: ${{ matrix.os }}-${{ steps.cache_key.outputs.key }}
+      
+      # Nix
       - uses: cachix/install-nix-action@v10
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      - run: nix-shell --run "sudo apt-get install g++ gcc libc6-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg netbase"
+      - uses: mstksg/get-package@v1
+        with:
+          apt-get: libgmp-dev
+      - uses: mstksg/setup-stack@v1
+      
+      # Tasks
       - run: nix-shell --run "just install-deps"
       - run: nix-shell --run "just build-prod"
-      - run: ls ./build
+          
+      # Upload artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build/
+      
+      
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    outputs:
+      RELEASE_UPLOAD_ID: ${{ steps.create_release.outputs.id }}
+    
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir compressed
+      
+      # Download artifacts
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build/
+          
+      # Create zip
+      - uses: montudor/action-zip@v0.1.0
+        with:
+          args: zip -qq -r ./compressed/diffuse-web.zip ./build
+          
+      # Create tar.gz
+      - uses: master-atul/tar-action@v1.0.2
+        with:
+          command: c
+          cwd: .
+          files: ./build
+          outPath: compressed/diffuse-web.tar.gz
+      
+      # Get Diffuse's version number  
+      - run: echo ::set-env name=PACKAGE_VERSION::$(node -p "require('./package.json').version")
+      
+      # Create release
+      - uses: actions/create-release@v1.1.2
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "${{ env.PACKAGE_VERSION }}"
+          release_name: "v${{ env.PACKAGE_VERSION }}"
+          body: "See the assets to download this version and install."
+          draft: true
+          prerelease: true
+      
+      # Upload assets
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./compressed/diffuse-web.zip
+          asset_name: diffuse-web.zip
+          asset_content_type: application/zip
+          
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./compressed/diffuse-web.tar.gz
+          asset_name: diffuse-web.tar.gz
+          asset_content_type: application/gzip
+      
+      
+  tauri:
+    needs: create-release
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+        
+    runs-on: ${{ matrix.platform }}
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      # Cache
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          
+      # Rust & Node
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+          
+      # Download artifacts
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build/
+      
+      # Dependencies
+      - run: cargo install tauri-bundler --force
+      - name: install webkit2gtk (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y webkit2gtk-4.0
+          
+      # Tasks
+      - uses: tauri-apps/tauri-action@v0.0.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          distPath: ../build/
+          iconPath: ./src/Static/Images/icon.png
+          releaseId: ${{ needs.create-release.outputs.RELEASE_UPLOAD_ID }}
+          includeDebug: true
