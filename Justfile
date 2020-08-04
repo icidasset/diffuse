@@ -4,6 +4,8 @@ SRC_DIR 				:= "./src"
 SYSTEM_DIR 			:= "./system"
 TEMPORARY_DIR 	:= "./tmp"
 
+ETC_CMD					:= "yarn run etc"
+
 
 default: dev
 
@@ -28,14 +30,14 @@ default: dev
 @css:
 	echo "> Compiling CSS"
 
-	{{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/About.css \
+	{{ETC_CMD}} {{SRC_DIR}}/Css/About.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
 	  --output {{BUILD_DIR}}/about.css \
 		\
 		--post-plugin-before postcss-import \
 		--post-plugin-after postcss-custom-properties
 
-	{{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/Application.css \
+	{{ETC_CMD}} {{SRC_DIR}}/Css/Application.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
 		--elm-module Css.Classes \
 	  --elm-path {{SRC_DIR}}/Library/Css/Classes.elm \
@@ -48,7 +50,7 @@ default: dev
 @css-prod:
 	echo "> Optimizing CSS"
 
-	NODE_ENV=production {{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/About.css \
+	NODE_ENV=production {{ETC_CMD}} {{SRC_DIR}}/Css/About.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
 	  --output {{BUILD_DIR}}/about.css \
 		\
@@ -57,7 +59,7 @@ default: dev
 		\
 		--purge-content {{BUILD_DIR}}/about/**/*.html
 
-	NODE_ENV=production {{NPM_DIR}}/.bin/etc {{SRC_DIR}}/Css/Application.css \
+	NODE_ENV=production {{ETC_CMD}} {{SRC_DIR}}/Css/Application.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
 	  --output {{BUILD_DIR}}/application.css \
 		\
