@@ -2,7 +2,7 @@ module Sources.Services.AmazonS3.Presign exposing (presignedUrl)
 
 import Binary exposing (Bits)
 import Common
-import Cryptography.HMAC as HMAC
+import Cryptography.Hmac as Hmac
 import DateFormat as Date
 import Dict
 import Dict.Ext as Dict
@@ -201,4 +201,4 @@ encodeAdditionalCharacters query =
 
 hmacSha256 : String -> Bits -> Bits
 hmacSha256 =
-    HMAC.encrypt64 SHA.sha256
+    Hmac.encrypt64 SHA.sha256

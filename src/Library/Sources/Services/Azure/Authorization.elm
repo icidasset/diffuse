@@ -10,7 +10,7 @@ module Sources.Services.Azure.Authorization exposing (Computation(..), Signature
 import Binary
 import BinaryBase64
 import Common
-import Cryptography.HMAC as Hmac
+import Cryptography.Hmac as Hmac
 import DateFormat as Date
 import Dict
 import Dict.Ext as Dict
