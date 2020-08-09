@@ -189,7 +189,7 @@ processSpecific : List Source -> Manager
 processSpecific toProcess model =
     let
         notification =
-            Notifications.stickyWarning "Processing sources ..."
+            Notifications.stickyCasual "Processing sources ..."
 
         notificationId =
             Notifications.id notification

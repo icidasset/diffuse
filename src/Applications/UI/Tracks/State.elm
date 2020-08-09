@@ -218,7 +218,7 @@ clearCache model =
         |> andThen User.saveEnclosedUserData
         |> andThen
             ("Tracks cache was cleared"
-                |> Notifications.warning
+                |> Notifications.casual
                 |> Common.showNotification
             )
 
@@ -239,7 +239,7 @@ download : String -> List Track -> Manager
 download zipName tracks model =
     let
         notification =
-            Notifications.stickyWarning "Downloading tracks ..."
+            Notifications.stickyCasual "Downloading tracks ..."
 
         downloading =
             Just { notificationId = Notifications.id notification }
@@ -675,14 +675,14 @@ storeInCache tracks model =
             case tracks of
                 [ t ] ->
                     ("__" ++ t.tags.title ++ "__ will be stored in the cache")
-                        |> Notifications.success
+                        |> Notifications.casual
 
                 list ->
                     list
                         |> List.length
                         |> String.fromInt
                         |> (\s -> "__" ++ s ++ " tracks__ will be stored in the cache")
-                        |> Notifications.success
+                        |> Notifications.casual
     in
     tracks
         |> Json.Encode.list

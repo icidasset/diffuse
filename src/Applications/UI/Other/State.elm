@@ -62,5 +62,5 @@ setCurrentTime time model =
 syncHypaethralData : Manager
 syncHypaethralData model =
     model
-        |> Common.showNotification (Notifications.warning "Syncing")
+        |> Common.showNotification (Notifications.casual "Syncing")
         |> Return.command (Ports.toBrain <| Alien.trigger Alien.SyncHypaethralData)

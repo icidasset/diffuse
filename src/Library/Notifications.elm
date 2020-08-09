@@ -1,4 +1,4 @@
-module Notifications exposing (Action, Kind(..), Notification, Options, contents, dismiss, error, errorWithCode, id, kind, options, stickyError, stickySuccess, stickyWarning, success, warning)
+module Notifications exposing (Action, Kind(..), Notification, Options, casual, contents, dismiss, error, errorWithCode, id, kind, options, stickyCasual, stickyError, stickySuccess, success)
 
 import Chunky exposing (..)
 import Css.Classes as C
@@ -24,9 +24,9 @@ type alias Options =
 
 
 type Kind
-    = Error
+    = Casual
+    | Error
     | Success
-    | Warning
 
 
 
@@ -149,13 +149,13 @@ stickySuccess content =
 
 
 
--- ⚠️
+-- 🦉
 
 
-warning : String -> Notification msg
-warning content =
+casual : String -> Notification msg
+casual content =
     Notification
-        Warning
+        Casual
         (hashString 0 content)
         { sticky = False
         , wasDismissed = False
@@ -163,10 +163,10 @@ warning content =
         (render content)
 
 
-stickyWarning : String -> Notification msg
-stickyWarning content =
+stickyCasual : String -> Notification msg
+stickyCasual content =
     Notification
-        Warning
+        Casual
         (hashString 0 content)
         { sticky = True
         , wasDismissed = False

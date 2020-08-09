@@ -77,7 +77,7 @@ importLegacyData model =
                 I'll try to import data from Diffuse version one.
                 If this was successful, you'll get a notification.
              """
-                |> Notifications.warning
+                |> Notifications.casual
                 |> Common.showNotification
             )
 

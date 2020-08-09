@@ -304,14 +304,14 @@ injectFirst { showNotification } identifiedTracks model =
             case tracks of
                 [ t ] ->
                     ("__" ++ t.tags.title ++ "__ will be played next")
-                        |> Notifications.success
+                        |> Notifications.casual
 
                 list ->
                     list
                         |> List.length
                         |> String.fromInt
                         |> (\s -> "__" ++ s ++ " tracks__ will be played next")
-                        |> Notifications.success
+                        |> Notifications.casual
     in
     { model | playingNext = items ++ cleanedFuture }
         |> (if showNotification then
@@ -362,14 +362,14 @@ injectLast { showNotification } identifiedTracks model =
             case tracks of
                 [ t ] ->
                     ("__" ++ t.tags.title ++ "__ was added to the queue")
-                        |> Notifications.success
+                        |> Notifications.casual
 
                 list ->
                     list
                         |> List.length
                         |> String.fromInt
                         |> (\s -> "__" ++ s ++ " tracks__ were added to the queue")
-                        |> Notifications.success
+                        |> Notifications.casual
     in
     { model | playingNext = newFuture }
         |> (if showNotification then

@@ -1,12 +1,15 @@
 module UI.Notifications exposing (Model, dismiss, show, showWithModel, view)
 
 import Chunky exposing (..)
+import Color exposing (Color)
+import Color.Manipulate
 import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (class, rel)
+import Html.Attributes exposing (class, rel, style)
 import Html.Ext exposing (onDoubleTap, onTap)
 import Html.Lazy
+import Maybe.Extra as Maybe
 import Notifications exposing (..)
 import Process
 import Task
@@ -77,11 +80,17 @@ showWithModel model notification =
 -- 🗺
 
 
-view : Model -> Html Msg
-view collection =
+view : Maybe Color -> Model -> Html Msg
+view extractedBackdropColor collection =
+    let
+        manipulatedColor =
+            Maybe.map
+                (Color.Manipulate.darken 0.125)
+                extractedBackdropColor
+    in
     collection
         |> List.reverse
-        |> List.map (Html.Lazy.lazy notificationView)
+        |> List.map (Html.Lazy.lazy2 notificationView manipulatedColor)
         |> Html.div
             [ class "notifications"
 
@@ -92,7 +101,7 @@ view collection =
             , C.flex_col
             , C.items_end
             , C.leading_snug
-            , C.mb_3
+            , C.mb_4
             , C.mr_3
             , C.right_0
             , C.text_sm
@@ -100,8 +109,8 @@ view collection =
             ]
 
 
-notificationView : Notification Msg -> Html Msg
-notificationView notification =
+notificationView : Maybe Color -> Notification Msg -> Html Msg
+notificationView extractedBackdropColor notification =
     let
         kind =
             Notifications.kind notification
@@ -139,21 +148,24 @@ notificationView notification =
 
         --
         , case kind of
+            Casual ->
+                Maybe.unwrap
+                    C.bg_white_20
+                    (style "background-color" << Color.toCssString)
+                    extractedBackdropColor
+
             Error ->
                 C.bg_base08
 
             Success ->
                 C.bg_base0b
 
-            Warning ->
-                C.bg_white_20
-
         --
         , if options.wasDismissed then
             C.transition
 
           else
-            C.transition_none
+            C.transition_colors
 
         --
         , if options.wasDismissed then
@@ -167,7 +179,7 @@ notificationView notification =
             [ contents notification ]
 
         --
-        , if options.sticky && kind /= Warning then
+        , if options.sticky && kind /= Casual then
             Html.div
                 [ C.cursor_pointer
                 , C.italic

@@ -108,7 +108,7 @@ body model =
         -----------------------------------------
         -- Notifications
         -----------------------------------------
-        , Lazy.lazy UI.Notifications.view model.notifications
+        , Lazy.lazy2 UI.Notifications.view model.extractedBackdropColor model.notifications
 
         -----------------------------------------
         -- Overlay
