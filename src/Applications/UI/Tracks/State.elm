@@ -795,7 +795,7 @@ toggleFavourite index model =
                 |> reviseCollection effect
                 |> andThen User.saveFavourites
                 |> (if model.scene == Covers then
-                        andThen generateCovers
+                        andThen generateCovers >> andThen harvestCovers
 
                     else
                         identity
