@@ -764,7 +764,7 @@ buffer@^4.3.0:
     ieee754 "^1.1.4"
     isarray "^1.0.0"
 
-buffer@^5.5.0:
+buffer@^5.6.0:
   version "5.6.0"
   resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.6.0.tgz#a31749dc7d81d84db08abf937b6b8c4033f62786"
   integrity sha512-/gDYp/UtU0eA1ys8bOs9J6a+E/KWIY+DZ+Q2WESNUA0jFRsJOc0SNUO6xJ5SGA1xueg3NL65W6s+NY5l9cunuw==
@@ -1518,10 +1518,10 @@ elm-review@^2.2.6:
     which "^2.0.2"
     wrap-ansi "^6.2.0"
 
-elm-tailwind-css@^0.4.4:
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/elm-tailwind-css/-/elm-tailwind-css-0.4.4.tgz#07d9ab24e52e59d8a36f566ced8b43419a4ac112"
-  integrity sha512-Fyx5EsSvBbGbFIsr31jBpEL5WaRolf1kEq8xros7v+ebIFNauS/S2h8eboXgR6DpVfiz7ueQggZgZKaA9ug2wQ==
+elm-tailwind-css@^0.4.6:
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/elm-tailwind-css/-/elm-tailwind-css-0.4.6.tgz#d74ae5bc75afe745e92fec5c58478543ab1f6b83"
+  integrity sha512-f8hcsDesiFQatzNY5+uXVWacOIJvx/nn9SlwP0rFY8xXGxhBVd7XVZyOZahCTGDgBLUQNq7jxjUkGCg18MHNDw==
   dependencies:
     "@fullhuman/postcss-purgecss" "^2.3.0"
     autoprefixer "^9.8.6"
@@ -1529,7 +1529,6 @@ elm-tailwind-css@^0.4.4:
     postcss "^7.0.32"
     postcss-csso "^4.0.0"
     postcss-elm-tailwind icidasset/postcss-elm-tailwind#b88835786d9b0aa48a88d83fd8c13df89bbd60a0
-    tailwindcss "^1.6.0"
 
 emoji-regex@^7.0.1:
   version "7.0.3"
@@ -1860,10 +1859,10 @@ file-saver@^2.0.2:
   resolved "https://registry.yarnpkg.com/file-saver/-/file-saver-2.0.2.tgz#06d6e728a9ea2df2cce2f8d9e84dfcdc338ec17a"
   integrity sha512-Wz3c3XQ5xroCxd1G8b7yL0Ehkf0TC9oYC6buPFkNnU9EnaPlifeAFCyCh+iewXTyFRcg0a6j3J7FmJsIhlhBdw==
 
-file-type@^14.6.2:
-  version "14.6.2"
-  resolved "https://registry.yarnpkg.com/file-type/-/file-type-14.6.2.tgz#5bf69c0d8c39de525d3d9de23d81a3b6e81cf69a"
-  integrity sha512-kSZTAJxPXBdBgJyoC7TexkBWoMI/D1Gas6aTtAn9VIRFwCehwiluGV5O8O2GwqO5zIqeEvXxEKl/xfcaAKB0Yg==
+file-type@^14.7.0:
+  version "14.7.1"
+  resolved "https://registry.yarnpkg.com/file-type/-/file-type-14.7.1.tgz#f748732b3e70478bff530e1cf0ec2fe33608b1bb"
+  integrity sha512-sXAMgFk67fQLcetXustxfKX+PZgHIUFn96Xld9uH8aXPdX3xOp0/jg9OdouVTvQrf7mrn+wAa4jN/y9fUOOiRA==
   dependencies:
     readable-web-to-node-stream "^2.0.0"
     strtok3 "^6.0.3"
@@ -3178,30 +3177,30 @@ ms@^2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-music-metadata-browser@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/music-metadata-browser/-/music-metadata-browser-2.1.0.tgz#318f9ed6b8e867fbcfabb104ed2f4266cf0bf92a"
-  integrity sha512-WSJ2pw6KdYQ6eUE22g46N+/A4d8Sfqa9VcEqCjqn3+8uzEKCKLSHUM+zC2G9SklckPjk2330O/HkASyMK8GVsg==
+music-metadata-browser@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/music-metadata-browser/-/music-metadata-browser-2.1.1.tgz#d7a6a0febe6551b6c67391a7627ddd9e1e42aec9"
+  integrity sha512-booEkHWtdrh7v9zxoLP+ca6bQTd1LhYxJRXKLZG8VhyEa4boGwn9/y85XD/B06St2xKF5jEX9mrJ2dvewblt+Q==
   dependencies:
     assert "^2.0.0"
-    buffer "^5.5.0"
+    buffer "^5.6.0"
     debug "^4.0.1"
-    music-metadata "^7.0.0"
+    music-metadata "^7.0.1"
     readable-stream "^3.6.0"
     readable-web-to-node-stream "^2.0.0"
     remove "^0.1.5"
     typedarray-to-buffer "^3.1.5"
 
-music-metadata@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/music-metadata/-/music-metadata-7.0.0.tgz#39ab048e477e57797f05890a6871cc66eafc427e"
-  integrity sha512-v/A4QVS0nTvV49ShgZo/2g2cbvE8UtUbxIXh4W7zG+k40gy83UK1FkLvF0q9nd++mIXn5a+MS6kcrPO1WJBAdQ==
+music-metadata@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/music-metadata/-/music-metadata-7.0.1.tgz#5a2229835c168a840483c54509467f0b2269ea01"
+  integrity sha512-iuG7CAhS2UZN7LlLvGIzBs8W8Eo7UFRqD6jdp9W3bQ+0nBDFZdD+AoCaAoZ5lc1qTI8CCEHVttNp9+LucKQ4mQ==
   dependencies:
     content-type "^1.0.4"
     debug "^4.1.0"
-    file-type "^14.6.2"
+    file-type "^14.7.0"
     media-typer "^1.1.0"
-    strtok3 "^6.0.3"
+    strtok3 "^6.0.4"
     token-types "^2.0.0"
 
 mustache@^3.0.1:
@@ -4793,18 +4792,18 @@ tailwindcss-animations@^2.0.0:
   dependencies:
     lodash "^4.17.15"
 
-tailwindcss-interaction-variants@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/tailwindcss-interaction-variants/-/tailwindcss-interaction-variants-4.0.0.tgz#3ec0e4323c2207ee6f84b2427bc99880990994e1"
-  integrity sha512-0jvrD1Be63L/H357DrFDnAF9yzRy1aVYbXFCeU4axitWdoefjLctxhl6BuKdjP1hKULDB8H35JUuUA/0mEgglQ==
+tailwindcss-interaction-variants@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/tailwindcss-interaction-variants/-/tailwindcss-interaction-variants-5.0.0.tgz#8e0825dfa4b2a81804cbae536915e48a85e96580"
+  integrity sha512-Tmx9HjwuNA3G7cLUcebGkNchKkNVIZXBroxa0LBoq/KUb/xEKEM8qugUG7QczSNPhaZzpXmo3IzPkRhf4tDaOQ==
   dependencies:
-    lodash "^4.17.15"
+    lodash "^4.17.19"
     postcss-selector-parser "^6.0.2"
 
-tailwindcss@^1.6.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-1.6.0.tgz#cdad8cdd225129ad41bff6aa607aa39ad6524593"
-  integrity sha512-UZEex5ebsQlCTIBjI0oZITL67HBjOrzMgA4ceLOf8mrBGquLSn7LsO92do1nBSBZBV2Qqpivz9QUwT3zMSQkMA==
+tailwindcss@^1.6.2:
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-1.6.2.tgz#352da9e1b0d9154c95ce12483daa1c2fa1f1eea8"
+  integrity sha512-Cpa0kElG8Sg5sJSvTYi2frmIQZq0w37RLNNrYyy/W6HIWKspqSdTfb9tIN6X1gm4KV5a+TE/n7EKmn5Q9C7EUQ==
   dependencies:
     "@fullhuman/postcss-purgecss" "^2.1.2"
     autoprefixer "^9.4.5"
