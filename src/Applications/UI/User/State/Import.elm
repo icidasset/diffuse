@@ -58,6 +58,7 @@ importJson json model =
         -- Clear tracks cache
         |> andThen Tracks.clearCache
         -- Redirect to index page
+        |> andThen Common.forceTracksRerender
         |> andThen (Common.changeUrlUsingPage Page.Index)
         -----------------------------
         -- Save all the imported data

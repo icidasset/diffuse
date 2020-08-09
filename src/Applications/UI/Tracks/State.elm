@@ -362,16 +362,7 @@ harvestCovers model =
     model.covers
         |> Covers.harvest model.selectedCover model.sortBy model.tracks
         |> (\( c, s ) -> { model | covers = c, selectedCover = s })
-        |> Return.communicate
-            (Ports.loadAlbumCovers ())
-        |> andThen
-            (case model.scene of
-                Covers ->
-                    Common.forceTracksRerender
-
-                List ->
-                    Return.singleton
-            )
+        |> Return.communicate (Ports.loadAlbumCovers ())
 
 
 infiniteListMsg : InfiniteList.Model -> Manager
