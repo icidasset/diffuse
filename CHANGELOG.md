@@ -3,7 +3,7 @@
 ## 3.0.0
 
 - **Adds album-covers view** (switch to and from list view with icon in nav bar)
-- Added new background images and replaced two older ones
+- Added new background images and replaced a few older ones
 - Adds a keyboard shortcut `L` to quickly select a playlist
 - Adds ability to sync tags for individual tracks
 - Adds keyboard shortcuts to switch screens

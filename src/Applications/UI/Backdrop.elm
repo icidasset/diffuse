@@ -54,6 +54,8 @@ options =
     , ( "26.jpg", "Option 26" )
     , ( "27.jpg", "Option 27" )
     , ( "28.jpg", "Option 28" )
+    , ( "29.jpg", "Option 29" )
+    , ( "30.jpg", "Option 30" )
     ]
 
 
@@ -133,9 +135,6 @@ backgroundPositioning filename =
 
         "11.jpg" ->
             style "background-position" "center 67.25%"
-
-        "17.jpg" ->
-            style "background-position" "center 2.5%"
 
         "19.jpg" ->
             style "background-position" "center 13%"

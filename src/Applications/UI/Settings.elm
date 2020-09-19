@@ -273,13 +273,13 @@ backgroundImage chosenBackground =
                     [ C.cursor_pointer
                     , C.h_0
                     , C.overflow_hidden
-                    , C.pt_1over5
+                    , C.pt_1over8
                     , C.relative
-                    , C.w_1over3
+                    , C.w_1over5
 
                     --
-                    , C.md__pt_1over12
-                    , C.md__w_1over7
+                    , C.md__pt_1over16
+                    , C.md__w_1over10
                     ]
                     [ if isActive then
                         chunk
