@@ -163,7 +163,7 @@ default: dev
 
 @system:
 	echo "> Compiling system"
-	stack build && stack exec build
+	stack build --fast 2>&1 | sed '/^Warning:/,/Invalid magic: e49ceb0f$/d' | sed '/^Inferring license/d' && stack exec build --silent
 
 
 @vendor-js:
