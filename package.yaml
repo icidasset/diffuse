@@ -8,12 +8,12 @@ default-extensions:
 
 
 dependencies:
-  - aeson == 1.4.*
+  - aeson == 1.5.*
   - base >= 4.7 && < 5
   - bytestring == 0.10.*
-  - cmark == 0.5.*
+  - cmark == 0.6.*
   - flow == 1.*
-  - protolude == 0.2.*
+  - protolude == 0.3.*
   - shikensu == 0.3.*
   - text == 1.*
   - time == 1.*

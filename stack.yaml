@@ -1,2 +1,5 @@
-resolver: lts-13.5
+resolver: nightly-2020-09-19
 recommend-stack-upgrade: false
+
+extra-deps:
+  - shikensu-0.3.11
