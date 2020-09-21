@@ -99,7 +99,7 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                     , style "height" "3px"
                     , style "width" (String.fromFloat progress ++ "%")
                     ]
-                    [ class "progressBarValue" ]
+                    [ class "progressBarValue", C.rounded_sm ]
                     []
                 ]
             ]
