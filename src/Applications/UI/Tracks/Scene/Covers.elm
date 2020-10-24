@@ -206,7 +206,7 @@ scrollToNowPlaying viewportWidth covers nowPlaying =
                 |> List.take idx
                 |> List.foldl (\a -> (+) <| dynamicRowHeight rowHeightArgs 0 a) 0
                 |> toFloat
-                |> (+) 46
+                |> (+) 11
                 |> Dom.setViewportOf containerId 0
                 |> Task.attempt (always Bypass)
 

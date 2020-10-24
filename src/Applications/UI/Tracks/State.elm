@@ -10,6 +10,7 @@ import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Decode as Json
 import Json.Encode
+import Keyboard
 import List.Ext as List
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -628,20 +629,36 @@ scrollToNowPlaying model =
                     model.tracks.harvested
             )
         |> Maybe.map
-            (case model.scene of
-                Covers ->
-                    UI.Tracks.Scene.Covers.scrollToNowPlaying
-                        model.viewport.width
-                        model.covers.harvested
+            (\( identifiers, track ) ->
+                case model.scene of
+                    Covers ->
+                        if List.member Keyboard.Shift model.pressedKeys then
+                            return
+                                { model | selectedCover = Nothing }
+                                (UI.Tracks.Scene.Covers.scrollToNowPlaying
+                                    model.viewport.width
+                                    model.covers.harvested
+                                    ( identifiers, track )
+                                )
 
-                List ->
-                    UI.Tracks.Scene.List.scrollToNowPlaying model.tracks.harvested
+                        else
+                            model.covers.harvested
+                                |> List.find (\cover -> List.member track.id cover.trackIds)
+                                |> Maybe.unwrap model (\cover -> { model | selectedCover = Just cover })
+                                |> Return.singleton
+
+                    List ->
+                        return
+                            { model | selectedCover = Nothing }
+                            (UI.Tracks.Scene.List.scrollToNowPlaying
+                                model.tracks.harvested
+                                ( identifiers, track )
+                            )
             )
         |> Maybe.map
-            (\cmd ->
-                cmd
-                    |> return { model | selectedCover = Nothing }
-                    |> andThen (Common.changeUrlUsingPage UI.Page.Index)
+            (UI.Page.Index
+                |> Common.changeUrlUsingPage
+                |> andThen
             )
         |> Maybe.withDefault
             (Return.singleton model)
