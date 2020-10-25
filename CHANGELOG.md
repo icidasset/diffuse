@@ -8,6 +8,7 @@
 - Adds ability to sync tags for individual tracks
 - Adds keyboard shortcuts to switch screens
 - Adds the ability to migrate between data-storage methods
+- Changes the keyboard shortcuts for seeking and changing tracks (see overview on about page)
 - Dark mode for the about page
 - Fixes issue with shuffle algorithm
 - Fixes playback issues (eg. clicking same track multiple times)

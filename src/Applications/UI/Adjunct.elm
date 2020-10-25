@@ -66,16 +66,16 @@ keyboardInput msg model =
 
         else
             case m.pressedKeys of
-                [ Keyboard.ArrowLeft ] ->
+                [ Keyboard.Character "{", Keyboard.Shift ] ->
                     Queue.rewind m
 
-                [ Keyboard.ArrowRight ] ->
+                [ Keyboard.Character "}", Keyboard.Shift ] ->
                     Queue.shift m
 
-                [ Keyboard.ArrowUp ] ->
+                [ Keyboard.Character "<", Keyboard.Shift ] ->
                     Audio.seek ((m.audioPosition - 10) / m.audioDuration) m
 
-                [ Keyboard.ArrowDown ] ->
+                [ Keyboard.Character ">", Keyboard.Shift ] ->
                     Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
 
                 --

@@ -236,8 +236,11 @@ P - Play / Pause
 R - Toggle Repeat
 S - Toggle Shuffle
 
-Left / Right - Previous / Next
-Up   / Down  - Seek forwards / Seek backwards
+{ / } - Previous / Next
+< / > - Seek forwards / Seek backwards
+
+Alternatively you can use the media-control keys,  
+if your browser supports it.
 
 ESC - Close overlay, close context-menu, deselect album cover, etc.
 
