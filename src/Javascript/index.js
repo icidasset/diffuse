@@ -31,8 +31,8 @@ if ("serviceWorker" in navigator) {
     initialise,
     () => failure(
       location.protocol === "https:"
-        ? "Failed to start service worker."
-        : "Failed to start service worker, try using HTTPS."
+        ? "Failed to start the service worker."
+        : "Failed to start the service worker, try using HTTPS."
     )
   )
 } else {
