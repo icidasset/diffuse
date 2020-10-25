@@ -412,7 +412,9 @@ function audioLoading(_event) {
   clearTimeout(this.loadingTimeoutId)
 
   this.loadingTimeoutId = setTimeout(() => {
-    if (this.audio.readyState === 4 && this.audio.currentTime === 0) {
+    if (!this.audio) {
+      return
+    } else if (this.audio.readyState === 4 && this.audio.currentTime === 0) {
       this.app.ports.setAudioIsLoading.send(false)
     } else {
       this.app.ports.setAudioIsLoading.send(true)

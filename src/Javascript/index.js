@@ -90,7 +90,7 @@ audioEngine.setup(orchestrion)
 
 
 app.ports.activeQueueItemChanged.subscribe(item => {
-  if (orchestrion.activeQueueItem && item.trackId === orchestrion.activeQueueItem.trackId) {
+  if (orchestrion.activeQueueItem && item && item.trackId === orchestrion.activeQueueItem.trackId) {
     orchestrion.audio.currentTime = 0
     return
   }
