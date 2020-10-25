@@ -25,47 +25,96 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   location.href = location.href.replace("http://", "https://")
 }
 
+// Service worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js").then(
+    initialise,
+    () => failure(
+      location.protocol === "https:"
+        ? "Failed to start service worker."
+        : "Failed to start service worker, try using HTTPS."
+    )
+  )
+} else {
+  failure("We'll need a more modern browser to liven the place up a bit.")
+}
+
 
 
 // 🍱
 
 
-const app = Elm.UI.init({
-  node: document.getElementById("elm"),
-  flags: {
-    darkMode: preferredColorScheme().matches,
-    initialTime: Date.now(),
-    isOnline: navigator.onLine,
-    upgrade: viableForUpgrade(),
-    viewport: {
-      height: window.innerHeight,
-      width: window.innerWidth
+let app
+let wire = {}
+
+
+function initialise() {
+  app = Elm.UI.init({
+    node: document.getElementById("elm"),
+    flags: {
+      darkMode: preferredColorScheme().matches,
+      initialTime: Date.now(),
+      isOnline: navigator.onLine,
+      upgrade: viableForUpgrade(),
+      viewport: {
+        height: window.innerHeight,
+        width: window.innerWidth
+      }
     }
-  }
-})
+  })
+
+  self.app = app
+
+  // ⚡️
+  wire.brain()
+  wire.audio()
+  wire.backdrop()
+  wire.clipboard()
+  wire.covers()
+}
 
 
-self.app = app
+function failure(text) {
+  const note = document.createElement("div")
+
+  note.className = "flex flex-col font-body items-center h-screen italic justify-center leading-relaxed px-4 text-center text-base text-white"
+  note.innerHTML = `
+    <a class="block logo mb-5" href="../">
+      <img src="../images/diffuse-light.svg" />
+    </a>
+
+    <p class="opacity-60">
+      ${text}
+    </p>
+  `
+
+  document.body.appendChild(note)
+
+  // Remove loader
+  const elm = document.querySelector("#elm")
+
+  elm && elm.parentNode.removeChild(elm)
+}
 
 
 
 // Brain
 // =====
 
-const brain = new Worker(
-  "brain.js#appHref=" +
-  encodeURIComponent(window.location.href)
-)
+let brain
 
+wire.brain = () => {
+  brain = new Worker(
+    "brain.js#appHref=" +
+    encodeURIComponent(window.location.href)
+  )
 
-app.ports.toBrain.subscribe(thing => {
-  brain.postMessage(thing)
-})
+  brain.onmessage = event => {
+    if (event.data.action) return handleAction(event.data.action, event.data.data)
+    if (event.data.tag) return app.ports.fromAlien.send(event.data)
+  }
 
-
-brain.onmessage = event => {
-  if (event.data.action) return handleAction(event.data.action, event.data.data)
-  if (event.data.tag) return app.ports.fromAlien.send(event.data)
+  app.ports.toBrain.subscribe(a => brain.postMessage(a))
 }
 
 
@@ -78,18 +127,30 @@ function handleAction(action, data) { switch (action) {
 // Audio
 // -----
 
-const orchestrion = {
-  activeQueueItem: null,
-  audio: null,
-  app: app,
-  repeat: false
+let orchestrion
+
+
+wire.audio = () => {
+  orchestrion = {
+    activeQueueItem: null,
+    audio: null,
+    app: app,
+    repeat: false
+  }
+
+  audioEngine.setup(orchestrion)
+
+  app.ports.activeQueueItemChanged.subscribe(activeQueueItemChanged)
+  app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
+  app.ports.pause.subscribe(pause)
+  app.ports.play.subscribe(play)
+  app.ports.preloadAudio.subscribe(preloadAudio())
+  app.ports.seek.subscribe(seek)
+  app.ports.setRepeat.subscribe(setRepeat)
 }
 
 
-audioEngine.setup(orchestrion)
-
-
-app.ports.activeQueueItemChanged.subscribe(item => {
+function activeQueueItemChanged(item) {
   if (orchestrion.activeQueueItem && item && item.trackId === orchestrion.activeQueueItem.trackId) {
     orchestrion.audio.currentTime = 0
     return
@@ -115,47 +176,54 @@ app.ports.activeQueueItemChanged.subscribe(item => {
     app.ports.setAudioIsPlaying.send(false)
     app.ports.setAudioPosition.send(0)
   }
-})
+}
 
 
-app.ports.adjustEqualizerSetting.subscribe(e => {
+function adjustEqualizerSetting(e) {
   audioEngine.adjustEqualizerSetting(e.knob, e.value)
-})
+}
 
 
-app.ports.pause.subscribe(_ => {
+function pause(_) {
   if (orchestrion.audio) orchestrion.audio.pause()
-})
+}
 
 
-app.ports.play.subscribe(_ => {
+function play(_) {
   if (orchestrion.audio) orchestrion.audio.play()
-})
+}
 
 
-app.ports.preloadAudio.subscribe(debounce(item => {
-  // Wait 15 seconds to preload something.
-  // This is particularly useful when quickly shifting through tracks,
-  // or when moving things around in the queue.
-  (audioEngine.usesSingleAudioNode() || item.isCached)
-    ? false
-    : audioEngine.preloadAudioElement(orchestrion, item)
-}, 15000))
+function preloadAudio() {
+  return debounce(item => {
+    // Wait 15 seconds to preload something.
+    // This is particularly useful when quickly shifting through tracks,
+    // or when moving things around in the queue.
+    (audioEngine.usesSingleAudioNode() || item.isCached)
+      ? false
+      : audioEngine.preloadAudioElement(orchestrion, item)
+  }, 15000)
+}
 
 
-app.ports.seek.subscribe(percentage => {
+function seek(percentage) {
   audioEngine.seek(orchestrion.audio, percentage)
-})
+}
 
 
-app.ports.setRepeat.subscribe(repeat => {
+function setRepeat(repeat) {
   orchestrion.repeat = repeat
-})
+}
 
 
 
 // Backdrop
 // --------
+
+wire.backdrop = () => {
+  app.ports.pickAverageBackgroundColor.subscribe(pickAverageBackgroundColor)
+}
+
 
 function averageColorOfImage(img) {
   const canvas = document.createElement("canvas")
@@ -182,21 +250,26 @@ function averageColorOfImage(img) {
 }
 
 
-app.ports.pickAverageBackgroundColor.subscribe(src => {
+function pickAverageBackgroundColor(src) {
   const img = document.querySelector(`img[src$="${src}"]`)
 
   if (img) {
     const avgColor = averageColorOfImage(img)
     app.ports.setAverageBackgroundColor.send(avgColor)
   }
-})
+}
 
 
 
 // Clipboard
 // ---------
 
-app.ports.copyToClipboard.subscribe(text => {
+wire.clipboard = () => {
+  app.ports.copyToClipboard.subscribe(copyToClipboard)
+}
+
+
+function copyToClipboard(text) {
 
   // Insert a textarea element
   const el = document.createElement("textarea")
@@ -226,7 +299,7 @@ app.ports.copyToClipboard.subscribe(text => {
     document.getSelection().addRange(selected)
   }
 
-})
+}
 
 
 
@@ -236,9 +309,13 @@ app.ports.copyToClipboard.subscribe(text => {
 const loadingCovers = {}
 
 
-app.ports.loadAlbumCovers.subscribe(
-  debounce(loadAlbumCovers, 500)
-)
+wire.covers = () => {
+  app.ports.loadAlbumCovers.subscribe(
+    debounce(loadAlbumCovers, 500)
+  )
+
+  db.keys().then(cachedCovers)
+}
 
 
 function loadAlbumCovers() {
@@ -286,7 +363,7 @@ function loadAlbumCovers() {
 
 
 // Send a dictionary of the cached covers to the app.
-db.keys().then(keys => {
+function cachedCovers(keys) {
   const cacheKeys = keys.filter(
     k => k.startsWith("coverCache.")
   )
@@ -309,7 +386,7 @@ db.keys().then(keys => {
     app.ports.insertCoverCache.send(cache)
     setTimeout(loadAlbumCovers, 500)
   })
-})
+}
 
 
 
@@ -489,10 +566,10 @@ if ("mediaSession" in navigator) {
   })
 
 
-  // navigator.mediaSession.setActionHandler("seekto", event => {
-  //   const audio = orchestrion.audio
-  //   if (audio) audio.currentTime = event.seekTime
-  // })
+  navigator.mediaSession.setActionHandler("seekto", event => {
+    const audio = orchestrion.audio
+    if (audio) audio.currentTime = event.seekTime
+  })
 
 }
 
