@@ -21,5 +21,8 @@ in
       pkgs.nodejs-14_x
       pkgs.yarn
 
+      # Indirect dependencies
+      pkgs.gmp
+
     ];
   }
