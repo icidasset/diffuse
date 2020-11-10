@@ -292,7 +292,7 @@ corsWarning id =
     , chunk
         [ C.text_sm, C.leading_snug, C.mb_8, C.mt_1, C.opacity_50 ]
         [ text "You can find the instructions over "
-        , UI.Kit.link { label = "here", url = "about#" ++ id }
+        , UI.Kit.link { label = "here", url = "about/cors#" ++ id }
         ]
     ]
 

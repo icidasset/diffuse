@@ -105,10 +105,12 @@ flow _ (AboutCss, dict) =
 
 flow x (AboutPages, dict) =
     dict
+        |> map lowerCasePath
+        |> renameExt ".md" ".html"
+        |> permalink "index"
+        |> prefixDirname "about/"
         |> renderContent markdownRenderer
         |> renderContent (layoutRenderer $ x !~> "aboutLayout")
-        |> rename "About.md" "index.html"
-        |> prefixDirname "about/"
 
 
 

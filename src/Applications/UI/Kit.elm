@@ -387,7 +387,9 @@ link : { label : String, url : String } -> Html msg
 link params =
     slab
         Html.a
-        [ href params.url ]
+        [ A.href params.url
+        , A.target "_blank"
+        ]
         [ C.border_b_2
         , C.border_base04
         , C.inline_block
