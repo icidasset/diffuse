@@ -6,7 +6,7 @@ import Return
 import Return.Ext as Return
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
-import UI.Authentication.Types as Authentication
+import UI.Authentication.Common as Authentication
 import UI.Common.State as Common
 import UI.Interface.State exposing (hideOverlay)
 import UI.Page as Page
@@ -32,12 +32,7 @@ keyboardInput msg model =
                 Return.singleton m
 
             authenticated =
-                case model.authentication of
-                    Authentication.Authenticated _ ->
-                        True
-
-                    _ ->
-                        False
+                Authentication.isAuthenticated model.authentication
         in
         if not authenticated || (m.focusedOnInput && Maybe.isNothing model.alfred) then
             case m.pressedKeys of

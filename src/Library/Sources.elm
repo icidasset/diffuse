@@ -1,7 +1,8 @@
-module Sources exposing (Property, Service(..), Source, SourceData, enabledSourceIds, setProperId)
+module Sources exposing (..)
 
 import Conditional exposing (..)
 import Dict exposing (Dict)
+import Json.Decode
 import Time
 
 
@@ -47,6 +48,36 @@ type Service
     | Google
     | Ipfs
     | WebDav
+
+
+serviceDictionary : Dict String Service
+serviceDictionary =
+    Dict.fromList
+        [ ( "amazons3", AmazonS3 )
+        , ( "amazon_s3", AmazonS3 )
+        , ( "azureblob", AzureBlob )
+        , ( "azure_blob", AzureBlob )
+        , ( "azurefile", AzureFile )
+        , ( "azure_file", AzureFile )
+        , ( "btfs", Btfs )
+        , ( "dropbox", Dropbox )
+        , ( "google", Google )
+        , ( "ipfs", Ipfs )
+        , ( "webdav", WebDav )
+        , ( "web_dav", WebDav )
+        ]
+
+
+serviceDecoder : Json.Decode.Decoder Service
+serviceDecoder =
+    Json.Decode.andThen
+        (\string ->
+            serviceDictionary
+                |> Dict.get string
+                |> Maybe.map Json.Decode.succeed
+                |> Maybe.withDefault (Json.Decode.fail "Invalid source kind")
+        )
+        Json.Decode.string
 
 
 

@@ -29,6 +29,7 @@ import UI.Authentication.Types as Authentication exposing (..)
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
+import UI.Sources.Query
 import UI.Sources.State as Sources
 import UI.Types as UI exposing (..)
 import UI.User.State.Import as User
@@ -283,21 +284,28 @@ notAuthenticated : Manager
 notAuthenticated model =
     -- This is the message we get when the app initially
     -- finds out we're not authenticated.
-    andThen
-        Backdrop.setDefault
-        (if model.isUpgrading then
-            """
-            Thank you for using Diffuse V1!
-            If you want to import your old data,
-            please pick the storage method you used before and
-            go to the [import page](#/settings/import-export).
-            """
-                |> Notifications.stickySuccess
-                |> showNotificationWithModel { model | isUpgrading = False }
+    (if model.isUpgrading then
+        """
+        Thank you for using Diffuse V1!
+        If you want to import your old data,
+        please pick the storage method you used before and
+        go to the [import page](#/settings/import-export).
+        """
+            |> Notifications.stickySuccess
+            |> showNotificationWithModel { model | isUpgrading = False }
 
-         else
-            Return.singleton model
-        )
+     else
+        Return.singleton model
+    )
+        |> andThen Backdrop.setDefault
+        -- When the user wants to create a source (by passing the info through the url)
+        -- and the user isn't signed in yet, sign in using the "Local" method.
+        |> (if UI.Sources.Query.requestedAddition model.url then
+                andThen (signIn Local)
+
+            else
+                identity
+           )
 
 
 remoteStorageWebfinger : RemoteStorage.Attributes -> Result Http.Error String -> Manager

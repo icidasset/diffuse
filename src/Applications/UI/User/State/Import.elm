@@ -126,6 +126,8 @@ loadHypaethralUserData json model =
                     Return.singleton m
             )
         |> andThen
+            Sources.addSourcesFromUrl
+        |> andThen
             (\m ->
                 if m.processAutomatically then
                     Sources.process m

@@ -77,7 +77,7 @@ default: dev
 @elm:
 	echo "> Compiling Elm application"
 	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/brain.elm.js
-	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js
+	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js --debug
 
 
 @elm-prod:

@@ -26,6 +26,7 @@ import UI.Ports as Ports
 import UI.Sources.ContextMenu as Sources
 import UI.Sources.Form as Form
 import UI.Sources.Page as Sources
+import UI.Sources.Query
 import UI.Sources.Types exposing (..)
 import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (Manager, Model)
@@ -148,6 +149,24 @@ update msg =
 
 
 -- 🔱
+
+
+addSourcesFromUrl : Manager
+addSourcesFromUrl model =
+    case UI.Sources.Query.sourcesFromUrl model.url of
+        [] ->
+            Return.singleton model
+
+        sources ->
+            sources
+                |> List.foldl
+                    (\s -> andThen <| addToCollection s)
+                    (Return.singleton model)
+                |> Return.command
+                    (Nav.replaceUrl
+                        model.navKey
+                        (model.url.path ++ Page.toString model.page)
+                    )
 
 
 finishedProcessing : Manager
