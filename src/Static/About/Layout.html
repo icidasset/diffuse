@@ -36,6 +36,8 @@
 
 
   <!-- Service worker -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad()</script>
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("{{pathToRoot}}service-worker.js")

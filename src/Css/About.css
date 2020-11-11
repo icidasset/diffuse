@@ -83,6 +83,16 @@ code {
   }
 }
 
+.hljs-comment,
+.language-shell .hljs-meta,
+.language-shell .hljs-meta + .bash {
+  opacity: 0.5;
+}
+
+.hljs-string {
+  @apply text-base0b;
+}
+
 
 
 /* Links
