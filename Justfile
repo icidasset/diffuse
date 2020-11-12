@@ -48,7 +48,7 @@ default: dev
 
 
 @css-prod:
-	echo "> Optimizing CSS"
+	echo "> Optimising CSS"
 
 	NODE_ENV=production {{ETC_CMD}} {{SRC_DIR}}/Css/About.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
@@ -57,7 +57,11 @@ default: dev
 		--post-plugin-before postcss-import \
 		--post-plugin-after postcss-custom-properties \
 		\
-		--purge-content {{BUILD_DIR}}/about/**/*.html
+		--purge-content {{BUILD_DIR}}/about/**/*.html \
+		--purge-whitelist hljs-string \
+		--purge-whitelist hljs-comment \
+		--purge-whitelist hljs-meta \
+		--purge-whitelist bash
 
 	NODE_ENV=production {{ETC_CMD}} {{SRC_DIR}}/Css/Application.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
@@ -81,7 +85,7 @@ default: dev
 
 
 @elm-prod:
-	echo "> Compiling Elm application (optimized)"
+	echo "> Compiling Elm application (optimised)"
 	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/brain.elm.js --optimize
 	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js --optimize
 
@@ -132,7 +136,7 @@ default: dev
 
 
 @js-prod: vendor-js
-	echo "> Compiling Javascript code (optimized)"
+	echo "> Compiling Javascript code (optimised)"
 
 	# ...
 	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
