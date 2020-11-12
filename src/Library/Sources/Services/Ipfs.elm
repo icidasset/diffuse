@@ -103,7 +103,7 @@ prepare _ srcData _ toMsg =
     in
     if isDnsLink srcData then
         (Just << Http.request)
-            { method = "GET"
+            { method = "POST"
             , headers = []
             , url = extractGateway srcData ++ "/api/v0/dns?arg=" ++ domainName
             , body = Http.emptyBody
@@ -160,7 +160,7 @@ makeTree srcData marker _ resultMsg =
     in
     (if resolveWithIpns then
         Http.task
-            { method = "GET"
+            { method = "POST"
             , headers = []
             , url = gateway ++ "/api/v0/name/resolve?arg=" ++ encodedPath path ++ "&local=" ++ resolveLocally ++ "&encoding=json"
             , body = Http.emptyBody
@@ -174,7 +174,7 @@ makeTree srcData marker _ resultMsg =
         |> Task.andThen
             (\{ ipfsPath } ->
                 Http.task
-                    { method = "GET"
+                    { method = "POST"
                     , headers = []
                     , url = gateway ++ "/api/v0/ls?arg=" ++ encodedPath ipfsPath ++ "&encoding=json"
                     , body = Http.emptyBody
