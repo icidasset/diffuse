@@ -507,7 +507,7 @@ note service =
                 , text ", do. You can find the configuration for that server "
                 , UI.Kit.link
                     { label = "here"
-                    , url = "about#CORS__WebDAV"
+                    , url = "about/cors#CORS__WebDAV"
                     }
                 , text "."
                 ]
