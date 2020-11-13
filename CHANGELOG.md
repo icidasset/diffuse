@@ -13,6 +13,7 @@
 - Dark mode for the about page
 - Enforces usage of a secure context (HTTPS, localhost, etc)
 - Fixes issue with shuffle algorithm
+- Fixes issue with WebDAV
 - Fixes playback issues (eg. clicking same track multiple times)
 - Fixes various issues with add-to-playlist overlay
 - Improve about pages (split up into multiple pages)
