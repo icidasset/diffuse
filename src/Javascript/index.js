@@ -25,8 +25,13 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   location.href = location.href.replace("http://", "https://")
 }
 
-// Service worker
-if ("serviceWorker" in navigator) {
+// Secure context & Service worker
+if (!self.isSecureContext) {
+  failure(`
+    This app only works on a <a class="underline" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#When_is_a_context_considered_secure">secure context</a>, HTTPS & localhost, and modern browsers.
+  `)
+
+} else if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js").then(
     initialise,
     () => failure(
@@ -35,8 +40,7 @@ if ("serviceWorker" in navigator) {
         : "Failed to start the service worker, try using HTTPS."
     )
   )
-} else {
-  failure("We'll need a more modern browser to liven the place up a bit.")
+
 }
 
 
