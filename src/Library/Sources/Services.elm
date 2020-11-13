@@ -360,5 +360,5 @@ labels =
     , ( typeToKey Dropbox, "Dropbox" )
     , ( typeToKey Google, "Google Drive" )
     , ( typeToKey Ipfs, "IPFS" )
-    , ( typeToKey WebDav, "WebDAV (Experimental)" )
+    , ( typeToKey WebDav, "WebDAV" )
     ]

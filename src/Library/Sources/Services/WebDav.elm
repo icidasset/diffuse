@@ -199,7 +199,7 @@ url { addAuth } srcData path =
 
         authBit =
             if addAuth && String.length authPrefix > 0 then
-                "?service_worker_authentication=" ++ Base64.encode authPrefix
+                "?service_worker_authentication=" ++ Url.percentEncode (Base64.encode authPrefix)
 
             else
                 ""
