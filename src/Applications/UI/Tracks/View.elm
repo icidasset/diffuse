@@ -281,6 +281,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                     Just playlist ->
                         brick
                             [ onClick DeselectPlaylist
+                            , title "Deactivate playlist"
 
                             --
                             , bgColor
