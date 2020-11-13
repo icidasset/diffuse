@@ -3,16 +3,19 @@
 ## 3.0.0
 
 - **Adds album-covers view** (switch to and from list view with icon in nav bar)
+- **Adds the ability to add a source via the url** (integration with other apps)
+- **Adds a keyboard shortcut `L` to quickly select a playlist**
+- **Adds the ability to migrate between data-storage methods**
 - Added new background images and replaced a few older ones
-- Adds a keyboard shortcut `L` to quickly select a playlist
 - Adds ability to sync tags for individual tracks
 - Adds keyboard shortcuts to switch screens
-- Adds the ability to migrate between data-storage methods
 - Changes the keyboard shortcuts for seeking and changing tracks (see overview on about page)
 - Dark mode for the about page
+- Enforces usage of a secure context (HTTPS, localhost, etc)
 - Fixes issue with shuffle algorithm
 - Fixes playback issues (eg. clicking same track multiple times)
 - Fixes various issues with add-to-playlist overlay
+- Improve about pages (split up into multiple pages)
 - Only show generated playlists for enabled sources
 - Removes support for Blockstack & Textile
 
