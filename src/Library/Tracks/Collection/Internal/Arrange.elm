@@ -112,7 +112,7 @@ groupByInsertedAtFolder ( i, t ) =
 insertedAtGroupName : Int -> Time.Month -> String
 insertedAtGroupName year month =
     if year == 1970 then
-        "I HONESTLY CAN'T REMEMBER"
+        "A LONG TIME AGO IN A GALAXY FAR FAR AWAY"
 
     else
         Time.monthName month ++ " " ++ String.fromInt year
