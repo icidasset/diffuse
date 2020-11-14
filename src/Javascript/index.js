@@ -96,7 +96,6 @@ function failure(text) {
 
   // Remove loader
   const elm = document.querySelector("#elm")
-
   elm && elm.parentNode.removeChild(elm)
 }
 
@@ -179,6 +178,7 @@ function activeQueueItemChanged(item) {
   } else {
     app.ports.setAudioIsPlaying.send(false)
     app.ports.setAudioPosition.send(0)
+    if (navigator.mediaSession) navigator.mediaSession.playbackState = "none"
   }
 }
 
@@ -558,15 +558,17 @@ if ("mediaSession" in navigator) {
   })
 
 
-  navigator.mediaSession.setActionHandler("seekbackward", _ => {
+  navigator.mediaSession.setActionHandler("seekbackward", event => {
     const audio = orchestrion.audio
-    if (audio) audio.currentTime = Math.max(audio.currentTime - 10, 0)
+    const seekOffset = event.seekOffset || 10
+    if (audio) audio.currentTime = Math.max(audio.currentTime - seekOffset, 0)
   })
 
 
-  navigator.mediaSession.setActionHandler("seekforward", _ => {
+  navigator.mediaSession.setActionHandler("seekforward", event => {
     const audio = orchestrion.audio
-    if (audio) audio.currentTime = Math.min(audio.currentTime + 10, audio.duration)
+    const seekOffset = event.seekOffset || 10
+    if (audio) audio.currentTime = Math.min(audio.currentTime + seekOffset, audio.duration)
   })
 
 
