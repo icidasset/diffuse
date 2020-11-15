@@ -23,10 +23,10 @@ import { debounce, fileExtension } from "./common"
 // Redirect to HTTPS if using the `diffuse.sh` domain (subdomains included)
 if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   location.href = location.href.replace("http://", "https://")
-}
+  failure("Just a moment, redirecting to HTTPS.")
 
 // Secure context & Service worker
-if (!self.isSecureContext) {
+} else if (!self.isSecureContext) {
   failure(`
     This app only works on a <a class="underline" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#When_is_a_context_considered_secure">secure context</a>, HTTPS & localhost, and modern browsers.
   `)
