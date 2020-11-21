@@ -86,7 +86,9 @@ export function getTags(headUrl, getUrl, filename, options) {
         Object.assign({}, parserConfiguration, options || {})
       )
     })
-    .then(pickTags)
+    .then(result => {
+      return pickTags(filename, result)
+    })
     .catch(err => {
       console.error(err)
       return fallbackTags(filename)
@@ -94,16 +96,19 @@ export function getTags(headUrl, getUrl, filename, options) {
 }
 
 
-function pickTags(result) {
+function pickTags(filename, result) {
   const tags = result && result.common
   if (!tags) return null
+
+  const artist = tags.artist && tags.artist.length ? tags.artist : null
+  const title = tags.title && tags.title.length ? tags.title : null
 
   return {
     disc: tags.disk.no || 1,
     nr: tags.track.no || 1,
     album: tags.album && tags.album.length ? tags.album : "Unknown",
-    artist: tags.artist && tags.artist.length ? tags.artist : "Unknown",
-    title: tags.title && tags.title.length ? tags.title : "Unknown",
+    artist: artist || "Unknown",
+    title: title ? title : (artist ? "Unknown" : filename.replace(/\.\w+$/, "")),
     genre: (tags.genre && tags.genre[0]) || null,
     year: tags.year || null,
     picture: tags.picture ? tags.picture[0] : null
