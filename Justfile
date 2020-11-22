@@ -1,10 +1,13 @@
+export NODE_NO_WARNINGS := "1"
+
+
 BUILD_DIR 			:= "./build"
 NPM_DIR 				:= "./node_modules"
 SRC_DIR 				:= "./src"
 SYSTEM_DIR 			:= "./system"
 TEMPORARY_DIR 	:= "./tmp"
 
-ETC_CMD					:= "yarn run etc"
+ETC_CMD					:= "pnpx etc"
 
 
 default: dev
@@ -81,7 +84,7 @@ default: dev
 @elm:
 	echo "> Compiling Elm application"
 	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/brain.elm.js
-	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js --debug
+	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js
 
 
 @elm-prod:
@@ -105,9 +108,6 @@ default: dev
 
 @js: vendor-js
 	echo "> Compiling Javascript code"
-
-	# ...
-	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 
 	# Main builds
 	{{NPM_DIR}}/.bin/webpack-cli \
@@ -137,9 +137,6 @@ default: dev
 
 @js-prod: vendor-js
 	echo "> Compiling Javascript code (optimised)"
-
-	# ...
-	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 
 	# Main builds
 	{{NPM_DIR}}/.bin/webpack-cli \
@@ -174,11 +171,9 @@ default: dev
 
 @vendor-js:
 	mkdir -p {{BUILD_DIR}}/vendor
+	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
-
-	{{NPM_DIR}}/.bin/terser {{NPM_DIR}}/pep/elm-pep.js \
-		--output {{BUILD_DIR}}/vendor/pep.js \
-		--compress --mangle
+	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
 
 
 #
@@ -198,16 +193,17 @@ default: dev
 
 
 @elm-housekeeping: reset-elm-css
-	echo "> Running elm-impfix"
-	{{NPM_DIR}}/.bin/elm-impfix "{{SRC_DIR}}/**/*.elm" --replace
-	# echo "> Running elm-review"
+	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
 	echo "> Running elm-format"
 	elm-format {{SRC_DIR}} --yes
 
 
 @install-deps:
-	yarn install --ignore-engines
+	pnpm install
+
+	mkdir -p vendor
+	curl --silent --show-error --fail -o ./vendor/pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
 
 
 @quality: reset-elm-css

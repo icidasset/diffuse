@@ -19,7 +19,7 @@ in
       pkgs.elmPackages.elm-format
       pkgs.haskellPackages.stack
       pkgs.nodejs-14_x
-      pkgs.yarn
+      pkgs.nodePackages.pnpm
 
       # Indirect dependencies
       pkgs.gmp
