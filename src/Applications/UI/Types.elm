@@ -195,6 +195,8 @@ type Msg
       -- Audio
       -----------------------------------------
     | NoteProgress { trackId : String, progress : Float }
+    | Pause
+    | Play
     | Seek Float
     | SetAudioDuration Float
     | SetAudioHasStalled Bool

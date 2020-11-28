@@ -257,6 +257,12 @@ update msg =
         NoteProgress a ->
             Audio.noteProgress a
 
+        Pause ->
+            Audio.pause
+
+        Play ->
+            Audio.play
+
         Seek a ->
             Audio.seek a
 
@@ -520,6 +526,8 @@ subscriptions model =
         -- Audio
         -----------------------------------------
         , Ports.noteProgress NoteProgress
+        , Ports.requestPause (always Pause)
+        , Ports.requestPlay (always Play)
         , Ports.requestPlayPause (always TogglePlay)
         , Ports.requestStop (always Stop)
         , Ports.setAudioDuration SetAudioDuration

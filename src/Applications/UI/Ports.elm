@@ -70,6 +70,12 @@ port preferredColorSchemaChanged : ({ dark : Bool } -> msg) -> Sub msg
 port requestNext : (() -> msg) -> Sub msg
 
 
+port requestPause : (() -> msg) -> Sub msg
+
+
+port requestPlay : (() -> msg) -> Sub msg
+
+
 port requestPlayPause : (() -> msg) -> Sub msg
 
 

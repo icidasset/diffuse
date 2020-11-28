@@ -539,12 +539,12 @@ document.addEventListener("MediaNext", () => {
 if ("mediaSession" in navigator) {
 
   navigator.mediaSession.setActionHandler("play", () => {
-    app.ports.requestPlayPause.send(null)
+    app.ports.requestPlay.send(null)
   })
 
 
   navigator.mediaSession.setActionHandler("pause", () => {
-    app.ports.requestPlayPause.send(null)
+    app.ports.requestPause.send(null)
   })
 
 

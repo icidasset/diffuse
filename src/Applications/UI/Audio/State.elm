@@ -35,6 +35,11 @@ noteProgress { trackId, progress } model =
         Return.singleton model
 
 
+pause : Manager
+pause model =
+    return model (Ports.pause ())
+
+
 playPause : Manager
 playPause model =
     if Maybe.isNothing model.nowPlaying then
@@ -45,6 +50,15 @@ playPause model =
 
     else
         communicate (Ports.play ()) model
+
+
+play : Manager
+play model =
+    if Maybe.isNothing model.nowPlaying then
+        Queue.shift model
+
+    else
+        return model (Ports.play ())
 
 
 seek : Float -> Manager
