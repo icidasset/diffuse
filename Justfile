@@ -5,7 +5,7 @@ BUILD_DIR 			:= "./build"
 NPM_DIR 				:= "./node_modules"
 SRC_DIR 				:= "./src"
 SYSTEM_DIR 			:= "./system"
-TEMPORARY_DIR 	:= "./tmp"
+TEMPORARY_DIR 	:= "./elm-stuff/elm-tailwind-css"
 
 ETC_CMD					:= "pnpx etc"
 
