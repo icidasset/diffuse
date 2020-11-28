@@ -17,19 +17,26 @@ There's only one thing you need to do yourself so that the service you chose wil
 
 You can find the CORS configuration editor under the "Permissions" tab, on the S3 AWS Console.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
-<CORSRule>
-    <AllowedOrigin>*</AllowedOrigin>
-    <AllowedMethod>GET</AllowedMethod>
-    <AllowedMethod>HEAD</AllowedMethod>
-    <MaxAgeSeconds>31536000</MaxAgeSeconds>
-    <ExposeHeader>Content-Length</ExposeHeader>
-    <ExposeHeader>Content-Type</ExposeHeader>
-    <AllowedHeader>Range</AllowedHeader>
-</CORSRule>
-</CORSConfiguration>
+```json
+[
+    {
+        "AllowedHeaders": [
+            "Range"
+        ],
+        "AllowedMethods": [
+            "GET",
+            "HEAD"
+        ],
+        "AllowedOrigins": [
+            "*"
+        ],
+        "ExposeHeaders": [
+            "Content-Length",
+            "Content-Type"
+        ],
+        "MaxAgeSeconds": 31536000
+    }
+]
 ```
 
 <div id="CORS__BTFS" />
