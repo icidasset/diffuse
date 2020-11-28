@@ -418,6 +418,9 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
 
             --
+            , style "-webkit-text-security" "disc"
+
+            --
             , Html.Events.onInput KeepPassphraseInMemory
             ]
         , UI.Kit.button
