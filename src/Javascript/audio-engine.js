@@ -232,7 +232,6 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   let audio
 
   const bind = fn => event => {
-    console.log(event.type, event)
     const is = isActiveAudioElement(orchestrion, event.target)
     if (is) fn.call(orchestrion, event)
   }
