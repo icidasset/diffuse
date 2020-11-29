@@ -11,6 +11,14 @@ import { throttle } from "./common"
 import { transformUrl } from "./urls"
 
 
+// ⛩
+
+
+const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
+                  !!navigator.userAgent.includes("AppleWebKit")
+
+
+
 // Audio context
 // -------------
 
@@ -25,8 +33,7 @@ if (window.AudioContext) {
 self.context = context
 
 
-let SINGLE_AUDIO_NODE = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
-                        !!navigator.userAgent.includes("AppleWebKit")
+let SINGLE_AUDIO_NODE = IS_SAFARI
 
 
 export function usesSingleAudioNode() {
@@ -253,8 +260,10 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.addEventListener("play", bind(audioPlayEvent))
   audio.addEventListener("seeking", bind(audioLoading))
   audio.addEventListener("seeked", bind(audioLoaded))
-  audio.addEventListener("stalled", bind(audioStalledEvent))
   audio.addEventListener("timeupdate", bind(audioTimeUpdateEvent))
+
+  // `stalled` event doesn't work properly on Safari
+  if (!IS_SAFARI) audio.addEventListener("stalled", bind(audioStalledEvent))
 
   audio.load()
   audioElementsContainer.appendChild(audio)
