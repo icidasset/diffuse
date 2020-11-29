@@ -232,6 +232,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   let audio
 
   const bind = fn => event => {
+    console.log(event.type, event)
     const is = isActiveAudioElement(orchestrion, event.target)
     if (is) fn.call(orchestrion, event)
   }
@@ -262,8 +263,8 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.addEventListener("seeked", bind(audioLoaded))
   audio.addEventListener("timeupdate", bind(audioTimeUpdateEvent))
 
-  // `stalled` event doesn't work properly on Safari
-  if (!IS_SAFARI) audio.addEventListener("stalled", bind(audioStalledEvent))
+  // `stalled` event doesn't work properly (mostly on Safari and mobile devices)
+  // if (!IS_SAFARI) audio.addEventListener("stalled", bind(audioStalledEvent))
 
   audio.load()
   audioElementsContainer.appendChild(audio)
@@ -308,6 +309,7 @@ export function seek(audio, percentage) {
 // Audio events
 // ------------
 
+let showedNoNetworkError = false
 let timesStalled = 1
 
 
@@ -331,10 +333,13 @@ function audioErrorEvent(event) {
       if (event.target.currentTime && event.target.currentTime > 0) {
         showNetworkErrorNotification.call(this)
         audioStalledEvent.call(this, event)
-      } else {
+      } else if (navigator.onLine) {
         showUnsupportedSrcErrorNotification.call(this)
         clearTimeout(this.loadingTimeoutId)
         this.app.ports.setAudioIsLoading.send(false)
+      } else {
+        showNetworkErrorNotification.call(this)
+        audioStalledEvent.call(this, event)
       }
       break
     default:
@@ -344,6 +349,8 @@ function audioErrorEvent(event) {
 
 
     function showNetworkErrorNotification() {
+      if (showedNoNetworkError) return
+      showedNoNetworkError = true
       this.app.ports.showErrorNotification.send(
         navigator.onLine
           ? "I can't play this track because of a network error. I'll try to reconnect."
@@ -455,6 +462,7 @@ function audioPauseEvent(_event) {
 
 
 function audioCanPlayEvent(event) {
+  showedNoNetworkError = false
   setDurationIfNecessary.call(this, event.target)
 }
 
@@ -543,7 +551,7 @@ function unstallAudio(node) {
   node.load()
   node.currentTime = time
 
-  if (timesStalled > 5 && navigator.onLine) {
+  if (timesStalled > 5 && !showedNoNetworkError && navigator.onLine) {
     this.app.ports.showStickyErrorNotification.send(
       "You loaded too many tracks too quickly, " +
       "which the browser can't handle. " +
