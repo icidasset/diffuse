@@ -2,6 +2,7 @@ module UI.Navigation exposing (Action(..), Icon(..), Label(..), LabelType(..), g
 
 import Alfred exposing (Alfred)
 import Chunky exposing (..)
+import Common
 import Conditional exposing (..)
 import Css.Classes as C
 import Html exposing (Html, text)
@@ -124,14 +125,14 @@ localWithTabindex tabindex_ items =
             [ C.flex ]
             (items
                 |> List.reverse
-                |> List.map (localItem tabindex_)
+                |> List.map (localItem tabindex_ { amount = List.length items })
                 |> List.reverse
             )
         ]
 
 
-localItem : Int -> ( Icon msg, Label, Action msg ) -> Html msg
-localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
+localItem : Int -> { amount : Int } -> ( Icon msg, Label, Action msg ) -> Html msg
+localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) =
     slab
         (case action of
             NavigateToPage page ->
@@ -172,8 +173,7 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         --
         , tabindex tabindex_
         ]
-        [ ifThenElse (labelType == Hidden) C.flex_shrink_0 C.flex_grow
-        , C.bg_transparent
+        [ C.bg_transparent
         , C.border_gray_300
         , C.border_r
         , C.cursor_pointer
@@ -186,8 +186,36 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
         , C.text_base02
 
         --
+        , ifThenElse
+            (labelText == Common.backToIndex && labelType == Hidden && amount > 1)
+            C.flex_shrink_0
+            C.flex_grow
+
+        --
+        , ifThenElse
+            (labelText == Common.backToIndex && labelType == Hidden && amount > 1)
+            C.overflow_visible
+            C.overflow_hidden
+
+        --
         , C.fixate__text_black
         , C.last__border_r_0
+
+        -- Responsive
+        -------------
+        , C.sm__overflow_visible
+
+        --
+        , ifThenElse
+            (labelType == Hidden)
+            C.sm__flex_shrink_0
+            C.sm__flex_grow
+
+        --
+        , ifThenElse
+            (labelType == Hidden)
+            C.sm__flex_grow_0
+            C.sm__flex_grow
 
         -- Dark mode
         ------------
@@ -207,7 +235,9 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
             , C.mt_px
             , C.pt_px
             ]
-            [ icon 16 Inherit
+            [ inline
+                [ C.flex_shrink_0 ]
+                [ icon 16 Inherit ]
 
             --
             , case labelType of
@@ -218,7 +248,11 @@ localItem tabindex_ ( Icon icon, Label labelText labelType, action ) =
                     slab
                         Html.span
                         []
-                        [ C.inline_block, C.leading_tight, C.ml_1, C.truncate ]
+                        [ C.inline_block
+                        , C.leading_tight
+                        , C.ml_1
+                        , C.truncate
+                        ]
                         [ text labelText ]
             ]
         ]

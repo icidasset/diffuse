@@ -128,7 +128,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
             ifThenElse isOnIndexPage 0 -1
     in
     chunk
-        [ C.flex ]
+        [ C.sm__flex ]
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
@@ -138,10 +138,17 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
             , C.border_gray_300
             , C.flex
             , C.flex_grow
+            , C.h_12
             , C.mt_px
+            , C.px_1
             , C.overflow_hidden
             , C.relative
             , C.text_gray_600
+
+            -- Responsive
+            -------------
+            , C.sm__h_auto
+            , C.sm__px_0
 
             -- Dark mode
             ------------
@@ -152,7 +159,9 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
               --------
               slab
                 Html.input
-                [ onBlur (TracksMsg Search)
+                [ attribute "autocorrect" "off"
+                , attribute "autocapitalize" "none"
+                , onBlur (TracksMsg Search)
                 , onEnterKey (TracksMsg Search)
                 , onInput (TracksMsg << SetSearchTerm)
                 , placeholder "Search"
@@ -190,8 +199,13 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , C.left_0
                 , C.ml_3
                 , C.mt_px
+                , C.pl_1
                 , C.top_0
                 , C.z_0
+
+                -- Responsive
+                -------------
+                , C.sm__pl_0
                 ]
                 [ Icons.search 16 Inherit ]
 
@@ -203,6 +217,11 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , C.mr_3
                 , C.mt_px
                 , C.pt_px
+                , C.space_x_4
+
+                -- Responsive
+                -------------
+                , C.sm__space_x_2
                 ]
                 [ -- 1
                   case searchTerm of
@@ -212,7 +231,6 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             , title "Clear search"
                             ]
                             [ C.cursor_pointer
-                            , C.ml_1
                             , C.mt_px
                             ]
                             [ Icons.clear 16 Inherit ]
@@ -225,9 +243,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                     [ onClick (TracksMsg ToggleFavouritesOnly)
                     , title "Toggle favourites-only"
                     ]
-                    [ C.cursor_pointer
-                    , C.ml_1
-                    ]
+                    [ C.cursor_pointer ]
                     [ case favouritesOnly of
                         True ->
                             Icons.favorite 16 (Color UI.Kit.colorKit.base08)
@@ -246,7 +262,10 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                                 |> TracksMsg
                                 |> onClick
                             ]
-                            [ C.ml_1, C.mr_px, C.cursor_pointer ]
+                            [ C.ml_6
+                            , C.mr_px
+                            , C.cursor_pointer
+                            ]
                             [ chunk
                                 [ C.pl_1 ]
                                 [ Icons.notes 18 Inherit ]
@@ -260,7 +279,9 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                                 |> TracksMsg
                                 |> onClick
                             ]
-                            [ C.ml_1, C.mr_px, C.cursor_pointer ]
+                            [ C.cursor_pointer
+                            , C.mr_px
+                            ]
                             [ chunk
                                 [ C.pl_1 ]
                                 [ Icons.burst_mode 20 Inherit ]
@@ -271,9 +292,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                     [ Mouse.onClick (TracksMsg << ShowViewMenu maybeGrouping)
                     , title "View settings"
                     ]
-                    [ C.cursor_pointer
-                    , C.ml_1
-                    ]
+                    [ C.cursor_pointer ]
                     [ Icons.more_vert 16 Inherit ]
 
                 -- 5
@@ -294,7 +313,6 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             , C.duration_500
                             , C.font_bold
                             , C.leading_none
-                            , C.ml_1
                             , C.px_1
                             , C.py_1
                             , C.rounded
@@ -353,10 +371,14 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
                     , C.justify_center
                     , C.px_3
                     ]
-                    [ -- Add
-                      ------
+                    [ -----------------------------------------
+                      -- Add
+                      -----------------------------------------
                       inline
-                        [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
+                        [ C.mb_4
+                        , C.mx_2
+                        , C.whitespace_no_wrap
+                        ]
                         [ UI.Kit.buttonLink
                             (Sources.NewOnboarding
                                 |> Page.Sources
@@ -370,10 +392,14 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
                             )
                         ]
 
+                    -----------------------------------------
                     -- Demo
-                    -------
+                    -----------------------------------------
                     , inline
-                        [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
+                        [ C.mb_4
+                        , C.mx_2
+                        , C.whitespace_no_wrap
+                        ]
                         [ UI.Kit.buttonWithColor
                             UI.Kit.Gray
                             UI.Kit.Normal
@@ -385,10 +411,14 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
                             )
                         ]
 
+                    -----------------------------------------
                     -- How
-                    ------
+                    -----------------------------------------
                     , inline
-                        [ C.mb_3, C.mx_2, C.whitespace_no_wrap ]
+                        [ C.mb_4
+                        , C.mx_2
+                        , C.whitespace_no_wrap
+                        ]
                         [ UI.Kit.buttonWithOptions
                             Html.a
                             [ href "about"
