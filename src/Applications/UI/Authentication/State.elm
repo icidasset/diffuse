@@ -95,6 +95,16 @@ initialModel url =
             Welcome
 
 
+initialCommand : Url -> Cmd Authentication.Msg
+initialCommand url =
+    case Url.action url of
+        [ "authenticate", "fission" ] ->
+            Ports.authenticateWithFission ()
+
+        _ ->
+            Cmd.none
+
+
 lens : Lens UI.Model Authentication.State
 lens =
     { get = .authentication
@@ -253,6 +263,11 @@ externalAuth method string model =
                 |> Common.queryString
                 |> String.append "https://www.dropbox.com/oauth2/authorize"
                 |> Nav.load
+                |> return model
+
+        Fission ->
+            ()
+                |> Ports.redirectToFissionForAuth
                 |> return model
 
         RemoteStorage _ ->

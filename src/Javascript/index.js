@@ -7,6 +7,7 @@
 
 
 import "tocca"
+import loadScript from "load-script2"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
 
@@ -14,7 +15,7 @@ import "../../build/vendor/pep"
 
 import * as audioEngine from "./audio-engine"
 import * as db from "./indexed-db"
-import { debounce, fileExtension } from "./common"
+import { WEBNATIVE_PERMISSIONS, debounce, fileExtension } from "./common"
 
 
 // 🔐
@@ -75,6 +76,7 @@ function initialise() {
   wire.backdrop()
   wire.clipboard()
   wire.covers()
+  wire.webnative()
 }
 
 
@@ -106,6 +108,7 @@ function failure(text) {
 
 let brain
 
+
 wire.brain = () => {
   brain = new Worker(
     "brain.js#appHref=" +
@@ -113,7 +116,7 @@ wire.brain = () => {
   )
 
   brain.onmessage = event => {
-    if (event.data.action) return handleAction(event.data.action, event.data.data)
+    if (event.data.action) return handleAction(event.data.action, event.data.data, event.ports)
     if (event.data.tag) return app.ports.fromAlien.send(event.data)
   }
 
@@ -121,8 +124,9 @@ wire.brain = () => {
 }
 
 
-function handleAction(action, data) { switch (action) {
+function handleAction(action, data, ports) { switch (action) {
   case "DOWNLOAD_TRACKS": return downloadTracks(data)
+  case "SETUP_WEBNATIVE": return setupWebnative(ports)
 }}
 
 
@@ -217,6 +221,65 @@ function seek(percentage) {
 
 function setRepeat(repeat) {
   orchestrion.repeat = repeat
+}
+
+
+
+// Authentication
+// --------------
+
+let wn
+
+
+wire.webnative = () => {
+  app.ports.authenticateWithFission.subscribe(authenticateWithFission)
+  app.ports.redirectToFissionForAuth.subscribe(redirectToFissionForAuth)
+}
+
+
+function authenticateWithFission() {
+  loadWebnative().then(() => {
+    return wn.initialise({
+      permissions: WEBNATIVE_PERMISSIONS,
+      loadFileSystem: false
+    })
+
+  }).then(state => {
+    if (state.authenticated) brain.postMessage({
+      tag: "SIGN_IN",
+      data: { method: "FISSION", migratingData: false, passphrase: null },
+      error: null
+    })
+
+  })
+}
+
+
+function redirectToFissionForAuth() {
+  loadWebnative().then(() => {
+    wn.redirectToLobby(
+      WEBNATIVE_PERMISSIONS,
+      `${location.origin}${location.pathname}?action=authenticate/fission`
+    )
+  })
+}
+
+
+function loadWebnative() {
+  if (wn) return Promise.resolve()
+  return loadScript("vendor/webnative.min.js").then(() => {
+    wn = webnative
+    if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
+      wn.setup.debug({ enabled: true })
+    }
+  })
+}
+
+
+function setupWebnative(ports) {
+  loadWebnative()
+    .then(_ => wn.ipfs.iframe())
+    .then(iframePort => ports[0].postMessage("connect", [ iframePort ]))
 }
 
 

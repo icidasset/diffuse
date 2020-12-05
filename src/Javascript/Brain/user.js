@@ -6,9 +6,10 @@
 
 
 import * as crypto from "../crypto"
-import { identity } from "../common"
+import { WEBNATIVE_PERMISSIONS, identity } from "../common"
 
-import { SECRET_KEY_LOCATION, decryptIfNeeded, encryptWithSecretKey } from "./common"
+import { SECRET_KEY_LOCATION } from "./common"
+import { decryptIfNeeded, encryptWithSecretKey } from "./common"
 import { fromCache, isLocalHost, reportError } from "./common"
 import { sendJsonData, storageCallback, toCache } from "./common"
 
@@ -89,6 +90,95 @@ ports.toDropbox = app => event => {
   toCache(event.tag + "_" + event.data.file, event.data.data)
     .then( !navigator.onLine ? storageCallback(app, event) : identity )
     .catch(reporter)
+}
+
+
+
+// Fission
+// -------
+
+let wn
+let wnfs
+
+
+function fission() {
+  if (!wnfs) {
+    importScripts("vendor/webnative.min.js")
+    importScripts("vendor/ipfs-message-port-client.min.js")
+
+    wn = self.webnative
+
+    if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
+      wn.setup.debug({ enabled: true })
+    }
+
+    return (
+      new Promise((resolve) => {
+        const channel = new MessageChannel()
+
+        channel.port1.onmessage = ({ ports }) => {
+          resolve(ports[0])
+        }
+
+        self.postMessage(
+          { action: "SETUP_WEBNATIVE" },
+          [ channel.port2 ]
+        )
+      })
+    )
+      .then(port => self.IpfsMessagePortClient.from(port))
+      .then(ipfs => wn.ipfs.set(ipfs))
+      .then(_ => wn.loadFileSystem(WEBNATIVE_PERMISSIONS))
+      .then(fs => wnfs = fs)
+
+  } else {
+    return Promise.resolve()
+
+  }
+}
+
+
+ports.deconstructFission = _app => _ => {
+  // TODO: Disable redirect
+  wn.leave()
+
+  wn = null
+  wnfs = null
+}
+
+
+ports.requestFission = app => event => {
+  fission()
+    .then(() => {
+      return wnfs.exists(wnfs.appPath([ event.data.file ]))
+    })
+    .then(exists => {
+      if (exists) {
+        return wnfs.read(wnfs.appPath([ event.data.file ]))
+      } else {
+        return null
+      }
+    })
+    .then(a => a ? new TextDecoder().decode(a) : null)
+    .then( sendJsonData(app, event) )
+    .catch( reportError(app, event) )
+}
+
+
+ports.toFission = app => event => {
+  fission()
+    .then(() => {
+      return wnfs.write(
+        wnfs.appPath([ event.data.file ]),
+        new Blob(
+          [ JSON.stringify(event.data.data) ],
+          { type: "text/plain" }
+        )
+      )
+    })
+    .then(() => wnfs.publish())
+    .then( storageCallback(app, event) )
+    .catch( reportError(app, event) )
 }
 
 

@@ -219,6 +219,11 @@ init flags url key =
         |> Routing.transition
             page
         |> Return.command
+            (url
+                |> Authentication.initialCommand
+                |> Cmd.map AuthenticationMsg
+            )
+        |> Return.command
             (if Maybe.isNothing maybePage then
                 Routing.resetUrl key url page
 

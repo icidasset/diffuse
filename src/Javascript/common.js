@@ -3,6 +3,14 @@
 // ʕ•ᴥ•ʔ
 
 
+export const WEBNATIVE_PERMISSIONS = {
+  app: {
+    name: "Diffuse",
+    creator: "icidasset"
+  }
+}
+
+
 export const debounce =
   (callback, time = 250, timeoutId) =>
   (...args) =>

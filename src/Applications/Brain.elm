@@ -202,6 +202,9 @@ translateAlienData tag data =
         Alien.AuthEnclosedData ->
             UserMsg (User.EnclosedDataRetrieved data)
 
+        Alien.AuthFission ->
+            UserMsg (User.HypaethralDataRetrieved data)
+
         Alien.AuthIpfs ->
             UserMsg (User.HypaethralDataRetrieved data)
 
