@@ -178,7 +178,7 @@ enclosedDataDecoder =
         |> optional "onlyShowCachedTracks" Json.bool False
         |> optional "onlyShowFavourites" Json.bool False
         |> optional "repeat" Json.bool False
-        |> optional "scene" Tracks.sceneDecoder Tracks.List
+        |> optional "scene" Tracks.sceneDecoder Tracks.Covers
         |> optional "searchTerm" (Json.maybe Json.string) Nothing
         |> optional "selectedPlaylist" (Json.maybe Json.string) Nothing
         |> optional "shuffle" Json.bool False
