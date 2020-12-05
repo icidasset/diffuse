@@ -254,6 +254,13 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
+            { action = TriggerExternalAuth Fission ""
+            , icon = \_ _ -> Svg.map never UI.Svg.Elements.fissionLogo
+            , infoLink = Just "https://fission.codes/"
+            , label = "Fission"
+            , outOfOrder = False
+            }
+        , choiceButton
             { action = TriggerExternalAuth (Dropbox { token = "" }) ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.dropboxLogo
             , infoLink = Just "https://dropbox.com/"
@@ -515,6 +522,7 @@ speechBubble contents =
         , brick
             speechBubbleArrowStyles
             [ C.absolute
+            , C.border_background
             , C.h_0
             , C.left_1over2
             , C.neg_translate_x_1over2
@@ -522,6 +530,10 @@ speechBubble contents =
             , C.top_0
             , C.transform
             , C.w_0
+
+            -- Dark mode
+            ------------
+            , C.dark__border_darkest_hour
             ]
             []
         ]
@@ -533,10 +545,8 @@ speechBubble contents =
 
 speechBubbleArrowStyles : List (Html.Attribute msg)
 speechBubbleArrowStyles =
-    let
-        color =
-            Color.toCssString UI.Kit.colors.background
-    in
-    [ style "border-color" ("transparent transparent " ++ color ++ " transparent")
+    [ style "border-top-color" "transparent"
+    , style "border-left-color" "transparent"
+    , style "border-right-color" "transparent"
     , style "border-width" "0 6px 5px 6px"
     ]

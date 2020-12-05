@@ -38,6 +38,7 @@ import Tracks.Encoding as Tracks
 
 type Method
     = Dropbox { token : String }
+    | Fission
     | Ipfs { apiOrigin : String }
     | Local
     | RemoteStorage { userAddress : String, token : String }
@@ -106,6 +107,9 @@ methodFromString string =
         [ "DROPBOX", t ] ->
             Just (Dropbox { token = t })
 
+        [ "FISSION" ] ->
+            Just Fission
+
         [ "IPFS", a ] ->
             Just (Ipfs { apiOrigin = a })
 
@@ -128,6 +132,9 @@ methodToString method =
                 [ "DROPBOX"
                 , token
                 ]
+
+        Fission ->
+            "FISSION"
 
         Ipfs { apiOrigin } ->
             String.join

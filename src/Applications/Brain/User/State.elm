@@ -20,6 +20,7 @@ import Task.Extra exposing (do)
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
 import Url exposing (Url)
+import Url.Ext as Url
 import User.Layer as User exposing (..)
 
 
@@ -28,11 +29,18 @@ import User.Layer as User exposing (..)
 
 
 initialCommand : Url -> Cmd Brain.Msg
-initialCommand _ =
-    Cmd.batch
-        [ do (UserMsg RetrieveMethod)
-        , do (UserMsg RetrieveEnclosedData)
-        ]
+initialCommand uiUrl =
+    case Url.action uiUrl of
+        [ "authenticate", "fission" ] ->
+            Cmd.batch
+                [ do (UserMsg RetrieveEnclosedData)
+                ]
+
+        _ ->
+            Cmd.batch
+                [ do (UserMsg RetrieveMethod)
+                , do (UserMsg RetrieveEnclosedData)
+                ]
 
 
 
@@ -207,6 +215,9 @@ signOut model =
         Just (Dropbox _) ->
             Cmd.none
 
+        Just Fission ->
+            Ports.deconstructFission ()
+
         Just (Ipfs _) ->
             Cmd.none
 
@@ -359,6 +370,14 @@ retrieveHypaethralData bit model =
                 |> Ports.requestDropbox
                 |> return model
 
+        Just Fission ->
+            [ ( "file", file )
+            ]
+                |> Json.object
+                |> Alien.broadcast Alien.AuthFission
+                |> Ports.requestFission
+                |> return model
+
         Just (Ipfs { apiOrigin }) ->
             [ ( "apiOrigin", Json.string apiOrigin )
             , ( "file", file )
@@ -442,6 +461,15 @@ saveHypaethralData bit json model =
                 |> Json.object
                 |> Alien.broadcast Alien.AuthDropbox
                 |> Ports.toDropbox
+                |> return model
+
+        Just Fission ->
+            [ ( "data", json )
+            , ( "file", file )
+            ]
+                |> Json.object
+                |> Alien.broadcast Alien.AuthFission
+                |> Ports.toFission
                 |> return model
 
         Just (Ipfs { apiOrigin }) ->

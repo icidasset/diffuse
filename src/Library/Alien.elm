@@ -26,6 +26,7 @@ type alias Event =
 type Tag
     = AuthAnonymous
     | AuthDropbox
+    | AuthFission
     | AuthEnclosedData
     | AuthIpfs
     | AuthMethod
@@ -82,6 +83,7 @@ enum =
         [ ( "AUTH_ANONYMOUS", AuthAnonymous )
         , ( "AUTH_DROPBOX", AuthDropbox )
         , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
+        , ( "AUTH_FISSION", AuthFission )
         , ( "AUTH_IPFS", AuthIpfs )
         , ( "AUTH_METHOD", AuthMethod )
         , ( "AUTH_REMOTE_STORAGE", AuthRemoteStorage )

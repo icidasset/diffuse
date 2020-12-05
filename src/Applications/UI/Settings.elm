@@ -100,6 +100,9 @@ content deps =
             Just (Dropbox _) ->
                 text "on Dropbox."
 
+            Just Fission ->
+                text "on Fission."
+
             Just (Ipfs _) ->
                 text "on IPFS."
 
@@ -116,6 +119,9 @@ content deps =
       , case deps.authenticationMethod of
             Just (Dropbox d) ->
                 changePassphrase (Dropbox d)
+
+            Just Fission ->
+                nothing
 
             Just (Ipfs i) ->
                 changePassphrase (Ipfs i)

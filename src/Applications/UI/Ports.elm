@@ -15,6 +15,9 @@ port activeQueueItemChanged : Maybe Queue.EngineItem -> Cmd msg
 port adjustEqualizerSetting : { knob : String, value : Float } -> Cmd msg
 
 
+port authenticateWithFission : () -> Cmd msg
+
+
 port copyToClipboard : String -> Cmd msg
 
 
@@ -31,6 +34,9 @@ port play : () -> Cmd msg
 
 
 port preloadAudio : Queue.EngineItem -> Cmd msg
+
+
+port redirectToFissionForAuth : () -> Cmd msg
 
 
 port seek : Float -> Cmd msg

@@ -173,7 +173,12 @@ default: dev
 	mkdir -p {{BUILD_DIR}}/vendor
 	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
+	cp {{NPM_DIR}}/ipfs-message-port-client/dist/index.min.js {{BUILD_DIR}}/vendor/ipfs-message-port-client.min.js
 	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
+
+	{{NPM_DIR}}/.bin/terser {{NPM_DIR}}/webnative/index.umd.js \
+		--output {{BUILD_DIR}}/vendor/webnative.min.js \
+		--compress --mangle
 
 
 #
