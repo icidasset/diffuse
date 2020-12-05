@@ -268,7 +268,7 @@ function redirectToFissionForAuth() {
 function loadWebnative() {
   if (wn) return Promise.resolve()
   return loadScript("vendor/webnative.min.js").then(() => {
-    wn = webnative
+    wn = window.webnative
     if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
       wn.setup.debug({ enabled: true })
     }
