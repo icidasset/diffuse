@@ -169,18 +169,26 @@ ports.requestFission = app => event => {
       switch (event.data.file) {
 
         case "playlists.json":
-          return wnfs.ls(PLAYLISTS_PATH).then(result => {
-            return Object.values(result).map(r => {
-              return wnfs
-                .read(PLAYLISTS_PATH + r.name)
-                .then(p => new TextDecoder().decode(p))
-                .then(j => JSON.parse(j))
-            })
-          }).then(promises => {
-            return Promise.all(promises)
-          }).then(playlists => {
-            return sendData(app, event)(playlists)
+          return wnfs.exists(PLAYLISTS_PATH).then(exists => {
+            if (!exists) return wnfs
+              .read(wnfs.appPath([ event.data.file ]))
+              .then(a => a ? new TextDecoder().decode(a) : null)
+              .then(sendJsonData_)
+
+            return wnfs.ls(PLAYLISTS_PATH).then(result =>
+              Object.values(result).map(r =>
+                wnfs
+                  .read(PLAYLISTS_PATH + r.name)
+                  .then(p => new TextDecoder().decode(p))
+                  .then(j => JSON.parse(j))
+              )
+            )
           })
+          .then(promises =>
+            Promise.all(promises)
+          ).then(playlists =>
+            sendData(app, event)(playlists)
+          )
 
         default:
           return wnfs
