@@ -505,7 +505,9 @@ search model =
 
 selectCover : Cover -> Manager
 selectCover cover model =
-    Return.singleton { model | selectedCover = Just cover }
+    return
+        { model | selectedCover = Just cover }
+        (Ports.loadAlbumCovers ())
 
 
 setSearchResults : Json.Value -> Manager
@@ -645,7 +647,7 @@ scrollToNowPlaying model =
                             model.covers.harvested
                                 |> List.find (\cover -> List.member track.id cover.trackIds)
                                 |> Maybe.unwrap model (\cover -> { model | selectedCover = Just cover })
-                                |> Return.singleton
+                                |> Return.communicate (Ports.loadAlbumCovers ())
 
                     List ->
                         return

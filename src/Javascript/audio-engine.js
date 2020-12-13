@@ -157,7 +157,7 @@ export function adjustEqualizerSetting(knobType, value) {
 // Playback
 // --------
 
-export function insertTrack(orchestrion, queueItem) {
+export function insertTrack(orchestrion, queueItem, maybeArtwork) {
   if (queueItem.url == undefined) console.error("insertTrack, missing `url`");
   if (queueItem.trackId == undefined) console.error("insertTrack, missing `trackId`");
 
@@ -174,10 +174,21 @@ export function insertTrack(orchestrion, queueItem) {
 
   // metadata
   if ("mediaSession" in navigator && queueItem.trackTags) {
+    let artwork = []
+
+    if (maybeArtwork) {
+      artwork = [{
+        src: "https://dummyimage.com/512x512",
+        sizes: "512x512",
+        type: "image/png"
+      }]
+    }
+
     navigator.mediaSession.metadata = new MediaMetadata({
       title: queueItem.trackTags.title,
       artist: queueItem.trackTags.artist,
-      album: queueItem.trackTags.album
+      album: queueItem.trackTags.album,
+      artwork: artwork
     })
   }
 

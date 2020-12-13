@@ -178,7 +178,13 @@ function activeQueueItemChanged(item) {
     : audioEngine.removeOlderAudioElements(timestampInMilliseconds)
 
   if (item) {
-    audioEngine.insertTrack(orchestrion, item)
+    albumCover()
+
+    audioEngine.insertTrack(
+      orchestrion,
+      item,
+      albumCover
+    )
   } else {
     app.ports.setAudioIsPlaying.send(false)
     app.ports.setAudioPosition.send(0)
@@ -385,10 +391,17 @@ wire.covers = () => {
 }
 
 
+function albumCover(cacheKey) {
+  return db.getFromIndex({ key: `coverCache.${cacheKey}` })
+}
+
+
 function loadAlbumCovers() {
   const nodes = Array.from(
     document.querySelectorAll("#diffuse__track-covers [data-key]")
-  )
+  ).concat(Array.from(
+    document.querySelectorAll("#diffuse__track-covers + div [data-key]")
+  ))
 
   if (!nodes.length) return;
 
@@ -413,7 +426,7 @@ function loadAlbumCovers() {
 
   artworkPrep.reduce((acc, prep) => {
     return acc.then(arr => {
-      return db.getFromIndex({ key: `coverCache.${prep.cacheKey}` }).then(a => {
+      return albumCover(prep.cacheKey).then(a => {
         if (!a) return arr.concat([ prep ])
         return arr
       })
