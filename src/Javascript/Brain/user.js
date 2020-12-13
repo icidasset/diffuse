@@ -197,10 +197,12 @@ ports.requestFission = app => event => {
 ports.toFission = app => event => {
   fission()
     .then(() => {
+      let playlistFilenames
+
       switch (event.data.file) {
 
         case "playlists.json":
-          const playlistFilenames = event.data.data.map(playlist =>
+          playlistFilenames = event.data.data.map(playlist =>
             `${playlist.name}.json`
           )
 
