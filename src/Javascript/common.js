@@ -7,6 +7,10 @@ export const WEBNATIVE_PERMISSIONS = {
   app: {
     name: "Diffuse",
     creator: "icidasset"
+  },
+  fs: {
+    privatePaths: ["/Audio/Music/Playlists"],
+    publicPaths: ["/Audio/Music/Playlists"]
   }
 }
 

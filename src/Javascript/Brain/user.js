@@ -11,7 +11,7 @@ import { WEBNATIVE_PERMISSIONS, identity } from "../common"
 import { SECRET_KEY_LOCATION } from "./common"
 import { decryptIfNeeded, encryptWithSecretKey } from "./common"
 import { fromCache, isLocalHost, reportError } from "./common"
-import { sendJsonData, storageCallback, toCache } from "./common"
+import { sendData, sendJsonData, storageCallback, toCache } from "./common"
 
 
 const ports = []
@@ -100,6 +100,8 @@ ports.toDropbox = app => event => {
 let wn
 let wnfs
 
+const PLAYLISTS_PATH = "private/Audio/Music/Playlists/"
+
 
 function fission() {
   if (!wnfs) {
@@ -150,17 +152,44 @@ ports.deconstructFission = _app => _ => {
 ports.requestFission = app => event => {
   fission()
     .then(() => {
-      return wnfs.exists(wnfs.appPath([ event.data.file ]))
-    })
-    .then(exists => {
-      if (exists) {
-        return wnfs.read(wnfs.appPath([ event.data.file ]))
-      } else {
-        return null
+      switch (event.data.file) {
+
+        case "playlists.json":
+          return wnfs.exists(PLAYLISTS_PATH)
+
+        default:
+          return wnfs.exists(wnfs.appPath([ event.data.file ]))
+
       }
     })
-    .then(a => a ? new TextDecoder().decode(a) : null)
-    .then( sendJsonData(app, event) )
+    .then(exists => {
+      const sendJsonData_ = sendJsonData(app, event)
+      if (!exists) return sendJsonData_(null)
+
+      switch (event.data.file) {
+
+        case "playlists.json":
+          return wnfs.ls(PLAYLISTS_PATH).then(result => {
+            return Object.values(result).map(r => {
+              return wnfs
+                .read(PLAYLISTS_PATH + r.name)
+                .then(p => new TextDecoder().decode(p))
+                .then(j => JSON.parse(j))
+            })
+          }).then(promises => {
+            return Promise.all(promises)
+          }).then(playlists => {
+            return sendData(app, event)(playlists)
+          })
+
+        default:
+          return wnfs
+            .read(wnfs.appPath([ event.data.file ]))
+            .then(a => a ? new TextDecoder().decode(a) : null)
+            .then(sendJsonData_)
+
+      }
+    })
     .catch( reportError(app, event) )
 }
 
@@ -168,13 +197,46 @@ ports.requestFission = app => event => {
 ports.toFission = app => event => {
   fission()
     .then(() => {
-      return wnfs.write(
-        wnfs.appPath([ event.data.file ]),
-        new Blob(
-          [ JSON.stringify(event.data.data) ],
-          { type: "text/plain" }
-        )
-      )
+      switch (event.data.file) {
+
+        case "playlists.json":
+          const playlistFilenames = event.data.data.map(playlist =>
+            `${playlist.name}.json`
+          )
+
+          return wnfs.ls(PLAYLISTS_PATH).then(list =>
+            // delete playlists that are no longer in the catalog
+            Object.values(list).map(l => l.name).filter(name =>
+              !playlistFilenames.includes(name)
+            )
+
+          ).then(playlistsToRemove =>
+            Promise.all(playlistsToRemove.map(name =>
+              wnfs.rm(`${PLAYLISTS_PATH}/${name}`)
+            ))
+
+          ).then(() =>
+            // create/update playlists
+            Promise.all(event.data.data.map(playlist => wnfs.write(
+              `${PLAYLISTS_PATH}/${playlist.name}.json`,
+              new Blob(
+                [ JSON.stringify(playlist) ],
+                { type: "text/plain" }
+              )
+            )))
+
+          )
+
+        default:
+          return wnfs.write(
+            wnfs.appPath([ event.data.file ]),
+            new Blob(
+              [ JSON.stringify(event.data.data) ],
+              { type: "text/plain" }
+            )
+          )
+
+      }
     })
     .then(() => wnfs.publish())
     .then( storageCallback(app, event) )
