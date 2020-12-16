@@ -13,10 +13,10 @@ dependencies:
   subworkers: 1.0.1
   timer.js: 1.0.4
   tocca: 2.0.9
-  webnative: 0.21.0-alpha-4
+  webnative: 0.21.0
 devDependencies:
   elm-review: 2.3.3
-  elm-tailwind-css: 1.0.1
+  elm-tailwind-css: 1.0.1_tailwindcss@1.9.6
   eslint: 7.14.0
   postcss-custom-properties: 9.2.0
   postcss-import: 12.0.1
@@ -166,6 +166,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==
+  /@ungap/global-this/0.4.3:
+    dev: false
+    resolution:
+      integrity: sha512-MuHEpDBurNVeD6mV9xBcAN2wfTwuaFQhHuhWkJuXmyVJ5P5sBCw+nnFpdfb0tAvgWkfefWCsAoAsh7MTUr3LPg==
   /@webassemblyjs/ast/1.9.0:
     dependencies:
       '@webassemblyjs/helper-module-context': 1.9.0
@@ -1591,7 +1595,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-1TiTnEXzpzACrc/JdB3tvmgNf5Qd0RyX8wbBqPPuc1aWvHHvPf6wi/ncz1gcILFAObr1zquCePkJkoW0uoZiBA==
-  /elm-tailwind-css/1.0.1:
+  /elm-tailwind-css/1.0.1_tailwindcss@1.9.6:
     dependencies:
       '@fullhuman/postcss-purgecss': 3.0.0
       autoprefixer: 10.0.4_postcss@8.1.10
@@ -1600,6 +1604,7 @@ packages:
       meow: 8.0.0
       postcss: 8.1.10
       postcss-csso: 5.0.0_postcss@8.1.10
+      tailwindcss: 1.9.6
     dev: true
     hasBin: true
     peerDependencies:
@@ -2293,14 +2298,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-BWICuzzDvDoH54NHKCseDanAhE3CeDorgDL5MT6LMXXj2WCnd9UC2szdk4AWLfjdgNBCXLUanXYcpBBKOSWGwg==
-  /globalthis/1.0.1:
-    dependencies:
-      define-properties: 1.1.3
-    dev: false
-    engines:
-      node: '>= 0.4'
-    resolution:
-      integrity: sha512-mJPRTc/P39NH/iNG4mXa9aIhNymaQikTrnspeCa2ZuJ+mH2QN/rXwtX3XwKrHqWgUQFbNZKtHM105aHzJalElw==
   /got/10.7.0:
     dependencies:
       '@sindresorhus/is': 2.1.1
@@ -2579,6 +2576,16 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-n5cDDeTWWRwK1EBoWwRti+8nP4NbytBBY0pldmnIkq6Z55KNFmWofh4rl9dPZpj+U/nVq7gweR3ylrvMt4YZ5A==
+  /ipfs-message-port-client/0.4.3:
+    dependencies:
+      browser-readablestream-to-it: 1.0.1
+      ipfs-message-port-protocol: 0.4.3
+    dev: false
+    engines:
+      node: '>=10.3.0'
+      npm: '>=3.0.0'
+    resolution:
+      integrity: sha512-mdFZVaHjAQ3zSIV7opA1F6w6hAJKPjLsEKrSwKwC/pMNXB1QwX+WvlYUxdfjgTON2vB4IGZlG53shlXV1uQsWg==
   /ipfs-message-port-client/0.4.3-rc.8:
     dependencies:
       browser-readablestream-to-it: 1.0.1
@@ -2589,6 +2596,16 @@ packages:
       npm: '>=3.0.0'
     resolution:
       integrity: sha512-JOXlfhiv27Yl+YKOrmN4uHLq9mgBfliLHAbwCk3WswrR0SB7Rc44tRriBThzcihSEykmx9rAadM4Iu6F1Y5sYw==
+  /ipfs-message-port-protocol/0.4.3:
+    dependencies:
+      cids: 1.0.2
+      ipld-block: 0.11.0
+    dev: false
+    engines:
+      node: '>=10.3.0'
+      npm: '>=3.0.0'
+    resolution:
+      integrity: sha512-lcmKsQAe51JsGLe55uY0zJFNNzLXcGPiaAU4aTO7qVu4/XfXGHrHunQgbQe93Eqq1qKi0JsCWXgDkX68ERHLKQ==
   /ipfs-message-port-protocol/0.4.3-rc.8:
     dependencies:
       cids: 1.0.2
@@ -3009,15 +3026,15 @@ packages:
     dev: false
     resolution:
       integrity: sha512-WRtu7TPCmYePR1nazfrtuF216cIVon/3GWOvHS9QR5bIwSbnxtdpma6un3jyGGNhHsKCSzn5Ypk+EkDRvTGiFA==
-  /keystore-idb/0.14.0-alpha-1:
+  /keystore-idb/0.14.0:
     dependencies:
-      globalthis: 1.0.1
+      '@ungap/global-this': 0.4.3
       localforage: 1.9.0
     dev: false
     engines:
       node: '>=10.21.0'
     resolution:
-      integrity: sha512-26L8eS0Zlx570ps3QvDHkW1049Uju3pMKitY4OL8TW7W6gcy5uMfpqD0A7GIR8JeSPYbfUtqVTWhNzSK30cXXg==
+      integrity: sha512-LX6BipvB4t90XZgD/6yYg6/7Avv9V+yEg6j48Vds2T5QRd82De03ApKlCbkYYGl3G2odwY28odL7ES6+eKcglg==
   /keyv/4.0.3:
     dependencies:
       json-buffer: 3.0.1
@@ -5581,16 +5598,16 @@ packages:
     dev: false
     resolution:
       integrity: sha512-l+UtsuV4zrBKyVAj9VCtwWgscTgadCsdGgL1OvbV102cvydWwJCGXlFIXauzWLzfheIDHfPNRWfgMuwyC6ZfIA==
-  /webnative/0.21.0-alpha-4:
+  /webnative/0.21.0:
     dependencies:
       base58-universal: 1.0.0
       borc: 2.1.2
       buffer: 6.0.3
       cids: 1.0.2
       fission-bloom-filters: 1.4.0
-      ipfs-message-port-client: 0.4.3-rc.8
+      ipfs-message-port-client: 0.4.3
       ipld-dag-pb: 0.20.0
-      keystore-idb: 0.14.0-alpha-1
+      keystore-idb: 0.14.0
       localforage: 1.9.0
       make-error: 1.3.6
       throttle-debounce: 2.3.0
@@ -5598,7 +5615,7 @@ packages:
     engines:
       node: '>=10.21.0'
     resolution:
-      integrity: sha512-3IFnQf9LnhG7/BVFkzHXbZN+TcMFwmzTPG3ECDsRPaaOSHQbsNXzDtjejnQ32Iik7faUdag5dcX/HZMUC6pwZw==
+      integrity: sha512-gijRRZYYIqzdLRHoYf88cSbtQsmuVLyA/zI+tFX3RnmyRW9JSDUgzUCoBk+rcYYW6ZJvH8DcVaBXZQZ0h7cv8w==
   /webpack-cli/3.3.12_webpack@4.44.2:
     dependencies:
       chalk: 2.4.2
@@ -5838,6 +5855,6 @@ specifiers:
   terser: ^5.0.0
   timer.js: ^1.0.4
   tocca: ^2.0.9
-  webnative: 0.21.0-alpha-4
+  webnative: 0.21.0
   webpack: ^4.44.1
   webpack-cli: ^3.3.12
