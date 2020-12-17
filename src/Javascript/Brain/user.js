@@ -141,9 +141,7 @@ function fission() {
 
 
 ports.deconstructFission = _app => _ => {
-  // TODO: Disable redirect
-  wn.leave()
-
+  wn.leave({ withoutRedirect: true })
   wn = null
   wnfs = null
 }
@@ -204,6 +202,20 @@ ports.requestFission = app => event => {
 
 ports.toFission = app => event => {
   fission()
+    .then(() => {
+      switch (event.data.file) {
+
+        case "playlists.json":
+          return wnfs.exists(PLAYLISTS_PATH).then(exists => {
+            if (exists) return null
+            return wnfs.mkdir(PLAYLISTS_PATH)
+          })
+
+        default:
+          return null
+
+      }
+    })
     .then(() => {
       let playlistFilenames
 
