@@ -104,7 +104,7 @@ const PLAYLISTS_PATH = "private/Audio/Music/Playlists/"
 
 
 function fission() {
-  if (!wnfs) {
+  if (!wn) {
     importScripts("vendor/webnative.min.js")
     importScripts("vendor/ipfs-message-port-client.min.js")
 
