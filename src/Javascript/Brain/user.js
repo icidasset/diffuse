@@ -227,6 +227,7 @@ ports.toFission = app => event => {
           )
 
           return wnfs.exists(PLAYLISTS_PATH).then(exists => {
+            if (exists) return true
             return wnfs.mkdir(PLAYLISTS_PATH)
 
           }).then(_ =>
