@@ -226,7 +226,13 @@ ports.toFission = app => event => {
             `${playlist.name}.json`
           )
 
-          return wnfs.ls(PLAYLISTS_PATH).then(list =>
+          return wnfs.exists(PLAYLISTS_PATH).then(exists => {
+            return wnfs.mkdir(PLAYLISTS_PATH)
+
+          }).then(_ =>
+            wnfs.ls(PLAYLISTS_PATH)
+
+          ).then(list =>
             // delete playlists that are no longer in the catalog
             Object.values(list).map(l => l.name).filter(name =>
               !playlistFilenames.includes(name)
