@@ -78,13 +78,13 @@ To add something to a playlist, and create that playlist if it doesn't exist yet
 ### Search
 
 ```shell
-# Show me every track where the title, artist or album contains the term 'Parkway' and the term 'Drive'. Terms are separated by spaces (eg. "Killing with a smile" has four terms).
+# Show me every track where the title, artist or album contains the term 'Parkway' and the term 'Drive'.
 Parkway Drive
 
-# Show me every track of which the artist's name contains 'park'.
-artist:park*
+# Show me every track of which the artist's name starts with 'park'.
+artist:park
 
-# Show me every track from Parkway Drive's "Deep Blue" album.
+# Show me every track from Parkway Drive of which the album starts with "Deep Blue".
 artist:Parkway Drive album:Deep Blue
 
 # Show me every track from Parkway Drive but not their "Atlas" album.

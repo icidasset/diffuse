@@ -61,7 +61,7 @@ function performSearch(rawSearchTerm) {
     .reduce(
       ([ acc, previousOperator, previousPrefix ], chunk) => {
         const operator = (a => a && a[0])( chunk.match(/^(\+|-)/) )
-        const chunkWithoutOperator = chunk.replace(/^(\+|-)/, "")
+        const chunkWithoutOperator = chunk.replace(/^(\+|-)/, "").replace(/\*$/, "")
         const prefix = (a => a && a[1])( chunkWithoutOperator.match(/^([^:]+:)/) )
         const chunkWithoutPrefix = chunkWithoutOperator.replace(/^([^:]+:)/, "")
 
@@ -69,17 +69,38 @@ function performSearch(rawSearchTerm) {
         const pr = prefix ? "" : (operator ? "" : previousPrefix)
 
         return chunkWithoutPrefix.trim().length > 0
-          ? [ [ ...acc, op + pr + chunkWithoutOperator ], op, prefix || pr ]
+          ? [ [ ...acc
+              , op + pr + chunkWithoutOperator
+              ]
+              , op
+              , prefix || pr
+              ]
           : [ acc, previousOperator, previousPrefix ]
       },
       [ [], "+", "" ]
     )[0]
     .join(" ")
 
+  const searchTermWithAsteriks =
+    searchTerm
+      .split(" ")
+      .map(s => {
+        if (s.startsWith("-")) return s
+        return s + "*"
+      })
+      .join(" ")
+
+  console.log(searchTerm, searchTermWithAsteriks)
+
   if (index) {
     results = index
       .search(searchTerm)
       .map(s => s.ref)
+      .concat(
+        index
+          .search(searchTermWithAsteriks)
+          .map(s => s.ref)
+      )
   }
 
   self.postMessage({
