@@ -15,7 +15,7 @@ import { transformUrl } from "./urls"
 
 
 const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
-                  !!navigator.userAgent.includes("AppleWebKit")
+                  navigator.vendor === "Apple Computer, Inc."
 
 
 
