@@ -17,6 +17,7 @@
 - Fixes playback issues (eg. clicking same track multiple times)
 - Fixes various issues with add-to-playlist overlay
 - Improve about pages (split up into multiple pages)
+- Improved search (able to find incomplete terms)
 - Only show generated playlists for enabled sources
 - Removes support for Blockstack & Textile
 
