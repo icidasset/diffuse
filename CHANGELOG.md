@@ -12,6 +12,7 @@
 - Changes the keyboard shortcuts for seeking and changing tracks (see overview on about page)
 - Dark mode for the about page
 - Enforces usage of a secure context (HTTPS, localhost, etc)
+- Fixes audio preloading on non-Safari browsers on Apple devices
 - Fixes issue with shuffle algorithm
 - Fixes issue with WebDAV
 - Fixes playback issues (eg. clicking same track multiple times)
