@@ -3,6 +3,7 @@
 // (◕‿◕✿)
 
 
+import { transformUrl } from "../urls"
 import * as processing from "../processing"
 
 
@@ -25,13 +26,18 @@ export function find(prep) {
 
 
 function findUsingTags(prep) {
-  return processing.getTags(
-    prep.trackHeadUrl,
-    prep.trackGetUrl,
+  return Promise.all(
+    [ transformUrl(prep.trackHeadUrl)
+    , transformUrl(prep.trackGetUrl)
+    ]
+
+  ).then(([ headUrl, getUrl ]) => processing.getTags(
+    headUrl,
+    getUrl,
     prep.trackFilename,
     { skipCovers: false }
 
-  ).then(tags => {
+  )).then(tags => {
     return tags.picture
       ? new Blob([ tags.picture.data ], { type: tags.picture.format })
       : null
