@@ -27,17 +27,12 @@ html, body {
 body {
   @apply text-base01;
 
-  background-color: rgb(2, 7, 14);
-  background-image: url(images/ep_naturalblack_pattern.jpg);
+  background-color: rgb(29, 29, 29);
+  background-image: url(images/ocean.jpg);
   font-feature-settings: kern, liga;
   font-weight: 400;
   min-width: 300px;
   text-rendering: optimizeLegibility;
-}
-
-button {
-  color: inherit;
-  font-family: inherit;
 }
 
 *:active {
@@ -51,6 +46,16 @@ button {
 
 @screen dark {
   body { @apply text-gray-600; }
+}
+
+
+
+/* Buttons
+   ------- */
+
+button {
+  color: inherit;
+  font-family: inherit;
 }
 
 

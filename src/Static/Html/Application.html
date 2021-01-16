@@ -60,8 +60,18 @@
 
   <!-- Insert loader -->
   <script>
-    document.getElementById("elm").innerHTML =
-      '<div class="flex h-screen items-center justify-center"><svg class="loading-animation" height="29" width="29" viewbox="0 0 30 30"><circle class="loading-animation__circle" cx="15" cy="15" fill="none" r="14" stroke-linecap="round" stroke-width="2"></circle></svg></div>'
+    document.getElementById("elm").innerHTML = `
+      <div class="flex h-screen items-center justify-center">
+        <div>
+          <svg class="loading-animation mx-auto" height="29" width="29" viewbox="0 0 30 30">
+            <circle class="loading-animation__circle" cx="15" cy="15" fill="none" r="14" stroke-linecap="round" stroke-width="2"></circle>
+          </svg>
+          <div class="italic mt-5 text-white text-opacity-30">
+            Loading application
+          </div>
+        </div>
+      </div>
+    `
   </script>
 
 
