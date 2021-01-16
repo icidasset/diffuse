@@ -90,8 +90,6 @@ function performSearch(rawSearchTerm) {
       })
       .join(" ")
 
-  console.log(searchTerm, searchTermWithAsteriks)
-
   if (index) {
     results = index
       .search(searchTerm)
