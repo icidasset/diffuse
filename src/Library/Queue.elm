@@ -22,8 +22,10 @@ type alias Item =
 type alias EngineItem =
     { isCached : Bool
     , progress : Maybe Float
+    , sourceId : String
     , trackId : String
     , trackTags : Tags
+    , trackPath : String
     , url : String
     }
 
@@ -36,7 +38,9 @@ makeEngineItem : Time.Posix -> List Source -> List String -> Dict String Float -
 makeEngineItem timestamp sources cachedTrackIds progressTable track =
     { isCached = List.member track.id cachedTrackIds
     , progress = Dict.get track.id progressTable
+    , sourceId = track.sourceId
     , trackId = track.id
+    , trackPath = track.path
     , trackTags = track.tags
     , url = makeTrackUrl timestamp sources track
     }

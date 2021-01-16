@@ -117,7 +117,11 @@ wire.brain = () => {
 
   brain.onmessage = event => {
     if (event.data.action) return handleAction(event.data.action, event.data.data, event.ports)
-    if (event.data.tag) return app.ports.fromAlien.send(event.data)
+    if (event.data.tag) app.ports.fromAlien.send(event.data)
+
+    switch (event.data.tag) {
+      case "GOT_CACHED_COVER": return gotCachedCover(event.data.data)
+    }
   }
 
   app.ports.toBrain.subscribe(a => brain.postMessage(a))
@@ -167,28 +171,49 @@ function activeQueueItemChanged(item) {
 
   orchestrion.activeQueueItem = item
   orchestrion.audio = null
+  orchestrion.coverPrep = null
 
+  // Reset scrobble timer
   if (orchestrion.scrobbleTimer) {
     orchestrion.scrobbleTimer.stop()
     orchestrion.scrobbleTimer = null
   }
 
+  // Remove older audio elements if possible
   audioEngine.usesSingleAudioNode()
     ? false
     : audioEngine.removeOlderAudioElements(timestampInMilliseconds)
 
+  // 🎵
   if (item) {
-    albumCover()
+    const coverPrep = {
+      cacheKey:       btoa(item.trackTags.artist + " --- " + item.trackTags.album),
+      trackFilename:  item.trackPath.split("/").reverse()[0],
+      trackPath:      item.trackPath,
+      trackSourceId:  item.sourceId,
+      variousArtists: false
+    }
 
-    audioEngine.insertTrack(
-      orchestrion,
-      item,
-      albumCover
-    )
+    albumCover(coverPrep.cacheKey).then(maybeCover => {
+      orchestrion.coverPrep = coverPrep
+
+      audioEngine.insertTrack(
+        orchestrion,
+        item,
+        maybeCover
+      )
+
+      if (!maybeCover) {
+        loadAlbumCovers([ coverPrep ])
+      }
+    })
+
+  // ✋
   } else {
     app.ports.setAudioIsPlaying.send(false)
     app.ports.setAudioPosition.send(0)
     if (navigator.mediaSession) navigator.mediaSession.playbackState = "none"
+
   }
 }
 
@@ -384,19 +409,33 @@ const loadingCovers = {}
 
 wire.covers = () => {
   app.ports.loadAlbumCovers.subscribe(
-    debounce(loadAlbumCovers, 500)
+    debounce(loadAlbumCoversFromDom, 500)
   )
 
   db.keys().then(cachedCovers)
 }
 
 
-function albumCover(cacheKey) {
-  return db.getFromIndex({ key: `coverCache.${cacheKey}` })
+function albumCover(coverKey) {
+  return db.getFromIndex({ key: `coverCache.${coverKey}` })
 }
 
 
-function loadAlbumCovers() {
+function gotCachedCover({ key, url }) {
+  const item = orchestrion.activeQueueItem
+
+  if (key === orchestrion.coverPrep.key && item) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: item.trackTags.title,
+      artist: item.trackTags.artist,
+      album: item.trackTags.album,
+      artwork: [{ src: url }]
+    })
+  }
+}
+
+
+function loadAlbumCoversFromDom() {
   const nodes = Array.from(
     document.querySelectorAll("#diffuse__track-covers [data-key]")
   ).concat(Array.from(
@@ -405,26 +444,23 @@ function loadAlbumCovers() {
 
   if (!nodes.length) return;
 
-  const artworkPrep = nodes.map(node => {
-    return {
-      cacheKey:       node.getAttribute("data-key"),
-      focus:          node.getAttribute("data-focus"),
-      trackFilename:  node.getAttribute("data-filename"),
-      trackPath:      node.getAttribute("data-path"),
-      trackSourceId:  node.getAttribute("data-source-id"),
-      variousArtists: node.getAttribute("data-various-artists")
-    }
+  const coverPrepList = nodes.map(node => ({
+    cacheKey:       node.getAttribute("data-key"),
+    trackFilename:  node.getAttribute("data-filename"),
+    trackPath:      node.getAttribute("data-path"),
+    trackSourceId:  node.getAttribute("data-source-id"),
+    variousArtists: node.getAttribute("data-various-artists")
+  }))
 
-  }).filter(prep => {
-    return !loadingCovers[prep.cacheKey]
+  return loadAlbumCovers(coverPrepList)
+}
 
-  })
 
-  artworkPrep.forEach(prep => {
+function loadAlbumCovers(coverPrepList) {
+  return coverPrepList.reduce((acc, prep) => {
+    if (loadingCovers[prep.cacheKey]) return acc
     loadingCovers[prep.cacheKey] = true
-  })
 
-  artworkPrep.reduce((acc, prep) => {
     return acc.then(arr => {
       return albumCover(prep.cacheKey).then(a => {
         if (!a) return arr.concat([ prep ])
@@ -464,7 +500,7 @@ function cachedCovers(keys) {
 
   cachePromise.then(cache => {
     app.ports.insertCoverCache.send(cache)
-    setTimeout(loadAlbumCovers, 500)
+    setTimeout(loadAlbumCoversFromDom, 500)
   })
 }
 

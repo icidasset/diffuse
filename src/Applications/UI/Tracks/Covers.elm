@@ -344,15 +344,6 @@ makeCoverWithFallback sortBy_ gathering fallback =
     , identifiedTrackCover = identifiedTrack
 
     --
-    , focus =
-        case sortBy_ of
-            Artist ->
-                "artist"
-
-            _ ->
-                "album"
-
-    --
     , group = group
     , sameAlbum = sameAlbum
     , sameArtist = sameArtist

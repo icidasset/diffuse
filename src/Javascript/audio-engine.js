@@ -82,7 +82,7 @@ export function setup(orchestrion) {
     // which seems to happen with audio nodes using an url created by `createObjectURL`.
     insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
       const temporaryClickHandler = () => {
-        orchestrion.audio.play()
+        if (orchestrion.audio) orchestrion.audio.play()
         document.body.removeEventListener("click", temporaryClickHandler)
       }
 
@@ -176,11 +176,10 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
   if ("mediaSession" in navigator && queueItem.trackTags) {
     let artwork = []
 
-    if (maybeArtwork) {
+    if (maybeArtwork && typeof maybeArtwork !== "string") {
       artwork = [{
-        src: "https://dummyimage.com/512x512",
-        sizes: "512x512",
-        type: "image/png"
+        src: URL.createObjectURL(maybeArtwork),
+        type: maybeArtwork.type
       }]
     }
 

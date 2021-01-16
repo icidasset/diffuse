@@ -706,7 +706,6 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                                 cover.identifiedTrackCover
                         in
                         [ A.attribute "data-key" cover.key
-                        , A.attribute "data-focus" cover.focus
                         , A.attribute "data-filename" identifiers.filename
                         , A.attribute "data-path" track.path
                         , A.attribute "data-source-id" track.sourceId

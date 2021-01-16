@@ -240,7 +240,6 @@ app.ports.requestTags.subscribe(context => {
 
 app.ports.syncTags.subscribe(context => {
   processing.processContext(context).then(newContext => {
-    console.log(newContext)
     app.ports.replaceTags.send(newContext)
   })
 })
