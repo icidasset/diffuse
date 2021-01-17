@@ -424,7 +424,7 @@ function albumCover(coverKey) {
 function gotCachedCover({ key, url }) {
   const item = orchestrion.activeQueueItem
 
-  if (key === orchestrion.coverPrep.key && item) {
+  if (item && key === orchestrion.coverPrep.key) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: item.trackTags.title,
       artist: item.trackTags.artist,
