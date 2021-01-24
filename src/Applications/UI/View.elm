@@ -126,7 +126,23 @@ body model =
           in
           case ( model.isLoading, model.authentication ) of
             ( True, _ ) ->
-                content { opts | justifyCenter = True } [ loadingAnimation ]
+                content
+                    { opts | justifyCenter = True }
+                    [ loadingAnimation
+                    , Html.div
+                        [ C.italic
+                        , C.mt_5
+                        , C.text_white
+                        , C.text_opacity_30
+                        ]
+                        [ case model.authentication of
+                            Authentication.Authenticated _ ->
+                                Html.text "Loading your data"
+
+                            _ ->
+                                Html.text "Transmitting particles"
+                        ]
+                    ]
 
             ( False, Authentication.Authenticated _ ) ->
                 content opts (defaultScreen model)
