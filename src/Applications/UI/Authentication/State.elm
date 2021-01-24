@@ -373,7 +373,11 @@ signedIn json model =
                         if m.migratingData then
                             "Migrated data successfully"
                                 |> Notifications.success
-                                |> showNotificationWithModel { m | migratingData = False }
+                                |> showNotificationWithModel
+                                    { m
+                                        | isLoading = False
+                                        , migratingData = False
+                                    }
                                 |> User.saveAllHypaethralData
 
                         else

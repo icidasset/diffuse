@@ -187,17 +187,24 @@ signIn json model =
                 }
 
         Ok ( maybeMethod, migratingData, Nothing ) ->
-            (if migratingData then
-                hypaethralDataRetrieved Json.null
+            { model
+                | authMethod = maybeMethod
+                , migratingData = migratingData
+                , performingSignIn = True
+            }
+                |> (if migratingData then
+                        hypaethralDataRetrieved Json.null
 
-             else
-                retrieveAllHypaethralData
-            )
-                { model
-                    | authMethod = maybeMethod
-                    , migratingData = migratingData
-                    , performingSignIn = True
-                }
+                    else
+                        retrieveAllHypaethralData
+                   )
+                |> (case maybeMethod of
+                        Just method ->
+                            andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
+
+                        Nothing ->
+                            identity
+                   )
 
         _ ->
             Return.singleton model
@@ -682,7 +689,9 @@ methodRetrieved json model =
     case decodeMethod json of
         -- 🚀
         Just method ->
-            retrieveAllHypaethralData { model | authMethod = Just method }
+            { model | authMethod = Just method }
+                |> retrieveAllHypaethralData
+                |> andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
 
         -- ✋
         _ ->
