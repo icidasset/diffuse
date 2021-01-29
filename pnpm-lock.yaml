@@ -14,7 +14,7 @@ dependencies:
   subworkers: 1.0.1
   timer.js: 1.0.4
   tocca: 2.0.9
-  webnative: 0.21.3-alpha
+  webnative: 0.21.3
 devDependencies:
   elm-review: 2.3.3
   elm-tailwind-css: 1.0.1_tailwindcss@1.9.6
@@ -5513,7 +5513,7 @@ packages:
   /uint8arrays/1.1.0:
     dependencies:
       multibase: 3.1.0
-      web-encoding: 1.0.4
+      web-encoding: 1.0.6
     dev: false
     resolution:
       integrity: sha512-cLdlZ6jnFczsKf5IH1gPHTtcHtPGho5r4CvctohmQjw8K7Q3gFdfIGHxSTdTaCKrL4w09SsPRJTqRS0drYeszA==
@@ -5726,10 +5726,6 @@ packages:
     dev: true
     resolution:
       integrity: sha1-8LDc+RW8X/FSivrbLA4XtTLaL+g=
-  /web-encoding/1.0.4:
-    dev: false
-    resolution:
-      integrity: sha512-DcXs2lbVPzuJmn2kuDEwul2oZg7p4YMa5J2f0YzsOBHaAnBYGPNUB/rJ74DTjTKpw7F0+lSsVM8sFHE2UyBixg==
   /web-encoding/1.0.6:
     dev: false
     resolution:
@@ -5740,7 +5736,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-l+UtsuV4zrBKyVAj9VCtwWgscTgadCsdGgL1OvbV102cvydWwJCGXlFIXauzWLzfheIDHfPNRWfgMuwyC6ZfIA==
-  /webnative/0.21.3-alpha:
+  /webnative/0.21.3:
     dependencies:
       base58-universal: 1.0.0
       borc: 2.1.2
@@ -5758,7 +5754,7 @@ packages:
     engines:
       node: '>=10.21.0'
     resolution:
-      integrity: sha512-zbbnzN/AZ4HkfK0tCCTo36yIGkMLxNeHWpz49XQJTABXHHo0dTojrDY72wjAmZEMFPG0iGc2iHjDzro1C3gZoQ==
+      integrity: sha512-kaVLPVoQEnB4/ERoBWkwgk7JGG/lFLNDizSDDxXMsZx/tYVa3xHFQBw61XU9BDgLyfpAanxH3ZCdncIiO8kvgA==
   /webpack-cli/3.3.12_webpack@4.45.0:
     dependencies:
       chalk: 2.4.2
@@ -6015,6 +6011,6 @@ specifiers:
   terser: ^5.0.0
   timer.js: ^1.0.4
   tocca: ^2.0.9
-  webnative: 0.21.3-alpha
+  webnative: 0.21.3
   webpack: ^4.44.1
   webpack-cli: ^3.3.12
