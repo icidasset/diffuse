@@ -1,6 +1,6 @@
-module Json.Decode.Ext exposing (listIgnore)
+module Json.Decode.Ext exposing (listIgnore, optionalField)
 
-import Json.Decode exposing (Decoder)
+import Json.Decode as Decode exposing (Decoder)
 import Maybe.Extra as Maybe
 
 
@@ -13,6 +13,16 @@ import Maybe.Extra as Maybe
 listIgnore : Decoder a -> Decoder (List a)
 listIgnore decoder =
     decoder
-        |> Json.Decode.maybe
-        |> Json.Decode.list
-        |> Json.Decode.map Maybe.values
+        |> Decode.maybe
+        |> Decode.list
+        |> Decode.map Maybe.values
+
+
+{-| Provide a default value for a field that might not be there.
+-}
+optionalField : String -> Decoder a -> a -> Decoder a
+optionalField field decoder defaultValue =
+    decoder
+        |> Decode.field field
+        |> Decode.maybe
+        |> Decode.map (Maybe.withDefault defaultValue)

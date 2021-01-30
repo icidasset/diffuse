@@ -6,7 +6,7 @@
 
 
 import * as crypto from "../crypto"
-import { WEBNATIVE_PERMISSIONS, identity } from "../common"
+import { WEBNATIVE_PERMISSIONS, WEBNATIVE_STAGING_MODE, identity } from "../common"
 
 import { SECRET_KEY_LOCATION } from "./common"
 import { decryptIfNeeded, encryptWithSecretKey } from "./common"
@@ -112,6 +112,14 @@ function fission() {
 
     if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
       wn.setup.debug({ enabled: true })
+    }
+
+    if (WEBNATIVE_STAGING_MODE) {
+      wn.setup.endpoints({
+        api: "https://runfission.net",
+        lobby: "http://auth.runfission.net",
+        user: "fissionuser.net"
+      })
     }
 
     return (

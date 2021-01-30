@@ -180,13 +180,17 @@ defaultScreen model =
                 nothing
 
             Page.Playlists subPage ->
-                Lazy.lazy5
+                Lazy.lazy6
                     Playlists.view
                     subPage
                     model.playlists
                     model.selectedPlaylist
                     model.editPlaylistContext
                     model.extractedBackdropColor
+                    (model.authentication
+                        |> Authentication.extractMethod
+                        |> Maybe.unwrap False User.Layer.methodSupportsPublicData
+                    )
 
             Page.Queue subPage ->
                 Queue.view subPage model

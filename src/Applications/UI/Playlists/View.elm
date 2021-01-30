@@ -24,8 +24,8 @@ import Url
 -- 🗺
 
 
-view : Page -> List Playlist -> Maybe Playlist -> Maybe { oldName : String, newName : String } -> Maybe Color -> Html Msg
-view page playlists selectedPlaylist editContext bgColor =
+view : Page -> List Playlist -> Maybe Playlist -> Maybe { oldName : String, newName : String } -> Maybe Color -> Bool -> Html Msg
+view page playlists selectedPlaylist editContext bgColor authMethodSupportsPublicData =
     UI.Kit.receptacle
         { scrolling = True }
         (case page of
@@ -43,7 +43,7 @@ view page playlists selectedPlaylist editContext bgColor =
                     |> Maybe.withDefault [ nothing ]
 
             Index ->
-                index playlists selectedPlaylist bgColor
+                index playlists selectedPlaylist bgColor authMethodSupportsPublicData
 
             New ->
                 new
@@ -54,8 +54,8 @@ view page playlists selectedPlaylist editContext bgColor =
 -- INDEX
 
 
-index : List Playlist -> Maybe Playlist -> Maybe Color -> List (Html Msg)
-index playlists selectedPlaylist bgColor =
+index : List Playlist -> Maybe Playlist -> Maybe Color -> Bool -> List (Html Msg)
+index playlists selectedPlaylist bgColor authMethodSupportsPublicData =
     let
         selectedPlaylistName =
             Maybe.map .name selectedPlaylist
@@ -72,11 +72,32 @@ index playlists selectedPlaylist bgColor =
             else
                 { label = text playlist.name
                 , actions =
-                    [ { icon = Icons.more_vert
-                      , msg = Just (ShowPlaylistListMenu playlist)
-                      , title = "Menu"
-                      }
-                    ]
+                    List.append
+                        (if authMethodSupportsPublicData then
+                            [ { icon =
+                                    if playlist.public then
+                                        Icons.public
+
+                                    else
+                                        Icons.public_off
+                              , msg = Nothing
+                              , title =
+                                    if playlist.public then
+                                        "Make private"
+
+                                    else
+                                        "Make public"
+                              }
+                            ]
+
+                         else
+                            []
+                        )
+                        [ { icon = Icons.more_vert
+                          , msg = Just (ShowPlaylistListMenu playlist)
+                          , title = "Menu"
+                          }
+                        ]
                 , msg = Just (ActivatePlaylist playlist)
                 , isSelected = False
                 }

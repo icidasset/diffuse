@@ -44,6 +44,25 @@ type Method
     | RemoteStorage { userAddress : String, token : String }
 
 
+methodSupportsPublicData : Method -> Bool
+methodSupportsPublicData method =
+    case method of
+        Dropbox _ ->
+            False
+
+        Fission ->
+            True
+
+        Ipfs _ ->
+            False
+
+        Local ->
+            False
+
+        RemoteStorage _ ->
+            False
+
+
 
 -- 🌳  ░░  ENCLOSED
 

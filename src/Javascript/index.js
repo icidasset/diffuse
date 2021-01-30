@@ -15,7 +15,7 @@ import "../../build/vendor/pep"
 
 import * as audioEngine from "./audio-engine"
 import * as db from "./indexed-db"
-import { WEBNATIVE_PERMISSIONS, debounce, fileExtension } from "./common"
+import { WEBNATIVE_PERMISSIONS, WEBNATIVE_STAGING_MODE, debounce, fileExtension } from "./common"
 
 
 // 🔐
@@ -298,10 +298,20 @@ function redirectToFissionForAuth() {
 
 function loadWebnative() {
   if (wn) return Promise.resolve()
+
   return loadScript("vendor/webnative.min.js").then(() => {
     wn = window.webnative
+
     if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
       wn.setup.debug({ enabled: true })
+    }
+
+    if (WEBNATIVE_STAGING_MODE) {
+      wn.setup.endpoints({
+        api: "https://runfission.net",
+        lobby: "http://auth.runfission.net",
+        user: "fissionuser.net"
+      })
     }
   })
 }

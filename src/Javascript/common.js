@@ -15,6 +15,15 @@ export const WEBNATIVE_PERMISSIONS = {
 }
 
 
+export const WEBNATIVE_STAGING_MODE = (
+  location.host === "localhost:5000"
+)
+
+
+
+// FUNCTIONS
+
+
 export const debounce =
   (callback, time = 250, timeoutId) =>
   (...args) =>
