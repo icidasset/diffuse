@@ -22,6 +22,7 @@ import Tracks.Encoding as Tracks
 import Url exposing (Url)
 import Url.Ext as Url
 import User.Layer as User exposing (..)
+import User.Layer.Methods.Fission as Fission
 
 
 
@@ -137,6 +138,9 @@ update msg =
         -----------------------------------------
         -- z. Data
         -----------------------------------------
+        GotWebnativeResponse a ->
+            gotWebnativeResponse a
+
         SaveAllHypaethralData ->
             saveAllHypaethralData
 
@@ -161,6 +165,16 @@ update msg =
 
 
 -- 🔱
+
+
+gotWebnativeResponse : Webnative.Response -> Manager
+gotWebnativeResponse response =
+    case Fission.decodeResponse response of
+        Wnfs PublicPlaylistsDirectoryExists _ ->
+            Return.singleton model
+
+        _ ->
+            Return.singleton model
 
 
 signIn : Json.Value -> Manager
@@ -363,8 +377,11 @@ retrieveAllHypaethralData model =
 retrieveHypaethralData : HypaethralBit -> Manager
 retrieveHypaethralData bit model =
     let
+        filename =
+            hypaethralBitFileName bit
+
         file =
-            Json.string (hypaethralBitFileName bit)
+            Json.string filename
     in
     case model.authMethod of
         -- 🚀
@@ -378,12 +395,9 @@ retrieveHypaethralData bit model =
                 |> return model
 
         Just Fission ->
-            [ ( "file", file )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthFission
-                |> Ports.requestFission
-                |> return model
+            filename
+                |> Fission.retrieve
+                |> Ports.webnativeRequest
 
         Just (Ipfs { apiOrigin }) ->
             [ ( "apiOrigin", Json.string apiOrigin )
@@ -452,17 +466,20 @@ saveAllHypaethralData =
         |> saveHypaethralDataBits
 
 
-saveHypaethralData : HypaethralBit -> Json.Value -> Manager
-saveHypaethralData bit json model =
+saveHypaethralData : HypaethralBit -> Manager
+saveHypaethralData bit model =
     let
-        file =
-            Json.string (hypaethralBitFileName bit)
+        file b =
+            Json.string (hypaethralBitFileName b)
+
+        json b =
+            encodeHypaethralBit b model.hypaethralUserData
     in
     case model.authMethod of
         -- 🚀
         Just (Dropbox { token }) ->
-            [ ( "data", json )
-            , ( "file", file )
+            [ ( "data", json bit )
+            , ( "file", file bit )
             , ( "token", Json.string token )
             ]
                 |> Json.object
@@ -471,18 +488,14 @@ saveHypaethralData bit json model =
                 |> return model
 
         Just Fission ->
-            [ ( "data", json )
-            , ( "file", file )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthFission
-                |> Ports.toFission
-                |> return model
+            model.hypaethralUserData
+                |> Fission.save bit
+                |> Ports.webnativeRequest
 
         Just (Ipfs { apiOrigin }) ->
             [ ( "apiOrigin", Json.string apiOrigin )
-            , ( "data", json )
-            , ( "file", file )
+            , ( "data", json bit )
+            , ( "file", file bit )
             ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthIpfs
@@ -490,8 +503,8 @@ saveHypaethralData bit json model =
                 |> return model
 
         Just Local ->
-            [ ( "data", json )
-            , ( "file", file )
+            [ ( "data", json bit )
+            , ( "file", file bit )
             ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthAnonymous
@@ -499,8 +512,8 @@ saveHypaethralData bit json model =
                 |> return model
 
         Just (RemoteStorage { userAddress, token }) ->
-            [ ( "data", json )
-            , ( "file", file )
+            [ ( "data", json bit )
+            , ( "file", file bit )
             , ( "token", Json.string token )
             , ( "userAddress", Json.string userAddress )
             ]
@@ -523,7 +536,6 @@ saveHypaethralDataBits bits model =
         bit :: rest ->
             saveHypaethralData
                 bit
-                (encodeHypaethralBit bit model.hypaethralUserData)
                 { model | hypaethralStorage = rest }
 
         _ ->
@@ -565,7 +577,6 @@ saveNextHypaethralBit model =
         bit :: rest ->
             saveHypaethralData
                 bit
-                (encodeHypaethralBit bit model.hypaethralUserData)
                 { model | hypaethralStorage = rest }
 
         _ ->

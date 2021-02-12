@@ -3,6 +3,7 @@ module Brain.User.Types exposing (..)
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import User.Layer as User exposing (HypaethralBit(..))
+import Webnative
 
 
 
@@ -50,6 +51,7 @@ type Msg
       -----------------------------------------
       -- z. Data
       -----------------------------------------
+    | GotWebnativeResponse Webnative.Response
     | SaveAllHypaethralData
     | SaveHypaethralDataBits (List HypaethralBit)
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)

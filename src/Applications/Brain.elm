@@ -167,6 +167,7 @@ subscriptions model =
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
         , Ports.replaceTags ReplaceTrackTags
         , Ports.savedHypaethralBit (\_ -> UserMsg User.SaveNextHypaethralBit)
+        , Ports.webnativeResponse (\_ -> UserMsg User.GotWebnativeResponse)
 
         --
         , Time.every (60 * 1000) SetCurrentTime

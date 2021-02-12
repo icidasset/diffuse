@@ -3,21 +3,16 @@
 // ʕ•ᴥ•ʔ
 
 
-export const WEBNATIVE_PERMISSIONS = {
-  app: {
-    name: "Diffuse",
-    creator: "icidasset"
-  },
-  fs: {
-    privatePaths: ["/Audio/Music/Playlists"],
-    publicPaths: ["/Audio/Music/Playlists"]
-  }
-}
-
-
 export const WEBNATIVE_STAGING_MODE = (
   location.host === "localhost:5000"
 )
+
+
+export const WEBNATIVE_STAGING_ENV = {
+  api: "https://runfission.net",
+  lobby: "http://auth.runfission.net",
+  user: "fissionuser.net"
+}
 
 
 

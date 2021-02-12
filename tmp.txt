@@ -1,0 +1,122 @@
+ports.requestFission = app => event => {
+  fission()
+    .then(() => {
+      switch (event.data.file) {
+
+        case "playlists.json":
+          return wnfs.exists(PLAYLISTS_PATH)
+
+        default:
+          return wnfs.exists(wnfs.appPath([ event.data.file ]))
+
+      }
+    })
+    .then(exists => {
+      const sendJsonData_ = sendJsonData(app, event)
+      if (!exists) return sendJsonData_(null)
+
+      switch (event.data.file) {
+
+        case "playlists.json":
+          return (() => {
+            if (!exists) return wnfs
+              .read(wnfs.appPath([ event.data.file ]))
+              .then(a => a ? new TextDecoder().decode(a) : null)
+              .then(sendJsonData_)
+
+            return wnfs.ls(PLAYLISTS_PATH).then(result => {
+              return Promise.all(Object.values(result).map(r =>
+                wnfs
+                  .read(PLAYLISTS_PATH + r.name)
+                  .then(p => new TextDecoder().decode(p))
+                  .then(j => JSON.parse(j))
+              ))
+            })
+          })()
+          .then(playlists => {
+            sendData(app, event)(playlists)
+          })
+
+        default:
+          return wnfs
+            .read(wnfs.appPath([ event.data.file ]))
+            .then(a => a ? new TextDecoder().decode(a) : null)
+            .then(sendJsonData_)
+
+      }
+    })
+    .catch( reportError(app, event) )
+}
+
+
+ports.toFission = app => event => {
+  fission()
+    .then(() => {
+      switch (event.data.file) {
+
+        case "playlists.json":
+          return wnfs.exists(PLAYLISTS_PATH).then(exists => {
+            if (exists) return null
+            return wnfs.mkdir(PLAYLISTS_PATH)
+          })
+
+        default:
+          return null
+
+      }
+    })
+    .then(() => {
+      let playlistFilenames
+
+      switch (event.data.file) {
+
+        case "playlists.json":
+          playlistFilenames = event.data.data.map(playlist =>
+            `${playlist.name}.json`
+          )
+
+          return wnfs.exists(PLAYLISTS_PATH).then(exists => {
+            if (exists) return true
+            return wnfs.mkdir(PLAYLISTS_PATH)
+
+          }).then(_ =>
+            wnfs.ls(PLAYLISTS_PATH)
+
+          ).then(list =>
+            // delete playlists that are no longer in the catalog
+            Object.values(list).map(l => l.name).filter(name =>
+              !playlistFilenames.includes(name)
+            )
+
+          ).then(playlistsToRemove =>
+            Promise.all(playlistsToRemove.map(name =>
+              wnfs.rm(`${PLAYLISTS_PATH}/${name}`)
+            ))
+
+          ).then(() =>
+            // create/update playlists
+            Promise.all(event.data.data.map(playlist => wnfs.write(
+              `${PLAYLISTS_PATH}/${playlist.name}.json`,
+              new Blob(
+                [ JSON.stringify(playlist) ],
+                { type: "text/plain" }
+              )
+            )))
+
+          )
+
+        default:
+          return wnfs.write(
+            wnfs.appPath([ event.data.file ]),
+            new Blob(
+              [ JSON.stringify(event.data.data) ],
+              { type: "text/plain" }
+            )
+          )
+
+      }
+    })
+    .then(() => wnfs.publish())
+    .then( storageCallback(app, event) )
+    .catch( reportError(app, event) )
+}

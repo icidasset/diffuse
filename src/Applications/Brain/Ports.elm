@@ -88,6 +88,9 @@ port toIpfs : Alien.Event -> Cmd msg
 port toRemoteStorage : Alien.Event -> Cmd msg
 
 
+port webnativeRequest : Webnative.Request -> Cmd msg
+
+
 
 -- 📰
 
@@ -108,3 +111,6 @@ port replaceTags : (ContextForTagsSync -> msg) -> Sub msg
 
 
 port savedHypaethralBit : (Json.Value -> msg) -> Sub msg
+
+
+port webnativeResponse : (Webnative.Response -> msg) -> Sub msg

@@ -13,7 +13,6 @@
             "Gizra/elm-debouncer": "2.0.0",
             "Herteby/enum": "1.0.1",
             "NoRedInk/elm-json-decode-pipeline": "1.0.0",
-            "robinheghan/murmur3": "1.0.0",
             "arturopala/elm-monocle": "2.2.0",
             "avh4/elm-color": "1.0.0",
             "elm/browser": "1.0.2",
@@ -33,6 +32,7 @@
             "elm-community/list-extra": "8.2.4",
             "elm-community/maybe-extra": "5.2.0",
             "elm-explorations/markdown": "1.0.0",
+            "fission-suite/webnative-elm": "4.0.0",
             "icidasset/elm-binary": "2.1.0",
             "icidasset/elm-material-icons": "4.0.0",
             "icidasset/elm-sha": "2.0.2",
@@ -40,6 +40,7 @@
             "newlandsvalley/elm-binary-base64": "1.0.3",
             "noahzgordon/elm-color-extra": "1.0.2",
             "ohanhi/keyboard": "2.0.1",
+            "robinheghan/murmur3": "1.0.0",
             "rtfeldman/elm-hex": "1.0.0",
             "ryannhg/date-format": "2.3.0",
             "truqu/elm-base64": "2.0.4",
@@ -48,6 +49,7 @@
             "ymtszw/elm-xml-decode": "3.2.1"
         },
         "indirect": {
+            "TSFoster/elm-bytes-extra": "1.3.0",
             "elm/bytes": "1.0.8",
             "elm/parser": "1.1.0",
             "fredcy/elm-parseint": "2.0.1",

@@ -37,6 +37,8 @@ import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
 import User.Layer exposing (..)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
+import Webnative
+import Webnative.Constants as Webnative
 
 
 
@@ -99,7 +101,12 @@ initialCommand : Url -> Cmd Authentication.Msg
 initialCommand url =
     case Url.action url of
         [ "authenticate", "fission" ] ->
-            Ports.authenticateWithFission ()
+            Webnative.permissions
+                |> Webnative.initWithOptions
+                    { autoRemoveUrlParams = True
+                    , loadFilesystem = False
+                    }
+                |> Ports.webnativeRequest
 
         _ ->
             Cmd.none
@@ -266,9 +273,16 @@ externalAuth method string model =
                 |> return model
 
         Fission ->
-            ()
-                |> Ports.redirectToFissionForAuth
-                |> return model
+            let
+                url =
+                    model.url
+
+                redirectTo =
+                    { url | query = Just "action=authenticate/fission" }
+            in
+            Webnative.permissions
+                |> Webnative.redirectToLobby (Webnative.RedirectTo redirectTo)
+                |> Ports.webnativeRequest
 
         RemoteStorage _ ->
             string

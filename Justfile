@@ -184,6 +184,10 @@ default: dev
 		--output {{BUILD_DIR}}/vendor/webnative.min.js \
 		--compress --mangle
 
+	{{NPM_DIR}}/.bin/terser {{NPM_DIR}}/webnative-elm/src/funnel.js \
+		--output {{BUILD_DIR}}/vendor/webnative-elm.min.js \
+		--compress --mangle
+
 
 #
 # Dev tasks

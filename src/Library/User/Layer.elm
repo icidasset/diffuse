@@ -38,7 +38,7 @@ import Tracks.Encoding as Tracks
 
 type Method
     = Dropbox { token : String }
-    | Fission
+    | Fission { initialised : Bool }
     | Ipfs { apiOrigin : String }
     | Local
     | RemoteStorage { userAddress : String, token : String }
