@@ -23,6 +23,7 @@ in
 
       # Indirect dependencies
       pkgs.gmp
+      pkgs.libiconv
 
     ];
   }
