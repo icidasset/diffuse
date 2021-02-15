@@ -33,6 +33,8 @@ default: dev
 @css:
 	echo "> Compiling CSS"
 
+	mkdir -p {{SRC_DIR}}/Library/Css/
+
 	{{ETC_CMD}} {{SRC_DIR}}/Css/About.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
 	  --output {{BUILD_DIR}}/about.css \
@@ -52,6 +54,8 @@ default: dev
 
 @css-prod:
 	echo "> Optimising CSS"
+
+	mkdir -p {{SRC_DIR}}/Library/Css/
 
 	NODE_ENV=production {{ETC_CMD}} {{SRC_DIR}}/Css/About.css \
 	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
