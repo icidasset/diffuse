@@ -1,5 +1,5 @@
 .DS_Store
-.fission.yaml*
+fission.yaml*
 .tmp.js
 *.cabal
 *.log

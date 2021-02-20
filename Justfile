@@ -16,11 +16,11 @@ default: dev
 # Tasks
 # =====
 
-@build: clean system css elm js
+@build: clean css elm js system
 	echo "> Build completed ⚡"
 
 
-@build-prod: quality clean system css elm-prod css-prod js-prod
+@build-prod: quality clean css elm-prod css-prod js-prod system
 	echo "> Production build completed 🛳"
 
 

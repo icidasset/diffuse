@@ -31,11 +31,16 @@ main =
         -- & reduce to a single dictionary
         let dictionary = List.concatMap (flow de) se
 
-        -- Make a file tree
-        -- and then write to disk
+        -- Write everything to disk
         dictionary
-            |> insertTree
             |> insertVersion (de !~> "timestamp")
+            |> write "../build"
+
+        -- Make a file tree
+        build <- list "../build/**/*.*"
+
+        build
+            |> makeTree
             |> write "../build"
 
 
@@ -49,29 +54,24 @@ list pattern =
 
 
 data Sequence
-    = Favicons
+    = AboutPages
+    | Favicons
     | Fonts
     | Hosting
     | Html
     | Images
     | Manifests
-    -- About Pages
-    | AboutCss
-    | AboutPages
 
 
 sequences :: IO [( Sequence, Dictionary )]
 sequences = lsequence
-    [ ( Favicons,       list "Static/Favicons/**/*.*"   )
+    [ ( AboutPages,     list "Static/About/**/*.md"     )
+    , ( Favicons,       list "Static/Favicons/**/*.*"   )
     , ( Fonts,          list "Static/Fonts/**/*.*"      )
     , ( Hosting,        list "Static/Hosting/**/*"      )
     , ( Html,           list "Static/Html/**/*.html"    )
     , ( Images,         list "Static/Images/**/*.*"     )
     , ( Manifests,      list "Static/Manifests/**/*.*"  )
-
-    -- About Pages
-    , ( AboutPages,     list "Static/About/**/*.md"    )
-    , ( AboutCss,       list "Static/About/**/*.css"   )
     ]
 
 
@@ -98,11 +98,6 @@ flow _ (Manifests, dict) =
 
 
 {-| About Pages -}
-flow _ (AboutCss, dict) =
-    dict
-        |> map lowerCasePath
-        |> prefixDirname "about/"
-
 flow x (AboutPages, dict) =
     dict
         |> map lowerCasePath
@@ -136,12 +131,13 @@ dependencies = do
 -- INSERT
 
 
-insertTree :: Dictionary -> Dictionary
-insertTree dict =
+makeTree :: Dictionary -> Dictionary
+makeTree dict =
     let
         treeContent =
             dict
                 |> List.map localPath
+                |> List.filter (\p -> p /= "tree.json")
                 |> Aeson.encode
                 |> BSL.toStrict
 
@@ -156,7 +152,7 @@ insertTree dict =
                 Nothing ->
                     []
     in
-    dict <> defs
+    defs
 
 
 insertVersion :: Text -> Dictionary -> Dictionary
