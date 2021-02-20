@@ -136,7 +136,7 @@ index amountOfTracks model =
             -------
             , model.sources
                 |> List.sortBy
-                    (.data >> Dict.fetch "name" "")
+                    lowercaseName
                 |> List.map
                     (\source ->
                         { label = Html.text (Dict.fetch "name" "" source.data)
@@ -281,3 +281,12 @@ sourceActions processingContext processingError source =
           , title = "Menu"
           }
         ]
+
+
+
+-- 🛠
+
+
+lowercaseName : Source -> String
+lowercaseName =
+    .data >> Dict.fetch "name" "" >> String.toLower
