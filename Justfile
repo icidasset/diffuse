@@ -20,7 +20,7 @@ default: dev
 	echo "> Build completed ⚡"
 
 
-@build-prod: quality clean css elm-prod css-prod js-prod system
+@build-prod: quality clean css elm-prod js-prod system css-prod
 	echo "> Production build completed 🛳"
 
 
