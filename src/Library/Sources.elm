@@ -92,3 +92,34 @@ enabledSourceIds =
 setProperId : Int -> Time.Posix -> Source -> Source
 setProperId n time source =
     { source | id = String.fromInt (Time.posixToMillis time) ++ String.fromInt n }
+
+
+worksOffline : Source -> Bool
+worksOffline source =
+    case source.service of
+        AmazonS3 ->
+            False
+
+        AzureBlob ->
+            False
+
+        AzureFile ->
+            False
+
+        Btfs ->
+            True
+
+        Dropbox ->
+            False
+
+        Google ->
+            False
+
+        Ipfs ->
+            True
+
+        WebDav ->
+            source.data
+                |> Dict.get "url"
+                |> Maybe.map (\u -> String.contains "localhost" u || String.contains "127.0.0.1" u)
+                |> Maybe.withDefault False

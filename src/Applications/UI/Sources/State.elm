@@ -201,7 +201,20 @@ process model =
             Return.singleton model
 
         toProcess ->
-            processSpecific toProcess model
+            if model.isOnline then
+                processSpecific toProcess model
+
+            else
+                toProcess
+                    |> List.filter Sources.worksOffline
+                    |> (\s ->
+                            case s of
+                                [] ->
+                                    Return.singleton model
+
+                                _ ->
+                                    processSpecific s model
+                       )
 
 
 processSpecific : List Source -> Manager
