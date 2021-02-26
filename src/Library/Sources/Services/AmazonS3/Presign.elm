@@ -69,7 +69,7 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
         -- {var} Paths
         filePathPrefix =
             if Maybe.isJust customHost then
-                "/" ++ bucketName
+                bucketName
 
             else
                 ""
