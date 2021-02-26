@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     
     steps:
       - uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
       
   create-release:
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     
     outputs:
       RELEASE_UPLOAD_ID: ${{ steps.create_release.outputs.id }}
@@ -104,7 +104,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-10.15, ubuntu-20.04, windows-2019]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         
     runs-on: ${{ matrix.os }}
     
@@ -143,7 +143,7 @@ jobs:
           sudo apt-get install -y webkit2gtk-4.0
           
       # Tasks
-      - uses: tauri-apps/tauri-action@v0.0.9
+      - uses: tauri-apps/tauri-action@v0.0.10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
