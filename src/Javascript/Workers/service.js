@@ -36,7 +36,7 @@ self.addEventListener("install", event => {
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))
-      const whatToCache = [ href, "brain.elm.js", "ui.elm.js" ].concat(filteredTree)
+      const whatToCache = [ href, `${href}/about` ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
     .then(_ => self.skipWaiting())
