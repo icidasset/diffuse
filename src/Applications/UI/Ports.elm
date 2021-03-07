@@ -21,7 +21,7 @@ port authenticateWithFission : () -> Cmd msg
 port copyToClipboard : String -> Cmd msg
 
 
-port loadAlbumCovers : () -> Cmd msg
+port loadAlbumCovers : { list : Bool, coverView : Bool } -> Cmd msg
 
 
 port pause : () -> Cmd msg

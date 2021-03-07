@@ -11,8 +11,6 @@ const REJECT = () => Promise.reject("No artwork found")
 
 
 export function find(prep) {
-  prep.variousArtists = prep.variousArtists === "t"
-
   return findUsingTags(prep)
     .then(a => a ? a : findUsingMusicBrainz(prep))
     .then(a => a ? a : findUsingLastFm(prep))
@@ -55,7 +53,7 @@ function findUsingMusicBrainz(prep) {
   const artist = parts[0]
   const album = parts[1] || parts[0]
 
-  const query = `release:"${album}"` + (prep.variousArtists ? `` : ` AND artist:"${artist}"`)
+  const query = `release:"${album}"` + (prep.variousArtists === "t" ? `` : ` AND artist:"${artist}"`)
   const encodedQuery = encodeURIComponent(query)
 
   return fetch(`https://musicbrainz.org/ws/2/release/?query=${encodedQuery}&fmt=json`)

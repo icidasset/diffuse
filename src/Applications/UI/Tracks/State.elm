@@ -198,7 +198,7 @@ changeScene : Scene -> Manager
 changeScene scene model =
     (case scene of
         Covers ->
-            Ports.loadAlbumCovers ()
+            Ports.loadAlbumCovers { list = True, coverView = True }
 
         List ->
             Cmd.none
@@ -363,14 +363,14 @@ harvestCovers model =
     model.covers
         |> Covers.harvest model.selectedCover model.sortBy model.tracks
         |> (\( c, s ) -> { model | covers = c, selectedCover = s })
-        |> Return.communicate (Ports.loadAlbumCovers ())
+        |> Return.communicate (Ports.loadAlbumCovers { list = True, coverView = True })
 
 
 infiniteListMsg : InfiniteList.Model -> Manager
 infiniteListMsg infiniteList model =
     return
         { model | infiniteList = infiniteList }
-        (Ports.loadAlbumCovers ())
+        (Ports.loadAlbumCovers { list = True, coverView = False })
 
 
 insertCoverCache : Json.Value -> Manager
@@ -507,7 +507,7 @@ selectCover : Cover -> Manager
 selectCover cover model =
     return
         { model | selectedCover = Just cover }
-        (Ports.loadAlbumCovers ())
+        (Ports.loadAlbumCovers { list = False, coverView = True })
 
 
 setSearchResults : Json.Value -> Manager
@@ -647,7 +647,7 @@ scrollToNowPlaying model =
                             model.covers.harvested
                                 |> List.find (\cover -> List.member track.id cover.trackIds)
                                 |> Maybe.unwrap model (\cover -> { model | selectedCover = Just cover })
-                                |> Return.communicate (Ports.loadAlbumCovers ())
+                                |> Return.communicate (Ports.loadAlbumCovers { list = True, coverView = True })
 
                     List ->
                         return

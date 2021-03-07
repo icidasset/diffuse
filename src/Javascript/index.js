@@ -191,10 +191,11 @@ function activeQueueItemChanged(item) {
       trackFilename:  item.trackPath.split("/").reverse()[0],
       trackPath:      item.trackPath,
       trackSourceId:  item.sourceId,
-      variousArtists: false
+      variousArtists: "f"
     }
 
     albumCover(coverPrep.cacheKey).then(maybeCover => {
+      maybeCover = maybeCover === "TRIED" ? null : maybeCover
       orchestrion.coverPrep = coverPrep
 
       audioEngine.insertTrack(
@@ -414,9 +415,6 @@ function copyToClipboard(text) {
 // Covers
 // ------
 
-const loadingCovers = {}
-
-
 wire.covers = () => {
   app.ports.loadAlbumCovers.subscribe(
     debounce(loadAlbumCoversFromDom, 500)
@@ -445,10 +443,14 @@ function gotCachedCover({ key, url }) {
 }
 
 
-function loadAlbumCoversFromDom() {
-  const nodes = Array.from(
+function loadAlbumCoversFromDom({ coverView, list } = {}) {
+  let nodes = []
+
+  if (list) nodes = nodes.concat(Array.from(
     document.querySelectorAll("#diffuse__track-covers [data-key]")
-  ).concat(Array.from(
+  ))
+
+  if (coverView) nodes = nodes.concat(Array.from(
     document.querySelectorAll("#diffuse__track-covers + div [data-key]")
   ))
 
@@ -468,9 +470,6 @@ function loadAlbumCoversFromDom() {
 
 function loadAlbumCovers(coverPrepList) {
   return coverPrepList.reduce((acc, prep) => {
-    if (loadingCovers[prep.cacheKey]) return acc
-    loadingCovers[prep.cacheKey] = true
-
     return acc.then(arr => {
       return albumCover(prep.cacheKey).then(a => {
         if (!a) return arr.concat([ prep ])
@@ -510,7 +509,7 @@ function cachedCovers(keys) {
 
   cachePromise.then(cache => {
     app.ports.insertCoverCache.send(cache)
-    setTimeout(loadAlbumCoversFromDom, 500)
+    setTimeout(() => loadAlbumCoversFromDom({ list: true, coverView: true }), 500)
   })
 }
 
