@@ -19,6 +19,7 @@ import Sources.Encoding as Sources
 import Task.Extra exposing (do)
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
+import Tuple3
 import Url exposing (Url)
 import Url.Ext as Url
 import User.Layer as User exposing (..)
@@ -168,13 +169,23 @@ update msg =
 
 
 gotWebnativeResponse : Webnative.Response -> Manager
-gotWebnativeResponse response =
-    case Fission.decodeResponse response of
-        Wnfs PublicPlaylistsDirectoryExists _ ->
-            Return.singleton model
+gotWebnativeResponse response model =
+    let
+        baggage =
+            model.hypaethralRetrieval
+                |> Maybe.andThen Tuple3.third
+                |> Maybe.withDefault BaggageClaimed
+    in
+    case Fission.proceed response baggage of
+        Fission.Hypaethral data ->
+            hypaethralDataRetrieved data
 
-        _ ->
-            Return.singleton model
+        Fission.Ongoing baggage request ->
+            model.hypaethralRetrieval
+                |> Maybe.map (Tuple3.mapThird <| always baggage)
+                |> Maybe.map (\h -> { model | hypaethralRetrieval = h })
+                |> Maybe.withDefault model
+                |> Return.communicate (Ports.webnativeRequest request)
 
 
 signIn : Json.Value -> Manager
@@ -313,13 +324,13 @@ hypaethralDataRetrieved encodedData model =
         let
             retrieval =
                 Maybe.map
-                    (Zipper.mapCurrent <| Tuple.mapSecond <| always encodedData)
+                    (Zipper.mapCurrent <| Tuple3.mapSecond <| always encodedData)
                     model.hypaethralRetrieval
         in
         case Maybe.andThen Zipper.next retrieval of
             Just nextRetrieval ->
                 retrieveHypaethralData
-                    (Tuple.first <| Zipper.current nextRetrieval)
+                    (Tuple3.first <| Zipper.current nextRetrieval)
                     { model | hypaethralRetrieval = Just nextRetrieval }
 
             Nothing ->
@@ -360,13 +371,13 @@ retrieveAllHypaethralData model =
     let
         maybeZipper =
             hypaethralBit.list
-                |> List.map (\( _, b ) -> ( b, Json.null ))
+                |> List.map (\( _, b ) -> ( b, Json.null, BaggageClaimed ))
                 |> Zipper.fromList
     in
     case maybeZipper of
         Just zipper ->
             retrieveHypaethralData
-                (Tuple.first <| Zipper.current zipper)
+                (Tuple3.first <| Zipper.current zipper)
                 { model | hypaethralRetrieval = Just zipper }
 
         Nothing ->
@@ -462,7 +473,7 @@ retrieveLegacyHypaethralData model =
 saveAllHypaethralData : Manager
 saveAllHypaethralData =
     User.hypaethralBit.list
-        |> List.map Tuple.second
+        |> List.map Tuple3.second
         |> saveHypaethralDataBits
 
 

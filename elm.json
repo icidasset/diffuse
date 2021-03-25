@@ -13,6 +13,7 @@
             "Gizra/elm-debouncer": "2.0.0",
             "Herteby/enum": "1.0.1",
             "NoRedInk/elm-json-decode-pipeline": "1.0.0",
+            "TSFoster/elm-tuple-extra": "2.0.0",
             "arturopala/elm-monocle": "2.2.0",
             "avh4/elm-color": "1.0.0",
             "elm/browser": "1.0.2",

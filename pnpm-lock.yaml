@@ -14,7 +14,8 @@ dependencies:
   subworkers: 1.0.1
   timer.js: 1.0.4
   tocca: 2.0.9
-  webnative: 0.21.4
+  webnative: 0.22.0-alpha-11
+  webnative-elm: 4.0.0_webnative@0.22.0-alpha-11
 devDependencies:
   elm-review: 2.3.3
   elm-tailwind-css: 1.0.1_tailwindcss@1.9.6
@@ -5736,7 +5737,15 @@ packages:
     dev: false
     resolution:
       integrity: sha512-l+UtsuV4zrBKyVAj9VCtwWgscTgadCsdGgL1OvbV102cvydWwJCGXlFIXauzWLzfheIDHfPNRWfgMuwyC6ZfIA==
-  /webnative/0.21.4:
+  /webnative-elm/4.0.0_webnative@0.22.0-alpha-11:
+    dependencies:
+      webnative: 0.22.0-alpha-11
+    dev: false
+    peerDependencies:
+      webnative: '> 0.0.0'
+    resolution:
+      integrity: sha512-zmHgikud1A6VUpHVqhyzsV7/gwiWLLXh9pGygDeaMU/WgIl4yWiWLDr19w3iHGiCvkT1h1WXRJSyJB27/5M2gA==
+  /webnative/0.22.0-alpha-11:
     dependencies:
       base58-universal: 1.0.0
       borc: 2.1.2
@@ -5754,7 +5763,7 @@ packages:
     engines:
       node: '>=10.21.0'
     resolution:
-      integrity: sha512-4fozhQN5QboZRV+lzx5muLuQyeEsjeyrs3XH+cQhlon2wl2M2d5DgcZlyyaTUv9CBckoyNbVRtlUrMo2dw5OqA==
+      integrity: sha512-rzudsXMCBV9kKnCzESEt8IcF1YF+NK0GNnWHZBz189yP9fGG0UQd5qGqv6bNabuX05cF5zzjCNRLD/BpnssqbQ==
   /webpack-cli/3.3.12_webpack@4.45.0:
     dependencies:
       chalk: 2.4.2
@@ -6011,6 +6020,7 @@ specifiers:
   terser: ^5.0.0
   timer.js: ^1.0.4
   tocca: ^2.0.9
-  webnative: 0.21.4
+  webnative: 0.22.0-alpha-11
+  webnative-elm: ^4.0.0
   webpack: ^4.44.1
   webpack-cli: ^3.3.12

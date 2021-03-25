@@ -50,7 +50,7 @@ methodSupportsPublicData method =
         Dropbox _ ->
             False
 
-        Fission ->
+        Fission _ ->
             True
 
         Ipfs _ ->
@@ -96,6 +96,15 @@ type HypaethralBit
     | Tracks
 
 
+type HypaethralBaggage
+    = BaggageClaimed
+      --
+    | PlaylistsBaggage
+        { publicPlaylists : List Json.Value
+        , privatePlaylists : List Json.Value
+        }
+
+
 type alias HypaethralData =
     { favourites : List Tracks.Favourite
     , playlists : List Playlists.Playlist
@@ -127,7 +136,7 @@ methodFromString string =
             Just (Dropbox { token = t })
 
         [ "FISSION" ] ->
-            Just Fission
+            Just (Fission { initialised = False })
 
         [ "IPFS", a ] ->
             Just (Ipfs { apiOrigin = a })
@@ -152,7 +161,7 @@ methodToString method =
                 , token
                 ]
 
-        Fission ->
+        Fission _ ->
             "FISSION"
 
         Ipfs { apiOrigin } ->

@@ -36,7 +36,15 @@ type Step
 
 
 toString : Tag -> String
-toString tag =
+toString =
+    tagEnum.toString
+
+
+
+-- ENUMS
+
+
+tagEnum =
     Enum.fromIterator
         (\t ->
             case t of
