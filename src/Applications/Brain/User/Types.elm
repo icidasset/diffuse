@@ -38,7 +38,6 @@ type Msg
     | RetrieveEnclosedData
     | EnclosedDataRetrieved Json.Value
     | SaveEnclosedData Json.Value
-    | SaveHypaethralData HypaethralBit Json.Value
       -----------------------------------------
       -- y. Data
       -----------------------------------------

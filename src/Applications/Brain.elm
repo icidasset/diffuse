@@ -95,7 +95,7 @@ init flags =
 
 update : Msg -> Manager
 update msg =
-    case msg of
+    case Debug.log "" msg of
         Bypass ->
             Return.singleton
 
@@ -167,7 +167,7 @@ subscriptions model =
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
         , Ports.replaceTags ReplaceTrackTags
         , Ports.savedHypaethralBit (\_ -> UserMsg User.SaveNextHypaethralBit)
-        , Ports.webnativeResponse (\_ -> UserMsg User.GotWebnativeResponse)
+        , Ports.webnativeResponse (UserMsg << User.GotWebnativeResponse)
 
         --
         , Time.every (60 * 1000) SetCurrentTime

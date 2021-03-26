@@ -19,11 +19,15 @@ app =
 
 fs : Webnative.FileSystemPermissions
 fs =
-    { privatePaths = [ playlistsPath ]
-    , publicPaths = [ playlistsPath ]
+    let
+        playlists =
+            String.join "/" playlistsPath
+    in
+    { privatePaths = [ playlists ]
+    , publicPaths = [ playlists ]
     }
 
 
-playlistsPath : String
+playlistsPath : List String
 playlistsPath =
-    "/Audio/Music/Playlists"
+    [ "Audio", "Music", "Playlists" ]

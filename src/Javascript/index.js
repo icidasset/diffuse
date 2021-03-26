@@ -266,7 +266,7 @@ let wn
 wire.webnative = () => {
   app.ports.webnativeRequest.subscribe(request => {
     loadWebnative().then(() => {
-      window.webnativeElm.processRequest(request, app)
+      window.webnativeElm.request(request, app)
     })
   })
 }
@@ -275,20 +275,19 @@ wire.webnative = () => {
 function loadWebnative() {
   if (wn) return Promise.resolve()
 
-  return Promise.all([
-    loadScript("vendor/webnative.min.js"),
-    loadScript("vendor/webnative-elm.min.js")
-  ]).then(() => {
-    wn = window.webnative
+  return loadScript("vendor/webnative.min.js")
+    .then(() => loadScript("vendor/webnative-elm.min.js"))
+    .then(() => {
+      wn = window.webnative
 
-    if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
-      wn.setup.debug({ enabled: true })
-    }
+      if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
+        wn.setup.debug({ enabled: true })
+      }
 
-    if (WEBNATIVE_STAGING_MODE) {
-      wn.setup.endpoints(WEBNATIVE_STAGING_ENV)
-    }
-  })
+      if (WEBNATIVE_STAGING_MODE) {
+        wn.setup.endpoints(WEBNATIVE_STAGING_ENV)
+      }
+    })
 }
 
 

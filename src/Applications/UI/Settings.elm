@@ -100,7 +100,7 @@ content deps =
             Just (Dropbox _) ->
                 text "on Dropbox."
 
-            Just Fission ->
+            Just (Fission _) ->
                 text "on Fission."
 
             Just (Ipfs _) ->
@@ -120,7 +120,7 @@ content deps =
             Just (Dropbox d) ->
                 changePassphrase (Dropbox d)
 
-            Just Fission ->
+            Just (Fission _) ->
                 nothing
 
             Just (Ipfs i) ->

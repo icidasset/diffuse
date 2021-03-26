@@ -21,24 +21,21 @@ type Proceedings
 
 
 
---
+-- ⛰
 
 
-playlistsPath =
-    [ "Audio", "Music", "Playlists" ]
-
-
+playlistPath : String -> List String
 playlistPath name =
     playlistsPath ++ [ name, ".json" ]
 
 
 
---
+-- ⛵️
 
 
 proceed : Webnative.Response -> HypaethralBaggage -> Proceedings
 proceed response baggage =
-    case Webnative.decodeResponse response of
+    case Webnative.decodeResponse Tag.fromString response of
         -----------------------------------------
         -- Private Playlists Directory Exists
         -----------------------------------------
@@ -92,6 +89,15 @@ proceed response baggage =
             -- TODO
             Hypaethral Json.null
 
+        --
+        Wnfs GotHypaethralData (Utf8Content json) ->
+            let
+                _ =
+                    Debug.log "GotHypaethralData" json
+            in
+            -- TODO
+            Hypaethral Json.null
+
         -----------------------------------------
         -- ...
         -----------------------------------------
@@ -101,10 +107,11 @@ proceed response baggage =
 
 
 
---
+-- 👀
 
 
-retrieve bit filename =
+retrieve : { initialised : Bool } -> HypaethralBit -> String -> Webnative.Request
+retrieve { initialised } bit filename =
     case bit of
         Playlists ->
             Wnfs.exists
@@ -114,12 +121,30 @@ retrieve bit filename =
                 }
 
         _ ->
-            Wnfs.read
+            Wnfs.readUtf8
                 (Wnfs.AppData app)
                 { path = [ filename ]
-                , tag = Tag.toString
+                , tag = Tag.toString GotHypaethralData
                 }
 
 
-save bit dataCollection =
-    Wnfs.write
+save : { initialised : Bool } -> HypaethralBit -> String -> Json.Value -> Webnative.Request
+save { initialised } bit filename dataCollection =
+    case bit of
+        Playlists ->
+            -- Write each playlist to file
+            -- TODO
+            Wnfs.writeUtf8
+                (Wnfs.AppData app)
+                { path = [ filename ]
+                , tag = Tag.toString WroteHypaethralData
+                }
+                (Json.encode 0 dataCollection)
+
+        _ ->
+            Wnfs.writeUtf8
+                (Wnfs.AppData app)
+                { path = [ filename ]
+                , tag = Tag.toString WroteHypaethralData
+                }
+                (Json.encode 0 dataCollection)

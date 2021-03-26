@@ -10,7 +10,8 @@ import Playlists exposing (Playlist)
 
 
 type Tag
-    = Mutation
+    = GotHypaethralData
+    | WroteHypaethralData
       -----------------------------------------
       -- Flows
       -----------------------------------------
@@ -35,6 +36,11 @@ type Step
 -- 🛠
 
 
+fromString : String -> Result String Tag
+fromString =
+    tagEnum.fromString >> Result.fromMaybe "Unknown tag"
+
+
 toString : Tag -> String
 toString =
     tagEnum.toString
@@ -48,8 +54,11 @@ tagEnum =
     Enum.fromIterator
         (\t ->
             case t of
-                Mutation ->
-                    ( "Mutation", Mutation )
+                GotHypaethralData ->
+                    ( "GotHypaethralData", GotHypaethralData )
+
+                WroteHypaethralData ->
+                    ( "WroteHypaethralData", WroteHypaethralData )
 
                 -----------------------------------------
                 -- Flows
@@ -57,7 +66,7 @@ tagEnum =
                 LoadPlaylists step ->
                     ( "LoadPlaylists" ++ "_" ++ stepEnum.toString step, LoadPlaylists step )
         )
-        Mutation
+        GotHypaethralData
 
 
 stepEnum =

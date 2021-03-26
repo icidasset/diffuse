@@ -24,6 +24,7 @@ import Url exposing (Url)
 import Url.Ext as Url
 import User.Layer as User exposing (..)
 import User.Layer.Methods.Fission as Fission
+import Webnative
 
 
 
@@ -36,6 +37,7 @@ initialCommand uiUrl =
         [ "authenticate", "fission" ] ->
             Cmd.batch
                 [ do (UserMsg RetrieveEnclosedData)
+                , do (UserMsg <| MethodRetrieved <| encodeMethod <| Fission { initialised = True })
                 ]
 
         _ ->
@@ -102,9 +104,6 @@ update msg =
 
         SaveEnclosedData a ->
             saveEnclosedData a
-
-        SaveHypaethralData a b ->
-            saveHypaethralData a b
 
         -----------------------------------------
         -- y. Data
@@ -173,18 +172,17 @@ gotWebnativeResponse response model =
     let
         baggage =
             model.hypaethralRetrieval
-                |> Maybe.andThen Tuple3.third
+                |> Maybe.map (Zipper.current >> Tuple3.third)
                 |> Maybe.withDefault BaggageClaimed
     in
     case Fission.proceed response baggage of
         Fission.Hypaethral data ->
-            hypaethralDataRetrieved data
+            hypaethralDataRetrieved data model
 
-        Fission.Ongoing baggage request ->
+        Fission.Ongoing newBaggage request ->
             model.hypaethralRetrieval
-                |> Maybe.map (Tuple3.mapThird <| always baggage)
-                |> Maybe.map (\h -> { model | hypaethralRetrieval = h })
-                |> Maybe.withDefault model
+                |> Maybe.map (Zipper.map <| Tuple3.mapThird <| always newBaggage)
+                |> (\h -> { model | hypaethralRetrieval = h })
                 |> Return.communicate (Ports.webnativeRequest request)
 
 
@@ -247,7 +245,7 @@ signOut model =
         Just (Dropbox _) ->
             Cmd.none
 
-        Just Fission ->
+        Just (Fission _) ->
             Ports.deconstructFission ()
 
         Just (Ipfs _) ->
@@ -405,10 +403,11 @@ retrieveHypaethralData bit model =
                 |> Ports.requestDropbox
                 |> return model
 
-        Just Fission ->
+        Just (Fission params) ->
             filename
-                |> Fission.retrieve
+                |> Fission.retrieve params bit
                 |> Ports.webnativeRequest
+                |> return model
 
         Just (Ipfs { apiOrigin }) ->
             [ ( "apiOrigin", Json.string apiOrigin )
@@ -473,24 +472,27 @@ retrieveLegacyHypaethralData model =
 saveAllHypaethralData : Manager
 saveAllHypaethralData =
     User.hypaethralBit.list
-        |> List.map Tuple3.second
+        |> List.map Tuple.second
         |> saveHypaethralDataBits
 
 
 saveHypaethralData : HypaethralBit -> Manager
 saveHypaethralData bit model =
     let
-        file b =
-            Json.string (hypaethralBitFileName b)
+        filename =
+            hypaethralBitFileName bit
 
-        json b =
-            encodeHypaethralBit b model.hypaethralUserData
+        file =
+            Json.string filename
+
+        json =
+            encodeHypaethralBit bit model.hypaethralUserData
     in
     case model.authMethod of
         -- 🚀
         Just (Dropbox { token }) ->
-            [ ( "data", json bit )
-            , ( "file", file bit )
+            [ ( "data", json )
+            , ( "file", file )
             , ( "token", Json.string token )
             ]
                 |> Json.object
@@ -498,15 +500,16 @@ saveHypaethralData bit model =
                 |> Ports.toDropbox
                 |> return model
 
-        Just Fission ->
-            model.hypaethralUserData
-                |> Fission.save bit
+        Just (Fission params) ->
+            json
+                |> Fission.save params bit filename
                 |> Ports.webnativeRequest
+                |> return model
 
         Just (Ipfs { apiOrigin }) ->
             [ ( "apiOrigin", Json.string apiOrigin )
-            , ( "data", json bit )
-            , ( "file", file bit )
+            , ( "data", json )
+            , ( "file", file )
             ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthIpfs
@@ -514,8 +517,8 @@ saveHypaethralData bit model =
                 |> return model
 
         Just Local ->
-            [ ( "data", json bit )
-            , ( "file", file bit )
+            [ ( "data", json )
+            , ( "file", file )
             ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthAnonymous
@@ -523,8 +526,8 @@ saveHypaethralData bit model =
                 |> return model
 
         Just (RemoteStorage { userAddress, token }) ->
-            [ ( "data", json bit )
-            , ( "file", file bit )
+            [ ( "data", json )
+            , ( "file", file )
             , ( "token", Json.string token )
             , ( "userAddress", Json.string userAddress )
             ]

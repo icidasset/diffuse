@@ -253,7 +253,7 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = TriggerExternalAuth Fission ""
+            { action = TriggerExternalAuth (Fission { initialised = False }) ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.fissionLogo
             , infoLink = Just "https://fission.codes/"
             , label = "Fission"

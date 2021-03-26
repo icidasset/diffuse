@@ -336,8 +336,8 @@ hypaethralDataDecoder =
         |> optional (hypaethralBitKey Tracks) (Json.listIgnore Tracks.trackDecoder) []
 
 
-putHypaethralJsonBitsTogether : List ( HypaethralBit, Json.Value ) -> Json.Value
+putHypaethralJsonBitsTogether : List ( HypaethralBit, Json.Value, HypaethralBaggage ) -> Json.Value
 putHypaethralJsonBitsTogether bits =
     bits
-        |> List.map (Tuple.mapFirst hypaethralBitKey)
+        |> List.map (\( a, b, _ ) -> ( hypaethralBitKey a, b ))
         |> Json.Encode.object

@@ -102,7 +102,7 @@ let wn
 
 ports.webnativeRequest = app => request => {
   constructFission().then(() => {
-    webnativeElm.processRequest(request, app)
+    webnativeElm.request(request, app)
   })
 }
 

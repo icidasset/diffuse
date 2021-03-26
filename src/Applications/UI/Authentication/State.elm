@@ -272,7 +272,7 @@ externalAuth method string model =
                 |> Nav.load
                 |> return model
 
-        Fission ->
+        Fission _ ->
             let
                 url =
                     model.url
@@ -283,6 +283,7 @@ externalAuth method string model =
             Webnative.permissions
                 |> Webnative.redirectToLobby (Webnative.RedirectTo redirectTo)
                 |> Ports.webnativeRequest
+                |> return model
 
         RemoteStorage _ ->
             string
