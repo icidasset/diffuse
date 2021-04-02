@@ -587,7 +587,7 @@ pingIpfsCallback result =
                         You can find this address on the IPFS Web UI.<br />
                         Most likely you'll also need to setup CORS.<br />
                         You can find the instructions for that
-                        <a href="about/cors#CORS__IPFS" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.
+                        <a href="about/cors/#CORS__IPFS" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.
                     </span>
                   """
                 , value = "//localhost:5001"

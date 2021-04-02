@@ -64,7 +64,7 @@ index deps =
           )
         , ( Icon Icons.help_outline
           , Label "Help" Shown
-          , OpenLinkInNewPage "about#UI"
+          , OpenLinkInNewPage "about/#UI"
           )
         , ( Icon Icons.exit_to_app
           , Label "Sign out" Shown

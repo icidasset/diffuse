@@ -292,7 +292,7 @@ corsWarning id =
     , chunk
         [ C.text_sm, C.leading_snug, C.mb_8, C.mt_1, C.opacity_50 ]
         [ text "You can find the instructions over "
-        , UI.Kit.link { label = "here", url = "about/cors#" ++ id }
+        , UI.Kit.link { label = "here", url = "about/cors/#" ++ id }
         ]
     ]
 
@@ -507,7 +507,7 @@ note service =
                 , text ", do. You can find the configuration for that server "
                 , UI.Kit.link
                     { label = "here"
-                    , url = "about/cors#CORS__WebDAV"
+                    , url = "about/cors/#CORS__WebDAV"
                     }
                 , text "."
                 ]
