@@ -104,7 +104,7 @@ initialCommand url =
             Webnative.permissions
                 |> Webnative.initWithOptions
                     { autoRemoveUrlParams = True
-                    , loadFilesystem = False
+                    , loadFileSystem = False
                     }
                 |> Ports.webnativeRequest
 

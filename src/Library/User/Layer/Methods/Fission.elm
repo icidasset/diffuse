@@ -35,7 +35,10 @@ playlistPath name =
 
 proceed : Webnative.Response -> HypaethralBaggage -> Proceedings
 proceed response baggage =
-    case Webnative.decodeResponse Tag.fromString response of
+    case Debug.log "🍿" <| Webnative.decodeResponse Tag.fromString response of
+        Webnative (NoArtifact LoadedFileSystemManually) ->
+            --
+
         -----------------------------------------
         -- Private Playlists Directory Exists
         -----------------------------------------
@@ -112,39 +115,47 @@ proceed response baggage =
 
 retrieve : { initialised : Bool } -> HypaethralBit -> String -> Webnative.Request
 retrieve { initialised } bit filename =
-    case bit of
-        Playlists ->
-            Wnfs.exists
-                Wnfs.Public
-                { path = playlistsPath
-                , tag = Tag.toString (LoadPlaylists PublicPlaylistsDirectoryExists)
-                }
+    if initialised then
+        case bit of
+            Playlists ->
+                Wnfs.exists
+                    Wnfs.Public
+                    { path = playlistsPath
+                    , tag = Tag.toString (LoadPlaylists PublicPlaylistsDirectoryExists)
+                    }
 
-        _ ->
-            Wnfs.readUtf8
-                (Wnfs.AppData app)
-                { path = [ filename ]
-                , tag = Tag.toString GotHypaethralData
-                }
+            _ ->
+                Wnfs.readUtf8
+                    (Wnfs.AppData app)
+                    { path = [ filename ]
+                    , tag = Tag.toString GotHypaethralData
+                    }
+
+    else
+        Webnative.loadFileSystem permissions
 
 
 save : { initialised : Bool } -> HypaethralBit -> String -> Json.Value -> Webnative.Request
 save { initialised } bit filename dataCollection =
-    case bit of
-        Playlists ->
-            -- Write each playlist to file
-            -- TODO
-            Wnfs.writeUtf8
-                (Wnfs.AppData app)
-                { path = [ filename ]
-                , tag = Tag.toString WroteHypaethralData
-                }
-                (Json.encode 0 dataCollection)
+    if initialised then
+        case bit of
+            Playlists ->
+                -- Write each playlist to file
+                -- TODO
+                Wnfs.writeUtf8
+                    (Wnfs.AppData app)
+                    { path = [ filename ]
+                    , tag = Tag.toString WroteHypaethralData
+                    }
+                    (Json.encode 0 dataCollection)
 
-        _ ->
-            Wnfs.writeUtf8
-                (Wnfs.AppData app)
-                { path = [ filename ]
-                , tag = Tag.toString WroteHypaethralData
-                }
-                (Json.encode 0 dataCollection)
+            _ ->
+                Wnfs.writeUtf8
+                    (Wnfs.AppData app)
+                    { path = [ filename ]
+                    , tag = Tag.toString WroteHypaethralData
+                    }
+                    (Json.encode 0 dataCollection)
+
+    else
+        Webnative.loadFileSystem permissions

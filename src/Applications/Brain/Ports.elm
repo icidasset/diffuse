@@ -65,9 +65,6 @@ port provideArtworkTrackUrls : Json.Value -> Cmd msg
 port requestDropbox : Alien.Event -> Cmd msg
 
 
-port requestFission : Alien.Event -> Cmd msg
-
-
 port requestIpfs : Alien.Event -> Cmd msg
 
 
@@ -78,9 +75,6 @@ port requestRemoteStorage : Alien.Event -> Cmd msg
 
 
 port toDropbox : Alien.Event -> Cmd msg
-
-
-port toFission : Alien.Event -> Cmd msg
 
 
 port toIpfs : Alien.Event -> Cmd msg
