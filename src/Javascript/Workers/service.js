@@ -36,7 +36,7 @@ self.addEventListener("install", event => {
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))
-      const whatToCache = [ href, `${href}about`, "/", "/about" ].concat(filteredTree)
+      const whatToCache = [ href, `${href.replace(/\/+$/, "")}/about/` ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
     .then(_ => self.skipWaiting())
@@ -93,7 +93,7 @@ self.addEventListener("fetch", event => {
       caches
         .open(KEY)
         .then(cache => cache.match(url))
-        .then(match => match || Promise.reject("no-match"))
+        .then(match => match || fetch(url))
     )
 
     if (!isOffline && event.request.mode !== "navigate") event.waitUntil(
@@ -102,7 +102,10 @@ self.addEventListener("fetch", event => {
         .then(cache => fetch(url)
           .then(response => response.clone())
           .then(response => cache.put(url, response))
-        )
+        ).catch(err => {
+          console.error("Could not fetch " + url.href)
+          console.error(err)
+        })
     )
   }
 })
