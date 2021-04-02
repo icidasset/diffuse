@@ -36,7 +36,7 @@ self.addEventListener("install", event => {
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))
-      const whatToCache = [ href, `${href}/about` ].concat(filteredTree)
+      const whatToCache = [ href, `${href}about`, "/", "/about" ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
     .then(_ => self.skipWaiting())
@@ -56,16 +56,8 @@ self.addEventListener("fetch", event => {
   const isOffline =
     !self.navigator.onLine
 
-  // Use cache if offline and identified as cached (internal)
-  if (isInternal && isOffline) {
-    const promise = caches
-      .match(event.request)
-      .then(r => r || fetch(event.request))
-
-    event.respondWith(promise)
-
   // When doing a request with basic authentication in the url, put it in the headers instead
-  } else if (event.request.url.includes("service_worker_authentication=")) {
+  if (event.request.url.includes("service_worker_authentication=")) {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("service_worker_authentication")
 
@@ -92,6 +84,26 @@ self.addEventListener("fetch", event => {
       "Bearer " + token
     )
 
+  // Use cache if internal request & update cache in the background
+  } else if (isInternal) {
+    let url = new URL(event.request.url)
+    url.search = ""
+
+    event.respondWith(
+      caches
+        .open(KEY)
+        .then(cache => cache.match(url))
+        .then(match => match || Promise.reject("no-match"))
+    )
+
+    if (!isOffline && event.request.mode !== "navigate") event.waitUntil(
+      caches
+        .open(KEY)
+        .then(cache => fetch(url)
+          .then(response => response.clone())
+          .then(response => cache.put(url, response))
+        )
+    )
   }
 })
 
