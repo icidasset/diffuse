@@ -1,5 +1,7 @@
+Contributed by [@Netherquark](https://github.com/Netherquark)
+
 Hello there! I see you want to build Diffuse.
-<p> The process can seem quite complicated, especially if you aren't familiar with concepts like Nix, just like I wasn't when I started out. Don't worry,this guide is here to help you. </p>
+<p> The process can seem quite complicated, especially if you aren't familiar with concepts like Nix, just like I wasn't when I started out. Don't worry, this guide is here to help you. </p>
 <p> First off, determine your operating system (of choice). The setup process is considerably easier on MacOS and Linux, but it is still theoretically possible on Windows. </p>
 
 **Prerequisites for MacOS and Linux**  
