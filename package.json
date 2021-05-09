@@ -1,7 +1,7 @@
 {
   "name": "Diffuse",
   "description": "A music player that connects to your cloud/distributed storage",
-  "version": "3.0.0-beta-2",
+  "version": "3.0.0-beta-3",
   "author": "Steven Vandevelde <icid.asset@gmail.com>",
   "homepage": "https://diffuse.sh",
   "repository": "github:icidasset/diffuse",
@@ -35,8 +35,8 @@
     "subworkers": "^1.0.1",
     "timer.js": "^1.0.4",
     "tocca": "^2.0.9",
-    "webnative": "^0.23.2",
-    "webnative-elm": "4.0.0-3"
+    "webnative": "0.24.1-alpha-2",
+    "webnative-elm": "6.0.0"
   },
   "pnpm": {
     "overrides": {

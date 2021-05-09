@@ -29,7 +29,7 @@ type alias Model =
     , currentTime : Time.Posix
     , hypaethralDebouncer : Debouncer HypaethralBit (List HypaethralBit)
     , hypaethralRetrieval : Maybe (Zipper ( HypaethralBit, Json.Value, HypaethralBaggage ))
-    , hypaethralStorage : List HypaethralBit
+    , hypaethralStorage : List { bit : HypaethralBit, saving : Bool }
     , hypaethralUserData : User.HypaethralData
     , legacyMode : Bool
     , migratingData : Bool

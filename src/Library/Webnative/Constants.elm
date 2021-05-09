@@ -1,6 +1,7 @@
 module Webnative.Constants exposing (..)
 
 import Webnative
+import Webnative.Path as Path exposing (Directory, Path)
 
 
 permissions : Webnative.Permissions
@@ -19,15 +20,11 @@ app =
 
 fs : Webnative.FileSystemPermissions
 fs =
-    let
-        playlists =
-            String.join "/" playlistsPath
-    in
-    { privatePaths = [ playlists ]
-    , publicPaths = [ playlists ]
+    { private = { directories = [ playlistsPath ], files = [] }
+    , public = { directories = [ playlistsPath ], files = [] }
     }
 
 
-playlistsPath : List String
+playlistsPath : Path Directory
 playlistsPath =
-    [ "Audio", "Music", "Playlists" ]
+    Path.directory [ "Audio", "Music", "Playlists" ]

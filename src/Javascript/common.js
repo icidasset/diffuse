@@ -10,7 +10,7 @@ export const WEBNATIVE_STAGING_MODE = (
 
 export const WEBNATIVE_STAGING_ENV = {
   api: "https://runfission.net",
-  lobby: "http://auth.runfission.net",
+  lobby: "https://auth.runfission.net",
   user: "fissionuser.net"
 }
 

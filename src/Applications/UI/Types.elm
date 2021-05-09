@@ -37,6 +37,7 @@ import UI.Sources.Types as Sources
 import UI.Tracks.Types as Tracks
 import Url exposing (Protocol(..), Url)
 import User.Layer exposing (..)
+import Webnative
 
 
 
@@ -275,6 +276,7 @@ type Msg
       -- User
       -----------------------------------------
     | Export
+    | GotWebnativeResponse Webnative.Response
     | ImportFile File
     | ImportJson String
     | ImportLegacyData

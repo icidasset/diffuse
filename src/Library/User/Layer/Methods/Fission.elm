@@ -1,12 +1,14 @@
 module User.Layer.Methods.Fission exposing (..)
 
+import Json.Decode as Decode
 import Json.Encode as Json
 import List.Zipper as Zipper exposing (Zipper)
 import Playlists exposing (Playlist)
 import Return
 import User.Layer exposing (HypaethralBaggage, HypaethralBit(..))
-import Webnative exposing (DecodedResponse(..))
+import Webnative exposing (Artifact(..), DecodedResponse(..), NoArtifact(..))
 import Webnative.Constants exposing (..)
+import Webnative.Path as Path exposing (Directory, File, Path)
 import Webnative.Tag as Tag exposing (Step(..), Tag(..))
 import Wnfs exposing (Artifact(..))
 
@@ -17,16 +19,23 @@ import Wnfs exposing (Artifact(..))
 
 type Proceedings
     = Hypaethral Json.Value
+    | FullStop
+    | LoadedFileSystem
     | Ongoing HypaethralBaggage Webnative.Request
+    | OtherRequest Webnative.Request
+    | SaveNextHypaethralBit
 
 
 
 -- ⛰
 
 
-playlistPath : String -> List String
+playlistPath : String -> Path File
 playlistPath name =
-    playlistsPath ++ [ name, ".json" ]
+    playlistsPath
+        |> Path.unwrap
+        |> (\p -> p ++ [ name, ".json" ])
+        |> Path.file
 
 
 
@@ -36,8 +45,8 @@ playlistPath name =
 proceed : Webnative.Response -> HypaethralBaggage -> Proceedings
 proceed response baggage =
     case Debug.log "🍿" <| Webnative.decodeResponse Tag.fromString response of
-        Webnative (NoArtifact LoadedFileSystemManually) ->
-            --
+        Webnative (Webnative.NoArtifact LoadedFileSystemManually) ->
+            LoadedFileSystem
 
         -----------------------------------------
         -- Private Playlists Directory Exists
@@ -51,7 +60,7 @@ proceed response baggage =
 
         Wnfs (LoadPlaylists PrivatePlaylistsDirectoryExists) (Boolean False) ->
             -- TODO: Not sure this is correct
-            Hypaethral Json.null
+            FullStop
 
         -----------------------------------------
         -- Public Playlists Directory Exists
@@ -94,19 +103,28 @@ proceed response baggage =
 
         --
         Wnfs GotHypaethralData (Utf8Content json) ->
-            let
-                _ =
-                    Debug.log "GotHypaethralData" json
-            in
-            -- TODO
-            Hypaethral Json.null
+            json
+                |> Decode.decodeString Decode.value
+                |> Result.map Hypaethral
+                |> Result.withDefault FullStop
 
         -----------------------------------------
         -- ...
         -----------------------------------------
+        WnfsError (Wnfs.JavascriptError "Path does not exist") ->
+            Hypaethral Json.null
+
+        Wnfs Published _ ->
+            SaveNextHypaethralBit
+
+        Wnfs WroteHypaethralData Wnfs.NoArtifact ->
+            { tag = Tag.toString Published }
+                |> Wnfs.publish
+                |> OtherRequest
+
         _ ->
             -- TODO: Error handling
-            Hypaethral Json.null
+            FullStop
 
 
 
@@ -127,7 +145,7 @@ retrieve { initialised } bit filename =
             _ ->
                 Wnfs.readUtf8
                     (Wnfs.AppData app)
-                    { path = [ filename ]
+                    { path = Path.file [ filename ]
                     , tag = Tag.toString GotHypaethralData
                     }
 
@@ -141,18 +159,26 @@ save { initialised } bit filename dataCollection =
         case bit of
             Playlists ->
                 -- Write each playlist to file
-                -- TODO
+                let
+                    -- TODO
+                    _ =
+                        Debug.log "save playlist" filename
+                in
                 Wnfs.writeUtf8
                     (Wnfs.AppData app)
-                    { path = [ filename ]
+                    { path = Path.file [ filename ]
                     , tag = Tag.toString WroteHypaethralData
                     }
                     (Json.encode 0 dataCollection)
 
             _ ->
+                let
+                    _ =
+                        Debug.log "🌳 save" filename
+                in
                 Wnfs.writeUtf8
                     (Wnfs.AppData app)
-                    { path = [ filename ]
+                    { path = Path.file [ filename ]
                     , tag = Tag.toString WroteHypaethralData
                     }
                     (Json.encode 0 dataCollection)

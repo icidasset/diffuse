@@ -11,6 +11,7 @@ import Playlists exposing (Playlist)
 
 type Tag
     = GotHypaethralData
+    | Published
     | WroteHypaethralData
       -----------------------------------------
       -- Flows
@@ -51,22 +52,44 @@ toString =
 
 
 tagEnum =
-    Enum.fromIterator
-        (\t ->
-            case t of
-                GotHypaethralData ->
-                    ( "GotHypaethralData", GotHypaethralData )
+    [ GotHypaethralData
+    , Published
+    , WroteHypaethralData
 
-                WroteHypaethralData ->
-                    ( "WroteHypaethralData", WroteHypaethralData )
+    -----------------------------------------
+    -- Playlists
+    -----------------------------------------
+    , LoadPlaylists PlaylistAdded
+    , LoadPlaylists PlaylistRemoved
+    , LoadPlaylists PrivatePlaylistsDirectoryCreated
+    , LoadPlaylists PrivatePlaylistsDirectoryExists
+    , LoadPlaylists PrivatePlaylistsDirectoryListed
+    , LoadPlaylists PublicPlaylistsDirectoryCreated
+    , LoadPlaylists PublicPlaylistsDirectoryExists
+    , LoadPlaylists PublicPlaylistsDirectoryListed
+    ]
+        |> List.map tagIterator
+        |> Enum.create
 
-                -----------------------------------------
-                -- Flows
-                -----------------------------------------
-                LoadPlaylists step ->
-                    ( "LoadPlaylists" ++ "_" ++ stepEnum.toString step, LoadPlaylists step )
-        )
-        GotHypaethralData
+
+tagIterator tag =
+    case tag of
+        GotHypaethralData ->
+            ( "GotHypaethralData", GotHypaethralData )
+
+        Published ->
+            ( "Published", Published )
+
+        WroteHypaethralData ->
+            ( "WroteHypaethralData", WroteHypaethralData )
+
+        -----------------------------------------
+        -- Flows
+        -----------------------------------------
+        LoadPlaylists step ->
+            ( "LoadPlaylists" ++ "_" ++ stepEnum.toString step
+            , LoadPlaylists step
+            )
 
 
 stepEnum =

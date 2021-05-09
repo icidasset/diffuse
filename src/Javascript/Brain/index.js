@@ -10,7 +10,7 @@ import * as db from "../indexed-db"
 import * as processing from "../processing"
 import * as user from "./user"
 
-import { fromCache, removeCache, reportError } from "./common"
+import { fromCache, identity, removeCache, reportError } from "./common"
 import { sendData, storageCallback, toCache } from "./common"
 
 importScripts("brain.elm.js")
@@ -87,7 +87,11 @@ app.ports.toCache.subscribe(event => {
     : event.tag
 
   toCache(key, event.data.data || event.data)
-    .then( storageCallback(app, event) )
+    .then(
+      event.tag === "AUTH_ANONYMOUS"
+      ? storageCallback(app, event)
+      : identity
+    )
     .catch( reportError(app, event) )
 })
 

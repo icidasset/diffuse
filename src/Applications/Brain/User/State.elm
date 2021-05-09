@@ -11,6 +11,7 @@ import EverySet
 import Json.Decode as Decode
 import Json.Encode as Json
 import List.Zipper as Zipper
+import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
 import Return.Ext as Return
@@ -35,10 +36,7 @@ initialCommand : Url -> Cmd Brain.Msg
 initialCommand uiUrl =
     case Url.action uiUrl of
         [ "authenticate", "fission" ] ->
-            Cmd.batch
-                [ do (UserMsg RetrieveEnclosedData)
-                , do (UserMsg <| MethodRetrieved <| encodeMethod <| Fission { initialised = True })
-                ]
+            Cmd.none
 
         _ ->
             Cmd.batch
@@ -170,20 +168,45 @@ update msg =
 gotWebnativeResponse : Webnative.Response -> Manager
 gotWebnativeResponse response model =
     let
+        isQuery =
+            Maybe.isJust model.hypaethralRetrieval
+
         baggage =
             model.hypaethralRetrieval
                 |> Maybe.map (Zipper.current >> Tuple3.third)
                 |> Maybe.withDefault BaggageClaimed
     in
-    case Fission.proceed response baggage of
+    case Debug.log "proceed" <| Fission.proceed response baggage of
+        Fission.FullStop ->
+            Return.singleton model
+
         Fission.Hypaethral data ->
             hypaethralDataRetrieved data model
+
+        Fission.LoadedFileSystem ->
+            -- Had to load the filesystem first, please continue.
+            let
+                authMethod =
+                    Fission { initialised = True }
+            in
+            model.authMethod
+                |> Maybe.map (\_ -> authMethod)
+                |> (\a -> { model | authMethod = a })
+                |> retrieveAllHypaethralData
 
         Fission.Ongoing newBaggage request ->
             model.hypaethralRetrieval
                 |> Maybe.map (Zipper.map <| Tuple3.mapThird <| always newBaggage)
                 |> (\h -> { model | hypaethralRetrieval = h })
                 |> Return.communicate (Ports.webnativeRequest request)
+
+        Fission.OtherRequest request ->
+            request
+                |> Ports.webnativeRequest
+                |> return model
+
+        Fission.SaveNextHypaethralBit ->
+            saveNextHypaethralBit model
 
 
 signIn : Json.Value -> Manager
@@ -546,11 +569,19 @@ one part at a time.
 -}
 saveHypaethralDataBits : List HypaethralBit -> Manager
 saveHypaethralDataBits bits model =
-    case model.hypaethralStorage ++ bits of
-        bit :: rest ->
-            saveHypaethralData
-                bit
-                { model | hypaethralStorage = rest }
+    let
+        newItems =
+            List.map (\b -> { bit = b, saving = False }) bits
+    in
+    case model.hypaethralStorage ++ newItems of
+        item :: rest ->
+            if item.saving then
+                Return.singleton model
+
+            else
+                saveHypaethralData
+                    item.bit
+                    { model | hypaethralStorage = { item | saving = True } :: rest }
 
         _ ->
             Return.singleton model
@@ -587,14 +618,18 @@ depending on what's in the queue saving queue
 -}
 saveNextHypaethralBit : Manager
 saveNextHypaethralBit model =
+    let
+        _ =
+            Debug.log "saveNext" model.hypaethralStorage
+    in
     case model.hypaethralStorage of
-        bit :: rest ->
+        _ :: item :: rest ->
             saveHypaethralData
-                bit
-                { model | hypaethralStorage = rest }
+                item.bit
+                { model | hypaethralStorage = { item | saving = True } :: rest }
 
         _ ->
-            Return.singleton model
+            Return.singleton { model | hypaethralStorage = [] }
 
 
 sendHypaethralDataToUI : Json.Value -> HypaethralData -> Manager
