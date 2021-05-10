@@ -99,12 +99,7 @@ type HypaethralBit
 type HypaethralBaggage
     = BaggageClaimed
       --
-    | PlaylistsBaggage
-        { publicPlaylistsRead : List Json.Value
-        , publicPlaylistsTodo : List String
-        , privatePlaylistsRead : List Json.Value
-        , privatePlaylistsTodo : List String
-        }
+    | PlaylistsBaggage PlaylistsBaggageAttributes
 
 
 type alias HypaethralData =
@@ -114,6 +109,14 @@ type alias HypaethralData =
     , settings : Maybe Settings.Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
+    }
+
+
+type alias PlaylistsBaggageAttributes =
+    { publicPlaylistsRead : List Json.Value
+    , publicPlaylistsTodo : List String
+    , privatePlaylistsRead : List Json.Value
+    , privatePlaylistsTodo : List String
     }
 
 
@@ -343,3 +346,17 @@ putHypaethralJsonBitsTogether bits =
     bits
         |> List.map (\( a, b, _ ) -> ( hypaethralBitKey a, b ))
         |> Json.Encode.object
+
+
+
+-- 🔱  ░░  BAGGAGE
+
+
+mapPlaylistsBaggage : (PlaylistsBaggageAttributes -> PlaylistsBaggageAttributes) -> HypaethralBaggage -> HypaethralBaggage
+mapPlaylistsBaggage fn baggage =
+    case baggage of
+        PlaylistsBaggage p ->
+            PlaylistsBaggage (fn p)
+
+        b ->
+            b

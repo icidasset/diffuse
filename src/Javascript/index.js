@@ -265,7 +265,6 @@ let wn
 
 wire.webnative = () => {
   app.ports.webnativeRequest.subscribe(request => {
-    console.log("UI request", request)
     loadWebnative().then(() => {
       webnativeElm.request({ app: app, request: request })
     })

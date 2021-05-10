@@ -5,7 +5,7 @@ import Json.Encode as Json
 import List.Zipper as Zipper exposing (Zipper)
 import Playlists exposing (Playlist)
 import Return
-import User.Layer exposing (HypaethralBaggage(..), HypaethralBit(..))
+import User.Layer exposing (HypaethralBaggage(..), HypaethralBit(..), mapPlaylistsBaggage)
 import Webnative exposing (Artifact(..), DecodedResponse(..), NoArtifact(..))
 import Webnative.Constants exposing (..)
 import Webnative.Path as Path exposing (Directory, File, Path)
@@ -51,7 +51,9 @@ proceed response baggage =
         -----------------------------------------
         -- (1) Public Playlists
         -----------------------------------------
-        -- Directory Exists
+        ---------------------
+        -- Directory Exists -
+        ---------------------
         Wnfs (LoadPlaylists PublicPlaylistsDirectoryExists) (Boolean True) ->
             { path = playlistsPath
             , tag = Tag.toString (LoadPlaylists PublicPlaylistsDirectoryListed)
@@ -66,24 +68,38 @@ proceed response baggage =
                 |> Wnfs.ls Wnfs.Private
                 |> Ongoing baggage
 
-        -- List
+        ---------
+        -- List -
+        ---------
         Wnfs (LoadPlaylists PublicPlaylistsDirectoryListed) (DirectoryContent listing) ->
-            let
-                _ =
-                    Debug.log "PublicPlaylistsDirectoryListed" listing
-            in
-            { path = playlistsPath
-            , tag = Tag.toString (LoadPlaylists PrivatePlaylistsDirectoryExists)
-            }
-                |> Wnfs.exists Wnfs.Private
-                |> Ongoing baggage
+            baggage
+                |> ensurePlaylistsBaggage
+                |> mapPlaylistsBaggage
+                    (\b -> { b | publicPlaylistsTodo = List.map .name listing })
+                |> readPublicPlaylistOrMoveOn
 
-        -- Read
-        --
+        ---------
+        -- Read -
+        ---------
+        Wnfs (LoadPlaylists PublicPlaylistRead) (Utf8Content json) ->
+            baggage
+                |> mapPlaylistsBaggage
+                    (\b ->
+                        case Decode.decodeString Decode.value json of
+                            Ok value ->
+                                { b | publicPlaylistsRead = value :: b.publicPlaylistsRead }
+
+                            Err _ ->
+                                b
+                    )
+                |> readPublicPlaylistOrMoveOn
+
         -----------------------------------------
         -- (2) Private Playlists
         -----------------------------------------
-        -- Directory Exists
+        ---------------------
+        -- Directory Exists -
+        ---------------------
         Wnfs (LoadPlaylists PrivatePlaylistsDirectoryExists) (Boolean True) ->
             { path = playlistsPath
             , tag = Tag.toString (LoadPlaylists PrivatePlaylistsDirectoryListed)
@@ -94,14 +110,31 @@ proceed response baggage =
         Wnfs (LoadPlaylists PrivatePlaylistsDirectoryExists) (Boolean False) ->
             finalisePlaylists baggage
 
-        -- List
+        ---------
+        -- List -
+        ---------
         Wnfs (LoadPlaylists PrivatePlaylistsDirectoryListed) (DirectoryContent listing) ->
-            let
-                _ =
-                    Debug.log "PrivatePlaylistsDirectoryListed" listing
-            in
-            -- TODO
-            Hypaethral Json.null
+            baggage
+                |> ensurePlaylistsBaggage
+                |> mapPlaylistsBaggage
+                    (\b -> { b | privatePlaylistsTodo = List.map .name listing })
+                |> readPrivatePlaylistOrMoveOn
+
+        ---------
+        -- Read -
+        ---------
+        Wnfs (LoadPlaylists PrivatePlaylistRead) (Utf8Content json) ->
+            baggage
+                |> mapPlaylistsBaggage
+                    (\b ->
+                        case Decode.decodeString Decode.value json of
+                            Ok value ->
+                                { b | privatePlaylistsRead = value :: b.privatePlaylistsRead }
+
+                            Err _ ->
+                                b
+                    )
+                |> readPrivatePlaylistOrMoveOn
 
         -----------------------------------------
         -- Other
@@ -207,6 +240,21 @@ save { initialised } bit filename dataCollection =
 -- PLAYLISTS
 
 
+ensurePlaylistsBaggage : HypaethralBaggage -> HypaethralBaggage
+ensurePlaylistsBaggage baggage =
+    case baggage of
+        BaggageClaimed ->
+            PlaylistsBaggage
+                { publicPlaylistsRead = []
+                , publicPlaylistsTodo = []
+                , privatePlaylistsRead = []
+                , privatePlaylistsTodo = []
+                }
+
+        b ->
+            b
+
+
 finalisePlaylists : HypaethralBaggage -> Proceedings
 finalisePlaylists baggage =
     case baggage of
@@ -217,3 +265,60 @@ finalisePlaylists baggage =
 
         _ ->
             Hypaethral Json.null
+
+
+
+-- PLAYLISTS  ░░  PUBLIC
+
+
+readPublicPlaylistOrMoveOn : HypaethralBaggage -> Proceedings
+readPublicPlaylistOrMoveOn baggage =
+    case baggage of
+        PlaylistsBaggage b ->
+            case b.publicPlaylistsTodo of
+                [] ->
+                    checkPrivatePlaylistsDir baggage
+
+                name :: rest ->
+                    { path = playlistPath (String.dropRight 5 name)
+                    , tag = Tag.toString (LoadPlaylists PublicPlaylistRead)
+                    }
+                        |> Wnfs.readUtf8 Wnfs.Public
+                        |> Ongoing
+                            (PlaylistsBaggage { b | publicPlaylistsTodo = rest })
+
+        _ ->
+            checkPrivatePlaylistsDir baggage
+
+
+
+-- PLAYLISTS  ░░  PRIVATE
+
+
+checkPrivatePlaylistsDir : HypaethralBaggage -> Proceedings
+checkPrivatePlaylistsDir baggage =
+    { path = playlistsPath
+    , tag = Tag.toString (LoadPlaylists PrivatePlaylistsDirectoryExists)
+    }
+        |> Wnfs.exists Wnfs.Private
+        |> Ongoing baggage
+
+
+readPrivatePlaylistOrMoveOn : HypaethralBaggage -> Proceedings
+readPrivatePlaylistOrMoveOn baggage =
+    case baggage of
+        PlaylistsBaggage b ->
+            case b.privatePlaylistsTodo of
+                [] ->
+                    finalisePlaylists baggage
+
+                name :: rest ->
+                    { path = playlistPath (String.dropRight 5 name)
+                    , tag = Tag.toString (LoadPlaylists PrivatePlaylistRead)
+                    }
+                        |> Wnfs.readUtf8 Wnfs.Private
+                        |> Ongoing
+                            (PlaylistsBaggage { b | privatePlaylistsTodo = rest })
+
+        _ ->
+            finalisePlaylists baggage

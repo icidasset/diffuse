@@ -66,9 +66,11 @@ tagEnum =
     , LoadPlaylists PrivatePlaylistsDirectoryCreated
     , LoadPlaylists PrivatePlaylistsDirectoryExists
     , LoadPlaylists PrivatePlaylistsDirectoryListed
+    , LoadPlaylists PrivatePlaylistRead
     , LoadPlaylists PublicPlaylistsDirectoryCreated
     , LoadPlaylists PublicPlaylistsDirectoryExists
     , LoadPlaylists PublicPlaylistsDirectoryListed
+    , LoadPlaylists PublicPlaylistRead
     ]
         |> List.map tagIterator
         |> Enum.create
@@ -101,7 +103,9 @@ stepEnum =
         , ( "PrivatePlaylistsDirectoryCreated", PrivatePlaylistsDirectoryCreated )
         , ( "PrivatePlaylistsDirectoryExists", PrivatePlaylistsDirectoryExists )
         , ( "PrivatePlaylistsDirectoryListed", PrivatePlaylistsDirectoryListed )
+        , ( "PrivatePlaylistRead", PrivatePlaylistRead )
         , ( "PublicPlaylistsDirectoryCreated", PublicPlaylistsDirectoryCreated )
         , ( "PublicPlaylistsDirectoryExists", PublicPlaylistsDirectoryExists )
         , ( "PublicPlaylistsDirectoryListed", PublicPlaylistsDirectoryListed )
+        , ( "PublicPlaylistRead", PublicPlaylistRead )
         ]

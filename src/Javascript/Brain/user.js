@@ -101,7 +101,6 @@ let wn
 
 
 ports.webnativeRequest = app => request => {
-  console.log("User request", request)
   constructFission().then(() => {
     webnativeElm.request({ app: app, request: request })
   })
