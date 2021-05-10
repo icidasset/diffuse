@@ -11,7 +11,7 @@ import Playlists exposing (Playlist)
 
 type Tag
     = GotHypaethralData
-    | Published
+    | PublishedHypaethralData
     | WroteHypaethralData
       -----------------------------------------
       -- Flows
@@ -28,9 +28,11 @@ type Step
     | PrivatePlaylistsDirectoryCreated
     | PrivatePlaylistsDirectoryExists
     | PrivatePlaylistsDirectoryListed
+    | PrivatePlaylistRead
     | PublicPlaylistsDirectoryCreated
     | PublicPlaylistsDirectoryExists
     | PublicPlaylistsDirectoryListed
+    | PublicPlaylistRead
 
 
 
@@ -53,7 +55,7 @@ toString =
 
 tagEnum =
     [ GotHypaethralData
-    , Published
+    , PublishedHypaethralData
     , WroteHypaethralData
 
     -----------------------------------------
@@ -77,8 +79,8 @@ tagIterator tag =
         GotHypaethralData ->
             ( "GotHypaethralData", GotHypaethralData )
 
-        Published ->
-            ( "Published", Published )
+        PublishedHypaethralData ->
+            ( "PublishedHypaethralData", PublishedHypaethralData )
 
         WroteHypaethralData ->
             ( "WroteHypaethralData", WroteHypaethralData )

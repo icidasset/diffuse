@@ -176,10 +176,7 @@ gotWebnativeResponse response model =
                 |> Maybe.map (Zipper.current >> Tuple3.third)
                 |> Maybe.withDefault BaggageClaimed
     in
-    case Debug.log "proceed" <| Fission.proceed response baggage of
-        Fission.FullStop ->
-            Return.singleton model
-
+    case Fission.proceed response baggage of
         Fission.Hypaethral data ->
             hypaethralDataRetrieved data model
 
@@ -207,6 +204,9 @@ gotWebnativeResponse response model =
 
         Fission.SaveNextHypaethralBit ->
             saveNextHypaethralBit model
+
+        Fission.Stopping ->
+            Return.singleton model
 
 
 signIn : Json.Value -> Manager
@@ -526,7 +526,8 @@ saveHypaethralData bit model =
         Just (Fission params) ->
             json
                 |> Fission.save params bit filename
-                |> Ports.webnativeRequest
+                |> List.map Ports.webnativeRequest
+                |> Cmd.batch
                 |> return model
 
         Just (Ipfs { apiOrigin }) ->
@@ -618,10 +619,6 @@ depending on what's in the queue saving queue
 -}
 saveNextHypaethralBit : Manager
 saveNextHypaethralBit model =
-    let
-        _ =
-            Debug.log "saveNext" model.hypaethralStorage
-    in
     case model.hypaethralStorage of
         _ :: item :: rest ->
             saveHypaethralData

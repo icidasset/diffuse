@@ -16,7 +16,7 @@ import Webnative.Tag as Tag
 
 gotWebnativeResponse : Webnative.Response -> Manager
 gotWebnativeResponse response model =
-    case Debug.log "🔮" <| Webnative.decodeResponse Tag.fromString response of
+    case Webnative.decodeResponse Tag.fromString response of
         Webnative (Initialisation state) ->
             if Webnative.isAuthenticated state then
                 Authentication.signIn

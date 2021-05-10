@@ -100,8 +100,10 @@ type HypaethralBaggage
     = BaggageClaimed
       --
     | PlaylistsBaggage
-        { publicPlaylists : List Json.Value
-        , privatePlaylists : List Json.Value
+        { publicPlaylistsRead : List Json.Value
+        , publicPlaylistsTodo : List String
+        , privatePlaylistsRead : List Json.Value
+        , privatePlaylistsTodo : List String
         }
 
 

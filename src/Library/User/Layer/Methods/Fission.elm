@@ -5,7 +5,7 @@ import Json.Encode as Json
 import List.Zipper as Zipper exposing (Zipper)
 import Playlists exposing (Playlist)
 import Return
-import User.Layer exposing (HypaethralBaggage, HypaethralBit(..))
+import User.Layer exposing (HypaethralBaggage(..), HypaethralBit(..))
 import Webnative exposing (Artifact(..), DecodedResponse(..), NoArtifact(..))
 import Webnative.Constants exposing (..)
 import Webnative.Path as Path exposing (Directory, File, Path)
@@ -19,11 +19,11 @@ import Wnfs exposing (Artifact(..))
 
 type Proceedings
     = Hypaethral Json.Value
-    | FullStop
     | LoadedFileSystem
     | Ongoing HypaethralBaggage Webnative.Request
     | OtherRequest Webnative.Request
     | SaveNextHypaethralBit
+    | Stopping
 
 
 
@@ -34,7 +34,7 @@ playlistPath : String -> Path File
 playlistPath name =
     playlistsPath
         |> Path.unwrap
-        |> (\p -> p ++ [ name, ".json" ])
+        |> (\p -> p ++ [ name ++ ".json" ])
         |> Path.file
 
 
@@ -44,27 +44,14 @@ playlistPath name =
 
 proceed : Webnative.Response -> HypaethralBaggage -> Proceedings
 proceed response baggage =
-    case Debug.log "🍿" <| Webnative.decodeResponse Tag.fromString response of
+    case Webnative.decodeResponse Tag.fromString response of
         Webnative (Webnative.NoArtifact LoadedFileSystemManually) ->
             LoadedFileSystem
 
         -----------------------------------------
-        -- Private Playlists Directory Exists
+        -- (1) Public Playlists
         -----------------------------------------
-        Wnfs (LoadPlaylists PrivatePlaylistsDirectoryExists) (Boolean True) ->
-            { path = playlistsPath
-            , tag = Tag.toString (LoadPlaylists PrivatePlaylistsDirectoryListed)
-            }
-                |> Wnfs.ls Wnfs.Private
-                |> Ongoing baggage
-
-        Wnfs (LoadPlaylists PrivatePlaylistsDirectoryExists) (Boolean False) ->
-            -- TODO: Not sure this is correct
-            FullStop
-
-        -----------------------------------------
-        -- Public Playlists Directory Exists
-        -----------------------------------------
+        -- Directory Exists
         Wnfs (LoadPlaylists PublicPlaylistsDirectoryExists) (Boolean True) ->
             { path = playlistsPath
             , tag = Tag.toString (LoadPlaylists PublicPlaylistsDirectoryListed)
@@ -79,9 +66,7 @@ proceed response baggage =
                 |> Wnfs.ls Wnfs.Private
                 |> Ongoing baggage
 
-        -----------------------------------------
-        -- Directory Listings
-        -----------------------------------------
+        -- List
         Wnfs (LoadPlaylists PublicPlaylistsDirectoryListed) (DirectoryContent listing) ->
             let
                 _ =
@@ -93,6 +78,23 @@ proceed response baggage =
                 |> Wnfs.exists Wnfs.Private
                 |> Ongoing baggage
 
+        -- Read
+        --
+        -----------------------------------------
+        -- (2) Private Playlists
+        -----------------------------------------
+        -- Directory Exists
+        Wnfs (LoadPlaylists PrivatePlaylistsDirectoryExists) (Boolean True) ->
+            { path = playlistsPath
+            , tag = Tag.toString (LoadPlaylists PrivatePlaylistsDirectoryListed)
+            }
+                |> Wnfs.ls Wnfs.Private
+                |> Ongoing baggage
+
+        Wnfs (LoadPlaylists PrivatePlaylistsDirectoryExists) (Boolean False) ->
+            finalisePlaylists baggage
+
+        -- List
         Wnfs (LoadPlaylists PrivatePlaylistsDirectoryListed) (DirectoryContent listing) ->
             let
                 _ =
@@ -101,30 +103,29 @@ proceed response baggage =
             -- TODO
             Hypaethral Json.null
 
-        --
-        Wnfs GotHypaethralData (Utf8Content json) ->
-            json
-                |> Decode.decodeString Decode.value
-                |> Result.map Hypaethral
-                |> Result.withDefault FullStop
-
         -----------------------------------------
-        -- ...
+        -- Other
         -----------------------------------------
         WnfsError (Wnfs.JavascriptError "Path does not exist") ->
             Hypaethral Json.null
 
-        Wnfs Published _ ->
+        Wnfs GotHypaethralData (Utf8Content json) ->
+            json
+                |> Decode.decodeString Decode.value
+                |> Result.map Hypaethral
+                |> Result.withDefault Stopping
+
+        Wnfs PublishedHypaethralData _ ->
             SaveNextHypaethralBit
 
         Wnfs WroteHypaethralData Wnfs.NoArtifact ->
-            { tag = Tag.toString Published }
+            { tag = Tag.toString PublishedHypaethralData }
                 |> Wnfs.publish
                 |> OtherRequest
 
         _ ->
             -- TODO: Error handling
-            FullStop
+            Stopping
 
 
 
@@ -153,35 +154,66 @@ retrieve { initialised } bit filename =
         Webnative.loadFileSystem permissions
 
 
-save : { initialised : Bool } -> HypaethralBit -> String -> Json.Value -> Webnative.Request
+save : { initialised : Bool } -> HypaethralBit -> String -> Json.Value -> List Webnative.Request
 save { initialised } bit filename dataCollection =
     if initialised then
         case bit of
             Playlists ->
-                -- Write each playlist to file
-                let
-                    -- TODO
-                    _ =
-                        Debug.log "save playlist" filename
-                in
-                Wnfs.writeUtf8
-                    (Wnfs.AppData app)
-                    { path = Path.file [ filename ]
-                    , tag = Tag.toString WroteHypaethralData
-                    }
-                    (Json.encode 0 dataCollection)
+                -- Write each playlist to a file
+                dataCollection
+                    |> Decode.decodeValue (Decode.list Decode.value)
+                    |> Result.withDefault []
+                    |> List.filterMap
+                        (\playlist ->
+                            playlist
+                                |> Decode.decodeValue
+                                    (Decode.map2
+                                        Tuple.pair
+                                        (Decode.field "name" Decode.string)
+                                        (Decode.field "public" Decode.bool)
+                                    )
+                                |> Result.toMaybe
+                                |> Maybe.map (Tuple.pair playlist)
+                        )
+                    |> List.map
+                        (\( playlist, ( name, public ) ) ->
+                            Wnfs.writeUtf8
+                                (if public then
+                                    Wnfs.Public
+
+                                 else
+                                    Wnfs.Private
+                                )
+                                { path = playlistPath name
+                                , tag = Tag.toString WroteHypaethralData
+                                }
+                                (Json.encode 0 playlist)
+                        )
 
             _ ->
-                let
-                    _ =
-                        Debug.log "🌳 save" filename
-                in
-                Wnfs.writeUtf8
+                [ Wnfs.writeUtf8
                     (Wnfs.AppData app)
                     { path = Path.file [ filename ]
                     , tag = Tag.toString WroteHypaethralData
                     }
                     (Json.encode 0 dataCollection)
+                ]
 
     else
-        Webnative.loadFileSystem permissions
+        [ Webnative.loadFileSystem permissions ]
+
+
+
+-- PLAYLISTS
+
+
+finalisePlaylists : HypaethralBaggage -> Proceedings
+finalisePlaylists baggage =
+    case baggage of
+        PlaylistsBaggage { publicPlaylistsRead, privatePlaylistsRead } ->
+            (publicPlaylistsRead ++ privatePlaylistsRead)
+                |> Json.list identity
+                |> Hypaethral
+
+        _ ->
+            Hypaethral Json.null
