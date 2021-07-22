@@ -1,3 +1,7 @@
+// TODO: Remove once fixed in webnative-elm
+//       https://github.com/fission-suite/webnative-elm/issues/17
+
+
 const DEFAULT_PORT_NAMES = {
   incoming: "webnativeRequest",
   outgoing: "webnativeResponse"
