@@ -421,7 +421,7 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
                         ]
                         [ UI.Kit.buttonWithOptions
                             Html.a
-                            [ href "about"
+                            [ href "about/"
                             , target "_blank"
                             ]
                             UI.Kit.Gray

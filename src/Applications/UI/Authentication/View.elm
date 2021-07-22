@@ -186,7 +186,7 @@ view_ state =
             ]
             [ slab
                 a
-                [ href "about" ]
+                [ href "about/" ]
                 [ C.border_b
                 , C.border_white_60
                 , C.italic
