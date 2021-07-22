@@ -7,6 +7,7 @@
 - **Adds a keyboard shortcut `L` to quickly select a playlist**
 - **Adds the ability to migrate between data-storage methods**
 - Added new background images and replaced a few older ones
+- Adds ability to store your data on your [Fission](https://fission.codes/) filesystem.
 - Adds ability to sync tags for individual tracks
 - Adds keyboard shortcuts to switch screens
 - Changes the keyboard shortcuts for seeking and changing tracks (see overview on about page)
@@ -19,6 +20,7 @@
 - Fixes various issues with add-to-playlist overlay
 - Improve about pages (split up into multiple pages)
 - Improved search (able to find incomplete terms)
+- Improved application loading
 - Only show generated playlists for enabled sources
 - Removes support for Blockstack & Textile
 
