@@ -176,7 +176,10 @@ gotWebnativeResponse response model =
                 |> Maybe.map (Zipper.current >> Tuple3.third)
                 |> Maybe.withDefault BaggageClaimed
     in
-    case Fission.proceed response baggage of
+    case Debug.log "" <| Fission.proceed response baggage of
+        Fission.Error err ->
+            Common.reportUI Alien.ReportError err model
+
         Fission.Hypaethral data ->
             hypaethralDataRetrieved data model
 
@@ -193,7 +196,12 @@ gotWebnativeResponse response model =
 
         Fission.Ongoing newBaggage request ->
             model.hypaethralRetrieval
-                |> Maybe.map (Zipper.map <| Tuple3.mapThird <| always newBaggage)
+                |> Maybe.map
+                    (newBaggage
+                        |> always
+                        |> Tuple3.mapThird
+                        |> Zipper.map
+                    )
                 |> (\h -> { model | hypaethralRetrieval = h })
                 |> Return.communicate (Ports.webnativeRequest request)
 

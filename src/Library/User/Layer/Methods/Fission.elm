@@ -18,7 +18,8 @@ import Wnfs exposing (Artifact(..))
 
 
 type Proceedings
-    = Hypaethral Json.Value
+    = Error String
+    | Hypaethral Json.Value
     | LoadedFileSystem
     | Ongoing HypaethralBaggage Webnative.Request
     | OtherRequest Webnative.Request
@@ -44,7 +45,7 @@ playlistPath name =
 
 proceed : Webnative.Response -> HypaethralBaggage -> Proceedings
 proceed response baggage =
-    case Webnative.decodeResponse Tag.fromString response of
+    case Debug.log "" <| Webnative.decodeResponse Tag.fromString response of
         Webnative (Webnative.NoArtifact LoadedFileSystemManually) ->
             LoadedFileSystem
 
@@ -142,6 +143,12 @@ proceed response baggage =
         WnfsError (Wnfs.JavascriptError "Path does not exist") ->
             Hypaethral Json.null
 
+        WnfsError err ->
+            Error (Wnfs.error err)
+
+        WebnativeError err ->
+            Error (Webnative.error err)
+
         Wnfs GotHypaethralData (Utf8Content json) ->
             json
                 |> Decode.decodeString Decode.value
@@ -157,7 +164,6 @@ proceed response baggage =
                 |> OtherRequest
 
         _ ->
-            -- TODO: Error handling
             Stopping
 
 
@@ -169,13 +175,15 @@ retrieve : { initialised : Bool } -> HypaethralBit -> String -> Webnative.Reques
 retrieve { initialised } bit filename =
     if initialised then
         case bit of
-            Playlists ->
-                Wnfs.exists
-                    Wnfs.Public
-                    { path = playlistsPath
-                    , tag = Tag.toString (LoadPlaylists PublicPlaylistsDirectoryExists)
-                    }
-
+            -- NOTE: Currently no custom logic for playlists,
+            --       too many unsolved variables.
+            --
+            -- Playlists ->
+            --     Wnfs.exists
+            --         Wnfs.Public
+            --         { path = playlistsPath
+            --         , tag = Tag.toString (LoadPlaylists PublicPlaylistsDirectoryExists)
+            --         }
             _ ->
                 Wnfs.readUtf8
                     (Wnfs.AppData app)
@@ -190,39 +198,49 @@ retrieve { initialised } bit filename =
 save : { initialised : Bool } -> HypaethralBit -> String -> Json.Value -> List Webnative.Request
 save { initialised } bit filename dataCollection =
     if initialised then
-        case bit of
-            Playlists ->
-                -- Write each playlist to a file
-                dataCollection
-                    |> Decode.decodeValue (Decode.list Decode.value)
-                    |> Result.withDefault []
-                    |> List.filterMap
-                        (\playlist ->
-                            playlist
-                                |> Decode.decodeValue
-                                    (Decode.map2
-                                        Tuple.pair
-                                        (Decode.field "name" Decode.string)
-                                        (Decode.field "public" Decode.bool)
-                                    )
-                                |> Result.toMaybe
-                                |> Maybe.map (Tuple.pair playlist)
-                        )
-                    |> List.map
-                        (\( playlist, ( name, public ) ) ->
-                            Wnfs.writeUtf8
-                                (if public then
-                                    Wnfs.Public
-
-                                 else
-                                    Wnfs.Private
-                                )
-                                { path = playlistPath name
-                                , tag = Tag.toString WroteHypaethralData
-                                }
-                                (Json.encode 0 playlist)
-                        )
-
+        case Debug.log "save" bit of
+            -- TODO: Write each playlist to a file
+            --       Not in use, because of concurrency issues with publish.
+            --       https://github.com/fission-suite/webnative/issues/267
+            -- Playlists ->
+            --     dataCollection
+            --         |> Decode.decodeValue (Decode.list Decode.value)
+            --         |> Result.withDefault []
+            --         |> List.filterMap
+            --             (\playlist ->
+            --                 playlist
+            --                     |> Decode.decodeValue
+            --                         (Decode.map2
+            --                             Tuple.pair
+            --                             (Decode.field "name" Decode.string)
+            --                             (Decode.field "public" Decode.bool)
+            --                         )
+            --                     |> Result.toMaybe
+            --                     |> Maybe.map (Tuple.pair playlist)
+            --             )
+            --         |> List.map
+            --             (\( playlist, ( name, public ) ) ->
+            --                 Wnfs.writeUtf8
+            --                     (if public then
+            --                         Wnfs.Public
+            --
+            --                      else
+            --                         Wnfs.Private
+            --                     )
+            --                     { path = playlistPath name
+            --                     , tag = Tag.toString WrotePlaylist
+            --                     }
+            --                     (Json.encode 0 playlist)
+            --             )
+            --         |> (\list ->
+            --                 case list of
+            --                     [] ->
+            --                         [ Wnfs.publish { tag = Tag.toString PublishedHypaethralData }
+            --                         ]
+            --
+            --                     l ->
+            --                         l
+            --            )
             _ ->
                 [ Wnfs.writeUtf8
                     (Wnfs.AppData app)

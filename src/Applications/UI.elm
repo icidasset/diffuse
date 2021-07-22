@@ -683,4 +683,4 @@ translateAlienError tag data err =
             TracksMsg (Tracks.StoredInCache data <| Just err)
 
         _ ->
-            ShowNotification (Notifications.error err)
+            ShowNotification (Notifications.stickyError err)

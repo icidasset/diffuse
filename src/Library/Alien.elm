@@ -72,6 +72,7 @@ type Tag
     | NotAuthenticated
     | ReloadTracks
     | RemoveTracksByPath
+    | ReportError
     | ReportProcessingError
     | ReportProcessingProgress
     | UpdateSourceData
@@ -130,6 +131,7 @@ enum =
         , ( "NOT_AUTHENTICATED", NotAuthenticated )
         , ( "RELOAD_TRACKS", ReloadTracks )
         , ( "REMOVE_TRACKS_BY_PATH", RemoveTracksByPath )
+        , ( "REPORT_ERROR", ReportError )
         , ( "REPORT_PROCESSING_ERROR", ReportProcessingError )
         , ( "REPORT_PROCESSING_PROGRESS", ReportProcessingProgress )
         , ( "UPDATE_SOURCE_DATA", UpdateSourceData )

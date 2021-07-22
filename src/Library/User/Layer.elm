@@ -51,7 +51,9 @@ methodSupportsPublicData method =
             False
 
         Fission _ ->
-            True
+            -- NOTE: Temporarily disabled,
+            --       since we don't actually support public playlists yet.
+            False
 
         Ipfs _ ->
             False
