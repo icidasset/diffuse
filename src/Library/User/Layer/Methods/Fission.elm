@@ -45,7 +45,7 @@ playlistPath name =
 
 proceed : Webnative.Response -> HypaethralBaggage -> Proceedings
 proceed response baggage =
-    case Debug.log "" <| Webnative.decodeResponse Tag.fromString response of
+    case Webnative.decodeResponse Tag.fromString response of
         Webnative (Webnative.NoArtifact LoadedFileSystemManually) ->
             LoadedFileSystem
 
@@ -198,7 +198,7 @@ retrieve { initialised } bit filename =
 save : { initialised : Bool } -> HypaethralBit -> String -> Json.Value -> List Webnative.Request
 save { initialised } bit filename dataCollection =
     if initialised then
-        case Debug.log "save" bit of
+        case bit of
             -- TODO: Write each playlist to a file
             --       Not in use, because of concurrency issues with publish.
             --       https://github.com/fission-suite/webnative/issues/267

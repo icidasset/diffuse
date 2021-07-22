@@ -176,7 +176,7 @@ gotWebnativeResponse response model =
                 |> Maybe.map (Zipper.current >> Tuple3.third)
                 |> Maybe.withDefault BaggageClaimed
     in
-    case Debug.log "" <| Fission.proceed response baggage of
+    case Fission.proceed response baggage of
         Fission.Error err ->
             Common.reportUI Alien.ReportError err model
 
