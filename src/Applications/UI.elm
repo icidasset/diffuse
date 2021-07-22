@@ -460,6 +460,9 @@ update msg =
         Export ->
             User.export
 
+        GotWebnativeResponse a ->
+            User.gotWebnativeResponse a
+
         ImportFile a ->
             User.importFile a
 
@@ -577,6 +580,7 @@ subscriptions model =
         -- 📭 Other
         -----------------------------------------
         , Ports.setIsOnline SetIsOnline
+        , Ports.webnativeResponse GotWebnativeResponse
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]
@@ -679,4 +683,4 @@ translateAlienError tag data err =
             TracksMsg (Tracks.StoredInCache data <| Just err)
 
         _ ->
-            ShowNotification (Notifications.error err)
+            ShowNotification (Notifications.stickyError err)

@@ -15,7 +15,7 @@ import "../../build/vendor/pep"
 
 import * as audioEngine from "./audio-engine"
 import * as db from "./indexed-db"
-import { WEBNATIVE_PERMISSIONS, WEBNATIVE_STAGING_MODE, debounce, fileExtension } from "./common"
+import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, debounce, fileExtension } from "./common"
 
 
 // 🔐
@@ -130,7 +130,7 @@ wire.brain = () => {
 
 function handleAction(action, data, ports) { switch (action) {
   case "DOWNLOAD_TRACKS": return downloadTracks(data)
-  case "SETUP_WEBNATIVE": return setupWebnative(ports)
+  case "SETUP_WEBNATIVE_IFRAME": return setupWebnativeIframe(ports)
 }}
 
 
@@ -264,35 +264,10 @@ let wn
 
 
 wire.webnative = () => {
-  app.ports.authenticateWithFission.subscribe(authenticateWithFission)
-  app.ports.redirectToFissionForAuth.subscribe(redirectToFissionForAuth)
-}
-
-
-function authenticateWithFission() {
-  loadWebnative().then(() => {
-    return wn.initialise({
-      permissions: WEBNATIVE_PERMISSIONS,
-      loadFileSystem: false
+  app.ports.webnativeRequest.subscribe(request => {
+    loadWebnative().then(() => {
+      webnativeElm.request({ app: app, request: request })
     })
-
-  }).then(state => {
-    if (state.authenticated) brain.postMessage({
-      tag: "SIGN_IN",
-      data: { method: "FISSION", migratingData: false, passphrase: null },
-      error: null
-    })
-
-  })
-}
-
-
-function redirectToFissionForAuth() {
-  loadWebnative().then(() => {
-    wn.redirectToLobby(
-      WEBNATIVE_PERMISSIONS,
-      `${location.origin}${location.pathname}?action=authenticate/fission`
-    )
   })
 }
 
@@ -300,25 +275,23 @@ function redirectToFissionForAuth() {
 function loadWebnative() {
   if (wn) return Promise.resolve()
 
-  return loadScript("vendor/webnative.min.js").then(() => {
-    wn = window.webnative
+  return loadScript("vendor/webnative.min.js")
+    .then(() => loadScript("vendor/webnative-elm.min.js"))
+    .then(() => {
+      wn = window.webnative
 
-    if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
-      wn.setup.debug({ enabled: true })
-    }
+      if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
+        wn.setup.debug({ enabled: true })
+      }
 
-    if (WEBNATIVE_STAGING_MODE) {
-      wn.setup.endpoints({
-        api: "https://runfission.net",
-        lobby: "http://auth.runfission.net",
-        user: "fissionuser.net"
-      })
-    }
-  })
+      if (WEBNATIVE_STAGING_MODE) {
+        wn.setup.endpoints(WEBNATIVE_STAGING_ENV)
+      }
+    })
 }
 
 
-function setupWebnative(ports) {
+function setupWebnativeIframe(ports) {
   loadWebnative()
     .then(_ => wn.ipfs.iframe())
     .then(iframePort => ports[0].postMessage("connect", [ iframePort ]))

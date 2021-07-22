@@ -3,12 +3,13 @@ module Brain.Types exposing (..)
 import Brain.Sources.Processing.Types as Processing
 import Brain.User.Types as User
 import Debouncer.Basic as Debouncer exposing (Debouncer)
+import Dict exposing (Dict)
 import Json.Decode as Json
 import List.Zipper exposing (Zipper)
 import Management
 import Sources.Processing as Processing
 import Time
-import User.Layer as User exposing (HypaethralBit(..))
+import User.Layer as User exposing (HypaethralBaggage, HypaethralBit(..))
 
 
 
@@ -27,8 +28,8 @@ type alias Model =
     { authMethod : Maybe User.Method
     , currentTime : Time.Posix
     , hypaethralDebouncer : Debouncer HypaethralBit (List HypaethralBit)
-    , hypaethralRetrieval : Maybe (Zipper ( HypaethralBit, Json.Value ))
-    , hypaethralStorage : List HypaethralBit
+    , hypaethralRetrieval : Maybe (Zipper ( HypaethralBit, Json.Value, HypaethralBaggage ))
+    , hypaethralStorage : List { bit : HypaethralBit, saving : Bool }
     , hypaethralUserData : User.HypaethralData
     , legacyMode : Bool
     , migratingData : Bool

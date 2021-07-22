@@ -38,7 +38,7 @@ import Tracks.Encoding as Tracks
 
 type Method
     = Dropbox { token : String }
-    | Fission
+    | Fission { initialised : Bool }
     | Ipfs { apiOrigin : String }
     | Local
     | RemoteStorage { userAddress : String, token : String }
@@ -50,8 +50,10 @@ methodSupportsPublicData method =
         Dropbox _ ->
             False
 
-        Fission ->
-            True
+        Fission _ ->
+            -- NOTE: Temporarily disabled,
+            --       since we don't actually support public playlists yet.
+            False
 
         Ipfs _ ->
             False
@@ -96,6 +98,12 @@ type HypaethralBit
     | Tracks
 
 
+type HypaethralBaggage
+    = BaggageClaimed
+      --
+    | PlaylistsBaggage PlaylistsBaggageAttributes
+
+
 type alias HypaethralData =
     { favourites : List Tracks.Favourite
     , playlists : List Playlists.Playlist
@@ -103,6 +111,14 @@ type alias HypaethralData =
     , settings : Maybe Settings.Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
+    }
+
+
+type alias PlaylistsBaggageAttributes =
+    { publicPlaylistsRead : List Json.Value
+    , publicPlaylistsTodo : List String
+    , privatePlaylistsRead : List Json.Value
+    , privatePlaylistsTodo : List String
     }
 
 
@@ -127,7 +143,7 @@ methodFromString string =
             Just (Dropbox { token = t })
 
         [ "FISSION" ] ->
-            Just Fission
+            Just (Fission { initialised = False })
 
         [ "IPFS", a ] ->
             Just (Ipfs { apiOrigin = a })
@@ -152,7 +168,7 @@ methodToString method =
                 , token
                 ]
 
-        Fission ->
+        Fission _ ->
             "FISSION"
 
         Ipfs { apiOrigin } ->
@@ -327,8 +343,22 @@ hypaethralDataDecoder =
         |> optional (hypaethralBitKey Tracks) (Json.listIgnore Tracks.trackDecoder) []
 
 
-putHypaethralJsonBitsTogether : List ( HypaethralBit, Json.Value ) -> Json.Value
+putHypaethralJsonBitsTogether : List ( HypaethralBit, Json.Value, HypaethralBaggage ) -> Json.Value
 putHypaethralJsonBitsTogether bits =
     bits
-        |> List.map (Tuple.mapFirst hypaethralBitKey)
+        |> List.map (\( a, b, _ ) -> ( hypaethralBitKey a, b ))
         |> Json.Encode.object
+
+
+
+-- 🔱  ░░  BAGGAGE
+
+
+mapPlaylistsBaggage : (PlaylistsBaggageAttributes -> PlaylistsBaggageAttributes) -> HypaethralBaggage -> HypaethralBaggage
+mapPlaylistsBaggage fn baggage =
+    case baggage of
+        PlaylistsBaggage p ->
+            PlaylistsBaggage (fn p)
+
+        b ->
+            b
