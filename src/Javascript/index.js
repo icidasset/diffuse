@@ -187,7 +187,7 @@ function activeQueueItemChanged(item) {
   // 🎵
   if (item) {
     const coverPrep = {
-      cacheKey:       btoa(item.trackTags.artist + " --- " + item.trackTags.album),
+      cacheKey:       btoa(unescape(encodeURIComponent(item.trackTags.artist + " --- " + item.trackTags.album))),
       trackFilename:  item.trackPath.split("/").reverse()[0],
       trackPath:      item.trackPath,
       trackSourceId:  item.sourceId,

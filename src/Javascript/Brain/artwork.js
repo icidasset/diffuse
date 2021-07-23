@@ -19,6 +19,11 @@ export function find(prep) {
 }
 
 
+function decodeCacheKey(cacheKey) {
+  return decodeURIComponent(escape(atob(cacheKey)))
+}
+
+
 
 // 1. TAGS
 
@@ -49,7 +54,7 @@ function findUsingTags(prep) {
 
 
 function findUsingMusicBrainz(prep) {
-  const parts = atob(prep.cacheKey).split(" --- ")
+  const parts = decodeCacheKey(prep.cacheKey).split(" --- ")
   const artist = parts[0]
   const album = parts[1] || parts[0]
 
@@ -85,7 +90,7 @@ function musicBrainzCover(remainingReleases) {
 
 
 function findUsingLastFm(prep) {
-  const query = atob(prep.cacheKey).replace(" --- ", " ")
+  const query = decodeCacheKey(prep.cacheKey).replace(" --- ", " ")
 
   return fetch(`https://ws.audioscrobbler.com/2.0/?method=album.search&album=${query}&api_key=4f0fe85b67baef8bb7d008a8754a95e5&format=json`)
     .then(r => r.json())
