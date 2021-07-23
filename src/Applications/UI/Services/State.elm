@@ -6,10 +6,9 @@ import Http
 import LastFm
 import Notifications
 import Return exposing (andThen, return)
-import Return.Ext as Return
 import String.Ext as String
-import UI.Common.State as Common exposing (showNotification)
-import UI.Types as UI exposing (Manager, Msg(..))
+import UI.Common.State exposing (showNotification)
+import UI.Types exposing (Manager, Msg(..))
 import UI.User.State.Export as User
 import Url
 

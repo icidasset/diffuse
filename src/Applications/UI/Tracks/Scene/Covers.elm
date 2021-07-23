@@ -13,15 +13,12 @@ import Html.Events as E
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
 import InfiniteList
-import List.Ext as List
-import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Queue
 import Task
 import Tracks exposing (..)
-import UI.Queue.Types as Queue
 import UI.Tracks.Scene as Scene
 import UI.Tracks.Scene.List
 import UI.Tracks.Types exposing (Msg(..))

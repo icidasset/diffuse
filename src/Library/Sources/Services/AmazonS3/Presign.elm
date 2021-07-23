@@ -4,7 +4,6 @@ import Binary exposing (Bits)
 import Common
 import Cryptography.Hmac as Hmac
 import DateFormat as Date
-import Dict
 import Dict.Ext as Dict
 import Hex
 import Maybe.Extra as Maybe

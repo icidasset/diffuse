@@ -2,13 +2,10 @@ module User.Layer.Methods.Fission exposing (..)
 
 import Json.Decode as Decode
 import Json.Encode as Json
-import List.Zipper as Zipper exposing (Zipper)
-import Playlists exposing (Playlist)
-import Return
-import User.Layer exposing (HypaethralBaggage(..), HypaethralBit(..), mapPlaylistsBaggage)
+import User.Layer exposing (HypaethralBaggage(..), HypaethralBit, mapPlaylistsBaggage)
 import Webnative exposing (Artifact(..), DecodedResponse(..), NoArtifact(..))
 import Webnative.Constants exposing (..)
-import Webnative.Path as Path exposing (Directory, File, Path)
+import Webnative.Path as Path exposing (File, Path)
 import Webnative.Tag as Tag exposing (Step(..), Tag(..))
 import Wnfs exposing (Artifact(..))
 

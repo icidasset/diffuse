@@ -8,7 +8,6 @@ import List.Extra as List
 import Monocle.Lens as Lens exposing (Lens)
 import Notifications exposing (Notification)
 import Return exposing (return)
-import Return.Ext as Return
 import Task
 import Tracks
 import UI.Notifications

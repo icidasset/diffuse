@@ -1,9 +1,8 @@
 module Brain.Sources.Processing.Types exposing (..)
 
-import Http exposing (Error(..))
+import Http
 import Json.Decode as Json
 import Sources.Processing exposing (..)
-import Tracks exposing (Track)
 
 
 

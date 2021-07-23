@@ -9,7 +9,6 @@ This basically re-exports `Sources.Services.IPFS.Marker`.
 
 -}
 
-import Sources.Processing exposing (Marker(..))
 import Sources.Services.Ipfs.Marker as IpfsMarker
 
 

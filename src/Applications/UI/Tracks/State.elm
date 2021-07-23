@@ -5,7 +5,6 @@ import Common exposing (..)
 import ContextMenu
 import Coordinates exposing (Coordinates)
 import Dict
-import Dict.Extra as Dict
 import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
 import Json.Decode as Json
@@ -20,8 +19,6 @@ import Queue
 import Return exposing (andThen, return)
 import Return.Ext as Return
 import Sources
-import Sources.Processing exposing (HttpMethod(..))
-import Task
 import Task.Extra as Task
 import Tracks exposing (..)
 import Tracks.Collection as Collection
@@ -37,7 +34,7 @@ import UI.Tracks.Covers as Covers
 import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Tracks.Types as Tracks exposing (..)
-import UI.Types as UI exposing (Manager, Model, Msg(..))
+import UI.Types exposing (Manager, Model, Msg(..))
 import UI.User.State.Export as User
 import User.Layer exposing (HypaethralData)
 

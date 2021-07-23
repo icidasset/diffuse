@@ -11,7 +11,7 @@ import Maybe.Extra as Maybe
 import Notifications
 import Process
 import Return exposing (andThen, return)
-import Return.Ext as Return exposing (communicate)
+import Return.Ext exposing (communicate)
 import Task
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
@@ -22,7 +22,6 @@ import UI.Playlists.Directory
 import UI.Ports as Ports
 import UI.Sources.State as Sources
 import UI.Tracks.State as Tracks
-import UI.Tracks.Types as Tracks
 import UI.Types as UI exposing (..)
 import UI.User.State.Export as User
 import Url.Ext as Url

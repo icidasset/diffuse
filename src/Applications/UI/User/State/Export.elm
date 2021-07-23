@@ -10,7 +10,7 @@ import Settings exposing (Settings)
 import Sources.Encoding as Sources
 import Tracks.Encoding as Tracks
 import UI.Ports as Ports
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 import User.Layer exposing (..)
 
 

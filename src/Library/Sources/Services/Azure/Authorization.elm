@@ -12,7 +12,6 @@ import BinaryBase64
 import Common
 import Cryptography.Hmac as Hmac
 import DateFormat as Date
-import Dict
 import Dict.Ext as Dict
 import SHA
 import Sources exposing (SourceData)

@@ -1,15 +1,13 @@
 module UI.Other.State exposing (..)
 
 import Alien
-import Common exposing (Switch(..))
 import Notifications
 import Return
-import Return.Ext as Return
 import Time
 import UI.Authentication.Types as Authentication
 import UI.Common.State as Common
 import UI.Ports as Ports
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 import User.Layer exposing (..)
 
 

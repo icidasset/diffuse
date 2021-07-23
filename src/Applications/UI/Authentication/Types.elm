@@ -3,7 +3,7 @@ module UI.Authentication.Types exposing (Msg(..), Question, State(..))
 import Html.Events.Extra.Mouse as Mouse
 import Http
 import Json.Decode as Json
-import User.Layer exposing (Method(..))
+import User.Layer exposing (Method)
 import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 

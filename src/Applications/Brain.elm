@@ -12,17 +12,14 @@ import Brain.User.Types as User
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import Json.Encode
-import Maybe.Extra as Maybe
 import Return
 import Return.Ext as Return
 import Sources.Processing as Processing
-import Sources.Processing.Encoding as Processing
 import Task
 import Time
 import Time.Ext as Time
-import Tracks.Encoding as Tracks
 import Url
-import User.Layer as User exposing (HypaethralBit(..))
+import User.Layer as User
 
 
 

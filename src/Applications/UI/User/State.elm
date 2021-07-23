@@ -1,10 +1,8 @@
 module UI.User.State exposing (..)
 
-import Alien
-import Return exposing (return)
+import Return
 import UI.Authentication.State as Authentication
-import UI.Ports as Ports
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 import User.Layer as User
 import Webnative exposing (Artifact(..), DecodedResponse(..))
 import Webnative.Tag as Tag

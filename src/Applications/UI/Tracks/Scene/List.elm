@@ -14,7 +14,6 @@ import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
 import InfiniteList
 import Json.Decode as Decode
-import List.Ext as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe

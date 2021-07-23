@@ -1,6 +1,5 @@
 module UI.Interface.State exposing (..)
 
-import Common exposing (Switch(..))
 import Debouncer.Basic as Debouncer
 import Maybe.Extra as Maybe
 import Notifications
@@ -12,8 +11,7 @@ import UI.Page as Page
 import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Types as UI exposing (..)
-import User.Layer exposing (..)
+import UI.Types exposing (..)
 
 
 

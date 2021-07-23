@@ -6,11 +6,11 @@ fission.yaml*
 *.yaml.lock
 *.tar.gz
 *.zip
+elm-stuff
 /.deploy*
 /.stack-work
 /build
 /diffuse
-/elm-stuff
 /node_modules
 /src/Library/Css/Classes.elm
 /TODO.md

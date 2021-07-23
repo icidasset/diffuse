@@ -3,7 +3,6 @@ module UI.View exposing (view)
 import Alfred exposing (Alfred)
 import Browser
 import Chunky exposing (..)
-import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Css.Classes as C
@@ -13,19 +12,9 @@ import Html.Events exposing (on)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
 import Json.Decode
-import List.Ext as List
-import List.Extra as List
 import Maybe.Extra as Maybe
-import Playlists.Encoding as Playlists
-import Queue
-import Settings
-import Sources
-import Sources.Encoding as Sources
-import Tracks
-import Tracks.Encoding as Tracks
 import UI.Alfred.View as Alfred
 import UI.Authentication.Common as Authentication
-import UI.Authentication.ContextMenu as Authentication
 import UI.Authentication.Types as Authentication
 import UI.Authentication.View as Authentication
 import UI.Backdrop as Backdrop
@@ -35,20 +24,16 @@ import UI.Equalizer.View as Equalizer
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
-import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.View as Playlists
 import UI.Queue.View as Queue
 import UI.Settings as Settings
 import UI.Settings.Page
-import UI.Sources.ContextMenu as Sources
 import UI.Sources.Page
 import UI.Sources.View as Sources
 import UI.Svg.Elements
-import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.View as Tracks
 import UI.Types exposing (..)
-import Url exposing (Protocol(..))
-import User.Layer exposing (..)
+import User.Layer
 
 
 

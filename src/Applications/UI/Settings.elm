@@ -10,7 +10,6 @@ import Html.Lazy
 import LastFm
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Settings
 import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit

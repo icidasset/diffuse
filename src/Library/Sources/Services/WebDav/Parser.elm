@@ -1,7 +1,7 @@
 module Sources.Services.WebDav.Parser exposing (..)
 
 import Maybe.Extra as Maybe
-import Sources.Processing exposing (Marker(..), TreeAnswer)
+import Sources.Processing exposing (Marker, TreeAnswer)
 import Sources.Services.Ipfs.Marker as Marker
 import String.Ext as String
 import Url

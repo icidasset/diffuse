@@ -7,6 +7,7 @@ SRC_DIR 				:= "./src"
 SYSTEM_DIR 			:= "./system"
 TEMPORARY_DIR 	:= "./elm-stuff/elm-tailwind-css"
 
+ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
 ETC_CMD					:= "pnpx etc"
 
 
@@ -96,13 +97,11 @@ default: dev
 	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/brain.elm.js --optimize
 	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js --optimize
 
-	{{NPM_DIR}}/.bin/terser {{BUILD_DIR}}/brain.elm.js \
-		--output {{BUILD_DIR}}/brain.elm.tmp.js \
-		--compress --mangle
+	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/brain.elm.js \
+		--minify --outfile={{BUILD_DIR}}/brain.elm.tmp.js
 
-	{{NPM_DIR}}/.bin/terser {{BUILD_DIR}}/ui.elm.js \
-		--output {{BUILD_DIR}}/ui.elm.tmp.js \
-		--compress --mangle
+	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/ui.elm.js \
+		--minify --outfile={{BUILD_DIR}}/ui.elm.tmp.js
 
 	rm {{BUILD_DIR}}/brain.elm.js
 	mv {{BUILD_DIR}}/brain.elm.tmp.js {{BUILD_DIR}}/brain.elm.js
@@ -114,58 +113,42 @@ default: dev
 	echo "> Compiling Javascript code"
 
 	# Main builds
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/index.js \
-		--mode none \
-		--output {{BUILD_DIR}}/ui.js
+	{{ESBUILD}} ./src/Javascript/index.js \
+		--outfile={{BUILD_DIR}}/ui.js
 
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/Brain/index.js \
-		--mode none \
-		--target webworker \
-		--output {{BUILD_DIR}}/brain.js
+	{{ESBUILD}} ./src/Javascript/Brain/index.js \
+		--inject:./system/Js/node-shims.js \
+		--outfile={{BUILD_DIR}}/brain.js
 
 	# Workers
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/Workers/search.js \
-		--mode none \
-		--target webworker \
-		--output {{BUILD_DIR}}/search.js
+	{{ESBUILD}} ./src/Javascript/Workers/search.js \
+		--outfile={{BUILD_DIR}}/search.js
 
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/Workers/service.js \
-		--mode none \
-		--target webworker \
-		--output {{BUILD_DIR}}/service-worker.js
+	{{ESBUILD}} ./src/Javascript/Workers/service.js \
+		--outfile={{BUILD_DIR}}/service-worker.js
 
 
 @js-prod: vendor-js
 	echo "> Compiling Javascript code (optimised)"
 
 	# Main builds
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/index.js \
-		--mode production \
-		--output {{BUILD_DIR}}/ui.js
+	{{ESBUILD}} ./src/Javascript/index.js \
+		--minify \
+		--outfile={{BUILD_DIR}}/ui.js
 
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/Brain/index.js \
-		--mode production \
-		--target webworker \
-		--output {{BUILD_DIR}}/brain.js
+	{{ESBUILD}} ./src/Javascript/Brain/index.js \
+		--minify \
+		--inject:./system/Js/node-shims.js \
+		--outfile={{BUILD_DIR}}/brain.js
 
 	# Workers
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/Workers/search.js \
-		--mode production \
-		--target webworker \
-		--output {{BUILD_DIR}}/search.js
+	{{ESBUILD}} ./src/Javascript/Workers/search.js \
+		--minify \
+		--outfile={{BUILD_DIR}}/search.js
 
-	{{NPM_DIR}}/.bin/webpack-cli \
-		--entry ./src/Javascript/Workers/service.js \
-		--mode production \
-		--target webworker \
-		--output {{BUILD_DIR}}/service-worker.js
+	{{ESBUILD}} ./src/Javascript/Workers/service.js \
+		--minify \
+		--outfile={{BUILD_DIR}}/service-worker.js
 
 
 @system:
@@ -180,13 +163,8 @@ default: dev
 	cp {{NPM_DIR}}/ipfs-message-port-client/dist/index.min.js {{BUILD_DIR}}/vendor/ipfs-message-port-client.min.js
 	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
 
-	{{NPM_DIR}}/.bin/terser {{NPM_DIR}}/webnative/dist/index.umd.js \
-		--output {{BUILD_DIR}}/vendor/webnative.min.js \
-		--compress --mangle
-
-	{{NPM_DIR}}/.bin/terser {{SRC_DIR}}/Static/webnative-elm.js \
-		--output {{BUILD_DIR}}/vendor/webnative-elm.min.js \
-		--compress --mangle
+	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/webnative/dist/index.umd.js --minify --outfile={{BUILD_DIR}}/vendor/webnative.min.js
+	{{NPM_DIR}}/.bin/esbuild {{SRC_DIR}}/Static/webnative-elm.js --minify --outfile={{BUILD_DIR}}/vendor/webnative-elm.min.js
 
 
 #

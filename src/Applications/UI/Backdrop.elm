@@ -9,7 +9,6 @@ import Html.Events exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode
 import Return exposing (return)
-import Return.Ext as Return
 import UI.Ports as Ports
 import UI.Types exposing (..)
 import UI.User.State.Export as User

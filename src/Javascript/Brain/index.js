@@ -10,8 +10,9 @@ import * as db from "../indexed-db"
 import * as processing from "../processing"
 import * as user from "./user"
 
-import { fromCache, identity, removeCache, reportError } from "./common"
+import { fromCache, removeCache, reportError } from "./common"
 import { sendData, storageCallback, toCache } from "./common"
+import { identity } from "../common"
 
 importScripts("brain.elm.js")
 importScripts("subworkers.js")

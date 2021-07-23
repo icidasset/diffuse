@@ -1,7 +1,7 @@
 module ContextMenu exposing (ContextMenu(..), Item(..), ItemProperties, anyItem, coordinates, justAnItem)
 
 import Coordinates exposing (Coordinates)
-import Material.Icons.Types exposing (Coloring(..))
+import Material.Icons.Types exposing (Coloring)
 import Svg exposing (Svg)
 
 

@@ -1,7 +1,6 @@
 module UI.Playlists.Directory exposing (generate)
 
 import Dict exposing (Dict)
-import List.Extra as List
 import Playlists exposing (..)
 import Set exposing (Set)
 import Sources exposing (Source)

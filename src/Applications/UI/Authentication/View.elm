@@ -1,7 +1,6 @@
 module UI.Authentication.View exposing (view)
 
 import Chunky exposing (..)
-import Common exposing (Switch(..))
 import Conditional exposing (..)
 import Css.Classes as C
 import Html exposing (Html, a, button, text)
@@ -13,8 +12,6 @@ import Html.Lazy as Lazy
 import Markdown
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Maybe.Extra as Maybe
-import String.Ext as String
 import Svg exposing (Svg)
 import UI.Authentication.Types as Authentication exposing (..)
 import UI.Kit

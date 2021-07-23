@@ -8,7 +8,6 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (href)
 import Html.Lazy as Lazy
 import Icons
-import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Queue exposing (..)
@@ -18,7 +17,7 @@ import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Queue.Page as Queue exposing (Page(..))
-import UI.Queue.Types as Queue exposing (..)
+import UI.Queue.Types exposing (..)
 import UI.Sources.Page
 import UI.Types as UI exposing (..)
 

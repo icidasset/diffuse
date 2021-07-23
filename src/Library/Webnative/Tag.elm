@@ -1,8 +1,6 @@
 module Webnative.Tag exposing (..)
 
-import Enum exposing (Enum)
-import List.Zipper as Zipper exposing (Zipper)
-import Playlists exposing (Playlist)
+import Enum
 
 
 

@@ -11,7 +11,6 @@ import Notifications
 import Playlists exposing (..)
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
-import Return.Ext as Return
 import Tracks exposing (IdentifiedTrack)
 import Tracks.Collection
 import UI.Alfred.State as Alfred
@@ -22,8 +21,7 @@ import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Page exposing (..)
 import UI.Ports as Ports
 import UI.Tracks.State as Tracks
-import UI.Tracks.Types as Tracks
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 import UI.User.State.Export as User
 
 

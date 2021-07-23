@@ -7,7 +7,6 @@ import Html exposing (Html)
 import Html.Attributes exposing (title)
 import Html.Events exposing (onClick)
 import Html.Events.Extra.Mouse as Mouse exposing (onWithOptions)
-import List.Ext as List
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import UI.DnD as DnD

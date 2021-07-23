@@ -2,14 +2,13 @@ module Brain.Types exposing (..)
 
 import Brain.Sources.Processing.Types as Processing
 import Brain.User.Types as User
-import Debouncer.Basic as Debouncer exposing (Debouncer)
-import Dict exposing (Dict)
+import Debouncer.Basic exposing (Debouncer)
 import Json.Decode as Json
 import List.Zipper exposing (Zipper)
 import Management
 import Sources.Processing as Processing
 import Time
-import User.Layer as User exposing (HypaethralBaggage, HypaethralBit(..))
+import User.Layer as User exposing (HypaethralBaggage, HypaethralBit)
 
 
 

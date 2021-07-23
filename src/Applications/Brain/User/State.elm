@@ -5,13 +5,11 @@ import Brain.Common.State as Common
 import Brain.Ports as Ports
 import Brain.Types as Brain exposing (..)
 import Brain.User.Types as User exposing (..)
-import Conditional exposing (..)
 import Debouncer.Basic as Debouncer
 import EverySet
 import Json.Decode as Decode
 import Json.Encode as Json
 import List.Zipper as Zipper
-import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
 import Return.Ext as Return
@@ -168,9 +166,6 @@ update msg =
 gotWebnativeResponse : Webnative.Response -> Manager
 gotWebnativeResponse response model =
     let
-        isQuery =
-            Maybe.isJust model.hypaethralRetrieval
-
         baggage =
             model.hypaethralRetrieval
                 |> Maybe.map (Zipper.current >> Tuple3.third)

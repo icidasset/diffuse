@@ -1,6 +1,6 @@
 module Management exposing (..)
 
-import Monocle.Lens as Lens exposing (Lens)
+import Monocle.Lens exposing (Lens)
 
 
 

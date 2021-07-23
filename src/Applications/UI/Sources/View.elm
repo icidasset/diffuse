@@ -11,7 +11,7 @@ import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Sources exposing (..)
-import UI.Kit exposing (ButtonType(..))
+import UI.Kit
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page

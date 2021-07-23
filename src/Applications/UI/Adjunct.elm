@@ -3,7 +3,6 @@ module UI.Adjunct exposing (..)
 import Keyboard
 import Maybe.Extra as Maybe
 import Return
-import Return.Ext as Return
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
 import UI.Authentication.Common as Authentication
@@ -17,7 +16,7 @@ import UI.Queue.State as Queue
 import UI.Settings.Page as Settings
 import UI.Sources.Page as Sources
 import UI.Tracks.State as Tracks
-import UI.Types as UI exposing (..)
+import UI.Types exposing (..)
 
 
 

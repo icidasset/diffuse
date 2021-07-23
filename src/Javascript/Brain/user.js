@@ -11,7 +11,7 @@ import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, identity } from "../comm
 import { SECRET_KEY_LOCATION } from "./common"
 import { decryptIfNeeded, encryptWithSecretKey } from "./common"
 import { fromCache, isLocalHost, reportError } from "./common"
-import { sendData, sendJsonData, storageCallback, toCache } from "./common"
+import { sendJsonData, storageCallback, toCache } from "./common"
 
 
 const ports = []
@@ -102,7 +102,7 @@ let wn
 
 ports.webnativeRequest = app => request => {
   constructFission().then(() => {
-    webnativeElm.request({ app: app, request: request })
+    self.webnativeElm.request({ app: app, request: request })
   })
 }
 

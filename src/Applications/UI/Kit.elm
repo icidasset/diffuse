@@ -2,7 +2,6 @@ module UI.Kit exposing (..)
 
 import Chunky exposing (..)
 import Color
-import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html)

@@ -3,7 +3,6 @@ module UI.Queue.Types exposing (..)
 import Html.Events.Extra.Mouse as Mouse
 import Queue exposing (Item)
 import Tracks exposing (IdentifiedTrack)
-import UI.DnD as DnD
 
 
 

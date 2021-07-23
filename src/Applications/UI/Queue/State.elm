@@ -7,7 +7,6 @@ import List.Extra as List
 import Notifications
 import Queue exposing (..)
 import Return exposing (andThen, return)
-import Return.Ext as Return
 import Tracks exposing (..)
 import UI.Common.State as Common
 import UI.Ports as Ports
@@ -15,7 +14,7 @@ import UI.Queue.ContextMenu as Queue
 import UI.Queue.Fill as Fill
 import UI.Queue.Types as Queue exposing (..)
 import UI.Types exposing (..)
-import UI.User.State.Export as User exposing (..)
+import UI.User.State.Export exposing (..)
 
 
 

@@ -2,7 +2,6 @@ module UI.Tracks.View exposing (view)
 
 import Chunky exposing (..)
 import Color exposing (Color)
-import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Css.Classes as C
 import Html exposing (Html, text)
@@ -11,15 +10,10 @@ import Html.Events exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
 import Html.Lazy exposing (..)
-import List.Ext as List
-import List.Extra as List
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
-import Sources
 import Tracks exposing (..)
-import Tracks.Collection exposing (..)
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page

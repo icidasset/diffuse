@@ -2,13 +2,10 @@ module UI.Alfred.State exposing (..)
 
 import Alfred exposing (Alfred)
 import Browser.Dom as Dom
-import Chunky exposing (..)
 import List.Extra as List
-import Material.Icons.Types exposing (Coloring(..))
 import Process
 import Return exposing (return)
 import Return.Ext as Return
-import String.Ext as String
 import Task
 import UI.Types as UI exposing (Manager)
 
