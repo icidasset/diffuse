@@ -3,7 +3,6 @@ module UI.Kit exposing (..)
 import Chunky exposing (..)
 import Color
 import Conditional exposing (ifThenElse)
-import Css.Classes as C
 import Html exposing (Html)
 import Html.Attributes as A exposing (href, style)
 import Html.Events exposing (onClick, onInput)
@@ -108,23 +107,23 @@ buttonWithOptions :
 buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
     let
         defaultClasses =
-            [ C.antialiased
-            , C.border_2
-            , C.cursor_pointer
-            , C.font_bold
-            , C.inline_block
-            , C.leading_relaxed
-            , C.no_underline
-            , C.py_2
-            , C.px_4
-            , C.rounded
-            , C.text_center
-            , C.text_sm
+            [ "antialiased"
+            , "border-2"
+            , "cursor-pointer"
+            , "font-bold"
+            , "inline-block"
+            , "leading-relaxed"
+            , "no-underline"
+            , "py-2"
+            , "px-4"
+            , "rounded"
+            , "text-center"
+            , "text-sm"
 
             --
-            , C.fixate__bg_white
-            , C.fixate__border_black
-            , C.fixate__text_black
+            , "fixate:bg-white"
+            , "fixate:border-black"
+            , "fixate:text-black"
             ]
 
         specificClasses =
@@ -132,55 +131,55 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                 Filled ->
                     case buttonColor of
                         Accent ->
-                            [ C.bg_accent_btn
-                            , C.border_transparent
-                            , C.text_white_90
+                            [ "bg-accent-btn"
+                            , "border-transparent"
+                            , "text-white-90"
                             ]
 
                         Blank ->
-                            [ C.bg_white
-                            , C.border_transparent
-                            , C.text_accent_light
+                            [ "bg-white"
+                            , "border-transparent"
+                            , "text-accent-light"
 
                             -- Dark mode
                             ------------
-                            , C.dark__bg_darkest_hour
-                            , C.dark__text_accent_dark
+                            , "dark:bg-darkest-hour"
+                            , "dark:text-accent-dark"
                             ]
 
                         Gray ->
-                            [ C.bg_base04
-                            , C.border_transparent
-                            , C.text_white
+                            [ "bg-base04"
+                            , "border-transparent"
+                            , "text-white"
 
                             -- Dark mode
                             ------------
-                            , C.dark__bg_base05
+                            , "dark:bg-base05"
                             ]
 
                 _ ->
                     case buttonColor of
                         Accent ->
-                            [ C.bg_transparent
-                            , C.border_base04
-                            , C.text_base04
+                            [ "bg-transparent"
+                            , "border-base04"
+                            , "text-base04"
                             ]
 
                         Blank ->
-                            [ C.bg_transparent
-                            , C.border_white
-                            , C.text_white
+                            [ "bg-transparent"
+                            , "border-white"
+                            , "text-white"
                             ]
 
                         Gray ->
-                            [ C.bg_transparent
-                            , C.border_base04
-                            , C.text_base04
+                            [ "bg-transparent"
+                            , "border-base04"
+                            , "text-base04"
 
                             -- Dark mode
                             ------------
-                            , C.dark__border_base05
-                            , C.dark__text_base05
+                            , "dark:border-base05"
+                            , "dark:text-base05"
                             ]
     in
     slab
@@ -199,20 +198,20 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
         [ case buttonType of
             IconOnly ->
                 inline
-                    [ C.align_middle
-                    , C.inline_block
-                    , C.leading_none
-                    , C.pointer_events_none
-                    , C.text_0
+                    [ "align-middle"
+                    , "inline-block"
+                    , "leading-none"
+                    , "pointer-events-none"
+                    , "text-0"
                     ]
                     [ child ]
 
             _ ->
                 inline
-                    [ C.align_middle
-                    , C.inline_block
-                    , C.leading_none
-                    , C.pointer_events_none
+                    [ "align-middle"
+                    , "inline-block"
+                    , "leading-none"
+                    , "pointer-events-none"
                     ]
                     [ child ]
         ]
@@ -225,34 +224,34 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 canister : List (Html msg) -> Html msg
 canister children =
     chunk
-        [ C.mx_1, C.px_4, C.pb_4 ]
+        [ "mx-1", "px-4", "pb-4" ]
         children
 
 
 canisterForm : List (Html msg) -> Html msg
 canisterForm children =
     chunk
-        [ C.mx_1, C.px_4, C.pb_4, C.w_full ]
+        [ "mx-1", "px-4", "pb-4", "w-full" ]
         children
 
 
 centeredContent : List (Html msg) -> Html msg
 centeredContent children =
     chunk
-        [ C.flex
-        , C.flex_grow
-        , C.overflow_hidden
-        , C.relative
+        [ "flex"
+        , "flex-grow"
+        , "overflow-hidden"
+        , "relative"
         ]
         [ Html.map never logoBackdrop
         , chunk
-            [ C.flex
-            , C.flex_col
-            , C.flex_grow
-            , C.items_center
-            , C.justify_center
-            , C.relative
-            , C.z_10
+            [ "flex"
+            , "flex-col"
+            , "flex-grow"
+            , "items-center"
+            , "justify-center"
+            , "relative"
+            , "z-10"
             ]
             children
         ]
@@ -264,7 +263,7 @@ checkbox opts =
         [ onClick opts.toggleMsg
         , style "left" "-3px"
         ]
-        [ C.inline_block, C.cursor_pointer, C.relative ]
+        [ "inline-block", "cursor-pointer", "relative" ]
         [ if opts.checked then
             Icons.check_box 22 Inherit
 
@@ -278,28 +277,28 @@ h1 text =
     slab
         Html.h1
         [ style "font-size" "13.5px" ]
-        [ C.all_small_caps
-        , C.antialiased
-        , C.bg_base06
-        , C.inline_block
-        , C.font_semibold
-        , C.leading_tight
-        , C.m_0
-        , C.neg_top_px
-        , C.overflow_hidden
-        , C.pointer_events_none
-        , C.px_2
-        , C.py_1
-        , C.relative
-        , C.rounded_b
-        , C.uppercase
-        , C.text_sm
-        , C.text_white
+        [ "all-small-caps"
+        , "antialiased"
+        , "bg-base06"
+        , "inline-block"
+        , "font-semibold"
+        , "leading-tight"
+        , "m-0"
+        , "-top-px"
+        , "overflow-hidden"
+        , "pointer-events-none"
+        , "px-2"
+        , "py-1"
+        , "relative"
+        , "rounded-b"
+        , "uppercase"
+        , "text-sm"
+        , "text-white"
 
         -- Dark mode
         ------------
-        , C.dark__bg_base01
-        , C.dark__text_base05
+        , "dark:bg-base01"
+        , "dark:text-base05"
         ]
         [ Html.text text ]
 
@@ -309,15 +308,15 @@ h2 text =
     slab
         Html.h2
         []
-        [ C.antialiased
-        , C.font_bold
-        , C.font_display
-        , C.leading_tight
-        , C.mb_8
-        , C.mt_4
-        , C.mx_auto
-        , C.text_2xl
-        , C.text_center
+        [ "antialiased"
+        , "font-bold"
+        , "font-display"
+        , "leading-tight"
+        , "mb-8"
+        , "mt-4"
+        , "mx-auto"
+        , "text-2xl"
+        , "text-center"
         ]
         [ Html.text text ]
 
@@ -327,13 +326,13 @@ h3 text =
     slab
         Html.h2
         []
-        [ C.antialiased
-        , C.font_bold
-        , C.font_display
-        , C.leading_tight
-        , C.mb_8
-        , C.mt_4
-        , C.text_xl
+        [ "antialiased"
+        , "font-bold"
+        , "font-display"
+        , "leading-tight"
+        , "mb-8"
+        , "mt-4"
+        , "text-xl"
         ]
         [ Html.text text ]
 
@@ -341,11 +340,11 @@ h3 text =
 inlineIcon : (Int -> Coloring -> Svg.Svg msg) -> Html msg
 inlineIcon icon =
     inline
-        [ C.align_sub
-        , C.inline_block
-        , C.leading_0
-        , C.mr_1
-        , C.text_0
+        [ "align-sub"
+        , "inline-block"
+        , "leading-0"
+        , "mr-1"
+        , "text-0"
         ]
         [ icon 14 Inherit ]
 
@@ -355,14 +354,14 @@ intro child =
     slab
         Html.p
         [ style "line-height" "1.75" ]
-        [ C.mb_6
-        , C.mt_3
-        , C.text_base05
-        , C.text_sm
+        [ "mb-6"
+        , "mt-3"
+        , "text-base05"
+        , "text-sm"
 
         -- Dark mode
         ------------
-        , C.dark__text_base03
+        , "dark:text-base03"
         ]
         [ child ]
 
@@ -372,12 +371,12 @@ label attributes t =
     slab
         Html.label
         (style "font-size" "11.25px" :: attributes)
-        [ C.antialiased
-        , C.block
-        , C.font_bold
-        , C.leading_normal
-        , C.opacity_90
-        , C.uppercase
+        [ "antialiased"
+        , "block"
+        , "font-bold"
+        , "leading-normal"
+        , "opacity-90"
+        , "uppercase"
         ]
         [ Html.text t ]
 
@@ -389,35 +388,35 @@ link params =
         [ A.href params.url
         , A.target "_blank"
         ]
-        [ C.border_b_2
-        , C.border_base04
-        , C.inline_block
-        , C.leading_none
-        , C.no_underline
-        , C.text_inherit
+        [ "border-b-2"
+        , "border-base04"
+        , "inline-block"
+        , "leading-none"
+        , "no-underline"
+        , "text-inherit"
         ]
         [ Html.text params.label ]
 
 
 logoBackdrop : Html Never
 logoBackdrop =
-    Html.div
-        [ A.class "logo-backdrop"
+    chunk
+        [ "logo-backdrop"
 
         --
-        , C.absolute
-        , C.bg_cover
-        , C.bg_no_repeat
-        , C.h_0
-        , C.left_full
-        , C.opacity_025
-        , C.pt_full
-        , C.top_0
-        , C.z_0
+        , "absolute"
+        , "bg-cover"
+        , "bg-no-repeat"
+        , "h-0"
+        , "left-full"
+        , "opacity-025"
+        , "pt-full"
+        , "top-0"
+        , "z-0"
 
         -- Dark mode
         ------------
-        , C.dark__opacity_40
+        , "dark:opacity-40"
         ]
         []
 
@@ -425,82 +424,82 @@ logoBackdrop =
 receptacle : { scrolling : Bool } -> List (Html msg) -> Html msg
 receptacle { scrolling } =
     chunk
-        [ C.absolute
-        , C.bg_white
-        , C.flex
-        , C.flex_col
-        , C.inset_0
-        , C.overflow_x_hidden
-        , C.scrolling_touch
-        , C.z_50
+        [ "absolute"
+        , "bg-white"
+        , "flex"
+        , "flex-col"
+        , "inset-0"
+        , "overflow-x-hidden"
+        , "scrolling-touch"
+        , "z-50"
 
         -- Dark mode
         ------------
-        , C.dark__bg_darkest_hour
+        , "dark:bg-darkest-hour"
 
         --
-        , ifThenElse scrolling C.overflow_y_auto C.overflow_y_hidden
+        , ifThenElse scrolling "overflow-y-auto" "overflow-y-hidden"
         ]
 
 
 select : (String -> msg) -> List (Html msg) -> Html msg
 select inputHandler options =
     chunk
-        [ C.max_w_md
-        , C.mx_auto
-        , C.relative
-        , C.text_base05
-        , C.w_full
+        [ "max-w-md"
+        , "mx-auto"
+        , "relative"
+        , "text-base05"
+        , "w-full"
 
         --
-        , C.focus_within__text_black
+        , "focus-within:text-black"
 
         -- Dark mode
         ------------
-        , C.dark__text_gray_600
-        , C.dark__focus_within__text_base07
+        , "dark:text-gray-600"
+        , "dark:focus-within:text-base07"
         ]
         [ slab
             Html.select
             [ onInput inputHandler ]
-            [ C.appearance_none
-            , C.border_b
-            , C.border_l_0
-            , C.border_r_0
-            , C.border_t_0
-            , C.border_gray_400
-            , C.bg_transparent
-            , C.block
-            , C.leading_normal
-            , C.m_0
-            , C.outline_none
-            , C.py_2
-            , C.px_0
-            , C.rounded_none
-            , C.text_base01
-            , C.text_lg
-            , C.w_full
+            [ "appearance-none"
+            , "border-b"
+            , "border-l-0"
+            , "border-r-0"
+            , "border-t-0"
+            , "border-gray-400"
+            , "bg-transparent"
+            , "block"
+            , "leading-normal"
+            , "m-0"
+            , "outline-none"
+            , "py-2"
+            , "px-0"
+            , "rounded-none"
+            , "text-base01"
+            , "text-lg"
+            , "w-full"
 
             --
-            , C.focus__border_black
+            , "focus:border-black"
 
             -- Dark mode
             ------------
-            , C.dark__border_base02
-            , C.dark__text_gray_600
+            , "dark:border-base02"
+            , "dark:text-gray-600"
 
             --
-            , C.dark__focus__border_base07
+            , "dark:focus:border-base07"
             ]
             options
         , chunk
-            [ C.absolute
-            , C.neg_translate_y_1over2
-            , C.mt_px
-            , C.right_0
-            , C.text_0
-            , C.top_1over2
-            , C.transform
+            [ "absolute"
+            , "-translate-y-1/2"
+            , "mt-px"
+            , "right-0"
+            , "text-0"
+            , "top-1/2"
+            , "transform"
             ]
             [ Icons.keyboard_arrow_down 20 Inherit ]
         ]
@@ -511,21 +510,21 @@ textArea attributes =
     slab
         Html.textarea
         attributes
-        [ C.bg_white
-        , C.block
-        , C.leading_normal
-        , C.mb_4
-        , C.p_4
-        , C.resize_none
-        , C.rounded
-        , C.text_base01
-        , C.text_sm
-        , C.w_full
+        [ "bg-white"
+        , "block"
+        , "leading-normal"
+        , "mb-4"
+        , "p-4"
+        , "resize-none"
+        , "rounded"
+        , "text-base01"
+        , "text-sm"
+        , "w-full"
 
         -- Dark mode
         ------------
-        , C.dark__bg_darkest_hour
-        , C.dark__text_gray_600
+        , "dark:bg-darkest-hour"
+        , "dark:text-gray-600"
         ]
         []
 
@@ -535,15 +534,15 @@ textButton params =
     slab
         Html.button
         [ onClick params.onClick ]
-        [ C.appearance_none
-        , C.bg_transparent
-        , C.border_base04
-        , C.border_b_2
-        , C.text_inherit
-        , C.leading_tight
-        , C.m_0
-        , C.p_0
-        , C.cursor_pointer
+        [ "appearance-none"
+        , "bg-transparent"
+        , "border-base04"
+        , "border-b-2"
+        , "text-inherit"
+        , "leading-tight"
+        , "m-0"
+        , "p-0"
+        , "cursor-pointer"
         ]
         [ Html.text params.label ]
 
@@ -553,33 +552,33 @@ textField attributes =
     slab
         Html.input
         attributes
-        [ C.appearance_none
-        , C.border_b
-        , C.border_l_0
-        , C.border_r_0
-        , C.border_t_0
-        , C.border_gray_400
-        , C.bg_transparent
-        , C.block
-        , C.leading_normal
-        , C.mt_1
-        , C.py_2
-        , C.rounded_none
-        , C.text_base01
-        , C.text_sm
-        , C.w_full
+        [ "appearance-none"
+        , "border-b"
+        , "border-l-0"
+        , "border-r-0"
+        , "border-t-0"
+        , "border-gray-400"
+        , "bg-transparent"
+        , "block"
+        , "leading-normal"
+        , "mt-1"
+        , "py-2"
+        , "rounded-none"
+        , "text-base01"
+        , "text-sm"
+        , "w-full"
 
         --
-        , C.focus__border_black
-        , C.focus__outline_none
+        , "focus:border-black"
+        , "focus:outline-none"
 
         -- Dark mode
         ------------
-        , C.dark__border_base02
-        , C.dark__text_gray_600
+        , "dark:border-base02"
+        , "dark:text-gray-600"
 
         --
-        , C.dark__focus__border_base07
+        , "dark:focus:border-base07"
         ]
         []
 
@@ -589,20 +588,20 @@ textFieldAlt attributes =
     slab
         Html.input
         attributes
-        [ C.bg_white
-        , C.block
-        , C.leading_normal
-        , C.mb_3
-        , C.p_3
-        , C.resize_none
-        , C.rounded
-        , C.text_base01
-        , C.text_sm
-        , C.w_full
+        [ "bg-white"
+        , "block"
+        , "leading-normal"
+        , "mb-3"
+        , "p-3"
+        , "resize-none"
+        , "rounded"
+        , "text-base01"
+        , "text-sm"
+        , "w-full"
 
         -- Dark mode
         ------------
-        , C.dark__bg_darkest_hour
-        , C.dark__text_gray_600
+        , "dark:bg-darkest-hour"
+        , "dark:text-gray-600"
         ]
         []

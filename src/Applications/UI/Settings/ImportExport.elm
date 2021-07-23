@@ -1,7 +1,6 @@
 module UI.Settings.ImportExport exposing (view)
 
 import Chunky exposing (..)
-import Css.Classes as C
 import Html exposing (Html, text)
 import Material.Icons as Icons
 import UI.Kit exposing (ButtonType(..))
@@ -40,7 +39,7 @@ view userLayerMethod =
             --------
             , [ UI.Kit.inlineIcon Icons.warning
               , inline
-                    [ C.font_semibold ]
+                    [ "font-semibold" ]
                     [ text "All your data will be replaced when you import something." ]
               ]
                 |> raw
@@ -48,12 +47,12 @@ view userLayerMethod =
 
             --
             , chunk
-                [ C.sm__flex, C.sm__neg_mt_6 ]
+                [ "sm:flex", "sm:neg-mt-6" ]
                 [ -- Import
                   ---------
                   chunk
-                    [ C.flex_auto, C.pr_2 ]
-                    [ chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Import" ]
+                    [ "flex-auto", "pr-2" ]
+                    [ chunk [ "mb-2", "mt-8" ] [ UI.Kit.label [] "Import" ]
                     , UI.Kit.buttonWithColor
                         UI.Kit.Gray
                         Normal
@@ -75,8 +74,8 @@ view userLayerMethod =
                 -- Export
                 ---------
                 , chunk
-                    [ C.flex_auto, C.pl_2 ]
-                    [ chunk [ C.mb_2, C.mt_8 ] [ UI.Kit.label [] "Export" ]
+                    [ "flex-auto", "pl-2" ]
+                    [ chunk [ "mb-2", "mt-8" ] [ UI.Kit.label [] "Export" ]
                     , UI.Kit.button
                         Normal
                         Export
@@ -84,11 +83,11 @@ view userLayerMethod =
 
                     --
                     , chunk
-                        [ C.italic, C.leading_normal, C.mt_5, C.text_xs ]
+                        [ "italic", "leading-normal", "mt-5", "text-xs" ]
                         [ text "Other options:" ]
                     , chunk
-                        [ C.leading_normal, C.mt_2, C.text_sm ]
-                        [ inline [ C.mr_2 ] [ text "•" ]
+                        [ "leading-normal", "mt-2", "text-sm" ]
+                        [ inline [ "mr-2" ] [ text "•" ]
                         , UI.Kit.textButton
                             { label = "Migrate to another storage"
                             , onClick = MigrateHypaethralUserData
@@ -104,11 +103,11 @@ otherImportOptions : Html Msg
 otherImportOptions =
     raw
         [ chunk
-            [ C.italic, C.leading_normal, C.mt_5, C.text_xs ]
+            [ "italic", "leading-normal", "mt-5", "text-xs" ]
             [ text "Other options:" ]
         , chunk
-            [ C.leading_normal, C.mt_2, C.text_sm ]
-            [ inline [ C.mr_2 ] [ text "•" ]
+            [ "leading-normal", "mt-2", "text-sm" ]
+            [ inline [ "mr-2" ] [ text "•" ]
             , UI.Kit.textButton
                 { label = "Import Diffuse V1 data"
                 , onClick = ImportLegacyData

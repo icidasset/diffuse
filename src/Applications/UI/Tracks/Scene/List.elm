@@ -6,9 +6,8 @@ import Color exposing (Color)
 import Color.Manipulate as Color
 import Conditional exposing (ifThenElse)
 import Coordinates
-import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (id, style, tabindex)
+import Html.Attributes exposing (class, id, style, tabindex)
 import Html.Events
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
@@ -56,29 +55,29 @@ view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortD
             (tabindex (ifThenElse deps.isVisible 0 -1))
             viewAttributes
         )
-        [ C.flex_basis_0
-        , C.flex_grow
-        , C.outline_none
-        , C.overflow_x_hidden
-        , C.relative
-        , C.select_none
-        , C.scrolling_touch
-        , C.text_xs
+        [ "flex-basis-0"
+        , "flex-grow"
+        , "outline-none"
+        , "overflow-x-hidden"
+        , "relative"
+        , "select-none"
+        , "scrolling-touch"
+        , "text-xs"
 
         --
-        , C.md__text_almost_sm
+        , "md:text-almost-sm"
 
         --
         , case maybeDnD of
             Just dnd ->
                 if deps.isTouchDevice && DnD.isDragging dnd then
-                    C.overflow_y_hidden
+                    "overflow-y-hidden"
 
                 else
-                    C.overflow_y_auto
+                    "overflow-y-auto"
 
             Nothing ->
-                C.overflow_y_auto
+                "overflow-y-auto"
         ]
         [ Scene.shadow
 
@@ -129,7 +128,7 @@ viewAttributes : List (Html.Attribute Msg)
 viewAttributes =
     [ InfiniteList.onScroll (InfiniteListMsg >> TracksMsg)
     , id containerId
-    , C.overscroll_none
+    , class "overscroll-none"
     ]
 
 
@@ -154,22 +153,22 @@ header isPlaylist showAlbum sortBy sortDirection =
             ifThenElse (sortBy == s) (Just sortIcon) Nothing
     in
     chunk
-        [ C.antialiased
-        , C.bg_white
-        , C.border_b
-        , C.border_gray_300
-        , C.flex
-        , C.font_semibold
-        , C.relative
-        , C.text_base06
-        , C.text_xxs
-        , C.z_20
+        [ "antialiased"
+        , "bg-white"
+        , "border-b"
+        , "border-gray-300"
+        , "flex"
+        , "font-semibold"
+        , "relative"
+        , "text-base06"
+        , "text-xxs"
+        , "z-20"
 
         -- Dark mode
         ------------
-        , C.dark__bg_darkest_hour
-        , C.dark__border_base01
-        , C.dark__text_base03
+        , "dark:bg-darkest-hour"
+        , "dark:border-base01"
+        , "dark:text-base03"
         ]
         (if isPlaylist && showAlbum then
             [ headerColumn "" 4.5 Nothing Bypass
@@ -214,45 +213,45 @@ headerColumn text_ width maybeSortIcon msg =
         , style "min-width" columnMinWidth
         , style "width" (String.fromFloat width ++ "%")
         ]
-        [ C.border_l
-        , C.border_gray_300
-        , C.leading_relaxed
-        , C.pl_2
-        , C.pr_2
-        , C.pt_px
-        , C.relative
+        [ "border-l"
+        , "border-gray-300"
+        , "leading-relaxed"
+        , "pl-2"
+        , "pr-2"
+        , "pt-px"
+        , "relative"
 
         --
         , case msg of
             Bypass ->
-                C.cursor_default
+                "cursor-default"
 
             _ ->
-                C.cursor_pointer
+                "cursor-pointer"
 
         --
-        , C.first__border_l_0
-        , C.first__cursor_default
-        , C.first__pl_4
-        , C.last__pr_4
+        , "first:border-l-0"
+        , "first:cursor-default"
+        , "first:pl-4"
+        , "last:pr-4"
 
         -- Dark mode
         ------------
-        , C.dark__border_base01
+        , "dark:border-base01"
         ]
         [ chunk
-            [ C.mt_px, C.opacity_90, C.pt_px ]
+            [ "mt-px", "opacity-90", "pt-px" ]
             [ Html.text text_ ]
         , case maybeSortIcon of
             Just sortIcon ->
                 chunk
-                    [ C.absolute
-                    , C.neg_translate_y_1over2
-                    , C.mr_1
-                    , C.opacity_90
-                    , C.right_0
-                    , C.top_1over2
-                    , C.transform
+                    [ "absolute"
+                    , "-translate-y-1/2"
+                    , "mr-1"
+                    , "opacity-90"
+                    , "right-0"
+                    , "top-1/2"
+                    , "transform"
                     ]
                     [ sortIcon ]
 
@@ -349,9 +348,7 @@ deriveColors { bgColor, darkMode } =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ C.pb_2
-    , C.pt_1
-    ]
+    [ class "pb-2 pt-1" ]
 
 
 dynamicRowHeight : Int -> IdentifiedTrack -> Int
@@ -438,26 +435,26 @@ defaultItemView args _ idx identifiedTrack =
                     ]
                 ]
             )
-            [ C.flex
-            , C.items_center
+            [ "flex"
+            , "items-center"
 
             --
-            , ifThenElse identifiers.isMissing C.cursor_default C.cursor_pointer
-            , ifThenElse isSelected C.font_semibold C.font_normal
-            , ifThenElse roundedCorners C.rounded C.border_r_0
+            , ifThenElse identifiers.isMissing "cursor-default" "cursor-pointer"
+            , ifThenElse isSelected "font-semibold" "font-normal"
+            , ifThenElse roundedCorners "rounded" "border-r-0"
 
             --
             , ifThenElse
                 isOddRow
-                C.bg_white
-                C.bg_gray_100
+                "bg-white"
+                "bg-gray-100"
 
             -- Dark mode
             ------------
             , ifThenElse
                 isOddRow
-                C.dark__bg_darkest_hour
-                C.dark__bg_near_darkest_hour
+                "dark:bg-darkest-hour"
+                "dark:bg-near-darkest-hour"
             ]
             (if not showArtist && not showAlbum then
                 [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
@@ -553,25 +550,25 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
                 []
             ]
         )
-        [ C.flex
-        , C.items_center
+        [ "flex"
+        , "items-center"
 
         --
-        , ifThenElse identifiers.isMissing C.cursor_default C.cursor_pointer
-        , ifThenElse isSelected C.font_semibold C.font_normal
+        , ifThenElse identifiers.isMissing "cursor-default" "cursor-pointer"
+        , ifThenElse isSelected "font-semibold" "font-normal"
 
         --
         , ifThenElse
             isOddRow
-            C.bg_white
-            C.bg_gray_100
+            "bg-white"
+            "bg-gray-100"
 
         -- Dark mode
         ------------
         , ifThenElse
             isOddRow
-            C.dark__bg_darkest_hour
-            C.dark__bg_near_darkest_hour
+            "dark:bg-darkest-hour"
+            "dark:bg-near-darkest-hour"
         ]
         (if showAlbum then
             [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
@@ -756,14 +753,14 @@ favouriteColumn columnWidth favouritesOnly identifiers derivedColors =
             ]
             (favouriteColumnStyles favouritesOnly identifiers derivedColors)
         )
-        [ C.flex_shrink_0
-        , C.font_normal
-        , C.pl_4
-        , C.text_gray_500
+        [ "flex-shrink-0"
+        , "font-normal"
+        , "pl-4"
+        , "text-gray-500"
 
         -- Dark mode
         ------------
-        , C.dark__text_base02
+        , "dark:text-base02"
         ]
         [ if identifiers.isFavourite then
             text "t"
@@ -799,10 +796,10 @@ playlistIndexColumn : Int -> Html msg
 playlistIndexColumn indexInPlaylist =
     brick
         (otherColumnStyles "4.5%")
-        [ C.pl_2
-        , C.pr_2
-        , C.pointer_events_none
-        , C.truncate
+        [ "pl-2"
+        , "pr-2"
+        , "pointer-events-none"
+        , "truncate"
         ]
         [ indexInPlaylist
             |> (+) 1
@@ -815,13 +812,13 @@ otherColumn : String -> Bool -> String -> Html msg
 otherColumn width isLast text_ =
     brick
         (otherColumnStyles width)
-        [ C.pl_2
-        , C.pr_2
-        , C.pointer_events_none
-        , C.truncate
+        [ "pl-2"
+        , "pr-2"
+        , "pointer-events-none"
+        , "truncate"
 
         --
-        , C.last__pr_4
+        , "last:pr-4"
         ]
         [ text text_ ]
 

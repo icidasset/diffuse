@@ -2,7 +2,6 @@ module UI.List exposing (Action, Item, Variant(..), view)
 
 import Chunky exposing (..)
 import Conditional exposing (..)
-import Css.Classes as C
 import Html exposing (Html)
 import Html.Attributes exposing (title)
 import Html.Events exposing (onClick)
@@ -44,7 +43,7 @@ type Variant context msg
 view : Variant Int msg -> List (Item msg) -> Html msg
 view variant items =
     chunk
-        [ C.antialiased, C.font_semibold, C.leading_snug, C.text_nearly_sm ]
+        [ "antialiased", "font-semibold", "leading-snug", "text-nearly-sm" ]
         (List.indexedMap (item variant) items)
 
 
@@ -66,38 +65,38 @@ item variant idx { label, actions, msg, isSelected } =
                     DnD.isDraggingOver idx env.model
     in
     chunky
-        [ C.border_t
+        [ "border-t"
 
         --
         , if dragTarget then
-            C.border_base03
+            "border-base03"
 
           else
-            C.border_transparent
+            "border-transparent"
 
         -- Dark mode
         ------------
         , if dragTarget then
-            C.dark__border_gray_300
+            "dark:border-gray-300"
 
           else
-            C.dark__border_transparent
+            "dark:border-transparent"
         ]
     <|
         chunk
-            [ C.border_b
-            , C.border_gray_200
-            , C.flex
-            , C.items_center
+            [ "border-b"
+            , "border-gray-200"
+            , "flex"
+            , "items-center"
 
             --
-            , ifThenElse (Maybe.isJust msg) C.cursor_pointer C.cursor_default
-            , ifThenElse isSelected C.text_base03 C.text_inherit
+            , ifThenElse (Maybe.isJust msg) "cursor-pointer" "cursor-default"
+            , ifThenElse isSelected "text-base03" "text-inherit"
 
             -- Dark mode
             ------------
-            , C.dark__border_base00
-            , ifThenElse isSelected C.dark__text_gray_300 C.dark__text_inherit
+            , "dark:border-base00"
+            , ifThenElse isSelected "dark:text-gray-300" "dark:text-inherit"
             ]
             [ -- Label
               --------
@@ -125,29 +124,29 @@ item variant idx { label, actions, msg, isSelected } =
                             )
                             (DnD.listenToEnterLeave env idx)
                 )
-                [ C.flex_grow
-                , C.py_4
-                , C.overflow_hidden
+                [ "flex-grow"
+                , "py-4"
+                , "overflow-hidden"
                 ]
                 [ label ]
 
             -- Actions
             ----------
             , chunk
-                [ C.flex
-                , C.items_center
+                [ "flex"
+                , "items-center"
 
                 --
                 , case variant of
                     Normal ->
-                        C.pointer_events_auto
+                        "pointer-events-auto"
 
                     Draggable env ->
                         if DnD.isDragging env.model then
-                            C.pointer_events_none
+                            "pointer-events-none"
 
                         else
-                            C.pointer_events_auto
+                            "pointer-events-auto"
                 ]
                 (List.map actionView actions)
             ]
@@ -167,9 +166,9 @@ actionView action =
             Nothing ->
                 [ title action.title ]
         )
-        [ C.leading_0
-        , C.ml_1
-        , C.pl_1
-        , ifThenElse (Maybe.isJust action.msg) C.cursor_pointer C.cursor_default
+        [ "leading-0"
+        , "ml-1"
+        , "pl-1"
+        , ifThenElse (Maybe.isJust action.msg) "cursor-pointer" "cursor-default"
         ]
         [ action.icon 16 Inherit ]

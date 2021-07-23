@@ -4,7 +4,6 @@ import Alfred exposing (Alfred)
 import Chunky exposing (..)
 import Common
 import Conditional exposing (..)
-import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (href, style, tabindex, target, title)
 import Html.Events exposing (onClick)
@@ -45,16 +44,16 @@ global : List ( Page, String ) -> Maybe (Alfred reply) -> Page -> Html msg
 global items alfred activePage =
     brick
         [ style "font-size" "11.25px" ]
-        [ C.antialiased
-        , C.font_semibold
-        , C.mb_16
-        , C.mt_8
-        , C.text_xs
-        , C.tracking_widest
-        , C.uppercase
+        [ "antialiased"
+        , "font-semibold"
+        , "mb-16"
+        , "mt-8"
+        , "text-xs"
+        , "tracking-widest"
+        , "uppercase"
 
         --
-        , ifThenElse (Maybe.isJust alfred) C.opacity_0 C.opacity_100
+        , ifThenElse (Maybe.isJust alfred) "opacity-0" "opacity-100"
         ]
         (List.indexedMap
             (globalItem activePage <| List.length items)
@@ -72,28 +71,28 @@ globalItem activePage totalItems idx ( page, label ) =
             idx + 1 == totalItems
     in
     chunk
-        [ C.inline_block
-        , ifThenElse isLastItem C.mr_0 C.mr_1
+        [ "inline-block"
+        , ifThenElse isLastItem "mr-0" "mr-1"
         ]
         [ slab
             Html.a
             [ href (Page.toString page) ]
-            [ C.inline_block
-            , C.leading_normal
-            , C.no_underline
-            , C.cursor_pointer
-            , C.pt_2
+            [ "inline-block"
+            , "leading-normal"
+            , "no-underline"
+            , "cursor-pointer"
+            , "pt-2"
 
             --
-            , ifThenElse isActivePage C.border_b C.border_b_0
-            , ifThenElse isActivePage C.border_base01_15 C.border_transparent
-            , ifThenElse isActivePage C.text_base01 C.text_base01_55
-            , ifThenElse isLastItem C.mr_0 C.mr_8
+            , ifThenElse isActivePage "border-b" "border-b-0"
+            , ifThenElse isActivePage "border-base01-15" "border-transparent"
+            , ifThenElse isActivePage "text-base01" "text-base01-55"
+            , ifThenElse isLastItem "mr-0" "mr-8"
 
             --
-            , C.focus__border_black_50
-            , C.focus__outline_none
-            , C.focus__text_black
+            , "focus:border-black-50"
+            , "focus:outline-none"
+            , "focus:text-black"
             ]
             [ text label ]
         ]
@@ -112,16 +111,16 @@ localWithTabindex : Int -> List ( Icon msg, Label, Action msg ) -> Html msg
 localWithTabindex tabindex_ items =
     brick
         [ style "font-size" "12.5px" ]
-        [ C.antialiased
-        , C.border_b
-        , C.border_gray_300
+        [ "antialiased"
+        , "border-b"
+        , "border-gray-300"
 
         -- Dark mode
         ------------
-        , C.dark__border_base01
+        , "dark:border-base01"
         ]
         [ chunk
-            [ C.flex ]
+            [ "flex" ]
             (items
                 |> List.reverse
                 |> List.map (localItem tabindex_ { amount = List.length items })
@@ -172,70 +171,70 @@ localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) 
         --
         , tabindex tabindex_
         ]
-        [ C.bg_transparent
-        , C.border_gray_300
-        , C.border_r
-        , C.cursor_pointer
-        , C.flex_basis_0
-        , C.font_semibold
-        , C.leading_none
-        , C.no_underline
-        , C.px_4
-        , C.py_3
-        , C.text_base02
+        [ "bg-transparent"
+        , "border-gray-300"
+        , "border-r"
+        , "cursor-pointer"
+        , "flex-basis-0"
+        , "font-semibold"
+        , "leading-none"
+        , "no-underline"
+        , "px-4"
+        , "py-3"
+        , "text-base02"
 
         --
         , ifThenElse
             (labelText == Common.backToIndex && labelType == Hidden && amount > 1)
-            C.flex_shrink_0
-            C.flex_grow
+            "flex-shrink-0"
+            "flex-grow"
 
         --
         , ifThenElse
             (labelText == Common.backToIndex && labelType == Hidden && amount > 1)
-            C.overflow_visible
-            C.overflow_hidden
+            "overflow-visible"
+            "overflow-hidden"
 
         --
-        , C.fixate__text_black
-        , C.last__border_r_0
+        , "fixate:text-black"
+        , "last:border-r-0"
 
         -- Responsive
         -------------
-        , C.sm__overflow_visible
+        , "sm:overflow-visible"
 
         --
         , ifThenElse
             (labelType == Hidden)
-            C.sm__flex_shrink_0
-            C.sm__flex_grow
+            "sm:flex-shrink-0"
+            "sm:flex-grow"
 
         --
         , ifThenElse
             (labelType == Hidden)
-            C.sm__flex_grow_0
-            C.sm__flex_grow
+            "sm:flex-grow-0"
+            "sm:flex-grow"
 
         -- Dark mode
         ------------
-        , C.dark__border_base01
-        , C.dark__text_base06
+        , "dark:border-base01"
+        , "dark:text-base06"
 
         --
-        , C.dark__fixate__text_base07
+        , "dark:fixate:text-base07"
         ]
         [ chunk
-            [ C.border_b
-            , C.border_t
-            , C.border_transparent
-            , C.flex
-            , C.items_center
-            , C.justify_center
-            , C.mt_px
-            , C.pt_px
+            [ "border-b"
+            , "border-t"
+            , "border-transparent"
+            , "flex"
+            , "items-center"
+            , "justify-center"
+            , "mt-px"
+            , "pt-px"
             ]
             [ inline
-                [ C.flex_shrink_0 ]
+                [ "flex-shrink-0" ]
                 [ icon 16 Inherit ]
 
             --
@@ -247,10 +246,10 @@ localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) 
                     slab
                         Html.span
                         []
-                        [ C.inline_block
-                        , C.leading_tight
-                        , C.ml_1
-                        , C.truncate
+                        [ "inline-block"
+                        , "leading-tight"
+                        , "ml-1"
+                        , "truncate"
                         ]
                         [ text labelText ]
             ]

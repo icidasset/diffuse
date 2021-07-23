@@ -1,7 +1,6 @@
 module Notifications exposing (Action, Kind(..), Notification, Options, casual, contents, dismiss, error, errorWithCode, id, kind, options, stickyCasual, stickyError, stickySuccess, success)
 
 import Chunky exposing (..)
-import Css.Classes as C
 import Html exposing (Html)
 import Markdown
 import Murmur3 exposing (..)
@@ -104,18 +103,18 @@ errorWithCode content code _ =
 
               else
                 chunk
-                    [ C.bg_black_50
-                    , C.break_all
-                    , C.rounded
-                    , C.mb_0
-                    , C.mt_3
-                    , C.p_2
-                    , C.text_xxs
+                    [ "bg-black-50"
+                    , "break-all"
+                    , "rounded"
+                    , "mb-0"
+                    , "mt-3"
+                    , "p-2"
+                    , "text-xxs"
                     ]
                     [ slab
                         Html.code
                         []
-                        [ C.align_middle ]
+                        [ "align-middle" ]
                         [ Html.text code ]
                     ]
             ]

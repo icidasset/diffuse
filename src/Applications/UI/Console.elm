@@ -2,9 +2,8 @@ module UI.Console exposing (view)
 
 import Chunky exposing (..)
 import Conditional exposing (..)
-import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (class, style, title)
+import Html.Attributes exposing (style, title)
 import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Material.Icons as Icons
@@ -28,23 +27,23 @@ view :
     -> Html Msg
 view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
     chunk
-        [ C.antialiased
-        , C.mt_1
-        , C.text_center
-        , C.w_full
+        [ "antialiased"
+        , "mt-1"
+        , "text-center"
+        , "w-full"
 
         --
-        , C.lg__max_w_insulation
+        , "lg:max-w-insulation"
         ]
         [ -----------------------------------------
           -- Now Playing
           -----------------------------------------
           chunk
-            [ C.text_sm
-            , C.italic
-            , C.leading_normal
-            , C.py_4
-            , C.text_white
+            [ "text-sm"
+            , "italic"
+            , "leading-normal"
+            , "py-4"
+            , "text-white"
             ]
             [ if stalled then
                 text "Audio connection got interrupted, trying to reconnect ..."
@@ -55,11 +54,12 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
               else
                 case Maybe.map .identifiedTrack activeQueueItem of
                     Just ( _, { tags } ) ->
-                        Html.span
+                        slab
+                            Html.span
                             [ onClick (TracksMsg Tracks.ScrollToNowPlaying)
                             , title "Scroll to track"
-                            , C.cursor_pointer
                             ]
+                            [ "cursor-pointer" ]
                             [ text (tags.artist ++ " - " ++ tags.title) ]
 
                     Nothing ->
@@ -82,22 +82,24 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
           in
           brick
             [ on "click" (clickLocationDecoder Seek) ]
-            [ C.cursor_pointer
-            , C.py_1
+            [ "cursor-pointer"
+            , "py-1"
             ]
             [ brick
                 [ style "background-color" "rgba(255, 255, 255, 0.25)"
                 , style "height" "3px"
                 ]
-                [ C.rounded_sm
-                , C.select_none
+                [ "rounded-sm"
+                , "select-none"
                 ]
                 [ brick
                     [ style "background-color" "rgba(255, 255, 255, 0.325)"
                     , style "height" "3px"
                     , style "width" (String.fromFloat progress ++ "%")
                     ]
-                    [ class "progressBarValue", C.rounded_sm ]
+                    [ "progressBarValue"
+                    , "rounded-sm"
+                    ]
                     []
                 ]
             ]
@@ -106,15 +108,15 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
         -- Buttons
         -----------------------------------------
         , chunk
-            [ C.flex
-            , C.justify_between
-            , C.mb_3
-            , C.mt_4
-            , C.select_none
-            , C.text_white_90
+            [ "flex"
+            , "justify-between"
+            , "mb-3"
+            , "mt-4"
+            , "select-none"
+            , "text-white-90"
 
             --
-            , C.sm__justify_center
+            , "sm:justify-center"
             ]
             [ button "Toggle repeat"
                 (smallLight repeat)
@@ -158,14 +160,14 @@ button t light content msg =
         [ onClick msg
         , title t
         ]
-        [ C.cursor_pointer
-        , C.flex
-        , C.flex_col
-        , C.items_center
-        , C.px_1
+        [ "cursor-pointer"
+        , "flex"
+        , "flex-col"
+        , "items-center"
+        , "px-1"
 
         --
-        , C.sm__mx_8
+        , "sm:mx-8"
         ]
         [ brick
             [ style "height" "4px" ]
@@ -173,9 +175,9 @@ button t light content msg =
             [ light ]
         , brick
             [ style "height" "25px" ]
-            [ C.flex
-            , C.items_center
-            , C.my_2
+            [ "flex"
+            , "items-center"
+            , "my-2"
             ]
             [ content ]
         ]
@@ -194,7 +196,7 @@ smallLight isOn =
                 "rgb(157, 174, 255)"
                 "rgba(255, 255, 255, 0.25)"
         ]
-        [ C.rounded_full ]
+        [ "rounded-full" ]
         []
 
 
@@ -212,7 +214,7 @@ largeLight isOn =
                 "rgb(198, 254, 153)"
                 "rgba(255, 255, 255, 0.25)"
         ]
-        [ C.relative, C.rounded_full ]
+        [ "relative", "rounded-full" ]
         []
 
 
@@ -229,10 +231,10 @@ play =
         [ style "font-size" "11.25px"
         , style "letter-spacing" "3.75px"
         ]
-        [ C.font_bold
-        , C.font_display
-        , C.relative
-        , C.whitespace_no_wrap
+        [ "font-bold"
+        , "font-display"
+        , "relative"
+        , "whitespace-nowrap"
         ]
         [ text "PLAY" ]
 

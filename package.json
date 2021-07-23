@@ -8,14 +8,15 @@
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "assert": "^2.0.0",
+    "autoprefixer": "^10.3.1",
     "buffer": "^6.0.3",
     "elm-review": "^2.5.3",
-    "elm-tailwind-css": "^1.1.1",
     "esbuild": "^0.12.15",
     "eslint": "^7.31.0",
+    "postcss": "^8.3.6",
     "postcss-custom-properties": "^11.0.0",
     "postcss-import": "^14.0.2",
-    "tailwindcss": "^1.6.2",
+    "tailwindcss": "^2.2.7",
     "tailwindcss-animations": "^2.0.0",
     "tailwindcss-interaction-variants": "^5.0.0"
   },

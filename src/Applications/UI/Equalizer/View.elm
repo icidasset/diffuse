@@ -1,7 +1,7 @@
 module UI.Equalizer.View exposing (view)
 
+import Chunky exposing (..)
 import Common
-import Css.Classes as C
 import Equalizer exposing (..)
 import Html exposing (Html)
 import Html.Attributes as A
@@ -38,10 +38,10 @@ view settings =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , Html.div
-            [ C.relative, C.select_none ]
-            [ Html.div
-                [ C.absolute, C.left_0, C.top_0 ]
+        , chunk
+            [ "relative", "select-none" ]
+            [ chunk
+                [ "absolute", "left-0", "top-0" ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Equalizer" ]
                 ]
             ]
@@ -54,34 +54,36 @@ view settings =
 
 eqView : Settings -> Html Msg
 eqView settings =
-    Html.div
-        [ A.class "equalizer"
-        , C.text_center
+    chunk
+        [ "equalizer"
+
+        --
+        , "text-center"
         ]
-        [ Html.div
-            [ C.border
-            , C.border_black_05
-            , C.rounded
-            , C.flex
+        [ chunk
+            [ "border"
+            , "border-black-05"
+            , "rounded"
+            , "flex"
 
             -- Dark mode
             ------------
-            , C.dark__border_base00
+            , "dark:border-base00"
             ]
             [ knob Volume settings.volume
             ]
 
         --
-        , Html.div
-            [ C.border
-            , C.border_black_05
-            , C.rounded
-            , C.flex
-            , C.mt_4
+        , chunk
+            [ "border"
+            , "border-black-05"
+            , "rounded"
+            , "flex"
+            , "mt-4"
 
             -- Dark mode
             ------------
-            , C.dark__border_base00
+            , "dark:border-base00"
             ]
             [ knob Low settings.low
             , knob Mid settings.mid
@@ -96,20 +98,20 @@ eqView settings =
 
 knob : Knob -> Float -> Html Msg
 knob knobType value =
-    Html.div
-        [ C.border_black_05
-        , C.border_r
-        , C.flex_grow
-        , C.flex_shrink_0
-        , C.px_10
-        , C.py_4
+    chunk
+        [ "border-black-05"
+        , "border-r"
+        , "flex-grow"
+        , "flex-shrink-0"
+        , "px-10"
+        , "py-4"
 
         --
-        , C.last__border_r_0
+        , "last:border-r-0"
 
         --
-        , C.sm__px_12
-        , C.md__px_16
+        , "sm:px-12"
+        , "md:px-16"
         ]
         [ knob_ knobType value
         , knobLines
@@ -135,9 +137,8 @@ knob_ knobType value =
                 , preventDefault = True
                 }
     in
-    Html.div
-        [ A.class "knob"
-        , A.style "transform" ("rotate(" ++ String.fromFloat angle ++ "deg)")
+    brick
+        [ A.style "transform" ("rotate(" ++ String.fromFloat angle ++ "deg)")
 
         --
         , Html.Events.custom "dblclick" resetDecoder
@@ -147,13 +148,15 @@ knob_ knobType value =
         , knobType
             |> ActivateKnob
             |> Pointer.onDown
+        ]
+        [ "knob"
 
         --
-        , C.cursor_pointer
-        , C.mx_auto
-        , C.overflow_hidden
-        , C.relative
-        , C.rounded_full
+        , "cursor-pointer"
+        , "mx-auto"
+        , "overflow-hidden"
+        , "relative"
+        , "rounded-full"
         ]
         [ Html.map never knob__ ]
 
@@ -163,16 +166,20 @@ knob__ =
     Html.div
         []
         [ decagonSvg
-        , Html.div
-            [ A.class "layer-a"
-            , C.absolute
-            , C.inset_0
-            , C.rounded_full
-            , C.z_10
+        , chunk
+            [ "layer-a"
+
+            --
+            , "absolute"
+            , "inset-0"
+            , "rounded-full"
+            , "z-10"
             ]
-            [ Html.div
-                [ A.class "layer-b"
-                , C.mx_auto
+            [ chunk
+                [ "layer-b"
+
+                --
+                , "mx-auto"
                 ]
                 []
             ]
@@ -181,14 +188,14 @@ knob__ =
 
 knobLabel : Knob -> Html Msg
 knobLabel knobType =
-    Html.div
-        [ A.class "knob-label"
+    chunk
+        [ "knob-label"
 
         --
-        , C.font_semibold
-        , C.mt_3
-        , C.opacity_70
-        , C.tracking_wide
+        , "font-semibold"
+        , "mt-3"
+        , "opacity-70"
+        , "tracking-wide"
         ]
         [ case knobType of
             Low ->
@@ -207,13 +214,15 @@ knobLabel knobType =
 
 knobLines : Html Msg
 knobLines =
-    Html.div
-        [ A.class "knob-lines"
-        , C.mx_auto
-        , C.relative
+    chunk
+        [ "knob-lines"
+
+        --
+        , "mx-auto"
+        , "relative"
         ]
-        [ Html.div [ C.absolute, C.left_0, C.top_0 ] []
-        , Html.div [ C.absolute, C.right_0, C.top_0 ] []
+        [ chunk [ "absolute", "left-0", "top-0" ] []
+        , chunk [ "absolute", "right-0", "top-0" ] []
         ]
 
 

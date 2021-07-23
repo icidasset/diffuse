@@ -2,7 +2,6 @@ module UI.Settings exposing (Dependencies, view)
 
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
-import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -76,7 +75,7 @@ index deps =
     -----------------------------------------
     , deps
         |> content
-        |> chunk [ C.pb_4 ]
+        |> chunk [ "pb-4" ]
         |> List.singleton
         |> UI.Kit.canister
     ]
@@ -141,7 +140,7 @@ content deps =
     -- Background
     -----------------------------------------
     , chunk
-        [ C.mt_8 ]
+        [ "mt-8" ]
         [ label "Background Image"
         , Html.Lazy.lazy backgroundImage deps.chosenBackgroundImage
         ]
@@ -150,9 +149,9 @@ content deps =
     -- Row 1
     -----------------------------------------
     , chunk
-        [ C.flex, C.flex_wrap, C.pt_2 ]
+        [ "flex", "flex-wrap", "pt-2" ]
         [ chunk
-            [ C.w_full, C.md__w_1over2 ]
+            [ "w-full", "md:w-1/2" ]
             [ label "Downloaded tracks"
             , UI.Kit.buttonWithColor
                 UI.Kit.Gray
@@ -164,7 +163,7 @@ content deps =
         -- Last.fm
         ----------
         , chunk
-            [ C.w_1over2 ]
+            [ "w-1/2" ]
             [ label "Last.fm scrobbling"
 
             --
@@ -195,9 +194,9 @@ content deps =
     -- Row 2
     -----------------------------------------
     , chunk
-        [ C.flex, C.flex_wrap ]
+        [ "flex", "flex-wrap" ]
         [ chunk
-            [ C.w_full, C.md__w_1over2 ]
+            [ "w-full", "md:w-1/2" ]
             [ label "Hide Duplicates"
             , UI.Kit.checkbox
                 { checked = deps.hideDuplicateTracks
@@ -205,7 +204,7 @@ content deps =
                 }
             ]
         , chunk
-            [ C.w_full, C.md__w_1over2 ]
+            [ "w-full", "md:w-1/2" ]
             [ label "Process sources automatically"
             , UI.Kit.checkbox
                 { checked = deps.processAutomatically
@@ -218,9 +217,9 @@ content deps =
     -- Row 3
     -----------------------------------------
     , chunk
-        [ C.flex, C.flex_wrap ]
+        [ "flex", "flex-wrap" ]
         [ chunk
-            [ C.w_full, C.md__w_1over2 ]
+            [ "w-full", "md:w-1/2" ]
             [ label "Remember position on long tracks"
             , UI.Kit.checkbox
                 { checked = deps.rememberProgress
@@ -234,7 +233,7 @@ content deps =
 label : String -> Html msg
 label l =
     chunk
-        [ C.mb_3, C.mt_6, C.pb_px ]
+        [ "mb-3", "mt-6", "pb-px" ]
         [ UI.Kit.label [] l ]
 
 
@@ -266,7 +265,7 @@ changePassphrase method =
 backgroundImage : Maybe String -> Html Msg
 backgroundImage chosenBackground =
     chunk
-        [ C.flex, C.flex_wrap ]
+        [ "flex", "flex-wrap" ]
         (List.map
             (\( filename, backdropLabel ) ->
                 let
@@ -275,34 +274,34 @@ backgroundImage chosenBackground =
                 in
                 brick
                     [ onClick (ChooseBackdrop filename) ]
-                    [ C.cursor_pointer
-                    , C.h_0
-                    , C.overflow_hidden
-                    , C.pt_1over8
-                    , C.relative
-                    , C.w_1over5
+                    [ "cursor-pointer"
+                    , "h-0"
+                    , "overflow-hidden"
+                    , "pt-1/8"
+                    , "relative"
+                    , "w-1/5"
 
                     --
-                    , C.md__pt_1over16
-                    , C.md__w_1over10
+                    , "md:pt-1/16"
+                    , "md:w-1/10"
                     ]
                     [ if isActive then
                         chunk
-                            [ C.absolute
-                            , C.bg_base04
-                            , C.inset_0
-                            , C.mb_1
-                            , C.mr_1
-                            , C.rounded_sm
-                            , C.z_10
+                            [ "absolute"
+                            , "bg-base04"
+                            , "inset-0"
+                            , "mb-1"
+                            , "mr-1"
+                            , "rounded-sm"
+                            , "z-10"
 
                             --
-                            , C.sm__mb_2
-                            , C.sm__mr_2
+                            , "sm:mb-2"
+                            , "sm:mr-2"
 
                             --
-                            , C.md__mb_1
-                            , C.md__mr_1
+                            , "md:mb-1"
+                            , "md:mr-1"
                             ]
                             []
 
@@ -319,59 +318,59 @@ backgroundImage chosenBackground =
                             |> String.append "url(images/Background/Thumbnails/"
                             |> style "background-image"
                         ]
-                        [ C.absolute
-                        , C.bg_cover
-                        , C.inset_0
-                        , C.mb_1
-                        , C.mr_1
-                        , C.rounded_sm
-                        , C.z_20
+                        [ "absolute"
+                        , "bg-cover"
+                        , "inset-0"
+                        , "mb-1"
+                        , "mr-1"
+                        , "rounded-sm"
+                        , "z-20"
 
                         --
-                        , C.sm__mb_2
-                        , C.sm__mr_2
+                        , "sm:mb-2"
+                        , "sm:mr-2"
 
                         --
-                        , C.md__mb_1
-                        , C.md__mr_1
+                        , "md:mb-1"
+                        , "md:mr-1"
 
                         --
-                        , ifThenElse isActive C.opacity_20 C.opacity_100
+                        , ifThenElse isActive "opacity-20" "opacity-100"
                         ]
                         []
 
                     --
                     , if isActive then
                         chunk
-                            [ C.absolute
-                            , C.inset_0
-                            , C.flex
-                            , C.font_semibold
-                            , C.items_center
-                            , C.justify_center
-                            , C.leading_snug
-                            , C.mb_1
-                            , C.mr_1
-                            , C.px_2
-                            , C.text_center
-                            , C.text_white
-                            , C.text_xs
-                            , C.z_30
+                            [ "absolute"
+                            , "inset-0"
+                            , "flex"
+                            , "font-semibold"
+                            , "items-center"
+                            , "justify-center"
+                            , "leading-snug"
+                            , "mb-1"
+                            , "mr-1"
+                            , "px-2"
+                            , "text-center"
+                            , "text-white"
+                            , "text-xs"
+                            , "z-30"
 
                             --
-                            , C.sm__mb_2
-                            , C.sm__mr_2
+                            , "sm:mb-2"
+                            , "sm:mr-2"
 
                             --
-                            , C.md__mb_1
-                            , C.md__mr_1
+                            , "md:mb-1"
+                            , "md:mr-1"
 
                             -- Dark mode
                             ------------
-                            , C.dark__text_base07
+                            , "dark:text-base07"
                             ]
                             [ chunk
-                                [ C.mt_px ]
+                                [ "mt-px" ]
                                 [ Icons.check 16 Inherit ]
                             ]
 

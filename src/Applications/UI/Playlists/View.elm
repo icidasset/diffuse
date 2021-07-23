@@ -3,7 +3,6 @@ module UI.Playlists.View exposing (view)
 import Chunky exposing (..)
 import Color exposing (Color)
 import Common
-import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (href, placeholder, style, value)
 import Html.Events exposing (onInput, onSubmit)
@@ -137,9 +136,9 @@ index playlists selectedPlaylist bgColor authMethodSupportsPublicData =
     -----------------------------------------
     , if List.isEmpty playlists then
         chunk
-            [ C.relative ]
+            [ "relative" ]
             [ chunk
-                [ C.absolute, C.left_0, C.top_0 ]
+                [ "absolute", "left-0", "top-0" ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Playlists" ] ]
             ]
 
@@ -184,20 +183,20 @@ index playlists selectedPlaylist bgColor authMethodSupportsPublicData =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Playlists New) ]
-                [ C.block
-                , C.opacity_30
-                , C.text_inherit
+                [ "block"
+                , "opacity-30"
+                , "text-inherit"
                 ]
                 [ Icons.waves 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Playlists New) ]
-                [ C.block
-                , C.leading_normal
-                , C.mt_2
-                , C.opacity_40
-                , C.text_center
-                , C.text_inherit
+                [ "block"
+                , "leading-normal"
+                , "mt-2"
+                , "opacity-40"
+                , "text-center"
+                , "text-inherit"
                 ]
                 [ text "No playlists found, create one"
                 , lineBreak
@@ -224,21 +223,21 @@ intro =
 category : String -> Html Msg
 category cat =
     chunk
-        [ C.antialiased
-        , C.font_display
-        , C.mb_3
-        , C.mt_10
-        , C.text_base05
-        , C.text_xxs
-        , C.truncate
-        , C.uppercase
+        [ "antialiased"
+        , "font-display"
+        , "mb-3"
+        , "mt-10"
+        , "text-base05"
+        , "text-xxs"
+        , "truncate"
+        , "uppercase"
 
         -- Dark mode
         ------------
-        , C.dark__text_base04
+        , "dark:text-base04"
         ]
         [ UI.Kit.inlineIcon Icons.folder
-        , inline [ C.font_bold, C.ml_2 ] [ text cat ]
+        , inline [ "font-bold", "ml-2" ] [ text cat ]
         ]
 
 
@@ -293,12 +292,12 @@ new =
         , placeholder "The Classics"
         ]
             |> UI.Kit.textField
-            |> chunky [ C.max_w_md, C.mx_auto ]
+            |> chunky [ "max-w-md", "mx-auto" ]
 
       -- Button
       ---------
       , chunk
-            [ C.mt_10 ]
+            [ "mt-10" ]
             [ UI.Kit.button
                 Normal
                 Bypass
@@ -312,9 +311,9 @@ new =
         |> slab
             Html.form
             [ onSubmit CreatePlaylist ]
-            [ C.flex
-            , C.flex_grow
-            , C.text_center
+            [ "flex"
+            , "flex-grow"
+            , "text-center"
             ]
     ]
 
@@ -357,12 +356,12 @@ edit editContext playlist =
                 value playlist.name
         ]
             |> UI.Kit.textField
-            |> chunky [ C.max_w_md, C.mx_auto ]
+            |> chunky [ "max-w-md", "mx-auto" ]
 
       -- Button
       ---------
       , chunk
-            [ C.mt_10 ]
+            [ "mt-10" ]
             [ UI.Kit.button
                 Normal
                 Bypass
@@ -376,9 +375,9 @@ edit editContext playlist =
         |> slab
             Html.form
             [ onSubmit ModifyPlaylist ]
-            [ C.flex
-            , C.flex_grow
-            , C.text_center
+            [ "flex"
+            , "flex-grow"
+            , "text-center"
             ]
     ]
 

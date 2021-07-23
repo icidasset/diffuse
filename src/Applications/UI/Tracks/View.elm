@@ -3,9 +3,8 @@ module UI.Tracks.View exposing (view)
 import Chunky exposing (..)
 import Color exposing (Color)
 import Conditional exposing (ifThenElse)
-import Css.Classes as C
 import Html exposing (Html, text)
-import Html.Attributes exposing (attribute, class, href, placeholder, style, tabindex, target, title, value)
+import Html.Attributes exposing (attribute, href, placeholder, style, tabindex, target, title, value)
 import Html.Events exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
@@ -107,11 +106,11 @@ view model =
         ]
 
 
-viewClasses : List (Html.Attribute UI.Msg)
+viewClasses : List String
 viewClasses =
-    [ C.flex
-    , C.flex_col
-    , C.flex_grow
+    [ "flex"
+    , "flex-col"
+    , "flex-grow"
     ]
 
 
@@ -122,32 +121,32 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
             ifThenElse isOnIndexPage 0 -1
     in
     chunk
-        [ C.sm__flex ]
+        [ "sm:flex" ]
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
           chunk
-            [ C.border_b
-            , C.border_r
-            , C.border_gray_300
-            , C.flex
-            , C.flex_grow
-            , C.h_12
-            , C.mt_px
-            , C.px_1
-            , C.overflow_hidden
-            , C.relative
-            , C.text_gray_600
+            [ "border-b"
+            , "border-r"
+            , "border-gray-300"
+            , "flex"
+            , "flex-grow"
+            , "h-12"
+            , "mt-px"
+            , "px-1"
+            , "overflow-hidden"
+            , "relative"
+            , "text-gray-600"
 
             -- Responsive
             -------------
-            , C.sm__h_auto
-            , C.sm__px_0
+            , "sm:h-auto"
+            , "sm:px-0"
 
             -- Dark mode
             ------------
-            , C.dark__border_base01
-            , C.dark__text_base04
+            , "dark:border-base01"
+            , "dark:text-base04"
             ]
             [ -- Input
               --------
@@ -162,60 +161,60 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 , tabindex tabindex_
                 , value (Maybe.withDefault "" searchTerm)
                 ]
-                [ C.bg_transparent
-                , C.border_none
-                , C.flex_grow
-                , C.h_full
-                , C.min_w_0
-                , C.ml_1
-                , C.mt_px
-                , C.outline_none
-                , C.pl_8
-                , C.pr_2
-                , C.pt_px
-                , C.text_base02
-                , C.text_sm
-                , C.w_full
+                [ "bg-transparent"
+                , "border-none"
+                , "flex-grow"
+                , "h-full"
+                , "min-w-0"
+                , "ml-1"
+                , "mt-px"
+                , "outline-none"
+                , "pl-8"
+                , "pr-2"
+                , "pt-px"
+                , "text-base02"
+                , "text-sm"
+                , "w-full"
 
                 -- Dark mode
                 ------------
-                , C.dark__text_base06
+                , "dark:text-base06"
                 ]
                 []
 
             -- Search icon
             --------------
             , chunk
-                [ C.absolute
-                , C.bottom_0
-                , C.flex
-                , C.items_center
-                , C.left_0
-                , C.ml_3
-                , C.mt_px
-                , C.pl_1
-                , C.top_0
-                , C.z_0
+                [ "absolute"
+                , "bottom-0"
+                , "flex"
+                , "items-center"
+                , "left-0"
+                , "ml-3"
+                , "mt-px"
+                , "pl-1"
+                , "top-0"
+                , "z-0"
 
                 -- Responsive
                 -------------
-                , C.sm__pl_0
+                , "sm:pl-0"
                 ]
                 [ Icons.search 16 Inherit ]
 
             -- Actions
             ----------
             , chunk
-                [ C.flex
-                , C.items_center
-                , C.mr_3
-                , C.mt_px
-                , C.pt_px
-                , C.space_x_4
+                [ "flex"
+                , "items-center"
+                , "mr-3"
+                , "mt-px"
+                , "pt-px"
+                , "space-x-4"
 
                 -- Responsive
                 -------------
-                , C.sm__space_x_2
+                , "sm:space-x-2"
                 ]
                 [ -- 1
                   case searchTerm of
@@ -224,8 +223,8 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                             [ onClick (TracksMsg ClearSearch)
                             , title "Clear search"
                             ]
-                            [ C.cursor_pointer
-                            , C.mt_px
+                            [ "cursor-pointer"
+                            , "mt-px"
                             ]
                             [ Icons.clear 16 Inherit ]
 
@@ -237,7 +236,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                     [ onClick (TracksMsg ToggleFavouritesOnly)
                     , title "Toggle favourites-only"
                     ]
-                    [ C.cursor_pointer ]
+                    [ "cursor-pointer" ]
                     [ case favouritesOnly of
                         True ->
                             Icons.favorite 16 (Color UI.Kit.colorKit.base08)
@@ -256,12 +255,12 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                                 |> TracksMsg
                                 |> onClick
                             ]
-                            [ C.ml_6
-                            , C.mr_px
-                            , C.cursor_pointer
+                            [ "ml-6"
+                            , "mr-px"
+                            , "cursor-pointer"
                             ]
                             [ chunk
-                                [ C.pl_1 ]
+                                [ "pl-1" ]
                                 [ Icons.notes 18 Inherit ]
                             ]
 
@@ -273,11 +272,11 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                                 |> TracksMsg
                                 |> onClick
                             ]
-                            [ C.cursor_pointer
-                            , C.mr_px
+                            [ "cursor-pointer"
+                            , "mr-px"
                             ]
                             [ chunk
-                                [ C.pl_1 ]
+                                [ "pl-1" ]
                                 [ Icons.burst_mode 20 Inherit ]
                             ]
 
@@ -286,7 +285,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                     [ Mouse.onClick (TracksMsg << ShowViewMenu maybeGrouping)
                     , title "View settings"
                     ]
-                    [ C.cursor_pointer ]
+                    [ "cursor-pointer" ]
                     [ Icons.more_vert 16 Inherit ]
 
                 -- 5
@@ -302,25 +301,25 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                                 |> Color.toCssString
                                 |> style "background-color"
                             ]
-                            [ C.antialiased
-                            , C.cursor_pointer
-                            , C.duration_500
-                            , C.font_bold
-                            , C.leading_none
-                            , C.px_1
-                            , C.py_1
-                            , C.rounded
-                            , C.truncate
-                            , C.text_white_90
-                            , C.text_xxs
-                            , C.transition
+                            [ "antialiased"
+                            , "cursor-pointer"
+                            , "duration-500"
+                            , "font-bold"
+                            , "leading-none"
+                            , "px-1"
+                            , "py-1"
+                            , "rounded"
+                            , "truncate"
+                            , "text-white-90"
+                            , "text-xxs"
+                            , "transition"
 
                             -- Dark mode
                             ------------
-                            , C.dark__text_white_60
+                            , "dark:text-white-60"
                             ]
                             [ chunk
-                                [ C.px_px, C.pt_px ]
+                                [ "px-px", "pt-px" ]
                                 [ text playlist.name ]
                             ]
 
@@ -352,26 +351,31 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 noTracksView : List String -> Int -> Int -> Int -> Html UI.Msg
 noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites =
     chunk
-        [ class "no-tracks-view", C.flex, C.flex_grow ]
+        [ "no-tracks-view"
+
+        --
+        , "flex"
+        , "flex-grow"
+        ]
         [ UI.Kit.centeredContent
             [ if List.length processingContext > 0 then
                 message "Processing Tracks"
 
               else if amountOfSources == 0 then
                 chunk
-                    [ C.flex
-                    , C.flex_wrap
-                    , C.items_start
-                    , C.justify_center
-                    , C.px_3
+                    [ "flex"
+                    , "flex-wrap"
+                    , "items-start"
+                    , "justify-center"
+                    , "px-3"
                     ]
                     [ -----------------------------------------
                       -- Add
                       -----------------------------------------
                       inline
-                        [ C.mb_4
-                        , C.mx_2
-                        , C.whitespace_no_wrap
+                        [ "mb-4"
+                        , "mx-2"
+                        , "whitespace-nowrap"
                         ]
                         [ UI.Kit.buttonLink
                             (Sources.NewOnboarding
@@ -390,9 +394,9 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
                     -- Demo
                     -----------------------------------------
                     , inline
-                        [ C.mb_4
-                        , C.mx_2
-                        , C.whitespace_no_wrap
+                        [ "mb-4"
+                        , "mx-2"
+                        , "whitespace-nowrap"
                         ]
                         [ UI.Kit.buttonWithColor
                             UI.Kit.Gray
@@ -409,9 +413,9 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
                     -- How
                     -----------------------------------------
                     , inline
-                        [ C.mb_4
-                        , C.mx_2
-                        , C.whitespace_no_wrap
+                        [ "mb-4"
+                        , "mx-2"
+                        , "whitespace-nowrap"
                         ]
                         [ UI.Kit.buttonWithOptions
                             Html.a
@@ -441,20 +445,20 @@ noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites
 buttonContents : List (Html UI.Msg) -> Html UI.Msg
 buttonContents =
     inline
-        [ C.flex
-        , C.items_center
-        , C.leading_0
+        [ "flex"
+        , "items-center"
+        , "leading-0"
         ]
 
 
 message : String -> Html UI.Msg
 message m =
     chunk
-        [ C.border_b_2
-        , C.border_current_color
-        , C.text_sm
-        , C.font_semibold
-        , C.leading_snug
-        , C.pb_1
+        [ "border-b-2"
+        , "border-current-color"
+        , "text-sm"
+        , "font-semibold"
+        , "leading-snug"
+        , "pb-1"
         ]
         [ text m ]

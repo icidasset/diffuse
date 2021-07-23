@@ -4,7 +4,6 @@ import Chunky exposing (..)
 import Color exposing (Color)
 import Color.Manipulate
 import Conditional exposing (ifThenElse)
-import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (class, rel, style)
 import Html.Ext exposing (onDoubleTap, onTap)
@@ -91,21 +90,21 @@ view extractedBackdropColor collection =
     collection
         |> List.reverse
         |> List.map (Html.Lazy.lazy2 notificationView manipulatedColor)
-        |> Html.div
-            [ class "notifications"
+        |> chunk
+            [ "notifications"
 
             --
-            , C.absolute
-            , C.bottom_0
-            , C.flex
-            , C.flex_col
-            , C.items_end
-            , C.leading_snug
-            , C.mb_4
-            , C.mr_3
-            , C.right_0
-            , C.text_sm
-            , C.z_50
+            , "absolute"
+            , "bottom-0"
+            , "flex"
+            , "flex-col"
+            , "items-end"
+            , "leading-snug"
+            , "mb-4"
+            , "mr-3"
+            , "right-0"
+            , "text-sm"
+            , "z-50"
             ]
 
 
@@ -124,7 +123,7 @@ notificationView extractedBackdropColor notification =
         dismissMsg =
             DismissNotification { id = id }
     in
-    Html.div
+    brick
         [ if options.sticky then
             onDoubleTap dismissMsg
 
@@ -135,58 +134,57 @@ notificationView extractedBackdropColor notification =
         , rel (String.fromInt id)
 
         --
-        , C.duration_200
-        , C.max_w_xs
-        , C.mt_2
-        , C.p_4
-        , C.rounded
-        , C.text_white_90
-
-        --
-        , ifThenElse options.sticky C.cursor_pointer C.cursor_default
-        , ifThenElse options.sticky C.select_none C.select_auto
-
-        --
         , case kind of
             Casual ->
                 Maybe.unwrap
-                    C.bg_white_20
+                    (class "bg-white-20")
                     (style "background-color" << Color.toCssString)
                     extractedBackdropColor
 
             Error ->
-                C.bg_base08
+                class "bg-base08"
 
             Success ->
-                C.bg_base0b
-
-        --
-        , if options.wasDismissed then
-            C.transition
-
-          else
-            C.transition_colors
-
-        --
-        , if options.wasDismissed then
-            C.opacity_0
-
-          else
-            C.opacity_100
+                class "bg-base0b"
         ]
-        [ Html.div
-            [ C.mt_px, C.pt_px ]
+        [ "duration-200"
+        , "max-w-xs"
+        , "mt-2"
+        , "p-4"
+        , "rounded"
+        , "text-white-90"
+
+        --
+        , ifThenElse options.sticky "cursor-pointer" "cursor-default"
+        , ifThenElse options.sticky "select-none" "select-auto"
+
+        --
+        , if options.wasDismissed then
+            "transition"
+
+          else
+            "transition-colors"
+
+        --
+        , if options.wasDismissed then
+            "opacity-0"
+
+          else
+            "opacity-100"
+        ]
+        [ chunk
+            [ "mt-px", "pt-px" ]
             [ contents notification ]
 
         --
         , if options.sticky && kind /= Casual then
-            Html.div
-                [ C.cursor_pointer
-                , C.italic
-                , C.mt_2
-                , C.opacity_60
-                , C.select_none
-                , C.text_xs
+            chunk
+                [ "cursor-pointer"
+                , "italic"
+                , "mt-2"
+                , "opacity-60"
+                , "select-none"
+                , "text-xs"
                 ]
                 [ text "Double click to dismiss" ]
 

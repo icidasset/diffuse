@@ -2,7 +2,6 @@ module UI.Sources.View exposing (view)
 
 import Chunky exposing (..)
 import Conditional exposing (ifThenElse)
-import Css.Classes as C
 import Dict.Ext as Dict
 import Html exposing (Html, text)
 import Html.Attributes exposing (href)
@@ -118,9 +117,9 @@ index amountOfTracks model =
     -----------------------------------------
     , if List.isEmpty model.sources then
         chunk
-            [ C.relative ]
+            [ "relative" ]
             [ chunk
-                [ C.absolute, C.left_0, C.top_0 ]
+                [ "absolute", "left-0", "top-0" ]
                 [ UI.Kit.canister [ UI.Kit.h1 "Sources" ] ]
             ]
 
@@ -154,26 +153,26 @@ index amountOfTracks model =
             [ slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ C.block
-                , C.opacity_30
-                , C.text_inherit
+                [ "block"
+                , "opacity-30"
+                , "text-inherit"
                 ]
                 [ Icons.music_note 64 Inherit ]
             , slab
                 Html.a
                 [ href (Page.toString <| Page.Sources New) ]
-                [ C.block
-                , C.leading_normal
-                , C.mt_2
-                , C.opacity_40
-                , C.text_center
-                , C.text_inherit
+                [ "block"
+                , "leading-normal"
+                , "mt-2"
+                , "opacity-40"
+                , "text-center"
+                , "text-inherit"
                 ]
                 [ text "A source is a place where music is stored,"
                 , lineBreak
                 , text "add one so you can play some music "
                 , inline
-                    [ C.align_middle, C.inline_block, C.neg_mt_px ]
+                    [ "align-middle", "inline-block", "-mt-px" ]
                     [ Icons.add 14 Inherit ]
                 ]
             ]
@@ -215,7 +214,7 @@ sourceActions processingContext processingError source =
                         \_ _ ->
                             if progress < 0.05 then
                                 inline
-                                    [ C.inline_block, C.opacity_70, C.px_1 ]
+                                    [ "inline-block", "opacity-70", "px-1" ]
                                     [ case processIndex of
                                         Just 0 ->
                                             Html.text "Listing"
@@ -232,7 +231,7 @@ sourceActions processingContext processingError source =
                                     |> (\s -> s ++ "%")
                                     |> Html.text
                                     |> List.singleton
-                                    |> inline [ C.inline_block, C.opacity_70, C.px_1 ]
+                                    |> inline [ "inline-block", "opacity-70", "px-1" ]
                   , msg = Nothing
                   , title = ""
                   }

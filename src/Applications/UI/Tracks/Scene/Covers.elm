@@ -5,10 +5,9 @@ import Chunky exposing (..)
 import Color exposing (Color)
 import Conditional exposing (ifThenElse)
 import Coordinates
-import Css.Classes as C
 import Dict exposing (Dict)
 import Html exposing (Html, text)
-import Html.Attributes as A exposing (id, style, tabindex)
+import Html.Attributes as A exposing (class, id, style, tabindex)
 import Html.Events as E
 import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
@@ -63,12 +62,12 @@ view deps =
 
 view_ : Dependencies -> Html Msg
 view_ deps =
-    Html.div
-        [ C.flex
-        , C.flex_basis_0
-        , C.flex_col
-        , C.flex_grow
-        , C.relative
+    chunk
+        [ "flex"
+        , "flex-basis-0"
+        , "flex-col"
+        , "flex-grow"
+        , "relative"
         ]
         [ collectionView deps
         , case deps.selectedCover of
@@ -95,40 +94,40 @@ collectionView deps =
             (tabindex (ifThenElse deps.isVisible 0 -1))
             viewAttributes
         )
-        [ C.flex_basis_0
-        , C.flex_grow
-        , C.outline_none
-        , C.overflow_x_hidden
-        , C.overflow_y_auto
-        , C.relative
-        , C.scrolling_touch
-        , C.text_almost_sm
+        [ "flex-basis-0"
+        , "flex-grow"
+        , "outline-none"
+        , "overflow-x-hidden"
+        , "overflow-y-auto"
+        , "relative"
+        , "scrolling-touch"
+        , "text-almost-sm"
         ]
         [ Scene.shadow
-        , Html.div
-            [ C.bg_white
-            , C.flex
-            , C.items_center
-            , C.pt_5
-            , C.px_5
-            , C.relative
-            , C.z_20
+        , chunk
+            [ "bg-white"
+            , "flex"
+            , "items-center"
+            , "pt-5"
+            , "px-5"
+            , "relative"
+            , "z-20"
 
             -- Dark mode
             ------------
-            , C.dark__bg_darkest_hour
+            , "dark:bg-darkest-hour"
             ]
             [ sortGroupButtons deps.sortBy
 
             --
-            , Html.div
-                [ C.flex
-                , C.flex_auto
-                , C.items_center
-                , C.justify_end
-                , C.text_base05
-                , C.text_right
-                , C.text_xs
+            , chunk
+                [ "flex"
+                , "flex-auto"
+                , "items-center"
+                , "justify-end"
+                , "text-base05"
+                , "text-right"
+                , "text-xs"
                 ]
                 [ text (String.fromInt amountOfCovers)
                 , case deps.sortBy of
@@ -156,9 +155,9 @@ collectionView deps =
                         Desc ->
                             A.title "Sorted alphabetically descending"
                     ]
-                    [ C.cursor_pointer
-                    , C.ml_1
-                    , C.opacity_60
+                    [ "cursor-pointer"
+                    , "ml-1"
+                    , "opacity-60"
                     ]
                     [ case deps.sortDirection of
                         Asc ->
@@ -244,31 +243,31 @@ singleCoverView cover deps =
     in
     brick
         [ tabindex (ifThenElse deps.isVisible 0 -1) ]
-        [ C.absolute
-        , C.bg_white
-        , C.flex_basis_0
-        , C.flex_grow
-        , C.inset_0
-        , C.leading_tight
-        , C.outline_none
-        , C.overflow_x_hidden
-        , C.overflow_y_auto
-        , C.text_almost_sm
-        , C.z_30
+        [ "absolute"
+        , "bg-white"
+        , "flex-basis-0"
+        , "flex-grow"
+        , "inset-0"
+        , "leading-tight"
+        , "outline-none"
+        , "overflow-x-hidden"
+        , "overflow-y-auto"
+        , "text-almost-sm"
+        , "z-30"
 
         -- Dark mode
         ------------
-        , C.dark__bg_darkest_hour
+        , "dark:bg-darkest-hour"
         ]
-        [ Html.div
-            [ C.flex
-            , C.font_semibold
-            , C.h_8
-            , C.items_center
-            , C.leading_none
-            , C.neg_ml_2
-            , C.mt_5
-            , C.px_5
+        [ chunk
+            [ "flex"
+            , "font-semibold"
+            , "h-8"
+            , "items-center"
+            , "leading-none"
+            , "-ml-2"
+            , "mt-5"
+            , "px-5"
             ]
             [ headerButton
                 [ E.onClick (TracksMsg DeselectCover) ]
@@ -285,15 +284,15 @@ singleCoverView cover deps =
             ]
 
         --
-        , Html.div
-            [ C.mb_6
-            , C.neg_top_px
-            , C.mt_4
-            , C.relative
+        , chunk
+            [ "mb-6"
+            , "-top-px"
+            , "mt-4"
+            , "relative"
 
             --
-            , ifThenElse condensedView C.block C.flex
-            , ifThenElse condensedView C.mx_5 C.ml_5
+            , ifThenElse condensedView "block" "flex"
+            , ifThenElse condensedView "mx-5" "ml-5"
             ]
             [ itemView
                 { clickable = False, horizontal = condensedView }
@@ -315,18 +314,18 @@ singleCoverView cover deps =
                         }
                         0
                     )
-                |> Html.div
-                    [ ifThenElse condensedView C.px_px C.px_0 ]
+                |> chunk
+                    [ ifThenElse condensedView "px-px" "px-0" ]
                 |> List.singleton
-                |> Html.div
-                    [ C.flex_auto
-                    , C.flex_basis_0
-                    , C.overflow_hidden
-                    , C.select_none
+                |> chunk
+                    [ "flex-auto"
+                    , "flex-basis-0"
+                    , "overflow-hidden"
+                    , "select-none"
 
                     --
-                    , ifThenElse condensedView C.neg_mx_5 C.mx_5
-                    , ifThenElse condensedView C.px_1 C.px_0
+                    , ifThenElse condensedView "-mx-5" "mx-5"
+                    , ifThenElse condensedView "px-1" "px-0"
                     ]
             ]
         ]
@@ -339,20 +338,20 @@ singleCoverView cover deps =
 headerButton attributes { active, label } =
     brick
         attributes
-        [ C.cursor_pointer
-        , C.inline_flex
-        , C.h_8
-        , C.items_center
-        , C.overflow_hidden
-        , C.px_2
-        , C.rounded
+        [ "cursor-pointer"
+        , "inline-flex"
+        , "h-8"
+        , "items-center"
+        , "overflow-hidden"
+        , "px-2"
+        , "rounded"
 
         --
-        , ifThenElse active C.bg_gray_300 C.bg_transparent
-        , ifThenElse active C.dark__bg_base01 C.dark__bg_transparent
+        , ifThenElse active "bg-gray-300" "bg-transparent"
+        , ifThenElse active "dark:bg-base01" "dark:bg-transparent"
         ]
-        [ Html.div
-            [ C.mt_px, C.pt_px ]
+        [ chunk
+            [ "mt-px", "pt-px" ]
             [ label ]
         ]
 
@@ -370,31 +369,31 @@ showCoverMenu cover =
 
 sortGroupButtons : SortBy -> Html Msg
 sortGroupButtons sortBy =
-    Html.div
-        [ C.flex
-        , C.h_8
-        , C.items_center
-        , C.leading_none
-        , C.mr_3
-        , C.text_xs
-        , C.tracking_tad_further
+    chunk
+        [ "flex"
+        , "h-8"
+        , "items-center"
+        , "leading-none"
+        , "mr-3"
+        , "text-xs"
+        , "tracking-tad-further"
         ]
         [ sortGroupButton
             { current = sortBy, btn = Artist }
-            (Html.div
-                [ C.inline_flex, C.items_center ]
-                [ inline [ C.mr_px ] [ Icons.people_alt 16 Inherit ]
-                , inline [ C.ml_1, C.mt_px, C.pl_px, C.pt_px ] [ text "Artists" ]
+            (chunk
+                [ "inline-flex", "items-center" ]
+                [ inline [ "mr-px" ] [ Icons.people_alt 16 Inherit ]
+                , inline [ "ml-1", "mt-px", "pl-px", "pt-px" ] [ text "Artists" ]
                 ]
             )
 
         --
         , sortGroupButton
             { current = sortBy, btn = Album }
-            (Html.div
-                [ C.inline_flex, C.items_center ]
-                [ inline [ C.mr_px ] [ Icons.album 16 Inherit ]
-                , inline [ C.ml_1, C.mt_px, C.pt_px ] [ text "Albums" ]
+            (chunk
+                [ "inline-flex", "items-center" ]
+                [ inline [ "mr-px" ] [ Icons.album 16 Inherit ]
+                , inline [ "ml-1", "mt-px", "pt-px" ] [ text "Albums" ]
                 ]
             )
         ]
@@ -409,7 +408,7 @@ sortGroupButton { current, btn } label =
             |> E.onClick
 
         --
-        , C.mr_1
+        , class "mr-1"
         ]
         { active = current == btn
         , label = label
@@ -478,9 +477,9 @@ compileItemDependencies deps =
 
 listStyles : List (Html.Attribute msg)
 listStyles =
-    [ C.leading_tight
-    , C.pl_5
-    , C.pt_4
+    [ class "leading-tight"
+    , class "pl-5"
+    , class "pt-4"
     ]
 
 
@@ -590,16 +589,16 @@ rowView itemDeps _ idx row =
     raw
         [ case ( shouldRenderGroup, maybeIdentifiers ) of
             ( True, Just identifiers ) ->
-                Html.div
-                    [ C.neg_ml_4 ]
+                chunk
+                    [ "-ml-4" ]
                     [ Scene.group { index = idx } identifiers ]
 
             _ ->
                 nothing
 
         --
-        , Html.div
-            [ C.flex, C.flex_wrap ]
+        , chunk
+            [ "flex", "flex-wrap" ]
             (List.map (itemView { clickable = True, horizontal = False } itemDeps) row)
         ]
 
@@ -633,31 +632,31 @@ type alias ItemViewOptions =
 
 itemView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
 itemView options deps cover =
-    Html.div
-        [ C.antialiased
-        , C.flex_shrink_0
-        , C.font_semibold
+    chunk
+        [ "antialiased"
+        , "flex-shrink-0"
+        , "font-semibold"
 
         --
-        , ifThenElse options.horizontal C.flex C.block
-        , ifThenElse options.horizontal C.mb_0 C.mb_5
+        , ifThenElse options.horizontal "flex" "block"
+        , ifThenElse options.horizontal "mb-0" "mb-5"
 
         --
         , case ( options.horizontal, deps.columns ) of
             ( True, _ ) ->
-                C.w_auto
+                "w-auto"
 
             ( False, 1 ) ->
-                C.w_full
+                "w-full"
 
             ( False, 2 ) ->
-                C.w_1over2
+                "w-1/2"
 
             ( False, 3 ) ->
-                C.w_1over3
+                "w-1/3"
 
             _ ->
-                C.w_1over4
+                "w-1/4"
         ]
         [ coverView options deps cover
         , metadataView options deps cover
@@ -712,16 +711,16 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                     else
                         []
     in
-    Html.div
-        [ C.flex_shrink_0
-        , C.mr_5
-        , C.relative
+    chunk
+        [ "flex-shrink-0"
+        , "mr-5"
+        , "relative"
 
         --
-        , ifThenElse clickable C.cursor_pointer C.cursor_default
-        , ifThenElse horizontal C.h_32 C.h_0
-        , ifThenElse horizontal C.mb_4 C.pt_full
-        , ifThenElse horizontal C.w_32 C.w_auto
+        , ifThenElse clickable "cursor-pointer" "cursor-default"
+        , ifThenElse horizontal "h-32" "h-0"
+        , ifThenElse horizontal "mb-4" "pt-full"
+        , ifThenElse horizontal "w-32" "w-auto"
         ]
         [ brick
             (List.append
@@ -735,34 +734,34 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                     []
                 )
             )
-            [ C.absolute
-            , C.bg_cover
-            , C.bg_gray_300
-            , C.mb_5
-            , C.inset_0
-            , C.rounded_md
-            , C.shadow
+            [ "absolute"
+            , "bg-cover"
+            , "bg-gray-300"
+            , "mb-5"
+            , "inset-0"
+            , "rounded-md"
+            , "shadow"
 
             --
-            , ifThenElse horizontal C.h_32 C.h_auto
+            , ifThenElse horizontal "h-32" "h-auto"
 
             -- Dark mode
             ------------
-            , C.dark__bg_white_025
+            , "dark:bg-white-025"
             ]
             [ if not hasBackgroundImage then
-                Html.div
-                    [ C.absolute
-                    , C.left_1over2
-                    , C.neg_translate_x_1over2
-                    , C.neg_translate_y_1over2
-                    , C.text_gray_400
-                    , C.top_1over2
-                    , C.transform
+                chunk
+                    [ "absolute"
+                    , "left-1/2"
+                    , "-translate-x-1/2"
+                    , "-translate-y-1/2"
+                    , "text-gray-400"
+                    , "top-1/2"
+                    , "transform"
 
                     -- Dark mode
                     ------------
-                    , C.dark__text_base01
+                    , "dark:text-base01"
                     ]
                     [ Icons.album 26 Inherit ]
 
@@ -779,12 +778,12 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                     [ style "-webkit-filter" dropShadow
                     , style "filter" dropShadow
                     ]
-                    [ C.absolute
-                    , C.bottom_0
-                    , C.mb_3
-                    , C.mr_3
-                    , C.right_0
-                    , C.text_white
+                    [ "absolute"
+                    , "bottom-0"
+                    , "mb-3"
+                    , "mr-3"
+                    , "right-0"
+                    , "text-white"
                     ]
                     [ Icons.headset 16 Inherit ]
 
@@ -815,21 +814,21 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
          else
             []
         )
-        [ C.mr_5
-        , C.relative
-        , C.tracking_tad_closer
-        , C.z_10
+        [ "mr-5"
+        , "relative"
+        , "tracking-tad-closer"
+        , "z-10"
 
         --
-        , ifThenElse clickable C.cursor_pointer C.cursor_default
-        , ifThenElse horizontal C.mt_0 C.neg_mt_5
-        , ifThenElse horizontal C.overflow_hidden C.overflow_auto
-        , ifThenElse horizontal C.pt_0 C.pt_2
+        , ifThenElse clickable "cursor-pointer" "cursor-default"
+        , ifThenElse horizontal "mt-0" "-mt-5"
+        , ifThenElse horizontal "overflow-hidden" "overflow-auto"
+        , ifThenElse horizontal "pt-0" "pt-2"
         ]
-        [ Html.div
-            [ C.mt_px
-            , C.pt_px
-            , C.truncate
+        [ chunk
+            [ "mt-px"
+            , "pt-px"
+            , "truncate"
             ]
             [ case sortBy of
                 Album ->
@@ -843,12 +842,12 @@ metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
             ]
 
         --
-        , Html.div
-            [ C.mt_px
-            , C.pt_px
-            , C.text_base05
-            , C.text_xs
-            , C.truncate
+        , chunk
+            [ "mt-px"
+            , "pt-px"
+            , "text-base05"
+            , "text-xs"
+            , "truncate"
             ]
             [ case sortBy of
                 Album ->

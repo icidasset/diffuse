@@ -5,9 +5,8 @@ import Browser
 import Chunky exposing (..)
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
-import Css.Classes as C
 import Html exposing (Html, section)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (on)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
@@ -60,7 +59,7 @@ body model =
             ]
 
          else if model.isDragging then
-            [ C.dragging_something
+            [ class "dragging-something"
             , on "mouseup" (Json.Decode.succeed StoppedDragging)
             , on "touchcancel" (Json.Decode.succeed StoppedDragging)
             , on "touchend" (Json.Decode.succeed StoppedDragging)
@@ -114,11 +113,11 @@ body model =
                 content
                     { opts | justifyCenter = True }
                     [ loadingAnimation
-                    , Html.div
-                        [ C.italic
-                        , C.mt_5
-                        , C.text_white
-                        , C.text_opacity_30
+                    , chunk
+                        [ "italic"
+                        , "mt-5"
+                        , "text-white"
+                        , "text-opacity-30"
                         ]
                         [ case model.authentication of
                             Authentication.Authenticated _ ->
@@ -223,29 +222,29 @@ content { justifyCenter, scrolling } nodes =
         , on "focusin" inputFocusDecoder
         , style "height" "calc(var(--vh, 1vh) * 100)"
         ]
-        [ C.overflow_x_hidden
-        , C.relative
-        , C.scrolling_touch
-        , C.w_screen
-        , C.z_10
+        [ "overflow-x-hidden"
+        , "relative"
+        , "scrolling-touch"
+        , "w-screen"
+        , "z-10"
 
         --
-        , ifThenElse scrolling C.overflow_y_auto C.overflow_y_hidden
+        , ifThenElse scrolling "overflow-y-auto" "overflow-y-hidden"
         ]
         [ brick
             [ style "min-width" "280px" ]
-            [ C.flex
-            , C.flex_col
-            , C.items_center
-            , C.h_full
-            , C.px_3
+            [ "flex"
+            , "flex-col"
+            , "items-center"
+            , "h-full"
+            , "px-3"
 
             --
-            , C.md__px_8
-            , C.lg__px_16
+            , "md:px-8"
+            , "lg:px-16"
 
             --
-            , ifThenElse justifyCenter C.justify_center C.justify_start
+            , ifThenElse justifyCenter "justify-center" "justify-start"
             ]
             nodes
         ]
@@ -282,18 +281,17 @@ overlay maybeAlfred maybeContextMenu =
     in
     brick
         []
-        [ C.inset_0
-        , C.bg_black
-        , C.duration_1000
-        , C.ease_in_out
-        , C.fixed
-        , C.transition
-        , C.transition_opacity
-        , C.z_30
+        [ "inset-0"
+        , "bg-black"
+        , "duration-1000"
+        , "ease-in-out"
+        , "fixed"
+        , "transition-opacity"
+        , "z-30"
 
         --
-        , ifThenElse isShown C.pointer_events_auto C.pointer_events_none
-        , ifThenElse isShown C.opacity_40 C.opacity_0
+        , ifThenElse isShown "pointer-events-auto" "pointer-events-none"
+        , ifThenElse isShown "opacity-40" "opacity-0"
         ]
         []
 
@@ -303,29 +301,29 @@ vessel =
     (>>)
         (brick
             [ style "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
-            [ C.bg_white
-            , C.flex
-            , C.flex_col
-            , C.flex_grow
-            , C.overflow_hidden
-            , C.relative
-            , C.rounded
+            [ "bg-white"
+            , "flex"
+            , "flex-col"
+            , "flex-grow"
+            , "overflow-hidden"
+            , "relative"
+            , "rounded"
 
             -- Dark mode
             ------------
-            , C.dark__bg_darkest_hour
+            , "dark:bg-darkest-hour"
             ]
         )
         (bricky
             [ style "min-height" "296px" ]
-            [ C.flex
-            , C.flex_grow
-            , C.rounded
-            , C.shadow_lg
-            , C.w_full
+            [ "flex"
+            , "flex-grow"
+            , "rounded"
+            , "shadow-lg"
+            , "w-full"
 
             --
-            , C.lg__max_w_insulation
-            , C.lg__min_w_3xl
+            , "lg:max-w-insulation"
+            , "lg:min-w-3xl"
             ]
         )

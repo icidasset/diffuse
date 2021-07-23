@@ -5,10 +5,8 @@ BUILD_DIR 			:= "./build"
 NPM_DIR 				:= "./node_modules"
 SRC_DIR 				:= "./src"
 SYSTEM_DIR 			:= "./system"
-TEMPORARY_DIR 	:= "./elm-stuff/elm-tailwind-css"
 
 ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
-ETC_CMD					:= "pnpx etc"
 
 
 default: dev
@@ -21,7 +19,7 @@ default: dev
 	echo "> Build completed ⚡"
 
 
-@build-prod: quality clean css elm-prod js-prod system css-prod
+@build-prod: quality clean (css "minify") elm-prod js-prod system
 	echo "> Production build completed 🛳"
 
 
@@ -31,59 +29,26 @@ default: dev
 	mkdir -p {{BUILD_DIR}}
 
 
-@css:
-	echo "> Compiling CSS"
+@css minify="false":
+	echo "{{ if minify == "minify" { "> Compiling CSS (optimised)" } else { "> Compiling CSS" } }}"
 
-	mkdir -p {{SRC_DIR}}/Library/Css/
+	{{NPM_DIR}}/.bin/tailwind \
+		--input {{SRC_DIR}}/Css/About.css \
+		--output {{BUILD_DIR}}/about.css \
+		--purge {{SRC_DIR}}/Static/About/**/*.* \
+		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
+		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
+		--jit \
+		{{ if minify == "minify" { "--minify" } else { "" } }}
 
-	{{ETC_CMD}} {{SRC_DIR}}/Css/About.css \
-	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
-	  --output {{BUILD_DIR}}/about.css \
-		\
-		--post-plugin-before postcss-import \
-		--post-plugin-after postcss-custom-properties
-
-	{{ETC_CMD}} {{SRC_DIR}}/Css/Application.css \
-	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
-		--elm-module Css.Classes \
-	  --elm-path {{SRC_DIR}}/Library/Css/Classes.elm \
-	  --output {{BUILD_DIR}}/application.css \
-		\
-		--post-plugin-before postcss-import \
-		--post-plugin-after postcss-custom-properties
-
-
-@css-prod:
-	echo "> Optimising CSS"
-
-	mkdir -p {{SRC_DIR}}/Library/Css/
-
-	NODE_ENV=production {{ETC_CMD}} {{SRC_DIR}}/Css/About.css \
-	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
-	  --output {{BUILD_DIR}}/about.css \
-		\
-		--post-plugin-before postcss-import \
-		--post-plugin-after postcss-custom-properties \
-		\
-		--purge-content {{BUILD_DIR}}/about/**/*.html \
-		--purge-whitelist hljs-string \
-		--purge-whitelist hljs-comment \
-		--purge-whitelist hljs-meta \
-		--purge-whitelist bash
-
-	NODE_ENV=production {{ETC_CMD}} {{SRC_DIR}}/Css/Application.css \
-	  --config {{SYSTEM_DIR}}/Css/Tailwind.js \
-	  --output {{BUILD_DIR}}/application.css \
-		\
-		--post-plugin-before postcss-import \
-		--post-plugin-after postcss-custom-properties \
-		\
-	  --purge-content {{BUILD_DIR}}/ui.elm.js \
-		--purge-content {{BUILD_DIR}}/index.html \
-		--purge-whitelist button \
-		--purge-whitelist input \
-		--purge-whitelist select \
-		--purge-whitelist textarea
+	{{NPM_DIR}}/.bin/tailwind \
+		--input {{SRC_DIR}}/Css/Application.css \
+		--output {{BUILD_DIR}}/application.css \
+		--purge "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm" \
+		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
+		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
+		--jit \
+		{{ if minify == "minify" { "--minify" } else { "" } }}
 
 
 @elm:
@@ -183,7 +148,7 @@ default: dev
 	)
 
 
-@elm-housekeeping: reset-elm-css
+@elm-housekeeping:
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
 	echo "> Running elm-format"
@@ -197,18 +162,11 @@ default: dev
 	curl --silent --show-error --fail -o ./vendor/pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
 
 
-@quality: reset-elm-css
+@quality:
 	echo "> Running es-lint"
 	{{NPM_DIR}}/.bin/eslint src/Javascript/**
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review
-
-
-@reset-elm-css:
-	# This removes the generated Elm module for the CSS selectors,
-	# and also the `tmp` dir which is related to that.
-	rm -rf {{TEMPORARY_DIR}}
-	rm -f {{SRC_DIR}}/Library/Css/Classes.elm
 
 
 @server:

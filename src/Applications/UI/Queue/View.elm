@@ -3,7 +3,6 @@ module UI.Queue.View exposing (view)
 import Chunky exposing (..)
 import Common
 import Conditional exposing (..)
-import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (href)
 import Html.Lazy as Lazy
@@ -78,9 +77,9 @@ futureView playingNext selectedQueueItem dnd =
         -----------------------------------------
         , if List.isEmpty playingNext then
             chunk
-                [ C.relative ]
+                [ "relative" ]
                 [ chunk
-                    [ C.absolute, C.left_0, C.top_0 ]
+                    [ "absolute", "left-0", "top-0" ]
                     [ UI.Kit.canister [ UI.Kit.h1 "Up next" ] ]
                 ]
 
@@ -95,7 +94,7 @@ futureView playingNext selectedQueueItem dnd =
                             , toMsg = UI.DnD
                             }
                         )
-                    |> chunky [ C.mt_3 ]
+                    |> chunky [ "mt-3" ]
                 ]
 
         --
@@ -104,12 +103,12 @@ futureView playingNext selectedQueueItem dnd =
                 [ slab
                     Html.a
                     [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                    [ C.text_inherit, C.block, C.opacity_30 ]
+                    [ "text-inherit", "block", "opacity-30" ]
                     [ Icons.music_note 64 Inherit ]
                 , slab
                     Html.a
                     [ href (Page.toString <| Page.Sources UI.Sources.Page.New) ]
-                    [ C.text_inherit, C.block, C.leading_normal, C.mt_2, C.opacity_40, C.text_center ]
+                    [ "text-inherit", "block", "leading-normal", "mt-2", "opacity-40", "text-center" ]
                     [ text "Nothing here yet,"
                     , lineBreak
                     , text "add some music first."
@@ -141,29 +140,29 @@ futureItem selectedQueueItem idx item =
     in
     { label =
         inline
-            [ C.block
-            , C.truncate
+            [ "block"
+            , "truncate"
 
             --
             , if item.manualEntry || isSelected then
-                C.text_inherit
+                "text-inherit"
 
               else
-                C.text_base05
+                "text-base05"
 
             -- Dark mode
             ------------
             , if item.manualEntry || isSelected then
-                C.dark__text_inherit
+                "dark:text-inherit"
 
               else
-                C.dark__text_base04
+                "dark:text-base04"
             ]
             [ inline
-                [ C.inline_block
-                , C.mr_2
-                , C.opacity_60
-                , C.text_xs
+                [ "inline-block"
+                , "mr-2"
+                , "opacity-60"
+                , "text-xs"
                 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
@@ -202,13 +201,13 @@ futureItem selectedQueueItem idx item =
     }
 
 
-subtleFutureIconClasses : List (Html.Attribute UI.Msg)
+subtleFutureIconClasses : List String
 subtleFutureIconClasses =
-    [ C.text_gray_500
+    [ "text-gray-500"
 
     -- Dark mode
     ------------
-    , C.dark__text_base02
+    , "dark:text-base02"
     ]
 
 
@@ -239,9 +238,9 @@ historyView playedPreviously dnd =
         -----------------------------------------
         , if List.isEmpty playedPreviously then
             chunk
-                [ C.relative ]
+                [ "relative" ]
                 [ chunk
-                    [ C.absolute, C.left_0, C.top_0 ]
+                    [ "absolute", "left-0", "top-0" ]
                     [ UI.Kit.canister [ UI.Kit.h1 "History" ] ]
                 ]
 
@@ -252,17 +251,17 @@ historyView playedPreviously dnd =
                     |> List.reverse
                     |> List.indexedMap historyItem
                     |> UI.List.view UI.List.Normal
-                    |> chunky [ C.mt_3 ]
+                    |> chunky [ "mt-3" ]
                 ]
 
         --
         , if List.isEmpty playedPreviously then
             UI.Kit.centeredContent
                 [ chunk
-                    [ C.opacity_30 ]
+                    [ "opacity-30" ]
                     [ Icons.music_note 64 Inherit ]
                 , chunk
-                    [ C.leading_normal, C.mt_2, C.opacity_40, C.text_center ]
+                    [ "leading-normal", "mt-2", "opacity-40", "text-center" ]
                     [ text "Nothing here yet,"
                     , lineBreak
                     , text "play some music first."
@@ -282,9 +281,9 @@ historyItem idx ({ identifiedTrack, manualEntry } as item) =
     in
     { label =
         inline
-            [ C.block, C.truncate ]
+            [ "block", "truncate" ]
             [ inline
-                [ C.inline_block, C.text_xs, C.mr_2 ]
+                [ "inline-block", "text-xs", "mr-2" ]
                 [ text (String.fromInt <| idx + 1), text "." ]
             , text (track.tags.artist ++ " - " ++ track.tags.title)
             ]

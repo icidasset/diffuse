@@ -1,7 +1,7 @@
 module UI.Tracks.Scene exposing (..)
 
+import Chunky exposing (..)
 import Conditional exposing (..)
-import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes as A
 import Material.Icons as Icons
@@ -21,47 +21,45 @@ group { index } identifiers =
                 |> Maybe.map .name
                 |> Maybe.withDefault "Unknown"
     in
-    Html.div
-        [ A.style "height" "18px"
+    brick
+        [ A.style "height" "18px" ]
+        [ "box-content"
+        , "font-display"
+        , "font-semibold"
+        , "leading-normal"
+        , "pb-3"
+        , "px-4"
+        , "text-base04"
+        , "text-xxs"
+        , "tracking-tad-further"
+        , "truncate"
 
         --
-        , C.box_content
-        , C.font_display
-        , C.font_semibold
-        , C.leading_normal
-        , C.pb_3
-        , C.px_4
-        , C.text_base04
-        , C.text_xxs
-        , C.tracking_tad_further
-        , C.truncate
-
-        --
-        , ifThenElse (0 == index) C.pt_3 C.pt_4
+        , ifThenElse (0 == index) "pt-3" "pt-4"
         ]
         [ groupIcon
-        , Html.span [ C.align_middle ] [ text groupName ]
+        , inline [ "align-middle" ] [ text groupName ]
         ]
 
 
 shadow : Html msg
 shadow =
-    Html.div
-        [ C.h_10
-        , C.left_0
-        , C.neg_mt_10
-        , C.neg_translate_y_full
-        , C.opacity_30
-        , C.right_0
-        , C.shadow_md
-        , C.sticky
-        , C.top_0
-        , C.transform
-        , C.z_10
+    chunk
+        [ "h-10"
+        , "left-0"
+        , "-mt-10"
+        , "-translate-y-full"
+        , "opacity-30"
+        , "right-0"
+        , "shadow-md"
+        , "sticky"
+        , "top-0"
+        , "transform"
+        , "z-10"
 
         -- Dark mode
         ------------
-        , C.dark__shadow_md_darker
+        , "dark:shadow-md-darker"
         ]
         []
 
@@ -72,6 +70,6 @@ shadow =
 
 groupIcon : Html msg
 groupIcon =
-    Html.span
-        [ C.align_middle, C.inline_block, C.leading_0, C.pr_2 ]
+    inline
+        [ "align-middle", "inline-block", "leading-0", "pr-2" ]
         [ Icons.library_music 16 Inherit ]

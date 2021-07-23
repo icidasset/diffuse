@@ -18,7 +18,7 @@ type alias Icon msg =
 -- 🔱
 
 
-wrapped : List (Html.Attribute msg) -> Icon msg -> Int -> Coloring -> VirtualDom.Node msg
+wrapped : List String -> Icon msg -> Int -> Coloring -> VirtualDom.Node msg
 wrapped classes icon size coloring =
     coloring
         |> icon size

@@ -3,7 +3,6 @@ module UI.ContextMenu exposing (view)
 import Chunky exposing (..)
 import Conditional exposing (..)
 import ContextMenu exposing (..)
-import Css.Classes as C
 import Html exposing (Html, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (custom)
@@ -40,22 +39,22 @@ view viewportWidth m =
                 --
                 , style "min-width" "170px"
                 ]
-                [ C.absolute
-                , C.bg_white
-                , C.leading_loose
-                , C.overflow_hidden
-                , C.neg_translate_x_1over2
-                , C.neg_translate_y_1over2
-                , C.rounded
-                , C.shadow_md
-                , C.select_none
-                , C.text_almost_sm
-                , C.transform
-                , C.z_50
+                [ "absolute"
+                , "bg-white"
+                , "leading-loose"
+                , "overflow-hidden"
+                , "-translate-x-1/2"
+                , "-translate-y-1/2"
+                , "rounded"
+                , "shadow-md"
+                , "select-none"
+                , "text-almost-sm"
+                , "transform"
+                , "z-50"
 
                 -- Dark mode
                 ------------
-                , C.dark__bg_darkest_hour
+                , "dark:bg-darkest-hour"
                 ]
                 (List.map
                     (\item ->
@@ -86,44 +85,44 @@ itemView { icon, label, msg, active } =
                 }
             )
         ]
-        [ C.border_b
-        , C.cursor_pointer
-        , C.pl_4
-        , C.pr_8
-        , C.py_3
-        , C.truncate
+        [ "border-b"
+        , "cursor-pointer"
+        , "pl-4"
+        , "pr-8"
+        , "py-3"
+        , "truncate"
 
         --
-        , C.last__border_transparent
+        , "last:border-transparent"
 
         --
-        , ifThenElse active C.antialiased C.subpixel_antialiased
-        , ifThenElse active C.border_transparent C.border_gray_200
-        , ifThenElse active C.bg_base00 C.bg_transparent
-        , ifThenElse active C.text_white C.text_inherit
-        , ifThenElse active C.font_semibold C.font_normal
+        , ifThenElse active "antialiased" "subpixel-antialiased"
+        , ifThenElse active "border-transparent" "border-gray-200"
+        , ifThenElse active "bg-base00" "bg-transparent"
+        , ifThenElse active "text-white" "text-inherit"
+        , ifThenElse active "font-semibold" "font-normal"
 
         -- Dark mode
         ------------
-        , C.dark__border_base00
+        , "dark:border-base00"
 
         --
-        , ifThenElse active C.dark__bg_base07 C.dark__bg_transparent
-        , ifThenElse active C.dark__text_darkest_hour C.dark__text_inherit
+        , ifThenElse active "dark:bg-base07" "dark:bg-transparent"
+        , ifThenElse active "dark:text-darkest-hour" "dark:text-inherit"
         ]
         [ inline
-            [ C.align_middle
-            , C.inline_block
-            , C.leading_0
+            [ "align-middle"
+            , "inline-block"
+            , "leading-0"
             ]
             [ icon 14 Inherit ]
         , inline
-            [ C.align_middle
-            , C.inline_block
-            , C.leading_0
-            , C.ml_2
-            , C.pl_1
-            , C.relative
+            [ "align-middle"
+            , "inline-block"
+            , "leading-0"
+            , "ml-2"
+            , "pl-1"
+            , "relative"
             ]
             [ text label ]
         ]

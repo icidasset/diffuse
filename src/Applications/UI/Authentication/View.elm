@@ -2,7 +2,6 @@ module UI.Authentication.View exposing (view)
 
 import Chunky exposing (..)
 import Conditional exposing (..)
-import Css.Classes as C
 import Html exposing (Html, a, button, text)
 import Html.Attributes exposing (attribute, href, placeholder, src, style, target, title, value, width)
 import Html.Events exposing (onClick, onSubmit)
@@ -32,24 +31,24 @@ view =
 view_ : State -> Html Authentication.Msg
 view_ state =
     chunk
-        [ C.flex
-        , C.flex_col
-        , C.h_full
-        , C.items_center
+        [ "flex"
+        , "flex-col"
+        , "h-full"
+        , "items-center"
         ]
         [ brick
             [ style "height" "42%" ]
-            [ C.flex
-            , C.items_center
-            , C.pb_8
+            [ "flex"
+            , "items-center"
+            , "pb-8"
 
             --
-            , C.md__pb_0
+            , "md:pb-0"
             ]
             [ -- Logo
               -------
               chunk
-                [ C.py_5, C.relative ]
+                [ "py-5", "relative" ]
                 [ slab
                     Html.img
                     [ onClick CancelFlow
@@ -66,10 +65,10 @@ view_ state =
                     ]
                     [ case state of
                         Welcome ->
-                            C.cursor_default
+                            "cursor-default"
 
                         _ ->
-                            C.cursor_pointer
+                            "cursor-pointer"
                     ]
                     []
 
@@ -94,7 +93,7 @@ view_ state =
                         [ text "I need a passphrase to encrypt your personal data."
                         , lineBreak
                         , inline
-                            [ C.font_normal, C.text_white_60 ]
+                            [ "font-normal", "text-white-60" ]
                             [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
@@ -104,7 +103,7 @@ view_ state =
                         [ text "I need a new passphrase to encrypt your personal data."
                         , lineBreak
                         , inline
-                            [ C.font_normal, C.text_white_60 ]
+                            [ "font-normal", "text-white-60" ]
                             [ text "This'll prevent other people from reading your data." ]
                         ]
                             |> chunk []
@@ -112,8 +111,8 @@ view_ state =
 
                     Welcome ->
                         [ text "Diffuse plays music"
-                        , inline [ C.not_italic, C.font_normal, C.mr_px ] [ text " ♫ " ]
-                        , inline [ C.font_normal, C.text_white_60 ]
+                        , inline [ "not-italic", "font-normal", "mr-px" ] [ text " ♫ " ]
+                        , inline [ "font-normal", "text-white-60" ]
                             [ text "from your Dropbox,"
                             , lineBreak
                             , text "IPFS node, Amazon S3 bucket, or any other"
@@ -128,7 +127,7 @@ view_ state =
                         [ text "Where would you like to keep your personal data?"
                         , lineBreak
                         , inline
-                            [ C.font_normal, C.text_white_60 ]
+                            [ "font-normal", "text-white-60" ]
                             [ text "That's things like your favourites, your playlists, etc."
                             , lineBreak
                             , text "After this you'll be able add some music ♫"
@@ -171,24 +170,24 @@ view_ state =
         -- Link to about page
         -----------------------------------------
         , chunk
-            [ C.antialiased
-            , C.font_semibold
-            , C.flex
-            , C.flex_grow
-            , C.items_end
-            , C.leading_snug
-            , C.pb_8
-            , C.pt_3
-            , C.text_sm
+            [ "antialiased"
+            , "font-semibold"
+            , "flex"
+            , "flex-grow"
+            , "items-end"
+            , "leading-snug"
+            , "pb-8"
+            , "pt-3"
+            , "text-sm"
             ]
             [ slab
                 a
                 [ href "about/" ]
-                [ C.border_b
-                , C.border_white_60
-                , C.italic
-                , C.no_underline
-                , C.text_white_60
+                [ "border-b"
+                , "border-white-60"
+                , "italic"
+                , "no-underline"
+                , "text-white-60"
                 ]
                 [ text "More info" ]
             ]
@@ -202,9 +201,9 @@ view_ state =
 welcomeScreen : Html Authentication.Msg
 welcomeScreen =
     chunk
-        [ C.mt_3
-        , C.relative
-        , C.z_10
+        [ "mt-3"
+        , "relative"
+        , "z-10"
         ]
         [ UI.Kit.buttonWithColor
             UI.Kit.Blank
@@ -214,10 +213,10 @@ welcomeScreen =
                 Html.span
                 [ style "letter-spacing" "0.25em"
                 ]
-                [ C.align_middle
-                , C.inline_block
-                , C.pt_px
-                , C.text_nearly_sm
+                [ "align-middle"
+                , "inline-block"
+                , "pt-px"
+                , "text-nearly-sm"
                 ]
                 [ text "SIGN IN" ]
             )
@@ -231,16 +230,16 @@ welcomeScreen =
 choicesScreen : Html Authentication.Msg
 choicesScreen =
     chunk
-        [ C.bg_white
-        , C.rounded
-        , C.px_4
-        , C.py_2
-        , C.relative
-        , C.z_10
+        [ "bg-white"
+        , "rounded"
+        , "px-4"
+        , "py-2"
+        , "relative"
+        , "z-10"
 
         -- Dark mode
         ------------
-        , C.dark__bg_darkest_hour
+        , "dark:bg-darkest-hour"
         ]
         [ choiceButton
             { action = ShowNewEncryptionKeyScreen Local
@@ -286,15 +285,15 @@ choicesScreen =
         -- More options
         ---------------
         , chunk
-            [ C.pb_px, C.pt_4, C.text_center ]
+            [ "pb-px", "pt-4", "text-center" ]
             [ slab
                 Html.span
                 [ title "More options"
                 , Mouse.onClick ShowMoreOptions
                 ]
-                [ C.inline_block, C.px_1, C.cursor_pointer, C.leading_none ]
+                [ "inline-block", "px-1", "cursor-pointer", "leading-none" ]
                 [ chunk
-                    [ C.pointer_events_none ]
+                    [ "pointer-events-none" ]
                     [ Icons.more_horiz 22 Inherit ]
                 ]
             ]
@@ -311,16 +310,16 @@ choiceButton :
     -> Html msg
 choiceButton { action, icon, infoLink, label, outOfOrder } =
     chunk
-        [ C.border_b
-        , C.border_gray_300
-        , C.relative
+        [ "border-b"
+        , "border-gray-300"
+        , "relative"
 
         --
-        , C.last__border_b_0
+        , "last:border-b-0"
 
         -- Dark mode
         ------------
-        , C.dark__border_base01
+        , "dark:border-base01"
         ]
         [ -----------------------------------------
           -- Button
@@ -328,27 +327,27 @@ choiceButton { action, icon, infoLink, label, outOfOrder } =
           slab
             button
             [ onClick action ]
-            [ C.bg_transparent
-            , C.cursor_pointer
-            , C.flex
-            , C.items_center
-            , C.leading_none
-            , C.min_w_tiny
-            , C.outline_none
-            , C.px_2
-            , C.py_4
-            , C.text_left
-            , C.text_sm
+            [ "bg-transparent"
+            , "cursor-pointer"
+            , "flex"
+            , "items-center"
+            , "leading-none"
+            , "min-w-tiny"
+            , "outline-none"
+            , "px-2"
+            , "py-4"
+            , "text-left"
+            , "text-sm"
             ]
             [ chunk
-                [ C.flex
-                , C.items_center
+                [ "flex"
+                , "items-center"
 
                 --
-                , ifThenElse outOfOrder C.opacity_20 C.opacity_100
+                , ifThenElse outOfOrder "opacity-20" "opacity-100"
                 ]
                 [ inline
-                    [ C.inline_flex, C.mr_4 ]
+                    [ "inline-flex", "mr-4" ]
                     [ icon 16 Inherit ]
                 , text label
                 ]
@@ -370,20 +369,20 @@ choiceButton { action, icon, infoLink, label, outOfOrder } =
                     , target "_blank"
                     , title ("Learn more about " ++ label)
                     ]
-                    [ C.absolute
-                    , C.cursor_pointer
-                    , C.duration_100
-                    , C.leading_none
-                    , C.ml_4
-                    , C.neg_translate_y_1over2
-                    , C.opacity_40
-                    , C.pl_4
-                    , C.text_white
-                    , C.transition
-                    , C.transform
+                    [ "absolute"
+                    , "cursor-pointer"
+                    , "duration-100"
+                    , "leading-none"
+                    , "ml-4"
+                    , "opacity-40"
+                    , "pl-4"
+                    , "text-white"
+                    , "transition-opacity"
+                    , "transform"
+                    , "-translate-y-1/2"
 
                     --
-                    , C.hocus__opacity_100
+                    , "hocus:opacity-100"
                     ]
                     [ Icons.help 17 Inherit ]
 
@@ -401,14 +400,14 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
     slab
         Html.form
         [ onSubmit withEncryption ]
-        [ C.flex
-        , C.flex_col
-        , C.max_w_xs
-        , C.px_3
-        , C.w_screen
+        [ "flex"
+        , "flex-col"
+        , "max-w-xs"
+        , "px-3"
+        , "w-screen"
 
         --
-        , C.sm__px_0
+        , "sm:px-0"
         ]
         [ UI.Kit.textArea
             [ attribute "autocapitalize" "none"
@@ -432,17 +431,17 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             (text "Continue")
         , brick
             [ onClickStopPropagation withoutEncryption ]
-            [ C.cursor_pointer
-            , C.flex
-            , C.items_center
-            , C.justify_center
-            , C.leading_snug
-            , C.mt_3
-            , C.opacity_50
-            , C.text_white
-            , C.text_xs
+            [ "cursor-pointer"
+            , "flex"
+            , "items-center"
+            , "justify-center"
+            , "leading-snug"
+            , "mt-3"
+            , "opacity-50"
+            , "text-white"
+            , "text-xs"
             ]
-            [ inline [ C.inline_block, C.leading_none, C.mr_2 ] [ Icons.warning 13 Inherit ]
+            [ inline [ "inline-block", "leading-none", "mr-2" ] [ Icons.warning 13 Inherit ]
             , text "Continue without encryption"
             ]
         ]
@@ -457,14 +456,14 @@ inputScreen question =
     slab
         Html.form
         [ onSubmit ConfirmInput ]
-        [ C.flex
-        , C.flex_col
-        , C.max_w_xs
-        , C.px_3
-        , C.w_screen
+        [ "flex"
+        , "flex-col"
+        , "max-w-xs"
+        , "px-3"
+        , "w-screen"
 
         --
-        , C.sm__px_0
+        , "sm:px-0"
         ]
         [ UI.Kit.textFieldAlt
             [ attribute "autocapitalize" "off"
@@ -486,50 +485,50 @@ inputScreen question =
 speechBubble : Html msg -> Html msg
 speechBubble contents =
     chunk
-        [ C.absolute
-        , C.antialiased
-        , C.bg_background
-        , C.border_b
-        , C.border_transparent
-        , C.font_semibold
-        , C.italic
-        , C.leading_snug
-        , C.left_1over2
-        , C.max_w_screen
-        , C.neg_translate_x_1over2
-        , C.px_4
-        , C.py_2
-        , C.rounded
-        , C.text_center
-        , C.text_sm
-        , C.text_white
-        , C.top_full
-        , C.transform
-        , C.whitespace_no_wrap
+        [ "absolute"
+        , "antialiased"
+        , "bg-background"
+        , "border-b"
+        , "border-transparent"
+        , "font-semibold"
+        , "italic"
+        , "leading-snug"
+        , "left-1/2"
+        , "max-w-screen"
+        , "-translate-x-1/2"
+        , "px-4"
+        , "py-2"
+        , "rounded"
+        , "text-center"
+        , "text-sm"
+        , "text-white"
+        , "top-full"
+        , "transform"
+        , "whitespace-nowrap"
 
         -- Dark mode
         ------------
-        , C.dark__bg_darkest_hour
-        , C.dark__text_gray_600
+        , "dark:bg-darkest-hour"
+        , "dark:text-gray-600"
         ]
         [ contents
 
         --
         , brick
             speechBubbleArrowStyles
-            [ C.absolute
-            , C.border_background
-            , C.h_0
-            , C.left_1over2
-            , C.neg_translate_x_1over2
-            , C.neg_translate_y_full
-            , C.top_0
-            , C.transform
-            , C.w_0
+            [ "absolute"
+            , "border-background"
+            , "h-0"
+            , "left-1/2"
+            , "-translate-x-1/2"
+            , "-translate-y-full"
+            , "top-0"
+            , "transform"
+            , "w-0"
 
             -- Dark mode
             ------------
-            , C.dark__border_darkest_hour
+            , "dark:border-darkest-hour"
             ]
             []
         ]

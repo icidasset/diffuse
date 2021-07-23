@@ -2,7 +2,6 @@ module UI.Backdrop exposing (..)
 
 import Chunky exposing (..)
 import Color
-import Css.Classes as C
 import Html exposing (Html)
 import Html.Attributes exposing (src, style)
 import Html.Events exposing (on)
@@ -91,9 +90,9 @@ setDefault model =
 view : Model -> Html Msg
 view model =
     chunk
-        [ C.fixed
-        , C.neg_inset_px
-        , C.z_0
+        [ "fixed"
+        , "-inset-px"
+        , "z-0"
         ]
         [ Lazy.lazy chosen model.chosenBackdrop
         , Lazy.lazy2 loaded model.loadedBackdrops model.fadeInBackdrop
@@ -102,11 +101,11 @@ view model =
         ---------
         , brick
             [ style "background" "linear-gradient(#0000, rgba(0, 0, 0, 0.175))" ]
-            [ C.absolute
-            , C.bottom_0
-            , C.h_64
-            , C.inset_x_0
-            , C.z_10
+            [ "absolute"
+            , "bottom-0"
+            , "h-64"
+            , "inset-x-0"
+            , "z-10"
             ]
             []
         ]
@@ -185,12 +184,12 @@ chosen maybeChosen =
                 , src ("images/Background/" ++ c)
                 , style "opacity" "0.00001"
                 ]
-                [ C.fixed
-                , C.h_px
-                , C.left_full
-                , C.overflow_hidden
-                , C.top_full
-                , C.w_px
+                [ "fixed"
+                , "h-px"
+                , "left-full"
+                , "overflow-hidden"
+                , "top-full"
+                , "w-px"
                 ]
                 []
 
@@ -216,26 +215,26 @@ image : Bool -> Bool -> String -> Html msg
 image fadeIn isPrevious loadedBackdrop =
     let
         defaultClasses =
-            [ C.bg_cover
-            , C.fixed
-            , C.inset_0
+            [ "bg-cover"
+            , "fixed"
+            , "inset-0"
 
             -- Opacity
             ----------
             , if isPrevious || not fadeIn then
-                C.opacity_100
+                "opacity-100"
 
               else
-                C.opacity_0
+                "opacity-0"
             ]
 
         animationClasses =
             if not isPrevious && fadeIn then
-                [ C.animation_2s
-                , C.animation_delay_50ms
-                , C.animation_fadeIn
-                , C.animation_fill_forwards
-                , C.animation_once
+                [ "animation-2s"
+                , "animation-delay-50ms"
+                , "animation-fadeIn"
+                , "animation-fill-forwards"
+                , "animation-once"
                 ]
 
             else
