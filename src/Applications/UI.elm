@@ -337,6 +337,9 @@ update msg =
         HideOverlay ->
             Interface.hideOverlay
 
+        LostWindowFocus ->
+            Interface.lostWindowFocus
+
         MsgViaContextMenu a ->
             Interface.msgViaContextMenu a
 
@@ -542,6 +545,7 @@ subscriptions model =
         -----------------------------------------
         , Browser.Events.onResize Interface.onResize
         , Ports.indicateTouchDevice (\_ -> SetIsTouchDevice True)
+        , Ports.lostWindowFocus (always LostWindowFocus)
         , Ports.preferredColorSchemaChanged PreferredColorSchemaChanged
         , Ports.showErrorNotification (Notifications.error >> ShowNotification)
         , Ports.showStickyErrorNotification (Notifications.stickyError >> ShowNotification)

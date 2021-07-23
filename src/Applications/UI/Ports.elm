@@ -59,6 +59,9 @@ port downloadTracksFinished : (() -> msg) -> Sub msg
 port fromAlien : (Alien.Event -> msg) -> Sub msg
 
 
+port lostWindowFocus : (() -> msg) -> Sub msg
+
+
 port indicateTouchDevice : (() -> msg) -> Sub msg
 
 

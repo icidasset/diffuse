@@ -555,6 +555,11 @@ function removeFocus() {
 }
 
 
+window.addEventListener("blur", event => {
+  if (app && event.target === window) app.ports.lostWindowFocus.send(null)
+})
+
+
 
 // Forms
 // -----

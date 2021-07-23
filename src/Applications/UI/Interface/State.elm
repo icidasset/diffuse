@@ -129,6 +129,11 @@ hideOverlay model =
         Return.singleton model
 
 
+lostWindowFocus : Manager
+lostWindowFocus model =
+    Return.singleton { model | focusedOnInput = False, pressedKeys = [] }
+
+
 preferredColorSchemaChanged : { dark : Bool } -> Manager
 preferredColorSchemaChanged { dark } model =
     Return.singleton { model | darkMode = dark }

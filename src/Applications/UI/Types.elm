@@ -226,6 +226,7 @@ type Msg
     | DnD (DnD.Msg Int)
     | FocusedOnInput
     | HideOverlay
+    | LostWindowFocus
     | MsgViaContextMenu Msg
     | PreferredColorSchemaChanged { dark : Bool }
     | RemoveNotification { id : Int }
