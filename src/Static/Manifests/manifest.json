@@ -18,6 +18,18 @@
   ],
   "start_url": ".",
   "theme_color": "#8a90a9",
-  "background_color": "#02070E",
-  "display": "standalone"
+  "background_color": "#02070e",
+  "display": "standalone",
+  "screenshots": [
+    {
+      "src": "https://icidasset-public.s3.amazonaws.com/diffuse-v3.jpg",
+      "type": "image/jpg",
+      "sizes": "2840x1602"
+    },
+    {
+      "src": "https://icidasset-public.s3.amazonaws.com/diffuse-v3-art.jpg",
+      "type": "image/jpg",
+      "sizes": "2840x1602"
+    }
+  ]
 }
