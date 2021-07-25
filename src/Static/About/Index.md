@@ -131,3 +131,11 @@ ESC - Close overlay, close context-menu, deselect album cover, etc.
 There's a small link, or button if you will, on the "Settings → Import / Export"
 page that will allow you to import data from version 1 of the app. Note that this
 will need to reflect the authentication/storage method you chose in version 1.
+
+
+
+<div id="Misc" />
+
+## 🪐
+
+_Part of the <a href="https://ring.0data.app/#random" target="_blank">App Ring</a>_
