@@ -492,6 +492,9 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
         listIdx =
             identifiers.indexInList
 
+        cantDrag =
+            favouritesOnly || Maybe.isJust searchTerm
+
         dragEnv =
             { model = dnd
             , toMsg = DnD
@@ -522,13 +525,9 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
 
             --
             , List.append
-                (if isSelected && not favouritesOnly && Maybe.isNothing searchTerm then
+                (if isSelected then
                     [ touchContextMenuEvent identifiedTrack (Just dragEnv)
                     , DnD.listenToStart dragEnv listIdx
-                    ]
-
-                 else if isSelected then
-                    [ touchContextMenuEvent identifiedTrack (Just dragEnv)
                     ]
 
                  else

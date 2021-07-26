@@ -6,6 +6,7 @@ import Notifications
 import Return exposing (return)
 import Return.Ext as Return
 import Tracks
+import UI.Common.State as Common
 import UI.DnD as DnD
 import UI.Page as Page
 import UI.Playlists.State as Playlists
@@ -73,7 +74,7 @@ dnd dragMsg model =
                 { model | dnd = d }
     in
     if DnD.hasDropped d then
-        case model.page of
+        case m.page of
             Page.Queue _ ->
                 let
                     ( from, to ) =
@@ -83,21 +84,31 @@ dnd dragMsg model =
 
                     newFuture =
                         Queue.moveItem
-                            { from = from, to = to, shuffle = model.shuffle }
-                            model.playingNext
+                            { from = from, to = to, shuffle = m.shuffle }
+                            m.playingNext
                 in
                 Queue.fill { m | playingNext = newFuture }
 
             Page.Index ->
-                case model.scene of
+                let
+                    trackCanBeMoved =
+                        not m.favouritesOnly && Maybe.isNothing m.searchTerm
+                in
+                case m.scene of
                     Tracks.Covers ->
                         -- TODO
                         Return.singleton m
 
                     Tracks.List ->
-                        Playlists.moveTrackInSelected
-                            { to = Maybe.withDefault 0 (DnD.modelTarget d) }
-                            m
+                        if trackCanBeMoved then
+                            Playlists.moveTrackInSelected
+                                { to = Maybe.withDefault 0 (DnD.modelTarget d) }
+                                m
+
+                        else
+                            "Can't move tracks in a playlist whilst using favourites-only mode, or while searching."
+                                |> Notifications.casual
+                                |> Common.showNotificationWithModel m
 
             _ ->
                 Return.singleton m
