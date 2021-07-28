@@ -20,7 +20,8 @@ jobs:
           
       - uses: cachix/cachix-action@v10
         with:
-          name: nix-cache
+          name: diffuse
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
           
       # Cache
       - uses: actions/cache@v2
