@@ -60,7 +60,8 @@ jobs:
           outPath: compressed/diffuse-web.tar.gz
       
       # Get Diffuse's version number
-      - uses: martinbeentjes/npm-get-version-action@v1.1.0
+      - id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.1.0
       
       # Create release
       - uses: actions/create-release@v1.1.2
@@ -68,8 +69,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "${{ steps.package-version.outputs.current-version}}"
-          release_name: "v${{ steps.package-version.outputs.current-version}}"
+          tag_name: "${{ steps.package-version.outputs.current-version }}"
+          release_name: "v${{ steps.package-version.outputs.current-version }}"
           body: "See the assets to download this version and install."
           draft: true
           prerelease: true
