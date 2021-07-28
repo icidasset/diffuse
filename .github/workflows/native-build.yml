@@ -17,10 +17,6 @@ jobs:
       - uses: cachix/install-nix-action@v13
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      # - uses: actions/setup-haskell@v1.1
-      #   with:
-      #     enable-stack: true
-      #     stack-version: latest
       
       # Tasks
       - run: nix-shell --run "just install-deps"
@@ -63,8 +59,8 @@ jobs:
           files: ./build
           outPath: compressed/diffuse-web.tar.gz
       
-      # Get Diffuse's version number  
-      - run: echo ::set-env name=PACKAGE_VERSION::$(node -p "require('./package.json').version")
+      # Get Diffuse's version number
+      - uses: martinbeentjes/npm-get-version-action@v1.1.0
       
       # Create release
       - uses: actions/create-release@v1.1.2
@@ -72,8 +68,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "${{ env.PACKAGE_VERSION }}"
-          release_name: "v${{ env.PACKAGE_VERSION }}"
+          tag_name: "${{ steps.package-version.outputs.current-version}}"
+          release_name: "v${{ steps.package-version.outputs.current-version}}"
           body: "See the assets to download this version and install."
           draft: true
           prerelease: true
