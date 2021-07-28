@@ -14,9 +14,9 @@
       "targets": "all",
       "identifier": "com.icidasset.diffuse",
       "icon": [
-        "images/icon.png",
-        "images/icon.icns",
-        "images/icon.ico"
+        "../images/icon.png",
+        "../images/icon.icns",
+        "../images/icon.ico"
       ],
       "resources": [],
       "externalBin": [],
