@@ -144,7 +144,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          distPath: ../build/
           projectPath: ./src-tauri/
           releaseId: ${{ needs.create-release.outputs.RELEASE_UPLOAD_ID }}
-          includeDebug: true
