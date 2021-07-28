@@ -124,9 +124,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14
+      # - uses: actions/setup-node@v1
+      #   with:
+      #     node-version: 14
           
       # Download artifacts
       - uses: actions/download-artifact@v2
@@ -148,6 +148,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           distPath: ../build/
-          iconPath: ./src/Static/Images/icon.png
+          projectPath: ./src-tauri/
           releaseId: ${{ needs.create-release.outputs.RELEASE_UPLOAD_ID }}
           includeDebug: true

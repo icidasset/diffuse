@@ -15,11 +15,11 @@ default: dev
 # Tasks
 # =====
 
-@build: clean css elm js system
+@build: clean css elm js system license
 	echo "> Build completed ⚡"
 
 
-@build-prod: quality clean (css "minify") elm-prod js-prod system
+@build-prod: quality clean (css "minify") elm-prod js-prod system license
 	echo "> Production build completed 🛳"
 
 
@@ -114,6 +114,11 @@ default: dev
 	{{ESBUILD}} ./src/Javascript/Workers/service.js \
 		--minify \
 		--outfile={{BUILD_DIR}}/service-worker.js
+
+
+@license:
+	echo "> Copying license file"
+	cp LICENSE {{BUILD_DIR}}/LICENSE
 
 
 @system:
