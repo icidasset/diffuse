@@ -492,9 +492,6 @@ playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd s
         listIdx =
             identifiers.indexInList
 
-        cantDrag =
-            favouritesOnly || Maybe.isJust searchTerm
-
         dragEnv =
             { model = dnd
             , toMsg = DnD
