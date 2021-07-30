@@ -151,7 +151,10 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          
           tag_name: "${{ needs.create-release.outputs.TAG_NAME }}"
+          draft: true
+          prerelease: true
           
           files: |
             src-tauri/target/debug/bundle/appimage/*.AppImage
