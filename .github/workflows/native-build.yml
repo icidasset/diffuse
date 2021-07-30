@@ -52,6 +52,7 @@ jobs:
     
     outputs:
       RELEASE_UPLOAD_ID: ${{ steps.create_release.outputs.id }}
+      TAG_NAME: ${{ steps.package-version.outputs.current-version }}
     
     steps:
       - uses: actions/checkout@v2
@@ -150,7 +151,7 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: "${{ steps.package-version.outputs.current-version }}"
+          tag_name: "${{ needs.create-release.outputs.TAG_NAME }}"
           
           files: |
             ./src-tauri/target/(release|debug)/bundle/*.(AppImage|deb|dmg|app)
