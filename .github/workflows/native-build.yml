@@ -7,6 +7,9 @@ on:
 
 
 jobs:
+  #########
+  # BUILD #
+  #########
   build:
     runs-on: ubuntu-latest
     
@@ -39,8 +42,10 @@ jobs:
         with:
           name: build
           path: build/
-      
-      
+  
+  ##################    
+  # CREATE RELEASE #
+  ##################
   create-release:
     needs: build
     runs-on: ubuntu-latest
@@ -106,7 +111,9 @@ jobs:
           asset_name: diffuse-web.tar.gz
           asset_content_type: application/gzip
       
-      
+  #########
+  # TAURI #
+  #########
   tauri:
     needs: create-release
     
@@ -134,6 +141,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      
       # - uses: actions/setup-node@v1
       #   with:
       #     node-version: 14
@@ -145,7 +153,6 @@ jobs:
           path: build/
       
       # Dependencies
-      - run: cargo install tauri-bundler --force
       - name: install linux dependencies
         if: matrix.os == 'ubuntu-20.04'
         run: |
@@ -157,9 +164,20 @@ jobs:
             libgtk-3-dev \
             squashfs-tools
           
-      # Tasks
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Tauri CLI
+      - run: cargo install tauri-cli --version 1.0.0-beta.5
+      
+      # Make a build
+      - cargo-tauri tauri build
+      
+      # - uses: tauri-apps/tauri-action@v0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     releaseId: ${{ needs.create-release.outputs.RELEASE_UPLOAD_ID }}
+      
+      # Upload artifacts
+      - uses: actions/upload-artifact@v2
         with:
-          releaseId: ${{ needs.create-release.outputs.RELEASE_UPLOAD_ID }}
+          name: target
+          path: src-tauri/target/
