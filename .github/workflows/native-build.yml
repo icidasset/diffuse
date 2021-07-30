@@ -82,7 +82,7 @@ jobs:
         uses: martinbeentjes/npm-get-version-action@v1.1.0
       
       # Create release
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v0.1.7
         id: create_release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -147,8 +147,8 @@ jobs:
       # Make a build
       - run: cargo-tauri tauri build --debug
       
-      # Upload artifacts
-      - uses: softprops/action-gh-release@v1
+      # Upload artifacts (MacOS)
+      - uses: softprops/action-gh-release@v0.1.7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           
@@ -161,7 +161,3 @@ jobs:
             src-tauri/target/debug/bundle/deb/*.deb
             src-tauri/target/debug/bundle/dmg/*.dmg
             src-tauri/target/debug/bundle/macos/*.app
-            src-tauri/target/release/bundle/appimage/*.AppImage
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/macos/*.app
