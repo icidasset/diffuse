@@ -97,7 +97,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          asset_paths: '["./compressed/diffuse-web.(zip|tar.gz)"]'
+          asset_paths: '["compressed/diffuse-web.zip", "compressed/diffuse-web.tar.gz"]'
       
   #########
   # TAURI #
