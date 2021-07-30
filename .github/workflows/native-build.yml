@@ -146,7 +146,7 @@ jobs:
       
       # Make a build
       - run: cargo run --no-default-features
-        working_directory: ./src-tauri
+        working-directory: ./src-tauri
       
       # Upload artifacts (MacOS)
       - uses: softprops/action-gh-release@v0.1.7
