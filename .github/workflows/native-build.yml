@@ -145,7 +145,7 @@ jobs:
       - run: cargo install tauri-cli --version 1.0.0-beta.5
       
       # Make a build
-      - run: cargo-tauri tauri build --debug --no-default-features
+      - run: cargo-tauri tauri build --no-default-features -- --debug
       
       # Upload artifacts (MacOS)
       - uses: softprops/action-gh-release@v0.1.7
