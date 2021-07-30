@@ -168,7 +168,7 @@ jobs:
       - run: cargo install tauri-cli --version 1.0.0-beta.5
       
       # Make a build
-      - cargo-tauri tauri build
+      - run: cargo-tauri tauri build
       
       # - uses: tauri-apps/tauri-action@v0
       #   env:
