@@ -93,23 +93,11 @@ jobs:
           prerelease: true
       
       # Upload assets
-      - uses: actions/upload-release-asset@v1
+      - uses: alexellis/upload-assets@0.2.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./compressed/diffuse-web.zip
-          asset_name: diffuse-web.zip
-          asset_content_type: application/zip
-          
-      - uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./compressed/diffuse-web.tar.gz
-          asset_name: diffuse-web.tar.gz
-          asset_content_type: application/gzip
+          asset_paths: '["./compressed/diffuse-web.(zip|tar.gz)"]'
       
   #########
   # TAURI #
@@ -159,10 +147,11 @@ jobs:
       - run: cargo install tauri-cli --version 1.0.0-beta.5
       
       # Make a build
-      - run: cargo-tauri tauri build
+      - run: cargo-tauri tauri build --debug
       
       # Upload artifacts
-      - uses: actions/upload-artifact@v2
+      - uses: alexellis/upload-assets@0.2.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: target
-          path: src-tauri/target/
+          asset_paths: '["./src-tauri/target/(release|debug)/bundle/*.(AppImage|deb|dmg|app)"]'
