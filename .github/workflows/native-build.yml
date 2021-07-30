@@ -129,7 +129,7 @@ jobs:
       
       # OS
       - name: install linux dependencies
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update && sudo apt install libwebkit2gtk-4.0-dev \
             build-essential \
@@ -137,9 +137,7 @@ jobs:
             wget \
             libssl-dev \
             libgtk-3-dev \
-            squashfs-tools \
-            libgail-dev \
-            libatk-bridge2.0-dev
+            squashfs-tools
           
       # Rust
       - uses: actions-rs/toolchain@v1
@@ -148,6 +146,8 @@ jobs:
           toolchain: stable
           
       - uses: Swatinem/rust-cache@v1
+        with:
+          working-directory: src-tauri
       
       # Download artifacts
       - uses: actions/download-artifact@v2
