@@ -56,6 +56,8 @@ You can also make this change in the Web UI, you'll find it under "Settings → 
   "API": {
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": [
+        ...                                         // Default BTFS values
+
         "https://diffuse.sh",                       // 🎵 Default
         "http://diffuse.sh.ipns.localhost:8080",    // IPNS
         "http://127.0.0.1:44999"                    // Electron app
@@ -94,6 +96,8 @@ You can also make this change in the Web UI, you'll find it under "Settings → 
   "API": {
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": [
+        ...                                         // Default IPFS values
+
         "https://diffuse.sh",                       // 🎵 Default
         "http://diffuse.sh.ipns.localhost:8080",    // IPNS through IPFS Companion
         "http://127.0.0.1:44999"                    // Electron app
