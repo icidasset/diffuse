@@ -35,11 +35,14 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
 } else if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js").then(
     initialise,
-    () => failure(
-      location.protocol === "https:"
-        ? "Failed to start the service worker."
-        : "Failed to start the service worker, try using HTTPS."
-    )
+    err => {
+      console.error(err)
+      return failure(
+        location.protocol === "https:"
+          ? "Failed to start the service worker."
+          : "Failed to start the service worker, try using HTTPS."
+      )
+    }
   )
 
 }
