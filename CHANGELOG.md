@@ -14,6 +14,7 @@
 - Dark mode for the about page
 - Enforces usage of a secure context (HTTPS, localhost, etc)
 - Fixes audio preloading on non-Safari browsers on Apple devices
+- Fixes issue with non-default AWS regions (now uses region in the url as well)
 - Fixes issue with shuffle algorithm
 - Fixes issue with WebDAV
 - Fixes playback issues (eg. clicking same track multiple times)

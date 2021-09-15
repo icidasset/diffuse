@@ -56,7 +56,12 @@ presignedUrl method lifeExpectancyInSeconds extraParams currentTime srcData path
                         |> String.chopEnd "/"
 
                 Nothing ->
-                    bucketName ++ ".s3.amazonaws.com"
+                    case String.trim region of
+                        "" ->
+                            bucketName ++ ".s3.amazonaws.com"
+
+                        r ->
+                            bucketName ++ ".s3." ++ r ++ ".amazonaws.com"
 
         protocol =
             if String.contains "http://" (Maybe.withDefault "" customHost) then
