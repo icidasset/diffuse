@@ -219,9 +219,11 @@ makeTree srcData marker currentTime resultMsg =
                     , "files/trashed"
                     ]
               )
+            , ( "includeItemsFromAllDrives", "true" )
             , ( "pageSize", "1000" )
             , ( "q", String.concat query )
             , ( "spaces", "drive" )
+            , ( "supportsAllDrives", "true" )
             ]
 
         queryString =

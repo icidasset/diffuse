@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.1
+
+Also list files from shared Google drives, in addition to 'Shared with me'.
+
+
 ## 3.0.0
 
 - **Adds album-covers view** (switch to and from list view with icon in nav bar)
