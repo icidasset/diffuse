@@ -165,7 +165,12 @@ wire.audio = () => {
 
 
 function activeQueueItemChanged(item) {
-  if (orchestrion.activeQueueItem && item && item.trackId === orchestrion.activeQueueItem.trackId) {
+  if (
+    orchestrion.activeQueueItem &&
+    orchestrion.audio &&
+    item &&
+    item.trackId === orchestrion.activeQueueItem.trackId
+  ) {
     orchestrion.audio.currentTime = 0
     return
   }
@@ -408,12 +413,21 @@ function albumCover(coverKey) {
 function gotCachedCover({ key, url }) {
   const item = orchestrion.activeQueueItem
 
-  if (item && key === orchestrion.coverPrep.key) {
+  if (item && orchestrion.coverPrep && key === orchestrion.coverPrep.key && url) {
+    let artwork = [{ src: url }]
+
+    if (typeof url !== "string") {
+      artwork = [{
+        src: URL.createObjectURL(url),
+        type: url.type
+      }]
+    }
+
     navigator.mediaSession.metadata = new MediaMetadata({
       title: item.trackTags.title,
       artist: item.trackTags.artist,
       album: item.trackTags.album,
-      artwork: [{ src: url }]
+      artwork: artwork
     })
   }
 }
