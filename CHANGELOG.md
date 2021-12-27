@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixes various issues with the album-cover view (eg. playback issues)
+
+
 ## 3.0.1
 
 Also list files from shared Google drives, in addition to 'Shared with me'.
