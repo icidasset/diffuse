@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fixes various issues with the album-cover view (eg. playback issues)
+- Service worker tweaks to improve performance and offline behaviour
 
 
 ## 3.0.1

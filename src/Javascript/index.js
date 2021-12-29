@@ -56,7 +56,7 @@ let app
 let wire = {}
 
 
-function initialise() {
+function initialise(reg) {
   app = Elm.UI.init({
     node: document.getElementById("elm"),
     flags: {
@@ -80,6 +80,9 @@ function initialise() {
   wire.clipboard()
   wire.covers()
   wire.webnative()
+
+  // Check for service worker updates every hour
+  setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
 }
 
 
