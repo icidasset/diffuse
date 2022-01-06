@@ -26,13 +26,19 @@ const exclude =
 
 self.addEventListener("activate", event => {
   event.waitUntil(self.clients.claim())
+
+  // Remove all caches except the one with the currently used `KEY`
+  caches.keys().then(keys => {
+    keys.forEach(k => {
+      if (k !== KEY) caches.delete(k)
+    })
+  })
 })
 
 
 self.addEventListener("install", event => {
   const href = self.location.href.replace("service-worker.js", "")
-  const promise = removeAllCaches()
-    .then(_ => fetch("tree.json"))
+  const promise = fetch("tree.json")
     .then(response => response.json())
     .then(tree => {
       const filteredTree = tree.filter(t => !exclude.find(u => u === t))
@@ -46,15 +52,11 @@ self.addEventListener("install", event => {
 
 
 self.addEventListener("fetch", event => {
-  // const isNotLocal =
-  //   !event.request.url.match(new RegExp("^https?\:\/\/127.0.0.1")) &&
-  //   !event.request.url.match(new RegExp("^https?\:\/\/localhost"))
-
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
-  const isOffline =
-    !self.navigator.onLine
+  // const isOffline =
+  //   !self.navigator.onLine
 
   // When doing a request with basic authentication in the url, put it in the headers instead
   if (event.request.url.includes("service_worker_authentication=")) {
@@ -84,7 +86,7 @@ self.addEventListener("fetch", event => {
       "Bearer " + token
     )
 
-  // Use cache if internal request & update cache in the background
+  // Use cache if internal request
   } else if (isInternal) {
     let url = new URL(event.request.url)
     url.search = ""
@@ -94,18 +96,6 @@ self.addEventListener("fetch", event => {
         .open(KEY)
         .then(cache => cache.match(url))
         .then(match => match || fetch(url))
-    )
-
-    if (!isOffline && event.request.mode !== "navigate") event.waitUntil(
-      caches
-        .open(KEY)
-        .then(cache => fetch(url)
-          .then(response => response.clone())
-          .then(response => cache.put(url, response))
-        ).catch(err => {
-          console.error("Could not fetch " + url.href)
-          console.error(err)
-        })
     )
   }
 })
@@ -127,12 +117,4 @@ function newRequestWithAuth(event, urlWithoutToken, authToken, mode) {
   })
 
   event.respondWith(fetch(newRequest))
-}
-
-
-function removeAllCaches() {
-  return caches.keys().then(keys => {
-    const promises = keys.map(k => caches.delete(k))
-    return Promise.all(promises)
-  })
 }

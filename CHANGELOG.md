@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Fixes various issues with the album-cover view (eg. playback issues)
+- Service worker tweaks to improve performance and offline behaviour
+
+
+## 3.0.1
+
+Also list files from shared Google drives, in addition to 'Shared with me'.
+
+
 ## 3.0.0
 
 - **Adds album-covers view** (switch to and from list view with icon in nav bar)
@@ -14,6 +25,7 @@
 - Dark mode for the about page
 - Enforces usage of a secure context (HTTPS, localhost, etc)
 - Fixes audio preloading on non-Safari browsers on Apple devices
+- Fixes issue with non-default AWS regions (now uses region in the url as well)
 - Fixes issue with shuffle algorithm
 - Fixes issue with WebDAV
 - Fixes playback issues (eg. clicking same track multiple times)

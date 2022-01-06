@@ -1,7 +1,7 @@
 {
   "name": "Diffuse",
   "description": "A music player that connects to your cloud/distributed storage",
-  "version": "3.0.0-beta-3",
+  "version": "3.0.1",
   "author": "Steven Vandevelde <icid.asset@gmail.com>",
   "homepage": "https://diffuse.sh",
   "repository": "github:icidasset/diffuse",

@@ -10,9 +10,9 @@ import Shikensu.Contrib.IO as Shikensu
 import Shikensu.Utilities
 
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as KeyMap (fromList)
 import qualified Data.ByteString.Lazy as BSL (toStrict)
 import qualified Data.Char as Char
-import qualified Data.HashMap.Strict as HashMap (fromList)
 import qualified Data.List as List
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.IO as Text
@@ -121,7 +121,7 @@ dependencies = do
     aboutLayout     <- Text.readFile "src/Static/About/Layout.html"
     timestamp       <- fmap show unixTime :: IO Text
 
-    return $ HashMap.fromList
+    return $ KeyMap.fromList
         [ ( "aboutLayout", Aeson.toJSON aboutLayout )
         , ( "timestamp", Aeson.toJSON timestamp )
         ]
