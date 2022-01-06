@@ -1,20 +1,19 @@
 Contributed by [@Netherquark](https://github.com/Netherquark)
 
-| Platform |      Browser      | Installation | Website works? | Persistent Login? | Streaming | Caching |
-|:--------:|:-----------------:|:------------:|:--------------:|:-----------------:|:---------:|:-------:|
-|  Windows |       Chrome      |       ✅      |        ✅       |         ✅         |     ✅     |    ✅    |
-|          |    Edge(Legacy)   |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|          |      Firefox      |       ✅      |        ✅       |         ✅         |     ✅     |    ❔    |
-|          | Internet Explorer |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|   MacOS  |       Chrome      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|          |      Firefox      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|          |       Safari      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|  Manjaro |       Chrome      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|          |      Firefox      |       ✅      |        ✅       |         ✅         |     ✅     |    ✅    |
-|  Ubuntu  |       Chrome      |       ✅      |        ✅       |         ✅         |     ✅     |    ❌    |
-|          |      Firefox      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|  Android |       Chrome      |       ✅      |        ✅       |         ✅         |     ✅     |    ✅    |
-|          |      Firefox      |       ✅      |        ✅       |         ✅         |     ✅     |    ❌    |
-|    iOS   |       Chrome      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|          |      Firefox      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
-|          |       Safari      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |
+| Platform |      Browser      | Installation | Website works? | Persistent Login? | Streaming | Caching | Offline Login |
+|:--------:|:-----------------:|:------------:|:--------------:|:-----------------:|:---------:|:-------:|:-------------:|
+|  Windows |      Chromium     |       ✅      |        ✅       |         ✅         |     ✅     |    ✅    |      ❌       |
+|          |      Firefox      |       ✅      |        ✅       |         ✅         |     ✅     |    ❔    |      ❌       |
+|   MacOS  |      Chromium     |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |      ❔       |
+|          |      Firefox      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |      ❔       |
+|          |       Safari      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |      ❔       |
+|  Linux   |      Chromium     |       ✅      |        ✅       |         ✅         |     ✅     |    ✅    |      ❌       |
+|          |      Firefox      |       ❌*     |        ✅       |         ✅         |     ✅     |    ✅    |      ❌**     |
+|  Android |      Chromium     |       ✅      |        ✅       |         ✅         |     ✅     |    ✅    |      ❌**     |
+|          |      Firefox      |       ✅      |        ✅       |         ✅         |     ✅     |    ✅    |      ❌**     |
+|    iOS   |      Chromium     |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |      ❔       |
+|          |      Firefox      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |      ❔       |
+|          |       Safari      |       ❔      |        ❔       |         ❔         |     ❔     |    ❔    |      ❔       |
+
+*Diffuse works as expected but Firefox doesn't support "installing" PWAs. More about this topic [here](https://www.xda-developers.com/mozilla-drops-support-for-desktop-web-apps-in-firefox/).
+**Diffuse loads, but with the "No tracks found" error
