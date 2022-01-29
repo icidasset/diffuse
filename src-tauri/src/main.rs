@@ -4,7 +4,7 @@
 )]
 
 use tauri::{App, PhysicalPosition, PhysicalSize, Position, Size};
-use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
+use tauri::{Menu, MenuItem, Submenu};
 use tauri::{Window, WindowBuilder, WindowUrl};
 
 fn main() {
@@ -42,7 +42,7 @@ fn main() {
  */
 fn create_window(app: &mut App, port: u16) -> tauri::Result<Window> {
     return app.create_window(
-        "Diffuse",
+        "main",
         WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
         |window_builder, webview_attributes| {
             let w = window_builder
