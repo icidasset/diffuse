@@ -4,7 +4,7 @@
   },
   "build": {
     "distDir": "../build",
-    "devPath": "http://localhost:5000",
+    "devPath": "../build",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
   },
@@ -29,7 +29,7 @@
         "frameworks": [],
         "minimumSystemVersion": "",
         "useBootstrapper": false,
-        "exceptionDomain": "",
+        "exceptionDomain": "localhost",
         "signingIdentity": null,
         "entitlements": null,
         "license": "LICENSE"
@@ -44,21 +44,11 @@
       "active": false
     },
     "allowlist": {
-      "all": false
+      "all": true
     },
-    "windows": [
-      {
-        "title": "Diffuse",
-        "center": true,
-        "width": 1280,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false,
-        "maximized": false
-      }
-    ],
+    "windows": [],
     "security": {
-      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
     }
   }
 }
