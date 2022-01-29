@@ -41,7 +41,7 @@ fn main() {
  * Create a window that loads our localhost server.
  */
 fn create_window(app: &mut App, port: u16) -> tauri::Result<Window> {
-    return app.create_window(
+    app.create_window(
         "main",
         WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
         |window_builder, webview_attributes| {
@@ -54,7 +54,7 @@ fn create_window(app: &mut App, port: u16) -> tauri::Result<Window> {
 
             (w, webview_attributes)
         },
-    );
+    )
 }
 
 /**
@@ -83,9 +83,9 @@ fn menu() -> Menu {
         .add_native_item(MenuItem::Separator)
         .add_native_item(MenuItem::ShowAll);
 
-    return Menu::new()
+    Menu::new()
         .add_submenu(Submenu::new("Diffuse", app_menu))
         .add_submenu(Submenu::new("File", file_menu))
         .add_submenu(Submenu::new("Edit", edit_menu))
-        .add_submenu(Submenu::new("Window", window_menu));
+        .add_submenu(Submenu::new("Window", window_menu))
 }
