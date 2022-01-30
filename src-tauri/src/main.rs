@@ -80,6 +80,7 @@ fn menu() -> Menu {
 
     let window_menu = Menu::new()
         .add_native_item(MenuItem::Minimize)
+        .add_native_item(MenuItem::Zoom)
         .add_native_item(MenuItem::Separator)
         .add_native_item(MenuItem::ShowAll);
 
