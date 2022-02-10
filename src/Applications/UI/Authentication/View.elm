@@ -497,7 +497,7 @@ speechBubble contents =
         , "max-w-screen"
         , "-translate-x-1/2"
         , "px-4"
-        , "py-2"
+        , "py-1"
         , "rounded"
         , "text-center"
         , "text-sm"
@@ -511,7 +511,9 @@ speechBubble contents =
         , "dark:bg-darkest-hour"
         , "dark:text-gray-600"
         ]
-        [ contents
+        [ chunk
+            [ "mb-px", "pb-px", "pt-1" ]
+            [ contents ]
 
         --
         , brick
