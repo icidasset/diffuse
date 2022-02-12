@@ -4,6 +4,7 @@ import Html.Events.Extra.Mouse as Mouse
 import Http
 import Json.Decode as Json
 import User.Layer exposing (Method)
+import User.Layer.Methods.Dropbox as Dropbox
 import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
@@ -13,6 +14,7 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 type State
     = Authenticated Method
+    | Authenticating
     | InputScreen Method Question
     | NewEncryptionKeyScreen Method (Maybe String)
     | UpdateEncryptionKeyScreen Method (Maybe String)
@@ -37,6 +39,7 @@ type Msg
     | BootFailure String
     | CancelFlow
     | GetStarted
+    | GotDropboxTokens Dropbox.TokenFlow (Result Http.Error Dropbox.Tokens)
     | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
     | ShowMoreOptions Mouse.Event

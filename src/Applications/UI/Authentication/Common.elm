@@ -24,6 +24,9 @@ extractMethod state =
         Authenticated method ->
             Just method
 
+        Authenticating ->
+            Nothing
+
         InputScreen method _ ->
             Just method
 

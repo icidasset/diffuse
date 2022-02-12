@@ -45,7 +45,12 @@ rewriteUrl url =
             path =
                 Maybe.withDefault "" maybePath
         in
-        if Maybe.unwrap False (String.contains "token=") url.fragment then
+        if
+            Maybe.unwrap
+                False
+                (\f -> String.contains "token=" f || String.contains "code=" f)
+                url.fragment
+        then
             -- For some oauth stuff, replace the query with the fragment
             { url | path = path, query = url.fragment }
 

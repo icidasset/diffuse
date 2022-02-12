@@ -5,10 +5,12 @@ import Base64
 import Binary
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
+import Dict
 import Html exposing (a)
 import Html.Attributes exposing (value)
 import Html.Events.Extra.Mouse as Mouse
 import Http
+import Http.Ext as Http
 import Json.Decode as Json
 import Json.Encode
 import Lens.Ext as Lens
@@ -25,6 +27,7 @@ import UI.Authentication.Types as Authentication exposing (..)
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
+import UI.Routing.State as Routing
 import UI.Sources.Query
 import UI.Sources.State as Sources
 import UI.Types as UI exposing (..)
@@ -32,6 +35,7 @@ import UI.User.State.Import as User
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
 import User.Layer exposing (..)
+import User.Layer.Methods.Dropbox as Dropbox
 import User.Layer.Methods.RemoteStorage as RemoteStorage
 import Webnative
 import Webnative.Constants as Webnative
@@ -57,37 +61,36 @@ initialModel : Url -> Authentication.State
 initialModel url =
     case Url.action url of
         [ "authenticate", "dropbox" ] ->
-            url.fragment
-                |> Maybe.map (String.split "&")
-                |> Maybe.map (List.filter <| String.startsWith "access_token=")
-                |> Maybe.andThen List.head
-                |> Maybe.withDefault ""
-                |> String.replace "access_token=" ""
-                |> (\t ->
-                        NewEncryptionKeyScreen
-                            (Dropbox { token = t })
-                            Nothing
-                   )
+            case Dict.get "code" (Url.queryDictionary url) of
+                Just _ ->
+                    Authenticating
+
+                _ ->
+                    Unauthenticated
 
         [ "authenticate", "remotestorage", encodedUserAddress ] ->
             let
+                dict =
+                    Url.queryDictionary url
+
                 userAddress =
                     encodedUserAddress
                         |> Url.percentDecode
                         |> Maybe.andThen (Base64.decode >> Result.toMaybe)
                         |> Maybe.withDefault encodedUserAddress
             in
-            url.fragment
-                |> Maybe.map (String.split "&")
-                |> Maybe.map (List.filter <| String.startsWith "access_token=")
-                |> Maybe.andThen List.head
-                |> Maybe.withDefault ""
-                |> String.replace "access_token=" ""
-                |> (\t ->
-                        NewEncryptionKeyScreen
-                            (RemoteStorage { userAddress = userAddress, token = t })
-                            Nothing
-                   )
+            case Dict.get "access_token" dict of
+                Just t ->
+                    NewEncryptionKeyScreen
+                        (RemoteStorage
+                            { userAddress = userAddress
+                            , token = t
+                            }
+                        )
+                        Nothing
+
+                Nothing ->
+                    Unauthenticated
 
         _ ->
             Welcome
@@ -96,6 +99,17 @@ initialModel url =
 initialCommand : Url -> Cmd Authentication.Msg
 initialCommand url =
     case Url.action url of
+        [ "authenticate", "dropbox" ] ->
+            case Dict.get "code" (Url.queryDictionary url) of
+                Just code ->
+                    Dropbox.exchangeAuthCode
+                        (GotDropboxTokens Dropbox.Code)
+                        url
+                        code
+
+                _ ->
+                    Cmd.none
+
         [ "authenticate", "fission" ] ->
             Webnative.permissions
                 |> Webnative.initWithOptions
@@ -133,6 +147,9 @@ update msg =
 
         GetStarted ->
             startFlow
+
+        GotDropboxTokens a b ->
+            gotDropboxTokens a b
 
         NotAuthenticated ->
             notAuthenticated
@@ -235,6 +252,9 @@ cancelFlow model =
             Authenticated method ->
                 Authenticated method
 
+            Authenticating ->
+                Unauthenticated
+
             InputScreen _ _ ->
                 Unauthenticated
 
@@ -259,9 +279,10 @@ externalAuth : Method -> String -> Manager
 externalAuth method string model =
     case method of
         Dropbox _ ->
-            [ ( "response_type", "token" )
-            , ( "client_id", "te0c9pbeii8f8bw" )
-            , ( "redirect_uri", Common.urlOrigin model.url ++ "?action=authenticate/dropbox" )
+            [ ( "client_id", Dropbox.clientId )
+            , ( "redirect_uri", Dropbox.redirectUri model.url )
+            , ( "response_type", "code" )
+            , ( "token_access_type", "offline" )
             ]
                 |> Common.queryString
                 |> String.append "https://www.dropbox.com/oauth2/authorize"
@@ -295,6 +316,42 @@ externalAuth method string model =
 
         _ ->
             Return.singleton model
+
+
+gotDropboxTokens : Dropbox.TokenFlow -> Result Http.Error Dropbox.Tokens -> Manager
+gotDropboxTokens flow result model =
+    case ( flow, result ) of
+        ( Dropbox.Code, Ok tokens ) ->
+            case tokens.refreshToken of
+                Just refreshToken ->
+                    Nothing
+                        |> NewEncryptionKeyScreen
+                            (Dropbox
+                                { accessToken = tokens.accessToken
+                                , expiresIn = tokens.expiresIn
+                                , refreshToken = refreshToken
+                                }
+                            )
+                        |> Lens.replace lens model
+                        |> Return.singleton
+
+                Nothing ->
+                    "Missing refresh token in Dropbox code exchange flow."
+                        |> Notifications.stickyError
+                        |> showNotificationWithModel
+                            (Lens.replace lens model Unauthenticated)
+
+        ( Dropbox.Refresh, Ok tokens ) ->
+            -- TODO
+            Return.singleton model
+
+        ( _, Err err ) ->
+            []
+                |> Notifications.errorWithCode
+                    "Failed to authenticate with Dropbox"
+                    (Http.errorToString err)
+                |> showNotificationWithModel
+                    (Lens.replace lens model Unauthenticated)
 
 
 missingSecretKey : Json.Value -> Manager

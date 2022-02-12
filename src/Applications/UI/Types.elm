@@ -22,6 +22,7 @@ import Management
 import Notifications exposing (Notification)
 import Playlists exposing (Playlist, PlaylistTrack)
 import Queue
+import Random
 import Sources exposing (Source)
 import Time
 import Tracks exposing (..)
@@ -70,6 +71,7 @@ type alias Model =
     , page : Page
     , pressedKeys : List Keyboard.Key
     , processAutomatically : Bool
+    , uuidSeed : Random.Seed
     , url : Url
     , viewport : Viewport
 

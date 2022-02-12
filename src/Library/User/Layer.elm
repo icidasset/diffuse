@@ -37,7 +37,7 @@ import Tracks.Encoding as Tracks
 
 
 type Method
-    = Dropbox { token : String }
+    = Dropbox { accessToken : String, expiresIn : Int, refreshToken : String }
     | Fission { initialised : Bool }
     | Ipfs { apiOrigin : String }
     | Local
@@ -139,8 +139,14 @@ encodeMethod =
 methodFromString : String -> Maybe Method
 methodFromString string =
     case String.split methodSeparator string of
-        [ "DROPBOX", t ] ->
-            Just (Dropbox { token = t })
+        [ "DROPBOX", a, e, r ] ->
+            Just
+                (Dropbox
+                    { accessToken = a
+                    , expiresIn = Maybe.withDefault 0 (String.toInt e)
+                    , refreshToken = r
+                    }
+                )
 
         [ "FISSION" ] ->
             Just (Fission { initialised = False })
@@ -161,11 +167,13 @@ methodFromString string =
 methodToString : Method -> String
 methodToString method =
     case method of
-        Dropbox { token } ->
+        Dropbox { accessToken, expiresIn, refreshToken } ->
             String.join
                 methodSeparator
                 [ "DROPBOX"
-                , token
+                , accessToken
+                , String.fromInt expiresIn
+                , refreshToken
                 ]
 
         Fission _ ->

@@ -7,6 +7,7 @@ import Html.Attributes exposing (attribute, href, placeholder, src, style, targe
 import Html.Events exposing (onClick, onSubmit)
 import Html.Events.Extra exposing (onClickStopPropagation)
 import Html.Events.Extra.Mouse as Mouse
+import Html.Extra as Html
 import Html.Lazy as Lazy
 import Markdown
 import Material.Icons as Icons
@@ -75,6 +76,9 @@ view_ state =
                 -- Speech bubble
                 ----------------
                 , case state of
+                    Authenticating ->
+                        speechBubble negotiating
+
                     InputScreen _ { question } ->
                         question
                             |> String.lines
@@ -163,6 +167,9 @@ view_ state =
             Authenticated _ ->
                 choicesScreen
 
+            Authenticating ->
+                Html.nothing
+
             Welcome ->
                 welcomeScreen
 
@@ -224,6 +231,30 @@ welcomeScreen =
 
 
 
+-- LOADING
+
+
+negotiating : Html Authentication.Msg
+negotiating =
+    chunk
+        [ "flex"
+        , "items-center"
+        ]
+        [ chunk
+            [ "transform", "-translate-y-px" ]
+            [ Html.map never (UI.Svg.Elements.loadingWithSize 14) ]
+        , chunk
+            [ "italic"
+            , "ml-2"
+            , "text-opacity-80"
+            , "text-sm"
+            , "text-white"
+            ]
+            [ Html.text "Negotiating with service" ]
+        ]
+
+
+
 -- CHOICES
 
 
@@ -256,7 +287,7 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = TriggerExternalAuth (Dropbox { token = "" }) ""
+            { action = TriggerExternalAuth (Dropbox { accessToken = "", expiresIn = 0, refreshToken = "" }) ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.dropboxLogo
             , infoLink = Just "https://dropbox.com/"
             , label = "Dropbox"

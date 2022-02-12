@@ -420,9 +420,9 @@ retrieveHypaethralData bit model =
     in
     case model.authMethod of
         -- 🚀
-        Just (Dropbox { token }) ->
+        Just (Dropbox { accessToken, refreshToken }) ->
             [ ( "file", file )
-            , ( "token", Json.string token )
+            , ( "token", Json.string accessToken )
             ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthDropbox
@@ -516,10 +516,10 @@ saveHypaethralData bit model =
     in
     case model.authMethod of
         -- 🚀
-        Just (Dropbox { token }) ->
+        Just (Dropbox { accessToken, refreshToken }) ->
             [ ( "data", json )
             , ( "file", file )
-            , ( "token", Json.string token )
+            , ( "token", Json.string accessToken )
             ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthDropbox
