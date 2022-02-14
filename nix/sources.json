@@ -5,10 +5,10 @@
         "homepage": "https://github.com/nmattia/niv",
         "owner": "nmattia",
         "repo": "niv",
-        "rev": "e0ca65c81a2d7a4d82a189f1e23a48d59ad42070",
-        "sha256": "1pq9nh1d8nn3xvbdny8fafzw87mj7gsmp6pxkdl65w2g18rmcmzx",
+        "rev": "9cb7ef336bb71fd1ca84fc7f2dff15ef4b033f2a",
+        "sha256": "1ajyqr8zka1zlb25jx1v4xys3zqmdy3prbm1vxlid6ah27a8qnzh",
         "type": "tarball",
-        "url": "https://github.com/nmattia/niv/archive/e0ca65c81a2d7a4d82a189f1e23a48d59ad42070.tar.gz",
+        "url": "https://github.com/nmattia/niv/archive/9cb7ef336bb71fd1ca84fc7f2dff15ef4b033f2a.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
@@ -17,10 +17,22 @@
         "homepage": null,
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "16105403bdd843540cbef9c63fc0f16c1c6eaa70",
-        "sha256": "0sl6hsxlh14kcs38jcra908nvi5hd8p8hlim3lbra55lz0kd9rcl",
+        "rev": "1882c6b7368fd284ad01b0a5b5601ef136321292",
+        "sha256": "0zg7ak2mcmwzi2kg29g4v9fvbvs0viykjsg2pwaphm1fi13s7s0i",
         "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/16105403bdd843540cbef9c63fc0f16c1c6eaa70.tar.gz",
+        "url": "https://github.com/NixOS/nixpkgs/archive/1882c6b7368fd284ad01b0a5b5601ef136321292.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "old-packages": {
+        "branch": "nixos-21.05",
+        "description": "Nix Packages collection",
+        "homepage": "",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "0fd9ee1aa36ce865ad273f4f07fdc093adeb5c00",
+        "sha256": "1mr2qgv5r2nmf6s3gqpcjj76zpsca6r61grzmqngwm0xlh958smx",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/0fd9ee1aa36ce865ad273f4f07fdc093adeb5c00.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

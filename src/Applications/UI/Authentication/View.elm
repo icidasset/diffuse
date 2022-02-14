@@ -287,7 +287,7 @@ choicesScreen =
             , outOfOrder = False
             }
         , choiceButton
-            { action = TriggerExternalAuth (Dropbox { accessToken = "", expiresIn = 0, refreshToken = "" }) ""
+            { action = TriggerExternalAuth (Dropbox { accessToken = "", expiresAt = 0, refreshToken = "" }) ""
             , icon = \_ _ -> Svg.map never UI.Svg.Elements.dropboxLogo
             , infoLink = Just "https://dropbox.com/"
             , label = "Dropbox"

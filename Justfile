@@ -1,10 +1,10 @@
 export NODE_NO_WARNINGS := "1"
 
 
-BUILD_DIR 			:= "./build"
+BUILD_DIR 				:= "./build"
 NPM_DIR 				:= "./node_modules"
 SRC_DIR 				:= "./src"
-SYSTEM_DIR 			:= "./system"
+SYSTEM_DIR				:= "./system"
 
 ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
 
@@ -176,7 +176,7 @@ default: dev
 
 @server:
 	echo "> Booting up web server on port 5000"
-	devd --port 5000 --all --crossdomain --quiet --notfound=301.html {{BUILD_DIR}}
+	nix-shell --run "simple-http-server --port 5000 --try-file {{BUILD_DIR}}/301.html --cors --index --nocache --silent -- {{BUILD_DIR}}"
 
 
 @test: doc-tests

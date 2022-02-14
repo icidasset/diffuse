@@ -21,6 +21,7 @@ import Notifications
 import Return exposing (andThen, return)
 import SHA
 import String.Ext as String
+import Time
 import Tracks
 import UI.Authentication.ContextMenu as Authentication
 import UI.Authentication.Types as Authentication exposing (..)
@@ -328,7 +329,7 @@ gotDropboxTokens flow result model =
                         |> NewEncryptionKeyScreen
                             (Dropbox
                                 { accessToken = tokens.accessToken
-                                , expiresIn = tokens.expiresIn
+                                , expiresAt = Time.posixToMillis model.currentTime // 1000 + tokens.expiresIn
                                 , refreshToken = refreshToken
                                 }
                             )

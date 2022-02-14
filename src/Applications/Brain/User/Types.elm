@@ -3,6 +3,7 @@ module Brain.User.Types exposing (..)
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import User.Layer exposing (HypaethralBit)
+import User.Layer.Methods.Dropbox as Dropbox
 import Webnative
 
 
@@ -60,3 +61,7 @@ type Msg
       -----------------------------------------
     | RemoveEncryptionKey
     | UpdateEncryptionKey Json.Value
+      -----------------------------------------
+      -- 📭 Other
+      -----------------------------------------
+    | RefreshedDropboxTokens { currentTime : Int, refreshToken : String } Dropbox.Tokens Msg
