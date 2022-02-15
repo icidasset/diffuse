@@ -1,7 +1,6 @@
 module Http.Ext exposing (errorToString)
 
 import Http exposing (Error(..))
-import Json.Decode as Json
 
 
 
@@ -26,12 +25,3 @@ errorToString err =
 
         BadUrl url ->
             "Malformed url: " ++ url
-
-
-
--- ㊙️
-
-
-parseError : String -> Maybe String
-parseError =
-    Json.decodeString (Json.field "error" Json.string) >> Result.toMaybe

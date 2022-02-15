@@ -28,7 +28,6 @@ import UI.Authentication.Types as Authentication exposing (..)
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
-import UI.Routing.State as Routing
 import UI.Sources.Query
 import UI.Sources.State as Sources
 import UI.Types as UI exposing (..)
