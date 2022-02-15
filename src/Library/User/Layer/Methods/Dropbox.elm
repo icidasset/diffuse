@@ -13,11 +13,6 @@ import Url exposing (Url)
 -- 🌳
 
 
-type TokenFlow
-    = Code
-    | Refresh
-
-
 type alias Tokens =
     { accessToken : String
     , expiresIn : Int -- Time in seconds the access token expires in

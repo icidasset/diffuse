@@ -38,8 +38,8 @@ type Msg
       --
     | BootFailure String
     | CancelFlow
+    | ExchangeDropboxAuthCode (Result Http.Error Dropbox.Tokens)
     | GetStarted
-    | GotDropboxTokens Dropbox.TokenFlow (Result Http.Error Dropbox.Tokens)
     | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
     | ShowMoreOptions Mouse.Event

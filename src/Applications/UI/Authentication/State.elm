@@ -104,7 +104,7 @@ initialCommand url =
             case Dict.get "code" (Url.queryDictionary url) of
                 Just code ->
                     Dropbox.exchangeAuthCode
-                        (GotDropboxTokens Dropbox.Code)
+                        ExchangeDropboxAuthCode
                         url
                         code
 
@@ -146,11 +146,11 @@ update msg =
         CancelFlow ->
             cancelFlow
 
+        ExchangeDropboxAuthCode a ->
+            exchangeDropboxAuthCode a
+
         GetStarted ->
             startFlow
-
-        GotDropboxTokens a b ->
-            gotDropboxTokens a b
 
         NotAuthenticated ->
             notAuthenticated
@@ -319,10 +319,10 @@ externalAuth method string model =
             Return.singleton model
 
 
-gotDropboxTokens : Dropbox.TokenFlow -> Result Http.Error Dropbox.Tokens -> Manager
-gotDropboxTokens flow result model =
-    case ( flow, result ) of
-        ( Dropbox.Code, Ok tokens ) ->
+exchangeDropboxAuthCode : Result Http.Error Dropbox.Tokens -> Manager
+exchangeDropboxAuthCode result model =
+    case result of
+        Ok tokens ->
             case tokens.refreshToken of
                 Just refreshToken ->
                     Nothing
@@ -342,11 +342,7 @@ gotDropboxTokens flow result model =
                         |> showNotificationWithModel
                             (Lens.replace lens model Unauthenticated)
 
-        ( Dropbox.Refresh, Ok tokens ) ->
-            -- TODO
-            Return.singleton model
-
-        ( _, Err err ) ->
+        Err err ->
             []
                 |> Notifications.errorWithCode
                     "Failed to authenticate with Dropbox"
