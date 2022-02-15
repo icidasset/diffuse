@@ -249,6 +249,8 @@ localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) 
                         [ "inline-block"
                         , "leading-tight"
                         , "ml-1"
+                        , "transform"
+                        , "translate-y-px"
                         , "truncate"
                         ]
                         [ text labelText ]

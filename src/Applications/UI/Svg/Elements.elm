@@ -1,4 +1,4 @@
-module UI.Svg.Elements exposing (dropboxLogo, fissionLogo, ipfsLogo, loading, remoteStorageLogo)
+module UI.Svg.Elements exposing (dropboxLogo, fissionLogo, ipfsLogo, loading, loadingWithSize, remoteStorageLogo)
 
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -112,11 +112,16 @@ remoteStorageLogo =
 
 loading : Svg Never
 loading =
+    loadingWithSize 29
+
+
+loadingWithSize : Int -> Svg Never
+loadingWithSize size =
     svg
         [ class "loading-animation"
-        , height "29"
+        , height (String.fromInt size)
         , viewBox "0 0 30 30"
-        , width "29"
+        , width (String.fromInt size)
         ]
         [ circle
             [ class "loading-animation__circle"

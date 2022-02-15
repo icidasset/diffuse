@@ -14,6 +14,7 @@ import Keyboard
 import LastFm
 import Maybe.Extra as Maybe
 import Notifications
+import Random
 import Return
 import Task
 import Time
@@ -47,6 +48,7 @@ import UI.User.State.Export as User
 import UI.User.State.Import as User
 import UI.View exposing (view)
 import Url exposing (Url)
+import Url.Ext as Url
 
 
 
@@ -98,6 +100,7 @@ init flags url key =
     , page = page
     , pressedKeys = []
     , processAutomatically = True
+    , uuidSeed = Random.initialSeed flags.initialTime
     , url = url
     , viewport = flags.viewport
 
@@ -216,7 +219,12 @@ init flags url key =
                 Routing.resetUrl key url page
 
              else
-                Cmd.none
+                case Url.action url of
+                    [ "authenticate", "dropbox" ] ->
+                        Routing.resetUrl key url page
+
+                    _ ->
+                        Cmd.none
             )
         |> Return.command
             (Task.perform SetCurrentTime Time.now)

@@ -15,13 +15,16 @@ import Return exposing (andThen, return)
 import Return.Ext as Return
 import Settings
 import Sources.Encoding as Sources
+import Task
 import Task.Extra exposing (do)
+import Time
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
 import Tuple3
 import Url exposing (Url)
 import Url.Ext as Url
 import User.Layer as User exposing (..)
+import User.Layer.Methods.Dropbox as Dropbox
 import User.Layer.Methods.Fission as Fission
 import Webnative
 
@@ -157,6 +160,12 @@ update msg =
 
         UpdateEncryptionKey a ->
             updateEncryptionKey a
+
+        -----------------------------------------
+        -- 📭 Other
+        -----------------------------------------
+        RefreshedDropboxTokens a b c ->
+            refreshedDropboxTokens a b c
 
 
 
@@ -420,14 +429,49 @@ retrieveHypaethralData bit model =
     in
     case model.authMethod of
         -- 🚀
-        Just (Dropbox { token }) ->
-            [ ( "file", file )
-            , ( "token", Json.string token )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthDropbox
-                |> Ports.requestDropbox
-                |> return model
+        Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
+            let
+                currentTime =
+                    Time.posixToMillis model.currentTime // 1000
+
+                currentTimeWithOffset =
+                    -- We add 60 seconds here because we only get the current time every minute,
+                    -- so there's always the chance the "current time" is 1-60 seconds behind.
+                    currentTime + 60
+            in
+            -- If the access token is expired
+            if currentTimeWithOffset >= expiresAt then
+                refreshToken
+                    |> Dropbox.refreshAccessToken
+                    |> Task.attempt
+                        (\result ->
+                            case result of
+                                Ok tokens ->
+                                    bit
+                                        |> RetrieveHypaethralData
+                                        |> RefreshedDropboxTokens
+                                            { currentTime = currentTime
+                                            , refreshToken = refreshToken
+                                            }
+                                            tokens
+                                        |> UserMsg
+
+                                Err err ->
+                                    err
+                                        |> Alien.report Alien.ReportError
+                                        |> Ports.toUI
+                                        |> Cmd
+                        )
+                    |> return model
+
+            else
+                [ ( "file", file )
+                , ( "token", Json.string accessToken )
+                ]
+                    |> Json.object
+                    |> Alien.broadcast Alien.AuthDropbox
+                    |> Ports.requestDropbox
+                    |> return model
 
         Just (Fission params) ->
             filename
@@ -516,10 +560,10 @@ saveHypaethralData bit model =
     in
     case model.authMethod of
         -- 🚀
-        Just (Dropbox { token }) ->
+        Just (Dropbox { accessToken, refreshToken }) ->
             [ ( "data", json )
             , ( "file", file )
-            , ( "token", Json.string token )
+            , ( "token", Json.string accessToken )
             ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthDropbox
@@ -758,12 +802,36 @@ methodRetrieved json model =
             terminate NotAuthenticated model
 
 
+refreshedDropboxTokens :
+    { currentTime : Int, refreshToken : String }
+    -> Dropbox.Tokens
+    -> User.Msg
+    -> Manager
+refreshedDropboxTokens { currentTime, refreshToken } tokens msg model =
+    { accessToken = tokens.accessToken
+    , expiresAt = currentTime + tokens.expiresIn
+    , refreshToken = refreshToken
+    }
+        |> Dropbox
+        |> (\m -> saveMethod m model)
+        |> andThen (update msg)
+
+
 retrieveMethod : Manager
 retrieveMethod =
     Alien.AuthMethod
         |> Alien.trigger
         |> Ports.requestCache
         |> Return.communicate
+
+
+saveMethod : Method -> Manager
+saveMethod method model =
+    method
+        |> encodeMethod
+        |> Alien.broadcast Alien.AuthMethod
+        |> Ports.toCache
+        |> return { model | authMethod = Just method }
 
 
 

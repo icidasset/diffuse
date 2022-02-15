@@ -1,4 +1,4 @@
-const defaultTheme = require("tailwindcss/defaultTheme")
+const tailwindColors = require("tailwindcss/colors")
 
 
 // Colors
@@ -63,8 +63,16 @@ module.exports = {
     // ------
 
     colors: {
-      ...defaultTheme.colors,
       ...colors,
+
+      black: tailwindColors.black,
+      current: tailwindColors.current,
+      inherit: tailwindColors.inherit,
+      transparent: tailwindColors.transparent,
+      white: tailwindColors.white,
+
+      gray: tailwindColors.gray,
+      neutral: tailwindColors.neutral,
 
       "accent-btn": "hsl(219, 20.2%, 38.8%)",
       "accent-dark": "hsl(304.3, 9.6%, 71.4%)",
@@ -76,7 +84,6 @@ module.exports = {
       "black-35": "rgba(0, 0, 0, 0.35)",
       "black-50": "rgba(0, 0, 0, 0.5)",
       "current-color": "currentColor",
-      "inherit": "inherit",
       "white-025": "rgba(255, 255, 255, 0.025)",
       "white-20": "rgba(255, 255, 255, 0.2)",
       "white-60": "rgba(255, 255, 255, 0.6)",

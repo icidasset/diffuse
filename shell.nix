@@ -10,8 +10,8 @@ in
 
       # Dev Tools
       pkgs.curl
-      pkgs.devd
       pkgs.just
+      pkgs.simple-http-server
       pkgs.watchexec
 
       # Language Specific

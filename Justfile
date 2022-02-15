@@ -1,10 +1,10 @@
 export NODE_NO_WARNINGS := "1"
 
 
-BUILD_DIR 			:= "./build"
+BUILD_DIR 				:= "./build"
 NPM_DIR 				:= "./node_modules"
 SRC_DIR 				:= "./src"
-SYSTEM_DIR 			:= "./system"
+SYSTEM_DIR				:= "./system"
 
 ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
 
@@ -35,7 +35,7 @@ default: dev
 	{{NPM_DIR}}/.bin/tailwind \
 		--input {{SRC_DIR}}/Css/About.css \
 		--output {{BUILD_DIR}}/about.css \
-		--purge {{SRC_DIR}}/Static/About/**/*.* \
+		--content {{SRC_DIR}}/Static/About/**/*.* \
 		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
 		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
 		--jit \
@@ -44,7 +44,7 @@ default: dev
 	{{NPM_DIR}}/.bin/tailwind \
 		--input {{SRC_DIR}}/Css/Application.css \
 		--output {{BUILD_DIR}}/application.css \
-		--purge "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm" \
+		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm" \
 		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
 		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
 		--jit \
@@ -130,11 +130,11 @@ default: dev
 	mkdir -p {{BUILD_DIR}}/vendor
 	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
-	cp {{NPM_DIR}}/ipfs-message-port-client/dist/index.min.js {{BUILD_DIR}}/vendor/ipfs-message-port-client.min.js
+	cp {{NPM_DIR}}/ipfs-message-port-client/index.min.js {{BUILD_DIR}}/vendor/ipfs-message-port-client.min.js
+	cp {{NPM_DIR}}/webnative/dist/index.umd.min.js {{BUILD_DIR}}/vendor/webnative.min.js
 	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
 
-	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/webnative/dist/index.umd.js --minify --outfile={{BUILD_DIR}}/vendor/webnative.min.js
-	{{NPM_DIR}}/.bin/esbuild {{SRC_DIR}}/Static/webnative-elm.js --minify --outfile={{BUILD_DIR}}/vendor/webnative-elm.min.js
+	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/webnative-elm/src/funnel.js --minify --outfile={{BUILD_DIR}}/vendor/webnative-elm.min.js
 
 
 #
@@ -176,7 +176,7 @@ default: dev
 
 @server:
 	echo "> Booting up web server on port 5000"
-	devd --port 5000 --all --crossdomain --quiet --notfound=301.html {{BUILD_DIR}}
+	nix-shell --run "simple-http-server --port 5000 --try-file {{BUILD_DIR}}/301.html --cors --index --nocache --silent -- {{BUILD_DIR}}"
 
 
 @test: doc-tests
@@ -195,7 +195,7 @@ default: dev
 
 
 @watch-elm:
-	watchexec -p -w {{SRC_DIR}} -e elm -- just elm
+	watchexec -p -w {{SRC_DIR}} -e elm -- just elm css
 
 
 @watch-js:
