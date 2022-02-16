@@ -49,8 +49,7 @@ fn create_window(app: &mut App, port: u16) -> tauri::Result<Window> {
                 .maximized(true)
                 .menu(menu())
                 .resizable(true)
-                .title("Diffuse")
-                .transparent(true);
+                .title("Diffuse");
 
             (w, webview_attributes)
         },
