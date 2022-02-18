@@ -1,40 +1,53 @@
 let
 
-  # Install rust for Tauri build
-  rustOverlay     = builtins.fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz";
-
   sources         = import ./nix/sources.nix;
   pkgs            = import sources.nixpkgs { overlays = [ (import rustOverlay) ]; };
-  frameworks      = pkgs.darwin.apple_sdk.frameworks;
 
-in
+  rustOverlay     = builtins.fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz";
 
-  pkgs.mkShell {
-    buildInputs = [
+  # Dependencies
+  # ------------
 
-      # Dev Tools
+  deps = {
+
+    tools = [
       pkgs.curl
       pkgs.just
       pkgs.simple-http-server
       pkgs.watchexec
+    ];
 
-      # Language Specific
+    languages = [
       pkgs.elmPackages.elm
       pkgs.elmPackages.elm-format
       pkgs.haskellPackages.stack
       pkgs.nodejs-14_x
       pkgs.nodePackages.pnpm
       pkgs.rust-bin.stable.latest.default
-
-      # Indirect dependencies
-      frameworks.WebKit
-      pkgs.gmp
-      pkgs.libiconv
-
     ];
 
-    # Workaround to get Tauri to work in a Nix environment on MacOS
-    shellHook = ''
-      export NIX_LDFLAGS="-F${frameworks.WebKit}/Library/Frameworks -framework WebKit $NIX_LDFLAGS";
-    '';
+    tauri = {
+      # Needed to build Tauri on Mac OS
+      # https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/darwin/apple-sdk/frameworks.nix
+      macOS = [
+        pkgs.darwin.apple_sdk.frameworks.AppKit
+        pkgs.darwin.apple_sdk.frameworks.WebKit
+        pkgs.libiconv
+      ];
+    };
+
+  };
+
+in
+
+  pkgs.mkShell {
+
+    buildInputs = builtins.concatLists [
+      deps.tools
+      deps.languages
+
+      # Mac OS dependencies
+      (pkgs.lib.optionals pkgs.stdenv.isDarwin deps.tauri.macOS)
+    ];
+
   }
