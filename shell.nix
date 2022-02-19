@@ -23,7 +23,15 @@ let
       pkgs.haskellPackages.stack
       pkgs.nodejs-14_x
       pkgs.nodePackages.pnpm
+
       pkgs.rust-bin.stable.latest.default
+      # (pkgs.rust-bin.stable.latest.default.override {
+      #   targets =
+      #     if pkgs.stdenv.isDarwin then
+      #       [ "aarch64-apple-darwin" "x86_64-apple-darwin" ]
+      #     else
+      #       [];
+      # })
     ];
 
     tauri = {

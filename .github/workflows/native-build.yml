@@ -1,7 +1,7 @@
 name: Build Native Version
 
 
-on: 
+on:
   workflow_dispatch:
     inputs:
 
@@ -12,63 +12,63 @@ jobs:
   #########
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v2
-      
+
       # Nix
       - uses: cachix/install-nix-action@v13
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-          
+
       - uses: cachix/cachix-action@v10
         with:
           name: diffuse
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-          
+
       # Cache
       - uses: actions/cache@v2
         with:
           path: |
             ~/.stack
           key: ${{ runner.os }}-stack
-      
+
       # Tasks
       - run: nix-shell --run "just install-deps"
       - run: nix-shell --run "just build-prod"
-          
+
       # Upload artifacts
       - uses: actions/upload-artifact@v2
         with:
           name: build
           path: build/
-  
-  ##################    
+
+  ##################
   # CREATE RELEASE #
   ##################
   create-release:
     needs: build
     runs-on: ubuntu-latest
-    
+
     outputs:
       RELEASE_UPLOAD_ID: ${{ steps.create_release.outputs.id }}
       TAG_NAME: ${{ steps.package-version.outputs.current-version }}
-    
+
     steps:
       - uses: actions/checkout@v2
       - run: mkdir compressed
-      
+
       # Download artifacts
       - uses: actions/download-artifact@v2
         with:
           name: build
           path: build/
-          
+
       # Create zip
       - uses: montudor/action-zip@v0.1.0
         with:
           args: zip -qq -r ./compressed/diffuse-web.zip ./build
-          
+
       # Create tar.gz
       - uses: master-atul/tar-action@v1.0.2
         with:
@@ -76,43 +76,43 @@ jobs:
           cwd: .
           files: ./build
           outPath: compressed/diffuse-web.tar.gz
-      
+
       # Get Diffuse's version number
       - id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.1.0
-      
+
       # Create release
       - uses: softprops/action-gh-release@v0.1.7
         id: create_release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
           tag_name: "${{ steps.package-version.outputs.current-version }}"
           name: "v${{ steps.package-version.outputs.current-version }}"
           body: "See the assets to download this version and install."
           draft: true
           prerelease: true
-          
+
           files: |
             compressed/diffuse-web.zip
             compressed/diffuse-web.tar.gz
-      
+
   #########
   # TAURI #
   #########
   tauri:
     needs: create-release
-    
+
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v2
-      
+
       # OS
       - name: install linux dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -125,39 +125,36 @@ jobs:
             libgtk-3-dev \
             libgtksourceview-3.0-dev \
             squashfs-tools
-          
+
       # Rust
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
-          
+
       - uses: Swatinem/rust-cache@v1
         with:
           working-directory: src-tauri
-      
+
       # Download artifacts
       - uses: actions/download-artifact@v2
         with:
           name: build
           path: build/
-          
-      # Tauri CLI
-      - run: cargo install tauri-cli --version 1.0.0-beta.5
-      
+
       # Make a build
-      - run: cargo build --no-default-features
+      - run: cargo build --no-default-features # --release
         working-directory: src-tauri
-      
+
       # Upload artifacts (MacOS)
       - uses: softprops/action-gh-release@v0.1.7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
           tag_name: "${{ needs.create-release.outputs.TAG_NAME }}"
           draft: true
           prerelease: true
-          
+
           files: |
             src-tauri/target/debug/bundle/appimage/*.AppImage
             src-tauri/target/debug/bundle/deb/*.deb
