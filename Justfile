@@ -2,11 +2,11 @@ export NODE_NO_WARNINGS := "1"
 
 
 BUILD_DIR 				:= "./build"
-NPM_DIR 				:= "./node_modules"
-SRC_DIR 				:= "./src"
+NPM_DIR 					:= "./node_modules"
+SRC_DIR 					:= "./src"
 SYSTEM_DIR				:= "./system"
 
-ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
+ESBUILD						:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
 
 
 default: dev
@@ -126,6 +126,11 @@ default: dev
 	stack build --fast 2>&1 | sed '/^Warning:/,/Invalid magic: e49ceb0f$/d' | sed '/^Inferring license/d' && stack exec build --silent
 
 
+@tauri-build:
+	echo "> Building Tauri binaries"
+	./src-tauri/bin/cargo-tauri tauri build # --target universal-apple-darwin
+
+
 @vendor-js:
 	mkdir -p {{BUILD_DIR}}/vendor
 	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
@@ -166,6 +171,8 @@ default: dev
 	mkdir -p vendor
 	curl --silent --show-error --fail -o ./vendor/pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
 
+	cargo install tauri-cli --version "^1.0.0-rc.6" --root ./src-tauri
+
 
 @quality:
 	echo "> Running es-lint"
@@ -177,6 +184,10 @@ default: dev
 @server:
 	echo "> Booting up web server on port 5000"
 	nix-shell --run "simple-http-server --port 5000 --try-file {{BUILD_DIR}}/301.html --cors --index --nocache --silent -- {{BUILD_DIR}}"
+
+
+@tauri-dev:
+	./src-tauri/bin/cargo-tauri tauri dev
 
 
 @test: doc-tests
