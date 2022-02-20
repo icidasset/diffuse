@@ -6,7 +6,8 @@
     "distDir": "../build",
     "devPath": "../build",
     "beforeDevCommand": "",
-    "beforeBuildCommand": ""
+    "beforeBuildCommand": "",
+    "withGlobalTauri": true
   },
   "tauri": {
     "bundle": {
@@ -44,7 +45,13 @@
       "active": false
     },
     "allowlist": {
-      "all": true
+      "http": {
+        "all": true,
+        "request": true
+      },
+      "shell": {
+        "open": ".*"
+      }
     },
     "windows": [],
     "security": {
