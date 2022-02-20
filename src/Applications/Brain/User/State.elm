@@ -143,11 +143,14 @@ update msg =
         SaveAllHypaethralData ->
             saveAllHypaethralData
 
-        SaveHypaethralDataSlowly a ->
-            saveHypaethralDataSlowly a
+        SaveHypaethralDataBit a ->
+            saveHypaethralData a
 
         SaveHypaethralDataBits a ->
             saveHypaethralDataBits a
+
+        SaveHypaethralDataSlowly a ->
+            saveHypaethralDataSlowly a
 
         SaveNextHypaethralBit ->
             saveNextHypaethralBit
@@ -560,16 +563,50 @@ saveHypaethralData bit model =
     in
     case model.authMethod of
         -- 🚀
-        Just (Dropbox { accessToken, refreshToken }) ->
-            -- TODO: Refresh token
-            [ ( "data", json )
-            , ( "file", file )
-            , ( "token", Json.string accessToken )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthDropbox
-                |> Ports.toDropbox
-                |> return model
+        Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
+            let
+                currentTime =
+                    Time.posixToMillis model.currentTime // 1000
+
+                currentTimeWithOffset =
+                    -- We add 60 seconds here because we only get the current time every minute,
+                    -- so there's always the chance the "current time" is 1-60 seconds behind.
+                    currentTime + 60
+            in
+            -- If the access token is expired
+            if currentTimeWithOffset >= expiresAt then
+                refreshToken
+                    |> Dropbox.refreshAccessToken
+                    |> Task.attempt
+                        (\result ->
+                            case result of
+                                Ok tokens ->
+                                    bit
+                                        |> SaveHypaethralDataBit
+                                        |> RefreshedDropboxTokens
+                                            { currentTime = currentTime
+                                            , refreshToken = refreshToken
+                                            }
+                                            tokens
+                                        |> UserMsg
+
+                                Err err ->
+                                    err
+                                        |> Alien.report Alien.ReportError
+                                        |> Ports.toUI
+                                        |> Cmd
+                        )
+                    |> return model
+
+            else
+                [ ( "data", json )
+                , ( "file", file )
+                , ( "token", Json.string accessToken )
+                ]
+                    |> Json.object
+                    |> Alien.broadcast Alien.AuthDropbox
+                    |> Ports.toDropbox
+                    |> return model
 
         Just (Fission params) ->
             json
