@@ -263,6 +263,7 @@ importEnclosed value model =
                 ]
             )
 
-        Err _ ->
-            -- TODO: Error handling
-            Return.singleton model
+        Err err ->
+            ("Failed to decode enclosed data: " ++ Json.Decode.errorToString err)
+                |> Notifications.error
+                |> Common.showNotificationWithModel model
