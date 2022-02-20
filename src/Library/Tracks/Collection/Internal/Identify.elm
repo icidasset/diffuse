@@ -67,12 +67,11 @@ identifyTrack :
     -> ( List IdentifiedTrack, List String )
     -> ( List IdentifiedTrack, List String )
 identifyTrack enabledSourceIds favourites track =
-    case List.member track.sourceId enabledSourceIds of
-        True ->
-            partTwo favourites track
+    if List.member track.sourceId enabledSourceIds then
+        partTwo favourites track
 
-        False ->
-            identity
+    else
+        identity
 
 
 partTwo :
@@ -105,25 +104,24 @@ partTwo favourites track ( acc, remainingFavourites ) =
             , track
             )
     in
-    case isFav of
+    if isFav then
         --
         -- A favourite
         --
-        True ->
-            ( identifiedTrack :: acc
-            , remainingFavourites
-                |> List.findIndex isFavourite_
-                |> Maybe.map (\idx -> List.removeAt idx remainingFavourites)
-                |> Maybe.withDefault remainingFavourites
-            )
+        ( identifiedTrack :: acc
+        , remainingFavourites
+            |> List.findIndex isFavourite_
+            |> Maybe.map (\idx -> List.removeAt idx remainingFavourites)
+            |> Maybe.withDefault remainingFavourites
+        )
 
+    else
         --
         -- Not a favourite
         --
-        False ->
-            ( identifiedTrack :: acc
-            , remainingFavourites
-            )
+        ( identifiedTrack :: acc
+        , remainingFavourites
+        )
 
 
 

@@ -267,7 +267,7 @@ backgroundImage chosenBackground =
     chunk
         [ "flex", "flex-wrap" ]
         (List.map
-            (\( filename, backdropLabel ) ->
+            (\( filename, _ ) ->
                 let
                     isActive =
                         chosenBackground == Just filename

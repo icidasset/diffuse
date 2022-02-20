@@ -90,10 +90,7 @@ collectionView deps =
             List.length deps.covers
     in
     brick
-        ((::)
-            (tabindex (ifThenElse deps.isVisible 0 -1))
-            viewAttributes
-        )
+        (tabindex (ifThenElse deps.isVisible 0 -1) :: viewAttributes)
         [ "flex-basis-0"
         , "flex-grow"
         , "outline-none"
@@ -794,7 +791,7 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
 
 
 metadataView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
-metadataView { clickable, horizontal } { cachedCovers, sortBy } cover =
+metadataView { clickable, horizontal } { sortBy } cover =
     let
         { identifiedTrackCover } =
             cover

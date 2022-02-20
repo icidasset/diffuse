@@ -146,7 +146,7 @@ view_ state =
         -- Content
         -----------------------------------------
         , case state of
-            InputScreen method opts ->
+            InputScreen _ opts ->
                 inputScreen opts
 
             NewEncryptionKeyScreen method pass ->

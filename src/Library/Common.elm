@@ -64,10 +64,10 @@ translateHttpResponse response =
         Http.NetworkError_ ->
             Err Http.NetworkError
 
-        Http.BadStatus_ m body ->
+        Http.BadStatus_ _ body ->
             Err (Http.BadBody body)
 
-        Http.GoodStatus_ m body ->
+        Http.GoodStatus_ _ body ->
             Ok body
 
 

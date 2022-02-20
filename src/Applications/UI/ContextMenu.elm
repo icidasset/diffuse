@@ -30,7 +30,7 @@ view viewportWidth m =
 
                 top =
                     coordinates.y
-                        |> max (250 / 2 + 12)
+                        |> max (height / 2 + 12)
             in
             brick
                 [ style "left" (String.fromFloat left ++ "px")

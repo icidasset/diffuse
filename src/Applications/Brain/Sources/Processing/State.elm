@@ -168,7 +168,7 @@ treeStep context result model =
     case result of
         Ok response ->
             case model.processingStatus of
-                Processing ( source, tracks ) rest ->
+                Processing ( _, tracks ) rest ->
                     return
                         { model | processingStatus = Processing ( context.source, tracks ) rest }
                         (Steps.takeTreeStep context response tracks model.currentTime)

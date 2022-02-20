@@ -26,11 +26,17 @@ addSuffix path =
             p ++ sep
 
 
+{-| Drop an amount of path segments from the right side.
+
+    >>> dropRight 5 "a/b/c/d/e/f"
+    "a"
+
+-}
 dropRight : Int -> String -> String
 dropRight int path =
     path
         |> String.split sep
-        |> (\l -> List.take (List.length l - 1) l)
+        |> (\l -> List.take (List.length l - int) l)
         |> String.join sep
 
 

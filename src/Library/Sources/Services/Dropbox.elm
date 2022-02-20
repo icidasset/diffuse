@@ -124,7 +124,7 @@ Or a specific directory in the bucket.
 
 -}
 makeTree : SourceData -> Marker -> Time.Posix -> (Result Http.Error String -> msg) -> Cmd msg
-makeTree srcData marker currentTime resultMsg =
+makeTree srcData marker _ resultMsg =
     let
         accessToken =
             Dict.fetch "accessToken" "" srcData
@@ -226,5 +226,5 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentTime srcData method pathToFile =
+makeTrackUrl _ srcData _ pathToFile =
     "dropbox://" ++ Dict.fetch "accessToken" "" srcData ++ "@" ++ pathToFile

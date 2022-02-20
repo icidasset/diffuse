@@ -142,7 +142,7 @@ prepare origin srcData _ resultMsg =
         queryParams =
             case maybeCode of
                 -- Exchange authorization code for access token & request token
-                Just authCode ->
+                Just _ ->
                     [ ( "client_id", Dict.fetch "clientId" "" srcData )
                     , ( "client_secret", Dict.fetch "clientSecret" "" srcData )
                     , ( "code", Dict.fetch "authCode" "" srcData )
@@ -182,7 +182,7 @@ Or a specific directory in the bucket.
 
 -}
 makeTree : SourceData -> Marker -> Time.Posix -> (Result Http.Error String -> msg) -> Cmd msg
-makeTree srcData marker currentTime resultMsg =
+makeTree srcData marker _ resultMsg =
     let
         accessToken =
             Dict.fetch "accessToken" "" srcData
@@ -289,7 +289,7 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentTime srcData method path =
+makeTrackUrl _ srcData _ path =
     let
         file =
             String.Path.file path

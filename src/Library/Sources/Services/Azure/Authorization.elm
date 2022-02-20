@@ -49,7 +49,7 @@ presignedUrl :
     -> String
     -> List ( String, String )
     -> String
-presignedUrl storageMethod computation httpMethod hoursToLive currentTime srcData pathToFile params =
+presignedUrl storageMethod computation _ _ currentTime srcData pathToFile params =
     let
         azure =
             srcData

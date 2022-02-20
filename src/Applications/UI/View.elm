@@ -298,23 +298,21 @@ overlay maybeAlfred maybeContextMenu =
 
 vessel : List (Html Msg) -> Html Msg
 vessel =
-    (>>)
-        (brick
-            [ style "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
-            [ "bg-white"
-            , "flex"
-            , "flex-col"
-            , "flex-grow"
-            , "overflow-hidden"
-            , "relative"
-            , "rounded"
+    brick
+        [ style "-webkit-mask-image" "-webkit-radial-gradient(white, black)" ]
+        [ "bg-white"
+        , "flex"
+        , "flex-col"
+        , "flex-grow"
+        , "overflow-hidden"
+        , "relative"
+        , "rounded"
 
-            -- Dark mode
-            ------------
-            , "dark:bg-darkest-hour"
-            ]
-        )
-        (bricky
+        -- Dark mode
+        ------------
+        , "dark:bg-darkest-hour"
+        ]
+        >> bricky
             [ style "min-height" "296px" ]
             [ "flex"
             , "flex-grow"
@@ -326,4 +324,3 @@ vessel =
             , "lg:max-w-insulation"
             , "lg:min-w-3xl"
             ]
-        )

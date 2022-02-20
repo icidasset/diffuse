@@ -342,7 +342,7 @@ removeFromPlaylist tracks playlist =
         |> List.indexedFoldr
             (\idx t ( acc, remaining ) ->
                 case List.partition ((==) (Just idx)) remaining of
-                    ( match :: _, rem ) ->
+                    ( _ :: _, rem ) ->
                         ( acc, rem )
 
                     ( _, rem ) ->
@@ -369,7 +369,7 @@ shouldRenderGroup identifiers =
 toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrack
 toPlaylistTracks =
     List.map
-        (\( i, t ) ->
+        (\( _, t ) ->
             { album = t.tags.album
             , artist = t.tags.artist
             , title = t.tags.title

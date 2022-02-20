@@ -48,7 +48,7 @@ view page model =
                     , sources = model.sources
                     }
 
-            Edit sourceId ->
+            Edit _ ->
                 lazyForm model <| Form.edit
 
             New ->
@@ -60,7 +60,7 @@ view page model =
             NewThroughRedirect _ _ ->
                 lazyForm model <| Form.new { onboarding = False }
 
-            Rename sourceId ->
+            Rename _ ->
                 lazyForm model <| Form.rename
         )
 

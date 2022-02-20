@@ -274,7 +274,7 @@ historyView playedPreviously dnd =
 
 
 historyItem : Int -> Queue.Item -> UI.List.Item UI.Msg
-historyItem idx ({ identifiedTrack, manualEntry } as item) =
+historyItem idx ({ identifiedTrack } as item) =
     let
         ( _, track ) =
             identifiedTrack

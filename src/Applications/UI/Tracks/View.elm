@@ -237,12 +237,11 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                     , title "Toggle favourites-only"
                     ]
                     [ "cursor-pointer" ]
-                    [ case favouritesOnly of
-                        True ->
-                            Icons.favorite 16 (Color UI.Kit.colorKit.base08)
+                    [ if favouritesOnly then
+                        Icons.favorite 16 (Color UI.Kit.colorKit.base08)
 
-                        False ->
-                            Icons.favorite_border 16 Inherit
+                      else
+                        Icons.favorite_border 16 Inherit
                     ]
 
                 -- 3
@@ -349,7 +348,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 
 
 noTracksView : List String -> Int -> Int -> Int -> Html UI.Msg
-noTracksView processingContext amountOfSources amountOfTracks amountOfFavourites =
+noTracksView processingContext amountOfSources amountOfTracks _ =
     chunk
         [ "no-tracks-view"
 

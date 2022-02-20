@@ -263,5 +263,6 @@ importEnclosed value model =
                 ]
             )
 
-        Err err ->
+        Err _ ->
+            -- TODO: Error handling
             Return.singleton model

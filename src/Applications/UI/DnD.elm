@@ -98,7 +98,7 @@ update msg model =
       -- Response
       ------------------------------------
     , case msg of
-        Start context ->
+        Start _ ->
             { initiated = True }
 
         _ ->

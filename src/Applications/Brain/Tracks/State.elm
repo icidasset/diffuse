@@ -237,7 +237,7 @@ syncTrackTags data model =
             result
                 |> Result.withDefault []
                 |> List.foldl
-                    (\{ path, sourceId } ( dict, acc ) ->
+                    (\{ sourceId } ( dict, acc ) ->
                         if List.member sourceId acc then
                             ( dict, acc )
 

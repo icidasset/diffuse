@@ -71,7 +71,7 @@ alternativeMenuActions :
     -> List (ContextMenu.Item Msg)
 alternativeMenuActions timestamp sources tracks =
     case tracks of
-        [ ( i, t ) ] ->
+        [ ( _, t ) ] ->
             [ Item
                 { icon = Icons.link
                 , label = "Copy temporary url"
@@ -98,7 +98,7 @@ cacheAction :
     -> ContextMenu.Item Msg
 cacheAction { cached, cachingInProgress } tracks =
     case tracks of
-        [ ( i, t ) as track ] ->
+        [ ( _, t ) ] ->
             if List.member t.id cached then
                 Item
                     { icon = Icons.offline_bolt

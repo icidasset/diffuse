@@ -26,7 +26,7 @@ generate sortBy tracks =
     in
     tracks.arranged
         |> List.indexedFoldr
-            (\idx identifiedTrack { covers, gathering } ->
+            (\_ identifiedTrack { covers, gathering } ->
                 let
                     group =
                         groupFn identifiedTrack
@@ -308,7 +308,7 @@ makeCover sortBy_ gathering collection =
             makeCoverWithFallback sortBy_ closedGathering fallback :: collection
 
 
-makeCoverWithFallback sortBy_ gathering fallback =
+makeCoverWithFallback _ gathering fallback =
     let
         amountOfTracks =
             List.length gathering.accIds
@@ -322,7 +322,7 @@ makeCoverWithFallback sortBy_ gathering fallback =
                 |> Maybe.map Tuple.first
                 |> Maybe.withDefault fallback
 
-        ( identifiers, track ) =
+        ( _, track ) =
             identifiedTrack
 
         ( largestAlbumSequence, largestArtistSequence ) =

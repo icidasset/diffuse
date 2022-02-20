@@ -156,7 +156,7 @@ update msg =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.batch
         [ Ports.fromAlien alien
         , Ports.makeArtworkTrackUrls MakeArtworkTrackUrls

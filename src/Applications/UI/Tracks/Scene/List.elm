@@ -51,10 +51,7 @@ type alias DerivedColors =
 view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe Queue.Item -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html Msg
 view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
     brick
-        ((::)
-            (tabindex (ifThenElse deps.isVisible 0 -1))
-            viewAttributes
-        )
+        (tabindex (ifThenElse deps.isVisible 0 -1) :: viewAttributes)
         [ "flex-basis-0"
         , "flex-grow"
         , "outline-none"
@@ -484,7 +481,7 @@ defaultItemView args _ idx identifiedTrack =
 
 
 playlistItemView : Bool -> Maybe Queue.Item -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
-playlistItemView favouritesOnly nowPlaying searchTerm selectedTrackIndexes dnd showAlbum darkMode derivedColors _ idx identifiedTrack =
+playlistItemView favouritesOnly nowPlaying _ selectedTrackIndexes dnd showAlbum darkMode derivedColors _ idx identifiedTrack =
     let
         ( identifiers, track ) =
             identifiedTrack
@@ -700,7 +697,7 @@ rowHeight =
 
 
 rowStyles : Int -> { isMissing : Bool, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> List (Html.Attribute msg)
-rowStyles idx { isMissing, isNowPlaying, isSelected } derivedColors =
+rowStyles _ { isMissing, isNowPlaying } derivedColors =
     let
         bgColor =
             if isNowPlaying then
@@ -740,7 +737,7 @@ columnMinWidth =
 favouriteColumn : String -> Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> Html Msg
 favouriteColumn columnWidth favouritesOnly identifiers derivedColors =
     brick
-        ((++)
+        (List.append
             [ style "width" columnWidth
             , identifiers.indexInList
                 |> ToggleFavourite
@@ -767,7 +764,7 @@ favouriteColumn columnWidth favouritesOnly identifiers derivedColors =
 
 
 favouriteColumnStyles : Bool -> { isFavourite : Bool, indexInList : Int, isNowPlaying : Bool, isSelected : Bool } -> DerivedColors -> List (Html.Attribute msg)
-favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying, isSelected } derivedColors =
+favouriteColumnStyles favouritesOnly { isFavourite, isNowPlaying } derivedColors =
     let
         color =
             if isNowPlaying && isFavourite then
@@ -805,7 +802,7 @@ playlistIndexColumn indexInPlaylist =
 
 
 otherColumn : String -> Bool -> String -> Html msg
-otherColumn width isLast text_ =
+otherColumn width _ text_ =
     brick
         (otherColumnStyles width)
         [ "pl-2"

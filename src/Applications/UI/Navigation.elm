@@ -133,13 +133,13 @@ localItem : Int -> { amount : Int } -> ( Icon msg, Label, Action msg ) -> Html m
 localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) =
     slab
         (case action of
-            NavigateToPage page ->
+            NavigateToPage _ ->
                 Html.a
 
             OpenLinkInNewPage _ ->
                 Html.a
 
-            PerformMsg msg ->
+            PerformMsg _ ->
                 Html.button
         )
         [ case action of

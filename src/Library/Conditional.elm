@@ -5,9 +5,8 @@ module Conditional exposing (ifThenElse)
 
 ifThenElse : Bool -> a -> a -> a
 ifThenElse bool x y =
-    case bool of
-        True ->
-            x
+    if bool then
+        x
 
-        False ->
-            y
+    else
+        y

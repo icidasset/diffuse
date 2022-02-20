@@ -56,18 +56,17 @@ toggleInFavouritesList ( i, t ) favourites =
             , title = t.tags.title
             }
     in
-    case i.isFavourite of
-        True ->
-            -- Remove from list
-            List.filterNot
-                (match favourite)
-                favourites
+    if i.isFavourite then
+        -- Remove from list
+        List.filterNot
+            (match favourite)
+            favourites
 
-        False ->
-            -- Add to list
-            List.append
-                favourites
-                [ favourite ]
+    else
+        -- Add to list
+        List.append
+            favourites
+            [ favourite ]
 
 
 

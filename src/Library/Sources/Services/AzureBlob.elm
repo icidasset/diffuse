@@ -164,5 +164,5 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentTime srcData method pathToFile =
+makeTrackUrl currentTime srcData _ pathToFile =
     presignedUrl Blob Read Get 48 currentTime srcData pathToFile []

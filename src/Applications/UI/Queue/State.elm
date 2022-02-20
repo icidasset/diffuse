@@ -143,12 +143,11 @@ fill model =
                             }
                     in
                     -- Fill using the appropiate method
-                    case m.shuffle of
-                        False ->
-                            { m | playingNext = Fill.ordered timestamp nonMissingTracks fillState }
+                    if m.shuffle then
+                        { m | playingNext = Fill.shuffled timestamp nonMissingTracks fillState }
 
-                        True ->
-                            { m | playingNext = Fill.shuffled timestamp nonMissingTracks fillState }
+                    else
+                        { m | playingNext = Fill.ordered timestamp nonMissingTracks fillState }
            )
         |> preloadNext
 

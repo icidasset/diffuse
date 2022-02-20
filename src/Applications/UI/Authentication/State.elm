@@ -713,7 +713,7 @@ input string model =
 confirmInput : Manager
 confirmInput model =
     case lens.get model of
-        InputScreen (Ipfs i) { value } ->
+        InputScreen (Ipfs _) { value } ->
             pingOtherIpfs (String.chopEnd "/" value) model
 
         InputScreen (RemoteStorage r) { value } ->
