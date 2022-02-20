@@ -6,8 +6,6 @@ import Binary
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import Dict
-import Html exposing (a)
-import Html.Attributes exposing (value)
 import Html.Events.Extra.Mouse as Mouse
 import Http
 import Http.Ext as Http

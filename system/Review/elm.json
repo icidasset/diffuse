@@ -8,9 +8,14 @@
         "direct": {
             "elm/core": "1.0.5",
             "elm/json": "1.1.3",
-            "jfmengels/elm-review": "2.5.0",
+            "jfmengels/elm-review": "2.7.0",
+            "jfmengels/elm-review-common": "1.2.0",
             "jfmengels/elm-review-debug": "1.0.6",
-            "jfmengels/elm-review-unused": "1.1.14"
+            "jfmengels/elm-review-performance": "1.0.1",
+            "jfmengels/elm-review-the-elm-architecture": "1.0.3",
+            "jfmengels/elm-review-unused": "1.1.20",
+            "sparksp/elm-review-ports": "1.3.1",
+            "vkfisher/elm-review-no-unsafe-division": "1.0.1"
         },
         "indirect": {
             "elm/html": "1.0.0",
@@ -19,11 +24,12 @@
             "elm/random": "1.0.0",
             "elm/time": "1.0.0",
             "elm/virtual-dom": "1.0.2",
-            "elm-community/list-extra": "8.3.1",
+            "elm-community/list-extra": "8.5.2",
+            "elm-community/maybe-extra": "5.3.0",
             "elm-explorations/test": "1.2.2",
             "miniBill/elm-unicode": "1.0.2",
             "rtfeldman/elm-hex": "1.0.0",
-            "stil4m/elm-syntax": "7.2.6",
+            "stil4m/elm-syntax": "7.2.9",
             "stil4m/structured-writer": "1.0.3"
         }
     },
