@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 3.0.2
 
+- __Fixes issue with Dropbox user-data storage__ (Dropbox API change)
 - Fixes various issues with the album-cover view (eg. playback issues)
 - Service worker tweaks to improve performance and offline behaviour
 
@@ -105,7 +106,7 @@ Also list files from shared Google drives, in addition to 'Shared with me'.
 - **Added dark mode**
 - **Added support for BTFS (an IPFS fork)**
 - Added ability to rename sources (ie. after creation)
-- Added keyboard shortcuts for play/pause, toggle shuffle, etc.  
+- Added keyboard shortcuts for play/pause, toggle shuffle, etc.
   See UI section on the about page for more info.
 - Improved IPFS support as a music source (now uses paths instead of hashes)
 - Improved text readability (contrast, etc.)
