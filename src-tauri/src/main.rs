@@ -3,17 +3,33 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{App, PhysicalPosition, PhysicalSize, Position, Size};
-use tauri::{Menu, MenuItem, Submenu};
-use tauri::{Window, WindowBuilder, WindowUrl};
+use tauri::{PhysicalPosition, PhysicalSize, Position, Size};
+use tauri::{Manager, Menu, MenuItem, Submenu};
+use tauri::{WindowBuilder, WindowUrl};
+
 
 fn main() {
     let port = 44999;
 
     tauri::Builder::default()
         .plugin(tauri_plugin_localhost::Localhost::new(port))
+        .plugin(tauri_plugin_window_state::WindowState::default())
+        .create_window(
+            "main",
+            WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
+            |window_builder, webview_attributes| {
+                let win = window_builder
+                    .title("Diffuse")
+                    .menu(menu())
+                    .maximized(true)
+                    .resizable(true);
+
+                return (win, webview_attributes);
+            },
+        )
+        .unwrap()
         .setup(move |app| {
-            let w = create_window(app, port).unwrap();
+            let w = app.get_window("main").unwrap();
 
             // Scale window to a bit smaller than screen size
             let monitor = w.current_monitor().unwrap().unwrap();
@@ -34,26 +50,7 @@ fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
-
-/**
- * Create a window that loads our localhost server.
- */
-fn create_window(app: &mut App, port: u16) -> tauri::Result<Window> {
-    app.create_window(
-        "main",
-        WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
-        |window_builder, webview_attributes| {
-            let w = window_builder
-                .maximized(true)
-                .menu(menu())
-                .resizable(true)
-                .title("Diffuse");
-
-            (w, webview_attributes)
-        },
-    )
+        .expect("Error while running tauri application");
 }
 
 /**
