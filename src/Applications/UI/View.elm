@@ -282,8 +282,8 @@ overlay maybeAlfred maybeContextMenu =
     brick
         []
         [ "inset-0"
-        , "bg-black"
-        , "duration-1000"
+        , "bg-darkest-hour"
+        , "duration-500"
         , "ease-in-out"
         , "fixed"
         , "transition-opacity"
@@ -291,7 +291,7 @@ overlay maybeAlfred maybeContextMenu =
 
         --
         , ifThenElse isShown "pointer-events-auto" "pointer-events-none"
-        , ifThenElse isShown "opacity-40" "opacity-0"
+        , ifThenElse isShown "opacity-75" "opacity-0"
         ]
         []
 

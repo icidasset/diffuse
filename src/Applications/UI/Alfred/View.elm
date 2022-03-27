@@ -43,6 +43,7 @@ view maybeInstance extractedBackdropColor =
                     [ "italic"
                     , "leading-normal"
                     , "mt-12"
+                    , "opacity-75"
                     , "text-center"
                     , "text-white"
 
@@ -66,7 +67,7 @@ view maybeInstance extractedBackdropColor =
                         )
                     ]
                     [ "text-sm"
-                    , "max-w-lg"
+                    , "max-w-xl"
                     , "mt-8"
                     , "w-full"
                     ]
@@ -88,21 +89,22 @@ view maybeInstance extractedBackdropColor =
                             Mutation ->
                                 placeholder "Type to create"
                         ]
-                        [ "border-none"
+                        [ "border"
                         , "bg-white"
                         , "block"
                         , "leading-normal"
-                        , "rounded"
                         , "outline-none"
                         , "p-4"
+                        , "rounded-t"
                         , "shadow-md"
-                        , "text-2xl"
+                        , "text-xl"
                         , "tracking-tad-closer"
                         , "w-full"
 
                         -- Dark mode
                         ------------
-                        , "dark:bg-base00"
+                        , "dark:bg-darkest-hour"
+                        , "dark:border-base00"
                         ]
                         []
                     ]
@@ -113,13 +115,14 @@ view maybeInstance extractedBackdropColor =
                 , brick
                     [ id "alfred__results" ]
                     [ "bg-white"
-                    , "rounded"
-                    , "leading-none"
-                    , "max-w-lg"
+                    , "border"
+                    , "border-t-0"
+                    , "leading-tight"
+                    , "max-w-xl"
                     , "mb-32"
-                    , "mt-8"
                     , "overflow-x-hidden"
                     , "overflow-y-auto"
+                    , "rounded-b"
                     , "shadow-md"
                     , "smooth-scrolling"
                     , "text-nearly-sm"
@@ -127,7 +130,8 @@ view maybeInstance extractedBackdropColor =
 
                     -- Dark mode
                     ------------
-                    , "dark:bg-base00"
+                    , "dark:bg-darkest-hour"
+                    , "dark:border-base00"
                     ]
                     (List.indexedMap
                         (\idx result ->
@@ -149,39 +153,54 @@ view maybeInstance extractedBackdropColor =
                                     style "" ""
                                 ]
                                 (List.concat
-                                    [ [ "p-4"
+                                    [ [ "flex"
+                                      , "items-center"
+                                      , "m-2"
+                                      , "p-3"
                                       , "relative"
-                                      , "truncate"
+                                      , "rounded"
                                       ]
 
                                     --
                                     , if idx == instance.focus then
-                                        [ "text-white", "dark:text-base07" ]
+                                        [ "text-white"
+                                        , "dark:opacity-80"
+                                        , "dark:text-base07"
+                                        ]
 
                                       else
                                         [ "text-inherit" ]
 
                                     --
-                                    , if modBy 2 idx == 0 then
-                                        []
-
-                                      else
-                                        [ "bg-gray-100", "dark:bg-base01-15" ]
+                                    -- , if modBy 2 idx == 0 then
+                                    --     []
+                                    --   else
+                                    --     [ "bg-gray-100", "dark:bg-base01-15" ]
                                     ]
                                 )
-                                [ text result
+                                [ case result.icon of
+                                    Just icon ->
+                                        slab
+                                            Html.span
+                                            []
+                                            [ "inline-block", "mr-2" ]
+                                            [ icon 16 Inherit
+                                            ]
+
+                                    Nothing ->
+                                        text ""
+
+                                --
+                                , slab
+                                    Html.span
+                                    []
+                                    [ "flex-1", "inline-block", "pt-px" ]
+                                    [ text result.title ]
 
                                 --
                                 , if idx == instance.focus then
                                     chunk
-                                        [ "absolute"
-                                        , "leading-0"
-                                        , "-translate-y-1/2"
-                                        , "mr-3"
-                                        , "right-0"
-                                        , "top-1/2"
-                                        , "transform"
-                                        ]
+                                        [ "leading-0", "ml-2" ]
                                         [ Icons.keyboard_return 13 Inherit
                                         ]
 

@@ -118,9 +118,9 @@ determineResults searchTerm alfred =
             , searchTerm =
                 Just searchTerm
             , results =
-                alfred.index
-                    |> List.filter (String.toLower >> String.contains lowerSearchTerm)
-                    |> List.sort
+                List.filter
+                    (.value >> String.toLower >> String.contains lowerSearchTerm)
+                    alfred.index
         }
 
     else

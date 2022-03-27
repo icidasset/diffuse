@@ -2,6 +2,7 @@ module UI.Playlists.Alfred exposing (create, select)
 
 import Alfred exposing (..)
 import List.Extra as List
+import Material.Icons as Icons
 import Playlists exposing (..)
 import Tracks exposing (IdentifiedTrack)
 import UI.Types as UI
@@ -18,10 +19,13 @@ create tracks playlists =
             playlists
                 |> List.map .name
                 |> List.sortBy String.toLower
+
+        index =
+            makeIndex playlistNames
     in
     { action = createAction tracks
     , focus = 0
-    , index = playlistNames
+    , index = index
     , message =
         if List.length tracks == 1 then
             "Choose or create a playlist to add this track to."
@@ -29,12 +33,12 @@ create tracks playlists =
         else
             "Choose or create a playlist to add these tracks to."
     , operation = QueryOrMutation
-    , results = playlistNames
+    , results = index
     , searchTerm = Nothing
     }
 
 
-createAction : List IdentifiedTrack -> { result : Maybe String, searchTerm : Maybe String } -> List UI.Msg
+createAction : List IdentifiedTrack -> Alfred.Action UI.Msg
 createAction tracks maybe =
     let
         playlistTracks =
@@ -45,7 +49,7 @@ createAction tracks maybe =
             -- Add to playlist
             --
             [ UI.AddTracksToPlaylist
-                { playlistName = result
+                { playlistName = result.value
                 , tracks = playlistTracks
                 }
             ]
@@ -77,22 +81,40 @@ select playlists =
             playlists
                 |> List.map .name
                 |> List.sortBy String.toLower
+
+        index =
+            makeIndex playlistNames
     in
     { action = selectAction playlists
     , focus = 0
-    , index = playlistNames
+    , index = index
     , message = "Select a playlist to play tracks from."
     , operation = Query
-    , results = playlistNames
+    , results = index
     , searchTerm = Nothing
     }
 
 
-selectAction : List Playlist -> { result : Maybe String, searchTerm : Maybe String } -> List UI.Msg
+selectAction : List Playlist -> Alfred.Action UI.Msg
 selectAction playlists { result } =
-    case Maybe.andThen (\r -> List.find (.name >> (==) r) playlists) result of
+    case Maybe.andThen (\r -> List.find (.name >> (==) r.value) playlists) result of
         Just playlist ->
             [ UI.SelectPlaylist playlist ]
 
         Nothing ->
             []
+
+
+
+-- ㊙️
+
+
+makeIndex playlistNames =
+    List.map
+        (\name ->
+            { icon = Just Icons.queue_music
+            , title = name
+            , value = name
+            }
+        )
+        playlistNames

@@ -55,6 +55,8 @@ view viewportWidth m =
                 -- Dark mode
                 ------------
                 , "dark:bg-darkest-hour"
+                , "dark:border"
+                , "dark:border-base00"
                 ]
                 (List.map
                     (\item ->

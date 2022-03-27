@@ -1,16 +1,31 @@
 module Alfred exposing (..)
 
+import Material.Icons.Types exposing (Icon)
+
+
+
 -- 🌳
 
 
-type alias Alfred action =
-    { action : { result : Maybe String, searchTerm : Maybe String } -> List action
+type alias Alfred msg =
+    { action : Action msg
     , focus : Int
-    , index : List String
+    , index : List (Item msg)
     , message : String
     , operation : Operation
-    , results : List String
+    , results : List (Item msg)
     , searchTerm : Maybe String
+    }
+
+
+type alias Action msg =
+    { result : Maybe (Item msg), searchTerm : Maybe String } -> List msg
+
+
+type alias Item msg =
+    { icon : Maybe (Icon msg)
+    , title : String
+    , value : String
     }
 
 
