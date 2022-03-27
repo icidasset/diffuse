@@ -60,51 +60,51 @@ keyboardInput msg model =
 
         else
             case m.pressedKeys of
-                [ Keyboard.Character "{", Keyboard.Shift ] ->
+                [ Keyboard.Character "{", Keyboard.Shift, Keyboard.Control ] ->
                     Queue.rewind m
 
-                [ Keyboard.Character "}", Keyboard.Shift ] ->
+                [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
                     Queue.shift m
 
-                [ Keyboard.Character "<", Keyboard.Shift ] ->
+                [ Keyboard.Character "<", Keyboard.Shift, Keyboard.Control ] ->
                     Audio.seek ((m.audioPosition - 10) / m.audioDuration) m
 
-                [ Keyboard.Character ">", Keyboard.Shift ] ->
+                [ Keyboard.Character ">", Keyboard.Shift, Keyboard.Control ] ->
                     Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
 
                 --
-                [ Keyboard.Character "L" ] ->
+                [ Keyboard.Character "L", Keyboard.Control ] ->
                     Playlists.assistWithSelectingPlaylist m
 
-                [ Keyboard.Character "N" ] ->
+                [ Keyboard.Character "N", Keyboard.Control ] ->
                     Tracks.scrollToNowPlaying m
 
-                [ Keyboard.Character "P" ] ->
+                [ Keyboard.Character "P", Keyboard.Control ] ->
                     Audio.playPause m
 
-                [ Keyboard.Character "R" ] ->
+                [ Keyboard.Character "R", Keyboard.Control ] ->
                     Queue.toggleRepeat m
 
-                [ Keyboard.Character "S" ] ->
+                [ Keyboard.Character "S", Keyboard.Control ] ->
                     Queue.toggleShuffle m
 
                 --
-                [ Keyboard.Character "1" ] ->
+                [ Keyboard.Character "1", Keyboard.Control ] ->
                     Common.changeUrlUsingPage Page.Index m
 
-                [ Keyboard.Character "2" ] ->
+                [ Keyboard.Character "2", Keyboard.Control ] ->
                     Common.changeUrlUsingPage (Page.Playlists Playlists.Index) m
 
-                [ Keyboard.Character "3" ] ->
+                [ Keyboard.Character "3", Keyboard.Control ] ->
                     Common.changeUrlUsingPage (Page.Queue Queue.Index) m
 
-                [ Keyboard.Character "4" ] ->
+                [ Keyboard.Character "4", Keyboard.Control ] ->
                     Common.changeUrlUsingPage Page.Equalizer m
 
-                [ Keyboard.Character "8" ] ->
+                [ Keyboard.Character "8", Keyboard.Control ] ->
                     Common.changeUrlUsingPage (Page.Sources Sources.Index) m
 
-                [ Keyboard.Character "9" ] ->
+                [ Keyboard.Character "9", Keyboard.Control ] ->
                     Common.changeUrlUsingPage (Page.Settings Settings.Index) m
 
                 --
