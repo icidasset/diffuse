@@ -1,8 +1,8 @@
 > A music player that connects to your cloud &amp; distributed storage
 
-[Return to the application](../)  
-[CORS instructions](cors/)  
-[Developers](dev/)  
+[Return to the application](../)
+[CORS instructions](cors/)
+[Developers](dev/)
 
 
 
@@ -96,28 +96,28 @@ artist:Parkway Drive - album:Atlas
 
 The app should be usable with only the keyboard, there are various keyboard shortcuts:
 
-```
-L - Select playlist using autocompletion
-N - Scroll to currently-playing track
-P - Play / Pause
-R - Toggle Repeat
-S - Toggle Shuffle
+```js
+CTRL + L // Select playlist using autocompletion
+CTRL + N // Scroll to currently-playing track
+CTRL + P // Play / Pause
+CTRL + R // Toggle Repeat
+CTRL + S // Toggle Shuffle
 
-{ / } - Previous / Next
-< / > - Seek forwards / Seek backwards
+CTRL + { or } // Previous / Next
+CTRL + < or > // Seek forwards / Seek backwards
 
-Alternatively you can use the media-control keys,  
+Alternatively you can use the media-control keys,
 if your browser supports it.
 
-ESC - Close overlay, close context-menu, deselect album cover, etc.
+ESC // Close overlay, close context-menu, deselect album cover, etc.
 
-1 - Tracks
-2 - Playlists
-3 - Queue
-4 - EQ
+CTRL + 1 // Tracks
+CTRL + 2 // Playlists
+CTRL + 3 // Queue
+CTRL + 4 // EQ
 
-8 - Sources
-9 - Settings
+CTRL + 8 // Sources
+CTRL + 9 // Settings
 ```
 
 
