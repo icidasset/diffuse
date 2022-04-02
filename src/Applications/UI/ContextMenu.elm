@@ -42,6 +42,7 @@ view viewportWidth m =
                 [ "absolute"
                 , "bg-white"
                 , "leading-loose"
+                , "opacity-90"
                 , "overflow-hidden"
                 , "-translate-x-1/2"
                 , "-translate-y-1/2"

@@ -291,7 +291,7 @@ overlay maybeAlfred maybeContextMenu =
 
         --
         , ifThenElse isShown "pointer-events-auto" "pointer-events-none"
-        , ifThenElse isShown "opacity-75" "opacity-0"
+        , ifThenElse isShown "opacity-50" "opacity-0"
         ]
         []
 
