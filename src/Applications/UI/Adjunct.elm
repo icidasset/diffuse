@@ -6,6 +6,7 @@ import Return
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
 import UI.Authentication.Common as Authentication
+import UI.Commands.State as Commands
 import UI.Common.State as Common
 import UI.Interface.State exposing (hideOverlay)
 import UI.Page as Page
@@ -60,19 +61,28 @@ keyboardInput msg model =
 
         else
             case m.pressedKeys of
-                [ Keyboard.Character "{", Keyboard.Shift, Keyboard.Control ] ->
+                [ Keyboard.Character "[", Keyboard.Control ] ->
                     Queue.rewind m
 
-                [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
+                [ Keyboard.Character "]", Keyboard.Control ] ->
                     Queue.shift m
 
-                [ Keyboard.Character "<", Keyboard.Shift, Keyboard.Control ] ->
+                [ Keyboard.Character "{", Keyboard.Shift, Keyboard.Control ] ->
                     Audio.seek ((m.audioPosition - 10) / m.audioDuration) m
 
-                [ Keyboard.Character ">", Keyboard.Shift, Keyboard.Control ] ->
+                [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
                     Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
 
+                -- Meta key
                 --
+                [ Keyboard.Character "K", Keyboard.Meta ] ->
+                    Commands.showPalette m
+
+                -- Ctrl key
+                --
+                [ Keyboard.Character "K", Keyboard.Control ] ->
+                    Commands.showPalette m
+
                 [ Keyboard.Character "L", Keyboard.Control ] ->
                     Playlists.assistWithSelectingPlaylist m
 

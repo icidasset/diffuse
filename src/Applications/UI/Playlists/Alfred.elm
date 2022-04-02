@@ -1,6 +1,7 @@
 module UI.Playlists.Alfred exposing (create, select)
 
 import Alfred exposing (..)
+import Json.Decode exposing (string)
 import List.Extra as List
 import Material.Icons as Icons
 import Playlists exposing (..)
@@ -39,26 +40,31 @@ create tracks playlists =
 
 
 createAction : List IdentifiedTrack -> Alfred.Action UI.Msg
-createAction tracks maybe =
+createAction tracks ctx =
     let
         playlistTracks =
             Tracks.toPlaylistTracks tracks
     in
-    case maybe.result of
+    case ctx.result of
         Just result ->
             -- Add to playlist
             --
-            [ UI.AddTracksToPlaylist
-                { playlistName = result.value
-                , tracks = playlistTracks
-                }
-            ]
+            case Alfred.stringValue result.value of
+                Just playlistName ->
+                    [ UI.AddTracksToPlaylist
+                        { playlistName = playlistName
+                        , tracks = playlistTracks
+                        }
+                    ]
+
+                Nothing ->
+                    []
 
         Nothing ->
             -- Create playlist,
             -- if given a search term.
             --
-            case maybe.searchTerm of
+            case ctx.searchTerm of
                 Just searchTerm ->
                     [ UI.AddTracksToPlaylist
                         { playlistName = searchTerm
@@ -97,7 +103,7 @@ select playlists =
 
 selectAction : List Playlist -> Alfred.Action UI.Msg
 selectAction playlists { result } =
-    case Maybe.andThen (\r -> List.find (.name >> (==) r.value) playlists) result of
+    case Maybe.andThen (\r -> List.find (.name >> Just >> (==) (stringValue r.value)) playlists) result of
         Just playlist ->
             [ UI.SelectPlaylist playlist ]
 
@@ -112,9 +118,9 @@ selectAction playlists { result } =
 makeIndex playlistNames =
     List.map
         (\name ->
-            { icon = Just Icons.queue_music
+            { icon = Just (Icons.queue_music 16)
             , title = name
-            , value = name
+            , value = Alfred.StringValue name
             }
         )
         playlistNames

@@ -93,7 +93,7 @@ view maybeInstance extractedBackdropColor =
                         , "bg-white"
                         , "block"
                         , "leading-normal"
-                        , "opacity-90"
+                        , "opacity-95"
                         , "outline-none"
                         , "p-4"
                         , "rounded-t"
@@ -121,7 +121,7 @@ view maybeInstance extractedBackdropColor =
                     , "leading-tight"
                     , "max-w-xl"
                     , "mb-32"
-                    , "opacity-90"
+                    , "opacity-95"
                     , "overflow-x-hidden"
                     , "overflow-y-auto"
                     , "rounded-b"
@@ -185,8 +185,11 @@ view maybeInstance extractedBackdropColor =
                                         slab
                                             Html.span
                                             []
-                                            [ "inline-block", "mr-2" ]
-                                            [ icon 16 Inherit
+                                            [ "inline-block"
+                                            , "mr-2"
+                                            , "w-5"
+                                            ]
+                                            [ icon Inherit
                                             ]
 
                                     Nothing ->

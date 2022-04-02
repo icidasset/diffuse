@@ -20,7 +20,10 @@ assign instance model =
         |> Process.sleep
         |> Task.andThen (\_ -> Dom.focus "diffuse__alfred")
         |> Task.attempt (\_ -> UI.Bypass)
-        |> return { model | alfred = Just instance }
+        -- The "K" key seems to stick when using CMD + K,
+        -- aka. Meta key + K, to show the command palette.
+        -- https://github.com/ohanhi/keyboard/issues/14
+        |> return { model | alfred = Just instance, pressedKeys = [] }
 
 
 gotInput : String -> Manager
@@ -119,7 +122,7 @@ determineResults searchTerm alfred =
                 Just searchTerm
             , results =
                 List.filter
-                    (.value >> String.toLower >> String.contains lowerSearchTerm)
+                    (.title >> String.toLower >> String.contains lowerSearchTerm)
                     alfred.index
         }
 

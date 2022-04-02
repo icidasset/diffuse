@@ -97,14 +97,16 @@ artist:Parkway Drive - album:Atlas
 The app should be usable with only the keyboard, there are various keyboard shortcuts:
 
 ```js
+CTRL + K or CMD + K // Show command palette
+
 CTRL + L // Select playlist using autocompletion
 CTRL + N // Scroll to currently-playing track
 CTRL + P // Play / Pause
 CTRL + R // Toggle Repeat
 CTRL + S // Toggle Shuffle
 
-CTRL + { or } // Previous / Next
-CTRL + < or > // Seek forwards / Seek backwards
+CTRL + [ or ] // Previous / Next
+CTRL + { or } // Seek forwards / Seek backwards
 
 Alternatively you can use the media-control keys,
 if your browser supports it.

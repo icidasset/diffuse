@@ -1,6 +1,7 @@
 module Alfred exposing (..)
 
-import Material.Icons.Types exposing (Icon)
+import Material.Icons.Types exposing (Coloring)
+import Svg exposing (Svg)
 
 
 
@@ -23,13 +24,42 @@ type alias Action msg =
 
 
 type alias Item msg =
-    { icon : Maybe (Icon msg)
+    { icon : Maybe (Coloring -> Svg msg)
     , title : String
-    , value : String
+    , value : ItemValue msg
     }
+
+
+type ItemValue msg
+    = Command msg
+    | StringValue String
 
 
 type Operation
     = Query
     | QueryOrMutation
     | Mutation
+
+
+
+-- 🛠
+
+
+command : ItemValue msg -> Maybe msg
+command val =
+    case val of
+        Command cmd ->
+            Just cmd
+
+        StringValue _ ->
+            Nothing
+
+
+stringValue : ItemValue msg -> Maybe String
+stringValue val =
+    case val of
+        Command _ ->
+            Nothing
+
+        StringValue string ->
+            Just string
