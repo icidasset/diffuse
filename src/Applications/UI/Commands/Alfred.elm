@@ -11,54 +11,27 @@ import UI.Types as UI
 
 palette : UI.Model -> Alfred UI.Msg
 palette model =
-    { action = action
-    , focus = 0
-    , index = commands model
-    , message = "Run a command."
-    , operation = Query
-    , results = commands model
-    , searchTerm = Nothing
-    }
+    Alfred.create
+        { action = action
+        , index = commands model
+        , message = "Run a command."
+        , operation = Query
+        }
 
 
 
 -- ⛰
 
 
-commands : UI.Model -> List (Alfred.Item UI.Msg)
+commands : UI.Model -> List (Alfred.Group UI.Msg)
 commands model =
-    [ -----------------------------------------
-      -- View
-      -----------------------------------------
-      case model.scene of
-        Tracks.Covers ->
-            { icon = Just (Icons.notes 16)
-            , title = "Switch to list view"
-            , value = Command (UI.TracksMsg <| Tracks.ChangeScene Tracks.List)
-            }
+    [ { name = Just "View", items = viewCommands model }
+    , { name = Just "Playback", items = playbackCommands model }
+    ]
 
-        Tracks.List ->
-            { icon = Just (Icons.burst_mode 18)
-            , title = "Switch to cover view"
-            , value = Command (UI.TracksMsg <| Tracks.ChangeScene Tracks.Covers)
-            }
 
-    --
-    , { icon = Just (Icons.favorite 14)
-      , title = toggle model.favouritesOnly "favourites-only mode"
-      , value = Command (UI.TracksMsg Tracks.ToggleFavouritesOnly)
-      }
-
-    --
-    , { icon = Just (Icons.filter_list 16)
-      , title = ifThenElse model.cachedTracksOnly "Disable cached-tracks-only mode" "Only show cached tracks"
-      , value = Command (UI.TracksMsg Tracks.ToggleCachedOnly)
-      }
-
-    -----------------------------------------
-    -- Playback
-    -----------------------------------------
-    , if model.audioIsPlaying then
+playbackCommands model =
+    [ if model.audioIsPlaying then
         { icon = Just (Icons.pause 16)
         , title = "Pause"
         , value = Command UI.TogglePlay
@@ -86,6 +59,34 @@ commands model =
     , { icon = Just (Icons.shuffle 16)
       , title = toggle model.shuffle "shuffle"
       , value = Command (UI.QueueMsg Queue.ToggleShuffle)
+      }
+    ]
+
+
+viewCommands model =
+    [ { icon = Just (Icons.favorite 14)
+      , title = toggle model.favouritesOnly "favourites-only mode"
+      , value = Command (UI.TracksMsg Tracks.ToggleFavouritesOnly)
+      }
+
+    --
+    , case model.scene of
+        Tracks.Covers ->
+            { icon = Just (Icons.notes 16)
+            , title = "Switch to list view"
+            , value = Command (UI.TracksMsg <| Tracks.ChangeScene Tracks.List)
+            }
+
+        Tracks.List ->
+            { icon = Just (Icons.burst_mode 18)
+            , title = "Switch to cover view"
+            , value = Command (UI.TracksMsg <| Tracks.ChangeScene Tracks.Covers)
+            }
+
+    --
+    , { icon = Just (Icons.filter_list 16)
+      , title = ifThenElse model.cachedTracksOnly "Disable cached-tracks-only mode" "Only show cached tracks"
+      , value = Command (UI.TracksMsg Tracks.ToggleCachedOnly)
       }
     ]
 

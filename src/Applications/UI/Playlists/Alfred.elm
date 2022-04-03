@@ -24,19 +24,17 @@ create tracks playlists =
         index =
             makeIndex playlistNames
     in
-    { action = createAction tracks
-    , focus = 0
-    , index = index
-    , message =
-        if List.length tracks == 1 then
-            "Choose or create a playlist to add this track to."
+    Alfred.create
+        { action = createAction tracks
+        , index = index
+        , message =
+            if List.length tracks == 1 then
+                "Choose or create a playlist to add this track to."
 
-        else
-            "Choose or create a playlist to add these tracks to."
-    , operation = QueryOrMutation
-    , results = index
-    , searchTerm = Nothing
-    }
+            else
+                "Choose or create a playlist to add these tracks to."
+        , operation = QueryOrMutation
+        }
 
 
 createAction : List IdentifiedTrack -> Alfred.Action UI.Msg
@@ -91,14 +89,12 @@ select playlists =
         index =
             makeIndex playlistNames
     in
-    { action = selectAction playlists
-    , focus = 0
-    , index = index
-    , message = "Select a playlist to play tracks from."
-    , operation = Query
-    , results = index
-    , searchTerm = Nothing
-    }
+    Alfred.create
+        { action = selectAction playlists
+        , index = index
+        , message = "Select a playlist to play tracks from."
+        , operation = Query
+        }
 
 
 selectAction : List Playlist -> Alfred.Action UI.Msg
@@ -116,11 +112,15 @@ selectAction playlists { result } =
 
 
 makeIndex playlistNames =
-    List.map
-        (\name ->
-            { icon = Just (Icons.queue_music 16)
-            , title = name
-            , value = Alfred.StringValue name
-            }
-        )
-        playlistNames
+    playlistNames
+        |> List.map
+            (\name ->
+                { icon = Just (Icons.queue_music 16)
+                , title = name
+                , value = Alfred.StringValue name
+                }
+            )
+        |> (\items ->
+                { name = Nothing, items = items }
+           )
+        |> List.singleton

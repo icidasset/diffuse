@@ -1,5 +1,6 @@
 module Alfred exposing (..)
 
+import List.Extra as List
 import Material.Icons.Types exposing (Coloring)
 import Svg exposing (Svg)
 
@@ -11,16 +12,21 @@ import Svg exposing (Svg)
 type alias Alfred msg =
     { action : Action msg
     , focus : Int
-    , index : List (Item msg)
+    , index : List (Group msg)
+    , indexFlattened : List (Item msg)
     , message : String
     , operation : Operation
-    , results : List (Item msg)
+    , results : List (Group msg)
     , searchTerm : Maybe String
     }
 
 
 type alias Action msg =
     { result : Maybe (Item msg), searchTerm : Maybe String } -> List msg
+
+
+type alias Group msg =
+    { name : Maybe String, items : List (Item msg) }
 
 
 type alias Item msg =
@@ -39,6 +45,29 @@ type Operation
     = Query
     | QueryOrMutation
     | Mutation
+
+
+
+-- 🛳
+
+
+create :
+    { action : Action msg
+    , index : List (Group msg)
+    , message : String
+    , operation : Operation
+    }
+    -> Alfred msg
+create { action, index, message, operation } =
+    { action = action
+    , focus = 0
+    , index = index
+    , indexFlattened = List.concatMap .items index
+    , message = message
+    , operation = operation
+    , results = index
+    , searchTerm = Nothing
+    }
 
 
 
@@ -63,3 +92,19 @@ stringValue val =
 
         StringValue string ->
             Just string
+
+
+
+-- 🛠
+
+
+getAt : Int -> Alfred msg -> Maybe (Item msg)
+getAt index alfred =
+    alfred.results
+        |> List.concatMap .items
+        |> List.getAt index
+
+
+length : Alfred msg -> Int
+length { indexFlattened } =
+    List.length indexFlattened
