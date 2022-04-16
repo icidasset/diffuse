@@ -2,7 +2,6 @@ module UI.Alfred.State exposing (..)
 
 import Alfred exposing (Alfred)
 import Browser.Dom as Dom
-import List.Extra as List
 import Process
 import Return exposing (return)
 import Return.Ext as Return

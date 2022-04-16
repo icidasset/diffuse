@@ -1,7 +1,6 @@
 module UI.Playlists.Alfred exposing (create, select)
 
 import Alfred exposing (..)
-import Json.Decode exposing (string)
 import List.Extra as List
 import Material.Icons as Icons
 import Playlists exposing (..)
