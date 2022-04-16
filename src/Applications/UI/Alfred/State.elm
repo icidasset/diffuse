@@ -20,7 +20,10 @@ assign instance model =
         |> Process.sleep
         |> Task.andThen (\_ -> Dom.focus "diffuse__alfred")
         |> Task.attempt (\_ -> UI.Bypass)
-        |> return { model | alfred = Just instance }
+        -- The "K" key seems to stick when using CMD + K,
+        -- aka. Meta key + K, to show the command palette.
+        -- https://github.com/ohanhi/keyboard/issues/14
+        |> return { model | alfred = Just instance, pressedKeys = [] }
 
 
 gotInput : String -> Manager
@@ -34,7 +37,7 @@ runAction : Int -> Manager
 runAction index model =
     case model.alfred of
         Just instance ->
-            { result = List.getAt index instance.results
+            { result = Alfred.getAt index instance
             , searchTerm = instance.searchTerm
             }
                 |> instance.action
@@ -78,8 +81,12 @@ selectNext : Manager
 selectNext model =
     case model.alfred of
         Just instance ->
+            let
+                total =
+                    Alfred.length instance
+            in
             instance
-                |> (\i -> { i | focus = min (i.focus + 1) (List.length i.results - 1) })
+                |> (\i -> { i | focus = min (i.focus + 1) (total - 1) })
                 |> (\i -> { model | alfred = Just i })
                 |> scrollToFocus
 
@@ -118,9 +125,16 @@ determineResults searchTerm alfred =
             , searchTerm =
                 Just searchTerm
             , results =
-                alfred.index
-                    |> List.filter (String.toLower >> String.contains lowerSearchTerm)
-                    |> List.sort
+                List.map
+                    (\group ->
+                        group.items
+                            |> List.filter
+                                (.title >> String.toLower >> String.contains lowerSearchTerm)
+                            |> (\items ->
+                                    { group | items = items }
+                               )
+                    )
+                    alfred.index
         }
 
     else

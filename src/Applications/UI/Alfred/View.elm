@@ -43,6 +43,7 @@ view maybeInstance extractedBackdropColor =
                     [ "italic"
                     , "leading-normal"
                     , "mt-12"
+                    , "opacity-75"
                     , "text-center"
                     , "text-white"
 
@@ -66,7 +67,7 @@ view maybeInstance extractedBackdropColor =
                         )
                     ]
                     [ "text-sm"
-                    , "max-w-lg"
+                    , "max-w-xl"
                     , "mt-8"
                     , "w-full"
                     ]
@@ -88,21 +89,23 @@ view maybeInstance extractedBackdropColor =
                             Mutation ->
                                 placeholder "Type to create"
                         ]
-                        [ "border-none"
+                        [ "border"
                         , "bg-white"
                         , "block"
                         , "leading-normal"
-                        , "rounded"
+                        , "opacity-95"
                         , "outline-none"
                         , "p-4"
+                        , "rounded-t"
                         , "shadow-md"
-                        , "text-2xl"
+                        , "text-xl"
                         , "tracking-tad-closer"
                         , "w-full"
 
                         -- Dark mode
                         ------------
-                        , "dark:bg-base00"
+                        , "dark:bg-darkest-hour"
+                        , "dark:border-base00"
                         ]
                         []
                     ]
@@ -113,13 +116,15 @@ view maybeInstance extractedBackdropColor =
                 , brick
                     [ id "alfred__results" ]
                     [ "bg-white"
-                    , "rounded"
-                    , "leading-none"
-                    , "max-w-lg"
+                    , "border"
+                    , "border-t-0"
+                    , "leading-tight"
+                    , "max-w-xl"
                     , "mb-32"
-                    , "mt-8"
+                    , "opacity-95"
                     , "overflow-x-hidden"
                     , "overflow-y-auto"
+                    , "rounded-b"
                     , "shadow-md"
                     , "smooth-scrolling"
                     , "text-nearly-sm"
@@ -127,71 +132,133 @@ view maybeInstance extractedBackdropColor =
 
                     -- Dark mode
                     ------------
-                    , "dark:bg-base00"
+                    , "dark:bg-darkest-hour"
+                    , "dark:border-base00"
                     ]
-                    (List.indexedMap
-                        (\idx result ->
-                            brick
-                                [ onTapPreventDefault (UI.SelectAlfredItem idx)
+                    (instance.results
+                        |> List.foldl
+                            (\group ( acc, indexBase ) ->
+                                case List.length group.items of
+                                    0 ->
+                                        ( acc, indexBase )
 
-                                --
-                                , if idx == instance.focus then
-                                    id "alfred__results__focus"
-
-                                  else
-                                    id ("alfred__results__" ++ String.fromInt idx)
-
-                                --
-                                , if idx == instance.focus then
-                                    style "background-color" bgColor
-
-                                  else
-                                    style "" ""
-                                ]
-                                (List.concat
-                                    [ [ "p-4"
-                                      , "relative"
-                                      , "truncate"
-                                      ]
-
-                                    --
-                                    , if idx == instance.focus then
-                                        [ "text-white", "dark:text-base07" ]
-
-                                      else
-                                        [ "text-inherit" ]
-
-                                    --
-                                    , if modBy 2 idx == 0 then
-                                        []
-
-                                      else
-                                        [ "bg-gray-100", "dark:bg-base01-15" ]
-                                    ]
-                                )
-                                [ text result
-
-                                --
-                                , if idx == instance.focus then
-                                    chunk
-                                        [ "absolute"
-                                        , "leading-0"
-                                        , "-translate-y-1/2"
-                                        , "mr-3"
-                                        , "right-0"
-                                        , "top-1/2"
-                                        , "transform"
-                                        ]
-                                        [ Icons.keyboard_return 13 Inherit
-                                        ]
-
-                                  else
-                                    nothing
-                                ]
-                        )
-                        instance.results
+                                    x ->
+                                        ( groupView bgColor instance group indexBase :: acc
+                                        , indexBase + x
+                                        )
+                            )
+                            ( [], 0 )
+                        |> Tuple.first
+                        |> List.reverse
                     )
                 ]
 
         Nothing ->
             nothing
+
+
+groupView bgColor instance group indexBase =
+    raw
+        [ case group.name of
+            Just name ->
+                chunk
+                    [ "all-small-caps"
+                    , "antialiased"
+                    , "font-semibold"
+                    , "leading-tight"
+                    , "mb-2"
+                    , "mx-2"
+                    , "mt-5"
+                    , "opacity-60"
+                    , "px-3"
+                    , "text-sm"
+                    , "tracking-wider"
+                    ]
+                    [ Html.text name ]
+
+            Nothing ->
+                Html.text ""
+        , raw
+            (List.indexedMap
+                (\i -> itemView bgColor instance <| indexBase + i)
+                group.items
+            )
+        ]
+
+
+itemView bgColor instance idx item =
+    brick
+        [ onTapPreventDefault (UI.SelectAlfredItem idx)
+
+        --
+        , if idx == instance.focus then
+            id "alfred__results__focus"
+
+          else
+            id ("alfred__results__" ++ String.fromInt idx)
+
+        --
+        , if idx == instance.focus then
+            style "background-color" bgColor
+
+          else
+            style "" ""
+        ]
+        (List.concat
+            [ [ "flex"
+              , "items-center"
+              , "m-2"
+              , "p-3"
+              , "relative"
+              , "rounded"
+              ]
+
+            --
+            , if idx == instance.focus then
+                [ "text-white"
+                , "dark:opacity-80"
+                , "dark:text-base07"
+                ]
+
+              else
+                [ "text-inherit" ]
+
+            --
+            -- , if modBy 2 idx == 0 then
+            --     []
+            --   else
+            --     [ "bg-gray-100", "dark:bg-base01-15" ]
+            ]
+        )
+        [ case item.icon of
+            Just icon ->
+                slab
+                    Html.span
+                    []
+                    [ "inline-block"
+                    , "mr-2"
+                    , "w-5"
+                    ]
+                    [ icon Inherit
+                    ]
+
+            Nothing ->
+                text ""
+
+        --
+        , slab
+            Html.span
+            []
+            [ "flex-1", "inline-block", "pt-px" ]
+            [ text item.title ]
+
+        --
+        , if idx == instance.focus then
+            chunk
+                [ "leading-0", "ml-2" ]
+                [ Icons.keyboard_return 13 Inherit
+                ]
+
+          else
+            nothing
+        ]

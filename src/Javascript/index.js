@@ -81,6 +81,11 @@ function initialise(reg) {
   wire.covers()
   wire.webnative()
 
+  // Other ports
+  app.ports.openUrlOnNewPage.subscribe(url => {
+    window.open(url, "_blank")
+  })
+
   // Check for service worker updates every hour
   setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
 }

@@ -222,7 +222,6 @@ welcomeScreen =
                 ]
                 [ "align-middle"
                 , "inline-block"
-                , "pt-px"
                 , "text-nearly-sm"
                 ]
                 [ text "SIGN IN" ]

@@ -432,6 +432,9 @@ update msg =
         LinkClicked a ->
             Routing.linkClicked a
 
+        OpenUrlOnNewPage a ->
+            Routing.openUrlOnNewPage a
+
         PageChanged a ->
             Routing.transition a
 

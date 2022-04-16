@@ -103,6 +103,9 @@ update msg =
         Add a ->
             add a
 
+        AddFavourites a ->
+            addFavourites a
+
         Reload a ->
             reload a
 
@@ -111,6 +114,9 @@ update msg =
 
         RemoveBySourceId a ->
             removeBySourceId a
+
+        RemoveFavourites a ->
+            removeFavourites a
 
         SortBy a ->
             sortBy a
@@ -189,6 +195,11 @@ add encodedTracks model =
             |> Collection.add
         )
         model
+
+
+addFavourites : List IdentifiedTrack -> Manager
+addFavourites =
+    manageFavourites AddToFavourites
 
 
 changeScene : Scene -> Manager
@@ -379,6 +390,63 @@ insertCoverCache json model =
         |> Return.singleton
 
 
+manageFavourites : FavouritesManagementAction -> List IdentifiedTrack -> Manager
+manageFavourites action tracks model =
+    let
+        newFavourites =
+            (case action of
+                AddToFavourites ->
+                    Favourites.completeFavouritesList
+
+                RemoveFromFavourites ->
+                    Favourites.removeFromFavouritesList
+            )
+                tracks
+                model.favourites
+
+        effect collection =
+            collection
+                |> Collection.map
+                    (case action of
+                        AddToFavourites ->
+                            Favourites.completeTracksList tracks
+
+                        RemoveFromFavourites ->
+                            Favourites.removeFromTracksList tracks
+                    )
+                |> (if model.favouritesOnly then
+                        Collection.harvest
+
+                    else
+                        identity
+                   )
+
+        selectedCover =
+            Maybe.map
+                (\cover ->
+                    cover.tracks
+                        |> (case action of
+                                AddToFavourites ->
+                                    Favourites.completeTracksList tracks
+
+                                RemoveFromFavourites ->
+                                    Favourites.removeFromTracksList tracks
+                           )
+                        |> (\a -> { cover | tracks = a })
+                )
+                model.selectedCover
+    in
+    { model | favourites = newFavourites, selectedCover = selectedCover }
+        |> reviseCollection effect
+        |> andThen User.saveFavourites
+        |> (if model.scene == Covers then
+                andThen generateCovers >> andThen harvestCovers
+
+            else
+                identity
+           )
+
+
 markAsSelected : Int -> { shiftKey : Bool } -> Manager
 markAsSelected indexInList { shiftKey } model =
     let
@@ -456,6 +524,11 @@ removeBySourceId sourceId model =
         |> return { model | tracks = newCollection }
         |> andThen (reviseCollection Collection.identify)
         |> andThen (removeFromCache removed)
+
+
+removeFavourites : List IdentifiedTrack -> Manager
+removeFavourites =
+    manageFavourites RemoveFromFavourites
 
 
 removeFromCache : List Track -> Manager
@@ -976,3 +1049,12 @@ importHypaethral data selectedPlaylist model =
                 Nothing ->
                     andThen (Common.toggleLoadingScreen Off)
            )
+
+
+
+-- ㊙️
+
+
+type FavouritesManagementAction
+    = AddToFavourites
+    | RemoveFromFavourites

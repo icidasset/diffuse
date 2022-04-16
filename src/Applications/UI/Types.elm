@@ -261,6 +261,7 @@ type Msg
       -----------------------------------------
     | ChangeUrlUsingPage Page
     | LinkClicked Browser.UrlRequest
+    | OpenUrlOnNewPage String
     | PageChanged Page
     | UrlChanged Url
       -----------------------------------------

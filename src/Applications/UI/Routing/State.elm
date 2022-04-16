@@ -1,4 +1,4 @@
-module UI.Routing.State exposing (linkClicked, resetUrl, transition, urlChanged)
+module UI.Routing.State exposing (linkClicked, openUrlOnNewPage, resetUrl, transition, urlChanged)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Nav
@@ -10,6 +10,7 @@ import Sources.Services.Dropbox
 import Sources.Services.Google
 import UI.Common.State as Common
 import UI.Page as Page exposing (Page)
+import UI.Ports as Ports
 import UI.Sources.Form
 import UI.Sources.Page
 import UI.Sources.State as Sources
@@ -42,6 +43,13 @@ linkClicked urlRequest model =
 
         Browser.External href ->
             return model (Nav.load href)
+
+
+openUrlOnNewPage : String -> Manager
+openUrlOnNewPage url model =
+    url
+        |> Ports.openUrlOnNewPage
+        |> return model
 
 
 urlChanged : Url -> Manager

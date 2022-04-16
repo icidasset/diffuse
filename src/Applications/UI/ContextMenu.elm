@@ -42,6 +42,7 @@ view viewportWidth m =
                 [ "absolute"
                 , "bg-white"
                 , "leading-loose"
+                , "opacity-95"
                 , "overflow-hidden"
                 , "-translate-x-1/2"
                 , "-translate-y-1/2"
@@ -55,6 +56,8 @@ view viewportWidth m =
                 -- Dark mode
                 ------------
                 , "dark:bg-darkest-hour"
+                , "dark:border"
+                , "dark:border-base00"
                 ]
                 (List.map
                     (\item ->

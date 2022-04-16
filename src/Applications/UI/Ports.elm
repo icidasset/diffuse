@@ -22,6 +22,9 @@ port copyToClipboard : String -> Cmd msg
 port loadAlbumCovers : { list : Bool, coverView : Bool } -> Cmd msg
 
 
+port openUrlOnNewPage : String -> Cmd msg
+
+
 port pause : () -> Cmd msg
 
 
