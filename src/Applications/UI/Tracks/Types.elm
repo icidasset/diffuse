@@ -37,9 +37,11 @@ type Msg
       -- Collection
       -----------------------------------------
     | Add Json.Value
+    | AddFavourites (List IdentifiedTrack)
     | Reload Json.Value
     | RemoveByPaths Json.Value
     | RemoveBySourceId String
+    | RemoveFavourites (List IdentifiedTrack)
     | SortBy SortBy
     | ToggleFavourite Int
       -----------------------------------------

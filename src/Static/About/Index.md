@@ -1,8 +1,8 @@
 > A music player that connects to your cloud &amp; distributed storage
 
-[Return to the application](../)
-[CORS instructions](cors/)
-[Developers](dev/)
+[Return to the application](../)  
+[CORS instructions](cors/)  
+[Developers](dev/)  
 
 
 

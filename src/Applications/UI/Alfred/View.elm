@@ -138,9 +138,14 @@ view maybeInstance extractedBackdropColor =
                     (instance.results
                         |> List.foldl
                             (\group ( acc, indexBase ) ->
-                                ( groupView bgColor instance group indexBase :: acc
-                                , indexBase + List.length group.items
-                                )
+                                case List.length group.items of
+                                    0 ->
+                                        ( acc, indexBase )
+
+                                    x ->
+                                        ( groupView bgColor instance group indexBase :: acc
+                                        , indexBase + x
+                                        )
                             )
                             ( [], 0 )
                         |> Tuple.first

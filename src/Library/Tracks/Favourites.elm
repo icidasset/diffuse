@@ -1,4 +1,4 @@
-module Tracks.Favourites exposing (match, simplified, toggleInFavouritesList, toggleInTracksList)
+module Tracks.Favourites exposing (completeFavouritesList, completeTracksList, match, removeFromFavouritesList, removeFromTracksList, simplified, toggleInFavouritesList, toggleInTracksList)
 
 import List.Extra as List
 import Tracks exposing (Favourite, IdentifiedTrack, Track)
@@ -6,6 +6,59 @@ import Tracks exposing (Favourite, IdentifiedTrack, Track)
 
 
 -- 🔱
+
+
+completeFavouritesList : List IdentifiedTrack -> List Favourite -> List Favourite
+completeFavouritesList tracks favourites =
+    List.append
+        favourites
+        (List.filterMap
+            (\( i, t ) ->
+                if not i.isFavourite then
+                    Just
+                        { artist = t.tags.artist
+                        , title = t.tags.title
+                        }
+
+                else
+                    Nothing
+            )
+            tracks
+        )
+
+
+completeTracksList : List IdentifiedTrack -> List IdentifiedTrack -> List IdentifiedTrack
+completeTracksList tracksToMakeFavourite tracks =
+    let
+        favs =
+            List.filterMap
+                (\( i, t ) ->
+                    if not i.isFavourite then
+                        Just ( lowercaseArtist t, lowercaseTitle t )
+
+                    else
+                        Nothing
+                )
+                tracksToMakeFavourite
+    in
+    List.map
+        (\( i, t ) ->
+            let
+                ( la, lt ) =
+                    ( lowercaseArtist t, lowercaseTitle t )
+            in
+            List.foldr
+                (\( lartist, ltitle ) ( ai, at ) ->
+                    if la == lartist && lt == ltitle && not ai.isFavourite then
+                        ( { ai | isFavourite = True }, at )
+
+                    else
+                        ( ai, at )
+                )
+                ( i, t )
+                favs
+        )
+        tracks
 
 
 match : Favourite -> Favourite -> Bool
@@ -22,6 +75,56 @@ match a b =
             )
     in
     aa == ba && at == bt
+
+
+removeFromFavouritesList : List IdentifiedTrack -> List Favourite -> List Favourite
+removeFromFavouritesList tracks favourites =
+    List.foldr
+        (\( i, t ) acc ->
+            if i.isFavourite then
+                List.filterNot
+                    (match { artist = t.tags.artist, title = t.tags.title })
+                    acc
+
+            else
+                acc
+        )
+        favourites
+        tracks
+
+
+removeFromTracksList : List IdentifiedTrack -> List IdentifiedTrack -> List IdentifiedTrack
+removeFromTracksList tracksToRemoveFromFavs tracks =
+    let
+        unfavs =
+            List.filterMap
+                (\( i, t ) ->
+                    if i.isFavourite then
+                        Just ( lowercaseArtist t, lowercaseTitle t )
+
+                    else
+                        Nothing
+                )
+                tracksToRemoveFromFavs
+    in
+    List.map
+        (\( i, t ) ->
+            let
+                ( la, lt ) =
+                    ( lowercaseArtist t, lowercaseTitle t )
+            in
+            List.foldr
+                (\( lartist, ltitle ) ( ai, at ) ->
+                    if la == lartist && lt == ltitle && ai.isFavourite then
+                        ( { ai | isFavourite = False }, at )
+
+                    else
+                        ( ai, at )
+                )
+                ( i, t )
+                unfavs
+        )
+        tracks
 
 
 simplified : Favourite -> String
