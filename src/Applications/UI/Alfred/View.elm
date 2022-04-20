@@ -3,6 +3,7 @@ module UI.Alfred.View exposing (view)
 import Alfred exposing (..)
 import Chunky exposing (..)
 import Color exposing (Color)
+import Conditional exposing (ifThenElse)
 import Html exposing (Html, text)
 import Html.Attributes exposing (autofocus, id, placeholder, style, type_)
 import Html.Events exposing (onInput)
@@ -26,6 +27,10 @@ view maybeInstance extractedBackdropColor =
     in
     case maybeInstance of
         Just instance ->
+            let
+                hasResults =
+                    List.sum (List.map (.items >> List.length) instance.results) > 0
+            in
             chunk
                 [ "inset-0"
                 , "flex"
@@ -102,6 +107,13 @@ view maybeInstance extractedBackdropColor =
                         , "tracking-tad-closer"
                         , "w-full"
 
+                        --
+                        , if not hasResults then
+                            "rounded-b"
+
+                          else
+                            ""
+
                         -- Dark mode
                         ------------
                         , "dark:bg-darkest-hour"
@@ -116,7 +128,6 @@ view maybeInstance extractedBackdropColor =
                 , brick
                     [ id "alfred__results" ]
                     [ "bg-white"
-                    , "border"
                     , "border-t-0"
                     , "leading-tight"
                     , "max-w-xl"
@@ -129,6 +140,9 @@ view maybeInstance extractedBackdropColor =
                     , "smooth-scrolling"
                     , "text-nearly-sm"
                     , "w-full"
+
+                    --
+                    , ifThenElse hasResults "border" ""
 
                     -- Dark mode
                     ------------
