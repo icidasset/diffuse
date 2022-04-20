@@ -26,8 +26,8 @@
     "delay": "^5.0.0",
     "fast-text-encoding": "^1.0.3",
     "file-saver": "^2.0.2",
-    "ipfs-message-port-client": "^0.11.1",
-    "ipfs-message-port-protocol": "^0.11.1",
+    "ipfs-message-port-client": "0.10.x",
+    "ipfs-message-port-protocol": "0.10.x",
     "jszip": "^3.7.1",
     "load-script2": "^2.0.5",
     "lunr": "^2.3.8",
@@ -39,10 +39,5 @@
     "tocca": "^2.0.9",
     "webnative": "0.31.1",
     "webnative-elm": "7.0.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "ipfs-message-port-protocol": "https://ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz"
-    }
   }
 }

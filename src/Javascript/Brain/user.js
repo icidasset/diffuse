@@ -98,11 +98,28 @@ ports.toDropbox = app => event => {
 // -------
 
 let wn
+let wnfs
 
 
 ports.webnativeRequest = app => request => {
-  constructFission().then(() => {
-    self.webnativeElm.request({ app: app, request: request })
+  const getFs = () => wnfs
+
+  constructFission.call(self).then(() => {
+    console.log(request)
+    if (request.method === "loadFileSystem") {
+      self.webnative.loadFileSystem(...request.arguments).then(fs => {
+        wnfs = fs
+        app.ports.webnativeResponse.send({
+          tag: request.tag,
+          error: null,
+          method: request.method,
+          data: {},
+          context: request.context
+        })
+      })
+    } else {
+      self.webnativeElm.request({ app: app, getFs, request: request })
+    }
   })
 }
 
@@ -140,7 +157,7 @@ function constructFission() {
       )
     })
   )
-    .then(port => self.IpfsMessagePortClient.from(port))
+    .then(port => self.IpfsMessagePortClient.IPFSClient.from(port))
     .then(ipfs => wn.ipfs.set(ipfs))
 }
 

@@ -1,8 +1,5 @@
 lockfileVersion: 5.3
 
-overrides:
-  ipfs-message-port-protocol: https://ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz
-
 specifiers:
   '@tokenizer/http': ^0.6.0
   assert: ^2.0.0
@@ -15,8 +12,8 @@ specifiers:
   events: ^3.3.0
   fast-text-encoding: ^1.0.3
   file-saver: ^2.0.2
-  ipfs-message-port-client: ^0.11.1
-  ipfs-message-port-protocol: https://ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz
+  ipfs-message-port-client: 0.10.x
+  ipfs-message-port-protocol: 0.10.x
   jszip: ^3.7.1
   load-script2: ^2.0.5
   lunr: ^2.3.8
@@ -40,8 +37,8 @@ dependencies:
   delay: 5.0.0
   fast-text-encoding: 1.0.3
   file-saver: 2.0.5
-  ipfs-message-port-client: 0.11.1
-  ipfs-message-port-protocol: '@ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz'
+  ipfs-message-port-client: 0.10.3
+  ipfs-message-port-protocol: 0.10.5
   jszip: 3.7.1
   load-script2: 2.0.6
   lunr: 2.3.9
@@ -290,6 +287,7 @@ packages:
 
   /@zxing/text-encoding/0.9.0:
     resolution: {integrity: sha512-U/4aVJ2mxI0aDNI8Uq0wEhMgY+u4CNtEb0om3+y3+niDAsoTCOB33UF0sxpzqzdqXLqmvc+vZyAt4O8pPdfkwA==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -1345,6 +1343,7 @@ packages:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -1537,17 +1536,6 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /ipfs-core-types/0.10.1:
-    resolution: {integrity: sha512-s5+kXXcjkIdWPHblrE0TyiKxROQdL7zfkVI7FpEEwv5rtHCjpI0I4vKSzziZLLzLXf3a2F1qtscOnlaT0ruWBw==}
-    dependencies:
-      interface-datastore: 6.1.0
-      multiaddr: 10.0.1
-      multiformats: 9.6.3
-    transitivePeerDependencies:
-      - node-fetch
-      - supports-color
-    dev: false
-
   /ipfs-core-types/0.9.0:
     resolution: {integrity: sha512-VJ8vJSHvI1Zm7/SxsZo03T+zzpsg8pkgiIi5hfwSJlsrJ1E2v68QPlnLshGHUSYw89Oxq0IbETYl2pGTFHTWfg==}
     dependencies:
@@ -1566,7 +1554,7 @@ packages:
       browser-readablestream-to-it: 1.0.2
       err-code: 3.0.1
       ipfs-core-types: 0.9.0
-      ipfs-message-port-protocol: '@ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz'
+      ipfs-message-port-protocol: 0.10.5
       ipfs-unixfs: 6.0.6
       it-peekable: 1.0.3
       multiformats: 9.6.3
@@ -1575,16 +1563,11 @@ packages:
       - supports-color
     dev: false
 
-  /ipfs-message-port-client/0.11.1:
-    resolution: {integrity: sha512-dT/XYWUGCvLmlHWtgTvL8TtobmWJphk5Cq499nG7Ng52hQUzZEUy0Mun1N3hqyd7SHMDVe7LGrQEY/l//seGyQ==}
-    engines: {node: '>=15.0.0', npm: '>=3.0.0'}
+  /ipfs-message-port-protocol/0.10.5:
+    resolution: {integrity: sha512-dHq+N0Epur5k7ZnQTSOepp5/Gmvtrg8SCD65t2okthkP8c4xIVxxaMpXZbHgi/2x0ix7HoQt4QiQa0StMkoj7A==}
+    engines: {node: '>=14.0.0', npm: '>=3.0.0'}
     dependencies:
-      browser-readablestream-to-it: 1.0.2
-      err-code: 3.0.1
-      ipfs-core-types: 0.10.1
-      ipfs-message-port-protocol: '@ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz'
-      ipfs-unixfs: 6.0.6
-      it-peekable: 1.0.3
+      ipfs-core-types: 0.9.0
       multiformats: 9.6.3
     transitivePeerDependencies:
       - node-fetch
@@ -1597,13 +1580,6 @@ packages:
     dependencies:
       err-code: 3.0.1
       protobufjs: 6.11.2
-    dev: false
-
-  /ipld-block/0.11.1:
-    resolution: {integrity: sha512-sDqqLqD5qh4QzGq6ssxLHUCnH4emCf/8F8IwjQM2cjEEIEHMUj57XhNYgmGbemdYPznUhffxFGEHsruh5+HQRw==}
-    engines: {node: '>=6.0.0', npm: '>=3.0.0'}
-    dependencies:
-      cids: 1.1.9
     dev: false
 
   /ipld-dag-pb/0.22.3:
@@ -3002,7 +2978,7 @@ packages:
       '@ipld/dag-pb': 2.1.15
       fission-bloom-filters: 1.7.1
       ipfs-message-port-client: 0.10.3
-      ipfs-message-port-protocol: '@ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz'
+      ipfs-message-port-protocol: 0.10.5
       ipld-dag-pb: 0.22.3
       keystore-idb: 0.15.4
       localforage: 1.10.0
@@ -3088,13 +3064,3 @@ packages:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
     engines: {node: '>= 6'}
     dev: true
-
-  '@ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz':
-    resolution: {tarball: https://ipfs.runfission.com/ipfs/bafybeigx6q4aezve7my76s5vvfuiinbxtepapqvmjf2jbgrozrut6cjape/p/ipfs-message-port-protocol.tar.gz}
-    name: ipfs-message-port-protocol
-    version: 0.6.0-fission
-    engines: {node: '>=10.3.0', npm: '>=3.0.0'}
-    dependencies:
-      cids: 1.1.9
-      ipld-block: 0.11.1
-    dev: false

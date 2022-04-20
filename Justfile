@@ -135,11 +135,11 @@ default: dev
 	mkdir -p {{BUILD_DIR}}/vendor
 	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
-	cp {{NPM_DIR}}/ipfs-message-port-client/index.min.js {{BUILD_DIR}}/vendor/ipfs-message-port-client.min.js
 	cp {{NPM_DIR}}/webnative/dist/index.umd.min.js {{BUILD_DIR}}/vendor/webnative.min.js
 	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
 
 	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/webnative-elm/src/funnel.js --minify --outfile={{BUILD_DIR}}/vendor/webnative-elm.min.js
+	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/ipfs-message-port-client/esm/src/index.js --minify --bundle --target=es2018 --outfile={{BUILD_DIR}}/vendor/ipfs-message-port-client.min.js --global-name=IpfsMessagePortClient
 
 
 #
