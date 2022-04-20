@@ -105,7 +105,6 @@ ports.webnativeRequest = app => request => {
   const getFs = () => wnfs
 
   constructFission.call(self).then(() => {
-    console.log(request)
     if (request.method === "loadFileSystem") {
       self.webnative.loadFileSystem(...request.arguments).then(fs => {
         wnfs = fs
