@@ -119,7 +119,34 @@ keyboardInput msg model =
 
                 --
                 [ Keyboard.Escape ] ->
-                    hideOverlay m
+                    if Maybe.isJust m.contextMenu then
+                        Return.singleton { m | contextMenu = Nothing }
+
+                    else if Maybe.isJust m.confirmation then
+                        Return.singleton { m | confirmation = Nothing }
+
+                    else if Maybe.isJust m.alfred then
+                        Return.singleton { m | alfred = Nothing }
+
+                    else if Maybe.isJust m.selectedCover then
+                        Return.singleton { m | selectedCover = Nothing }
+
+                    else
+                        case m.page of
+                            Page.Equalizer ->
+                                Return.singleton { m | page = Page.Index }
+
+                            Page.Playlists Playlists.Index ->
+                                Return.singleton { m | page = Page.Index }
+
+                            Page.Playlists _ ->
+                                Return.singleton { m | page = Page.Playlists Playlists.Index }
+
+                            Page.Queue _ ->
+                                Return.singleton { m | page = Page.Index }
+
+                            _ ->
+                                skip
 
                 _ ->
                     skip

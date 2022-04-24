@@ -133,9 +133,6 @@ hideOverlay model =
     else if Maybe.isJust model.alfred then
         Return.singleton { model | alfred = Nothing }
 
-    else if Maybe.isJust model.selectedCover then
-        Return.singleton { model | selectedCover = Nothing }
-
     else
         Return.singleton model
 
