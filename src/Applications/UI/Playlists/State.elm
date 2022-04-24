@@ -267,7 +267,7 @@ save model =
 
 select : Playlist -> Manager
 select playlist model =
-    { model | selectedPlaylist = Just playlist }
+    { model | page = Page.Index, selectedPlaylist = Just playlist }
         |> Tracks.reviseCollection Tracks.Collection.arrange
         |> andThen User.saveEnclosedUserData
 
