@@ -41,6 +41,19 @@ export function usesSingleAudioNode() {
 }
 
 
+function unlockAudioContext() {
+  if (context.state !== "suspended") return
+  const b = document.body
+  const events = [ "touchstart", "touchend", "mousedown", "keydown" ]
+  events.forEach(e => b.addEventListener(e, unlock, false))
+  function unlock() { context.resume().then(clean) }
+  function clean() { events.forEach(e => b.removeEventListener(e, unlock)) }
+}
+
+
+unlockAudioContext()
+
+
 
 // Container for <audio> elements
 // ------------------------------
