@@ -4,8 +4,7 @@
 )]
 
 use tauri::{PhysicalPosition, PhysicalSize, Position, Size};
-use tauri::{Manager, Menu, MenuItem, Submenu};
-use tauri::{WindowBuilder, WindowUrl};
+use tauri::{Menu, MenuItem, Submenu, WindowUrl};
 
 
 fn main() {
@@ -14,22 +13,20 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_localhost::Localhost::new(port))
         .plugin(tauri_plugin_window_state::WindowState::default())
-        .create_window(
-            "main",
-            WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
-            |window_builder, webview_attributes| {
-                let win = window_builder
-                    .title("Diffuse")
-                    .menu(menu())
-                    .maximized(true)
-                    .resizable(true);
-
-                return (win, webview_attributes);
-            },
-        )
-        .unwrap()
         .setup(move |app| {
-            let w = app.get_window("main").unwrap();
+            let w = tauri::window::WindowBuilder::new(
+                    app,
+                    "main",
+                    WindowUrl::External(
+                        format!("http://localhost:{}", port).parse().unwrap()
+                    )
+                )
+                .title("Diffuse")
+                .menu(menu())
+                .maximized(true)
+                .resizable(true)
+                .build()
+                .unwrap();
 
             // Scale window to a bit smaller than screen size
             let monitor = w.current_monitor().unwrap().unwrap();
@@ -37,7 +34,7 @@ fn main() {
 
             w.set_size(Size::Physical(PhysicalSize {
                 width: screen_size.width - 60,
-                height: screen_size.height - 60 - 50,
+                height: screen_size.height - 60,
             }))
             .unwrap();
 

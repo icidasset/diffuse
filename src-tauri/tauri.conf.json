@@ -23,13 +23,11 @@
       "externalBin": [],
       "category": "Music",
       "deb": {
-        "depends": [],
-        "useBootstrapper": false
+        "depends": []
       },
       "macOS": {
         "frameworks": [],
         "minimumSystemVersion": "",
-        "useBootstrapper": false,
         "exceptionDomain": "localhost",
         "signingIdentity": null,
         "entitlements": null,
@@ -45,12 +43,24 @@
       "active": false
     },
     "allowlist": {
+      "dialog": {
+        "all": true
+      },
+      "fs": {
+        "all": true
+      },
       "http": {
         "all": true,
         "request": true
       },
+      "path": {
+        "all": true
+      },
       "shell": {
         "open": ".*"
+      },
+      "window": {
+        "all": true
       }
     },
     "windows": [],
