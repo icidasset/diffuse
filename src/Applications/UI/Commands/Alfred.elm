@@ -3,7 +3,7 @@ module UI.Commands.Alfred exposing (commands, palette)
 import Alfred exposing (..)
 import Conditional exposing (ifThenElse)
 import List.Extra as List
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Tracks exposing (Grouping(..), SortBy(..))
 import UI.Page as Page
 import UI.Queue.Types as Queue

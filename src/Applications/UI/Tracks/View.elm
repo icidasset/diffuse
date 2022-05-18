@@ -9,7 +9,7 @@ import Html.Events exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
 import Html.Lazy exposing (..)
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Playlists exposing (Playlist)
 import Tracks exposing (..)
@@ -339,8 +339,8 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
               , Label "Queue" Hidden
               , NavigateToPage (Page.Queue UI.Queue.Page.Index)
               )
-            , ( Icon Icons.equalizer
-              , Label "Equalizer" Hidden
+            , ( Icon Icons.volume_up
+              , Label "Volume" Hidden
               , NavigateToPage Page.Equalizer
               )
             ]

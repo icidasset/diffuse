@@ -10,7 +10,7 @@ import Html.Events.Extra.Mouse as Mouse
 import Html.Extra as Html
 import Html.Lazy as Lazy
 import Markdown
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Svg exposing (Svg)
 import UI.Authentication.Types as Authentication exposing (..)

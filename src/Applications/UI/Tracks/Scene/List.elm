@@ -13,7 +13,7 @@ import Html.Events.Extra.Mouse as Mouse
 import Html.Lazy
 import InfiniteList
 import Json.Decode as Decode
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Queue

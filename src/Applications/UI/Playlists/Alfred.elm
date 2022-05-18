@@ -2,7 +2,7 @@ module UI.Playlists.Alfred exposing (create, select)
 
 import Alfred exposing (..)
 import List.Extra as List
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Playlists exposing (..)
 import Tracks exposing (IdentifiedTrack)
 import UI.Types as UI

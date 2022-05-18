@@ -6,7 +6,7 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (style, title)
 import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Queue
 import UI.Queue.Types as Queue

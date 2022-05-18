@@ -9,7 +9,7 @@ import Html.Attributes exposing (autofocus, id, placeholder, style, type_)
 import Html.Events exposing (onInput)
 import Html.Ext exposing (onTapPreventDefault)
 import Json.Decode
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import UI.Types as UI

@@ -4,7 +4,7 @@ import Chunky exposing (..)
 import Conditional exposing (..)
 import Html exposing (Html, text)
 import Html.Attributes as A
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Tracks
 

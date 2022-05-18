@@ -3,7 +3,7 @@ module UI.Sources.ContextMenu exposing (sourceMenu)
 import Conditional exposing (ifThenElse)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Sources exposing (Source)
 import UI.Page
 import UI.Sources.Page

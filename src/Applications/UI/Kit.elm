@@ -6,7 +6,7 @@ import Conditional exposing (ifThenElse)
 import Html exposing (Html)
 import Html.Attributes as A exposing (href, style)
 import Html.Events exposing (onClick, onInput)
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Svg
 

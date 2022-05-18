@@ -7,7 +7,7 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (href)
 import Html.Lazy as Lazy
 import Icons
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Queue exposing (..)
 import UI.DnD as DnD

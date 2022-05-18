@@ -236,7 +236,7 @@ function activeQueueItemChanged(item) {
 
 
 function adjustEqualizerSetting(e) {
-  audioEngine.adjustEqualizerSetting(e.knob, e.value)
+  audioEngine.adjustEqualizerSetting(orchestrion, e.knob, e.value)
 }
 
 

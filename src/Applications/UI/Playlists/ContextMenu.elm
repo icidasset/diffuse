@@ -3,7 +3,7 @@ module UI.Playlists.ContextMenu exposing (listMenu)
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
 import Html.Events.Extra.Mouse
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Playlists exposing (Playlist)
 import Playlists.Matching
 import Tracks exposing (IdentifiedTrack)

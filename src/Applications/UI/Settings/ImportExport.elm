@@ -2,7 +2,7 @@ module UI.Settings.ImportExport exposing (view)
 
 import Chunky exposing (..)
 import Html exposing (Html, text)
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import UI.Kit exposing (ButtonType(..))
 import UI.Navigation exposing (..)
 import UI.Page

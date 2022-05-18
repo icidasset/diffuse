@@ -8,7 +8,7 @@ import Html.Attributes as A
 import Html.Events
 import Html.Events.Extra.Pointer as Pointer
 import Json.Decode as Decode
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Svg
 import Svg.Attributes
 import UI.Kit
@@ -42,7 +42,7 @@ view settings =
             [ "relative", "select-none" ]
             [ chunk
                 [ "absolute", "left-0", "top-0" ]
-                [ UI.Kit.canister [ UI.Kit.h1 "Equalizer" ]
+                [ UI.Kit.canister [ UI.Kit.h1 "Volume" ]
                 ]
             ]
 
@@ -71,23 +71,6 @@ eqView settings =
             , "dark:border-base00"
             ]
             [ knob Volume settings.volume
-            ]
-
-        --
-        , chunk
-            [ "border"
-            , "border-black-05"
-            , "rounded"
-            , "flex"
-            , "mt-4"
-
-            -- Dark mode
-            ------------
-            , "dark:border-base00"
-            ]
-            [ knob Low settings.low
-            , knob Mid settings.mid
-            , knob High settings.high
             ]
         ]
 

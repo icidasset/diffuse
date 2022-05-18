@@ -22,36 +22,12 @@ const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
 // Audio context
 // -------------
 
-var context
-
-if (window.AudioContext) {
-  context = new window.AudioContext()
-} else if (window.webkitAudioContext) {
-  context = new window.webkitAudioContext()
-}
-
-self.context = context
-
-
 let SINGLE_AUDIO_NODE = IS_SAFARI
 
 
 export function usesSingleAudioNode() {
   return SINGLE_AUDIO_NODE
 }
-
-
-function unlockAudioContext() {
-  if (context.state !== "suspended") return
-  const b = document.body
-  const events = [ "touchstart", "touchend", "mousedown", "keydown" ]
-  events.forEach(e => b.addEventListener(e, unlock, false))
-  function unlock() { context.resume().then(clean) }
-  function clean() { events.forEach(e => b.removeEventListener(e, unlock)) }
-}
-
-
-unlockAudioContext()
 
 
 
@@ -106,63 +82,18 @@ export function setup(orchestrion) {
 
 
 
-// Audio nodes
-// -----------
-// Flow:
-// {Input} -> Volume -> Low -> Mid -> High -> {Output}
+// EQ
+// --
 
-let volume,
-    low,
-    mid,
-    high
+let volume = 0.5
 
-// volume
-volume = context.createGain()
-volume.gain.value = 1
-
-// biquad filters
-low   = context.createBiquadFilter()
-mid   = context.createBiquadFilter()
-high  = context.createBiquadFilter()
-
-low.type    = "lowshelf"
-mid.type    = "peaking"
-high.type   = "highshelf"
-
-low.frequency.value   = 250
-mid.frequency.value   = 2750
-mid.Q.value           = 1
-high.frequency.value  = 8000
-
-// connect them nodes
-volume.connect(low)
-low.connect(mid)
-mid.connect(high)
-high.connect(context.destination)
-
-
-function determineNodeGainValue(knobType, value) {
+export function adjustEqualizerSetting(orchestrion, knobType, value) {
   switch (knobType) {
-    case "VOLUME"   : return value
-    default         : return value < 0 ? value * 50 : value * 15
+    case "VOLUME":
+      volume = value
+      if (orchestrion.audio) orchestrion.audio.volume = value
+      break;
   }
-}
-
-
-export function adjustEqualizerSetting(knobType, value) {
-  let node
-
-  switch (knobType) {
-    case "LOW"      : node = low; break
-    case "MID"      : node = mid; break
-    case "HIGH"     : node = high; break
-    case "VOLUME"   : node = volume; break
-  }
-
-  node.gain.setValueAtTime(
-    determineNodeGainValue(knobType, value),
-    context.currentTime
-  )
 }
 
 
@@ -179,11 +110,6 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
   orchestrion.app.ports.setAudioPosition.send(0)
   clearTimeout(orchestrion.unstallTimeout)
   timesStalled = 1
-
-  // resume audio context if it's suspended
-  if (context.resume && context.state !== "running") {
-    context.resume()
-  }
 
   // metadata
   if ("mediaSession" in navigator && queueItem.trackTags) {
@@ -224,8 +150,6 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
     } else if (audioNode = findExistingAudioElement(queueItem)) {
       audioNode.setAttribute("data-preload", "f")
       audioNode.setAttribute("data-timestamp", Date.now())
-      audioNode.context = context.createMediaElementSource(audioNode)
-      audioNode.context.connect(volume)
 
       if (audioNode.readyState >= 4) {
         playAudio(audioNode, queueItem, orchestrion.app)
@@ -236,11 +160,10 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
 
     } else {
       audioNode = createAudioElement(orchestrion, queueItem, Date.now())
-      audioNode.context = context.createMediaElementSource(audioNode)
-      audioNode.context.connect(volume)
 
     }
 
+    audioNode.volume = volume
     orchestrion.audio = audioNode
   })
 }
@@ -594,11 +517,6 @@ export function removeOlderAudioElements(timestamp) {
   nodes.forEach(node => {
     const t = parseInt(node.getAttribute("data-timestamp"), 10)
     if (t >= timestamp) return
-
-    if (node.context) {
-      node.context.disconnect()
-      node.context = null
-    }
 
     // Force browser to stop loading
     node.src = silentMp3File

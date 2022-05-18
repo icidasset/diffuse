@@ -2,7 +2,7 @@ module UI.Queue.ContextMenu exposing (futureMenu, historyMenu)
 
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
-import Material.Icons as Icons
+import Material.Icons.Round as Icons
 import Queue
 import UI.Queue.Types as Queue
 import UI.Tracks.ContextMenu
