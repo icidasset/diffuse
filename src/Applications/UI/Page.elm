@@ -17,8 +17,7 @@ import Url.Parser.Query as Query
 
 
 type Page
-    = Equalizer
-    | Index
+    = Index
     | Queue Queue.Page
     | Playlists Playlists.Page
     | Settings Settings.Page
@@ -70,9 +69,6 @@ toString =
 toString_ : Page -> String
 toString_ page =
     case page of
-        Equalizer ->
-            "equalizer"
-
         Index ->
             ""
 
@@ -151,9 +147,6 @@ sameBase a b =
         ( Sources _, Sources _ ) ->
             True
 
-        ( Index, Equalizer ) ->
-            True
-
         ( Index, Playlists _ ) ->
             True
 
@@ -186,9 +179,6 @@ route : Parser (Page -> a) a
 route =
     oneOf
         [ map Index top
-
-        --
-        , map Equalizer (s "equalizer")
 
         -----------------------------------------
         -- Playlists

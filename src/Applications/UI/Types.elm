@@ -102,8 +102,8 @@ type alias Model =
     -----------------------------------------
     -- Equalizer
     -----------------------------------------
-    , eqKnobOperation : Maybe Equalizer.KnobOperation
     , eqSettings : Equalizer.Settings
+    , showVolumeSlider : Bool
 
     -----------------------------------------
     -- Instances
@@ -213,10 +213,8 @@ type Msg
       -----------------------------------------
       -- Equalizer
       -----------------------------------------
-    | ActivateKnob Knob Pointer.Event
-    | AdjustKnob Pointer.Event
-    | DeactivateKnob Pointer.Event
-    | ResetKnob Knob
+    | AdjustVolume Float
+    | ToggleVolumeSlider Switch
       -----------------------------------------
       -- Interface
       -----------------------------------------

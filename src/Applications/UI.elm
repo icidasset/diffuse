@@ -135,8 +135,8 @@ init flags url key =
     -----------------------------------------
     -- Equalizer
     -----------------------------------------
-    , eqKnobOperation = Nothing
     , eqSettings = Equalizer.defaultSettings
+    , showVolumeSlider = False
 
     -----------------------------------------
     -- Instances
@@ -306,17 +306,11 @@ update msg =
         -----------------------------------------
         -- Equalizer
         -----------------------------------------
-        ActivateKnob a b ->
-            Equalizer.activateKnob a b
+        AdjustVolume a ->
+            Equalizer.adjustVolume a
 
-        AdjustKnob a ->
-            Equalizer.adjustKnob a
-
-        DeactivateKnob _ ->
-            Equalizer.deactivateKnob
-
-        ResetKnob a ->
-            Equalizer.resetKnob a
+        ToggleVolumeSlider a ->
+            Equalizer.toggleVolumeSlider a
 
         -----------------------------------------
         -- Interface

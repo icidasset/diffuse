@@ -2,15 +2,17 @@ module UI.Tracks.View exposing (view)
 
 import Chunky exposing (..)
 import Color exposing (Color)
+import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Html exposing (Html, text)
-import Html.Attributes exposing (attribute, href, placeholder, style, tabindex, target, title, value)
-import Html.Events exposing (onBlur, onClick, onInput)
+import Html.Attributes as A exposing (attribute, href, placeholder, style, tabindex, target, title, value)
+import Html.Events as E exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
 import Html.Lazy exposing (..)
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
+import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Tracks exposing (..)
 import UI.Kit
@@ -37,7 +39,7 @@ view model =
     in
     chunk
         viewClasses
-        [ lazy7
+        [ lazy8
             navigation
             model.grouping
             model.favouritesOnly
@@ -46,6 +48,9 @@ view model =
             isOnIndexPage
             model.extractedBackdropColor
             model.scene
+            ( model.showVolumeSlider
+            , model.eqSettings.volume
+            )
 
         --
         , if List.isEmpty model.tracks.harvested then
@@ -111,17 +116,18 @@ viewClasses =
     [ "flex"
     , "flex-col"
     , "flex-grow"
+    , "relative"
     ]
 
 
-navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Bool -> Maybe Color -> Scene -> Html UI.Msg
-navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPage bgColor scene =
+navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Bool -> Maybe Color -> Scene -> ( Bool, Float ) -> Html UI.Msg
+navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPage bgColor scene ( showVolumeSlider, volume ) =
     let
         tabindex_ =
             ifThenElse isOnIndexPage 0 -1
     in
     chunk
-        [ "sm:flex" ]
+        [ "relative", "sm:flex" ]
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
@@ -339,11 +345,62 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
               , Label "Queue" Hidden
               , NavigateToPage (Page.Queue UI.Queue.Page.Index)
               )
-            , ( Icon Icons.volume_up
+            , ( if volume == 0 then
+                    Icon Icons.volume_off
+
+                else if volume < 0.5 then
+                    Icon Icons.volume_down
+
+                else
+                    Icon Icons.volume_up
               , Label "Volume" Hidden
-              , NavigateToPage Page.Equalizer
+              , PerformMsg (ToggleVolumeSlider <| ifThenElse showVolumeSlider Off On)
               )
             ]
+        , -----------------------------------------
+          -- Part 3
+          -----------------------------------------
+          if showVolumeSlider then
+            chunk
+                [ "absolute"
+                , "bg-white"
+                , "px-4"
+                , "py-3"
+                , "right-0"
+                , "rounded-bl"
+                , "shadow-lg"
+                , "top-full"
+                , "z-30"
+
+                -- Dark mode
+                ------------
+                , "dark:bg-darkest-hour"
+                ]
+                [ chunk
+                    [ "leading-[0px]"
+                    , "my-1"
+                    , "pt-px"
+                    , "text-[0px]"
+                    ]
+                    [ slab
+                        Html.input
+                        [ A.type_ "range"
+                        , A.min "0"
+                        , A.max "1"
+                        , A.step "0.0125"
+                        , A.value (String.fromFloat volume)
+
+                        --
+                        , E.onBlur SaveEnclosedUserData
+                        , E.onInput (String.toFloat >> Maybe.unwrap Bypass AdjustVolume)
+                        ]
+                        [ "range-slider" ]
+                        []
+                    ]
+                ]
+
+          else
+            nothing
         ]
 
 

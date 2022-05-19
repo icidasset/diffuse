@@ -108,9 +108,6 @@ keyboardInput msg model =
                 [ Keyboard.Character "3", Keyboard.Control ] ->
                     Common.changeUrlUsingPage (Page.Queue Queue.Index) m
 
-                [ Keyboard.Character "4", Keyboard.Control ] ->
-                    Common.changeUrlUsingPage Page.Equalizer m
-
                 [ Keyboard.Character "8", Keyboard.Control ] ->
                     Common.changeUrlUsingPage (Page.Sources Sources.Index) m
 
@@ -133,9 +130,6 @@ keyboardInput msg model =
 
                     else
                         case m.page of
-                            Page.Equalizer ->
-                                Return.singleton { m | page = Page.Index }
-
                             Page.Playlists Playlists.Index ->
                                 Return.singleton { m | page = Page.Index }
 

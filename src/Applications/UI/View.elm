@@ -3,12 +3,12 @@ module UI.View exposing (view)
 import Alfred exposing (Alfred)
 import Browser
 import Chunky exposing (..)
+import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Html exposing (Html, section)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (on)
-import Html.Events.Extra.Pointer as Pointer
 import Html.Lazy as Lazy
 import Json.Decode
 import Maybe.Extra as Maybe
@@ -19,7 +19,6 @@ import UI.Authentication.View as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
-import UI.Equalizer.View as Equalizer
 import UI.Navigation as Navigation
 import UI.Notifications
 import UI.Page as Page
@@ -52,11 +51,8 @@ body model =
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred then
             [ on "tap" (Json.Decode.succeed HideOverlay) ]
 
-         else if Maybe.isJust model.eqKnobOperation then
-            [ Pointer.onMove AdjustKnob
-            , Pointer.onUp DeactivateKnob
-            , Pointer.onCancel DeactivateKnob
-            ]
+         else if model.showVolumeSlider then
+            [ on "tap" (Json.Decode.succeed <| ToggleVolumeSlider Off) ]
 
          else if model.isDragging then
             [ class "dragging-something"
@@ -157,9 +153,6 @@ defaultScreen model =
         -- Pages
         --------
         , case model.page of
-            Page.Equalizer ->
-                Lazy.lazy Equalizer.view model.eqSettings
-
             Page.Index ->
                 nothing
 
