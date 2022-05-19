@@ -9,10 +9,9 @@ import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict exposing (Dict)
-import Equalizer exposing (Knob)
+import Equalizer
 import File exposing (File)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Events.Extra.Pointer as Pointer
 import Http
 import InfiniteList
 import Json.Decode
