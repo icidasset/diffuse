@@ -375,6 +375,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 -- Dark mode
                 ------------
                 , "dark:bg-darkest-hour"
+                , "dark:shadow-[rgba(0,0,0,.175)]"
                 ]
                 [ chunk
                     [ "leading-[0px]"
