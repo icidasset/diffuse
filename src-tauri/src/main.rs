@@ -29,19 +29,19 @@ fn main() {
                 .unwrap();
 
             // Scale window to a bit smaller than screen size
-            let monitor = w.current_monitor().unwrap().unwrap();
-            let screen_size = tauri::window::Monitor::size(&monitor);
+            // let monitor = w.current_monitor().unwrap().unwrap();
+            // let screen_size = tauri::window::Monitor::size(&monitor);
 
-            w.set_size(Size::Physical(PhysicalSize {
-                width: screen_size.width - 60,
-                height: screen_size.height - 60,
-            }))
-            .unwrap();
+            // w.set_size(Size::Physical(PhysicalSize {
+            //     width: screen_size.width - 60,
+            //     height: screen_size.height - 60,
+            // }))
+            // .unwrap();
 
             // Put the window in the middle of the screen
-            let window_offset = Position::Physical(PhysicalPosition { x: 30, y: 30 });
+            // let window_offset = Position::Physical(PhysicalPosition { x: 30, y: 30 });
 
-            w.set_position(window_offset).unwrap();
+            // w.set_position(window_offset).unwrap();
 
             // Fin
             Ok(())
