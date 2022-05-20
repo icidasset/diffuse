@@ -140,7 +140,6 @@ default: dev
 	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
 
 	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/webnative-elm/src/funnel.js --minify --outfile={{BUILD_DIR}}/vendor/webnative-elm.min.js
-	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/ipfs-message-port-client/esm/src/index.js --minify --bundle --target=es2018 --outfile={{BUILD_DIR}}/vendor/ipfs-message-port-client.min.js --global-name=IpfsMessagePortClient
 
 
 #

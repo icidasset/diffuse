@@ -26,8 +26,6 @@
     "delay": "^5.0.0",
     "fast-text-encoding": "^1.0.3",
     "file-saver": "^2.0.2",
-    "ipfs-message-port-client": "0.11.x",
-    "ipfs-message-port-protocol": "0.11.x",
     "jszip": "^3.7.1",
     "load-script2": "^2.0.5",
     "lunr": "^2.3.8",
