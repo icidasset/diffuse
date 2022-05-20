@@ -126,9 +126,9 @@ ports.webnativeRequest = app => request => {
 function constructFission() {
   if (wn) return Promise.resolve()
 
+  importScripts("vendor/ipfs.min.js")
   importScripts("vendor/webnative.min.js")
   importScripts("vendor/webnative-elm.min.js")
-  importScripts("vendor/ipfs-message-port-client.min.js")
 
   // Environment setup
   wn = self.webnative
@@ -137,33 +137,124 @@ function constructFission() {
     wn.setup.debug({ enabled: true })
   }
 
+  let endpoints
+
   if (WEBNATIVE_STAGING_MODE) {
-    wn.setup.endpoints(WEBNATIVE_STAGING_ENV)
+    endpoints = wn.setup.endpoints(WEBNATIVE_STAGING_ENV)
+  } else {
+    endpoints = wn.setup.endpoints({})
   }
 
   // Connect IPFS
-  return (
-    new Promise((resolve) => {
-      const channel = new MessageChannel()
+  const peersPromise = fetch( `${endpoints.api}/ipfs/peers` )
+    .then(r => r.json())
+    .then(r => r.filter(p => p.includes("/wss/")))
+    .catch(e => { throw new Error("💥 Couldn't start IPFS node, failed to fetch peer list") })
 
-      channel.port1.onmessage = ({ ports }) => {
-        resolve(ports[0])
+  return peersPromise.then(peers => {
+    return Ipfs.create({
+      config: {
+        Addresses: {
+          Delegates: []
+        },
+        Bootstrap: [],
+        Discovery: {
+          webRTCStar: { enabled: false }
+        }
+      },
+      preload: {
+        enabled: false
+      },
+      libp2p: {
+        config: {
+          peerDiscovery: { autoDial: false }
+        }
       }
-
-      self.postMessage(
-        { action: "SETUP_WEBNATIVE_IFRAME" },
-        [ channel.port2 ]
-      )
+    }).then(ipfs => {
+      peers.forEach(peer => tryConnectingToIpfsPeer(ipfs, peer))
+      wn.ipfs.set(ipfs)
     })
-  )
-    .then(port => self.IpfsMessagePortClient.IPFSClient.from(port))
-    .then(ipfs => wn.ipfs.set(ipfs))
+  })
 }
 
 
 ports.deconstructFission = _app => _ => {
   wn.leave({ withoutRedirect: true })
   wn = null
+}
+
+
+// TODO: This stuff is going to be moved into webnative.
+//       Remove when possible.
+
+
+const KEEP_ALIVE_INTERVAL =
+  1 * 60 * 1000 // 1 minute
+
+const BACKOFF_INIT = {
+  retryNumber: 0,
+  lastBackoff: 0,
+  currentBackoff: 1000
+}
+
+const KEEP_TRYING_INTERVAL =
+  5 * 60 * 1000 // 5 minutes
+
+const latestPeerTimeoutIds = {}
+
+
+function tryConnectingToIpfsPeer(ipfs, peer) {
+  ipfs.libp2p.ping(peer).then(() => {
+    return ipfs.swarm.connect(peer, 1 * 1000)
+      .then(() => {
+        console.log(`🪐 Connected to ${peer}`)
+        setTimeout(() => keepAlive(ipfs, peer, BACKOFF_INIT), KEEP_ALIVE_INTERVAL)
+      })
+      .catch(() => {
+        console.log(`🪓 Could not connect to ${peer}`)
+        keepAlive(ipfs, peer, BACKOFF_INIT)
+      })
+  })
+}
+
+
+function keepAlive(ipfs, peer, backoff) {
+  let timeoutId = null
+
+  if (backoff.currentBackoff < KEEP_TRYING_INTERVAL) {
+    timeoutId = setTimeout(() => reconnect(ipfs, peer, backoff), backoff.currentBackoff)
+  } else {
+    timeoutId = setTimeout(() => reconnect(ipfs, peer, backoff), KEEP_TRYING_INTERVAL)
+  }
+
+  latestPeerTimeoutIds[peer] = timeoutId
+
+  ipfs.libp2p.ping(peer).then(_ => {
+    clearTimeout(timeoutId)
+
+    if (timeoutId === latestPeerTimeoutIds[peer]) {
+      setTimeout(() => keepAlive(ipfs, peer, BACKOFF_INIT), KEEP_ALIVE_INTERVAL)
+    }
+  }).catch(() => {})
+}
+
+
+function reconnect(ipfs, peer, backoff) {
+  ipfs.swarm.disconnect(peer)
+    .then(() => ipfs.swarm.connect(peer))
+    .catch(() => {})
+
+  if (backoff.currentBackoff < KEEP_TRYING_INTERVAL) {
+    const nextBackoff = {
+      retryNumber: backoff.retryNumber + 1,
+      lastBackoff: backoff.currentBackoff,
+      currentBackoff: backoff.lastBackoff + backoff.currentBackoff
+    }
+
+    keepAlive(ipfs, peer, nextBackoff)
+  } else {
+    keepAlive(ipfs, peer, backoff)
+  }
 }
 
 

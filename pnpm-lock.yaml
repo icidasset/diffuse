@@ -12,8 +12,8 @@ specifiers:
   events: ^3.3.0
   fast-text-encoding: ^1.0.3
   file-saver: ^2.0.2
-  ipfs-message-port-client: 0.10.x
-  ipfs-message-port-protocol: 0.10.x
+  ipfs-message-port-client: 0.11.x
+  ipfs-message-port-protocol: 0.11.x
   jszip: ^3.7.1
   load-script2: ^2.0.5
   lunr: ^2.3.8
@@ -29,7 +29,7 @@ specifiers:
   tailwindcss-interaction-variants: ^5.0.0
   timer.js: ^1.0.4
   tocca: ^2.0.9
-  webnative: 0.31.1
+  webnative: 0.32.0
   webnative-elm: 7.0.0
 
 dependencies:
@@ -37,8 +37,8 @@ dependencies:
   delay: 5.0.0
   fast-text-encoding: 1.0.3
   file-saver: 2.0.5
-  ipfs-message-port-client: 0.10.3
-  ipfs-message-port-protocol: 0.10.5
+  ipfs-message-port-client: 0.11.3
+  ipfs-message-port-protocol: 0.11.3
   jszip: 3.7.1
   load-script2: 2.0.6
   lunr: 2.3.9
@@ -48,8 +48,8 @@ dependencies:
   subworkers: 1.0.1
   timer.js: 1.0.4
   tocca: 2.0.9
-  webnative: 0.31.1
-  webnative-elm: 7.0.0_webnative@0.31.1
+  webnative: 0.32.0
+  webnative-elm: 7.0.0_webnative@0.32.0
 
 devDependencies:
   assert: 2.0.0
@@ -159,7 +159,7 @@ packages:
     dev: true
 
   /@protobufjs/aspromise/1.1.2:
-    resolution: {integrity: sha1-m4sMxmPWaafY9vXQiToU00jzD78=}
+    resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
     dev: false
 
   /@protobufjs/base64/1.1.2:
@@ -171,34 +171,34 @@ packages:
     dev: false
 
   /@protobufjs/eventemitter/1.1.0:
-    resolution: {integrity: sha1-NVy8mLr61ZePntCV85diHx0Ga3A=}
+    resolution: {integrity: sha512-j9ednRT81vYJ9OfVuXG6ERSTdEL1xVsNgqpkxMsbIabzSo3goCjDIveeGv5d03om39ML71RdmrGNjG5SReBP/Q==}
     dev: false
 
   /@protobufjs/fetch/1.1.0:
-    resolution: {integrity: sha1-upn7WYYUr2VwDBYZ/wbUVLDYTEU=}
+    resolution: {integrity: sha512-lljVXpqXebpsijW71PZaCYeIcE5on1w5DlQy5WH6GLbFryLUrBD4932W/E2BSpfRJWseIL4v/KPgBFxDOIdKpQ==}
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/inquire': 1.1.0
     dev: false
 
   /@protobufjs/float/1.0.2:
-    resolution: {integrity: sha1-Xp4avctz/Ap8uLKR33jIy9l7h9E=}
+    resolution: {integrity: sha512-Ddb+kVXlXst9d+R9PfTIxh1EdNkgoRe5tOX6t01f1lYWOvJnSPDBlG241QLzcyPdoNTsblLUdujGSE4RzrTZGQ==}
     dev: false
 
   /@protobufjs/inquire/1.1.0:
-    resolution: {integrity: sha1-/yAOPnzyQp4tyvwRQIKOjMY48Ik=}
+    resolution: {integrity: sha512-kdSefcPdruJiFMVSbn801t4vFK7KB/5gd2fYvrxhuJYg8ILrmn9SKSX2tZdV6V+ksulWqS7aXjBcRXl3wHoD9Q==}
     dev: false
 
   /@protobufjs/path/1.1.2:
-    resolution: {integrity: sha1-bMKyDFya1q0NzP0hynZz2Nf79o0=}
+    resolution: {integrity: sha512-6JOcJ5Tm08dOHAbdR3GrvP+yUUfkjG5ePsHYczMFLq3ZmMkAD98cDgcT2iA1lJ9NVwFd4tH/iSSoe44YWkltEA==}
     dev: false
 
   /@protobufjs/pool/1.1.0:
-    resolution: {integrity: sha1-Cf0V8tbTq/qbZbw2ZQbWrXhG/1Q=}
+    resolution: {integrity: sha512-0kELaGSIDBKvcgS4zkjz1PeddatrjYcmMWOlAuAPwAeccUrPHdUqo/J6LiymHHEiJT5NrF1UVwxY14f+fy4WQw==}
     dev: false
 
   /@protobufjs/utf8/1.1.0:
-    resolution: {integrity: sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=}
+    resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
     dev: false
 
   /@sindresorhus/is/2.1.1:
@@ -430,7 +430,7 @@ packages:
     dev: true
 
   /blakejs/1.1.0:
-    resolution: {integrity: sha1-ad+S75U6qIylGjLfarHFShVfx6U=}
+    resolution: {integrity: sha512-1TSf2Cf2KycDPzjJpzamYhr6PFSEgKWyoc4rQ/BarXJzp/jM0FC7yP1rLWtMOWT2EIJtjPv9fwpKquRNbRV7Lg==}
     dev: false
 
   /brace-expansion/1.1.11:
@@ -576,17 +576,6 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
-
-  /cids/1.1.7:
-    resolution: {integrity: sha512-dlh+K0hMwFAFFjWQ2ZzxOhgGVNVREPdmk8cqHFui2U4sOodcemLMxdE5Ujga4cDcDQhWfldEPThkfu6KWBt1eA==}
-    engines: {node: '>=4.0.0', npm: '>=3.0.0'}
-    deprecated: This module has been superseded by the multiformats module
-    dependencies:
-      multibase: 4.0.4
-      multicodec: 3.1.0
-      multihashes: 4.0.2
-      uint8arrays: 2.1.7
-    dev: false
 
   /cids/1.1.9:
     resolution: {integrity: sha512-l11hWRfugIcbGuTZwAM5PwpjPPjyb6UZOGwlHSnOBV5o07XhQ4gNpBN67FbODvpjyHtd+0Xs6KNvUcGBiDRsdg==}
@@ -1523,8 +1512,8 @@ packages:
     deprecated: This module has been superseded by the multiformats module
     dependencies:
       cids: 1.1.9
-      multicodec: 3.1.0
-      multihashes: 4.0.2
+      multicodec: 3.2.1
+      multihashes: 4.0.3
     dev: false
 
   /interface-store/2.0.2:
@@ -1536,10 +1525,12 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /ipfs-core-types/0.9.0:
-    resolution: {integrity: sha512-VJ8vJSHvI1Zm7/SxsZo03T+zzpsg8pkgiIi5hfwSJlsrJ1E2v68QPlnLshGHUSYw89Oxq0IbETYl2pGTFHTWfg==}
+  /ipfs-core-types/0.10.3:
+    resolution: {integrity: sha512-GNid2lRBjR5qgScCglgk7w9Hk3TZAwPHQXxOLQx72wgyc0jF2U5NXRoKW0GRvX8NPbHmsrFszForIqxd23I1Gw==}
     dependencies:
+      '@ipld/dag-pb': 2.1.15
       interface-datastore: 6.1.0
+      ipfs-unixfs: 6.0.6
       multiaddr: 10.0.1
       multiformats: 9.6.3
     transitivePeerDependencies:
@@ -1547,14 +1538,14 @@ packages:
       - supports-color
     dev: false
 
-  /ipfs-message-port-client/0.10.3:
-    resolution: {integrity: sha512-lAdIdU8fpZBGUg1dG22X55Qnm3N6BxEVf4d3tYu8ITaIxhrZ2nm2HmkNzlc5fYeIZKTICThIDYiqzqMTrx67aw==}
-    engines: {node: '>=14.0.0', npm: '>=3.0.0'}
+  /ipfs-message-port-client/0.11.3:
+    resolution: {integrity: sha512-eMXyW6SVpDJN43R/XmaYbOGFvjH8yPuTafZ4FwZcuSpzOuj3JIRzQIVST3HMqYGse6zyo/6qbgmUixa2yzE2ag==}
+    engines: {node: '>=15.0.0', npm: '>=3.0.0'}
     dependencies:
       browser-readablestream-to-it: 1.0.2
       err-code: 3.0.1
-      ipfs-core-types: 0.9.0
-      ipfs-message-port-protocol: 0.10.5
+      ipfs-core-types: 0.10.3
+      ipfs-message-port-protocol: 0.11.3
       ipfs-unixfs: 6.0.6
       it-peekable: 1.0.3
       multiformats: 9.6.3
@@ -1563,11 +1554,11 @@ packages:
       - supports-color
     dev: false
 
-  /ipfs-message-port-protocol/0.10.5:
-    resolution: {integrity: sha512-dHq+N0Epur5k7ZnQTSOepp5/Gmvtrg8SCD65t2okthkP8c4xIVxxaMpXZbHgi/2x0ix7HoQt4QiQa0StMkoj7A==}
-    engines: {node: '>=14.0.0', npm: '>=3.0.0'}
+  /ipfs-message-port-protocol/0.11.3:
+    resolution: {integrity: sha512-LRZRlbeTdD2RXPyIjpuLV2ewrMSFwewBgm0s0lzpwtm0RNMXXKE8KBZu/fDZSkx7Cx/tL4nJJCfeyy1nowIDdg==}
+    engines: {node: '>=15.0.0', npm: '>=3.0.0'}
     dependencies:
-      ipfs-core-types: 0.9.0
+      ipfs-core-types: 0.10.3
       multiformats: 9.6.3
     transitivePeerDependencies:
       - node-fetch
@@ -1587,9 +1578,9 @@ packages:
     engines: {node: '>=6.0.0', npm: '>=3.0.0'}
     deprecated: This module has been superseded by @ipld/dag-pb and multiformats
     dependencies:
-      cids: 1.1.7
+      cids: 1.1.9
       interface-ipld-format: 1.0.1
-      multicodec: 3.1.0
+      multicodec: 3.2.1
       multihashing-async: 2.0.1
       protobufjs: 6.11.2
       stable: 0.1.8
@@ -1793,8 +1784,8 @@ packages:
       set-immediate-shim: 1.0.1
     dev: false
 
-  /keystore-idb/0.15.4:
-    resolution: {integrity: sha512-3HfkebZQzo7iFA301aXTizupfwlWk350uwCjdUY2p6v9jVP0B1frySTgesInqjHaj66mpridvg8WNF43JErEQg==}
+  /keystore-idb/0.15.5:
+    resolution: {integrity: sha512-7bcUAnY5iD0+N75odQVTCs8mhXBW+yLt9/HH8+VUrl44FGllpAhu7q3/w9QpNMHxLQv3OXs1fsA042CAviN79Q==}
     engines: {node: '>=10.21.0'}
     dependencies:
       localforage: 1.10.0
@@ -1980,28 +1971,12 @@ packages:
       web-encoding: 1.1.5
     dev: false
 
-  /multibase/4.0.4:
-    resolution: {integrity: sha512-8/JmrdSGzlw6KTgAJCOqUBSGd1V6186i/X8dDCGy/lbCKrQ+1QB6f3HE+wPr7Tpdj4U3gutaj9jG2rNX6UpiJg==}
-    engines: {node: '>=12.0.0', npm: '>=6.0.0'}
-    deprecated: This module has been superseded by the multiformats module
-    dependencies:
-      '@multiformats/base-x': 4.0.1
-    dev: false
-
   /multibase/4.0.6:
     resolution: {integrity: sha512-x23pDe5+svdLz/k5JPGCVdfn7Q5mZVMBETiC+ORfO+sor9Sgs0smJzAjfTbM5tckeCqnaUuMYoz+k3RXMmJClQ==}
     engines: {node: '>=12.0.0', npm: '>=6.0.0'}
     deprecated: This module has been superseded by the multiformats module
     dependencies:
       '@multiformats/base-x': 4.0.1
-    dev: false
-
-  /multicodec/3.1.0:
-    resolution: {integrity: sha512-f6d4DhbQ9a8WiJ/wpbKgeJSeR0/juP/1wnjbKdZ0KAWDkC/z7Lb3xOegMUG+uTcfwSYf6j1eTvFf8HDgqPRGmQ==}
-    deprecated: This module has been superseded by the multiformats module
-    dependencies:
-      uint8arrays: 2.1.7
-      varint: 6.0.0
     dev: false
 
   /multicodec/3.2.1:
@@ -2023,15 +1998,6 @@ packages:
       multibase: 3.1.2
       uint8arrays: 1.1.0
       varint: 6.0.0
-    dev: false
-
-  /multihashes/4.0.2:
-    resolution: {integrity: sha512-xpx++1iZr4ZQHjN1mcrXS6904R36LWLxX/CBifczjtmrtCXEX623DMWOF1eiNSg+pFpiZDFVBgou/4v6ayCHSQ==}
-    engines: {node: '>=12.0.0', npm: '>=6.0.0'}
-    dependencies:
-      multibase: 4.0.4
-      uint8arrays: 2.1.7
-      varint: 5.0.2
     dev: false
 
   /multihashes/4.0.3:
@@ -2962,25 +2928,25 @@ packages:
       xhr2: 0.1.4
     dev: false
 
-  /webnative-elm/7.0.0_webnative@0.31.1:
+  /webnative-elm/7.0.0_webnative@0.32.0:
     resolution: {integrity: sha512-i52PkbknlbPAXPrW9ygPMhM8GK5TOHdLsGK0HmzB7qPdPbP2hzL3td574KKiWcF3esf/thuKCc6L+Qx2j2nwFw==}
     peerDependencies:
       webnative: '> 0.24.0'
     dependencies:
-      webnative: 0.31.1
+      webnative: 0.32.0
     dev: false
 
-  /webnative/0.31.1:
-    resolution: {integrity: sha512-lkvAyy7MTMp3Yg+WgkjG508iCtwrVPmCSjQxxegLh0C15x4qO//28QYX7sFVPm8uFLST8B7EP8XLbThofKfnAg==}
+  /webnative/0.32.0:
+    resolution: {integrity: sha512-Oz7+WVakUFuMeIivfsCPGTOSaSHS34MM75EaXTL1G3AHIItHfJq67gwoEhSMgYcia7eM7zEx5HS8hmIhYgbTUg==}
     engines: {node: '>=15'}
     dependencies:
       '@ipld/dag-cbor': 7.0.0
       '@ipld/dag-pb': 2.1.15
       fission-bloom-filters: 1.7.1
-      ipfs-message-port-client: 0.10.3
-      ipfs-message-port-protocol: 0.10.5
+      ipfs-message-port-client: 0.11.3
+      ipfs-message-port-protocol: 0.11.3
       ipld-dag-pb: 0.22.3
-      keystore-idb: 0.15.4
+      keystore-idb: 0.15.5
       localforage: 1.10.0
       multiformats: 9.6.3
       one-webcrypto: 1.0.3

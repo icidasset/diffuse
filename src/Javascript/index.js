@@ -141,7 +141,6 @@ wire.brain = () => {
 
 function handleAction(action, data, ports) { switch (action) {
   case "DOWNLOAD_TRACKS": return downloadTracks(data)
-  case "SETUP_WEBNATIVE_IFRAME": return setupWebnativeIframe(ports)
 }}
 
 
@@ -304,13 +303,6 @@ function loadWebnative() {
         wn.setup.endpoints(WEBNATIVE_STAGING_ENV)
       }
     })
-}
-
-
-function setupWebnativeIframe(ports) {
-  loadWebnative()
-    .then(_ => wn.ipfs.iframe())
-    .then(iframePort => ports[0].postMessage("connect", [ iframePort ]))
 }
 
 

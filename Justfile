@@ -136,6 +136,7 @@ default: dev
 	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
 	cp {{NPM_DIR}}/webnative/dist/index.umd.min.js {{BUILD_DIR}}/vendor/webnative.min.js
+	cp ./vendor/ipfs.min.js {{BUILD_DIR}}/vendor/ipfs.min.js
 	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
 
 	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/webnative-elm/src/funnel.js --minify --outfile={{BUILD_DIR}}/vendor/webnative-elm.min.js
@@ -158,6 +159,10 @@ default: dev
 	)
 
 
+@download-vendor-dep filename url:
+	curl --silent --show-error --fail -o ./vendor/{{filename}} {{url}}
+
+
 @elm-housekeeping:
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
@@ -169,7 +174,9 @@ default: dev
 	pnpm install
 
 	mkdir -p vendor
-	curl --silent --show-error --fail -o ./vendor/pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
+
+	just download-vendor-dep pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
+	just download-vendor-dep ipfs.min.js https://unpkg.com/ipfs@0.62.3/index.min.js
 
 	cargo install tauri-cli --version "^1.0.0-rc.6" --root ./src-tauri
 
