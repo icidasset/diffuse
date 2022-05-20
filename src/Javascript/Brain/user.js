@@ -149,10 +149,10 @@ function constructFission() {
   const peersPromise = fetch( `${endpoints.api}/ipfs/peers` )
     .then(r => r.json())
     .then(r => r.filter(p => p.includes("/wss/")))
-    .catch(e => { throw new Error("💥 Couldn't start IPFS node, failed to fetch peer list") })
+    .catch(() => { throw new Error("💥 Couldn't start IPFS node, failed to fetch peer list") })
 
   return peersPromise.then(peers => {
-    return Ipfs.create({
+    return self.Ipfs.create({
       config: {
         Addresses: {
           Delegates: []

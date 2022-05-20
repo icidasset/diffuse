@@ -22,7 +22,7 @@ const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
 // Audio context
 // -------------
 
-let SINGLE_AUDIO_NODE = IS_SAFARI
+let SINGLE_AUDIO_NODE = false
 
 
 export function usesSingleAudioNode() {
@@ -66,7 +66,7 @@ const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU
 export function setup(orchestrion) {
   addAudioContainer()
 
-  if (SINGLE_AUDIO_NODE) {
+  if (IS_SAFARI) {
     // Try to avoid the "couldn't play automatically" error,
     // which seems to happen with audio nodes using an url created by `createObjectURL`.
     insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
@@ -445,7 +445,7 @@ function playAudio(element, queueItem, app) {
   const promise = element.play() || Promise.resolve()
 
   promise.catch(e => {
-    SINGLE_AUDIO_NODE = true
+    // SINGLE_AUDIO_NODE = true
 
     const err = "Couldn't play audio automatically. Please resume playback manually."
     console.error(err, e)

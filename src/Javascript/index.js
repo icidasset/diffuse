@@ -139,7 +139,7 @@ wire.brain = () => {
 }
 
 
-function handleAction(action, data, ports) { switch (action) {
+function handleAction(action, data, _ports) { switch (action) {
   case "DOWNLOAD_TRACKS": return downloadTracks(data)
 }}
 

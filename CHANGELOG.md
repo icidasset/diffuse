@@ -4,6 +4,7 @@
 
 - **Removes usage of the Web Audio API, just uses `<audio>` elements now so that Diffuse can be played in the background on iOS.** _Sadly this also means the equalizer has been removed, but a better volume control has been added instead, one that doesn't move away from the tracks view._
 - **Added a command palette.**
+- Disables single-audio-node mode on Safari
 - Fixes Fission integration
 - Improves launcher design (called Alfred internally)
 - Improves key bindings
