@@ -221,6 +221,7 @@ welcomeScreen =
                 [ style "letter-spacing" "0.25em"
                 ]
                 [ "align-middle"
+                , "font-bold"
                 , "inline-block"
                 , "text-nearly-sm"
                 ]
