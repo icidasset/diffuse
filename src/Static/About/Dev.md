@@ -26,83 +26,118 @@ You can add multiple "source" query parameters, if you want to add multiple sour
 
 ### Amazon S3
 
-```shell
-# Required
-accessKey
-bucketName
-region
-secretKey
+```yaml
+kind:
+  amazon_s3 
 
-# Optional
-directoryPath
-host
+data:
+  # Required
+  accessKey
+  bucketName
+  name
+  region
+  secretKey
+
+  # Optional
+  directoryPath
+  host
 ```
 
 ### Azure
 
-```shell
-# Required
-accountName
-accountKey
-container
+```yaml
+kind:
+  "azure_file" # or "azure_blob" 
 
-# Optional
-directoryPath
+data:
+  # Required
+  accountName
+  accountKey
+  container
+  name
+
+  # Optional
+  directoryPath
 ```
 
 ### BTFS
 
-```shell
-# Required
-directoryHash
+```yaml
+kind:
+  btfs 
 
-# Optional
-gateway
+data:
+  # Required
+  directoryHash
+  name
+
+  # Optional
+  gateway
 ```
 
 ### Dropbox
 
-```shell
-# Required
-accessToken
-appKey
+```yaml
+kind:
+  dropbox 
 
-# Optional
-directoryPath
+data:
+  # Required
+  accessToken
+  appKey
+  name
+
+  # Optional
+  directoryPath
 ```
 
 ### Google
 
-```shell
-# Required
-authCode
-clientId
-clientSecret
+```yaml
+kind:
+  google 
 
-# Optional
-folderId
+data:
+  # Required
+  authCode
+  clientId
+  clientSecret
+  name
+
+  # Optional
+  folderId
 ```
 
 ### IPFS
 
-```shell
-# Required
-directoryHash
+```yaml
+kind:
+  ipfs 
 
-# Optional
-gateway
-ipns              ← boolean, `t` of `f`
-local             ← boolean, `t` of `f`
+data:
+  # Required
+  directoryHash
+  name
+
+  # Optional
+  gateway
+  ipns              ← boolean, `t` of `f`
+  local             ← boolean, `t` of `f`
 ```
 
 ### WebDAV
 
-```shell
-# Required
-url
+```yaml
+kind:
+  webdav 
 
-# Optional
-directoryPath
-password
-username
+data:
+  # Required
+  name
+  url
+
+  # Optional
+  directoryPath
+  password
+  username
 ```
