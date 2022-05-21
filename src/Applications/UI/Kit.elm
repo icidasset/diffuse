@@ -110,7 +110,7 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
             [ "antialiased"
             , "border-2"
             , "cursor-pointer"
-            , "font-bold"
+            , "font-semibold"
             , "inline-block"
             , "leading-relaxed"
             , "no-underline"
