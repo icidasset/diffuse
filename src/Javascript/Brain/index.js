@@ -113,7 +113,15 @@ function downloadArtwork(list) {
 
 function shiftArtworkQueue() {
   const next = artworkQueue.shift()
-  if (next) app.ports.makeArtworkTrackUrls.send(next)
+
+  if (next) {
+    app.ports.makeArtworkTrackUrls.send(next)
+  } else {
+    self.postMessage({
+      action: "FINISHED_DOWNLOADING_ARTWORK",
+      data: null
+    })
+  }
 }
 
 

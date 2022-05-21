@@ -143,6 +143,7 @@ wire.brain = () => {
 
 function handleAction(action, data, _ports) { switch (action) {
   case "DOWNLOAD_TRACKS": return downloadTracks(data)
+  case "FINISHED_DOWNLOADING_ARTWORK": return finishedDownloadingArtwork()
 }}
 
 
@@ -219,11 +220,17 @@ function activeQueueItemChanged(item) {
         orchestrion,
         item,
         maybeCover
-      )
 
-      if (!maybeCover) {
-        loadAlbumCovers([ coverPrep ])
-      }
+      ).then(() => {
+        if (!maybeCover) {
+          if (!orchestrion.audio) return
+          orchestrion.audio.waitingForArtwork = coverPrep.cacheKey
+          loadAlbumCovers([ coverPrep ])
+        } else {
+          orchestrion.audio.waitingForArtwork = null
+        }
+
+      })
     })
 
   // ✋
@@ -503,6 +510,17 @@ function cachedCovers(keys) {
     app.ports.insertCoverCache.send(cache)
     setTimeout(() => loadAlbumCoversFromDom({ list: true, coverView: true }), 500)
   })
+}
+
+
+function finishedDownloadingArtwork() {
+  if (!orchestrion.audio || !orchestrion.audio.waitingForArtwork || !orchestrion.activeQueueItem) return
+
+  albumCover(orchestrion.audio.waitingForArtwork).then(maybeArtwork => {
+    audioEngine.setMediaSessionMetadata(orchestrion.activeQueueItem, maybeArtwork)
+  })
+
+  orchestrion.audio.waitingForArtwork = null
 }
 
 

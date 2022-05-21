@@ -112,23 +112,7 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
   timesStalled = 1
 
   // metadata
-  if ("mediaSession" in navigator && queueItem.trackTags) {
-    let artwork = []
-
-    if (maybeArtwork && typeof maybeArtwork !== "string") {
-      artwork = [{
-        src: URL.createObjectURL(maybeArtwork),
-        type: maybeArtwork.type
-      }]
-    }
-
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: queueItem.trackTags.title,
-      artist: queueItem.trackTags.artist,
-      album: queueItem.trackTags.album,
-      artwork: artwork
-    })
-  }
+  setMediaSessionMetadata(queueItem, maybeArtwork)
 
   // initial promise
   const initialPromise = queueItem.isCached
@@ -491,6 +475,27 @@ function setDurationIfNecessary(audio) {
   })
 
   this.scrobbleTimer.start(scrobbleTimeoutDuration)
+}
+
+
+export function setMediaSessionMetadata(queueItem, maybeArtwork) {
+  if ("mediaSession" in navigator === false || !queueItem.trackTags) return
+
+  let artwork = []
+
+  if (maybeArtwork && typeof maybeArtwork !== "string") {
+    artwork = [{
+      src: URL.createObjectURL(maybeArtwork),
+      type: maybeArtwork.type
+    }]
+  }
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: queueItem.trackTags.title,
+    artist: queueItem.trackTags.artist,
+    album: queueItem.trackTags.album,
+    artwork: artwork
+  })
 }
 
 
