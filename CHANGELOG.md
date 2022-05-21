@@ -9,7 +9,8 @@
 - Fixes Fission integration
 - Improves launcher design (called Alfred internally)
 - Improves key bindings
-- Small UI improvements 
+- Small UI improvements
+- Updates media session metadata with artwork after downloading missing artwork
 
 
 ## 3.0.2
