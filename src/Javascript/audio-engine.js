@@ -361,6 +361,7 @@ function audioTimeUpdateEvent(event) {
 
 function audioEndEvent(event) {
   if (this.repeat) {
+    if (this.scrobbleTimer) this.scrobbleTimer.stop()
     playAudio(event.target, this.activeQueueItem, this.app)
   } else {
     this.app.ports.noteProgress.send({ trackId: this.activeQueueItem.trackId, progress: 1 })
