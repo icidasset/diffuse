@@ -36,10 +36,12 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   navigator.serviceWorker.register("service-worker.js").then(
     initialise,
     err => {
+      const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
+
       console.error(err)
       return failure(
-        location.protocol === "https:"
-          ? "Failed to start the service worker."
+        location.protocol === "https:" || location.hostname === "localhost"
+          ? "Failed to start the service worker." + (isFirefox ? " Make sure the setting <strong>Delete cookies and site data when Firefox is closed</strong> is off, or Diffuse's domain is added as an exception." : "")
           : "Failed to start the service worker, try using HTTPS."
       )
     }
@@ -100,7 +102,7 @@ function failure(text) {
       <img src="../images/diffuse-light.svg" />
     </a>
 
-    <p class="opacity-60">
+    <p class="max-w-sm opacity-60">
       ${text}
     </p>
   `

@@ -44,7 +44,7 @@ default: dev
 	{{NPM_DIR}}/.bin/tailwind \
 		--input {{SRC_DIR}}/Css/Application.css \
 		--output {{BUILD_DIR}}/application.css \
-		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm" \
+		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm,{{SRC_DIR}}/Javascript/**/*.js" \
 		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
 		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
 		--jit \
