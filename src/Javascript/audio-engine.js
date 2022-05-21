@@ -361,6 +361,7 @@ function audioTimeUpdateEvent(event) {
 
 function audioEndEvent(event) {
   if (this.repeat) {
+    event.target.startedPlayingAt = Math.floor(Date.now() / 1000)
     if (this.scrobbleTimer) this.scrobbleTimer.stop()
     playAudio(event.target, this.activeQueueItem, this.app)
   } else {
@@ -479,10 +480,12 @@ function setDurationIfNecessary(audio) {
   const scrobbleTimeoutDuration = Math.min(240 + 0.5, lastSetDuration / 1.95)
   const trackId = audio.getAttribute("rel")
 
+  audio.startedPlayingAt = timestamp
+
   this.scrobbleTimer = new Timer({
     onend: _ => this.app.ports.scrobble.send({
       duration: Math.round(lastSetDuration),
-      timestamp: timestamp,
+      timestamp: audio.startedPlayingAt || timestamp,
       trackId: trackId
     })
   })
