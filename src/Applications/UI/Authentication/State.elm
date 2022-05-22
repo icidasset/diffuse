@@ -295,10 +295,14 @@ externalAuth method string model =
                 redirectTo =
                     { url | query = Just "action=authenticate/fission" }
             in
-            Webnative.permissions
-                |> Webnative.redirectToLobby (Webnative.RedirectTo redirectTo)
-                |> Ports.webnativeRequest
-                |> return model
+            "Just a moment, loading necessary components ..."
+                |> Notifications.stickyCasual
+                |> Common.showNotificationWithModel model
+                |> Return.command
+                    (Webnative.permissions
+                        |> Webnative.redirectToLobby (Webnative.RedirectTo redirectTo)
+                        |> Ports.webnativeRequest
+                    )
 
         RemoteStorage _ ->
             string
