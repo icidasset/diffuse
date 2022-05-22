@@ -246,12 +246,16 @@ localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) 
                     slab
                         Html.span
                         []
-                        [ "inline-block"
+                        [ "hidden"
                         , "leading-tight"
                         , "ml-1"
                         , "transform"
                         , "translate-y-px"
                         , "truncate"
+
+                        -- Responsive
+                        -------------
+                        , "sm:inline-block"
                         ]
                         [ text labelText ]
             ]
