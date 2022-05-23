@@ -26,26 +26,29 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   location.href = location.href.replace("http://", "https://")
   failure("Just a moment, redirecting to HTTPS.")
 
-// Secure context & Service worker
+// Not a secure context
 } else if (!self.isSecureContext) {
   failure(`
     This app only works on a <a class="underline" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#When_is_a_context_considered_secure">secure context</a>, HTTPS & localhost, and modern browsers.
   `)
 
+// Service worker
 } else if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js").then(
-    initialise,
-    err => {
-      const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("service-worker.js")
+      .then(initialise)
+      .catch(err => {
+        const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
 
-      console.error(err)
-      return failure(
-        location.protocol === "https:" || location.hostname === "localhost"
-          ? "Failed to start the service worker." + (isFirefox ? " Make sure the setting <strong>Delete cookies and site data when Firefox is closed</strong> is off, or Diffuse's domain is added as an exception." : "")
-          : "Failed to start the service worker, try using HTTPS."
-      )
-    }
-  )
+        console.error(err)
+        return failure(
+          location.protocol === "https:" || location.hostname === "localhost"
+            ? "Failed to start the service worker." + (isFirefox ? " Make sure the setting <strong>Delete cookies and site data when Firefox is closed</strong> is off, or Diffuse's domain is added as an exception." : "")
+            : "Failed to start the service worker, try using HTTPS."
+        )
+      })
+  })
 
 }
 
@@ -81,15 +84,13 @@ function initialise(reg) {
   wire.backdrop()
   wire.clipboard()
   wire.covers()
+  wire.serviceWorker(reg)
   wire.webnative()
 
   // Other ports
   app.ports.openUrlOnNewPage.subscribe(url => {
     window.open(url, "_blank")
   })
-
-  // Check for service worker updates every hour
-  setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
 }
 
 
@@ -830,6 +831,33 @@ document.body.addEventListener("touchmove", event => {
     event.stopPropagation()
   }
 })
+
+
+
+// Service worker
+// --------------
+
+wire.serviceWorker = async (reg) => {
+  if (reg.installing) console.log("🧑‍✈️ Service worker is installing")
+  const initialInstall = reg.installing
+
+  reg.addEventListener("updatefound", () => {
+    const newWorker = reg.installing
+
+    // No worker was installed yet, so we'll only want to track the state changes
+    if (newWorker !== initialInstall) {
+      console.log("🧑‍✈️ A new version of Diffuse is available")
+    }
+
+    newWorker.addEventListener("statechange", (e) => {
+      console.log("🧑‍✈️ Service worker is", e.target.state)
+    })
+  })
+
+  // Check for service worker updates and every hour after that
+  reg.update()
+  setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
+}
 
 
 

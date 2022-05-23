@@ -6,14 +6,11 @@
 // so it can be used offline.
 
 
-importScripts("version.js")
-
-
 const KEY =
-  "diffuse-" + self.VERSION
+  "diffuse-{{VERSION}}"
 
 
-const exclude =
+const EXCLUDE =
   [ "_headers"
   , "_redirects"
   , "CORS"
@@ -25,8 +22,6 @@ const exclude =
 
 
 self.addEventListener("activate", event => {
-  event.waitUntil(self.clients.claim())
-
   // Remove all caches except the one with the currently used `KEY`
   caches.keys().then(keys => {
     keys.forEach(k => {
@@ -41,10 +36,11 @@ self.addEventListener("install", event => {
   const promise = fetch("tree.json")
     .then(response => response.json())
     .then(tree => {
-      const filteredTree = tree.filter(t => !exclude.find(u => u === t))
+      const filteredTree = tree.filter(t => !EXCLUDE.find(u => u === t))
       const whatToCache = [ href, `${href.replace(/\/+$/, "")}/about/` ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
+    // TODO: Remove?
     .then(_ => self.skipWaiting())
 
   event.waitUntil(promise)

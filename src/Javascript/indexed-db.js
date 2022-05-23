@@ -13,9 +13,6 @@ import retryPromise from "p-retry"
 const WAITING_MSG = "Waiting for database"
 
 
-self.importScripts && importScripts("version.js")
-
-
 const indexedDB =
   self.indexedDB ||
   self.webkitIndexedDB ||
@@ -40,11 +37,6 @@ idx.onupgradeneeded = event => {
 
 idx.onsuccess = _ => {
   db = idx.result
-
-  setInIndex({
-    key: "VERSION",
-    data: self.VERSION
-  })
 }
 
 idx.onerror = event => {

@@ -14,6 +14,7 @@ import qualified Data.Aeson.KeyMap as KeyMap (fromList)
 import qualified Data.ByteString.Lazy as BSL (toStrict)
 import qualified Data.Char as Char
 import qualified Data.List as List
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.IO as Text
 
@@ -21,7 +22,7 @@ import qualified Data.Text.IO as Text
 -- | (• ◡•)| (❍ᴥ❍ʋ)
 
 
-main :: IO Dictionary
+main :: IO ()
 main =
     do
         de <- dependencies
@@ -32,9 +33,7 @@ main =
         let dictionary = List.concatMap (flow de) se
 
         -- Write everything to disk
-        dictionary
-            |> insertVersion (de !~> "timestamp")
-            |> write "../build"
+        write "../build" dictionary
 
         -- Make a file tree
         build <- list "../build/**/*.*"
@@ -42,6 +41,12 @@ main =
         build
             |> makeTree
             |> write "../build"
+
+        -- Inject version timestamp
+        insertVersion (de !~> "timestamp") build
+
+        -- Fin
+        return ()
 
 
 list :: [Char] -> IO Dictionary
@@ -155,24 +160,25 @@ makeTree dict =
     defs
 
 
-insertVersion :: Text -> Dictionary -> Dictionary
-insertVersion version dict =
-    let
-        versionContent =
-            Text.encodeUtf8 ("self.VERSION = \"" <> version <> "\"")
+insertVersion :: Text -> Dictionary -> IO ()
+insertVersion version dict = do
+    let sw = List.filter
+                (\def -> localPath def == "service-worker.js")
+                dict
 
-        defs =
-            case headMay dict of
-                Just def ->
-                    def
-                        |> forkDefinition "version.js"
-                        |> wrap
-                        |> setContent versionContent
+    case headMay sw of
+        Just def ->
+            def
+                |> content
+                |> fmap Text.decodeUtf8
+                |> fmap (Text.replace "{{VERSION}}" version)
+                |> fmap Text.encodeUtf8
+                |> (\c -> def { content = c })
+                |> writeDef "../build"
+                |> fmap (\_ -> ())
 
-                Nothing ->
-                        []
-    in
-    dict <> defs
+        Nothing ->
+            return ()
 
 
 
