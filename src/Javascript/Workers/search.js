@@ -8,6 +8,9 @@
 import lunr from "lunr"
 
 
+const FIELDS = ["album", "artist", "title"]
+
+
 lunr.Pipeline.registerFunction(
   removeParenthesesFromToken,
   "Remove parentheses from token"
@@ -61,9 +64,21 @@ function performSearch(rawSearchTerm) {
     .reduce(
       ([ acc, previousOperator, previousPrefix ], chunk) => {
         const operator = (a => a && a[0])( chunk.match(/^(\+|-)/) )
-        const chunkWithoutOperator = chunk.replace(/^(\+|-)/, "").replace(/\*$/, "")
-        const prefix = (a => a && a[1])( chunkWithoutOperator.match(/^([^:]+:)/) )
-        const chunkWithoutPrefix = chunkWithoutOperator.replace(/^([^:]+:)/, "")
+
+        let chunkWithoutOperator = chunk.replace(/^(\+|-)/, "").replace(/\*$/, "").trim()
+        let prefix = (a => a && a[1])( chunkWithoutOperator.match(/^([^:]+:)/) )
+        let chunkWithoutPrefix = chunkWithoutOperator.replace(/^([^:]+:)/, "")
+
+        if (prefix && !FIELDS.includes(prefix.slice(0, -1))) {
+          prefix = null
+          chunkWithoutPrefix = chunkWithoutOperator.replace(":", "\\:")
+          chunkWithoutOperator = chunkWithoutPrefix
+
+        } else if (prefix && chunkWithoutPrefix.includes(":")) {
+          chunkWithoutPrefix = chunkWithoutPrefix.replace(":", "\\:")
+          chunkWithoutOperator = prefix + chunkWithoutPrefix
+
+        }
 
         const op = operator || previousOperator
         const pr = prefix ? "" : (operator ? "" : previousPrefix)
@@ -114,11 +129,11 @@ function updateSearchIndex(input) {
     : input
 
   index = customLunr(function() {
-    this.field("album");
-    this.field("artist");
-    this.field("title");
+    FIELDS.forEach(
+      field => this.field(field)
+    )
 
-    (tracks || [])
+    ;(tracks || [])
       .map(mapTrack)
       .forEach(t => this.add(t))
   })
