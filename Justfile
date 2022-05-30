@@ -23,6 +23,20 @@ default: dev
 	echo "> Production build completed 🛳"
 
 
+check-versions:
+	#!/usr/bin/env node
+	console.log("> Checking version numbers 🧮")
+	const pwd = "{{invocation_directory()}}"
+
+	const package = require(`${pwd}/package.json`)
+	const manifest = require(`${pwd}/src/Static/Manifests/manifest.json`)
+
+	if (package.version !== manifest.version) {
+		console.error(`The version from package.json doesn't match the one from the app manifest. The package version is '${package.version}' and the manifest version is '${manifest.version}'.`)
+		process.exit(1)
+	}
+
+
 @clean:
 	echo "> Cleaning build directory"
 	rm -rf {{BUILD_DIR}} || true
@@ -180,7 +194,7 @@ default: dev
 	cargo install tauri-cli --version "^1.0.0-rc.6" --root ./src-tauri
 
 
-@quality:
+@quality: check-versions
 	echo "> Running es-lint"
 	{{NPM_DIR}}/.bin/eslint src/Javascript/**
 	echo "> Running elm-review"

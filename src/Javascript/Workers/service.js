@@ -21,7 +21,7 @@ const EXCLUDE =
 // 📣
 
 
-self.addEventListener("activate", event => {
+self.addEventListener("activate", _event => {
   // Remove all caches except the one with the currently used `KEY`
   caches.keys().then(keys => {
     keys.forEach(k => {
