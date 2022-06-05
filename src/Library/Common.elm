@@ -1,4 +1,4 @@
-module Common exposing (Switch(..), backToIndex, boolFromString, boolToString, queryString, translateHttpResponse, urlOrigin)
+module Common exposing (ServiceWorkerStatus(..), Switch(..), backToIndex, boolFromString, boolToString, queryString, translateHttpResponse, urlOrigin)
 
 import Http
 import Tuple.Ext as Tuple
@@ -17,6 +17,13 @@ backToIndex =
 
 
 -- 🌳
+
+
+type ServiceWorkerStatus
+    = InstallingInitial
+    | InstallingNew
+    | WaitingForActivation
+    | Activated
 
 
 type Switch

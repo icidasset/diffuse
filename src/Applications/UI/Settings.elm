@@ -1,14 +1,19 @@
 module UI.Settings exposing (Dependencies, view)
 
 import Chunky exposing (..)
+import Color exposing (Color)
+import Common exposing (ServiceWorkerStatus(..))
 import Conditional exposing (ifThenElse)
+import DateFormat as Date
 import Html exposing (Html, text)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events as E exposing (onClick)
 import Html.Lazy
 import LastFm
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
+import Maybe.Extra as Maybe
+import Time
 import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit
@@ -28,11 +33,16 @@ import User.Layer exposing (Method(..))
 
 type alias Dependencies =
     { authenticationMethod : Maybe User.Layer.Method
+    , buildTimestamp : Int
     , chosenBackgroundImage : Maybe String
+    , currentTimeZone : Time.Zone
+    , extractedBackdropColor : Maybe Color
     , hideDuplicateTracks : Bool
     , lastFm : LastFm.Model
     , processAutomatically : Bool
     , rememberProgress : Bool
+    , serviceWorkerStatus : ServiceWorkerStatus
+    , version : String
     }
 
 
@@ -135,6 +145,110 @@ content deps =
       ]
         |> raw
         |> UI.Kit.intro
+
+    -----------------------------------------
+    -- Version
+    -----------------------------------------
+    , let
+        tag =
+            chunk
+                [ "bg-base06"
+                , "inline-block"
+                , "leading-none"
+                , "ml-1"
+                , "mr-3"
+                , "p-1"
+                , "rounded"
+                , "text-white"
+
+                -- Dark mode
+                ------------
+                , "dark:bg-base01"
+                , "dark:text-base05"
+                ]
+      in
+      chunk
+        [ "text-base05"
+        , "text-xs"
+
+        -- Dark mode
+        ------------
+        , "dark:text-base03"
+        ]
+        [ text "Version"
+        , tag [ text deps.version ]
+        , text "Built on"
+        , deps.buildTimestamp
+            |> (*) 1000
+            |> Time.millisToPosix
+            |> Date.format
+                [ Date.monthNameAbbreviated
+                , Date.text " "
+                , Date.dayOfMonthSuffix
+                , Date.text " "
+                , Date.yearNumber
+                , Date.text ", "
+                , Date.hourMilitaryFixed
+                , Date.text ":"
+                , Date.minuteFixed
+                , Date.text ":"
+                , Date.secondFixed
+                ]
+                deps.currentTimeZone
+            |> text
+            |> List.singleton
+            |> tag
+
+        --
+        , case deps.serviceWorkerStatus of
+            InstallingInitial ->
+                inline
+                    [ "inline-flex", "items-center" ]
+                    [ text "Setting up service worker"
+                    , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
+                    ]
+
+            InstallingNew ->
+                inline
+                    [ "inline-flex", "items-center" ]
+                    [ text "Installing new version"
+                    , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
+                    ]
+
+            WaitingForActivation ->
+                inline
+                    []
+                    [ text "Update available"
+                    , brick
+                        [ Maybe.unwrap
+                            (class "bg-white-20")
+                            (style "background-color" << Color.toCssString)
+                            deps.extractedBackdropColor
+
+                        --
+                        , E.onClick ReloadApp
+                        ]
+                        [ "bg-base06"
+                        , "cursor-pointer"
+                        , "inline-block"
+                        , "leading-none"
+                        , "ml-1"
+                        , "mr-3"
+                        , "p-1"
+                        , "rounded"
+                        , "text-white"
+
+                        -- Dark mode
+                        ------------
+                        , "dark:bg-base01"
+                        , "dark:text-base05"
+                        ]
+                        [ text "Reload app" ]
+                    ]
+
+            Activated ->
+                nothing
+        ]
 
     -----------------------------------------
     -- Background

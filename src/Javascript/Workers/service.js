@@ -7,7 +7,8 @@
 
 
 const KEY =
-  "diffuse-{{VERSION}}"
+  /* eslint-disable no-undef */
+  `diffuse-${BUILD_TIMESTAMP}`
 
 
 const EXCLUDE =
@@ -40,14 +41,12 @@ self.addEventListener("install", event => {
       const whatToCache = [ href, `${href.replace(/\/+$/, "")}/about/` ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
-    // TODO: Remove?
-    .then(_ => self.skipWaiting())
 
   event.waitUntil(promise)
 })
 
 
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", async event => {
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
@@ -82,6 +81,16 @@ self.addEventListener("fetch", event => {
       "Bearer " + token
     )
 
+  // When refreshing the page to update the app
+  } else if (
+    event.request.mode === "navigate" &&
+    event.request.method === "GET" &&
+    registration.waiting &&
+    (await clients.matchAll()).length < 2
+  ) {
+    registration.waiting.postMessage("skipWaiting")
+    event.respondWith(new Response("", { headers: { "Refresh": "0" } }))
+
   // Use cache if internal request
   } else if (isInternal) {
     let url = new URL(event.request.url)
@@ -93,6 +102,13 @@ self.addEventListener("fetch", event => {
         .then(cache => cache.match(url))
         .then(match => match || fetch(url))
     )
+  }
+})
+
+
+addEventListener("message", event => {
+  if (event.data === "skipWaiting") {
+    skipWaiting()
   }
 })
 

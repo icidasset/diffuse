@@ -42,8 +42,12 @@ main =
             |> makeTree
             |> write "../build"
 
-        -- Inject version timestamp
-        insertVersion (de !~> "timestamp") build
+        -- Inject build timestamp
+        --
+        -- NOTE: Done by esbuild at the moment (see Justfile)
+        --       But we leave it here in case we need it anywhere else.
+        --
+        -- insertBuildTimestamp (de !~> "timestamp") build
 
         -- Fin
         return ()
@@ -160,25 +164,24 @@ makeTree dict =
     defs
 
 
-insertVersion :: Text -> Dictionary -> IO ()
-insertVersion version dict = do
-    let sw = List.filter
-                (\def -> localPath def == "service-worker.js")
-                dict
-
-    case headMay sw of
-        Just def ->
-            def
-                |> content
-                |> fmap Text.decodeUtf8
-                |> fmap (Text.replace "{{VERSION}}" version)
-                |> fmap Text.encodeUtf8
-                |> (\c -> def { content = c })
-                |> writeDef "../build"
-                |> fmap (\_ -> ())
-
-        Nothing ->
-            return ()
+insertBuildTimestamp :: Text -> Dictionary -> IO ()
+insertBuildTimestamp version dict =
+    dict
+        |> List.filter
+            (\def ->
+                localPath def == "service-worker.js"
+            )
+        |> List.map
+            (\def ->
+                def
+                    |> content
+                    |> fmap Text.decodeUtf8
+                    |> fmap (Text.replace "{{BUILD_TIMESTAMP}}" version)
+                    |> fmap Text.encodeUtf8
+                    |> (\c -> def { content = c })
+            )
+        |> write "../build"
+        |> fmap (\_ -> ())
 
 
 

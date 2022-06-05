@@ -4,9 +4,11 @@
 
 - **Removes usage of the Web Audio API, just uses `<audio>` elements now so that Diffuse can be played in the background on iOS.** _Sadly this also means the equalizer has been removed, but a better volume control has been added instead, one that doesn't move away from the tracks view._
 - **Adds a command palette.**
+- **Adds app version info and an update button to the settings page.**
 - Correctly scrobbles repeated tracks with Last.fm
 - Disables single-audio-node mode on Safari & iOS (ie. preloading now works)
 - Fixes Fission integration
+- Fixes issue with search where you couldn't have the `:` character in your search term
 - Improves detection of new versions and upgrading in the background (ie. service worker)
 - Improves launcher design (called Alfred internally)
 - Improves key bindings

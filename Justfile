@@ -88,12 +88,15 @@ check-versions:
 	mv {{BUILD_DIR}}/ui.elm.tmp.js {{BUILD_DIR}}/ui.elm.js
 
 
-@js: vendor-js
+js: vendor-js
+	#!/usr/bin/env bash
+	build_timestamp="`date '+%s'`"
 	echo "> Compiling Javascript code"
 
 	# Main builds
 	{{ESBUILD}} ./src/Javascript/index.js \
-		--outfile={{BUILD_DIR}}/ui.js
+		--outfile={{BUILD_DIR}}/ui.js \
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.js \
 		--inject:./system/Js/node-shims.js \
@@ -104,16 +107,20 @@ check-versions:
 		--outfile={{BUILD_DIR}}/search.js
 
 	{{ESBUILD}} ./src/Javascript/Workers/service.js \
-		--outfile={{BUILD_DIR}}/service-worker.js
+		--outfile={{BUILD_DIR}}/service-worker.js \
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 
-@js-prod: vendor-js
+js-prod: vendor-js
+	#!/usr/bin/env bash
+	build_timestamp="`date '+%s'`"
 	echo "> Compiling Javascript code (optimised)"
 
 	# Main builds
 	{{ESBUILD}} ./src/Javascript/index.js \
 		--minify \
-		--outfile={{BUILD_DIR}}/ui.js
+		--outfile={{BUILD_DIR}}/ui.js \
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.js \
 		--minify \
@@ -127,7 +134,8 @@ check-versions:
 
 	{{ESBUILD}} ./src/Javascript/Workers/service.js \
 		--minify \
-		--outfile={{BUILD_DIR}}/service-worker.js
+		--outfile={{BUILD_DIR}}/service-worker.js \
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 
 @license:

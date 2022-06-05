@@ -37,6 +37,9 @@ port play : () -> Cmd msg
 port preloadAudio : Queue.EngineItem -> Cmd msg
 
 
+port reloadApp : () -> Cmd msg
+
+
 port seek : Float -> Cmd msg
 
 
@@ -69,6 +72,12 @@ port indicateTouchDevice : (() -> msg) -> Sub msg
 
 
 port insertCoverCache : (Json.Value -> msg) -> Sub msg
+
+
+port installedNewServiceWorker : (() -> msg) -> Sub msg
+
+
+port installingNewServiceWorker : (() -> msg) -> Sub msg
 
 
 port noteProgress : ({ trackId : String, progress : Float } -> msg) -> Sub msg

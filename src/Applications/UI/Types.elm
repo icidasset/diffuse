@@ -4,7 +4,7 @@ import Alfred exposing (Alfred)
 import Browser
 import Browser.Navigation as Nav
 import Color exposing (Color)
-import Common exposing (Switch)
+import Common exposing (ServiceWorkerStatus, Switch)
 import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Debouncer.Basic as Debouncer exposing (Debouncer)
@@ -40,10 +40,13 @@ import Webnative
 
 
 type alias Flags =
-    { darkMode : Bool
+    { buildTimestamp : Int
+    , darkMode : Bool
     , initialTime : Int
+    , isInstallingServiceWorker : Bool -- ie. Installing SW for the first time
     , isOnline : Bool
     , upgrade : Bool
+    , version : String
     , viewport : Viewport
     }
 
@@ -53,8 +56,10 @@ type alias Flags =
 
 
 type alias Model =
-    { confirmation : Maybe String
+    { buildTimestamp : Int
+    , confirmation : Maybe String
     , currentTime : Time.Posix
+    , currentTimeZone : Time.Zone
     , darkMode : Bool
     , downloading : Maybe { notificationId : Int }
     , dnd : DnD.Model Int
@@ -70,8 +75,10 @@ type alias Model =
     , page : Page
     , pressedKeys : List Keyboard.Key
     , processAutomatically : Bool
+    , serviceWorkerStatus : ServiceWorkerStatus
     , uuidSeed : Random.Seed
     , url : Url
+    , version : String
     , viewport : Viewport
 
     -----------------------------------------
@@ -296,7 +303,11 @@ type Msg
       -----------------------------------------
       -- 📭 Other
       -----------------------------------------
+    | InstalledServiceWorker
+    | InstallingServiceWorker
+    | ReloadApp
     | SetCurrentTime Time.Posix
+    | SetCurrentTimeZone Time.Zone
     | SetIsOnline Bool
 
 

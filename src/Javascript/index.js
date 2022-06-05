@@ -15,7 +15,9 @@ import "../../build/vendor/pep"
 
 import * as audioEngine from "./audio-engine"
 import * as db from "./indexed-db"
+import { version } from '../../package.json'
 import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, debounce, fileExtension } from "./common"
+
 
 
 // 🔐
@@ -37,7 +39,6 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("service-worker.js")
-      .then(initialise)
       .catch(err => {
         const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
 
@@ -47,6 +48,11 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
             ? "Failed to start the service worker." + (isFirefox ? " Make sure the setting <strong>Delete cookies and site data when Firefox is closed</strong> is off, or Diffuse's domain is added as an exception." : "")
             : "Failed to start the service worker, try using HTTPS."
         )
+      })
+      .then(initialise)
+      .catch(err => {
+        console.error(err)
+        return failure("<strong>Failed to start the application.</strong><br />See browser console for details.")
       })
   })
 
@@ -65,10 +71,14 @@ function initialise(reg) {
   app = Elm.UI.init({
     node: document.getElementById("elm"),
     flags: {
+      /* eslint-disable no-undef */
+      buildTimestamp: BUILD_TIMESTAMP,
       darkMode: preferredColorScheme().matches,
       initialTime: Date.now(),
+      isInstallingServiceWorker: !!reg.installing,
       isOnline: navigator.onLine,
       upgrade: viableForUpgrade(),
+      version,
       viewport: {
         height: window.innerHeight,
         width: window.innerWidth
@@ -82,6 +92,7 @@ function initialise(reg) {
   wire.brain()
   wire.audio()
   wire.backdrop()
+  wire.broadcastChannel()
   wire.clipboard()
   wire.covers()
   wire.serviceWorker(reg)
@@ -90,6 +101,19 @@ function initialise(reg) {
   // Other ports
   app.ports.openUrlOnNewPage.subscribe(url => {
     window.open(url, "_blank")
+  })
+
+  app.ports.reloadApp.subscribe(_ => {
+    let timeout = setTimeout(() => location.reload(), 250)
+
+    bc.addEventListener("message", event => {
+      if (event.data === "PONG") {
+        clearTimeout(timeout)
+        alert("⚠️ You can only update the app when you have no more than one instance open.")
+      }
+    })
+
+    bc.postMessage("PING")
   })
 }
 
@@ -357,6 +381,22 @@ function pickAverageBackgroundColor(src) {
     const avgColor = averageColorOfImage(img)
     app.ports.setAverageBackgroundColor.send(avgColor)
   }
+}
+
+
+
+// Broadcast channel
+// -----------------
+
+let bc
+
+wire.broadcastChannel = () => {
+  bc = new BroadcastChannel(`Diffuse-${location.hostname}`)
+  bc.addEventListener("message", event => {
+    switch (event.data) {
+      case "PING": return bc.postMessage("PONG")
+    }
+  })
 }
 
 
@@ -847,10 +887,12 @@ wire.serviceWorker = async (reg) => {
     // No worker was installed yet, so we'll only want to track the state changes
     if (newWorker !== initialInstall) {
       console.log("🧑‍✈️ A new version of Diffuse is available")
+      app.ports.installingNewServiceWorker.send(null)
     }
 
     newWorker.addEventListener("statechange", (e) => {
       console.log("🧑‍✈️ Service worker is", e.target.state)
+      if (e.target.state === "installed") app.ports.installedNewServiceWorker.send(null)
     })
   })
 

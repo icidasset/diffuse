@@ -1,8 +1,9 @@
 module UI.Other.State exposing (..)
 
 import Alien
+import Common exposing (ServiceWorkerStatus(..))
 import Notifications
-import Return
+import Return exposing (return)
 import Time
 import UI.Authentication.Types as Authentication
 import UI.Common.State as Common
@@ -13,6 +14,21 @@ import User.Layer exposing (..)
 
 
 -- 🔱
+
+
+installedServiceWorker : Manager
+installedServiceWorker model =
+    Return.singleton { model | serviceWorkerStatus = WaitingForActivation }
+
+
+installingServiceWorker : Manager
+installingServiceWorker model =
+    Return.singleton { model | serviceWorkerStatus = InstallingNew }
+
+
+reloadApp : Manager
+reloadApp model =
+    return model (Ports.reloadApp ())
 
 
 setIsOnline : Bool -> Manager
@@ -51,6 +67,11 @@ setIsOnline bool model =
 setCurrentTime : Time.Posix -> Manager
 setCurrentTime time model =
     Return.singleton { model | currentTime = time }
+
+
+setCurrentTimeZone : Time.Zone -> Manager
+setCurrentTimeZone zone model =
+    Return.singleton { model | currentTimeZone = zone }
 
 
 

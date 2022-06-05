@@ -176,11 +176,16 @@ defaultScreen model =
                 Lazy.lazy2 Settings.view
                     subPage
                     { authenticationMethod = Authentication.extractMethod model.authentication
+                    , buildTimestamp = model.buildTimestamp
                     , chosenBackgroundImage = model.chosenBackdrop
+                    , currentTimeZone = model.currentTimeZone
+                    , extractedBackdropColor = model.extractedBackdropColor
                     , hideDuplicateTracks = model.hideDuplicates
                     , lastFm = model.lastFm
                     , processAutomatically = model.processAutomatically
                     , rememberProgress = model.rememberProgress
+                    , serviceWorkerStatus = model.serviceWorkerStatus
+                    , version = model.version
                     }
 
             Page.Sources subPage ->

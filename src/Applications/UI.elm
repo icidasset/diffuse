@@ -4,7 +4,7 @@ import Alien
 import Browser
 import Browser.Events
 import Browser.Navigation as Nav
-import Common exposing (Switch(..))
+import Common exposing (ServiceWorkerStatus(..), Switch(..))
 import Debouncer.Basic as Debouncer
 import Dict
 import Equalizer
@@ -82,9 +82,18 @@ init flags url key =
 
         page =
             Maybe.withDefault Page.Index maybePage
+
+        serviceWorkerStatus =
+            if flags.isInstallingServiceWorker then
+                InstallingInitial
+
+            else
+                Activated
     in
-    { confirmation = Nothing
+    { buildTimestamp = flags.buildTimestamp
+    , confirmation = Nothing
     , currentTime = Time.millisToPosix flags.initialTime
+    , currentTimeZone = Time.utc
     , darkMode = flags.darkMode
     , downloading = Nothing
     , dnd = DnD.initialModel
@@ -100,8 +109,10 @@ init flags url key =
     , page = page
     , pressedKeys = []
     , processAutomatically = True
+    , serviceWorkerStatus = serviceWorkerStatus
     , uuidSeed = Random.initialSeed flags.initialTime
     , url = url
+    , version = flags.version
     , viewport = flags.viewport
 
     -----------------------------------------
@@ -228,6 +239,8 @@ init flags url key =
             )
         |> Return.command
             (Task.perform SetCurrentTime Time.now)
+        |> Return.command
+            (Task.perform SetCurrentTimeZone Time.here)
 
 
 
@@ -510,8 +523,20 @@ update msg =
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
+        InstalledServiceWorker ->
+            Other.installedServiceWorker
+
+        InstallingServiceWorker ->
+            Other.installingServiceWorker
+
+        ReloadApp ->
+            Other.reloadApp
+
         SetCurrentTime a ->
             Other.setCurrentTime a
+
+        SetCurrentTimeZone a ->
+            Other.setCurrentTimeZone a
 
         SetIsOnline a ->
             Other.setIsOnline a
@@ -576,6 +601,8 @@ subscriptions _ =
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
+        , Ports.installedNewServiceWorker (\_ -> InstalledServiceWorker)
+        , Ports.installingNewServiceWorker (\_ -> InstallingServiceWorker)
         , Ports.setIsOnline SetIsOnline
         , Ports.webnativeResponse GotWebnativeResponse
         , Sub.map KeyboardMsg Keyboard.subscriptions
