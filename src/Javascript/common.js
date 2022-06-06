@@ -4,7 +4,7 @@
 
 
 export const WEBNATIVE_STAGING_MODE = (
-  location.host === "localhost:5000"
+  location.host === "localhost:8000"
 )
 
 

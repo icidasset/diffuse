@@ -210,8 +210,8 @@ js-prod: vendor-js
 
 
 @server:
-	echo "> Booting up web server on port 5000"
-	nix-shell --run "simple-http-server --port 5000 --try-file {{BUILD_DIR}}/301.html --cors --index --nocache --silent -- {{BUILD_DIR}}"
+	echo "> Booting up web server on port 8000"
+	nix-shell --run "simple-http-server --port 8000 --try-file {{BUILD_DIR}}/301.html --cors --index --nocache --silent -- {{BUILD_DIR}}"
 
 
 @tauri-dev:
