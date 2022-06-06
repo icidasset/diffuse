@@ -18,7 +18,12 @@ import User.Layer exposing (..)
 
 installedServiceWorker : Manager
 installedServiceWorker model =
-    Return.singleton { model | serviceWorkerStatus = WaitingForActivation }
+    case model.serviceWorkerStatus of
+        InstallingNew ->
+            Return.singleton { model | serviceWorkerStatus = WaitingForActivation }
+
+        _ ->
+            Return.singleton { model | serviceWorkerStatus = Activated }
 
 
 installingServiceWorker : Manager
