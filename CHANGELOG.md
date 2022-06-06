@@ -6,7 +6,6 @@
 - **Adds a command palette.**
 - **Adds app version info and an update button to the settings page.**
 - Correctly scrobbles repeated tracks with Last.fm
-- Disables single-audio-node mode on Safari & iOS (ie. preloading now works)
 - Fixes Fission integration
 - Fixes issue with search where you couldn't have the `:` character in your search term
 - Improves detection of new versions and upgrading in the background (ie. service worker)
