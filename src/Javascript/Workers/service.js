@@ -46,7 +46,7 @@ self.addEventListener("install", event => {
 })
 
 
-self.addEventListener("fetch", async event => {
+self.addEventListener("fetch", event => {
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
@@ -81,29 +81,23 @@ self.addEventListener("fetch", async event => {
       "Bearer " + token
     )
 
-  // When refreshing the page to update the app
-  } else if (
-    event.request.mode === "navigate" &&
-    event.request.method === "GET" &&
-    registration.waiting &&
-    (await clients.matchAll()).length < 2
-  ) {
-    registration.waiting.postMessage("skipWaiting")
-    event.respondWith(new Response("", { headers: { "Refresh": "0" } }))
-
   // Use cache if internal request
   } else if (isInternal) {
-    let url = new URL(event.request.url)
-    url.search = ""
+    event.respondWith( cacheThenNetwork(event) )
 
-    event.respondWith(
-      caches
-        .open(KEY)
-        .then(cache => cache.match(url))
-        .then(match => match || fetch(url))
-    )
   }
 })
+
+
+function cacheThenNetwork(event) {
+  let url = new URL(event.request.url)
+  url.search = ""
+
+  return caches
+    .open(KEY)
+    .then(cache => cache.match(url))
+    .then(match => match || fetch(url))
+}
 
 
 addEventListener("message", event => {

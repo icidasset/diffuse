@@ -104,7 +104,10 @@ function initialise(reg) {
   })
 
   app.ports.reloadApp.subscribe(_ => {
-    let timeout = setTimeout(() => location.reload(), 250)
+    let timeout = setTimeout(() => {
+      if (reg.waiting) reg.waiting.postMessage("skipWaiting")
+      location.reload()
+    }, 250)
 
     bc.addEventListener("message", event => {
       if (event.data === "PONG") {
@@ -907,6 +910,7 @@ wire.serviceWorker = async (reg) => {
 // ------------
 
 window.addEventListener("touchstart", function onFirstTouch() {
+  if (!app) return
   app.ports.indicateTouchDevice.send(null)
   window.removeEventListener("touchstart", onFirstTouch, false)
 }, false)
