@@ -22,7 +22,7 @@ const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
 // Audio context
 // -------------
 
-let SINGLE_AUDIO_NODE = false
+let SINGLE_AUDIO_NODE = IS_SAFARI
 
 
 export function usesSingleAudioNode() {
@@ -126,7 +126,10 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
     queueItem =
       Object.assign({}, queueItem, { url: url })
 
-    if ((audioNode = audioElementsContainer.querySelector("audio")) && SINGLE_AUDIO_NODE) {
+    audioNode =
+      audioElementsContainer.querySelector("audio")
+
+    if (SINGLE_AUDIO_NODE && audioNode) {
       audioNode.setAttribute("src", queueItem.url)
       audioNode.setAttribute("rel", queueItem.trackId)
       audioNode.load()
