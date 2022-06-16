@@ -12,7 +12,7 @@ fn main() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_localhost::Localhost::new(port))
-        .plugin(tauri_plugin_window_state::WindowState::default())
+        // .plugin(tauri_plugin_window_state::WindowState::default())
         .setup(move |app| {
             let w = tauri::window::WindowBuilder::new(
                     app,
