@@ -12,15 +12,15 @@ fn main() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_localhost::Localhost::new(port))
-        // .plugin(tauri_plugin_window_state::WindowState::default())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(move |app| {
             let w = tauri::window::WindowBuilder::new(
-                    app,
-                    "main",
-                    WindowUrl::External(
-                        format!("http://localhost:{}", port).parse().unwrap()
-                    )
+                app,
+                "main",
+                WindowUrl::External(
+                    format!("http://localhost:{}", port).parse().unwrap()
                 )
+            )
                 .title("Diffuse")
                 .menu(menu())
                 .maximized(true)
@@ -28,7 +28,7 @@ fn main() {
                 .build()
                 .unwrap();
 
-            // Scale window to a bit smaller than screen size
+            // // Scale window to a bit smaller than screen size
             // let monitor = w.current_monitor().unwrap().unwrap();
             // let screen_size = tauri::window::Monitor::size(&monitor);
 
@@ -38,7 +38,7 @@ fn main() {
             // }))
             // .unwrap();
 
-            // Put the window in the middle of the screen
+            // // Put the window in the middle of the screen
             // let window_offset = Position::Physical(PhysicalPosition { x: 30, y: 30 });
 
             // w.set_position(window_offset).unwrap();
