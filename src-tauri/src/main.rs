@@ -14,7 +14,6 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_localhost::Localhost::new(port))
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .menu(tauri::Menu::os_default(&context.package_info().name))
         .setup(move |app| {
             WindowBuilder::new(
                 app,
@@ -26,11 +25,24 @@ fn main() {
                 .title("Diffuse")
                 .maximized(true)
                 .resizable(true)
+                .theme(None)
                 .build()?;
 
             // Fin
             Ok(())
         })
+        // .on_window_event(|event| match event.event() {
+
+        //     tauri::WindowEvent::ThemeChanged(theme) => {
+        //         if !focused {
+        //             event.window().hide().unwrap();
+        //         }
+
+        //     }
+
+        //     _ => {}
+
+        // })
         .run(context)
         .expect("Error while running tauri application");
 }
