@@ -1,4 +1,4 @@
-resolver: nightly-2022-07-23
+resolver: lts-19.16
 recommend-stack-upgrade: false
 allow-newer: true
 

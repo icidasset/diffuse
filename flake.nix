@@ -1,23 +1,25 @@
 {
   description = "diffuse";
 
+
+  # Inputs
+  # ======
+
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/release-22.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-
-    # Dependencies
-    # ------------
     rust-overlay.url = "github:oxalica/rust-overlay";
-
-    # Getting build errors with watchexec from Nix channel
-    # watchexec.url = "github:watchexec/watchexec";
   };
+
+
+  # Outputs
+  # =======
 
   outputs = { self, nixpkgs, flake-utils, rust-overlay }:
     flake-utils.lib.simpleFlake {
       inherit self nixpkgs;
       name = "diffuse";
-      shell = ./shell.nix;
+      shell = ./nix/shell.nix;
       preOverlays = [ (import rust-overlay) ];
     };
 }
