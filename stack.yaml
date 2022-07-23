@@ -1,10 +1,6 @@
-resolver: nightly-2021-12-26
+resolver: lts-19.16
 recommend-stack-upgrade: false
-
-# nix:
-#   enable: true
+allow-newer: true
 
 extra-deps:
-  - aeson-2.0.2.0
-  - protolude-0.2.4
-  - shikensu-0.4.0
+  - protolude-0.3.2
