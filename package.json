@@ -22,7 +22,7 @@
     "tailwindcss-interaction-variants": "^5.0.0"
   },
   "dependencies": {
-    "@tokenizer/http": "^0.6.0",
+    "@tokenizer/http": "^0.6.2",
     "delay": "^5.0.0",
     "fast-text-encoding": "^1.0.3",
     "file-saver": "^2.0.2",
