@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.1
+
+- Fixes Google Drive CORS issue
+
 ## 3.1.0
 
 - **Removes usage of the Web Audio API, just uses `<audio>` elements now so that Diffuse can be played in the background on iOS.** _Sadly this also means the equalizer has been removed, but a better volume control has been added instead, one that doesn't move away from the tracks view._
