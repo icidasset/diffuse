@@ -118,8 +118,7 @@ function newRequestWithAuth(event, urlWithoutToken, authToken, mode) {
   const newRequest = new Request(new Request(urlWithoutToken, event.request), {
     headers: newHeaders,
     mode: mode || "cors",
-    cache: "no-cache",
-    credentials: "include"
+    cache: "no-cache"
   })
 
   event.respondWith(fetch(newRequest))
