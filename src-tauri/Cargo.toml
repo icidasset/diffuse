@@ -1,6 +1,6 @@
 [package]
 name = "diffuse"
-version = "3.1.0"
+version = "3.1.1"
 description = "A music player that connects to your cloud/distributed storage"
 authors = ["you"]
 license = ""

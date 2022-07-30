@@ -2,7 +2,7 @@
 
 ## 3.1.1
 
-- Fixes Google Drive CORS issue
+Fixes Google Drive CORS issue.
 
 ## 3.1.0
 
