@@ -3,8 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-
-use tauri::{utils::config::AppUrl, WindowBuilder, WindowUrl};
+use tauri::{utils::config::AppUrl, Runtime, Window, WindowBuilder, WindowEvent, WindowUrl};
 
 
 // #[tauri::command]
@@ -33,16 +32,82 @@ fn main() {
         .setup(move |app| {
             // http.start(app.handle());
 
-            WindowBuilder::new(app, "main", window_url)
+            let win = WindowBuilder::new(app, "main", window_url)
                 .title("Diffuse")
                 .maximized(true)
                 .resizable(true)
                 .theme(None)
                 .build()?;
 
+            win.set_transparent_titlebar(ToolbarThickness::Thin);
+
             // Fin
             Ok(())
         })
         .run(context)
         .expect("Error while running tauri application");
+}
+
+
+
+// TRANSPARENT WINDOW
+
+
+#[allow(dead_code)]
+pub enum ToolbarThickness {
+    Thick,
+    Medium,
+    Thin,
+}
+
+pub trait WindowExt {
+    #[cfg(target_os = "macos")]
+    fn disable_transparent_titlebar(&self);
+    fn set_transparent_titlebar(&self, thickness: ToolbarThickness);
+}
+
+impl<R: Runtime> WindowExt for Window<R> {
+    #[cfg(target_os = "macos")]
+    fn set_transparent_titlebar(&self, thickness: ToolbarThickness) {
+        use cocoa::appkit::{NSWindow, NSWindowTitleVisibility};
+
+        unsafe {
+            let id = self.ns_window().unwrap() as cocoa::base::id;
+
+            id.setTitlebarAppearsTransparent_(cocoa::base::YES);
+
+            match thickness {
+                ToolbarThickness::Thick => {
+                    self.set_title("").expect("Title wasn't set to ''");
+                    make_toolbar(id);
+                }
+                ToolbarThickness::Medium => {
+                    id.setTitleVisibility_(NSWindowTitleVisibility::NSWindowTitleHidden);
+                    make_toolbar(id);
+                }
+                ToolbarThickness::Thin => {
+                    id.setTitleVisibility_(NSWindowTitleVisibility::NSWindowTitleHidden);
+                }
+            }
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    fn disable_transparent_titlebar(&self) {
+        use cocoa::appkit::{NSWindow};
+
+        unsafe {
+            let id = self.ns_window().unwrap() as cocoa::base::id;
+            id.setTitlebarAppearsTransparent_(cocoa::base::NO)
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn make_toolbar(id: cocoa::base::id) {
+    use cocoa::appkit::{NSToolbar, NSWindow};
+
+    let new_toolbar = NSToolbar::alloc(id);
+    new_toolbar.init_();
+    id.setToolbar_(new_toolbar);
 }
