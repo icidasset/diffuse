@@ -12,7 +12,7 @@ fn main() {
     let context = tauri::generate_context!("tauri.conf.json");
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_localhost::Localhost::new(port))
+        .plugin(tauri_plugin_localhost::Builder::new(port).build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(move |app| {
             WindowBuilder::new(

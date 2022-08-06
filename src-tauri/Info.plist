@@ -21,5 +21,9 @@
       </dict>
     </dict>
   </dict>
+  <key>WKAppBoundDomains</key>
+  <array>
+    <string>localhost</string>
+  </array>
 </dict>
 </plist>
