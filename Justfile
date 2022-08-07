@@ -206,8 +206,6 @@ js-prod: vendor-js
 	just download-vendor-dep pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
 	just download-vendor-dep ipfs.min.js https://unpkg.com/ipfs@0.62.3/index.min.js
 
-	just install-tauri-cli
-
 
 @install-tauri-cli:
 	cargo install tauri-cli --version "^1.0.5" --root ./src-tauri
