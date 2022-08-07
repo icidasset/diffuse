@@ -15,7 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: jlumbroso/free-disk-space@main
 
       # Nix
       - uses: cachix/install-nix-action@v16
