@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{utils::config::AppUrl, Runtime, Window, WindowBuilder, WindowEvent, WindowUrl};
+use tauri::{utils::config::AppUrl, Runtime, Window, WindowBuilder, WindowUrl};
 
 
 // #[tauri::command]
