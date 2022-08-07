@@ -26,6 +26,13 @@ jobs:
           name: diffuse
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
+      # Cache
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.stack
+          key: ${{ runner.os }}-stack
+
       # Tasks
       - run: nix-shell --run "just install-deps"
       - run: nix-shell --run "just build-prod"
@@ -129,6 +136,9 @@ jobs:
           name: build
           path: build/
 
+      # Install Tauri CLI
+      - run: just install-tauri-cli
+
       # Make a build
       - run: just tauri-build
         if: matrix.os != 'macos-latest'
@@ -146,7 +156,9 @@ jobs:
           prerelease: true
 
           files: |
-            src-tauri/target/debug/bundle/appimage/*.AppImage
-            src-tauri/target/debug/bundle/deb/*.deb
-            src-tauri/target/debug/bundle/dmg/*.dmg
-            src-tauri/target/debug/bundle/macos/*.app
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/macos/*.app
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app
