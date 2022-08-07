@@ -76,7 +76,7 @@ jobs:
         uses: martinbeentjes/npm-get-version-action@v1.1.0
 
       # Create release
-      - uses: softprops/action-gh-release@v0.1.7
+      - uses: softprops/action-gh-release@v1
         id: create_release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -85,7 +85,6 @@ jobs:
           name: "v${{ steps.package-version.outputs.current-version }}"
           body: "See the assets to download this version and install."
           draft: true
-          prerelease: true
 
           files: |
             compressed/diffuse-web.zip
