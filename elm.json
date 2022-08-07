@@ -32,7 +32,7 @@
             "elm-community/list-extra": "8.5.2",
             "elm-community/maybe-extra": "5.3.0",
             "elm-explorations/markdown": "1.0.0",
-            "fission-suite/webnative-elm": "7.0.0",
+            "fission-codes/webnative-elm": "1.0.0",
             "icidasset/elm-binary": "2.1.0",
             "icidasset/elm-material-icons": "9.0.0",
             "icidasset/elm-sha": "2.0.2",
