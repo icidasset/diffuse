@@ -15,6 +15,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: jlumbroso/free-disk-space@main
 
       # Nix
       - uses: cachix/install-nix-action@v16
@@ -25,13 +26,6 @@ jobs:
         with:
           name: diffuse
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
-      # Cache
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: |
-      #       ~/.stack
-      #     key: ${{ runner.os }}-stack
 
       # Tasks
       - run: nix-shell --run "just install-deps"
