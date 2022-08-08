@@ -155,7 +155,6 @@ jobs:
 
           tag_name: "${{ needs.create-release.outputs.TAG_NAME }}"
           draft: true
-          prerelease: false
 
           files: |
             src-tauri/target/release/bundle/appimage/*.AppImage
