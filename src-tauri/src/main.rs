@@ -6,16 +6,8 @@
 use tauri::{utils::config::AppUrl, Runtime, Window, WindowBuilder, WindowUrl};
 
 
-// #[tauri::command]
-// fn my_command(args: u64) -> Result<String, ()> {
-//   println!("executed command with args {:?}", args);
-//   Ok("executed".into())
-// }
-
-
 fn main() {
     let port = 44999;
-    // let http = tauri_invoke_http::Invoke::new(["http://localhost:44998"]);
     let mut context = tauri::generate_context!("tauri.conf.json");
 
     let url = format!("http://localhost:{}", port).parse().unwrap();
@@ -25,13 +17,9 @@ fn main() {
     context.config_mut().build.dev_path = AppUrl::Url(window_url.clone());
 
     tauri::Builder::default()
-        // .invoke_system(http.initialization_script(), http.responder())
-        // .invoke_handler(tauri::generate_handler![my_command])
         .plugin(tauri_plugin_localhost::Builder::new(port).build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(move |app| {
-            // http.start(app.handle());
-
             let win = WindowBuilder::new(app, "main", window_url)
                 .title("Diffuse")
                 .maximized(true)
@@ -62,7 +50,6 @@ pub enum ToolbarThickness {
 
 pub trait WindowExt {
     #[cfg(target_os = "macos")]
-    fn disable_transparent_titlebar(&self);
     fn set_transparent_titlebar(&self, thickness: ToolbarThickness);
 }
 
@@ -92,15 +79,8 @@ impl<R: Runtime> WindowExt for Window<R> {
         }
     }
 
-    #[cfg(target_os = "macos")]
-    fn disable_transparent_titlebar(&self) {
-        use cocoa::appkit::{NSWindow};
-
-        unsafe {
-            let id = self.ns_window().unwrap() as cocoa::base::id;
-            id.setTitlebarAppearsTransparent_(cocoa::base::NO)
-        }
-    }
+    #[cfg(not(target_os = "macos"))]
+    fn set_transparent_titlebar(&self, thickness: ToolbarThickness) {}
 }
 
 #[cfg(target_os = "macos")]
