@@ -148,14 +148,14 @@ jobs:
       - run: just tauri-build-universal
         if: matrix.os == 'macos-latest'
 
-      # Upload artifacts (MacOS)
-      - uses: softprops/action-gh-release@v0.1.7
+      # Upload artifacts
+      - uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
           tag_name: "${{ needs.create-release.outputs.TAG_NAME }}"
           draft: true
-          prerelease: true
+          prerelease: false
 
           files: |
             src-tauri/target/release/bundle/appimage/*.AppImage
