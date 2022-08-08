@@ -130,7 +130,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          working-directory: src-tauri
+          workspaces: "src-tauri -> target"
 
       # Download artifacts
       - uses: actions/download-artifact@v2

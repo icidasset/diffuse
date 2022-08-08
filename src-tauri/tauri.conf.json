@@ -7,7 +7,7 @@
     "devPath": "../build",
     "beforeDevCommand": "",
     "beforeBuildCommand": "",
-    "withGlobalTauri": true
+    "withGlobalTauri": false
   },
   "tauri": {
     "bundle": {

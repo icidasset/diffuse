@@ -150,13 +150,13 @@ js-prod: vendor-js
 
 @tauri-build:
 	echo "> Building Tauri binaries"
-	./src-tauri/bin/cargo-tauri tauri build
+	./src-tauri/bin/cargo-tauri tauri build --config ./src-tauri/tauri.conf.json
 
 
 @tauri-build-universal:
 	echo "> Building Tauri binaries (Universal MacOS build)"
 	rustup target add aarch64-apple-darwin
-	./src-tauri/bin/cargo-tauri tauri build --target universal-apple-darwin
+	./src-tauri/bin/cargo-tauri tauri build --target universal-apple-darwin --config ./src-tauri/tauri.conf.json
 
 
 @vendor-js:
