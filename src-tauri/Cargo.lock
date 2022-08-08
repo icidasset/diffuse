@@ -545,7 +545,6 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
- "tauri-invoke-http",
  "tauri-plugin-localhost",
  "tauri-plugin-window-state",
  "window-shadows",
@@ -1951,15 +1950,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "portpicker"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be97d76faf1bfab666e1375477b23fde79eccf0276e9b63b92a39d676a889ba9"
-dependencies = [
- "rand 0.8.5",
-]
-
-[[package]]
 name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2753,17 +2743,6 @@ dependencies = [
  "time",
  "uuid 1.1.2",
  "walkdir",
-]
-
-[[package]]
-name = "tauri-invoke-http"
-version = "0.0.0"
-source = "git+https://github.com/tauri-apps/tauri-invoke-http?branch=dev#c4e8ac118908f40d570e1175f63395e6277eb97e"
-dependencies = [
- "portpicker",
- "serde_json",
- "tauri",
- "tiny_http",
 ]
 
 [[package]]
