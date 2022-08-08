@@ -3,86 +3,90 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{PhysicalPosition, PhysicalSize, Position, Size};
-use tauri::{Manager, Menu, MenuItem, Submenu};
-use tauri::{WindowBuilder, WindowUrl};
+use tauri::{utils::config::AppUrl, Runtime, Window, WindowBuilder, WindowUrl};
 
 
 fn main() {
     let port = 44999;
+    let mut context = tauri::generate_context!("tauri.conf.json");
+
+    let url = format!("http://localhost:{}", port).parse().unwrap();
+    let window_url = WindowUrl::External(url);
+
+    context.config_mut().build.dist_dir = AppUrl::Url(window_url.clone());
+    context.config_mut().build.dev_path = AppUrl::Url(window_url.clone());
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_localhost::Localhost::new(port))
-        .plugin(tauri_plugin_window_state::WindowState::default())
-        .create_window(
-            "main",
-            WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
-            |window_builder, webview_attributes| {
-                let win = window_builder
-                    .title("Diffuse")
-                    .menu(menu())
-                    .maximized(true)
-                    .resizable(true);
-
-                return (win, webview_attributes);
-            },
-        )
-        .unwrap()
+        .plugin(tauri_plugin_localhost::Builder::new(port).build())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(move |app| {
-            let w = app.get_window("main").unwrap();
+            let win = WindowBuilder::new(app, "main", window_url)
+                .title("Diffuse")
+                .maximized(true)
+                .resizable(true)
+                .theme(None)
+                .build()?;
 
-            // Scale window to a bit smaller than screen size
-            let monitor = w.current_monitor().unwrap().unwrap();
-            let screen_size = tauri::window::Monitor::size(&monitor);
-
-            w.set_size(Size::Physical(PhysicalSize {
-                width: screen_size.width - 60,
-                height: screen_size.height - 60 - 50,
-            }))
-            .unwrap();
-
-            // Put the window in the middle of the screen
-            let window_offset = Position::Physical(PhysicalPosition { x: 30, y: 30 });
-
-            w.set_position(window_offset).unwrap();
+            win.set_transparent_titlebar(ToolbarThickness::Thin);
 
             // Fin
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("Error while running tauri application");
 }
 
-/**
- * Menu
- */
-fn menu() -> Menu {
-    let app_menu = Menu::new()
-        .add_native_item(MenuItem::Hide)
-        .add_native_item(MenuItem::Services)
-        .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::Quit);
 
-    let file_menu = Menu::new().add_native_item(MenuItem::CloseWindow);
 
-    let edit_menu = Menu::new()
-        .add_native_item(MenuItem::Undo)
-        .add_native_item(MenuItem::Redo)
-        .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::Cut)
-        .add_native_item(MenuItem::Copy)
-        .add_native_item(MenuItem::Paste)
-        .add_native_item(MenuItem::SelectAll);
+// TRANSPARENT WINDOW
 
-    let window_menu = Menu::new()
-        .add_native_item(MenuItem::Minimize)
-        .add_native_item(MenuItem::Zoom)
-        .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::ShowAll);
 
-    Menu::new()
-        .add_submenu(Submenu::new("Diffuse", app_menu))
-        .add_submenu(Submenu::new("File", file_menu))
-        .add_submenu(Submenu::new("Edit", edit_menu))
-        .add_submenu(Submenu::new("Window", window_menu))
+#[allow(dead_code)]
+pub enum ToolbarThickness {
+    Thick,
+    Medium,
+    Thin,
+}
+
+pub trait WindowExt {
+    fn set_transparent_titlebar(&self, thickness: ToolbarThickness);
+}
+
+impl<R: Runtime> WindowExt for Window<R> {
+    #[cfg(target_os = "macos")]
+    fn set_transparent_titlebar(&self, thickness: ToolbarThickness) {
+        use cocoa::appkit::{NSWindow, NSWindowTitleVisibility};
+
+        unsafe {
+            let id = self.ns_window().unwrap() as cocoa::base::id;
+
+            id.setTitlebarAppearsTransparent_(cocoa::base::YES);
+
+            match thickness {
+                ToolbarThickness::Thick => {
+                    self.set_title("").expect("Title wasn't set to ''");
+                    make_toolbar(id);
+                }
+                ToolbarThickness::Medium => {
+                    id.setTitleVisibility_(NSWindowTitleVisibility::NSWindowTitleHidden);
+                    make_toolbar(id);
+                }
+                ToolbarThickness::Thin => {
+                    id.setTitleVisibility_(NSWindowTitleVisibility::NSWindowTitleHidden);
+                }
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn set_transparent_titlebar(&self, _thickness: ToolbarThickness) {}
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn make_toolbar(id: cocoa::base::id) {
+    use cocoa::appkit::{NSToolbar, NSWindow};
+
+    let new_toolbar = NSToolbar::alloc(id);
+    new_toolbar.init_();
+    id.setToolbar_(new_toolbar);
 }

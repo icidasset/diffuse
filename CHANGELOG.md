@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.2.0
+
+Native builds with [Tauri](https://tauri.app/).
+
+
 ## 3.1.1
 
 Fixes Google Drive CORS issue.

@@ -32,6 +32,10 @@
 /* Base
    ---- */
 
+:root {
+  color-scheme: light dark;
+}
+
 html,
 body {
   height: calc(var(--vh, 1vh) * 100);

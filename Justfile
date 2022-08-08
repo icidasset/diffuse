@@ -150,7 +150,13 @@ js-prod: vendor-js
 
 @tauri-build:
 	echo "> Building Tauri binaries"
-	./src-tauri/bin/cargo-tauri tauri build # --target universal-apple-darwin
+	./src-tauri/bin/cargo-tauri tauri build --config ./src-tauri/tauri.conf.json
+
+
+@tauri-build-universal:
+	echo "> Building Tauri binaries (Universal MacOS build)"
+	rustup target add aarch64-apple-darwin
+	./src-tauri/bin/cargo-tauri tauri build --target universal-apple-darwin --config ./src-tauri/tauri.conf.json
 
 
 @vendor-js:
@@ -200,7 +206,9 @@ js-prod: vendor-js
 	just download-vendor-dep pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
 	just download-vendor-dep ipfs.min.js https://unpkg.com/ipfs@0.62.3/index.min.js
 
-	cargo install tauri-cli --version "^1.0.0-rc.6" --root ./src-tauri
+
+@install-tauri-cli:
+	cargo install tauri-cli --version "^1.0.5" --root ./src-tauri
 
 
 @quality: check-versions
