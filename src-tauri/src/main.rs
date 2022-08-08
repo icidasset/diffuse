@@ -79,7 +79,7 @@ impl<R: Runtime> WindowExt for Window<R> {
     }
 
     #[cfg(not(target_os = "macos"))]
-    fn set_transparent_titlebar(&self, thickness: ToolbarThickness) {}
+    fn set_transparent_titlebar(&self, _thickness: ToolbarThickness) {}
 }
 
 #[cfg(target_os = "macos")]
