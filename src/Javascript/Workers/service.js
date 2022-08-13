@@ -18,6 +18,9 @@ const EXCLUDE =
   ]
 
 
+const isNativeWrapper = location.host === "localhost:44999" || location.host === "127.0.0.1:44999"
+
+
 
 // 📣
 
@@ -33,6 +36,10 @@ self.addEventListener("activate", _event => {
 
 
 self.addEventListener("install", event => {
+  if (isNativeWrapper) {
+    return self.skipWaiting()
+  }
+
   const href = self.location.href.replace("service-worker.js", "")
   const promise = fetch("tree.json")
     .then(response => response.json())
@@ -49,9 +56,6 @@ self.addEventListener("install", event => {
 self.addEventListener("fetch", event => {
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
-
-  // const isOffline =
-  //   !self.navigator.onLine
 
   // When doing a request with basic authentication in the url, put it in the headers instead
   if (event.request.url.includes("service_worker_authentication=")) {
@@ -81,9 +85,13 @@ self.addEventListener("fetch", event => {
       "Bearer " + token
     )
 
-  // Use cache if internal request
+  // Use cache if internal request and not using native app
   } else if (isInternal) {
-    event.respondWith( cacheThenNetwork(event) )
+    event.respondWith(
+      isNativeWrapper
+        ? cacheThenNetwork(event)
+        : network(event)
+    )
 
   }
 })
@@ -97,6 +105,11 @@ function cacheThenNetwork(event) {
     .open(KEY)
     .then(cache => cache.match(url))
     .then(match => match || fetch(url))
+}
+
+
+function network(event) {
+  return fetch(event.request.url)
 }
 
 

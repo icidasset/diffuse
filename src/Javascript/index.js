@@ -20,6 +20,13 @@ import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, debounce, fileExtension 
 
 
 
+// 🌸
+
+
+const isNativeWrapper = location.host === "localhost:44999" || location.host === "127.0.0.1:44999"
+
+
+
 // 🔐
 
 
@@ -38,7 +45,16 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
 } else if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("service-worker.js")
+      .getRegistrations()
+      .then(registrations => {
+        // native app should not have to install a new service worker
+        if (isNativeWrapper) {
+          return Promise.all(registrations.map(r => r.unregister()))
+        }
+
+        return Promise.resolve([])
+      })
+      .then(_ => navigator.serviceWorker.register("service-worker.js"))
       .catch(err => {
         const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
 
@@ -900,8 +916,10 @@ wire.serviceWorker = async (reg) => {
   })
 
   // Check for service worker updates and every hour after that
-  reg.update()
-  setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
+  if (!isNativeWrapper) {
+    reg.update()
+    setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
+  }
 }
 
 
