@@ -89,8 +89,8 @@ self.addEventListener("fetch", event => {
   } else if (isInternal) {
     event.respondWith(
       isNativeWrapper
-        ? cacheThenNetwork(event)
-        : network(event)
+        ? network(event)
+        : cacheThenNetwork(event)
     )
 
   }
