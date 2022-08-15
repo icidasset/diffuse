@@ -180,6 +180,7 @@ function newRequestWithAuth(event, urlWithoutToken, authToken) {
       })
     }
   }).catch(err => {
+    // Safari keeps getting weird CORS errors from Google Drive, after some time they disappear 🤷‍♂️
     retries++
     if (retries <= 1000) return new Promise((resolve, reject) => setTimeout(makeFetch().then(resolve, reject), 1000))
     else throw new Error(err)
