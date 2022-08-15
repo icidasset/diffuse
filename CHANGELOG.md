@@ -2,7 +2,8 @@
 
 ## 3.2.0
 
-Native builds with [Tauri](https://tauri.app/).
+- **__**Native builds with [Tauri](https://tauri.app/)**.
+- Fixes playback issue with Google Drive on Safari/iOS.
 
 
 ## 3.1.1
