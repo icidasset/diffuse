@@ -130,6 +130,8 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
       audioElementsContainer.querySelector("audio")
 
     if (SINGLE_AUDIO_NODE && audioNode) {
+      const crossorigin = isCrossOrginUrl(queueItem.url) ? "use-credentials" : "anonymous"
+      audioNode.setAttribute("crossorigin", crossorigin)
       audioNode.setAttribute("src", queueItem.url)
       audioNode.setAttribute("rel", queueItem.trackId)
       audioNode.load()
@@ -169,9 +171,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
     if (is) fn.call(orchestrion, event)
   }
 
-  const crossorigin = queueItem.url.includes("service_worker_authentication")
-    ? "use-credentials"
-    : "anonymous"
+  const crossorigin = isCrossOrginUrl(queueItem.url) ? "use-credentials" : "anonymous"
 
   audio = new Audio()
   audio.setAttribute("crossorigin", crossorigin)
@@ -234,6 +234,11 @@ export function seek(audio, percentage) {
     if (audio.paused) audio.play()
     audio.currentTime = audio.duration * percentage
   }
+}
+
+
+export function isCrossOrginUrl(url) {
+  return url.includes("service_worker_authentication")
 }
 
 

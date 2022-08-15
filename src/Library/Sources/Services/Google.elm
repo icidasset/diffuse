@@ -306,6 +306,6 @@ makeTrackUrl _ srcData _ path =
     String.concat
         [ "https://www.googleapis.com/drive/v3/files/"
         , Url.percentEncode fileId
-        , "?alt=media&access_token="
+        , "?alt=media&bearer_token="
         , Url.percentEncode accessToken
         ]

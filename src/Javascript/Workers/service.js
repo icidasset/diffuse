@@ -5,6 +5,8 @@
 // This worker is responsible for caching the application
 // so it can be used offline.
 
+import { stringify } from "postcss"
+
 
 const KEY =
   /* eslint-disable no-undef */
@@ -18,7 +20,15 @@ const EXCLUDE =
   ]
 
 
+const GOOGLE_DRIVE = "https://www.googleapis.com/drive/"
+
+
+
+// 🙈
+
+
 const isNativeWrapper = location.host === "localhost:44999" || location.host === "127.0.0.1:44999"
+let googleDriveToken
 
 
 
@@ -72,11 +82,13 @@ self.addEventListener("fetch", event => {
     )
 
   // When doing a request with access token in the url, put it in the headers instead
-  } else if (event.request.url.includes("access_token=")) {
+  } else if (event.request.url.includes("bearer_token=")) {
     const url = new URL(event.request.url)
-    const token = url.searchParams.get("access_token")
+    const token = url.searchParams.get("bearer_token")
 
-    url.searchParams.delete("access_token")
+    if (url.href.startsWith(GOOGLE_DRIVE)) googleDriveToken = token
+
+    url.searchParams.delete("bearer_token")
     url.search = "?" + url.searchParams.toString()
 
     newRequestWithAuth(
@@ -92,6 +104,18 @@ self.addEventListener("fetch", event => {
         ? network(event)
         : cacheThenNetwork(event)
     )
+
+  } else if (event.request.url && event.request.url.startsWith(GOOGLE_DRIVE) && event.request.url.includes("alt=media")) {
+    // For some reason Safari starts using the non bearer-token URL while playing audio
+    googleDriveToken
+      ? newRequestWithAuth(
+        event,
+        event.request.url.toString(),
+        "Bearer " + googleDriveToken
+      )
+      : event.respondWith(
+        network(event)
+      )
 
   }
 })
@@ -125,14 +149,46 @@ addEventListener("message", event => {
 
 
 function newRequestWithAuth(event, urlWithoutToken, authToken, mode) {
-  const newHeaders = new Headers(event.request.headers)
-  newHeaders.set("authorization", authToken)
+  const request = event.request
+  const newHeaders = Object.fromEntries(
+    request.headers.entries()
+  )
 
-  const newRequest = new Request(new Request(urlWithoutToken, event.request), {
-    headers: newHeaders,
-    mode: mode || "cors",
-    cache: "no-cache"
+  newHeaders["authorization"] = authToken
+
+  const newRequest = new Request(
+    new Request(urlWithoutToken, event.request),
+    {
+      headers: newHeaders,
+      credentials: request.credentials,
+      cache: request.cache,
+      destination: request.destination,
+      method: request.method,
+      mode: request.mode,
+      redirect: request.redirect,
+      referrer: request.referrer,
+    }
+  )
+
+  let retries = 0
+
+  const makeFetch = () => fetch(newRequest).then(r => {
+    if (r.ok) {
+      retries = 0
+      return r
+    } else {
+      return r.text().then(text => {
+        throw new Error(text)
+      })
+    }
+  }).catch(err => {
+    retries++
+    if (retries <= 1000) return new Promise((resolve, reject) => setTimeout(makeFetch().then(resolve, reject), 1000))
+    else throw new Error(err)
+
   })
 
-  event.respondWith(fetch(newRequest))
+  event.respondWith(
+    makeFetch()
+  )
 }
