@@ -5,8 +5,6 @@
 // This worker is responsible for caching the application
 // so it can be used offline.
 
-import { stringify } from "postcss"
-
 
 const KEY =
   /* eslint-disable no-undef */
@@ -148,7 +146,7 @@ addEventListener("message", event => {
 // ⚗️
 
 
-function newRequestWithAuth(event, urlWithoutToken, authToken, mode) {
+function newRequestWithAuth(event, urlWithoutToken, authToken) {
   const request = event.request
   const newHeaders = Object.fromEntries(
     request.headers.entries()
