@@ -10,7 +10,7 @@ fn main() {
     let port = 44999;
     let mut context = tauri::generate_context!("tauri.conf.json");
 
-    let url = format!("http://127.0.0.1:{}", port).parse().unwrap();
+    let url = format!("http://localhost:{}", port).parse().unwrap();
     let window_url = WindowUrl::External(url);
 
     context.config_mut().build.dist_dir = AppUrl::Url(window_url.clone());
