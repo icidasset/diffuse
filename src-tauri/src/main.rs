@@ -100,7 +100,7 @@ unsafe fn make_toolbar(id: cocoa::base::id) {
 fn set_user_agent(window: Window) {
     let user_agent = "Chrome";
 
-    window.with_webview(|webview| {
+    window.with_webview(move |webview| {
         #[cfg(windows)]
         unsafe {
             use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings2;
