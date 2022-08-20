@@ -111,8 +111,6 @@ fn set_user_agent(window: Window) {
                 .CoreWebView2()
                 .unwrap()
                 .Settings()
-                .unwrap()
-                .cast()
                 .unwrap();
 
             settings
