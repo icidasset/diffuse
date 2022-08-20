@@ -114,7 +114,7 @@ fn set_user_agent(window: Window) {
                 .unwrap();
 
             let settings2 =
-                settings::<ICoreWebView2Settings2>()?;
+                ::windows::core::Interface::cast::<ICoreWebView2Settings2>(settings)?;
 
             settings2
                 .SetUserAgent(user_agent)
