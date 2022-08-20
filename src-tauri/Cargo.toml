@@ -21,19 +21,20 @@ tauri = { version = "^1.0.5", features = ["dialog-all", "fs-all", "http-all", "p
 tauri-plugin-localhost = { version = "^0.1.0" }
 tauri-plugin-window-state = { version = "^0.1.0" }
 
-[target.'cfg(target_os = "linux")'.dependencies]
-webkit2gtk = "^0.18.0"
+[target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\"))".dependencies]
+webkit2gtk = "0.18.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc = "^0.2.7"
-objc-foundation = "^0.1.1"
-cocoa = "^0.24.0"
+objc = "0.2"
+objc-foundation = "0.1"
+cocoa = "0.24"
 
 [target.'cfg(windows)'.dependencies]
-webview2-com-sys = "^0.18.0"
+webview2-com = "0.16.0"
+windows-implement = "0.37.0"
 
 [target.'cfg(windows)'.dependencies.windows]
-version = "^0.39.0"
+version = "0.37.0"
 features = [
     "Data_Xml_Dom",
     "Win32_Foundation",
