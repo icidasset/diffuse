@@ -103,19 +103,20 @@ fn set_user_agent(window: Window) {
     window.with_webview(|webview| {
         #[cfg(windows)]
         unsafe {
-            use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings2;
-            use windows::core::interface::Interface;
+            use webview2_com::Microsoft::Web::WebView2::Win32::{ICoreWebView2Settings, ICoreWebView2Settings2};
+            use windows::core::Interface;
 
-            let settings: ICoreWebView2Settings2 = webview
+            let settings: ICoreWebView2Settings = webview
                 .controller()
                 .CoreWebView2()
                 .unwrap()
                 .Settings()
-                .unwrap()
-                .cast()
                 .unwrap();
 
-            settings
+            let settings2 =
+                settings::<ICoreWebView2Settings2>()?;
+
+            settings2
                 .SetUserAgent(user_agent)
                 .unwrap();
         }
