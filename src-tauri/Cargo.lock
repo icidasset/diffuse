@@ -550,7 +550,7 @@ dependencies = [
  "tauri-plugin-localhost",
  "tauri-plugin-window-state",
  "webkit2gtk",
- "webview2-com 0.18.0",
+ "webview2-com-sys 0.18.0",
  "windows 0.39.0",
 ]
 
@@ -2693,7 +2693,7 @@ dependencies = [
  "url",
  "uuid 1.1.2",
  "webkit2gtk",
- "webview2-com 0.16.0",
+ "webview2-com",
  "windows 0.37.0",
 ]
 
@@ -2792,7 +2792,7 @@ dependencies = [
  "tauri-utils",
  "thiserror",
  "uuid 1.1.2",
- "webview2-com 0.16.0",
+ "webview2-com",
  "windows 0.37.0",
 ]
 
@@ -2811,7 +2811,7 @@ dependencies = [
  "tauri-utils",
  "uuid 1.1.2",
  "webkit2gtk",
- "webview2-com 0.16.0",
+ "webview2-com",
  "windows 0.37.0",
  "wry",
 ]
@@ -3332,18 +3332,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "webview2-com"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae37a9bb69db574d6e8205c5005ed9bed92af0a895bf1e151cc02c92226b768f"
-dependencies = [
- "webview2-com-macros",
- "webview2-com-sys 0.18.0",
- "windows 0.38.0",
- "windows-implement 0.38.0",
-]
-
-[[package]]
 name = "webview2-com-macros"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3749,7 +3737,7 @@ dependencies = [
  "url",
  "webkit2gtk",
  "webkit2gtk-sys",
- "webview2-com 0.16.0",
+ "webview2-com",
  "windows 0.37.0",
  "windows-implement 0.37.0",
 ]
