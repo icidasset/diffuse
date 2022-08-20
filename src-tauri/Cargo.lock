@@ -2762,7 +2762,8 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-localhost"
 version = "0.1.0"
-source = "git+https://github.com/icidasset/tauri-plugin-localhost?branch=127.0.0.1#e12353ad5343066470b8d1cd5296f7a1974e9909"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f20786ccff879045f6bafec445fb5c6740c0c057372d2f992ae1281e4658c681"
 dependencies = [
  "serde_json",
  "tauri",
