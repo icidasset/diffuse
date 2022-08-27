@@ -28,6 +28,7 @@ fn main() {
                 .build()?;
 
             win.set_transparent_titlebar(ToolbarThickness::Thin);
+            set_user_agent(win);
 
             // Fin
             Ok(())
@@ -89,4 +90,51 @@ unsafe fn make_toolbar(id: cocoa::base::id) {
     let new_toolbar = NSToolbar::alloc(id);
     new_toolbar.init_();
     id.setToolbar_(new_toolbar);
+}
+
+
+
+// USER AGENT
+
+
+fn set_user_agent(window: Window) {
+    let user_agent = "Chrome";
+
+    window.with_webview(move |webview| {
+        #[cfg(windows)]
+        unsafe {
+            use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings2;
+            use windows::core::Interface;
+
+            let settings: ICoreWebView2Settings2 = webview
+                .controller()
+                .CoreWebView2()
+                .unwrap()
+                .Settings()
+                .unwrap()
+                .cast()
+                .unwrap();
+
+            settings
+                .SetUserAgent(user_agent)
+                .unwrap();
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            use webkit2gtk::{WebViewExt, SettingsExt};
+            let webview = webview.inner();
+            let settings = webview.settings().unwrap();
+            settings.set_user_agent(Some(user_agent));
+        }
+
+        // untested
+        #[cfg(target_os = "macos")]
+        unsafe {
+            use objc::{msg_send, sel, sel_impl};
+            use objc_foundation::{NSString, INSString};
+            let agent = NSString::from_str(user_agent);
+            let () = msg_send![webview.inner(), setCustomUserAgent: agent];
+        }
+    });
 }
