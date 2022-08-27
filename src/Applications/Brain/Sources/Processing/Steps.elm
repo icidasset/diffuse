@@ -80,7 +80,7 @@ takeFirstStep origin currentTime source =
 takePrepareStep : Context -> String -> Time.Posix -> Cmd Brain.Msg
 takePrepareStep context response currentTime =
     context
-        |> handlePreparationResponse response
+        |> handlePreparationResponse response currentTime
         |> intoPreparationCommands currentTime
 
 
@@ -149,13 +149,14 @@ prepare context currentTime =
             makeTree context currentTime
 
 
-handlePreparationResponse : String -> Context -> Context
-handlePreparationResponse response context =
+handlePreparationResponse : String -> Time.Posix -> Context -> Context
+handlePreparationResponse response currentTime context =
     let
         answer =
             Services.parsePreparationResponse
                 context.source.service
                 response
+                currentTime
                 context.source.data
                 context.preparationMarker
 

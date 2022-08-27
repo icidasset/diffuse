@@ -10,7 +10,7 @@ import * as processing from "../processing"
 const REJECT = () => Promise.reject("No artwork found")
 
 
-export function find(prep) {
+export function find(prep, app) {
   return findUsingTags(prep)
     .then(a => a ? a : findUsingMusicBrainz(prep))
     .then(a => a ? a : findUsingLastFm(prep))
@@ -28,10 +28,11 @@ function decodeCacheKey(cacheKey) {
 // 1. TAGS
 
 
-function findUsingTags(prep) {
+function findUsingTags(prep, app) {
   return Promise.all(
-    [ transformUrl(prep.trackHeadUrl)
-    , transformUrl(prep.trackGetUrl)
+    [
+      transformUrl(prep.trackHeadUrl, app),
+      transformUrl(prep.trackGetUrl, app)
     ]
 
   ).then(([ headUrl, getUrl ]) => processing.getTags(
@@ -55,8 +56,8 @@ function findUsingTags(prep) {
 
 function findUsingMusicBrainz(prep) {
   const parts = decodeCacheKey(prep.cacheKey).split(" --- ")
-  const artist = parts[0]
-  const album = parts[1] || parts[0]
+  const artist = parts[ 0 ]
+  const album = parts[ 1 ] || parts[ 0 ]
 
   const query = `release:"${album}"` + (prep.variousArtists === "t" ? `` : ` AND artist:"${artist}"`)
   const encodedQuery = encodeURIComponent(query)
@@ -68,7 +69,7 @@ function findUsingMusicBrainz(prep) {
 
 
 function musicBrainzCover(remainingReleases) {
-  const release = remainingReleases[0]
+  const release = remainingReleases[ 0 ]
   if (!release) return null
 
   return fetch(
@@ -99,12 +100,12 @@ function findUsingLastFm(prep) {
 
 
 function lastFmCover(remainingMatches) {
-  const album = remainingMatches[0]
-  const url = album ? album.image[album.image.length - 1]["#text"] : null
+  const album = remainingMatches[ 0 ]
+  const url = album ? album.image[ album.image.length - 1 ][ "#text" ] : null
 
   return url && url !== ""
     ? fetch(url)
-        .then(r => r.blob())
-        .catch(_ => lastFmCover(remainingMatches.slice(1)))
+      .then(r => r.blob())
+      .catch(_ => lastFmCover(remainingMatches.slice(1)))
     : album && lastFmCover(remainingMatches.slice(1))
 }

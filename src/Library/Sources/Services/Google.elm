@@ -250,7 +250,7 @@ makeTree srcData marker _ resultMsg =
 
 {-| Re-export parser functions.
 -}
-parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse : String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse =
     Parser.parsePreparationResponse
 
@@ -289,7 +289,7 @@ We need this to play the track.
 
 -}
 makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ path =
+makeTrackUrl currentTime srcData _ path =
     let
         file =
             String.Path.file path
@@ -300,12 +300,23 @@ makeTrackUrl _ srcData _ path =
                 |> List.head
                 |> Maybe.withDefault file
 
-        accessToken =
-            Dict.fetch "accessToken" "" srcData
+        now =
+            Time.posixToMillis currentTime
+
+        expiresAt =
+            Dict.fetch "expiresAt" (String.fromInt now) srcData
     in
     String.concat
-        [ "https://www.googleapis.com/drive/v3/files/"
-        , Url.percentEncode fileId
-        , "?alt=media&bearer_token="
-        , Url.percentEncode accessToken
+        [ "google://"
+        , Dict.fetch "accessToken" "" srcData
+        , ":"
+        , expiresAt
+        , ":"
+        , Dict.fetch "refreshToken" "" srcData
+        , ":"
+        , Dict.fetch "clientId" "" srcData
+        , ":"
+        , Dict.fetch "clientSecret" "" srcData
+        , "@"
+        , fileId
         ]

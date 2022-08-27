@@ -26,8 +26,8 @@ const flags = location
   .substr(1)
   .split("&")
   .reduce((acc, flag) => {
-    const [k, v] = flag.split("=")
-    return { ...acc, [k]: v }
+    const [ k, v ] = flag.split("=")
+    return { ...acc, [ k ]: v }
   }, {})
 
 
@@ -56,9 +56,11 @@ self.onmessage = event => {
 }
 
 
-function handleAction(action, data) { switch (action) {
-  case "DOWNLOAD_ARTWORK": return downloadArtwork(data)
-}}
+function handleAction(action, data) {
+  switch (action) {
+    case "DOWNLOAD_ARTWORK": return downloadArtwork(data)
+  }
+}
 
 
 
@@ -67,7 +69,7 @@ function handleAction(action, data) { switch (action) {
 
 app.ports.removeCache.subscribe(event => {
   removeCache(event.tag)
-    .catch( reportError(app, event) )
+    .catch(reportError(app, event))
 })
 
 
@@ -77,8 +79,8 @@ app.ports.requestCache.subscribe(event => {
     : event.tag
 
   fromCache(key)
-    .then( sendData(app, event) )
-    .catch( reportError(app, event) )
+    .then(sendData(app, event))
+    .catch(reportError(app, event))
 })
 
 
@@ -90,10 +92,10 @@ app.ports.toCache.subscribe(event => {
   toCache(key, event.data.data || event.data)
     .then(
       event.tag === "AUTH_ANONYMOUS"
-      ? storageCallback(app, event)
-      : identity
+        ? storageCallback(app, event)
+        : identity
     )
-    .catch( reportError(app, event) )
+    .catch(reportError(app, event))
 })
 
 
@@ -105,7 +107,7 @@ let artworkQueue = []
 
 
 function downloadArtwork(list) {
-  const exe = !artworkQueue[0]
+  const exe = !artworkQueue[ 0 ]
   artworkQueue = artworkQueue.concat(list)
   if (exe) shiftArtworkQueue()
 }
@@ -127,7 +129,7 @@ function shiftArtworkQueue() {
 
 app.ports.provideArtworkTrackUrls.subscribe(prep => {
   artwork
-    .find(prep)
+    .find(prep, app)
     .then(blob => {
       const url = URL.createObjectURL(blob)
 
@@ -139,10 +141,17 @@ app.ports.provideArtworkTrackUrls.subscribe(prep => {
 
       return toCache(`coverCache.${prep.cacheKey}`, blob)
     })
-    .catch(_ => {
-      // Indicate that we've tried to find artwork,
-      // so that we don't try to find it each time we launch the app.
-      return toCache(`coverCache.${prep.cacheKey}`, "TRIED")
+    .catch(err => {
+      if (err === "No artwork found") {
+        // Indicate that we've tried to find artwork,
+        // so that we don't try to find it each time we launch the app.
+        return toCache(`coverCache.${prep.cacheKey}`, "TRIED")
+
+      } else {
+        // Something went wrong
+        reportError(app, { tag: "REPORT_ERROR" })(err)
+
+      }
     })
     .finally(shiftArtworkQueue)
 })
@@ -159,7 +168,7 @@ app.ports.removeTracksFromCache.subscribe(trackIds => {
 
   ).catch(
     _ => reportError
-      ({ tag: "REMOVE_TRACKS_FROM_CACHE" })
+      (app, { tag: "REMOVE_TRACKS_FROM_CACHE" })
       ("Failed to remove tracks from cache")
 
   )
@@ -168,10 +177,11 @@ app.ports.removeTracksFromCache.subscribe(trackIds => {
 
 app.ports.storeTracksInCache.subscribe(list => {
   list.reduce(
-    (acc, item) => { return acc
-      .then(_ => fetch(item.url))
-      .then(r => r.blob())
-      .then(b => db.setInIndex({ key: item.trackId, data: b, store: db.storeNames.tracks }))
+    (acc, item) => {
+      return acc
+        .then(_ => fetch(item.url))
+        .then(r => r.blob())
+        .then(b => db.setInIndex({ key: item.trackId, data: b, store: db.storeNames.tracks }))
     },
     Promise.resolve()
 
@@ -245,14 +255,14 @@ search.onmessage = event => {
 // ----
 
 app.ports.requestTags.subscribe(context => {
-  processing.processContext(context).then(newContext => {
+  processing.processContext(context, app).then(newContext => {
     app.ports.receiveTags.send(newContext)
   })
 })
 
 
 app.ports.syncTags.subscribe(context => {
-  processing.processContext(context).then(newContext => {
+  processing.processContext(context, app).then(newContext => {
     app.ports.replaceTags.send(newContext)
   })
 })

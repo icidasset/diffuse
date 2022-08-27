@@ -1,5 +1,4 @@
 //
-// Elm loader
 // | (• ◡•)| (❍ᴥ❍ʋ)
 //
 // The bit where we launch the Elm app,
@@ -17,6 +16,7 @@ import * as audioEngine from "./audio-engine"
 import * as db from "./indexed-db"
 import { version } from '../../package.json'
 import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, debounce, fileExtension } from "./common"
+import { transformUrl } from "./urls"
 
 
 
@@ -35,13 +35,13 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   location.href = location.href.replace("http://", "https://")
   failure("Just a moment, redirecting to HTTPS.")
 
-// Not a secure context
+  // Not a secure context
 } else if (!self.isSecureContext) {
   failure(`
     This app only works on a <a class="underline" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#When_is_a_context_considered_secure">secure context</a>, HTTPS & localhost, and modern browsers.
   `)
 
-// Service worker
+  // Service worker
 } else if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
@@ -193,10 +193,12 @@ wire.brain = () => {
 }
 
 
-function handleAction(action, data, _ports) { switch (action) {
-  case "DOWNLOAD_TRACKS": return downloadTracks(data)
-  case "FINISHED_DOWNLOADING_ARTWORK": return finishedDownloadingArtwork()
-}}
+function handleAction(action, data, _ports) {
+  switch (action) {
+    case "DOWNLOAD_TRACKS": return downloadTracks(data)
+    case "FINISHED_DOWNLOADING_ARTWORK": return finishedDownloadingArtwork()
+  }
+}
 
 
 
@@ -257,10 +259,10 @@ function activeQueueItemChanged(item) {
   // 🎵
   if (item) {
     const coverPrep = {
-      cacheKey:       btoa(unescape(encodeURIComponent(item.trackTags.artist + " --- " + item.trackTags.album))),
-      trackFilename:  item.trackPath.split("/").reverse()[0],
-      trackPath:      item.trackPath,
-      trackSourceId:  item.sourceId,
+      cacheKey: btoa(unescape(encodeURIComponent(item.trackTags.artist + " --- " + item.trackTags.album))),
+      trackFilename: item.trackPath.split("/").reverse()[ 0 ],
+      trackPath: item.trackPath,
+      trackSourceId: item.sourceId,
       variousArtists: "f"
     }
 
@@ -285,7 +287,7 @@ function activeQueueItemChanged(item) {
       })
     })
 
-  // ✋
+    // ✋
   } else {
     app.ports.setAudioIsPlaying.send(false)
     app.ports.setAudioPosition.send(0)
@@ -388,9 +390,9 @@ function averageColorOfImage(img) {
   const color = { r: 0, g: 0, b: 0 }
 
   for (let i = 0, l = imageData.data.length; i < l; i += 4) {
-    color.r += imageData.data[i]
-    color.g += imageData.data[i + 1]
-    color.b += imageData.data[i + 2]
+    color.r += imageData.data[ i ]
+    color.g += imageData.data[ i + 1 ]
+    color.b += imageData.data[ i + 2 ]
   }
 
   color.r = Math.floor(color.r / (imageData.data.length / 4))
@@ -432,12 +434,25 @@ wire.broadcastChannel = () => {
 // ---------
 
 wire.clipboard = () => {
-  app.ports.copyToClipboard.subscribe(copyToClipboard)
+  app.ports.copyToClipboard.subscribe(text => {
+    // TODO: Find a better solution for this
+    const adjustedText = (() => {
+      if (text.startsWith("dropbox://")) {
+        return transformUrl(text)
+      } else if (text.startsWith("google://")) {
+        return transformUrl(text)
+      } else {
+        return text
+
+      }
+    })()
+
+    copyToClipboard(copyToClipboard)
+  })
 }
 
 
 function copyToClipboard(text) {
-
   // Insert a textarea element
   const el = document.createElement("textarea")
 
@@ -465,7 +480,6 @@ function copyToClipboard(text) {
     document.getSelection().removeAllRanges()
     document.getSelection().addRange(selected)
   }
-
 }
 
 
@@ -491,13 +505,13 @@ function gotCachedCover({ key, url }) {
   const item = orchestrion.activeQueueItem
 
   if (item && orchestrion.coverPrep && key === orchestrion.coverPrep.key && url) {
-    let artwork = [{ src: url }]
+    let artwork = [ { src: url } ]
 
     if (typeof url !== "string") {
-      artwork = [{
+      artwork = [ {
         src: URL.createObjectURL(url),
         type: url.type
-      }]
+      } ]
     }
 
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -524,10 +538,10 @@ function loadAlbumCoversFromDom({ coverView, list } = {}) {
   if (!nodes.length) return;
 
   const coverPrepList = nodes.map(node => ({
-    cacheKey:       node.getAttribute("data-key"),
-    trackFilename:  node.getAttribute("data-filename"),
-    trackPath:      node.getAttribute("data-path"),
-    trackSourceId:  node.getAttribute("data-source-id"),
+    cacheKey: node.getAttribute("data-key"),
+    trackFilename: node.getAttribute("data-filename"),
+    trackPath: node.getAttribute("data-path"),
+    trackSourceId: node.getAttribute("data-source-id"),
     variousArtists: node.getAttribute("data-various-artists")
   }))
 
@@ -566,7 +580,7 @@ function cachedCovers(keys) {
         const cacheKey = key.slice(11)
 
         if (blob && typeof blob !== "string") {
-          cache[cacheKey] = URL.createObjectURL(blob)
+          cache[ cacheKey ] = URL.createObjectURL(blob)
         }
 
         return cache
@@ -618,16 +632,17 @@ function downloadTracks(group) {
   const folder = zip.folder("Diffuse - " + group.name)
 
   return group.tracks.reduce(
-    (acc, track) => { return acc
-      .then(_ => fetch(track.url))
-      .then(r => {
-        const mimeType = r.headers.get("content-type")
-        const fileExt = fileExtension(mimeType) || "unknown"
+    (acc, track) => {
+      return acc
+        .then(_ => fetch(track.url))
+        .then(r => {
+          const mimeType = r.headers.get("content-type")
+          const fileExt = fileExtension(mimeType) || "unknown"
 
-        return r.blob().then(
-          b => folder.file(track.filename + "." + fileExt, b)
-        )
-      })
+          return r.blob().then(
+            b => folder.file(track.filename + "." + fileExt, b)
+          )
+        })
     },
     Promise.resolve()
 
@@ -863,9 +878,9 @@ function touchPointerEvent(eventType, touchEvent, touch) {
 // Simulate `pointerenter` and `pointerleave` event for non-touch devices
 if (!self.PointerEvent) {
   document.addEventListener("mouseover", event => {
-    const section     = document.body.querySelector("section")
-    const isDragging  = section && section.classList.contains("dragging-something")
-    const node        = isDragging && document.elementFromPoint(event.clientX, event.clientY)
+    const section = document.body.querySelector("section")
+    const isDragging = section && section.classList.contains("dragging-something")
+    const node = isDragging && document.elementFromPoint(event.clientX, event.clientY)
 
     if (node && node != enteredElement) {
       enteredElement && enteredElement.dispatchEvent(mousePointerEvent("pointerleave", event))
@@ -878,10 +893,10 @@ if (!self.PointerEvent) {
 
 // Simulate `pointerenter` and `pointerleave` event for touch devices
 document.body.addEventListener("touchmove", event => {
-  const section       = document.body.querySelector("section")
-  const isDragging    = section && section.classList.contains("dragging-something")
+  const section = document.body.querySelector("section")
+  const isDragging = section && section.classList.contains("dragging-something")
 
-  let touch = event.touches[0]
+  let touch = event.touches[ 0 ]
   let node
 
   if (isDragging && touch) {
