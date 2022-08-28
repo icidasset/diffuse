@@ -40,6 +40,7 @@ type Tag
     | DownloadTracks
     | ImportLegacyData
     | ProcessSources
+    | RefreshedAccessToken
     | RemoveEncryptionKey
     | RemoveTracksBySourceId
     | RemoveTracksFromCache
@@ -98,6 +99,7 @@ enum =
         , ( "DOWNLOAD_TRACKS", DownloadTracks )
         , ( "IMPORT_LEGACY_DATA", ImportLegacyData )
         , ( "PROCESS_SOURCES", ProcessSources )
+        , ( "REFRESHED_ACCESS_TOKEN", RefreshedAccessToken )
         , ( "REMOVE_ENCRYPTION_KEY", RemoveEncryptionKey )
         , ( "REMOVE_TRACKS_BY_SOURCE_ID", RemoveTracksBySourceId )
         , ( "REMOVE_TRACKS_FROM_CACHE", RemoveTracksFromCache )

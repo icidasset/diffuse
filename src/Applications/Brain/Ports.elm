@@ -99,6 +99,9 @@ port makeArtworkTrackUrls : (Json.Value -> msg) -> Sub msg
 port receiveSearchResults : (List String -> msg) -> Sub msg
 
 
+port refreshedAccessToken : (Json.Value -> msg) -> Sub msg
+
+
 port receiveTags : (ContextForTags -> msg) -> Sub msg
 
 

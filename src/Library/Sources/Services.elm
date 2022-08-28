@@ -49,7 +49,7 @@ initialData service =
             WebDav.initialData
 
 
-makeTrackUrl : Service -> Time.Posix -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl : Service -> Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl service =
     case service of
         AmazonS3 ->

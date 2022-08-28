@@ -288,8 +288,8 @@ postProcessTree =
 We need this to play the track.
 
 -}
-makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentTime srcData _ path =
+makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl currentTime srcId srcData _ path =
     let
         file =
             String.Path.file path
@@ -317,6 +317,8 @@ makeTrackUrl currentTime srcData _ path =
         , Dict.fetch "clientId" "" srcData
         , ":"
         , Dict.fetch "clientSecret" "" srcData
+        , ":"
+        , srcId
         , "@"
         , fileId
         ]

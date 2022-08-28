@@ -306,6 +306,7 @@ makeTrackUrl timestamp trackPath maybeSource httpMethod =
             Sources.Services.makeTrackUrl
                 source.service
                 timestamp
+                source.id
                 source.data
                 httpMethod
                 trackPath
@@ -318,7 +319,7 @@ tagUrls : Time.Posix -> String -> Source -> TagUrls
 tagUrls currentTime path source =
     let
         maker =
-            Sources.Services.makeTrackUrl source.service currentTime source.data
+            Sources.Services.makeTrackUrl source.service currentTime source.id source.data
     in
     { getUrl = maker Get path
     , headUrl = maker Head path

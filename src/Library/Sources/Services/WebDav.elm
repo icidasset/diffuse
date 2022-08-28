@@ -168,8 +168,8 @@ postProcessTree =
 We need this to play the track.
 
 -}
-makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ filePath =
+makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl _ _ srcData _ filePath =
     url { addAuth = True } srcData filePath
 
 

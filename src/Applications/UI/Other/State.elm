@@ -31,6 +31,11 @@ installingServiceWorker model =
     Return.singleton { model | serviceWorkerStatus = InstallingNew }
 
 
+redirectToBrain : Alien.Event -> Manager
+redirectToBrain event model =
+    return model (Ports.toBrain event)
+
+
 reloadApp : Manager
 reloadApp model =
     return model (Ports.reloadApp ())

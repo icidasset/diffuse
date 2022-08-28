@@ -163,6 +163,6 @@ We need this to play the track.
 (!) Creates a presigned url that's valid for 48 hours
 
 -}
-makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentTime srcData _ pathToFile =
+makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl currentTime _ srcData _ pathToFile =
     presignedUrl Blob Read Get 48 currentTime srcData pathToFile []

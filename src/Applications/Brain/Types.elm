@@ -66,6 +66,7 @@ type Msg
       -----------------------------------------
       -- 📭 Other
       -----------------------------------------
+    | RefreshedAccessToken Json.Value
     | SetCurrentTime Time.Posix
     | ToCache Json.Value
 

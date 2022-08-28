@@ -1,6 +1,7 @@
 module UI.Types exposing (..)
 
 import Alfred exposing (Alfred)
+import Alien
 import Browser
 import Browser.Navigation as Nav
 import Color exposing (Color)
@@ -305,6 +306,7 @@ type Msg
       -----------------------------------------
     | InstalledServiceWorker
     | InstallingServiceWorker
+    | RedirectToBrain Alien.Event
     | ReloadApp
     | SetCurrentTime Time.Posix
     | SetCurrentTimeZone Time.Zone

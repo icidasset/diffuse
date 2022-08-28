@@ -41,20 +41,20 @@ export async function transformUrl(url, app) {
       let finalAccessToken
 
       const googleBits = parts[ 1 ].split("@")
-      const [ accessToken, expiresAtString, refreshToken, clientId, clientSecret ] = googleBits[ 0 ].split(":")
+      const [ accessToken, expiresAtString, refreshToken, clientId, clientSecret, srcId ] = googleBits[ 0 ].split(":")
       const fileId = googleBits[ 1 ]
 
       // Unix timestamp in milliseconds
-      const in15minutes = Date.now() + 15 * 60 * 1000
+      const inXminutes = Date.now() + 5 * 60 * 1000 // 5 minutes
       const expiresAt = parseInt(expiresAtString, 10)
-      const isAlmostExpired = expiresAt <= in15minutes
+      const isAlmostExpired = expiresAt <= inXminutes
 
       if (EXPIRED_ACCESS_TOKENS.GOOGLE[ accessToken ]) {
         const replacement = EXPIRED_ACCESS_TOKENS.GOOGLE[ accessToken ]
 
-        if (replacement.newExpiresAt <= in15minutes) {
+        if (replacement.newExpiresAt <= inXminutes) {
           finalAccessToken = await refreshGoogleAccessToken({
-            clientId, clientSecret, refreshToken, oldToken: accessToken
+            app, clientId, clientSecret, refreshToken, srcId, oldToken: accessToken
           })
         } else {
           finalAccessToken = replacement.newToken
@@ -62,7 +62,7 @@ export async function transformUrl(url, app) {
 
       } else if (isAlmostExpired) {
         finalAccessToken = await refreshGoogleAccessToken({
-          clientId, clientSecret, refreshToken, oldToken: accessToken
+          app, clientId, clientSecret, refreshToken, srcId, oldToken: accessToken
         })
 
       } else {
@@ -86,7 +86,7 @@ export async function transformUrl(url, app) {
 // GOOGLE
 
 
-async function refreshGoogleAccessToken({ clientId, clientSecret, oldToken, refreshToken }) {
+async function refreshGoogleAccessToken({ app, clientId, clientSecret, oldToken, refreshToken, srcId }) {
   console.log("🔐 Refreshing Google Drive access token")
 
   const url = new URL("https://www.googleapis.com/oauth2/v4/token")
@@ -97,13 +97,22 @@ async function refreshGoogleAccessToken({ clientId, clientSecret, oldToken, refr
   url.searchParams.set("grant_type", "refresh_token")
 
   const serverResponse = await fetch(url, { method: "POST" }).then(r => r.json())
+  const newToken = serverResponse.access_token
+  const newExpiresAt = Date.now() + (serverResponse.expires_in * 1000)
 
   EXPIRED_ACCESS_TOKENS.GOOGLE[ oldToken ] = {
     oldToken,
-    newToken: serverResponse.access_token,
-    newExpiresAt: Date.now() + (serverResponse.expires_in * 1000),
+    newToken,
+    newExpiresAt,
     refreshToken
   }
+
+  app.ports.refreshAccessToken.send({
+    service: "google",
+    sourceId: srcId,
+    accessToken: newToken,
+    expiresAt: newExpiresAt
+  })
 
   return serverResponse.access_token
 }

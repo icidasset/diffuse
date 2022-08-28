@@ -840,21 +840,6 @@ methodRetrieved json model =
             terminate NotAuthenticated model
 
 
-refreshedDropboxTokens :
-    { currentTime : Int, refreshToken : String }
-    -> Dropbox.Tokens
-    -> User.Msg
-    -> Manager
-refreshedDropboxTokens { currentTime, refreshToken } tokens msg model =
-    { accessToken = tokens.accessToken
-    , expiresAt = currentTime + tokens.expiresIn
-    , refreshToken = refreshToken
-    }
-        |> Dropbox
-        |> (\m -> saveMethod m model)
-        |> andThen (update msg)
-
-
 retrieveMethod : Manager
 retrieveMethod =
     Alien.AuthMethod
@@ -955,3 +940,22 @@ terminate t model =
             model
                 |> Common.nudgeUI Alien.NotAuthenticated
                 |> andThen (Common.nudgeUI Alien.HideLoadingScreen)
+
+
+
+-- 📭  ░░  OTHER
+
+
+refreshedDropboxTokens :
+    { currentTime : Int, refreshToken : String }
+    -> Dropbox.Tokens
+    -> User.Msg
+    -> Manager
+refreshedDropboxTokens { currentTime, refreshToken } tokens msg model =
+    { accessToken = tokens.accessToken
+    , expiresAt = currentTime + tokens.expiresIn
+    , refreshToken = refreshToken
+    }
+        |> Dropbox
+        |> (\m -> saveMethod m model)
+        |> andThen (update msg)

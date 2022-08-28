@@ -320,8 +320,8 @@ makeTrackUrls currentTime source filePaths =
 
         mapFn =
             \path ->
-                { getUrl = maker currentTime source.data Get path
-                , headUrl = maker currentTime source.data Head path
+                { getUrl = maker currentTime source.id source.data Get path
+                , headUrl = maker currentTime source.id source.data Head path
                 }
     in
     List.map mapFn filePaths

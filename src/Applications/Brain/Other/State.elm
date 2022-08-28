@@ -7,11 +7,33 @@ import Brain.Types exposing (..)
 import Json.Decode as Json
 import Return
 import Return.Ext as Return
+import Sources exposing (Service(..))
+import Sources.Refresh.AccessToken
 import Time
 
 
 
 -- 🔱
+
+
+refreshedAccessToken : Json.Value -> Manager
+refreshedAccessToken value model =
+    case Json.decodeValue Sources.Refresh.AccessToken.portArgumentsDecoder value of
+        Ok portArguments ->
+            case portArguments.service of
+                Google ->
+                    -- TODO:
+                    -- 1. Find source
+                    -- 2. Add `access token` and `expires at` to source data
+                    -- 3. Replace source in collection
+                    -- 4. Save user data
+                    Return.singleton model
+
+                _ ->
+                    Return.singleton model
+
+        Err err ->
+            Common.reportUI Alien.ToCache (Json.errorToString err) model
 
 
 setCurrentTime : Time.Posix -> Manager
