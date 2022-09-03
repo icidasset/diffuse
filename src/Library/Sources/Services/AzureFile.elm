@@ -128,7 +128,7 @@ makeTree srcData marker currentTime resultMsg =
 
 {-| Re-export parser functions.
 -}
-parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse : String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse =
     noPrep
 
@@ -167,6 +167,6 @@ We need this to play the track.
 (!) Creates a presigned url that's valid for 48 hours
 
 -}
-makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl currentTime srcData _ pathToFile =
+makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl currentTime _ srcData _ pathToFile =
     presignedUrl File Read Get 48 currentTime srcData pathToFile []

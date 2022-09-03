@@ -3,6 +3,7 @@ module Sources.Services.Common exposing (cleanPath, noPrep)
 import Sources exposing (..)
 import Sources.Processing exposing (..)
 import String.Ext as String
+import Time
 
 
 
@@ -43,6 +44,6 @@ cleanPath dirtyPath =
 -- PARSING
 
 
-noPrep : String -> SourceData -> Marker -> PrepationAnswer Marker
-noPrep _ srcData _ =
+noPrep : String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
+noPrep _ _ srcData _ =
     { sourceData = srcData, marker = TheEnd }

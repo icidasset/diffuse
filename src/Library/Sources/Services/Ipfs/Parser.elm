@@ -7,14 +7,15 @@ import Sources.Pick exposing (isMusicFile)
 import Sources.Processing exposing (Marker(..), PrepationAnswer, TreeAnswer)
 import Sources.Services.Ipfs.Marker as Marker
 import String.Ext as String
+import Time
 
 
 
 -- PREPARATION
 
 
-parseDnsLookup : String -> SourceData -> Marker -> PrepationAnswer Marker
-parseDnsLookup response srcData _ =
+parseDnsLookup : String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
+parseDnsLookup response _ srcData _ =
     case decodeString dnsResultDecoder response of
         Ok path ->
             srcData

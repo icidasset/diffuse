@@ -187,7 +187,7 @@ getProperDirectoryPath srcData =
 
 {-| Re-export parser functions.
 -}
-parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse : String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse =
     noPrep
 
@@ -225,6 +225,6 @@ postProcessTree =
 We need this to play the track.
 
 -}
-makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ pathToFile =
+makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl _ _ srcData _ pathToFile =
     "dropbox://" ++ Dict.fetch "accessToken" "" srcData ++ "@" ++ pathToFile

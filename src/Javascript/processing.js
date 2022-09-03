@@ -15,21 +15,21 @@ import { transformUrl } from "./urls"
 // Contexts
 // --------
 
-export function processContext(context) {
+export function processContext(context, app) {
   const initialPromise = Promise.resolve([])
 
   return context.urlsForTags.reduce((accumulator, urls, idx) => {
     return accumulator.then(col => {
       const filename = context
-        .receivedFilePaths[idx]
+        .receivedFilePaths[ idx ]
         .split("/")
-        .reverse()[0]
+        .reverse()[ 0 ]
 
       return Promise.all([
-        transformUrl(urls.headUrl),
-        transformUrl(urls.getUrl)
+        transformUrl(urls.headUrl, app),
+        transformUrl(urls.getUrl, app)
 
-      ]).then(([headUrl, getUrl]) => {
+      ]).then(([ headUrl, getUrl ]) => {
         return getTags(headUrl, getUrl, filename, { skipCovers: true })
 
       }).then(r => {
@@ -63,7 +63,7 @@ const parserConfiguration = Object.assign(
 
 export function getTags(headUrl, getUrl, filename, options) {
   const fileExtMatch = filename.match(/\.(\w+)$/)
-  const fileExt = fileExtMatch && fileExtMatch[1]
+  const fileExt = fileExtMatch && fileExtMatch[ 1 ]
 
   const overrideContentType = (
     getUrl.includes("googleapis.com") ||
@@ -109,9 +109,9 @@ function pickTags(filename, result) {
     album: tags.album && tags.album.length ? tags.album : "Unknown",
     artist: artist || "Unknown",
     title: title ? title : (artist ? "Unknown" : filename.replace(/\.\w+$/, "")),
-    genre: (tags.genre && tags.genre[0]) || null,
+    genre: (tags.genre && tags.genre[ 0 ]) || null,
     year: tags.year || null,
-    picture: tags.picture ? tags.picture[0] : null
+    picture: tags.picture ? tags.picture[ 0 ] : null
   }
 }
 

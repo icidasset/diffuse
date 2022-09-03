@@ -209,7 +209,7 @@ ipnsResolver response =
 
 {-| Re-export parser functions.
 -}
-parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse : String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse =
     Parser.parseDnsLookup
 
@@ -247,8 +247,8 @@ postProcessTree =
 We need this to play the track.
 
 -}
-makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ path =
+makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl _ _ srcData _ path =
     if not (String.contains "/" path) && not (String.contains "." path) then
         -- If it still uses the old way of doing things
         -- (ie. each path was a cid)

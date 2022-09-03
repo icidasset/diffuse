@@ -49,7 +49,7 @@ initialData service =
             WebDav.initialData
 
 
-makeTrackUrl : Service -> Time.Posix -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl : Service -> Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl service =
     case service of
         AmazonS3 ->
@@ -139,7 +139,7 @@ parseErrorResponse service =
             WebDav.parseErrorResponse
 
 
-parsePreparationResponse : Service -> String -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse : Service -> String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
 parsePreparationResponse service =
     case service of
         AmazonS3 ->

@@ -9,19 +9,32 @@ import Sources.Pick
 import Sources.Processing exposing (Marker(..), PrepationAnswer, TreeAnswer)
 import Sources.Services.Google.Marker as Marker
 import String.Path
+import Time
 
 
 
 -- PREPARATION
 
 
-parsePreparationResponse : String -> SourceData -> Marker -> PrepationAnswer Marker
-parsePreparationResponse response srcData _ =
+parsePreparationResponse : String -> Time.Posix -> SourceData -> Marker -> PrepationAnswer Marker
+parsePreparationResponse response currentTimePosix srcData _ =
     let
         newAccessToken =
             response
                 |> decodeString (field "access_token" string)
                 |> Result.withDefault ""
+
+        currentTime =
+            -- Current time in milliseconds
+            Time.posixToMillis currentTimePosix
+
+        expiresAt =
+            -- Unix timestamp in milliseconds
+            response
+                |> decodeString (field "expires_in" int)
+                -- time in seconds
+                |> Result.withDefault 2500
+                |> (\s -> currentTime + s * 1000)
 
         maybeRefreshToken =
             response
@@ -39,6 +52,7 @@ parsePreparationResponse response srcData _ =
     in
     srcData
         |> Dict.insert "accessToken" newAccessToken
+        |> Dict.insert "expiresAt" (String.fromInt expiresAt)
         |> refreshTokenUpdater
         |> Dict.remove "authCode"
         |> (\s -> { sourceData = s, marker = TheEnd })

@@ -116,6 +116,6 @@ postProcessTree =
 We need this to play the track.
 
 -}
-makeTrackUrl : Time.Posix -> SourceData -> HttpMethod -> String -> String
-makeTrackUrl _ srcData _ path =
+makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
+makeTrackUrl _ _ srcData _ path =
     Ipfs.extractGateway srcData ++ "/btfs/" ++ Ipfs.rootHash srcData ++ "/" ++ Ipfs.encodedPath path

@@ -15,7 +15,7 @@ import { transformUrl } from "./urls"
 
 
 const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
-                  navigator.vendor === "Apple Computer, Inc."
+  navigator.vendor === "Apple Computer, Inc."
 
 
 
@@ -38,9 +38,9 @@ const audioElementsContainer = (() => {
   let c
   let styles =
     [ "height: 0"
-    , "width: 0"
-    , "visibility: hidden"
-    , "pointer-events: none"
+      , "width: 0"
+      , "visibility: hidden"
+      , "pointer-events: none"
     ]
 
   c = document.createElement("div")
@@ -117,7 +117,7 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
   // initial promise
   const initialPromise = queueItem.isCached
     ? db.getFromIndex({ key: queueItem.trackId, store: db.storeNames.tracks }).then(blobUrl)
-    : transformUrl(queueItem.url)
+    : transformUrl(queueItem.url, orchestrion.app)
 
   // find or create audio node
   let audioNode
@@ -214,15 +214,15 @@ export function preloadAudioElement(orchestrion, queueItem) {
     n => n.parentNode.removeChild(n)
   )
 
-  // audio element remains valid for 2 hours
-  transformUrl(queueItem.url).then(url => {
+  // audio element remains valid for 45 minutes
+  transformUrl(queueItem.url, orchestrion.app).then(url => {
     const queueItemWithTransformedUrl =
       Object.assign({}, queueItem, { url: url })
 
     createAudioElement(
       orchestrion,
       queueItemWithTransformedUrl,
-      Date.now() + 1000 * 60 * 60 * 2,
+      Date.now() + 1000 * 60 * 45,
       true
     )
   })
@@ -285,22 +285,22 @@ function audioErrorEvent(event) {
 }
 
 
-    function showNetworkErrorNotification() {
-      if (showedNoNetworkError) return
-      showedNoNetworkError = true
-      this.app.ports.showErrorNotification.send(
-        navigator.onLine
-          ? "I can't play this track because of a network error. I'll try to reconnect."
-          : "I can't play this track because we're offline. I'll try to reconnect."
-      )
-    }
+function showNetworkErrorNotification() {
+  if (showedNoNetworkError) return
+  showedNoNetworkError = true
+  this.app.ports.showErrorNotification.send(
+    navigator.onLine
+      ? "I can't play this track because of a network error. I'll try to reconnect."
+      : "I can't play this track because we're offline. I'll try to reconnect."
+  )
+}
 
 
-    function showUnsupportedSrcErrorNotification() {
-      this.app.ports.showErrorNotification.send(
-        "__I can't play this track because your browser didn't recognize it.__ Try checking your developer console for a warning to find out why."
-      )
-    }
+function showUnsupportedSrcErrorNotification() {
+  this.app.ports.showErrorNotification.send(
+    "__I can't play this track because your browser didn't recognize it.__ Try checking your developer console for a warning to find out why."
+  )
+}
 
 
 function audioStalledEvent(event, notifyAppImmediately) {
@@ -426,8 +426,8 @@ function isActiveAudioElement(orchestrion, node) {
     !node ||
     node.getAttribute("data-preload") === "t"
   )
-  ? false
-  : orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
+    ? false
+    : orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
 }
 
 
@@ -492,10 +492,10 @@ export function setMediaSessionMetadata(queueItem, maybeArtwork) {
   let artwork = []
 
   if (maybeArtwork && typeof maybeArtwork !== "string") {
-    artwork = [{
+    artwork = [ {
       src: URL.createObjectURL(maybeArtwork),
       type: maybeArtwork.type
-    }]
+    } ]
   }
 
   navigator.mediaSession.metadata = new MediaMetadata({

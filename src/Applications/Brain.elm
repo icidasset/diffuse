@@ -144,6 +144,9 @@ update msg =
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
+        RefreshedAccessToken a ->
+            Other.refreshedAccessToken a
+
         SetCurrentTime a ->
             Other.setCurrentTime a
 
@@ -160,6 +163,7 @@ subscriptions _ =
     Sub.batch
         [ Ports.fromAlien alien
         , Ports.makeArtworkTrackUrls MakeArtworkTrackUrls
+        , Ports.refreshedAccessToken RefreshedAccessToken
         , Ports.receiveSearchResults GotSearchResults
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
         , Ports.replaceTags ReplaceTrackTags
@@ -229,6 +233,9 @@ translateAlienData tag data =
 
         Alien.ProcessSources ->
             ProcessingMsg (Processing.Process data)
+
+        Alien.RefreshedAccessToken ->
+            RefreshedAccessToken data
 
         Alien.RemoveEncryptionKey ->
             UserMsg User.RemoveEncryptionKey

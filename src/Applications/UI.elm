@@ -529,6 +529,9 @@ update msg =
         InstallingServiceWorker ->
             Other.installingServiceWorker
 
+        RedirectToBrain a ->
+            Other.redirectToBrain a
+
         ReloadApp ->
             Other.reloadApp
 
@@ -603,6 +606,7 @@ subscriptions _ =
         -----------------------------------------
         , Ports.installedNewServiceWorker (\_ -> InstalledServiceWorker)
         , Ports.installingNewServiceWorker (\_ -> InstallingServiceWorker)
+        , Ports.refreshedAccessToken (Alien.broadcast Alien.RefreshedAccessToken >> RedirectToBrain)
         , Ports.setIsOnline SetIsOnline
         , Ports.webnativeResponse GotWebnativeResponse
         , Sub.map KeyboardMsg Keyboard.subscriptions

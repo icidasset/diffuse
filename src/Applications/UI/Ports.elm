@@ -83,6 +83,9 @@ port installingNewServiceWorker : (() -> msg) -> Sub msg
 port noteProgress : ({ trackId : String, progress : Float } -> msg) -> Sub msg
 
 
+port refreshedAccessToken : (Json.Value -> msg) -> Sub msg
+
+
 port preferredColorSchemaChanged : ({ dark : Bool } -> msg) -> Sub msg
 
 
