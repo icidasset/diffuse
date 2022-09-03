@@ -15,7 +15,7 @@
 
   stack-wrapped = symlinkJoin {
     name = "stack";
-    paths = [ stack ];
+    paths = [ haskellPackages.stack ];
     buildInputs = [ makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/stack \
