@@ -13,8 +13,8 @@ const KEY =
 
 const EXCLUDE =
   [ "_headers"
-  , "_redirects"
-  , "CORS"
+    , "_redirects"
+    , "CORS"
   ]
 
 
@@ -79,7 +79,7 @@ self.addEventListener("fetch", event => {
       "Basic " + token
     )
 
-  // When doing a request with access token in the url, put it in the headers instead
+    // When doing a request with access token in the url, put it in the headers instead
   } else if (event.request.url.includes("bearer_token=")) {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("bearer_token")
@@ -95,7 +95,7 @@ self.addEventListener("fetch", event => {
       "Bearer " + token
     )
 
-  // Use cache if internal request and not using native app
+    // Use cache if internal request and not using native app
   } else if (isInternal) {
     event.respondWith(
       isNativeWrapper
@@ -152,7 +152,7 @@ function newRequestWithAuth(event, urlWithoutToken, authToken) {
     request.headers.entries()
   )
 
-  newHeaders["authorization"] = authToken
+  newHeaders[ "authorization" ] = authToken
 
   const newRequest = new Request(
     new Request(urlWithoutToken, event.request),
@@ -170,6 +170,8 @@ function newRequestWithAuth(event, urlWithoutToken, authToken) {
 
   let retries = 0
 
+  // TODO: When request fails because access token is expired,
+  //       refresh the token, and retry the request.
   const makeFetch = () => fetch(newRequest).then(r => {
     if (r.ok) {
       retries = 0

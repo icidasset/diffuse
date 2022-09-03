@@ -107,8 +107,8 @@ async function refreshGoogleAccessToken({ app, clientId, clientSecret, oldToken,
     refreshToken
   }
 
-  app.ports.refreshAccessToken.send({
-    service: "google",
+  app.ports.refreshedAccessToken.send({
+    service: "Google",
     sourceId: srcId,
     accessToken: newToken,
     expiresAt: newExpiresAt

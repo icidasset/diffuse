@@ -4,10 +4,13 @@ import Alien
 import Brain.Common.State as Common
 import Brain.Ports as Ports
 import Brain.Types exposing (..)
+import Dict
 import Json.Decode as Json
-import Return
+import List.Extra as List
+import Return exposing (return)
 import Return.Ext as Return
 import Sources exposing (Service(..))
+import Sources.Encoding
 import Sources.Refresh.AccessToken
 import Time
 
@@ -22,12 +25,24 @@ refreshedAccessToken value model =
         Ok portArguments ->
             case portArguments.service of
                 Google ->
-                    -- TODO:
-                    -- 1. Find source
-                    -- 2. Add `access token` and `expires at` to source data
-                    -- 3. Replace source in collection
-                    -- 4. Save user data
-                    Return.singleton model
+                    model.hypaethralUserData.sources
+                        |> List.find (.id >> (==) portArguments.sourceId)
+                        |> Maybe.map
+                            (\source ->
+                                source.data
+                                    |> Dict.insert "accessToken" portArguments.accessToken
+                                    |> Dict.insert "expiresAt" (String.fromInt portArguments.expiresAt)
+                                    |> (\newData -> { source | data = newData })
+                            )
+                        |> Maybe.map
+                            (\source ->
+                                source
+                                    |> Sources.Encoding.encode
+                                    |> Alien.broadcast Alien.UpdateSourceData
+                                    |> Ports.toUI
+                            )
+                        |> Maybe.withDefault Cmd.none
+                        |> return model
 
                 _ ->
                     Return.singleton model

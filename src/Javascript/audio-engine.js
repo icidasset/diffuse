@@ -214,7 +214,7 @@ export function preloadAudioElement(orchestrion, queueItem) {
     n => n.parentNode.removeChild(n)
   )
 
-  // audio element remains valid for 2 hours
+  // audio element remains valid for 45 minutes
   transformUrl(queueItem.url, orchestrion.app).then(url => {
     const queueItemWithTransformedUrl =
       Object.assign({}, queueItem, { url: url })
@@ -222,7 +222,7 @@ export function preloadAudioElement(orchestrion, queueItem) {
     createAudioElement(
       orchestrion,
       queueItemWithTransformedUrl,
-      Date.now() + 1000 * 60 * 60 * 2,
+      Date.now() + 1000 * 60 * 45,
       true
     )
   })
