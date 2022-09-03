@@ -434,7 +434,7 @@ wire.broadcastChannel = () => {
 // ---------
 
 wire.clipboard = () => {
-  app.ports.copyToClipboard.subscribe(text => {
+  app.ports.copyToClipboard.subscribe(async text => {
     // TODO: Find a better solution for this
     const adjustedText = (() => {
       if (text.startsWith("dropbox://")) {
@@ -447,7 +447,7 @@ wire.clipboard = () => {
       }
     })()
 
-    copyToClipboard(copyToClipboard)
+    copyToClipboard(await adjustedText)
   })
 }
 

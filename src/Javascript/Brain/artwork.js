@@ -10,7 +10,7 @@ import * as processing from "../processing"
 const REJECT = () => Promise.reject("No artwork found")
 
 
-export function find(prep, app) {
+export function find(prep, _app) {
   return findUsingTags(prep)
     .then(a => a ? a : findUsingMusicBrainz(prep))
     .then(a => a ? a : findUsingLastFm(prep))
