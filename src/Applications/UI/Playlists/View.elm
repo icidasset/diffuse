@@ -112,7 +112,12 @@ index playlists selectedPlaylist bgColor authMethodSupportsPublicData =
 
             else
                 { label = text playlist.name
-                , actions = []
+                , actions =
+                    [ { icon = Icons.more_vert
+                      , msg = Just (ShowPlaylistListMenu playlist)
+                      , title = "Menu"
+                      }
+                    ]
                 , msg = Just (ActivatePlaylist playlist)
                 , isSelected = False
                 }
@@ -257,8 +262,12 @@ selectedPlaylistListItem playlist bgColor =
             [ text playlist.name ]
     , actions =
         [ { icon = \size _ -> Icons.check size (Color selectionColor)
-          , msg = Nothing
+          , msg = Just (always DeactivatePlaylist)
           , title = "Selected playlist"
+          }
+        , { icon = Icons.more_vert
+          , msg = Just (ShowPlaylistListMenu playlist)
+          , title = "Menu"
           }
         ]
     , msg = Just DeactivatePlaylist
