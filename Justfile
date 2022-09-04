@@ -238,11 +238,11 @@ js-prod: vendor-js
 
 
 @watch-css:
-	watchexec -p -w {{SRC_DIR}}/Css -w {{SYSTEM_DIR}}/Css -- just css
+	watchexec -p -w {{SRC_DIR}}/Css -w {{SYSTEM_DIR}}/Css -- just css js
 
 
 @watch-elm:
-	watchexec -p -w {{SRC_DIR}} -e elm -- just elm css
+	watchexec -p -w {{SRC_DIR}} -e elm -- just elm js css
 
 
 @watch-js:
@@ -250,4 +250,4 @@ js-prod: vendor-js
 
 
 @watch-system:
-	watchexec -p --ignore *.elm --ignore *.js --ignore *.css -- just system
+	watchexec -p --ignore *.elm --ignore *.js --ignore *.css -- just system js
