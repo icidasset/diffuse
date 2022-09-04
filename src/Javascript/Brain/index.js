@@ -13,6 +13,7 @@ import * as user from "./user"
 import { fromCache, removeCache, reportError } from "./common"
 import { sendData, storageCallback, toCache } from "./common"
 import { identity } from "../common"
+import { transformUrl } from "../urls"
 
 importScripts("brain.elm.js")
 importScripts("subworkers.js")
@@ -179,7 +180,8 @@ app.ports.storeTracksInCache.subscribe(list => {
   list.reduce(
     (acc, item) => {
       return acc
-        .then(_ => fetch(item.url))
+        .then(_ => transformUrl(item.url))
+        .then(fetch)
         .then(r => r.blob())
         .then(b => db.setInIndex({ key: item.trackId, data: b, store: db.storeNames.tracks }))
     },
