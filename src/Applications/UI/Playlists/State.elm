@@ -11,7 +11,7 @@ import Notifications
 import Playlists exposing (..)
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
-import Tracks exposing (IdentifiedTrack, SortBy(..), SortDirection(..))
+import Tracks exposing (IdentifiedTrack)
 import Tracks.Collection
 import UI.Alfred.State as Alfred
 import UI.Common.State as Common
