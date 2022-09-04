@@ -175,8 +175,7 @@ js-prod: vendor-js
 #
 
 @dev: build
-	# just watch-wo-build & just server
-	just server
+	just watch-wo-build & just server
 
 
 @doc-tests:

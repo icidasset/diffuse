@@ -36,7 +36,7 @@
       curl
       just
       simple-http-server
-      # watchexec
+      pkgs-x86.watchexec
     ];
 
     languages = [
