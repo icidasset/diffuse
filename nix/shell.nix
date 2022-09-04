@@ -1,5 +1,7 @@
 { pkgs ? import <nixpkgs> {} }: with pkgs; let
 
+  isM1Mac = stdenv.system == "aarch64-darwin";
+
   # Rust
   # ----
 
@@ -36,7 +38,7 @@
       curl
       just
       simple-http-server
-      pkgs-x86.watchexec
+      (if isM1Mac then pkgs-x86.watchexec else watchexec)
     ];
 
     languages = [
