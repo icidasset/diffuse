@@ -375,15 +375,17 @@ shouldRenderGroup identifiers =
         |> Maybe.withDefault False
 
 
+playlistTrackFromTrack : Track -> PlaylistTrack
+playlistTrackFromTrack track =
+    { album = track.tags.album
+    , artist = track.tags.artist
+    , title = track.tags.title
+    }
+
+
 toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrack
 toPlaylistTracks =
-    List.map
-        (\( _, t ) ->
-            { album = t.tags.album
-            , artist = t.tags.artist
-            , title = t.tags.title
-            }
-        )
+    List.map (Tuple.second >> playlistTrackFromTrack)
 
 
 
