@@ -21,17 +21,17 @@ export const WEBNATIVE_STAGING_ENV = {
 
 export const debounce =
   (callback, time = 250, timeoutId) =>
-  (...args) =>
-  clearTimeout(timeoutId, timeoutId = setTimeout(callback, time, ...args))
+    (...args) =>
+      clearTimeout(timeoutId, timeoutId = setTimeout(callback, time, ...args))
 
 
 export const throttle =
   (callback, time = 250, wasCalledBefore, lastestArgs) =>
-  (...args) => {
-    lastestArgs = args
-    if (wasCalledBefore) { return } else { wasCalledBefore = true }
-    setTimeout(() => { callback(...lastestArgs); wasCalledBefore = false }, time)
-  }
+    (...args) => {
+      lastestArgs = args
+      if (wasCalledBefore) { return } else { wasCalledBefore = true }
+      setTimeout(() => { callback(...lastestArgs); wasCalledBefore = false }, time)
+    }
 
 
 export function identity(a) {
@@ -40,7 +40,7 @@ export function identity(a) {
 
 
 export function fileExtension(mimeType) {
-  const audioId = mimeType.toLowerCase().split("/")[1]
+  const audioId = mimeType.toLowerCase().split("/")[ 1 ]
 
   switch (audioId) {
     case "mp3": return "mp3";
@@ -51,6 +51,7 @@ export function fileExtension(mimeType) {
     case "x-m4a": return "m4a";
 
     case "flac": return "flac";
+    case "x-flac": return "flac";
     case "ogg": return "ogg";
 
     case "wav": return "wav";
