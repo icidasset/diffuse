@@ -634,7 +634,8 @@ function downloadTracks(group) {
   return group.tracks.reduce(
     (acc, track) => {
       return acc
-        .then(_ => fetch(track.url))
+        .then(_ => transformUrl(track.url))
+        .then(fetch)
         .then(r => {
           const mimeType = r.headers.get("content-type")
           const fileExt = fileExtension(mimeType) || "unknown"
