@@ -5,6 +5,7 @@
 - **Native builds with [Tauri](https://tauri.app/)**.
 - Fixes playback issue with Google Drive on Safari/iOS.
 - Improves Google Drive support, access tokens are now refreshed when needed (before it only refreshed on source processing)
+- Add support for non-standard `audio/x-flac` mimetype
 
 
 ## 3.1.1
