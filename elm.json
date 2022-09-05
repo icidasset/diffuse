@@ -28,6 +28,7 @@
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
             "elm/virtual-dom": "1.0.2",
+            "elm-community/dict-extra": "2.4.0",
             "elm-community/html-extra": "3.4.0",
             "elm-community/list-extra": "8.5.2",
             "elm-community/maybe-extra": "5.3.0",
