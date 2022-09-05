@@ -250,6 +250,7 @@ type Msg
     | ActivatePlaylist Playlist
     | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
     | AssistWithAddingTracksToPlaylist (List IdentifiedTrack)
+    | AssistWithSelectingPlaylist
     | CreatePlaylist
     | DeactivatePlaylist
     | DeletePlaylist { playlistName : String }

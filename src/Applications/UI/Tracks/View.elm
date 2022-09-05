@@ -10,6 +10,7 @@ import Html.Events as E exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
 import Html.Lazy exposing (..)
+import Keyboard exposing (Key(..))
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
@@ -28,6 +29,24 @@ import UI.Types as UI exposing (..)
 
 
 
+-- 🌳
+
+
+type alias NavigationProperties =
+    { bgColor : Maybe Color
+    , favouritesOnly : Bool
+    , grouping : Maybe Grouping
+    , isOnIndexPage : Bool
+    , pressedShift : Bool
+    , scene : Scene
+    , searchTerm : Maybe String
+    , selectedPlaylist : Maybe Playlist
+    , showVolumeSlider : Bool
+    , volume : Float
+    }
+
+
+
 -- 🗺
 
 
@@ -39,18 +58,19 @@ view model =
     in
     chunk
         viewClasses
-        [ lazy8
+        [ lazy
             navigation
-            model.grouping
-            model.favouritesOnly
-            model.searchTerm
-            model.selectedPlaylist
-            isOnIndexPage
-            model.extractedBackdropColor
-            model.scene
-            ( model.showVolumeSlider
-            , model.eqSettings.volume
-            )
+            { bgColor = model.extractedBackdropColor
+            , favouritesOnly = model.favouritesOnly
+            , grouping = model.grouping
+            , isOnIndexPage = isOnIndexPage
+            , pressedShift = List.member Shift model.pressedKeys
+            , scene = model.scene
+            , searchTerm = model.searchTerm
+            , selectedPlaylist = model.selectedPlaylist
+            , showVolumeSlider = model.showVolumeSlider
+            , volume = model.eqSettings.volume
+            }
 
         --
         , if List.isEmpty model.tracks.harvested then
@@ -120,8 +140,8 @@ viewClasses =
     ]
 
 
-navigation : Maybe Grouping -> Bool -> Maybe String -> Maybe Playlist -> Bool -> Maybe Color -> Scene -> ( Bool, Float ) -> Html UI.Msg
-navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPage bgColor scene ( showVolumeSlider, volume ) =
+navigation : NavigationProperties -> Html UI.Msg
+navigation { bgColor, favouritesOnly, grouping, isOnIndexPage, pressedShift, scene, searchTerm, selectedPlaylist, showVolumeSlider, volume } =
     let
         tabindex_ =
             ifThenElse isOnIndexPage 0 -1
@@ -287,7 +307,7 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
 
                 -- 4
                 , brick
-                    [ Mouse.onClick (TracksMsg << ShowViewMenu maybeGrouping)
+                    [ Mouse.onClick (TracksMsg << ShowViewMenu grouping)
                     , title "View settings"
                     ]
                     [ "cursor-pointer" ]
@@ -339,11 +359,19 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
             tabindex_
             [ ( Icon Icons.waves
               , Label "Playlists" Hidden
-              , NavigateToPage (Page.Playlists UI.Playlists.Page.Index)
+              , if pressedShift then
+                    PerformMsg AssistWithSelectingPlaylist
+
+                else
+                    NavigateToPage (Page.Playlists UI.Playlists.Page.Index)
               )
             , ( Icon Icons.schedule
               , Label "Queue" Hidden
-              , NavigateToPage (Page.Queue UI.Queue.Page.Index)
+              , if pressedShift then
+                    PerformMsg (ChangeUrlUsingPage <| Page.Queue UI.Queue.Page.History)
+
+                else
+                    NavigateToPage (Page.Queue UI.Queue.Page.Index)
               )
             , ( if volume == 0 then
                     Icon Icons.volume_off
@@ -354,7 +382,15 @@ navigation maybeGrouping favouritesOnly searchTerm selectedPlaylist isOnIndexPag
                 else
                     Icon Icons.volume_up
               , Label "Volume" Hidden
-              , PerformMsg (ToggleVolumeSlider <| ifThenElse showVolumeSlider Off On)
+              , if pressedShift then
+                    if volume == 0 then
+                        PerformMsg (AdjustVolume 0.5)
+
+                    else
+                        PerformMsg (AdjustVolume 0)
+
+                else
+                    PerformMsg (ToggleVolumeSlider <| ifThenElse showVolumeSlider Off On)
               )
             ]
         , -----------------------------------------

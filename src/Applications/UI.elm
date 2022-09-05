@@ -397,6 +397,9 @@ update msg =
         AssistWithAddingTracksToPlaylist a ->
             Playlists.assistWithAddingTracksToPlaylist a
 
+        AssistWithSelectingPlaylist ->
+            Playlists.assistWithSelectingPlaylist
+
         CreatePlaylist ->
             Playlists.create
 
