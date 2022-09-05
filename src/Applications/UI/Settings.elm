@@ -150,11 +150,12 @@ content deps =
     -- Version
     -----------------------------------------
     , let
-        tag =
+        tag children =
             chunk
                 [ "bg-base06"
                 , "inline-block"
                 , "leading-none"
+                , "mb-1"
                 , "ml-1"
                 , "mr-3"
                 , "p-1"
@@ -165,6 +166,12 @@ content deps =
                 ------------
                 , "dark:bg-base01"
                 , "dark:text-base05"
+                ]
+                [ chunk
+                    [ "inline-block"
+                    , "pt-px"
+                    ]
+                    children
                 ]
       in
       chunk
