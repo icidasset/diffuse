@@ -67,6 +67,9 @@ update msg =
         ToggleCachedOnly ->
             toggleCachedOnly
 
+        ToggleCoverSelectionReducesPool ->
+            toggleCoverSelectionReducesPool
+
         ToggleFavouritesOnly ->
             toggleFavouritesOnly
 
@@ -212,6 +215,13 @@ changeScene scene model =
             Cmd.none
     )
         |> return { model | scene = scene, selectedCover = Nothing }
+        |> andThen
+            (if model.coverSelectionReducesPool then
+                Queue.reset
+
+             else
+                Return.singleton
+            )
         |> andThen Common.forceTracksRerender
         |> andThen User.saveEnclosedUserData
 
@@ -241,7 +251,13 @@ clearSearch model =
 
 deselectCover : Manager
 deselectCover model =
-    Return.singleton { model | selectedCover = Nothing }
+    (if model.coverSelectionReducesPool then
+        Queue.reset
+
+     else
+        Return.singleton
+    )
+        { model | selectedCover = Nothing }
 
 
 download : String -> List Track -> Manager
@@ -575,9 +591,14 @@ search model =
 
 selectCover : Cover -> Manager
 selectCover cover model =
-    return
-        { model | selectedCover = Just cover }
-        (Ports.loadAlbumCovers { list = False, coverView = True })
+    { model | selectedCover = Just cover }
+        |> (if model.coverSelectionReducesPool then
+                Queue.reset
+
+            else
+                Return.singleton
+           )
+        |> Return.command (Ports.loadAlbumCovers { list = False, coverView = True })
 
 
 setSearchResults : Json.Value -> Manager
@@ -844,6 +865,13 @@ toggleCachedOnly model =
         |> andThen Common.forceTracksRerender
 
 
+toggleCoverSelectionReducesPool : Manager
+toggleCoverSelectionReducesPool model =
+    { model | coverSelectionReducesPool = not model.coverSelectionReducesPool }
+        |> Queue.reset
+        |> andThen User.saveSettings
+
+
 toggleFavourite : Int -> Manager
 toggleFavourite index model =
     case List.getAt index model.tracks.harvested of
@@ -958,11 +986,11 @@ resolveParcel ( deps, newCollection ) model =
                     model.tracks.harvested
                     newCollection.harvested
 
-        searchChanged =
+        scrollContextChanged =
             newScrollContext /= model.tracks.scrollContext
 
         modelWithNewCollection =
-            (if model.scene == List && searchChanged then
+            (if model.scene == List && scrollContextChanged then
                 \m -> { m | infiniteList = InfiniteList.updateScroll scrollEvent m.infiniteList }
 
              else
@@ -995,7 +1023,7 @@ resolveParcel ( deps, newCollection ) model =
           -----------------------------------------
           -- Command
           -----------------------------------------
-        , if searchChanged then
+        , if scrollContextChanged then
             case model.scene of
                 Covers ->
                     UI.Tracks.Scene.Covers.scrollToTop
@@ -1009,7 +1037,7 @@ resolveParcel ( deps, newCollection ) model =
 
 
 whenHarvestChanges =
-    andThen Queue.reset >> andThen harvestCovers
+    andThen harvestCovers >> andThen Queue.reset
 
 
 whenArrangementChanges =
@@ -1036,7 +1064,6 @@ importHypaethral : HypaethralData -> Maybe Playlist -> Manager
 importHypaethral data selectedPlaylist model =
     { model
         | favourites = data.favourites
-        , hideDuplicates = Maybe.unwrap False .hideDuplicates data.settings
         , selectedPlaylist = selectedPlaylist
         , tracks = { emptyCollection | untouched = data.tracks }
     }

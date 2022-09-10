@@ -160,6 +160,7 @@ type alias Model =
     , cachedTracksOnly : Bool
     , cachingTracksInProgress : List String
     , covers : { arranged : List Tracks.Cover, harvested : List Tracks.Cover }
+    , coverSelectionReducesPool : Bool
     , favourites : List Favourite
     , favouritesOnly : Bool
     , grouping : Maybe Grouping

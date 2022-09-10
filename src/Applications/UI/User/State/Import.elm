@@ -176,6 +176,8 @@ importHypaethral value model =
                 selectedPlaylist
                 { model
                     | chosenBackdrop = chosenBackdrop
+                    , coverSelectionReducesPool = Maybe.unwrap True .coverSelectionReducesPool data.settings
+                    , hideDuplicates = Maybe.unwrap False .hideDuplicates data.settings
                     , lastFm = { lastFmModel | sessionKey = Maybe.andThen .lastFm data.settings }
                     , playlists = newPlaylistsCollection
                     , playlistToActivate = Nothing

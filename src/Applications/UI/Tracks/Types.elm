@@ -44,6 +44,7 @@ type Msg
     | RemoveFavourites (List IdentifiedTrack)
     | SortBy SortBy
     | ToggleFavourite Int
+    | ToggleCoverSelectionReducesPool
       -----------------------------------------
       -- Groups
       -----------------------------------------

@@ -246,38 +246,6 @@ harvest previouslySelectedCover sortBy tracks covers =
 -- ⚗️
 
 
-coverGroup : SortBy -> IdentifiedTrack -> String
-coverGroup sort ( identifiers, { tags } as track ) =
-    (case sort of
-        Artist ->
-            tags.artist
-
-        Album ->
-            -- There is the possibility of albums with the same name,
-            -- such as "Greatests Hits".
-            -- To make sure we treat those as different albums,
-            -- we prefix the album by its parent directory.
-            identifiers.parentDirectory ++ tags.album
-
-        PlaylistIndex ->
-            ""
-
-        Title ->
-            tags.title
-    )
-        |> String.trim
-        |> String.toLower
-
-
-coverKey : Bool -> Track -> String
-coverKey isVariousArtists { tags } =
-    if isVariousArtists then
-        tags.album
-
-    else
-        tags.artist ++ " --- " ++ tags.album
-
-
 makeCover sortBy_ gathering collection =
     let
         closedGathering =
