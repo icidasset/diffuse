@@ -111,7 +111,13 @@ fill : Manager
 fill model =
     let
         ( availableTracks, timestamp ) =
-            ( model.tracks.harvested
+            ( case ( model.selectedCover, model.coverSelectionReducesPool ) of
+                ( Just cover, True ) ->
+                    Tuple.first <| List.foldl coverTracksHarvester ( [], cover.trackIds ) model.tracks.harvested
+
+                _ ->
+                    model.tracks.harvested
+              --
             , model.currentTime
             )
 
@@ -419,6 +425,23 @@ removeItem { index, item } model =
 
 
 -- ⚗️
+
+
+coverTracksHarvester :
+    IdentifiedTrack
+    -> ( List IdentifiedTrack, List String )
+    -> ( List IdentifiedTrack, List String )
+coverTracksHarvester ( i, t ) ( acc, coverTrackIds ) =
+    case List.findIndex ((==) t.id) coverTrackIds of
+        Just idx ->
+            ( acc ++ [ ( i, t ) ]
+            , List.removeAt idx coverTrackIds
+            )
+
+        Nothing ->
+            ( acc
+            , coverTrackIds
+            )
 
 
 moveItem : { from : Int, to : Int, shuffle : Bool } -> List Item -> List Item

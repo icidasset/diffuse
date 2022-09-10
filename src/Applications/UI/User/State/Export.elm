@@ -33,8 +33,9 @@ export model =
 
 
 gatherSettings : Model -> Settings
-gatherSettings { chosenBackdrop, hideDuplicates, lastFm, processAutomatically, rememberProgress } =
+gatherSettings { chosenBackdrop, coverSelectionReducesPool, hideDuplicates, lastFm, processAutomatically, rememberProgress } =
     { backgroundImage = chosenBackdrop
+    , coverSelectionReducesPool = coverSelectionReducesPool
     , hideDuplicates = hideDuplicates
     , lastFm = lastFm.sessionKey
     , processAutomatically = processAutomatically

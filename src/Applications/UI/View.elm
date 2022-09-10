@@ -178,6 +178,7 @@ defaultScreen model =
                     { authenticationMethod = Authentication.extractMethod model.authentication
                     , buildTimestamp = model.buildTimestamp
                     , chosenBackgroundImage = model.chosenBackdrop
+                    , coverSelectionReducesPool = model.coverSelectionReducesPool
                     , currentTimeZone = model.currentTimeZone
                     , extractedBackdropColor = model.extractedBackdropColor
                     , hideDuplicateTracks = model.hideDuplicates

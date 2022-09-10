@@ -35,6 +35,7 @@ type alias Dependencies =
     { authenticationMethod : Maybe User.Layer.Method
     , buildTimestamp : Int
     , chosenBackgroundImage : Maybe String
+    , coverSelectionReducesPool : Bool
     , currentTimeZone : Time.Zone
     , extractedBackdropColor : Maybe Color
     , hideDuplicateTracks : Bool
@@ -345,6 +346,14 @@ content deps =
             , UI.Kit.checkbox
                 { checked = deps.rememberProgress
                 , toggleMsg = ToggleRememberProgress
+                }
+            ]
+        , chunk
+            [ "w-full", "md:w-1/2" ]
+            [ label "Cover selection reduces track pool"
+            , UI.Kit.checkbox
+                { checked = deps.coverSelectionReducesPool
+                , toggleMsg = TracksMsg Tracks.ToggleCoverSelectionReducesPool
                 }
             ]
         ]

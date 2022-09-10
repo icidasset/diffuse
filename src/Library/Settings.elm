@@ -12,6 +12,7 @@ import Maybe.Extra as Maybe
 
 type alias Settings =
     { backgroundImage : Maybe String
+    , coverSelectionReducesPool : Bool
     , hideDuplicates : Bool
     , lastFm : Maybe String
     , processAutomatically : Bool
@@ -28,6 +29,9 @@ encode settings =
     Json.Encode.object
         [ ( "backgroundImage"
           , Maybe.unwrap Json.Encode.null Json.Encode.string settings.backgroundImage
+          )
+        , ( "coverSelectionReducesPool"
+          , Json.Encode.bool settings.coverSelectionReducesPool
           )
         , ( "hideDuplicates"
           , Json.Encode.bool settings.hideDuplicates
@@ -52,6 +56,7 @@ decoder : Json.Decoder Settings
 decoder =
     Json.succeed Settings
         |> optional "backgroundImage" (Json.maybe Json.string) Nothing
+        |> optional "coverSelectionReducesPool" Json.bool True
         |> optional "hideDuplicates" Json.bool False
         |> optional "lastFm" (Json.maybe Json.string) Nothing
         |> optional "processAutomatically" Json.bool True

@@ -520,6 +520,7 @@ signOut model =
 
             -- Tracks
             ---------
+            , coverSelectionReducesPool = True
             , favourites = []
             , hideDuplicates = False
             , searchResults = Nothing

@@ -175,7 +175,7 @@ js-prod: vendor-js
 #
 
 @dev: build
-	just watch-wo-build & just server
+	just watch & just server
 
 
 @doc-tests:
@@ -229,10 +229,7 @@ js-prod: vendor-js
 @test: doc-tests
 
 
-@watch: build watch-wo-build
-
-
-@watch-wo-build:
+@watch:
 	echo "> Watching"
 	just watch-css & just watch-elm & just watch-js & just watch-system
 
