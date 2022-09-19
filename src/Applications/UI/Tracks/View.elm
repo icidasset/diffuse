@@ -457,73 +457,46 @@ noTracksView processingContext amountOfSources amountOfTracks _ =
               else if amountOfSources == 0 then
                 chunk
                     [ "flex"
-                    , "flex-wrap"
-                    , "items-start"
+                    , "flex-col"
+                    , "items-center"
                     , "justify-center"
                     , "px-3"
                     ]
-                    [ -----------------------------------------
-                      -- Add
-                      -----------------------------------------
-                      inline
-                        [ "mb-4"
-                        , "mx-2"
-                        , "whitespace-nowrap"
+                    [ slab
+                        Html.img
+                        [ A.src "images/diffuse-dark.svg"
+                        , A.width 190
                         ]
-                        [ UI.Kit.buttonLink
-                            (Sources.NewOnboarding
-                                |> Page.Sources
-                                |> Page.toString
-                            )
-                            UI.Kit.Filled
-                            (buttonContents
-                                [ UI.Kit.inlineIcon Icons.add
-                                , text "Add some music"
-                                ]
-                            )
-                        ]
+                        [ "dark:hidden" ]
+                        []
 
-                    -----------------------------------------
-                    -- Demo
-                    -----------------------------------------
-                    , inline
-                        [ "mb-4"
-                        , "mx-2"
-                        , "whitespace-nowrap"
+                    --
+                    , slab
+                        Html.img
+                        [ A.src "images/diffuse-light.svg"
+                        , A.width 190
                         ]
-                        [ UI.Kit.buttonWithColor
-                            UI.Kit.Gray
-                            UI.Kit.Normal
-                            InsertDemo
-                            (buttonContents
-                                [ UI.Kit.inlineIcon Icons.music_note
-                                , text "Insert demo"
-                                ]
-                            )
-                        ]
+                        [ "hidden dark:block" ]
+                        []
 
-                    -----------------------------------------
-                    -- How
-                    -----------------------------------------
-                    , inline
-                        [ "mb-4"
-                        , "mx-2"
-                        , "whitespace-nowrap"
+                    --
+                    , chunk
+                        [ "italic"
+                        , "max-w-sm"
+                        , "mt-5"
+                        , "text-base05"
+                        , "text-center"
+                        , "text-sm"
+
+                        -- Dark mode
+                        ------------
+                        , "dark:text-base03"
                         ]
-                        [ UI.Kit.buttonWithOptions
-                            Html.a
-                            [ href "about/"
-                            , target "_blank"
-                            ]
-                            UI.Kit.Gray
-                            UI.Kit.Normal
-                            Nothing
-                            (buttonContents
-                                [ UI.Kit.inlineIcon Icons.help
-                                , text "More info"
-                                ]
-                            )
-                        ]
+                        [ Html.text """
+                            Play music ♫ from your Dropbox,
+IPFS node, Amazon S3 bucket, or any other
+cloud/distributed storage service you use.
+                        """ ]
                     ]
 
               else if amountOfTracks == 0 then
