@@ -292,6 +292,7 @@ type Msg
     | MigrateHypaethralUserData
     | RequestImport
     | SaveEnclosedUserData
+    | SyncData
       -----------------------------------------
       -- ⚗️ Adjunct
       -----------------------------------------

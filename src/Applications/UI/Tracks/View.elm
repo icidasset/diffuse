@@ -16,12 +16,12 @@ import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Tracks exposing (..)
+import UI.Authentication.Types as Authentication
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Playlists.Page
 import UI.Queue.Page
-import UI.Sources.Page as Sources
 import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Tracks.Types exposing (..)
@@ -492,11 +492,53 @@ noTracksView processingContext amountOfSources amountOfTracks _ =
                         ------------
                         , "dark:text-base03"
                         ]
-                        [ Html.text """
-                            Play music ♫ from your Dropbox,
+                        [ Html.text "Play music"
+                        , inline [ "not-italic", "font-normal", "inline-block", "mx-1", "pr-px" ] [ Html.text " ♫ " ]
+                        , Html.text """from your Dropbox,
 IPFS node, Amazon S3 bucket, or any other
 cloud/distributed storage service you use.
-                        """ ]
+                        """
+                        ]
+
+                    --
+                    , chunk
+                        [ "mt-4", "space-x-3" ]
+                        [ UI.Kit.button
+                            UI.Kit.Normal
+                            (OpenUrlOnNewPage "about/")
+                            (Html.text "More info")
+                        , UI.Kit.button
+                            UI.Kit.Normal
+                            InsertDemo
+                            (Html.text "Insert Demo")
+                        , UI.Kit.buttonWithOptions
+                            Html.button
+                            [ Mouse.onClick (AuthenticationMsg << Authentication.ShowSyncDataMenu) ]
+                            UI.Kit.Accent
+                            UI.Kit.Filled
+                            Nothing
+                            (Html.text "Sync data")
+                        ]
+
+                    --
+                    -- , chunk
+                    --     [ "mt-4" ]
+                    --     [ slab
+                    --         Html.a
+                    --         [ A.href "about/"
+                    --         , A.target "_blank"
+                    --         ]
+                    --         [ "border-b"
+                    --         , "border-current"
+                    --         , "inline-block"
+                    --         , "text-base05"
+                    --         , "text-sm"
+                    --         -- Dark mode
+                    --         ------------
+                    --         , "dark:text-base03"
+                    --         ]
+                    --         [ Html.text "More info" ]
+                    -- ]
                     ]
 
               else if amountOfTracks == 0 then

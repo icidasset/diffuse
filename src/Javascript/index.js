@@ -116,7 +116,7 @@ function initialise(reg) {
 
   // Other ports
   app.ports.openUrlOnNewPage.subscribe(url => {
-    if (__TAURI__) {
+    if (self.__TAURI__) {
       __TAURI__.shell.open(
         url.includes("://") ? url : `${location.origin}/${url.replace(/^\.\//, "")}`
       )

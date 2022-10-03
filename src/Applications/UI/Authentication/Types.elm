@@ -40,12 +40,13 @@ type Msg
     | CancelFlow
     | ExchangeDropboxAuthCode (Result Http.Error Dropbox.Tokens)
     | GetStarted
+    | GotAuthMethod Json.Value
     | NotAuthenticated
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
     | ShowMoreOptions Mouse.Event
+    | ShowSyncDataMenu Mouse.Event
     | SignIn Method
     | SignInWithPassphrase Method String
-    | SignedIn Json.Value
     | SignOut
     | TriggerExternalAuth Method String
       -----------------------------------------

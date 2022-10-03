@@ -828,16 +828,14 @@ makeHypaethralLens setter model value =
 
 methodRetrieved : Json.Value -> Manager
 methodRetrieved json model =
-    case decodeMethod json of
-        -- 🚀
-        Just method ->
-            { model | authMethod = Just method }
-                |> retrieveAllHypaethralData
-                |> andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
-
-        -- ✋
-        _ ->
-            terminate NotAuthenticated model
+    -- 🚀
+    let
+        method =
+            Maybe.withDefault Local (decodeMethod json)
+    in
+    { model | authMethod = Just method }
+        |> retrieveAllHypaethralData
+        |> andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
 
 
 retrieveMethod : Manager

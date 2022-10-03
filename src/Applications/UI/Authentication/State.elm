@@ -5,6 +5,7 @@ import Base64
 import Binary
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
+import Coordinates exposing (Coordinates)
 import Dict
 import Html.Events.Extra.Mouse as Mouse
 import Http
@@ -149,6 +150,9 @@ update msg =
         GetStarted ->
             startFlow
 
+        GotAuthMethod a ->
+            gotAuthMethod a
+
         NotAuthenticated ->
             notAuthenticated
 
@@ -158,14 +162,14 @@ update msg =
         ShowMoreOptions a ->
             showMoreOptions a
 
+        ShowSyncDataMenu a ->
+            showSyncDataMenu a
+
         SignIn a ->
             signIn a
 
         SignInWithPassphrase a b ->
             signInWithPassphrase a b
-
-        SignedIn a ->
-            signedIn a
 
         SignOut ->
             signOut
@@ -352,6 +356,35 @@ exchangeDropboxAuthCode result model =
                     (Lens.replace lens model Unauthenticated)
 
 
+gotAuthMethod : Json.Value -> Manager
+gotAuthMethod json model =
+    -- 🧠 told me which auth method we're using,
+    -- so we can tell the user in the UI.
+    case decodeMethod json of
+        Just method ->
+            model
+                |> replaceState
+                    (Authenticated method)
+                |> andThen
+                    (\m ->
+                        if m.migratingData then
+                            "Migrated data successfully"
+                                |> Notifications.success
+                                |> showNotificationWithModel
+                                    { m
+                                        | isLoading = False
+                                        , migratingData = False
+                                    }
+                                |> User.saveAllHypaethralData
+
+                        else
+                            Return.singleton m
+                    )
+
+        Nothing ->
+            Return.singleton model
+
+
 missingSecretKey : Json.Value -> Manager
 missingSecretKey _ model =
     "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
@@ -425,33 +458,12 @@ showMoreOptions mouseEvent model =
         |> Common.showContextMenuWithModel model
 
 
-signedIn : Json.Value -> Manager
-signedIn json model =
-    -- 🧠 told me which auth method we're using,
-    -- so we can tell the user in the UI.
-    case decodeMethod json of
-        Just method ->
-            model
-                |> replaceState
-                    (Authenticated method)
-                |> andThen
-                    (\m ->
-                        if m.migratingData then
-                            "Migrated data successfully"
-                                |> Notifications.success
-                                |> showNotificationWithModel
-                                    { m
-                                        | isLoading = False
-                                        , migratingData = False
-                                    }
-                                |> User.saveAllHypaethralData
-
-                        else
-                            Return.singleton m
-                    )
-
-        Nothing ->
-            Return.singleton model
+showSyncDataMenu : Mouse.Event -> Manager
+showSyncDataMenu mouseEvent model =
+    mouseEvent.clientPos
+        |> Coordinates.fromTuple
+        |> Authentication.syncDataMenu
+        |> Common.showContextMenuWithModel model
 
 
 signIn : Method -> Manager

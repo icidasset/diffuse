@@ -642,7 +642,7 @@ translateAlienData tag data =
             TracksMsg (Tracks.Add data)
 
         Alien.AuthMethod ->
-            AuthenticationMsg (Authentication.SignedIn data)
+            AuthenticationMsg (Authentication.GotAuthMethod data)
 
         Alien.FinishedProcessingSource ->
             SourcesMsg (Sources.FinishedProcessingSource data)
