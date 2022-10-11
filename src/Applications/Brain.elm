@@ -5,6 +5,7 @@ import Brain.Other.State as Other
 import Brain.Ports as Ports
 import Brain.Sources.Processing.State as Processing
 import Brain.Sources.Processing.Types as Processing
+import Brain.Task.Ports
 import Brain.Tracks.State as Tracks
 import Brain.Types exposing (..)
 import Brain.User.State as User
@@ -64,17 +65,14 @@ init flags =
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
-      { authMethod = Nothing
-      , currentTime = Time.default
+      { currentTime = Time.default
       , hypaethralDebouncer = hypDebouncer
       , hypaethralRetrieval = Nothing
       , hypaethralStorage = []
       , hypaethralUserData = User.emptyHypaethralData
-      , legacyMode = False
-      , migratingData = False
       , origin = "ORIGIN_UNKNOWN"
-      , performingSignIn = False
       , processingStatus = Processing.NotProcessing
+      , userSyncMethod = Nothing
       }
       -----------------------------------------
       -- Initial command
@@ -92,7 +90,7 @@ init flags =
 
 update : Msg -> Manager
 update msg =
-    case msg of
+    case Debug.log "Brain" msg of
         Bypass ->
             Return.singleton
 
@@ -227,9 +225,6 @@ translateAlienData tag data =
         -----------------------------------------
         Alien.DownloadTracks ->
             DownloadTracks data
-
-        Alien.ImportLegacyData ->
-            UserMsg User.RetrieveLegacyHypaethralData
 
         Alien.ProcessSources ->
             ProcessingMsg (Processing.Process data)

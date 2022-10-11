@@ -71,7 +71,6 @@ type alias Model =
     , isTouchDevice : Bool
     , isUpgrading : Bool
     , lastFm : LastFm.Model
-    , migratingData : Bool
     , navKey : Nav.Key
     , page : Page
     , pressedKeys : List Keyboard.Key
@@ -285,11 +284,9 @@ type Msg
     | GotWebnativeResponse Webnative.Response
     | ImportFile File
     | ImportJson String
-    | ImportLegacyData
     | InsertDemo
     | LoadEnclosedUserData Json.Decode.Value
     | LoadHypaethralUserData Json.Decode.Value
-    | MigrateHypaethralUserData
     | RequestImport
     | SaveEnclosedUserData
     | SyncData

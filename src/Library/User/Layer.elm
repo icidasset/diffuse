@@ -22,12 +22,15 @@ import Json.Decode as Json
 import Json.Decode.Ext as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
+import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists
 import Playlists.Encoding as Playlists
 import Settings
 import Sources
 import Sources.Encoding as Sources
+import Time
+import Time.Ext as Time
 import Tracks
 import Tracks.Encoding as Tracks
 
@@ -111,6 +114,9 @@ type alias HypaethralData =
     , settings : Maybe Settings.Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
+
+    --
+    , modifiedAt : Maybe Time.Posix
     }
 
 
@@ -264,40 +270,54 @@ emptyHypaethralData =
     , settings = Nothing
     , sources = []
     , tracks = []
+
+    --
+    , modifiedAt = Nothing
     }
 
 
-encodeHypaethralBit : HypaethralBit -> HypaethralData -> Json.Value
-encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tracks } =
-    case bit of
-        Favourites ->
-            Json.Encode.list Tracks.encodeFavourite favourites
+encodeHypaethralBit : HypaethralBit -> HypaethralData -> Maybe Time.Posix -> Json.Value
+encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tracks } maybeTime =
+    Json.Encode.object
+        [ ( "data"
+          , case bit of
+                Favourites ->
+                    Json.Encode.list Tracks.encodeFavourite favourites
 
-        Playlists ->
-            Json.Encode.list Playlists.encode playlists
+                Playlists ->
+                    Json.Encode.list Playlists.encode playlists
 
-        Progress ->
-            Json.Encode.dict identity Json.Encode.float progress
+                Progress ->
+                    Json.Encode.dict identity Json.Encode.float progress
 
-        Settings ->
-            Maybe.unwrap Json.Encode.null Settings.encode settings
+                Settings ->
+                    Maybe.unwrap Json.Encode.null Settings.encode settings
 
-        Sources ->
-            Json.Encode.list Sources.encode sources
+                Sources ->
+                    Json.Encode.list Sources.encode sources
 
-        Tracks ->
-            Json.Encode.list Tracks.encodeTrack tracks
+                Tracks ->
+                    Json.Encode.list Tracks.encodeTrack tracks
+          )
+        , ( "modifiedAt"
+          , Maybe.unwrap Json.Encode.null Time.encode maybeTime
+          )
+        ]
 
 
 encodeHypaethralData : HypaethralData -> Json.Value
 encodeHypaethralData data =
+    let
+        time =
+            data.modifiedAt
+    in
     Json.Encode.object
-        [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data )
-        , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data )
-        , ( hypaethralBitKey Progress, encodeHypaethralBit Progress data )
-        , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data )
-        , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data )
-        , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data )
+        [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data time )
+        , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data time )
+        , ( hypaethralBitKey Progress, encodeHypaethralBit Progress data time )
+        , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data time )
+        , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data time )
+        , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data time )
         ]
 
 
@@ -342,13 +362,66 @@ hypaethralBitKey bit =
 
 hypaethralDataDecoder : Json.Decoder HypaethralData
 hypaethralDataDecoder =
-    Json.succeed HypaethralData
-        |> optional (hypaethralBitKey Favourites) (Json.listIgnore Tracks.favouriteDecoder) []
-        |> optional (hypaethralBitKey Playlists) (Json.listIgnore Playlists.decoder) []
-        |> optional (hypaethralBitKey Progress) (Json.dict Json.float) Dict.empty
-        |> optional (hypaethralBitKey Settings) (Json.maybe Settings.decoder) Nothing
-        |> optional (hypaethralBitKey Sources) (Json.listIgnore Sources.decoder) []
-        |> optional (hypaethralBitKey Tracks) (Json.listIgnore Tracks.trackDecoder) []
+    let
+        optionalWithPossiblyData key dec def a =
+            optional
+                (hypaethralBitKey key)
+                (Json.oneOf [ modifiedAtDecoder dec, noModifiedAt dec ])
+                { data = def, modifiedAt = Nothing }
+                a
+    in
+    (\fav pla pro set sor tra ->
+        { favourites = fav.data
+        , playlists = pla.data
+        , progress = pro.data
+        , settings = set.data
+        , sources = sor.data
+        , tracks = tra.data
+
+        --
+        , modifiedAt =
+            [ fav.modifiedAt
+            , pla.modifiedAt
+            , pro.modifiedAt
+            , set.modifiedAt
+            , sor.modifiedAt
+            , tra.modifiedAt
+            ]
+                |> List.filterMap (Maybe.map Time.posixToMillis)
+                |> List.sort
+                |> List.last
+                |> Maybe.map Time.millisToPosix
+        }
+    )
+        |> Json.succeed
+        |> optionalWithPossiblyData Favourites (Json.listIgnore Tracks.favouriteDecoder) []
+        |> optionalWithPossiblyData Playlists (Json.listIgnore Playlists.decoder) []
+        |> optionalWithPossiblyData Progress (Json.dict Json.float) Dict.empty
+        |> optionalWithPossiblyData Settings (Json.maybe Settings.decoder) Nothing
+        |> optionalWithPossiblyData Sources (Json.listIgnore Sources.decoder) []
+        |> optionalWithPossiblyData Tracks (Json.listIgnore Tracks.trackDecoder) []
+
+
+
+--
+
+
+modifiedAtDecoder : Json.Decoder a -> Json.Decoder { data : a, modifiedAt : Maybe Time.Posix }
+modifiedAtDecoder decoder =
+    Json.map2
+        (\d m -> { data = d, modifiedAt = m })
+        (Json.field "data" decoder)
+        (Json.maybe <| Json.field "modifiedAt" Time.decoder)
+
+
+noModifiedAt : Json.Decoder a -> Json.Decoder { data : a, modifiedAt : Maybe Time.Posix }
+noModifiedAt =
+    Json.map
+        (\data ->
+            { data = data
+            , modifiedAt = Nothing
+            }
+        )
 
 
 putHypaethralJsonBitsTogether : List ( HypaethralBit, Json.Value, HypaethralBaggage ) -> Json.Value

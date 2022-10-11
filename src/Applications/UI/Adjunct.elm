@@ -30,11 +30,8 @@ keyboardInput msg model =
         let
             skip =
                 Return.singleton m
-
-            authenticated =
-                Authentication.isAuthenticated model.authentication
         in
-        if not authenticated || (m.focusedOnInput && Maybe.isNothing model.alfred) then
+        if m.focusedOnInput && Maybe.isNothing model.alfred then
             case m.pressedKeys of
                 [ Keyboard.Escape ] ->
                     hideOverlay m

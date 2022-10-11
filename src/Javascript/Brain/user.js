@@ -45,8 +45,9 @@ ports.requestDropbox = app => event => {
 
   const dataPromise =
     !navigator.onLine
-    ? fromCache(event.tag + "_" + event.data.file)
-    : fetch("https://content.dropboxapi.com/2/files/download", {
+      // TODO: Replace with local data syncing
+      ? fromCache(event.tag + "_" + event.data.file)
+      : fetch("https://content.dropboxapi.com/2/files/download", {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + event.data.token,
@@ -58,8 +59,8 @@ ports.requestDropbox = app => event => {
         .then(decryptIfNeeded)
 
   dataPromise
-    .then( sendJsonData(app, event) )
-    .catch( reportError(app, event) )
+    .then(sendJsonData(app, event))
+    .catch(reportError(app, event))
 }
 
 
@@ -84,11 +85,11 @@ ports.toDropbox = app => event => {
         body: data
       })
     })
-    .then( storageCallback(app, event) )
+    .then(storageCallback(app, event))
     .catch(reporter)
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
-    .then( !navigator.onLine ? storageCallback(app, event) : identity )
+    .then(!navigator.onLine ? storageCallback(app, event) : identity)
     .catch(reporter)
 }
 
@@ -146,7 +147,7 @@ function constructFission() {
   }
 
   // Connect IPFS
-  const peersPromise = fetch( `${endpoints.api}/ipfs/peers` )
+  const peersPromise = fetch(`${endpoints.api}/ipfs/peers`)
     .then(r => r.json())
     .then(r => r.filter(p => p.includes("/wss/")))
     .catch(() => { throw new Error("💥 Couldn't start IPFS node, failed to fetch peer list") })
@@ -227,22 +228,22 @@ function keepAlive(ipfs, peer, backoff) {
     timeoutId = setTimeout(() => reconnect(ipfs, peer, backoff), KEEP_TRYING_INTERVAL)
   }
 
-  latestPeerTimeoutIds[peer] = timeoutId
+  latestPeerTimeoutIds[ peer ] = timeoutId
 
   ipfs.libp2p.ping(peer).then(_ => {
     clearTimeout(timeoutId)
 
-    if (timeoutId === latestPeerTimeoutIds[peer]) {
+    if (timeoutId === latestPeerTimeoutIds[ peer ]) {
       setTimeout(() => keepAlive(ipfs, peer, BACKOFF_INIT), KEEP_ALIVE_INTERVAL)
     }
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 
 function reconnect(ipfs, peer, backoff) {
   ipfs.swarm.disconnect(peer)
     .then(() => ipfs.swarm.connect(peer))
-    .catch(() => {})
+    .catch(() => { })
 
   if (backoff.currentBackoff < KEEP_TRYING_INTERVAL) {
     const nextBackoff = {
@@ -273,8 +274,8 @@ ports.requestIpfs = app => event => {
     .then(r => r.ok ? r.text() : r.json())
     .then(r => r.Code === 0 ? null : r)
     .then(decryptIfNeeded)
-    .then( sendJsonData(app, event) )
-    .catch( reportError(app, event) )
+    .then(sendJsonData(app, event))
+    .catch(reportError(app, event))
 }
 
 
@@ -300,29 +301,8 @@ ports.toIpfs = app => event => {
         { method: "POST", body: formData }
       )
     })
-    .then( storageCallback(app, event) )
-    .catch( reportError(app, event) )
-}
-
-
-
-// Legacy
-// ------
-
-ports.requestLegacyLocalData = app => event => {
-  let oldIdx
-  let key = location.hostname + ".json"
-
-  oldIdx = indexedDB.open(key, 1)
-  oldIdx.onsuccess = _ => {
-    const old = oldIdx.result
-    const tra = old.transaction([key], "readwrite")
-    const req = tra.objectStore(key).get(key)
-
-    req.onsuccess = _ => {
-      if (req.result) sendJsonData(app, event)(req.result)
-    }
-  }
+    .then(storageCallback(app, event))
+    .catch(reportError(app, event))
 }
 
 
@@ -357,7 +337,7 @@ function remoteStorage(event) {
 
 function remoteStorageIsUnavailable(event) {
   return !navigator.onLine &&
-         !isLocalHost(event.data.userAddress.replace(/^[^@]*@/, ""))
+    !isLocalHost(event.data.userAddress.replace(/^[^@]*@/, ""))
 }
 
 
@@ -373,15 +353,16 @@ ports.requestRemoteStorage = app => event => {
 
   const dataPromise =
     isOffline
-    ? fromCache(event.tag + "_" + event.data.file)
-    : remoteStorage(event)
+      // TODO: Replace with local data syncing
+      ? fromCache(event.tag + "_" + event.data.file)
+      : remoteStorage(event)
         .then(_ => rsClient.getFile(event.data.file))
         .then(r => r.data)
         .then(decryptIfNeeded)
 
   dataPromise
-    .then( sendJsonData(app, event) )
-    .catch( reportError(app, event) )
+    .then(sendJsonData(app, event))
+    .catch(reportError(app, event))
 }
 
 
@@ -393,12 +374,12 @@ ports.toRemoteStorage = app => event => {
   !isOffline && remoteStorage(event)
     .then(doEncryption)
     .then(data => rsClient.storeFile("application/json", event.data.file, data))
-    .then( storageCallback(app, event) )
-    .catch( reportError(app, event) )
+    .then(storageCallback(app, event))
+    .catch(reportError(app, event))
 
   toCache(event.tag + "_" + event.data.file, event.data.data)
-    .then( isOffline ? storageCallback(app, event) : identity )
-    .catch( reportError(app, event) )
+    .then(isOffline ? storageCallback(app, event) : identity)
+    .catch(reportError(app, event))
 }
 
 
@@ -408,7 +389,7 @@ ports.toRemoteStorage = app => event => {
 
 export function setupPorts(app) {
   Object.keys(ports).forEach(name => {
-    const fn = ports[name](app)
-    app.ports[name].subscribe(fn)
+    const fn = ports[ name ](app)
+    app.ports[ name ].subscribe(fn)
   })
 }

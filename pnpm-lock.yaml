@@ -7,6 +7,7 @@ specifiers:
   buffer: ^6.0.3
   delay: ^5.0.0
   elm-review: ^2.7.2
+  elm-taskport: ^2.0.1
   esbuild: ^0.14.42
   eslint: ^8.17.0
   events: ^3.3.0
@@ -33,6 +34,7 @@ specifiers:
 dependencies:
   '@tokenizer/http': 0.6.2
   delay: 5.0.0
+  elm-taskport: 2.0.1
   fast-text-encoding: 1.0.3
   file-saver: 2.0.5
   jszip: 3.7.1
@@ -932,6 +934,10 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /elm-taskport/2.0.1:
+    resolution: {integrity: sha512-8UgIjzmGuoU6Wt6VC0tkJnzvc5xHL5yH7GdN+/QNxaaA3ckoyveCtV0QJqNCRa42bpyR1JhOwLSApwf2Id5xZg==}
+    dev: false
 
   /elm-tooling/1.7.0:
     resolution: {integrity: sha512-EHZ54voWrG3BhUONbH/wFw5U95H6N7R4QFgXHDrPIaDBDdeyNkpFu4QWArSWkhzxyCF7hqT8ya2yy7SferDsgg==}

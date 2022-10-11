@@ -3,6 +3,7 @@ module Brain.User.State exposing (..)
 import Alien
 import Brain.Common.State as Common
 import Brain.Ports as Ports
+import Brain.Task.Ports
 import Brain.Types as Brain exposing (..)
 import Brain.User.Types as User exposing (..)
 import Debouncer.Basic as Debouncer
@@ -40,10 +41,13 @@ initialCommand uiUrl =
             Cmd.none
 
         _ ->
-            Cmd.batch
-                [ do (UserMsg RetrieveMethod)
-                , do (UserMsg RetrieveEnclosedData)
-                ]
+            -- Cmd.batch
+            --     [ do (UserMsg RetrieveMethod)
+            --     , do (UserMsg RetrieveEnclosedData)
+            --     ]
+            Decode.string
+                |> Brain.Task.Ports.fromCache Alien.AuthMethod
+                |> Task.attempt (Debug.log "" >> always Bypass)
 
 
 
@@ -80,17 +84,11 @@ update msg =
         -----------------------------------------
         -- 2. Data
         -----------------------------------------
-        RetrieveHypaethralData a ->
-            retrieveHypaethralData a
+        RetrieveHypaethralData a b ->
+            retrieveHypaethralData a b
 
         HypaethralDataRetrieved a ->
             hypaethralDataRetrieved a
-
-        -----------------------------------------
-        -- 2. Data (Legacy)
-        -----------------------------------------
-        RetrieveLegacyHypaethralData ->
-            retrieveLegacyHypaethralData
 
         -----------------------------------------
         -- x. Data
@@ -193,13 +191,12 @@ gotWebnativeResponse response model =
         Fission.LoadedFileSystem ->
             -- Had to load the filesystem first, please continue.
             let
-                authMethod =
+                userSyncMethod =
                     Fission { initialised = True }
             in
-            model.authMethod
-                |> Maybe.map (\_ -> authMethod)
-                |> (\a -> { model | authMethod = a })
-                |> retrieveAllHypaethralData
+            model.userSyncMethod
+                |> Maybe.withDefault userSyncMethod
+                |> (\a -> retrieveAllHypaethralData a { model | userSyncMethod = Just a })
 
         Fission.Ongoing newBaggage request ->
             model.hypaethralRetrieval
@@ -226,46 +223,26 @@ gotWebnativeResponse response model =
 
 signIn : Json.Value -> Manager
 signIn json model =
+    -- TODO: Rename to `setSyncMethod`
     -- 🐤
     -- Set & store method,
     -- and retrieve data.
     let
         decoder =
-            Decode.map3
-                (\a b c -> ( a, Maybe.withDefault False b, c ))
+            Decode.map2
+                (\a b -> ( a, b ))
                 (Decode.field "method" <| Decode.map methodFromString Decode.string)
-                (Decode.field "migratingData" <| Decode.maybe Decode.bool)
                 (Decode.field "passphrase" <| Decode.maybe Decode.string)
     in
     case Decode.decodeValue decoder json of
-        Ok ( maybeMethod, migratingData, Just passphrase ) ->
-            fabricateSecretKey
-                passphrase
-                { model
-                    | authMethod = maybeMethod
-                    , migratingData = migratingData
-                    , performingSignIn = True
-                }
+        Ok ( maybeMethod, Just passphrase ) ->
+            fabricateSecretKey passphrase { model | userSyncMethod = maybeMethod }
 
-        Ok ( maybeMethod, migratingData, Nothing ) ->
-            { model
-                | authMethod = maybeMethod
-                , migratingData = migratingData
-                , performingSignIn = True
-            }
-                |> (if migratingData then
-                        hypaethralDataRetrieved Json.null
+        Ok ( Just method, Nothing ) ->
+            retrieveAllHypaethralData method { model | userSyncMethod = Just method }
 
-                    else
-                        retrieveAllHypaethralData
-                   )
-                |> (case maybeMethod of
-                        Just method ->
-                            andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
-
-                        Nothing ->
-                            identity
-                   )
+        Ok ( Nothing, Nothing ) ->
+            Return.singleton { model | userSyncMethod = Nothing }
 
         _ ->
             Return.singleton model
@@ -273,13 +250,14 @@ signIn json model =
 
 signOut : Manager
 signOut model =
+    -- TODO: Rename to `unsetSyncMethod`
     -- 💀
     -- Unset & remove stored method.
     [ Ports.removeCache (Alien.trigger Alien.AuthMethod)
-    , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
 
+    -- , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
     --
-    , case model.authMethod of
+    , case model.userSyncMethod of
         Just (Dropbox _) ->
             Cmd.none
 
@@ -299,11 +277,7 @@ signOut model =
             Cmd.none
     ]
         |> Cmd.batch
-        |> return
-            { model
-                | authMethod = Nothing
-                , hypaethralUserData = emptyHypaethralData
-            }
+        |> return { model | userSyncMethod = Nothing }
 
 
 
@@ -337,73 +311,44 @@ saveEnclosedData json =
 
 hypaethralDataRetrieved : Json.Value -> Manager
 hypaethralDataRetrieved encodedData model =
-    if model.legacyMode then
-        --------------
-        -- Legacy Data
-        --------------
-        case Decode.decodeValue hypaethralDataDecoder encodedData of
-            Ok decodedData ->
-                { model | legacyMode = False }
-                    |> sendHypaethralDataToUI encodedData decodedData
-                    -- Save again in the new format
-                    |> andThen saveAllHypaethralData
-                    -- Show notification in UI thread
-                    |> andThen (Common.nudgeUI Alien.ImportLegacyData)
+    ---------------
+    -- Default Flow
+    ---------------
+    let
+        retrieval =
+            Maybe.map
+                (Zipper.mapCurrent <| Tuple3.mapSecond <| always encodedData)
+                model.hypaethralRetrieval
+    in
+    case Maybe.andThen Zipper.next retrieval of
+        Just nextRetrieval ->
+            retrieveHypaethralData
+                Local
+                -- TODO
+                (Tuple3.first <| Zipper.current nextRetrieval)
+                { model | hypaethralRetrieval = Just nextRetrieval }
 
-            Err _ ->
-                Return.singleton model
-
-    else
-        ---------------
-        -- Default Flow
-        ---------------
-        let
-            retrieval =
-                Maybe.map
-                    (Zipper.mapCurrent <| Tuple3.mapSecond <| always encodedData)
-                    model.hypaethralRetrieval
-        in
-        case Maybe.andThen Zipper.next retrieval of
-            Just nextRetrieval ->
-                retrieveHypaethralData
-                    (Tuple3.first <| Zipper.current nextRetrieval)
-                    { model | hypaethralRetrieval = Just nextRetrieval }
-
-            Nothing ->
-                -- 🚀
-                let
-                    allJson =
-                        retrieval
-                            |> Maybe.map Zipper.toList
-                            |> Maybe.withDefault []
-                            |> putHypaethralJsonBitsTogether
-                in
-                { model
-                    | hypaethralRetrieval = Nothing
-                    , performingSignIn = False
-                }
-                    |> Return.singleton
-                    |> Return.command
-                        (case ( model.performingSignIn, model.authMethod ) of
-                            ( True, Just method ) ->
-                                method
-                                    |> encodeMethod
-                                    |> Alien.broadcast Alien.AuthMethod
-                                    |> Ports.toCache
-
-                            _ ->
-                                Cmd.none
-                        )
-                    |> andThen
-                        (model.authMethod
-                            |> Maybe.map (\method -> Authenticated method allJson)
-                            |> Maybe.map terminate
-                            |> Maybe.withDefault Return.singleton
-                        )
+        Nothing ->
+            -- 🚀
+            let
+                allJson =
+                    retrieval
+                        |> Maybe.map Zipper.toList
+                        |> Maybe.withDefault []
+                        |> putHypaethralJsonBitsTogether
+            in
+            { model | hypaethralRetrieval = Nothing }
+                |> Return.singleton
+                |> andThen
+                    (allJson
+                        |> User.decodeHypaethralData
+                        |> Result.withDefault model.hypaethralUserData
+                        |> sendHypaethralDataToUI allJson
+                    )
 
 
-retrieveAllHypaethralData : Manager
-retrieveAllHypaethralData model =
+retrieveAllHypaethralData : Method -> Manager
+retrieveAllHypaethralData method model =
     let
         maybeZipper =
             hypaethralBit.list
@@ -413,6 +358,7 @@ retrieveAllHypaethralData model =
     case maybeZipper of
         Just zipper ->
             retrieveHypaethralData
+                method
                 (Tuple3.first <| Zipper.current zipper)
                 { model | hypaethralRetrieval = Just zipper }
 
@@ -421,8 +367,8 @@ retrieveAllHypaethralData model =
                 { model | hypaethralRetrieval = Nothing }
 
 
-retrieveHypaethralData : HypaethralBit -> Manager
-retrieveHypaethralData bit model =
+retrieveHypaethralData : Method -> HypaethralBit -> Manager
+retrieveHypaethralData method bit model =
     let
         filename =
             hypaethralBitFileName bit
@@ -430,9 +376,9 @@ retrieveHypaethralData bit model =
         file =
             Json.string filename
     in
-    case model.authMethod of
+    case method of
         -- 🚀
-        Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
+        Dropbox { accessToken, expiresAt, refreshToken } ->
             let
                 currentTime =
                     Time.posixToMillis model.currentTime // 1000
@@ -451,7 +397,7 @@ retrieveHypaethralData bit model =
                             case result of
                                 Ok tokens ->
                                     bit
-                                        |> RetrieveHypaethralData
+                                        |> RetrieveHypaethralData method
                                         |> RefreshedDropboxTokens
                                             { currentTime = currentTime
                                             , refreshToken = refreshToken
@@ -476,13 +422,13 @@ retrieveHypaethralData bit model =
                     |> Ports.requestDropbox
                     |> return model
 
-        Just (Fission params) ->
+        Fission params ->
             filename
                 |> Fission.retrieve params bit
                 |> Ports.webnativeRequest
                 |> return model
 
-        Just (Ipfs { apiOrigin }) ->
+        Ipfs { apiOrigin } ->
             [ ( "apiOrigin", Json.string apiOrigin )
             , ( "file", file )
             ]
@@ -491,14 +437,14 @@ retrieveHypaethralData bit model =
                 |> Ports.requestIpfs
                 |> return model
 
-        Just Local ->
+        Local ->
             [ ( "file", file ) ]
                 |> Json.object
                 |> Alien.broadcast Alien.AuthAnonymous
                 |> Ports.requestCache
                 |> return model
 
-        Just (RemoteStorage { userAddress, token }) ->
+        RemoteStorage { userAddress, token } ->
             [ ( "file", file )
             , ( "token", Json.string token )
             , ( "userAddress", Json.string userAddress )
@@ -507,39 +453,6 @@ retrieveHypaethralData bit model =
                 |> Alien.broadcast Alien.AuthRemoteStorage
                 |> Ports.requestRemoteStorage
                 |> return model
-
-        -- ✋
-        Nothing ->
-            Return.singleton model
-
-
-retrieveLegacyHypaethralData : Manager
-retrieveLegacyHypaethralData model =
-    let
-        file =
-            Json.string "diffuse.json"
-    in
-    case model.authMethod of
-        -- 🚀
-        Just Local ->
-            Alien.AuthAnonymous
-                |> Alien.trigger
-                |> Ports.requestLegacyLocalData
-                |> return { model | legacyMode = True }
-
-        Just (RemoteStorage { userAddress, token }) ->
-            [ ( "file", file )
-            , ( "token", Json.string token )
-            , ( "userAddress", Json.string userAddress )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthRemoteStorage
-                |> Ports.requestRemoteStorage
-                |> return { model | legacyMode = True }
-
-        -- ✋
-        _ ->
-            Return.singleton model
 
 
 saveAllHypaethralData : Manager
@@ -552,6 +465,10 @@ saveAllHypaethralData =
 saveHypaethralData : HypaethralBit -> Manager
 saveHypaethralData bit model =
     let
+        method =
+            -- TODO
+            Maybe.withDefault Local model.userSyncMethod
+
         filename =
             hypaethralBitFileName bit
 
@@ -559,11 +476,11 @@ saveHypaethralData bit model =
             Json.string filename
 
         json =
-            encodeHypaethralBit bit model.hypaethralUserData
+            encodeHypaethralBit bit model.hypaethralUserData (Just model.currentTime)
     in
-    case model.authMethod of
+    case method of
         -- 🚀
-        Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
+        Dropbox { accessToken, expiresAt, refreshToken } ->
             let
                 currentTime =
                     Time.posixToMillis model.currentTime // 1000
@@ -608,14 +525,14 @@ saveHypaethralData bit model =
                     |> Ports.toDropbox
                     |> return model
 
-        Just (Fission params) ->
+        Fission params ->
             json
                 |> Fission.save params bit filename
                 |> List.map Ports.webnativeRequest
                 |> Cmd.batch
                 |> return model
 
-        Just (Ipfs { apiOrigin }) ->
+        Ipfs { apiOrigin } ->
             [ ( "apiOrigin", Json.string apiOrigin )
             , ( "data", json )
             , ( "file", file )
@@ -625,7 +542,7 @@ saveHypaethralData bit model =
                 |> Ports.toIpfs
                 |> return model
 
-        Just Local ->
+        Local ->
             [ ( "data", json )
             , ( "file", file )
             ]
@@ -634,7 +551,7 @@ saveHypaethralData bit model =
                 |> Ports.toCache
                 |> return model
 
-        Just (RemoteStorage { userAddress, token }) ->
+        RemoteStorage { userAddress, token } ->
             [ ( "data", json )
             , ( "file", file )
             , ( "token", Json.string token )
@@ -645,9 +562,16 @@ saveHypaethralData bit model =
                 |> Ports.toRemoteStorage
                 |> return model
 
-        -- ✋
-        Nothing ->
-            Return.singleton model
+
+
+-- saveHypaethralDataLocallyToo =
+--     [ ( "data", json )
+--     , ( "file", file )
+--     ]
+--         |> Json.object
+--         |> Alien.broadcast Alien.AuthAnonymous
+--         |> Ports.toCache
+--         |> return model
 
 
 {-| Save different parts of hypaethral data,
@@ -830,12 +754,18 @@ methodRetrieved : Json.Value -> Manager
 methodRetrieved json model =
     -- 🚀
     let
-        method =
-            Maybe.withDefault Local (decodeMethod json)
+        maybeMethod =
+            decodeMethod json
     in
-    { model | authMethod = Just method }
-        |> retrieveAllHypaethralData
-        |> andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
+    { model | userSyncMethod = maybeMethod }
+        |> retrieveAllHypaethralData Local
+        |> (case maybeMethod of
+                Just method ->
+                    andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
+
+                Nothing ->
+                    identity
+           )
 
 
 retrieveMethod : Manager
@@ -852,7 +782,7 @@ saveMethod method model =
         |> encodeMethod
         |> Alien.broadcast Alien.AuthMethod
         |> Ports.toCache
-        |> return { model | authMethod = Just method }
+        |> return { model | userSyncMethod = Just method }
 
 
 
@@ -885,15 +815,13 @@ removeEncryptionKey =
 
 secretKeyFabricated : Manager
 secretKeyFabricated model =
-    if model.performingSignIn then
-        if model.migratingData then
-            hypaethralDataRetrieved Json.null model
-
-        else
-            retrieveAllHypaethralData model
-
-    else
-        saveAllHypaethralData model
+    -- if model.performingSignIn then
+    --     retrieveAllHypaethralData model
+    --
+    -- else
+    --     saveAllHypaethralData model
+    -- TODO:
+    Return.singleton model
 
 
 updateEncryptionKey : Json.Value -> Manager
@@ -904,40 +832,6 @@ updateEncryptionKey json =
 
         Err _ ->
             Return.singleton
-
-
-
--- TERMINATION
-
-
-type Termination
-    = Authenticated Method Json.Value
-    | NotAuthenticated
-
-
-terminate : Termination -> Manager
-terminate t model =
-    case t of
-        Authenticated method encodedData ->
-            { model | migratingData = False }
-                |> (if model.migratingData then
-                        Return.singleton
-
-                    else
-                        encodedData
-                            |> User.decodeHypaethralData
-                            |> Result.withDefault model.hypaethralUserData
-                            |> sendHypaethralDataToUI encodedData
-                   )
-                |> (encodeMethod method
-                        |> Common.giveUI Alien.AuthMethod
-                        |> andThen
-                   )
-
-        NotAuthenticated ->
-            model
-                |> Common.nudgeUI Alien.NotAuthenticated
-                |> andThen (Common.nudgeUI Alien.HideLoadingScreen)
 
 
 

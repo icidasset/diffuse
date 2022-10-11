@@ -8,16 +8,6 @@ import User.Layer exposing (Method)
 -- 🛠
 
 
-isAuthenticated : State -> Bool
-isAuthenticated state =
-    case state of
-        Authenticated _ ->
-            True
-
-        _ ->
-            False
-
-
 extractMethod : State -> Maybe Method
 extractMethod state =
     case state of

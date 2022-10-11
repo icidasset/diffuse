@@ -24,17 +24,14 @@ type alias Flags =
 
 
 type alias Model =
-    { authMethod : Maybe User.Method
-    , currentTime : Time.Posix
+    { currentTime : Time.Posix
     , hypaethralDebouncer : Debouncer HypaethralBit (List HypaethralBit)
     , hypaethralRetrieval : Maybe (Zipper ( HypaethralBit, Json.Value, HypaethralBaggage ))
     , hypaethralStorage : List { bit : HypaethralBit, saving : Bool }
     , hypaethralUserData : User.HypaethralData
-    , legacyMode : Bool
-    , migratingData : Bool
     , origin : String
-    , performingSignIn : Bool
     , processingStatus : Processing.Status
+    , userSyncMethod : Maybe User.Method
     }
 
 

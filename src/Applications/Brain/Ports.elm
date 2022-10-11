@@ -68,9 +68,6 @@ port requestDropbox : Alien.Event -> Cmd msg
 port requestIpfs : Alien.Event -> Cmd msg
 
 
-port requestLegacyLocalData : Alien.Event -> Cmd msg
-
-
 port requestRemoteStorage : Alien.Event -> Cmd msg
 
 

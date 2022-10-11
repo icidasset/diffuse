@@ -104,31 +104,21 @@ body model =
                 , scrolling = not model.isDragging
                 }
           in
-          case ( model.isLoading, model.authentication ) of
-            ( True, _ ) ->
-                content
-                    { opts | justifyCenter = True }
-                    [ loadingAnimation
-                    , chunk
-                        [ "italic"
-                        , "mt-5"
-                        , "text-white"
-                        , "text-opacity-30"
-                        ]
-                        [ case model.authentication of
-                            Authentication.Authenticated _ ->
-                                Html.text "Loading your data"
-
-                            _ ->
-                                Html.text "Transmitting particles"
-                        ]
+          if model.isLoading then
+            content
+                { opts | justifyCenter = True }
+                [ loadingAnimation
+                , chunk
+                    [ "italic"
+                    , "mt-5"
+                    , "text-white"
+                    , "text-opacity-30"
                     ]
+                    [ Html.text "Transmitting particles" ]
+                ]
 
-            ( False, Authentication.Authenticated _ ) ->
-                content opts (defaultScreen model)
-
-            ( False, _ ) ->
-                content opts [ Authentication.view model ]
+          else
+            content opts (defaultScreen model)
         ]
 
 

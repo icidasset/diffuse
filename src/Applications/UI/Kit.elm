@@ -308,8 +308,7 @@ h2 text =
     slab
         Html.h2
         []
-        [ "antialiased"
-        , "font-bold"
+        [ "font-bold"
         , "font-display"
         , "leading-tight"
         , "mb-8"

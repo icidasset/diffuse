@@ -38,7 +38,6 @@ type Tag
       -- from UI
       -----------------------------------------
     | DownloadTracks
-    | ImportLegacyData
     | ProcessSources
     | RefreshedAccessToken
     | RemoveEncryptionKey
@@ -70,7 +69,6 @@ type Tag
     | LoadEnclosedUserData
     | LoadHypaethralUserData
     | MissingSecretKey
-    | NotAuthenticated
     | ReloadTracks
     | RemoveTracksByPath
     | ReportError
@@ -97,7 +95,6 @@ enum =
         -- From UI
         -----------------------------------------
         , ( "DOWNLOAD_TRACKS", DownloadTracks )
-        , ( "IMPORT_LEGACY_DATA", ImportLegacyData )
         , ( "PROCESS_SOURCES", ProcessSources )
         , ( "REFRESHED_ACCESS_TOKEN", RefreshedAccessToken )
         , ( "REMOVE_ENCRYPTION_KEY", RemoveEncryptionKey )
@@ -130,7 +127,6 @@ enum =
         , ( "LOAD_ENCLOSED_USER_DATA", LoadEnclosedUserData )
         , ( "LOAD_HYPAETHRAL_USER_DATA", LoadHypaethralUserData )
         , ( "MISSING_SECRET_KEY", MissingSecretKey )
-        , ( "NOT_AUTHENTICATED", NotAuthenticated )
         , ( "RELOAD_TRACKS", ReloadTracks )
         , ( "REMOVE_TRACKS_BY_PATH", RemoveTracksByPath )
         , ( "REPORT_ERROR", ReportError )

@@ -65,22 +65,6 @@ importJson json model =
         |> saveAllHypaethralData
 
 
-importLegacyData : Manager
-importLegacyData model =
-    Alien.ImportLegacyData
-        |> Alien.trigger
-        |> Ports.toBrain
-        |> return model
-        |> andThen
-            ("""
-                I'll try to import data from Diffuse version one.
-                If this was successful, you'll get a notification.
-             """
-                |> Notifications.casual
-                |> Common.showNotification
-            )
-
-
 insertDemo : Manager
 insertDemo model =
     model

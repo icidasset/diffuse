@@ -27,12 +27,8 @@ type Msg
       -----------------------------------------
       -- 2. Data
       -----------------------------------------
-    | RetrieveHypaethralData HypaethralBit
+    | RetrieveHypaethralData User.Layer.Method HypaethralBit
     | HypaethralDataRetrieved Json.Value
-      -----------------------------------------
-      -- 2. Data (Legacy)
-      -----------------------------------------
-    | RetrieveLegacyHypaethralData
       -----------------------------------------
       -- x. Data
       -----------------------------------------

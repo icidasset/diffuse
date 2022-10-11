@@ -5,6 +5,8 @@
 // This worker is responsible for everything non-UI.
 
 
+import * as TaskPort from "elm-taskport"
+
 import * as artwork from "./artwork"
 import * as db from "../indexed-db"
 import * as processing from "../processing"
@@ -20,6 +22,13 @@ importScripts("subworkers.js")
 
 
 // 🍱
+
+
+TaskPort.install()
+
+
+TaskPort.register("fromCache", fromCache)
+TaskPort.register("toCache", ({ key, value }) => toCache(key, value))
 
 
 const flags = location

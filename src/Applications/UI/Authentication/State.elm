@@ -362,24 +362,7 @@ gotAuthMethod json model =
     -- so we can tell the user in the UI.
     case decodeMethod json of
         Just method ->
-            model
-                |> replaceState
-                    (Authenticated method)
-                |> andThen
-                    (\m ->
-                        if m.migratingData then
-                            "Migrated data successfully"
-                                |> Notifications.success
-                                |> showNotificationWithModel
-                                    { m
-                                        | isLoading = False
-                                        , migratingData = False
-                                    }
-                                |> User.saveAllHypaethralData
-
-                        else
-                            Return.singleton m
-                    )
+            replaceState (Authenticated method) model
 
         Nothing ->
             Return.singleton model
@@ -469,7 +452,6 @@ showSyncDataMenu mouseEvent model =
 signIn : Method -> Manager
 signIn method model =
     [ ( "method", encodeMethod method )
-    , ( "migratingData", Json.Encode.bool model.migratingData )
     , ( "passphrase", Json.Encode.null )
     ]
         |> Json.Encode.object
@@ -489,7 +471,6 @@ signInWithPassphrase method passphrase model =
 
     else
         [ ( "method", encodeMethod method )
-        , ( "migratingData", Json.Encode.bool model.migratingData )
         , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
         ]
             |> Json.Encode.object
@@ -502,47 +483,41 @@ signInWithPassphrase method passphrase model =
 
 signOut : Manager
 signOut model =
-    if model.migratingData then
-        return
-            { model | authentication = Authentication.Unauthenticated }
-            (Ports.toBrain <| Alien.trigger Alien.SignOut)
+    { model
+        | authentication = Authentication.Unauthenticated
+        , playlists = []
+        , playlistToActivate = Nothing
 
-    else
-        { model
-            | authentication = Authentication.Unauthenticated
-            , playlists = []
-            , playlistToActivate = Nothing
+        -- Queue
+        --------
+        , dontPlay = []
+        , nowPlaying = Nothing
+        , playedPreviously = []
+        , playingNext = []
+        , selectedQueueItem = Nothing
 
-            -- Queue
-            --------
-            , dontPlay = []
-            , nowPlaying = Nothing
-            , playedPreviously = []
-            , playingNext = []
-            , selectedQueueItem = Nothing
+        --
+        , repeat = False
+        , shuffle = False
 
-            --
-            , repeat = False
-            , shuffle = False
+        -- Sources
+        ----------
+        , processingContext = []
+        , sources = []
 
-            -- Sources
-            ----------
-            , processingContext = []
-            , sources = []
-
-            -- Tracks
-            ---------
-            , coverSelectionReducesPool = True
-            , favourites = []
-            , hideDuplicates = False
-            , searchResults = Nothing
-            , tracks = Tracks.emptyCollection
-        }
-            |> Backdrop.setDefault
-            |> Return.andThen Sources.stopProcessing
-            |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
-            |> Return.command (Ports.activeQueueItemChanged Nothing)
-            |> Return.command (Nav.pushUrl model.navKey "#/")
+        -- Tracks
+        ---------
+        , coverSelectionReducesPool = True
+        , favourites = []
+        , hideDuplicates = False
+        , searchResults = Nothing
+        , tracks = Tracks.emptyCollection
+    }
+        |> Backdrop.setDefault
+        |> Return.andThen Sources.stopProcessing
+        |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
+        |> Return.command (Ports.activeQueueItemChanged Nothing)
+        |> Return.command (Nav.pushUrl model.navKey "#/")
 
 
 startFlow : Manager

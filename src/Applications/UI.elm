@@ -104,7 +104,6 @@ init flags url key =
     , isTouchDevice = False
     , isUpgrading = flags.upgrade
     , lastFm = LastFm.initialModel
-    , migratingData = False
     , navKey = key
     , page = page
     , pressedKeys = []
@@ -482,9 +481,6 @@ update msg =
         ImportJson a ->
             User.importJson a
 
-        ImportLegacyData ->
-            User.importLegacyData
-
         InsertDemo ->
             User.insertDemo
 
@@ -494,14 +490,14 @@ update msg =
         LoadHypaethralUserData a ->
             User.loadHypaethralUserData a
 
-        MigrateHypaethralUserData ->
-            User.migrateHypaethralUserData
-
         RequestImport ->
             User.requestImport
 
         SaveEnclosedUserData ->
             User.saveEnclosedUserData
+
+        SyncData ->
+            User.syncData
 
         -----------------------------------------
         -- ⚗️ Adjunct
@@ -656,9 +652,6 @@ translateAlienData tag data =
         Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off
 
-        Alien.ImportLegacyData ->
-            ShowNotification (Notifications.success "Imported data successfully!")
-
         Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData data
 
@@ -667,9 +660,6 @@ translateAlienData tag data =
 
         Alien.MissingSecretKey ->
             AuthenticationMsg (Authentication.MissingSecretKey data)
-
-        Alien.NotAuthenticated ->
-            AuthenticationMsg Authentication.NotAuthenticated
 
         Alien.ReloadTracks ->
             TracksMsg (Tracks.Reload data)
