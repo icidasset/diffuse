@@ -5,6 +5,7 @@ import Brain.Common.State as Common
 import Brain.Ports as Ports
 import Brain.Task.Ports
 import Brain.Types as Brain exposing (..)
+import Brain.User.Hypaethral
 import Brain.User.Types as User exposing (..)
 import Debouncer.Basic as Debouncer
 import EverySet
@@ -45,9 +46,23 @@ initialCommand uiUrl =
             --     [ do (UserMsg RetrieveMethod)
             --     , do (UserMsg RetrieveEnclosedData)
             --     ]
-            Decode.string
-                |> Brain.Task.Ports.fromCache Alien.AuthMethod
-                |> Task.attempt (Debug.log "" >> always Bypass)
+            loadSyncMethodAndLocalHypaethralData
+
+
+loadSyncMethodAndLocalHypaethralData =
+    Decode.value
+        |> Brain.Task.Ports.fromCache Alien.AuthMethod
+        |> Task.andThen
+            (\json ->
+                let
+                    maybeMethod =
+                        Maybe.andThen decodeMethod json
+                in
+                Brain.User.Hypaethral.retrieveLocal
+                    |> Brain.User.Hypaethral.retrieveAll
+                    |> Task.map (Tuple.pair maybeMethod)
+            )
+        |> Task.attempt (Debug.log "" >> always Bypass)
 
 
 

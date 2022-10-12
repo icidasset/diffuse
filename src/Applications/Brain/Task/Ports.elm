@@ -20,6 +20,16 @@ fromCache tag decoder =
         (Alien.tagToString tag)
 
 
+fromCacheWithSuffix : Alien.Tag -> String -> Json.Decode.Decoder value -> TaskPort.Task (Maybe value)
+fromCacheWithSuffix tag suffix decoder =
+    TaskPort.call
+        { function = "fromCache"
+        , valueDecoder = Json.Decode.maybe decoder
+        , argsEncoder = Json.Encode.string
+        }
+        (Alien.tagToString tag ++ "_" ++ suffix)
+
+
 toCache : Alien.Tag -> Json.Encode.Value -> TaskPort.Task ()
 toCache tag =
     let
