@@ -2,7 +2,7 @@ module Brain.User.Types exposing (..)
 
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
-import User.Layer exposing (HypaethralBit)
+import User.Layer as User exposing (HypaethralBit, HypaethralData)
 import User.Layer.Methods.Dropbox as Dropbox
 import Webnative
 
@@ -12,8 +12,9 @@ import Webnative
 
 
 type Msg
-    = SignIn Json.Value
-    | SignOut
+    = Commence (Maybe User.Method) ( Json.Value, HypaethralData )
+    | SetSyncMethod Json.Value
+    | UnsetSyncMethod
       -----------------------------------------
       -- 0. Secret Key
       -----------------------------------------
@@ -27,7 +28,7 @@ type Msg
       -----------------------------------------
       -- 2. Data
       -----------------------------------------
-    | RetrieveHypaethralData User.Layer.Method HypaethralBit
+    | RetrieveHypaethralData User.Method HypaethralBit
     | HypaethralDataRetrieved Json.Value
       -----------------------------------------
       -- x. Data

@@ -50,13 +50,13 @@ type Tag
     | SaveSettings
     | SaveSources
     | SaveTracks
-    | SignIn
-    | SignOut
+    | SetSyncMethod
     | StopProcessing
     | StoreTracksInCache
     | SyncHypaethralData
     | SyncTrackTags
     | ToCache
+    | UnsetSyncMethod
     | UpdateEncryptionKey
       -----------------------------------------
       -- to UI
@@ -107,13 +107,13 @@ enum =
         , ( "SAVE_SETTINGS", SaveSettings )
         , ( "SAVE_SOURCES", SaveSources )
         , ( "SAVE_TRACKS", SaveTracks )
-        , ( "SIGN_IN", SignIn )
-        , ( "SIGN_OUT", SignOut )
+        , ( "SET_SYNC_METHOD", SetSyncMethod )
         , ( "STOP_PROCESSING", StopProcessing )
         , ( "STORE_TRACKS_IN_CACHE", StoreTracksInCache )
         , ( "SYNC_HYPAETHRAL_DATA", SyncHypaethralData )
         , ( "SYNC_TRACK_TAGS", SyncTrackTags )
         , ( "TO_CACHE", ToCache )
+        , ( "UNSET_SYNC_METHOD", UnsetSyncMethod )
         , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )
 
         -----------------------------------------

@@ -1,11 +1,11 @@
 module Brain exposing (main)
 
 import Alien
+import Brain.Common.State as Common
 import Brain.Other.State as Other
 import Brain.Ports as Ports
 import Brain.Sources.Processing.State as Processing
 import Brain.Sources.Processing.Types as Processing
-import Brain.Task.Ports
 import Brain.Tracks.State as Tracks
 import Brain.Types exposing (..)
 import Brain.User.State as User
@@ -262,11 +262,8 @@ translateAlienData tag data =
         Alien.SaveTracks ->
             UserMsg (User.SaveTracks data)
 
-        Alien.SignIn ->
-            UserMsg (User.SignIn data)
-
-        Alien.SignOut ->
-            UserMsg User.SignOut
+        Alien.SetSyncMethod ->
+            UserMsg (User.SetSyncMethod data)
 
         Alien.StopProcessing ->
             ProcessingMsg Processing.StopProcessing
@@ -279,6 +276,9 @@ translateAlienData tag data =
 
         Alien.ToCache ->
             ToCache data
+
+        Alien.UnsetSyncMethod ->
+            UserMsg User.UnsetSyncMethod
 
         Alien.UpdateEncryptionKey ->
             UserMsg (User.UpdateEncryptionKey data)
@@ -305,10 +305,10 @@ translateAlienError tag _ err =
         _ ->
             case err of
                 "db is undefined" ->
-                    report tag "Can't connect to the browser's IndexedDB. FYI, this is __not supported in Firefox's private mode__."
+                    Common.reportUICmdMsg tag "Can't connect to the browser's IndexedDB. FYI, this is __not supported in Firefox's private mode__."
 
                 _ ->
-                    report tag err
+                    Common.reportUICmdMsg tag err
 
 
 reportAuthError : Alien.Tag -> String -> String -> Msg
@@ -324,12 +324,4 @@ reportAuthError tag originalError fallbackError =
                 |> Cmd
 
         _ ->
-            report tag fallbackError
-
-
-report : Alien.Tag -> String -> Msg
-report tag err =
-    err
-        |> Alien.report tag
-        |> Ports.toUI
-        |> Cmd
+            Common.reportUICmdMsg tag fallbackError

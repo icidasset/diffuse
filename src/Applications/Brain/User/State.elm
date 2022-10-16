@@ -5,7 +5,7 @@ import Brain.Common.State as Common
 import Brain.Ports as Ports
 import Brain.Task.Ports
 import Brain.Types as Brain exposing (..)
-import Brain.User.Hypaethral
+import Brain.User.Hypaethral as Hypaethral
 import Brain.User.Types as User exposing (..)
 import Debouncer.Basic as Debouncer
 import EverySet
@@ -19,6 +19,7 @@ import Settings
 import Sources.Encoding as Sources
 import Task
 import Task.Extra exposing (do)
+import TaskPort
 import Time
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
@@ -42,13 +43,26 @@ initialCommand uiUrl =
             Cmd.none
 
         _ ->
-            -- Cmd.batch
-            --     [ do (UserMsg RetrieveMethod)
-            --     , do (UserMsg RetrieveEnclosedData)
-            --     ]
-            loadSyncMethodAndLocalHypaethralData
+            Cmd.batch
+                [ loadEnclosedData
+                , loadSyncMethodAndLocalHypaethralData
+                ]
 
 
+{-| Loads the "enclosed" data from cache and sends it to the UI.
+-}
+loadEnclosedData : Cmd Brain.Msg
+loadEnclosedData =
+    Decode.value
+        |> Brain.Task.Ports.fromCache Alien.AuthEnclosedData
+        |> Task.map (Maybe.withDefault Json.null)
+        |> Common.attemptPortTask (Common.giveUICmdMsg Alien.LoadEnclosedUserData)
+
+
+{-| Loads the "sync method" and "hypaethral" data,
+see `Commence` Msg what happens next.
+-}
+loadSyncMethodAndLocalHypaethralData : Cmd Brain.Msg
 loadSyncMethodAndLocalHypaethralData =
     Decode.value
         |> Brain.Task.Ports.fromCache Alien.AuthMethod
@@ -58,11 +72,27 @@ loadSyncMethodAndLocalHypaethralData =
                     maybeMethod =
                         Maybe.andThen decodeMethod json
                 in
-                Brain.User.Hypaethral.retrieveLocal
-                    |> Brain.User.Hypaethral.retrieveAll
+                Hypaethral.retrieveLocal
+                    |> Hypaethral.retrieveAll
                     |> Task.map (Tuple.pair maybeMethod)
             )
-        |> Task.attempt (Debug.log "" >> always Bypass)
+        |> Common.attemptPortTask
+            (\( maybeMethod, hypaethralJson ) ->
+                hypaethralJson
+                    |> User.decodeHypaethralData
+                    |> Result.map
+                        (\hypaethralData ->
+                            ( hypaethralJson
+                            , hypaethralData
+                            )
+                        )
+                    |> Result.withDefault
+                        ( User.encodeHypaethralData User.emptyHypaethralData
+                        , User.emptyHypaethralData
+                        )
+                    |> Commence maybeMethod
+                    |> UserMsg
+            )
 
 
 
@@ -72,11 +102,14 @@ loadSyncMethodAndLocalHypaethralData =
 update : User.Msg -> Manager
 update msg =
     case msg of
-        SignIn a ->
-            signIn a
+        Commence a b ->
+            commence a b
 
-        SignOut ->
-            signOut
+        SetSyncMethod a ->
+            setSyncMethod a
+
+        UnsetSyncMethod ->
+            unsetSyncMethod
 
         -----------------------------------------
         -- 0. Secret Key
@@ -188,6 +221,50 @@ update msg =
 -- 🔱
 
 
+commence : Maybe Method -> ( Json.Value, HypaethralData ) -> Manager
+commence maybeMethod ( hypaethralJson, hypaethralData ) model =
+    -- 🚀
+    -- Initiated from `initialCommand`.
+    -- Loaded the used-sync method and the local hypaethral data.
+    { model | userSyncMethod = maybeMethod }
+        |> sendHypaethralDataToUI hypaethralJson hypaethralData
+        -- Next load the hypaethral data from the syncing service.
+        |> andThen
+            (\m ->
+                case m.userSyncMethod of
+                    Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
+                        if
+                            Hypaethral.isDropboxTokenExpired
+                                { currentTime = model.currentTime
+                                , expiresAt = expiresAt
+                                }
+                        then
+                            -- refreshToken
+                            --     |> Dropbox.refreshAccessToken
+                            --     |> Task.andThen
+                            --         (\tokens ->
+                            --         )
+                            -- TODO
+                            Return.singleton m
+
+                        else
+                            -- { file = hypaethralBitFileName bit
+                            -- , token = accessToken
+                            -- }
+                            -- |> Brain.Task.Ports.requestDropbox
+                            -- |> Common.attemptPortTask
+                            --     (\maybeJson ->
+                            --
+                            --     )
+                            -- TODO
+                            Return.singleton m
+
+                    _ ->
+                        -- TODO
+                        Return.singleton m
+            )
+
+
 gotWebnativeResponse : Webnative.Response -> Manager
 gotWebnativeResponse response model =
     let
@@ -236,9 +313,8 @@ gotWebnativeResponse response model =
             Return.singleton model
 
 
-signIn : Json.Value -> Manager
-signIn json model =
-    -- TODO: Rename to `setSyncMethod`
+setSyncMethod : Json.Value -> Manager
+setSyncMethod json model =
     -- 🐤
     -- Set & store method,
     -- and retrieve data.
@@ -263,14 +339,13 @@ signIn json model =
             Return.singleton model
 
 
-signOut : Manager
-signOut model =
-    -- TODO: Rename to `unsetSyncMethod`
+unsetSyncMethod : Manager
+unsetSyncMethod model =
     -- 💀
     -- Unset & remove stored method.
     [ Ports.removeCache (Alien.trigger Alien.AuthMethod)
+    , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
 
-    -- , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
     --
     , case model.userSyncMethod of
         Just (Dropbox _) ->
@@ -421,10 +496,7 @@ retrieveHypaethralData method bit model =
                                         |> UserMsg
 
                                 Err err ->
-                                    err
-                                        |> Alien.report Alien.ReportError
-                                        |> Ports.toUI
-                                        |> Cmd
+                                    Common.reportUICmdMsg Alien.ReportError err
                         )
                     |> return model
 
@@ -523,10 +595,7 @@ saveHypaethralData bit model =
                                         |> UserMsg
 
                                 Err err ->
-                                    err
-                                        |> Alien.report Alien.ReportError
-                                        |> Ports.toUI
-                                        |> Cmd
+                                    Common.reportUICmdMsg Alien.ReportError err
                         )
                     |> return model
 

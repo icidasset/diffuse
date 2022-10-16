@@ -41,3 +41,19 @@ toCache tag =
         , valueDecoder = TaskPort.ignoreValue
         , argsEncoder = \v -> Json.Encode.object [ ( "key", Json.Encode.string key ), ( "value", v ) ]
         }
+
+
+
+-- USER LAYER
+
+
+requestDropbox : { file : String, token : String } -> TaskPort.Task (Maybe Json.Decode.Value)
+requestDropbox { file, token } =
+    TaskPort.call
+        { function = "requestDropbox"
+        , valueDecoder = Json.Decode.maybe Json.Decode.value
+        , argsEncoder = Json.Encode.object
+        }
+        [ ( "file", Json.Encode.string file )
+        , ( "token", Json.Encode.string token )
+        ]

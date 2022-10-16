@@ -5,7 +5,7 @@ import Base64
 import Binary
 import Browser.Navigation as Nav
 import Common exposing (Switch(..))
-import Coordinates exposing (Coordinates)
+import Coordinates
 import Dict
 import Html.Events.Extra.Mouse as Mouse
 import Http
@@ -30,7 +30,6 @@ import UI.Ports as Ports
 import UI.Sources.Query
 import UI.Sources.State as Sources
 import UI.Types as UI exposing (..)
-import UI.User.State.Import as User
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
 import User.Layer exposing (..)
@@ -44,10 +43,12 @@ import Webnative.Constants as Webnative
 -- ⛩
 
 
+minimumPassphraseLength : Int
 minimumPassphraseLength =
     16
 
 
+passphraseLengthErrorMessage : String
 passphraseLengthErrorMessage =
     "Your passphrase should be atleast *16 characters* long."
 
@@ -455,7 +456,7 @@ signIn method model =
     , ( "passphrase", Json.Encode.null )
     ]
         |> Json.Encode.object
-        |> Alien.broadcast Alien.SignIn
+        |> Alien.broadcast Alien.SetSyncMethod
         |> Ports.toBrain
         --
         |> return model
@@ -474,7 +475,7 @@ signInWithPassphrase method passphrase model =
         , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
         ]
             |> Json.Encode.object
-            |> Alien.broadcast Alien.SignIn
+            |> Alien.broadcast Alien.SetSyncMethod
             |> Ports.toBrain
             --
             |> return model
@@ -515,7 +516,7 @@ signOut model =
     }
         |> Backdrop.setDefault
         |> Return.andThen Sources.stopProcessing
-        |> Return.command (Ports.toBrain <| Alien.trigger Alien.SignOut)
+        |> Return.command (Ports.toBrain <| Alien.trigger Alien.UnsetSyncMethod)
         |> Return.command (Ports.activeQueueItemChanged Nothing)
         |> Return.command (Nav.pushUrl model.navKey "#/")
 

@@ -15,6 +15,7 @@ import { sendJsonData, storageCallback, toCache } from "./common"
 
 
 const ports = []
+const taskPorts = []
 
 
 // Crypto
@@ -38,29 +39,19 @@ ports.fabricateSecretKey = app => event => {
 // Dropbox
 // -------
 
-ports.requestDropbox = app => event => {
-  const params = {
-    path: "/" + event.data.file
-  }
+ports.requestDropbox = app => event => { } // TODO: Remove
 
-  const dataPromise =
-    !navigator.onLine
-      // TODO: Replace with local data syncing
-      ? fromCache(event.tag + "_" + event.data.file)
-      : fetch("https://content.dropboxapi.com/2/files/download", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + event.data.token,
-          "Dropbox-API-Arg": JSON.stringify(params)
-        }
-      })
-        .then(r => r.ok ? r.text() : r.json())
-        .then(r => r.error ? null : r)
-        .then(decryptIfNeeded)
-
-  dataPromise
-    .then(sendJsonData(app, event))
-    .catch(reportError(app, event))
+taskPorts.requestDropbox = ({ file, token }) => {
+  return fetch("https://content.dropboxapi.com/2/files/download", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + event.data.token,
+      "Dropbox-API-Arg": JSON.stringify(params)
+    }
+  })
+    .then(r => r.ok ? r.text() : r.json())
+    .then(r => r.error ? null : r)
+    .then(decryptIfNeeded)
 }
 
 
@@ -391,5 +382,13 @@ export function setupPorts(app) {
   Object.keys(ports).forEach(name => {
     const fn = ports[ name ](app)
     app.ports[ name ].subscribe(fn)
+  })
+}
+
+
+export function setupTaskPorts() {
+  Object.keys(taskPorts).forEach(name => {
+    const fn = taskPorts[ name ]()
+    TaskPort.register(name, fn)
   })
 }

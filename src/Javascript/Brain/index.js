@@ -31,6 +31,9 @@ TaskPort.register("fromCache", fromCache)
 TaskPort.register("toCache", ({ key, value }) => toCache(key, value))
 
 
+user.setupTaskPorts()
+
+
 const flags = location
   .hash
   .substr(1)
