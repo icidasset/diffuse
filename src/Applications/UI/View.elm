@@ -181,6 +181,10 @@ defaultScreen model =
 
             Page.Sources subPage ->
                 Sources.view subPage model
+
+        -- Authentication
+        -----------------
+        , Authentication.view model
         ]
 
     -----------------------------------------

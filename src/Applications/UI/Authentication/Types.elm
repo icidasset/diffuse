@@ -13,13 +13,12 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 type State
-    = Authenticated Method
-    | Authenticating
+    = NotSynced
+    | Synced Method
+    | Syncing
     | InputScreen Method Question
     | NewEncryptionKeyScreen Method (Maybe String)
     | UpdateEncryptionKeyScreen Method (Maybe String)
-    | Unauthenticated
-    | Welcome
 
 
 type alias Question =
@@ -37,7 +36,6 @@ type Msg
     = Bypass
       --
     | BootFailure String
-    | CancelFlow
     | ExchangeDropboxAuthCode (Result Http.Error Dropbox.Tokens)
     | GetStarted
     | GotAuthMethod Json.Value

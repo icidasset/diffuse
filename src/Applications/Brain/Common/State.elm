@@ -13,6 +13,7 @@ import TaskPort
 -- 🛠
 
 
+attemptPortTask : (a -> Msg) -> Task.Task TaskPort.Error a -> Cmd Msg
 attemptPortTask mapFn =
     Task.attempt (reportPortErrorToUI mapFn)
 

@@ -19,7 +19,6 @@ import Settings
 import Sources.Encoding as Sources
 import Task
 import Task.Extra exposing (do)
-import TaskPort
 import Time
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
@@ -107,6 +106,9 @@ update msg =
 
         SetSyncMethod a ->
             setSyncMethod a
+
+        Sync ->
+            sync
 
         UnsetSyncMethod ->
             unsetSyncMethod
@@ -229,40 +231,7 @@ commence maybeMethod ( hypaethralJson, hypaethralData ) model =
     { model | userSyncMethod = maybeMethod }
         |> sendHypaethralDataToUI hypaethralJson hypaethralData
         -- Next load the hypaethral data from the syncing service.
-        |> andThen
-            (\m ->
-                case m.userSyncMethod of
-                    Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
-                        if
-                            Hypaethral.isDropboxTokenExpired
-                                { currentTime = model.currentTime
-                                , expiresAt = expiresAt
-                                }
-                        then
-                            -- refreshToken
-                            --     |> Dropbox.refreshAccessToken
-                            --     |> Task.andThen
-                            --         (\tokens ->
-                            --         )
-                            -- TODO
-                            Return.singleton m
-
-                        else
-                            -- { file = hypaethralBitFileName bit
-                            -- , token = accessToken
-                            -- }
-                            -- |> Brain.Task.Ports.requestDropbox
-                            -- |> Common.attemptPortTask
-                            --     (\maybeJson ->
-                            --
-                            --     )
-                            -- TODO
-                            Return.singleton m
-
-                    _ ->
-                        -- TODO
-                        Return.singleton m
-            )
+        |> andThen sync
 
 
 gotWebnativeResponse : Webnative.Response -> Manager
@@ -336,6 +305,52 @@ setSyncMethod json model =
             Return.singleton { model | userSyncMethod = Nothing }
 
         _ ->
+            Return.singleton model
+
+
+sync : Manager
+sync model =
+    case model.userSyncMethod of
+        Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
+            if
+                Hypaethral.isDropboxTokenExpired
+                    { currentTime = model.currentTime
+                    , expiresAt = expiresAt
+                    }
+            then
+                refreshToken
+                    |> Dropbox.refreshAccessToken
+                    |> Task.attempt
+                        (\result ->
+                            case result of
+                                Ok tokens ->
+                                    Sync
+                                        |> RefreshedDropboxTokens
+                                            { currentTime = Time.posixToMillis model.currentTime // 1000
+                                            , refreshToken = refreshToken
+                                            }
+                                            tokens
+                                        |> UserMsg
+
+                                Err err ->
+                                    Common.reportUICmdMsg Alien.ReportError err
+                        )
+                    |> return model
+
+            else
+                (\bit ->
+                    Brain.Task.Ports.requestDropbox
+                        { file = hypaethralBitFileName bit
+                        , token = accessToken
+                        }
+                )
+                    |> Hypaethral.retrieveAll
+                    |> Common.attemptPortTask
+                        (\a -> Debug.log "" a |> always Bypass)
+                    |> return model
+
+        _ ->
+            -- TODO
             Return.singleton model
 
 

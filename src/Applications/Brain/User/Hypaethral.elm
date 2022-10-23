@@ -8,7 +8,6 @@ import Task exposing (Task)
 import TaskPort
 import Time
 import User.Layer as User exposing (..)
-import User.Layer.Methods.Dropbox as Dropbox
 
 
 

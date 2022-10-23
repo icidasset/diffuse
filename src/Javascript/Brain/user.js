@@ -5,6 +5,8 @@
 // Related to the user layer.
 
 
+import * as TaskPort from "elm-taskport"
+
 import * as crypto from "../crypto"
 import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, identity } from "../common"
 
@@ -388,7 +390,7 @@ export function setupPorts(app) {
 
 export function setupTaskPorts() {
   Object.keys(taskPorts).forEach(name => {
-    const fn = taskPorts[ name ]()
+    const fn = taskPorts[ name ]
     TaskPort.register(name, fn)
   })
 }

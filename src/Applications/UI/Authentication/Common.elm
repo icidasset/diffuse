@@ -11,10 +11,10 @@ import User.Layer exposing (Method)
 extractMethod : State -> Maybe Method
 extractMethod state =
     case state of
-        Authenticated method ->
+        Synced method ->
             Just method
 
-        Authenticating ->
+        Syncing ->
             Nothing
 
         InputScreen method _ ->
@@ -26,8 +26,5 @@ extractMethod state =
         UpdateEncryptionKeyScreen method _ ->
             Just method
 
-        Unauthenticated ->
-            Nothing
-
-        Welcome ->
+        NotSynced ->
             Nothing

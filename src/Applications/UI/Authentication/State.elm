@@ -63,10 +63,10 @@ initialModel url =
         [ "authenticate", "dropbox" ] ->
             case Dict.get "code" (Url.queryDictionary url) of
                 Just _ ->
-                    Authenticating
+                    Syncing
 
                 _ ->
-                    Unauthenticated
+                    NotSynced
 
         [ "authenticate", "remotestorage", encodedUserAddress ] ->
             let
@@ -90,10 +90,10 @@ initialModel url =
                         Nothing
 
                 Nothing ->
-                    Unauthenticated
+                    NotSynced
 
         _ ->
-            Welcome
+            Syncing
 
 
 initialCommand : Url -> Cmd Authentication.Msg
@@ -141,9 +141,6 @@ update msg =
 
         BootFailure a ->
             bootFailure a
-
-        CancelFlow ->
-            cancelFlow
 
         ExchangeDropboxAuthCode a ->
             exchangeDropboxAuthCode a
@@ -248,36 +245,6 @@ bootFailure err model =
         |> andThen Backdrop.setDefault
 
 
-cancelFlow : Manager
-cancelFlow model =
-    (\state ->
-        case state of
-            Authenticated method ->
-                Authenticated method
-
-            Authenticating ->
-                Unauthenticated
-
-            InputScreen _ _ ->
-                Unauthenticated
-
-            NewEncryptionKeyScreen _ _ ->
-                Unauthenticated
-
-            UpdateEncryptionKeyScreen method _ ->
-                Authenticated method
-
-            Unauthenticated ->
-                Welcome
-
-            Welcome ->
-                Welcome
-    )
-        |> Lens.adjust lens model
-        |> Return.singleton
-        |> andThen Common.forceTracksRerender
-
-
 externalAuth : Method -> String -> Manager
 externalAuth method string model =
     case method of
@@ -346,7 +313,7 @@ exchangeDropboxAuthCode result model =
                     "Missing refresh token in Dropbox code exchange flow."
                         |> Notifications.stickyError
                         |> showNotificationWithModel
-                            (Lens.replace lens model Unauthenticated)
+                            (Lens.replace lens model NotSynced)
 
         Err err ->
             []
@@ -354,7 +321,7 @@ exchangeDropboxAuthCode result model =
                     "Failed to authenticate with Dropbox"
                     (Http.errorToString err)
                 |> showNotificationWithModel
-                    (Lens.replace lens model Unauthenticated)
+                    (Lens.replace lens model NotSynced)
 
 
 gotAuthMethod : Json.Value -> Manager
@@ -363,7 +330,7 @@ gotAuthMethod json model =
     -- so we can tell the user in the UI.
     case decodeMethod json of
         Just method ->
-            replaceState (Authenticated method) model
+            replaceState (Synced method) model
 
         Nothing ->
             Return.singleton model
@@ -485,7 +452,7 @@ signInWithPassphrase method passphrase model =
 signOut : Manager
 signOut model =
     { model
-        | authentication = Authentication.Unauthenticated
+        | authentication = Authentication.NotSynced
         , playlists = []
         , playlistToActivate = Nothing
 
@@ -523,7 +490,7 @@ signOut model =
 
 startFlow : Manager
 startFlow =
-    replaceState Unauthenticated
+    replaceState NotSynced
 
 
 
@@ -554,7 +521,7 @@ removeEncryptionKey method model =
         |> Ports.toBrain
         --
         |> return
-            (lens.set (Authenticated method) model)
+            (lens.set (Synced method) model)
         |> andThen
             ("Saving data without encryption ..."
                 |> Notifications.success
@@ -589,7 +556,7 @@ updateEncryptionKey method passphrase model =
             |> Ports.toBrain
             --
             |> return
-                (lens.set (Authenticated method) model)
+                (lens.set (Synced method) model)
             |> andThen
                 ("Encrypting data with new passphrase ..."
                     |> Notifications.success

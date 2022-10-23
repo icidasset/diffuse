@@ -14,6 +14,7 @@ import Webnative
 type Msg
     = Commence (Maybe User.Method) ( Json.Value, HypaethralData )
     | SetSyncMethod Json.Value
+    | Sync
     | UnsetSyncMethod
       -----------------------------------------
       -- 0. Secret Key
