@@ -30,19 +30,27 @@ view_ : State -> Html Authentication.Msg
 view_ state =
     case state of
         InputScreen _ opts ->
-            inputScreen opts
+            UI.Kit.receptacle
+                { scrolling = False }
+                [ inputScreen opts ]
 
         NewEncryptionKeyScreen method pass ->
-            encryptionKeyScreen
-                { withEncryption = SignInWithPassphrase method (Maybe.withDefault "" pass)
-                , withoutEncryption = SignIn method
-                }
+            UI.Kit.receptacle
+                { scrolling = False }
+                [ encryptionKeyScreen
+                    { withEncryption = SignInWithPassphrase method (Maybe.withDefault "" pass)
+                    , withoutEncryption = SignIn method
+                    }
+                ]
 
         UpdateEncryptionKeyScreen method pass ->
-            encryptionKeyScreen
-                { withEncryption = UpdateEncryptionKey method (Maybe.withDefault "" pass)
-                , withoutEncryption = RemoveEncryptionKey method
-                }
+            UI.Kit.receptacle
+                { scrolling = False }
+                [ encryptionKeyScreen
+                    { withEncryption = UpdateEncryptionKey method (Maybe.withDefault "" pass)
+                    , withoutEncryption = RemoveEncryptionKey method
+                    }
+                ]
 
         Syncing ->
             Html.nothing

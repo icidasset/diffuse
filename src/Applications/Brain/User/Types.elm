@@ -13,32 +13,30 @@ import Webnative
 
 type Msg
     = Commence (Maybe User.Method) ( Json.Value, HypaethralData )
+      -----------------------------------------
+      --  Method
+      -----------------------------------------
     | SetSyncMethod Json.Value
     | Sync
     | UnsetSyncMethod
       -----------------------------------------
-      -- 0. Secret Key
-      -----------------------------------------
-    | FabricateSecretKey String
-    | SecretKeyFabricated
-      -----------------------------------------
-      -- 1. Method
+      -- 1. Method (TODO: Remove)
       -----------------------------------------
     | RetrieveMethod
     | MethodRetrieved Json.Value
       -----------------------------------------
-      -- 2. Data
+      -- 2. Data (TODO: Remove)
       -----------------------------------------
     | RetrieveHypaethralData User.Method HypaethralBit
     | HypaethralDataRetrieved Json.Value
       -----------------------------------------
-      -- x. Data
+      -- Enclosed Data
       -----------------------------------------
     | RetrieveEnclosedData
     | EnclosedDataRetrieved Json.Value
     | SaveEnclosedData Json.Value
       -----------------------------------------
-      -- y. Data
+      -- Hypaethral Data, pt. 1
       -----------------------------------------
     | SaveFavourites Json.Value
     | SavePlaylists Json.Value
@@ -47,8 +45,9 @@ type Msg
     | SaveSources Json.Value
     | SaveTracks Json.Value
       -----------------------------------------
-      -- z. Data
+      -- Hypaethral Data, pt. 2
       -----------------------------------------
+    | GotHypaethralData Json.Value
     | GotWebnativeResponse Webnative.Response
     | SaveAllHypaethralData
     | SaveHypaethralDataBit HypaethralBit
@@ -56,9 +55,11 @@ type Msg
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
     | SaveNextHypaethralBit
       -----------------------------------------
-      -- z. Secret Key
+      -- Encryption
       -----------------------------------------
+    | FabricateSecretKey String
     | RemoveEncryptionKey
+    | SecretKeyFabricated
     | UpdateEncryptionKey Json.Value
       -----------------------------------------
       -- 📭 Other

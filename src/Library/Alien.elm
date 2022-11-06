@@ -68,7 +68,6 @@ type Tag
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
-    | MissingSecretKey
     | ReloadTracks
     | RemoveTracksByPath
     | ReportError
@@ -126,7 +125,6 @@ enum =
         , ( "HIDE_LOADING_SCREEN", HideLoadingScreen )
         , ( "LOAD_ENCLOSED_USER_DATA", LoadEnclosedUserData )
         , ( "LOAD_HYPAETHRAL_USER_DATA", LoadHypaethralUserData )
-        , ( "MISSING_SECRET_KEY", MissingSecretKey )
         , ( "RELOAD_TRACKS", ReloadTracks )
         , ( "REMOVE_TRACKS_BY_PATH", RemoveTracksByPath )
         , ( "REPORT_ERROR", ReportError )

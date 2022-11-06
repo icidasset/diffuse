@@ -34,7 +34,15 @@ retrieveAll retrievalFn =
 
 
 
--- RETRIEVAL LOCAL CACHE
+-- RETRIEVAL
+
+
+retrieveDropbox : String -> HypaethralBit -> TaskPort.Task (Maybe Json.Decode.Value)
+retrieveDropbox accessToken bit =
+    Brain.Task.Ports.requestDropbox
+        { file = hypaethralBitFileName bit
+        , token = accessToken
+        }
 
 
 retrieveLocal : HypaethralBit -> TaskPort.Task (Maybe Json.Decode.Value)

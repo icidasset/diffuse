@@ -185,6 +185,9 @@ update msg =
         -----------------------------------------
         -- z. Data
         -----------------------------------------
+        GotHypaethralData a ->
+            gotHypaethralData a
+
         GotWebnativeResponse a ->
             gotWebnativeResponse a
 
@@ -294,7 +297,7 @@ setSyncMethod json model =
                 (Decode.field "method" <| Decode.map methodFromString Decode.string)
                 (Decode.field "passphrase" <| Decode.maybe Decode.string)
     in
-    case Decode.decodeValue decoder json of
+    case Debug.log "setSyncMethod" <| Decode.decodeValue decoder json of
         Ok ( maybeMethod, Just passphrase ) ->
             fabricateSecretKey passphrase { model | userSyncMethod = maybeMethod }
 
@@ -338,15 +341,10 @@ sync model =
                     |> return model
 
             else
-                (\bit ->
-                    Brain.Task.Ports.requestDropbox
-                        { file = hypaethralBitFileName bit
-                        , token = accessToken
-                        }
-                )
+                accessToken
+                    |> Hypaethral.retrieveDropbox
                     |> Hypaethral.retrieveAll
-                    |> Common.attemptPortTask
-                        (\a -> Debug.log "" a |> always Bypass)
+                    |> Common.attemptPortTask (UserMsg << GotHypaethralData)
                     |> return model
 
         _ ->
@@ -414,6 +412,24 @@ saveEnclosedData json =
 -- 🔱  ░░  DATA - HYPAETHRAL
 
 
+gotHypaethralData : Json.Value -> Manager
+gotHypaethralData hypaethralJson model =
+    case User.decodeHypaethralData hypaethralJson of
+        Ok hypaethralData ->
+            model
+                |> sendHypaethralDataToUI hypaethralJson hypaethralData
+                |> (case model.userSyncMethod of
+                        Just userSyncMethod ->
+                            andThen (Common.giveUI Alien.AuthMethod <| encodeMethod userSyncMethod)
+
+                        Nothing ->
+                            identity
+                   )
+
+        Err decodingError ->
+            Common.reportUI Alien.SyncHypaethralData (Decode.errorToString decodingError) model
+
+
 hypaethralDataRetrieved : Json.Value -> Manager
 hypaethralDataRetrieved encodedData model =
     ---------------
@@ -454,22 +470,23 @@ hypaethralDataRetrieved encodedData model =
 
 retrieveAllHypaethralData : Method -> Manager
 retrieveAllHypaethralData method model =
-    let
-        maybeZipper =
-            hypaethralBit.list
-                |> List.map (\( _, b ) -> ( b, Json.null, BaggageClaimed ))
-                |> Zipper.fromList
-    in
-    case maybeZipper of
-        Just zipper ->
-            retrieveHypaethralData
-                method
-                (Tuple3.first <| Zipper.current zipper)
-                { model | hypaethralRetrieval = Just zipper }
+    -- Dropbox { accessToken : String, expiresAt : Int, refreshToken : String }
+    -- | Fission { initialised : Bool }
+    -- | Ipfs { apiOrigin : String }
+    -- | Local
+    -- | RemoteStorage { userAddress : String, token : String }
+    case method of
+        Dropbox { accessToken } ->
+            accessToken
+                |> Hypaethral.retrieveDropbox
+                |> Hypaethral.retrieveAll
+                |> Common.attemptPortTask
+                    (\a -> Debug.log "" a |> always Bypass)
+                |> return model
 
-        Nothing ->
-            Return.singleton
-                { model | hypaethralRetrieval = Nothing }
+        _ ->
+            -- TODO
+            Return.singleton model
 
 
 retrieveHypaethralData : Method -> HypaethralBit -> Manager
@@ -920,7 +937,7 @@ secretKeyFabricated model =
     -- else
     --     saveAllHypaethralData model
     -- TODO:
-    Return.singleton model
+    sync model
 
 
 updateEncryptionKey : Json.Value -> Manager

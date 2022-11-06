@@ -43,7 +43,7 @@ syncDataMenu =
         , Item
             { icon = \_ _ -> Svg.map never UI.Svg.Elements.remoteStorageLogo
             , label = "RemoteStorage"
-            , msg = Bypass
+            , msg = Bypass -- TODO
             , active = False
             }
         , Item

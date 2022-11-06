@@ -80,7 +80,7 @@ reportErrorToUI mapFn result =
 
 reportPortErrorToUI : (a -> Msg) -> Result TaskPort.Error a -> Msg
 reportPortErrorToUI mapFn =
-    Result.mapError TaskPort.errorToString >> reportErrorToUI mapFn
+    Result.mapError taskErrorToString >> reportErrorToUI mapFn
 
 
 reportUI : Alien.Tag -> String -> Manager
@@ -102,3 +102,22 @@ reportUICmdMsg tag error =
     error
         |> reportUICmd tag
         |> Cmd
+
+
+
+-- ㊙️
+
+
+taskErrorToString : TaskPort.Error -> String
+taskErrorToString err =
+    case err of
+        TaskPort.JSError jsErr ->
+            case jsErr of
+                TaskPort.ErrorObject _ errRecord ->
+                    errRecord.message
+
+                TaskPort.ErrorValue _ ->
+                    TaskPort.errorToString err
+
+        TaskPort.InteropError _ ->
+            TaskPort.errorToString err

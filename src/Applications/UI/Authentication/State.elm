@@ -181,9 +181,6 @@ update msg =
         KeepPassphraseInMemory a ->
             keepPassphraseInMemory a
 
-        MissingSecretKey a ->
-            missingSecretKey a
-
         RemoveEncryptionKey a ->
             removeEncryptionKey a
 
@@ -336,15 +333,6 @@ gotAuthMethod json model =
             Return.singleton model
 
 
-missingSecretKey : Json.Value -> Manager
-missingSecretKey _ model =
-    "There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue."
-        |> Notifications.error
-        |> showNotificationWithModel model
-        |> andThen Backdrop.setDefault
-        |> andThen (Common.toggleLoadingScreen Off)
-
-
 notAuthenticated : Manager
 notAuthenticated model =
     -- This is the message we get when the app initially
@@ -427,7 +415,6 @@ signIn method model =
         |> Ports.toBrain
         --
         |> return model
-        |> andThen (Common.toggleLoadingScreen On)
 
 
 signInWithPassphrase : Method -> String -> Manager
@@ -446,7 +433,6 @@ signInWithPassphrase method passphrase model =
             |> Ports.toBrain
             --
             |> return model
-            |> andThen (Common.toggleLoadingScreen On)
 
 
 signOut : Manager

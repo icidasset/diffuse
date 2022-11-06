@@ -1,6 +1,5 @@
 module UI.User.State.Import exposing (..)
 
-import Alien
 import File exposing (File)
 import File.Select
 import Json.Decode
@@ -13,6 +12,7 @@ import Process
 import Return exposing (andThen, return)
 import Return.Ext exposing (communicate)
 import Task
+import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification)
 import UI.Demo as Demo

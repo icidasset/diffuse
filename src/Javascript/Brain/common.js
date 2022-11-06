@@ -33,6 +33,12 @@ export function isLocalHost(url) {
 }
 
 
+export function parseJsonIfNeeded(a) {
+  if (typeof a === "string") return JSON.parse(a)
+  return a
+}
+
+
 export function reportError(app, event) {
   return e => {
     const err = e ? e.message || e : null
@@ -81,9 +87,9 @@ export function removeCache(key) {
 export function fromCache(key) {
   return isAuthMethodService(key)
     ? db.getFromIndex({ key: key })
-        .then(decryptIfNeeded)
-        .then(d => typeof d === "string" ? JSON.parse(d) : d)
-        .then(a => a === undefined ? null : a)
+      .then(decryptIfNeeded)
+      .then(d => typeof d === "string" ? JSON.parse(d) : d)
+      .then(a => a === undefined ? null : a)
     : db.getFromIndex({ key: key })
 }
 
@@ -115,7 +121,10 @@ export function decryptIfNeeded(data) {
 
   } else {
     return data
-      ? getSecretKey().then(secretKey => crypto.decrypt(secretKey, data))
+      ? getSecretKey().then(secretKey => {
+        if (!secretKey) throw new Error("There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue.")
+        return crypto.decrypt(secretKey, data)
+      })
       : Promise.resolve(null)
 
   }
@@ -125,16 +134,12 @@ export function decryptIfNeeded(data) {
 export function encryptWithSecretKey(unencryptedData) {
   return unencryptedData
     ? getSecretKey()
-        .then(secretKey => crypto.encrypt(secretKey, unencryptedData))
-        .catch(_ => unencryptedData)
+      .catch(_ => { throw new Error("Can't encrypt data without a key") })
+      .then(secretKey => crypto.encrypt(secretKey, unencryptedData))
     : null
 }
 
 
 export function getSecretKey() {
-  return db.getFromIndex({
-    key: SECRET_KEY_LOCATION
-  }).then(key => {
-    return key ? key : Promise.reject(new Error("MISSING_SECRET_KEY"))
-  })
+  return db.getFromIndex({ key: SECRET_KEY_LOCATION })
 }

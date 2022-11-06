@@ -249,7 +249,7 @@ init flags url key =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg =
-    case msg of
+    case Debug.log "🌁" msg of
         Bypass ->
             Return.singleton
 
@@ -657,9 +657,6 @@ translateAlienData tag data =
 
         Alien.LoadHypaethralUserData ->
             LoadHypaethralUserData data
-
-        Alien.MissingSecretKey ->
-            AuthenticationMsg (Authentication.MissingSecretKey data)
 
         Alien.ReloadTracks ->
             TracksMsg (Tracks.Reload data)

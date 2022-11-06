@@ -51,7 +51,6 @@ type Msg
       -- Encryption
       -----------------------------------------
     | KeepPassphraseInMemory String
-    | MissingSecretKey Json.Value
     | RemoveEncryptionKey Method
     | ShowNewEncryptionKeyScreen Method
     | ShowUpdateEncryptionKeyScreen Method

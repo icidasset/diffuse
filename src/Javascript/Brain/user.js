@@ -12,7 +12,7 @@ import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, identity } from "../comm
 
 import { SECRET_KEY_LOCATION } from "./common"
 import { decryptIfNeeded, encryptWithSecretKey } from "./common"
-import { fromCache, isLocalHost, reportError } from "./common"
+import { fromCache, isLocalHost, parseJsonIfNeeded, reportError } from "./common"
 import { sendJsonData, storageCallback, toCache } from "./common"
 
 
@@ -47,13 +47,14 @@ taskPorts.requestDropbox = ({ file, token }) => {
   return fetch("https://content.dropboxapi.com/2/files/download", {
     method: "POST",
     headers: {
-      "Authorization": "Bearer " + event.data.token,
-      "Dropbox-API-Arg": JSON.stringify(params)
+      "Authorization": "Bearer " + token,
+      "Dropbox-API-Arg": JSON.stringify({ path: "/" + file })
     }
   })
     .then(r => r.ok ? r.text() : r.json())
     .then(r => r.error ? null : r)
     .then(decryptIfNeeded)
+    .then(parseJsonIfNeeded)
 }
 
 
