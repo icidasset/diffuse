@@ -36,6 +36,11 @@ ports.fabricateSecretKey = app => event => {
     .catch(reportError(app, event))
 }
 
+taskPorts.fabricateSecretKey = async passphrase => {
+  const data = await crypto.keyFromPassphrase(passphrase)
+  return toCache(SECRET_KEY_LOCATION, data)
+}
+
 
 
 // Dropbox

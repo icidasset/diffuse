@@ -108,7 +108,7 @@ update msg =
             setSyncMethod a
 
         Sync ->
-            sync
+            sync { initialTask = Nothing }
 
         UnsetSyncMethod ->
             unsetSyncMethod
@@ -234,7 +234,7 @@ commence maybeMethod ( hypaethralJson, hypaethralData ) model =
     { model | userSyncMethod = maybeMethod }
         |> sendHypaethralDataToUI hypaethralJson hypaethralData
         -- Next load the hypaethral data from the syncing service.
-        |> andThen sync
+        |> andThen (sync { initialTask = Nothing })
 
 
 gotWebnativeResponse : Webnative.Response -> Manager
@@ -297,22 +297,35 @@ setSyncMethod json model =
                 (Decode.field "method" <| Decode.map methodFromString Decode.string)
                 (Decode.field "passphrase" <| Decode.maybe Decode.string)
     in
-    case Debug.log "setSyncMethod" <| Decode.decodeValue decoder json of
-        Ok ( maybeMethod, Just passphrase ) ->
-            fabricateSecretKey passphrase { model | userSyncMethod = maybeMethod }
+    case Decode.decodeValue decoder json of
+        Ok ( Just method, Just passphrase ) ->
+            let
+                initialTask =
+                    passphrase
+                        |> Brain.Task.Ports.fabricateSecretKey
+                        |> Task.mapError Common.taskErrorToString
+            in
+            sync { initialTask = Just initialTask } { model | userSyncMethod = Just method }
 
         Ok ( Just method, Nothing ) ->
-            retrieveAllHypaethralData method { model | userSyncMethod = Just method }
+            sync { initialTask = Nothing } { model | userSyncMethod = Just method }
 
-        Ok ( Nothing, Nothing ) ->
+        Ok ( Nothing, _ ) ->
             Return.singleton { model | userSyncMethod = Nothing }
 
-        _ ->
+        Err _ ->
             Return.singleton model
 
 
-sync : Manager
-sync model =
+sync : { initialTask : Maybe (Task.Task String ()) } -> Manager
+sync { initialTask } model =
+    model
+        |> syncCommand (Maybe.withDefault (Task.succeed ()) initialTask)
+        |> return model
+
+
+syncCommand : Task.Task String a -> Model -> Cmd Brain.Msg
+syncCommand initialTask model =
     case model.userSyncMethod of
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
             if
@@ -321,8 +334,8 @@ sync model =
                     , expiresAt = expiresAt
                     }
             then
-                refreshToken
-                    |> Dropbox.refreshAccessToken
+                initialTask
+                    |> Task.andThen (\_ -> Dropbox.refreshAccessToken refreshToken)
                     |> Task.attempt
                         (\result ->
                             case result of
@@ -338,18 +351,20 @@ sync model =
                                 Err err ->
                                     Common.reportUICmdMsg Alien.ReportError err
                         )
-                    |> return model
 
             else
-                accessToken
-                    |> Hypaethral.retrieveDropbox
-                    |> Hypaethral.retrieveAll
-                    |> Common.attemptPortTask (UserMsg << GotHypaethralData)
-                    |> return model
+                initialTask
+                    |> Task.andThen
+                        (\_ ->
+                            accessToken
+                                |> Hypaethral.retrieveDropbox
+                                |> Hypaethral.retrieveAll
+                                |> Task.mapError Common.taskErrorToString
+                        )
+                    |> Common.attemptTask (UserMsg << GotHypaethralData)
 
         _ ->
-            -- TODO
-            Return.singleton model
+            Cmd.none
 
 
 unsetSyncMethod : Manager
@@ -470,23 +485,8 @@ hypaethralDataRetrieved encodedData model =
 
 retrieveAllHypaethralData : Method -> Manager
 retrieveAllHypaethralData method model =
-    -- Dropbox { accessToken : String, expiresAt : Int, refreshToken : String }
-    -- | Fission { initialised : Bool }
-    -- | Ipfs { apiOrigin : String }
-    -- | Local
-    -- | RemoteStorage { userAddress : String, token : String }
-    case method of
-        Dropbox { accessToken } ->
-            accessToken
-                |> Hypaethral.retrieveDropbox
-                |> Hypaethral.retrieveAll
-                |> Common.attemptPortTask
-                    (\a -> Debug.log "" a |> always Bypass)
-                |> return model
-
-        _ ->
-            -- TODO
-            Return.singleton model
+    -- TODO: Remove method
+    Return.singleton model
 
 
 retrieveHypaethralData : Method -> HypaethralBit -> Manager
@@ -937,14 +937,17 @@ secretKeyFabricated model =
     -- else
     --     saveAllHypaethralData model
     -- TODO:
-    sync model
+    sync { initialTask = Nothing } model
 
 
 updateEncryptionKey : Json.Value -> Manager
 updateEncryptionKey json =
     case Decode.decodeValue Decode.string json of
         Ok passphrase ->
-            fabricateSecretKey passphrase
+            -- TODO: update with task
+            -- 1. fabricateSecretKey passphrase
+            -- 2. saveAllHypaethralData model
+            Return.singleton
 
         Err _ ->
             Return.singleton

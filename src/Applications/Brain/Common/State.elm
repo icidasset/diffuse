@@ -18,6 +18,26 @@ attemptPortTask mapFn =
     Task.attempt (reportPortErrorToUI mapFn)
 
 
+attemptTask : (a -> Msg) -> Task.Task String a -> Cmd Msg
+attemptTask mapFn =
+    Task.attempt (reportErrorToUI mapFn)
+
+
+taskErrorToString : TaskPort.Error -> String
+taskErrorToString err =
+    case err of
+        TaskPort.JSError jsErr ->
+            case jsErr of
+                TaskPort.ErrorObject _ errRecord ->
+                    errRecord.message
+
+                TaskPort.ErrorValue _ ->
+                    TaskPort.errorToString err
+
+        TaskPort.InteropError _ ->
+            TaskPort.errorToString err
+
+
 
 -- GIVE
 
@@ -102,22 +122,3 @@ reportUICmdMsg tag error =
     error
         |> reportUICmd tag
         |> Cmd
-
-
-
--- ㊙️
-
-
-taskErrorToString : TaskPort.Error -> String
-taskErrorToString err =
-    case err of
-        TaskPort.JSError jsErr ->
-            case jsErr of
-                TaskPort.ErrorObject _ errRecord ->
-                    errRecord.message
-
-                TaskPort.ErrorValue _ ->
-                    TaskPort.errorToString err
-
-        TaskPort.InteropError _ ->
-            TaskPort.errorToString err

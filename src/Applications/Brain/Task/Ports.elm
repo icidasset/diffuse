@@ -44,6 +44,19 @@ toCache tag =
 
 
 
+-- CRYPTO
+
+
+fabricateSecretKey : String -> TaskPort.Task ()
+fabricateSecretKey =
+    TaskPort.call
+        { function = "fabricateSecretKey"
+        , valueDecoder = Json.Decode.succeed ()
+        , argsEncoder = Json.Encode.string
+        }
+
+
+
 -- USER LAYER
 
 
