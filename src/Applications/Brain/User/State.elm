@@ -12,13 +12,15 @@ import EverySet
 import Json.Decode as Decode
 import Json.Encode as Json
 import List.Zipper as Zipper
+import Maybe.Extra
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
 import Return.Ext as Return
 import Settings
 import Sources.Encoding as Sources
+import Syncing.Services.Dropbox.Token
 import Task
-import Task.Extra exposing (do)
+import Task.Extra as Task exposing (do)
 import Time
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
@@ -326,16 +328,40 @@ sync { initialTask } model =
 
 syncCommand : Task.Task String a -> Model -> Cmd Brain.Msg
 syncCommand initialTask model =
+    -- TODO:
+    -- 1. Check if any existing data is present on the service to sync with.
+    -- 2. If not, copy over all current data (in memory) to that service.
+    --    If so: 👇
+    -- 3. If no data is present locally then just load the remote data (ie. service data)
+    --    No data = no sources, favourites & playlists
+    --    If so: 👇
+    -- 4. Compare modifiedAt timestamps
+    --    (if no remote timestamp is available try to calculate it based on the data, progress → favourites → playlists → tracks → sources)
+    --    If remote is newer: Load remote data
+    --    Otherwise: 👇
+    -- 5. Load remote data and run merge function for each type of data (sources, tracks, etc.)
+    -- 6. Store merged data into memory
+    -- 7. Overwrite remote data
+    let
+        localTimestamp =
+            model.hypaethralUserData.modifiedAt
+
+        noLocalData =
+            List.isEmpty model.hypaethralUserData.sources
+                && List.isEmpty model.hypaethralUserData.favourites
+                && List.isEmpty model.hypaethralUserData.playlists
+    in
     case model.userSyncMethod of
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
             if
-                Hypaethral.isDropboxTokenExpired
+                Syncing.Services.Dropbox.Token.isExpired
                     { currentTime = model.currentTime
                     , expiresAt = expiresAt
                     }
             then
                 initialTask
-                    |> Task.andThen (\_ -> Dropbox.refreshAccessToken refreshToken)
+                    |> Task.andThen
+                        (\_ -> Dropbox.refreshAccessToken refreshToken)
                     |> Task.attempt
                         (\result ->
                             case result of
@@ -360,6 +386,24 @@ syncCommand initialTask model =
                                 |> Hypaethral.retrieveDropbox
                                 |> Hypaethral.retrieveAll
                                 |> Task.mapError Common.taskErrorToString
+                        )
+                    |> Task.andThen
+                        (\list ->
+                            let
+                                hasExistingData =
+                                    List.any (Tuple.second >> Maybe.Extra.isJust) list
+                            in
+                            if hasExistingData then
+                                list
+                                    |> List.map (\( a, b ) -> ( hypaethralBitKey a, Maybe.withDefault Json.null b ))
+                                    |> Json.object
+                                    |> User.decodeHypaethralData
+                                    |> Task.fromResult
+                                    |> Task.mapError Decode.errorToString
+
+                            else
+                                -- Save local data to remote
+                                Task.fail "TODO"
                         )
                     |> Common.attemptTask (UserMsg << GotHypaethralData)
 
@@ -594,8 +638,17 @@ saveHypaethralData bit model =
         file =
             Json.string filename
 
+        userData =
+            model.hypaethralUserData
+
+        updatedUserData =
+            { userData | modifiedAt = Just model.currentTime }
+
+        updatedModel =
+            { model | hypaethralUserData = updatedUserData }
+
         json =
-            encodeHypaethralBit bit model.hypaethralUserData (Just model.currentTime)
+            encodeHypaethralBit bit updatedUserData
     in
     case method of
         -- 🚀
@@ -629,7 +682,7 @@ saveHypaethralData bit model =
                                 Err err ->
                                     Common.reportUICmdMsg Alien.ReportError err
                         )
-                    |> return model
+                    |> return updatedModel
 
             else
                 [ ( "data", json )
@@ -639,14 +692,14 @@ saveHypaethralData bit model =
                     |> Json.object
                     |> Alien.broadcast Alien.AuthDropbox
                     |> Ports.toDropbox
-                    |> return model
+                    |> return updatedModel
 
         Fission params ->
             json
                 |> Fission.save params bit filename
                 |> List.map Ports.webnativeRequest
                 |> Cmd.batch
-                |> return model
+                |> return updatedModel
 
         Ipfs { apiOrigin } ->
             [ ( "apiOrigin", Json.string apiOrigin )
@@ -656,7 +709,7 @@ saveHypaethralData bit model =
                 |> Json.object
                 |> Alien.broadcast Alien.AuthIpfs
                 |> Ports.toIpfs
-                |> return model
+                |> return updatedModel
 
         Local ->
             [ ( "data", json )
@@ -665,7 +718,7 @@ saveHypaethralData bit model =
                 |> Json.object
                 |> Alien.broadcast Alien.AuthAnonymous
                 |> Ports.toCache
-                |> return model
+                |> return updatedModel
 
         RemoteStorage { userAddress, token } ->
             [ ( "data", json )
@@ -676,7 +729,7 @@ saveHypaethralData bit model =
                 |> Json.object
                 |> Alien.broadcast Alien.AuthRemoteStorage
                 |> Ports.toRemoteStorage
-                |> return model
+                |> return updatedModel
 
 
 

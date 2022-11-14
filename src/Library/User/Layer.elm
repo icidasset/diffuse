@@ -276,8 +276,8 @@ emptyHypaethralData =
     }
 
 
-encodeHypaethralBit : HypaethralBit -> HypaethralData -> Maybe Time.Posix -> Json.Value
-encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tracks } maybeTime =
+encodeHypaethralBit : HypaethralBit -> HypaethralData -> Json.Value
+encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tracks, modifiedAt } =
     Json.Encode.object
         [ ( "data"
           , case bit of
@@ -300,24 +300,20 @@ encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tr
                     Json.Encode.list Tracks.encodeTrack tracks
           )
         , ( "modifiedAt"
-          , Maybe.unwrap Json.Encode.null Time.encode maybeTime
+          , Maybe.unwrap Json.Encode.null Time.encode modifiedAt
           )
         ]
 
 
 encodeHypaethralData : HypaethralData -> Json.Value
 encodeHypaethralData data =
-    let
-        time =
-            data.modifiedAt
-    in
     Json.Encode.object
-        [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data time )
-        , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data time )
-        , ( hypaethralBitKey Progress, encodeHypaethralBit Progress data time )
-        , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data time )
-        , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data time )
-        , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data time )
+        [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data )
+        , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data )
+        , ( hypaethralBitKey Progress, encodeHypaethralBit Progress data )
+        , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data )
+        , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data )
+        , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data )
         ]
 
 
