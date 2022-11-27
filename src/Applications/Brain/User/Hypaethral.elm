@@ -4,25 +4,8 @@ import Alien
 import Brain.Task.Ports
 import Json.Decode
 import Json.Encode
-import Task exposing (Task)
 import TaskPort
 import User.Layer as User exposing (..)
-
-
-
--- 🔱
-
-
-retrieveAll : (HypaethralBit -> Task x (Maybe Json.Decode.Value)) -> Task x (List ( HypaethralBit, Maybe Json.Encode.Value ))
-retrieveAll retrievalFn =
-    hypaethralBit.list
-        |> List.map
-            (\( _, bit ) ->
-                bit
-                    |> retrievalFn
-                    |> Task.map (\value -> ( bit, value ))
-            )
-        |> Task.sequence
 
 
 
@@ -44,7 +27,7 @@ retrieveDropbox accessToken bit =
 retrieveLocal : HypaethralBit -> TaskPort.Task (Maybe Json.Decode.Value)
 retrieveLocal bit =
     Brain.Task.Ports.fromCacheWithSuffix
-        Alien.AuthAnonymous
+        Alien.SyncLocal
         (hypaethralBitFileName bit)
         Json.Decode.value
 
@@ -53,8 +36,8 @@ retrieveLocal bit =
 -- STORAGE
 
 
-toDropbox : String -> HypaethralBit -> Json.Decode.Value -> TaskPort.Task ()
-toDropbox accessToken bit data =
+saveDropbox : String -> HypaethralBit -> Json.Decode.Value -> TaskPort.Task ()
+saveDropbox accessToken bit data =
     TaskPort.call
         { function = "toDropbox"
         , valueDecoder = TaskPort.ignoreValue
@@ -64,3 +47,11 @@ toDropbox accessToken bit data =
         , ( "data", data )
         , ( "token", Json.Encode.string accessToken )
         ]
+
+
+saveLocal : HypaethralBit -> Json.Decode.Value -> TaskPort.Task ()
+saveLocal bit data =
+    Brain.Task.Ports.toCacheWithSuffix
+        Alien.SyncLocal
+        (hypaethralBitFileName bit)
+        data

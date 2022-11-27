@@ -29,6 +29,7 @@ import Playlists.Encoding as Playlists
 import Settings
 import Sources
 import Sources.Encoding as Sources
+import Task exposing (Task)
 import Time
 import Time.Ext as Time
 import Tracks
@@ -454,6 +455,31 @@ putHypaethralJsonBitsTogether bits =
     bits
         |> List.map (\( a, b, _ ) -> ( hypaethralBitKey a, b ))
         |> Json.Encode.object
+
+
+retrieveHypaethralData : (HypaethralBit -> Task x (Maybe Json.Value)) -> Task x (List ( HypaethralBit, Maybe Json.Encode.Value ))
+retrieveHypaethralData retrievalFn =
+    hypaethralBit.list
+        |> List.map
+            (\( _, bit ) ->
+                bit
+                    |> retrievalFn
+                    |> Task.map (\value -> ( bit, value ))
+            )
+        |> Task.sequence
+
+
+saveHypaethralData : (HypaethralBit -> Json.Value -> Task x ()) -> HypaethralData -> Task x ()
+saveHypaethralData saveFn data =
+    hypaethralBit.list
+        |> List.map
+            (\( _, bit ) ->
+                data
+                    |> encodeHypaethralBit bit
+                    |> saveFn bit
+            )
+        |> Task.sequence
+        |> Task.map (always ())
 
 
 

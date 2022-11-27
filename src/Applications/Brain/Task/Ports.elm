@@ -43,6 +43,19 @@ toCache tag =
         }
 
 
+toCacheWithSuffix : Alien.Tag -> String -> Json.Encode.Value -> TaskPort.Task ()
+toCacheWithSuffix tag suffix =
+    let
+        key =
+            Alien.tagToString tag ++ "_" ++ suffix
+    in
+    TaskPort.call
+        { function = "toCache"
+        , valueDecoder = TaskPort.ignoreValue
+        , argsEncoder = \v -> Json.Encode.object [ ( "key", Json.Encode.string key ), ( "value", v ) ]
+        }
+
+
 
 -- CRYPTO
 

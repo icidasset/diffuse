@@ -12,19 +12,21 @@ import EverySet
 import Json.Decode as Decode
 import Json.Encode as Json
 import List.Zipper as Zipper
-import Maybe.Extra
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
 import Return.Ext as Return
 import Settings
 import Sources.Encoding as Sources
+import Syncing
 import Syncing.Services.Dropbox.Token
 import Task
 import Task.Extra as Task exposing (do)
+import TaskPort.Extra as TaskPort
 import Time
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
 import Tuple3
+import UI.Authentication.Types exposing (State(..))
 import Url exposing (Url)
 import Url.Ext as Url
 import User.Layer as User exposing (..)
@@ -66,7 +68,7 @@ see `Commence` Msg what happens next.
 loadSyncMethodAndLocalHypaethralData : Cmd Brain.Msg
 loadSyncMethodAndLocalHypaethralData =
     Decode.value
-        |> Brain.Task.Ports.fromCache Alien.AuthMethod
+        |> Brain.Task.Ports.fromCache Alien.SyncMethod
         |> Task.andThen
             (\json ->
                 let
@@ -74,7 +76,7 @@ loadSyncMethodAndLocalHypaethralData =
                         Maybe.andThen decodeMethod json
                 in
                 Hypaethral.retrieveLocal
-                    |> Hypaethral.retrieveAll
+                    |> User.retrieveHypaethralData
                     |> Task.map
                         (\bits ->
                             bits
@@ -311,12 +313,16 @@ setSyncMethod json model =
                 initialTask =
                     passphrase
                         |> Brain.Task.Ports.fabricateSecretKey
-                        |> Task.mapError Common.taskErrorToString
+                        |> Task.mapError TaskPort.errorToStringCustom
             in
-            sync { initialTask = Just initialTask } { model | userSyncMethod = Just method }
+            { model | userSyncMethod = Just method }
+                |> sync { initialTask = Just initialTask }
+                |> andThen (saveMethod method)
 
         Ok ( Just method, Nothing ) ->
-            sync { initialTask = Nothing } { model | userSyncMethod = Just method }
+            { model | userSyncMethod = Just method }
+                |> sync { initialTask = Nothing }
+                |> andThen (saveMethod method)
 
         Ok ( Nothing, _ ) ->
             Return.singleton { model | userSyncMethod = Nothing }
@@ -334,30 +340,18 @@ sync { initialTask } model =
 
 syncCommand : Task.Task String a -> Model -> Cmd Brain.Msg
 syncCommand initialTask model =
-    -- 1. Check if any existing data is present on the service to sync with.
-    -- 2. If not, copy over all current data (in memory) to that service.
-    --    If so: 👇
-    -- 3. If no data is present locally then just load the remote data (ie. service data)
-    --    No data = no sources, favourites & playlists
-    --    If so: 👇
-    -- 4. Compare modifiedAt timestamps
-    --    (if no remote timestamp is available try to calculate it based on the data, progress → favourites → playlists → tracks → sources)
-    --    If remote is newer: Load remote data
-    --    Otherwise: 👇
-    -- 5. Load remote data and run merge function for each type of data (sources, tracks, etc.)
-    -- 6. Store merged data into memory
-    -- 7. Overwrite remote data
-    --
-    -- 🏝️ LOCAL
-    -- 🛰️ REMOTE
     let
         localData =
             model.hypaethralUserData
 
-        noLocalData =
-            List.isEmpty localData.sources
-                && List.isEmpty localData.favourites
-                && List.isEmpty localData.playlists
+        attemptSync args =
+            args
+                |> Syncing.task
+                    initialTask
+                    { localData = localData
+                    , saveLocal = Hypaethral.saveLocal
+                    }
+                |> Common.attemptTask (UserMsg << GotHypaethralData)
     in
     case model.userSyncMethod of
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
@@ -387,68 +381,10 @@ syncCommand initialTask model =
                         )
 
             else
-                initialTask
-                    |> Task.andThen
-                        (\_ ->
-                            accessToken
-                                |> Hypaethral.retrieveDropbox
-                                |> Hypaethral.retrieveAll
-                                |> Task.mapError Common.taskErrorToString
-                        )
-                    |> Task.andThen
-                        (\list ->
-                            let
-                                hasExistingData =
-                                    List.any (Tuple.second >> Maybe.Extra.isJust) list
-                            in
-                            if hasExistingData then
-                                -- 🛰️
-                                Task.succeed list
-
-                            else
-                                -- 🏝️ → 🛰️ / Push to remote
-                                localData
-                                    |> encodedHypaethralDataList
-                                    |> List.map (\( bit, data ) -> Hypaethral.toDropbox accessToken bit data)
-                                    |> Task.sequence
-                                    |> Task.mapError Common.taskErrorToString
-                                    |> Task.map (\_ -> list)
-                        )
-                    |> Task.andThen
-                        (\list ->
-                            -- Decode remote
-                            list
-                                |> List.map (\( a, b ) -> ( hypaethralBitKey a, Maybe.withDefault Json.null b ))
-                                |> Json.object
-                                |> User.decodeHypaethralData
-                                |> Task.fromResult
-                                |> Task.mapError Decode.errorToString
-                        )
-                    |> Task.map
-                        (\remoteData ->
-                            -- Compare modifiedAt timestamps
-                            case ( remoteData.modifiedAt, localData.modifiedAt ) of
-                                ( Just remoteModifiedAt, Just localModifiedAt ) ->
-                                    -- d
-                                    if Time.posixToMillis remoteModifiedAt > Time.posixToMillis localModifiedAt then
-                                        -- 🛰️
-                                        remoteData
-
-                                    else
-                                        -- 🏝️
-                                        localData
-
-                                -- TODO: Do we need to match for (Just, Nothing) or (Nothing, Just)?
-                                _ ->
-                                    if noLocalData then
-                                        -- 🛰️
-                                        remoteData
-
-                                    else
-                                        -- 🏝️
-                                        localData
-                        )
-                    |> Common.attemptTask (UserMsg << GotHypaethralData)
+                attemptSync
+                    { retrieve = Hypaethral.retrieveDropbox accessToken
+                    , save = Hypaethral.saveDropbox accessToken
+                    }
 
         _ ->
             Cmd.none
@@ -517,6 +453,7 @@ saveEnclosedData json =
 gotHypaethralData : HypaethralData -> Manager
 gotHypaethralData hypaethralData model =
     model
+        -- TODO: Don't send data to UI if not necessary
         |> sendHypaethralDataToUI (User.encodeHypaethralData hypaethralData) hypaethralData
         |> (case model.userSyncMethod of
                 Just userSyncMethod ->
@@ -529,6 +466,7 @@ gotHypaethralData hypaethralData model =
 
 hypaethralDataRetrieved : Json.Value -> Manager
 hypaethralDataRetrieved encodedData model =
+    -- TODO: Remove method
     ---------------
     -- Default Flow
     ---------------
@@ -573,6 +511,7 @@ retrieveAllHypaethralData method model =
 
 retrieveHypaethralData : Method -> HypaethralBit -> Manager
 retrieveHypaethralData method bit model =
+    -- TODO: Remove method
     let
         filename =
             hypaethralBitFileName bit
@@ -987,7 +926,7 @@ saveMethod : Method -> Manager
 saveMethod method model =
     method
         |> encodeMethod
-        |> Alien.broadcast Alien.AuthMethod
+        |> Alien.broadcast Alien.SyncMethod
         |> Ports.toCache
         |> return { model | userSyncMethod = Just method }
 

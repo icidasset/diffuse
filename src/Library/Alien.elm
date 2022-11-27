@@ -34,6 +34,8 @@ type Tag
     | AuthSecretKey
     | FabricateSecretKey
     | SearchTracks
+    | SyncLocal
+    | SyncMethod
       -----------------------------------------
       -- from UI
       -----------------------------------------
@@ -89,6 +91,8 @@ enum =
         , ( "AUTH_SECRET_KEY", AuthSecretKey )
         , ( "FABRICATE_SECRET_KEY", FabricateSecretKey )
         , ( "SEARCH_TRACKS", SearchTracks )
+        , ( "SYNC_LOCAL", SyncLocal )
+        , ( "SYNC_METHOD", SyncMethod )
 
         -----------------------------------------
         -- From UI

@@ -7,6 +7,7 @@ import Json.Decode as Json
 import Return.Ext as Return
 import Task
 import TaskPort
+import TaskPort.Extra as TaskPort
 
 
 
@@ -21,21 +22,6 @@ attemptPortTask mapFn =
 attemptTask : (a -> Msg) -> Task.Task String a -> Cmd Msg
 attemptTask mapFn =
     Task.attempt (reportErrorToUI mapFn)
-
-
-taskErrorToString : TaskPort.Error -> String
-taskErrorToString err =
-    case err of
-        TaskPort.JSError jsErr ->
-            case jsErr of
-                TaskPort.ErrorObject _ errRecord ->
-                    errRecord.message
-
-                TaskPort.ErrorValue _ ->
-                    TaskPort.errorToString err
-
-        TaskPort.InteropError _ ->
-            TaskPort.errorToString err
 
 
 
@@ -100,7 +86,7 @@ reportErrorToUI mapFn result =
 
 reportPortErrorToUI : (a -> Msg) -> Result TaskPort.Error a -> Msg
 reportPortErrorToUI mapFn =
-    Result.mapError taskErrorToString >> reportErrorToUI mapFn
+    Result.mapError TaskPort.errorToStringCustom >> reportErrorToUI mapFn
 
 
 reportUI : Alien.Tag -> String -> Manager
