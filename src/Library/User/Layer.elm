@@ -307,14 +307,21 @@ encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tr
 
 encodeHypaethralData : HypaethralData -> Json.Value
 encodeHypaethralData data =
-    Json.Encode.object
-        [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data )
-        , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data )
-        , ( hypaethralBitKey Progress, encodeHypaethralBit Progress data )
-        , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data )
-        , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data )
-        , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data )
-        ]
+    data
+        |> encodedHypaethralDataList
+        |> List.map (Tuple.mapFirst hypaethralBitKey)
+        |> Json.Encode.object
+
+
+encodedHypaethralDataList : HypaethralData -> List ( HypaethralBit, Json.Value )
+encodedHypaethralDataList data =
+    [ ( Favourites, encodeHypaethralBit Favourites data )
+    , ( Playlists, encodeHypaethralBit Playlists data )
+    , ( Progress, encodeHypaethralBit Progress data )
+    , ( Settings, encodeHypaethralBit Settings data )
+    , ( Sources, encodeHypaethralBit Sources data )
+    , ( Tracks, encodeHypaethralBit Tracks data )
+    ]
 
 
 hypaethralBit : Enum HypaethralBit
@@ -399,7 +406,29 @@ hypaethralDataDecoder =
 
 
 
---
+-- merge : HypaethralData -> HypaethralData -> HypaethralData
+-- merge a b =
+--     { favourites = List.unique (a.favourites ++ b.favourites)
+--     , playlists = List.unique (a.playlists ++ b.playlists)
+--     , progress = List.unique (a.progress ++ b.progress)
+--     , settings = List.unique (a.settings ++ b.settings)
+--     , sources = List.unique (a.sources ++ b.sources)
+--     , tracks = List.unique (a.tracks ++ b.tracks)
+--     --
+--     , modifiedAt =
+--         case ( a.modifiedAt, b.modifiedAt ) of
+--             ( Just am, Just bm ) ->
+--                 if Time.posixToMillis am > Time.posixToMillis bm then
+--                     Just am
+--                 else
+--                     Just bm
+--             ( Just am, Nothing ) ->
+--                 Just am
+--             ( Nothing, Just bm ) ->
+--                 Just bm
+--             ( Nothing, Nothing ) ->
+--                 Nothing
+--     }
 
 
 modifiedAtDecoder : Json.Decoder a -> Json.Decoder { data : a, modifiedAt : Maybe Time.Posix }

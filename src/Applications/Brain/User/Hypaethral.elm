@@ -31,10 +31,14 @@ retrieveAll retrievalFn =
 
 retrieveDropbox : String -> HypaethralBit -> TaskPort.Task (Maybe Json.Decode.Value)
 retrieveDropbox accessToken bit =
-    Brain.Task.Ports.requestDropbox
-        { file = hypaethralBitFileName bit
-        , token = accessToken
+    TaskPort.call
+        { function = "fromDropbox"
+        , valueDecoder = Json.Decode.maybe Json.Decode.value
+        , argsEncoder = Json.Encode.object
         }
+        [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
+        , ( "token", Json.Encode.string accessToken )
+        ]
 
 
 retrieveLocal : HypaethralBit -> TaskPort.Task (Maybe Json.Decode.Value)
@@ -43,3 +47,20 @@ retrieveLocal bit =
         Alien.AuthAnonymous
         (hypaethralBitFileName bit)
         Json.Decode.value
+
+
+
+-- STORAGE
+
+
+toDropbox : String -> HypaethralBit -> Json.Decode.Value -> TaskPort.Task ()
+toDropbox accessToken bit data =
+    TaskPort.call
+        { function = "toDropbox"
+        , valueDecoder = TaskPort.ignoreValue
+        , argsEncoder = Json.Encode.object
+        }
+        [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
+        , ( "data", data )
+        , ( "token", Json.Encode.string accessToken )
+        ]

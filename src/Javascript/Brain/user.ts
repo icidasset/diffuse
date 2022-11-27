@@ -5,19 +5,20 @@
 // Related to the user layer.
 
 
+// @ts-ignore
 import * as TaskPort from "elm-taskport"
 
 import * as crypto from "../crypto"
 import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, identity } from "../common"
 
-import { SECRET_KEY_LOCATION } from "./common"
+import { encryptIfPossible, SECRET_KEY_LOCATION } from "./common"
 import { decryptIfNeeded, encryptWithSecretKey } from "./common"
 import { fromCache, isLocalHost, parseJsonIfNeeded, reportError } from "./common"
 import { sendJsonData, storageCallback, toCache } from "./common"
 
 
-const ports = []
-const taskPorts = []
+const ports: Record<string, any> = {}
+const taskPorts: Record<string, any> = {}
 
 
 // Crypto
@@ -47,13 +48,14 @@ taskPorts.fabricateSecretKey = async passphrase => {
 // -------
 
 ports.requestDropbox = app => event => { } // TODO: Remove
+ports.toDropbox = app => event => { } // TODO: Remove
 
-taskPorts.requestDropbox = ({ file, token }) => {
+taskPorts.fromDropbox = ({ fileName, token }) => {
   return fetch("https://content.dropboxapi.com/2/files/download", {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
-      "Dropbox-API-Arg": JSON.stringify({ path: "/" + file })
+      "Dropbox-API-Arg": JSON.stringify({ path: "/" + fileName })
     }
   })
     .then(r => r.ok ? r.text() : r.json())
@@ -63,33 +65,27 @@ taskPorts.requestDropbox = ({ file, token }) => {
 }
 
 
-ports.toDropbox = app => event => {
-  const json = JSON.stringify(event.data.data)
-  const reporter = reportError(app, event)
+taskPorts.toDropbox = async ({ fileName, data, token }) => {
+  const json = JSON.stringify(data)
   const params = {
-    path: "/" + event.data.file,
+    path: "/" + fileName,
     mode: "overwrite",
     mute: true
   }
 
-  navigator.onLine && encryptWithSecretKey(json)
-    .then(data => {
-      return fetch("https://content.dropboxapi.com/2/files/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + event.data.token,
-          "Content-Type": "application/octet-stream",
-          "Dropbox-API-Arg": JSON.stringify(params)
-        },
-        body: data
-      })
-    })
-    .then(storageCallback(app, event))
-    .catch(reporter)
+  const possiblyEncrypted = await encryptIfPossible(data)
 
-  toCache(event.tag + "_" + event.data.file, event.data.data)
-    .then(!navigator.onLine ? storageCallback(app, event) : identity)
-    .catch(reporter)
+  return fetch("https://content.dropboxapi.com/2/files/upload", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/octet-stream",
+      "Dropbox-API-Arg": JSON.stringify(params)
+    },
+    body: possiblyEncrypted
+  })
+
+
 }
 
 
@@ -106,7 +102,7 @@ ports.webnativeRequest = app => request => {
 
   constructFission.call(self).then(() => {
     if (request.method === "loadFileSystem") {
-      self.webnative.loadFileSystem(...request.arguments).then(fs => {
+      (self as any).webnative.loadFileSystem(...request.arguments).then(fs => {
         wnfs = fs
         app.ports.webnativeResponse.send({
           tag: request.tag,
@@ -117,7 +113,7 @@ ports.webnativeRequest = app => request => {
         })
       })
     } else {
-      self.webnativeElm.request({ app: app, getFs, request: request })
+      (self as any).webnativeElm.request({ app: app, getFs, request: request })
     }
   })
 }
@@ -131,7 +127,7 @@ function constructFission() {
   importScripts("vendor/webnative-elm.min.js")
 
   // Environment setup
-  wn = self.webnative
+  wn = (self as any).webnative
 
   if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
     wn.setup.debug({ enabled: true })
@@ -152,7 +148,7 @@ function constructFission() {
     .catch(() => { throw new Error("💥 Couldn't start IPFS node, failed to fetch peer list") })
 
   return peersPromise.then(peers => {
-    return self.Ipfs.create({
+    return (self as any).Ipfs.create({
       config: {
         Addresses: {
           Delegates: []
@@ -219,7 +215,7 @@ function tryConnectingToIpfsPeer(ipfs, peer) {
 
 
 function keepAlive(ipfs, peer, backoff) {
-  let timeoutId = null
+  let timeoutId = 0
 
   if (backoff.currentBackoff < KEEP_TRYING_INTERVAL) {
     timeoutId = setTimeout(() => reconnect(ipfs, peer, backoff), backoff.currentBackoff)
@@ -283,10 +279,10 @@ ports.toIpfs = app => event => {
   const json = JSON.stringify(event.data.data)
   const params = new URLSearchParams({
     arg: IPFS_ROOT + event.data.file,
-    create: true,
-    offset: 0,
-    parents: true,
-    truncate: true
+    create: "true",
+    offset: "0",
+    parents: "true",
+    truncate: "true"
   }).toString()
 
   encryptWithSecretKey(json)
@@ -317,7 +313,7 @@ function remoteStorage(event) {
   if (!rs) {
     importScripts("vendor/remotestorage.min.js")
 
-    rs = new RemoteStorage({ cache: false })
+    rs = new (self as any).RemoteStorage({ cache: false })
     rs.access.claim("diffuse", "rw")
 
     rsClient = rs.scope("/diffuse/")

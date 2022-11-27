@@ -75,6 +75,12 @@ loadSyncMethodAndLocalHypaethralData =
                 in
                 Hypaethral.retrieveLocal
                     |> Hypaethral.retrieveAll
+                    |> Task.map
+                        (\bits ->
+                            bits
+                                |> List.map (\( a, b ) -> ( hypaethralBitKey a, Maybe.withDefault Json.null b ))
+                                |> Json.object
+                        )
                     |> Task.map (Tuple.pair maybeMethod)
             )
         |> Common.attemptPortTask
@@ -328,7 +334,6 @@ sync { initialTask } model =
 
 syncCommand : Task.Task String a -> Model -> Cmd Brain.Msg
 syncCommand initialTask model =
-    -- TODO:
     -- 1. Check if any existing data is present on the service to sync with.
     -- 2. If not, copy over all current data (in memory) to that service.
     --    If so: 👇
@@ -342,14 +347,17 @@ syncCommand initialTask model =
     -- 5. Load remote data and run merge function for each type of data (sources, tracks, etc.)
     -- 6. Store merged data into memory
     -- 7. Overwrite remote data
+    --
+    -- 🏝️ LOCAL
+    -- 🛰️ REMOTE
     let
-        localTimestamp =
-            model.hypaethralUserData.modifiedAt
+        localData =
+            model.hypaethralUserData
 
         noLocalData =
-            List.isEmpty model.hypaethralUserData.sources
-                && List.isEmpty model.hypaethralUserData.favourites
-                && List.isEmpty model.hypaethralUserData.playlists
+            List.isEmpty localData.sources
+                && List.isEmpty localData.favourites
+                && List.isEmpty localData.playlists
     in
     case model.userSyncMethod of
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
@@ -394,16 +402,51 @@ syncCommand initialTask model =
                                     List.any (Tuple.second >> Maybe.Extra.isJust) list
                             in
                             if hasExistingData then
-                                list
-                                    |> List.map (\( a, b ) -> ( hypaethralBitKey a, Maybe.withDefault Json.null b ))
-                                    |> Json.object
-                                    |> User.decodeHypaethralData
-                                    |> Task.fromResult
-                                    |> Task.mapError Decode.errorToString
+                                -- 🛰️
+                                Task.succeed list
 
                             else
-                                -- Save local data to remote
-                                Task.fail "TODO"
+                                -- 🏝️ → 🛰️ / Push to remote
+                                localData
+                                    |> encodedHypaethralDataList
+                                    |> List.map (\( bit, data ) -> Hypaethral.toDropbox accessToken bit data)
+                                    |> Task.sequence
+                                    |> Task.mapError Common.taskErrorToString
+                                    |> Task.map (\_ -> list)
+                        )
+                    |> Task.andThen
+                        (\list ->
+                            -- Decode remote
+                            list
+                                |> List.map (\( a, b ) -> ( hypaethralBitKey a, Maybe.withDefault Json.null b ))
+                                |> Json.object
+                                |> User.decodeHypaethralData
+                                |> Task.fromResult
+                                |> Task.mapError Decode.errorToString
+                        )
+                    |> Task.map
+                        (\remoteData ->
+                            -- Compare modifiedAt timestamps
+                            case ( remoteData.modifiedAt, localData.modifiedAt ) of
+                                ( Just remoteModifiedAt, Just localModifiedAt ) ->
+                                    -- d
+                                    if Time.posixToMillis remoteModifiedAt > Time.posixToMillis localModifiedAt then
+                                        -- 🛰️
+                                        remoteData
+
+                                    else
+                                        -- 🏝️
+                                        localData
+
+                                -- TODO: Do we need to match for (Just, Nothing) or (Nothing, Just)?
+                                _ ->
+                                    if noLocalData then
+                                        -- 🛰️
+                                        remoteData
+
+                                    else
+                                        -- 🏝️
+                                        localData
                         )
                     |> Common.attemptTask (UserMsg << GotHypaethralData)
 
@@ -471,22 +514,17 @@ saveEnclosedData json =
 -- 🔱  ░░  DATA - HYPAETHRAL
 
 
-gotHypaethralData : Json.Value -> Manager
-gotHypaethralData hypaethralJson model =
-    case User.decodeHypaethralData hypaethralJson of
-        Ok hypaethralData ->
-            model
-                |> sendHypaethralDataToUI hypaethralJson hypaethralData
-                |> (case model.userSyncMethod of
-                        Just userSyncMethod ->
-                            andThen (Common.giveUI Alien.AuthMethod <| encodeMethod userSyncMethod)
+gotHypaethralData : HypaethralData -> Manager
+gotHypaethralData hypaethralData model =
+    model
+        |> sendHypaethralDataToUI (User.encodeHypaethralData hypaethralData) hypaethralData
+        |> (case model.userSyncMethod of
+                Just userSyncMethod ->
+                    andThen (Common.giveUI Alien.AuthMethod <| encodeMethod userSyncMethod)
 
-                        Nothing ->
-                            identity
-                   )
-
-        Err decodingError ->
-            Common.reportUI Alien.SyncHypaethralData (Decode.errorToString decodingError) model
+                Nothing ->
+                    identity
+           )
 
 
 hypaethralDataRetrieved : Json.Value -> Manager

@@ -47,7 +47,7 @@ type Msg
       -----------------------------------------
       -- Hypaethral Data, pt. 2
       -----------------------------------------
-    | GotHypaethralData Json.Value
+    | GotHypaethralData HypaethralData
     | GotWebnativeResponse Webnative.Response
     | SaveAllHypaethralData
     | SaveHypaethralDataBit HypaethralBit

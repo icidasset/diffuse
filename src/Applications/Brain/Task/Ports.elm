@@ -54,19 +54,3 @@ fabricateSecretKey =
         , valueDecoder = Json.Decode.succeed ()
         , argsEncoder = Json.Encode.string
         }
-
-
-
--- USER LAYER
-
-
-requestDropbox : { file : String, token : String } -> TaskPort.Task (Maybe Json.Decode.Value)
-requestDropbox { file, token } =
-    TaskPort.call
-        { function = "requestDropbox"
-        , valueDecoder = Json.Decode.maybe Json.Decode.value
-        , argsEncoder = Json.Encode.object
-        }
-        [ ( "file", Json.Encode.string file )
-        , ( "token", Json.Encode.string token )
-        ]

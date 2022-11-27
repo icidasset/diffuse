@@ -98,7 +98,7 @@ export function toCache(key, data) {
   if (isAuthMethodService(key)) {
     const json = JSON.stringify(data)
 
-    return encryptWithSecretKey(json)
+    return encryptIfPossible(json)
       .then(encryptedData => db.setInIndex({ key: key, data: encryptedData }))
 
   } else {
@@ -131,13 +131,16 @@ export function decryptIfNeeded(data) {
 }
 
 
-export function encryptWithSecretKey(unencryptedData) {
+export async function encryptIfPossible(unencryptedData: string): Promise<string> {
   return unencryptedData
     ? getSecretKey()
-      .catch(_ => { throw new Error("Can't encrypt data without a key") })
+      .catch(_ => unencryptedData)
       .then(secretKey => crypto.encrypt(secretKey, unencryptedData))
-    : null
+    : unencryptedData
 }
+
+
+export { encryptIfPossible as encryptWithSecretKey }
 
 
 export function getSecretKey() {
