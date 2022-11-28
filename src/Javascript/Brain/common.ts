@@ -70,7 +70,8 @@ export function sendJsonData(app, event) {
 
 export function storageCallback(app, _) {
   return _ => {
-    app.ports.savedHypaethralBit.send()
+    // TODO: Remove
+    // app.ports.savedHypaethralBit.send()
   }
 }
 

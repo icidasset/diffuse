@@ -105,7 +105,4 @@ port receiveTags : (ContextForTags -> msg) -> Sub msg
 port replaceTags : (ContextForTagsSync -> msg) -> Sub msg
 
 
-port savedHypaethralBit : (Json.Value -> msg) -> Sub msg
-
-
 port webnativeResponse : (Webnative.Response -> msg) -> Sub msg

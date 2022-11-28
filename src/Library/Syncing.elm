@@ -86,10 +86,6 @@ task initialTask { localData, saveLocal } { retrieve, save } =
                 -- Compare modifiedAt timestamps
                 case Debug.log "" ( remoteData.modifiedAt, localData.modifiedAt ) of
                     ( Just remoteModifiedAt, Just localModifiedAt ) ->
-                        let
-                            _ =
-                                Debug.log "isNewer" (Time.posixToMillis remoteModifiedAt > Time.posixToMillis localModifiedAt)
-                        in
                         if Time.posixToMillis remoteModifiedAt > Time.posixToMillis localModifiedAt then
                             -- 🛰️
                             Task.succeed remoteData
@@ -103,7 +99,18 @@ task initialTask { localData, saveLocal } { retrieve, save } =
                                 |> Task.mapError TaskPort.errorToString
                                 |> Task.map (\_ -> localData)
 
-                    -- TODO: Do we need to match for (Just, Nothing) or (Nothing, Just)?
+                    ( Just remote, Nothing ) ->
+                        Task.succeed remoteData
+
+                    ( Nothing, Just local ) ->
+                        -- 🏝️ -> 🛰️
+                        localData
+                            |> User.encodedHypaethralDataList
+                            |> List.map (\( bit, data ) -> save bit data)
+                            |> Task.sequence
+                            |> Task.mapError TaskPort.errorToString
+                            |> Task.map (\_ -> localData)
+
                     _ ->
                         if noLocalData then
                             -- 🛰️

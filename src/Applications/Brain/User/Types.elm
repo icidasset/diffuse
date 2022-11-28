@@ -20,16 +20,6 @@ type Msg
     | Sync
     | UnsetSyncMethod
       -----------------------------------------
-      -- 1. Method (TODO: Remove)
-      -----------------------------------------
-    | RetrieveMethod
-    | MethodRetrieved Json.Value
-      -----------------------------------------
-      -- 2. Data (TODO: Remove)
-      -----------------------------------------
-    | RetrieveHypaethralData User.Method HypaethralBit
-    | HypaethralDataRetrieved Json.Value
-      -----------------------------------------
       -- Enclosed Data
       -----------------------------------------
     | RetrieveEnclosedData
@@ -53,7 +43,6 @@ type Msg
     | SaveHypaethralDataBit HypaethralBit
     | SaveHypaethralDataBits (List HypaethralBit)
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
-    | SaveNextHypaethralBit
       -----------------------------------------
       -- Encryption
       -----------------------------------------

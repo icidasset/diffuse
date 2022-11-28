@@ -165,7 +165,6 @@ subscriptions _ =
         , Ports.receiveSearchResults GotSearchResults
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
         , Ports.replaceTags ReplaceTrackTags
-        , Ports.savedHypaethralBit (\_ -> UserMsg User.SaveNextHypaethralBit)
         , Ports.webnativeResponse (UserMsg << User.GotWebnativeResponse)
 
         --
@@ -193,26 +192,8 @@ alien event =
 translateAlienData : Alien.Tag -> Json.Value -> Msg
 translateAlienData tag data =
     case tag of
-        Alien.AuthAnonymous ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthDropbox ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
         Alien.AuthEnclosedData ->
             UserMsg (User.EnclosedDataRetrieved data)
-
-        Alien.AuthFission ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthIpfs ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthMethod ->
-            UserMsg (User.MethodRetrieved data)
-
-        Alien.AuthRemoteStorage ->
-            UserMsg (User.HypaethralDataRetrieved data)
 
         Alien.FabricateSecretKey ->
             UserMsg User.SecretKeyFabricated

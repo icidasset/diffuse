@@ -133,24 +133,6 @@ update msg =
             secretKeyFabricated
 
         -----------------------------------------
-        -- 1. Method
-        -----------------------------------------
-        RetrieveMethod ->
-            retrieveMethod
-
-        MethodRetrieved a ->
-            methodRetrieved a
-
-        -----------------------------------------
-        -- 2. Data
-        -----------------------------------------
-        RetrieveHypaethralData a b ->
-            retrieveHypaethralData a b
-
-        HypaethralDataRetrieved a ->
-            hypaethralDataRetrieved a
-
-        -----------------------------------------
         -- x. Data
         -----------------------------------------
         RetrieveEnclosedData ->
@@ -213,9 +195,6 @@ update msg =
         SaveHypaethralDataSlowly a ->
             saveHypaethralDataSlowly a
 
-        SaveNextHypaethralBit ->
-            saveNextHypaethralBit
-
         -----------------------------------------
         -- z. Secret Key
         -----------------------------------------
@@ -260,7 +239,8 @@ gotWebnativeResponse response model =
             Common.reportUI Alien.ReportError err model
 
         Fission.Hypaethral data ->
-            hypaethralDataRetrieved data model
+            -- TODO: hypaethralDataRetrieved data model
+            Return.singleton model
 
         Fission.LoadedFileSystem ->
             -- Had to load the filesystem first, please continue.
@@ -268,9 +248,11 @@ gotWebnativeResponse response model =
                 userSyncMethod =
                     Fission { initialised = True }
             in
-            model.userSyncMethod
-                |> Maybe.withDefault userSyncMethod
-                |> (\a -> retrieveAllHypaethralData a { model | userSyncMethod = Just a })
+            -- TODO:
+            -- model.userSyncMethod
+            --     |> Maybe.withDefault userSyncMethod
+            --     |> (\a -> retrieveAllHypaethralData a { model | userSyncMethod = Just a })
+            Return.singleton model
 
         Fission.Ongoing newBaggage request ->
             model.hypaethralRetrieval
@@ -289,7 +271,9 @@ gotWebnativeResponse response model =
                 |> return model
 
         Fission.SaveNextHypaethralBit ->
-            saveNextHypaethralBit model
+            -- TODO
+            -- saveNextHypaethralBit model
+            Return.singleton model
 
         Fission.Stopping ->
             Return.singleton model
@@ -361,24 +345,11 @@ syncCommand initialTask model =
                     , expiresAt = expiresAt
                     }
             then
-                initialTask
-                    |> Task.andThen
-                        (\_ -> Dropbox.refreshAccessToken refreshToken)
-                    |> Task.attempt
-                        (\result ->
-                            case result of
-                                Ok tokens ->
-                                    Sync
-                                        |> RefreshedDropboxTokens
-                                            { currentTime = Time.posixToMillis model.currentTime // 1000
-                                            , refreshToken = refreshToken
-                                            }
-                                            tokens
-                                        |> UserMsg
-
-                                Err err ->
-                                    Common.reportUICmdMsg Alien.ReportError err
-                        )
+                refreshDropboxTokens
+                    model.currentTime
+                    Sync
+                    initialTask
+                    refreshToken
 
             else
                 attemptSync
@@ -394,7 +365,7 @@ unsetSyncMethod : Manager
 unsetSyncMethod model =
     -- 💀
     -- Unset & remove stored method.
-    [ Ports.removeCache (Alien.trigger Alien.AuthMethod)
+    [ Ports.removeCache (Alien.trigger Alien.SyncMethod)
     , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
 
     --
@@ -464,135 +435,83 @@ gotHypaethralData hypaethralData model =
            )
 
 
-hypaethralDataRetrieved : Json.Value -> Manager
-hypaethralDataRetrieved encodedData model =
-    -- TODO: Remove method
-    ---------------
-    -- Default Flow
-    ---------------
-    let
-        retrieval =
-            Maybe.map
-                (Zipper.mapCurrent <| Tuple3.mapSecond <| always encodedData)
-                model.hypaethralRetrieval
-    in
-    case Maybe.andThen Zipper.next retrieval of
-        Just nextRetrieval ->
-            retrieveHypaethralData
-                Local
-                -- TODO
-                (Tuple3.first <| Zipper.current nextRetrieval)
-                { model | hypaethralRetrieval = Just nextRetrieval }
 
-        Nothing ->
-            -- 🚀
-            let
-                allJson =
-                    retrieval
-                        |> Maybe.map Zipper.toList
-                        |> Maybe.withDefault []
-                        |> putHypaethralJsonBitsTogether
-            in
-            { model | hypaethralRetrieval = Nothing }
-                |> Return.singleton
-                |> andThen
-                    (allJson
-                        |> User.decodeHypaethralData
-                        |> Result.withDefault model.hypaethralUserData
-                        |> sendHypaethralDataToUI allJson
-                    )
-
-
-retrieveAllHypaethralData : Method -> Manager
-retrieveAllHypaethralData method model =
-    -- TODO: Remove method
-    Return.singleton model
-
-
-retrieveHypaethralData : Method -> HypaethralBit -> Manager
-retrieveHypaethralData method bit model =
-    -- TODO: Remove method
-    let
-        filename =
-            hypaethralBitFileName bit
-
-        file =
-            Json.string filename
-    in
-    case method of
-        -- 🚀
-        Dropbox { accessToken, expiresAt, refreshToken } ->
-            let
-                currentTime =
-                    Time.posixToMillis model.currentTime // 1000
-
-                currentTimeWithOffset =
-                    -- We add 60 seconds here because we only get the current time every minute,
-                    -- so there's always the chance the "current time" is 1-60 seconds behind.
-                    currentTime + 60
-            in
-            -- If the access token is expired
-            if currentTimeWithOffset >= expiresAt then
-                refreshToken
-                    |> Dropbox.refreshAccessToken
-                    |> Task.attempt
-                        (\result ->
-                            case result of
-                                Ok tokens ->
-                                    bit
-                                        |> RetrieveHypaethralData method
-                                        |> RefreshedDropboxTokens
-                                            { currentTime = currentTime
-                                            , refreshToken = refreshToken
-                                            }
-                                            tokens
-                                        |> UserMsg
-
-                                Err err ->
-                                    Common.reportUICmdMsg Alien.ReportError err
-                        )
-                    |> return model
-
-            else
-                [ ( "file", file )
-                , ( "token", Json.string accessToken )
-                ]
-                    |> Json.object
-                    |> Alien.broadcast Alien.AuthDropbox
-                    |> Ports.requestDropbox
-                    |> return model
-
-        Fission params ->
-            filename
-                |> Fission.retrieve params bit
-                |> Ports.webnativeRequest
-                |> return model
-
-        Ipfs { apiOrigin } ->
-            [ ( "apiOrigin", Json.string apiOrigin )
-            , ( "file", file )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthIpfs
-                |> Ports.requestIpfs
-                |> return model
-
-        Local ->
-            [ ( "file", file ) ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthAnonymous
-                |> Ports.requestCache
-                |> return model
-
-        RemoteStorage { userAddress, token } ->
-            [ ( "file", file )
-            , ( "token", Json.string token )
-            , ( "userAddress", Json.string userAddress )
-            ]
-                |> Json.object
-                |> Alien.broadcast Alien.AuthRemoteStorage
-                |> Ports.requestRemoteStorage
-                |> return model
+-- retrieveHypaethralData : Method -> HypaethralBit -> Manager
+-- retrieveHypaethralData method bit model =
+--     -- TODO: Remove method
+--     let
+--         filename =
+--             hypaethralBitFileName bit
+--         file =
+--             Json.string filename
+--     in
+--     case method of
+--         -- 🚀
+--         Dropbox { accessToken, expiresAt, refreshToken } ->
+--             let
+--                 currentTime =
+--                     Time.posixToMillis model.currentTime // 1000
+--                 currentTimeWithOffset =
+--                     -- We add 60 seconds here because we only get the current time every minute,
+--                     -- so there's always the chance the "current time" is 1-60 seconds behind.
+--                     currentTime + 60
+--             in
+--             -- If the access token is expired
+--             if currentTimeWithOffset >= expiresAt then
+--                 refreshToken
+--                     |> Dropbox.refreshAccessToken
+--                     |> Task.attempt
+--                         (\result ->
+--                             case result of
+--                                 Ok tokens ->
+--                                     bit
+--                                         |> RetrieveHypaethralData method
+--                                         |> RefreshedDropboxTokens
+--                                             { currentTime = currentTime
+--                                             , refreshToken = refreshToken
+--                                             }
+--                                             tokens
+--                                         |> UserMsg
+--                                 Err err ->
+--                                     Common.reportUICmdMsg Alien.ReportError err
+--                         )
+--                     |> return model
+--             else
+--                 [ ( "file", file )
+--                 , ( "token", Json.string accessToken )
+--                 ]
+--                     |> Json.object
+--                     |> Alien.broadcast Alien.AuthDropbox
+--                     |> Ports.requestDropbox
+--                     |> return model
+--         Fission params ->
+--             filename
+--                 |> Fission.retrieve params bit
+--                 |> Ports.webnativeRequest
+--                 |> return model
+--         Ipfs { apiOrigin } ->
+--             [ ( "apiOrigin", Json.string apiOrigin )
+--             , ( "file", file )
+--             ]
+--                 |> Json.object
+--                 |> Alien.broadcast Alien.AuthIpfs
+--                 |> Ports.requestIpfs
+--                 |> return model
+--         Local ->
+--             [ ( "file", file ) ]
+--                 |> Json.object
+--                 |> Alien.broadcast Alien.AuthAnonymous
+--                 |> Ports.requestCache
+--                 |> return model
+--         RemoteStorage { userAddress, token } ->
+--             [ ( "file", file )
+--             , ( "token", Json.string token )
+--             , ( "userAddress", Json.string userAddress )
+--             ]
+--                 |> Json.object
+--                 |> Alien.broadcast Alien.AuthRemoteStorage
+--                 |> Ports.requestRemoteStorage
+--                 |> return model
 
 
 saveAllHypaethralData : Manager
@@ -715,7 +634,7 @@ saveHypaethralData bit model =
 --     , ( "file", file )
 --     ]
 --         |> Json.object
---         |> Alien.broadcast Alien.AuthAnonymous
+--         |> Alien.broadcast Alien.SyncLocal
 --         |> Ports.toCache
 --         |> return model
 
@@ -725,22 +644,8 @@ one part at a time.
 -}
 saveHypaethralDataBits : List HypaethralBit -> Manager
 saveHypaethralDataBits bits model =
-    let
-        newItems =
-            List.map (\b -> { bit = b, saving = False }) bits
-    in
-    case model.hypaethralStorage ++ newItems of
-        item :: rest ->
-            if item.saving then
-                Return.singleton model
-
-            else
-                saveHypaethralData
-                    item.bit
-                    { model | hypaethralStorage = { item | saving = True } :: rest }
-
-        _ ->
-            Return.singleton model
+    -- TODO:
+    Return.singleton model
 
 
 saveHypaethralDataBitWithDebounce : HypaethralBit -> Manager
@@ -766,22 +671,6 @@ saveHypaethralDataSlowly debouncerMsg model =
         |> Cmd.map (SaveHypaethralDataSlowly >> UserMsg)
         |> return { model | hypaethralDebouncer = m }
         |> andThen (saveHypaethralDataBits bits)
-
-
-{-| Saves some hypaethral data,
-depending on what's in the queue saving queue
-(ie. `hypaethralStorage`)
--}
-saveNextHypaethralBit : Manager
-saveNextHypaethralBit model =
-    case model.hypaethralStorage of
-        _ :: item :: rest ->
-            saveHypaethralData
-                item.bit
-                { model | hypaethralStorage = { item | saving = True } :: rest }
-
-        _ ->
-            Return.singleton { model | hypaethralStorage = [] }
 
 
 sendHypaethralDataToUI : Json.Value -> HypaethralData -> Manager
@@ -896,32 +785,6 @@ makeHypaethralLens setter model value =
 -- 🔱  ░░  METHOD
 
 
-methodRetrieved : Json.Value -> Manager
-methodRetrieved json model =
-    -- 🚀
-    let
-        maybeMethod =
-            decodeMethod json
-    in
-    { model | userSyncMethod = maybeMethod }
-        |> retrieveAllHypaethralData Local
-        |> (case maybeMethod of
-                Just method ->
-                    andThen (Common.giveUI Alien.AuthMethod <| encodeMethod method)
-
-                Nothing ->
-                    identity
-           )
-
-
-retrieveMethod : Manager
-retrieveMethod =
-    Alien.AuthMethod
-        |> Alien.trigger
-        |> Ports.requestCache
-        |> Return.communicate
-
-
 saveMethod : Method -> Manager
 saveMethod method model =
     method
@@ -985,6 +848,28 @@ updateEncryptionKey json =
 
 
 -- 📭  ░░  OTHER
+
+
+refreshDropboxTokens : Time.Posix -> User.Msg -> Task.Task String a -> String -> Cmd Brain.Msg
+refreshDropboxTokens currentTime msg initialTask refreshToken =
+    initialTask
+        |> Task.andThen
+            (\_ -> Dropbox.refreshAccessToken refreshToken)
+        |> Task.attempt
+            (\result ->
+                case result of
+                    Ok tokens ->
+                        msg
+                            |> RefreshedDropboxTokens
+                                { currentTime = Time.posixToMillis currentTime // 1000
+                                , refreshToken = refreshToken
+                                }
+                                tokens
+                            |> UserMsg
+
+                    Err err ->
+                        Common.reportUICmdMsg Alien.ReportError err
+            )
 
 
 refreshedDropboxTokens :
