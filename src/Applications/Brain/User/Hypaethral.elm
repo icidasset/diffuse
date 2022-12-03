@@ -4,7 +4,9 @@ import Alien
 import Brain.Task.Ports
 import Json.Decode
 import Json.Encode
+import Task exposing (Task)
 import TaskPort
+import TaskPort.Extra as TaskPort
 import User.Layer as User exposing (..)
 
 
@@ -12,46 +14,50 @@ import User.Layer as User exposing (..)
 -- RETRIEVAL
 
 
-retrieveDropbox : String -> HypaethralBit -> TaskPort.Task (Maybe Json.Decode.Value)
+retrieveDropbox : String -> HypaethralBit -> Task String (Maybe Json.Decode.Value)
 retrieveDropbox accessToken bit =
-    TaskPort.call
-        { function = "fromDropbox"
-        , valueDecoder = Json.Decode.maybe Json.Decode.value
-        , argsEncoder = Json.Encode.object
-        }
-        [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
-        , ( "token", Json.Encode.string accessToken )
-        ]
+    [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
+    , ( "token", Json.Encode.string accessToken )
+    ]
+        |> TaskPort.call
+            { function = "fromDropbox"
+            , valueDecoder = Json.Decode.maybe Json.Decode.value
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
 
 
-retrieveLocal : HypaethralBit -> TaskPort.Task (Maybe Json.Decode.Value)
+retrieveLocal : HypaethralBit -> Task String (Maybe Json.Decode.Value)
 retrieveLocal bit =
-    Brain.Task.Ports.fromCacheWithSuffix
-        Alien.SyncLocal
-        (hypaethralBitFileName bit)
-        Json.Decode.value
+    Json.Decode.value
+        |> Brain.Task.Ports.fromCacheWithSuffix
+            Alien.SyncLocal
+            (hypaethralBitFileName bit)
+        |> Task.mapError TaskPort.errorToStringCustom
 
 
 
 -- STORAGE
 
 
-saveDropbox : String -> HypaethralBit -> Json.Decode.Value -> TaskPort.Task ()
+saveDropbox : String -> HypaethralBit -> Json.Decode.Value -> Task String ()
 saveDropbox accessToken bit data =
-    TaskPort.call
-        { function = "toDropbox"
-        , valueDecoder = TaskPort.ignoreValue
-        , argsEncoder = Json.Encode.object
-        }
-        [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
-        , ( "data", data )
-        , ( "token", Json.Encode.string accessToken )
-        ]
+    [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
+    , ( "data", data )
+    , ( "token", Json.Encode.string accessToken )
+    ]
+        |> TaskPort.call
+            { function = "toDropbox"
+            , valueDecoder = TaskPort.ignoreValue
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
 
 
-saveLocal : HypaethralBit -> Json.Decode.Value -> TaskPort.Task ()
+saveLocal : HypaethralBit -> Json.Decode.Value -> Task String ()
 saveLocal bit data =
-    Brain.Task.Ports.toCacheWithSuffix
-        Alien.SyncLocal
-        (hypaethralBitFileName bit)
-        data
+    data
+        |> Brain.Task.Ports.toCacheWithSuffix
+            Alien.SyncLocal
+            (hypaethralBitFileName bit)
+        |> Task.mapError TaskPort.errorToStringCustom

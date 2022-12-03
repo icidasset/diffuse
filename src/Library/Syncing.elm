@@ -5,21 +5,21 @@ import Json.Encode as Json
 import Maybe.Extra as Maybe
 import Task exposing (Task)
 import Task.Extra as Task
-import TaskPort
-import TaskPort.Extra as TaskPort
 import Time
 import User.Layer as User exposing (..)
 
 
+{-| Syncs all hypaethral data.
+-}
 task :
     Task String a
     ->
         { localData : HypaethralData
-        , saveLocal : HypaethralBit -> Decode.Value -> TaskPort.Task ()
+        , saveLocal : HypaethralBit -> Decode.Value -> Task String ()
         }
     ->
-        { retrieve : HypaethralBit -> TaskPort.Task (Maybe Decode.Value)
-        , save : HypaethralBit -> Decode.Value -> TaskPort.Task ()
+        { retrieve : HypaethralBit -> Task String (Maybe Decode.Value)
+        , save : HypaethralBit -> Decode.Value -> Task String ()
         }
     -> Task String HypaethralData
 task initialTask { localData, saveLocal } { retrieve, save } =
@@ -44,13 +44,18 @@ task initialTask { localData, saveLocal } { retrieve, save } =
             List.isEmpty localData.sources
                 && List.isEmpty localData.favourites
                 && List.isEmpty localData.playlists
+
+        pushLocalToRemote { return } =
+            localData
+                |> User.encodedHypaethralDataList
+                |> List.map (\( bit, data ) -> save bit data)
+                |> Task.sequence
+                |> Task.map (\_ -> return)
     in
     initialTask
         |> Task.andThen
             (\_ ->
-                retrieve
-                    |> User.retrieveHypaethralData
-                    |> Task.mapError TaskPort.errorToString
+                User.retrieveHypaethralData retrieve
             )
         |> Task.andThen
             (\list ->
@@ -63,17 +68,12 @@ task initialTask { localData, saveLocal } { retrieve, save } =
                     Task.succeed list
 
                 else
-                    -- 🏝️ → 🛰️ / Push to remote
-                    localData
-                        |> User.encodedHypaethralDataList
-                        |> List.map (\( bit, data ) -> save bit data)
-                        |> Task.sequence
-                        |> Task.mapError TaskPort.errorToString
-                        |> Task.map (\_ -> list)
+                    -- 🏝️ → 🛰️
+                    pushLocalToRemote { return = list }
             )
         |> Task.andThen
             (\list ->
-                -- Decode
+                -- Decode remote
                 list
                     |> List.map (\( a, b ) -> ( hypaethralBitKey a, Maybe.withDefault Json.null b ))
                     |> Json.object
@@ -84,32 +84,23 @@ task initialTask { localData, saveLocal } { retrieve, save } =
         |> Task.andThen
             (\remoteData ->
                 -- Compare modifiedAt timestamps
-                case Debug.log "" ( remoteData.modifiedAt, localData.modifiedAt ) of
+                case ( remoteData.modifiedAt, localData.modifiedAt ) of
                     ( Just remoteModifiedAt, Just localModifiedAt ) ->
-                        if Time.posixToMillis remoteModifiedAt > Time.posixToMillis localModifiedAt then
+                        if Time.posixToMillis remoteModifiedAt >= Time.posixToMillis localModifiedAt then
                             -- 🛰️
                             Task.succeed remoteData
 
                         else
-                            -- 🏝️ -> 🛰️
-                            localData
-                                |> User.encodedHypaethralDataList
-                                |> List.map (\( bit, data ) -> save bit data)
-                                |> Task.sequence
-                                |> Task.mapError TaskPort.errorToString
-                                |> Task.map (\_ -> localData)
+                            -- 🏝️
+                            pushLocalToRemote { return = localData }
 
-                    ( Just remote, Nothing ) ->
+                    ( Just _, Nothing ) ->
+                        -- 🛰️
                         Task.succeed remoteData
 
-                    ( Nothing, Just local ) ->
-                        -- 🏝️ -> 🛰️
-                        localData
-                            |> User.encodedHypaethralDataList
-                            |> List.map (\( bit, data ) -> save bit data)
-                            |> Task.sequence
-                            |> Task.mapError TaskPort.errorToString
-                            |> Task.map (\_ -> localData)
+                    ( Nothing, Just _ ) ->
+                        -- 🏝️
+                        pushLocalToRemote { return = localData }
 
                     _ ->
                         if noLocalData then
@@ -124,6 +115,5 @@ task initialTask { localData, saveLocal } { retrieve, save } =
             (\data ->
                 data
                     |> User.saveHypaethralData saveLocal
-                    |> Task.mapError TaskPort.errorToString
                     |> Task.map (\_ -> data)
             )

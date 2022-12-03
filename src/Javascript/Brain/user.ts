@@ -73,7 +73,7 @@ taskPorts.toDropbox = async ({ fileName, data, token }) => {
     mute: true
   }
 
-  const possiblyEncrypted = await encryptIfPossible(data)
+  const possiblyEncrypted = await encryptIfPossible(json)
 
   return fetch("https://content.dropboxapi.com/2/files/upload", {
     method: "POST",
@@ -383,10 +383,10 @@ ports.toRemoteStorage = app => event => {
 // ======
 
 export function setupPorts(app) {
-  Object.keys(ports).forEach(name => {
-    const fn = ports[ name ](app)
-    app.ports[ name ].subscribe(fn)
-  })
+  // Object.keys(ports).forEach(name => {
+  //   const fn = ports[ name ](app)
+  //   app.ports[ name ].subscribe(fn)
+  // })
 }
 
 

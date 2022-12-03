@@ -39,8 +39,6 @@ type Msg
       -----------------------------------------
     | GotHypaethralData HypaethralData
     | GotWebnativeResponse Webnative.Response
-    | SaveAllHypaethralData
-    | SaveHypaethralDataBit HypaethralBit
     | SaveHypaethralDataBits (List HypaethralBit)
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
       -----------------------------------------
