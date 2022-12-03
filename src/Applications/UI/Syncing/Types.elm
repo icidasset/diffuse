@@ -1,4 +1,4 @@
-module UI.Authentication.Types exposing (Msg(..), Question, State(..))
+module UI.Syncing.Types exposing (Msg(..), Question, State(..))
 
 import Html.Events.Extra.Mouse as Mouse
 import Http
@@ -35,17 +35,15 @@ type alias Question =
 type Msg
     = Bypass
       --
+    | ActivateSync Method
+    | ActivateSyncWithPassphrase Method String
     | BootFailure String
     | ExchangeDropboxAuthCode (Result Http.Error Dropbox.Tokens)
     | GetStarted
-    | GotAuthMethod Json.Value
-    | NotAuthenticated
+    | GotSyncMethod Json.Value
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
-    | ShowMoreOptions Mouse.Event
     | ShowSyncDataMenu Mouse.Event
-    | SignIn Method
-    | SignInWithPassphrase Method String
-    | SignOut
+    | StopSync
     | TriggerExternalAuth Method String
       -----------------------------------------
       -- Encryption

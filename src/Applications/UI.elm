@@ -22,8 +22,6 @@ import Tracks
 import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
-import UI.Authentication.State as Authentication
-import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
 import UI.DnD as DnD
@@ -40,6 +38,8 @@ import UI.Services.State as Services
 import UI.Sources.Form
 import UI.Sources.State as Sources
 import UI.Sources.Types as Sources
+import UI.Syncing.State as Syncing
+import UI.Syncing.Types as Syncing
 import UI.Tracks.State as Tracks
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (..)
@@ -216,14 +216,14 @@ init flags url key =
     -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
-    , authentication = Authentication.initialModel url
+    , syncing = Syncing.initialModel url
     }
         |> Routing.transition
             page
         |> Return.command
             (url
-                |> Authentication.initialCommand
-                |> Cmd.map AuthenticationMsg
+                |> Syncing.initialCommand
+                |> Cmd.map SyncingMsg
             )
         |> Return.command
             (if Maybe.isNothing maybePage then
@@ -508,8 +508,8 @@ update msg =
         -----------------------------------------
         -- 🦉 Nested
         -----------------------------------------
-        AuthenticationMsg a ->
-            Authentication.update a
+        SyncingMsg a ->
+            Syncing.update a
 
         QueueMsg a ->
             Queue.update a
@@ -637,9 +637,6 @@ translateAlienData tag data =
         Alien.AddTracks ->
             TracksMsg (Tracks.Add data)
 
-        Alien.AuthMethod ->
-            AuthenticationMsg (Authentication.GotAuthMethod data)
-
         Alien.FinishedProcessingSource ->
             SourcesMsg (Sources.FinishedProcessingSource data)
 
@@ -676,6 +673,9 @@ translateAlienData tag data =
         Alien.StoreTracksInCache ->
             TracksMsg (Tracks.StoredInCache data Nothing)
 
+        Alien.SyncMethod ->
+            SyncingMsg (Syncing.GotSyncMethod data)
+
         Alien.UpdateSourceData ->
             SourcesMsg (Sources.UpdateSourceData data)
 
@@ -687,16 +687,16 @@ translateAlienError : Alien.Tag -> Json.Value -> String -> Msg
 translateAlienError tag data err =
     case tag of
         Alien.AuthAnonymous ->
-            AuthenticationMsg (Authentication.BootFailure err)
+            SyncingMsg (Syncing.BootFailure err)
 
         Alien.AuthDropbox ->
-            AuthenticationMsg (Authentication.BootFailure err)
+            SyncingMsg (Syncing.BootFailure err)
 
         Alien.AuthIpfs ->
-            AuthenticationMsg (Authentication.BootFailure err)
+            SyncingMsg (Syncing.BootFailure err)
 
         Alien.AuthRemoteStorage ->
-            AuthenticationMsg (Authentication.BootFailure err)
+            SyncingMsg (Syncing.BootFailure err)
 
         Alien.StoreTracksInCache ->
             TracksMsg (Tracks.StoredInCache data <| Just err)

@@ -26,11 +26,11 @@ import Random
 import Sources exposing (Source)
 import Time
 import Tracks exposing (..)
-import UI.Authentication.Types as Authentication
 import UI.DnD as DnD
 import UI.Page exposing (Page)
 import UI.Queue.Types as Queue
 import UI.Sources.Types as Sources
+import UI.Syncing.Types as Syncing
 import UI.Tracks.Types as Tracks
 import Url exposing (Url)
 import Webnative
@@ -180,7 +180,7 @@ type alias Model =
     -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
-    , authentication : Authentication.State
+    , syncing : Syncing.State
     }
 
 
@@ -297,7 +297,7 @@ type Msg
       -----------------------------------------
       -- 🦉 Nested
       -----------------------------------------
-    | AuthenticationMsg Authentication.Msg
+    | SyncingMsg Syncing.Msg
     | QueueMsg Queue.Msg
     | SourcesMsg Sources.Msg
     | TracksMsg Tracks.Msg

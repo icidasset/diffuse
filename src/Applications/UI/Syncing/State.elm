@@ -1,4 +1,4 @@
-module UI.Authentication.State exposing (..)
+module UI.Syncing.State exposing (..)
 
 import Alien
 import Base64
@@ -22,13 +22,13 @@ import SHA
 import String.Ext as String
 import Time
 import Tracks
-import UI.Authentication.ContextMenu as Authentication
-import UI.Authentication.Types as Authentication exposing (..)
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
 import UI.Sources.Query
 import UI.Sources.State as Sources
+import UI.Syncing.ContextMenu as Syncing
+import UI.Syncing.Types as Syncing exposing (..)
 import UI.Types as UI exposing (..)
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
@@ -57,7 +57,7 @@ passphraseLengthErrorMessage =
 -- 🌳
 
 
-initialModel : Url -> Authentication.State
+initialModel : Url -> Syncing.State
 initialModel url =
     case Url.action url of
         [ "authenticate", "dropbox" ] ->
@@ -96,7 +96,7 @@ initialModel url =
             Syncing
 
 
-initialCommand : Url -> Cmd Authentication.Msg
+initialCommand : Url -> Cmd Syncing.Msg
 initialCommand url =
     case Url.action url of
         [ "authenticate", "dropbox" ] ->
@@ -122,10 +122,10 @@ initialCommand url =
             Cmd.none
 
 
-lens : Lens UI.Model Authentication.State
+lens : Lens UI.Model Syncing.State
 lens =
-    { get = .authentication
-    , set = \a m -> { m | authentication = a }
+    { get = .syncing
+    , set = \a m -> { m | syncing = a }
     }
 
 
@@ -133,11 +133,17 @@ lens =
 -- 📣
 
 
-update : Authentication.Msg -> Manager
+update : Syncing.Msg -> Manager
 update msg =
     case msg of
-        Authentication.Bypass ->
+        Syncing.Bypass ->
             Return.singleton
+
+        ActivateSync a ->
+            activateSync a
+
+        ActivateSyncWithPassphrase a b ->
+            activateSyncWithPassphrase a b
 
         BootFailure a ->
             bootFailure a
@@ -148,29 +154,17 @@ update msg =
         GetStarted ->
             startFlow
 
-        GotAuthMethod a ->
-            gotAuthMethod a
-
-        NotAuthenticated ->
-            notAuthenticated
+        GotSyncMethod a ->
+            gotSyncMethod a
 
         RemoteStorageWebfinger a b ->
             remoteStorageWebfinger a b
 
-        ShowMoreOptions a ->
-            showMoreOptions a
-
         ShowSyncDataMenu a ->
             showSyncDataMenu a
 
-        SignIn a ->
-            signIn a
-
-        SignInWithPassphrase a b ->
-            signInWithPassphrase a b
-
-        SignOut ->
-            signOut
+        StopSync ->
+            stopSync
 
         TriggerExternalAuth a b ->
             externalAuth a b
@@ -221,18 +215,48 @@ update msg =
             confirmInput
 
 
-organize : Organizer Authentication.State -> Manager
+organize : Organizer Syncing.State -> Manager
 organize =
     Management.organize lens
 
 
-replaceState : Authentication.State -> Manager
+replaceState : Syncing.State -> Manager
 replaceState state =
     lens.set state >> Return.singleton
 
 
 
 -- 🔱
+
+
+activateSync : Method -> Manager
+activateSync method model =
+    [ ( "method", encodeMethod method )
+    , ( "passphrase", Json.Encode.null )
+    ]
+        |> Json.Encode.object
+        |> Alien.broadcast Alien.SetSyncMethod
+        |> Ports.toBrain
+        --
+        |> return model
+
+
+activateSyncWithPassphrase : Method -> String -> Manager
+activateSyncWithPassphrase method passphrase model =
+    if String.length passphrase < minimumPassphraseLength then
+        passphraseLengthErrorMessage
+            |> Notifications.error
+            |> Common.showNotificationWithModel model
+
+    else
+        [ ( "method", encodeMethod method )
+        , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
+        ]
+            |> Json.Encode.object
+            |> Alien.broadcast Alien.SetSyncMethod
+            |> Ports.toBrain
+            --
+            |> return model
 
 
 bootFailure : String -> Manager
@@ -277,7 +301,7 @@ externalAuth method string model =
             string
                 |> RemoteStorage.parseUserAddress
                 |> Maybe.map (RemoteStorage.webfingerRequest RemoteStorageWebfinger)
-                |> Maybe.map (Cmd.map AuthenticationMsg)
+                |> Maybe.map (Cmd.map SyncingMsg)
                 |> Maybe.unwrap
                     (RemoteStorage.userAddressError
                         |> Notifications.error
@@ -321,8 +345,8 @@ exchangeDropboxAuthCode result model =
                     (Lens.replace lens model NotSynced)
 
 
-gotAuthMethod : Json.Value -> Manager
-gotAuthMethod json model =
+gotSyncMethod : Json.Value -> Manager
+gotSyncMethod json model =
     -- 🧠 told me which auth method we're using,
     -- so we can tell the user in the UI.
     case decodeMethod json of
@@ -331,34 +355,6 @@ gotAuthMethod json model =
 
         Nothing ->
             Return.singleton model
-
-
-notAuthenticated : Manager
-notAuthenticated model =
-    -- This is the message we get when the app initially
-    -- finds out we're not authenticated.
-    (if model.isUpgrading then
-        """
-        Thank you for using Diffuse V1!
-        If you want to import your old data,
-        please pick the storage method you used before and
-        go to the [import page](#/settings/import-export).
-        """
-            |> Notifications.stickySuccess
-            |> showNotificationWithModel { model | isUpgrading = False }
-
-     else
-        Return.singleton model
-    )
-        |> andThen Backdrop.setDefault
-        -- When the user wants to create a source (by passing the info through the url)
-        -- and the user isn't signed in yet, sign in using the "Local" method.
-        |> (if UI.Sources.Query.requestedAddition model.url then
-                andThen (signIn Local)
-
-            else
-                identity
-           )
 
 
 remoteStorageWebfinger : RemoteStorage.Attributes -> Result Http.Error String -> Manager
@@ -383,64 +379,20 @@ remoteStorageWebfinger remoteStorage result model =
                 |> showNotificationWithModel model
 
 
-showMoreOptions : Mouse.Event -> Manager
-showMoreOptions mouseEvent model =
-    ( mouseEvent.clientPos
-    , mouseEvent.offsetPos
-    )
-        |> (\( ( a, b ), ( c, d ) ) ->
-                { x = a - c + 15
-                , y = b - d + 12
-                }
-           )
-        |> Authentication.moreOptionsMenu
-        |> Common.showContextMenuWithModel model
-
-
 showSyncDataMenu : Mouse.Event -> Manager
 showSyncDataMenu mouseEvent model =
     mouseEvent.clientPos
         |> Coordinates.fromTuple
-        |> Authentication.syncDataMenu
+        |> Syncing.syncDataMenu
         |> Common.showContextMenuWithModel model
 
 
-signIn : Method -> Manager
-signIn method model =
-    [ ( "method", encodeMethod method )
-    , ( "passphrase", Json.Encode.null )
-    ]
-        |> Json.Encode.object
-        |> Alien.broadcast Alien.SetSyncMethod
-        |> Ports.toBrain
-        --
-        |> return model
-
-
-signInWithPassphrase : Method -> String -> Manager
-signInWithPassphrase method passphrase model =
-    if String.length passphrase < minimumPassphraseLength then
-        passphraseLengthErrorMessage
-            |> Notifications.error
-            |> Common.showNotificationWithModel model
-
-    else
-        [ ( "method", encodeMethod method )
-        , ( "passphrase", Json.Encode.string <| hashPassphrase passphrase )
-        ]
-            |> Json.Encode.object
-            |> Alien.broadcast Alien.SetSyncMethod
-            |> Ports.toBrain
-            --
-            |> return model
-
-
-signOut : Manager
-signOut model =
+stopSync : Manager
+stopSync model =
     { model
-        | authentication = Authentication.NotSynced
-        , playlists = []
+        | playlists = []
         , playlistToActivate = Nothing
+        , syncing = Syncing.NotSynced
 
         -- Queue
         --------
@@ -570,7 +522,7 @@ pingIpfs model =
 
         Http ->
             { url = "//localhost:5001/api/v0/id"
-            , expect = Http.expectWhatever (AuthenticationMsg << PingIpfsCallback)
+            , expect = Http.expectWhatever (SyncingMsg << PingIpfsCallback)
             , body = Http.emptyBody
             }
                 |> Http.post
@@ -605,7 +557,7 @@ pingIpfsCallback result =
 pingOtherIpfs : String -> Manager
 pingOtherIpfs origin model =
     { url = origin ++ "/api/v0/id"
-    , expect = Http.expectWhatever (AuthenticationMsg << PingOtherIpfsCallback origin)
+    , expect = Http.expectWhatever (SyncingMsg << PingOtherIpfsCallback origin)
     , body = Http.emptyBody
     }
         |> Http.post

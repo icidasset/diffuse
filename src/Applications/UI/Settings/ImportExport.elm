@@ -69,21 +69,6 @@ view userLayerMethod =
                         Normal
                         Export
                         (text "Export data")
-
-                    --
-                    -- TODO: Sync with other storage
-                    --
-                    -- , chunk
-                    --     [ "italic", "leading-normal", "mt-5", "text-xs" ]
-                    --     [ text "Other options:" ]
-                    -- , chunk
-                    --     [ "leading-normal", "mt-2", "text-sm" ]
-                    --     [ inline [ "mr-2" ] [ text "•" ]
-                    --     , UI.Kit.textButton
-                    --         { label = "Migrate to another storage"
-                    --         , onClick = MigrateHypaethralUserData
-                    --         }
-                    --     ]
                     ]
                 ]
             ]

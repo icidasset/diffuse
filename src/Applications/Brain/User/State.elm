@@ -26,7 +26,6 @@ import Time
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
 import Tuple3
-import UI.Authentication.Types exposing (State(..))
 import Url exposing (Url)
 import Url.Ext as Url
 import User.Layer as User exposing (..)

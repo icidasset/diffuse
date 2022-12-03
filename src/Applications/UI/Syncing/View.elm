@@ -1,4 +1,4 @@
-module UI.Authentication.View exposing (view)
+module UI.Syncing.View exposing (view)
 
 import Chunky exposing (..)
 import Conditional exposing (..)
@@ -10,9 +10,9 @@ import Html.Extra as Html
 import Html.Lazy as Lazy
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Svg exposing (Svg)
-import UI.Authentication.Types as Authentication exposing (..)
+import Svg
 import UI.Kit
+import UI.Syncing.Types as Syncing exposing (..)
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)
 
@@ -23,10 +23,10 @@ import User.Layer exposing (..)
 
 view : Model -> Html UI.Msg
 view =
-    Html.map AuthenticationMsg << Lazy.lazy view_ << .authentication
+    Html.map SyncingMsg << Lazy.lazy view_ << .syncing
 
 
-view_ : State -> Html Authentication.Msg
+view_ : State -> Html Syncing.Msg
 view_ state =
     case state of
         InputScreen _ opts ->
@@ -38,8 +38,8 @@ view_ state =
             UI.Kit.receptacle
                 { scrolling = False }
                 [ encryptionKeyScreen
-                    { withEncryption = SignInWithPassphrase method (Maybe.withDefault "" pass)
-                    , withoutEncryption = SignIn method
+                    { withEncryption = ActivateSyncWithPassphrase method (Maybe.withDefault "" pass)
+                    , withoutEncryption = ActivateSync method
                     }
                 ]
 
@@ -66,7 +66,7 @@ view_ state =
 -- ENCRYPTION KEY
 
 
-encryptionKeyScreen : { withEncryption : Authentication.Msg, withoutEncryption : Authentication.Msg } -> Html Authentication.Msg
+encryptionKeyScreen : { withEncryption : Syncing.Msg, withoutEncryption : Syncing.Msg } -> Html Syncing.Msg
 encryptionKeyScreen { withEncryption, withoutEncryption } =
     slab
         Html.form
@@ -98,7 +98,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
             ]
         , UI.Kit.button
             UI.Kit.Filled
-            Authentication.Bypass
+            Syncing.Bypass
             (text "Continue")
         , brick
             [ onClickStopPropagation withoutEncryption ]
@@ -122,7 +122,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
 -- INPUT SCREEN
 
 
-inputScreen : Question -> Html Authentication.Msg
+inputScreen : Question -> Html Syncing.Msg
 inputScreen question =
     slab
         Html.form
@@ -144,7 +144,7 @@ inputScreen question =
             ]
         , UI.Kit.button
             UI.Kit.Filled
-            Authentication.Bypass
+            Syncing.Bypass
             (text "Continue")
         ]
 

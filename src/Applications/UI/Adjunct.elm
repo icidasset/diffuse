@@ -5,7 +5,6 @@ import Maybe.Extra as Maybe
 import Return
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
-import UI.Authentication.Common as Authentication
 import UI.Commands.State as Commands
 import UI.Common.State as Common
 import UI.Interface.State exposing (hideOverlay)

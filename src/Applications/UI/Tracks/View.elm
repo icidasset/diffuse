@@ -16,13 +16,13 @@ import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Tracks exposing (..)
-import UI.Authentication.Types as Authentication
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Playlists.Page
 import UI.Queue.Page
 import UI.Sources.Page as Sources
+import UI.Syncing.Types as Syncing
 import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Tracks.Types exposing (..)
@@ -514,7 +514,7 @@ cloud/distributed storage service you use.
                             (Html.text "Add Music")
                         , UI.Kit.buttonWithOptions
                             Html.button
-                            [ Mouse.onClick (AuthenticationMsg << Authentication.ShowSyncDataMenu) ]
+                            [ Mouse.onClick (SyncingMsg << Syncing.ShowSyncDataMenu) ]
                             UI.Kit.Gray
                             UI.Kit.Filled
                             Nothing

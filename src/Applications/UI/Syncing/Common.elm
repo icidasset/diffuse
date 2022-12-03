@@ -1,6 +1,6 @@
-module UI.Authentication.Common exposing (..)
+module UI.Syncing.Common exposing (..)
 
-import UI.Authentication.Types exposing (..)
+import UI.Syncing.Types exposing (..)
 import User.Layer exposing (Method)
 
 

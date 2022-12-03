@@ -5,7 +5,6 @@ import Common exposing (ServiceWorkerStatus(..))
 import Notifications
 import Return exposing (return)
 import Time
-import UI.Authentication.Types as Authentication
 import UI.Common.State as Common
 import UI.Ports as Ports
 import UI.Types exposing (..)

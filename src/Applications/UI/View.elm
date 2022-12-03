@@ -13,9 +13,6 @@ import Html.Lazy as Lazy
 import Json.Decode
 import Maybe.Extra as Maybe
 import UI.Alfred.View as Alfred
-import UI.Authentication.Common as Authentication
-import UI.Authentication.Types as Authentication
-import UI.Authentication.View as Authentication
 import UI.Backdrop as Backdrop
 import UI.Console
 import UI.ContextMenu
@@ -29,6 +26,9 @@ import UI.Settings.Page
 import UI.Sources.Page
 import UI.Sources.View as Sources
 import UI.Svg.Elements
+import UI.Syncing.Common as Syncing
+import UI.Syncing.Types as Syncing
+import UI.Syncing.View as Syncing
 import UI.Tracks.View as Tracks
 import UI.Types exposing (..)
 import User.Layer
@@ -154,8 +154,8 @@ defaultScreen model =
                     model.selectedPlaylist
                     model.editPlaylistContext
                     model.extractedBackdropColor
-                    (model.authentication
-                        |> Authentication.extractMethod
+                    (model.syncing
+                        |> Syncing.extractMethod
                         |> Maybe.unwrap False User.Layer.methodSupportsPublicData
                     )
 
@@ -165,8 +165,7 @@ defaultScreen model =
             Page.Settings subPage ->
                 Lazy.lazy2 Settings.view
                     subPage
-                    { authenticationMethod = Authentication.extractMethod model.authentication
-                    , buildTimestamp = model.buildTimestamp
+                    { buildTimestamp = model.buildTimestamp
                     , chosenBackgroundImage = model.chosenBackdrop
                     , coverSelectionReducesPool = model.coverSelectionReducesPool
                     , currentTimeZone = model.currentTimeZone
@@ -176,15 +175,16 @@ defaultScreen model =
                     , processAutomatically = model.processAutomatically
                     , rememberProgress = model.rememberProgress
                     , serviceWorkerStatus = model.serviceWorkerStatus
+                    , syncMethod = Syncing.extractMethod model.syncing
                     , version = model.version
                     }
 
             Page.Sources subPage ->
                 Sources.view subPage model
 
-        -- Authentication
-        -----------------
-        , Authentication.view model
+        -- Syncing
+        ----------
+        , Syncing.view model
         ]
 
     -----------------------------------------
