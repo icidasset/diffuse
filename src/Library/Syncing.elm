@@ -21,7 +21,7 @@ task :
         { retrieve : HypaethralBit -> Task String (Maybe Decode.Value)
         , save : HypaethralBit -> Decode.Value -> Task String ()
         }
-    -> Task String HypaethralData
+    -> Task String (Maybe HypaethralData)
 task initialTask { localData, saveLocal } { retrieve, save } =
     -- 1. Check if any existing data is present on the service to sync with.
     -- 2. If not, copy over all current data (in memory) to that service.
@@ -51,6 +51,11 @@ task initialTask { localData, saveLocal } { retrieve, save } =
                 |> List.map (\( bit, data ) -> save bit data)
                 |> Task.sequence
                 |> Task.map (\_ -> return)
+
+        saveLocally data =
+            data
+                |> User.saveHypaethralData saveLocal
+                |> Task.map (\_ -> Just data)
     in
     initialTask
         |> Task.andThen
@@ -60,10 +65,10 @@ task initialTask { localData, saveLocal } { retrieve, save } =
         |> Task.andThen
             (\list ->
                 let
-                    hasExistingData =
+                    remoteHasExistingData =
                         List.any (Tuple.second >> Maybe.isJust) list
                 in
-                if hasExistingData then
+                if remoteHasExistingData then
                     -- 🛰️
                     Task.succeed list
 
@@ -86,34 +91,32 @@ task initialTask { localData, saveLocal } { retrieve, save } =
                 -- Compare modifiedAt timestamps
                 case ( remoteData.modifiedAt, localData.modifiedAt ) of
                     ( Just remoteModifiedAt, Just localModifiedAt ) ->
-                        if Time.posixToMillis remoteModifiedAt >= Time.posixToMillis localModifiedAt then
+                        if Time.posixToMillis remoteModifiedAt == Time.posixToMillis localModifiedAt then
+                            -- 🏝️
+                            Task.succeed Nothing
+
+                        else if Time.posixToMillis remoteModifiedAt > Time.posixToMillis localModifiedAt then
                             -- 🛰️
-                            Task.succeed remoteData
+                            saveLocally remoteData
 
                         else
                             -- 🏝️
-                            pushLocalToRemote { return = localData }
+                            pushLocalToRemote { return = Nothing }
 
                     ( Just _, Nothing ) ->
                         -- 🛰️
-                        Task.succeed remoteData
+                        saveLocally remoteData
 
                     ( Nothing, Just _ ) ->
                         -- 🏝️
-                        pushLocalToRemote { return = localData }
+                        pushLocalToRemote { return = Nothing }
 
                     _ ->
                         if noLocalData then
                             -- 🛰️
-                            Task.succeed remoteData
+                            saveLocally remoteData
 
                         else
                             -- 🏝️
-                            Task.succeed localData
-            )
-        |> Task.andThen
-            (\data ->
-                data
-                    |> User.saveHypaethralData saveLocal
-                    |> Task.map (\_ -> data)
+                            Task.succeed Nothing
             )

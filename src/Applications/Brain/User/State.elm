@@ -330,7 +330,15 @@ syncCommand initialTask model =
                     { localData = localData
                     , saveLocal = Hypaethral.saveLocal
                     }
-                |> Common.attemptTask (UserMsg << GotHypaethralData)
+                |> Common.attemptTask
+                    (\maybe ->
+                        case maybe of
+                            Just data ->
+                                UserMsg (GotHypaethralData data)
+
+                            Nothing ->
+                                Brain.Bypass
+                    )
     in
     case model.userSyncMethod of
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
@@ -420,7 +428,6 @@ saveEnclosedData json =
 gotHypaethralData : HypaethralData -> Manager
 gotHypaethralData hypaethralData model =
     model
-        -- TODO: Don't send data to UI if not necessary
         |> sendHypaethralDataToUI (User.encodeHypaethralData hypaethralData) hypaethralData
         |> (case model.userSyncMethod of
                 Just userSyncMethod ->
