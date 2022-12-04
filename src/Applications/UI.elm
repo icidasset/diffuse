@@ -670,6 +670,9 @@ translateAlienData tag data =
         Alien.SearchTracks ->
             TracksMsg (Tracks.SetSearchResults data)
 
+        Alien.StartedSyncing ->
+            SyncingMsg (Syncing.StartedSyncing data)
+
         Alien.StoreTracksInCache ->
             TracksMsg (Tracks.StoredInCache data Nothing)
 

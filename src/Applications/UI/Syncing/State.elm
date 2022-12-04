@@ -18,6 +18,7 @@ import Maybe.Extra as Maybe
 import Monocle.Lens exposing (Lens)
 import Notifications
 import Return exposing (andThen, return)
+import Return.Ext as Return
 import SHA
 import String.Ext as String
 import Time
@@ -25,7 +26,6 @@ import Tracks
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
-import UI.Sources.Query
 import UI.Sources.State as Sources
 import UI.Syncing.ContextMenu as Syncing
 import UI.Syncing.Types as Syncing exposing (..)
@@ -60,14 +60,6 @@ passphraseLengthErrorMessage =
 initialModel : Url -> Syncing.State
 initialModel url =
     case Url.action url of
-        [ "authenticate", "dropbox" ] ->
-            case Dict.get "code" (Url.queryDictionary url) of
-                Just _ ->
-                    Syncing
-
-                _ ->
-                    NotSynced
-
         [ "authenticate", "remotestorage", encodedUserAddress ] ->
             let
                 dict =
@@ -93,7 +85,7 @@ initialModel url =
                     NotSynced
 
         _ ->
-            Syncing
+            NotSynced
 
 
 initialCommand : Url -> Cmd Syncing.Msg
@@ -151,9 +143,6 @@ update msg =
         ExchangeDropboxAuthCode a ->
             exchangeDropboxAuthCode a
 
-        GetStarted ->
-            startFlow
-
         GotSyncMethod a ->
             gotSyncMethod a
 
@@ -162,6 +151,9 @@ update msg =
 
         ShowSyncDataMenu a ->
             showSyncDataMenu a
+
+        StartedSyncing a ->
+            startedSyncing a
 
         StopSync ->
             stopSync
@@ -239,6 +231,7 @@ activateSync method model =
         |> Ports.toBrain
         --
         |> return model
+        |> andThen (Common.showSyncingNotification method)
 
 
 activateSyncWithPassphrase : Method -> String -> Manager
@@ -257,6 +250,7 @@ activateSyncWithPassphrase method passphrase model =
             |> Ports.toBrain
             --
             |> return model
+            |> andThen (Common.showSyncingNotification method)
 
 
 bootFailure : String -> Manager
@@ -347,14 +341,25 @@ exchangeDropboxAuthCode result model =
 
 gotSyncMethod : Json.Value -> Manager
 gotSyncMethod json model =
+    let
+        afterwards =
+            case model.syncing of
+                Syncing { notificationId } ->
+                    Common.dismissNotification { id = notificationId }
+
+                _ ->
+                    Return.singleton
+    in
     -- 🧠 told me which auth method we're using,
     -- so we can tell the user in the UI.
     case decodeMethod json of
         Just method ->
-            replaceState (Synced method) model
+            model
+                |> replaceState (Synced method)
+                |> andThen afterwards
 
         Nothing ->
-            Return.singleton model
+            afterwards model
 
 
 remoteStorageWebfinger : RemoteStorage.Attributes -> Result Http.Error String -> Manager
@@ -387,48 +392,24 @@ showSyncDataMenu mouseEvent model =
         |> Common.showContextMenuWithModel model
 
 
+startedSyncing : Json.Value -> Manager
+startedSyncing json =
+    -- 🧠 started syncing
+    case decodeMethod json of
+        Just method ->
+            Common.showSyncingNotification method
+
+        Nothing ->
+            Return.singleton
+
+
 stopSync : Manager
 stopSync model =
-    { model
-        | playlists = []
-        , playlistToActivate = Nothing
-        , syncing = Syncing.NotSynced
-
-        -- Queue
-        --------
-        , dontPlay = []
-        , nowPlaying = Nothing
-        , playedPreviously = []
-        , playingNext = []
-        , selectedQueueItem = Nothing
-
-        --
-        , repeat = False
-        , shuffle = False
-
-        -- Sources
-        ----------
-        , processingContext = []
-        , sources = []
-
-        -- Tracks
-        ---------
-        , coverSelectionReducesPool = True
-        , favourites = []
-        , hideDuplicates = False
-        , searchResults = Nothing
-        , tracks = Tracks.emptyCollection
-    }
-        |> Backdrop.setDefault
-        |> Return.andThen Sources.stopProcessing
-        |> Return.command (Ports.toBrain <| Alien.trigger Alien.UnsetSyncMethod)
-        |> Return.command (Ports.activeQueueItemChanged Nothing)
-        |> Return.command (Nav.pushUrl model.navKey "#/")
-
-
-startFlow : Manager
-startFlow =
-    replaceState NotSynced
+    Alien.UnsetSyncMethod
+        |> Alien.trigger
+        |> Ports.toBrain
+        |> return model
+        |> andThen (replaceState NotSynced)
 
 
 

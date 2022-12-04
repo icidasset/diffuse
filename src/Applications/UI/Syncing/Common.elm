@@ -14,8 +14,8 @@ extractMethod state =
         Synced method ->
             Just method
 
-        Syncing ->
-            Nothing
+        Syncing { method } ->
+            Just method
 
         InputScreen method _ ->
             Just method

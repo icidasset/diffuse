@@ -56,14 +56,6 @@ dataCommands model =
       , title = "Import data (⚠️ will override current data)"
       , value = Command UI.RequestImport
       }
-
-    --
-    -- TODO: Sync with different storage
-    --
-    -- , { icon = Just (Icons.save 16)
-    --   , title = "Migrate user data to different storage"
-    --   , value = Command UI.MigrateHypaethralUserData
-    --   }
     ]
 
 

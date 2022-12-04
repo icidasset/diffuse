@@ -29,6 +29,7 @@ import UI.DnD as DnD
 import UI.Page
 import UI.Ports as Ports
 import UI.Queue.State as Queue
+import UI.Syncing.Types exposing (State(..))
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Covers as Covers
 import UI.Tracks.Scene.Covers
@@ -203,6 +204,12 @@ add encodedTracks model =
 addFavourites : List IdentifiedTrack -> Manager
 addFavourites =
     manageFavourites AddToFavourites
+
+
+afterInitialLoad : Manager
+afterInitialLoad model =
+    -- TODO: Show syncing notification
+    Common.toggleLoadingScreen Off model
 
 
 changeScene : Scene -> Manager
@@ -610,7 +617,7 @@ setSearchResults json model =
                 |> Result.withDefault []
                 |> (\results -> { model | searchResults = Just results })
                 |> reviseCollection Collection.harvest
-                |> andThen (Common.toggleLoadingScreen Off)
+                |> andThen afterInitialLoad
 
         Nothing ->
             Return.singleton model
@@ -1074,7 +1081,7 @@ importHypaethral data selectedPlaylist model =
                     identity
 
                 Nothing ->
-                    andThen (Common.toggleLoadingScreen Off)
+                    andThen afterInitialLoad
            )
 
 

@@ -177,6 +177,9 @@ update msg =
         -----------------------------------------
         -- z. Data
         -----------------------------------------
+        FinishedSyncing ->
+            finishedSyncing
+
         GotHypaethralData a ->
             gotHypaethralData a
 
@@ -314,6 +317,14 @@ sync { initialTask } model =
     model
         |> syncCommand (Maybe.withDefault (Task.succeed ()) initialTask)
         |> return model
+        |> andThen
+            (case model.userSyncMethod of
+                Just method ->
+                    Common.giveUI Alien.StartedSyncing (encodeMethod method)
+
+                Nothing ->
+                    Return.singleton
+            )
 
 
 syncCommand : Task.Task String a -> Model -> Cmd Brain.Msg
@@ -336,7 +347,7 @@ syncCommand initialTask model =
                                 UserMsg (GotHypaethralData data)
 
                             Nothing ->
-                                Brain.Bypass
+                                UserMsg FinishedSyncing
                     )
     in
     case model.userSyncMethod of
@@ -382,9 +393,6 @@ unsetSyncMethod model =
         Just (Ipfs _) ->
             Cmd.none
 
-        Just Local ->
-            Cmd.none
-
         Just (RemoteStorage _) ->
             Ports.deconstructRemoteStorage ()
 
@@ -424,28 +432,21 @@ saveEnclosedData json =
 -- 🔱  ░░  DATA - HYPAETHRAL
 
 
+finishedSyncing : Manager
+finishedSyncing model =
+    case model.userSyncMethod of
+        Just userSyncMethod ->
+            Common.giveUI Alien.SyncMethod (encodeMethod userSyncMethod) model
+
+        Nothing ->
+            Return.singleton model
+
+
 gotHypaethralData : HypaethralData -> Manager
 gotHypaethralData hypaethralData model =
     model
         |> sendHypaethralDataToUI (User.encodeHypaethralData hypaethralData) hypaethralData
-        |> (case model.userSyncMethod of
-                Just userSyncMethod ->
-                    andThen (Common.giveUI Alien.AuthMethod <| encodeMethod userSyncMethod)
-
-                Nothing ->
-                    identity
-           )
-
-
-
--- saveHypaethralDataLocallyToo =
---     [ ( "data", json )
---     , ( "file", file )
---     ]
---         |> Json.object
---         |> Alien.broadcast Alien.SyncLocal
---         |> Ports.toCache
---         |> return model
+        |> andThen finishedSyncing
 
 
 {-| Save different parts of hypaethral data,

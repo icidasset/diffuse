@@ -6,6 +6,7 @@ import Conditional exposing (ifThenElse)
 import Html exposing (Html)
 import Html.Attributes as A exposing (href, style)
 import Html.Events exposing (onClick, onInput)
+import Icons exposing (Icon)
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Svg
@@ -78,7 +79,7 @@ type ButtonType
 
 button : ButtonType -> msg -> Html msg -> Html msg
 button =
-    buttonWithColor Accent
+    buttonWithColor Gray
 
 
 buttonLink : String -> ButtonType -> Html msg -> Html msg
@@ -161,8 +162,8 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                     case buttonColor of
                         Accent ->
                             [ "bg-transparent"
-                            , "border-base04"
-                            , "text-base04"
+                            , "border-accent-btn"
+                            , "text-accent-btn"
                             ]
 
                         Blank ->
@@ -269,6 +270,58 @@ checkbox opts =
 
           else
             Icons.check_box_outline_blank 22 Inherit
+        ]
+
+
+focusScreen : { icon : Icon msg, iconHref : Maybe String, text : List (Html msg), textHref : Maybe String } -> List (Html msg) -> Html msg
+focusScreen { icon, iconHref, text, textHref } nodes =
+    centeredContent
+        [ slab
+            (case iconHref of
+                Just _ ->
+                    Html.a
+
+                Nothing ->
+                    Html.div
+            )
+            (case iconHref of
+                Just h ->
+                    [ href h ]
+
+                Nothing ->
+                    []
+            )
+            [ "block"
+            , "opacity-30"
+            , "text-inherit"
+            ]
+            [ icon 64 Inherit ]
+        , slab
+            (case iconHref of
+                Just _ ->
+                    Html.a
+
+                Nothing ->
+                    Html.div
+            )
+            (case textHref of
+                Just h ->
+                    [ href h ]
+
+                Nothing ->
+                    []
+            )
+            [ "block"
+            , "leading-normal"
+            , "mt-2"
+            , "opacity-40"
+            , "text-center"
+            , "text-inherit"
+            ]
+            text
+        , chunk
+            [ "mt-4" ]
+            nodes
         ]
 
 
@@ -520,10 +573,18 @@ textArea attributes =
         , "text-sm"
         , "w-full"
 
+        --
+        , "placeholder:text-base01"
+        , "placeholder:text-opacity-40"
+
         -- Dark mode
         ------------
         , "dark:bg-darkest-hour"
         , "dark:text-gray-600"
+
+        --
+        , "dark:placeholder:text-gray-600"
+        , "dark:placeholder:text-opacity-30"
         ]
         []
 
@@ -570,6 +631,8 @@ textField attributes =
         --
         , "focus:border-black"
         , "focus:outline-none"
+        , "placeholder:text-base01"
+        , "placeholder:text-opacity-40"
 
         -- Dark mode
         ------------
@@ -578,6 +641,8 @@ textField attributes =
 
         --
         , "dark:focus:border-base07"
+        , "dark:placeholder:text-gray-600"
+        , "dark:placeholder:text-opacity-30"
         ]
         []
 

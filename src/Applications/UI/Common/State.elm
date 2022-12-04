@@ -13,9 +13,11 @@ import Tracks
 import UI.Notifications
 import UI.Page as Page exposing (Page)
 import UI.Playlists.Directory
+import UI.Syncing.Types as Syncing
 import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Types as UI exposing (Manager, Msg)
+import User.Layer exposing (Method)
 
 
 
@@ -89,6 +91,20 @@ showNotification notification model =
 showNotificationWithModel : UI.Model -> Notification Msg -> ( UI.Model, Cmd UI.Msg )
 showNotificationWithModel model notification =
     showNotification notification model
+
+
+showSyncingNotification : Method -> Manager
+showSyncingNotification method model =
+    let
+        notification =
+            Notifications.stickyCasual "Syncing user data ..."
+
+        syncing =
+            Syncing.Syncing { method = method, notificationId = Notifications.id notification }
+    in
+    showNotification
+        notification
+        { model | syncing = syncing }
 
 
 toggleLoadingScreen : Switch -> Manager

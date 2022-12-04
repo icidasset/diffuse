@@ -508,7 +508,8 @@ cloud/distributed storage service you use.
                             UI.Kit.Normal
                             InsertDemo
                             (Html.text "Insert Demo")
-                        , UI.Kit.button
+                        , UI.Kit.buttonWithColor
+                            UI.Kit.Accent
                             UI.Kit.Filled
                             (ChangeUrlUsingPage <| Page.Sources Sources.New)
                             (Html.text "Add Music")

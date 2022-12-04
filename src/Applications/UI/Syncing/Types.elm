@@ -15,7 +15,7 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 type State
     = NotSynced
     | Synced Method
-    | Syncing
+    | Syncing { method : Method, notificationId : Int }
     | InputScreen Method Question
     | NewEncryptionKeyScreen Method (Maybe String)
     | UpdateEncryptionKeyScreen Method (Maybe String)
@@ -39,10 +39,10 @@ type Msg
     | ActivateSyncWithPassphrase Method String
     | BootFailure String
     | ExchangeDropboxAuthCode (Result Http.Error Dropbox.Tokens)
-    | GetStarted
     | GotSyncMethod Json.Value
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
     | ShowSyncDataMenu Mouse.Event
+    | StartedSyncing Json.Value
     | StopSync
     | TriggerExternalAuth Method String
       -----------------------------------------

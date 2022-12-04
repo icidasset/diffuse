@@ -18,9 +18,8 @@ import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Settings.ImportExport
+import UI.Settings.Data
 import UI.Settings.Page as Settings exposing (..)
-import UI.Settings.Syncing
 import UI.Sources.Types as Sources
 import UI.Syncing.Types as Syncing
 import UI.Tracks.Types as Tracks
@@ -51,14 +50,11 @@ type alias Dependencies =
 view : Settings.Page -> Dependencies -> Html Msg
 view page deps =
     case page of
-        ImportExport ->
-            UI.Settings.ImportExport.view deps.syncMethod
+        Data ->
+            UI.Settings.Data.view deps.syncMethod
 
         Index ->
             UI.Kit.receptacle { scrolling = True } (index deps)
-
-        Syncing ->
-            UI.Settings.Syncing.view deps.syncMethod
 
 
 
@@ -71,13 +67,9 @@ index deps =
       -- Navigation
       -----------------------------------------
       UI.Navigation.local
-        [ ( Icon Icons.sync_alt
-          , Label "Syncing" Shown
-          , NavigateToPage (Page.Settings Syncing)
-          )
-        , ( Icon Icons.import_export
-          , Label "Import & Export" Shown
-          , NavigateToPage (Page.Settings ImportExport)
+        [ ( Icon Icons.account_circle
+          , Label "Data & Sync" Shown
+          , NavigateToPage (Page.Settings Data)
           )
         , ( Icon Icons.help_outline
           , Label "Help" Shown
@@ -106,18 +98,7 @@ content deps =
     -----------------------------------------
     -- Version
     -----------------------------------------
-    , let
-        highlight =
-            Html.strong
-                (case deps.extractedBackdropColor of
-                    Just color ->
-                        [ style "color" (Color.toCssString color) ]
-
-                    Nothing ->
-                        []
-                )
-      in
-      chunk
+    , chunk
         [ "mt-6" ]
         [ chunk
             [ "flex"
@@ -175,54 +156,55 @@ content deps =
                     |> text
 
                 --
-                , case deps.serviceWorkerStatus of
-                    InstallingInitial ->
-                        inline
-                            [ "inline-flex", "items-center" ]
-                            [ text "Setting up service worker"
-                            , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
-                            ]
-
-                    InstallingNew ->
-                        inline
-                            [ "inline-flex", "items-center" ]
-                            [ text "Installing new version"
-                            , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
-                            ]
-
-                    WaitingForActivation ->
-                        inline
-                            []
-                            [ text "Update available"
-                            , brick
-                                [ Maybe.unwrap
-                                    (class "bg-white-20")
-                                    (style "background-color" << Color.toCssString)
-                                    deps.extractedBackdropColor
-
-                                --
-                                , E.onClick ReloadApp
+                , chunk
+                    [ "not-italic", "mt-3" ]
+                    [ case deps.serviceWorkerStatus of
+                        InstallingInitial ->
+                            inline
+                                [ "inline-flex", "items-center" ]
+                                [ text "Setting up service worker"
+                                , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
                                 ]
-                                [ "bg-base06"
-                                , "cursor-pointer"
-                                , "inline-block"
-                                , "leading-none"
-                                , "ml-1"
-                                , "mr-3"
-                                , "p-1"
-                                , "rounded"
-                                , "text-white"
 
-                                -- Dark mode
-                                ------------
-                                , "dark:bg-base01"
-                                , "dark:text-base05"
+                        InstallingNew ->
+                            inline
+                                [ "inline-flex", "items-center" ]
+                                [ text "Installing new version"
+                                , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
                                 ]
-                                [ text "Reload app" ]
-                            ]
 
-                    Activated ->
-                        nothing
+                        WaitingForActivation ->
+                            inline
+                                []
+                                [ text "Update available"
+                                , brick
+                                    [ Maybe.unwrap
+                                        (class "bg-white-20")
+                                        (style "background-color" << Color.toCssString)
+                                        deps.extractedBackdropColor
+
+                                    --
+                                    , E.onClick ReloadApp
+                                    ]
+                                    [ "bg-base06"
+                                    , "cursor-pointer"
+                                    , "inline-block"
+                                    , "leading-none"
+                                    , "ml-1"
+                                    , "p-1"
+                                    , "rounded"
+                                    , "text-white"
+
+                                    -- Dark mode
+                                    ------------
+                                    , "dark:bg-base01"
+                                    ]
+                                    [ text "Reload app" ]
+                                ]
+
+                        Activated ->
+                            nothing
+                    ]
                 ]
             ]
         ]

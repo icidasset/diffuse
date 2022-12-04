@@ -1,5 +1,6 @@
 module Brain.User.Types exposing (..)
 
+import Alien exposing (Tag(..))
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import User.Layer as User exposing (HypaethralBit, HypaethralData)
@@ -37,6 +38,7 @@ type Msg
       -----------------------------------------
       -- Hypaethral Data, pt. 2
       -----------------------------------------
+    | FinishedSyncing
     | GotHypaethralData HypaethralData
     | GotWebnativeResponse Webnative.Response
     | SaveHypaethralDataBits (List HypaethralBit)

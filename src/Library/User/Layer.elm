@@ -44,7 +44,6 @@ type Method
     = Dropbox { accessToken : String, expiresAt : Int, refreshToken : String }
     | Fission { initialised : Bool }
     | Ipfs { apiOrigin : String }
-    | Local
     | RemoteStorage { userAddress : String, token : String }
 
 
@@ -60,9 +59,6 @@ methodSupportsPublicData method =
             False
 
         Ipfs _ ->
-            False
-
-        Local ->
             False
 
         RemoteStorage _ ->
@@ -143,6 +139,22 @@ encodeMethod =
     methodToString >> Json.Encode.string
 
 
+methodName : Method -> String
+methodName method =
+    case method of
+        Dropbox _ ->
+            "Dropbox"
+
+        Fission _ ->
+            "Fission"
+
+        Ipfs _ ->
+            "IPFS"
+
+        RemoteStorage _ ->
+            "Remote Storage"
+
+
 methodFromString : String -> Maybe Method
 methodFromString string =
     case String.split methodSeparator string of
@@ -160,9 +172,6 @@ methodFromString string =
 
         [ "IPFS", a ] ->
             Just (Ipfs { apiOrigin = a })
-
-        [ "LOCAL" ] ->
-            Just Local
 
         [ "REMOTE_STORAGE", u, t ] ->
             Just (RemoteStorage { userAddress = u, token = t })
@@ -192,9 +201,6 @@ methodToString method =
                 [ "IPFS"
                 , apiOrigin
                 ]
-
-        Local ->
-            "LOCAL"
 
         RemoteStorage { userAddress, token } ->
             String.join

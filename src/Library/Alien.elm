@@ -29,7 +29,6 @@ type Tag
     | AuthFission
     | AuthEnclosedData
     | AuthIpfs
-    | AuthMethod
     | AuthRemoteStorage
     | AuthSecretKey
     | FabricateSecretKey
@@ -66,6 +65,7 @@ type Tag
     | AddTracks
     | FinishedProcessingSource
     | FinishedProcessingSources
+    | FinishedSyncing
     | GotCachedCover
     | HideLoadingScreen
     | LoadEnclosedUserData
@@ -75,6 +75,7 @@ type Tag
     | ReportError
     | ReportProcessingError
     | ReportProcessingProgress
+    | StartedSyncing
     | UpdateSourceData
 
 
@@ -86,7 +87,6 @@ enum =
         , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
         , ( "AUTH_FISSION", AuthFission )
         , ( "AUTH_IPFS", AuthIpfs )
-        , ( "AUTH_METHOD", AuthMethod )
         , ( "AUTH_REMOTE_STORAGE", AuthRemoteStorage )
         , ( "AUTH_SECRET_KEY", AuthSecretKey )
         , ( "FABRICATE_SECRET_KEY", FabricateSecretKey )
@@ -134,6 +134,7 @@ enum =
         , ( "REPORT_ERROR", ReportError )
         , ( "REPORT_PROCESSING_ERROR", ReportProcessingError )
         , ( "REPORT_PROCESSING_PROGRESS", ReportProcessingProgress )
+        , ( "STARTED_SYNCING", StartedSyncing )
         , ( "UPDATE_SOURCE_DATA", UpdateSourceData )
         ]
 

@@ -52,13 +52,7 @@ view_ state =
                     }
                 ]
 
-        Syncing ->
-            Html.nothing
-
-        Synced _ ->
-            Html.nothing
-
-        NotSynced ->
+        _ ->
             Html.nothing
 
 
@@ -68,52 +62,59 @@ view_ state =
 
 encryptionKeyScreen : { withEncryption : Syncing.Msg, withoutEncryption : Syncing.Msg } -> Html Syncing.Msg
 encryptionKeyScreen { withEncryption, withoutEncryption } =
-    slab
-        Html.form
-        [ onSubmit withEncryption ]
-        [ "flex"
-        , "flex-col"
-        , "max-w-xs"
-        , "px-3"
-        , "w-screen"
-
-        --
-        , "sm:px-0"
-        ]
-        [ UI.Kit.textArea
-            [ attribute "autocapitalize" "none"
-            , attribute "autocomplete" "off"
-            , attribute "autocorrect" "off"
-            , attribute "rows" "4"
-            , attribute "spellcheck" "false"
+    UI.Kit.focusScreen
+        { icon = Icons.lock
+        , iconHref = Nothing
+        , text = [ text "Optional passphrase to encrypt/decrypt your data" ]
+        , textHref = Nothing
+        }
+        [ slab
+            Html.form
+            [ onSubmit withEncryption ]
+            [ "flex"
+            , "flex-col"
+            , "max-w-xs"
+            , "px-3"
+            , "w-screen"
 
             --
-            , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
-
-            --
-            , style "-webkit-text-security" "disc"
-
-            --
-            , E.onInput KeepPassphraseInMemory
+            , "sm:px-0"
             ]
-        , UI.Kit.button
-            UI.Kit.Filled
-            Syncing.Bypass
-            (text "Continue")
-        , brick
-            [ onClickStopPropagation withoutEncryption ]
-            [ "cursor-pointer"
-            , "flex"
-            , "items-center"
-            , "justify-center"
-            , "leading-snug"
-            , "mt-3"
-            , "opacity-50"
-            , "text-white"
-            , "text-xs"
-            ]
-            [ inline [ "inline-block", "leading-none", "mr-2" ] [ Icons.warning 13 Inherit ]
-            , text "Continue without encryption"
+            [ UI.Kit.textArea
+                [ attribute "autocapitalize" "none"
+                , attribute "autocomplete" "off"
+                , attribute "autocorrect" "off"
+                , attribute "rows" "4"
+                , attribute "spellcheck" "false"
+
+                --
+                , placeholder "anQLS9Usw24gxUi11IgVBg76z8SCWZgLKkoWIeJ1ClVmBHLRlaiA0CtvONVAMGritbgd3U45cPTxrhFU0WXaOAa8pVt186KyEccfUNyAq97"
+
+                --
+                , style "-webkit-text-security" "disc"
+
+                --
+                , E.onInput KeepPassphraseInMemory
+                ]
+            , UI.Kit.button
+                UI.Kit.Filled
+                Syncing.Bypass
+                (text "Continue")
+            , brick
+                [ onClickStopPropagation withoutEncryption ]
+                [ "cursor-pointer"
+                , "flex"
+                , "items-center"
+                , "justify-center"
+                , "leading-snug"
+                , "mt-3"
+                , "opacity-50"
+                , "text-white"
+                , "text-xs"
+                ]
+                [ inline [ "inline-block", "leading-none", "mr-2" ] [ Icons.warning 13 Inherit ]
+                , text "Continue without encryption"
+                ]
             ]
         ]
 
