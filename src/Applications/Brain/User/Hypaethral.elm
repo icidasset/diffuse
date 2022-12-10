@@ -16,11 +16,24 @@ import User.Layer as User exposing (..)
 
 retrieveDropbox : String -> HypaethralBit -> Task String (Maybe Json.Decode.Value)
 retrieveDropbox accessToken bit =
-    [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
+    [ ( "fileName", fileName bit )
     , ( "token", Json.Encode.string accessToken )
     ]
         |> TaskPort.call
             { function = "fromDropbox"
+            , valueDecoder = Json.Decode.maybe Json.Decode.value
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
+
+
+retrieveIpfs : String -> HypaethralBit -> Task String (Maybe Json.Decode.Value)
+retrieveIpfs apiOrigin bit =
+    [ ( "fileName", fileName bit )
+    , ( "apiOrigin", Json.Encode.string apiOrigin )
+    ]
+        |> TaskPort.call
+            { function = "fromIpfs"
             , valueDecoder = Json.Decode.maybe Json.Decode.value
             , argsEncoder = Json.Encode.object
             }
@@ -42,12 +55,26 @@ retrieveLocal bit =
 
 saveDropbox : String -> HypaethralBit -> Json.Decode.Value -> Task String ()
 saveDropbox accessToken bit data =
-    [ ( "fileName", Json.Encode.string (hypaethralBitFileName bit) )
+    [ ( "fileName", fileName bit )
     , ( "data", data )
     , ( "token", Json.Encode.string accessToken )
     ]
         |> TaskPort.call
             { function = "toDropbox"
+            , valueDecoder = TaskPort.ignoreValue
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
+
+
+saveIpfs : String -> HypaethralBit -> Json.Decode.Value -> Task String ()
+saveIpfs apiOrigin bit data =
+    [ ( "apiOrigin", Json.Encode.string apiOrigin )
+    , ( "fileName", fileName bit )
+    , ( "data", data )
+    ]
+        |> TaskPort.call
+            { function = "toIpfs"
             , valueDecoder = TaskPort.ignoreValue
             , argsEncoder = Json.Encode.object
             }
@@ -61,3 +88,12 @@ saveLocal bit data =
             Alien.SyncLocal
             (hypaethralBitFileName bit)
         |> Task.mapError TaskPort.errorToStringCustom
+
+
+
+-- 🛠
+
+
+fileName : HypaethralBit -> Json.Decode.Value
+fileName =
+    Json.Encode.string << hypaethralBitFileName

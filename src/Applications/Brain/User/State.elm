@@ -370,6 +370,12 @@ syncCommand initialTask model =
                     , save = Hypaethral.saveDropbox accessToken
                     }
 
+        Just (Ipfs { apiOrigin }) ->
+            attemptSync
+                { retrieve = Hypaethral.retrieveIpfs apiOrigin
+                , save = Hypaethral.saveIpfs apiOrigin
+                }
+
         _ ->
             -- TODO:
             Cmd.none
@@ -477,13 +483,10 @@ saveHypaethralDataBits bits model =
                             (Hypaethral.saveLocal bit value)
                     )
                 |> Task.sequence
-                |> Common.attemptTask (\_ -> Brain.Bypass)
+                |> Common.attemptTask (Debug.log "" >> always Brain.Bypass)
                 |> return updatedModel
     in
     case model.userSyncMethod of
-        Nothing ->
-            Return.singleton updatedModel
-
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
             if
                 Syncing.Services.Dropbox.Token.isExpired
@@ -501,9 +504,12 @@ saveHypaethralDataBits bits model =
             else
                 save (Hypaethral.saveDropbox accessToken)
 
+        Just (Ipfs { apiOrigin }) ->
+            save (Hypaethral.saveIpfs apiOrigin)
+
         _ ->
-            -- TODO:
-            Return.singleton model
+            -- Only save locally
+            save (\_ _ -> Task.succeed ())
 
 
 saveHypaethralDataBitWithDebounce : HypaethralBit -> Manager

@@ -47,9 +47,6 @@ taskPorts.fabricateSecretKey = async passphrase => {
 // Dropbox
 // -------
 
-ports.requestDropbox = app => event => { } // TODO: Remove
-ports.toDropbox = app => event => { } // TODO: Remove
-
 taskPorts.fromDropbox = ({ fileName, token }) => {
   return fetch("https://content.dropboxapi.com/2/files/download", {
     method: "POST",
@@ -73,8 +70,6 @@ taskPorts.toDropbox = async ({ fileName, data, token }) => {
     mute: true
   }
 
-  const possiblyEncrypted = await encryptIfPossible(json)
-
   return fetch("https://content.dropboxapi.com/2/files/upload", {
     method: "POST",
     headers: {
@@ -82,10 +77,8 @@ taskPorts.toDropbox = async ({ fileName, data, token }) => {
       "Content-Type": "application/octet-stream",
       "Dropbox-API-Arg": JSON.stringify(params)
     },
-    body: possiblyEncrypted
+    body: await encryptIfPossible(json)
   })
-
-
 }
 
 
@@ -261,43 +254,37 @@ function reconnect(ipfs, peer, backoff) {
 const IPFS_ROOT = "/Applications/Diffuse/"
 
 
-ports.requestIpfs = app => event => {
-  const apiOrigin = event.data.apiOrigin
-  const path = IPFS_ROOT + event.data.file
+taskPorts.fromIpfs = ({ apiOrigin, fileName }) => {
+  const path = IPFS_ROOT + fileName
 
-  fetch(apiOrigin + "/api/v0/files/read?arg=" + path, { method: "POST" })
+  fetch(apiOrigin + "/api/v0/files/read?arg=" + encodeURIComponent(path), { method: "POST" })
     .then(r => r.ok ? r.text() : r.json())
     .then(r => r.Code === 0 ? null : r)
     .then(decryptIfNeeded)
-    .then(sendJsonData(app, event))
-    .catch(reportError(app, event))
+    .then(parseJsonIfNeeded)
 }
 
 
-ports.toIpfs = app => event => {
-  const apiOrigin = event.data.apiOrigin
-  const json = JSON.stringify(event.data.data)
+taskPorts.toIpfs = ({ apiOrigin, fileName, data }) => {
+  const json = JSON.stringify(data)
   const params = new URLSearchParams({
-    arg: IPFS_ROOT + event.data.file,
+    arg: IPFS_ROOT + fileName,
     create: "true",
     offset: "0",
     parents: "true",
     truncate: "true"
   }).toString()
 
-  encryptWithSecretKey(json)
-    .then(data => {
-      const formData = new FormData()
+  return encryptIfPossible(json).then(possiblyEncryptedData => {
+    const formData = new FormData()
 
-      formData.append("data", data)
+    formData.append("data", possiblyEncryptedData)
 
-      return fetch(
-        apiOrigin + "/api/v0/files/write?" + params,
-        { method: "POST", body: formData }
-      )
-    })
-    .then(storageCallback(app, event))
-    .catch(reportError(app, event))
+    return fetch(
+      apiOrigin + "/api/v0/files/write?" + params,
+      { method: "POST", body: formData }
+    )
+  })
 }
 
 

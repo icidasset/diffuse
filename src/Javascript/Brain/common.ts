@@ -135,8 +135,8 @@ export function decryptIfNeeded(data) {
 export async function encryptIfPossible(unencryptedData: string): Promise<string> {
   return unencryptedData
     ? getSecretKey()
-      .catch(_ => unencryptedData)
       .then(secretKey => crypto.encrypt(secretKey, unencryptedData))
+      .catch(_ => unencryptedData)
     : unencryptedData
 }
 

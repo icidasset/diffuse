@@ -22,11 +22,13 @@ import UI.Page as Page
 import UI.Playlists.Page
 import UI.Queue.Page
 import UI.Sources.Page as Sources
+import UI.Syncing.Common as Syncing
 import UI.Syncing.Types as Syncing
 import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
 import UI.Tracks.Types exposing (..)
 import UI.Types as UI exposing (..)
+import User.Layer as User
 
 
 
@@ -75,12 +77,13 @@ view model =
 
         --
         , if List.isEmpty model.tracks.harvested then
-            lazy4
+            lazy5
                 noTracksView
                 (List.map Tuple.first model.processingContext)
                 (List.length model.sources)
                 (List.length model.tracks.harvested)
                 (List.length model.favourites)
+                (Syncing.extractMethod model.syncing)
 
           else
             case model.scene of
@@ -442,8 +445,8 @@ navigation { bgColor, favouritesOnly, grouping, isOnIndexPage, pressedShift, sce
         ]
 
 
-noTracksView : List String -> Int -> Int -> Int -> Html UI.Msg
-noTracksView processingContext amountOfSources amountOfTracks _ =
+noTracksView : List String -> Int -> Int -> Int -> Maybe User.Method -> Html UI.Msg
+noTracksView processingContext amountOfSources amountOfTracks _ userLayerMethod =
     chunk
         [ "no-tracks-view"
 
@@ -513,13 +516,22 @@ cloud/distributed storage service you use.
                             UI.Kit.Filled
                             (ChangeUrlUsingPage <| Page.Sources Sources.New)
                             (Html.text "Add Music")
-                        , UI.Kit.buttonWithOptions
-                            Html.button
-                            [ Mouse.onClick (SyncingMsg << Syncing.ShowSyncDataMenu) ]
-                            UI.Kit.Gray
-                            UI.Kit.Filled
-                            Nothing
-                            (Html.text "Sync data")
+                        , case userLayerMethod of
+                            Just method ->
+                                UI.Kit.buttonWithColor
+                                    UI.Kit.Gray
+                                    UI.Kit.Filled
+                                    (SyncingMsg Syncing.StopSync)
+                                    (text <| "Stop syncing with " ++ User.methodName method)
+
+                            Nothing ->
+                                UI.Kit.buttonWithOptions
+                                    Html.button
+                                    [ Mouse.onClick (SyncingMsg << Syncing.ShowSyncDataMenu) ]
+                                    UI.Kit.Gray
+                                    UI.Kit.Filled
+                                    Nothing
+                                    (Html.text "Sync data")
                         ]
 
                     --
