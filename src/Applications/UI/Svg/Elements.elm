@@ -24,12 +24,12 @@ fissionLogo =
         ]
 
 
-ipfsLogo : Svg Never
-ipfsLogo =
+ipfsLogo : Int -> Svg Never
+ipfsLogo size =
     svg
-        [ height "16"
+        [ height (String.fromInt size)
         , viewBox "0 0 511.99999 511.99998"
-        , width "16"
+        , width (String.fromInt size)
         ]
         [ -- Group 1
           ----------

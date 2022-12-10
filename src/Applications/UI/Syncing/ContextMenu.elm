@@ -1,4 +1,4 @@
-module UI.Syncing.ContextMenu exposing (moreOptionsMenu, syncDataMenu)
+module UI.Syncing.ContextMenu exposing (syncDataMenu)
 
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
@@ -11,18 +11,6 @@ import User.Layer exposing (Method(..))
 
 
 -- 🔱
-
-
-moreOptionsMenu : Coordinates -> ContextMenu Msg
-moreOptionsMenu =
-    ContextMenu
-        [ Item
-            { icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
-            , label = "IPFS (using the Mutable File System)"
-            , msg = SyncingMsg Syncing.PingIpfs
-            , active = False
-            }
-        ]
 
 
 syncDataMenu : Coordinates -> ContextMenu Msg
@@ -47,7 +35,7 @@ syncDataMenu =
             , active = False
             }
         , Item
-            { icon = \_ _ -> Svg.map never UI.Svg.Elements.ipfsLogo
+            { icon = \_ _ -> Svg.map never (UI.Svg.Elements.ipfsLogo 16)
             , label = "IPFS (using MFS)"
             , msg = SyncingMsg Syncing.PingIpfs
             , active = False

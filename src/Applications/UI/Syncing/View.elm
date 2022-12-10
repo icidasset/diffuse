@@ -3,7 +3,7 @@ module UI.Syncing.View exposing (view)
 import Chunky exposing (..)
 import Conditional exposing (..)
 import Html exposing (Html, text)
-import Html.Attributes exposing (attribute, placeholder, style, value)
+import Html.Attributes as A exposing (attribute, placeholder, style, value)
 import Html.Events as E exposing (onSubmit)
 import Html.Events.Extra exposing (onClickStopPropagation)
 import Html.Extra as Html
@@ -12,6 +12,7 @@ import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Svg
 import UI.Kit
+import UI.Svg.Elements
 import UI.Syncing.Types as Syncing exposing (..)
 import UI.Types as UI exposing (..)
 import User.Layer exposing (..)
@@ -94,6 +95,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
                 , style "-webkit-text-security" "disc"
 
                 --
+                , A.class "shadow"
                 , E.onInput KeepPassphraseInMemory
                 ]
             , UI.Kit.button
@@ -109,7 +111,6 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
                 , "leading-snug"
                 , "mt-3"
                 , "opacity-50"
-                , "text-white"
                 , "text-xs"
                 ]
                 [ inline [ "inline-block", "leading-none", "mr-2" ] [ Icons.warning 13 Inherit ]
@@ -125,28 +126,36 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
 
 inputScreen : Question -> Html Syncing.Msg
 inputScreen question =
-    slab
-        Html.form
-        [ onSubmit ConfirmInput ]
-        [ "flex"
-        , "flex-col"
-        , "max-w-xs"
-        , "px-3"
-        , "w-screen"
+    UI.Kit.focusScreen
+        { icon = \size _ -> Svg.map never (UI.Svg.Elements.ipfsLogo size)
+        , iconHref = Nothing
+        , text = [ question.question ]
+        , textHref = Nothing
+        }
+        [ slab
+            Html.form
+            [ onSubmit ConfirmInput ]
+            [ "flex"
+            , "flex-col"
+            , "max-w-xs"
+            , "px-3"
+            , "w-screen"
 
-        --
-        , "sm:px-0"
-        ]
-        [ UI.Kit.textFieldAlt
-            [ attribute "autocapitalize" "off"
-            , placeholder question.placeholder
-            , E.onInput Input
-            , value question.value
+            --
+            , "sm:px-0"
             ]
-        , UI.Kit.button
-            UI.Kit.Filled
-            Syncing.Bypass
-            (text "Continue")
+            [ UI.Kit.textFieldAlt
+                [ attribute "autocapitalize" "off"
+                , placeholder question.placeholder
+                , A.class "shadow"
+                , E.onInput Input
+                , value question.value
+                ]
+            , UI.Kit.button
+                UI.Kit.Filled
+                Syncing.Bypass
+                (text "Continue")
+            ]
         ]
 
 

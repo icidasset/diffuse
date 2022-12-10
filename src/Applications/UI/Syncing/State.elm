@@ -7,6 +7,8 @@ import Browser.Navigation as Nav
 import Common exposing (Switch(..))
 import Coordinates
 import Dict
+import Html
+import Html.Attributes
 import Html.Events.Extra.Mouse as Mouse
 import Http
 import Http.Ext as Http
@@ -22,11 +24,9 @@ import Return.Ext as Return
 import SHA
 import String.Ext as String
 import Time
-import Tracks
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Ports as Ports
-import UI.Sources.State as Sources
 import UI.Syncing.ContextMenu as Syncing
 import UI.Syncing.Types as Syncing exposing (..)
 import UI.Types as UI exposing (..)
@@ -522,15 +522,27 @@ pingIpfsCallback result =
             askForInput
                 (Ipfs { apiOrigin = "" })
                 { placeholder = "//localhost:5001"
-                , question = """
-                    Where's your IPFS API located?<br />
-                    <span class="font-normal text-white-60">
-                        You can find this address on the IPFS Web UI.<br />
-                        Most likely you'll also need to setup CORS.<br />
-                        You can find the instructions for that
-                        <a href="about/cors/#CORS__IPFS" target="_blank" class="border-b border-current-color font-semibold inline-block leading-tight">here</a>.
-                    </span>
-                  """
+                , question =
+                    Html.span
+                        []
+                        [ Html.div
+                            [ Html.Attributes.class "font-semibold pt-1" ]
+                            [ Html.text "Where's your IPFS API located?" ]
+                        , Html.div
+                            [ Html.Attributes.class "italic mt-2 text-sm" ]
+                            [ Html.text "You can find this address on the IPFS Web UI."
+                            , Html.br [] []
+                            , Html.text "Most likely you'll also need to setup CORS."
+                            , Html.br [] []
+                            , Html.text "You can find the instructions for that "
+                            , Html.a
+                                [ Html.Attributes.class "border-b border-current-color font-semibold inline-block leading-tight"
+                                , Html.Attributes.href "about/cors/#CORS__IPFS"
+                                , Html.Attributes.target "_blank"
+                                ]
+                                [ Html.text "here" ]
+                            ]
+                        ]
                 , value = "//localhost:5001"
                 }
 

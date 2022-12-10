@@ -1,5 +1,6 @@
 module UI.Syncing.Types exposing (Msg(..), Question, State(..))
 
+import Html exposing (Html)
 import Html.Events.Extra.Mouse as Mouse
 import Http
 import Json.Decode as Json
@@ -23,7 +24,7 @@ type State
 
 type alias Question =
     { placeholder : String
-    , question : String
+    , question : Html Msg
     , value : String
     }
 
