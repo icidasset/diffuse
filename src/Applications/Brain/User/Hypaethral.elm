@@ -40,6 +40,20 @@ retrieveIpfs apiOrigin bit =
         |> Task.mapError TaskPort.errorToStringCustom
 
 
+retrieveRemoteStorage : { token : String, userAddress : String } -> HypaethralBit -> Task String (Maybe Json.Decode.Value)
+retrieveRemoteStorage { token, userAddress } bit =
+    [ ( "fileName", fileName bit )
+    , ( "token", Json.Encode.string token )
+    , ( "userAddress", Json.Encode.string userAddress )
+    ]
+        |> TaskPort.call
+            { function = "fromRemoteStorage"
+            , valueDecoder = Json.Decode.maybe Json.Decode.value
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
+
+
 retrieveLocal : HypaethralBit -> Task String (Maybe Json.Decode.Value)
 retrieveLocal bit =
     Json.Decode.value
@@ -75,6 +89,21 @@ saveIpfs apiOrigin bit data =
     ]
         |> TaskPort.call
             { function = "toIpfs"
+            , valueDecoder = TaskPort.ignoreValue
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
+
+
+saveRemoteStorage : { token : String, userAddress : String } -> HypaethralBit -> Json.Decode.Value -> Task String ()
+saveRemoteStorage { token, userAddress } bit data =
+    [ ( "fileName", fileName bit )
+    , ( "data", data )
+    , ( "token", Json.Encode.string token )
+    , ( "userAddress", Json.Encode.string userAddress )
+    ]
+        |> TaskPort.call
+            { function = "toRemoteStorage"
             , valueDecoder = TaskPort.ignoreValue
             , argsEncoder = Json.Encode.object
             }

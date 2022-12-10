@@ -289,7 +289,6 @@ type Msg
     | LoadHypaethralUserData Json.Decode.Value
     | RequestImport
     | SaveEnclosedUserData
-    | SyncData
       -----------------------------------------
       -- ⚗️ Adjunct
       -----------------------------------------

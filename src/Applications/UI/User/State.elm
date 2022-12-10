@@ -26,9 +26,3 @@ gotWebnativeResponse response model =
 
         _ ->
             Return.singleton model
-
-
-syncData : Manager
-syncData model =
-    -- TODO: Remove?
-    Return.singleton model

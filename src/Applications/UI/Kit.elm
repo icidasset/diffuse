@@ -222,6 +222,24 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 -- 🍱  ░░  OTHER
 
 
+askForInput : { question : String, info : List (Html msg) } -> Html msg
+askForInput { question, info } =
+    Html.span
+        []
+        [ chunk
+            [ "font-semibold", "pt-1" ]
+            [ Html.text question ]
+        , case info of
+            [] ->
+                Html.text ""
+
+            _ ->
+                chunk
+                    [ "italic", "mt-2", "text-sm" ]
+                    info
+        ]
+
+
 canister : List (Html msg) -> Html msg
 canister children =
     chunk

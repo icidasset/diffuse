@@ -23,10 +23,13 @@ import Return exposing (andThen, return)
 import Return.Ext as Return
 import SHA
 import String.Ext as String
+import Svg exposing (Svg)
 import Time
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
+import UI.Kit
 import UI.Ports as Ports
+import UI.Svg.Elements
 import UI.Syncing.ContextMenu as Syncing
 import UI.Syncing.Types as Syncing exposing (..)
 import UI.Types as UI exposing (..)
@@ -521,15 +524,13 @@ pingIpfsCallback result =
         Err _ ->
             askForInput
                 (Ipfs { apiOrigin = "" })
-                { placeholder = "//localhost:5001"
+                { icon = \size _ -> Svg.map never (UI.Svg.Elements.ipfsLogo size)
+                , placeholder = "//localhost:5001"
                 , question =
-                    Html.span
-                        []
-                        [ Html.div
-                            [ Html.Attributes.class "font-semibold pt-1" ]
-                            [ Html.text "Where's your IPFS API located?" ]
-                        , Html.div
-                            [ Html.Attributes.class "italic mt-2 text-sm" ]
+                    UI.Kit.askForInput
+                        { question =
+                            "Where's your IPFS API located?"
+                        , info =
                             [ Html.text "You can find this address on the IPFS Web UI."
                             , Html.br [] []
                             , Html.text "Most likely you'll also need to setup CORS."
@@ -542,7 +543,7 @@ pingIpfsCallback result =
                                 ]
                                 [ Html.text "here" ]
                             ]
-                        ]
+                        }
                 , value = "//localhost:5001"
                 }
 
@@ -576,11 +577,8 @@ pingOtherIpfsCallback origin result =
 
 
 askForInput : Method -> Question -> Manager
-askForInput method q =
-    { placeholder = q.placeholder
-    , question = q.question
-    , value = q.value
-    }
+askForInput method question =
+    question
         |> InputScreen method
         |> replaceState
 

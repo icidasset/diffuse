@@ -496,9 +496,6 @@ update msg =
         SaveEnclosedUserData ->
             User.saveEnclosedUserData
 
-        SyncData ->
-            User.syncData
-
         -----------------------------------------
         -- ⚗️ Adjunct
         -----------------------------------------

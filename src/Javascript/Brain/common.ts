@@ -63,19 +63,6 @@ export function sendData(app, event, opts) {
 }
 
 
-export function sendJsonData(app, event) {
-  return sendData(app, event, { parseJSON: true })
-}
-
-
-export function storageCallback(app, _) {
-  return _ => {
-    // TODO: Remove
-    // app.ports.savedHypaethralBit.send()
-  }
-}
-
-
 
 // Cache
 // -----

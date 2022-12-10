@@ -376,6 +376,12 @@ syncCommand initialTask model =
                 , save = Hypaethral.saveIpfs apiOrigin
                 }
 
+        Just (RemoteStorage args) ->
+            attemptSync
+                { retrieve = Hypaethral.retrieveRemoteStorage args
+                , save = Hypaethral.saveRemoteStorage args
+                }
+
         _ ->
             -- TODO:
             Cmd.none
@@ -506,6 +512,9 @@ saveHypaethralDataBits bits model =
 
         Just (Ipfs { apiOrigin }) ->
             save (Hypaethral.saveIpfs apiOrigin)
+
+        Just (RemoteStorage args) ->
+            save (Hypaethral.saveRemoteStorage args)
 
         _ ->
             -- Only save locally

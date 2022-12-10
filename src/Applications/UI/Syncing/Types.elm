@@ -4,6 +4,8 @@ import Html exposing (Html)
 import Html.Events.Extra.Mouse as Mouse
 import Http
 import Json.Decode as Json
+import Material.Icons.Types exposing (Coloring)
+import Svg exposing (Svg)
 import User.Layer exposing (Method)
 import User.Layer.Methods.Dropbox as Dropbox
 import User.Layer.Methods.RemoteStorage as RemoteStorage
@@ -23,7 +25,8 @@ type State
 
 
 type alias Question =
-    { placeholder : String
+    { icon : Int -> Coloring -> Svg Msg
+    , placeholder : String
     , question : Html Msg
     , value : String
     }

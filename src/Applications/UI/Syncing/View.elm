@@ -127,7 +127,7 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
 inputScreen : Question -> Html Syncing.Msg
 inputScreen question =
     UI.Kit.focusScreen
-        { icon = \size _ -> Svg.map never (UI.Svg.Elements.ipfsLogo size)
+        { icon = question.icon
         , iconHref = Nothing
         , text = [ question.question ]
         , textHref = Nothing

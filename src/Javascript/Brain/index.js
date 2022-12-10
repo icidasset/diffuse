@@ -13,8 +13,7 @@ import * as processing from "../processing"
 import * as user from "./user"
 
 import { fromCache, removeCache, reportError } from "./common"
-import { sendData, storageCallback, toCache } from "./common"
-import { identity } from "../common"
+import { sendData, toCache } from "./common"
 import { transformUrl } from "../urls"
 
 importScripts("brain.elm.js")
@@ -49,9 +48,6 @@ const app = Elm.Brain.init({
     initialUrl: decodeURIComponent(flags.appHref) || ""
   }
 })
-
-
-user.setupPorts(app)
 
 
 
@@ -103,11 +99,6 @@ app.ports.toCache.subscribe(event => {
     : event.tag
 
   toCache(key, event.data.data || event.data)
-    .then(
-      event.tag === "AUTH_ANONYMOUS"
-        ? storageCallback(app, event)
-        : identity
-    )
     .catch(reportError(app, event))
 })
 

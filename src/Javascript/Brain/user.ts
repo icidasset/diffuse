@@ -11,10 +11,8 @@ import * as TaskPort from "elm-taskport"
 import * as crypto from "../crypto"
 import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, identity } from "../common"
 
-import { encryptIfPossible, SECRET_KEY_LOCATION } from "./common"
-import { decryptIfNeeded, encryptWithSecretKey } from "./common"
-import { fromCache, isLocalHost, parseJsonIfNeeded, reportError } from "./common"
-import { sendJsonData, storageCallback, toCache } from "./common"
+import { decryptIfNeeded, encryptIfPossible, SECRET_KEY_LOCATION } from "./common"
+import { isLocalHost, parseJsonIfNeeded, toCache } from "./common"
 
 
 const ports: Record<string, any> = {}
@@ -23,19 +21,6 @@ const taskPorts: Record<string, any> = {}
 
 // Crypto
 // ======
-
-ports.fabricateSecretKey = app => event => {
-  crypto.keyFromPassphrase(event.data)
-    .then(data => toCache(SECRET_KEY_LOCATION, data))
-    .then(_ => {
-      app.ports.fromAlien.send({
-        tag: event.tag,
-        data: null,
-        error: null
-      })
-    })
-    .catch(reportError(app, event))
-}
 
 taskPorts.fabricateSecretKey = async passphrase => {
   const data = await crypto.keyFromPassphrase(passphrase)
@@ -296,7 +281,7 @@ let rs
 let rsClient
 
 
-function remoteStorage(event) {
+function remoteStorage(userAddress: string, token: string) {
   if (!rs) {
     importScripts("vendor/remotestorage.min.js")
 
@@ -307,7 +292,7 @@ function remoteStorage(event) {
 
     return new Promise(resolve => {
       rs.on("connected", resolve)
-      rs.connect(event.data.userAddress, event.data.token)
+      rs.connect(userAddress, token)
     })
 
   } else {
@@ -329,53 +314,27 @@ ports.deconstructRemoteStorage = _app => _ => {
 }
 
 
-ports.requestRemoteStorage = app => event => {
-  const isOffline =
-    remoteStorageIsUnavailable(event)
-
-  const dataPromise =
-    isOffline
-      // TODO: Replace with local data syncing
-      ? fromCache(event.tag + "_" + event.data.file)
-      : remoteStorage(event)
-        .then(_ => rsClient.getFile(event.data.file))
-        .then(r => r.data)
-        .then(decryptIfNeeded)
-
-  dataPromise
-    .then(sendJsonData(app, event))
-    .catch(reportError(app, event))
+taskPorts.fromRemoteStorage = ({ fileName, userAddress, token }) => {
+  return remoteStorage(userAddress, token)
+    .then(_ => rsClient.getFile(fileName))
+    .then(r => r.data)
+    .then(decryptIfNeeded)
+    .then(parseJsonIfNeeded)
 }
 
 
-ports.toRemoteStorage = app => event => {
-  const json = JSON.stringify(event.data.data)
-  const doEncryption = _ => encryptWithSecretKey(json)
-  const isOffline = remoteStorageIsUnavailable(event)
+taskPorts.toRemoteStorage = ({ data, fileName, userAddress, token }) => {
+  const json = JSON.stringify(data)
 
-  !isOffline && remoteStorage(event)
-    .then(doEncryption)
-    .then(data => rsClient.storeFile("application/json", event.data.file, data))
-    .then(storageCallback(app, event))
-    .catch(reportError(app, event))
-
-  toCache(event.tag + "_" + event.data.file, event.data.data)
-    .then(isOffline ? storageCallback(app, event) : identity)
-    .catch(reportError(app, event))
+  return remoteStorage(userAddress, token)
+    .then(_ => encryptIfPossible(json))
+    .then(data => rsClient.storeFile("application/json", fileName, data))
 }
 
 
 
 // EXPORT
 // ======
-
-export function setupPorts(app) {
-  // Object.keys(ports).forEach(name => {
-  //   const fn = ports[ name ](app)
-  //   app.ports[ name ].subscribe(fn)
-  // })
-}
-
 
 export function setupTaskPorts() {
   Object.keys(taskPorts).forEach(name => {
