@@ -208,7 +208,6 @@ addFavourites =
 
 afterInitialLoad : Manager
 afterInitialLoad model =
-    -- TODO: Show syncing notification
     Common.toggleLoadingScreen Off model
 
 

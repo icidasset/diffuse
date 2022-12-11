@@ -489,7 +489,7 @@ saveHypaethralDataBits bits model =
                             (Hypaethral.saveLocal bit value)
                     )
                 |> Task.sequence
-                |> Common.attemptTask (Debug.log "" >> always Brain.Bypass)
+                |> Common.attemptTask (always Brain.Bypass)
                 |> return updatedModel
     in
     case model.userSyncMethod of
@@ -544,7 +544,7 @@ saveHypaethralDataSlowly debouncerMsg model =
         |> Cmd.map (SaveHypaethralDataSlowly >> UserMsg)
         |> return { model | hypaethralDebouncer = m }
         |> (if not (List.isEmpty bits) then
-                andThen (saveHypaethralDataBits <| Debug.log "save" bits)
+                andThen (saveHypaethralDataBits bits)
 
             else
                 identity

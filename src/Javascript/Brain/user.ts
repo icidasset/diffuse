@@ -302,12 +302,6 @@ function remoteStorage(userAddress: string, token: string) {
 }
 
 
-function remoteStorageIsUnavailable(event) {
-  return !navigator.onLine &&
-    !isLocalHost(event.data.userAddress.replace(/^[^@]*@/, ""))
-}
-
-
 ports.deconstructRemoteStorage = _app => _ => {
   rs = null
   rsClient = null

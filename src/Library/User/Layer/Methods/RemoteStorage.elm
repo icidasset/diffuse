@@ -42,9 +42,7 @@ oauthAddress : { oauthOrigin : String, origin : String } -> Attributes -> String
 oauthAddress { oauthOrigin, origin } { host, username } =
     let
         ua =
-            (username ++ "@" ++ host)
-                |> Base64.encode
-                |> Url.percentEncode
+            Base64.encode (username ++ "@" ++ host)
     in
     String.concat
         [ oauthOrigin
@@ -55,9 +53,28 @@ oauthAddress { oauthOrigin, origin } { host, username } =
         ]
 
 
-webfingerAddress : Attributes -> String
-webfingerAddress { host, username } =
-    "https://" ++ host ++ "/.well-known/webfinger?resource=acct:" ++ username
+webfingerAddress : Url.Protocol -> Attributes -> String
+webfingerAddress originProtocol { host, username } =
+    let
+        fallbackProtocol =
+            case originProtocol of
+                Url.Http ->
+                    "http"
+
+                Url.Https ->
+                    "https"
+
+        protocol =
+            if String.contains "://" host then
+                host
+                    |> String.split "://"
+                    |> List.head
+                    |> Maybe.withDefault fallbackProtocol
+
+            else
+                fallbackProtocol
+    in
+    protocol ++ "://" ++ host ++ "/.well-known/webfinger?resource=acct:" ++ Url.percentEncode username
 
 
 webfingerDecoder : Decoder String
@@ -71,9 +88,9 @@ webfingerDecoder =
         Decode.string
 
 
-webfingerRequest : (Attributes -> Result Http.Error String -> msg) -> Attributes -> Cmd msg
-webfingerRequest toMsg rs =
+webfingerRequest : (Attributes -> Result Http.Error String -> msg) -> Url.Protocol -> Attributes -> Cmd msg
+webfingerRequest toMsg originProtocol rs =
     Http.get
-        { url = webfingerAddress rs
+        { url = webfingerAddress originProtocol rs
         , expect = Http.expectJson (toMsg rs) webfingerDecoder
         }

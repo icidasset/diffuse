@@ -297,7 +297,7 @@ externalAuth method string model =
         RemoteStorage _ ->
             string
                 |> RemoteStorage.parseUserAddress
-                |> Maybe.map (RemoteStorage.webfingerRequest RemoteStorageWebfinger)
+                |> Maybe.map (RemoteStorage.webfingerRequest RemoteStorageWebfinger model.url.protocol)
                 |> Maybe.map (Cmd.map SyncingMsg)
                 |> Maybe.unwrap
                     (RemoteStorage.userAddressError

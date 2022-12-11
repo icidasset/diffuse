@@ -90,7 +90,7 @@ init flags =
 
 update : Msg -> Manager
 update msg =
-    case Debug.log "🧠" msg of
+    case msg of
         Bypass ->
             Return.singleton
 
