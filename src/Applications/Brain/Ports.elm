@@ -3,7 +3,6 @@ port module Brain.Ports exposing (..)
 import Alien
 import Json.Encode as Json
 import Sources.Processing exposing (ContextForTags, ContextForTagsSync)
-import Webnative
 
 
 
@@ -80,9 +79,6 @@ port toIpfs : Alien.Event -> Cmd msg
 port toRemoteStorage : Alien.Event -> Cmd msg
 
 
-port webnativeRequest : Webnative.Request -> Cmd msg
-
-
 
 -- 📰
 
@@ -103,6 +99,3 @@ port receiveTags : (ContextForTags -> msg) -> Sub msg
 
 
 port replaceTags : (ContextForTagsSync -> msg) -> Sub msg
-
-
-port webnativeResponse : (Webnative.Response -> msg) -> Sub msg

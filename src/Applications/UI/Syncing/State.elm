@@ -38,8 +38,6 @@ import Url.Ext as Url
 import User.Layer exposing (..)
 import User.Layer.Methods.Dropbox as Dropbox
 import User.Layer.Methods.RemoteStorage as RemoteStorage
-import Webnative
-import Webnative.Constants as Webnative
 
 
 
@@ -106,12 +104,7 @@ initialCommand url =
                     Cmd.none
 
         [ "authenticate", "fission" ] ->
-            Webnative.permissions
-                |> Webnative.initWithOptions
-                    { autoRemoveUrlParams = True
-                    , loadFileSystem = False
-                    }
-                |> Ports.webnativeRequest
+            Ports.collectFissionCapabilities ()
 
         _ ->
             Cmd.none
@@ -234,7 +227,6 @@ activateSync method model =
         |> Ports.toBrain
         --
         |> return model
-        |> andThen (Common.showSyncingNotification method)
 
 
 activateSyncWithPassphrase : Method -> String -> Manager
@@ -253,7 +245,6 @@ activateSyncWithPassphrase method passphrase model =
             |> Ports.toBrain
             --
             |> return model
-            |> andThen (Common.showSyncingNotification method)
 
 
 bootFailure : String -> Manager
@@ -281,18 +272,11 @@ externalAuth method string model =
             let
                 url =
                     model.url
-
-                redirectTo =
-                    { url | query = Just "action=authenticate/fission" }
             in
             "Just a moment, loading necessary components ..."
                 |> Notifications.stickyCasual
                 |> Common.showNotificationWithModel model
-                |> Return.command
-                    (Webnative.permissions
-                        |> Webnative.redirectToLobby (Webnative.RedirectTo redirectTo)
-                        |> Ports.webnativeRequest
-                    )
+                |> Return.command (Ports.authenticateWithFission ())
 
         RemoteStorage _ ->
             string

@@ -22,7 +22,7 @@ syncDataMenu =
         [ Item
             { icon = \_ _ -> Svg.map never UI.Svg.Elements.fissionLogo
             , label = "Fission"
-            , msg = SyncingMsg <| Syncing.TriggerExternalAuth (Fission { initialised = False }) ""
+            , msg = SyncingMsg <| Syncing.TriggerExternalAuth (Fission {}) ""
             , active = False
             }
         , Item

@@ -43,12 +43,12 @@ import UI.Syncing.Types as Syncing
 import UI.Tracks.State as Tracks
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (..)
-import UI.User.State as User
 import UI.User.State.Export as User
 import UI.User.State.Import as User
 import UI.View exposing (view)
 import Url exposing (Url)
 import Url.Ext as Url
+import User.Layer as User
 
 
 
@@ -249,7 +249,7 @@ init flags url key =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg =
-    case msg of
+    case Debug.log "🏝️" msg of
         Bypass ->
             Return.singleton
 
@@ -472,9 +472,6 @@ update msg =
         Export ->
             User.export
 
-        GotWebnativeResponse a ->
-            User.gotWebnativeResponse a
-
         ImportFile a ->
             User.importFile a
 
@@ -601,11 +598,11 @@ subscriptions _ =
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
+        , Ports.collectedFissionCapabilities (\_ -> SyncingMsg <| Syncing.ActivateSync <| User.Fission {})
         , Ports.installedNewServiceWorker (\_ -> InstalledServiceWorker)
         , Ports.installingNewServiceWorker (\_ -> InstallingServiceWorker)
         , Ports.refreshedAccessToken (Alien.broadcast Alien.RefreshedAccessToken >> RedirectToBrain)
         , Ports.setIsOnline SetIsOnline
-        , Ports.webnativeResponse GotWebnativeResponse
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]

@@ -27,6 +27,18 @@ retrieveDropbox accessToken bit =
         |> Task.mapError TaskPort.errorToStringCustom
 
 
+retrieveFission : HypaethralBit -> Task String (Maybe Json.Decode.Value)
+retrieveFission bit =
+    [ ( "fileName", fileName bit )
+    ]
+        |> TaskPort.call
+            { function = "fromFission"
+            , valueDecoder = Json.Decode.maybe Json.Decode.value
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
+
+
 retrieveIpfs : String -> HypaethralBit -> Task String (Maybe Json.Decode.Value)
 retrieveIpfs apiOrigin bit =
     [ ( "fileName", fileName bit )
@@ -75,6 +87,19 @@ saveDropbox accessToken bit data =
     ]
         |> TaskPort.call
             { function = "toDropbox"
+            , valueDecoder = TaskPort.ignoreValue
+            , argsEncoder = Json.Encode.object
+            }
+        |> Task.mapError TaskPort.errorToStringCustom
+
+
+saveFission : HypaethralBit -> Json.Decode.Value -> Task String ()
+saveFission bit data =
+    [ ( "fileName", fileName bit )
+    , ( "data", data )
+    ]
+        |> TaskPort.call
+            { function = "toFission"
             , valueDecoder = TaskPort.ignoreValue
             , argsEncoder = Json.Encode.object
             }

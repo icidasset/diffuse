@@ -33,7 +33,6 @@ import UI.Sources.Types as Sources
 import UI.Syncing.Types as Syncing
 import UI.Tracks.Types as Tracks
 import Url exposing (Url)
-import Webnative
 
 
 
@@ -281,7 +280,6 @@ type Msg
       -- User
       -----------------------------------------
     | Export
-    | GotWebnativeResponse Webnative.Response
     | ImportFile File
     | ImportJson String
     | InsertDemo

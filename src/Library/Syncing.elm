@@ -66,7 +66,7 @@ task initialTask { localData, saveLocal } { retrieve, save } =
             (\list ->
                 let
                     remoteHasExistingData =
-                        List.any (Tuple.second >> Maybe.isJust) list
+                        List.any (Tuple.second >> Maybe.isJust) (Debug.log "" list)
                 in
                 if remoteHasExistingData then
                     -- 🛰️
@@ -89,7 +89,7 @@ task initialTask { localData, saveLocal } { retrieve, save } =
         |> Task.andThen
             (\remoteData ->
                 -- Compare modifiedAt timestamps
-                case ( remoteData.modifiedAt, localData.modifiedAt ) of
+                case Debug.log "" ( remoteData.modifiedAt, localData.modifiedAt ) of
                     ( Just remoteModifiedAt, Just localModifiedAt ) ->
                         if Time.posixToMillis remoteModifiedAt == Time.posixToMillis localModifiedAt then
                             -- 🏝️

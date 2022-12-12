@@ -90,7 +90,7 @@ init flags =
 
 update : Msg -> Manager
 update msg =
-    case msg of
+    case Debug.log "🧠" msg of
         Bypass ->
             Return.singleton
 
@@ -165,7 +165,6 @@ subscriptions _ =
         , Ports.receiveSearchResults GotSearchResults
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
         , Ports.replaceTags ReplaceTrackTags
-        , Ports.webnativeResponse (UserMsg << User.GotWebnativeResponse)
 
         --
         , Time.every (60 * 1000) SetCurrentTime

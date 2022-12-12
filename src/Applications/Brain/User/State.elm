@@ -11,7 +11,6 @@ import Debouncer.Basic as Debouncer
 import EverySet
 import Json.Decode as Decode
 import Json.Encode as Json
-import List.Zipper as Zipper
 import Playlists.Encoding as Playlists
 import Return exposing (andThen, return)
 import Return.Ext as Return
@@ -25,13 +24,10 @@ import TaskPort.Extra as TaskPort
 import Time
 import Tracks exposing (Track)
 import Tracks.Encoding as Tracks
-import Tuple3
 import Url exposing (Url)
 import Url.Ext as Url
 import User.Layer as User exposing (..)
 import User.Layer.Methods.Dropbox as Dropbox
-import User.Layer.Methods.Fission as Fission
-import Webnative
 
 
 
@@ -42,7 +38,7 @@ initialCommand : Url -> Cmd Brain.Msg
 initialCommand uiUrl =
     case Url.action uiUrl of
         [ "authenticate", "fission" ] ->
-            Cmd.none
+            loadEnclosedData
 
         _ ->
             Cmd.batch
@@ -183,9 +179,6 @@ update msg =
         GotHypaethralData a ->
             gotHypaethralData a
 
-        GotWebnativeResponse a ->
-            gotWebnativeResponse a
-
         SaveHypaethralDataBits a ->
             saveHypaethralDataBits a
 
@@ -223,59 +216,6 @@ commence maybeMethod ( hypaethralJson, hypaethralData ) model =
         |> andThen (sync { initialTask = Nothing })
 
 
-gotWebnativeResponse : Webnative.Response -> Manager
-gotWebnativeResponse response model =
-    let
-        baggage =
-            model.hypaethralRetrieval
-                |> Maybe.map (Zipper.current >> Tuple3.third)
-                |> Maybe.withDefault BaggageClaimed
-    in
-    case Fission.proceed response baggage of
-        Fission.Error err ->
-            Common.reportUI Alien.ReportError err model
-
-        Fission.Hypaethral data ->
-            -- TODO: hypaethralDataRetrieved data model
-            Return.singleton model
-
-        Fission.LoadedFileSystem ->
-            -- Had to load the filesystem first, please continue.
-            let
-                userSyncMethod =
-                    Fission { initialised = True }
-            in
-            -- TODO:
-            -- model.userSyncMethod
-            --     |> Maybe.withDefault userSyncMethod
-            --     |> (\a -> retrieveAllHypaethralData a { model | userSyncMethod = Just a })
-            Return.singleton model
-
-        Fission.Ongoing newBaggage request ->
-            model.hypaethralRetrieval
-                |> Maybe.map
-                    (newBaggage
-                        |> always
-                        |> Tuple3.mapThird
-                        |> Zipper.map
-                    )
-                |> (\h -> { model | hypaethralRetrieval = h })
-                |> Return.communicate (Ports.webnativeRequest request)
-
-        Fission.OtherRequest request ->
-            request
-                |> Ports.webnativeRequest
-                |> return model
-
-        Fission.SaveNextHypaethralBit ->
-            -- TODO
-            -- saveNextHypaethralBit model
-            Return.singleton model
-
-        Fission.Stopping ->
-            Return.singleton model
-
-
 setSyncMethod : Json.Value -> Manager
 setSyncMethod json model =
     -- 🐤
@@ -288,7 +228,7 @@ setSyncMethod json model =
                 (Decode.field "method" <| Decode.map methodFromString Decode.string)
                 (Decode.field "passphrase" <| Decode.maybe Decode.string)
     in
-    case Decode.decodeValue decoder json of
+    case Debug.log "" <| Decode.decodeValue decoder json of
         Ok ( Just method, Just passphrase ) ->
             let
                 initialTask =
@@ -342,7 +282,7 @@ syncCommand initialTask model =
                     }
                 |> Common.attemptTask
                     (\maybe ->
-                        case maybe of
+                        case Debug.log "🚀" maybe of
                             Just data ->
                                 UserMsg (GotHypaethralData data)
 
@@ -350,7 +290,7 @@ syncCommand initialTask model =
                                 UserMsg FinishedSyncing
                     )
     in
-    case model.userSyncMethod of
+    case Debug.log "" <| model.userSyncMethod of
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
             if
                 Syncing.Services.Dropbox.Token.isExpired
@@ -370,6 +310,12 @@ syncCommand initialTask model =
                     , save = Hypaethral.saveDropbox accessToken
                     }
 
+        Just (Fission _) ->
+            attemptSync
+                { retrieve = Hypaethral.retrieveFission
+                , save = Hypaethral.saveFission
+                }
+
         Just (Ipfs { apiOrigin }) ->
             attemptSync
                 { retrieve = Hypaethral.retrieveIpfs apiOrigin
@@ -382,8 +328,7 @@ syncCommand initialTask model =
                 , save = Hypaethral.saveRemoteStorage args
                 }
 
-        _ ->
-            -- TODO:
+        Nothing ->
             Cmd.none
 
 
@@ -510,13 +455,16 @@ saveHypaethralDataBits bits model =
             else
                 save (Hypaethral.saveDropbox accessToken)
 
+        Just (Fission _) ->
+            save Hypaethral.saveFission
+
         Just (Ipfs { apiOrigin }) ->
             save (Hypaethral.saveIpfs apiOrigin)
 
         Just (RemoteStorage args) ->
             save (Hypaethral.saveRemoteStorage args)
 
-        _ ->
+        Nothing ->
             -- Only save locally
             save (\_ _ -> Task.succeed ())
 

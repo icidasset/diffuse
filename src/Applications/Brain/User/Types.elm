@@ -5,7 +5,6 @@ import Debouncer.Basic as Debouncer
 import Json.Decode as Json
 import User.Layer as User exposing (HypaethralBit, HypaethralData)
 import User.Layer.Methods.Dropbox as Dropbox
-import Webnative
 
 
 
@@ -40,7 +39,6 @@ type Msg
       -----------------------------------------
     | FinishedSyncing
     | GotHypaethralData HypaethralData
-    | GotWebnativeResponse Webnative.Response
     | SaveHypaethralDataBits (List HypaethralBit)
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
       -----------------------------------------
