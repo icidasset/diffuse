@@ -228,7 +228,7 @@ setSyncMethod json model =
                 (Decode.field "method" <| Decode.map methodFromString Decode.string)
                 (Decode.field "passphrase" <| Decode.maybe Decode.string)
     in
-    case Debug.log "" <| Decode.decodeValue decoder json of
+    case Decode.decodeValue decoder json of
         Ok ( Just method, Just passphrase ) ->
             let
                 initialTask =
@@ -282,7 +282,7 @@ syncCommand initialTask model =
                     }
                 |> Common.attemptTask
                     (\maybe ->
-                        case Debug.log "🚀" maybe of
+                        case maybe of
                             Just data ->
                                 UserMsg (GotHypaethralData data)
 
@@ -290,7 +290,7 @@ syncCommand initialTask model =
                                 UserMsg FinishedSyncing
                     )
     in
-    case Debug.log "" <| model.userSyncMethod of
+    case model.userSyncMethod of
         Just (Dropbox { accessToken, expiresAt, refreshToken }) ->
             if
                 Syncing.Services.Dropbox.Token.isExpired

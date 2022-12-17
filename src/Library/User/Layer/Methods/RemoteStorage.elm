@@ -4,6 +4,7 @@ import Base64
 import Http
 import Json.Decode as Decode exposing (Decoder)
 import Url
+import UrlBase64
 
 
 
@@ -41,8 +42,17 @@ parseUserAddress str =
 oauthAddress : { oauthOrigin : String, origin : String } -> Attributes -> String
 oauthAddress { oauthOrigin, origin } { host, username } =
     let
+        hostWithoutProtocol =
+            host
+                |> String.split "://"
+                |> List.drop 1
+                |> List.head
+                |> Maybe.withDefault host
+
         ua =
-            Base64.encode (username ++ "@" ++ host)
+            (username ++ "@" ++ hostWithoutProtocol)
+                |> UrlBase64.encode (Base64.encode >> Ok)
+                |> Result.withDefault "BASE64_ENCODING_FAILED"
     in
     String.concat
         [ oauthOrigin
@@ -73,8 +83,15 @@ webfingerAddress originProtocol { host, username } =
 
             else
                 fallbackProtocol
+
+        hostWithoutProtocol =
+            host
+                |> String.split "://"
+                |> List.drop 1
+                |> List.head
+                |> Maybe.withDefault host
     in
-    protocol ++ "://" ++ host ++ "/.well-known/webfinger?resource=acct:" ++ Url.percentEncode username
+    protocol ++ "://" ++ hostWithoutProtocol ++ "/.well-known/webfinger?resource=acct:" ++ Url.percentEncode (username ++ "@" ++ hostWithoutProtocol)
 
 
 webfingerDecoder : Decoder String

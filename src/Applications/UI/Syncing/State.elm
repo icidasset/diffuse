@@ -35,6 +35,7 @@ import UI.Syncing.Types as Syncing exposing (..)
 import UI.Types as UI exposing (..)
 import Url exposing (Protocol(..), Url)
 import Url.Ext as Url
+import UrlBase64
 import User.Layer exposing (..)
 import User.Layer.Methods.Dropbox as Dropbox
 import User.Layer.Methods.RemoteStorage as RemoteStorage
@@ -64,12 +65,12 @@ initialModel url =
         [ "authenticate", "remotestorage", encodedUserAddress ] ->
             let
                 dict =
-                    Url.queryDictionary url
+                    Url.queryDictionary { url | query = url.fragment }
 
                 userAddress =
                     encodedUserAddress
                         |> Url.percentDecode
-                        |> Maybe.andThen (Base64.decode >> Result.toMaybe)
+                        |> Maybe.andThen (UrlBase64.decode Base64.decode >> Result.toMaybe)
                         |> Maybe.withDefault encodedUserAddress
             in
             case Dict.get "access_token" dict of
