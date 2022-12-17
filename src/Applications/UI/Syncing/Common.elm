@@ -1,7 +1,53 @@
 module UI.Syncing.Common exposing (..)
 
+import Chunky exposing (..)
+import Html
+import Svg
+import UI.Kit
+import UI.Svg.Elements
 import UI.Syncing.Types exposing (..)
-import User.Layer exposing (Method)
+import UI.Types exposing (Msg(..))
+import User.Layer exposing (Method, dropboxMethod, fissionMethod, remoteStorageMethod)
+
+
+
+-- 🚀
+
+
+startDropbox : Msg
+startDropbox =
+    SyncingMsg (TriggerExternalAuth dropboxMethod "")
+
+
+startFission : Msg
+startFission =
+    SyncingMsg (TriggerExternalAuth fissionMethod "")
+
+
+startIpfs : Msg
+startIpfs =
+    SyncingMsg PingIpfs
+
+
+startRemoteStorage : Msg
+startRemoteStorage =
+    { icon = \size _ -> Svg.map never (UI.Svg.Elements.remoteStorageLogo size)
+    , placeholder = "example@5apps.com"
+    , question =
+        UI.Kit.askForInput
+            { question =
+                "What's your user address?"
+            , info =
+                [ Html.text "The format is "
+                , inline
+                    []
+                    [ Html.text "username@server.domain" ]
+                ]
+            }
+    , value = ""
+    }
+        |> AskForInput remoteStorageMethod
+        |> SyncingMsg
 
 
 

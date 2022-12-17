@@ -102,6 +102,9 @@ toString_ page =
         Settings Settings.Index ->
             "settings"
 
+        Settings Settings.Sync ->
+            "settings/sync"
+
         -----------------------------------------
         -- Sources
         -----------------------------------------
@@ -197,6 +200,7 @@ route =
         -- Settings
         -----------------------------------------
         , map (Settings Settings.Data) (s "settings" </> s "data")
+        , map (Settings Settings.Sync) (s "settings" </> s "sync")
         , map (Settings Settings.Index) (s "settings")
 
         -----------------------------------------

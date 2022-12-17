@@ -20,6 +20,7 @@ import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Settings.Data
 import UI.Settings.Page as Settings exposing (..)
+import UI.Settings.Sync
 import UI.Sources.Types as Sources
 import UI.Syncing.Types as Syncing
 import UI.Tracks.Types as Tracks
@@ -51,10 +52,13 @@ view : Settings.Page -> Dependencies -> Html Msg
 view page deps =
     case page of
         Data ->
-            UI.Settings.Data.view deps.syncMethod
+            UI.Settings.Data.view
 
         Index ->
             UI.Kit.receptacle { scrolling = True } (index deps)
+
+        Sync ->
+            UI.Settings.Sync.view deps.syncMethod
 
 
 
@@ -69,7 +73,7 @@ index deps =
       UI.Navigation.local
         [ ( Icon Icons.account_circle
           , Label "Data & Sync" Shown
-          , NavigateToPage (Page.Settings Data)
+          , NavigateToPage (Page.Settings Sync)
           )
         , ( Icon Icons.help_outline
           , Label "Help" Shown

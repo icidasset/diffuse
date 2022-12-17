@@ -47,22 +47,24 @@ type Method
     | RemoteStorage { userAddress : String, token : String }
 
 
-methodSupportsPublicData : Method -> Bool
-methodSupportsPublicData method =
-    case method of
-        Dropbox _ ->
-            False
+dropboxMethod : Method
+dropboxMethod =
+    Dropbox { accessToken = "", expiresAt = 0, refreshToken = "" }
 
-        Fission _ ->
-            -- NOTE: Temporarily disabled,
-            --       since we don't actually support public playlists yet.
-            False
 
-        Ipfs _ ->
-            False
+fissionMethod : Method
+fissionMethod =
+    Fission {}
 
-        RemoteStorage _ ->
-            False
+
+ipfsMethod : Method
+ipfsMethod =
+    Ipfs { apiOrigin = "https://ipfs.io" }
+
+
+remoteStorageMethod : Method
+remoteStorageMethod =
+    RemoteStorage { userAddress = "", token = "" }
 
 
 
@@ -149,7 +151,7 @@ methodName method =
             "Fission"
 
         Ipfs _ ->
-            "IPFS"
+            "IPFS (using MFS)"
 
         RemoteStorage _ ->
             "Remote Storage"
@@ -214,6 +216,24 @@ methodToString method =
 methodSeparator : String
 methodSeparator =
     "___"
+
+
+methodSupportsPublicData : Method -> Bool
+methodSupportsPublicData method =
+    case method of
+        Dropbox _ ->
+            False
+
+        Fission _ ->
+            -- NOTE: Temporarily disabled,
+            --       since we don't actually support public playlists yet.
+            False
+
+        Ipfs _ ->
+            False
+
+        RemoteStorage _ ->
+            False
 
 
 
