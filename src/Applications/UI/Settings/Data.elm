@@ -8,31 +8,50 @@ import Material.Icons.Types exposing (Coloring(..))
 import UI.Kit exposing (ButtonColor(..), ButtonType(..))
 import UI.Navigation exposing (..)
 import UI.Page as Page
+import UI.Settings.Common exposing (changePassphrase)
 import UI.Settings.Page exposing (Page(..))
 import UI.Types exposing (Msg(..))
+import User.Layer exposing (Method(..))
 
 
 
 -- 🗺
 
 
-view : Html Msg
-view =
+view : Maybe Method -> Html Msg
+view activeMethod =
     UI.Kit.receptacle
         { scrolling = True }
         [ -----------------------------------------
           -- Navigation
           -----------------------------------------
-          UI.Navigation.local
-            [ ( Icon Icons.arrow_back
-              , Label "Settings" Hidden
-              , NavigateToPage (Page.Settings Index)
-              )
-            , ( Icon Icons.account_circle
-              , Label "Storage Service" Shown
-              , NavigateToPage (Page.Settings Sync)
-              )
-            ]
+          (case activeMethod of
+            Just (Dropbox d) ->
+                [ changePassphrase (Dropbox d) ]
+
+            Just (Fission _) ->
+                []
+
+            Just (Ipfs i) ->
+                [ changePassphrase (Ipfs i) ]
+
+            Just (RemoteStorage r) ->
+                [ changePassphrase (RemoteStorage r) ]
+
+            Nothing ->
+                []
+          )
+            |> List.append
+                [ ( Icon Icons.arrow_back
+                  , Label "Settings" Hidden
+                  , NavigateToPage (Page.Settings Index)
+                  )
+                , ( Icon Icons.account_circle
+                  , Label "Storage Service" Shown
+                  , NavigateToPage (Page.Settings Sync)
+                  )
+                ]
+            |> UI.Navigation.local
 
         -----------------------------------------
         -- Content

@@ -17,7 +17,7 @@ syncDataMenu : Coordinates -> ContextMenu Msg
 syncDataMenu =
     ContextMenu
         [ Item
-            { icon = \_ _ -> Svg.map never (UI.Svg.Elements.fissionLogo 16)
+            { icon = \_ _ -> Svg.map never (UI.Svg.Elements.webnativeLogo 16)
             , label = methodName fissionMethod
             , msg = startFission
             , active = False

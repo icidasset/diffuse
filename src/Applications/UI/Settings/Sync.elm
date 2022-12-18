@@ -12,6 +12,7 @@ import UI.Kit exposing (ButtonColor(..), ButtonType(..))
 import UI.List
 import UI.Navigation exposing (..)
 import UI.Page as Page
+import UI.Settings.Common exposing (changePassphrase)
 import UI.Settings.Page exposing (Page(..))
 import UI.Svg.Elements
 import UI.Syncing.Common exposing (startDropbox, startFission, startIpfs, startRemoteStorage)
@@ -31,16 +32,33 @@ view activeMethod =
         [ -----------------------------------------
           -- Navigation
           -----------------------------------------
-          UI.Navigation.local
-            [ ( Icon Icons.arrow_back
-              , Label "Settings" Hidden
-              , NavigateToPage (Page.Settings Index)
-              )
-            , ( Icon Icons.archive
-              , Label "Data Backup" Shown
-              , NavigateToPage (Page.Settings Data)
-              )
-            ]
+          (case activeMethod of
+            Just (Dropbox d) ->
+                [ changePassphrase (Dropbox d) ]
+
+            Just (Fission _) ->
+                []
+
+            Just (Ipfs i) ->
+                [ changePassphrase (Ipfs i) ]
+
+            Just (RemoteStorage r) ->
+                [ changePassphrase (RemoteStorage r) ]
+
+            Nothing ->
+                []
+          )
+            |> List.append
+                [ ( Icon Icons.arrow_back
+                  , Label "Settings" Hidden
+                  , NavigateToPage (Page.Settings Index)
+                  )
+                , ( Icon Icons.archive
+                  , Label "Data Backup" Shown
+                  , NavigateToPage (Page.Settings Data)
+                  )
+                ]
+            |> UI.Navigation.local
 
         -----------------------------------------
         -- Content
@@ -77,17 +95,20 @@ view activeMethod =
         ]
 
 
-methodInfoAction : Method -> UI.List.Action Msg
-methodInfoAction method =
+methodInfoAction : Bool -> Maybe Method -> Method -> UI.List.Action Msg
+methodInfoAction isSelected activeMethod method =
     { icon =
-        Icons.help
+        \a b ->
+            inline
+                [ opacity isSelected activeMethod ]
+                [ Icons.help a b ]
     , msg =
         case method of
             Dropbox _ ->
                 Just (\_ -> OpenUrlOnNewPage "https://dropbox.com")
 
             Fission _ ->
-                Just (\_ -> OpenUrlOnNewPage "https://fission.codes")
+                Just (\_ -> OpenUrlOnNewPage "https://webnative.dev")
 
             RemoteStorage _ ->
                 Just (\_ -> OpenUrlOnNewPage "https://remotestorage.io")
@@ -127,7 +148,7 @@ methodView activeMethod method =
                 label UI.Svg.Elements.dropboxLogo
 
             Fission _ ->
-                label UI.Svg.Elements.fissionLogo
+                label UI.Svg.Elements.webnativeLogo
 
             RemoteStorage _ ->
                 label UI.Svg.Elements.remoteStorageLogo
@@ -142,7 +163,7 @@ methodView activeMethod method =
             }
 
           else
-            methodInfoAction method
+            methodInfoAction isSelected activeMethod method
         ]
     , msg =
         if isSelected then
@@ -170,19 +191,19 @@ methodView activeMethod method =
 
 
 methodLabel activeMethod method isSelected icon =
-    let
-        opacity =
-            if isSelected then
-                "opacity-100"
-
-            else if Maybe.isJust activeMethod then
-                "opacity-40"
-
-            else
-                "opacity-100"
-    in
     inline
-        [ "flex", "items-center", opacity ]
+        [ "flex", "items-center", opacity isSelected activeMethod ]
         [ inline [ "inline-block", "mr-3" ] [ Html.map never (icon 15) ]
         , Html.text (methodName method)
         ]
+
+
+opacity isSelected activeMethod =
+    if isSelected then
+        "opacity-100"
+
+    else if Maybe.isJust activeMethod then
+        "opacity-50"
+
+    else
+        "opacity-100"

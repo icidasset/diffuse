@@ -194,9 +194,6 @@ translateAlienData tag data =
         Alien.AuthEnclosedData ->
             UserMsg (User.EnclosedDataRetrieved data)
 
-        Alien.FabricateSecretKey ->
-            UserMsg User.SecretKeyFabricated
-
         Alien.SearchTracks ->
             Search data
 

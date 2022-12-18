@@ -284,6 +284,17 @@ encodeEnclosedData { cachedTracks, equalizerSettings, grouping, onlyShowCachedTr
 -- 🔱  ░░  HYPAETHRAL
 
 
+allHypaethralBits : List HypaethralBit
+allHypaethralBits =
+    [ Favourites
+    , Playlists
+    , Progress
+    , Settings
+    , Sources
+    , Tracks
+    ]
+
+
 decodeHypaethralData : Json.Value -> Result Json.Error HypaethralData
 decodeHypaethralData =
     Json.decodeValue hypaethralDataDecoder
@@ -342,25 +353,16 @@ encodeHypaethralData data =
 
 encodedHypaethralDataList : HypaethralData -> List ( HypaethralBit, Json.Value )
 encodedHypaethralDataList data =
-    [ ( Favourites, encodeHypaethralBit Favourites data )
-    , ( Playlists, encodeHypaethralBit Playlists data )
-    , ( Progress, encodeHypaethralBit Progress data )
-    , ( Settings, encodeHypaethralBit Settings data )
-    , ( Sources, encodeHypaethralBit Sources data )
-    , ( Tracks, encodeHypaethralBit Tracks data )
-    ]
+    List.map
+        (\bit -> ( bit, encodeHypaethralBit bit data ))
+        allHypaethralBits
 
 
 hypaethralBit : Enum HypaethralBit
 hypaethralBit =
-    Enum.create
-        [ ( hypaethralBitKey Favourites, Favourites )
-        , ( hypaethralBitKey Playlists, Playlists )
-        , ( hypaethralBitKey Progress, Progress )
-        , ( hypaethralBitKey Settings, Settings )
-        , ( hypaethralBitKey Sources, Sources )
-        , ( hypaethralBitKey Tracks, Tracks )
-        ]
+    allHypaethralBits
+        |> List.map (\bit -> ( hypaethralBitKey bit, bit ))
+        |> Enum.create
 
 
 hypaethralBitFileName : HypaethralBit -> String

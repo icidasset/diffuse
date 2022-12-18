@@ -12,9 +12,6 @@ import Sources.Processing exposing (ContextForTags, ContextForTagsSync)
 port downloadTracks : Json.Value -> Cmd msg
 
 
-port fabricateSecretKey : Alien.Event -> Cmd msg
-
-
 port removeCache : Alien.Event -> Cmd msg
 
 

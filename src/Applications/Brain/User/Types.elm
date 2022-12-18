@@ -44,9 +44,7 @@ type Msg
       -----------------------------------------
       -- Encryption
       -----------------------------------------
-    | FabricateSecretKey String
     | RemoveEncryptionKey
-    | SecretKeyFabricated
     | UpdateEncryptionKey Json.Value
       -----------------------------------------
       -- 📭 Other

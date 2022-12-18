@@ -27,6 +27,7 @@ TaskPort.install()
 
 
 TaskPort.register("fromCache", fromCache)
+TaskPort.register("removeCache", removeCache)
 TaskPort.register("toCache", ({ key, value }) => toCache(key, value))
 
 

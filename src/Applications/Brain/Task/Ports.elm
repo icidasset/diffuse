@@ -30,6 +30,16 @@ fromCacheWithSuffix tag suffix decoder =
         (Alien.tagToString tag ++ "_" ++ suffix)
 
 
+removeCache : Alien.Tag -> TaskPort.Task ()
+removeCache tag =
+    TaskPort.call
+        { function = "removeCache"
+        , valueDecoder = TaskPort.ignoreValue
+        , argsEncoder = Json.Encode.string
+        }
+        (Alien.tagToString tag)
+
+
 toCache : Alien.Tag -> Json.Encode.Value -> TaskPort.Task ()
 toCache tag =
     let

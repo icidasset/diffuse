@@ -31,7 +31,6 @@ type Tag
     | AuthIpfs
     | AuthRemoteStorage
     | AuthSecretKey
-    | FabricateSecretKey
     | SearchTracks
     | SyncLocal
     | SyncMethod
@@ -89,7 +88,6 @@ enum =
         , ( "AUTH_IPFS", AuthIpfs )
         , ( "AUTH_REMOTE_STORAGE", AuthRemoteStorage )
         , ( "AUTH_SECRET_KEY", AuthSecretKey )
-        , ( "FABRICATE_SECRET_KEY", FabricateSecretKey )
         , ( "SEARCH_TRACKS", SearchTracks )
         , ( "SYNC_LOCAL", SyncLocal )
         , ( "SYNC_METHOD", SyncMethod )

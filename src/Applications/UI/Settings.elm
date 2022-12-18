@@ -22,7 +22,6 @@ import UI.Settings.Data
 import UI.Settings.Page as Settings exposing (..)
 import UI.Settings.Sync
 import UI.Sources.Types as Sources
-import UI.Syncing.Types as Syncing
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (Msg(..))
 import User.Layer exposing (Method(..))
@@ -52,7 +51,7 @@ view : Settings.Page -> Dependencies -> Html Msg
 view page deps =
     case page of
         Data ->
-            UI.Settings.Data.view
+            UI.Settings.Data.view deps.syncMethod
 
         Index ->
             UI.Kit.receptacle { scrolling = True } (index deps)
@@ -320,27 +319,6 @@ label l =
     chunk
         [ "mb-3", "mt-6", "pb-px" ]
         [ UI.Kit.label [] l ]
-
-
-
--- AUTHENTICATION
-
-
-changePassphrase : User.Layer.Method -> Html Msg
-changePassphrase method =
-    inline
-        []
-        [ lineBreak
-        , text "If you want to, you can "
-        , UI.Kit.textButton
-            { label = "change your passphrase"
-            , onClick =
-                method
-                    |> Syncing.ShowUpdateEncryptionKeyScreen
-                    |> SyncingMsg
-            }
-        , text "."
-        ]
 
 
 

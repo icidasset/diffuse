@@ -18,7 +18,7 @@ import Settings
 import Sources.Encoding as Sources
 import Syncing
 import Syncing.Services.Dropbox.Token
-import Task
+import Task exposing (Task)
 import Task.Extra as Task exposing (do)
 import TaskPort.Extra as TaskPort
 import Time
@@ -118,15 +118,6 @@ update msg =
 
         UnsetSyncMethod ->
             unsetSyncMethod
-
-        -----------------------------------------
-        -- 0. Secret Key
-        -----------------------------------------
-        FabricateSecretKey a ->
-            fabricateSecretKey a
-
-        SecretKeyFabricated ->
-            secretKeyFabricated
 
         -----------------------------------------
         -- x. Data
@@ -406,6 +397,43 @@ gotHypaethralData hypaethralData model =
         |> andThen finishedSyncing
 
 
+saveAllHypaethralDataTask : HypaethralData -> Method -> Task String ()
+saveAllHypaethralDataTask userData method =
+    let
+        save =
+            saveHypaethralDataBitsTask User.allHypaethralBits userData
+    in
+    case method of
+        Dropbox { accessToken } ->
+            save (Hypaethral.saveDropbox accessToken)
+
+        Fission _ ->
+            save Hypaethral.saveFission
+
+        Ipfs { apiOrigin } ->
+            save (Hypaethral.saveIpfs apiOrigin)
+
+        RemoteStorage a ->
+            save (Hypaethral.saveRemoteStorage a)
+
+
+saveHypaethralDataBitsTask : List HypaethralBit -> HypaethralData -> (HypaethralBit -> Json.Value -> Task String ()) -> Task String ()
+saveHypaethralDataBitsTask bits userData saveFn =
+    bits
+        |> List.map
+            (\bit ->
+                let
+                    value =
+                        encodeHypaethralBit bit userData
+                in
+                Task.andThen
+                    (\_ -> saveFn bit value)
+                    (Hypaethral.saveLocal bit value)
+            )
+        |> Task.sequence
+        |> Task.map (always ())
+
+
 {-| Save different parts of hypaethral data,
 one part at a time.
 -}
@@ -422,18 +450,8 @@ saveHypaethralDataBits bits model =
             { model | hypaethralUserData = updatedUserData }
 
         save saveFn =
-            bits
-                |> List.map
-                    (\bit ->
-                        let
-                            value =
-                                encodeHypaethralBit bit updatedUserData
-                        in
-                        Task.andThen
-                            (\_ -> saveFn bit value)
-                            (Hypaethral.saveLocal bit value)
-                    )
-                |> Task.sequence
+            saveFn
+                |> saveHypaethralDataBitsTask bits updatedUserData
                 |> Common.attemptTask (always Brain.Bypass)
                 |> return updatedModel
     in
@@ -624,52 +642,45 @@ saveMethod method model =
 -- 🔱  ░░  SECRET KEY
 
 
-fabricateSecretKey : String -> Manager
-fabricateSecretKey passphrase =
-    passphrase
-        |> Json.string
-        |> Alien.broadcast Alien.FabricateSecretKey
-        |> Ports.fabricateSecretKey
-        |> Return.communicate
-
-
 removeEncryptionKey : Manager
-removeEncryptionKey =
-    [ Alien.AuthSecretKey
-        |> Alien.trigger
-        |> Ports.removeCache
+removeEncryptionKey model =
+    Alien.AuthSecretKey
+        |> Brain.Task.Ports.removeCache
+        |> Task.mapError TaskPort.errorToStringCustom
+        |> Task.andThen
+            (\_ ->
+                case model.userSyncMethod of
+                    Just method ->
+                        saveAllHypaethralDataTask model.hypaethralUserData method
 
-    -- TODO:
-    -- , SaveAllHypaethralData
-    --     |> UserMsg
-    --     |> do
-    ]
-        |> Cmd.batch
-        |> Return.communicate
-
-
-secretKeyFabricated : Manager
-secretKeyFabricated model =
-    -- if model.performingSignIn then
-    --     retrieveAllHypaethralData model
-    --
-    -- else
-    --     saveAllHypaethralData model
-    -- TODO:
-    sync { initialTask = Nothing } model
+                    Nothing ->
+                        Task.succeed ()
+            )
+        |> Common.attemptTask (always Brain.Bypass)
+        |> return model
 
 
 updateEncryptionKey : Json.Value -> Manager
-updateEncryptionKey json =
+updateEncryptionKey json model =
     case Decode.decodeValue Decode.string json of
         Ok passphrase ->
-            -- TODO: update with task
-            -- 1. fabricateSecretKey passphrase
-            -- 2. saveAllHypaethralData model
-            Return.singleton
+            passphrase
+                |> Brain.Task.Ports.fabricateSecretKey
+                |> Task.mapError TaskPort.errorToStringCustom
+                |> Task.andThen
+                    (\_ ->
+                        case model.userSyncMethod of
+                            Just method ->
+                                saveAllHypaethralDataTask model.hypaethralUserData method
+
+                            Nothing ->
+                                Task.succeed ()
+                    )
+                |> Common.attemptTask (always Brain.Bypass)
+                |> return model
 
         Err _ ->
-            Return.singleton
+            Return.singleton model
 
 
 
