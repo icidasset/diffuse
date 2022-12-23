@@ -71,22 +71,39 @@ function initialise() {
 
 
 async function forwardCompatibility() {
-  const secretKey = await fromCache("AUTH_SECRET_KEY")
-  if (secretKey) {
-    await toCache("SECRET_KEY", secretKey)
-    await removeCache("AUTH_SECRET_KEY")
-  }
+  // TODO: Future, check version to migrate
+  if (await fromCache("MIGRATED")) return
+
+  await moveOldDbValue({ oldName: "AUTH_SECRET_KEY", newName: "SECRET_KEY" })
+  await moveOldDbValue({ oldName: "AUTH_ENCLOSED_DATA", newName: "ENCLOSED_DATA" })
 
   const method = await fromCache("AUTH_METHOD")
-  if (method) {
+
+  if (method === "LOCAL") {
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_favourites.json", newName: "SYNC_LOCAL_favourites.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_playlists.json", newName: "SYNC_LOCAL_playlists.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_progress.json", newName: "SYNC_LOCAL_progress.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_settings.json", newName: "SYNC_LOCAL_settings.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_sources.json", newName: "SYNC_LOCAL_sources.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_tracks.json", newName: "SYNC_LOCAL_tracks.json", parseJSON: true })
+
+    await removeCache("AUTH_METHOD")
+
+  } else if (method) {
     await toCache("SYNC_METHOD", method)
     await removeCache("AUTH_METHOD")
+
   }
 
-  const enclosedData = await fromCache("AUTH_ENCLOSED_DATA")
-  if (enclosedData) {
-    await toCache("ENCLOSED_DATA", enclosedData)
-    await removeCache("AUTH_ENCLOSED_DATA")
+  await toCache("MIGRATED", "3.3.0")
+}
+
+
+async function moveOldDbValue({ oldName, newName, parseJSON }) {
+  const value = await fromCache(oldName)
+  if (value) {
+    await toCache(newName, parseJSON ? JSON.parse(value) : value)
+    await removeCache(oldName)
   }
 }
 
