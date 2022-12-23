@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.0
+
+- **Removes the need to pick a user-data-storage service upfront.** You can now use the app immediately without having to sign in first.
+- Fixes authentication issue with RemoteStorage
+
+
 ## 3.2.0
 
 - **Native builds with [Tauri](https://tauri.app/)**.
