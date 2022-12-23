@@ -191,7 +191,7 @@ alien event =
 translateAlienData : Alien.Tag -> Json.Value -> Msg
 translateAlienData tag data =
     case tag of
-        Alien.AuthEnclosedData ->
+        Alien.EnclosedData ->
             UserMsg (User.EnclosedDataRetrieved data)
 
         Alien.SearchTracks ->

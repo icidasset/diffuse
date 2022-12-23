@@ -43,6 +43,7 @@ reloadApp model =
 setIsOnline : Bool -> Manager
 setIsOnline bool model =
     -- TODO:
+    -- SYNC
     -- if bool then
     --     -- We're caching the user's data in the browser while offline.
     --     -- If we're back online again, sync all the user's data.

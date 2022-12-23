@@ -23,6 +23,10 @@ importScripts("subworkers.js")
 // 🍱
 
 
+let app
+let wire = {}
+
+
 TaskPort.install()
 
 
@@ -44,28 +48,63 @@ const flags = location
   }, {})
 
 
-const app = Elm.Brain.init({
-  flags: {
-    initialUrl: decodeURIComponent(flags.appHref) || ""
+backwardsCompatibility().then(initialise)
+
+
+function initialise() {
+  app = Elm.Brain.init({
+    flags: {
+      initialUrl: decodeURIComponent(flags.appHref) || ""
+    }
+  })
+
+  user.setupPorts(app)
+
+  wire.ui()
+  wire.caching()
+  wire.artworkCaching()
+  wire.tracksCaching()
+  wire.downloading()
+  wire.search()
+  wire.tags()
+}
+
+
+async function backwardsCompatibility() {
+  const secretKey = await fromCache("AUTH_SECRET_KEY")
+  if (secretKey) {
+    await toCache("SECRET_KEY", secretKey)
+    await removeCache("AUTH_SECRET_KEY")
   }
-})
 
+  const method = await fromCache("AUTH_METHOD")
+  if (method) {
+    await toCache("SYNC_METHOD", method)
+    await removeCache("AUTH_METHOD")
+  }
 
-user.setupPorts(app)
+  const enclosedData = await fromCache("AUTH_ENCLOSED_DATA")
+  if (enclosedData) {
+    await toCache("ENCLOSED_DATA", enclosedData)
+    await removeCache("AUTH_ENCLOSED_DATA")
+  }
+}
 
 
 
 // UI
 // ==
 
-app.ports.toUI.subscribe(event => {
-  self.postMessage(event)
-})
+wire.ui = () => {
+  app.ports.toUI.subscribe(event => {
+    self.postMessage(event)
+  })
 
 
-self.onmessage = event => {
-  if (event.data.action) return handleAction(event.data.action, event.data.data)
-  if (event.data.tag) return app.ports.fromAlien.send(event.data)
+  self.onmessage = event => {
+    if (event.data.action) return handleAction(event.data.action, event.data.data)
+    if (event.data.tag) return app.ports.fromAlien.send(event.data)
+  }
 }
 
 
@@ -80,31 +119,31 @@ function handleAction(action, data) {
 // Cache
 // -----
 
-app.ports.removeCache.subscribe(event => {
-  removeCache(event.tag)
-    .catch(reportError(app, event))
-})
+wire.caching = () => {
+  app.ports.removeCache.subscribe(event => {
+    removeCache(event.tag)
+      .catch(reportError(app, event))
+  })
 
+  app.ports.requestCache.subscribe(event => {
+    const key = event.data && event.data.file
+      ? event.tag + "_" + event.data.file
+      : event.tag
 
-app.ports.requestCache.subscribe(event => {
-  const key = event.data && event.data.file
-    ? event.tag + "_" + event.data.file
-    : event.tag
+    fromCache(key)
+      .then(sendData(app, event))
+      .catch(reportError(app, event))
+  })
 
-  fromCache(key)
-    .then(sendData(app, event))
-    .catch(reportError(app, event))
-})
+  app.ports.toCache.subscribe(event => {
+    const key = event.data && event.data.file
+      ? event.tag + "_" + event.data.file
+      : event.tag
 
-
-app.ports.toCache.subscribe(event => {
-  const key = event.data && event.data.file
-    ? event.tag + "_" + event.data.file
-    : event.tag
-
-  toCache(key, event.data.data || event.data)
-    .catch(reportError(app, event))
-})
+    toCache(key, event.data.data || event.data)
+      .catch(reportError(app, event))
+  })
+}
 
 
 
@@ -112,6 +151,11 @@ app.ports.toCache.subscribe(event => {
 // ---------------
 
 let artworkQueue = []
+
+
+wire.artworkCaching = () => {
+  app.ports.provideArtworkTrackUrls.subscribe(provideArtworkTrackUrls)
+}
 
 
 function downloadArtwork(list) {
@@ -135,7 +179,7 @@ function shiftArtworkQueue() {
 }
 
 
-app.ports.provideArtworkTrackUrls.subscribe(prep => {
+function provideArtworkTrackUrls(prep) {
   artwork
     .find(prep, app)
     .then(blob => {
@@ -162,14 +206,20 @@ app.ports.provideArtworkTrackUrls.subscribe(prep => {
       }
     })
     .finally(shiftArtworkQueue)
-})
+}
 
 
 
 // Cache (Tracks)
 // --------------
 
-app.ports.removeTracksFromCache.subscribe(trackIds => {
+wire.tracksCaching = () => {
+  app.ports.removeTracksFromCache.subscribe(removeTracksFromCache)
+  app.ports.storeTracksInCache.subscribe(storeTracksInCache)
+}
+
+
+function removeTracksFromCache(trackIds) {
   trackIds.reduce(
     (acc, id) => acc.then(_ => db.deleteFromIndex({ key: id, store: db.storeNames.tracks })),
     Promise.resolve()
@@ -180,10 +230,10 @@ app.ports.removeTracksFromCache.subscribe(trackIds => {
       ("Failed to remove tracks from cache")
 
   )
-})
+}
 
 
-app.ports.storeTracksInCache.subscribe(list => {
+function storeTracksInCache(list) {
   list.reduce(
     (acc, item) => {
       return acc
@@ -212,19 +262,21 @@ app.ports.storeTracksInCache.subscribe(list => {
     }
 
   )
-})
+}
 
 
 
 // Downloading
 // -----------
 
-app.ports.downloadTracks.subscribe(group => {
-  self.postMessage({
-    action: "DOWNLOAD_TRACKS",
-    data: group
+wire.downloading = () => {
+  app.ports.downloadTracks.subscribe(group => {
+    self.postMessage({
+      action: "DOWNLOAD_TRACKS",
+      data: group
+    })
   })
-})
+}
 
 
 
@@ -234,20 +286,26 @@ app.ports.downloadTracks.subscribe(group => {
 const search = new Worker("search.js")
 
 
-app.ports.requestSearch.subscribe(searchTerm => {
+wire.search = () => {
+  app.ports.requestSearch.subscribe(requestSearch)
+  app.ports.updateSearchIndex.subscribe(updateSearchIndex)
+}
+
+
+function requestSearch(searchTerm) {
   search.postMessage({
     action: "PERFORM_SEARCH",
     data: searchTerm
   })
-})
+}
 
 
-app.ports.updateSearchIndex.subscribe(tracksJson => {
+function updateSearchIndex(tracksJson) {
   search.postMessage({
     action: "UPDATE_SEARCH_INDEX",
     data: tracksJson
   })
-})
+}
 
 
 search.onmessage = event => {
@@ -263,15 +321,16 @@ search.onmessage = event => {
 // Tags
 // ----
 
-app.ports.requestTags.subscribe(context => {
-  processing.processContext(context, app).then(newContext => {
-    app.ports.receiveTags.send(newContext)
+wire.tags = () => {
+  app.ports.requestTags.subscribe(context => {
+    processing.processContext(context, app).then(newContext => {
+      app.ports.receiveTags.send(newContext)
+    })
   })
-})
 
-
-app.ports.syncTags.subscribe(context => {
-  processing.processContext(context, app).then(newContext => {
-    app.ports.replaceTags.send(newContext)
+  app.ports.syncTags.subscribe(context => {
+    processing.processContext(context, app).then(newContext => {
+      app.ports.replaceTags.send(newContext)
+    })
   })
-})
+}

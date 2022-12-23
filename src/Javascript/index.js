@@ -931,10 +931,6 @@ wire.webnative = () => {
     // Webnative should collect the capabilities for us,
     // if everything is valid, we'll receive a session.
     const program = await webnativeProgram()
-
-    console.log(program)
-    console.log(program.session)
-
     app.ports.collectedFissionCapabilities.send(null)
   })
 }

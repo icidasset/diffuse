@@ -522,7 +522,7 @@ cloud/distributed storage service you use.
                                     UI.Kit.Gray
                                     UI.Kit.Filled
                                     (SyncingMsg Syncing.StopSync)
-                                    (text <| "Stop syncing with " ++ User.methodName method)
+                                    (text "Stop syncing")
 
                             Nothing ->
                                 UI.Kit.buttonWithOptions

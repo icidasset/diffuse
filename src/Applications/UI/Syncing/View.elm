@@ -8,6 +8,7 @@ import Html.Events as E exposing (onSubmit)
 import Html.Events.Extra exposing (onClickStopPropagation)
 import Html.Extra as Html
 import Html.Lazy as Lazy
+import Json.Decode
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Svg
@@ -39,7 +40,8 @@ view_ state =
             UI.Kit.receptacle
                 { scrolling = False }
                 [ encryptionKeyScreen
-                    { withEncryption = ActivateSyncWithPassphrase method (Maybe.withDefault "" pass)
+                    { ableToCancel = False
+                    , withEncryption = ActivateSyncWithPassphrase method (Maybe.withDefault "" pass)
                     , withoutEncryption = ActivateSync method
                     }
                 ]
@@ -48,7 +50,8 @@ view_ state =
             UI.Kit.receptacle
                 { scrolling = False }
                 [ encryptionKeyScreen
-                    { withEncryption = UpdateEncryptionKey method (Maybe.withDefault "" pass)
+                    { ableToCancel = True
+                    , withEncryption = UpdateEncryptionKey method (Maybe.withDefault "" pass)
                     , withoutEncryption = RemoveEncryptionKey method
                     }
                 ]
@@ -61,8 +64,8 @@ view_ state =
 -- ENCRYPTION KEY
 
 
-encryptionKeyScreen : { withEncryption : Syncing.Msg, withoutEncryption : Syncing.Msg } -> Html Syncing.Msg
-encryptionKeyScreen { withEncryption, withoutEncryption } =
+encryptionKeyScreen : { ableToCancel : Bool, withEncryption : Syncing.Msg, withoutEncryption : Syncing.Msg } -> Html Syncing.Msg
+encryptionKeyScreen { ableToCancel, withEncryption, withoutEncryption } =
     UI.Kit.focusScreen
         { icon = Icons.lock
         , iconHref = Nothing
@@ -98,10 +101,34 @@ encryptionKeyScreen { withEncryption, withoutEncryption } =
                 , A.class "shadow"
                 , E.onInput KeepPassphraseInMemory
                 ]
-            , UI.Kit.button
-                UI.Kit.Filled
-                Syncing.Bypass
-                (text "Continue")
+            , chunk
+                [ "flex"
+                , "items-stretch"
+                , "space-x-2.5"
+                ]
+                [ UI.Kit.buttonWithOptions
+                    Html.button
+                    [ A.class "flex-1" ]
+                    UI.Kit.Gray
+                    UI.Kit.Filled
+                    (Just Syncing.Bypass)
+                    (text "Continue")
+
+                --
+                , if ableToCancel then
+                    UI.Kit.buttonWithOptions
+                        Html.button
+                        [ A.class "flex-1"
+                        , E.stopPropagationOn "click" (Json.Decode.succeed ( CancelInput, True ))
+                        ]
+                        UI.Kit.Gray
+                        UI.Kit.Normal
+                        Nothing
+                        (text "Cancel")
+
+                  else
+                    nothing
+                ]
             , brick
                 [ onClickStopPropagation withoutEncryption ]
                 [ "cursor-pointer"

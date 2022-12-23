@@ -197,11 +197,14 @@ update msg =
         AskForInput a b ->
             askForInput a b
 
-        Input a ->
-            input a
+        CancelInput ->
+            cancelInput
 
         ConfirmInput ->
             confirmInput
+
+        Input a ->
+            input a
 
 
 organize : Organizer Syncing.State -> Manager
@@ -568,18 +571,20 @@ askForInput method question =
         |> replaceState
 
 
-input : String -> Manager
-input string model =
-    (\state ->
-        case state of
-            InputScreen method opts ->
-                InputScreen method { opts | value = string }
+cancelInput : Manager
+cancelInput model =
+    case lens.get model of
+        InputScreen _ _ ->
+            replaceState NotSynced model
 
-            s ->
-                s
-    )
-        |> Lens.adjust lens model
-        |> Return.singleton
+        NewEncryptionKeyScreen _ _ ->
+            replaceState NotSynced model
+
+        UpdateEncryptionKeyScreen method _ ->
+            replaceState (Synced method) model
+
+        m ->
+            replaceState m model
 
 
 confirmInput : Manager
@@ -593,6 +598,20 @@ confirmInput model =
 
         _ ->
             Return.singleton model
+
+
+input : String -> Manager
+input string model =
+    (\state ->
+        case state of
+            InputScreen method opts ->
+                InputScreen method { opts | value = string }
+
+            s ->
+                s
+    )
+        |> Lens.adjust lens model
+        |> Return.singleton
 
 
 

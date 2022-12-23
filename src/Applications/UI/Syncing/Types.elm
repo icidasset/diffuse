@@ -68,5 +68,6 @@ type Msg
       -- More Input
       -----------------------------------------
     | AskForInput Method Question
-    | Input String
+    | CancelInput
     | ConfirmInput
+    | Input String

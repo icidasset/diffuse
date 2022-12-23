@@ -7,20 +7,10 @@ import * as crypto from "../crypto"
 import * as db from "../indexed-db"
 
 
-export const SECRET_KEY_LOCATION = "AUTH_SECRET_KEY"
+export const SECRET_KEY_LOCATION = "SECRET_KEY"
 
 
 // 🔱
-
-
-export function isAuthMethodService(eventTag) {
-  return (
-    eventTag.startsWith("AUTH_") &&
-    eventTag !== "AUTH_ENCLOSED_DATA" &&
-    eventTag !== "AUTH_METHOD" &&
-    eventTag !== "AUTH_SECRET_KEY"
-  )
-}
 
 
 export function isLocalHost(url) {
@@ -73,26 +63,12 @@ export function removeCache(key) {
 
 
 export function fromCache(key) {
-  return isAuthMethodService(key)
-    ? db.getFromIndex({ key: key })
-      .then(decryptIfNeeded)
-      .then(d => typeof d === "string" ? JSON.parse(d) : d)
-      .then(a => a === undefined ? null : a)
-    : db.getFromIndex({ key: key })
+  return db.getFromIndex({ key: key })
 }
 
 
 export function toCache(key, data) {
-  if (isAuthMethodService(key)) {
-    const json = JSON.stringify(data)
-
-    return encryptIfPossible(json)
-      .then(encryptedData => db.setInIndex({ key: key, data: encryptedData }))
-
-  } else {
-    return db.setInIndex({ key: key, data: data })
-
-  }
+  return db.setInIndex({ key: key, data: data })
 }
 
 

@@ -24,14 +24,9 @@ type alias Event =
 
 
 type Tag
-    = AuthAnonymous
-    | AuthDropbox
-    | AuthFission
-    | AuthEnclosedData
-    | AuthIpfs
-    | AuthRemoteStorage
-    | AuthSecretKey
+    = EnclosedData
     | SearchTracks
+    | SecretKey
     | SyncLocal
     | SyncMethod
       -----------------------------------------
@@ -81,14 +76,9 @@ type Tag
 enum : Enum Tag
 enum =
     Enum.create
-        [ ( "AUTH_ANONYMOUS", AuthAnonymous )
-        , ( "AUTH_DROPBOX", AuthDropbox )
-        , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
-        , ( "AUTH_FISSION", AuthFission )
-        , ( "AUTH_IPFS", AuthIpfs )
-        , ( "AUTH_REMOTE_STORAGE", AuthRemoteStorage )
-        , ( "AUTH_SECRET_KEY", AuthSecretKey )
+        [ ( "ENCLOSED_DATA", EnclosedData )
         , ( "SEARCH_TRACKS", SearchTracks )
+        , ( "SECRET_KEY", SecretKey )
         , ( "SYNC_LOCAL", SyncLocal )
         , ( "SYNC_METHOD", SyncMethod )
 

@@ -114,12 +114,7 @@ async function constructFission() {
   })
 
   session = program.session
-
-  console.log(session)
-
   session.fs = await program.loadFileSystem(session.username)
-
-  console.log(session.fs)
 
   if (!session) throw new Error("Failed to load Webnative session")
   if (!session.fs) throw new Error("Did not load Webnative file system")

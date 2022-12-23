@@ -683,18 +683,6 @@ translateAlienData tag data =
 translateAlienError : Alien.Tag -> Json.Value -> String -> Msg
 translateAlienError tag data err =
     case tag of
-        Alien.AuthAnonymous ->
-            SyncingMsg (Syncing.BootFailure err)
-
-        Alien.AuthDropbox ->
-            SyncingMsg (Syncing.BootFailure err)
-
-        Alien.AuthIpfs ->
-            SyncingMsg (Syncing.BootFailure err)
-
-        Alien.AuthRemoteStorage ->
-            SyncingMsg (Syncing.BootFailure err)
-
         Alien.StoreTracksInCache ->
             TracksMsg (Tracks.StoredInCache data <| Just err)
 

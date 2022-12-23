@@ -52,7 +52,7 @@ initialCommand uiUrl =
 loadEnclosedData : Cmd Brain.Msg
 loadEnclosedData =
     Decode.value
-        |> Brain.Task.Ports.fromCache Alien.AuthEnclosedData
+        |> Brain.Task.Ports.fromCache Alien.EnclosedData
         |> Task.map (Maybe.withDefault Json.null)
         |> Common.attemptPortTask (Common.giveUICmdMsg Alien.LoadEnclosedUserData)
 
@@ -328,7 +328,7 @@ unsetSyncMethod model =
     -- 💀
     -- Unset & remove stored method.
     [ Ports.removeCache (Alien.trigger Alien.SyncMethod)
-    , Ports.removeCache (Alien.trigger Alien.AuthSecretKey)
+    , Ports.removeCache (Alien.trigger Alien.SecretKey)
 
     --
     , case model.userSyncMethod of
@@ -362,7 +362,7 @@ enclosedDataRetrieved json =
 
 retrieveEnclosedData : Manager
 retrieveEnclosedData =
-    Alien.AuthEnclosedData
+    Alien.EnclosedData
         |> Alien.trigger
         |> Ports.requestCache
         |> Return.communicate
@@ -371,7 +371,7 @@ retrieveEnclosedData =
 saveEnclosedData : Json.Value -> Manager
 saveEnclosedData json =
     json
-        |> Alien.broadcast Alien.AuthEnclosedData
+        |> Alien.broadcast Alien.EnclosedData
         |> Ports.toCache
         |> Return.communicate
 
@@ -644,7 +644,7 @@ saveMethod method model =
 
 removeEncryptionKey : Manager
 removeEncryptionKey model =
-    Alien.AuthSecretKey
+    Alien.SecretKey
         |> Brain.Task.Ports.removeCache
         |> Task.mapError TaskPort.errorToStringCustom
         |> Task.andThen
