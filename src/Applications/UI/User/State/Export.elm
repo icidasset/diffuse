@@ -8,6 +8,7 @@ import Playlists.Encoding as Playlists
 import Return exposing (return)
 import Settings exposing (Settings)
 import Sources.Encoding as Sources
+import Time
 import Tracks.Encoding as Tracks
 import UI.Ports as Ports
 import UI.Types exposing (..)
@@ -25,6 +26,9 @@ export model =
     , settings = Just (gatherSettings model)
     , sources = model.sources
     , tracks = model.tracks.untouched
+
+    --
+    , modifiedAt = Just model.currentTime
     }
         |> encodeHypaethralData
         |> Json.Encode.encode 2

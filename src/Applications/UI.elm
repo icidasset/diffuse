@@ -22,8 +22,6 @@ import Tracks
 import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
-import UI.Authentication.State as Authentication
-import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
 import UI.DnD as DnD
@@ -40,15 +38,17 @@ import UI.Services.State as Services
 import UI.Sources.Form
 import UI.Sources.State as Sources
 import UI.Sources.Types as Sources
+import UI.Syncing.State as Syncing
+import UI.Syncing.Types as Syncing
 import UI.Tracks.State as Tracks
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (..)
-import UI.User.State as User
 import UI.User.State.Export as User
 import UI.User.State.Import as User
 import UI.View exposing (view)
 import Url exposing (Url)
 import Url.Ext as Url
+import User.Layer as User
 
 
 
@@ -104,7 +104,6 @@ init flags url key =
     , isTouchDevice = False
     , isUpgrading = flags.upgrade
     , lastFm = LastFm.initialModel
-    , migratingData = False
     , navKey = key
     , page = page
     , pressedKeys = []
@@ -217,14 +216,14 @@ init flags url key =
     -----------------------------------------
     -- 🦉 Nested
     -----------------------------------------
-    , authentication = Authentication.initialModel url
+    , syncing = Syncing.initialModel url
     }
         |> Routing.transition
             page
         |> Return.command
             (url
-                |> Authentication.initialCommand
-                |> Cmd.map AuthenticationMsg
+                |> Syncing.initialCommand
+                |> Cmd.map SyncingMsg
             )
         |> Return.command
             (if Maybe.isNothing maybePage then
@@ -473,17 +472,11 @@ update msg =
         Export ->
             User.export
 
-        GotWebnativeResponse a ->
-            User.gotWebnativeResponse a
-
         ImportFile a ->
             User.importFile a
 
         ImportJson a ->
             User.importJson a
-
-        ImportLegacyData ->
-            User.importLegacyData
 
         InsertDemo ->
             User.insertDemo
@@ -493,9 +486,6 @@ update msg =
 
         LoadHypaethralUserData a ->
             User.loadHypaethralUserData a
-
-        MigrateHypaethralUserData ->
-            User.migrateHypaethralUserData
 
         RequestImport ->
             User.requestImport
@@ -512,8 +502,8 @@ update msg =
         -----------------------------------------
         -- 🦉 Nested
         -----------------------------------------
-        AuthenticationMsg a ->
-            Authentication.update a
+        SyncingMsg a ->
+            Syncing.update a
 
         QueueMsg a ->
             Queue.update a
@@ -608,11 +598,11 @@ subscriptions _ =
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
+        , Ports.collectedFissionCapabilities (\_ -> SyncingMsg <| Syncing.ActivateSync <| User.Fission {})
         , Ports.installedNewServiceWorker (\_ -> InstalledServiceWorker)
         , Ports.installingNewServiceWorker (\_ -> InstallingServiceWorker)
         , Ports.refreshedAccessToken (Alien.broadcast Alien.RefreshedAccessToken >> RedirectToBrain)
         , Ports.setIsOnline SetIsOnline
-        , Ports.webnativeResponse GotWebnativeResponse
         , Sub.map KeyboardMsg Keyboard.subscriptions
         , Time.every (60 * 1000) SetCurrentTime
         ]
@@ -641,9 +631,6 @@ translateAlienData tag data =
         Alien.AddTracks ->
             TracksMsg (Tracks.Add data)
 
-        Alien.AuthMethod ->
-            AuthenticationMsg (Authentication.SignedIn data)
-
         Alien.FinishedProcessingSource ->
             SourcesMsg (Sources.FinishedProcessingSource data)
 
@@ -656,20 +643,11 @@ translateAlienData tag data =
         Alien.HideLoadingScreen ->
             ToggleLoadingScreen Off
 
-        Alien.ImportLegacyData ->
-            ShowNotification (Notifications.success "Imported data successfully!")
-
         Alien.LoadEnclosedUserData ->
             LoadEnclosedUserData data
 
         Alien.LoadHypaethralUserData ->
             LoadHypaethralUserData data
-
-        Alien.MissingSecretKey ->
-            AuthenticationMsg (Authentication.MissingSecretKey data)
-
-        Alien.NotAuthenticated ->
-            AuthenticationMsg Authentication.NotAuthenticated
 
         Alien.ReloadTracks ->
             TracksMsg (Tracks.Reload data)
@@ -686,8 +664,14 @@ translateAlienData tag data =
         Alien.SearchTracks ->
             TracksMsg (Tracks.SetSearchResults data)
 
+        Alien.StartedSyncing ->
+            SyncingMsg (Syncing.StartedSyncing data)
+
         Alien.StoreTracksInCache ->
             TracksMsg (Tracks.StoredInCache data Nothing)
+
+        Alien.SyncMethod ->
+            SyncingMsg (Syncing.GotSyncMethod data)
 
         Alien.UpdateSourceData ->
             SourcesMsg (Sources.UpdateSourceData data)
@@ -699,20 +683,12 @@ translateAlienData tag data =
 translateAlienError : Alien.Tag -> Json.Value -> String -> Msg
 translateAlienError tag data err =
     case tag of
-        Alien.AuthAnonymous ->
-            AuthenticationMsg (Authentication.BootFailure err)
-
-        Alien.AuthDropbox ->
-            AuthenticationMsg (Authentication.BootFailure err)
-
-        Alien.AuthIpfs ->
-            AuthenticationMsg (Authentication.BootFailure err)
-
-        Alien.AuthRemoteStorage ->
-            AuthenticationMsg (Authentication.BootFailure err)
-
         Alien.StoreTracksInCache ->
             TracksMsg (Tracks.StoredInCache data <| Just err)
 
         _ ->
-            ShowNotification (Notifications.stickyError err)
+            if String.startsWith "There seems to be existing data that's encrypted, I will need the passphrase" err then
+                SyncingMsg (Syncing.NeedEncryptionKey { error = err })
+
+            else
+                ShowNotification (Notifications.stickyError err)

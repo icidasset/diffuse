@@ -37,6 +37,9 @@ queryDictionary url =
                     [ k, v ] ->
                         Just ( k, v )
 
+                    k :: v ->
+                        Just ( k, String.join "=" v )
+
                     _ ->
                         Nothing
             )

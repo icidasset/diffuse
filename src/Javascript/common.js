@@ -3,15 +3,16 @@
 // ʕ•ᴥ•ʔ
 
 
-export const WEBNATIVE_STAGING_MODE = (
-  location.host === "localhost:8000"
-)
+export const APP_INFO = {
+  creator: "icidasset",
+  name: "Diffuse"
+}
 
 
-export const WEBNATIVE_STAGING_ENV = {
-  api: "https://runfission.net",
-  lobby: "https://auth.runfission.net",
-  user: "fissionuser.net"
+export const WEBNATIVE_CONFIG = {
+  namespace: APP_INFO,
+  permissions: { app: APP_INFO },
+  debug: true,
 }
 
 

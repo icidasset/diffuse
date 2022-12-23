@@ -1,8 +1,11 @@
-module UI.Authentication.Types exposing (Msg(..), Question, State(..))
+module UI.Syncing.Types exposing (Msg(..), Question, State(..))
 
+import Html exposing (Html)
 import Html.Events.Extra.Mouse as Mouse
 import Http
 import Json.Decode as Json
+import Material.Icons.Types exposing (Coloring)
+import Svg exposing (Svg)
 import User.Layer exposing (Method)
 import User.Layer.Methods.Dropbox as Dropbox
 import User.Layer.Methods.RemoteStorage as RemoteStorage
@@ -13,18 +16,18 @@ import User.Layer.Methods.RemoteStorage as RemoteStorage
 
 
 type State
-    = Authenticated Method
-    | Authenticating
+    = NotSynced
+    | Synced Method
+    | Syncing { method : Method, notificationId : Int }
     | InputScreen Method Question
     | NewEncryptionKeyScreen Method (Maybe String)
     | UpdateEncryptionKeyScreen Method (Maybe String)
-    | Unauthenticated
-    | Welcome
 
 
 type alias Question =
-    { placeholder : String
-    , question : String
+    { icon : Int -> Coloring -> Svg Msg
+    , placeholder : String
+    , question : Html Msg
     , value : String
     }
 
@@ -36,23 +39,21 @@ type alias Question =
 type Msg
     = Bypass
       --
+    | ActivateSync Method
+    | ActivateSyncWithPassphrase Method String
     | BootFailure String
-    | CancelFlow
     | ExchangeDropboxAuthCode (Result Http.Error Dropbox.Tokens)
-    | GetStarted
-    | NotAuthenticated
+    | GotSyncMethod Json.Value
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)
-    | ShowMoreOptions Mouse.Event
-    | SignIn Method
-    | SignInWithPassphrase Method String
-    | SignedIn Json.Value
-    | SignOut
+    | ShowSyncDataMenu Mouse.Event
+    | StartedSyncing Json.Value
+    | StopSync
     | TriggerExternalAuth Method String
       -----------------------------------------
       -- Encryption
       -----------------------------------------
     | KeepPassphraseInMemory String
-    | MissingSecretKey Json.Value
+    | NeedEncryptionKey { error : String }
     | RemoveEncryptionKey Method
     | ShowNewEncryptionKeyScreen Method
     | ShowUpdateEncryptionKeyScreen Method
@@ -68,5 +69,6 @@ type Msg
       -- More Input
       -----------------------------------------
     | AskForInput Method Question
-    | Input String
+    | CancelInput
     | ConfirmInput
+    | Input String

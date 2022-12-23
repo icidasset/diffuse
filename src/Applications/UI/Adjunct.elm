@@ -5,7 +5,6 @@ import Maybe.Extra as Maybe
 import Return
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
-import UI.Authentication.Common as Authentication
 import UI.Commands.State as Commands
 import UI.Common.State as Common
 import UI.Interface.State exposing (hideOverlay)
@@ -30,11 +29,8 @@ keyboardInput msg model =
         let
             skip =
                 Return.singleton m
-
-            authenticated =
-                Authentication.isAuthenticated model.authentication
         in
-        if not authenticated || (m.focusedOnInput && Maybe.isNothing model.alfred) then
+        if m.focusedOnInput && Maybe.isNothing model.alfred then
             case m.pressedKeys of
                 [ Keyboard.Escape ] ->
                     hideOverlay m

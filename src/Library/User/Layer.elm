@@ -22,12 +22,16 @@ import Json.Decode as Json
 import Json.Decode.Ext as Json
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode
+import List.Extra as List
 import Maybe.Extra as Maybe
 import Playlists
 import Playlists.Encoding as Playlists
 import Settings
 import Sources
 import Sources.Encoding as Sources
+import Task exposing (Task)
+import Time
+import Time.Ext as Time
 import Tracks
 import Tracks.Encoding as Tracks
 
@@ -38,31 +42,29 @@ import Tracks.Encoding as Tracks
 
 type Method
     = Dropbox { accessToken : String, expiresAt : Int, refreshToken : String }
-    | Fission { initialised : Bool }
+    | Fission {}
     | Ipfs { apiOrigin : String }
-    | Local
     | RemoteStorage { userAddress : String, token : String }
 
 
-methodSupportsPublicData : Method -> Bool
-methodSupportsPublicData method =
-    case method of
-        Dropbox _ ->
-            False
+dropboxMethod : Method
+dropboxMethod =
+    Dropbox { accessToken = "", expiresAt = 0, refreshToken = "" }
 
-        Fission _ ->
-            -- NOTE: Temporarily disabled,
-            --       since we don't actually support public playlists yet.
-            False
 
-        Ipfs _ ->
-            False
+fissionMethod : Method
+fissionMethod =
+    Fission {}
 
-        Local ->
-            False
 
-        RemoteStorage _ ->
-            False
+ipfsMethod : Method
+ipfsMethod =
+    Ipfs { apiOrigin = "https://ipfs.io" }
+
+
+remoteStorageMethod : Method
+remoteStorageMethod =
+    RemoteStorage { userAddress = "", token = "" }
 
 
 
@@ -111,6 +113,9 @@ type alias HypaethralData =
     , settings : Maybe Settings.Settings
     , sources : List Sources.Source
     , tracks : List Tracks.Track
+
+    --
+    , modifiedAt : Maybe Time.Posix
     }
 
 
@@ -136,6 +141,22 @@ encodeMethod =
     methodToString >> Json.Encode.string
 
 
+methodName : Method -> String
+methodName method =
+    case method of
+        Dropbox _ ->
+            "Dropbox"
+
+        Fission _ ->
+            "Fission"
+
+        Ipfs _ ->
+            "IPFS (using MFS)"
+
+        RemoteStorage _ ->
+            "Remote Storage"
+
+
 methodFromString : String -> Maybe Method
 methodFromString string =
     case String.split methodSeparator string of
@@ -149,13 +170,10 @@ methodFromString string =
                 )
 
         [ "FISSION" ] ->
-            Just (Fission { initialised = False })
+            Just (Fission {})
 
         [ "IPFS", a ] ->
             Just (Ipfs { apiOrigin = a })
-
-        [ "LOCAL" ] ->
-            Just Local
 
         [ "REMOTE_STORAGE", u, t ] ->
             Just (RemoteStorage { userAddress = u, token = t })
@@ -186,9 +204,6 @@ methodToString method =
                 , apiOrigin
                 ]
 
-        Local ->
-            "LOCAL"
-
         RemoteStorage { userAddress, token } ->
             String.join
                 methodSeparator
@@ -201,6 +216,24 @@ methodToString method =
 methodSeparator : String
 methodSeparator =
     "___"
+
+
+methodSupportsPublicData : Method -> Bool
+methodSupportsPublicData method =
+    case method of
+        Dropbox _ ->
+            False
+
+        Fission _ ->
+            -- NOTE: Temporarily disabled,
+            --       since we don't actually support public playlists yet.
+            False
+
+        Ipfs _ ->
+            False
+
+        RemoteStorage _ ->
+            False
 
 
 
@@ -251,6 +284,17 @@ encodeEnclosedData { cachedTracks, equalizerSettings, grouping, onlyShowCachedTr
 -- 🔱  ░░  HYPAETHRAL
 
 
+allHypaethralBits : List HypaethralBit
+allHypaethralBits =
+    [ Favourites
+    , Playlists
+    , Progress
+    , Settings
+    , Sources
+    , Tracks
+    ]
+
+
 decodeHypaethralData : Json.Value -> Result Json.Error HypaethralData
 decodeHypaethralData =
     Json.decodeValue hypaethralDataDecoder
@@ -264,53 +308,61 @@ emptyHypaethralData =
     , settings = Nothing
     , sources = []
     , tracks = []
+
+    --
+    , modifiedAt = Nothing
     }
 
 
 encodeHypaethralBit : HypaethralBit -> HypaethralData -> Json.Value
-encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tracks } =
-    case bit of
-        Favourites ->
-            Json.Encode.list Tracks.encodeFavourite favourites
+encodeHypaethralBit bit { favourites, playlists, progress, settings, sources, tracks, modifiedAt } =
+    Json.Encode.object
+        [ ( "data"
+          , case bit of
+                Favourites ->
+                    Json.Encode.list Tracks.encodeFavourite favourites
 
-        Playlists ->
-            Json.Encode.list Playlists.encode playlists
+                Playlists ->
+                    Json.Encode.list Playlists.encode playlists
 
-        Progress ->
-            Json.Encode.dict identity Json.Encode.float progress
+                Progress ->
+                    Json.Encode.dict identity Json.Encode.float progress
 
-        Settings ->
-            Maybe.unwrap Json.Encode.null Settings.encode settings
+                Settings ->
+                    Maybe.unwrap Json.Encode.null Settings.encode settings
 
-        Sources ->
-            Json.Encode.list Sources.encode sources
+                Sources ->
+                    Json.Encode.list Sources.encode sources
 
-        Tracks ->
-            Json.Encode.list Tracks.encodeTrack tracks
+                Tracks ->
+                    Json.Encode.list Tracks.encodeTrack tracks
+          )
+        , ( "modifiedAt"
+          , Maybe.unwrap Json.Encode.null Time.encode modifiedAt
+          )
+        ]
 
 
 encodeHypaethralData : HypaethralData -> Json.Value
 encodeHypaethralData data =
-    Json.Encode.object
-        [ ( hypaethralBitKey Favourites, encodeHypaethralBit Favourites data )
-        , ( hypaethralBitKey Playlists, encodeHypaethralBit Playlists data )
-        , ( hypaethralBitKey Progress, encodeHypaethralBit Progress data )
-        , ( hypaethralBitKey Settings, encodeHypaethralBit Settings data )
-        , ( hypaethralBitKey Sources, encodeHypaethralBit Sources data )
-        , ( hypaethralBitKey Tracks, encodeHypaethralBit Tracks data )
-        ]
+    data
+        |> encodedHypaethralDataList
+        |> List.map (Tuple.mapFirst hypaethralBitKey)
+        |> Json.Encode.object
+
+
+encodedHypaethralDataList : HypaethralData -> List ( HypaethralBit, Json.Value )
+encodedHypaethralDataList data =
+    List.map
+        (\bit -> ( bit, encodeHypaethralBit bit data ))
+        allHypaethralBits
 
 
 hypaethralBit : Enum HypaethralBit
 hypaethralBit =
-    Enum.create
-        [ ( hypaethralBitKey Favourites, Favourites )
-        , ( hypaethralBitKey Playlists, Playlists )
-        , ( hypaethralBitKey Progress, Progress )
-        , ( hypaethralBitKey Settings, Settings )
-        , ( hypaethralBitKey Sources, Sources )
-        , ( hypaethralBitKey Tracks, Tracks )
-        ]
+    allHypaethralBits
+        |> List.map (\bit -> ( hypaethralBitKey bit, bit ))
+        |> Enum.create
 
 
 hypaethralBitFileName : HypaethralBit -> String
@@ -342,13 +394,88 @@ hypaethralBitKey bit =
 
 hypaethralDataDecoder : Json.Decoder HypaethralData
 hypaethralDataDecoder =
-    Json.succeed HypaethralData
-        |> optional (hypaethralBitKey Favourites) (Json.listIgnore Tracks.favouriteDecoder) []
-        |> optional (hypaethralBitKey Playlists) (Json.listIgnore Playlists.decoder) []
-        |> optional (hypaethralBitKey Progress) (Json.dict Json.float) Dict.empty
-        |> optional (hypaethralBitKey Settings) (Json.maybe Settings.decoder) Nothing
-        |> optional (hypaethralBitKey Sources) (Json.listIgnore Sources.decoder) []
-        |> optional (hypaethralBitKey Tracks) (Json.listIgnore Tracks.trackDecoder) []
+    let
+        optionalWithPossiblyData key dec def a =
+            optional
+                (hypaethralBitKey key)
+                (Json.oneOf [ modifiedAtDecoder dec, noModifiedAt dec ])
+                { data = def, modifiedAt = Nothing }
+                a
+    in
+    (\fav pla pro set sor tra ->
+        { favourites = fav.data
+        , playlists = pla.data
+        , progress = pro.data
+        , settings = set.data
+        , sources = sor.data
+        , tracks = tra.data
+
+        --
+        , modifiedAt =
+            [ fav.modifiedAt
+            , pla.modifiedAt
+            , pro.modifiedAt
+            , set.modifiedAt
+            , sor.modifiedAt
+            , tra.modifiedAt
+            ]
+                |> List.filterMap (Maybe.map Time.posixToMillis)
+                |> List.sort
+                |> List.last
+                |> Maybe.map Time.millisToPosix
+        }
+    )
+        |> Json.succeed
+        |> optionalWithPossiblyData Favourites (Json.listIgnore Tracks.favouriteDecoder) []
+        |> optionalWithPossiblyData Playlists (Json.listIgnore Playlists.decoder) []
+        |> optionalWithPossiblyData Progress (Json.dict Json.float) Dict.empty
+        |> optionalWithPossiblyData Settings (Json.maybe Settings.decoder) Nothing
+        |> optionalWithPossiblyData Sources (Json.listIgnore Sources.decoder) []
+        |> optionalWithPossiblyData Tracks (Json.listIgnore Tracks.trackDecoder) []
+
+
+
+-- merge : HypaethralData -> HypaethralData -> HypaethralData
+-- merge a b =
+--     { favourites = List.unique (a.favourites ++ b.favourites)
+--     , playlists = List.unique (a.playlists ++ b.playlists)
+--     , progress = List.unique (a.progress ++ b.progress)
+--     , settings = List.unique (a.settings ++ b.settings)
+--     , sources = List.unique (a.sources ++ b.sources)
+--     , tracks = List.unique (a.tracks ++ b.tracks)
+--     --
+--     , modifiedAt =
+--         case ( a.modifiedAt, b.modifiedAt ) of
+--             ( Just am, Just bm ) ->
+--                 if Time.posixToMillis am > Time.posixToMillis bm then
+--                     Just am
+--                 else
+--                     Just bm
+--             ( Just am, Nothing ) ->
+--                 Just am
+--             ( Nothing, Just bm ) ->
+--                 Just bm
+--             ( Nothing, Nothing ) ->
+--                 Nothing
+--     }
+
+
+modifiedAtDecoder : Json.Decoder a -> Json.Decoder { data : a, modifiedAt : Maybe Time.Posix }
+modifiedAtDecoder decoder =
+    Json.map2
+        (\d m -> { data = d, modifiedAt = m })
+        (Json.field "data" decoder)
+        (Json.maybe <| Json.field "modifiedAt" Time.decoder)
+
+
+noModifiedAt : Json.Decoder a -> Json.Decoder { data : a, modifiedAt : Maybe Time.Posix }
+noModifiedAt =
+    Json.map
+        (\data ->
+            { data = data
+            , modifiedAt = Nothing
+            }
+        )
 
 
 putHypaethralJsonBitsTogether : List ( HypaethralBit, Json.Value, HypaethralBaggage ) -> Json.Value
@@ -356,6 +483,31 @@ putHypaethralJsonBitsTogether bits =
     bits
         |> List.map (\( a, b, _ ) -> ( hypaethralBitKey a, b ))
         |> Json.Encode.object
+
+
+retrieveHypaethralData : (HypaethralBit -> Task x (Maybe Json.Value)) -> Task x (List ( HypaethralBit, Maybe Json.Encode.Value ))
+retrieveHypaethralData retrievalFn =
+    hypaethralBit.list
+        |> List.map
+            (\( _, bit ) ->
+                bit
+                    |> retrievalFn
+                    |> Task.map (\value -> ( bit, value ))
+            )
+        |> Task.sequence
+
+
+saveHypaethralData : (HypaethralBit -> Json.Value -> Task x ()) -> HypaethralData -> Task x ()
+saveHypaethralData saveFn data =
+    hypaethralBit.list
+        |> List.map
+            (\( _, bit ) ->
+                data
+                    |> encodeHypaethralBit bit
+                    |> saveFn bit
+            )
+        |> Task.sequence
+        |> Task.map (always ())
 
 
 

@@ -164,10 +164,7 @@ js-prod: vendor-js
 	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
 	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
 	cp {{NPM_DIR}}/webnative/dist/index.umd.min.js {{BUILD_DIR}}/vendor/webnative.min.js
-	cp ./vendor/ipfs.min.js {{BUILD_DIR}}/vendor/ipfs.min.js
 	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
-
-	{{NPM_DIR}}/.bin/esbuild {{NPM_DIR}}/webnative-elm/src/funnel.js --minify --outfile={{BUILD_DIR}}/vendor/webnative-elm.min.js
 
 
 #
@@ -198,12 +195,11 @@ js-prod: vendor-js
 
 
 @install-deps:
-	pnpm install
+	npm install
 
 	mkdir -p vendor
 
 	just download-vendor-dep pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
-	just download-vendor-dep ipfs.min.js https://unpkg.com/ipfs@0.62.3/index.min.js
 
 
 @install-tauri-cli:
@@ -219,7 +215,7 @@ js-prod: vendor-js
 
 @server:
 	echo "> Booting up web server on port 8000"
-	nix-shell --run "simple-http-server --port 8000 --try-file {{BUILD_DIR}}/301.html --cors --index --nocache --silent -- {{BUILD_DIR}}"
+	miniserve --spa --index index.html --port 8000 {{BUILD_DIR}}
 
 
 @tauri-dev:
@@ -239,12 +235,12 @@ js-prod: vendor-js
 
 
 @watch-elm:
-	watchexec -p -w {{SRC_DIR}} -e elm -- just elm js css
+	watchexec -p -w {{SRC_DIR}} -e elm -- just elm css
 
 
 @watch-js:
-	watchexec -p -w {{SRC_DIR}} -e js -- just js
+	watchexec -p -w {{SRC_DIR}} -e js,ts -- just js
 
 
 @watch-system:
-	watchexec -p --ignore *.elm --ignore *.js --ignore *.css -- just system js
+	watchexec -p --ignore *.elm --ignore *.js --ignore *.ts --ignore *.css -- just system js

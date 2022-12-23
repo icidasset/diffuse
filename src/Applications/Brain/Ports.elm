@@ -3,7 +3,6 @@ port module Brain.Ports exposing (..)
 import Alien
 import Json.Encode as Json
 import Sources.Processing exposing (ContextForTags, ContextForTagsSync)
-import Webnative
 
 
 
@@ -11,9 +10,6 @@ import Webnative
 
 
 port downloadTracks : Json.Value -> Cmd msg
-
-
-port fabricateSecretKey : Alien.Event -> Cmd msg
 
 
 port removeCache : Alien.Event -> Cmd msg
@@ -68,9 +64,6 @@ port requestDropbox : Alien.Event -> Cmd msg
 port requestIpfs : Alien.Event -> Cmd msg
 
 
-port requestLegacyLocalData : Alien.Event -> Cmd msg
-
-
 port requestRemoteStorage : Alien.Event -> Cmd msg
 
 
@@ -81,9 +74,6 @@ port toIpfs : Alien.Event -> Cmd msg
 
 
 port toRemoteStorage : Alien.Event -> Cmd msg
-
-
-port webnativeRequest : Webnative.Request -> Cmd msg
 
 
 
@@ -106,9 +96,3 @@ port receiveTags : (ContextForTags -> msg) -> Sub msg
 
 
 port replaceTags : (ContextForTagsSync -> msg) -> Sub msg
-
-
-port savedHypaethralBit : (Json.Value -> msg) -> Sub msg
-
-
-port webnativeResponse : (Webnative.Response -> msg) -> Sub msg

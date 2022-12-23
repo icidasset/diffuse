@@ -15,7 +15,7 @@ import "../../build/vendor/pep"
 import * as audioEngine from "./audio-engine"
 import * as db from "./indexed-db"
 import { version } from '../../package.json'
-import { WEBNATIVE_STAGING_ENV, WEBNATIVE_STAGING_MODE, debounce, fileExtension } from "./common"
+import { debounce, fileExtension, WEBNATIVE_CONFIG } from "./common"
 import { transformUrl } from "./urls"
 
 
@@ -116,7 +116,7 @@ function initialise(reg) {
 
   // Other ports
   app.ports.openUrlOnNewPage.subscribe(url => {
-    if (__TAURI__) {
+    if (self.__TAURI__) {
       __TAURI__.shell.open(
         url.includes("://") ? url : `${location.origin}/${url.replace(/^\.\//, "")}`
       )
@@ -331,41 +331,6 @@ function seek(percentage) {
 
 function setRepeat(repeat) {
   orchestrion.repeat = repeat
-}
-
-
-
-// Authentication
-// --------------
-
-let wn
-
-
-wire.webnative = () => {
-  app.ports.webnativeRequest.subscribe(request => {
-    loadWebnative().then(() => {
-      self.webnativeElm.request({ app: app, request: request })
-    })
-  })
-}
-
-
-function loadWebnative() {
-  if (wn) return Promise.resolve()
-
-  return loadScript("vendor/webnative.min.js")
-    .then(() => loadScript("vendor/webnative-elm.min.js"))
-    .then(() => {
-      wn = window.webnative
-
-      if ([ "localhost", "nightly.diffuse.sh" ].includes(location.hostname)) {
-        wn.setup.debug({ enabled: true })
-      }
-
-      if (WEBNATIVE_STAGING_MODE) {
-        wn.setup.endpoints(WEBNATIVE_STAGING_ENV)
-      }
-    })
 }
 
 
@@ -944,6 +909,49 @@ wire.serviceWorker = async (reg) => {
     reg.update()
     setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
   }
+}
+
+
+
+// Syncing
+// -------
+
+let wn
+
+
+wire.webnative = () => {
+  app.ports.authenticateWithFission.subscribe(async () => {
+    const program = await webnativeProgram()
+    await program.capabilities.request({
+      returnUrl: location.origin + "?action=authenticate/fission"
+    })
+  })
+
+  app.ports.collectFissionCapabilities.subscribe(async () => {
+    // Webnative should collect the capabilities for us,
+    // if everything is valid, we'll receive a session.
+    const program = await webnativeProgram()
+    app.ports.collectedFissionCapabilities.send(null)
+  })
+}
+
+
+
+async function webnativeProgram() {
+  await loadWebnative()
+
+  return wn.program({
+    ...WEBNATIVE_CONFIG,
+    fileSystem: { loadImmediately: false }
+  })
+}
+
+
+async function loadWebnative() {
+  if (wn) return
+
+  await loadScript("vendor/webnative.min.js")
+  wn = window.webnative
 }
 
 

@@ -1,6 +1,7 @@
 module Brain exposing (main)
 
 import Alien
+import Brain.Common.State as Common
 import Brain.Other.State as Other
 import Brain.Ports as Ports
 import Brain.Sources.Processing.State as Processing
@@ -64,17 +65,14 @@ init flags =
     ( -----------------------------------------
       -- Initial model
       -----------------------------------------
-      { authMethod = Nothing
-      , currentTime = Time.default
+      { currentTime = Time.default
       , hypaethralDebouncer = hypDebouncer
       , hypaethralRetrieval = Nothing
       , hypaethralStorage = []
       , hypaethralUserData = User.emptyHypaethralData
-      , legacyMode = False
-      , migratingData = False
       , origin = "ORIGIN_UNKNOWN"
-      , performingSignIn = False
       , processingStatus = Processing.NotProcessing
+      , userSyncMethod = Nothing
       }
       -----------------------------------------
       -- Initial command
@@ -167,8 +165,6 @@ subscriptions _ =
         , Ports.receiveSearchResults GotSearchResults
         , Ports.receiveTags (ProcessingMsg << Processing.TagsStep)
         , Ports.replaceTags ReplaceTrackTags
-        , Ports.savedHypaethralBit (\_ -> UserMsg User.SaveNextHypaethralBit)
-        , Ports.webnativeResponse (UserMsg << User.GotWebnativeResponse)
 
         --
         , Time.every (60 * 1000) SetCurrentTime
@@ -195,29 +191,8 @@ alien event =
 translateAlienData : Alien.Tag -> Json.Value -> Msg
 translateAlienData tag data =
     case tag of
-        Alien.AuthAnonymous ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthDropbox ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthEnclosedData ->
+        Alien.EnclosedData ->
             UserMsg (User.EnclosedDataRetrieved data)
-
-        Alien.AuthFission ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthIpfs ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.AuthMethod ->
-            UserMsg (User.MethodRetrieved data)
-
-        Alien.AuthRemoteStorage ->
-            UserMsg (User.HypaethralDataRetrieved data)
-
-        Alien.FabricateSecretKey ->
-            UserMsg User.SecretKeyFabricated
 
         Alien.SearchTracks ->
             Search data
@@ -227,9 +202,6 @@ translateAlienData tag data =
         -----------------------------------------
         Alien.DownloadTracks ->
             DownloadTracks data
-
-        Alien.ImportLegacyData ->
-            UserMsg User.RetrieveLegacyHypaethralData
 
         Alien.ProcessSources ->
             ProcessingMsg (Processing.Process data)
@@ -267,11 +239,8 @@ translateAlienData tag data =
         Alien.SaveTracks ->
             UserMsg (User.SaveTracks data)
 
-        Alien.SignIn ->
-            UserMsg (User.SignIn data)
-
-        Alien.SignOut ->
-            UserMsg User.SignOut
+        Alien.SetSyncMethod ->
+            UserMsg (User.SetSyncMethod data)
 
         Alien.StopProcessing ->
             ProcessingMsg Processing.StopProcessing
@@ -285,6 +254,9 @@ translateAlienData tag data =
         Alien.ToCache ->
             ToCache data
 
+        Alien.UnsetSyncMethod ->
+            UserMsg User.UnsetSyncMethod
+
         Alien.UpdateEncryptionKey ->
             UserMsg (User.UpdateEncryptionKey data)
 
@@ -294,47 +266,9 @@ translateAlienData tag data =
 
 translateAlienError : Alien.Tag -> Json.Value -> String -> Msg
 translateAlienError tag _ err =
-    case tag of
-        Alien.AuthAnonymous ->
-            reportAuthError Alien.AuthAnonymous err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
-
-        Alien.AuthDropbox ->
-            reportAuthError Alien.AuthDropbox err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
-
-        Alien.AuthIpfs ->
-            reportAuthError Alien.AuthIpfs err "Something went wrong regarding the IPFS storage. Maybe you used the wrong passphrase, or your IPFS node is offline?"
-
-        Alien.AuthRemoteStorage ->
-            reportAuthError Alien.AuthRemoteStorage err "I found some encrypted data, but I couldn't decrypt it. Maybe you used the wrong passphrase?"
+    case err of
+        "db is undefined" ->
+            Common.reportUICmdMsg tag "Can't connect to the browser's IndexedDB. FYI, this is __not supported in Firefox's private mode__."
 
         _ ->
-            case err of
-                "db is undefined" ->
-                    report tag "Can't connect to the browser's IndexedDB. FYI, this is __not supported in Firefox's private mode__."
-
-                _ ->
-                    report tag err
-
-
-reportAuthError : Alien.Tag -> String -> String -> Msg
-reportAuthError tag originalError fallbackError =
-    case originalError of
-        "MISSING_SECRET_KEY" ->
-            [ ( "alienMethodTag", Alien.tagToJson tag )
-            , ( "fallbackError", Json.Encode.string fallbackError )
-            ]
-                |> Json.Encode.object
-                |> Alien.broadcast Alien.MissingSecretKey
-                |> Ports.toUI
-                |> Cmd
-
-        _ ->
-            report tag fallbackError
-
-
-report : Alien.Tag -> String -> Msg
-report tag err =
-    err
-        |> Alien.report tag
-        |> Ports.toUI
-        |> Cmd
+            Common.reportUICmdMsg tag err

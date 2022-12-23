@@ -19,7 +19,7 @@
     tools = [
       curl
       just
-      simple-http-server
+      (if isM1Mac then pkgs-x86.miniserve else miniserve)
       (if isM1Mac then pkgs-x86.watchexec else watchexec)
     ];
 
@@ -27,7 +27,6 @@
       elmPackages.elm
       elmPackages.elm-format
       nodejs-18_x
-      nodePackages.pnpm
       rust
       stack
     ];

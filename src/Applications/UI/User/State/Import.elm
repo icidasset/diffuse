@@ -1,6 +1,5 @@
 module UI.User.State.Import exposing (..)
 
-import Alien
 import File exposing (File)
 import File.Select
 import Json.Decode
@@ -65,22 +64,6 @@ importJson json model =
         |> saveAllHypaethralData
 
 
-importLegacyData : Manager
-importLegacyData model =
-    Alien.ImportLegacyData
-        |> Alien.trigger
-        |> Ports.toBrain
-        |> return model
-        |> andThen
-            ("""
-                I'll try to import data from Diffuse version one.
-                If this was successful, you'll get a notification.
-             """
-                |> Notifications.casual
-                |> Common.showNotification
-            )
-
-
 insertDemo : Manager
 insertDemo model =
     model
@@ -116,7 +99,7 @@ loadHypaethralUserData json model =
                     """
                     Thank you for using Diffuse V1!
                     If you want to import your old data,
-                    please go to the [import page](#/settings/import-export).
+                    please go to the [import page](#/settings/data).
                     """
                         |> Notifications.stickySuccess
                         |> Common.showNotificationWithModel m
@@ -126,14 +109,6 @@ loadHypaethralUserData json model =
             )
         |> andThen
             Sources.addSourcesFromUrl
-        |> andThen
-            (\m ->
-                if m.processAutomatically then
-                    Sources.process m
-
-                else
-                    Return.singleton m
-            )
 
 
 requestImport : Manager

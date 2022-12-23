@@ -6,6 +6,7 @@ import Conditional exposing (ifThenElse)
 import Html exposing (Html)
 import Html.Attributes as A exposing (href, style)
 import Html.Events exposing (onClick, onInput)
+import Icons exposing (Icon)
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Svg
@@ -78,7 +79,7 @@ type ButtonType
 
 button : ButtonType -> msg -> Html msg -> Html msg
 button =
-    buttonWithColor Accent
+    buttonWithColor Gray
 
 
 buttonLink : String -> ButtonType -> Html msg -> Html msg
@@ -161,8 +162,8 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
                     case buttonColor of
                         Accent ->
                             [ "bg-transparent"
-                            , "border-base04"
-                            , "text-base04"
+                            , "border-accent-btn"
+                            , "text-accent-btn"
                             ]
 
                         Blank ->
@@ -221,6 +222,24 @@ buttonWithOptions tag attributes buttonColor buttonType maybeMsg child =
 -- 🍱  ░░  OTHER
 
 
+askForInput : { question : String, info : List (Html msg) } -> Html msg
+askForInput { question, info } =
+    Html.span
+        []
+        [ chunk
+            [ "font-semibold", "pt-1" ]
+            [ Html.text question ]
+        , case info of
+            [] ->
+                Html.text ""
+
+            _ ->
+                chunk
+                    [ "italic", "mt-2", "text-sm" ]
+                    info
+        ]
+
+
 canister : List (Html msg) -> Html msg
 canister children =
     chunk
@@ -240,6 +259,7 @@ centeredContent children =
     chunk
         [ "flex"
         , "flex-grow"
+        , "items-stretch"
         , "overflow-hidden"
         , "relative"
         ]
@@ -270,6 +290,68 @@ checkbox opts =
           else
             Icons.check_box_outline_blank 22 Inherit
         ]
+
+
+focusScreen : { icon : Icon msg, iconHref : Maybe String, text : List (Html msg), textHref : Maybe String } -> List (Html msg) -> Html msg
+focusScreen { icon, iconHref, text, textHref } nodes =
+    [ slab
+        (case iconHref of
+            Just _ ->
+                Html.a
+
+            Nothing ->
+                Html.div
+        )
+        (case iconHref of
+            Just h ->
+                [ href h ]
+
+            Nothing ->
+                []
+        )
+        [ "block"
+        , "opacity-30"
+        , "text-inherit"
+        ]
+        [ icon 64 Inherit ]
+    , slab
+        (case iconHref of
+            Just _ ->
+                Html.a
+
+            Nothing ->
+                Html.div
+        )
+        (case textHref of
+            Just h ->
+                [ href h ]
+
+            Nothing ->
+                []
+        )
+        [ "block"
+        , "leading-normal"
+        , "mt-2"
+        , "opacity-40"
+        , "text-center"
+        , "text-inherit"
+        ]
+        text
+    , chunk
+        [ "mt-4" ]
+        nodes
+    ]
+        |> chunk
+            [ "flex"
+            , "flex-col"
+            , "items-center"
+            , "max-h-full"
+            , "overflow-y-auto"
+            , "py-8"
+            , "w-full"
+            ]
+        |> List.singleton
+        |> centeredContent
 
 
 h1 : String -> Html msg
@@ -308,8 +390,7 @@ h2 text =
     slab
         Html.h2
         []
-        [ "antialiased"
-        , "font-bold"
+        [ "font-bold"
         , "font-display"
         , "leading-tight"
         , "mb-8"
@@ -521,10 +602,18 @@ textArea attributes =
         , "text-sm"
         , "w-full"
 
+        --
+        , "placeholder:text-base01"
+        , "placeholder:text-opacity-40"
+
         -- Dark mode
         ------------
         , "dark:bg-darkest-hour"
         , "dark:text-gray-600"
+
+        --
+        , "dark:placeholder:text-gray-600"
+        , "dark:placeholder:text-opacity-30"
         ]
         []
 
@@ -571,6 +660,8 @@ textField attributes =
         --
         , "focus:border-black"
         , "focus:outline-none"
+        , "placeholder:text-base01"
+        , "placeholder:text-opacity-40"
 
         -- Dark mode
         ------------
@@ -579,6 +670,8 @@ textField attributes =
 
         --
         , "dark:focus:border-base07"
+        , "dark:placeholder:text-gray-600"
+        , "dark:placeholder:text-opacity-30"
         ]
         []
 

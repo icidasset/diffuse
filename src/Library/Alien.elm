@@ -24,21 +24,15 @@ type alias Event =
 
 
 type Tag
-    = AuthAnonymous
-    | AuthDropbox
-    | AuthFission
-    | AuthEnclosedData
-    | AuthIpfs
-    | AuthMethod
-    | AuthRemoteStorage
-    | AuthSecretKey
-    | FabricateSecretKey
+    = EnclosedData
     | SearchTracks
+    | SecretKey
+    | SyncLocal
+    | SyncMethod
       -----------------------------------------
       -- from UI
       -----------------------------------------
     | DownloadTracks
-    | ImportLegacyData
     | ProcessSources
     | RefreshedAccessToken
     | RemoveEncryptionKey
@@ -51,13 +45,13 @@ type Tag
     | SaveSettings
     | SaveSources
     | SaveTracks
-    | SignIn
-    | SignOut
+    | SetSyncMethod
     | StopProcessing
     | StoreTracksInCache
     | SyncHypaethralData
     | SyncTrackTags
     | ToCache
+    | UnsetSyncMethod
     | UpdateEncryptionKey
       -----------------------------------------
       -- to UI
@@ -65,39 +59,33 @@ type Tag
     | AddTracks
     | FinishedProcessingSource
     | FinishedProcessingSources
+    | FinishedSyncing
     | GotCachedCover
     | HideLoadingScreen
     | LoadEnclosedUserData
     | LoadHypaethralUserData
-    | MissingSecretKey
-    | NotAuthenticated
     | ReloadTracks
     | RemoveTracksByPath
     | ReportError
     | ReportProcessingError
     | ReportProcessingProgress
+    | StartedSyncing
     | UpdateSourceData
 
 
 enum : Enum Tag
 enum =
     Enum.create
-        [ ( "AUTH_ANONYMOUS", AuthAnonymous )
-        , ( "AUTH_DROPBOX", AuthDropbox )
-        , ( "AUTH_ENCLOSED_DATA", AuthEnclosedData )
-        , ( "AUTH_FISSION", AuthFission )
-        , ( "AUTH_IPFS", AuthIpfs )
-        , ( "AUTH_METHOD", AuthMethod )
-        , ( "AUTH_REMOTE_STORAGE", AuthRemoteStorage )
-        , ( "AUTH_SECRET_KEY", AuthSecretKey )
-        , ( "FABRICATE_SECRET_KEY", FabricateSecretKey )
+        [ ( "ENCLOSED_DATA", EnclosedData )
         , ( "SEARCH_TRACKS", SearchTracks )
+        , ( "SECRET_KEY", SecretKey )
+        , ( "SYNC_LOCAL", SyncLocal )
+        , ( "SYNC_METHOD", SyncMethod )
 
         -----------------------------------------
         -- From UI
         -----------------------------------------
         , ( "DOWNLOAD_TRACKS", DownloadTracks )
-        , ( "IMPORT_LEGACY_DATA", ImportLegacyData )
         , ( "PROCESS_SOURCES", ProcessSources )
         , ( "REFRESHED_ACCESS_TOKEN", RefreshedAccessToken )
         , ( "REMOVE_ENCRYPTION_KEY", RemoveEncryptionKey )
@@ -110,13 +98,13 @@ enum =
         , ( "SAVE_SETTINGS", SaveSettings )
         , ( "SAVE_SOURCES", SaveSources )
         , ( "SAVE_TRACKS", SaveTracks )
-        , ( "SIGN_IN", SignIn )
-        , ( "SIGN_OUT", SignOut )
+        , ( "SET_SYNC_METHOD", SetSyncMethod )
         , ( "STOP_PROCESSING", StopProcessing )
         , ( "STORE_TRACKS_IN_CACHE", StoreTracksInCache )
         , ( "SYNC_HYPAETHRAL_DATA", SyncHypaethralData )
         , ( "SYNC_TRACK_TAGS", SyncTrackTags )
         , ( "TO_CACHE", ToCache )
+        , ( "UNSET_SYNC_METHOD", UnsetSyncMethod )
         , ( "UPDATE_ENCRYPTION_KEY", UpdateEncryptionKey )
 
         -----------------------------------------
@@ -129,13 +117,12 @@ enum =
         , ( "HIDE_LOADING_SCREEN", HideLoadingScreen )
         , ( "LOAD_ENCLOSED_USER_DATA", LoadEnclosedUserData )
         , ( "LOAD_HYPAETHRAL_USER_DATA", LoadHypaethralUserData )
-        , ( "MISSING_SECRET_KEY", MissingSecretKey )
-        , ( "NOT_AUTHENTICATED", NotAuthenticated )
         , ( "RELOAD_TRACKS", ReloadTracks )
         , ( "REMOVE_TRACKS_BY_PATH", RemoveTracksByPath )
         , ( "REPORT_ERROR", ReportError )
         , ( "REPORT_PROCESSING_ERROR", ReportProcessingError )
         , ( "REPORT_PROCESSING_PROGRESS", ReportProcessingProgress )
+        , ( "STARTED_SYNCING", StartedSyncing )
         , ( "UPDATE_SOURCE_DATA", UpdateSourceData )
         ]
 

@@ -1,10 +1,10 @@
 module Brain.User.Types exposing (..)
 
+import Alien exposing (Tag(..))
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
-import User.Layer exposing (HypaethralBit)
+import User.Layer as User exposing (HypaethralBit, HypaethralData)
 import User.Layer.Methods.Dropbox as Dropbox
-import Webnative
 
 
 
@@ -12,35 +12,21 @@ import Webnative
 
 
 type Msg
-    = SignIn Json.Value
-    | SignOut
+    = Commence (Maybe User.Method) ( Json.Value, HypaethralData )
       -----------------------------------------
-      -- 0. Secret Key
+      --  Method
       -----------------------------------------
-    | FabricateSecretKey String
-    | SecretKeyFabricated
+    | SetSyncMethod Json.Value
+    | Sync
+    | UnsetSyncMethod
       -----------------------------------------
-      -- 1. Method
-      -----------------------------------------
-    | RetrieveMethod
-    | MethodRetrieved Json.Value
-      -----------------------------------------
-      -- 2. Data
-      -----------------------------------------
-    | RetrieveHypaethralData HypaethralBit
-    | HypaethralDataRetrieved Json.Value
-      -----------------------------------------
-      -- 2. Data (Legacy)
-      -----------------------------------------
-    | RetrieveLegacyHypaethralData
-      -----------------------------------------
-      -- x. Data
+      -- Enclosed Data
       -----------------------------------------
     | RetrieveEnclosedData
     | EnclosedDataRetrieved Json.Value
     | SaveEnclosedData Json.Value
       -----------------------------------------
-      -- y. Data
+      -- Hypaethral Data, pt. 1
       -----------------------------------------
     | SaveFavourites Json.Value
     | SavePlaylists Json.Value
@@ -49,16 +35,14 @@ type Msg
     | SaveSources Json.Value
     | SaveTracks Json.Value
       -----------------------------------------
-      -- z. Data
+      -- Hypaethral Data, pt. 2
       -----------------------------------------
-    | GotWebnativeResponse Webnative.Response
-    | SaveAllHypaethralData
-    | SaveHypaethralDataBit HypaethralBit
+    | FinishedSyncing
+    | GotHypaethralData HypaethralData
     | SaveHypaethralDataBits (List HypaethralBit)
     | SaveHypaethralDataSlowly (Debouncer.Msg HypaethralBit)
-    | SaveNextHypaethralBit
       -----------------------------------------
-      -- z. Secret Key
+      -- Encryption
       -----------------------------------------
     | RemoveEncryptionKey
     | UpdateEncryptionKey Json.Value

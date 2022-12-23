@@ -4,6 +4,7 @@ import Base64
 import Http
 import Json.Decode as Decode exposing (Decoder)
 import Url
+import UrlBase64
 
 
 
@@ -41,10 +42,17 @@ parseUserAddress str =
 oauthAddress : { oauthOrigin : String, origin : String } -> Attributes -> String
 oauthAddress { oauthOrigin, origin } { host, username } =
     let
+        hostWithoutProtocol =
+            host
+                |> String.split "://"
+                |> List.drop 1
+                |> List.head
+                |> Maybe.withDefault host
+
         ua =
-            (username ++ "@" ++ host)
-                |> Base64.encode
-                |> Url.percentEncode
+            (username ++ "@" ++ hostWithoutProtocol)
+                |> UrlBase64.encode (Base64.encode >> Ok)
+                |> Result.withDefault "BASE64_ENCODING_FAILED"
     in
     String.concat
         [ oauthOrigin
@@ -55,9 +63,35 @@ oauthAddress { oauthOrigin, origin } { host, username } =
         ]
 
 
-webfingerAddress : Attributes -> String
-webfingerAddress { host, username } =
-    "https://" ++ host ++ "/.well-known/webfinger?resource=acct:" ++ username
+webfingerAddress : Url.Protocol -> Attributes -> String
+webfingerAddress originProtocol { host, username } =
+    let
+        fallbackProtocol =
+            case originProtocol of
+                Url.Http ->
+                    "http"
+
+                Url.Https ->
+                    "https"
+
+        protocol =
+            if String.contains "://" host then
+                host
+                    |> String.split "://"
+                    |> List.head
+                    |> Maybe.withDefault fallbackProtocol
+
+            else
+                fallbackProtocol
+
+        hostWithoutProtocol =
+            host
+                |> String.split "://"
+                |> List.drop 1
+                |> List.head
+                |> Maybe.withDefault host
+    in
+    protocol ++ "://" ++ hostWithoutProtocol ++ "/.well-known/webfinger?resource=acct:" ++ Url.percentEncode (username ++ "@" ++ hostWithoutProtocol)
 
 
 webfingerDecoder : Decoder String
@@ -71,9 +105,9 @@ webfingerDecoder =
         Decode.string
 
 
-webfingerRequest : (Attributes -> Result Http.Error String -> msg) -> Attributes -> Cmd msg
-webfingerRequest toMsg rs =
+webfingerRequest : (Attributes -> Result Http.Error String -> msg) -> Url.Protocol -> Attributes -> Cmd msg
+webfingerRequest toMsg originProtocol rs =
     Http.get
-        { url = webfingerAddress rs
+        { url = webfingerAddress originProtocol rs
         , expect = Http.expectJson (toMsg rs) webfingerDecoder
         }

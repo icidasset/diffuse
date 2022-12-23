@@ -3,7 +3,6 @@ port module UI.Ports exposing (..)
 import Alien
 import Json.Encode as Json
 import Queue
-import Webnative
 
 
 
@@ -14,6 +13,12 @@ port activeQueueItemChanged : Maybe Queue.EngineItem -> Cmd msg
 
 
 port adjustEqualizerSetting : { knob : String, value : Float } -> Cmd msg
+
+
+port authenticateWithFission : () -> Cmd msg
+
+
+port collectFissionCapabilities : () -> Cmd msg
 
 
 port copyToClipboard : String -> Cmd msg
@@ -49,14 +54,14 @@ port setRepeat : Bool -> Cmd msg
 port toBrain : Alien.Event -> Cmd msg
 
 
-port webnativeRequest : Webnative.Request -> Cmd msg
-
-
 
 -- 📰
 
 
 port activeQueueItemEnded : (() -> msg) -> Sub msg
+
+
+port collectedFissionCapabilities : (() -> msg) -> Sub msg
 
 
 port downloadTracksFinished : (() -> msg) -> Sub msg
@@ -135,9 +140,6 @@ port showErrorNotification : (String -> msg) -> Sub msg
 
 
 port showStickyErrorNotification : (String -> msg) -> Sub msg
-
-
-port webnativeResponse : (Webnative.Response -> msg) -> Sub msg
 
 
 

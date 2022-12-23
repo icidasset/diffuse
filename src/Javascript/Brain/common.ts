@@ -7,20 +7,10 @@ import * as crypto from "../crypto"
 import * as db from "../indexed-db"
 
 
-export const SECRET_KEY_LOCATION = "AUTH_SECRET_KEY"
+export const SECRET_KEY_LOCATION = "SECRET_KEY"
 
 
 // 🔱
-
-
-export function isAuthMethodService(eventTag) {
-  return (
-    eventTag.startsWith("AUTH_") &&
-    eventTag !== "AUTH_ENCLOSED_DATA" &&
-    eventTag !== "AUTH_METHOD" &&
-    eventTag !== "AUTH_SECRET_KEY"
-  )
-}
 
 
 export function isLocalHost(url) {
@@ -30,6 +20,12 @@ export function isLocalHost(url) {
     url.startsWith("127.0.0.1") ||
     url.startsWith("127.0.0.1")
   )
+}
+
+
+export function parseJsonIfNeeded(a) {
+  if (typeof a === "string") return JSON.parse(a)
+  return a
 }
 
 
@@ -57,18 +53,6 @@ export function sendData(app, event, opts) {
 }
 
 
-export function sendJsonData(app, event) {
-  return sendData(app, event, { parseJSON: true })
-}
-
-
-export function storageCallback(app, _) {
-  return _ => {
-    app.ports.savedHypaethralBit.send()
-  }
-}
-
-
 
 // Cache
 // -----
@@ -79,26 +63,12 @@ export function removeCache(key) {
 
 
 export function fromCache(key) {
-  return isAuthMethodService(key)
-    ? db.getFromIndex({ key: key })
-        .then(decryptIfNeeded)
-        .then(d => typeof d === "string" ? JSON.parse(d) : d)
-        .then(a => a === undefined ? null : a)
-    : db.getFromIndex({ key: key })
+  return db.getFromIndex({ key: key })
 }
 
 
 export function toCache(key, data) {
-  if (isAuthMethodService(key)) {
-    const json = JSON.stringify(data)
-
-    return encryptWithSecretKey(json)
-      .then(encryptedData => db.setInIndex({ key: key, data: encryptedData }))
-
-  } else {
-    return db.setInIndex({ key: key, data: data })
-
-  }
+  return db.setInIndex({ key: key, data: data })
 }
 
 
@@ -115,26 +85,28 @@ export function decryptIfNeeded(data) {
 
   } else {
     return data
-      ? getSecretKey().then(secretKey => crypto.decrypt(secretKey, data))
+      ? getSecretKey().then(secretKey => {
+        if (!secretKey) throw new Error("There seems to be existing data that's encrypted, I will need the passphrase (ie. encryption key) to continue.")
+        return crypto.decrypt(secretKey, data)
+      })
       : Promise.resolve(null)
 
   }
 }
 
 
-export function encryptWithSecretKey(unencryptedData) {
+export async function encryptIfPossible(unencryptedData: string): Promise<string> {
   return unencryptedData
     ? getSecretKey()
-        .then(secretKey => crypto.encrypt(secretKey, unencryptedData))
-        .catch(_ => unencryptedData)
-    : null
+      .then(secretKey => crypto.encrypt(secretKey, unencryptedData))
+      .catch(_ => unencryptedData)
+    : unencryptedData
 }
 
 
+export { encryptIfPossible as encryptWithSecretKey }
+
+
 export function getSecretKey() {
-  return db.getFromIndex({
-    key: SECRET_KEY_LOCATION
-  }).then(key => {
-    return key ? key : Promise.reject(new Error("MISSING_SECRET_KEY"))
-  })
+  return db.getFromIndex({ key: SECRET_KEY_LOCATION })
 }

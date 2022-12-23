@@ -6,7 +6,7 @@ import Common exposing (ServiceWorkerStatus(..))
 import Conditional exposing (ifThenElse)
 import DateFormat as Date
 import Html exposing (Html, text)
-import Html.Attributes exposing (..)
+import Html.Attributes as A exposing (..)
 import Html.Events as E exposing (onClick)
 import Html.Lazy
 import LastFm
@@ -14,13 +14,13 @@ import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Time
-import UI.Authentication.Types as Authentication
 import UI.Backdrop as Backdrop exposing (backgroundPositioning)
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
-import UI.Settings.ImportExport
+import UI.Settings.Data
 import UI.Settings.Page as Settings exposing (..)
+import UI.Settings.Sync
 import UI.Sources.Types as Sources
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (Msg(..))
@@ -32,7 +32,7 @@ import User.Layer exposing (Method(..))
 
 
 type alias Dependencies =
-    { authenticationMethod : Maybe User.Layer.Method
+    { syncMethod : Maybe User.Layer.Method
     , buildTimestamp : Int
     , chosenBackgroundImage : Maybe String
     , coverSelectionReducesPool : Bool
@@ -50,11 +50,14 @@ type alias Dependencies =
 view : Settings.Page -> Dependencies -> Html Msg
 view page deps =
     case page of
-        ImportExport ->
-            UI.Settings.ImportExport.view deps.authenticationMethod
+        Data ->
+            UI.Settings.Data.view deps.syncMethod
 
         Index ->
             UI.Kit.receptacle { scrolling = True } (index deps)
+
+        Sync ->
+            UI.Settings.Sync.view deps.syncMethod
 
 
 
@@ -67,17 +70,13 @@ index deps =
       -- Navigation
       -----------------------------------------
       UI.Navigation.local
-        [ ( Icon Icons.import_export
-          , Label "Import & Export" Shown
-          , NavigateToPage (Page.Settings ImportExport)
+        [ ( Icon Icons.account_circle
+          , Label "Data & Sync" Shown
+          , NavigateToPage (Page.Settings Sync)
           )
         , ( Icon Icons.help_outline
           , Label "Help" Shown
-          , OpenLinkInNewPage "about/#UI"
-          )
-        , ( Icon Icons.exit_to_app
-          , Label "Sign out" Shown
-          , PerformMsg (AuthenticationMsg Authentication.SignOut)
+          , OpenLinkInNewPage "about/"
           )
         ]
 
@@ -100,169 +99,124 @@ content deps =
       UI.Kit.h1 "Settings"
 
     -----------------------------------------
-    -- Intro
-    -----------------------------------------
-    , [ text "Changes are saved automatically."
-      , lineBreak
-      , text "You're storing the data for this application "
-      , case deps.authenticationMethod of
-            Just (Dropbox _) ->
-                text "on Dropbox."
-
-            Just (Fission _) ->
-                text "on Fission."
-
-            Just (Ipfs _) ->
-                text "on IPFS."
-
-            Just Local ->
-                text "in this browser."
-
-            Just (RemoteStorage _) ->
-                text "on a RemoteStorage server."
-
-            Nothing ->
-                text "on nothing, wtf?"
-
-      -- Change passphrase (if applicable)
-      , case deps.authenticationMethod of
-            Just (Dropbox d) ->
-                changePassphrase (Dropbox d)
-
-            Just (Fission _) ->
-                nothing
-
-            Just (Ipfs i) ->
-                changePassphrase (Ipfs i)
-
-            Just Local ->
-                changePassphrase Local
-
-            Just (RemoteStorage r) ->
-                changePassphrase (RemoteStorage r)
-
-            Nothing ->
-                nothing
-      ]
-        |> raw
-        |> UI.Kit.intro
-
-    -----------------------------------------
     -- Version
     -----------------------------------------
-    , let
-        tag children =
-            chunk
-                [ "bg-base06"
-                , "inline-block"
-                , "leading-none"
-                , "mb-1"
-                , "ml-1"
-                , "mr-3"
-                , "p-1"
-                , "rounded"
-                , "text-white"
+    , chunk
+        [ "mt-6" ]
+        [ chunk
+            [ "flex"
+            , "flex-col"
+            , "items-center"
+            , "justify-center"
+            , "text-base05"
+            , "text-xs"
 
-                -- Dark mode
-                ------------
-                , "dark:bg-base01"
-                , "dark:text-base05"
+            -- Dark mode
+            ------------
+            , "dark:text-base03"
+            ]
+            [ slab
+                Html.img
+                [ A.src "images/diffuse-dark.svg"
+                , A.width 160
                 ]
-                [ chunk
-                    [ "inline-block"
-                    , "pt-px"
-                    ]
-                    children
+                [ "dark:hidden" ]
+                []
+
+            --
+            , slab
+                Html.img
+                [ A.src "images/diffuse-light.svg"
+                , A.width 160
                 ]
-      in
-      chunk
-        [ "text-base05"
-        , "text-xs"
+                [ "hidden dark:block" ]
+                []
 
-        -- Dark mode
-        ------------
-        , "dark:text-base03"
-        ]
-        [ text "Version"
-        , tag [ text deps.version ]
-        , text "Built on"
-        , deps.buildTimestamp
-            |> (*) 1000
-            |> Time.millisToPosix
-            |> Date.format
-                [ Date.monthNameAbbreviated
-                , Date.text " "
-                , Date.dayOfMonthSuffix
-                , Date.text " "
-                , Date.yearNumber
-                , Date.text ", "
-                , Date.hourMilitaryFixed
-                , Date.text ":"
-                , Date.minuteFixed
-                , Date.text ":"
-                , Date.secondFixed
-                ]
-                deps.currentTimeZone
-            |> text
-            |> List.singleton
-            |> tag
-
-        --
-        , case deps.serviceWorkerStatus of
-            InstallingInitial ->
-                inline
-                    [ "inline-flex", "items-center" ]
-                    [ text "Setting up service worker"
-                    , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
-                    ]
-
-            InstallingNew ->
-                inline
-                    [ "inline-flex", "items-center" ]
-                    [ text "Installing new version"
-                    , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
-                    ]
-
-            WaitingForActivation ->
-                inline
-                    []
-                    [ text "Update available"
-                    , brick
-                        [ Maybe.unwrap
-                            (class "bg-white-20")
-                            (style "background-color" << Color.toCssString)
-                            deps.extractedBackdropColor
-
-                        --
-                        , E.onClick ReloadApp
+            --
+            , chunk
+                [ "italic", "mt-3", "text-center" ]
+                [ text "Version "
+                , text deps.version
+                , lineBreak
+                , text "Built on "
+                , deps.buildTimestamp
+                    |> (*) 1000
+                    |> Time.millisToPosix
+                    |> Date.format
+                        [ Date.monthNameAbbreviated
+                        , Date.text " "
+                        , Date.dayOfMonthSuffix
+                        , Date.text " "
+                        , Date.yearNumber
+                        , Date.text ", "
+                        , Date.hourMilitaryFixed
+                        , Date.text ":"
+                        , Date.minuteFixed
+                        , Date.text ":"
+                        , Date.secondFixed
                         ]
-                        [ "bg-base06"
-                        , "cursor-pointer"
-                        , "inline-block"
-                        , "leading-none"
-                        , "ml-1"
-                        , "mr-3"
-                        , "p-1"
-                        , "rounded"
-                        , "text-white"
+                        deps.currentTimeZone
+                    |> text
 
-                        -- Dark mode
-                        ------------
-                        , "dark:bg-base01"
-                        , "dark:text-base05"
-                        ]
-                        [ text "Reload app" ]
+                --
+                , chunk
+                    [ "not-italic", "mt-3" ]
+                    [ case deps.serviceWorkerStatus of
+                        InstallingInitial ->
+                            inline
+                                [ "inline-flex", "items-center" ]
+                                [ text "Setting up service worker"
+                                , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
+                                ]
+
+                        InstallingNew ->
+                            inline
+                                [ "inline-flex", "items-center" ]
+                                [ text "Installing new version"
+                                , inline [ "ml-1" ] [ Icons.downloading 12 Inherit ]
+                                ]
+
+                        WaitingForActivation ->
+                            inline
+                                []
+                                [ text "Update available"
+                                , brick
+                                    [ Maybe.unwrap
+                                        (class "bg-white-20")
+                                        (style "background-color" << Color.toCssString)
+                                        deps.extractedBackdropColor
+
+                                    --
+                                    , E.onClick ReloadApp
+                                    ]
+                                    [ "bg-base06"
+                                    , "cursor-pointer"
+                                    , "inline-block"
+                                    , "leading-none"
+                                    , "ml-1"
+                                    , "p-1"
+                                    , "rounded"
+                                    , "text-white"
+
+                                    -- Dark mode
+                                    ------------
+                                    , "dark:bg-base01"
+                                    ]
+                                    [ text "Reload app" ]
+                                ]
+
+                        Activated ->
+                            nothing
                     ]
-
-            Activated ->
-                nothing
+                ]
+            ]
         ]
 
     -----------------------------------------
     -- Background
     -----------------------------------------
     , chunk
-        [ "mt-8" ]
+        [ "mt-6" ]
         [ label "Background Image"
         , Html.Lazy.lazy backgroundImage deps.chosenBackgroundImage
         ]
@@ -365,27 +319,6 @@ label l =
     chunk
         [ "mb-3", "mt-6", "pb-px" ]
         [ UI.Kit.label [] l ]
-
-
-
--- AUTHENTICATION
-
-
-changePassphrase : User.Layer.Method -> Html Msg
-changePassphrase method =
-    inline
-        []
-        [ lineBreak
-        , text "If you want to, you can "
-        , UI.Kit.textButton
-            { label = "change your passphrase"
-            , onClick =
-                method
-                    |> Authentication.ShowUpdateEncryptionKeyScreen
-                    |> AuthenticationMsg
-            }
-        , text "."
-        ]
 
 
 
