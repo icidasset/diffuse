@@ -48,7 +48,7 @@ const flags = location
   }, {})
 
 
-backwardsCompatibility().then(initialise)
+forwardCompatibility().then(initialise)
 
 
 function initialise() {
@@ -70,7 +70,7 @@ function initialise() {
 }
 
 
-async function backwardsCompatibility() {
+async function forwardCompatibility() {
   const secretKey = await fromCache("AUTH_SECRET_KEY")
   if (secretKey) {
     await toCache("SECRET_KEY", secretKey)

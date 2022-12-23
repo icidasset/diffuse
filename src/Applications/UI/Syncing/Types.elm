@@ -53,6 +53,7 @@ type Msg
       -- Encryption
       -----------------------------------------
     | KeepPassphraseInMemory String
+    | NeedEncryptionKey { error : String }
     | RemoveEncryptionKey Method
     | ShowNewEncryptionKeyScreen Method
     | ShowUpdateEncryptionKeyScreen Method

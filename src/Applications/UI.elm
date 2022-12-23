@@ -687,4 +687,8 @@ translateAlienError tag data err =
             TracksMsg (Tracks.StoredInCache data <| Just err)
 
         _ ->
-            ShowNotification (Notifications.stickyError err)
+            if String.startsWith "There seems to be existing data that's encrypted, I will need the passphrase" err then
+                SyncingMsg (Syncing.NeedEncryptionKey { error = err })
+
+            else
+                ShowNotification (Notifications.stickyError err)

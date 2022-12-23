@@ -36,7 +36,7 @@ export function processContext(context, app) {
         return col.concat(r)
 
       }).catch(e => {
-        console.error(e)
+        console.warn(e)
         return col.concat(null)
 
       })

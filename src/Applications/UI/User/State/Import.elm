@@ -99,7 +99,7 @@ loadHypaethralUserData json model =
                     """
                     Thank you for using Diffuse V1!
                     If you want to import your old data,
-                    please go to the [import page](#/settings/import-export).
+                    please go to the [import page](#/settings/data).
                     """
                         |> Notifications.stickySuccess
                         |> Common.showNotificationWithModel m
@@ -109,14 +109,6 @@ loadHypaethralUserData json model =
             )
         |> andThen
             Sources.addSourcesFromUrl
-        |> andThen
-            (\m ->
-                if m.processAutomatically then
-                    Sources.process m
-
-                else
-                    Return.singleton m
-            )
 
 
 requestImport : Manager

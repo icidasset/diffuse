@@ -29,6 +29,7 @@ import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
 import UI.Kit
 import UI.Ports as Ports
+import UI.Sources.State as Sources
 import UI.Svg.Elements
 import UI.Syncing.ContextMenu as Syncing
 import UI.Syncing.Types as Syncing exposing (..)
@@ -163,6 +164,9 @@ update msg =
         -----------------------------------------
         KeepPassphraseInMemory a ->
             keepPassphraseInMemory a
+
+        NeedEncryptionKey a ->
+            needEncryptionKey a
 
         RemoveEncryptionKey a ->
             removeEncryptionKey a
@@ -333,13 +337,22 @@ exchangeDropboxAuthCode result model =
 gotSyncMethod : Json.Value -> Manager
 gotSyncMethod json model =
     let
-        afterwards =
-            case model.syncing of
-                Syncing { notificationId } ->
-                    Common.dismissNotification { id = notificationId }
+        afterwards a =
+            andThen
+                (\m ->
+                    if m.processAutomatically then
+                        Sources.process m
 
-                _ ->
-                    Return.singleton
+                    else
+                        Return.singleton m
+                )
+                (case model.syncing of
+                    Syncing { notificationId } ->
+                        Common.dismissNotification { id = notificationId } a
+
+                    _ ->
+                        Return.singleton a
+                )
     in
     -- 🧠 told me which auth method we're using,
     -- so we can tell the user in the UI.
@@ -422,6 +435,24 @@ keepPassphraseInMemory passphrase model =
     )
         |> Lens.adjust lens model
         |> Return.singleton
+
+
+needEncryptionKey : { error : String } -> Manager
+needEncryptionKey { error } model =
+    (case lens.get model of
+        Syncing { notificationId } ->
+            Common.dismissNotification { id = notificationId } model
+
+        m ->
+            replaceState m model
+    )
+        |> andThen
+            (error
+                |> Notifications.stickyError
+                |> Common.showNotification
+            )
+        |> andThen
+            stopSync
 
 
 removeEncryptionKey : Method -> Manager
