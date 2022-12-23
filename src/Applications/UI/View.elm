@@ -27,7 +27,6 @@ import UI.Sources.Page
 import UI.Sources.View as Sources
 import UI.Svg.Elements
 import UI.Syncing.Common as Syncing
-import UI.Syncing.Types as Syncing
 import UI.Syncing.View as Syncing
 import UI.Tracks.View as Tracks
 import UI.Types exposing (..)

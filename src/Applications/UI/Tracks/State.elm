@@ -29,7 +29,6 @@ import UI.DnD as DnD
 import UI.Page
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Syncing.Types exposing (State(..))
 import UI.Tracks.ContextMenu as Tracks
 import UI.Tracks.Covers as Covers
 import UI.Tracks.Scene.Covers

@@ -7,7 +7,7 @@ import Json.Encode
 import Task exposing (Task)
 import TaskPort
 import TaskPort.Extra as TaskPort
-import User.Layer as User exposing (..)
+import User.Layer exposing (..)
 
 
 

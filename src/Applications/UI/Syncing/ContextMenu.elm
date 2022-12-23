@@ -5,7 +5,7 @@ import Coordinates exposing (Coordinates)
 import Svg
 import UI.Svg.Elements
 import UI.Syncing.Common exposing (startDropbox, startFission, startIpfs, startRemoteStorage)
-import UI.Types exposing (Msg(..))
+import UI.Types exposing (Msg)
 import User.Layer exposing (dropboxMethod, fissionMethod, ipfsMethod, methodName, remoteStorageMethod)
 
 

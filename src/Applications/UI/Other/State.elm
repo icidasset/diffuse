@@ -8,7 +8,6 @@ import Time
 import UI.Common.State as Common
 import UI.Ports as Ports
 import UI.Types exposing (..)
-import User.Layer exposing (..)
 
 
 

@@ -4,7 +4,7 @@ import Alien
 import Base64
 import Binary
 import Browser.Navigation as Nav
-import Common exposing (Switch(..))
+import Common
 import Coordinates
 import Dict
 import Html
@@ -20,10 +20,9 @@ import Maybe.Extra as Maybe
 import Monocle.Lens exposing (Lens)
 import Notifications
 import Return exposing (andThen, return)
-import Return.Ext as Return
 import SHA
 import String.Ext as String
-import Svg exposing (Svg)
+import Svg
 import Time
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common exposing (showNotification, showNotificationWithModel)
@@ -277,10 +276,6 @@ externalAuth method string model =
                 |> return model
 
         Fission _ ->
-            let
-                url =
-                    model.url
-            in
             "Just a moment, loading necessary components ..."
                 |> Notifications.stickyCasual
                 |> Common.showNotificationWithModel model

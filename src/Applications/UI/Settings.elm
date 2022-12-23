@@ -24,7 +24,7 @@ import UI.Settings.Sync
 import UI.Sources.Types as Sources
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (Msg(..))
-import User.Layer exposing (Method(..))
+import User.Layer
 
 
 

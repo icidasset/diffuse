@@ -5,7 +5,7 @@ import Color exposing (Color)
 import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Html exposing (Html, text)
-import Html.Attributes as A exposing (attribute, href, placeholder, style, tabindex, target, title, value)
+import Html.Attributes as A exposing (attribute, placeholder, style, tabindex, title, value)
 import Html.Events as E exposing (onBlur, onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Ext exposing (onEnterKey)
@@ -565,15 +565,6 @@ cloud/distributed storage service you use.
               else
                 message "No sources available"
             ]
-        ]
-
-
-buttonContents : List (Html UI.Msg) -> Html UI.Msg
-buttonContents =
-    inline
-        [ "flex"
-        , "items-center"
-        , "leading-0"
         ]
 
 

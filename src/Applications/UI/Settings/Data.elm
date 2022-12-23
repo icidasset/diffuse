@@ -2,9 +2,7 @@ module UI.Settings.Data exposing (view)
 
 import Chunky exposing (..)
 import Html exposing (Html, text)
-import Html.Attributes exposing (href)
 import Material.Icons.Round as Icons
-import Material.Icons.Types exposing (Coloring(..))
 import UI.Kit exposing (ButtonColor(..), ButtonType(..))
 import UI.Navigation exposing (..)
 import UI.Page as Page

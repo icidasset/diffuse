@@ -12,7 +12,6 @@ import Brain.User.State as User
 import Brain.User.Types as User
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
-import Json.Encode
 import Return
 import Return.Ext as Return
 import Sources.Processing as Processing

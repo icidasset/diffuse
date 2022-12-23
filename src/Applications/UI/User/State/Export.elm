@@ -8,7 +8,6 @@ import Playlists.Encoding as Playlists
 import Return exposing (return)
 import Settings exposing (Settings)
 import Sources.Encoding as Sources
-import Time
 import Tracks.Encoding as Tracks
 import UI.Ports as Ports
 import UI.Types exposing (..)

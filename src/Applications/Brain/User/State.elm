@@ -19,7 +19,6 @@ import Sources.Encoding as Sources
 import Syncing
 import Syncing.Services.Dropbox.Token
 import Task exposing (Task)
-import Task.Extra as Task exposing (do)
 import TaskPort.Extra as TaskPort
 import Time
 import Tracks exposing (Track)
