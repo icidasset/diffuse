@@ -203,7 +203,7 @@ js-prod: vendor-js
 
 
 @install-tauri-cli:
-	cargo install tauri-cli --version "^1.0.5" --root ./src-tauri
+	cargo install tauri-cli --version "^1.2.2" --root ./src-tauri
 
 
 @quality: check-versions
