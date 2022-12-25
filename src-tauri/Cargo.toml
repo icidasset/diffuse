@@ -1,8 +1,8 @@
 [package]
 name = "diffuse"
-version = "3.2.0"
+version = "3.3.0"
 description = "A music player that connects to your cloud/distributed storage"
-authors = ["you"]
+authors = ["Steven Vandevelde"]
 license = ""
 repository = ""
 default-run = "diffuse"
@@ -17,8 +17,8 @@ tauri-build = { version = "^1.2.1", features = [] }
 [dependencies]
 serde_json = "^1.0"
 serde = { version = "^1.0", features = ["derive"] }
-tauri = { version = "^1.2.3", features = ["dialog-all", "fs-all", "http-all", "path-all", "shell-open", "shell-open-api", "window-all"] }
-tauri-plugin-localhost = { version = "^0.1.0" }
+tauri = { version = "^1.2.3", features = ["clipboard-all", "dialog-all", "fs-all", "global-shortcut-all", "http-all", "path-all", "protocol-all", "shell-open", "shell-open-api", "window-all"] }
+tauri-plugin-localhost = { git = "https://github.com/tauri-apps/tauri-plugin-localhost.git", rev = "a759df6a42d1a3986c9551a7130dd7f81a47d248" }
 tauri-plugin-window-state = { version = "^0.1.0" }
 
 [features]

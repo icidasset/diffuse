@@ -206,9 +206,9 @@ dependencies = [
 
 [[package]]
 name = "cargo_toml"
-version = "0.13.0"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa0e3586af56b3bfa51fca452bd56e8dbbbd5d8d81cbf0b7e4e35b695b537eb8"
+checksum = "497049e9477329f8f6a559972ee42e117487d01d1e8c2cc9f836ea6fa23a9e1a"
 dependencies = [
  "serde",
  "toml",
@@ -500,7 +500,7 @@ dependencies = [
 
 [[package]]
 name = "diffuse"
-version = "3.2.0"
+version = "3.3.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2625,9 +2625,9 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-localhost"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f20786ccff879045f6bafec445fb5c6740c0c057372d2f992ae1281e4658c681"
+source = "git+https://github.com/tauri-apps/tauri-plugin-localhost.git?rev=a759df6a42d1a3986c9551a7130dd7f81a47d248#a759df6a42d1a3986c9551a7130dd7f81a47d248"
 dependencies = [
+ "http",
  "serde_json",
  "tauri",
  "tiny_http",
