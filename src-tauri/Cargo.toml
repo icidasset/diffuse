@@ -1,8 +1,8 @@
 [package]
 name = "diffuse"
-version = "3.2.0"
+version = "3.3.0"
 description = "A music player that connects to your cloud/distributed storage"
-authors = ["you"]
+authors = ["Steven Vandevelde"]
 license = ""
 repository = ""
 default-run = "diffuse"
@@ -12,36 +12,14 @@ build = "src/build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "^1.0.4", features = [] }
+tauri-build = { version = "^1.2.1", features = [] }
 
 [dependencies]
 serde_json = "^1.0"
 serde = { version = "^1.0", features = ["derive"] }
-tauri = { version = "^1.0.5", features = ["dialog-all", "fs-all", "http-all", "path-all", "shell-open", "shell-open-api", "window-all"] }
-tauri-plugin-localhost = { version = "^0.1.0" }
+tauri = { version = "^1.2.3", features = ["clipboard-all", "dialog-all", "fs-all", "global-shortcut-all", "http-all", "path-all", "protocol-all", "shell-open", "shell-open-api", "window-all"] }
+tauri-plugin-localhost = { git = "https://github.com/tauri-apps/tauri-plugin-localhost.git", rev = "a759df6a42d1a3986c9551a7130dd7f81a47d248" }
 tauri-plugin-window-state = { version = "^0.1.0" }
-
-[target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\"))".dependencies]
-webkit2gtk = "0.18.0"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-objc = "0.2"
-objc-foundation = "0.1"
-cocoa = "0.24"
-
-[target.'cfg(windows)'.dependencies]
-webview2-com = "0.16.0"
-windows-implement = "0.37.0"
-
-[target.'cfg(windows)'.dependencies.windows]
-version = "0.37.0"
-features = [
-    "Data_Xml_Dom",
-    "Win32_Foundation",
-    "Win32_Security",
-    "Win32_System_Threading",
-    "Win32_UI_WindowsAndMessaging",
-]
 
 [features]
 default = [ "custom-protocol" ]

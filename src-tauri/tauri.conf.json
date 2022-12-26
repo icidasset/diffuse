@@ -43,10 +43,16 @@
       "active": false
     },
     "allowlist": {
+      "clipboard": {
+        "all": true
+      },
       "dialog": {
         "all": true
       },
       "fs": {
+        "all": true
+      },
+      "globalShortcut": {
         "all": true
       },
       "http": {
@@ -54,6 +60,9 @@
         "request": true
       },
       "path": {
+        "all": true
+      },
+      "protocol": {
         "all": true
       },
       "shell": {
