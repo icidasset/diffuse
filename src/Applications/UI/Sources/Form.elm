@@ -5,7 +5,7 @@ import Common exposing (boolFromString, boolToString)
 import Conditional exposing (..)
 import Dict.Ext as Dict
 import Html exposing (Html, text)
-import Html.Attributes exposing (for, name, placeholder, required, selected, type_, value)
+import Html.Attributes as A exposing (for, name, placeholder, required, selected, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons.Round as Icons
@@ -474,8 +474,22 @@ note service =
 
         Ipfs ->
             howNote
-                [ inline [ "font-semibold" ] [ text "Diffuse will try to use the default local gateway" ]
+                [ inline
+                    [ "font-semibold" ]
+                    [ text "Diffuse will use the ipfs.io gateway by default" ]
                 , text "."
+                , lineBreak
+                , inline
+                    []
+                    [ text "There are also "
+                    , Html.a
+                        [ A.href "https://ipfs.github.io/public-gateway-checker/"
+                        , A.class "underline"
+                        , A.target "_blank"
+                        ]
+                        [ text "other public gateways" ]
+                    , text " you can choose from."
+                    ]
                 , lineBreak
                 , text "If you would like to use another gateway, please provide it below."
                 ]

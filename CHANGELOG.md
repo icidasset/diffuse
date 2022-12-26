@@ -4,6 +4,7 @@
 
 - **Removes the need to pick a user-data-storage service upfront.** You can now use the app immediately without having to sign in first.
 - Fixes authentication issue with RemoteStorage
+- Sets https://ipfs.io as the default IPFS gateway.
 
 
 ## 3.2.0

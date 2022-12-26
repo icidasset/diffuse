@@ -38,7 +38,7 @@ defaults =
 
 
 defaultGateway =
-    "http://127.0.0.1:8080"
+    "https://ipfs.io"
 
 
 {-| The list of properties we need from the user.
