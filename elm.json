@@ -35,6 +35,7 @@
             "icidasset/elm-binary": "2.1.0",
             "icidasset/elm-material-icons": "11.0.0",
             "icidasset/elm-sha": "2.0.2",
+            "jinjor/elm-xml-parser": "2.0.0",
             "jzxhuang/http-extras": "2.1.0",
             "lobanov/elm-taskport": "2.0.1",
             "mpizenberg/elm-pointer-events": "4.0.2",
@@ -54,7 +55,6 @@
             "elm/bytes": "1.0.8",
             "elm/parser": "1.1.0",
             "fredcy/elm-parseint": "2.0.1",
-            "jinjor/elm-xml-parser": "2.0.0",
             "pzp1997/assoc-list": "1.0.0",
             "zwilias/elm-utf-tools": "2.0.1"
         }

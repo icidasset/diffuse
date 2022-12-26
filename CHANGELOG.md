@@ -3,7 +3,9 @@
 ## 3.3.0
 
 - **Removes the need to pick a user-data-storage service upfront.** You can now use the app immediately without having to sign in first.
+- Allows every WebDAV namespace to be used instead of just `d:`/`D:`
 - Fixes authentication issue with RemoteStorage
+- Fixes issue with volume control
 - Sets https://ipfs.io as the default IPFS gateway.
 
 

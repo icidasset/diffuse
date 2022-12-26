@@ -6,6 +6,7 @@ import Sources.Services.Ipfs.Marker as Marker
 import String.Ext as String
 import Url
 import Xml.Decode exposing (..)
+import XmlParser
 
 
 
@@ -18,11 +19,39 @@ parseTreeResponse response previousMarker =
         currentDir =
             Maybe.withDefault "//" (Marker.takeOne previousMarker)
 
+        parseResult =
+            XmlParser.parse response
+
+        namespace =
+            parseResult
+                |> Result.map
+                    (\xml ->
+                        case xml.root of
+                            XmlParser.Element nodeName _ _ ->
+                                nodeName
+                                    |> String.split ":"
+                                    |> List.head
+
+                            _ ->
+                                Nothing
+                    )
+                |> Result.withDefault Nothing
+                |> (\maybe ->
+                        case maybe of
+                            Just n ->
+                                n ++ ":"
+
+                            Nothing ->
+                                if String.contains "<d:" response then
+                                    "d:"
+
+                                else
+                                    "D:"
+                   )
+
         entries =
             response
-                |> String.replace "<d:" "<D:"
-                |> String.replace "</d:" "</D:"
-                |> decodeString treeDecoder
+                |> decodeString (treeDecoder namespace)
                 |> Result.withDefault []
                 |> List.map Url.percentDecode
                 |> Maybe.values
@@ -40,13 +69,19 @@ parseTreeResponse response previousMarker =
     }
 
 
-treeDecoder : Decoder (List String)
-treeDecoder =
-    path [ "D:response" ] (leakyList treeItemDecoder)
+treeDecoder : String -> Decoder (List String)
+treeDecoder namespace =
+    path
+        [ namespace ++ "response" ]
+        (leakyList <| treeItemDecoder namespace)
 
 
-treeItemDecoder : Decoder String
-treeItemDecoder =
+treeItemDecoder : String -> Decoder String
+treeItemDecoder namespace =
+    let
+        withNamespace =
+            String.append namespace
+    in
     map2
         (\_ h -> h)
         (oneOf
@@ -54,17 +89,17 @@ treeItemDecoder =
               --------
               string
                 |> single
-                |> path [ "D:propstat", "D:prop", "D:getcontenttype" ]
+                |> path [ withNamespace "propstat", withNamespace "prop", withNamespace "getcontenttype" ]
                 |> andThen mustBeAudio
 
             -- Directory
             ------------
             , string
                 |> single
-                |> path [ "D:propstat", "D:prop", "D:resourcetype", "D:collection" ]
+                |> path [ withNamespace "propstat", withNamespace "prop", withNamespace "resourcetype", withNamespace "collection" ]
             ]
         )
-        (path [ "D:href" ] (single string))
+        (path [ withNamespace "href" ] (single string))
 
 
 mustBeAudio : String -> Decoder String
