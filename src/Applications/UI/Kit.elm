@@ -270,6 +270,7 @@ centeredContent children =
             , "flex-grow"
             , "items-center"
             , "justify-center"
+            , "max-w-full"
             , "relative"
             , "z-10"
             ]
@@ -338,7 +339,9 @@ focusScreen { icon, iconHref, text, textHref } nodes =
         ]
         text
     , chunk
-        [ "mt-4" ]
+        [ "max-w-full"
+        , "mt-4"
+        ]
         nodes
     ]
         |> chunk
@@ -347,6 +350,7 @@ focusScreen { icon, iconHref, text, textHref } nodes =
             , "items-center"
             , "max-h-full"
             , "overflow-y-auto"
+            , "px-4"
             , "py-8"
             , "w-full"
             ]
