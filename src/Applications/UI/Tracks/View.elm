@@ -410,7 +410,7 @@ navigation { bgColor, favouritesOnly, grouping, isOnIndexPage, pressedShift, sce
                 , "rounded-bl"
                 , "shadow-lg"
                 , "top-full"
-                , "z-30"
+                , "z-40"
 
                 -- Dark mode
                 ------------
