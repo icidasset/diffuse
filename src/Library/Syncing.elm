@@ -1,4 +1,4 @@
-module Syncing exposing (..)
+module Syncing exposing (LocalConfig, RemoteConfig, task)
 
 import Json.Decode as Decode
 import Json.Encode as Json
@@ -6,62 +6,118 @@ import Maybe.Extra as Maybe
 import Task exposing (Task)
 import Task.Extra as Task
 import Time
+import Time.Ext as Time
 import User.Layer as User exposing (..)
 
 
+
+-- 🌳
+
+
+type alias LocalConfig =
+    { localData : HypaethralData
+    , saveLocal : HypaethralBit -> Decode.Value -> Task String ()
+    }
+
+
+type alias RemoteConfig =
+    { retrieve : HypaethralBit -> Task String (Maybe Decode.Value)
+    , save : HypaethralBit -> Decode.Value -> Task String ()
+    }
+
+
+
+-- 🛠
+
+
 {-| Syncs all hypaethral data.
+
+Returns `Nothing` if the local data is preferred.
+
+🏝️ LOCAL
+🛰️ REMOTE
+
+1.  Try to pull remote `modified.json` timestamp
+    a. If newer, continue (#2)
+    b. If same, do nothing
+    c. If older, or not present, prefer local data 🏝️ (stop & push)
+2.  Try to download all remote data
+    a. If any remote data, continue (#3)
+    b. If none, prefer local data 🏝️ (stop & push)
+3.  Decode remote data and compare timestamps
+    a. If newer, use remote data 🛰️
+    b. If same, do nothing
+    c. If older, prefer local data 🏝️ (stop & push)
+    d. If no timestamps, if local data, prefer local 🏝️ (stop & push), otherwise remote 🛰️
+
 -}
 task :
     Task String a
-    ->
-        { localData : HypaethralData
-        , saveLocal : HypaethralBit -> Decode.Value -> Task String ()
-        }
-    ->
-        { retrieve : HypaethralBit -> Task String (Maybe Decode.Value)
-        , save : HypaethralBit -> Decode.Value -> Task String ()
-        }
+    -> LocalConfig
+    -> RemoteConfig
     -> Task String (Maybe HypaethralData)
-task initialTask { localData, saveLocal } { retrieve, save } =
-    -- 1. Check if any existing data is present on the service to sync with.
-    -- 2. If not, copy over all current data (in memory) to that service.
-    --    If so: 👇
-    -- 3. If no data is present locally then just load the remote data (ie. service data)
-    --    No data = no sources, favourites & playlists
-    --    If so: 👇
-    -- 4. Compare modifiedAt timestamps
-    --    (if no remote timestamp is available try to calculate it based on the data, progress → favourites → playlists → tracks → sources)
-    --    If remote is newer: Load remote data
-    --    Otherwise: 👇
-    -- 5. Load remote data and run merge function for each type of data (sources, tracks, etc.)
-    -- 6. Store merged data into memory
-    -- 7. Overwrite remote data
-    --
-    -- 🏝️ LOCAL
-    -- 🛰️ REMOTE
-    let
-        noLocalData =
-            List.isEmpty localData.sources
-                && List.isEmpty localData.favourites
-                && List.isEmpty localData.playlists
+task initialTask localConfig remoteConfig =
+    initialTask
+        |> Task.andThen
+            (\_ ->
+                remoteConfig.retrieve ModifiedAt
+            )
+        |> Task.andThen
+            (\maybeModifiedAt ->
+                let
+                    maybeRemoteModifiedAt =
+                        Maybe.andThen
+                            (Decode.decodeValue Time.decoder >> Result.toMaybe)
+                            maybeModifiedAt
+                in
+                case ( maybeRemoteModifiedAt, localConfig.localData.modifiedAt ) of
+                    ( Just remoteModifiedAt, Just localModifiedAt ) ->
+                        if Time.posixToMillis remoteModifiedAt == Time.posixToMillis localModifiedAt then
+                            -- 🏝️
+                            Task.succeed Nothing
 
-        pushLocalToRemote { return } =
-            localData
-                |> User.encodedHypaethralDataList
-                |> List.map (\( bit, data ) -> save bit data)
-                |> Task.sequence
-                |> Task.map (\_ -> return)
+                        else if Time.posixToMillis remoteModifiedAt > Time.posixToMillis localModifiedAt then
+                            -- 🛰️
+                            fetchRemote localConfig remoteConfig
+
+                        else
+                            -- 🏝️ → 🛰️
+                            pushLocalToRemote localConfig remoteConfig { return = Nothing }
+
+                    ( Just _, Nothing ) ->
+                        -- 🛰️
+                        fetchRemote localConfig remoteConfig
+
+                    ( Nothing, _ ) ->
+                        -- 🛰️
+                        fetchRemote localConfig remoteConfig
+            )
+
+
+fetchRemote :
+    LocalConfig
+    -> RemoteConfig
+    -> Task String (Maybe HypaethralData)
+fetchRemote localConfig remoteConfig =
+    let
+        { localData, saveLocal } =
+            localConfig
+
+        { retrieve } =
+            remoteConfig
 
         saveLocally data =
             data
                 |> User.saveHypaethralData saveLocal
                 |> Task.map (\_ -> Just data)
+
+        noLocalData =
+            List.isEmpty localData.sources
+                && List.isEmpty localData.favourites
+                && List.isEmpty localData.playlists
     in
-    initialTask
-        |> Task.andThen
-            (\_ ->
-                User.retrieveHypaethralData retrieve
-            )
+    retrieve
+        |> User.retrieveHypaethralData
         |> Task.andThen
             (\list ->
                 let
@@ -74,7 +130,7 @@ task initialTask { localData, saveLocal } { retrieve, save } =
 
                 else
                     -- 🏝️ → 🛰️
-                    pushLocalToRemote { return = list }
+                    pushLocalToRemote localConfig remoteConfig { return = list }
             )
         |> Task.andThen
             (\list ->
@@ -100,16 +156,16 @@ task initialTask { localData, saveLocal } { retrieve, save } =
                             saveLocally remoteData
 
                         else
-                            -- 🏝️
-                            pushLocalToRemote { return = Nothing }
+                            -- 🏝️ → 🛰️
+                            pushLocalToRemote localConfig remoteConfig { return = Nothing }
 
                     ( Just _, Nothing ) ->
                         -- 🛰️
                         saveLocally remoteData
 
                     ( Nothing, Just _ ) ->
-                        -- 🏝️
-                        pushLocalToRemote { return = Nothing }
+                        -- 🏝️ → 🛰️
+                        pushLocalToRemote localConfig remoteConfig { return = Nothing }
 
                     _ ->
                         if noLocalData then
@@ -120,3 +176,16 @@ task initialTask { localData, saveLocal } { retrieve, save } =
                             -- 🏝️
                             Task.succeed Nothing
             )
+
+
+
+-- ㊙️
+
+
+pushLocalToRemote : LocalConfig -> RemoteConfig -> { return : a } -> Task String a
+pushLocalToRemote localConfig remoteConfig { return } =
+    localConfig.localData
+        |> User.encodedHypaethralDataList
+        |> List.map (\( bit, data ) -> remoteConfig.save bit data)
+        |> Task.sequence
+        |> Task.map (\_ -> return)

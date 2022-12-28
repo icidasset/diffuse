@@ -177,6 +177,9 @@ saveAllHypaethralData return =
                 Favourites ->
                     andThen User.saveFavourites
 
+                ModifiedAt ->
+                    andThen User.saveModifiedAt
+
                 Playlists ->
                     andThen User.savePlaylists
 

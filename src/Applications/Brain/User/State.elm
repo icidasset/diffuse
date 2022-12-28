@@ -437,8 +437,11 @@ saveHypaethralDataBitsTask bits userData saveFn =
 one part at a time.
 -}
 saveHypaethralDataBits : List HypaethralBit -> Manager
-saveHypaethralDataBits bits model =
+saveHypaethralDataBits bitsWithoutModifiedAt model =
     let
+        bits =
+            ModifiedAt :: bitsWithoutModifiedAt
+
         userData =
             model.hypaethralUserData
 

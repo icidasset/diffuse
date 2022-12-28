@@ -83,6 +83,9 @@ export function decryptIfNeeded(data) {
   } else if (data.startsWith("{") || data.startsWith("[")) {
     return Promise.resolve(data)
 
+  } else if (data.length < 15 && Number.isInteger(parseInt(data, 10))) {
+    return Promise.resolve(data)
+
   } else {
     return data
       ? getSecretKey().then(secretKey => {

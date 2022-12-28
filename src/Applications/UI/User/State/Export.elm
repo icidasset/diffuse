@@ -76,6 +76,12 @@ saveFavourites model =
         |> return model
 
 
+saveModifiedAt : Manager
+saveModifiedAt =
+    -- Handled by 🧠
+    Return.singleton
+
+
 savePlaylists : Manager
 savePlaylists model =
     model.playlists
