@@ -139,7 +139,7 @@ const IPFS_ROOT = "/Applications/Diffuse/"
 taskPorts.fromIpfs = ({ apiOrigin, fileName }) => {
   const path = IPFS_ROOT + fileName
 
-  fetch(apiOrigin + "/api/v0/files/read?arg=" + encodeURIComponent(path), { method: "POST" })
+  return fetch(apiOrigin + "/api/v0/files/read?arg=" + encodeURIComponent(path), { method: "POST" })
     .then(r => r.ok ? r.text() : r.json())
     .then(r => r.Code === 0 ? null : r)
     .then(decryptIfNeeded)
