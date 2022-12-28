@@ -80,10 +80,22 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
 
 
 let app
+let brain
 let wire = {}
 
 
-function initialise(reg) {
+async function initialise(reg) {
+  brain = new Worker(
+    "brain.js#appHref=" +
+    encodeURIComponent(window.location.href)
+  )
+
+  await new Promise(resolve => {
+    brain.onmessage = event => {
+      if (event.data.action === "READY") resolve()
+    }
+  })
+
   app = Elm.UI.init({
     node: document.getElementById("elm"),
     flags: {
@@ -171,15 +183,7 @@ function failure(text) {
 // Brain
 // =====
 
-let brain
-
-
 wire.brain = () => {
-  brain = new Worker(
-    "brain.js#appHref=" +
-    encodeURIComponent(window.location.href)
-  )
-
   brain.onmessage = event => {
     if (event.data.action) return handleAction(event.data.action, event.data.data, event.ports)
     if (event.data.tag) app.ports.fromAlien.send(event.data)

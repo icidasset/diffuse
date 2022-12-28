@@ -67,6 +67,8 @@ function initialise() {
   wire.downloading()
   wire.search()
   wire.tags()
+
+  self.postMessage({ action: "READY" })
 }
 
 
@@ -116,12 +118,12 @@ wire.ui = () => {
   app.ports.toUI.subscribe(event => {
     self.postMessage(event)
   })
+}
 
 
-  self.onmessage = event => {
-    if (event.data.action) return handleAction(event.data.action, event.data.data)
-    if (event.data.tag) return app.ports.fromAlien.send(event.data)
-  }
+self.onmessage = event => {
+  if (event.data.action) return handleAction(event.data.action, event.data.data)
+  if (event.data.tag) return app.ports.fromAlien.send(event.data)
 }
 
 
