@@ -400,7 +400,7 @@ saveAllHypaethralDataTask : HypaethralData -> Method -> Task String ()
 saveAllHypaethralDataTask userData method =
     let
         save =
-            saveHypaethralDataBitsTask User.allHypaethralBits userData
+            saveHypaethralDataBitsTask (ModifiedAt :: User.allHypaethralBits) userData
     in
     case method of
         Dropbox { accessToken } ->
@@ -653,7 +653,11 @@ removeEncryptionKey model =
             (\_ ->
                 case model.userSyncMethod of
                     Just method ->
-                        saveAllHypaethralDataTask model.hypaethralUserData method
+                        let
+                            data =
+                                model.hypaethralUserData
+                        in
+                        saveAllHypaethralDataTask { data | modifiedAt = Just model.currentTime } method
 
                     Nothing ->
                         Task.succeed ()
@@ -673,7 +677,11 @@ updateEncryptionKey json model =
                     (\_ ->
                         case model.userSyncMethod of
                             Just method ->
-                                saveAllHypaethralDataTask model.hypaethralUserData method
+                                let
+                                    data =
+                                        model.hypaethralUserData
+                                in
+                                saveAllHypaethralDataTask { data | modifiedAt = Just model.currentTime } method
 
                             Nothing ->
                                 Task.succeed ()
