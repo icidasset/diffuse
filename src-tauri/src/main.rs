@@ -4,8 +4,11 @@
 )]
 
 use std::path::PathBuf;
-use tauri::{TitleBarStyle, WindowBuilder, WindowUrl};
+use tauri::{WindowBuilder, WindowUrl};
 use tauri::utils::config::AppUrl;
+
+#[cfg(target_os = "macos")]
+use tauri::{TitleBarStyle};
 
 
 // 🚀 PRODUCTION
@@ -66,19 +69,24 @@ fn main() {
 
 
 fn build_window(app: tauri::AppHandle) {
-    WindowBuilder::new(
+    let mut builder = WindowBuilder::new(
         &app,
         "main",
         WindowUrl::App(PathBuf::from("index.html"))
     )
         .title("Diffuse")
-        .title_bar_style(TitleBarStyle::Overlay)
         .hidden_title(true)
         .maximized(true)
         .resizable(true)
         .theme(None)
         .enable_clipboard_access()
-        .user_agent("Chrome")
+        .user_agent("Chrome");
+
+    if cfg!(target_os = "macos") {
+        builder = builder.title_bar_style(TitleBarStyle::Overlay);
+    }
+
+    builder
         .build()
         .unwrap();
 }
