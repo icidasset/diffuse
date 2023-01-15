@@ -75,18 +75,29 @@ fn build_window(app: tauri::AppHandle) {
         WindowUrl::App(PathBuf::from("index.html"))
     )
         .title("Diffuse")
-        .hidden_title(true)
         .maximized(true)
         .resizable(true)
         .theme(None)
         .enable_clipboard_access()
         .user_agent("Chrome");
 
-    if cfg!(target_os = "macos") {
-        builder = builder.title_bar_style(TitleBarStyle::Overlay);
-    }
+    builder = title_styles(builder);
 
     builder
         .build()
         .unwrap();
+}
+
+
+#[cfg(target_os = "macos")]
+fn title_styles(builder: WindowBuilder) -> WindowBuilder {
+    return builder
+        .title_bar_style(TitleBarStyle::Overlay)
+        .hidden_title(true);
+}
+
+
+#[cfg(not(target_os = "macos"))]
+fn title_styles(builder: WindowBuilder) -> WindowBuilder {
+    return builder;
 }
