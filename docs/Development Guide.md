@@ -6,7 +6,8 @@ Hello there! I see you want to build Diffuse.
 
 **Prerequisites for MacOS and Linux**
 1. Curl
-2. Basic CLI operation knowledge
+2. NodeJS/npm
+3. Basic CLI operation knowledge
 
 **Linux guide** [Tested on Ubuntu 20.10]
 1. Set up [Git](https://www.freecodecamp.org/news/learn-the-basics-of-git-in-under-10-minutes-da548267cc91/).
@@ -45,6 +46,6 @@ Hello there! I see you want to build Diffuse.
 5. Execute `just install-deps` after the previous step finishes
 6. Execute `just`
 
-Note: _Using WSL/2 and the Linux instructions might work._
+Note: _Using WSL/2 with the Linux instructions might work._
 
 In case you have any queries or issues, feel free to reach out to me @Netherquark or to Steven @icidasset.
