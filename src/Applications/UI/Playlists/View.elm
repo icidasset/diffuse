@@ -79,7 +79,8 @@ index playlists selectedPlaylist bgColor authMethodSupportsPublicData =
 
                                     else
                                         Icons.public_off
-                              , msg = Nothing
+                              , msg =
+                                    Just (\_ -> TogglePlaylistVisibility playlist)
                               , title =
                                     if playlist.public then
                                         "Make private"

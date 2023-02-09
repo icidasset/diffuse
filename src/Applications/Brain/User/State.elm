@@ -418,19 +418,27 @@ saveAllHypaethralDataTask userData method =
 
 saveHypaethralDataBitsTask : List HypaethralBit -> HypaethralData -> (HypaethralBit -> Json.Value -> Task String ()) -> Task String ()
 saveHypaethralDataBitsTask bits userData saveFn =
-    bits
-        |> List.map
-            (\bit ->
-                let
-                    value =
-                        encodeHypaethralBit bit userData
-                in
-                Task.andThen
-                    (\_ -> saveFn bit value)
-                    (Hypaethral.saveLocal bit value)
-            )
-        |> Task.sequence
-        |> Task.map (always ())
+    [ --------
+      -- LOCAL
+      --------
+      List.map
+        (\bit ->
+            Hypaethral.saveLocal bit (encodeHypaethralBit bit userData)
+        )
+        bits
+    , ---------
+      -- REMOTE
+      ---------
+      List.map
+        (\bit ->
+            saveFn bit (encodeHypaethralBit bit userData)
+        )
+        bits
+    ]
+        |> List.concat
+        |> List.foldl
+            (\nextTask -> Task.andThen (\_ -> nextTask))
+            (Task.succeed ())
 
 
 {-| Save different parts of hypaethral data,
@@ -452,8 +460,14 @@ saveHypaethralDataBits bitsWithoutModifiedAt model =
             { model | hypaethralUserData = updatedUserData }
 
         save saveFn =
-            saveFn
-                |> saveHypaethralDataBitsTask bits updatedUserData
+            Time.now
+                |> Task.andThen
+                    (\currentTime ->
+                        saveHypaethralDataBitsTask
+                            bits
+                            { updatedUserData | modifiedAt = Just currentTime }
+                            saveFn
+                    )
                 |> Common.attemptTask (always Brain.Bypass)
                 |> return updatedModel
     in
@@ -470,7 +484,7 @@ saveHypaethralDataBits bitsWithoutModifiedAt model =
                         model.currentTime
                         (SaveHypaethralDataBits bits)
                         (Task.succeed ())
-                    |> return updatedModel
+                    |> return model
 
             else
                 save (Hypaethral.saveDropbox accessToken)
@@ -507,6 +521,7 @@ saveHypaethralDataSlowly debouncerMsg model =
                 |> Maybe.withDefault []
                 |> EverySet.fromList
                 |> EverySet.toList
+                |> Debug.log "Save bits"
     in
     c
         |> Cmd.map (SaveHypaethralDataSlowly >> UserMsg)
@@ -649,15 +664,16 @@ removeEncryptionKey model =
     Alien.SecretKey
         |> Brain.Task.Ports.removeCache
         |> Task.mapError TaskPort.errorToStringCustom
+        |> Task.andThen (\_ -> Time.now)
         |> Task.andThen
-            (\_ ->
+            (\currentTime ->
                 case model.userSyncMethod of
                     Just method ->
                         let
                             data =
                                 model.hypaethralUserData
                         in
-                        saveAllHypaethralDataTask { data | modifiedAt = Just model.currentTime } method
+                        saveAllHypaethralDataTask { data | modifiedAt = Just currentTime } method
 
                     Nothing ->
                         Task.succeed ()
@@ -673,15 +689,16 @@ updateEncryptionKey json model =
             passphrase
                 |> Brain.Task.Ports.fabricateSecretKey
                 |> Task.mapError TaskPort.errorToStringCustom
+                |> Task.andThen (\_ -> Time.now)
                 |> Task.andThen
-                    (\_ ->
+                    (\currentTime ->
                         case model.userSyncMethod of
                             Just method ->
                                 let
                                     data =
                                         model.hypaethralUserData
                                 in
-                                saveAllHypaethralDataTask { data | modifiedAt = Just model.currentTime } method
+                                saveAllHypaethralDataTask { data | modifiedAt = Just currentTime } method
 
                             Nothing ->
                                 Task.succeed ()

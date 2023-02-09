@@ -261,6 +261,7 @@ type Msg
     | SetPlaylistCreationContext String
     | SetPlaylistModificationContext String String
     | ShowPlaylistListMenu Playlist Mouse.Event
+    | TogglePlaylistVisibility Playlist
       -----------------------------------------
       -- Routing
       -----------------------------------------

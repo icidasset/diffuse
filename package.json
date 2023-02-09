@@ -36,6 +36,6 @@
     "subworkers": "^1.0.1",
     "timer.js": "^1.0.4",
     "tocca": "^2.0.9",
-    "webnative": "^0.35.0"
+    "webnative": "^0.36.2"
   }
 }

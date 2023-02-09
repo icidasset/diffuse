@@ -68,7 +68,11 @@ export function fromCache(key) {
 
 
 export function toCache(key, data) {
-  return db.setInIndex({ key: key, data: data })
+  console.log("toCache", key)
+  return db.setInIndex({ key: key, data: data }).then(result => {
+    console.log("toCache succeeded", key)
+    return result
+  })
 }
 
 
