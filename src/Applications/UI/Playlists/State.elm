@@ -1,16 +1,13 @@
 module UI.Playlists.State exposing (..)
 
-import Alien
 import Conditional exposing (ifThenElse)
 import Coordinates
 import Html.Events.Extra.Mouse as Mouse
-import Json.Encode
 import List.Ext as List
 import List.Extra as List
 import Notifications
 import Playlists exposing (..)
-import Playlists.Encoding as Playlists
-import Return exposing (andThen, return)
+import Return exposing (andThen)
 import Tracks exposing (IdentifiedTrack)
 import Tracks.Collection
 import UI.Alfred.State as Alfred
@@ -19,7 +16,6 @@ import UI.Page as Page
 import UI.Playlists.Alfred
 import UI.Playlists.ContextMenu as Playlists
 import UI.Playlists.Page exposing (..)
-import UI.Ports as Ports
 import UI.Tracks.State as Tracks
 import UI.Types exposing (..)
 import UI.User.State.Export as User

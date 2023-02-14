@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.0
+
+Allows you to make playlists public when using Fission / Webnative.
+
+
 ## 3.3.0
 
 - **Removes the need to pick a user-data-storage service upfront.** You can now use the app immediately without having to sign in first.
