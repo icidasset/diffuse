@@ -521,7 +521,6 @@ saveHypaethralDataSlowly debouncerMsg model =
                 |> Maybe.withDefault []
                 |> EverySet.fromList
                 |> EverySet.toList
-                |> Debug.log "Save bits"
     in
     c
         |> Cmd.map (SaveHypaethralDataSlowly >> UserMsg)

@@ -101,9 +101,6 @@ saveDropbox accessToken bit data =
 saveFission : HypaethralBit -> Json.Decode.Value -> Task String ()
 saveFission bit data =
     let
-        _ =
-            Debug.log "saveFission" bit
-
         savePublicData =
             bit == Playlists
     in
@@ -150,22 +147,10 @@ saveRemoteStorage { token, userAddress } bit data =
 
 saveLocal : HypaethralBit -> Json.Decode.Value -> Task String ()
 saveLocal bit data =
-    let
-        _ =
-            Debug.log "saveLocal" bit
-    in
     data
         |> Brain.Task.Ports.toCacheWithSuffix
             Alien.SyncLocal
             (hypaethralBitFileName bit)
-        |> Task.andThen
-            (\_ ->
-                let
-                    _ =
-                        Debug.log "saveLocal succeeded" ()
-                in
-                Task.succeed ()
-            )
         |> Task.mapError TaskPort.errorToStringCustom
 
 
