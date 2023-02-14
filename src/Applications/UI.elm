@@ -433,6 +433,9 @@ update msg =
         ShowPlaylistListMenu a b ->
             Playlists.showListMenu a b
 
+        TogglePlaylistVisibility a ->
+            Playlists.toggleVisibility a
+
         -----------------------------------------
         -- Routing
         -----------------------------------------

@@ -11,7 +11,10 @@ export const APP_INFO = {
 
 export const WEBNATIVE_CONFIG = {
   namespace: APP_INFO,
-  permissions: { app: APP_INFO },
+  permissions: {
+    app: APP_INFO,
+    fs: { public: [ { directory: [ "Apps", APP_INFO.creator, APP_INFO.name ] } ] }
+  },
   debug: true,
 }
 

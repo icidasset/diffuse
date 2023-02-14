@@ -68,7 +68,9 @@ export function fromCache(key) {
 
 
 export function toCache(key, data) {
-  return db.setInIndex({ key: key, data: data })
+  return db.setInIndex({ key: key, data: data }).then(result => {
+    return result
+  })
 }
 
 

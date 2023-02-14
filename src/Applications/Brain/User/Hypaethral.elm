@@ -29,7 +29,12 @@ retrieveDropbox accessToken bit =
 
 retrieveFission : HypaethralBit -> Task String (Maybe Json.Decode.Value)
 retrieveFission bit =
+    let
+        includePublicData =
+            bit == Playlists
+    in
     [ ( "fileName", fileName bit )
+    , ( "includePublicData", Json.Encode.bool includePublicData )
     ]
         |> TaskPort.call
             { function = "fromFission"
@@ -95,8 +100,13 @@ saveDropbox accessToken bit data =
 
 saveFission : HypaethralBit -> Json.Decode.Value -> Task String ()
 saveFission bit data =
+    let
+        savePublicData =
+            bit == Playlists
+    in
     [ ( "fileName", fileName bit )
     , ( "data", data )
+    , ( "savePublicData", Json.Encode.bool savePublicData )
     ]
         |> TaskPort.call
             { function = "toFission"
