@@ -114,7 +114,6 @@ taskPorts.fromFission = async ({ fileName, includePublicData }) => {
 
 
 taskPorts.toFission = async ({ data, fileName, savePublicData }) => {
-  console.log("toFission", fileName, data)
   await constructFission()
 
   // Data identifying
