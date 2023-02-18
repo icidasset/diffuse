@@ -38,9 +38,16 @@
 
 html,
 body {
-  height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
   overscroll-behavior: none;
+}
+
+html,
+body,
+.screen-height {
+  /* TODO: Remove support for older browsers */
+  height: calc(var(--vh, 1vh) * 100);
+  height: 100dvh;
 }
 
 body {

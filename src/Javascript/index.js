@@ -991,6 +991,8 @@ function viableForUpgrade() {
 
 // Vertical Height
 // ---------------
+// TODO: Remove support for older browsers
+//       Replaced by `dvh` CSS unit
 
 setVerticalHeightUnit()
 
