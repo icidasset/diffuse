@@ -102,7 +102,8 @@ type alias Model =
     -----------------------------------------
     -- Debouncing
     -----------------------------------------
-    , debounce : Debouncer Msg Msg
+    , resizeDebouncer : Debouncer Msg Msg
+    , searchDebouncer : Debouncer Msg Msg
 
     -----------------------------------------
     -- Equalizer
@@ -227,7 +228,6 @@ type Msg
     | Blur
     | ContextMenuConfirmation String Msg
     | CopyToClipboard String
-    | Debounce (Debouncer.Msg Msg)
     | DismissNotification { id : Int }
     | DnD (DnD.Msg Int)
     | FocusedOnInput
@@ -238,7 +238,9 @@ type Msg
     | RemoveNotification { id : Int }
     | RemoveQueueSelection
     | RemoveTrackSelection
+    | ResizeDebounce (Debouncer.Msg Msg)
     | ResizedWindow ( Int, Int )
+    | SearchDebounce (Debouncer.Msg Msg)
     | ShowNotification (Notification Msg)
     | SetIsTouchDevice Bool
     | StoppedDragging

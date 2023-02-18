@@ -6,9 +6,8 @@ import Common exposing (Switch(..))
 import Conditional exposing (ifThenElse)
 import Html exposing (Html, text)
 import Html.Attributes as A exposing (attribute, placeholder, style, tabindex, title, value)
-import Html.Events as E exposing (onBlur, onClick, onInput)
+import Html.Events as E exposing (onClick, onInput)
 import Html.Events.Extra.Mouse as Mouse
-import Html.Ext exposing (onEnterKey)
 import Html.Lazy exposing (..)
 import Keyboard exposing (Key(..))
 import Material.Icons.Round as Icons
@@ -184,8 +183,6 @@ navigation { bgColor, favouritesOnly, grouping, isOnIndexPage, pressedShift, sce
                 Html.input
                 [ attribute "autocorrect" "off"
                 , attribute "autocapitalize" "none"
-                , onBlur (TracksMsg Search)
-                , onEnterKey (TracksMsg Search)
                 , onInput (TracksMsg << SetSearchTerm)
                 , placeholder "Search"
                 , tabindex tabindex_

@@ -2,7 +2,9 @@
 
 ## 3.4.0
 
-Allows you to make playlists public when using Fission / Webnative.
+- Adjusted search behaviour, now searches while typing (with a small delay).
+- Allows you to make playlists public when using Fission / Webnative.
+- Fixes issue with Safari where reloading after a search caused the loader to be shown indefinitely.
 
 
 ## 3.3.0

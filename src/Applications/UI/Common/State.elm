@@ -4,6 +4,7 @@ import Browser.Dom
 import Browser.Navigation as Nav
 import Common exposing (..)
 import ContextMenu exposing (ContextMenu)
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 import List.Extra as List
 import Monocle.Lens as Lens exposing (Lens)
 import Notifications exposing (Notification)
@@ -16,7 +17,7 @@ import UI.Playlists.Directory
 import UI.Syncing.Types as Syncing
 import UI.Tracks.Scene.Covers
 import UI.Tracks.Scene.List
-import UI.Types as UI exposing (Manager, Msg)
+import UI.Types as UI exposing (Manager, Model, Msg)
 import User.Layer exposing (Method)
 
 
@@ -30,6 +31,28 @@ changeUrlUsingPage page model =
         |> Page.toString
         |> Nav.pushUrl model.navKey
         |> return model
+
+
+debounce : (Model -> Debouncer Msg Msg) -> (Debouncer Msg Msg -> Model -> Model) -> (Debouncer.Msg Msg -> Msg) -> (Msg -> Model -> ( Model, Cmd Msg )) -> Debouncer.Msg Msg -> Manager
+debounce getter setter debouncerMsgContainer update debouncerMsg model =
+    let
+        ( subModel, subCmd, emittedMsg ) =
+            Debouncer.update debouncerMsg (getter model)
+
+        mappedCmd =
+            Cmd.map debouncerMsgContainer subCmd
+
+        updatedModel =
+            setter subModel model
+    in
+    case emittedMsg of
+        Just emitted ->
+            updatedModel
+                |> update emitted
+                |> Return.command mappedCmd
+
+        Nothing ->
+            return updatedModel mappedCmd
 
 
 dismissNotification : { id : Int } -> Manager

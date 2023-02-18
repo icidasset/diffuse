@@ -5,7 +5,9 @@
 // and connect the other bits to it.
 
 
+import "subworkers"
 import "tocca"
+
 import loadScript from "load-script2"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"

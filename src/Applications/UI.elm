@@ -136,8 +136,13 @@ init flags url key =
     -----------------------------------------
     -- Debouncing
     -----------------------------------------
-    , debounce =
+    , resizeDebouncer =
         0.25
+            |> Debouncer.fromSeconds
+            |> Debouncer.debounce
+            |> Debouncer.toDebouncer
+    , searchDebouncer =
+        0.5
             |> Debouncer.fromSeconds
             |> Debouncer.debounce
             |> Debouncer.toDebouncer
@@ -337,9 +342,6 @@ update msg =
         CopyToClipboard a ->
             Interface.copyToClipboard a
 
-        Debounce a ->
-            Interface.debounce update a
-
         DismissNotification a ->
             Common.dismissNotification a
 
@@ -370,8 +372,14 @@ update msg =
         RemoveTrackSelection ->
             Interface.removeTrackSelection
 
+        ResizeDebounce a ->
+            Interface.resizeDebounce update a
+
         ResizedWindow a ->
             Interface.resizedWindow a
+
+        SearchDebounce a ->
+            Interface.searchDebounce update a
 
         SetIsTouchDevice a ->
             Interface.setIsTouchDevice a

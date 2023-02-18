@@ -7,6 +7,7 @@ import Return exposing (return)
 import Return.Ext as Return
 import Tracks
 import UI.Common.State as Common
+import UI.Common.Types exposing (DebounceManager)
 import UI.DnD as DnD
 import UI.Page as Page
 import UI.Playlists.State as Playlists
@@ -38,26 +39,12 @@ copyToClipboard string =
         |> Return.communicate
 
 
-debounce : (Msg -> Model -> ( Model, Cmd Msg )) -> Debouncer.Msg Msg -> Manager
-debounce update debouncerMsg model =
-    let
-        ( subModel, subCmd, emittedMsg ) =
-            Debouncer.update debouncerMsg model.debounce
-
-        mappedCmd =
-            Cmd.map Debounce subCmd
-
-        updatedModel =
-            { model | debounce = subModel }
-    in
-    case emittedMsg of
-        Just emitted ->
-            updatedModel
-                |> update emitted
-                |> Return.command mappedCmd
-
-        Nothing ->
-            return updatedModel mappedCmd
+resizeDebounce : DebounceManager
+resizeDebounce =
+    Common.debounce
+        .resizeDebouncer
+        (\d m -> { m | resizeDebouncer = d })
+        ResizeDebounce
 
 
 dnd : DnD.Msg Int -> Manager
@@ -187,6 +174,14 @@ resizedWindow ( width, height ) model =
         }
 
 
+searchDebounce : DebounceManager
+searchDebounce =
+    Common.debounce
+        .searchDebouncer
+        (\d m -> { m | searchDebouncer = d })
+        SearchDebounce
+
+
 setIsTouchDevice : Bool -> Manager
 setIsTouchDevice bool model =
     Return.singleton { model | isTouchDevice = bool }
@@ -220,4 +215,4 @@ onResize w h =
     ( w, h )
         |> ResizedWindow
         |> Debouncer.provideInput
-        |> Debounce
+        |> ResizeDebounce

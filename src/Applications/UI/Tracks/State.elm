@@ -4,6 +4,7 @@ import Alien
 import Common exposing (..)
 import ContextMenu
 import Coordinates exposing (Coordinates)
+import Debouncer.Basic as Debouncer
 import Dict
 import Html.Events.Extra.Mouse as Mouse
 import InfiniteList
@@ -623,14 +624,21 @@ setSearchResults json model =
 
 setSearchTerm : String -> Manager
 setSearchTerm term model =
-    User.saveEnclosedUserData
-        (case String.trim term of
-            "" ->
-                { model | searchTerm = Nothing }
+    (case String.trim term of
+        "" ->
+            { model | searchTerm = Nothing }
 
-            _ ->
-                { model | searchTerm = Just term }
-        )
+        _ ->
+            { model | searchTerm = Just term }
+    )
+        |> Return.communicate
+            (Search
+                |> TracksMsg
+                |> Debouncer.provideInput
+                |> SearchDebounce
+                |> Task.do
+            )
+        |> Return.andThen User.saveEnclosedUserData
 
 
 showCoverMenu : Cover -> Coordinates -> Manager
