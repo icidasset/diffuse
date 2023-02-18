@@ -7,7 +7,7 @@ import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Html exposing (Html, section)
-import Html.Attributes exposing (class, id, style)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode
