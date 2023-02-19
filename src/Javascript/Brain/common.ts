@@ -4,7 +4,7 @@
 
 
 import * as crypto from "../crypto"
-import * as db from "../indexed-db"
+import { db } from "../common"
 
 
 export const SECRET_KEY_LOCATION = "SECRET_KEY"
@@ -40,7 +40,7 @@ export function reportError(app, event) {
 }
 
 
-export function sendData(app, event, opts) {
+export function sendData(app, event, opts: any = {}) {
   return data => {
     app.ports.fromAlien.send({
       tag: event.tag,
@@ -57,20 +57,18 @@ export function sendData(app, event, opts) {
 // Cache
 // -----
 
-export function removeCache(key) {
-  return db.deleteFromIndex({ key: key })
+export function removeCache(key: string) {
+  return db().removeItem(key)
 }
 
 
-export function fromCache(key) {
-  return db.getFromIndex({ key: key })
+export function fromCache(key: string) {
+  return db().getItem(key)
 }
 
 
-export function toCache(key, data) {
-  return db.setInIndex({ key: key, data: data }).then(result => {
-    return result
-  })
+export function toCache(key: string, data: unknown) {
+  return db().setItem(key, data)
 }
 
 
@@ -113,5 +111,5 @@ export { encryptIfPossible as encryptWithSecretKey }
 
 
 export function getSecretKey() {
-  return db.getFromIndex({ key: SECRET_KEY_LOCATION })
+  return db().getItem(SECRET_KEY_LOCATION)
 }

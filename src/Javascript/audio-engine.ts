@@ -5,9 +5,10 @@
 // Creates audio elements and interacts with the Web Audio API.
 
 
+import { throttle } from "throttle-debounce"
 import Timer from "timer.js"
-import * as db from "./indexed-db"
-import { throttle } from "./common"
+
+import { db } from "./common"
 import { transformUrl } from "./urls"
 
 
@@ -22,7 +23,7 @@ const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
 // Audio context
 // -------------
 
-let SINGLE_AUDIO_NODE = IS_SAFARI
+let SINGLE_AUDIO_NODE = false
 
 
 export function usesSingleAudioNode() {
@@ -101,7 +102,7 @@ export function adjustEqualizerSetting(orchestrion, knobType, value) {
 // Playback
 // --------
 
-export function insertTrack(orchestrion, queueItem, maybeArtwork) {
+export function insertTrack(orchestrion, queueItem, maybeArtwork = null) {
   if (queueItem.url == undefined) console.error("insertTrack, missing `url`");
   if (queueItem.trackId == undefined) console.error("insertTrack, missing `trackId`");
 
@@ -116,7 +117,7 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
 
   // initial promise
   const initialPromise = queueItem.isCached
-    ? db.getFromIndex({ key: queueItem.trackId, store: db.storeNames.tracks }).then(blobUrl)
+    ? db("tracks").getItem(queueItem.trackId).then(blobUrl)
     : transformUrl(queueItem.url, orchestrion.app)
 
   // find or create audio node
@@ -148,7 +149,7 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
       }
 
     } else {
-      audioNode = createAudioElement(orchestrion, queueItem, Date.now())
+      audioNode = createAudioElement(orchestrion, queueItem, Date.now(), false)
 
     }
 
@@ -194,9 +195,6 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.addEventListener("seeking", bind(audioLoading))
   audio.addEventListener("seeked", bind(audioLoaded))
   audio.addEventListener("timeupdate", bind(audioTimeUpdateEvent))
-
-  // `stalled` event doesn't work properly (mostly on Safari and mobile devices)
-  // if (!IS_SAFARI) audio.addEventListener("stalled", bind(audioStalledEvent))
 
   audio.load()
   audioElementsContainer.appendChild(audio)
@@ -489,7 +487,7 @@ function setDurationIfNecessary(audio) {
 export function setMediaSessionMetadata(queueItem, maybeArtwork) {
   if ("mediaSession" in navigator === false || !queueItem.trackTags) return
 
-  let artwork = []
+  let artwork: MediaImage[] = []
 
   if (maybeArtwork && typeof maybeArtwork !== "string") {
     artwork = [ {

@@ -4,27 +4,30 @@
 //
 // This worker is responsible for everything non-UI.
 
+import { } from "../index.d"
 
+import "subworkers"
+
+// @ts-ignore
 import * as TaskPort from "elm-taskport"
 
 import * as artwork from "./artwork"
-import * as db from "../indexed-db"
 import * as processing from "../processing"
 import * as user from "./user"
 
+import { db } from "../common"
 import { fromCache, removeCache, reportError } from "./common"
 import { sendData, toCache } from "./common"
 import { transformUrl } from "../urls"
 
-importScripts("brain.elm.js")
-importScripts("subworkers.js")
+importScripts("js/brain.elm.js")
 
 
 // 🍱
 
 
 let app
-let wire = {}
+let wire: any = {}
 
 
 TaskPort.install()
@@ -38,7 +41,7 @@ TaskPort.register("toCache", ({ key, value }) => toCache(key, value))
 user.setupTaskPorts()
 
 
-const flags = location
+const flags: Record<string, string> = location
   .hash
   .substr(1)
   .split("&")
@@ -101,9 +104,15 @@ async function forwardCompatibility() {
 }
 
 
-async function moveOldDbValue({ oldName, newName, parseJSON }) {
+async function moveOldDbValue(
+  { oldName, newName, parseJSON }: {
+    oldName: string
+    newName: string
+    parseJSON?: boolean
+  }
+) {
   const value = await fromCache(oldName)
-  if (value) {
+  if (value && typeof value === "string") {
     await toCache(newName, parseJSON ? JSON.parse(value) : value)
     await removeCache(oldName)
   }
@@ -240,7 +249,7 @@ wire.tracksCaching = () => {
 
 function removeTracksFromCache(trackIds) {
   trackIds.reduce(
-    (acc, id) => acc.then(_ => db.deleteFromIndex({ key: id, store: db.storeNames.tracks })),
+    (acc, id) => acc.then(_ => db("tracks").removeItem(id)),
     Promise.resolve()
 
   ).catch(
@@ -256,10 +265,10 @@ function storeTracksInCache(list) {
   list.reduce(
     (acc, item) => {
       return acc
-        .then(_ => transformUrl(item.url))
+        .then(_ => transformUrl(item.url, app))
         .then(fetch)
         .then(r => r.blob())
-        .then(b => db.setInIndex({ key: item.trackId, data: b, store: db.storeNames.tracks }))
+        .then(b => db("tracks").setItem(item.trackId, b))
     },
     Promise.resolve()
 

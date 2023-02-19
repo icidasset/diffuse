@@ -3,6 +3,9 @@
 // ʕ•ᴥ•ʔ
 
 
+import * as localforage from "localforage"
+
+
 export const APP_INFO = {
   creator: "icidasset",
   name: "Diffuse"
@@ -23,23 +26,11 @@ export const WEBNATIVE_CONFIG = {
 // FUNCTIONS
 
 
-export const debounce =
-  (callback, time = 250, timeoutId) =>
-    (...args) =>
-      clearTimeout(timeoutId, timeoutId = setTimeout(callback, time, ...args))
-
-
-export const throttle =
-  (callback, time = 250, wasCalledBefore, lastestArgs) =>
-    (...args) => {
-      lastestArgs = args
-      if (wasCalledBefore) { return } else { wasCalledBefore = true }
-      setTimeout(() => { callback(...lastestArgs); wasCalledBefore = false }, time)
-    }
-
-
-export function identity(a) {
-  return a
+export function db(storeName: string = "main"): LocalForage {
+  return localforage.createInstance({
+    name: "diffuse",
+    storeName
+  })
 }
 
 

@@ -171,11 +171,10 @@ taskPorts.toFission = async ({ data, fileName, savePublicData }) => {
 
 
 async function constructFission() {
-  if (session) return Promise.resolve()
+  if (wn) return Promise.resolve()
 
-  importScripts("vendor/webnative.min.js")
-
-  wn = (self as any).webnative
+  const webnative = await import("webnative")
+  wn = webnative
 
   const program = await wn.program({
     ...WEBNATIVE_CONFIG,
@@ -186,7 +185,7 @@ async function constructFission() {
 
   if (!session) {
     await removeCache("SYNC_METHOD")
-    location.reload()
+    window.location.reload()
     throw new Error("Failed to load Webnative session")
   }
 
@@ -252,11 +251,11 @@ let rs
 let rsClient
 
 
-function remoteStorage(userAddress: string, token: string) {
+async function remoteStorage(userAddress: string, token: string) {
   if (!rs) {
-    importScripts("vendor/remotestorage.min.js")
+    const { default: RemoteStorage } = await import("remotestoragejs")
 
-    rs = new (self as any).RemoteStorage({ cache: false })
+    rs = new RemoteStorage({ cache: false })
     rs.access.claim("diffuse", "rw")
 
     rsClient = rs.scope("/diffuse/")

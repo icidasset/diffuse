@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html class="fixed font-body h-screen left-0 overflow-hidden top-0 w-full" lang="en">
+
 <head>
 
   <meta charset="utf-8" />
@@ -8,7 +9,8 @@
 
   <title>Diffuse</title>
 
-  <meta name="description" content="A music player that connects to your cloud/distributed storage, in the form of a static, serverless, web application." />
+  <meta name="description"
+    content="A music player that connects to your cloud/distributed storage, in the form of a static, serverless, web application." />
 
   <!-- Viewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,7 +32,12 @@
   <link rel="preload" href="images/diffuse__icon-dark.svg" as="image" crossorigin />
   <link rel="preload" href="fonts/Montserrat/Variable/variable.woff2" as="font" crossorigin />
 
+  <!-- Scripts -->
+  <script defer src="js/ui.elm.js"></script>
+  <script defer type="module" src="js/ui/index.js"></script>
+
 </head>
+
 <body>
 
 
@@ -44,8 +51,8 @@
 
     -->
     <noscript data-nosnippet>
-      <div class="flex flex-col font-body items-center h-screen italic justify-center leading-relaxed px-4 text-center text-base text-white"
-      >
+      <div
+        class="flex flex-col font-body items-center h-screen italic justify-center leading-relaxed px-4 text-center text-base text-white">
         <a class="block logo mb-5" href="../">
           <img src="../images/diffuse-light.svg" />
         </a>
@@ -76,11 +83,6 @@
   </script>
 
 
-
-  <!-- Scripts -->
-  <script src="ui.elm.js"></script>
-  <script src="ui.js"></script>
-
-
 </body>
+
 </html>

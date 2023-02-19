@@ -10,8 +10,8 @@ import * as processing from "../processing"
 const REJECT = () => Promise.reject("No artwork found")
 
 
-export function find(prep, _app) {
-  return findUsingTags(prep)
+export function find(prep, app) {
+  return findUsingTags(prep, app)
     .then(a => a ? a : findUsingMusicBrainz(prep))
     .then(a => a ? a : findUsingLastFm(prep))
     .then(a => a ? a : REJECT())
@@ -42,7 +42,7 @@ function findUsingTags(prep, app) {
     { skipCovers: false }
 
   )).then(tags => {
-    return tags.picture
+    return tags?.picture
       ? new Blob([ tags.picture.data ], { type: tags.picture.format })
       : null
 

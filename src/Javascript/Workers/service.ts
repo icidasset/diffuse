@@ -3,7 +3,13 @@
 // (◡ ‿ ◡ ✿)
 //
 // This worker is responsible for caching the application
-// so it can be used offline.
+// so it can be used offline and acts as a proxy that
+// allows for example, authentication through headers
+// when using audio elements.
+//
+/// <reference lib="webworker" />
+
+import { } from "../index.d"
 
 
 const KEY =
@@ -45,7 +51,7 @@ self.addEventListener("activate", _event => {
 
 self.addEventListener("install", event => {
   if (isNativeWrapper) {
-    return self.skipWaiting()
+    return globalThis.skipWaiting()
   }
 
   const href = self.location.href.replace("service-worker.js", "")
@@ -137,7 +143,7 @@ function network(event) {
 
 addEventListener("message", event => {
   if (event.data === "skipWaiting") {
-    skipWaiting()
+    globalThis.skipWaiting()
   }
 })
 
@@ -160,7 +166,6 @@ function newRequestWithAuth(event, urlWithoutToken, authToken) {
       headers: newHeaders,
       credentials: request.credentials,
       cache: request.cache,
-      destination: request.destination,
       method: request.method,
       mode: request.mode,
       redirect: request.redirect,
