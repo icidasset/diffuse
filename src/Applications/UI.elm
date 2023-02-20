@@ -642,6 +642,9 @@ translateAlienData tag data =
         Alien.AddTracks ->
             TracksMsg (Tracks.Add data)
 
+        Alien.CollectFissionCapabilities ->
+            SyncingMsg Syncing.CollectFissionCapabilities
+
         Alien.FinishedProcessingSource ->
             SourcesMsg (Sources.FinishedProcessingSource data)
 

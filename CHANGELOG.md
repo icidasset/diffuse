@@ -5,6 +5,7 @@
 - Adjusted search behaviour, now searches while typing (with a small delay).
 - Allows you to make playlists public when using Fission / Webnative.
 - Fixes issue with Safari where reloading after a search caused the loader to be shown indefinitely.
+- Fixes syncing issues with Fission/Webnative.
 
 
 ## 3.3.0

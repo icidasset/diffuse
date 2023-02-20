@@ -1,5 +1,6 @@
 module Syncing exposing (LocalConfig, RemoteConfig, task)
 
+import DateFormat as Date
 import Json.Decode as Decode
 import Json.Encode as Json
 import Maybe.Extra as Maybe
@@ -65,10 +66,31 @@ task initialTask localConfig remoteConfig =
         |> Task.andThen
             (\maybeModifiedAt ->
                 let
+                    formatDate =
+                        Date.format
+                            [ Date.monthNameAbbreviated
+                            , Date.text " "
+                            , Date.dayOfMonthSuffix
+                            , Date.text " "
+                            , Date.yearNumber
+                            , Date.text ", "
+                            , Date.hourMilitaryFixed
+                            , Date.text ":"
+                            , Date.minuteFixed
+                            , Date.text ":"
+                            , Date.secondFixed
+                            ]
+
                     maybeRemoteModifiedAt =
                         Maybe.andThen
                             (Decode.decodeValue Time.decoder >> Result.toMaybe)
                             maybeModifiedAt
+
+                    _ =
+                        Debug.log "remote" (Maybe.map (formatDate Time.utc) maybeRemoteModifiedAt)
+
+                    _ =
+                        Debug.log "local" (Maybe.map (formatDate Time.utc) localConfig.localData.modifiedAt)
                 in
                 case ( maybeRemoteModifiedAt, localConfig.localData.modifiedAt ) of
                     ( Just remoteModifiedAt, Just localModifiedAt ) ->
@@ -186,6 +208,13 @@ pushLocalToRemote : LocalConfig -> RemoteConfig -> { return : a } -> Task String
 pushLocalToRemote localConfig remoteConfig { return } =
     localConfig.localData
         |> User.encodedHypaethralDataList
+        |> (case localConfig.localData.modifiedAt of
+                Just localModifiedAt ->
+                    (::) ( ModifiedAt, Time.encode localModifiedAt )
+
+                Nothing ->
+                    identity
+           )
         |> List.map (\( bit, data ) -> remoteConfig.save bit data)
         |> Task.sequence
         |> Task.map (\_ -> return)

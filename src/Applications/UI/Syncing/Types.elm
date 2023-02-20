@@ -42,6 +42,7 @@ type Msg
     | ActivateSync Method
     | ActivateSyncWithPassphrase Method String
     | BootFailure String
+    | CollectFissionCapabilities
     | ExchangeDropboxAuthCode (Result Http.Error Dropbox.Tokens)
     | GotSyncMethod Json.Value
     | RemoteStorageWebfinger RemoteStorage.Attributes (Result Http.Error String)

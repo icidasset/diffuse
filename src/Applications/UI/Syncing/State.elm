@@ -104,9 +104,6 @@ initialCommand url =
                 _ ->
                     Cmd.none
 
-        [ "authenticate", "fission" ] ->
-            Ports.collectFissionCapabilities ()
-
         _ ->
             Cmd.none
 
@@ -136,6 +133,9 @@ update msg =
 
         BootFailure a ->
             bootFailure a
+
+        CollectFissionCapabilities ->
+            collectFissionCapabilities
 
         ExchangeDropboxAuthCode a ->
             exchangeDropboxAuthCode a
@@ -259,6 +259,11 @@ bootFailure err model =
     model
         |> showNotification (Notifications.error err)
         |> andThen Backdrop.setDefault
+
+
+collectFissionCapabilities : Manager
+collectFissionCapabilities model =
+    return model (Ports.collectFissionCapabilities ())
 
 
 externalAuth : Method -> String -> Manager

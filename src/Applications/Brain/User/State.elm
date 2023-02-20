@@ -37,12 +37,21 @@ initialCommand : Url -> Cmd Brain.Msg
 initialCommand uiUrl =
     case Url.action uiUrl of
         [ "authenticate", "fission" ] ->
-            loadEnclosedData
+            Cmd.batch
+                [ loadEnclosedData
+                , loadLocalHypaethralData
+                    { initialUrl = uiUrl
+                    , methodTask = Task.succeed Nothing
+                    }
+                ]
 
         _ ->
             Cmd.batch
                 [ loadEnclosedData
-                , loadSyncMethodAndLocalHypaethralData
+                , loadLocalHypaethralData
+                    { initialUrl = uiUrl
+                    , methodTask = loadSyncMethod
+                    }
                 ]
 
 
@@ -56,20 +65,24 @@ loadEnclosedData =
         |> Common.attemptPortTask (Common.giveUICmdMsg Alien.LoadEnclosedUserData)
 
 
-{-| Loads the "sync method" and "hypaethral" data,
-see `Commence` Msg what happens next.
+{-| Loads the "sync method".
 -}
-loadSyncMethodAndLocalHypaethralData : Cmd Brain.Msg
-loadSyncMethodAndLocalHypaethralData =
+loadSyncMethod : Task String (Maybe Method)
+loadSyncMethod =
     Decode.value
         |> Brain.Task.Ports.fromCache Alien.SyncMethod
         |> Task.mapError TaskPort.errorToStringCustom
+        |> Task.map (Maybe.andThen decodeMethod)
+
+
+{-| Loads the "sync method" and "hypaethral" data,
+see `Commence` Msg what happens next.
+-}
+loadLocalHypaethralData : { initialUrl : Url, methodTask : Task String (Maybe Method) } -> Cmd Brain.Msg
+loadLocalHypaethralData { initialUrl, methodTask } =
+    methodTask
         |> Task.andThen
-            (\json ->
-                let
-                    maybeMethod =
-                        Maybe.andThen decodeMethod json
-                in
+            (\maybeMethod ->
                 Hypaethral.retrieveLocal
                     |> User.retrieveHypaethralData
                     |> Task.map
@@ -94,7 +107,7 @@ loadSyncMethodAndLocalHypaethralData =
                         ( User.encodeHypaethralData User.emptyHypaethralData
                         , User.emptyHypaethralData
                         )
-                    |> Commence maybeMethod
+                    |> Commence maybeMethod initialUrl
                     |> UserMsg
             )
 
@@ -106,8 +119,8 @@ loadSyncMethodAndLocalHypaethralData =
 update : User.Msg -> Manager
 update msg =
     case msg of
-        Commence a b ->
-            commence a b
+        Commence a b c ->
+            commence a b c
 
         SetSyncMethod a ->
             setSyncMethod a
@@ -195,15 +208,21 @@ update msg =
 -- 🔱
 
 
-commence : Maybe Method -> ( Json.Value, HypaethralData ) -> Manager
-commence maybeMethod ( hypaethralJson, hypaethralData ) model =
+commence : Maybe Method -> Url -> ( Json.Value, HypaethralData ) -> Manager
+commence maybeMethod initialUrl ( hypaethralJson, hypaethralData ) model =
     -- 🚀
     -- Initiated from `initialCommand`.
     -- Loaded the used-sync method and the local hypaethral data.
     { model | userSyncMethod = maybeMethod }
         |> sendHypaethralDataToUI hypaethralJson hypaethralData
-        -- Next load the hypaethral data from the syncing service.
-        |> andThen (sync { initialTask = Nothing })
+        |> andThen
+            (case Url.action initialUrl of
+                [ "authenticate", "fission" ] ->
+                    Common.nudgeUI Alien.CollectFissionCapabilities
+
+                _ ->
+                    sync { initialTask = Nothing }
+            )
 
 
 setSyncMethod : Json.Value -> Manager

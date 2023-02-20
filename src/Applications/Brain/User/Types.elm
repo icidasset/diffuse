@@ -2,6 +2,7 @@ module Brain.User.Types exposing (..)
 
 import Debouncer.Basic as Debouncer
 import Json.Decode as Json
+import Url exposing (Url)
 import User.Layer as User exposing (HypaethralBit, HypaethralData)
 import User.Layer.Methods.Dropbox as Dropbox
 
@@ -11,7 +12,7 @@ import User.Layer.Methods.Dropbox as Dropbox
 
 
 type Msg
-    = Commence (Maybe User.Method) ( Json.Value, HypaethralData )
+    = Commence (Maybe User.Method) Url ( Json.Value, HypaethralData )
       -----------------------------------------
       --  Method
       -----------------------------------------
