@@ -13,7 +13,7 @@ in the form of a static, serverless, web application._
 ### Integrations
 
 Music layer for music storage.
-User layer for user-data storage.  
+User layer for user-data storage.
 
 #### Music layer
 
@@ -41,12 +41,12 @@ User layer for user-data storage.
 
 ### Hosting on your own server
 
-Diffuse is a static web application, which means it's just HTML, CSS and Javascript. No REST API, database, or anything backend-related involved. The app uses a hash, aka. fragment, based routing system, so you don't need any special server rules for routing. You can download a pre-build web-only version of Diffuse on the [releases](https://github.com/icidasset/diffuse/releases) page. Diffuse uses service workers, so you may need HTTPS for it to work smoothly in certain browsers.
+Diffuse is a static web application, which means it's just HTML, CSS, and Javascript. No REST API, database, or anything backend-related involved. The app uses a hash (aka. fragment-based) routing system, so you don't need any special server rules for routing. You can download a pre-build web-only version of Diffuse on the [releases](https://github.com/icidasset/diffuse/releases) page. Diffuse uses service workers, so you may need HTTPS for it to work smoothly in certain browsers.
 
-I should also note that some source services use OAuth, so you'll need to use your own application credentials (eg. google drive client id + secret). That said, if you're working locally you can use `http://localhost:8000` or `http://127.0.0.1:44999` to use the default ones, that's what the old Electron app was using.
+I should also note that some source services use OAuth, so you'll need to use your own application credentials (eg. Google Drive client ID + secret). That said, if you're working locally, you can use `http://localhost:8000` or `http://127.0.0.1:44999` to use the default ones, that's what the old Electron app was using.
 
 In short:
-- Diffuse is a static, serverless, web application
+- Diffuse is a static, serverless web application
 - Routing is done using hashes/fragments (eg. `diffuse.sh/#/sources`)
 - Download a web build on the [releases](https://github.com/icidasset/diffuse/releases) page
 - Uses service workers (use HTTPS if possible)
@@ -66,8 +66,11 @@ This project uses [Nix](https://nixos.org/features.html) to manage the project's
 ```shell
 # 🍱
 
-# 1. Setup Nix environment
+# 0. Install the Nix package manager
 # https://nixos.org/download.html
+
+# 1. Setup environment
+nix develop
 
 # 2. Install js dependencies
 just install-deps
