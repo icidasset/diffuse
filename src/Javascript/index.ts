@@ -6,7 +6,6 @@
 
 import { } from "./index.d"
 
-import "subworkers"
 import "tocca"
 
 import { debounce } from "throttle-debounce"
@@ -86,10 +85,13 @@ let wire: any = {}
 
 async function initialise(reg) {
   brain = new Worker(
-    "./js/brain/index.js#appHref=" +
-    encodeURIComponent(window.location.href),
+    "./js/brain/index.js#appHref=" + encodeURIComponent(window.location.href),
     { type: "module" }
   )
+
+  brain.addEventListener("error", err => {
+    failure("<strong>Failed to load web worker.</strong><br />If you're using Firefox, you might need to upgrade your browser (version 113 and up) and set `dom.workers.modules.enabled` to `true` in `about:config`")
+  })
 
   await new Promise(resolve => {
     brain.onmessage = event => {

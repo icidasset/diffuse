@@ -93,21 +93,6 @@ js:
 	build_timestamp="`date '+%s'`"
 	echo "> Compiling Javascript code"
 
-	# Main builds
-	{{ESBUILD}} ./src/Javascript/index.ts \
-		--outdir={{BUILD_DIR}}/js/ui/ \
-		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--format=esm \
-		--target=esnext \
-		--splitting
-
-	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
-		--inject:./system/Js/node-shims.js \
-		--outdir={{BUILD_DIR}}/js/brain/ \
-		--format=esm \
-		--target=esnext \
-		--splitting
-
 	# Workers
 	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
 		--outfile={{BUILD_DIR}}/search.js
@@ -115,6 +100,22 @@ js:
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--outfile={{BUILD_DIR}}/service-worker.js \
 		--define:BUILD_TIMESTAMP=$build_timestamp
+
+	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
+		--inject:./system/Js/node-shims.js \
+		--outdir={{BUILD_DIR}}/js/brain/ \
+		--format=esm \
+		--target=esnext \
+		--splitting \
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
+
+	# Main
+	{{ESBUILD}} ./src/Javascript/index.ts \
+		--outdir={{BUILD_DIR}}/js/ui/ \
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext \
+		--splitting
 
 
 js-prod:

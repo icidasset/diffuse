@@ -6,8 +6,6 @@
 
 import { } from "../index.d"
 
-import "subworkers"
-
 // @ts-ignore
 import * as TaskPort from "elm-taskport"
 
@@ -20,7 +18,8 @@ import { fromCache, removeCache, reportError } from "./common"
 import { sendData, toCache } from "./common"
 import { transformUrl } from "../urls"
 
-importScripts("js/brain.elm.js")
+// @ts-ignore
+const Elm = await import("brain.elm.js").then(a => a.default.Elm)
 
 
 // 🍱
@@ -39,84 +38,6 @@ TaskPort.register("toCache", ({ key, value }) => toCache(key, value))
 
 
 user.setupTaskPorts()
-
-
-const flags: Record<string, string> = location
-  .hash
-  .substr(1)
-  .split("&")
-  .reduce((acc, flag) => {
-    const [ k, v ] = flag.split("=")
-    return { ...acc, [ k ]: v }
-  }, {})
-
-
-forwardCompatibility().then(initialise)
-
-
-function initialise() {
-  app = Elm.Brain.init({
-    flags: {
-      initialUrl: decodeURIComponent(flags.appHref) || ""
-    }
-  })
-
-  user.setupPorts(app)
-
-  wire.ui()
-  wire.caching()
-  wire.artworkCaching()
-  wire.tracksCaching()
-  wire.downloading()
-  wire.search()
-  wire.tags()
-
-  self.postMessage({ action: "READY" })
-}
-
-
-async function forwardCompatibility() {
-  // TODO: Future, check version to migrate
-  if (await fromCache("MIGRATED")) return
-
-  await moveOldDbValue({ oldName: "AUTH_SECRET_KEY", newName: "SECRET_KEY" })
-  await moveOldDbValue({ oldName: "AUTH_ENCLOSED_DATA", newName: "ENCLOSED_DATA" })
-
-  const method = await fromCache("AUTH_METHOD")
-
-  if (method === "LOCAL") {
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_favourites.json", newName: "SYNC_LOCAL_favourites.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_playlists.json", newName: "SYNC_LOCAL_playlists.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_progress.json", newName: "SYNC_LOCAL_progress.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_settings.json", newName: "SYNC_LOCAL_settings.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_sources.json", newName: "SYNC_LOCAL_sources.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_tracks.json", newName: "SYNC_LOCAL_tracks.json", parseJSON: true })
-
-    await removeCache("AUTH_METHOD")
-
-  } else if (method) {
-    await toCache("SYNC_METHOD", method)
-    await removeCache("AUTH_METHOD")
-
-  }
-
-  await toCache("MIGRATED", "3.3.0")
-}
-
-
-async function moveOldDbValue(
-  { oldName, newName, parseJSON }: {
-    oldName: string
-    newName: string
-    parseJSON?: boolean
-  }
-) {
-  const value = await fromCache(oldName)
-  if (value && typeof value === "string") {
-    await toCache(newName, parseJSON ? JSON.parse(value) : value)
-    await removeCache(oldName)
-  }
-}
 
 
 
@@ -311,7 +232,10 @@ wire.downloading = () => {
 // Search
 // ------
 
-const search = new Worker("search.js")
+const search = new Worker(
+  "../../search.js",
+  { type: "module" }
+)
 
 
 wire.search = () => {
@@ -361,4 +285,86 @@ wire.tags = () => {
       app.ports.replaceTags.send(newContext)
     })
   })
+}
+
+
+
+// 🚀
+
+
+const flags: Record<string, string> = location
+  .hash
+  .substr(1)
+  .split("&")
+  .reduce((acc, flag) => {
+    const [ k, v ] = flag.split("=")
+    return { ...acc, [ k ]: v }
+  }, {})
+
+
+forwardCompatibility().then(initialise)
+
+
+function initialise() {
+  app = Elm.Brain.init({
+    flags: {
+      initialUrl: decodeURIComponent(flags.appHref) || ""
+    }
+  })
+
+  user.setupPorts(app)
+
+  wire.ui()
+  wire.caching()
+  wire.artworkCaching()
+  wire.tracksCaching()
+  wire.downloading()
+  wire.search()
+  wire.tags()
+
+  self.postMessage({ action: "READY" })
+}
+
+
+async function forwardCompatibility() {
+  // TODO: Future, check version to migrate
+  if (await fromCache("MIGRATED")) return
+
+  await moveOldDbValue({ oldName: "AUTH_SECRET_KEY", newName: "SECRET_KEY" })
+  await moveOldDbValue({ oldName: "AUTH_ENCLOSED_DATA", newName: "ENCLOSED_DATA" })
+
+  const method = await fromCache("AUTH_METHOD")
+
+  if (method === "LOCAL") {
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_favourites.json", newName: "SYNC_LOCAL_favourites.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_playlists.json", newName: "SYNC_LOCAL_playlists.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_progress.json", newName: "SYNC_LOCAL_progress.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_settings.json", newName: "SYNC_LOCAL_settings.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_sources.json", newName: "SYNC_LOCAL_sources.json", parseJSON: true })
+    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_tracks.json", newName: "SYNC_LOCAL_tracks.json", parseJSON: true })
+
+    await removeCache("AUTH_METHOD")
+
+  } else if (method) {
+    await toCache("SYNC_METHOD", method)
+    await removeCache("AUTH_METHOD")
+
+  }
+
+  await toCache("MIGRATED", "3.3.0")
+}
+
+
+async function moveOldDbValue(
+  { oldName, newName, parseJSON }: {
+    oldName: string
+    newName: string
+    parseJSON?: boolean
+  }
+) {
+  const value = await fromCache(oldName)
+  if (value && typeof value === "string") {
+    await toCache(newName, parseJSON ? JSON.parse(value) : value)
+    await removeCache(oldName)
+  }
 }
