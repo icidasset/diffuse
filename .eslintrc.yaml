@@ -4,11 +4,21 @@ env:
   worker: true
 
 extends:
-  eslint:recommended
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended
+
+parser:
+  "@typescript-eslint/parser"
 
 parserOptions:
-  ecmaVersion: 2018
+  ecmaVersion: 2020
   sourceType: module
+
+plugins:
+  - "@typescript-eslint"
+
+root:
+  true
 
 globals:
   Elm: readonly
@@ -17,6 +27,9 @@ globals:
   tocca: readonly
 
 rules:
+  "@typescript-eslint/ban-ts-comment":
+    0
+
   no-cond-assign:
     0
 

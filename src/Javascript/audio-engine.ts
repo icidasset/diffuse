@@ -67,18 +67,18 @@ const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU
 export function setup(orchestrion) {
   addAudioContainer()
 
-  if (IS_SAFARI) {
-    // Try to avoid the "couldn't play automatically" error,
-    // which seems to happen with audio nodes using an url created by `createObjectURL`.
-    insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
-      const temporaryClickHandler = () => {
-        if (orchestrion.audio) orchestrion.audio.play()
-        document.body.removeEventListener("click", temporaryClickHandler)
-      }
+  // if (IS_SAFARI) {
+  //   // Try to avoid the "couldn't play automatically" error,
+  //   // which seems to happen with audio nodes using an url created by `createObjectURL`.
+  //   insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
+  //     const temporaryClickHandler = () => {
+  //       if (orchestrion.audio) orchestrion.audio.play()
+  //       document.body.removeEventListener("click", temporaryClickHandler)
+  //     }
 
-      document.body.addEventListener("click", temporaryClickHandler)
-    })
-  }
+  //     document.body.addEventListener("click", temporaryClickHandler)
+  //   })
+  // }
 }
 
 

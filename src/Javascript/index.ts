@@ -53,7 +53,10 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
 
         return Promise.resolve([])
       })
-      .then(_ => navigator.serviceWorker.register("service-worker.js"))
+      .then(_ => navigator.serviceWorker.register(
+        "service-worker.js",
+        { type: "module" }
+      ))
       .catch(err => {
         const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
 
@@ -822,12 +825,26 @@ document.body.addEventListener("touchmove", event => {
 // Service worker
 // --------------
 
-wire.serviceWorker = async (reg) => {
+wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
   if (reg.installing) console.log("🧑‍✈️ Service worker is installing")
   const initialInstall = reg.installing
 
+  initialInstall?.addEventListener("statechange", function () {
+    if (this.state === "activated") {
+      console.log("🧑‍✈️ Service worker is activated")
+      app.ports.installedNewServiceWorker.send(null)
+    }
+  })
+
+  if (initialInstall?.state === "activated") {
+    console.log("🧑‍✈️ Service worker is activated")
+    app.ports.installedNewServiceWorker.send(null)
+  }
+
   reg.addEventListener("updatefound", () => {
     const newWorker = reg.installing
+    console.log(newWorker)
+    if (!newWorker) return
 
     // No worker was installed yet, so we'll only want to track the state changes
     if (newWorker !== initialInstall) {
@@ -835,7 +852,7 @@ wire.serviceWorker = async (reg) => {
       app.ports.installingNewServiceWorker.send(null)
     }
 
-    newWorker.addEventListener("statechange", (e) => {
+    newWorker.addEventListener("statechange", (e: any) => {
       console.log("🧑‍✈️ Service worker is", e.target.state)
       if (e.target.state === "installed") app.ports.installedNewServiceWorker.send(null)
     })

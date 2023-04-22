@@ -26,7 +26,7 @@ const Elm = await import("brain.elm.js").then(a => a.default.Elm)
 
 
 let app
-let wire: any = {}
+const wire: any = {}
 
 
 TaskPort.install()

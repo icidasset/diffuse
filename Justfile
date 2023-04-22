@@ -95,11 +95,15 @@ js:
 
 	# Workers
 	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
-		--outfile={{BUILD_DIR}}/search.js
+		--outfile={{BUILD_DIR}}/search.js \
+		--format=esm \
+		--target=esnext
 
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
 		--inject:./system/Js/node-shims.js \
@@ -123,14 +127,19 @@ js-prod:
 	build_timestamp="`date '+%s'`"
 	echo "> Compiling Javascript code (optimised)"
 
-	# Main builds
-	{{ESBUILD}} ./src/Javascript/index.ts \
-		--outdir={{BUILD_DIR}}/js/ui/ \
+	# Workers
+	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
+		--minify \
+		--outfile={{BUILD_DIR}}/search.js \
+		--format=esm \
+		--target=esnext
+
+	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
+		--minify \
+		--outfile={{BUILD_DIR}}/service-worker.js \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
 		--format=esm \
-		--target=esnext \
-		--splitting \
-		--minify
+		--target=esnext
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
 		--inject:./system/Js/node-shims.js \
@@ -138,17 +147,17 @@ js-prod:
 		--format=esm \
 		--target=esnext \
 		--splitting \
+		--minify \
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
+
+	# Main
+	{{ESBUILD}} ./src/Javascript/index.ts \
+		--outdir={{BUILD_DIR}}/js/ui/ \
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext \
+		--splitting \
 		--minify
-
-	# Workers
-	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
-		--minify \
-		--outfile={{BUILD_DIR}}/search.js
-
-	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
-		--minify \
-		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
 
 
 @license:
@@ -205,7 +214,7 @@ js-prod:
 
 @quality: check-versions
 	echo "> Running es-lint"
-	{{NPM_DIR}}/.bin/eslint src/Javascript/**
+	{{NPM_DIR}}/.bin/eslint src/Javascript/**/*
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review
 

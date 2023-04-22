@@ -126,7 +126,7 @@ self.addEventListener("fetch", event => {
 
 
 function cacheThenNetwork(event) {
-  let url = new URL(event.request.url)
+  const url = new URL(event.request.url)
   url.search = ""
 
   return caches
