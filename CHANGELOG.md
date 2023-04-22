@@ -6,7 +6,7 @@
 - Allows you to make playlists public when using Fission / Webnative.
 - Fixes issue with Safari where reloading after a search caused the loader to be shown indefinitely.
 - Fixes syncing issues with Fission/Webnative.
-- Remove support for older browsers
+- Removes support for older browsers
 
 
 ## 3.3.0
