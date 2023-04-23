@@ -71,6 +71,8 @@ self.addEventListener("fetch", event => {
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
+  console.log("fetch", event.request.url)
+
   // When doing a request with basic authentication in the url, put it in the headers instead
   if (event.request.url.includes("service_worker_authentication=")) {
     const url = new URL(event.request.url)

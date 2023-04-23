@@ -259,9 +259,7 @@ function activeQueueItemChanged(item) {
   }
 
   // Remove older audio elements if possible
-  audioEngine.usesSingleAudioNode()
-    ? false
-    : audioEngine.removeOlderAudioElements(timestampInMilliseconds)
+  audioEngine.removeOlderAudioElements(timestampInMilliseconds)
 
   // 🎵
   if (item) {
@@ -315,7 +313,9 @@ function pause(_) {
 
 
 function play(_) {
-  if (orchestrion.audio) orchestrion.audio.play()
+  if (orchestrion.audio) {
+    audioEngine.playAudio(orchestrion.audio, orchestrion.activeQueueItem, app)
+  }
 }
 
 
@@ -324,7 +324,7 @@ function preloadAudio() {
     // Wait 15 seconds to preload something.
     // This is particularly useful when quickly shifting through tracks,
     // or when moving things around in the queue.
-    (audioEngine.usesSingleAudioNode() || item.isCached)
+    item.isCached
       ? false
       : audioEngine.preloadAudioElement(orchestrion, item)
   })
@@ -332,7 +332,7 @@ function preloadAudio() {
 
 
 function seek(percentage) {
-  audioEngine.seek(orchestrion.audio, percentage)
+  audioEngine.seek(orchestrion, percentage)
 }
 
 
@@ -843,7 +843,6 @@ wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
 
   reg.addEventListener("updatefound", () => {
     const newWorker = reg.installing
-    console.log(newWorker)
     if (!newWorker) return
 
     // No worker was installed yet, so we'll only want to track the state changes
