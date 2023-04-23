@@ -181,8 +181,8 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.addEventListener("suspend", bind(audioSuspendEvent))
   audio.addEventListener("waiting", bind(audioWaitingEvent))
 
-  audio.load()
   audioElementsContainer.appendChild(audio)
+  audio.load()
 
   return audio
 }

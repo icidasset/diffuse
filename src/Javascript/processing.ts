@@ -5,7 +5,7 @@
 // Audio processing, getting metadata, etc.
 
 
-import * as musicMetadata from "music-metadata-browser"
+import * as musicMetadata from "music-metadata"
 import { makeTokenizer } from "@tokenizer/http"
 
 import { mimeType } from "./common"

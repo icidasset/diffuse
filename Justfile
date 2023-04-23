@@ -101,9 +101,7 @@ js:
 
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--format=esm \
-		--target=esnext
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
 		--inject:./system/Js/node-shims.js \
@@ -111,7 +109,9 @@ js:
 		--format=esm \
 		--target=esnext \
 		--splitting \
-		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=readable-stream
 
 	# Main
 	{{ESBUILD}} ./src/Javascript/index.ts \
@@ -119,7 +119,8 @@ js:
 		--define:BUILD_TIMESTAMP=$build_timestamp \
 		--format=esm \
 		--target=esnext \
-		--splitting
+		--splitting \
+		--alias:stream=readable-stream
 
 
 js-prod:
@@ -137,9 +138,7 @@ js-prod:
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--minify \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--format=esm \
-		--target=esnext
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
 		--inject:./system/Js/node-shims.js \

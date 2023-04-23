@@ -10,7 +10,7 @@ import "tocca"
 
 import { debounce } from "throttle-debounce"
 import { saveAs } from "file-saver"
-import JSZip from "jszip"
+// import JSZip from "jszip"
 
 import * as audioEngine from "./audio-engine"
 import { db, fileExtension, WEBNATIVE_CONFIG } from "./common"
@@ -55,7 +55,7 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
       })
       .then(_ => navigator.serviceWorker.register(
         "service-worker.js",
-        { type: "module" }
+        { type: "classic" }
       ))
       .catch(err => {
         const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
@@ -571,32 +571,32 @@ function preferredColorScheme() {
 // -----------
 
 function downloadTracks(group) {
-  const zip = new JSZip()
-  const folder = zip.folder("Diffuse - " + group.name)
-  if (!folder) throw new Error("Failed to create ZIP file")
+  // const zip = new JSZip()
+  // const folder = zip.folder("Diffuse - " + group.name)
+  // if (!folder) throw new Error("Failed to create ZIP file")
 
-  return group.tracks.reduce(
-    (acc, track) => {
-      return acc
-        .then(_ => transformUrl(track.url, app))
-        .then(fetch)
-        .then(r => {
-          const mimeType = r.headers.get("content-type")
-          const fileExt = fileExtension(mimeType) || "unknown"
+  // return group.tracks.reduce(
+  //   (acc, track) => {
+  //     return acc
+  //       .then(_ => transformUrl(track.url, app))
+  //       .then(fetch)
+  //       .then(r => {
+  //         const mimeType = r.headers.get("content-type")
+  //         const fileExt = fileExtension(mimeType) || "unknown"
 
-          return r.blob().then(
-            b => folder.file(track.filename + "." + fileExt, b)
-          )
-        })
-    },
-    Promise.resolve()
+  //         return r.blob().then(
+  //           b => folder.file(track.filename + "." + fileExt, b)
+  //         )
+  //       })
+  //   },
+  //   Promise.resolve()
 
-  ).then(_ => zip.generateAsync({ type: "blob" })
-  ).then(zipFile => {
-    saveAs(zipFile, "Diffuse - " + group.name + ".zip")
-    app.ports.downloadTracksFinished.send(null)
+  // ).then(_ => zip.generateAsync({ type: "blob" })
+  // ).then(zipFile => {
+  //   saveAs(zipFile, "Diffuse - " + group.name + ".zip")
+  //   app.ports.downloadTracksFinished.send(null)
 
-  })
+  // })
 }
 
 
