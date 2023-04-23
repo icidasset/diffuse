@@ -45,18 +45,26 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .getRegistrations()
-      .then(registrations => {
-        // native app should not have to install a new service worker
-        if (isNativeWrapper) {
-          return Promise.all(registrations.map(r => r.unregister()))
-        }
+      .then(async registrations => {
+        const resp = await fetch(`${location.origin}?ping=1`).then(r => r.text()).then(a => a === "false" ? false : true)
+        const serverIsOnline = navigator.onLine && resp
 
-        return Promise.resolve([])
+        if (isNativeWrapper || serverIsOnline) await Promise.all(
+          registrations.map(r => r.unregister())
+        )
+
+        return serverIsOnline
       })
-      .then(_ => navigator.serviceWorker.register(
-        "service-worker.js",
-        { type: "classic" }
-      ))
+      .then(async serverIsOnline => {
+        if (serverIsOnline) {
+          return navigator.serviceWorker.register(
+            "service-worker.js"
+          )
+        }
+      })
+      .then(_ => {
+        return navigator.serviceWorker.ready
+      })
       .catch(err => {
         const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
 
@@ -836,6 +844,11 @@ wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
     }
   })
 
+  if (reg.waiting) {
+    console.log("🧑‍✈️ A new version of Diffuse is available")
+    app.ports.installingNewServiceWorker.send(null)
+  }
+
   if (initialInstall?.state === "activated") {
     console.log("🧑‍✈️ Service worker is activated")
     app.ports.installedNewServiceWorker.send(null)
@@ -857,8 +870,10 @@ wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
     })
   })
 
+  console.log("try to update", !isNativeWrapper && navigator.onLine)
+
   // Check for service worker updates and every hour after that
-  if (!isNativeWrapper) {
+  if (!isNativeWrapper && navigator.onLine) {
     reg.update()
     setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
   }

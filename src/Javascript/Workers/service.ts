@@ -71,10 +71,19 @@ self.addEventListener("fetch", event => {
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
-  console.log("fetch", event.request.url)
+  // Ping
+  if (event.request.url.includes("?ping=1")) {
+    event.respondWith(
+      (async () => {
+        const serverIsOnline = await network(event).then(_ => true).catch(_ => false)
+        return new Response(JSON.stringify(serverIsOnline), {
+          headers: { "Content-Type": "application/json" }
+        })
+      })()
+    )
 
-  // When doing a request with basic authentication in the url, put it in the headers instead
-  if (event.request.url.includes("service_worker_authentication=")) {
+    // When doing a request with basic authentication in the url, put it in the headers instead
+  } else if (event.request.url.includes("service_worker_authentication=")) {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("service_worker_authentication")
 
