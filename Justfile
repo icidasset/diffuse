@@ -101,7 +101,9 @@ js:
 
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
 		--inject:./system/Js/node-shims.js \
@@ -138,7 +140,9 @@ js-prod:
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--minify \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
 		--inject:./system/Js/node-shims.js \

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
   <meta charset="utf-8" />
@@ -22,6 +23,7 @@
   <link rel="stylesheet" href="{{pathToRoot}}about.css" />
 
 </head>
+
 <body class="bg-white font-body my-16 px-4 text-base01 dark:bg-darkest-hour dark:text-gray-600">
 
 
@@ -41,10 +43,11 @@
   <script>hljs.initHighlightingOnLoad()</script>
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("{{pathToRoot}}service-worker.js")
+      navigator.serviceWorker.register("{{pathToRoot}}service-worker.js", { type: "module" })
     }
   </script>
 
 
 </body>
+
 </html>

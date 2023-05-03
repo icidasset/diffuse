@@ -49,7 +49,7 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
         const resp = await fetch(`${location.origin}?ping=1`).then(r => r.text()).then(a => a === "false" ? false : true)
         const serverIsOnline = navigator.onLine && resp
 
-        if (isNativeWrapper || serverIsOnline) await Promise.all(
+        if (isNativeWrapper) await Promise.all(
           registrations.map(r => r.unregister())
         )
 
@@ -58,7 +58,8 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
       .then(async serverIsOnline => {
         if (serverIsOnline) {
           return navigator.serviceWorker.register(
-            "service-worker.js"
+            "service-worker.js",
+            { type: "module" }
           )
         }
       })
@@ -847,6 +848,7 @@ wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
   if (reg.waiting) {
     console.log("🧑‍✈️ A new version of Diffuse is available")
     app.ports.installingNewServiceWorker.send(null)
+    app.ports.installedNewServiceWorker.send(null)
   }
 
   if (initialInstall?.state === "activated") {
@@ -869,8 +871,6 @@ wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
       if (e.target.state === "installed") app.ports.installedNewServiceWorker.send(null)
     })
   })
-
-  console.log("try to update", !isNativeWrapper && navigator.onLine)
 
   // Check for service worker updates and every hour after that
   if (!isNativeWrapper && navigator.onLine) {

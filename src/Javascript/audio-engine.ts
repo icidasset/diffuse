@@ -24,7 +24,7 @@ const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
 // Container for <audio> elements
 // ------------------------------
 
-const audioElementsContainer = (() => {
+const audioElementsContainer: HTMLElement = (() => {
   let c
   let styles =
     [ "height: 0"
@@ -100,11 +100,8 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork = null) {
   let audioNode
 
   return initialPromise.then(url => {
-    queueItem =
-      Object.assign({}, queueItem, { url: url })
-
-    audioNode =
-      audioElementsContainer.querySelector("audio")
+    queueItem.url = url
+    audioNode = audioElementsContainer.querySelector("audio")
 
     if (audioNode = findExistingAudioElement(queueItem)) {
       audioNode.setAttribute("data-preload", "f")
@@ -172,13 +169,13 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.addEventListener("play", bind(audioPlayEvent))
   audio.addEventListener("seeking", bind(audioLoading))
   audio.addEventListener("seeked", bind(audioLoaded))
-  audio.addEventListener("stalled", bind(audioStalledEvent))
   audio.addEventListener("timeupdate", bind(audioTimeUpdateEvent))
 
-  audio.addEventListener("abort", bind(audioAbortEvent))
-  audio.addEventListener("emptied", bind(audioEmptiedEvent))
-  audio.addEventListener("progress", bind(audioProgressEvent))
-  audio.addEventListener("suspend", bind(audioSuspendEvent))
+  // Audio stalled event doesn't work well in Safari
+  if (!IS_SAFARI) {
+    audio.addEventListener("stalled", bind(audioStalledEvent))
+  }
+
   audio.addEventListener("waiting", bind(audioWaitingEvent))
 
   audioElementsContainer.appendChild(audio)
@@ -194,7 +191,7 @@ export function preloadAudioElement(orchestrion, queueItem) {
 
   // remove other preloads
   audioElementsContainer.querySelectorAll(`[data-preload="t"]`).forEach(
-    n => n.parentNode.removeChild(n)
+    n => n.parentNode?.removeChild(n)
   )
 
   // audio element remains valid for 45 minutes
@@ -303,10 +300,6 @@ function showUnsupportedSrcErrorNotification() {
 
 
 function audioStalledEvent(event, notifyAppImmediately) {
-  console.log("stalled", event)
-
-  return
-
   this.app.ports.setAudioIsLoading.send(true)
   clearTimeout(this.unstallTimeout)
 
@@ -316,7 +309,7 @@ function audioStalledEvent(event, notifyAppImmediately) {
   }
 
   // Timeout
-  setTimeout(_ => {
+  this.unstallTimeout = setTimeout(_ => {
     if (isActiveAudioElement(this, event.target)) {
       unstallAudio.call(this, event.target)
     }
@@ -327,28 +320,8 @@ function audioStalledEvent(event, notifyAppImmediately) {
 }
 
 
-function audioSuspendEvent(event) {
-  console.log("suspended", event)
-}
-
-
 function audioWaitingEvent(event) {
   console.log("waiting", event)
-}
-
-
-function audioAbortEvent(event) {
-  console.log("abort", event)
-}
-
-
-function audioProgressEvent(event) {
-  console.log("progress", event)
-}
-
-
-function audioEmptiedEvent(event) {
-  console.log("emptied", event)
 }
 
 
@@ -398,10 +371,23 @@ function audioLoading(event) {
   clearTimeout(this.loadingTimeoutId)
 
   this.loadingTimeoutId = setTimeout(() => {
-    if (!this.audio) {
+    const audio = event.target
+
+    if (!audio || !isActiveAudioElement(this, audio)) {
       return
-    } else if (this.audio.readyState === 4 && this.audio.currentTime === 0) {
+    } else if (audio.readyState === 4 && audio.currentTime === 0) {
       this.app.ports.setAudioIsLoading.send(false)
+    } else if (audio.readyState < 3 && IS_SAFARI) {
+      this.app.ports.setAudioIsLoading.send(true)
+      this.unstallTimeout = setTimeout(
+        () => {
+          console.log("safariStall")
+          if (isActiveAudioElement(this, audio)) {
+            unstallSafariAudio.call(this, audio)
+          }
+        },
+        timesStalled * 2500
+      )
     } else {
       this.app.ports.setAudioIsLoading.send(true)
     }
@@ -412,6 +398,7 @@ function audioLoading(event) {
 function audioLoaded(event) {
   console.log("loaded", event)
   clearTimeout(this.loadingTimeoutId)
+  clearTimeout(this.unstallTimeout)
   this.app.ports.setAudioHasStalled.send(false)
   this.app.ports.setAudioIsLoading.send(false)
   if (event.target.paused && (event.type === "seeked" || !event.target.hasPlayed)) {
@@ -459,7 +446,8 @@ function isActiveAudioElement(orchestrion, node) {
   const isActive = (
     !orchestrion.activeQueueItem ||
     !node ||
-    node.getAttribute("data-preload") === "t"
+    node.getAttribute("data-preload") === "t" ||
+    node.getAttribute("data-deactivated") === "t"
   )
     ? false
     : orchestrion.activeQueueItem.trackId === audioElementTrackId(node);
@@ -530,7 +518,7 @@ export function setMediaSessionMetadata(queueItem, maybeArtwork) {
 }
 
 
-function unstallAudio(node) {
+function unstallAudio(node: HTMLAudioElement) {
   const time = node.currentTime
 
   node.load()
@@ -546,17 +534,43 @@ function unstallAudio(node) {
 }
 
 
+function unstallSafariAudio(node: HTMLAudioElement) {
+  console.log("unstall")
+  timesStalled++
+
+  // Deactivate
+  node.setAttribute("data-deactivated", "t")
+
+  // Force browser to stop loading
+  try { node.src = silentMp3File } catch (_err) { }
+
+  // Remove element
+  audioElementsContainer.removeChild(node)
+
+  // Create new element
+  createAudioElement(this, this.activeQueueItem, Date.now() + 1000 * 60 * 45, false)
+}
+
+
 
 // 💥
 // --
 // Remove all the audio elements with a timestamp older than the given one.
 
 export function removeOlderAudioElements(timestamp) {
-  const nodes = audioElementsContainer.querySelectorAll("audio[data-timestamp]")
+  const nodes: NodeListOf<HTMLAudioElement> = audioElementsContainer.querySelectorAll(
+    "audio[data-timestamp]"
+  )
 
   nodes.forEach(node => {
-    const t = parseInt(node.getAttribute("data-timestamp"), 10)
+    const tAttr = node.getAttribute("data-timestamp")
+    if (!tAttr) return
+
+    const t = parseInt(tAttr, 10)
     if (t >= timestamp) return
+
+    // Deactivate
+    node.setAttribute("data-deactivated", "t")
 
     // Force browser to stop loading
     try { node.src = silentMp3File } catch (_err) { }
