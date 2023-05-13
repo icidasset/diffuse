@@ -176,7 +176,17 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
     audio.addEventListener("stalled", bind(audioStalledEvent))
   }
 
-  audio.addEventListener("waiting", bind(audioWaitingEvent))
+  if (IS_SAFARI) {
+    audio.addEventListener("waiting", bind(audioWaitingEvent))
+    audio.addEventListener("encrypted", bind(() => console.log("encrypted")))
+    audio.addEventListener("stalled", bind(() => console.log("stalled")))
+    audio.addEventListener("suspended", bind(() => console.log("suspended")))
+    audio.addEventListener("loadedmetadata", bind(() => console.log("loadedmetadata")))
+    audio.addEventListener("emptied", bind(() => console.log("emptied")))
+    audio.addEventListener("ended", bind(() => console.log("ended")))
+    audio.addEventListener("error", bind(() => console.log("error")))
+    audio.addEventListener("progress", bind(() => console.log("progress")))
+  }
 
   audioElementsContainer.appendChild(audio)
   audio.load()
@@ -542,7 +552,7 @@ function unstallSafariAudio(node: HTMLAudioElement) {
   node.setAttribute("data-deactivated", "t")
 
   // Force browser to stop loading
-  try { node.src = silentMp3File } catch (_err) { }
+  // try { node.src = silentMp3File } catch (_err) { }
 
   // Remove element
   audioElementsContainer.removeChild(node)
