@@ -7,7 +7,7 @@
 
 // @ts-ignore
 import * as TaskPort from "elm-taskport"
-import { APP_INFO, WEBNATIVE_CONFIG } from "../common"
+import { APP_INFO, ODD_CONFIG } from "../common"
 
 import * as crypto from "../crypto"
 
@@ -71,14 +71,14 @@ taskPorts.toDropbox = async ({ fileName, data, token }) => {
 // Fission
 // -------
 
-let session, wn
+let odd, session
 
 
 taskPorts.fromFission = async ({ fileName, includePublicData }) => {
   await constructFission()
 
   // Private data
-  const privatePath = wn.path.appData(APP_INFO, wn.path.file(fileName))
+  const privatePath = odd.path.appData(APP_INFO, odd.path.file(fileName))
   const privateData = await session.fs.exists(privatePath)
     ? session.fs.read(privatePath)
       .then(bytes => new TextDecoder().decode(bytes))
@@ -117,7 +117,7 @@ taskPorts.toFission = async ({ data, fileName, savePublicData }) => {
   await constructFission()
 
   // Data identifying
-  const privatePath = wn.path.appData(APP_INFO, wn.path.file(fileName))
+  const privatePath = odd.path.appData(APP_INFO, odd.path.file(fileName))
   const isDataObject = typeof data === "object" && !!data.data
 
   if (!isDataObject) {
@@ -171,14 +171,12 @@ taskPorts.toFission = async ({ data, fileName, savePublicData }) => {
 
 
 async function constructFission() {
-  if (session) return Promise.resolve()
+  if (odd) return Promise.resolve()
 
-  importScripts("vendor/webnative.min.js")
+  odd = await import("@oddjs/odd")
 
-  wn = (self as any).webnative
-
-  const program = await wn.program({
-    ...WEBNATIVE_CONFIG,
+  const program = await odd.program({
+    ...ODD_CONFIG,
     fileSystem: { loadImmediately: false }
   })
 
@@ -186,12 +184,12 @@ async function constructFission() {
 
   if (!session) {
     await removeCache("SYNC_METHOD")
-    location.reload()
-    throw new Error("Failed to load Webnative session")
+    window.location.reload()
+    throw new Error("Failed to load ODD SDK session")
   }
 
   session.fs = await program.fileSystem.load(session.username)
-  if (!session.fs) throw new Error("Did not load Webnative file system")
+  if (!session.fs) throw new Error("Did not load ODD SDK file system")
 }
 
 
@@ -199,7 +197,7 @@ ports.deconstructFission = _app => _ => {
   if (!session) return
   session.destroy()
   session = undefined
-  wn = undefined
+  odd = undefined
 }
 
 
@@ -252,11 +250,11 @@ let rs
 let rsClient
 
 
-function remoteStorage(userAddress: string, token: string) {
+async function remoteStorage(userAddress: string, token: string) {
   if (!rs) {
-    importScripts("vendor/remotestorage.min.js")
+    const { default: RemoteStorage } = await import("remotestoragejs")
 
-    rs = new (self as any).RemoteStorage({ cache: false })
+    rs = new RemoteStorage({ cache: false })
     rs.access.claim("diffuse", "rw")
 
     rsClient = rs.scope("/diffuse/")

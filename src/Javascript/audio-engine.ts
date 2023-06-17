@@ -5,10 +5,12 @@
 // Creates audio elements and interacts with the Web Audio API.
 
 
+import { throttle } from "throttle-debounce"
 import Timer from "timer.js"
-import * as db from "./indexed-db"
-import { throttle } from "./common"
+
+import { db } from "./common"
 import { transformUrl } from "./urls"
+import { mimeType } from "./common"
 
 
 // ⛩
@@ -19,22 +21,10 @@ const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
 
 
 
-// Audio context
-// -------------
-
-let SINGLE_AUDIO_NODE = IS_SAFARI
-
-
-export function usesSingleAudioNode() {
-  return SINGLE_AUDIO_NODE
-}
-
-
-
 // Container for <audio> elements
 // ------------------------------
 
-const audioElementsContainer = (() => {
+const audioElementsContainer: HTMLElement = (() => {
   let c
   let styles =
     [ "height: 0"
@@ -65,19 +55,6 @@ const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU
 
 export function setup(orchestrion) {
   addAudioContainer()
-
-  if (IS_SAFARI) {
-    // Try to avoid the "couldn't play automatically" error,
-    // which seems to happen with audio nodes using an url created by `createObjectURL`.
-    insertTrack(orchestrion, { url: silentMp3File, trackId: "" }).then(_ => {
-      const temporaryClickHandler = () => {
-        if (orchestrion.audio) orchestrion.audio.play()
-        document.body.removeEventListener("click", temporaryClickHandler)
-      }
-
-      document.body.addEventListener("click", temporaryClickHandler)
-    })
-  }
 }
 
 
@@ -101,7 +78,7 @@ export function adjustEqualizerSetting(orchestrion, knobType, value) {
 // Playback
 // --------
 
-export function insertTrack(orchestrion, queueItem, maybeArtwork) {
+export function insertTrack(orchestrion, queueItem, maybeArtwork = null) {
   if (queueItem.url == undefined) console.error("insertTrack, missing `url`");
   if (queueItem.trackId == undefined) console.error("insertTrack, missing `trackId`");
 
@@ -116,27 +93,17 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
 
   // initial promise
   const initialPromise = queueItem.isCached
-    ? db.getFromIndex({ key: queueItem.trackId, store: db.storeNames.tracks }).then(blobUrl)
+    ? db("tracks").getItem(queueItem.trackId).then(blobUrl)
     : transformUrl(queueItem.url, orchestrion.app)
 
   // find or create audio node
   let audioNode
 
   return initialPromise.then(url => {
-    queueItem =
-      Object.assign({}, queueItem, { url: url })
+    queueItem.url = url
+    audioNode = audioElementsContainer.querySelector("audio")
 
-    audioNode =
-      audioElementsContainer.querySelector("audio")
-
-    if (SINGLE_AUDIO_NODE && audioNode) {
-      const crossorigin = isCrossOrginUrl(queueItem.url) ? "use-credentials" : "anonymous"
-      audioNode.setAttribute("crossorigin", crossorigin)
-      audioNode.setAttribute("src", queueItem.url)
-      audioNode.setAttribute("rel", queueItem.trackId)
-      audioNode.load()
-
-    } else if (audioNode = findExistingAudioElement(queueItem)) {
+    if (audioNode = findExistingAudioElement(queueItem)) {
       audioNode.setAttribute("data-preload", "f")
       audioNode.setAttribute("data-timestamp", Date.now())
 
@@ -148,7 +115,7 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork) {
       }
 
     } else {
-      audioNode = createAudioElement(orchestrion, queueItem, Date.now())
+      audioNode = createAudioElement(orchestrion, queueItem, Date.now(), false)
 
     }
 
@@ -173,13 +140,22 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
 
   const crossorigin = isCrossOrginUrl(queueItem.url) ? "use-credentials" : "anonymous"
 
-  audio = new Audio()
+  const fileName = queueItem.trackPath.split("/").reverse()[ 0 ]
+  const fileExtMatch = fileName.match(/\.(\w+)$/)
+  const fileExt = fileExtMatch && fileExtMatch[ 1 ]
+  const mime = mimeType(fileExt)
+
+  const source = document.createElement("source")
+  if (mime) source.setAttribute("type", mime)
+  source.setAttribute("src", queueItem.url)
+
+  audio = document.createElement("audio")
   audio.setAttribute("crossorigin", crossorigin)
   audio.setAttribute("data-preload", isPreload ? "t" : "f")
   audio.setAttribute("data-timestamp", timestampInMilliseconds)
-  audio.setAttribute("preload", SINGLE_AUDIO_NODE ? "none" : "auto")
+  audio.setAttribute("preload", "auto")
   audio.setAttribute("rel", queueItem.trackId)
-  audio.setAttribute("src", queueItem.url)
+  audio.appendChild(source)
 
   audio.crossorigin = "anonymous"
   audio.volume = 1
@@ -195,11 +171,13 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.addEventListener("seeked", bind(audioLoaded))
   audio.addEventListener("timeupdate", bind(audioTimeUpdateEvent))
 
-  // `stalled` event doesn't work properly (mostly on Safari and mobile devices)
-  // if (!IS_SAFARI) audio.addEventListener("stalled", bind(audioStalledEvent))
+  // Audio stalled event doesn't work well in Safari
+  if (!IS_SAFARI) {
+    audio.addEventListener("stalled", bind(audioStalledEvent))
+  }
 
-  audio.load()
   audioElementsContainer.appendChild(audio)
+  audio.load()
 
   return audio
 }
@@ -211,7 +189,7 @@ export function preloadAudioElement(orchestrion, queueItem) {
 
   // remove other preloads
   audioElementsContainer.querySelectorAll(`[data-preload="t"]`).forEach(
-    n => n.parentNode.removeChild(n)
+    n => n.parentNode?.removeChild(n)
   )
 
   // audio element remains valid for 45 minutes
@@ -229,9 +207,25 @@ export function preloadAudioElement(orchestrion, queueItem) {
 }
 
 
-export function seek(audio, percentage) {
+export function playAudio(element, queueItem, app) {
+  if (queueItem.progress && element.duration) {
+    element.currentTime = queueItem.progress * element.duration
+  }
+
+  const promise = element.play() || Promise.resolve()
+
+  promise.catch(e => {
+    const err = "Couldn't play audio automatically. Please resume playback manually."
+    console.error(err, e)
+    if (app) app.ports.fromAlien.send({ tag: "", data: null, error: err })
+  })
+}
+
+
+export function seek(orchestrion, percentage) {
+  const audio = orchestrion.audio
   if (audio && !isNaN(audio.duration)) {
-    if (audio.paused) audio.play()
+    if (audio.paused) playAudio(audio, orchestrion.activeQueueItem, orchestrion.app)
     audio.currentTime = audio.duration * percentage
   }
 }
@@ -313,7 +307,7 @@ function audioStalledEvent(event, notifyAppImmediately) {
   }
 
   // Timeout
-  setTimeout(_ => {
+  this.unstallTimeout = setTimeout(_ => {
     if (isActiveAudioElement(this, event.target)) {
       unstallAudio.call(this, event.target)
     }
@@ -337,10 +331,12 @@ function audioTimeUpdateEvent(event) {
   this.app.ports.setAudioPosition.send(node.currentTime)
 
   if (navigator.mediaSession && navigator.mediaSession.setPositionState) {
-    navigator.mediaSession.setPositionState({
-      duration: node.duration,
-      position: node.currentTime
-    })
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: node.duration,
+        position: node.currentTime
+      })
+    } catch (_err) { }
   }
 
   const progress = node.currentTime / node.duration
@@ -363,14 +359,26 @@ function audioEndEvent(event) {
 }
 
 
-function audioLoading(_event) {
+function audioLoading(event) {
   clearTimeout(this.loadingTimeoutId)
 
   this.loadingTimeoutId = setTimeout(() => {
-    if (!this.audio) {
+    const audio = event.target
+
+    if (!audio || !isActiveAudioElement(this, audio)) {
       return
-    } else if (this.audio.readyState === 4 && this.audio.currentTime === 0) {
+    } else if (audio.readyState === 4 && audio.currentTime === 0) {
       this.app.ports.setAudioIsLoading.send(false)
+    } else if (audio.readyState < 3 && IS_SAFARI) {
+      this.app.ports.setAudioIsLoading.send(true)
+      this.unstallTimeout = setTimeout(
+        () => {
+          if (isActiveAudioElement(this, audio)) {
+            unstallSafariAudio.call(this, audio)
+          }
+        },
+        timesStalled * 2500
+      )
     } else {
       this.app.ports.setAudioIsLoading.send(true)
     }
@@ -380,20 +388,24 @@ function audioLoading(_event) {
 
 function audioLoaded(event) {
   clearTimeout(this.loadingTimeoutId)
+  clearTimeout(this.unstallTimeout)
   this.app.ports.setAudioHasStalled.send(false)
   this.app.ports.setAudioIsLoading.send(false)
-  if (event.target.paused) playAudio(event.target, this.activeQueueItem, this.app)
+  if (event.target.paused && (event.type === "seeked" || !event.target.hasPlayed)) {
+    playAudio(event.target, this.activeQueueItem, this.app)
+  }
 }
 
 
-function audioPlayEvent(_event) {
+function audioPlayEvent(event) {
+  event.target.hasPlayed = true
   this.app.ports.setAudioIsPlaying.send(true)
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing"
   if (this.scrobbleTimer) this.scrobbleTimer.start()
 }
 
 
-function audioPauseEvent(_event) {
+function audioPauseEvent(event) {
   this.app.ports.setAudioIsPlaying.send(false)
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "paused"
   if (this.scrobbleTimer) this.scrobbleTimer.pause()
@@ -421,39 +433,28 @@ function blobUrl(blob) {
 
 
 function isActiveAudioElement(orchestrion, node) {
-  return (
+  const isActive = (
     !orchestrion.activeQueueItem ||
     !node ||
-    node.getAttribute("data-preload") === "t"
+    node.getAttribute("data-preload") === "t" ||
+    node.getAttribute("data-deactivated") === "t"
   )
     ? false
-    : orchestrion.activeQueueItem.trackId === audioElementTrackId(node)
+    : orchestrion.activeQueueItem.trackId === audioElementTrackId(node);
+
+  return isActive
 }
 
 
-function playAudio(element, queueItem, app) {
-  if (queueItem.progress && element.duration) {
-    element.currentTime = queueItem.progress * element.duration
-  }
-
-  const promise = element.play() || Promise.resolve()
-
-  promise.catch(e => {
-    // SINGLE_AUDIO_NODE = true
-
-    const err = "Couldn't play audio automatically. Please resume playback manually."
-    console.error(err, e)
-    if (app) app.ports.fromAlien.send({ tag: "", data: null, error: err })
-  })
-}
-
-
-const sendProgress = throttle((orchestrion, progress) => {
+const sendProgress = throttle(30000, (orchestrion, progress) => {
   orchestrion.app.ports.noteProgress.send({
     trackId: orchestrion.activeQueueItem.trackId,
     progress: progress
   })
-}, 30000)
+}, {
+  noLeading: false,
+  noTrailing: false
+})
 
 
 let lastSetDuration = 0
@@ -489,7 +490,7 @@ function setDurationIfNecessary(audio) {
 export function setMediaSessionMetadata(queueItem, maybeArtwork) {
   if ("mediaSession" in navigator === false || !queueItem.trackTags) return
 
-  let artwork = []
+  let artwork: MediaImage[] = []
 
   if (maybeArtwork && typeof maybeArtwork !== "string") {
     artwork = [ {
@@ -507,7 +508,7 @@ export function setMediaSessionMetadata(queueItem, maybeArtwork) {
 }
 
 
-function unstallAudio(node) {
+function unstallAudio(node: HTMLAudioElement) {
   const time = node.currentTime
 
   node.load()
@@ -523,20 +524,45 @@ function unstallAudio(node) {
 }
 
 
+function unstallSafariAudio(node: HTMLAudioElement) {
+  timesStalled++
+
+  // Deactivate
+  node.setAttribute("data-deactivated", "t")
+
+  // Force browser to stop loading
+  try { node.src = silentMp3File } catch (_err) { }
+
+  // Remove element
+  audioElementsContainer.removeChild(node)
+
+  // Create new element
+  createAudioElement(this, this.activeQueueItem, Date.now() + 1000 * 60 * 45, false)
+}
+
+
 
 // 💥
 // --
 // Remove all the audio elements with a timestamp older than the given one.
 
 export function removeOlderAudioElements(timestamp) {
-  const nodes = audioElementsContainer.querySelectorAll("audio[data-timestamp]")
+  const nodes: NodeListOf<HTMLAudioElement> = audioElementsContainer.querySelectorAll(
+    "audio[data-timestamp]"
+  )
 
   nodes.forEach(node => {
-    const t = parseInt(node.getAttribute("data-timestamp"), 10)
+    const tAttr = node.getAttribute("data-timestamp")
+    if (!tAttr) return
+
+    const t = parseInt(tAttr, 10)
     if (t >= timestamp) return
 
+    // Deactivate
+    node.setAttribute("data-deactivated", "t")
+
     // Force browser to stop loading
-    node.src = silentMp3File
+    try { node.src = silentMp3File } catch (_err) { }
 
     // Remove element
     audioElementsContainer.removeChild(node)

@@ -3,7 +3,13 @@
 // (◡ ‿ ◡ ✿)
 //
 // This worker is responsible for caching the application
-// so it can be used offline.
+// so it can be used offline and acts as a proxy that
+// allows for example, authentication through headers
+// when using audio elements.
+//
+/// <reference lib="webworker" />
+
+import { } from "../index.d"
 
 
 const KEY =
@@ -45,7 +51,7 @@ self.addEventListener("activate", _event => {
 
 self.addEventListener("install", event => {
   if (isNativeWrapper) {
-    return self.skipWaiting()
+    return globalThis.skipWaiting()
   }
 
   const href = self.location.href.replace("service-worker.js", "")
@@ -65,8 +71,19 @@ self.addEventListener("fetch", event => {
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
-  // When doing a request with basic authentication in the url, put it in the headers instead
-  if (event.request.url.includes("service_worker_authentication=")) {
+  // Ping
+  if (event.request.url.includes("?ping=1")) {
+    event.respondWith(
+      (async () => {
+        const serverIsOnline = await network(event).then(_ => true).catch(_ => false)
+        return new Response(JSON.stringify(serverIsOnline), {
+          headers: { "Content-Type": "application/json" }
+        })
+      })()
+    )
+
+    // When doing a request with basic authentication in the url, put it in the headers instead
+  } else if (event.request.url.includes("service_worker_authentication=")) {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("service_worker_authentication")
 
@@ -120,7 +137,7 @@ self.addEventListener("fetch", event => {
 
 
 function cacheThenNetwork(event) {
-  let url = new URL(event.request.url)
+  const url = new URL(event.request.url)
   url.search = ""
 
   return caches
@@ -137,7 +154,7 @@ function network(event) {
 
 addEventListener("message", event => {
   if (event.data === "skipWaiting") {
-    skipWaiting()
+    globalThis.skipWaiting()
   }
 })
 
@@ -160,7 +177,6 @@ function newRequestWithAuth(event, urlWithoutToken, authToken) {
       headers: newHeaders,
       credentials: request.credentials,
       cache: request.cache,
-      destination: request.destination,
       method: request.method,
       mode: request.mode,
       redirect: request.redirect,

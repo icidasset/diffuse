@@ -104,7 +104,7 @@ methodInfoAction isSelected activeMethod method =
                 Just (\_ -> OpenUrlOnNewPage "https://dropbox.com")
 
             Fission _ ->
-                Just (\_ -> OpenUrlOnNewPage "https://webnative.dev")
+                Just (\_ -> OpenUrlOnNewPage "https://odd.dev")
 
             RemoteStorage _ ->
                 Just (\_ -> OpenUrlOnNewPage "https://remotestorage.io")

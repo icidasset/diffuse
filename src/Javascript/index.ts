@@ -4,21 +4,20 @@
 // The bit where we launch the Elm app,
 // and connect the other bits to it.
 
+import { } from "./index.d"
 
-import "subworkers"
 import "tocca"
 
-import loadScript from "load-script2"
-import JSZip from "jszip"
-import { saveAs } from "file-saver"
+import type { Program as OddProgram } from "@oddjs/odd"
 
-import "../../build/vendor/pep"
+import { debounce } from "throttle-debounce"
+import { saveAs } from "file-saver"
+import JSZip from "jszip"
 
 import * as audioEngine from "./audio-engine"
-import * as db from "./indexed-db"
-import { version } from '../../package.json'
-import { debounce, fileExtension, WEBNATIVE_CONFIG } from "./common"
+import { db, fileExtension, ODD_CONFIG } from "./common"
 import { transformUrl } from "./urls"
+import { version } from "../../package.json"
 
 
 
@@ -48,15 +47,27 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .getRegistrations()
-      .then(registrations => {
-        // native app should not have to install a new service worker
-        if (isNativeWrapper) {
-          return Promise.all(registrations.map(r => r.unregister()))
-        }
+      .then(async registrations => {
+        const resp = await fetch(`${location.origin}?ping=1`).then(r => r.text()).then(a => a === "false" ? false : true)
+        const serverIsOnline = navigator.onLine && resp
 
-        return Promise.resolve([])
+        if (isNativeWrapper) await Promise.all(
+          registrations.map(r => r.unregister())
+        )
+
+        return serverIsOnline
       })
-      .then(_ => navigator.serviceWorker.register("service-worker.js"))
+      .then(async serverIsOnline => {
+        if (serverIsOnline) {
+          return navigator.serviceWorker.register(
+            "service-worker.js",
+            { type: "module" }
+          )
+        }
+      })
+      .then(_ => {
+        return navigator.serviceWorker.ready
+      })
       .catch(err => {
         const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
 
@@ -83,25 +94,28 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
 
 let app
 let brain
-let wire = {}
+let wire: any = {}
 
 
 async function initialise(reg) {
   brain = new Worker(
-    "brain.js#appHref=" +
-    encodeURIComponent(window.location.href)
+    "./js/brain/index.js#appHref=" + encodeURIComponent(window.location.href),
+    { type: "module" }
   )
+
+  brain.addEventListener("error", err => {
+    failure("<strong>Failed to load web worker.</strong><br />If you're using Firefox, you might need to upgrade your browser (version 113 and up) and set `dom.workers.modules.enabled` to `true` in `about:config`")
+  })
 
   await new Promise(resolve => {
     brain.onmessage = event => {
-      if (event.data.action === "READY") resolve()
+      if (event.data.action === "READY") resolve(null)
     }
   })
 
   app = Elm.UI.init({
     node: document.getElementById("elm"),
     flags: {
-      /* eslint-disable no-undef */
       buildTimestamp: BUILD_TIMESTAMP,
       darkMode: preferredColorScheme().matches,
       initialTime: Date.now(),
@@ -116,8 +130,6 @@ async function initialise(reg) {
     }
   })
 
-  self.app = app
-
   // ⚡️
   wire.brain()
   wire.audio()
@@ -126,12 +138,12 @@ async function initialise(reg) {
   wire.clipboard()
   wire.covers()
   wire.serviceWorker(reg)
-  wire.webnative()
+  wire.odd()
 
   // Other ports
   app.ports.openUrlOnNewPage.subscribe(url => {
-    if (self.__TAURI__) {
-      __TAURI__.shell.open(
+    if (globalThis.__TAURI__) {
+      globalThis.__TAURI__.shell.open(
         url.includes("://") ? url : `${location.origin}/${url.replace(/^\.\//, "")}`
       )
 
@@ -144,7 +156,7 @@ async function initialise(reg) {
   app.ports.reloadApp.subscribe(_ => {
     let timeout = setTimeout(() => {
       if (reg.waiting) reg.waiting.postMessage("skipWaiting")
-      location.reload()
+      window.location.reload()
     }, 250)
 
     bc.addEventListener("message", event => {
@@ -159,7 +171,7 @@ async function initialise(reg) {
 }
 
 
-function failure(text) {
+function failure(text: string) {
   const note = document.createElement("div")
 
   note.className = "flex flex-col font-body items-center h-screen italic justify-center leading-relaxed px-4 text-center text-base text-white"
@@ -177,7 +189,7 @@ function failure(text) {
 
   // Remove loader
   const elm = document.querySelector("#elm")
-  elm && elm.parentNode.removeChild(elm)
+  elm?.parentNode?.removeChild(elm)
 }
 
 
@@ -258,9 +270,7 @@ function activeQueueItemChanged(item) {
   }
 
   // Remove older audio elements if possible
-  audioEngine.usesSingleAudioNode()
-    ? false
-    : audioEngine.removeOlderAudioElements(timestampInMilliseconds)
+  audioEngine.removeOlderAudioElements(timestampInMilliseconds)
 
   // 🎵
   if (item) {
@@ -279,7 +289,7 @@ function activeQueueItemChanged(item) {
       audioEngine.insertTrack(
         orchestrion,
         item,
-        maybeCover
+        maybeCover as any
 
       ).then(() => {
         if (!maybeCover) {
@@ -314,24 +324,26 @@ function pause(_) {
 
 
 function play(_) {
-  if (orchestrion.audio) orchestrion.audio.play()
+  if (orchestrion.audio) {
+    audioEngine.playAudio(orchestrion.audio, orchestrion.activeQueueItem, app)
+  }
 }
 
 
 function preloadAudio() {
-  return debounce(item => {
+  return debounce(15000, item => {
     // Wait 15 seconds to preload something.
     // This is particularly useful when quickly shifting through tracks,
     // or when moving things around in the queue.
-    (audioEngine.usesSingleAudioNode() || item.isCached)
+    item.isCached
       ? false
       : audioEngine.preloadAudioElement(orchestrion, item)
-  }, 15000)
+  })
 }
 
 
 function seek(percentage) {
-  audioEngine.seek(orchestrion.audio, percentage)
+  audioEngine.seek(orchestrion, percentage)
 }
 
 
@@ -354,6 +366,8 @@ function averageColorOfImage(img) {
   const ctx = canvas.getContext("2d")
   canvas.width = img.naturalWidth
   canvas.height = img.naturalHeight
+
+  if (!ctx) return null
 
   ctx.drawImage(img, 0, 0)
 
@@ -409,9 +423,9 @@ wire.clipboard = () => {
     // TODO: Find a better solution for this
     const adjustedText = (() => {
       if (text.startsWith("dropbox://")) {
-        return transformUrl(text)
+        return transformUrl(text, app)
       } else if (text.startsWith("google://")) {
-        return transformUrl(text)
+        return transformUrl(text, app)
       } else {
         return text
 
@@ -429,15 +443,15 @@ wire.clipboard = () => {
 
 wire.covers = () => {
   app.ports.loadAlbumCovers.subscribe(
-    debounce(loadAlbumCoversFromDom, 500)
+    debounce(500, loadAlbumCoversFromDom)
   )
 
-  db.keys().then(cachedCovers)
+  db().keys().then(cachedCovers)
 }
 
 
 function albumCover(coverKey) {
-  return db.getFromIndex({ key: `coverCache.${coverKey}` })
+  return db().getItem(`coverCache.${coverKey}`)
 }
 
 
@@ -445,7 +459,7 @@ function gotCachedCover({ key, url }) {
   const item = orchestrion.activeQueueItem
 
   if (item && orchestrion.coverPrep && key === orchestrion.coverPrep.key && url) {
-    let artwork = [ { src: url } ]
+    let artwork = [ { src: url, type: undefined } ]
 
     if (typeof url !== "string") {
       artwork = [ {
@@ -464,8 +478,8 @@ function gotCachedCover({ key, url }) {
 }
 
 
-function loadAlbumCoversFromDom({ coverView, list } = {}) {
-  let nodes = []
+function loadAlbumCoversFromDom({ coverView, list }) {
+  let nodes: HTMLElement[] = []
 
   if (list) nodes = nodes.concat(Array.from(
     document.querySelectorAll("#diffuse__track-covers [data-key]")
@@ -516,10 +530,10 @@ function cachedCovers(keys) {
 
   const cachePromise = cacheKeys.reduce((acc, key) => {
     return acc.then(cache => {
-      return db.getFromIndex({ key: key }).then(blob => {
+      return db().getItem(key).then(blob => {
         const cacheKey = key.slice(11)
 
-        if (blob && typeof blob !== "string") {
+        if (blob && typeof blob !== "string" && blob instanceof Blob) {
           cache[ cacheKey ] = URL.createObjectURL(blob)
         }
 
@@ -570,11 +584,12 @@ function preferredColorScheme() {
 function downloadTracks(group) {
   const zip = new JSZip()
   const folder = zip.folder("Diffuse - " + group.name)
+  if (!folder) throw new Error("Failed to create ZIP file")
 
   return group.tracks.reduce(
     (acc, track) => {
       return acc
-        .then(_ => transformUrl(track.url))
+        .then(_ => transformUrl(track.url, app))
         .then(fetch)
         .then(r => {
           const mimeType = r.headers.get("content-type")
@@ -600,22 +615,6 @@ function downloadTracks(group) {
 // Focus
 // -----
 
-document.body.addEventListener("click", event => {
-  if (
-    event.target.matches("button, a") ||
-    event.target.closest("button, a")
-  ) {
-    removeFocus()
-  }
-})
-
-
-function removeFocus() {
-  const n = document.activeElement
-  if (n && !n.dataset.keepFocus) n.blur()
-}
-
-
 window.addEventListener("blur", event => {
   if (app && event.target === window) app.ports.lostWindowFocus.send(null)
 })
@@ -631,20 +630,20 @@ const FIELD_SELECTOR = "input, textarea"
 
 
 document.addEventListener("keyup", e => {
-  const field = e.target.closest(FIELD_SELECTOR)
+  const field = e.target && (<HTMLElement>e.target).closest(FIELD_SELECTOR)
   if (field) field.setAttribute("changed", "")
 })
 
 
 document.addEventListener("click", e => {
-  if (e.target.tagName !== "BUTTON") return;
-  const form = e.target.closest("form")
+  if (!e.target || (<HTMLElement>e.target).tagName !== "BUTTON") return;
+  const form = (<HTMLElement>e.target).closest("form")
   if (form) markAllFormFieldsAsChanged(form)
 })
 
 
 document.addEventListener("submit", e => {
-  const form = e.target.closest("form")
+  const form = e.target && (<HTMLElement>e.target).closest("form")
   if (form) markAllFormFieldsAsChanged(form)
 })
 
@@ -672,29 +671,6 @@ function onlineStatusChanged() {
 
 // Media Keys
 // ----------
-// https://github.com/borismus/keysocket#api
-// https://developers.google.com/web/updates/2019/02/chrome-73-media-updates
-
-document.addEventListener("MediaPlayPause", () => {
-  app.ports.requestPlayPause.send(null)
-})
-
-
-document.addEventListener("MediaStop", () => {
-  app.ports.requestStop.send(null)
-})
-
-
-document.addEventListener("MediaPrev", () => {
-  app.ports.requestPrevious.send(null)
-})
-
-
-document.addEventListener("MediaNext", () => {
-  app.ports.requestNext.send(null)
-})
-
-
 
 if ("mediaSession" in navigator) {
 
@@ -755,7 +731,7 @@ tocca({
 
 
 function mousePointerEvent(eventType, mouseEvent) {
-  let pointerEvent = new MouseEvent(eventType, mouseEvent)
+  let pointerEvent: any = new MouseEvent(eventType, mouseEvent)
   pointerEvent.pointerId = 1
   pointerEvent.isPrimary = true
   pointerEvent.pointerType = "mouse"
@@ -773,7 +749,7 @@ function mousePointerEvent(eventType, mouseEvent) {
 
 
 function touchPointerEvent(eventType, touchEvent, touch) {
-  let pointerEvent = new CustomEvent(eventType, {
+  let pointerEvent: any = new CustomEvent(eventType, {
     bubbles: true,
     cancelable: true
   })
@@ -860,12 +836,31 @@ document.body.addEventListener("touchmove", event => {
 // Service worker
 // --------------
 
-wire.serviceWorker = async (reg) => {
+wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
   if (reg.installing) console.log("🧑‍✈️ Service worker is installing")
   const initialInstall = reg.installing
 
+  initialInstall?.addEventListener("statechange", function () {
+    if (this.state === "activated") {
+      console.log("🧑‍✈️ Service worker is activated")
+      app.ports.installedNewServiceWorker.send(null)
+    }
+  })
+
+  if (reg.waiting) {
+    console.log("🧑‍✈️ A new version of Diffuse is available")
+    app.ports.installingNewServiceWorker.send(null)
+    app.ports.installedNewServiceWorker.send(null)
+  }
+
+  if (initialInstall?.state === "activated") {
+    console.log("🧑‍✈️ Service worker is activated")
+    app.ports.installedNewServiceWorker.send(null)
+  }
+
   reg.addEventListener("updatefound", () => {
     const newWorker = reg.installing
+    if (!newWorker) return
 
     // No worker was installed yet, so we'll only want to track the state changes
     if (newWorker !== initialInstall) {
@@ -873,14 +868,14 @@ wire.serviceWorker = async (reg) => {
       app.ports.installingNewServiceWorker.send(null)
     }
 
-    newWorker.addEventListener("statechange", (e) => {
+    newWorker.addEventListener("statechange", (e: any) => {
       console.log("🧑‍✈️ Service worker is", e.target.state)
       if (e.target.state === "installed") app.ports.installedNewServiceWorker.send(null)
     })
   })
 
   // Check for service worker updates and every hour after that
-  if (!isNativeWrapper) {
+  if (!isNativeWrapper && navigator.onLine) {
     reg.update()
     setInterval(() => reg.update(), 1 * 1000 * 60 * 60)
   }
@@ -891,42 +886,61 @@ wire.serviceWorker = async (reg) => {
 // Syncing
 // -------
 
-let wn
+let odd
 
 
-wire.webnative = () => {
+wire.odd = () => {
   app.ports.authenticateWithFission.subscribe(async () => {
-    const program = await webnativeProgram()
+    const program = await oddProgram()
     await program.capabilities.request({
       returnUrl: location.origin + "?action=authenticate/fission"
     })
   })
 
-  app.ports.collectFissionCapabilities.subscribe(async () => {
-    // Webnative should collect the capabilities for us,
+  app.ports.collectFissionCapabilities.subscribe(() => {
+    // The ODD SDK should collect the capabilities for us,
     // if everything is valid, we'll receive a session.
-    await webnativeProgram()
-    app.ports.collectedFissionCapabilities.send(null)
+    oddProgram().then(
+      program => {
+        history.replaceState({}, "", location.origin)
+        app.ports.collectedFissionCapabilities.send(null)
+      }
+    ).catch(
+      err => console.error(err)
+    )
   })
 }
 
 
 
-async function webnativeProgram() {
-  await loadWebnative()
+async function oddProgram(): Promise<OddProgram> {
+  try {
+    await loadOdd()
+  } catch (err) {
+    console.trace(err)
+    throw new Error("Failed to load the ODD SDK")
+  }
 
-  return wn.program({
-    ...WEBNATIVE_CONFIG,
+  const capComponent = await import("./Odd/components/capabilities.js")
+
+  const crypto = await odd.defaultCryptoComponent(ODD_CONFIG)
+  const storage = await odd.defaultStorageComponent(ODD_CONFIG)
+  const depot = await odd.defaultDepotComponent({ storage }, ODD_CONFIG)
+
+  return odd.program({
+    ...ODD_CONFIG,
+    capabilities: capComponent.implementation({
+      crypto,
+      depot
+    }),
     fileSystem: { loadImmediately: false }
   })
 }
 
 
-async function loadWebnative() {
-  if (wn) return
-
-  await loadScript("vendor/webnative.min.js")
-  wn = window.webnative
+async function loadOdd() {
+  if (odd) return
+  odd = await import("@oddjs/odd")
 }
 
 

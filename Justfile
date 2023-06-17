@@ -2,11 +2,11 @@ export NODE_NO_WARNINGS := "1"
 
 
 BUILD_DIR 				:= "./build"
-NPM_DIR 					:= "./node_modules"
-SRC_DIR 					:= "./src"
+NPM_DIR 				:= "./node_modules"
+SRC_DIR 				:= "./src"
 SYSTEM_DIR				:= "./system"
 
-ESBUILD						:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
+ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
 
 
 default: dev
@@ -58,7 +58,7 @@ check-versions:
 	{{NPM_DIR}}/.bin/tailwind \
 		--input {{SRC_DIR}}/Css/Application.css \
 		--output {{BUILD_DIR}}/application.css \
-		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm,{{SRC_DIR}}/Javascript/**/*.js" \
+		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm,{{SRC_DIR}}/Javascript/**/*.ts" \
 		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
 		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
 		--jit \
@@ -67,75 +67,100 @@ check-versions:
 
 @elm:
 	echo "> Compiling Elm application"
-	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/brain.elm.js
-	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js
+	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js
+	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js
 
 
 @elm-prod:
 	echo "> Compiling Elm application (optimised)"
-	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/brain.elm.js --optimize
-	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/ui.elm.js --optimize
+	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js --optimize
+	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js --optimize
 
-	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/brain.elm.js \
-		--minify --outfile={{BUILD_DIR}}/brain.elm.tmp.js
+	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/js/brain.elm.js \
+		--minify --outfile={{BUILD_DIR}}/js/brain.elm.tmp.js
 
-	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/ui.elm.js \
-		--minify --outfile={{BUILD_DIR}}/ui.elm.tmp.js
+	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/js/ui.elm.js \
+		--minify --outfile={{BUILD_DIR}}/js/ui.elm.tmp.js
 
-	rm {{BUILD_DIR}}/brain.elm.js
-	mv {{BUILD_DIR}}/brain.elm.tmp.js {{BUILD_DIR}}/brain.elm.js
-	rm {{BUILD_DIR}}/ui.elm.js
-	mv {{BUILD_DIR}}/ui.elm.tmp.js {{BUILD_DIR}}/ui.elm.js
+	rm {{BUILD_DIR}}/js/brain.elm.js
+	mv {{BUILD_DIR}}/js/brain.elm.tmp.js {{BUILD_DIR}}/js/brain.elm.js
+	rm {{BUILD_DIR}}/js/ui.elm.js
+	mv {{BUILD_DIR}}/js/ui.elm.tmp.js {{BUILD_DIR}}/js/ui.elm.js
 
 
-js: vendor-js
+js:
 	#!/usr/bin/env bash
 	build_timestamp="`date '+%s'`"
 	echo "> Compiling Javascript code"
 
-	# Main builds
-	{{ESBUILD}} ./src/Javascript/index.js \
-		--outfile={{BUILD_DIR}}/ui.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
-
-	{{ESBUILD}} ./src/Javascript/Brain/index.js \
-		--inject:./system/Js/node-shims.js \
-		--outfile={{BUILD_DIR}}/brain.js
-
 	# Workers
-	{{ESBUILD}} ./src/Javascript/Workers/search.js \
-		--outfile={{BUILD_DIR}}/search.js
+	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
+		--outfile={{BUILD_DIR}}/search.js \
+		--format=esm \
+		--target=esnext
 
-	{{ESBUILD}} ./src/Javascript/Workers/service.js \
+	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext
+
+	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
+		--inject:./system/Js/node-shims.js \
+		--outdir={{BUILD_DIR}}/js/brain/ \
+		--format=esm \
+		--target=esnext \
+		--splitting \
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=readable-stream
+
+	# Main
+	{{ESBUILD}} ./src/Javascript/index.ts \
+		--outdir={{BUILD_DIR}}/js/ui/ \
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext \
+		--splitting \
+		--alias:stream=readable-stream
 
 
-js-prod: vendor-js
+js-prod:
 	#!/usr/bin/env bash
 	build_timestamp="`date '+%s'`"
 	echo "> Compiling Javascript code (optimised)"
 
-	# Main builds
-	{{ESBUILD}} ./src/Javascript/index.js \
-		--minify \
-		--outfile={{BUILD_DIR}}/ui.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
-
-	{{ESBUILD}} ./src/Javascript/Brain/index.js \
-		--minify \
-		--inject:./system/Js/node-shims.js \
-		--outfile={{BUILD_DIR}}/brain.js
-
 	# Workers
-	{{ESBUILD}} ./src/Javascript/Workers/search.js \
+	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
 		--minify \
-		--outfile={{BUILD_DIR}}/search.js
+		--outfile={{BUILD_DIR}}/search.js \
+		--format=esm \
+		--target=esnext
 
-	{{ESBUILD}} ./src/Javascript/Workers/service.js \
+	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--minify \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext
+
+	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
+		--inject:./system/Js/node-shims.js \
+		--outdir={{BUILD_DIR}}/js/brain/ \
+		--format=esm \
+		--target=esnext \
+		--splitting \
+		--minify \
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
+
+	# Main
+	{{ESBUILD}} ./src/Javascript/index.ts \
+		--outdir={{BUILD_DIR}}/js/ui/ \
+		--define:BUILD_TIMESTAMP=$build_timestamp \
+		--format=esm \
+		--target=esnext \
+		--splitting \
+		--minify
 
 
 @license:
@@ -159,14 +184,6 @@ js-prod: vendor-js
 	./src-tauri/bin/cargo-tauri tauri build --target universal-apple-darwin --config ./src-tauri/tauri.conf.json
 
 
-@vendor-js:
-	mkdir -p {{BUILD_DIR}}/vendor
-	cp {{NPM_DIR}}/subworkers/subworkers.js {{BUILD_DIR}}/subworkers.js
-	cp {{NPM_DIR}}/remotestoragejs/release/remotestorage.js {{BUILD_DIR}}/vendor/remotestorage.min.js
-	cp {{NPM_DIR}}/webnative/dist/index.umd.min.js {{BUILD_DIR}}/vendor/webnative.min.js
-	cp ./vendor/pep.js {{BUILD_DIR}}/vendor/pep.js
-
-
 #
 # Dev tasks
 #
@@ -183,10 +200,6 @@ js-prod: vendor-js
 	)
 
 
-@download-vendor-dep filename url:
-	curl --silent --show-error --fail -o ./vendor/{{filename}} {{url}}
-
-
 @elm-housekeeping:
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
@@ -197,10 +210,6 @@ js-prod: vendor-js
 @install-deps:
 	npm install
 
-	mkdir -p vendor
-
-	just download-vendor-dep pep.js https://raw.githubusercontent.com/mpizenberg/elm-pep/071616d75ca61e261fdefc7b55bc46c34e44ea22/elm-pep.js
-
 
 @install-tauri-cli:
 	cargo install tauri-cli --version "^1.2.2" --root ./src-tauri
@@ -208,7 +217,7 @@ js-prod: vendor-js
 
 @quality: check-versions
 	echo "> Running es-lint"
-	{{NPM_DIR}}/.bin/eslint src/Javascript/**
+	{{NPM_DIR}}/.bin/eslint src/Javascript/**/*
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review
 
