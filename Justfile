@@ -2,11 +2,11 @@ export NODE_NO_WARNINGS := "1"
 
 
 BUILD_DIR 				:= "./build"
-NPM_DIR 					:= "./node_modules"
-SRC_DIR 					:= "./src"
+NPM_DIR 				:= "./node_modules"
+SRC_DIR 				:= "./src"
 SYSTEM_DIR				:= "./system"
 
-ESBUILD						:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
+ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
 
 
 default: dev

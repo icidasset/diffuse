@@ -19,7 +19,7 @@ import { sendData, toCache } from "./common"
 import { transformUrl } from "../urls"
 
 // @ts-ignore
-const Elm = await import("brain.elm.js").then(a => a.default.Elm)
+import { Elm } from "../../../build/js/brain.elm.js"
 
 
 // 🍱
@@ -108,7 +108,7 @@ wire.artworkCaching = () => {
 
 
 function downloadArtwork(list) {
-  const exe = !artworkQueue[ 0 ]
+  const exe = !artworkQueue[0]
   artworkQueue = artworkQueue.concat(list)
   if (exe) shiftArtworkQueue()
 }
@@ -297,8 +297,8 @@ const flags: Record<string, string> = location
   .substr(1)
   .split("&")
   .reduce((acc, flag) => {
-    const [ k, v ] = flag.split("=")
-    return { ...acc, [ k ]: v }
+    const [k, v] = flag.split("=")
+    return { ...acc, [k]: v }
   }, {})
 
 

@@ -12,7 +12,7 @@ export const APP_INFO = {
 }
 
 
-export const WEBNATIVE_CONFIG = {
+export const ODD_CONFIG = {
   namespace: APP_INFO,
   permissions: {
     app: APP_INFO,

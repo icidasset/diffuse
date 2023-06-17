@@ -176,18 +176,6 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
     audio.addEventListener("stalled", bind(audioStalledEvent))
   }
 
-  if (IS_SAFARI) {
-    audio.addEventListener("waiting", bind(audioWaitingEvent))
-    audio.addEventListener("encrypted", bind(() => console.log("encrypted")))
-    audio.addEventListener("stalled", bind(() => console.log("stalled")))
-    audio.addEventListener("suspended", bind(() => console.log("suspended")))
-    audio.addEventListener("loadedmetadata", bind(() => console.log("loadedmetadata")))
-    audio.addEventListener("emptied", bind(() => console.log("emptied")))
-    audio.addEventListener("ended", bind(() => console.log("ended")))
-    audio.addEventListener("error", bind(() => console.log("error")))
-    audio.addEventListener("progress", bind(() => console.log("progress")))
-  }
-
   audioElementsContainer.appendChild(audio)
   audio.load()
 
@@ -330,11 +318,6 @@ function audioStalledEvent(event, notifyAppImmediately) {
 }
 
 
-function audioWaitingEvent(event) {
-  console.log("waiting", event)
-}
-
-
 function audioTimeUpdateEvent(event) {
   const node = event.target
 
@@ -377,7 +360,6 @@ function audioEndEvent(event) {
 
 
 function audioLoading(event) {
-  console.log("loading", event)
   clearTimeout(this.loadingTimeoutId)
 
   this.loadingTimeoutId = setTimeout(() => {
@@ -391,7 +373,6 @@ function audioLoading(event) {
       this.app.ports.setAudioIsLoading.send(true)
       this.unstallTimeout = setTimeout(
         () => {
-          console.log("safariStall")
           if (isActiveAudioElement(this, audio)) {
             unstallSafariAudio.call(this, audio)
           }
@@ -406,7 +387,6 @@ function audioLoading(event) {
 
 
 function audioLoaded(event) {
-  console.log("loaded", event)
   clearTimeout(this.loadingTimeoutId)
   clearTimeout(this.unstallTimeout)
   this.app.ports.setAudioHasStalled.send(false)
@@ -545,14 +525,13 @@ function unstallAudio(node: HTMLAudioElement) {
 
 
 function unstallSafariAudio(node: HTMLAudioElement) {
-  console.log("unstall")
   timesStalled++
 
   // Deactivate
   node.setAttribute("data-deactivated", "t")
 
   // Force browser to stop loading
-  // try { node.src = silentMp3File } catch (_err) { }
+  try { node.src = silentMp3File } catch (_err) { }
 
   // Remove element
   audioElementsContainer.removeChild(node)

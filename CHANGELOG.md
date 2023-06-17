@@ -3,9 +3,9 @@
 ## 3.4.0
 
 - Adjusted search behaviour, now searches while typing (with a small delay).
-- Allows you to make playlists public when using Fission / Webnative.
+- Allows you to make playlists public when using Fission/ODD SDK.
 - Fixes issue with Safari where reloading after a search caused the loader to be shown indefinitely.
-- Fixes syncing issues with Fission/Webnative.
+- Fixes syncing issues with Fission/ODD SDK (was called Webnative before)
 - Removes support for older browsers
 
 

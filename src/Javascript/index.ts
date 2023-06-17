@@ -8,12 +8,14 @@ import { } from "./index.d"
 
 import "tocca"
 
+import type { Program as OddProgram } from "@oddjs/odd"
+
 import { debounce } from "throttle-debounce"
 import { saveAs } from "file-saver"
 import JSZip from "jszip"
 
 import * as audioEngine from "./audio-engine"
-import { db, fileExtension, WEBNATIVE_CONFIG } from "./common"
+import { db, fileExtension, ODD_CONFIG } from "./common"
 import { transformUrl } from "./urls"
 import { version } from "../../package.json"
 
@@ -136,7 +138,7 @@ async function initialise(reg) {
   wire.clipboard()
   wire.covers()
   wire.serviceWorker(reg)
-  wire.webnative()
+  wire.odd()
 
   // Other ports
   app.ports.openUrlOnNewPage.subscribe(url => {
@@ -884,22 +886,25 @@ wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
 // Syncing
 // -------
 
-let wn
+let odd
 
 
-wire.webnative = () => {
+wire.odd = () => {
   app.ports.authenticateWithFission.subscribe(async () => {
-    const program = await webnativeProgram()
+    const program = await oddProgram()
     await program.capabilities.request({
       returnUrl: location.origin + "?action=authenticate/fission"
     })
   })
 
   app.ports.collectFissionCapabilities.subscribe(() => {
-    // Webnative should collect the capabilities for us,
+    // The ODD SDK should collect the capabilities for us,
     // if everything is valid, we'll receive a session.
-    webnativeProgram().then(
-      () => app.ports.collectedFissionCapabilities.send(null)
+    oddProgram().then(
+      program => {
+        history.replaceState({}, "", location.origin)
+        app.ports.collectedFissionCapabilities.send(null)
+      }
     ).catch(
       err => console.error(err)
     )
@@ -908,25 +913,34 @@ wire.webnative = () => {
 
 
 
-async function webnativeProgram() {
+async function oddProgram(): Promise<OddProgram> {
   try {
-    await loadWebnative()
+    await loadOdd()
   } catch (err) {
-    console.error(err)
-    throw new Error("Failed to load Webnative")
+    console.trace(err)
+    throw new Error("Failed to load the ODD SDK")
   }
 
-  return wn.program({
-    ...WEBNATIVE_CONFIG,
+  const capComponent = await import("./Odd/components/capabilities.js")
+
+  const crypto = await odd.defaultCryptoComponent(ODD_CONFIG)
+  const storage = await odd.defaultStorageComponent(ODD_CONFIG)
+  const depot = await odd.defaultDepotComponent({ storage }, ODD_CONFIG)
+
+  return odd.program({
+    ...ODD_CONFIG,
+    capabilities: capComponent.implementation({
+      crypto,
+      depot
+    }),
     fileSystem: { loadImmediately: false }
   })
 }
 
 
-async function loadWebnative() {
-  if (wn) return
-  const webnative = await import("webnative")
-  wn = webnative
+async function loadOdd() {
+  if (odd) return
+  odd = await import("@oddjs/odd")
 }
 
 
