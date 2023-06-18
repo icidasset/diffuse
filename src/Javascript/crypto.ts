@@ -12,10 +12,6 @@ const extractable = false
 
 
 export function keyFromPassphrase(passphrase) {
-  console.log(
-    Uint8arrays.fromString(passphrase, "base64pad")
-  )
-
   return crypto.subtle.importKey(
     "raw",
     Uint8arrays.fromString(passphrase, "utf8"),
