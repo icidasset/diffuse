@@ -14,8 +14,6 @@ elm-stuff
 /diffuse
 /node_modules
 /src/Library/Css/Classes.elm
-/src-tauri/bin/
-/src-tauri/.crates*
 /TODO.md
 /tmp
 /vendor

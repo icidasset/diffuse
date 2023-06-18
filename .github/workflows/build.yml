@@ -1,4 +1,4 @@
-name: Build Native Version
+name: Build & create release
 
 
 on:
@@ -95,70 +95,3 @@ jobs:
           files: |
             compressed/diffuse-web.zip
             compressed/diffuse-web.tar.gz
-
-  #########
-  # TAURI #
-  #########
-  tauri:
-    needs: create-release
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # OS
-      - name: install linux dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
-
-      # Rust
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "src-tauri -> target"
-
-      # Download artifacts
-      - uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: build/
-
-      # Install Tauri CLI
-      - run: just install-tauri-cli
-
-      # Make a build
-      - run: just tauri-build
-        if: matrix.os != 'macos-latest'
-
-      - run: just tauri-build-universal
-        if: matrix.os == 'macos-latest'
-
-      # Upload artifacts
-      - uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-          tag_name: "${{ needs.create-release.outputs.TAG_NAME }}"
-          draft: true
-
-          files: |
-            src-tauri/target/release/bundle/appimage/*.AppImage
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg

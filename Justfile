@@ -173,17 +173,6 @@ js-prod:
 	stack build --fast 2>&1 | sed '/^Warning:/,/Invalid magic: e49ceb0f$/d' | sed '/^Inferring license/d' && stack exec build --silent
 
 
-@tauri-build:
-	echo "> Building Tauri binaries"
-	./src-tauri/bin/cargo-tauri tauri build --config ./src-tauri/tauri.conf.json
-
-
-@tauri-build-universal:
-	echo "> Building Tauri binaries (Universal MacOS build)"
-	rustup target add aarch64-apple-darwin
-	./src-tauri/bin/cargo-tauri tauri build --target universal-apple-darwin --config ./src-tauri/tauri.conf.json
-
-
 #
 # Dev tasks
 #
@@ -211,10 +200,6 @@ js-prod:
 	npm install
 
 
-@install-tauri-cli:
-	cargo install tauri-cli --version "^1.2.2" --root ./src-tauri
-
-
 @quality: check-versions
 	echo "> Running es-lint"
 	{{NPM_DIR}}/.bin/eslint src/Javascript/**/*
@@ -225,10 +210,6 @@ js-prod:
 @server:
 	echo "> Booting up web server on port 8000"
 	miniserve --spa --index index.html --port 8000 {{BUILD_DIR}}
-
-
-@tauri-dev:
-	./src-tauri/bin/cargo-tauri tauri dev
 
 
 @test: doc-tests

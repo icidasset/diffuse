@@ -8,14 +8,13 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
 
   # Outputs
   # =======
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay }:
+  outputs = { self, nixpkgs, flake-utils }:
     let
       inherit (nixpkgs.lib) attrValues optionalAttrs;
 
@@ -45,6 +44,6 @@
       inherit self nixpkgs;
       name = "diffuse";
       shell = ./nix/shell.nix;
-      preOverlays = [ (import rust-overlay) overlays.apple-silicon ];
+      preOverlays = [ overlays.apple-silicon ];
     };
 }
