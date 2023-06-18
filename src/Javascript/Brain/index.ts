@@ -108,7 +108,7 @@ wire.artworkCaching = () => {
 
 
 function downloadArtwork(list) {
-  const exe = !artworkQueue[0]
+  const exe = !artworkQueue[ 0 ]
   artworkQueue = artworkQueue.concat(list)
   if (exe) shiftArtworkQueue()
 }
@@ -153,6 +153,9 @@ function provideArtworkTrackUrls(prep) {
         reportError(app, { tag: "REPORT_ERROR" })(err)
 
       }
+    })
+    .catch(() => {
+      console.warn("Failed to download artwork for ", prep)
     })
     .finally(shiftArtworkQueue)
 }
@@ -297,8 +300,8 @@ const flags: Record<string, string> = location
   .substr(1)
   .split("&")
   .reduce((acc, flag) => {
-    const [k, v] = flag.split("=")
-    return { ...acc, [k]: v }
+    const [ k, v ] = flag.split("=")
+    return { ...acc, [ k ]: v }
   }, {})
 
 
