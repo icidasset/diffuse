@@ -183,6 +183,7 @@ navigation { bgColor, favouritesOnly, grouping, isOnIndexPage, pressedShift, sce
                 Html.input
                 [ attribute "autocorrect" "off"
                 , attribute "autocapitalize" "none"
+                , attribute "spellcheck" "false"
                 , onInput (TracksMsg << SetSearchTerm)
                 , placeholder "Search"
                 , tabindex tabindex_

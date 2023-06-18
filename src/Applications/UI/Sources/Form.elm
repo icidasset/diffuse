@@ -5,7 +5,7 @@ import Common exposing (boolFromString, boolToString)
 import Conditional exposing (..)
 import Dict.Ext as Dict
 import Html exposing (Html, text)
-import Html.Attributes as A exposing (for, name, placeholder, required, selected, type_, value)
+import Html.Attributes as A exposing (attribute, for, name, placeholder, required, selected, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import List.Extra as List
 import Material.Icons.Round as Icons
@@ -404,6 +404,9 @@ renderProperty context property =
                 , required (property.label |> String.toLower |> String.contains "optional" |> not)
                 , type_ (ifThenElse property.password "password" "text")
                 , value (Dict.fetch property.key "" context.data)
+
+                --
+                , attribute "spellcheck" "false"
                 ]
         ]
 

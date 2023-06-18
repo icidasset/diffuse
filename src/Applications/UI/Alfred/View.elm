@@ -5,7 +5,7 @@ import Chunky exposing (..)
 import Color exposing (Color)
 import Conditional exposing (ifThenElse)
 import Html exposing (Html, text)
-import Html.Attributes exposing (autofocus, id, placeholder, style, type_)
+import Html.Attributes exposing (attribute, autofocus, id, placeholder, style, type_)
 import Html.Events exposing (onInput)
 import Html.Ext exposing (onTapPreventDefault)
 import Json.Decode
@@ -82,6 +82,9 @@ view maybeInstance extractedBackdropColor =
                         , id "diffuse__alfred"
                         , onInput UI.GotAlfredInput
                         , type_ "text"
+
+                        --
+                        , attribute "spellcheck" "false"
 
                         --
                         , case instance.operation of
