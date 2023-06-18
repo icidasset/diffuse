@@ -323,6 +323,8 @@ function play(_) {
 
 
 function preloadAudio() {
+  if (navigator.onLine === false) return;
+
   return debounce(15000, item => {
     // Wait 15 seconds to preload something.
     // This is particularly useful when quickly shifting through tracks,
