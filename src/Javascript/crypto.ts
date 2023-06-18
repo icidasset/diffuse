@@ -12,9 +12,13 @@ const extractable = false
 
 
 export function keyFromPassphrase(passphrase) {
+  console.log(
+    Uint8arrays.fromString(passphrase, "base64pad")
+  )
+
   return crypto.subtle.importKey(
     "raw",
-    Uint8arrays.fromString(passphrase, "base64pad"),
+    Uint8arrays.fromString(passphrase, "utf8"),
     {
       name: "PBKDF2"
     },
@@ -24,7 +28,7 @@ export function keyFromPassphrase(passphrase) {
   ).then(baseKey => crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: Uint8arrays.fromString("diffuse", "base64pad"),
+      salt: Uint8arrays.fromString("diffuse", "utf8"),
       iterations: 10000,
       hash: "SHA-512"
     },
@@ -80,7 +84,7 @@ export function decrypt(key, string) {
   ).then(
     buffer => Uint8arrays.toString(
       new Uint8Array(buffer),
-      "base64pad"
+      "utf8"
     )
 
   )
