@@ -144,7 +144,7 @@ methodView activeMethod method =
                 label UI.Svg.Elements.dropboxLogo
 
             Fission _ ->
-                label UI.Svg.Elements.webnativeLogo
+                label UI.Svg.Elements.oddLogo
 
             RemoteStorage _ ->
                 label UI.Svg.Elements.remoteStorageLogo

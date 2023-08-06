@@ -1,12 +1,12 @@
 export NODE_NO_WARNINGS := "1"
 
 
-BUILD_DIR 				:= "./build"
-NPM_DIR 				:= "./node_modules"
-SRC_DIR 				:= "./src"
-SYSTEM_DIR				:= "./system"
+BUILD_DIR       := "./build"
+NPM_DIR         := "./node_modules"
+SRC_DIR         := "./src"
+SYSTEM_DIR      := "./system"
 
-ESBUILD					:= NPM_DIR + "/.bin/esbuild --target=es2018 --bundle"
+ESBUILD         := NPM_DIR + "/.bin/esbuild --target=esnext --format=esm --bundle"
 
 
 default: dev
@@ -95,34 +95,22 @@ js:
 
 	# Workers
 	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
-		--outfile={{BUILD_DIR}}/search.js \
-		--format=esm \
-		--target=esnext
+		--outfile={{BUILD_DIR}}/search.js
 
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--format=esm \
-		--target=esnext
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
-		--inject:./system/Js/node-shims.js \
 		--outdir={{BUILD_DIR}}/js/brain/ \
-		--format=esm \
-		--target=esnext \
 		--splitting \
-		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
-		--alias:node:buffer=buffer/ \
-		--alias:node:stream=readable-stream
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
 
 	# Main
 	{{ESBUILD}} ./src/Javascript/index.ts \
 		--outdir={{BUILD_DIR}}/js/ui/ \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--format=esm \
-		--target=esnext \
-		--splitting \
-		--alias:stream=readable-stream
+		--splitting
 
 
 js-prod:
@@ -133,22 +121,15 @@ js-prod:
 	# Workers
 	{{ESBUILD}} ./src/Javascript/Workers/search.ts \
 		--minify \
-		--outfile={{BUILD_DIR}}/search.js \
-		--format=esm \
-		--target=esnext
+		--outfile={{BUILD_DIR}}/search.js
 
 	{{ESBUILD}} ./src/Javascript/Workers/service.ts \
 		--minify \
 		--outfile={{BUILD_DIR}}/service-worker.js \
-		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--format=esm \
-		--target=esnext
+		--define:BUILD_TIMESTAMP=$build_timestamp
 
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
-		--inject:./system/Js/node-shims.js \
 		--outdir={{BUILD_DIR}}/js/brain/ \
-		--format=esm \
-		--target=esnext \
 		--splitting \
 		--minify \
 		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
@@ -157,8 +138,6 @@ js-prod:
 	{{ESBUILD}} ./src/Javascript/index.ts \
 		--outdir={{BUILD_DIR}}/js/ui/ \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--format=esm \
-		--target=esnext \
 		--splitting \
 		--minify
 

@@ -5,7 +5,7 @@
 // Audio processing, getting metadata, etc.
 
 
-import * as musicMetadata from "music-metadata"
+import * as musicMetadata from "music-metadata-browser"
 import { makeTokenizer } from "@tokenizer/http"
 
 import { mimeType } from "./common"
@@ -21,15 +21,15 @@ export function processContext(context, app) {
   return context.urlsForTags.reduce((accumulator, urls, idx) => {
     return accumulator.then(col => {
       const filename = context
-        .receivedFilePaths[ idx ]
+        .receivedFilePaths[idx]
         .split("/")
-        .reverse()[ 0 ]
+        .reverse()[0]
 
       return Promise.all([
         transformUrl(urls.headUrl, app),
         transformUrl(urls.getUrl, app)
 
-      ]).then(([ headUrl, getUrl ]) => {
+      ]).then(([headUrl, getUrl]) => {
         return getTags(headUrl, getUrl, filename, { skipCovers: true })
 
       }).then(r => {
@@ -56,14 +56,14 @@ export function processContext(context, app) {
 
 
 const parserConfiguration = Object.assign(
-  {}, musicMetadata.parsingOptions,
+  {},
   { duration: false, skipPostHeaders: true }
 )
 
 
 export function getTags(headUrl, getUrl, filename, options) {
   const fileExtMatch = filename.match(/\.(\w+)$/)
-  const fileExt = fileExtMatch && fileExtMatch[ 1 ]
+  const fileExt = fileExtMatch && fileExtMatch[1]
 
   const overrideContentType = (
     getUrl.includes("googleapis.com") ||
@@ -109,9 +109,9 @@ function pickTags(filename, result) {
     album: tags.album && tags.album.length ? tags.album : "Unknown",
     artist: artist || "Unknown",
     title: title ? title : (artist ? "Unknown" : filename.replace(/\.\w+$/, "")),
-    genre: (tags.genre && tags.genre[ 0 ]) || null,
+    genre: (tags.genre && tags.genre[0]) || null,
     year: tags.year || null,
-    picture: tags.picture ? tags.picture[ 0 ] : null
+    picture: tags.picture ? tags.picture[0] : null
   }
 }
 

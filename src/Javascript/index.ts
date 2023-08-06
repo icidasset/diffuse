@@ -268,7 +268,7 @@ function activeQueueItemChanged(item) {
   if (item) {
     const coverPrep = {
       cacheKey: btoa(unescape(encodeURIComponent(item.trackTags.artist + " --- " + item.trackTags.album))),
-      trackFilename: item.trackPath.split("/").reverse()[ 0 ],
+      trackFilename: item.trackPath.split("/").reverse()[0],
       trackPath: item.trackPath,
       trackSourceId: item.sourceId,
       variousArtists: "f"
@@ -287,7 +287,7 @@ function activeQueueItemChanged(item) {
         if (!maybeCover) {
           if (!orchestrion.audio) return
           orchestrion.audio.waitingForArtwork = coverPrep.cacheKey
-          loadAlbumCovers([ coverPrep ])
+          loadAlbumCovers([coverPrep])
         } else {
           orchestrion.audio.waitingForArtwork = null
         }
@@ -369,9 +369,9 @@ function averageColorOfImage(img) {
   const color = { r: 0, g: 0, b: 0 }
 
   for (let i = 0, l = imageData.data.length; i < l; i += 4) {
-    color.r += imageData.data[ i ]
-    color.g += imageData.data[ i + 1 ]
-    color.b += imageData.data[ i + 2 ]
+    color.r += imageData.data[i]
+    color.g += imageData.data[i + 1]
+    color.b += imageData.data[i + 2]
   }
 
   color.r = Math.floor(color.r / (imageData.data.length / 4))
@@ -453,13 +453,13 @@ function gotCachedCover({ key, url }) {
   const item = orchestrion.activeQueueItem
 
   if (item && orchestrion.coverPrep && key === orchestrion.coverPrep.key && url) {
-    let artwork = [ { src: url, type: undefined } ]
+    let artwork = [{ src: url, type: undefined }]
 
     if (typeof url !== "string") {
-      artwork = [ {
+      artwork = [{
         src: URL.createObjectURL(url),
         type: url.type
-      } ]
+      }]
     }
 
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -501,7 +501,7 @@ function loadAlbumCovers(coverPrepList) {
   return coverPrepList.reduce((acc, prep) => {
     return acc.then(arr => {
       return albumCover(prep.cacheKey).then(a => {
-        if (!a) return arr.concat([ prep ])
+        if (!a) return arr.concat([prep])
         return arr
       })
     })
@@ -528,7 +528,7 @@ function cachedCovers(keys) {
         const cacheKey = key.slice(11)
 
         if (blob && typeof blob !== "string" && blob instanceof Blob) {
-          cache[ cacheKey ] = URL.createObjectURL(blob)
+          cache[cacheKey] = URL.createObjectURL(blob)
         }
 
         return cache
@@ -807,7 +807,7 @@ document.body.addEventListener("touchmove", event => {
   const section = document.body.querySelector("section")
   const isDragging = section && section.classList.contains("dragging-something")
 
-  let touch = event.touches[ 0 ]
+  let touch = event.touches[0]
   let node
 
   if (isDragging && touch) {
@@ -834,7 +834,7 @@ wire.serviceWorker = async (reg: ServiceWorkerRegistration) => {
   if (reg.installing) console.log("🧑‍✈️ Service worker is installing")
   const initialInstall = reg.installing
 
-  initialInstall?.addEventListener("statechange", function () {
+  initialInstall?.addEventListener("statechange", function() {
     if (this.state === "activated") {
       console.log("🧑‍✈️ Service worker is activated")
       app.ports.installedNewServiceWorker.send(null)
