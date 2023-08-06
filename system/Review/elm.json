@@ -8,7 +8,7 @@
         "direct": {
             "elm/core": "1.0.5",
             "elm/json": "1.1.3",
-            "jfmengels/elm-review": "2.11.1",
+            "jfmengels/elm-review": "2.13.1",
             "jfmengels/elm-review-common": "1.3.2",
             "jfmengels/elm-review-debug": "1.0.8",
             "jfmengels/elm-review-performance": "1.0.2",
