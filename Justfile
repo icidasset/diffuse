@@ -104,7 +104,8 @@ js:
 	{{ESBUILD}} ./src/Javascript/Brain/index.ts \
 		--outdir={{BUILD_DIR}}/js/brain/ \
 		--splitting \
-		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
+		--inject:./system/Js/node-shims.js
 
 	# Main
 	{{ESBUILD}} ./src/Javascript/index.ts \
@@ -132,7 +133,8 @@ js-prod:
 		--outdir={{BUILD_DIR}}/js/brain/ \
 		--splitting \
 		--minify \
-		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js
+		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
+		--inject:./system/Js/node-shims.js
 
 	# Main
 	{{ESBUILD}} ./src/Javascript/index.ts \

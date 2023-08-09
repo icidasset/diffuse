@@ -78,8 +78,11 @@ export function getTags(headUrl, getUrl, filename, options) {
 
       tokenizer.fileInfo.mimeType = fileMime
       tokenizer.fileInfo.url = getUrl
-      tokenizer.rangeRequestClient.url = getUrl
-      tokenizer.rangeRequestClient.resolvedUrl = undefined
+
+      if (tokenizer.rangeRequestClient) {
+        tokenizer.rangeRequestClient.url = getUrl
+        tokenizer.rangeRequestClient.resolvedUrl = undefined
+      }
 
       return musicMetadata.parseFromTokenizer(
         tokenizer,
