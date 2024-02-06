@@ -1,7 +1,7 @@
 export NODE_NO_WARNINGS := "1"
 
 
-BUILD_DIR       := "./build"
+BUILD_DIR       := "./dist"
 NPM_DIR         := "./node_modules"
 SRC_DIR         := "./src"
 SYSTEM_DIR      := "./system"
@@ -67,14 +67,14 @@ check-versions:
 
 @elm:
 	echo "> Compiling Elm application"
-	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js
-	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js
 
 
 @elm-prod:
 	echo "> Compiling Elm application (optimised)"
-	elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js --optimize
-	elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js --optimize
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js --optimize
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js --optimize
 
 	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/js/brain.elm.js \
 		--minify --outfile={{BUILD_DIR}}/js/brain.elm.tmp.js
@@ -151,7 +151,10 @@ js-prod:
 
 @system:
 	echo "> Compiling system"
-	stack build --fast 2>&1 | sed '/^Warning:/,/Invalid magic: e49ceb0f$/d' | sed '/^Inferring license/d' && stack exec build --silent
+	{{NPM_DIR}}/.bin/gren make system/Build/Build.gren
+	node app
+	rm app
+
 
 
 #
@@ -177,10 +180,6 @@ js-prod:
 	elm-format {{SRC_DIR}} --yes
 
 
-@install-deps:
-	npm install
-
-
 @quality: check-versions
 	echo "> Running es-lint"
 	{{NPM_DIR}}/.bin/eslint src/Javascript/**/*
@@ -190,7 +189,7 @@ js-prod:
 
 @server:
 	echo "> Booting up web server on port 8000"
-	miniserve --spa --index index.html --port 8000 {{BUILD_DIR}}
+	{{NPM_DIR}}/.bin/serve {{BUILD_DIR}} -p 8000 --no-request-logging
 
 
 @test: doc-tests

@@ -1,8 +1,8 @@
-> A music player that connects to your cloud &amp; distributed storage
+> A music player that connects to your cloud & distributed storage
 
-[Return to the application](../)  
-[CORS instructions](cors/)  
-[Developers](dev/)  
+[Return to the application](../)<br />
+[CORS instructions](cors/)<br />
+[Developers](dev/)
 
 
 
@@ -52,7 +52,7 @@ Diffuse locates all the music files on the given services, extracts the metadata
 - WAV
 - WEBM
 
-<small><em>Note, support may vary depending on your <a href="https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers#Index_of_media_container_formats_file_types">browser</a>.</em></small>
+*<small>Note, support may vary depending on your <a href="https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers#Index_of_media_container_formats_file_types">browser</a>.</small>*
 
 
 

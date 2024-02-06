@@ -1,7 +1,7 @@
-> A music player that connects to your cloud &amp; distributed storage
+> A music player that connects to your cloud & distributed storage
 
-[Return to the application](../../)  
-[About](../)  
+[Return to the application](../../)<br />
+[About](../)
 
 
 
@@ -28,7 +28,7 @@ You can add multiple "source" query parameters, if you want to add multiple sour
 
 ```yaml
 kind:
-  amazon_s3 
+  amazon_s3
 
 data:
   # Required
@@ -47,7 +47,7 @@ data:
 
 ```yaml
 kind:
-  "azure_file" # or "azure_blob" 
+  "azure_file" # or "azure_blob"
 
 data:
   # Required
@@ -64,7 +64,7 @@ data:
 
 ```yaml
 kind:
-  btfs 
+  btfs
 
 data:
   # Required
@@ -79,7 +79,7 @@ data:
 
 ```yaml
 kind:
-  dropbox 
+  dropbox
 
 data:
   # Required
@@ -95,7 +95,7 @@ data:
 
 ```yaml
 kind:
-  google 
+  google
 
 data:
   # Required
@@ -112,7 +112,7 @@ data:
 
 ```yaml
 kind:
-  ipfs 
+  ipfs
 
 data:
   # Required
@@ -129,7 +129,7 @@ data:
 
 ```yaml
 kind:
-  webdav 
+  webdav
 
 data:
   # Required

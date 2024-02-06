@@ -1,6 +1,6 @@
 <img src="https://diffuse.sh/images/diffuse-dark.svg" alt="Diffuse" width="158" />
 
-_A music player that connects to your cloud/distributed storage,  
+_A music player that connects to your cloud/distributed storage,
 in the form of a static, serverless, web application._
 
 📍 Available at [diffuse.sh](https://diffuse.sh/) and for [download](https://github.com/icidasset/diffuse/releases).
@@ -60,21 +60,14 @@ In short:
 
 ### Building it yourself
 
-This project uses [Nix](https://nixos.org/features.html) to manage the project's environment. If you'd like to build this project without Nix, check out the dependencies in the `nix/shell.nix` file (most are available through Homebrew as well).
-
+This project can be built with [Node.js](https://nodejs.org/).
 
 ```shell
 # 🍱
 
-# 0. Install the Nix package manager
-# https://nixos.org/download.html
+# 1. Install dependencies
+npm install
 
-# 1. Setup environment
-nix develop
-
-# 2. Install js dependencies
-just install-deps
-
-# 3. Build, start server & watch for changes
-just
+# 2. Build, start server & watch for changes
+npx just
 ```

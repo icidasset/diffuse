@@ -1,0 +1,222 @@
+module Build exposing ( main )
+
+import About.Layout
+import Bytes exposing ( Bytes )
+import Bytes.Decode
+import Bytes.Encode
+import Dict
+import Json.Encode
+import Markdown
+import Shikensu
+import Shikensu.Bundle as Bundle
+import Shikensu.Contrib as Shikensu
+import Shikensu.Definition as Definition
+import Shikensu.Focus exposing ( Focus(..) )
+import Shikensu.Path as Path exposing (..)
+import Shikensu.Path.Encapsulated as Path.Encapsulated
+import Task
+import Transmutable.Html
+
+
+
+-- | (• ◡•)| (❍ᴥ❍ʋ)
+
+
+main =
+    Shikensu.programs
+        [ -- Copy static files to dist
+          copy (staticDir "Favicons")
+        , copy (staticDir "Hosting")
+        , copyInto "fonts" (staticDir "Fonts")
+        , copyInto "images" (staticDir "Images")
+
+        , -- Copy more static files with some alterations
+          copyWithAlterations
+            { focus = staticDir "Html"
+            , alt = Shikensu.rename (filePath "Application.html") (filePath "index.html")
+            }
+        , copyWithAlterations
+            { focus = staticDir "Manifests"
+            , alt = Shikensu.rename (filePath "manifest.json") (filePath "site.webmanifest")
+            }
+
+        , -- Render about pages
+          about
+
+        , -- Make a file tree so the service worker knows what to cache
+          tree
+        ]
+
+
+
+-- FOCUSES & PATHS
+
+
+dist =
+    Relative
+        (Path.directory
+            [ "dist"
+            ]
+        )
+
+
+filePath path =
+    path
+        |> Path.fromPosix
+        |> Path.Encapsulated.toFile
+        |> Maybe.withDefault (Path.file (Array.singleton path))
+
+
+staticDir dirName =
+    Relative
+        (Path.directory
+            [ "Src"
+            , "Static"
+            , dirName
+            ]
+        )
+
+
+
+-- PROGRAMS
+
+
+about =
+    { focus = staticDir "About"
+    , sequence = read >> Task.map aboutAlts >> write
+    }
+
+
+copy focus =
+    { focus = focus
+    , sequence = read >> write
+    }
+
+
+copyInto dirName focus =
+    { focus = focus
+    , sequence = read >> Task.map (prefixDirname dirName) >> write
+    }
+
+
+copyWithAlterations { focus, alt } =
+    { focus = focus
+    , sequence = read >> Task.map alt >> write
+    }
+
+
+tree =
+    { focus = dist
+    , sequence =
+        Task.map
+            (\bundle ->
+                bundle.compendium
+                    |> Array.map
+                            (\def ->
+                                def
+                                    |> Definition.relativePath
+                                    |> Path.toPosix
+                                            { absolute = False
+                                            }
+                            )
+                    |> Json.Encode.array Json.Encode.string
+                    |> Json.Encode.encode 0
+                    |> stringToBytes
+                    |> (\content ->
+                            { baseName = "tree"
+                            , content = Just content
+                            , directoryPath = Path.directory []
+                            , extensionName = Just "json"
+                            , metadata = Dict.empty
+                            }
+                        )
+                    |> (\def ->
+                            { bundle
+                                | compendium =
+                                    [ def
+                                    ]
+                            }
+                        )
+            )
+            >> write
+    }
+
+
+
+-- ALTERATIONS
+
+
+aboutAlts bundle =
+    bundle
+        |> Shikensu.withExtension "md"
+        |> lowerCasePath
+        |> prefixDirname "about"
+        |> Shikensu.renameExtension "md" "html"
+        |> Shikensu.permalink "index"
+        |> Shikensu.renderContent
+                (\def ->
+                    def.content
+                        |> Maybe.andThen bytesToString
+                        |> Maybe.withDefault ""
+                        |> Markdown.parse
+                                { frontmatter = Nothing
+                                }
+                        |> (\{ blocks } -> Array.map Markdown.toHtml blocks)
+                        |> About.Layout.layout
+                                { pathToRoot =
+                                    def.directoryPath
+                                        |> Path.unwrap
+                                        |> Array.map (\_ -> "..")
+                                        |> String.join "/"
+                                        |> (\a -> a ++ "/")
+                                }
+                        |> Transmutable.Html.arrayToString
+                        |> stringToBytes
+                        |> Just
+                )
+
+
+lowerCasePath =
+    (\def ->
+        def
+            |> Definition.relativePath
+            |> Path.map (Array.map String.toLower)
+            |> (\path -> Definition.fork path def)
+    )
+        |> Array.map
+        |> Bundle.mapCompendium
+
+
+prefixDirname dirName =
+    (\def -> { def | directoryPath = Path.map (Array.pushFirst dirName) def.directoryPath })
+        |> Array.map
+        |> Bundle.mapCompendium
+
+
+
+-- TASKS
+
+
+read =
+    Task.andThen Shikensu.read
+
+
+write =
+    Task.andThen (Shikensu.write dist)
+
+
+
+-- 🛠️
+
+
+bytesToString : Bytes -> Maybe String
+bytesToString bytes =
+    bytes
+        |> Bytes.width
+        |> Bytes.Decode.string
+        |> (\decoder -> Bytes.Decode.decode decoder bytes)
+
+
+stringToBytes : String -> Bytes
+stringToBytes =
+    Bytes.Encode.string >> Bytes.Encode.encode

@@ -1,8 +1,0 @@
-resolver: nightly-2022-09-23
-recommend-stack-upgrade: false
-allow-newer: true
-
-nix:
-  enable: true
-  pure: false
-  shell-file: nix/stack-integration.nix

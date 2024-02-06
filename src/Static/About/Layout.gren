@@ -1,0 +1,135 @@
+module About.Layout exposing (..)
+
+import Transmutable.Html as Html exposing ( Html )
+import Transmutable.Html.Attributes as A
+
+
+layout :
+    { pathToRoot : String
+    }
+    -> Array (Html msg)
+    -> Array (Html msg)
+layout { pathToRoot } contents =
+    [ Html.doctype
+    , Html.html
+        [ A.lang "en"
+        ]
+        [ Html.head
+            []
+            [ Html.meta
+                [ A.charset "utf8"
+                ]
+            , Html.title
+                [ Html.text "About | Diffuse"
+                ]
+            , Html.meta
+                [ A.name "description"
+                , A.content "A music player that connects to your cloud/distributed storage, in the form of a static, serverless, web application."
+                ]
+
+            , -- Viewport
+              Html.meta
+                [ A.name "viewport"
+                , A.content "width=device-width, initial-scale=1"
+                ]
+
+            , -- Favicons & Mobile
+              Html.link
+                [ A.rel "apple-touch-icon"
+                , A.href (pathToRoot ++ "apple-touch-icon.png")
+                , A.attribute "sizes" "180x180"
+                ]
+            , Html.link
+                [ A.rel "icon"
+                , A.href (pathToRoot ++ "favicon-32x32.png")
+                , A.attribute "sizes" "32x32"
+                ]
+            , Html.link
+                [ A.rel "icon"
+                , A.type_ "image/png"
+                , A.href (pathToRoot ++ "favicon-16x16.png")
+                , A.attribute "sizes" "16x16"
+                ]
+            , Html.link
+                [ A.rel "manifest"
+                , A.href (pathToRoot ++ "site.webmanifest")
+                ]
+            , Html.link
+                [ A.rel "mask-icon"
+                , A.href (pathToRoot ++ "safari-pinned-tab.svg")
+                , A.attribute "color" "#8a90a9"
+                ]
+            , Html.meta
+                [ A.name "msapplication-TileColor"
+                , A.content "#8a90a9"
+                ]
+            , Html.meta
+                [ A.name "theme-color"
+                , A.content "#8a90a9"
+                ]
+
+            , -- Styles
+              Html.meta
+                [ A.name "color-scheme"
+                , A.content "dark light"
+                ]
+            , Html.link
+                [ A.rel "stylesheet"
+                , A.href (pathToRoot ++ "about.css")
+                ]
+            ]
+
+        , -- 
+          Html.body
+            [ A.class "font-body text-base01 dark:bg-darkest-hour my-16 bg-white px-4 dark:text-gray-600"
+            ]
+            [ Html.main_
+                [ A.class "mx-auto max-w-2xl"
+                ]
+                [ Html.a
+                    [ A.class "logo inline-block"
+                    , A.href pathToRoot
+                    ]
+                    [ Html.img
+                        [ A.class "block dark:hidden"
+                        , A.src (pathToRoot ++ "images/diffuse-dark.svg")
+                        ]
+                        []
+                    , Html.img
+                        [ A.class "hidden dark:block"
+                        , A.src (pathToRoot ++ "images/diffuse-light.svg")
+                        ]
+                        []
+                    , Html.h1
+                        []
+                        [ Html.text "Diffuse"
+                        ]
+                    ]
+
+                , -- 
+                  Html.article [] contents
+                ]
+
+            , -- 
+              Html.node
+                "script"
+                [ A.src "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"
+                ]
+                []
+            , Html.node
+                "script"
+                []
+                [ Html.text "hljs.initHighlightingOnLoad();"
+                ]
+            , Html.node
+                "script"
+                []
+                [ Html.text "if (\"serviceWorker\" in navigator) {\n"
+                , Html.text "  navigator.serviceWorker.register(\""
+                , Html.text pathToRoot
+                , Html.text "service-worker.js\", { type: \"module\" });\n"
+                , Html.text "}"
+                ]
+            ]
+        ]
+    ]

@@ -1,6 +1,5 @@
 @charset "UTF-8";
 
-
 /* Imports
    ------- */
 
@@ -10,8 +9,6 @@
 
 @import "Fonts.css";
 @import "Logo.css";
-
-
 
 /* Basic
    ----- */
@@ -23,54 +20,69 @@ ol a {
   text-underline-offset: 2px;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  @apply antialiased font-bold leading-tight;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-bold leading-tight antialiased;
   font-family: "Playfair Display", serif;
   letter-spacing: -0.005em;
 }
 
-h1 { display: none }
-h2 { @apply mb-6 mt-12 text-2xl }
-h3 { @apply mb-5 mt-8 text-xl }
-h4 { @apply mb-4 mt-6 text-lg }
-h5 { @apply mb-5 mt-6 text-base }
+h1 {
+  display: none;
+}
+
+h2 {
+  @apply mb-6 mt-12 text-2xl;
+}
+
+h3 {
+  @apply mb-5 mt-8 text-xl;
+}
+
+h4 {
+  @apply mb-4 mt-6 text-lg;
+}
+
+h5 {
+  @apply mb-5 mt-6 text-base;
+}
 
 p {
-  @apply leading-relaxed my-3
+  @apply my-3 leading-relaxed;
 }
 
 strong {
   @apply font-semibold;
 }
 
-
-
 /* Blockquote
    ---------- */
 
 blockquote {
-  @apply font-display font-bold max-w-xl mb-12 ml-0 mt-12 pl-0 tracking-tight;
+  @apply font-display mb-12 ml-0 mt-12 max-w-xl pl-0 font-bold tracking-tight;
 }
 
 blockquote p {
-  @apply leading-tight text-5xl;
+  @apply text-5xl leading-tight;
   background: url(images/Background/21.jpg);
   background-position: center 33%;
   background-size: cover;
-  color: #B7C2D4;
+  color: #b7c2d4;
 
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-
-
 /* Code
    ---- */
 
 pre {
-  @apply border-2 border-gray-400 leading-relaxed overflow-x-auto overflow-y-hidden p-6 rounded text-sm;
+  @apply overflow-x-auto overflow-y-hidden rounded border-2 border-gray-400 p-6 text-sm leading-relaxed;
 }
 
 code {
@@ -93,34 +105,42 @@ code {
   @apply text-base0b;
 }
 
-
-
 /* Links
    ----- */
 
 h5 + p a {
-  @apply inline-block mb-2;
+  @apply mb-2 inline-block;
 }
-
-
 
 /* Lists
    ----- */
 
-ul, ol { @apply leading-relaxed ml-3 }
-ul li, ol li { @apply mb-1 }
+ul,
+ol {
+  @apply ml-3 leading-relaxed;
+}
+
+ul li,
+ol li {
+  @apply mb-1;
+}
 
 ol {
   counter-reset: ol;
 }
 
 ol li::before {
-  @apply pr-3 inline-block text-base06;
+  @apply text-base06 inline-block pr-3;
   counter-increment: ol;
   content: counters(ol, ".") ".";
 }
 
 ul li::before {
-  @apply pr-3 inline-block text-base06;
+  @apply text-base06 inline-block pr-3;
   content: "•";
+}
+
+ul p,
+ol p {
+  @apply my-0 inline;
 }

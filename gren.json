@@ -1,0 +1,19 @@
+{
+  "type": "application",
+  "platform": "node",
+  "source-directories": ["src/Static", "system/Build/"],
+  "gren-version": "0.3.0",
+  "dependencies": {
+    "direct": {
+      "gren-lang/core": "4.0.1",
+      "gren-lang/node": "3.0.1",
+      "icidasset/html-gren": "4.1.0",
+      "icidasset/markdown-gren": "3.1.0",
+      "icidasset/shikensu-gren": "5.0.1"
+    },
+    "indirect": {
+      "gren-lang/parser": "3.0.1",
+      "gren-lang/url": "3.0.0"
+    }
+  }
+}

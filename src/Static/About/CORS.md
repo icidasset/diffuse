@@ -1,7 +1,7 @@
-> A music player that connects to your cloud &amp; distributed storage
+> A music player that connects to your cloud & distributed storage
 
-[Return to the application](../../)  
-[About](../)  
+[Return to the application](../../)<br />
+[About](../)
 
 
 
@@ -43,7 +43,7 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
 
 #### BTFS
 
-Add the domain of the app, with the protocol, to the __list of allowed origins__.  
+Add the domain of the app, with the protocol, to the __list of allowed origins__.
 
 ```shell
 btfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://diffuse.sh.ipns.localhost:8080", "http://127.0.0.1:44999"]'
@@ -83,7 +83,7 @@ _Not necessary._
 
 #### IPFS
 
-Add the domain of the app, with the protocol, to the __list of allowed origins__.  
+Add the domain of the app, with the protocol, to the __list of allowed origins__.
 
 ```shell
 ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://diffuse.sh.ipns.localhost:8080", "http://127.0.0.1:44999"]'
@@ -111,7 +111,7 @@ You can also make this change in the Web UI, you'll find it under "Settings → 
 
 #### Microsoft Azure Storage
 
-You can find the CORS configuration under the "Settings -> CORS".  
+You can find the CORS configuration under the "Settings -> CORS".
 Then fill in the following in the input boxes (left to right):
 
 ```
@@ -126,7 +126,7 @@ MAX AGE               0
 
 #### WebDAV
 
-__Depends on your WebDAV server.__  
+__Depends on your WebDAV server.__
 Example setup for Henrique Dias's [WebDAV server](https://github.com/hacdias/webdav):
 
 ```yaml
