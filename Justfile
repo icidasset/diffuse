@@ -6,7 +6,7 @@ NPM_DIR         := "./node_modules"
 SRC_DIR         := "./src"
 SYSTEM_DIR      := "./system"
 
-ESBUILD         := NPM_DIR + "/.bin/esbuild --target=esnext --format=esm --bundle"
+ESBUILD         := "node system/Js/esbuild.mjs"
 
 
 default: dev
@@ -15,11 +15,11 @@ default: dev
 # Tasks
 # =====
 
-@build: clean css elm js system license
+@build: clean css elm copy-wasm js system license
 	echo "> Build completed ⚡"
 
 
-@build-prod: quality clean (css "minify") elm-prod js-prod system license
+@build-prod: quality clean (css "minify") elm-prod copy-wasm js-prod system license
 	echo "> Production build completed 🛳"
 
 
@@ -41,6 +41,12 @@ check-versions:
 	echo "> Cleaning build directory"
 	rm -rf {{BUILD_DIR}} || true
 	mkdir -p {{BUILD_DIR}}
+
+
+@copy-wasm:
+  echo "> Copying WASM files"
+  mkdir -p {{BUILD_DIR}}/wasm
+  cp {{NPM_DIR}}/mediainfo.js/dist/MediaInfoModule.wasm {{BUILD_DIR}}/wasm/media-info.wasm
 
 
 @css minify="false":
@@ -174,10 +180,10 @@ js-prod:
 
 
 @elm-housekeeping:
+	echo "> Running elm-format"
+	{{NPM_DIR}}/.bin/elm-format {{SRC_DIR}} --yes
 	echo "> Running elm-review"
 	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
-	echo "> Running elm-format"
-	elm-format {{SRC_DIR}} --yes
 
 
 @quality: check-versions

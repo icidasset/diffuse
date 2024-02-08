@@ -1,6 +1,7 @@
 module Tracks.Favourites exposing (completeFavouritesList, completeTracksList, match, removeFromFavouritesList, removeFromTracksList, simplified, toggleInFavouritesList, toggleInTracksList)
 
 import List.Extra as List
+import Maybe.Extra as Maybe
 import Tracks exposing (Favourite, IdentifiedTrack, Track)
 
 
@@ -65,12 +66,12 @@ match : Favourite -> Favourite -> Bool
 match a b =
     let
         ( aa, at ) =
-            ( String.toLower a.artist
+            ( Maybe.unwrap "" String.toLower a.artist
             , String.toLower a.title
             )
 
         ( ba, bt ) =
-            ( String.toLower b.artist
+            ( Maybe.unwrap "" String.toLower b.artist
             , String.toLower b.title
             )
     in
@@ -129,7 +130,7 @@ removeFromTracksList tracksToRemoveFromFavs tracks =
 
 simplified : Favourite -> String
 simplified fav =
-    String.toLower fav.artist ++ String.toLower fav.title
+    Maybe.unwrap "" String.toLower fav.artist ++ String.toLower fav.title
 
 
 toggleInTracksList : Track -> List IdentifiedTrack -> List IdentifiedTrack
@@ -178,7 +179,8 @@ toggleInFavouritesList ( i, t ) favourites =
 
 lowercaseArtist : Track -> String
 lowercaseArtist =
-    .tags >> .artist >> String.toLower
+    -- TODO: Use fallback value?
+    .tags >> .artist >> Maybe.unwrap "" String.toLower
 
 
 lowercaseTitle : Track -> String

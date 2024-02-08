@@ -60,7 +60,13 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                             , title "Scroll to track"
                             ]
                             [ "cursor-pointer" ]
-                            [ text (tags.artist ++ " - " ++ tags.title) ]
+                            [ case tags.artist of
+                                Just artist ->
+                                    text (artist ++ " - " ++ tags.title)
+
+                                Nothing ->
+                                    text tags.title
+                            ]
 
                     Nothing ->
                         text "Diffuse"

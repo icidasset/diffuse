@@ -1,5 +1,6 @@
 module Tracks.Sorting exposing (sort)
 
+import Maybe.Extra as Maybe
 import Tracks exposing (..)
 
 
@@ -81,12 +82,14 @@ sortByPlaylistIndex ( a, _ ) ( b, _ ) =
 
 album : Track -> String
 album =
-    .tags >> .album >> low
+    -- TODO: Use fallback value?
+    .tags >> .album >> Maybe.unwrap "" low
 
 
 artist : Track -> String
 artist =
-    .tags >> .artist >> low
+    -- TODO: Use fallback value?
+    .tags >> .artist >> Maybe.unwrap "" low
 
 
 title : Track -> String

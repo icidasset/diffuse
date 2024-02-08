@@ -79,7 +79,8 @@ harvest ( deps, collection ) =
             (\( i, t ) ( dict, ( idx, prevIdentifiers ), acc ) ->
                 let
                     s =
-                        String.toLower (t.tags.artist ++ t.tags.title)
+                        -- TODO: Use fallback value?
+                        String.toLower (Maybe.withDefault "" t.tags.artist ++ t.tags.title)
                 in
                 if theFilter ( i, t ) == False then
                     ( dict, ( idx, prevIdentifiers ), acc )

@@ -2,6 +2,7 @@ module Tracks.Collection.Internal.Identify exposing (identify)
 
 import Dict
 import List.Extra as List
+import Maybe.Extra as Maybe
 import Time.Ext as Time
 import Tracks exposing (..)
 import Tracks.Favourites as Favourites
@@ -130,7 +131,7 @@ partTwo favourites track ( acc, remainingFavourites ) =
 
 isFavourite : Track -> String -> Bool
 isFavourite track =
-    (==) (String.toLower track.tags.artist ++ String.toLower track.tags.title)
+    (==) (Maybe.unwrap "" String.toLower track.tags.artist ++ String.toLower track.tags.title)
 
 
 makeMissingFavouriteTrack : Favourite -> IdentifiedTrack
@@ -141,7 +142,7 @@ makeMissingFavouriteTrack fav =
             , nr = 0
             , artist = fav.artist
             , title = fav.title
-            , album = Tracks.missingAlbumPlaceholder
+            , album = Nothing
             , genre = Nothing
             , picture = Nothing
             , year = Nothing

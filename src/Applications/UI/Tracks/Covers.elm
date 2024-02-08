@@ -284,6 +284,7 @@ makeCoverWithFallback _ gathering fallback =
         group =
             gathering.previousGroup
 
+        identifiedTrack : IdentifiedTrack
         identifiedTrack =
             gathering.largestAlbumFavsSequence
                 |> Maybe.orElse gathering.largestAlbumSequence
@@ -306,7 +307,7 @@ makeCoverWithFallback _ gathering fallback =
         isVariousArtists =
             False
                 || (amountOfTracks > 4 && largestArtistSequence < 3)
-                || (String.toLower track.tags.artist == "va")
+                || (Maybe.map String.toLower track.tags.artist == Just "va")
     in
     { key = Base64.encode (coverKey isVariousArtists track)
     , identifiedTrackCover = identifiedTrack

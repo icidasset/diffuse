@@ -3,6 +3,7 @@ module Playlists.Encoding exposing (decoder, encode, encodePlaylistTrack, playli
 import Json.Decode as Decode
 import Json.Decode.Ext as Decode
 import Json.Encode as Encode
+import Json.Encode.Ext exposing (..)
 import Playlists exposing (..)
 
 
@@ -23,8 +24,8 @@ encode playlist =
 encodePlaylistTrack : PlaylistTrack -> Encode.Value
 encodePlaylistTrack playlistTrack =
     Encode.object
-        [ ( "album", Encode.string playlistTrack.album )
-        , ( "artist", Encode.string playlistTrack.artist )
+        [ ( "album", encodeMaybe playlistTrack.album Encode.string )
+        , ( "artist", encodeMaybe playlistTrack.artist Encode.string )
         , ( "title", Encode.string playlistTrack.title )
         ]
 
@@ -45,6 +46,6 @@ decoder =
 playlistTrackDecoder : Decode.Decoder PlaylistTrack
 playlistTrackDecoder =
     Decode.map3 PlaylistTrack
-        (Decode.field "album" Decode.string)
-        (Decode.field "artist" Decode.string)
+        (Decode.maybe <| Decode.field "album" Decode.string)
+        (Decode.maybe <| Decode.field "artist" Decode.string)
         (Decode.field "title" Decode.string)

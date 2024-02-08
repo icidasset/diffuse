@@ -673,7 +673,8 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                 |> .album
 
         missingTracks =
-            album == Tracks.missingAlbumPlaceholder
+            -- TODO: Not sure this is correct
+            album == Nothing
 
         maybeBlobUrlFromCache =
             cachedCovers
@@ -800,7 +801,8 @@ metadataView { clickable, horizontal } { sortBy } cover =
             identifiedTrackCover
 
         missingTracks =
-            track.tags.album == Tracks.missingAlbumPlaceholder
+            -- TODO: Not sure if correct
+            track.tags.album == Nothing
     in
     brick
         (if clickable then
@@ -829,10 +831,11 @@ metadataView { clickable, horizontal } { sortBy } cover =
             ]
             [ case sortBy of
                 Album ->
-                    text track.tags.album
+                    -- TODO: Use fallback value?
+                    Maybe.unwrap nothing text track.tags.album
 
                 Artist ->
-                    text track.tags.artist
+                    Maybe.unwrap nothing text track.tags.artist
 
                 _ ->
                     nothing
@@ -855,7 +858,8 @@ metadataView { clickable, horizontal } { sortBy } cover =
                         text "Various Artists"
 
                     else
-                        text track.tags.artist
+                        -- TODO
+                        Maybe.unwrap nothing text track.tags.artist
 
                 Artist ->
                     case List.length cover.trackIds of

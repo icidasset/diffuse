@@ -3,6 +3,7 @@ module Tracks.Encoding exposing (..)
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
+import Json.Encode.Ext exposing (..)
 import Time.Ext as Time
 import Tracks exposing (..)
 
@@ -14,7 +15,7 @@ import Tracks exposing (..)
 encodeFavourite : Favourite -> Encode.Value
 encodeFavourite fav =
     Encode.object
-        [ ( "artist", Encode.string fav.artist )
+        [ ( "artist", encodeMaybe fav.artist Encode.string )
         , ( "title", Encode.string fav.title )
         ]
 
@@ -89,8 +90,8 @@ encodeTags tags =
         , ( "nr", Encode.int tags.nr )
 
         --
-        , ( "album", Encode.string tags.album )
-        , ( "artist", Encode.string tags.artist )
+        , ( "album", encodeMaybe tags.album Encode.string )
+        , ( "artist", encodeMaybe tags.artist Encode.string )
         , ( "title", Encode.string tags.title )
 
         --
@@ -98,13 +99,6 @@ encodeTags tags =
         , ( "picture", encodeMaybe tags.picture Encode.string )
         , ( "year", encodeMaybe tags.year Encode.int )
         ]
-
-
-encodeMaybe : Maybe a -> (a -> Encode.Value) -> Encode.Value
-encodeMaybe maybe encoder =
-    maybe
-        |> Maybe.map encoder
-        |> Maybe.withDefault Encode.null
 
 
 
@@ -126,7 +120,7 @@ decodeTrack =
 favouriteDecoder : Decode.Decoder Favourite
 favouriteDecoder =
     Decode.map2 Favourite
-        (Decode.field "artist" Decode.string)
+        (Decode.maybe <| Decode.field "artist" Decode.string)
         (Decode.field "title" Decode.string)
 
 
@@ -215,8 +209,8 @@ tagsDecoder =
     Decode.map8 Tags
         (Decode.field "disc" Decode.int)
         (Decode.field "nr" Decode.int)
-        (Decode.field "album" Decode.string)
-        (Decode.field "artist" Decode.string)
+        (Decode.maybe <| Decode.field "album" Decode.string)
+        (Decode.maybe <| Decode.field "artist" Decode.string)
         (Decode.field "title" Decode.string)
         (Decode.maybe <| Decode.field "genre" Decode.string)
         (Decode.maybe <| Decode.field "picture" Decode.string)

@@ -12,8 +12,8 @@ type alias Playlist =
 
 
 type alias PlaylistTrack =
-    { album : String
-    , artist : String
+    { album : Maybe String
+    , artist : Maybe String
     , title : String
     }
 

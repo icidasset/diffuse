@@ -62,7 +62,8 @@ download json model =
                             |> String.padLeft 2 '0'
                         , " - "
                         , track.tags.artist
-                        , " - "
+                            |> Maybe.map (\a -> a ++ " - ")
+                            |> Maybe.withDefault ""
                         , track.tags.title
                         ]
                             |> String.concat
