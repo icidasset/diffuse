@@ -1,4 +1,4 @@
-module Tracks.Favourites exposing (completeFavouritesList, completeTracksList, match, removeFromFavouritesList, removeFromTracksList, simplified, toggleInFavouritesList, toggleInTracksList)
+module Tracks.Favourites exposing (completeFavouritesList, completeTracksList, match, removeFromFavouritesList, removeFromTracksList, toggleInFavouritesList, toggleInTracksList)
 
 import List.Extra as List
 import Maybe.Extra as Maybe
