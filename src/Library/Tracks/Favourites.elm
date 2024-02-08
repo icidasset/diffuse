@@ -128,11 +128,6 @@ removeFromTracksList tracksToRemoveFromFavs tracks =
         tracks
 
 
-simplified : Favourite -> String
-simplified fav =
-    Maybe.unwrap "" String.toLower fav.artist ++ String.toLower fav.title
-
-
 toggleInTracksList : Track -> List IdentifiedTrack -> List IdentifiedTrack
 toggleInTracksList track =
     let
