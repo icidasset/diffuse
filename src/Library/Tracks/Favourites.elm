@@ -3,6 +3,7 @@ module Tracks.Favourites exposing (completeFavouritesList, completeTracksList, m
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Tracks exposing (Favourite, IdentifiedTrack, Track)
+import Tracks exposing (fallbackArtist)
 
 
 
@@ -174,8 +175,8 @@ toggleInFavouritesList ( i, t ) favourites =
 
 lowercaseArtist : Track -> String
 lowercaseArtist =
-    -- TODO: Use fallback value?
-    .tags >> .artist >> Maybe.unwrap "" String.toLower
+    -- NOTE: Not entirely sure this fallback is correct
+    .tags >> .artist >> Maybe.unwrap fallbackArtist String.toLower
 
 
 lowercaseTitle : Track -> String

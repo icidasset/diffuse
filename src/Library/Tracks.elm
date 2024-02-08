@@ -276,26 +276,11 @@ coverGroup sort ( identifiers, { tags } as track ) =
 
 coverKey : Bool -> Track -> String
 coverKey isVariousArtists { tags } =
-    case ( tags.album, tags.artist ) of
-        ( Just album, Just artist ) ->
-            if isVariousArtists then
-                album
+      if isVariousArtists then
+          Maybe.withDefault "?" tags.album
 
-            else
-                artist ++ " --- " ++ album
-
-        ( Just album, Nothing ) ->
-            album
-
-        ( Nothing, Just artist ) ->
-            if isVariousArtists then
-                "?"
-
-            else
-                artist
-
-        ( Nothing, Nothing ) ->
-            "?"
+      else
+          Maybe.withDefault "?" tags.artist ++ " --- " ++ Maybe.withDefault "?" tags.album
 
 
 isNowPlaying : IdentifiedTrack -> IdentifiedTrack -> Bool

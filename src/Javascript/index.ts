@@ -266,9 +266,8 @@ function activeQueueItemChanged(item) {
 
   // 🎵
   if (item) {
-    // TODO: Does this cacheKey here need to match the Elm code?
     const coverPrep = {
-      cacheKey: btoa(unescape(encodeURIComponent(item.trackTags.artist + " --- " + item.trackTags.album))),
+      cacheKey: btoa(unescape(encodeURIComponent((item.trackTags.artist || "?") + " --- " + (item.trackTags.album || "?")))),
       trackFilename: item.trackPath.split("/").reverse()[0],
       trackPath: item.trackPath,
       trackSourceId: item.sourceId,
