@@ -181,11 +181,10 @@ groupByFirstAlphaCharacterFolder deps ( i, t ) =
         tag =
             case deps.sortBy of
                 Artist ->
-                    -- TODO: Use other value?
-                    Maybe.withDefault "#" t.tags.artist
+                    Maybe.withDefault fallbackArtist t.tags.artist
 
                 Album ->
-                    Maybe.withDefault "#" t.tags.album
+                    Maybe.withDefault fallbackAlbum t.tags.album
 
                 PlaylistIndex ->
                     ""

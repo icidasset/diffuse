@@ -25,8 +25,8 @@ generate sortBy tracks =
             makeCover sortBy
     in
     tracks.arranged
-        |> List.indexedFoldr
-            (\_ identifiedTrack { covers, gathering } ->
+        |> List.foldr
+            (\identifiedTrack { covers, gathering } ->
                 let
                     group =
                         groupFn identifiedTrack
@@ -173,16 +173,14 @@ harvest previouslySelectedCover sortBy tracks covers =
         groupFn =
             coverGroup sortBy
 
-        ( _, groups, tracksPerGroup ) =
+        ( groups, tracksPerGroup ) =
             List.foldr
-                (\identifiedTrack ( previousGroup, acc, dict ) ->
+                (\identifiedTrack ( acc, dict ) ->
                     let
                         group =
                             groupFn identifiedTrack
                     in
-                    ( group
-                      --
-                    , if group /= previousGroup then
+                    ( if Dict.member group dict == False then
                         group :: acc
 
                       else
@@ -193,7 +191,7 @@ harvest previouslySelectedCover sortBy tracks covers =
                         dict
                     )
                 )
-                ( "", [], Dict.empty )
+                ( [], Dict.empty )
                 tracks.harvested
     in
     covers.arranged

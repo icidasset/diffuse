@@ -6,6 +6,7 @@ import Playlists exposing (Playlist, PlaylistTrack)
 import String.Ext as String
 import Time
 import Time.Ext as Time
+import Maybe.Extra as Maybe
 
 
 
@@ -219,10 +220,23 @@ emptyCollection =
     , scrollContext = ""
     }
 
+{-| If a track doesn't fit into a group, where does it go?
+-}
+fallbackCoverGroup : String
+fallbackCoverGroup =
+  "MISSING_TRACK_INFO"
 
-fallbackTagValue =
-    "?"
+{-| This value is used as a fallback in the UI if the album is missing.
+-}
+fallbackAlbum : String
+fallbackAlbum =
+  ""
 
+{-| This value is used as a fallback in the UI if the artist is missing.
+-}
+fallbackArtist : String
+fallbackArtist =
+  ""
 
 
 -- MORE STUFF
@@ -230,17 +244,26 @@ fallbackTagValue =
 
 coverGroup : SortBy -> IdentifiedTrack -> String
 coverGroup sort ( identifiers, { tags } as track ) =
+    if identifiers.isMissing then
+      "MISSING_TRACKS"
+    else
     (case sort of
         Artist ->
-            -- TODO
-            Maybe.withDefault "" tags.artist
+            Maybe.unwrap fallbackCoverGroup (String.trim >> String.toLower) tags.artist
 
         Album ->
             -- There is the possibility of albums with the same name,
             -- such as "Greatests Hits".
             -- To make sure we treat those as different albums,
             -- we prefix the album by its parent directory.
-            identifiers.parentDirectory ++ Maybe.withDefault "" tags.album
+
+            case tags.album of
+              Just album ->
+                (identifiers.parentDirectory ++ album)
+                  |> String.trim
+                  |> String.toLower
+              Nothing ->
+                fallbackCoverGroup
 
         PlaylistIndex ->
             ""
@@ -248,8 +271,7 @@ coverGroup sort ( identifiers, { tags } as track ) =
         Title ->
             tags.title
     )
-        |> String.trim
-        |> String.toLower
+
 
 
 coverKey : Bool -> Track -> String

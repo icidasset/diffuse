@@ -68,6 +68,7 @@ function findUsingMusicBrainz(prep) {
   return fetch(`https://musicbrainz.org/ws/2/release/?query=${encodedQuery}&fmt=json`)
     .then(r => r.json())
     .then(r => musicBrainzCover(r.releases))
+    .catch(_ => REJECT())
 }
 
 
@@ -99,6 +100,7 @@ function findUsingLastFm(prep) {
   return fetch(`https://ws.audioscrobbler.com/2.0/?method=album.search&album=${query}&api_key=4f0fe85b67baef8bb7d008a8754a95e5&format=json`)
     .then(r => r.json())
     .then(r => lastFmCover(r.results.albummatches.album))
+    .catch(_ => REJECT())
 }
 
 

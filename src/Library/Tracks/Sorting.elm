@@ -44,6 +44,7 @@ sort property direction list =
 sortByAlbum : IdentifiedTrack -> IdentifiedTrack -> Order
 sortByAlbum ( x, a ) ( y, b ) =
     EQ
+        |> andThenCompareBools isMissing x y
         |> andThenCompare album a b
         |> andThenCompare parentDir x y
         |> andThenCompare disc a b
@@ -55,6 +56,7 @@ sortByAlbum ( x, a ) ( y, b ) =
 sortByArtist : IdentifiedTrack -> IdentifiedTrack -> Order
 sortByArtist ( x, a ) ( y, b ) =
     EQ
+        |> andThenCompareBools isMissing x y
         |> andThenCompare artist a b
         |> andThenCompare album a b
         |> andThenCompare parentDir x y
@@ -82,14 +84,12 @@ sortByPlaylistIndex ( a, _ ) ( b, _ ) =
 
 album : Track -> String
 album =
-    -- TODO: Use fallback value?
-    .tags >> .album >> Maybe.unwrap "" low
+    .tags >> .album >> Maybe.unwrap fallbackAlbum low
 
 
 artist : Track -> String
 artist =
-    -- TODO: Use fallback value?
-    .tags >> .artist >> Maybe.unwrap "" low
+    .tags >> .artist >> Maybe.unwrap fallbackArtist low
 
 
 title : Track -> String
@@ -106,6 +106,10 @@ nr : Track -> Int
 nr =
     .tags >> .nr
 
+isMissing : Identifiers -> Bool
+isMissing =
+    .isMissing
+
 
 parentDir : Identifiers -> String
 parentDir =
@@ -120,6 +124,24 @@ andThenCompare : (ctx -> comparable) -> ctx -> ctx -> Order -> Order
 andThenCompare fn a b order =
     if order == EQ then
         compare (fn a) (fn b)
+
+    else
+        order
+
+andThenCompareBools : (ctx -> Bool) -> ctx -> ctx -> Order -> Order
+andThenCompareBools fn a b order =
+    if order == EQ then
+        let
+          af = fn a
+          bf = fn b
+        in
+        if af == bf then
+          EQ
+        else if af == False then
+          GT
+        else
+          LT
+
 
     else
         order
