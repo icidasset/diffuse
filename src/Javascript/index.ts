@@ -962,24 +962,3 @@ function viableForUpgrade() {
   // The end
   return viable_v1
 }
-
-
-
-
-// Vertical Height
-// ---------------
-// TODO: Remove support for older browsers
-//       Replaced by `dvh` CSS unit
-
-setVerticalHeightUnit()
-
-
-window.addEventListener("resize", () => {
-  setTimeout(setVerticalHeightUnit, 0)
-})
-
-
-function setVerticalHeightUnit() {
-  const vh = document.documentElement.clientHeight * 0.01
-  document.documentElement.style.setProperty("--vh", `${vh}px`)
-}
