@@ -106,6 +106,7 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork = null) {
     if (audioNode = findExistingAudioElement(queueItem)) {
       audioNode.setAttribute("data-preload", "f")
       audioNode.setAttribute("data-timestamp", Date.now())
+      audioNode.volume = 1
 
       if (audioNode.readyState >= 4) {
         playAudio(audioNode, queueItem, orchestrion.app)
@@ -131,8 +132,6 @@ function findExistingAudioElement(queueItem) {
 
 
 function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isPreload) {
-  let audio
-
   const bind = fn => event => {
     const is = isActiveAudioElement(orchestrion, event.target)
     if (is) fn.call(orchestrion, event)
@@ -149,7 +148,7 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   if (mime) source.setAttribute("type", mime)
   source.setAttribute("src", queueItem.url)
 
-  audio = document.createElement("audio")
+  const audio = document.createElement("audio")
   audio.setAttribute("crossorigin", crossorigin)
   audio.setAttribute("data-preload", isPreload ? "t" : "f")
   audio.setAttribute("data-timestamp", timestampInMilliseconds)
@@ -157,8 +156,8 @@ function createAudioElement(orchestrion, queueItem, timestampInMilliseconds, isP
   audio.setAttribute("rel", queueItem.trackId)
   audio.appendChild(source)
 
-  audio.crossorigin = "anonymous"
-  audio.volume = 1
+  audio.crossOrigin = "anonymous"
+  audio.volume = isPreload ? 0 : 1
 
   audio.addEventListener("canplay", bind(audioCanPlayEvent))
   audio.addEventListener("ended", bind(audioEndEvent))
