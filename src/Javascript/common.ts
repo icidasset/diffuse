@@ -34,7 +34,7 @@ export function db(storeName: string = "main"): LocalForage {
 }
 
 
-export function fileExtension(mimeType) {
+export function fileExtension(mimeType: string): string | undefined {
   const audioId = mimeType.toLowerCase().split("/")[ 1 ]
 
   switch (audioId) {
@@ -48,6 +48,7 @@ export function fileExtension(mimeType) {
     case "flac": return "flac";
     case "x-flac": return "flac";
     case "ogg": return "ogg";
+    case "opus": return "opus";
 
     case "wav": return "wav";
     case "wave": return "wav";
@@ -57,13 +58,14 @@ export function fileExtension(mimeType) {
 }
 
 
-export function mimeType(fileExt) {
+export function mimeType(fileExt: string): string | undefined {
   switch (fileExt) {
     case "mp3": return "audio/mpeg";
     case "mp4": return "audio/mp4";
     case "m4a": return "audio/mp4";
     case "flac": return "audio/flac";
     case "ogg": return "audio/ogg";
+    case "opus": return "audio/opus";
     case "wav": return "audio/wave";
     case "webm": return "audio/webm";
   }
