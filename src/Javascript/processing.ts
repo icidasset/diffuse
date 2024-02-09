@@ -7,9 +7,7 @@
 import type { IAudioMetadata } from "music-metadata";
 import type { MediaInfo, MediaInfoType } from "mediainfo.js";
 
-import MediaInfoFactory from "mediainfo.js";
 import * as Uint8arrays from "uint8arrays";
-
 import { transformUrl } from "./urls";
 
 // Contexts
@@ -61,14 +59,8 @@ export async function getTags(
   headUrl: string,
   getUrl: string,
   filename: string,
-  mediainfo: MediaInfo<"object">,
+  { covers }: { covers: boolean },
 ) {
-  const miResult = await mediainfo
-    .analyzeData(getSize(headUrl), readChunk(getUrl))
-    .catch((_) => null);
-  const miTags = miResult && pickTagsFromMediaInfo(filename, miResult);
-  if (miTags) return miTags;
-
   const musicMetadata = await import("music-metadata-browser").then((a) => a.default);
   const httpTokenizer = await import("@tokenizer/http").then((a) => a.default);
 
@@ -83,9 +75,15 @@ export async function getTags(
     tokenizer.rangeRequestClient.resolvedUrl = undefined;
   }
 
-  const mmResult = await musicMetadata.parseFromTokenizer(tokenizer);
+  const mmResult = await musicMetadata.parseFromTokenizer(tokenizer, { skipCovers: !covers });
   const mmTags = pickTagsFromMusicMetadata(filename, mmResult);
   if (mmTags) return mmTags;
+
+  const miResult = (await mediaInfoClient())
+    .analyzeData(getSize(headUrl), readChunk(getUrl))
+    .catch((_) => null);
+  const miTags = miResult && pickTagsFromMediaInfo(filename, miResult);
+  if (miTags) return miTags;
 
   return fallbackTags(filename);
 }
@@ -153,10 +151,17 @@ function pickTagsFromMediaInfo(filename: string, result: MediaInfoType): Tags | 
   const tags = result?.media?.track?.filter((t) => t["@type"] === "General")[0];
   if (!tags) return null;
 
-  let artist = tags.Performer?.length ? tags.Performer : null;
-  const title = tags.Title?.length ? tags.Title : null;
+  let artist = typeof tags.Performer == "string" ? tags.Performer : null;
+  const album = typeof tags.Album == "string" ? tags.Album : null;
+
+  const title = typeof tags.Track == "string"
+    ? tags.Track
+    : typeof tags.Title == "string"
+    ? tags.Title
+    : null;
 
   if (!artist && !title) return null;
+  if (artist?.includes("�") || album?.includes("�") || title?.includes("�")) return null
 
   if (artist && artist.includes(" / ")) {
     artist = artist
@@ -170,7 +175,7 @@ function pickTagsFromMediaInfo(filename: string, result: MediaInfoType): Tags | 
   return {
     disc: tags.Part_Position || 1,
     nr: tags.Track_Position || 1,
-    album: tags.Album && tags.Album.length ? tags.Album : null,
+    album: album,
     artist: artist,
     title: title || filename.replace(/\.\w+$/, ""),
     genre: tags.Genre || null,
@@ -215,9 +220,10 @@ function pickTagsFromMusicMetadata(filename: string, result: IAudioMetadata): Ta
 // --
 
 async function mediaInfoClient() {
+  const MediaInfoFactory = await import("mediainfo.js").then(a => a.default)
+
   return await MediaInfoFactory({
     coverData: false,
-    full: true,
     locateFile: () => {
       return "../../wasm/media-info.wasm";
     },
