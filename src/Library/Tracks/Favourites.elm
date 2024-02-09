@@ -2,8 +2,7 @@ module Tracks.Favourites exposing (completeFavouritesList, completeTracksList, m
 
 import List.Extra as List
 import Maybe.Extra as Maybe
-import Tracks exposing (Favourite, IdentifiedTrack, Track)
-import Tracks exposing (fallbackArtist)
+import Tracks exposing (Favourite, IdentifiedTrack, Track, fallbackArtist)
 
 
 

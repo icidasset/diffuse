@@ -106,6 +106,7 @@ nr : Track -> Int
 nr =
     .tags >> .nr
 
+
 isMissing : Identifiers -> Bool
 isMissing =
     .isMissing
@@ -128,20 +129,25 @@ andThenCompare fn a b order =
     else
         order
 
+
 andThenCompareBools : (ctx -> Bool) -> ctx -> ctx -> Order -> Order
 andThenCompareBools fn a b order =
     if order == EQ then
         let
-          af = fn a
-          bf = fn b
+            af =
+                fn a
+
+            bf =
+                fn b
         in
         if af == bf then
-          EQ
-        else if af == False then
-          GT
-        else
-          LT
+            EQ
 
+        else if af == False then
+            GT
+
+        else
+            LT
 
     else
         order

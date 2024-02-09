@@ -666,16 +666,10 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
         nowPlayingId =
             Maybe.unwrap "" (.identifiedTrack >> Tuple.second >> .id) nowPlaying
 
-        album =
-            cover.identifiedTrackCover
-                |> Tuple.second
-                |> .tags
-                |> .album
-
         missingTracks =
-          List.any
-            (Tuple.first >> .isMissing)
-            cover.tracks
+            List.any
+                (Tuple.first >> .isMissing)
+                cover.tracks
 
         maybeBlobUrlFromCache =
             cachedCovers
@@ -803,8 +797,8 @@ metadataView { clickable, horizontal } { sortBy } cover =
 
         missingTracks =
             List.any
-              (Tuple.first >> .isMissing)
-              cover.tracks
+                (Tuple.first >> .isMissing)
+                cover.tracks
     in
     brick
         (if clickable then
@@ -831,24 +825,23 @@ metadataView { clickable, horizontal } { sortBy } cover =
             , "pt-px"
             , "truncate"
             ]
-            [
-                case sortBy of
-                  Album ->
+            [ case sortBy of
+                Album ->
                     if missingTracks then
-                      text "Missing tracks"
+                        text "Missing tracks"
 
                     else
-                      text (Maybe.withDefault "Unknown album" track.tags.album)
+                        text (Maybe.withDefault "Unknown album" track.tags.album)
 
-                  Artist ->
+                Artist ->
                     if missingTracks then
-                      text "Missing tracks"
+                        text "Missing tracks"
 
                     else
-                      text (Maybe.withDefault "Unknown artist" track.tags.artist)
+                        text (Maybe.withDefault "Unknown artist" track.tags.artist)
 
-                  _ ->
-                      nothing
+                _ ->
+                    nothing
             ]
 
         --
@@ -866,6 +859,7 @@ metadataView { clickable, horizontal } { sortBy } cover =
 
                     else if not missingTracks && Maybe.isJust track.tags.artist then
                         text (Maybe.withDefault "" track.tags.artist)
+
                     else
                         case List.length cover.trackIds of
                             1 ->
@@ -873,7 +867,6 @@ metadataView { clickable, horizontal } { sortBy } cover =
 
                             n ->
                                 text (String.fromInt n ++ " tracks")
-
 
                 Artist ->
                     case List.length cover.trackIds of

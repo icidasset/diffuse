@@ -3,7 +3,6 @@ module UI.Tracks.Covers exposing (..)
 import Base64
 import Conditional exposing (ifThenElse)
 import Dict
-import List.Extra as List
 import Maybe.Extra as Maybe
 import Tracks exposing (..)
 

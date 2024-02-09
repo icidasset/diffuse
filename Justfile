@@ -7,6 +7,7 @@ SRC_DIR         := "./src"
 SYSTEM_DIR      := "./system"
 
 ESBUILD         := "node system/Js/esbuild.mjs"
+ELM_REVIEW      := NPM_DIR + "/.bin/elm-review " + SRC_DIR + " --config system/Review --compiler " + NPM_DIR + "/.bin/elm --elm-format-path " + NPM_DIR + "/.bin/elm-format"
 
 
 default: dev
@@ -183,14 +184,14 @@ js-prod:
 	echo "> Running elm-format"
 	{{NPM_DIR}}/.bin/elm-format {{SRC_DIR}} --yes
 	echo "> Running elm-review"
-	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review --fix-all
+	{{ELM_REVIEW}} --fix-all
 
 
 @quality: check-versions
 	echo "> Running es-lint"
 	{{NPM_DIR}}/.bin/eslint src/Javascript/**/*
 	echo "> Running elm-review"
-	{{NPM_DIR}}/.bin/elm-review {{SRC_DIR}} --config system/Review
+	{{ELM_REVIEW}}
 
 
 @server:

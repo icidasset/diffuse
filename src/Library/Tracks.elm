@@ -2,11 +2,11 @@ module Tracks exposing (..)
 
 import Base64
 import List.Extra as List
+import Maybe.Extra as Maybe
 import Playlists exposing (Playlist, PlaylistTrack)
 import String.Ext as String
 import Time
 import Time.Ext as Time
-import Maybe.Extra as Maybe
 
 
 
@@ -220,23 +220,27 @@ emptyCollection =
     , scrollContext = ""
     }
 
+
 {-| If a track doesn't fit into a group, where does it go?
 -}
 fallbackCoverGroup : String
 fallbackCoverGroup =
-  "MISSING_TRACK_INFO"
+    "MISSING_TRACK_INFO"
+
 
 {-| This value is used as a fallback in the UI if the album is missing.
 -}
 fallbackAlbum : String
 fallbackAlbum =
-  ""
+    ""
+
 
 {-| This value is used as a fallback in the UI if the artist is missing.
 -}
 fallbackArtist : String
 fallbackArtist =
-  ""
+    ""
+
 
 
 -- MORE STUFF
@@ -245,42 +249,41 @@ fallbackArtist =
 coverGroup : SortBy -> IdentifiedTrack -> String
 coverGroup sort ( identifiers, { tags } as track ) =
     if identifiers.isMissing then
-      "MISSING_TRACKS"
+        "MISSING_TRACKS"
+
     else
-    (case sort of
-        Artist ->
-            Maybe.unwrap fallbackCoverGroup (String.trim >> String.toLower) tags.artist
+        case sort of
+            Artist ->
+                Maybe.unwrap fallbackCoverGroup (String.trim >> String.toLower) tags.artist
 
-        Album ->
-            -- There is the possibility of albums with the same name,
-            -- such as "Greatests Hits".
-            -- To make sure we treat those as different albums,
-            -- we prefix the album by its parent directory.
+            Album ->
+                -- There is the possibility of albums with the same name,
+                -- such as "Greatests Hits".
+                -- To make sure we treat those as different albums,
+                -- we prefix the album by its parent directory.
+                case tags.album of
+                    Just album ->
+                        (identifiers.parentDirectory ++ album)
+                            |> String.trim
+                            |> String.toLower
 
-            case tags.album of
-              Just album ->
-                (identifiers.parentDirectory ++ album)
-                  |> String.trim
-                  |> String.toLower
-              Nothing ->
-                fallbackCoverGroup
+                    Nothing ->
+                        fallbackCoverGroup
 
-        PlaylistIndex ->
-            ""
+            PlaylistIndex ->
+                ""
 
-        Title ->
-            tags.title
-    )
-
+            Title ->
+                tags.title
 
 
 coverKey : Bool -> Track -> String
 coverKey isVariousArtists { tags } =
-      if isVariousArtists then
-          Maybe.withDefault "?" tags.album
+    if isVariousArtists then
+        Maybe.withDefault "?" tags.album
 
-      else
-          Maybe.withDefault "?" tags.artist ++ " --- " ++ Maybe.withDefault "?" tags.album
+    else
+        Maybe.withDefault "?" tags.artist ++ " --- " ++ Maybe.withDefault "?" tags.album
 
 
 isNowPlaying : IdentifiedTrack -> IdentifiedTrack -> Bool

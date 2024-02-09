@@ -2,10 +2,8 @@ module Tracks.Collection.Internal.Identify exposing (identify)
 
 import Dict
 import List.Extra as List
-import Maybe.Extra as Maybe
 import Time.Ext as Time
 import Tracks exposing (..)
-import Tracks.Favourites as Favourites
 
 
 
