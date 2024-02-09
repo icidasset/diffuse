@@ -181,10 +181,10 @@ groupByFirstAlphaCharacterFolder deps ( i, t ) =
         tag =
             case deps.sortBy of
                 Artist ->
-                    t.tags.artist
+                    Maybe.withDefault fallbackArtist t.tags.artist
 
                 Album ->
-                    t.tags.album
+                    Maybe.withDefault fallbackAlbum t.tags.album
 
                 PlaylistIndex ->
                     ""

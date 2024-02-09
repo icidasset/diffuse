@@ -78,8 +78,14 @@ harvest ( deps, collection ) =
         |> List.foldl
             (\( i, t ) ( dict, ( idx, prevIdentifiers ), acc ) ->
                 let
+                    -- Identifier used to distinguish duplicates
                     s =
-                        String.toLower (t.tags.artist ++ t.tags.title)
+                        case t.tags.artist of
+                            Just artist ->
+                                String.toLower (artist ++ t.tags.title)
+
+                            Nothing ->
+                                String.toLower t.tags.title
                 in
                 if theFilter ( i, t ) == False then
                     ( dict, ( idx, prevIdentifiers ), acc )

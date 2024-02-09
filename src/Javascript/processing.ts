@@ -4,132 +4,222 @@
 //
 // Audio processing, getting metadata, etc.
 
+import type { IAudioMetadata } from "music-metadata";
+import type { MediaInfo, MediaInfoType } from "mediainfo.js";
 
-import * as musicMetadata from "music-metadata-browser"
-import { makeTokenizer } from "@tokenizer/http"
+import MediaInfoFactory from "mediainfo.js";
+import * as Uint8arrays from "uint8arrays";
 
-import { mimeType } from "./common"
-import { transformUrl } from "./urls"
-
+import { transformUrl } from "./urls";
 
 // Contexts
 // --------
 
-export function processContext(context, app) {
-  const initialPromise = Promise.resolve([])
+export async function processContext(context, app) {
+  const mediainfo = await mediaInfoClient();
+  const initialPromise = Promise.resolve([]);
 
-  return context.urlsForTags.reduce((accumulator, urls, idx) => {
-    return accumulator.then(col => {
-      const filename = context
-        .receivedFilePaths[idx]
-        .split("/")
-        .reverse()[0]
+  return context.urlsForTags
+    .reduce((accumulator, urls, idx) => {
+      return accumulator.then((col) => {
+        const filename = context.receivedFilePaths[idx].split("/").reverse()[0];
 
-      return Promise.all([
-        transformUrl(urls.headUrl, app),
-        transformUrl(urls.getUrl, app)
-
-      ]).then(([headUrl, getUrl]) => {
-        return getTags(headUrl, getUrl, filename, { skipCovers: true })
-
-      }).then(r => {
-        return col.concat(r)
-
-      }).catch(e => {
-        console.warn(e)
-        return col.concat(null)
-
-      })
-    })
-
-  }, initialPromise).then(col => {
-    context.receivedTags = col
-    return context
-
-  })
+        return Promise.all([transformUrl(urls.headUrl, app), transformUrl(urls.getUrl, app)])
+          .then(([headUrl, getUrl]) => {
+            return getTags(headUrl, getUrl, filename, mediainfo);
+          })
+          .then((r) => {
+            return col.concat(r);
+          })
+          .catch((e) => {
+            console.warn(e);
+            return col.concat(null);
+          });
+      });
+    }, initialPromise)
+    .then((col) => {
+      context.receivedTags = col;
+      return context;
+    });
 }
 
+// Tags - General
+// --------------
 
+type Tags = {
+  disc: number;
+  nr: number;
+  album: string | null;
+  artist: string | null;
+  title: string;
+  genre: string | null;
+  year: number | null;
+  picture: { data: Uint8Array; format: string } | null;
+};
 
-// Tags
-// ----
+export async function getTags(
+  headUrl: string,
+  getUrl: string,
+  filename: string,
+  mediainfo: MediaInfo<"object">,
+) {
+  const miResult = await mediainfo
+    .analyzeData(getSize(headUrl), readChunk(getUrl))
+    .catch((_) => null);
+  const miTags = miResult && pickTagsFromMediaInfo(filename, miResult);
+  if (miTags) return miTags;
 
+  const musicMetadata = await import("music-metadata-browser").then((a) => a.default);
+  const httpTokenizer = await import("@tokenizer/http").then((a) => a.default);
 
-const parserConfiguration = Object.assign(
-  {},
-  { duration: false, skipPostHeaders: true }
-)
+  const tokenizer = await httpTokenizer.makeTokenizer(headUrl);
+  tokenizer.fileInfo.url = getUrl;
 
-
-export function getTags(headUrl, getUrl, filename, options) {
-  const fileExtMatch = filename.match(/\.(\w+)$/)
-  const fileExt = fileExtMatch && fileExtMatch[1]
-
-  const overrideContentType = (
-    getUrl.includes("googleapis.com") ||
-    getUrl.includes("googleusercontent.com")
-  )
-
-  return makeTokenizer(headUrl)
-    .then(tokenizer => {
-      const fileMime = overrideContentType
-        ? mimeType(fileExt)
-        : tokenizer.fileInfo.mimeType
-
-      tokenizer.fileInfo.mimeType = fileMime
-      tokenizer.fileInfo.url = getUrl
-
-      if (tokenizer.rangeRequestClient) {
-        tokenizer.rangeRequestClient.url = getUrl
-        tokenizer.rangeRequestClient.resolvedUrl = undefined
-      }
-
-      return musicMetadata.parseFromTokenizer(
-        tokenizer,
-        Object.assign({}, parserConfiguration, options || {})
-      )
-    })
-    .then(result => {
-      return pickTags(filename, result)
-    })
-    .catch(err => {
-      console.error(err)
-      return fallbackTags(filename)
-    })
-}
-
-
-function pickTags(filename, result) {
-  const tags = result && result.common
-  if (!tags) return null
-
-  const artist = tags.artist && tags.artist.length ? tags.artist : null
-  const title = tags.title && tags.title.length ? tags.title : null
-
-  return {
-    disc: tags.disk.no || 1,
-    nr: tags.track.no || 1,
-    album: tags.album && tags.album.length ? tags.album : "Unknown",
-    artist: artist || "Unknown",
-    title: title ? title : (artist ? "Unknown" : filename.replace(/\.\w+$/, "")),
-    genre: (tags.genre && tags.genre[0]) || null,
-    year: tags.year || null,
-    picture: tags.picture ? tags.picture[0] : null
+  // @ts-ignore
+  if (tokenizer.rangeRequestClient) {
+    // @ts-ignore
+    tokenizer.rangeRequestClient.url = getUrl;
+    // @ts-ignore
+    tokenizer.rangeRequestClient.resolvedUrl = undefined;
   }
+
+  const mmResult = await musicMetadata.parseFromTokenizer(tokenizer);
+  const mmTags = pickTagsFromMusicMetadata(filename, mmResult);
+  if (mmTags) return mmTags;
+
+  return fallbackTags(filename);
 }
 
-
-function fallbackTags(filename) {
-  const filenameWithoutExt = filename.replace(/\.\w+$/, "")
+function fallbackTags(filename: string): Tags {
+  const filenameWithoutExt = filename.replace(/\.\w+$/, "");
 
   return {
     disc: 1,
     nr: 1,
-    album: "Unknown",
-    artist: "Unknown",
+    album: null,
+    artist: null,
     title: filenameWithoutExt,
     genre: null,
     year: null,
-    picture: null
+    picture: null,
+  };
+}
+
+// Tags - Media Info
+// -----------------
+
+const getSize = (headUrl: string) => async (): Promise<number> => {
+  const response = await fetch(headUrl, { method: "HEAD" });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error status=${response.status}: ${response.statusText}`);
   }
+
+  const l = response.headers.get("Content-Length");
+
+  if (l) {
+    return parseInt(l, 10);
+  } else {
+    throw new Error("HTTP response doesn't have a Content-Length");
+  }
+};
+
+const readChunk =
+  (getUrl: string) =>
+  async (chunkSize: number, offset: number): Promise<Uint8Array> => {
+    if (chunkSize === 0) return new Uint8Array();
+
+    const from = offset;
+    const to = offset + chunkSize;
+
+    const start = to < from ? to : from;
+    const end = to < from ? from : to;
+
+    const response = await fetch(getUrl, {
+      method: "GET",
+      headers: {
+        Range: `bytes=${start}-${end}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error status=${response.status}: ${response.statusText}`);
+    }
+
+    return new Uint8Array(await response.arrayBuffer());
+  };
+
+function pickTagsFromMediaInfo(filename: string, result: MediaInfoType): Tags | null {
+  const tags = result?.media?.track?.filter((t) => t["@type"] === "General")[0];
+  if (!tags) return null;
+
+  let artist = tags.Performer?.length ? tags.Performer : null;
+  const title = tags.Title?.length ? tags.Title : null;
+
+  if (!artist && !title) return null;
+
+  if (artist && artist.includes(" / ")) {
+    artist = artist
+      .split(" / ")
+      .filter((a) => a.trim() !== "")
+      .join(", ");
+  }
+
+  const year = tags.Recorded_Date ? new Date(Date.parse(tags.Recorded_Date)).getFullYear() : null;
+
+  return {
+    disc: tags.Part_Position || 1,
+    nr: tags.Track_Position || 1,
+    album: tags.Album && tags.Album.length ? tags.Album : null,
+    artist: artist,
+    title: title || filename.replace(/\.\w+$/, ""),
+    genre: tags.Genre || null,
+    year: year !== null && isNaN(year) ? null : year,
+    picture: tags.Cover_Data
+      ? {
+          data: Uint8arrays.fromString(tags.Cover_Data, "base64"),
+          format: tags.Cover_Mime || "image/jpeg",
+        }
+      : null,
+  };
+}
+
+// Tags - Music Metadata
+// ---------------------
+
+function pickTagsFromMusicMetadata(filename: string, result: IAudioMetadata): Tags | null {
+  const tags = result && result.common;
+  if (!tags) return null;
+
+  const artist = tags.artist && tags.artist.length ? tags.artist : null;
+  const title = tags.title && tags.title.length ? tags.title : null;
+
+  if (!artist && !title) return null;
+
+  return {
+    disc: tags.disk.no || 1,
+    nr: tags.track.no || 1,
+    album: tags.album && tags.album.length ? tags.album : null,
+    artist: artist,
+    title: title || filename.replace(/\.\w+$/, ""),
+    genre: (tags.genre && tags.genre[0]) || null,
+    year: tags.year || null,
+    picture:
+      tags.picture && tags.picture[0]
+        ? { data: tags.picture[0].data, format: tags.picture[0].format }
+        : null,
+  };
+}
+
+// 🛠️
+// --
+
+async function mediaInfoClient() {
+  return await MediaInfoFactory({
+    coverData: false,
+    full: true,
+    locateFile: () => {
+      return "../../wasm/media-info.wasm";
+    },
+  });
 }

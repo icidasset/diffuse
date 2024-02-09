@@ -2,6 +2,7 @@
 // Album Covers
 // (◕‿◕✿)
 
+import MediaInfoFactory, { MediaInfo } from "mediainfo.js"
 
 import { transformUrl } from "../urls"
 import * as processing from "../processing"
@@ -28,7 +29,9 @@ function decodeCacheKey(cacheKey) {
 // 1. TAGS
 
 
-function findUsingTags(prep, app) {
+async function findUsingTags(prep, app) {
+  const mediainfo = await mediaInfoClient()
+
   return Promise.all(
     [
       transformUrl(prep.trackHeadUrl, app),
@@ -39,7 +42,7 @@ function findUsingTags(prep, app) {
     headUrl,
     getUrl,
     prep.trackFilename,
-    { skipCovers: false }
+    mediainfo
 
   )).then(tags => {
     return tags?.picture
@@ -65,6 +68,7 @@ function findUsingMusicBrainz(prep) {
   return fetch(`https://musicbrainz.org/ws/2/release/?query=${encodedQuery}&fmt=json`)
     .then(r => r.json())
     .then(r => musicBrainzCover(r.releases))
+    .catch(_ => REJECT())
 }
 
 
@@ -96,6 +100,7 @@ function findUsingLastFm(prep) {
   return fetch(`https://ws.audioscrobbler.com/2.0/?method=album.search&album=${query}&api_key=4f0fe85b67baef8bb7d008a8754a95e5&format=json`)
     .then(r => r.json())
     .then(r => lastFmCover(r.results.albummatches.album))
+    .catch(_ => REJECT())
 }
 
 
@@ -108,4 +113,23 @@ function lastFmCover(remainingMatches) {
       .then(r => r.blob())
       .catch(_ => lastFmCover(remainingMatches.slice(1)))
     : album && lastFmCover(remainingMatches.slice(1))
+}
+
+
+
+// 🛠️
+
+
+let client: MediaInfo<"object"> | null
+
+
+async function mediaInfoClient() {
+  if (client) return client
+  client = await MediaInfoFactory({
+    coverData: true,
+    locateFile: () => {
+      return "../../wasm/media-info.wasm"
+    },
+  })
+  return client
 }

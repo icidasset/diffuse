@@ -673,7 +673,9 @@ coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
                 |> .album
 
         missingTracks =
-            album == Tracks.missingAlbumPlaceholder
+          List.any
+            (Tuple.first >> .isMissing)
+            cover.tracks
 
         maybeBlobUrlFromCache =
             cachedCovers
@@ -800,7 +802,9 @@ metadataView { clickable, horizontal } { sortBy } cover =
             identifiedTrackCover
 
         missingTracks =
-            track.tags.album == Tracks.missingAlbumPlaceholder
+            List.any
+              (Tuple.first >> .isMissing)
+              cover.tracks
     in
     brick
         (if clickable then
@@ -827,15 +831,24 @@ metadataView { clickable, horizontal } { sortBy } cover =
             , "pt-px"
             , "truncate"
             ]
-            [ case sortBy of
-                Album ->
-                    text track.tags.album
+            [
+                case sortBy of
+                  Album ->
+                    if missingTracks then
+                      text "Missing tracks"
 
-                Artist ->
-                    text track.tags.artist
+                    else
+                      text (Maybe.withDefault "Unknown album" track.tags.album)
 
-                _ ->
-                    nothing
+                  Artist ->
+                    if missingTracks then
+                      text "Missing tracks"
+
+                    else
+                      text (Maybe.withDefault "Unknown artist" track.tags.artist)
+
+                  _ ->
+                      nothing
             ]
 
         --
@@ -848,22 +861,27 @@ metadataView { clickable, horizontal } { sortBy } cover =
             ]
             [ case sortBy of
                 Album ->
-                    if missingTracks then
-                        text "Missing tracks"
-
-                    else if cover.variousArtists then
+                    if cover.variousArtists then
                         text "Various Artists"
 
+                    else if not missingTracks && Maybe.isJust track.tags.artist then
+                        text (Maybe.withDefault "" track.tags.artist)
                     else
-                        text track.tags.artist
+                        case List.length cover.trackIds of
+                            1 ->
+                                text "1 track"
+
+                            n ->
+                                text (String.fromInt n ++ " tracks")
+
 
                 Artist ->
                     case List.length cover.trackIds of
                         1 ->
-                            Html.text "1 track"
+                            text "1 track"
 
                         n ->
-                            Html.text (String.fromInt n ++ " tracks")
+                            text (String.fromInt n ++ " tracks")
 
                 _ ->
                     nothing

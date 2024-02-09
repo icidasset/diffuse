@@ -96,17 +96,17 @@ nowPlaying model { duration, msg, track } =
                 { url =
                     apiUrl
                 , body =
-                    authenticatedBody
-                        [ ( "album", track.tags.album )
-                        , ( "artist", track.tags.artist )
-                        , ( "duration", String.fromInt duration )
-                        , ( "track", track.tags.title )
-                        , ( "trackNumber", String.fromInt track.tags.nr )
+                    [ ( "duration", String.fromInt duration )
+                    , ( "track", track.tags.title )
+                    , ( "trackNumber", String.fromInt track.tags.nr )
 
-                        --
-                        , ( "method", "track.updateNowPlaying" )
-                        , ( "sk", sessionKey )
-                        ]
+                    --
+                    , ( "method", "track.updateNowPlaying" )
+                    , ( "sk", sessionKey )
+                    ]
+                        |> addAlbum track
+                        |> addArtist track
+                        |> authenticatedBody
                 , expect =
                     Http.expectWhatever (always msg)
                 }
@@ -123,24 +123,42 @@ scrobble model { duration, msg, timestamp, track } =
                 { url =
                     apiUrl
                 , body =
-                    authenticatedBody
-                        [ ( "album", track.tags.album )
-                        , ( "artist", track.tags.artist )
-                        , ( "duration", String.fromInt duration )
-                        , ( "track", track.tags.title )
-                        , ( "trackNumber", String.fromInt track.tags.nr )
+                    [ ( "duration", String.fromInt duration )
+                    , ( "track", track.tags.title )
+                    , ( "trackNumber", String.fromInt track.tags.nr )
 
-                        --
-                        , ( "method", "track.scrobble" )
-                        , ( "sk", sessionKey )
-                        , ( "timestamp", String.fromInt timestamp )
-                        ]
+                    --
+                    , ( "method", "track.scrobble" )
+                    , ( "sk", sessionKey )
+                    , ( "timestamp", String.fromInt timestamp )
+                    ]
+                        |> addAlbum track
+                        |> addArtist track
+                        |> authenticatedBody
                 , expect =
                     Http.expectWhatever (always msg)
                 }
 
         Nothing ->
             Cmd.none
+
+
+addAlbum track list =
+    case track.tags.album of
+        Just album ->
+            ( "album", album ) :: list
+
+        Nothing ->
+            list
+
+
+addArtist track list =
+    case track.tags.artist of
+        Just artist ->
+            ( "artist", artist ) :: list
+
+        Nothing ->
+            list
 
 
 

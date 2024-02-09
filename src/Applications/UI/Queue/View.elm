@@ -165,7 +165,12 @@ futureItem selectedQueueItem idx item =
                 , "text-xs"
                 ]
                 [ text (String.fromInt <| idx + 1), text "." ]
-            , text (track.tags.artist ++ " - " ++ track.tags.title)
+            , case track.tags.artist of
+                Just artist ->
+                    text (artist ++ " - " ++ track.tags.title)
+
+                Nothing ->
+                    text track.tags.title
             ]
     , actions =
         [ -- Remove
@@ -285,7 +290,12 @@ historyItem idx ({ identifiedTrack } as item) =
             [ inline
                 [ "inline-block", "text-xs", "mr-2" ]
                 [ text (String.fromInt <| idx + 1), text "." ]
-            , text (track.tags.artist ++ " - " ++ track.tags.title)
+            , case track.tags.artist of
+                Just artist ->
+                    text (artist ++ " - " ++ track.tags.title)
+
+                Nothing ->
+                    text track.tags.title
             ]
     , actions =
         [ { icon = Icons.more_vert

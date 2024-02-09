@@ -461,20 +461,20 @@ defaultItemView args _ idx identifiedTrack =
              else if not showArtist && showAlbum then
                 [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
                 , otherColumn "51.25%" False track.tags.title
-                , otherColumn "43%" False track.tags.album
+                , otherColumn "43%" False (Maybe.withDefault fallbackAlbum track.tags.album)
                 ]
 
              else if showArtist && not showAlbum then
                 [ favouriteColumn "5.75%" favouritesOnly favIdentifiers derivedColors
                 , otherColumn "51.25%" False track.tags.title
-                , otherColumn "43%" False track.tags.artist
+                , otherColumn "43%" False (Maybe.withDefault fallbackArtist track.tags.artist)
                 ]
 
              else
                 [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
                 , otherColumn "37.5%" False track.tags.title
-                , otherColumn "29.0%" False track.tags.artist
-                , otherColumn "29.0%" True track.tags.album
+                , otherColumn "29.0%" False (Maybe.withDefault fallbackArtist track.tags.artist)
+                , otherColumn "29.0%" True (Maybe.withDefault fallbackAlbum track.tags.album)
                 ]
             )
         ]
@@ -567,15 +567,15 @@ playlistItemView favouritesOnly nowPlaying _ selectedTrackIndexes dnd showAlbum 
             [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "36.0%" False track.tags.title
-            , otherColumn "27.5%" False track.tags.artist
-            , otherColumn "27.5%" True track.tags.album
+            , otherColumn "27.5%" False (Maybe.withDefault fallbackArtist track.tags.artist)
+            , otherColumn "27.5%" True (Maybe.withDefault fallbackAlbum track.tags.album)
             ]
 
          else
             [ favouriteColumn defFavColWidth favouritesOnly favIdentifiers derivedColors
             , playlistIndexColumn (Maybe.withDefault 0 identifiers.indexInPlaylist)
             , otherColumn "49.75%" False track.tags.title
-            , otherColumn "41.25%" False track.tags.artist
+            , otherColumn "41.25%" False (Maybe.withDefault fallbackArtist track.tags.artist)
             ]
         )
 

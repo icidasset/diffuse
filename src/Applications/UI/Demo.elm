@@ -29,7 +29,7 @@ tape currentTime =
 
 favourites : List Favourite
 favourites =
-    [ { artist = "James Blake"
+    [ { artist = Just "James Blake"
       , title = "Essential Mix (09-17-2011)"
       }
     ]
@@ -76,8 +76,8 @@ tracks insertedAt =
             , nr = 1
 
             --
-            , album = "Soulection White Label: 013"
-            , artist = "oriJanus"
+            , album = Just "Soulection White Label: 013"
+            , artist = Just "oriJanus"
             , title = "Bonita"
 
             --
@@ -95,8 +95,8 @@ tracks insertedAt =
             , nr = 2
 
             --
-            , album = "Soulection White Label: 013"
-            , artist = "oriJanus"
+            , album = Just "Soulection White Label: 013"
+            , artist = Just "oriJanus"
             , title = "6"
 
             --
@@ -114,8 +114,8 @@ tracks insertedAt =
             , nr = 3
 
             --
-            , album = "Soulection White Label: 013"
-            , artist = "oriJanus"
+            , album = Just "Soulection White Label: 013"
+            , artist = Just "oriJanus"
             , title = "Hot Remix ft. Tek.Lun & Zikomo"
 
             --
@@ -133,8 +133,8 @@ tracks insertedAt =
             , nr = 9
 
             --
-            , album = "Adult Swim Singles Project 2012"
-            , artist = "Com Truise"
+            , album = Just "Adult Swim Singles Project 2012"
+            , artist = Just "Com Truise"
             , title = "Chemical Legs"
 
             --
@@ -152,8 +152,8 @@ tracks insertedAt =
             , nr = 4
 
             --
-            , album = "The Miyazaki Tour EP"
-            , artist = "Manuele Atzeni"
+            , album = Just "The Miyazaki Tour EP"
+            , artist = Just "Manuele Atzeni"
             , title = "Little Star"
 
             --
@@ -171,8 +171,8 @@ tracks insertedAt =
             , nr = 2
 
             --
-            , album = "The Last Thing"
-            , artist = "Patrick Lee"
+            , album = Just "The Last Thing"
+            , artist = Just "Patrick Lee"
             , title = "Quittin' Time"
 
             --
@@ -190,8 +190,8 @@ tracks insertedAt =
             , nr = 1
 
             --
-            , album = "Essential Mix-SAT-09-17"
-            , artist = "James Blake"
+            , album = Just "Essential Mix-SAT-09-17"
+            , artist = Just "James Blake"
             , title = "Essential Mix (09-17-2011)"
 
             --
