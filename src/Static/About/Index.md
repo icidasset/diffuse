@@ -2,7 +2,8 @@
 
 [Return to the application](../)<br />
 [CORS instructions](cors/)<br />
-[Developers](dev/)
+[Developers](dev/)<br />
+[Privacy policy](../privacy.txt)
 
 
 
