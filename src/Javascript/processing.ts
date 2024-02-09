@@ -14,7 +14,6 @@ import { transformUrl } from "./urls";
 // --------
 
 export async function processContext(context, app) {
-  const mediainfo = await mediaInfoClient();
   const initialPromise = Promise.resolve([]);
 
   return context.urlsForTags
@@ -24,7 +23,7 @@ export async function processContext(context, app) {
 
         return Promise.all([transformUrl(urls.headUrl, app), transformUrl(urls.getUrl, app)])
           .then(([headUrl, getUrl]) => {
-            return getTags(headUrl, getUrl, filename, mediainfo);
+            return getTags(headUrl, getUrl, filename, { covers: false });
           })
           .then((r) => {
             return col.concat(r);
@@ -75,11 +74,11 @@ export async function getTags(
     tokenizer.rangeRequestClient.resolvedUrl = undefined;
   }
 
-  const mmResult = await musicMetadata.parseFromTokenizer(tokenizer, { skipCovers: !covers });
-  const mmTags = pickTagsFromMusicMetadata(filename, mmResult);
+  const mmResult = await musicMetadata.parseFromTokenizer(tokenizer, { skipCovers: !covers }).catch(() => null);
+  const mmTags = mmResult && pickTagsFromMusicMetadata(filename, mmResult);
   if (mmTags) return mmTags;
 
-  const miResult = (await mediaInfoClient())
+  const miResult = await (await mediaInfoClient(covers))
     .analyzeData(getSize(headUrl), readChunk(getUrl))
     .catch((_) => null);
   const miTags = miResult && pickTagsFromMediaInfo(filename, miResult);
@@ -219,11 +218,11 @@ function pickTagsFromMusicMetadata(filename: string, result: IAudioMetadata): Ta
 // 🛠️
 // --
 
-async function mediaInfoClient() {
+async function mediaInfoClient(covers: boolean) {
   const MediaInfoFactory = await import("mediainfo.js").then(a => a.default)
 
   return await MediaInfoFactory({
-    coverData: false,
+    coverData: covers,
     locateFile: () => {
       return "../../wasm/media-info.wasm";
     },
