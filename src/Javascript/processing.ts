@@ -5,7 +5,7 @@
 // Audio processing, getting metadata, etc.
 
 import type { IAudioMetadata } from "music-metadata";
-import type { MediaInfo, MediaInfoType } from "mediainfo.js";
+import type { MediaInfoType } from "mediainfo.js";
 
 import * as Uint8arrays from "uint8arrays";
 import { transformUrl } from "./urls";
@@ -74,13 +74,21 @@ export async function getTags(
     tokenizer.rangeRequestClient.resolvedUrl = undefined;
   }
 
-  const mmResult = await musicMetadata.parseFromTokenizer(tokenizer, { skipCovers: !covers }).catch(() => null);
+  const mmResult = await musicMetadata.parseFromTokenizer(
+    tokenizer,
+    { skipCovers: !covers }
+  ).catch(err => {
+    console.warn(err)
+    return null
+  });
+
   const mmTags = mmResult && pickTagsFromMusicMetadata(filename, mmResult);
   if (mmTags) return mmTags;
 
   const miResult = await (await mediaInfoClient(covers))
     .analyzeData(getSize(headUrl), readChunk(getUrl))
     .catch((_) => null);
+
   const miTags = miResult && pickTagsFromMediaInfo(filename, miResult);
   if (miTags) return miTags;
 
@@ -160,6 +168,8 @@ function pickTagsFromMediaInfo(filename: string, result: MediaInfoType): Tags | 
     : null;
 
   if (!artist && !title) return null;
+
+  // TODO: Encoding issues with mediainfo.js
   if (artist?.includes("�") || album?.includes("�") || title?.includes("�")) return null
 
   if (artist && artist.includes(" / ")) {
