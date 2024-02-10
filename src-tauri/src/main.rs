@@ -3,6 +3,8 @@
 
 use tauri::{webview::Url, AppHandle, WebviewBuilder, WebviewUrl, WindowBuilder};
 use tauri::{Manager, Runtime};
+use tauri_plugin_positioner::{Position, WindowExt};
+use tauri_plugin_window_state::{StateFlags, WindowExt as WindowStateExt};
 
 // 🚀 PRODUCTION
 
@@ -31,17 +33,42 @@ fn main() {
 // BUILDER
 
 fn default_builder() -> tauri::Builder<tauri::Wry> {
-    tauri::Builder::default().plugin(tauri_plugin_shell::init())
+    tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
 }
 
 // WINDOWS
 
 fn build_window(app: &AppHandle, url: Url) {
-    let mut window_builder = WindowBuilder::new(app, "main").title("Diffuse");
+    let monitor = app.primary_monitor().unwrap();
+
+    let height;
+    let width;
+
+    match monitor {
+        Some(m) => {
+            height = (m.size().height as f64 / m.scale_factor()) - 80.0;
+            width = (m.size().width as f64 / m.scale_factor()) - 40.0;
+        }
+
+        None => {
+            height = 675.0;
+            width = 1080.0;
+        }
+    }
+
+    let mut window_builder = WindowBuilder::new(app, "main")
+        .title("Diffuse")
+        .theme(None)
+        .inner_size(width, height);
 
     window_builder = title_styles(window_builder);
 
     let window = window_builder.build().unwrap();
+    window.move_window(Position::Center).unwrap();
+    window.restore_state(StateFlags::all()).unwrap();
 
     let webview_builder = WebviewBuilder::new("main", WebviewUrl::External(url))
         .auto_resize()
@@ -56,7 +83,7 @@ fn build_window(app: &AppHandle, url: Url) {
         )
         .unwrap();
 
-    window.maximize().unwrap();
+    // window.maximize().unwrap();
     window.set_resizable(true).unwrap();
 }
 
