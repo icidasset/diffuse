@@ -3,7 +3,7 @@
   "version": "3.4.0",
   "identifier": "com.icidasset.diffuse",
   "build": {
-    "beforeDevCommand": "npx just",
+    "beforeDevCommand": "",
     "devUrl": "http://localhost:8000",
     "beforeBuildCommand": "",
     "frontendDist": "../dist"
