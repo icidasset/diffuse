@@ -83,7 +83,6 @@ fn build_window(app: &AppHandle, url: Url) {
         )
         .unwrap();
 
-    // window.maximize().unwrap();
     window.set_resizable(true).unwrap();
 }
 
@@ -95,7 +94,7 @@ fn title_styles<R: Runtime, M: Manager<R>>(builder: WindowBuilder<R, M>) -> Wind
 }
 
 #[cfg(not(target_os = "macos"))]
-fn title_styles(builder: WindowBuilder) -> WindowBuilder {
+fn title_styles<R: Runtime, M: Manager<R>>(builder: WindowBuilder<R, M>) -> WindowBuilder<R, M> {
     return builder;
 }
 
