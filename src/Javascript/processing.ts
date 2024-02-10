@@ -87,7 +87,10 @@ export async function getTags(
 
   const miResult = await (await mediaInfoClient(covers))
     .analyzeData(getSize(headUrl), readChunk(getUrl))
-    .catch((_) => null);
+    .catch(err => {
+      console.warn(err)
+      return null
+    });
 
   const miTags = miResult && pickTagsFromMediaInfo(filename, miResult);
   if (miTags) return miTags;
