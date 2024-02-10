@@ -65,7 +65,6 @@ export function mimeType(fileExt: string): string | undefined {
     case "m4a": return "audio/mp4";
     case "flac": return "audio/flac";
     case "ogg": return "audio/ogg";
-    case "opus": return "audio/opus";
     case "wav": return "audio/wave";
     case "webm": return "audio/webm";
   }
