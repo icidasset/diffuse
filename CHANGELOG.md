@@ -2,8 +2,7 @@
 
 ## 3.4.0
 
-- **Improved audio metadata parsing**. Now uses [mediainfo.js](https://github.com/buzz/mediainfo.js).
-- **Removed native builds.** I no longer want to maintain native builds for Diffuse. I personally use it straight in the browser or install it as a PWA. Alternatively, there's software like [Multi](https://github.com/kofigumbs/multi) that allow you to package web applications into native apps. There are icons in the [src](/src/Static/Images) folder that you can use as the app icon.
+- **Improved audio metadata parsing**.
 - Adjusted search behaviour, now searches while typing (with a small delay).
 - Allows you to make playlists public when using Fission/ODD SDK.
 - Fixes issue with Safari where reloading after a search caused the loader to be shown indefinitely.
