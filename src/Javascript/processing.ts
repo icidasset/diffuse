@@ -63,24 +63,31 @@ export async function getTags(
   const musicMetadata = await import("music-metadata-browser").then((a) => a.default);
   const httpTokenizer = await import("@tokenizer/http").then((a) => a.default);
 
-  const tokenizer = await httpTokenizer.makeTokenizer(headUrl);
-  tokenizer.fileInfo.url = getUrl;
+  let tokenizer
+  let mmResult
 
-  // @ts-ignore
-  if (tokenizer.rangeRequestClient) {
-    // @ts-ignore
-    tokenizer.rangeRequestClient.url = getUrl;
-    // @ts-ignore
-    tokenizer.rangeRequestClient.resolvedUrl = undefined;
-  }
+  try {
+    tokenizer = await httpTokenizer.makeTokenizer(headUrl);
+    tokenizer.fileInfo.url = getUrl;
 
-  const mmResult = await musicMetadata.parseFromTokenizer(
-    tokenizer,
-    { skipCovers: !covers }
-  ).catch(err => {
+    // @ts-ignore
+    if (tokenizer.rangeRequestClient) {
+      // @ts-ignore
+      tokenizer.rangeRequestClient.url = getUrl;
+      // @ts-ignore
+      tokenizer.rangeRequestClient.resolvedUrl = undefined;
+    }
+
+    mmResult = await musicMetadata.parseFromTokenizer(
+      tokenizer,
+      { skipCovers: !covers }
+    ).catch(err => {
+      console.warn(err)
+      return null
+    });
+  } catch (err) {
     console.warn(err)
-    return null
-  });
+  }
 
   const mmTags = mmResult && pickTagsFromMusicMetadata(filename, mmResult);
   if (mmTags) return mmTags;

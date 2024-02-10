@@ -481,6 +481,8 @@ function gotCachedCover({ key, url }) {
 
 
 function loadAlbumCoversFromDom({ coverView, list }) {
+  if (!navigator.onLine) return
+
   let nodes: HTMLElement[] = []
 
   if (list) nodes = nodes.concat(Array.from(
