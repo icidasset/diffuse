@@ -3,9 +3,9 @@
   "version": "3.4.0",
   "identifier": "com.icidasset.diffuse",
   "build": {
-    "beforeDevCommand": "npx just server",
+    "beforeDevCommand": "npx just",
     "devUrl": "http://localhost:8000",
-    "beforeBuildCommand": "npx just build",
+    "beforeBuildCommand": "",
     "frontendDist": "../dist"
   },
   "app": {
