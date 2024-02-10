@@ -112,7 +112,7 @@ jobs:
           path: dist/
 
       # Make a build
-      - run: npm run tauri -- build
+      - run: npx tauri -- build
 
       # Upload artifacts
       - uses: softprops/action-gh-release@v1
