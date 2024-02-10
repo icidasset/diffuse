@@ -11,14 +11,9 @@ fn main() {
     let port = 44999;
     let url = format!("http://localhost:{}", port).parse().unwrap();
 
-    tauri::Builder::default()
-        .plugin(tauri_plugin_localhost::Builder::new(port).build())
-        .setup(move |app| {
-            build_window(app.handle(), url);
-            Ok(())
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    let builder = default_builder().plugin(tauri_plugin_localhost::Builder::new(port).build());
+
+    setup(url, builder)
 }
 
 // 💣 DEVELOPMENT
@@ -28,13 +23,15 @@ fn main() {
     let port = 8000;
     let url = format!("http://localhost:{}", port).parse().unwrap();
 
-    tauri::Builder::default()
-        .setup(move |app| {
-            build_window(app.handle(), url);
-            Ok(())
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    let builder = default_builder();
+
+    setup(url, builder)
+}
+
+// BUILDER
+
+fn default_builder() -> tauri::Builder<tauri::Wry> {
+    tauri::Builder::default().plugin(tauri_plugin_shell::init())
 }
 
 // WINDOWS
@@ -73,4 +70,16 @@ fn title_styles<R: Runtime, M: Manager<R>>(builder: WindowBuilder<R, M>) -> Wind
 #[cfg(not(target_os = "macos"))]
 fn title_styles(builder: WindowBuilder) -> WindowBuilder {
     return builder;
+}
+
+// SETUP
+
+fn setup(url: Url, builder: tauri::Builder<tauri::Wry>) {
+    builder
+        .setup(move |app| {
+            build_window(app.handle(), url);
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

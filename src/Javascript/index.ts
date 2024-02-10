@@ -142,7 +142,15 @@ async function initialise(reg) {
 
   // Other ports
   app.ports.openUrlOnNewPage.subscribe(url => {
-    window.open(url, "_blank")
+    if (globalThis.__TAURI__) {
+      globalThis.__TAURI__.shell.open(
+        url.includes("://") ? url : `${location.origin}/${url.replace(/^\.\//, "")}`
+      )
+
+    } else {
+      window.open(url, "_blank")
+
+    }
   })
 
   app.ports.reloadApp.subscribe(_ => {
