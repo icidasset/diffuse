@@ -16,6 +16,7 @@ type Msg
     | Select Item
     | Shift
     | ShowFutureMenu Item { index : Int } Mouse.Event
+    | ShowFutureNavigationMenu Mouse.Event
     | ShowHistoryMenu Item Mouse.Event
     | ToggleRepeat
     | ToggleShuffle

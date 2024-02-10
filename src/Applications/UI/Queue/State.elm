@@ -42,6 +42,9 @@ update msg =
         ShowFutureMenu a b c ->
             showFutureMenu a b c
 
+        ShowFutureNavigationMenu a ->
+            showFutureNavigationMenu a
+
         ShowHistoryMenu a b ->
             showHistoryMenu a b
 
@@ -239,6 +242,16 @@ showFutureMenu item { index } mouseEvent model =
             , itemIndex = index
             }
             item
+        |> Just
+        |> (\c -> { model | contextMenu = c })
+        |> Return.singleton
+
+
+showFutureNavigationMenu : Mouse.Event -> Manager
+showFutureNavigationMenu mouseEvent model =
+    mouseEvent.clientPos
+        |> Coordinates.fromTuple
+        |> Queue.futureNavigationMenu { manualEntries = List.filter .manualEntry model.playingNext }
         |> Just
         |> (\c -> { model | contextMenu = c })
         |> Return.singleton

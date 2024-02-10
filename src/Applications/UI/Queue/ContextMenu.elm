@@ -1,4 +1,4 @@
-module UI.Queue.ContextMenu exposing (futureMenu, historyMenu)
+module UI.Queue.ContextMenu exposing (futureMenu, futureNavigationMenu, historyMenu)
 
 import ContextMenu exposing (..)
 import Coordinates exposing (Coordinates)
@@ -56,6 +56,37 @@ futureMenu { cached, cachingInProgress, itemIndex } item =
             { cached = cached, cachingInProgress = cachingInProgress }
             tracks
         ]
+
+
+futureNavigationMenu : { manualEntries : List Queue.Item } -> Coordinates -> ContextMenu Msg
+futureNavigationMenu { manualEntries } =
+    [ [ Item
+            { icon = Icons.not_interested
+            , label = "Reset ignored"
+            , msg = QueueMsg Queue.Reset
+
+            --
+            , active = False
+            }
+      ]
+    , --
+      if List.isEmpty manualEntries then
+        []
+
+      else
+        [ Item
+            { icon = Icons.waves
+            , label = "Add queue picks to playlist"
+            , msg =
+                manualEntries
+                    |> List.map .identifiedTrack
+                    |> AssistWithAddingTracksToPlaylist
+            , active = False
+            }
+        ]
+    ]
+        |> List.concat
+        |> ContextMenu
 
 
 historyMenu :

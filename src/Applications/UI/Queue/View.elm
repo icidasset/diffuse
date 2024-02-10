@@ -66,9 +66,9 @@ futureView playingNext selectedQueueItem dnd =
               , Label "Clear" Shown
               , PerformMsg (QueueMsg Clear)
               )
-            , ( Icon Icons.not_interested
-              , Label "Reset ignored" Shown
-              , PerformMsg (QueueMsg Reset)
+            , ( Icon Icons.more_horiz
+              , Label "Menu" Hidden
+              , PerformMsgWithMouseEvent (QueueMsg << ShowFutureNavigationMenu)
               )
             ]
 

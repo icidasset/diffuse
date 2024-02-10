@@ -7,6 +7,7 @@ import Conditional exposing (..)
 import Html exposing (Html, text)
 import Html.Attributes exposing (href, style, tabindex, target, title)
 import Html.Events exposing (onClick)
+import Html.Events.Extra.Mouse as Mouse
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Svg exposing (Svg)
@@ -21,6 +22,7 @@ type Action msg
     = NavigateToPage Page
     | OpenLinkInNewPage String
     | PerformMsg msg
+    | PerformMsgWithMouseEvent (Mouse.Event -> msg)
 
 
 type Icon msg
@@ -141,6 +143,9 @@ localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) 
 
             PerformMsg _ ->
                 Html.button
+
+            PerformMsgWithMouseEvent _ ->
+                Html.button
         )
         [ case action of
             NavigateToPage page ->
@@ -151,6 +156,9 @@ localItem tabindex_ { amount } ( Icon icon, Label labelText labelType, action ) 
 
             PerformMsg msg ->
                 onClick msg
+
+            PerformMsgWithMouseEvent msg ->
+                Mouse.onClick msg
 
         --
         , case labelType of
