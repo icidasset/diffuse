@@ -95,6 +95,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
 
+      # Install dependencies
+      - run: npm install
+
       # OS
       - name: install linux dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -112,7 +115,7 @@ jobs:
           path: dist/
 
       # Make a build
-      - run: npx tauri -- build
+      - run: npx tauri build
 
       # Upload artifacts
       - uses: softprops/action-gh-release@v1
