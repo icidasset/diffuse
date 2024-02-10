@@ -7,6 +7,9 @@
   "repository": "github:icidasset/diffuse",
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
+    "@tauri-apps/api": "^2.0.0-beta.0",
+    "@tauri-apps/cli": "^2.0.0-beta.0",
+    "@tauri-apps/plugin-shell": "^2.0.0-beta.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "assert": "^2.1.0",
@@ -51,5 +54,8 @@
     "timer.js": "^1.0.4",
     "tocca": "^2.0.9",
     "uint8arrays": "^4.0.10"
+  },
+  "scripts": {
+    "tauri": "tauri"
   }
 }
