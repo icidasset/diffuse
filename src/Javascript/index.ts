@@ -4,15 +4,12 @@
 // The bit where we launch the Elm app,
 // and connect the other bits to it.
 
-import { } from "./index.d"
-
 import "tocca"
 
 import type { Program as OddProgram } from "@oddjs/odd"
+import type { } from "./index.d"
 
 import { debounce } from "throttle-debounce"
-import { saveAs } from "file-saver"
-import JSZip from "jszip"
 
 import * as audioEngine from "./audio-engine"
 import { db, fileExtension, ODD_CONFIG } from "./common"
@@ -597,7 +594,10 @@ function preferredColorScheme() {
 // Downloading
 // -----------
 
-function downloadTracks(group) {
+async function downloadTracks(group) {
+  const { saveAs } = await import("file-saver").then(a => a.default)
+  const JSZip = await import("jszip").then(a => a.default)
+
   const zip = new JSZip()
   const folder = zip.folder("Diffuse - " + group.name)
   if (!folder) throw new Error("Failed to create ZIP file")

@@ -4,7 +4,7 @@
 //
 // This worker is responsible for everything non-UI.
 
-import { } from "../index.d"
+import type { } from "../index.d"
 
 // @ts-ignore
 import * as TaskPort from "elm-taskport"
