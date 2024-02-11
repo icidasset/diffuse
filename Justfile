@@ -220,4 +220,4 @@ js-prod:
 
 
 @watch-system:
-	watchexec -p --ignore *.elm --ignore *.js --ignore *.ts --ignore *.css -- just system js
+	watchexec -p --ignore *.elm --ignore *.js --ignore *.ts --ignore *.css --ignore src-tauri/** -- just system js

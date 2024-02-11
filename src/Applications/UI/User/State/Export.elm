@@ -31,7 +31,12 @@ export model =
     }
         |> encodeHypaethralData
         |> Json.Encode.encode 2
-        |> File.Download.string "diffuse.json" "application/json"
+        |> (if model.isTauri then
+                \json -> Ports.downloadJsonUsingTauri { filename = "diffuse.json", json = json }
+
+            else
+                File.Download.string "diffuse.json" "application/json"
+           )
         |> return model
 
 

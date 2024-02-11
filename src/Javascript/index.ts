@@ -24,7 +24,7 @@ import { version } from "../../package.json"
 // 🌸
 
 
-const isNativeWrapper = location.host === "localhost:44999" || location.host === "127.0.0.1:44999"
+const isNativeWrapper = !!globalThis.__TAURI__
 
 
 
@@ -121,6 +121,7 @@ async function initialise(reg) {
       initialTime: Date.now(),
       isInstallingServiceWorker: !!reg.installing,
       isOnline: navigator.onLine,
+      isTauri: isNativeWrapper,
       upgrade: viableForUpgrade(),
       version,
       viewport: {
@@ -141,7 +142,18 @@ async function initialise(reg) {
   wire.odd()
 
   // Other ports
-  app.ports.openUrlOnNewPage.subscribe(url => {
+  app.ports.downloadJsonUsingTauri.subscribe(async (
+    { filename, json }: { filename: string, json: string }
+  ) => {
+    const { save } = await import("@tauri-apps/plugin-dialog")
+    const { writeTextFile } = await import("@tauri-apps/plugin-fs")
+    const { BaseDirectory } = await import("@tauri-apps/api/path")
+
+    const filePath = await save({ defaultPath: filename })
+    await writeTextFile(filePath || filename, json, { baseDir: BaseDirectory.Download })
+  })
+
+  app.ports.openUrlOnNewPage.subscribe((url: string) => {
     if (globalThis.__TAURI__) {
       globalThis.__TAURI__.shell.open(
         url.includes("://") ? url : `${location.origin}/${url.replace(/^\.\//, "")}`

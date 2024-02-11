@@ -101,6 +101,7 @@ init flags url key =
     , isDragging = False
     , isLoading = True
     , isOnline = flags.isOnline
+    , isTauri = flags.isTauri
     , isTouchDevice = False
     , isUpgrading = flags.upgrade
     , lastFm = LastFm.initialModel

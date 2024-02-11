@@ -45,6 +45,7 @@ type alias Flags =
     , initialTime : Int
     , isInstallingServiceWorker : Bool -- ie. Installing SW for the first time
     , isOnline : Bool
+    , isTauri : Bool
     , upgrade : Bool
     , version : String
     , viewport : Viewport
@@ -67,6 +68,7 @@ type alias Model =
     , isDragging : Bool
     , isLoading : Bool
     , isOnline : Bool
+    , isTauri : Bool
     , isTouchDevice : Bool
     , isUpgrading : Bool
     , lastFm : LastFm.Model

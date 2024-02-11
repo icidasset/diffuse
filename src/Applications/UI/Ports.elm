@@ -24,6 +24,9 @@ port collectFissionCapabilities : () -> Cmd msg
 port copyToClipboard : String -> Cmd msg
 
 
+port downloadJsonUsingTauri : { filename : String, json : String } -> Cmd msg
+
+
 port loadAlbumCovers : { list : Bool, coverView : Bool } -> Cmd msg
 
 

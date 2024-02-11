@@ -68,6 +68,15 @@ This project can be built with [Node.js](https://nodejs.org/).
 # 1. Install dependencies
 npm install
 
-# 2. Build, start server & watch for changes
+# 2. Build
+npx just build
+
+# 3. Start static-file server
+npx just server
+
+# 4. Watch for changes (requires [watchexec](https://github.com/watchexec/watchexec/) to be installed)
+npx just watch
+
+# Alternatively, to build, serve & watch:
 npx just
 ```
