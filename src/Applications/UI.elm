@@ -103,7 +103,6 @@ init flags url key =
     , isOnline = flags.isOnline
     , isTauri = flags.isTauri
     , isTouchDevice = False
-    , isUpgrading = flags.upgrade
     , lastFm = LastFm.initialModel
     , navKey = key
     , page = page

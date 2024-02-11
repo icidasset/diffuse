@@ -119,7 +119,6 @@ async function initialise(reg) {
       isInstallingServiceWorker: !!reg.installing,
       isOnline: navigator.onLine,
       isTauri: isNativeWrapper,
-      upgrade: viableForUpgrade(),
       version,
       viewport: {
         height: window.innerHeight,
@@ -969,18 +968,3 @@ window.addEventListener("touchstart", function onFirstTouch() {
   app.ports.indicateTouchDevice.send(null)
   window.removeEventListener("touchstart", onFirstTouch, false)
 }, false)
-
-
-
-// Upgrade
-// -------
-
-function viableForUpgrade() {
-  // Was the user using an old version of the app?
-  // V1
-  const viable_v1 = !!localStorage.getItem("additional-userdata")
-  if (viable_v1) localStorage.removeItem("additional-userdata")
-
-  // The end
-  return viable_v1
-}

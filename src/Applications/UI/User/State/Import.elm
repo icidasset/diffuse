@@ -94,20 +94,6 @@ loadHypaethralUserData json model =
                         Return.singleton m
             )
         |> andThen
-            (\m ->
-                if m.isUpgrading then
-                    """
-                    Thank you for using Diffuse V1!
-                    If you want to import your old data,
-                    please go to the [import page](#/settings/data).
-                    """
-                        |> Notifications.stickySuccess
-                        |> Common.showNotificationWithModel m
-
-                else
-                    Return.singleton m
-            )
-        |> andThen
             Sources.addSourcesFromUrl
 
 
