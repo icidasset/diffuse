@@ -12,13 +12,7 @@ import Sources.Processing exposing (ContextForTags, ContextForTagsSync)
 port downloadTracks : Json.Value -> Cmd msg
 
 
-port removeCache : Alien.Event -> Cmd msg
-
-
 port removeTracksFromCache : Json.Value -> Cmd msg
-
-
-port requestCache : Alien.Event -> Cmd msg
 
 
 port requestSearch : String -> Cmd msg
@@ -31,9 +25,6 @@ port storeTracksInCache : Json.Value -> Cmd msg
 
 
 port syncTags : ContextForTagsSync -> Cmd msg
-
-
-port toCache : Alien.Event -> Cmd msg
 
 
 port toUI : Alien.Event -> Cmd msg

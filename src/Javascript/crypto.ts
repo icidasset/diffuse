@@ -11,8 +11,8 @@ import * as Uint8arrays from "uint8arrays"
 const extractable = false
 
 
-export function keyFromPassphrase(passphrase) {
-  return crypto.subtle.importKey(
+export async function keyFromPassphrase(passphrase: string): Promise<CryptoKey> {
+  const baseKey = await crypto.subtle.importKey(
     "raw",
     Uint8arrays.fromString(passphrase, "utf8"),
     {
@@ -20,8 +20,9 @@ export function keyFromPassphrase(passphrase) {
     },
     false,
     [ "deriveKey" ]
+  )
 
-  ).then(baseKey => crypto.subtle.deriveKey(
+  return await crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: Uint8arrays.fromString("diffuse", "utf8"),
@@ -35,15 +36,14 @@ export function keyFromPassphrase(passphrase) {
     },
     extractable,
     [ "encrypt", "decrypt" ]
-
-  ))
+  )
 }
 
 
-export function encrypt(key, string) {
-  let iv = crypto.getRandomValues(new Uint8Array(12))
+export async function encrypt(key: CryptoKey, string: string): Promise<string> {
+  const iv = crypto.getRandomValues(new Uint8Array(12))
 
-  return crypto.subtle.encrypt(
+  const buf = await crypto.subtle.encrypt(
     {
       name: "AES-GCM",
       iv: iv,
@@ -51,24 +51,22 @@ export function encrypt(key, string) {
     },
     key,
     Uint8arrays.fromString(string, "base64pad")
+  )
 
-  ).then(buf => {
-    const iv_b64 = Uint8arrays.toString(iv, "base64pad")
-    const buf_b64 = Uint8arrays.toString(new Uint8Array(buf), "base64pad")
-    return iv_b64 + buf_b64
-
-  })
+  const iv_b64 = Uint8arrays.toString(iv, "base64pad")
+  const buf_b64 = Uint8arrays.toString(new Uint8Array(buf), "base64pad")
+  return iv_b64 + buf_b64
 }
 
 
-export function decrypt(key, string) {
+export async function decrypt(key: CryptoKey, string: string): Promise<string> {
   const iv_b64 = string.substring(0, 16)
   const buf_b64 = string.substring(16)
 
   const iv = Uint8arrays.fromString(iv_b64, "base64pad")
   const buf = Uint8arrays.fromString(buf_b64, "base64pad")
 
-  return crypto.subtle.decrypt(
+  const decrypted = await crypto.subtle.decrypt(
     {
       name: "AES-GCM",
       iv: iv,
@@ -76,12 +74,10 @@ export function decrypt(key, string) {
     },
     key,
     buf
+  )
 
-  ).then(
-    buffer => Uint8arrays.toString(
-      new Uint8Array(buffer),
-      "utf8"
-    )
-
+  return Uint8arrays.toString(
+    new Uint8Array(decrypted),
+    "utf8"
   )
 }

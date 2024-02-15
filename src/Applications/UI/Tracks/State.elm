@@ -1,6 +1,7 @@
 module UI.Tracks.State exposing (..)
 
 import Alien
+import Base64
 import Common exposing (..)
 import ContextMenu
 import Coordinates exposing (Coordinates)
@@ -362,18 +363,51 @@ gotCachedCover json model =
     let
         cachedCovers =
             Maybe.withDefault Dict.empty model.cachedCovers
+
+        decodedValue =
+            Json.decodeValue
+                (Json.map3
+                    (\i k u -> ( i, k, u ))
+                    (Json.field "imageType" Json.string)
+                    (Json.field "key" Json.string)
+                    (Json.field "url" Json.string)
+                )
+                json
     in
-    json
-        |> Json.decodeValue
-            (Json.map2
-                Tuple.pair
-                (Json.field "key" Json.string)
-                (Json.field "url" Json.string)
-            )
-        |> Result.map (\( key, url ) -> Dict.insert key url cachedCovers)
+    decodedValue
+        |> Result.map (\( _, key, url ) -> Dict.insert key url cachedCovers)
         |> Result.map (\dict -> { model | cachedCovers = Just dict })
         |> Result.withDefault model
-        |> Return.singleton
+        |> (\m ->
+                case ( m.nowPlaying, decodedValue ) of
+                    ( Just nowPlaying, Ok val ) ->
+                        let
+                            ( imageType, key, url ) =
+                                val
+
+                            ( _, track ) =
+                                nowPlaying.item.identifiedTrack
+
+                            hasntLoadedYet =
+                                nowPlaying.coverLoaded == False
+
+                            ( keyA, keyB ) =
+                                ( Base64.encode (Tracks.coverKey False track)
+                                , Base64.encode (Tracks.coverKey True track)
+                                )
+
+                            keyMatches =
+                                keyA == key || keyB == key
+                        in
+                        if hasntLoadedYet && keyMatches then
+                            ( m, Ports.setMediaSessionArtwork { blobUrl = url, imageType = imageType } )
+
+                        else
+                            Return.singleton m
+
+                    _ ->
+                        Return.singleton m
+           )
 
 
 groupBy : Tracks.Grouping -> Manager
@@ -727,7 +761,7 @@ scrollToNowPlaying : Manager
 scrollToNowPlaying model =
     model.nowPlaying
         |> Maybe.map
-            (.identifiedTrack >> Tuple.second >> .id)
+            (.item >> .identifiedTrack >> Tuple.second >> .id)
         |> Maybe.andThen
             (\id ->
                 List.find

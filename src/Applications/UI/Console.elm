@@ -8,7 +8,8 @@ import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
-import Queue
+import Maybe.Extra as Maybe
+import UI.Audio.Types exposing (AudioLoadingState(..), NowPlaying, nowPlayingIdentifiedTrack)
 import UI.Queue.Types as Queue
 import UI.Tracks.Types as Tracks
 import UI.Types exposing (Msg(..))
@@ -19,13 +20,11 @@ import UI.Types exposing (Msg(..))
 
 
 view :
-    Maybe Queue.Item
+    Maybe NowPlaying
     -> Bool
     -> Bool
-    -> { stalled : Bool, loading : Bool, playing : Bool }
-    -> ( Float, Float )
     -> Html Msg
-view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, duration ) =
+view nowPlaying repeat shuffle =
     chunk
         [ "antialiased"
         , "mt-1"
@@ -45,49 +44,90 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
             , "py-4"
             , "text-white"
             ]
-            [ if stalled then
-                text "Audio connection got interrupted, trying to reconnect ..."
+            [ case Maybe.map .loadingState nowPlaying of
+                Nothing ->
+                    text "Diffuse"
 
-              else if loading then
-                text "Loading track ..."
+                Just Loading ->
+                    text "Loading track ..."
 
-              else
-                case Maybe.map .identifiedTrack activeQueueItem of
-                    Just ( _, { tags } ) ->
-                        slab
-                            Html.span
-                            [ onClick (TracksMsg Tracks.ScrollToNowPlaying)
-                            , title "Scroll to track"
-                            ]
-                            [ "cursor-pointer" ]
-                            [ case tags.artist of
-                                Just artist ->
-                                    text (artist ++ " - " ++ tags.title)
+                Just Loaded ->
+                    case Maybe.map nowPlayingIdentifiedTrack nowPlaying of
+                        Just ( _, { tags } ) ->
+                            slab
+                                Html.span
+                                [ onClick (TracksMsg Tracks.ScrollToNowPlaying)
+                                , title "Scroll to track"
+                                ]
+                                [ "cursor-pointer" ]
+                                [ case tags.artist of
+                                    Just artist ->
+                                        text (artist ++ " - " ++ tags.title)
 
-                                Nothing ->
-                                    text tags.title
-                            ]
+                                    Nothing ->
+                                        text tags.title
+                                ]
 
-                    Nothing ->
-                        text "Diffuse"
+                        Nothing ->
+                            text "Diffuse"
+
+                -----------------------------------------
+                -- Errors
+                -----------------------------------------
+                Just DecodeError ->
+                    text "(!) An error occurred while decoding the audio"
+
+                Just NetworkError ->
+                    text "Waiting until your internet connection comes back online ..."
+
+                Just NotSupportedError ->
+                    text "(!) Your browser does not support playing this type of audio"
+
+            -- Just NotSupportedOrMissing ->
+            --     text "The audio is missing or is in a format not supported by your browser."
             ]
 
         -----------------------------------------
         -- Progress Bar
         -----------------------------------------
         , let
-            progress =
-                if duration <= 0 then
-                    0
+            maybeDuration =
+                Maybe.andThen .duration nowPlaying
 
-                else
-                    (position / duration)
-                        |> (*) 100
-                        |> min 100
-                        |> max 0
+            maybePosition =
+                Maybe.map .playbackPosition nowPlaying
+
+            progress =
+                case ( maybeDuration, maybePosition ) of
+                    ( Just duration, Just position ) ->
+                        if duration <= 0 then
+                            0
+
+                        else
+                            (position / duration)
+                                |> (*) 100
+                                |> min 100
+                                |> max 0
+
+                    _ ->
+                        0
           in
           brick
-            [ on "click" (clickLocationDecoder Seek) ]
+            (case nowPlaying of
+                Just { item } ->
+                    item.identifiedTrack
+                        |> Tuple.second
+                        |> .id
+                        |> (\id ->
+                                \float -> Seek { progress = float, trackId = id }
+                           )
+                        |> clickLocationDecoder
+                        |> on "click"
+                        |> List.singleton
+
+                Nothing ->
+                    []
+            )
             [ "cursor-pointer"
             , "py-1"
             ]
@@ -137,9 +177,13 @@ view activeQueueItem repeat shuffle { stalled, loading, playing } ( position, du
                 (QueueMsg Queue.Rewind)
 
             --
-            , button
+            , let
+                isPlaying =
+                    Maybe.unwrap False .isPlaying nowPlaying
+              in
+              button
                 ""
-                (largeLight playing)
+                (largeLight isPlaying)
                 play
                 TogglePlay
 

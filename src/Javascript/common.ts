@@ -23,6 +23,19 @@ export const ODD_CONFIG = {
 
 
 
+// 🌳
+
+
+export type CoverPrep = {
+  cacheKey: string
+  trackFilename: string
+  trackPath: string
+  trackSourceId: string
+  variousArtists: string
+}
+
+
+
 // FUNCTIONS
 
 

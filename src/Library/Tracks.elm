@@ -425,6 +425,11 @@ removeFromPlaylist tracks playlist =
         |> (\( t, _ ) -> { playlist | tracks = t })
 
 
+shouldNoteProgress : { duration : Float } -> Bool
+shouldNoteProgress { duration } =
+    duration >= 30 * 60
+
+
 shouldRenderGroup : Identifiers -> Bool
 shouldRenderGroup identifiers =
     identifiers.group

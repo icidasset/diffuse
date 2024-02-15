@@ -2,15 +2,122 @@
 // Album Covers
 // (◕‿◕✿)
 
+import * as Uint8arrays from "uint8arrays"
+
+import * as processing from "./processing"
+import { type App } from "./elm/types"
 import { transformUrl } from "../urls"
-import * as processing from "../processing"
+import { toCache } from "./common"
+import { type CoverPrep } from "../common"
+
+
+// 🌳
+
+
+type CoverPrepWithUrls = CoverPrep & {
+  trackGetUrl: string
+  trackHeadUrl: string
+}
+
+
+
+// 🏔️
+
+
+let artworkQueue: CoverPrep[] = []
+let app: App
+
+
+
+// 🚀
+
+
+export function init(a: App) {
+  app = a
+
+  app.ports.provideArtworkTrackUrls.subscribe(provideArtworkTrackUrls)
+}
+
+
+
+// PORTS
+
+
+function provideArtworkTrackUrls(prep: CoverPrepWithUrls) {
+  find(prep).then(blob => {
+    return toCache(`coverCache.${prep.cacheKey}`, blob).then(_ => blob)
+  })
+  .then((blob: Blob) => {
+    const url = URL.createObjectURL(blob)
+
+    self.postMessage({
+      tag: "GOT_CACHED_COVER",
+      data: { imageType: blob.type, key: prep.cacheKey, url: url },
+      error: null
+    })
+  })
+  .catch(err => {
+    if (err === "No artwork found") {
+      // Indicate that we've tried to find artwork,
+      // so that we don't try to find it each time we launch the app.
+      return toCache(`coverCache.${prep.cacheKey}`, "TRIED")
+
+    } else {
+      // Something went wrong
+      console.error(err)
+      return toCache(`coverCache.${prep.cacheKey}`, "TRIED")
+
+    }
+  })
+  .catch(() => {
+    console.warn("Failed to download artwork for ", prep)
+  })
+  .finally(shiftQueue)
+}
+
+
+
+// 🛠️
+
+
+export function download(list: CoverPrep[]) {
+  const exe = !artworkQueue[0]
+  artworkQueue = artworkQueue.concat(list)
+  if (exe) shiftQueue()
+}
+
+
+function shiftQueue() {
+  const next = artworkQueue.shift()
+
+  if (next) {
+    app.ports.makeArtworkTrackUrls.send(next)
+  } else {
+    self.postMessage({
+      action: "FINISHED_DOWNLOADING_ARTWORK",
+      data: null
+    })
+  }
+}
+
+
+
+// ㊙️
 
 
 const REJECT = () => Promise.reject("No artwork found")
 
 
-export function find(prep, app) {
-  return findUsingTags(prep, app)
+function decodeCacheKey(cacheKey: string) {
+  return Uint8arrays.toString(
+    Uint8arrays.fromString(cacheKey, "base64"),
+    "utf8"
+  )
+}
+
+
+function find(prep: CoverPrepWithUrls) {
+  return findUsingTags(prep)
     .then(a => a ? a : findUsingMusicBrainz(prep))
     .then(a => a ? a : findUsingLastFm(prep))
     .then(a => a ? a : REJECT())
@@ -18,16 +125,11 @@ export function find(prep, app) {
 }
 
 
-function decodeCacheKey(cacheKey) {
-  return decodeURIComponent(escape(atob(cacheKey)))
-}
-
-
 
 // 1. TAGS
 
 
-async function findUsingTags(prep, app) {
+async function findUsingTags(prep: CoverPrepWithUrls) {
   return Promise.all(
     [
       transformUrl(prep.trackHeadUrl, app),
@@ -53,7 +155,9 @@ async function findUsingTags(prep, app) {
 // 2. MUSIC BRAINZ
 
 
-function findUsingMusicBrainz(prep) {
+function findUsingMusicBrainz(prep: CoverPrepWithUrls) {
+  if (!navigator.onLine) return null
+
   const parts = decodeCacheKey(prep.cacheKey).split(" --- ")
   const artist = parts[ 0 ]
   const album = parts[ 1 ] || parts[ 0 ]
@@ -64,7 +168,6 @@ function findUsingMusicBrainz(prep) {
   return fetch(`https://musicbrainz.org/ws/2/release/?query=${encodedQuery}&fmt=json`)
     .then(r => r.json())
     .then(r => musicBrainzCover(r.releases))
-    .catch(_ => REJECT())
 }
 
 
@@ -90,13 +193,16 @@ function musicBrainzCover(remainingReleases) {
 // 3. LAST FM
 
 
-function findUsingLastFm(prep) {
-  const query = decodeCacheKey(prep.cacheKey).replace(" --- ", " ")
+function findUsingLastFm(prep: CoverPrepWithUrls) {
+  if (!navigator.onLine) return null
+
+  const query = encodeURIComponent(
+    decodeCacheKey(prep.cacheKey).replace(" --- ", " ")
+  )
 
   return fetch(`https://ws.audioscrobbler.com/2.0/?method=album.search&album=${query}&api_key=4f0fe85b67baef8bb7d008a8754a95e5&format=json`)
     .then(r => r.json())
     .then(r => lastFmCover(r.results.albummatches.album))
-    .catch(_ => REJECT())
 }
 
 

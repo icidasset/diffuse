@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.5.0
+
+- **Improve audio playback and error handling**.
+- Minor improvements/fixes to the artwork downloading process.
+
+
 ## 3.4.0
 
 - **Improved audio metadata parsing**.

@@ -4,14 +4,57 @@
 //
 // Audio processing, getting metadata, etc.
 
-import type { IAudioMetadata } from "music-metadata";
-import type { MediaInfoType } from "mediainfo.js";
+import type { IAudioMetadata } from "music-metadata"
+import type { GeneralTrack, MediaInfoResult } from "mediainfo.js"
 
-import * as Uint8arrays from "uint8arrays";
-import { transformUrl } from "./urls";
+import * as Uint8arrays from "uint8arrays"
+import { type App } from "./elm/types"
+import { transformUrl } from "../urls"
+
+
+// 🏔️
+
+
+const ENCODING_ISSUE_REPLACE_CHAR = '▩';
+
+let app: App
+
+
+
+// 🚀
+
+
+export function init(a: App) {
+  app = a
+
+  app.ports.requestTags.subscribe(requestTags)
+  app.ports.syncTags.subscribe(syncTags)
+}
+
+
+
+// Ports
+// -----
+
+
+function requestTags(context) {
+  processContext(context, app).then(newContext => {
+    app.ports.receiveTags.send(newContext)
+  })
+}
+
+
+function syncTags(context) {
+  processContext(context, app).then(newContext => {
+    app.ports.replaceTags.send(newContext)
+  })
+}
+
+
 
 // Contexts
 // --------
+
 
 export async function processContext(context, app) {
   const initialPromise = Promise.resolve([]);
@@ -40,8 +83,11 @@ export async function processContext(context, app) {
     });
 }
 
+
+
 // Tags - General
 // --------------
+
 
 type Tags = {
   disc: number;
@@ -63,8 +109,8 @@ export async function getTags(
   const musicMetadata = await import("music-metadata-browser").then((a) => a.default);
   const httpTokenizer = await import("@tokenizer/http").then((a) => a.default);
 
-  let tokenizer
-  let mmResult
+  let tokenizer;
+  let mmResult;
 
   try {
     tokenizer = await httpTokenizer.makeTokenizer(headUrl);
@@ -78,15 +124,14 @@ export async function getTags(
       tokenizer.rangeRequestClient.resolvedUrl = undefined;
     }
 
-    mmResult = await musicMetadata.parseFromTokenizer(
-      tokenizer,
-      { skipCovers: !covers }
-    ).catch(err => {
-      console.warn(err)
-      return null
-    });
+    mmResult = await musicMetadata
+      .parseFromTokenizer(tokenizer, { skipCovers: !covers })
+      .catch((err) => {
+        console.warn(err);
+        return null;
+      });
   } catch (err) {
-    console.warn(err)
+    console.warn(err);
   }
 
   const mmTags = mmResult && pickTagsFromMusicMetadata(filename, mmResult);
@@ -94,9 +139,9 @@ export async function getTags(
 
   const miResult = await (await mediaInfoClient(covers))
     .analyzeData(getSize(headUrl), readChunk(getUrl))
-    .catch(err => {
-      console.warn(err)
-      return null
+    .catch((err) => {
+      console.warn(err);
+      return null;
     });
 
   const miTags = miResult && pickTagsFromMediaInfo(filename, miResult);
@@ -164,23 +209,24 @@ const readChunk =
     return new Uint8Array(await response.arrayBuffer());
   };
 
-function pickTagsFromMediaInfo(filename: string, result: MediaInfoType): Tags | null {
-  const tags = result?.media?.track?.filter((t) => t["@type"] === "General")[0];
-  if (!tags) return null;
+function pickTagsFromMediaInfo(filename: string, result: MediaInfoResult): Tags | null {
+  const tagsRaw = result?.media?.track?.filter((t) => t["@type"] === "General")[0];
+  const tags = tagsRaw === undefined ? undefined : tagsRaw as GeneralTrack;
+  if (tags === undefined) return null;
 
   let artist = typeof tags.Performer == "string" ? tags.Performer : null;
-  const album = typeof tags.Album == "string" ? tags.Album : null;
+  let album = typeof tags.Album == "string" ? tags.Album : null;
 
-  const title = typeof tags.Track == "string"
-    ? tags.Track
-    : typeof tags.Title == "string"
-    ? tags.Title
-    : null;
+  let title =
+    typeof tags.Track == "string" ? tags.Track : typeof tags.Title == "string" ? tags.Title : null;
 
   if (!artist && !title) return null;
 
   // TODO: Encoding issues with mediainfo.js
-  if (artist?.includes("�") || album?.includes("�") || title?.includes("�")) return null
+  // https://github.com/buzz/mediainfo.js/issues/150
+  if (artist?.includes("�")) artist = artist.replace("�", ENCODING_ISSUE_REPLACE_CHAR)
+  if (album?.includes("�")) album = album.replace("�", ENCODING_ISSUE_REPLACE_CHAR)
+  if (title?.includes("�")) title = title.replace("�", ENCODING_ISSUE_REPLACE_CHAR)
 
   if (artist && artist.includes(" / ")) {
     artist = artist
@@ -201,15 +247,17 @@ function pickTagsFromMediaInfo(filename: string, result: MediaInfoType): Tags | 
     year: year !== null && isNaN(year) ? null : year,
     picture: tags.Cover_Data
       ? {
-          data: Uint8arrays.fromString(tags.Cover_Data, "base64"),
+          data: Uint8arrays.fromString(tags.Cover_Data.split(" / ")[0], "base64pad"),
           format: tags.Cover_Mime || "image/jpeg",
         }
       : null,
   };
 }
 
+
 // Tags - Music Metadata
 // ---------------------
+
 
 function pickTagsFromMusicMetadata(filename: string, result: IAudioMetadata): Tags | null {
   const tags = result && result.common;
@@ -235,11 +283,13 @@ function pickTagsFromMusicMetadata(filename: string, result: IAudioMetadata): Ta
   };
 }
 
+
+
 // 🛠️
-// --
+
 
 async function mediaInfoClient(covers: boolean) {
-  const MediaInfoFactory = await import("mediainfo.js").then(a => a.default)
+  const MediaInfoFactory = await import("mediainfo.js").then((a) => a.default);
 
   return await MediaInfoFactory({
     coverData: covers,

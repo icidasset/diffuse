@@ -26,6 +26,7 @@ import Random
 import Sources exposing (Source)
 import Time
 import Tracks exposing (..)
+import UI.Audio.Types exposing (DurationChangeEvent, ErrorAudioEvent, GenericAudioEvent, NowPlaying, PlaybackStateEvent, TimeUpdatedEvent)
 import UI.DnD as DnD
 import UI.Page exposing (Page)
 import UI.Queue.Types as Queue
@@ -83,11 +84,8 @@ type alias Model =
     -----------------------------------------
     -- Audio
     -----------------------------------------
-    , audioDuration : Float
-    , audioHasStalled : Bool
-    , audioIsLoading : Bool
-    , audioIsPlaying : Bool
-    , audioPosition : Float
+    , audioElements : List Queue.EngineItem
+    , nowPlaying : Maybe NowPlaying
     , progress : Dict String Float
     , rememberProgress : Bool
 
@@ -102,6 +100,8 @@ type alias Model =
     -----------------------------------------
     -- Debouncing
     -----------------------------------------
+    , preloadDebouncer : Debouncer Msg Msg
+    , progressDebouncer : Debouncer Msg Msg
     , resizeDebouncer : Debouncer Msg Msg
     , searchDebouncer : Debouncer Msg Msg
 
@@ -132,7 +132,6 @@ type alias Model =
     -- Queue
     -----------------------------------------
     , dontPlay : List Queue.Item
-    , nowPlaying : Maybe Queue.Item
     , playedPreviously : List Queue.Item
     , playingNext : List Queue.Item
     , selectedQueueItem : Maybe Queue.Item
@@ -199,15 +198,19 @@ type Msg
       -----------------------------------------
       -- Audio
       -----------------------------------------
+    | AudioDurationChange DurationChangeEvent
+    | AudioError ErrorAudioEvent
+    | AudioEnded GenericAudioEvent
+    | AudioHasLoaded GenericAudioEvent
+    | AudioIsLoading GenericAudioEvent
+    | AudioPlaybackStateChanged PlaybackStateEvent
+    | AudioPreloadDebounce (Debouncer.Msg Msg)
+    | AudioTimeUpdated TimeUpdatedEvent
     | NoteProgress { trackId : String, progress : Float }
+    | NoteProgressDebounce (Debouncer.Msg Msg)
     | Pause
     | Play
-    | Seek Float
-    | SetAudioDuration Float
-    | SetAudioHasStalled Bool
-    | SetAudioIsLoading Bool
-    | SetAudioIsPlaying Bool
-    | SetAudioPosition Float
+    | Seek { trackId : String, progress : Float }
     | Stop
     | TogglePlay
     | ToggleRememberProgress

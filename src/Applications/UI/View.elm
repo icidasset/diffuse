@@ -193,13 +193,6 @@ defaultScreen model =
         model.nowPlaying
         model.repeat
         model.shuffle
-        { stalled = model.audioHasStalled
-        , loading = model.audioIsLoading
-        , playing = model.audioIsPlaying
-        }
-        ( model.audioPosition
-        , model.audioDuration
-        )
     ]
 
 

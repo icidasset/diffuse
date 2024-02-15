@@ -3,6 +3,7 @@ module Brain.Other.State exposing (..)
 import Alien
 import Brain.Common.State as Common
 import Brain.Ports as Ports
+import Brain.Task.Ports
 import Brain.Types exposing (..)
 import Dict
 import Json.Decode as Json
@@ -56,13 +57,21 @@ setCurrentTime time model =
     Return.singleton { model | currentTime = time }
 
 
+{-| Save alien data to cache.
+-}
 toCache : Json.Value -> Manager
 toCache data =
     case Json.decodeValue Alien.hostDecoder data of
         Ok alienEvent ->
-            alienEvent
-                |> Ports.toCache
-                |> Return.communicate
+            case Alien.tagFromString alienEvent.tag of
+                Just tag ->
+                    alienEvent.data
+                        |> Brain.Task.Ports.toCache tag
+                        |> Common.attemptPortTask (always Bypass)
+                        |> Return.communicate
+
+                Nothing ->
+                    Common.reportUI Alien.ToCache "Failed to decode alien tag"
 
         Err err ->
             err

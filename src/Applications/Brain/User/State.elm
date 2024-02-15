@@ -99,16 +99,15 @@ loadLocalHypaethralData { initialUrl, methodTask } =
                     |> User.decodeHypaethralData
                     |> Result.map
                         (\hypaethralData ->
-                            ( hypaethralJson
-                            , hypaethralData
-                            )
+                            Commence
+                                maybeMethod
+                                initialUrl
+                                ( hypaethralJson
+                                , hypaethralData
+                                )
                         )
-                    |> Result.withDefault
-                        ( User.encodeHypaethralData User.emptyHypaethralData
-                        , User.emptyHypaethralData
-                        )
-                    |> Commence maybeMethod initialUrl
-                    |> UserMsg
+                    |> Result.mapError Decode.errorToString
+                    |> Common.reportErrorToUI UserMsg
             )
 
 
@@ -345,8 +344,8 @@ unsetSyncMethod : Manager
 unsetSyncMethod model =
     -- 💀
     -- Unset & remove stored method.
-    [ Ports.removeCache (Alien.trigger Alien.SyncMethod)
-    , Ports.removeCache (Alien.trigger Alien.SecretKey)
+    [ Common.attemptPortTask (always Brain.Bypass) (Brain.Task.Ports.removeCache Alien.SyncMethod)
+    , Common.attemptPortTask (always Brain.Bypass) (Brain.Task.Ports.removeCache Alien.SecretKey)
 
     --
     , case model.userSyncMethod of
@@ -380,17 +379,25 @@ enclosedDataRetrieved json =
 
 retrieveEnclosedData : Manager
 retrieveEnclosedData =
-    Alien.EnclosedData
-        |> Alien.trigger
-        |> Ports.requestCache
+    Decode.value
+        |> Brain.Task.Ports.fromCache Alien.EnclosedData
+        |> Common.attemptPortTask
+            (\maybe ->
+                case maybe of
+                    Just json ->
+                        Brain.UserMsg (EnclosedDataRetrieved json)
+
+                    Nothing ->
+                        Brain.Bypass
+            )
         |> Return.communicate
 
 
 saveEnclosedData : Json.Value -> Manager
 saveEnclosedData json =
     json
-        |> Alien.broadcast Alien.EnclosedData
-        |> Ports.toCache
+        |> Brain.Task.Ports.toCache Alien.EnclosedData
+        |> Common.attemptPortTask (always Brain.Bypass)
         |> Return.communicate
 
 
@@ -668,8 +675,8 @@ saveMethod : Method -> Manager
 saveMethod method model =
     method
         |> encodeMethod
-        |> Alien.broadcast Alien.SyncMethod
-        |> Ports.toCache
+        |> Brain.Task.Ports.toCache Alien.SyncMethod
+        |> Common.attemptPortTask (always Brain.Bypass)
         |> return { model | userSyncMethod = Just method }
 
 

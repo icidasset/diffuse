@@ -2,6 +2,7 @@ module UI.Other.State exposing (..)
 
 import Alien
 import Common exposing (ServiceWorkerStatus(..))
+import Dict
 import Notifications
 import Return exposing (return)
 import Time
@@ -41,11 +42,37 @@ reloadApp model =
 
 setIsOnline : Bool -> Manager
 setIsOnline bool model =
-    if bool then
-        syncHypaethralData { model | isOnline = bool }
+    { model | isOnline = bool }
+        |> Return.singleton
+        |> Return.command
+            (case model.nowPlaying of
+                Just { isPlaying, item } ->
+                    let
+                        trackId =
+                            (Tuple.second item.identifiedTrack).id
+                    in
+                    Ports.reloadAudioNodeIfNeeded
+                        { play = isPlaying
+                        , progress =
+                            if model.rememberProgress then
+                                Dict.get trackId model.progress
 
-    else
-        Return.singleton { model | isOnline = bool }
+                            else
+                                Nothing
+                        , trackId = trackId
+                        }
+
+                Nothing ->
+                    Cmd.none
+            )
+        |> Return.andThen
+            (case ( model.isOnline, bool ) of
+                ( False, True ) ->
+                    syncHypaethralData
+
+                _ ->
+                    Return.singleton
+            )
 
 
 setCurrentTime : Time.Posix -> Manager
