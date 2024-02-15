@@ -8,9 +8,9 @@
 import { throttle } from "throttle-debounce"
 import Timer from "timer.js"
 
-import { db } from "./common"
-import { transformUrl } from "./urls"
-import { mimeType } from "./common"
+import { db } from "../common"
+import { transformUrl } from "../urls"
+import { mimeType } from "../common"
 
 
 // ⛩

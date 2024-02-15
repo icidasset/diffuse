@@ -115,7 +115,7 @@ js:
 		--inject:./system/Js/node-shims.js
 
 	# Main
-	{{ESBUILD}} ./src/Javascript/index.ts \
+	{{ESBUILD}} ./src/Javascript/UI/index.ts \
 		--outdir={{BUILD_DIR}}/js/ui/ \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
 		--splitting
@@ -144,7 +144,7 @@ js-prod:
 		--inject:./system/Js/node-shims.js
 
 	# Main
-	{{ESBUILD}} ./src/Javascript/index.ts \
+	{{ESBUILD}} ./src/Javascript/UI/index.ts \
 		--outdir={{BUILD_DIR}}/js/ui/ \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
 		--splitting \
