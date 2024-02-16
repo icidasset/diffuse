@@ -178,6 +178,13 @@ insertTrack track model =
                 Dict.empty
             )
         |> (\engineItem ->
+                if engineItem.isCached then
+                    { engineItem | url = "TODO: blobUrl" }
+
+                else
+                    engineItem
+           )
+        |> (\engineItem ->
                 if
                     List.any
                         (\a -> engineItem.trackId == a.trackId)

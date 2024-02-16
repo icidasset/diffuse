@@ -13,6 +13,7 @@
             "Gizra/elm-debouncer": "2.0.0",
             "Herteby/enum": "1.0.1",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
+            "andrewMacmurray/elm-concurrent-task": "1.1.0",
             "arturopala/elm-monocle": "2.2.0",
             "avh4/elm-color": "1.0.0",
             "elm/browser": "1.0.2",
@@ -52,6 +53,7 @@
             "ymtszw/elm-xml-decode": "3.2.1"
         },
         "indirect": {
+            "danfishgold/base64-bytes": "1.1.0",
             "elm/bytes": "1.0.8",
             "elm/parser": "1.1.0",
             "fredcy/elm-parseint": "2.0.1",

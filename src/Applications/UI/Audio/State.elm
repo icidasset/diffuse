@@ -150,10 +150,6 @@ seek { trackId, progress } =
         |> Return.communicate
 
 
-
--- TODO
-
-
 setDuration : Float -> Manager
 setDuration duration model =
     -- TODO:
@@ -183,6 +179,15 @@ stop : Manager
 stop =
     -- TODO:
     Return.singleton
+
+
+timeUpdated : { trackId : String, currentTime : Float, duration : Float } -> Manager
+timeUpdated { trackId, currentTime, duration } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying ->
+            replaceNowPlaying { nowPlaying | duration = Just duration, playbackPosition = currentTime }
+        )
 
 
 toggleRememberProgress : Manager

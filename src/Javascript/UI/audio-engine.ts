@@ -21,43 +21,6 @@ const IS_SAFARI = !!navigator.platform.match(/iPhone|iPod|iPad/) ||
 
 
 
-// Container for <audio> elements
-// ------------------------------
-
-const audioElementsContainer: HTMLElement = (() => {
-  let c
-  let styles =
-    [ "height: 0"
-      , "width: 0"
-      , "visibility: hidden"
-      , "pointer-events: none"
-    ]
-
-  c = document.createElement("div")
-  c.setAttribute("class", "absolute left-0 top-0")
-  c.setAttribute("style", styles.join("; "))
-
-  return c
-})()
-
-
-function addAudioContainer() {
-  document.body.appendChild(audioElementsContainer)
-}
-
-
-
-// Setup
-// -----
-
-const silentMp3File = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
-
-
-export function setup(orchestrion) {
-  addAudioContainer()
-}
-
-
 
 // EQ
 // --
@@ -93,7 +56,7 @@ export function insertTrack(orchestrion, queueItem, maybeArtwork = null) {
 
   // initial promise
   const initialPromise = queueItem.isCached
-    ? db("tracks").getItem(queueItem.trackId).then(blobUrl)
+    ? db("tracks").getItem(queueItem.trackId).then(URL.createObjectURL)
     : transformUrl(queueItem.url, orchestrion.app)
 
   // find or create audio node
@@ -428,9 +391,6 @@ function audioElementTrackId(node) {
 }
 
 
-function blobUrl(blob) {
-  return URL.createObjectURL(blob)
-}
 
 
 function isActiveAudioElement(orchestrion, node) {
@@ -522,50 +482,4 @@ function unstallAudio(node: HTMLAudioElement) {
       "You'll most likely have to reload the browser."
     )
   }
-}
-
-
-function unstallSafariAudio(node: HTMLAudioElement) {
-  timesStalled++
-
-  // Deactivate
-  node.setAttribute("data-deactivated", "t")
-
-  // Force browser to stop loading
-  try { node.src = silentMp3File } catch (_err) { }
-
-  // Remove element
-  audioElementsContainer.removeChild(node)
-
-  // Create new element
-  createAudioElement(this, this.activeQueueItem, Date.now() + 1000 * 60 * 45, false)
-}
-
-
-
-// 💥
-// --
-// Remove all the audio elements with a timestamp older than the given one.
-
-export function removeOlderAudioElements(timestamp) {
-  const nodes: NodeListOf<HTMLAudioElement> = audioElementsContainer.querySelectorAll(
-    "audio[data-timestamp]"
-  )
-
-  nodes.forEach(node => {
-    const tAttr = node.getAttribute("data-timestamp")
-    if (!tAttr) return
-
-    const t = parseInt(tAttr, 10)
-    if (t >= timestamp) return
-
-    // Deactivate
-    node.setAttribute("data-deactivated", "t")
-
-    // Force browser to stop loading
-    try { node.src = silentMp3File } catch (_err) { }
-
-    // Remove element
-    audioElementsContainer.removeChild(node)
-  })
 }

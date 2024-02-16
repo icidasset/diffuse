@@ -7,6 +7,7 @@
 import type { Program as OddProgram } from "@oddjs/odd"
 import type { ElmPorts } from "./index.d"
 
+import * as ConcurrentTask from "@andrewmacmurray/elm-concurrent-task"
 import { debounce } from "throttle-debounce"
 
 import "./pointer-events"
@@ -138,6 +139,21 @@ async function initialise(reg: ServiceWorkerRegistration) {
   wire.covers()
   wire.serviceWorker(reg)
   wire.odd()
+
+  // TODO:
+  ConcurrentTask.register({
+    tasks: {
+      "tracks:cached:getBlobURL": (trackId: string) => {
+        db("tracks").getItem(trackId).then((blob: unknown) => {
+          return URL.createObjectURL(blob as Blob)
+        })
+      }
+    },
+    ports: {
+      send: app.ports.sendTask,
+      receive: app.ports.receiveTask,
+    },
+  })
 
   // Other ports
   app.ports.downloadJsonUsingTauri.subscribe(async (
@@ -312,9 +328,6 @@ function activeQueueItemChanged(item) {
     orchestrion.scrobbleTimer.stop()
     orchestrion.scrobbleTimer = null
   }
-
-  // Remove older audio elements if possible
-  audioEngine.removeOlderAudioElements(timestampInMilliseconds)
 
   // 🎵
   if (item) {

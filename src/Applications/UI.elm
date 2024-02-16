@@ -5,6 +5,7 @@ import Browser
 import Browser.Events
 import Browser.Navigation as Nav
 import Common exposing (ServiceWorkerStatus(..), Switch(..))
+import ConcurrentTask
 import Debouncer.Basic as Debouncer
 import Dict
 import Equalizer
@@ -104,6 +105,7 @@ init flags url key =
     , isOnline = flags.isOnline
     , isTauri = flags.isTauri
     , isTouchDevice = False
+    , jsTasks = ConcurrentTask.pool
     , lastFm = LastFm.initialModel
     , navKey = key
     , page = page
@@ -287,6 +289,9 @@ update msg =
 
         AudioPlaybackStateChanged a ->
             Audio.playbackStateChanged a
+
+        AudioTimeUpdated a ->
+            Audio.timeUpdated a
 
         NoteProgress a ->
             Audio.noteProgress a
@@ -533,6 +538,12 @@ update msg =
 
         InstallingServiceWorker ->
             Other.installingServiceWorker
+
+        JsTaskCompleted a ->
+            Other.jsTaskCompleted a
+
+        JsTaskProgress a ->
+            Other.jsTaskProgress a
 
         RedirectToBrain a ->
             Other.redirectToBrain a

@@ -2,10 +2,13 @@ module UI.Other.State exposing (..)
 
 import Alien
 import Common exposing (ServiceWorkerStatus(..))
+import ConcurrentTask
 import Notifications
 import Return exposing (return)
 import Time
 import UI.Common.State as Common
+import UI.Javascript.Task.State
+import UI.Javascript.Task.Types
 import UI.Ports as Ports
 import UI.Types exposing (..)
 
@@ -27,6 +30,25 @@ installedServiceWorker model =
 installingServiceWorker : Manager
 installingServiceWorker model =
     Return.singleton { model | serviceWorkerStatus = InstallingNew }
+
+
+jsTaskCompleted : ConcurrentTask.Response UI.Javascript.Task.Types.Msg UI.Javascript.Task.Types.Msg -> Manager
+jsTaskCompleted response =
+    case response of
+        ConcurrentTask.Success msg ->
+            UI.Javascript.Task.State.update msg
+
+        ConcurrentTask.Error msg ->
+            UI.Javascript.Task.State.update msg
+
+        ConcurrentTask.UnexpectedError _ ->
+            -- TODO
+            Return.singleton
+
+
+jsTaskProgress : ( ConcurrentTask.Pool Msg UI.Javascript.Task.Types.Msg UI.Javascript.Task.Types.Msg, Cmd Msg ) -> Manager
+jsTaskProgress ( pool, cmd ) model =
+    return { model | jsTasks = pool } cmd
 
 
 redirectToBrain : Alien.Event -> Manager

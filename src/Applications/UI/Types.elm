@@ -6,6 +6,7 @@ import Browser
 import Browser.Navigation as Nav
 import Color exposing (Color)
 import Common exposing (ServiceWorkerStatus, Switch)
+import ConcurrentTask
 import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Debouncer.Basic as Debouncer exposing (Debouncer)
@@ -28,6 +29,7 @@ import Time
 import Tracks exposing (..)
 import UI.Audio.Types exposing (AudioLoadingState, NowPlaying)
 import UI.DnD as DnD
+import UI.Javascript.Task.Types as JsTask
 import UI.Page exposing (Page)
 import UI.Queue.Types as Queue
 import UI.Sources.Types as Sources
@@ -70,6 +72,7 @@ type alias Model =
     , isOnline : Bool
     , isTauri : Bool
     , isTouchDevice : Bool
+    , jsTasks : ConcurrentTask.Pool Msg JsTask.Msg JsTask.Msg
     , lastFm : LastFm.Model
     , navKey : Nav.Key
     , page : Page
@@ -202,6 +205,7 @@ type Msg
     | AudioHasStalled { trackId : String }
     | AudioIsLoading { trackId : String }
     | AudioPlaybackStateChanged { trackId : String, isPlaying : Bool }
+    | AudioTimeUpdated { trackId : String, currentTime : Float, duration : Float }
     | NoteProgress { trackId : String, progress : Float }
     | Pause
     | Play
@@ -304,6 +308,8 @@ type Msg
       -----------------------------------------
     | InstalledServiceWorker
     | InstallingServiceWorker
+    | JsTaskCompleted (ConcurrentTask.Response JsTask.Msg JsTask.Msg)
+    | JsTaskProgress ( ConcurrentTask.Pool Msg JsTask.Msg JsTask.Msg, Cmd Msg )
     | RedirectToBrain Alien.Event
     | ReloadApp
     | SetCurrentTime Time.Posix

@@ -246,8 +246,8 @@ audioElement audio =
         , E.on "play" (audioPlayEvent trackId)
         , E.on "seeked" (audioSeekedEvent trackId)
         , E.on "seeking" (audioSeekingEvent trackId)
+        , E.on "timeupdate" (audioTimeUpdateEvent trackId)
 
-        -- , E.on "timeupdate"
         -- TODO:
         -- , E.on "stalled" (audioStalledEvent trackId)
         ]
@@ -296,6 +296,19 @@ audioSeekingEvent =
 
 audioStalledEvent trackId =
     Json.Decode.succeed (AudioHasStalled { trackId = trackId })
+
+
+audioTimeUpdateEvent trackId =
+    Json.Decode.map2
+        (\currentTime duration ->
+            AudioTimeUpdated
+                { trackId = trackId
+                , currentTime = currentTime
+                , duration = duration
+                }
+        )
+        (Json.Decode.at [ "target", "currentTime" ] Json.Decode.float)
+        (Json.Decode.at [ "target", "duration" ] Json.Decode.float)
 
 
 

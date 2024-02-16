@@ -51,6 +51,9 @@ port reloadApp : () -> Cmd msg
 port seek : { percentage : Float, trackId : String } -> Cmd msg
 
 
+port sendTask : Json.Value -> Cmd msg
+
+
 port setRepeat : Bool -> Cmd msg
 
 
@@ -95,6 +98,9 @@ port refreshedAccessToken : (Json.Value -> msg) -> Sub msg
 
 
 port preferredColorSchemaChanged : ({ dark : Bool } -> msg) -> Sub msg
+
+
+port receiveTask : (Json.Value -> msg) -> Sub msg
 
 
 port requestNext : (() -> msg) -> Sub msg
