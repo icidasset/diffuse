@@ -246,6 +246,8 @@ let timesStalled = 1
 function audioErrorEvent(event) {
   this.app.ports.setAudioIsPlaying.send(false)
 
+  // MediaError
+
   switch (event.target.error.code) {
     case event.target.error.MEDIA_ERR_ABORTED:
       console.error("You aborted the audio playback.")

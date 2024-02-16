@@ -180,11 +180,17 @@ js-prod:
 	)
 
 
-@elm-housekeeping:
-	echo "> Running elm-format"
-	{{NPM_DIR}}/.bin/elm-format {{SRC_DIR}} --yes
-	echo "> Running elm-review"
-	{{ELM_REVIEW}} --fix-all
+@elm-format:
+  echo "> Running elm-format"
+  {{NPM_DIR}}/.bin/elm-format {{SRC_DIR}} --yes
+
+
+@elm-housekeeping: elm-format elm-review
+
+
+@elm-review:
+  echo "> Running elm-review"
+  {{ELM_REVIEW}} --fix-all
 
 
 @quality: check-versions

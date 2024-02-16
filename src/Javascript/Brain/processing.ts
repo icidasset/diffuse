@@ -8,7 +8,7 @@ import type { IAudioMetadata } from "music-metadata";
 import type { MediaInfoType } from "mediainfo.js";
 
 import * as Uint8arrays from "uint8arrays";
-import { transformUrl } from "./urls";
+import { transformUrl } from "../urls";
 
 // Contexts
 // --------

@@ -22,6 +22,7 @@ import Tracks
 import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
+import UI.Audio.Types as Audio
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
 import UI.DnD as DnD
@@ -117,11 +118,8 @@ init flags url key =
     -----------------------------------------
     -- Audio
     -----------------------------------------
-    , audioDuration = 0
-    , audioHasStalled = False
-    , audioIsLoading = False
-    , audioIsPlaying = False
-    , audioPosition = 0
+    , audioElements = []
+    , nowPlaying = Nothing
     , progress = Dict.empty
     , rememberProgress = True
 
@@ -174,7 +172,6 @@ init flags url key =
     -- Queue
     -----------------------------------------
     , dontPlay = []
-    , nowPlaying = Nothing
     , playedPreviously = []
     , playingNext = []
     , selectedQueueItem = Nothing
@@ -273,6 +270,24 @@ update msg =
         -----------------------------------------
         -- Audio
         -----------------------------------------
+        AudioCanPlay a ->
+            Audio.canPlay a
+
+        AudioEnded a ->
+            Audio.ended a
+
+        AudioHasLoaded a ->
+            Audio.hasLoaded a
+
+        AudioHasStalled a ->
+            Audio.hasStalled a
+
+        AudioIsLoading a ->
+            Audio.isLoading a
+
+        AudioPlaybackStateChanged a ->
+            Audio.playbackStateChanged a
+
         NoteProgress a ->
             Audio.noteProgress a
 
@@ -284,21 +299,6 @@ update msg =
 
         Seek a ->
             Audio.seek a
-
-        SetAudioDuration a ->
-            Audio.setDuration a
-
-        SetAudioHasStalled a ->
-            Audio.setHasStalled a
-
-        SetAudioIsLoading a ->
-            Audio.setIsLoading a
-
-        SetAudioIsPlaying a ->
-            Audio.setIsPlaying a
-
-        SetAudioPosition a ->
-            Audio.setPosition a
 
         Stop ->
             Audio.stop
@@ -567,11 +567,6 @@ subscriptions _ =
         , Ports.requestPlay (always Play)
         , Ports.requestPlayPause (always TogglePlay)
         , Ports.requestStop (always Stop)
-        , Ports.setAudioDuration SetAudioDuration
-        , Ports.setAudioHasStalled SetAudioHasStalled
-        , Ports.setAudioIsLoading SetAudioIsLoading
-        , Ports.setAudioIsPlaying SetAudioIsPlaying
-        , Ports.setAudioPosition SetAudioPosition
 
         -----------------------------------------
         -- Backdrop

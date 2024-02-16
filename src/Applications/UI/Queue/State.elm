@@ -7,7 +7,9 @@ import List.Extra as List
 import Notifications
 import Queue exposing (..)
 import Return exposing (andThen, return)
+import Return.Ext as Return
 import Tracks exposing (..)
+import UI.Audio.Types exposing (AudioLoadingState(..))
 import UI.Common.State as Common
 import UI.Ports as Ports
 import UI.Queue.ContextMenu as Queue
@@ -85,23 +87,24 @@ update msg =
 
 changeActiveItem : Maybe Item -> Manager
 changeActiveItem maybeItem model =
-    maybeItem
-        |> Maybe.map
-            (.identifiedTrack >> Tuple.second)
-        |> Maybe.map
-            (Queue.makeEngineItem
-                model.currentTime
-                model.sources
-                model.cachedTracks
-                (if model.rememberProgress then
-                    model.progress
-
-                 else
-                    Dict.empty
+    let
+        maybeNowPlaying =
+            Maybe.map
+                (\item ->
+                    { duration = Nothing
+                    , isPlaying = False
+                    , item = item
+                    , loadingState = Loading
+                    , playbackPosition = 0
+                    }
                 )
-            )
-        |> Ports.activeQueueItemChanged
-        |> return { model | nowPlaying = maybeItem }
+                maybeItem
+    in
+    maybeItem
+        |> Maybe.map (.identifiedTrack >> Tuple.second)
+        |> Maybe.map insertTrack
+        |> Maybe.withDefault Return.singleton
+        |> (\fn -> fn { model | nowPlaying = maybeNowPlaying })
         |> andThen fill
 
 
@@ -145,7 +148,7 @@ fill model =
                 else
                     let
                         fillState =
-                            { activeItem = m.nowPlaying
+                            { activeItem = Maybe.map .item m.nowPlaying
                             , future = m.playingNext
                             , ignored = m.dontPlay
                             , past = m.playedPreviously
@@ -161,28 +164,73 @@ fill model =
         |> preloadNext
 
 
+insertTrack : Track -> Manager
+insertTrack track model =
+    track
+        |> Queue.makeEngineItem
+            model.currentTime
+            model.sources
+            model.cachedTracks
+            (if model.rememberProgress then
+                model.progress
+
+             else
+                Dict.empty
+            )
+        |> (\engineItem ->
+                if
+                    List.any
+                        (\a -> engineItem.trackId == a.trackId)
+                        model.audioElements
+                then
+                    List.map
+                        (\a ->
+                            if engineItem.trackId == a.trackId then
+                                { a | isPreload = False }
+
+                            else
+                                a
+                        )
+                        model.audioElements
+
+                else
+                    model.audioElements ++ [ engineItem ]
+           )
+        |> List.filter
+            (\a ->
+                if a.trackId /= track.id && not a.isPreload then
+                    False
+
+                else
+                    True
+            )
+        |> (\a -> { model | audioElements = a })
+        |> Return.communicate (Ports.play { trackId = track.id, volume = model.eqSettings.volume })
+
+
 preloadNext : Manager
 preloadNext model =
-    case List.head model.playingNext of
-        Just item ->
-            item
-                |> .identifiedTrack
-                |> Tuple.second
-                |> Queue.makeEngineItem
-                    model.currentTime
-                    model.sources
-                    model.cachedTracks
-                    (if model.rememberProgress then
-                        model.progress
-
-                     else
-                        Dict.empty
-                    )
-                |> Ports.preloadAudio
-                |> return model
-
-        Nothing ->
-            Return.singleton model
+    -- case List.head model.playingNext of
+    --     Just item ->
+    --         item
+    --             |> .identifiedTrack
+    --             |> Tuple.second
+    --             |> Queue.makeEngineItem
+    --                 model.currentTime
+    --                 model.sources
+    --                 model.cachedTracks
+    --                 (if model.rememberProgress then
+    --                     model.progress
+    --                  else
+    --                     Dict.empty
+    --                 )
+    --             |> Ports.preloadAudio
+    --             |> return model
+    --     Nothing ->
+    --         Return.singleton model
+    --
+    -- TODO:
+    Return.singleton model
 
 
 rewind : Manager
@@ -192,7 +240,7 @@ rewind model =
         { model
             | playingNext =
                 model.nowPlaying
-                    |> Maybe.map (\item -> item :: model.playingNext)
+                    |> Maybe.map (\{ item } -> item :: model.playingNext)
                     |> Maybe.withDefault model.playingNext
             , playedPreviously =
                 model.playedPreviously
@@ -226,7 +274,7 @@ shift model =
                     |> List.drop 1
             , playedPreviously =
                 model.nowPlaying
-                    |> Maybe.map List.singleton
+                    |> Maybe.map (.item >> List.singleton)
                     |> Maybe.map (List.append model.playedPreviously)
                     |> Maybe.withDefault model.playedPreviously
         }

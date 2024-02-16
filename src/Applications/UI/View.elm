@@ -7,11 +7,12 @@ import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Html exposing (Html, section)
-import Html.Attributes exposing (class, style)
-import Html.Events exposing (on)
+import Html.Attributes as A exposing (class, style)
+import Html.Events as E exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode
 import Maybe.Extra as Maybe
+import Queue exposing (EngineItem)
 import UI.Alfred.View as Alfred
 import UI.Backdrop as Backdrop
 import UI.Console
@@ -30,6 +31,7 @@ import UI.Syncing.Common as Syncing
 import UI.Syncing.View as Syncing
 import UI.Tracks.View as Tracks
 import UI.Types exposing (..)
+import Url.Builder exposing (crossOrigin)
 import User.Layer
 
 
@@ -118,6 +120,11 @@ body model =
 
           else
             content opts (defaultScreen model)
+
+        -----------------------------------------
+        -- Audio elements
+        -----------------------------------------
+        , Lazy.lazy audioElements model.audioElements
         ]
 
 
@@ -193,14 +200,102 @@ defaultScreen model =
         model.nowPlaying
         model.repeat
         model.shuffle
-        { stalled = model.audioHasStalled
-        , loading = model.audioIsLoading
-        , playing = model.audioIsPlaying
-        }
-        ( model.audioPosition
-        , model.audioDuration
-        )
     ]
+
+
+
+-- 🗺  ░░  AUDIO
+
+
+audioElements : List EngineItem -> Html Msg
+audioElements items =
+    Html.div
+        [ A.class "absolute h-0 invisible left-0 pointer-events-none top-0  w-0"
+        , A.id "audio-elements"
+        ]
+        (List.map
+            audioElement
+            items
+        )
+
+
+audioElement : EngineItem -> Html Msg
+audioElement audio =
+    let
+        trackId =
+            audio.trackId
+    in
+    Html.audio
+        [ A.id trackId
+
+        --
+        , A.attribute "crossorigin" "anonymous"
+        , A.attribute "muted" "true"
+        , A.preload "auto"
+        , A.src audio.url
+
+        -- Data attributes
+        , A.attribute "data-is-preload" (ifThenElse audio.isPreload "true" "false")
+
+        -- Events
+        , E.on "canplay" (audioCanPlayEvent trackId)
+        , E.on "ended" (audioEndedEvent trackId)
+        , E.on "loadeddata" (audioLoadedEvent trackId)
+        , E.on "loadstart" (audioLoadingEvent trackId)
+        , E.on "pause" (audioPauseEvent trackId)
+        , E.on "play" (audioPlayEvent trackId)
+        , E.on "seeked" (audioSeekedEvent trackId)
+        , E.on "seeking" (audioSeekingEvent trackId)
+
+        -- , E.on "timeupdate"
+        -- TODO:
+        -- , E.on "stalled" (audioStalledEvent trackId)
+        ]
+        []
+
+
+audioCanPlayEvent trackId =
+    Json.Decode.float
+        |> Json.Decode.at [ "target", "duration" ]
+        |> Json.Decode.map
+            (\duration ->
+                AudioCanPlay
+                    { duration = duration
+                    , trackId = trackId
+                    }
+            )
+
+
+audioEndedEvent trackId =
+    Json.Decode.succeed (AudioEnded { trackId = trackId })
+
+
+audioLoadedEvent trackId =
+    Json.Decode.succeed (AudioHasLoaded { trackId = trackId })
+
+
+audioLoadingEvent trackId =
+    Json.Decode.succeed (AudioIsLoading { trackId = trackId })
+
+
+audioPauseEvent trackId =
+    Json.Decode.succeed (AudioPlaybackStateChanged { trackId = trackId, isPlaying = False })
+
+
+audioPlayEvent trackId =
+    Json.Decode.succeed (AudioPlaybackStateChanged { trackId = trackId, isPlaying = True })
+
+
+audioSeekedEvent =
+    audioLoadedEvent
+
+
+audioSeekingEvent =
+    audioLoadingEvent
+
+
+audioStalledEvent trackId =
+    Json.Decode.succeed (AudioHasStalled { trackId = trackId })
 
 
 

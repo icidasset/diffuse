@@ -33,13 +33,13 @@ port loadAlbumCovers : { list : Bool, coverView : Bool } -> Cmd msg
 port openUrlOnNewPage : String -> Cmd msg
 
 
-port pause : () -> Cmd msg
+port pause : { trackId : String } -> Cmd msg
 
 
 port pickAverageBackgroundColor : String -> Cmd msg
 
 
-port play : () -> Cmd msg
+port play : { trackId : String, volume : Float } -> Cmd msg
 
 
 port preloadAudio : Queue.EngineItem -> Cmd msg
@@ -48,7 +48,7 @@ port preloadAudio : Queue.EngineItem -> Cmd msg
 port reloadApp : () -> Cmd msg
 
 
-port seek : Float -> Cmd msg
+port seek : { percentage : Float, trackId : String } -> Cmd msg
 
 
 port setRepeat : Bool -> Cmd msg

@@ -48,7 +48,7 @@ type alias DerivedColors =
     }
 
 
-view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe Queue.Item -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html Msg
+view : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe IdentifiedTrack -> Maybe String -> SortBy -> SortDirection -> List Int -> Maybe (DnD.Model Int) -> Html Msg
 view deps harvest infiniteList favouritesOnly nowPlaying searchTerm sortBy sortDirection selectedTrackIndexes maybeDnD =
     brick
         (tabindex (ifThenElse deps.isVisible 0 -1) :: viewAttributes)
@@ -261,7 +261,7 @@ headerColumn text_ width maybeSortIcon msg =
 -- INFINITE LIST
 
 
-infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe Queue.Item, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
+infiniteListView : Dependencies -> List IdentifiedTrack -> InfiniteList.Model -> Bool -> Maybe String -> ( Maybe IdentifiedTrack, List Int ) -> Maybe (DnD.Model Int) -> Html Msg
 infiniteListView deps harvest infiniteList favouritesOnly searchTerm ( nowPlaying, selectedTrackIndexes ) maybeDnD =
     let
         derivedColors =
@@ -364,7 +364,7 @@ dynamicRowHeight _ ( i, t ) =
 defaultItemView :
     { derivedColors : DerivedColors
     , favouritesOnly : Bool
-    , nowPlaying : Maybe Queue.Item
+    , nowPlaying : Maybe IdentifiedTrack
     , roundedCorners : Bool
     , selectedTrackIndexes : List Int
     , showAlbum : Bool
@@ -394,7 +394,7 @@ defaultItemView args _ idx identifiedTrack =
 
         rowIdentifiers =
             { isMissing = identifiers.isMissing
-            , isNowPlaying = Maybe.unwrap False (.identifiedTrack >> isNowPlaying identifiedTrack) nowPlaying
+            , isNowPlaying = Maybe.unwrap False (isNowPlaying identifiedTrack) nowPlaying
             , isSelected = isSelected
             }
 
@@ -480,7 +480,7 @@ defaultItemView args _ idx identifiedTrack =
         ]
 
 
-playlistItemView : Bool -> Maybe Queue.Item -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
+playlistItemView : Bool -> Maybe IdentifiedTrack -> Maybe String -> List Int -> DnD.Model Int -> Bool -> Bool -> DerivedColors -> Int -> Int -> IdentifiedTrack -> Html Msg
 playlistItemView favouritesOnly nowPlaying _ selectedTrackIndexes dnd showAlbum darkMode derivedColors _ idx identifiedTrack =
     let
         ( identifiers, track ) =
@@ -502,7 +502,7 @@ playlistItemView favouritesOnly nowPlaying _ selectedTrackIndexes dnd showAlbum 
 
         rowIdentifiers =
             { isMissing = identifiers.isMissing
-            , isNowPlaying = Maybe.unwrap False (.identifiedTrack >> isNowPlaying identifiedTrack) nowPlaying
+            , isNowPlaying = Maybe.unwrap False (isNowPlaying identifiedTrack) nowPlaying
             , isSelected = isSelected
             }
 

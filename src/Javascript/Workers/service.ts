@@ -37,7 +37,7 @@ let googleDriveToken
 // 📣
 
 
-self.addEventListener("activate", _event => {
+self.addEventListener("activate", () => {
   // Remove all caches except the one with the currently used `KEY`
   caches.keys().then(keys => {
     keys.forEach(k => {

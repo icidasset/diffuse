@@ -727,7 +727,7 @@ scrollToNowPlaying : Manager
 scrollToNowPlaying model =
     model.nowPlaying
         |> Maybe.map
-            (.identifiedTrack >> Tuple.second >> .id)
+            (.item >> .identifiedTrack >> Tuple.second >> .id)
         |> Maybe.andThen
             (\id ->
                 List.find

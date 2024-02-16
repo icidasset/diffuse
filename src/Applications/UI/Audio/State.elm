@@ -3,16 +3,69 @@ module UI.Audio.State exposing (..)
 import Dict
 import LastFm
 import Maybe.Extra as Maybe
+import Queue
 import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
+import Tracks exposing (Track)
+import UI.Audio.Types exposing (..)
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Types as UI exposing (Manager)
+import UI.Types as UI exposing (Manager, Model)
 import UI.User.State.Export as User
 
 
 
 -- 📣
+
+
+canPlay : { trackId : String, duration : Float } -> Manager
+canPlay { trackId, duration } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying ->
+            replaceNowPlaying { nowPlaying | duration = Just duration }
+        )
+
+
+ended : { trackId : String } -> Manager
+ended { trackId } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\_ model ->
+            if model.repeat then
+                play model
+
+            else
+                Queue.shift model
+        )
+
+
+hasLoaded : { trackId : String } -> Manager
+hasLoaded { trackId } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying ->
+            replaceNowPlaying { nowPlaying | loadingState = Loaded }
+        )
+
+
+hasStalled : { trackId : String } -> Manager
+hasStalled { trackId } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying ->
+            replaceNowPlaying { nowPlaying | loadingState = Stalled }
+        )
+
+
+isLoading : { trackId : String } -> Manager
+isLoading { trackId } =
+    -- TODO: Debounce?
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying ->
+            replaceNowPlaying { nowPlaying | loadingState = Loading }
+        )
 
 
 noteProgress : { trackId : String, progress : Float } -> Manager
@@ -37,78 +90,124 @@ noteProgress { trackId, progress } model =
 
 pause : Manager
 pause model =
-    return model (Ports.pause ())
+    case model.nowPlaying of
+        Just { item } ->
+            communicate
+                (Ports.pause
+                    { trackId = (Tuple.second item.identifiedTrack).id
+                    }
+                )
+                model
+
+        Nothing ->
+            -- TODO?
+            Return.singleton model
+
+
+playbackStateChanged : { trackId : String, isPlaying : Bool } -> Manager
+playbackStateChanged { trackId, isPlaying } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying ->
+            replaceNowPlaying { nowPlaying | isPlaying = isPlaying }
+        )
 
 
 playPause : Manager
 playPause model =
-    if Maybe.isNothing model.nowPlaying then
-        Queue.shift model
+    case model.nowPlaying of
+        Just { isPlaying } ->
+            if isPlaying then
+                pause model
 
-    else if model.audioIsPlaying then
-        communicate (Ports.pause ()) model
+            else
+                play model
 
-    else
-        communicate (Ports.play ()) model
+        Nothing ->
+            play model
 
 
 play : Manager
 play model =
-    if Maybe.isNothing model.nowPlaying then
-        Queue.shift model
+    case model.nowPlaying of
+        Just { item } ->
+            communicate
+                (Ports.play
+                    { trackId = (Tuple.second item.identifiedTrack).id
+                    , volume = model.eqSettings.volume
+                    }
+                )
+                model
 
-    else
-        return model (Ports.play ())
+        Nothing ->
+            Queue.shift model
 
 
-seek : Float -> Manager
-seek percentage =
-    Return.communicate (Ports.seek percentage)
+seek : { trackId : String, progress : Float } -> Manager
+seek { trackId, progress } =
+    { percentage = progress, trackId = trackId }
+        |> Ports.seek
+        |> Return.communicate
+
+
+
+-- TODO
 
 
 setDuration : Float -> Manager
 setDuration duration model =
-    let
-        cmd =
-            case Maybe.map .identifiedTrack model.nowPlaying of
-                Just ( _, track ) ->
-                    LastFm.nowPlaying model.lastFm
-                        { duration = round duration
-                        , msg = UI.Bypass
-                        , track = track
-                        }
-
-                Nothing ->
-                    Cmd.none
-    in
-    return { model | audioDuration = duration } cmd
-
-
-setHasStalled : Bool -> Manager
-setHasStalled hasStalled model =
-    Return.singleton { model | audioHasStalled = hasStalled }
-
-
-setIsLoading : Bool -> Manager
-setIsLoading isLoading model =
-    Return.singleton { model | audioIsLoading = isLoading }
-
-
-setIsPlaying : Bool -> Manager
-setIsPlaying isPlaying model =
-    Return.singleton { model | audioIsPlaying = isPlaying }
-
-
-setPosition : Float -> Manager
-setPosition position model =
-    Return.singleton { model | audioPosition = position }
+    -- TODO:
+    -- let
+    --     cmd =
+    --         case Maybe.map (.item >> .identifiedTrack) model.nowPlaying of
+    --             Just ( _, track ) ->
+    --                 LastFm.nowPlaying model.lastFm
+    --                     { duration = round duration
+    --                     , msg = UI.Bypass
+    --                     , track = track
+    --                     }
+    --             Nothing ->
+    --                 Cmd.none
+    -- in
+    -- return
+    --   { model | audioPlaybackState =
+    --       Maybe.map
+    --         (\state -> {state|duration=Just duration})
+    --         model.audioPlaybackState
+    --       }
+    --   cmd
+    Return.singleton model
 
 
 stop : Manager
 stop =
-    communicate (Ports.pause ())
+    -- TODO:
+    Return.singleton
 
 
 toggleRememberProgress : Manager
 toggleRememberProgress model =
     User.saveSettings { model | rememberProgress = not model.rememberProgress }
+
+
+
+-- 🛠️
+
+
+onlyIfMatchesNowPlaying : { trackId : String } -> (NowPlaying -> Manager) -> Manager
+onlyIfMatchesNowPlaying { trackId } fn model =
+    case model.nowPlaying of
+        Just ({ item } as nowPlaying) ->
+            if trackId == (Tuple.second item.identifiedTrack).id then
+                fn nowPlaying model
+
+            else
+                Return.singleton model
+
+        Nothing ->
+            Return.singleton model
+
+
+replaceNowPlaying : NowPlaying -> Manager
+replaceNowPlaying np model =
+    Return.singleton { model | nowPlaying = Just np }

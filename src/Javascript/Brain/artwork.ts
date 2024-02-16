@@ -3,7 +3,7 @@
 // (◕‿◕✿)
 
 import { transformUrl } from "../urls"
-import * as processing from "../processing"
+import * as processing from "./processing"
 
 
 const REJECT = () => Promise.reject("No artwork found")

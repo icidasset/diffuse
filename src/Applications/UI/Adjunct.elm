@@ -63,12 +63,12 @@ keyboardInput msg model =
                 [ Keyboard.Character "]", Keyboard.Control ] ->
                     Queue.shift m
 
-                [ Keyboard.Character "{", Keyboard.Shift, Keyboard.Control ] ->
-                    Audio.seek ((m.audioPosition - 10) / m.audioDuration) m
-
-                [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
-                    Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
-
+                -- TODO:
+                -- [ Keyboard.Character "{", Keyboard.Shift, Keyboard.Control ] ->
+                --     Audio.seek ((m.audioPosition - 10) / m.audioDuration) m
+                --
+                -- [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
+                --     Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
                 -- Meta key
                 --
                 [ Keyboard.Character "K", Keyboard.Meta ] ->

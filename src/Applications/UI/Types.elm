@@ -26,6 +26,7 @@ import Random
 import Sources exposing (Source)
 import Time
 import Tracks exposing (..)
+import UI.Audio.Types exposing (AudioLoadingState, NowPlaying)
 import UI.DnD as DnD
 import UI.Page exposing (Page)
 import UI.Queue.Types as Queue
@@ -83,11 +84,8 @@ type alias Model =
     -----------------------------------------
     -- Audio
     -----------------------------------------
-    , audioDuration : Float
-    , audioHasStalled : Bool
-    , audioIsLoading : Bool
-    , audioIsPlaying : Bool
-    , audioPosition : Float
+    , audioElements : List Queue.EngineItem
+    , nowPlaying : Maybe NowPlaying
     , progress : Dict String Float
     , rememberProgress : Bool
 
@@ -132,7 +130,6 @@ type alias Model =
     -- Queue
     -----------------------------------------
     , dontPlay : List Queue.Item
-    , nowPlaying : Maybe Queue.Item
     , playedPreviously : List Queue.Item
     , playingNext : List Queue.Item
     , selectedQueueItem : Maybe Queue.Item
@@ -199,15 +196,16 @@ type Msg
       -----------------------------------------
       -- Audio
       -----------------------------------------
+    | AudioCanPlay { duration : Float, trackId : String }
+    | AudioEnded { trackId : String }
+    | AudioHasLoaded { trackId : String }
+    | AudioHasStalled { trackId : String }
+    | AudioIsLoading { trackId : String }
+    | AudioPlaybackStateChanged { trackId : String, isPlaying : Bool }
     | NoteProgress { trackId : String, progress : Float }
     | Pause
     | Play
-    | Seek Float
-    | SetAudioDuration Float
-    | SetAudioHasStalled Bool
-    | SetAudioIsLoading Bool
-    | SetAudioIsPlaying Bool
-    | SetAudioPosition Float
+    | Seek { trackId : String, progress : Float }
     | Stop
     | TogglePlay
     | ToggleRememberProgress

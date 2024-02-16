@@ -56,7 +56,7 @@ gotLastFmSession result model =
 
 scrobble : { duration : Int, timestamp : Int, trackId : String } -> Manager
 scrobble { duration, timestamp, trackId } model =
-    case Maybe.map .identifiedTrack model.nowPlaying of
+    case Maybe.map (.item >> .identifiedTrack) model.nowPlaying of
         Just ( _, track ) ->
             if trackId == track.id then
                 ( model

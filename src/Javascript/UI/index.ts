@@ -55,13 +55,12 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
           registrations.map(r => r.unregister())
         )
 
-        return serverIsOnline
-      })
-      .then(async serverIsOnline => {
         if (serverIsOnline) return navigator.serviceWorker.register(
           "service-worker.js",
           { type: "module" }
         )
+
+        if (registrations[0]) return registrations
 
         throw new Error("Web server is offline")
       })
@@ -88,8 +87,10 @@ if (location.hostname.endsWith("diffuse.sh") && location.protocol === "http:") {
 // Set up Elm app and connect everything to it.
 
 
-let app: ElmApp<ElmPorts>
+let app: any // TODO: ElmApp<ElmPorts>
 let brain: Worker
+
+let wire: any = {} // TODO
 
 
 async function initialise(reg: ServiceWorkerRegistration) {
@@ -243,15 +244,49 @@ wire.audio = () => {
     repeat: false
   }
 
-  audioEngine.setup(orchestrion)
+  function findAudioNode(trackId: string): HTMLAudioElement | null {
+    const node = document.querySelector(`audio[id="${trackId}"][data-is-preload="false"]`)
+    if (!node) return null
+    return node as HTMLAudioElement
+  }
 
-  app.ports.activeQueueItemChanged.subscribe(activeQueueItemChanged)
-  app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
-  app.ports.pause.subscribe(pause)
-  app.ports.play.subscribe(play)
-  app.ports.preloadAudio.subscribe(preloadAudio())
-  app.ports.seek.subscribe(seek)
-  app.ports.setRepeat.subscribe(setRepeat)
+  app.ports.pause.subscribe(({ trackId }: { trackId: string }) => {
+    const audio = findAudioNode(trackId)
+    if (!audio) return
+
+    audio.pause()
+  })
+
+  app.ports.play.subscribe(({ trackId, volume }: { trackId: string; volume: number }) => {
+    // Using `requestAnimationFrame` to wait until Elm has finished rendering the audio elements
+    requestAnimationFrame(() => {
+      const audio = findAudioNode(trackId)
+      if (!audio) return
+
+      audio.volume = volume
+      audio.muted = false
+      audio.play()
+    })
+  })
+
+  app.ports.seek.subscribe(({ percentage, trackId }: { percentage: number, trackId: string }) => {
+    const audio = findAudioNode(trackId)
+    if (!audio) return
+
+    if (!isNaN(audio.duration)) {
+      audio.currentTime = audio.duration * percentage
+    }
+  })
+
+  // audioEngine.setup(orchestrion)
+
+  // app.ports.activeQueueItemChanged.subscribe(activeQueueItemChanged)
+  // app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
+  // app.ports.pause.subscribe(pause)
+  // app.ports.play.subscribe(play)
+  // app.ports.preloadAudio.subscribe(preloadAudio())
+  // app.ports.seek.subscribe(seek)
+  // app.ports.setRepeat.subscribe(setRepeat)
 }
 
 
@@ -821,7 +856,7 @@ async function oddProgram(): Promise<OddProgram> {
     throw new Error("Failed to load the ODD SDK")
   }
 
-  const capComponent = await import("./Odd/components/capabilities.js")
+  const capComponent = await import("../Odd/components/capabilities.js")
 
   const crypto = await odd.defaultCryptoComponent(ODD_CONFIG)
   const storage = await odd.defaultStorageComponent(ODD_CONFIG)
