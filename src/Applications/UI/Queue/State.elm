@@ -1,5 +1,6 @@
 module UI.Queue.State exposing (..)
 
+import ConcurrentTask exposing (ConcurrentTask)
 import Coordinates
 import Dict
 import Html.Events.Extra.Mouse as Mouse
@@ -11,6 +12,8 @@ import Return.Ext as Return
 import Tracks exposing (..)
 import UI.Audio.Types exposing (AudioLoadingState(..))
 import UI.Common.State as Common
+import UI.Javascript.Task
+import UI.Javascript.Task.Tracks.Cached
 import UI.Ports as Ports
 import UI.Queue.ContextMenu as Queue
 import UI.Queue.Fill as Fill
@@ -179,7 +182,7 @@ insertTrack track model =
             )
         |> (\engineItem ->
                 if engineItem.isCached then
-                    { engineItem | url = "TODO: blobUrl" }
+                    { engineItem | url = "tracks:cached://" ++ engineItem.trackId }
 
                 else
                     engineItem

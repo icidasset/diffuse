@@ -516,6 +516,15 @@ update msg =
             Adjunct.keyboardInput a
 
         -----------------------------------------
+        -- ☠️ JS Tasks
+        -----------------------------------------
+        JavascriptTaskCompleted a ->
+            javascriptTaskCompleted a
+
+        JavascriptTaskProgress a ->
+            javascriptTaskProgress a
+
+        -----------------------------------------
         -- 🦉 Nested
         -----------------------------------------
         SyncingMsg a ->
@@ -539,12 +548,6 @@ update msg =
         InstallingServiceWorker ->
             Other.installingServiceWorker
 
-        JsTaskCompleted a ->
-            Other.jsTaskCompleted a
-
-        JsTaskProgress a ->
-            Other.jsTaskProgress a
-
         RedirectToBrain a ->
             Other.redirectToBrain a
 
@@ -559,6 +562,29 @@ update msg =
 
         SetIsOnline a ->
             Other.setIsOnline a
+
+
+
+-- ☠️
+
+
+javascriptTaskCompleted : ConcurrentTask.Response Msg Msg -> Manager
+javascriptTaskCompleted response =
+    case response of
+        ConcurrentTask.Success msg ->
+            update msg
+
+        ConcurrentTask.Error msg ->
+            update msg
+
+        ConcurrentTask.UnexpectedError _ ->
+            -- TODO
+            Return.singleton
+
+
+javascriptTaskProgress : ( ConcurrentTask.Pool Msg Msg Msg, Cmd Msg ) -> Manager
+javascriptTaskProgress ( pool, cmd ) model =
+    ( { model | jsTasks = pool }, cmd )
 
 
 

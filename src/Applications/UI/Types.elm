@@ -29,7 +29,6 @@ import Time
 import Tracks exposing (..)
 import UI.Audio.Types exposing (AudioLoadingState, NowPlaying)
 import UI.DnD as DnD
-import UI.Javascript.Task.Types as JsTask
 import UI.Page exposing (Page)
 import UI.Queue.Types as Queue
 import UI.Sources.Types as Sources
@@ -72,7 +71,7 @@ type alias Model =
     , isOnline : Bool
     , isTauri : Bool
     , isTouchDevice : Bool
-    , jsTasks : ConcurrentTask.Pool Msg JsTask.Msg JsTask.Msg
+    , jsTasks : ConcurrentTask.Pool Msg Msg Msg
     , lastFm : LastFm.Model
     , navKey : Nav.Key
     , page : Page
@@ -297,6 +296,11 @@ type Msg
       -----------------------------------------
     | KeyboardMsg Keyboard.Msg
       -----------------------------------------
+      -- ☠️ JS Tasks
+      -----------------------------------------
+    | JavascriptTaskCompleted (ConcurrentTask.Response Msg Msg)
+    | JavascriptTaskProgress ( ConcurrentTask.Pool Msg Msg Msg, Cmd Msg )
+      -----------------------------------------
       -- 🦉 Nested
       -----------------------------------------
     | SyncingMsg Syncing.Msg
@@ -308,8 +312,6 @@ type Msg
       -----------------------------------------
     | InstalledServiceWorker
     | InstallingServiceWorker
-    | JsTaskCompleted (ConcurrentTask.Response JsTask.Msg JsTask.Msg)
-    | JsTaskProgress ( ConcurrentTask.Pool Msg JsTask.Msg JsTask.Msg, Cmd Msg )
     | RedirectToBrain Alien.Event
     | ReloadApp
     | SetCurrentTime Time.Posix
