@@ -315,11 +315,6 @@ function activeQueueItemChanged(item) {
 }
 
 
-function adjustEqualizerSetting(e) {
-  audioEngine.adjustEqualizerSetting(orchestrion, e.knob, e.value)
-}
-
-
 function preloadAudio() {
   if (navigator.onLine === false) return;
 

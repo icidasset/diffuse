@@ -103,18 +103,18 @@ changeActiveItem maybeItem model =
     maybeItem
         |> Maybe.map (.identifiedTrack >> Tuple.second)
         |> Maybe.map
-              (Queue.makeEngineItem
-                  False
-                  model.currentTime
-                  model.sources
-                  model.cachedTracks
-                  (if model.rememberProgress then
-                      model.progress
+            (Queue.makeEngineItem
+                False
+                model.currentTime
+                model.sources
+                model.cachedTracks
+                (if model.rememberProgress then
+                    model.progress
 
-                   else
-                      Dict.empty
-                  )
-              )
+                 else
+                    Dict.empty
+                )
+            )
         |> Maybe.map insertTrack
         |> Maybe.withDefault Return.singleton
         |> (\fn -> fn { model | nowPlaying = maybeNowPlaying })
@@ -202,7 +202,8 @@ insertTrack item model =
         |> List.filter
             (\a ->
                 if item.isPreload then
-                  True
+                    True
+
                 else if a.trackId /= item.trackId && not a.isPreload then
                     False
 
@@ -210,8 +211,19 @@ insertTrack item model =
                     True
             )
         |> (\a -> { model | audioElements = a })
-        |> (\m -> return m (Ports.renderAudioElements m.audioElements))
-        |> Return.command (Ports.play { trackId = item.trackId, volume = model.eqSettings.volume })
+        |> Return.singleton
+        |> Return.effect_
+            (\m ->
+                Ports.renderAudioElements
+                { items = m.audioElements
+                , play =
+                    if item.isPreload then
+                      Nothing
+                    else
+                      Just item.trackId
+                , volume = m.eqSettings.volume
+                }
+            )
 
 
 preloadNext : Manager
@@ -228,13 +240,14 @@ preloadNext model =
                     model.cachedTracks
                     (if model.rememberProgress then
                         model.progress
+
                      else
                         Dict.empty
                     )
-                |> Debug.log "preload"
                 |> (\engineItem ->
-                      insertTrack engineItem model
-                  )
+                        insertTrack engineItem model
+                   )
+
         Nothing ->
             Return.singleton model
 

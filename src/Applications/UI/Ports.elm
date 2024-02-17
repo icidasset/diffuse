@@ -49,7 +49,7 @@ port preloadAudio : Queue.EngineItem -> Cmd msg
 port reloadApp : () -> Cmd msg
 
 
-port renderAudioElements: List Queue.EngineItem -> Cmd msg
+port renderAudioElements : { items: List Queue.EngineItem, play : Maybe String, volume : Float } -> Cmd msg
 
 
 port seek : { percentage : Float, trackId : String } -> Cmd msg
@@ -74,7 +74,19 @@ port activeQueueItemEnded : (() -> msg) -> Sub msg
 port audioCanPlay : (Audio.CanPlayEvent -> msg) -> Sub msg
 
 
+port audioEnded : (Audio.GenericAudioEvent -> msg) -> Sub msg
+
+
 port audioPlaybackStateChanged : (Audio.PlaybackStateEvent -> msg) -> Sub msg
+
+
+port audioIsLoading : (Audio.GenericAudioEvent -> msg) -> Sub msg
+
+
+port audioHasLoaded : (Audio.GenericAudioEvent -> msg) -> Sub msg
+
+
+port audioTimeUpdated : (Audio.TimeUpdatedEvent -> msg) -> Sub msg
 
 
 port collectedFissionCapabilities : (() -> msg) -> Sub msg

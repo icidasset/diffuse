@@ -27,34 +27,31 @@ canPlay { trackId, duration } =
         )
 
 
-ended : { trackId : String } -> Manager
+ended : GenericAudioEvent -> Manager
 ended { trackId } model =
-  if model.repeat then
-      play model
+    if model.repeat then
+        play model
 
-  else
-      Queue.shift model
+    else
+        Queue.shift model
 
 
-hasLoaded : { trackId : String } -> Manager
+hasLoaded : GenericAudioEvent -> Manager
 hasLoaded { trackId } =
     onlyIfMatchesNowPlaying
-        { trackId = Debug.log "hasLoaded" trackId }
+        { trackId = trackId }
         (\nowPlaying model ->
-            let
-              _ = Debug.log "hasLoaded 2" ()
-            in
             model
-            |> replaceNowPlaying  { nowPlaying | loadingState = Loaded }
-            -- |> (if nowPlaying.isPlaying then
-            --           identity
-            --         else
-            --           Return.andThen play
-            --         )
+                |> replaceNowPlaying { nowPlaying | loadingState = Loaded }
+         -- |> (if nowPlaying.isPlaying then
+         --           identity
+         --         else
+         --           Return.andThen play
+         --         )
         )
 
 
-hasStalled : { trackId : String } -> Manager
+hasStalled : GenericAudioEvent -> Manager
 hasStalled { trackId } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
@@ -63,7 +60,7 @@ hasStalled { trackId } =
         )
 
 
-isLoading : { trackId : String } -> Manager
+isLoading : GenericAudioEvent -> Manager
 isLoading { trackId } =
     -- TODO: Debounce?
     onlyIfMatchesNowPlaying
@@ -109,7 +106,7 @@ pause model =
             Return.singleton model
 
 
-playbackStateChanged : { trackId : String, isPlaying : Bool } -> Manager
+playbackStateChanged : PlaybackStateEvent -> Manager
 playbackStateChanged { trackId, isPlaying } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
@@ -186,7 +183,7 @@ stop =
     Return.singleton
 
 
-timeUpdated : { trackId : String, currentTime : Float, duration : Float } -> Manager
+timeUpdated : TimeUpdatedEvent -> Manager
 timeUpdated { trackId, currentTime, duration } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }

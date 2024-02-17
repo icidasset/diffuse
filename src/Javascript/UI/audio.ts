@@ -1,3 +1,7 @@
+//
+// Audio engine
+// ♪(´ε｀ )
+
 import { db, mimeType } from "../common"
 
 
@@ -52,7 +56,7 @@ type TrackTags = {
 // Ports
 // -----
 
-export function adjustEqualizerSetting({ knob, value }: { knob: string, value: number }): void {
+export function adjustEqualizerSetting({ knob, value }: { knob: string; value: number }): void {
   switch (knob) {
     case "VOLUME":
       Array.from(
@@ -69,27 +73,27 @@ export function pause({ trackId }: { trackId: string }) {
 }
 
 export function play({ trackId, volume }: { trackId: string; volume: number }) {
+  console.log("play", trackId)
   withAudioNode(trackId, audio => {
     audio.volume = volume
     audio.muted = false
-    audio.play()
-  })
 
-  // Using `requestAnimationFrame` to wait until Elm has finished rendering the audio elements
-  requestAnimationFrame(() => {
-    withAudioNode(trackId, audio => {
-      audio.volume = volume
-      audio.muted = false
-      audio.play()
+    const promise = audio.play() || Promise.resolve()
+
+    promise.catch(e => {
+      const err = "Couldn't play audio automatically. Please resume playback manually."
+      console.error(err, e)
+      if (app) app.ports.fromAlien.send({ tag: "", data: null, error: err })
     })
   })
 }
 
-export async function renderAudioElements(items: Array<EngineItem>) {
-  return render(items)
+export async function renderAudioElements(args: { items: Array<EngineItem>, play: string | null, volume: number }) {
+  await render(args.items)
+  if (args.play) play({ trackId: args.play, volume: args.volume })
 }
 
-export function seek({ percentage, trackId }: { percentage: number, trackId: string }) {
+export function seek({ percentage, trackId }: { percentage: number; trackId: string }) {
   withAudioNode(trackId, audio => {
     if (!isNaN(audio.duration)) {
       audio.currentTime = audio.duration * percentage
@@ -114,6 +118,7 @@ async function render(items: Array<EngineItem>) {
   const trackIds = items.map(e => e.trackId)
   const existingNodes = {}
 
+  // Manage existing nodes
   Array.from(container.querySelectorAll("audio")).map((node: Element) => {
     if (trackIds.includes(node.id)) {
       existingNodes[node.id] = node
@@ -122,6 +127,7 @@ async function render(items: Array<EngineItem>) {
     }
   })
 
+  // Adjust existing and add new
   await items.reduce(async (acc: Promise<void>, item: EngineItem) => {
     await acc
 
@@ -190,28 +196,61 @@ function canplayEvent(event: Event) {
   })
 }
 
-function endedEvent() {}
+function endedEvent(event: Event) {
+  app.ports.audioEnded.send({
+    trackId: (event.target as HTMLAudioElement).id
+  })
+}
+
 function errorEvent() {}
-function loadstartEvent() {}
-function loadeddataEvent() {}
+
+function loadstartEvent(event: Event) {
+  app.ports.audioIsLoading.send({
+    trackId: (event.target as HTMLAudioElement).id
+  })
+}
+
+function loadeddataEvent(event: Event) {
+  app.ports.audioHasLoaded.send({
+    trackId: (event.target as HTMLAudioElement).id
+  })
+}
 
 function pauseEvent(event: Event) {
   app.ports.audioPlaybackStateChanged.send({
-     trackId: (event.target as HTMLAudioElement).id,
-     isPlaying: false
+    trackId: (event.target as HTMLAudioElement).id,
+    isPlaying: false
   })
 }
 
 function playEvent(event: Event) {
   app.ports.audioPlaybackStateChanged.send({
-     trackId: (event.target as HTMLAudioElement).id,
-     isPlaying: true
+    trackId: (event.target as HTMLAudioElement).id,
+    isPlaying: true
   })
 }
 
-function seekingEvent() {}
-function seekedEvent() {}
-function timeupdateEvent() {}
+function seekingEvent(event: Event) {
+  app.ports.audioIsLoading.send({
+    trackId: (event.target as HTMLAudioElement).id
+  })
+}
+
+function seekedEvent(event: Event) {
+  app.ports.audioHasLoaded.send({
+    trackId: (event.target as HTMLAudioElement).id
+  })
+}
+
+function timeupdateEvent(event: Event) {
+  const target = event.target as HTMLAudioElement
+
+  app.ports.audioTimeUpdated.send({
+    trackId: target.id,
+    currentTime : target.currentTime,
+    duration : target.duration
+  })
+}
 
 
 
