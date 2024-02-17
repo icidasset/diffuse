@@ -1,6 +1,5 @@
 module UI.Queue.State exposing (..)
 
-import ConcurrentTask exposing (ConcurrentTask)
 import Coordinates
 import Dict
 import Html.Events.Extra.Mouse as Mouse
@@ -12,8 +11,6 @@ import Return.Ext as Return
 import Tracks exposing (..)
 import UI.Audio.Types exposing (AudioLoadingState(..))
 import UI.Common.State as Common
-import UI.Javascript.Task
-import UI.Javascript.Task.Tracks.Cached
 import UI.Ports as Ports
 import UI.Queue.ContextMenu as Queue
 import UI.Queue.Fill as Fill
@@ -105,6 +102,19 @@ changeActiveItem maybeItem model =
     in
     maybeItem
         |> Maybe.map (.identifiedTrack >> Tuple.second)
+        |> Maybe.map
+              (Queue.makeEngineItem
+                  False
+                  model.currentTime
+                  model.sources
+                  model.cachedTracks
+                  (if model.rememberProgress then
+                      model.progress
+
+                   else
+                      Dict.empty
+                  )
+              )
         |> Maybe.map insertTrack
         |> Maybe.withDefault Return.singleton
         |> (\fn -> fn { model | nowPlaying = maybeNowPlaying })
@@ -167,26 +177,9 @@ fill model =
         |> preloadNext
 
 
-insertTrack : Track -> Manager
-insertTrack track model =
-    track
-        |> Queue.makeEngineItem
-            model.currentTime
-            model.sources
-            model.cachedTracks
-            (if model.rememberProgress then
-                model.progress
-
-             else
-                Dict.empty
-            )
-        |> (\engineItem ->
-                if engineItem.isCached then
-                    { engineItem | url = "tracks:cached://" ++ engineItem.trackId }
-
-                else
-                    engineItem
-           )
+insertTrack : EngineItem -> Manager
+insertTrack item model =
+    item
         |> (\engineItem ->
                 if
                     List.any
@@ -208,39 +201,42 @@ insertTrack track model =
            )
         |> List.filter
             (\a ->
-                if a.trackId /= track.id && not a.isPreload then
+                if item.isPreload then
+                  True
+                else if a.trackId /= item.trackId && not a.isPreload then
                     False
 
                 else
                     True
             )
         |> (\a -> { model | audioElements = a })
-        |> Return.communicate (Ports.play { trackId = track.id, volume = model.eqSettings.volume })
+        |> (\m -> return m (Ports.renderAudioElements m.audioElements))
+        |> Return.command (Ports.play { trackId = item.trackId, volume = model.eqSettings.volume })
 
 
 preloadNext : Manager
 preloadNext model =
-    -- case List.head model.playingNext of
-    --     Just item ->
-    --         item
-    --             |> .identifiedTrack
-    --             |> Tuple.second
-    --             |> Queue.makeEngineItem
-    --                 model.currentTime
-    --                 model.sources
-    --                 model.cachedTracks
-    --                 (if model.rememberProgress then
-    --                     model.progress
-    --                  else
-    --                     Dict.empty
-    --                 )
-    --             |> Ports.preloadAudio
-    --             |> return model
-    --     Nothing ->
-    --         Return.singleton model
-    --
-    -- TODO:
-    Return.singleton model
+    case List.head model.playingNext of
+        Just item ->
+            item
+                |> .identifiedTrack
+                |> Tuple.second
+                |> Queue.makeEngineItem
+                    True
+                    model.currentTime
+                    model.sources
+                    model.cachedTracks
+                    (if model.rememberProgress then
+                        model.progress
+                     else
+                        Dict.empty
+                    )
+                |> Debug.log "preload"
+                |> (\engineItem ->
+                      insertTrack engineItem model
+                  )
+        Nothing ->
+            Return.singleton model
 
 
 rewind : Manager

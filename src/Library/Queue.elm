@@ -35,10 +35,10 @@ type alias EngineItem =
 -- 🔱
 
 
-makeEngineItem : Time.Posix -> List Source -> List String -> Dict String Float -> Track -> EngineItem
-makeEngineItem timestamp sources cachedTrackIds progressTable track =
+makeEngineItem : Bool -> Time.Posix -> List Source -> List String -> Dict String Float -> Track -> EngineItem
+makeEngineItem preload timestamp sources cachedTrackIds progressTable track =
     { isCached = List.member track.id cachedTrackIds
-    , isPreload = False
+    , isPreload = preload
     , progress = Dict.get track.id progressTable
     , sourceId = track.sourceId
     , trackId = track.id

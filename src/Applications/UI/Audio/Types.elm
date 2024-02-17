@@ -3,7 +3,7 @@ module UI.Audio.Types exposing (..)
 import Queue
 import Tracks exposing (IdentifiedTrack)
 
-
+-- 🌳
 type AudioLoadingState
     = Loading
     | Loaded
@@ -24,6 +24,13 @@ type alias NowPlaying =
     , playbackPosition : Float
     }
 
+
+-- 🌳  ░░  EVENTS
+
+
+type alias CanPlayEvent = { trackId : String, duration : Float }
+
+type alias PlaybackStateEvent = { trackId : String, isPlaying : Bool }
 
 
 -- 🛠️

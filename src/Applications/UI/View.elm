@@ -120,11 +120,6 @@ body model =
 
           else
             content opts (defaultScreen model)
-
-        -----------------------------------------
-        -- Audio elements
-        -----------------------------------------
-        , Lazy.lazy audioElements model.audioElements
         ]
 
 
@@ -205,53 +200,6 @@ defaultScreen model =
 
 
 -- 🗺  ░░  AUDIO
-
-
-audioElements : List EngineItem -> Html Msg
-audioElements items =
-    Html.div
-        [ A.class "absolute h-0 invisible left-0 pointer-events-none top-0  w-0"
-        , A.id "audio-elements"
-        ]
-        (List.map
-            audioElement
-            items
-        )
-
-
-audioElement : EngineItem -> Html Msg
-audioElement audio =
-    let
-        trackId =
-            audio.trackId
-    in
-    Html.audio
-        [ A.id trackId
-
-        --
-        , A.attribute "crossorigin" "anonymous"
-        , A.attribute "muted" "true"
-        , A.preload "auto"
-        , A.src audio.url
-
-        -- Data attributes
-        , A.attribute "data-is-preload" (ifThenElse audio.isPreload "true" "false")
-
-        -- Events
-        , E.on "canplay" (audioCanPlayEvent trackId)
-        , E.on "ended" (audioEndedEvent trackId)
-        , E.on "loadeddata" (audioLoadedEvent trackId)
-        , E.on "loadstart" (audioLoadingEvent trackId)
-        , E.on "pause" (audioPauseEvent trackId)
-        , E.on "play" (audioPlayEvent trackId)
-        , E.on "seeked" (audioSeekedEvent trackId)
-        , E.on "seeking" (audioSeekingEvent trackId)
-        , E.on "timeupdate" (audioTimeUpdateEvent trackId)
-
-        -- TODO:
-        -- , E.on "stalled" (audioStalledEvent trackId)
-        ]
-        []
 
 
 audioCanPlayEvent trackId =

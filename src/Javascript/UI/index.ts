@@ -12,7 +12,7 @@ import { debounce } from "throttle-debounce"
 
 import "./pointer-events"
 
-import * as audioEngine from "./audio-engine"
+import * as Audio from "./audio"
 import { db, fileExtension, ODD_CONFIG } from "../common"
 import { transformUrl } from "../urls"
 import { version } from "../../../package.json"
@@ -141,19 +141,19 @@ async function initialise(reg: ServiceWorkerRegistration) {
   wire.odd()
 
   // TODO:
-  ConcurrentTask.register({
-    tasks: {
-      "tracks:cached:getBlobURL": (trackId: string) => {
-        db("tracks").getItem(trackId).then((blob: unknown) => {
-          return URL.createObjectURL(blob as Blob)
-        })
-      }
-    },
-    ports: {
-      send: app.ports.sendTask,
-      receive: app.ports.receiveTask,
-    },
-  })
+  // ConcurrentTask.register({
+  //   tasks: {
+  //     "tracks:cached:getBlobURL": (trackId: string) => {
+  //       db("tracks").getItem(trackId).then((blob: unknown) => {
+  //         return URL.createObjectURL(blob as Blob)
+  //       })
+  //     }
+  //   },
+  //   ports: {
+  //     send: app.ports.sendTask,
+  //     receive: app.ports.receiveTask,
+  //   },
+  // })
 
   // Other ports
   app.ports.downloadJsonUsingTauri.subscribe(async (
@@ -249,55 +249,16 @@ function handleAction(action, data, _ports) {
 // Audio
 // -----
 
-let orchestrion
-
-
 wire.audio = () => {
-  orchestrion = {
-    activeQueueItem: null,
-    audio: null,
-    app: app,
-    repeat: false
-  }
+  Audio.init(app)
 
-  function findAudioNode(trackId: string): HTMLAudioElement | null {
-    const node = document.querySelector(`audio[id="${trackId}"][data-is-preload="false"]`)
-    if (!node) return null
-    return node as HTMLAudioElement
-  }
-
-  app.ports.pause.subscribe(({ trackId }: { trackId: string }) => {
-    const audio = findAudioNode(trackId)
-    if (!audio) return
-
-    audio.pause()
-  })
-
-  app.ports.play.subscribe(({ trackId, volume }: { trackId: string; volume: number }) => {
-    // Using `requestAnimationFrame` to wait until Elm has finished rendering the audio elements
-    requestAnimationFrame(() => {
-      const audio = findAudioNode(trackId)
-      if (!audio) return
-
-      audio.volume = volume
-      audio.muted = false
-      audio.play()
-    })
-  })
-
-  app.ports.seek.subscribe(({ percentage, trackId }: { percentage: number, trackId: string }) => {
-    const audio = findAudioNode(trackId)
-    if (!audio) return
-
-    if (!isNaN(audio.duration)) {
-      audio.currentTime = audio.duration * percentage
-    }
-  })
-
-  // audioEngine.setup(orchestrion)
+  app.ports.adjustEqualizerSetting.subscribe(Audio.adjustEqualizerSetting)
+  app.ports.pause.subscribe(Audio.pause)
+  app.ports.play.subscribe(Audio.play)
+  app.ports.renderAudioElements.subscribe(Audio.renderAudioElements)
+  app.ports.seek.subscribe(Audio.seek)
 
   // app.ports.activeQueueItemChanged.subscribe(activeQueueItemChanged)
-  // app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
   // app.ports.pause.subscribe(pause)
   // app.ports.play.subscribe(play)
   // app.ports.preloadAudio.subscribe(preloadAudio())
@@ -307,22 +268,6 @@ wire.audio = () => {
 
 
 function activeQueueItemChanged(item) {
-  if (
-    orchestrion.activeQueueItem &&
-    orchestrion.audio &&
-    item &&
-    item.trackId === orchestrion.activeQueueItem.trackId
-  ) {
-    orchestrion.audio.currentTime = 0
-    return
-  }
-
-  const timestampInMilliseconds = Date.now()
-
-  orchestrion.activeQueueItem = item
-  orchestrion.audio = null
-  orchestrion.coverPrep = null
-
   // Reset scrobble timer
   if (orchestrion.scrobbleTimer) {
     orchestrion.scrobbleTimer.stop()
@@ -375,18 +320,6 @@ function adjustEqualizerSetting(e) {
 }
 
 
-function pause(_) {
-  if (orchestrion.audio) orchestrion.audio.pause()
-}
-
-
-function play(_) {
-  if (orchestrion.audio) {
-    audioEngine.playAudio(orchestrion.audio, orchestrion.activeQueueItem, app)
-  }
-}
-
-
 function preloadAudio() {
   if (navigator.onLine === false) return;
 
@@ -398,16 +331,6 @@ function preloadAudio() {
       ? false
       : audioEngine.preloadAudioElement(orchestrion, item)
   })
-}
-
-
-function seek(percentage) {
-  audioEngine.seek(orchestrion, percentage)
-}
-
-
-function setRepeat(repeat) {
-  orchestrion.repeat = repeat
 }
 
 

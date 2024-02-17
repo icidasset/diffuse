@@ -18,7 +18,7 @@ import UI.User.State.Export as User
 -- 📣
 
 
-canPlay : { trackId : String, duration : Float } -> Manager
+canPlay : CanPlayEvent -> Manager
 canPlay { trackId, duration } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
@@ -28,24 +28,29 @@ canPlay { trackId, duration } =
 
 
 ended : { trackId : String } -> Manager
-ended { trackId } =
-    onlyIfMatchesNowPlaying
-        { trackId = trackId }
-        (\_ model ->
-            if model.repeat then
-                play model
+ended { trackId } model =
+  if model.repeat then
+      play model
 
-            else
-                Queue.shift model
-        )
+  else
+      Queue.shift model
 
 
 hasLoaded : { trackId : String } -> Manager
 hasLoaded { trackId } =
     onlyIfMatchesNowPlaying
-        { trackId = trackId }
-        (\nowPlaying ->
-            replaceNowPlaying { nowPlaying | loadingState = Loaded }
+        { trackId = Debug.log "hasLoaded" trackId }
+        (\nowPlaying model ->
+            let
+              _ = Debug.log "hasLoaded 2" ()
+            in
+            model
+            |> replaceNowPlaying  { nowPlaying | loadingState = Loaded }
+            -- |> (if nowPlaying.isPlaying then
+            --           identity
+            --         else
+            --           Return.andThen play
+            --         )
         )
 
 
@@ -109,7 +114,7 @@ playbackStateChanged { trackId, isPlaying } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
         (\nowPlaying ->
-            replaceNowPlaying { nowPlaying | isPlaying = isPlaying }
+            replaceNowPlaying { nowPlaying | isPlaying = isPlaying, loadingState = Loaded }
         )
 
 

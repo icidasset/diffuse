@@ -3,6 +3,7 @@ port module UI.Ports exposing (..)
 import Alien
 import Json.Encode as Json
 import Queue
+import UI.Audio.Types as Audio
 
 
 
@@ -48,6 +49,9 @@ port preloadAudio : Queue.EngineItem -> Cmd msg
 port reloadApp : () -> Cmd msg
 
 
+port renderAudioElements: List Queue.EngineItem -> Cmd msg
+
+
 port seek : { percentage : Float, trackId : String } -> Cmd msg
 
 
@@ -65,6 +69,12 @@ port toBrain : Alien.Event -> Cmd msg
 
 
 port activeQueueItemEnded : (() -> msg) -> Sub msg
+
+
+port audioCanPlay : (Audio.CanPlayEvent -> msg) -> Sub msg
+
+
+port audioPlaybackStateChanged : (Audio.PlaybackStateEvent -> msg) -> Sub msg
 
 
 port collectedFissionCapabilities : (() -> msg) -> Sub msg
@@ -122,21 +132,6 @@ port requestStop : (() -> msg) -> Sub msg
 
 
 port scrobble : ({ duration : Int, timestamp : Int, trackId : String } -> msg) -> Sub msg
-
-
-port setAudioPosition : (Float -> msg) -> Sub msg
-
-
-port setAudioDuration : (Float -> msg) -> Sub msg
-
-
-port setAudioIsLoading : (Bool -> msg) -> Sub msg
-
-
-port setAudioIsPlaying : (Bool -> msg) -> Sub msg
-
-
-port setAudioHasStalled : (Bool -> msg) -> Sub msg
 
 
 port setAverageBackgroundColor : ({ r : Int, g : Int, b : Int } -> msg) -> Sub msg

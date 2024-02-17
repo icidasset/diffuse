@@ -600,6 +600,8 @@ subscriptions _ =
         -- Audio
         -----------------------------------------
         , Ports.noteProgress NoteProgress
+        , Ports.audioCanPlay AudioCanPlay
+        , Ports.audioPlaybackStateChanged AudioPlaybackStateChanged
         , Ports.requestPause (always Pause)
         , Ports.requestPlay (always Play)
         , Ports.requestPlayPause (always TogglePlay)
