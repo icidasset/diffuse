@@ -2,6 +2,7 @@
 // Audio engine
 // ♪(´ε｀ )
 
+import { debounce } from "throttle-debounce"
 import { db, mimeType } from "../common"
 
 
@@ -26,30 +27,30 @@ export function init(a: any) { // TODO
  */
 type EngineItem = {
   isCached: boolean
-  , isPreload: boolean
-  , progress: number | null
-  , sourceId: string
-  , trackId: string
-  , trackTags: TrackTags
-  , trackPath: string
-  , url: string
-  }
+  isPreload: boolean
+  progress: number | null
+  sourceId: string
+  trackId: string
+  trackTags: TrackTags
+  trackPath: string
+  url: string
+}
 
 /**/
 type TrackTags = {
   disc: number
-  , nr: number
+  nr: number
 
   // Main
-  , album: string | null
-  , artist: string | null
-  , title: string
+  album: string | null
+  artist: string | null
+  title: string
 
   // Extra
-  , genre: string | null
-  , picture: string | null
-  , year: number | null
-  }
+  genre: string | null
+  picture: string | null
+  year: number | null
+}
 
 
 
@@ -88,7 +89,11 @@ export function play({ trackId, volume }: { trackId: string; volume: number }) {
   })
 }
 
-export async function renderAudioElements(args: { items: Array<EngineItem>, play: string | null, volume: number }) {
+export async function renderAudioElements(args: {
+  items: Array<EngineItem>
+  play: string | null
+  volume: number
+}) {
   await render(args.items)
   if (args.play) play({ trackId: args.play, volume: args.volume })
 }
@@ -205,15 +210,11 @@ function endedEvent(event: Event) {
 function errorEvent() {}
 
 function loadstartEvent(event: Event) {
-  app.ports.audioIsLoading.send({
-    trackId: (event.target as HTMLAudioElement).id
-  })
+  initiateLoading(event)
 }
 
 function loadeddataEvent(event: Event) {
-  app.ports.audioHasLoaded.send({
-    trackId: (event.target as HTMLAudioElement).id
-  })
+  finishedLoading(event)
 }
 
 function pauseEvent(event: Event) {
@@ -231,15 +232,11 @@ function playEvent(event: Event) {
 }
 
 function seekingEvent(event: Event) {
-  app.ports.audioIsLoading.send({
-    trackId: (event.target as HTMLAudioElement).id
-  })
+  initiateLoading(event)
 }
 
 function seekedEvent(event: Event) {
-  app.ports.audioHasLoaded.send({
-    trackId: (event.target as HTMLAudioElement).id
-  })
+  finishedLoading(event)
 }
 
 function timeupdateEvent(event: Event) {
@@ -255,6 +252,20 @@ function timeupdateEvent(event: Event) {
 
 
 // 🛠️
+
+
+function finishedLoading(event: Event) {
+  app.ports.audioHasLoaded.send({
+    trackId: (event.target as HTMLAudioElement).id
+  })
+}
+
+
+const initiateLoading = debounce(1500, (event: Event) => {
+  app.ports.audioIsLoading.send({
+    trackId: (event.target as HTMLAudioElement).id
+  })
+})
 
 
 function withAudioNode(trackId: string, fn: (node: HTMLAudioElement) => void): void {

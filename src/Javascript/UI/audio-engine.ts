@@ -134,43 +134,6 @@ function audioEndEvent(event) {
 }
 
 
-function audioLoading(event) {
-  clearTimeout(this.loadingTimeoutId)
-
-  this.loadingTimeoutId = setTimeout(() => {
-    const audio = event.target
-
-    if (!audio || !isActiveAudioElement(this, audio)) {
-      return
-    } else if (audio.readyState === 4 && audio.currentTime === 0) {
-      this.app.ports.setAudioIsLoading.send(false)
-    } else if (audio.readyState < 3 && IS_SAFARI) {
-      this.app.ports.setAudioIsLoading.send(true)
-      this.unstallTimeout = setTimeout(
-        () => {
-          if (isActiveAudioElement(this, audio)) {
-            unstallSafariAudio.call(this, audio)
-          }
-        },
-        timesStalled * 2500
-      )
-    } else {
-      this.app.ports.setAudioIsLoading.send(true)
-    }
-  }, 1750)
-}
-
-
-function audioLoaded(event) {
-  clearTimeout(this.loadingTimeoutId)
-  clearTimeout(this.unstallTimeout)
-  this.app.ports.setAudioHasStalled.send(false)
-  this.app.ports.setAudioIsLoading.send(false)
-  if (event.target.paused && (event.type === "seeked" || !event.target.hasPlayed)) {
-    playAudio(event.target, this.activeQueueItem, this.app)
-  }
-}
-
 
 function audioPlayEvent(event) {
   event.target.hasPlayed = true
