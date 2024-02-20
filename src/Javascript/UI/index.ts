@@ -13,6 +13,8 @@ import { debounce } from "throttle-debounce"
 import "./pointer-events"
 
 import * as Audio from "./audio"
+import * as Backdrop from "./backdrop"
+
 import { db, fileExtension, ODD_CONFIG } from "../common"
 import { transformUrl } from "../urls"
 import { version } from "../../../package.json"
@@ -132,8 +134,10 @@ async function initialise(reg: ServiceWorkerRegistration) {
 
   // ⚡️
   wire.brain()
-  wire.audio()
-  wire.backdrop()
+
+  Audio.init(app)
+  Backdrop.init(app)
+
   wire.broadcastChannel()
   wire.clipboard()
   wire.covers()
@@ -241,136 +245,6 @@ function handleAction(action, data, _ports) {
   switch (action) {
     case "DOWNLOAD_TRACKS": return downloadTracks(data)
     case "FINISHED_DOWNLOADING_ARTWORK": return finishedDownloadingArtwork()
-  }
-}
-
-
-
-// Audio
-// -----
-
-wire.audio = () => {
-  Audio.init(app)
-
-  app.ports.adjustEqualizerSetting.subscribe(Audio.adjustEqualizerSetting)
-  app.ports.pause.subscribe(Audio.pause)
-  app.ports.play.subscribe(Audio.play)
-  app.ports.renderAudioElements.subscribe(Audio.renderAudioElements)
-  app.ports.seek.subscribe(Audio.seek)
-
-  // app.ports.activeQueueItemChanged.subscribe(activeQueueItemChanged)
-  // app.ports.pause.subscribe(pause)
-  // app.ports.play.subscribe(play)
-  // app.ports.preloadAudio.subscribe(preloadAudio())
-  // app.ports.seek.subscribe(seek)
-  // app.ports.setRepeat.subscribe(setRepeat)
-}
-
-
-function activeQueueItemChanged(item) {
-  // Reset scrobble timer
-  if (orchestrion.scrobbleTimer) {
-    orchestrion.scrobbleTimer.stop()
-    orchestrion.scrobbleTimer = null
-  }
-
-  // 🎵
-  if (item) {
-    const coverPrep = {
-      cacheKey: btoa(unescape(encodeURIComponent((item.trackTags.artist || "?") + " --- " + (item.trackTags.album || "?")))),
-      trackFilename: item.trackPath.split("/").reverse()[0],
-      trackPath: item.trackPath,
-      trackSourceId: item.sourceId,
-      variousArtists: "f"
-    }
-
-    albumCover(coverPrep.cacheKey).then(maybeCover => {
-      maybeCover = maybeCover === "TRIED" ? null : maybeCover
-      orchestrion.coverPrep = coverPrep
-
-      audioEngine.insertTrack(
-        orchestrion,
-        item,
-        maybeCover as any
-
-      ).then(() => {
-        if (!maybeCover) {
-          if (!orchestrion.audio) return
-          orchestrion.audio.waitingForArtwork = coverPrep.cacheKey
-          loadAlbumCovers([coverPrep])
-        } else {
-          orchestrion.audio.waitingForArtwork = null
-        }
-
-      })
-    })
-
-    // ✋
-  } else {
-    app.ports.setAudioIsPlaying.send(false)
-    app.ports.setAudioPosition.send(0)
-    if (navigator.mediaSession) navigator.mediaSession.playbackState = "none"
-
-  }
-}
-
-
-function preloadAudio() {
-  if (navigator.onLine === false) return;
-
-  return debounce(15000, item => {
-    // Wait 15 seconds to preload something.
-    // This is particularly useful when quickly shifting through tracks,
-    // or when moving things around in the queue.
-    item.isCached
-      ? false
-      : audioEngine.preloadAudioElement(orchestrion, item)
-  })
-}
-
-
-
-// Backdrop
-// --------
-
-wire.backdrop = () => {
-  app.ports.pickAverageBackgroundColor.subscribe(pickAverageBackgroundColor)
-}
-
-
-function averageColorOfImage(img: HTMLImageElement): { r: number, g: number, b: number } | null {
-  const canvas = document.createElement("canvas")
-  const ctx = canvas.getContext("2d")
-  canvas.width = img.naturalWidth
-  canvas.height = img.naturalHeight
-
-  if (!ctx) return null
-
-  ctx.drawImage(img, 0, 0)
-
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-  const color = { r: 0, g: 0, b: 0 }
-
-  for (let i = 0, l = imageData.data.length; i < l; i += 4) {
-    color.r += imageData.data[i]
-    color.g += imageData.data[i + 1]
-    color.b += imageData.data[i + 2]
-  }
-
-  color.r = Math.floor(color.r / (imageData.data.length / 4))
-  color.g = Math.floor(color.g / (imageData.data.length / 4))
-  color.b = Math.floor(color.b / (imageData.data.length / 4))
-
-  return color
-}
-
-
-function pickAverageBackgroundColor(src: string) {
-  const img = document.querySelector(`img[src$="${src}"]`)
-
-  if (img) {
-    const avgColor = averageColorOfImage(img as HTMLImageElement)
-    app.ports.setAverageBackgroundColor.send(avgColor)
   }
 }
 
@@ -647,54 +521,6 @@ window.addEventListener("offline", onlineStatusChanged)
 
 function onlineStatusChanged() {
   app.ports.setIsOnline.send(navigator.onLine)
-}
-
-
-
-// Media Keys
-// ----------
-
-if ("mediaSession" in navigator) {
-
-  navigator.mediaSession.setActionHandler("play", () => {
-    app.ports.requestPlay.send(null)
-  })
-
-
-  navigator.mediaSession.setActionHandler("pause", () => {
-    app.ports.requestPause.send(null)
-  })
-
-
-  navigator.mediaSession.setActionHandler("previoustrack", () => {
-    app.ports.requestPrevious.send(null)
-  })
-
-
-  navigator.mediaSession.setActionHandler("nexttrack", () => {
-    app.ports.requestNext.send(null)
-  })
-
-
-  navigator.mediaSession.setActionHandler("seekbackward", event => {
-    const audio = orchestrion.audio
-    const seekOffset = event.seekOffset || 10
-    if (audio) audio.currentTime = Math.max(audio.currentTime - seekOffset, 0)
-  })
-
-
-  navigator.mediaSession.setActionHandler("seekforward", event => {
-    const audio = orchestrion.audio
-    const seekOffset = event.seekOffset || 10
-    if (audio) audio.currentTime = Math.min(audio.currentTime + seekOffset, audio.duration)
-  })
-
-
-  navigator.mediaSession.setActionHandler("seekto", event => {
-    const audio = orchestrion.audio
-    if (audio) audio.currentTime = event.seekTime
-  })
-
 }
 
 

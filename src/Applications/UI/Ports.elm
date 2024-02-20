@@ -58,7 +58,10 @@ port seek : { percentage : Float, trackId : String } -> Cmd msg
 port sendTask : Json.Value -> Cmd msg
 
 
-port setRepeat : Bool -> Cmd msg
+port setMediaSessionPlaybackState : String -> Cmd msg
+
+
+port setMediaSessionPositionState : { currentTime : Float, duration : Float } -> Cmd msg
 
 
 port toBrain : Alien.Event -> Cmd msg
@@ -66,9 +69,6 @@ port toBrain : Alien.Event -> Cmd msg
 
 
 -- 📰
-
-
-port activeQueueItemEnded : (() -> msg) -> Sub msg
 
 
 port audioCanPlay : (Audio.CanPlayEvent -> msg) -> Sub msg
@@ -111,9 +111,6 @@ port installedNewServiceWorker : (() -> msg) -> Sub msg
 
 
 port installingNewServiceWorker : (() -> msg) -> Sub msg
-
-
-port noteProgress : ({ trackId : String, progress : Float } -> msg) -> Sub msg
 
 
 port refreshedAccessToken : (Json.Value -> msg) -> Sub msg

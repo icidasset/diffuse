@@ -136,6 +136,16 @@ init flags url key =
     -----------------------------------------
     -- Debouncing
     -----------------------------------------
+    , preloadDebouncer =
+        15
+            |> Debouncer.fromSeconds
+            |> Debouncer.debounce
+            |> Debouncer.toDebouncer
+    , progressDebouncer =
+        30
+            |> Debouncer.fromSeconds
+            |> Debouncer.debounce
+            |> Debouncer.toDebouncer
     , resizeDebouncer =
         0.25
             |> Debouncer.fromSeconds
@@ -290,11 +300,17 @@ update msg =
         AudioPlaybackStateChanged a ->
             Audio.playbackStateChanged a
 
+        AudioPreloadDebounce a ->
+            Audio.preloadDebounce update a
+
         AudioTimeUpdated a ->
             Audio.timeUpdated a
 
         NoteProgress a ->
             Audio.noteProgress a
+
+        NoteProgressDebounce a ->
+            Audio.noteProgressDebounce update a
 
         Pause ->
             Audio.pause
@@ -599,7 +615,6 @@ subscriptions _ =
         -----------------------------------------
         -- Audio
         -----------------------------------------
-        , Ports.noteProgress NoteProgress
         , Ports.audioCanPlay AudioCanPlay
         , Ports.audioEnded AudioEnded
         , Ports.audioPlaybackStateChanged AudioPlaybackStateChanged
@@ -629,7 +644,6 @@ subscriptions _ =
         -----------------------------------------
         -- Queue
         -----------------------------------------
-        , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
         , Ports.requestNext (\_ -> QueueMsg Queue.Shift)
         , Ports.requestPrevious (\_ -> QueueMsg Queue.Rewind)
 

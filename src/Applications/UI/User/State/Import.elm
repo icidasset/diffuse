@@ -223,10 +223,7 @@ importEnclosed value model =
                 , sortDirection = data.sortDirection
               }
               --
-            , Cmd.batch
-                [ Equalizer.adjustAllKnobs newEqualizerSettings
-                , Ports.setRepeat data.repeat
-                ]
+            , Equalizer.adjustAllKnobs newEqualizerSettings
             )
 
         Err err ->

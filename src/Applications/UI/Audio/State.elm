@@ -12,10 +12,11 @@ import UI.Ports as Ports
 import UI.Queue.State as Queue
 import UI.Types as UI exposing (Manager, Model)
 import UI.User.State.Export as User
+import UI.Common.Types exposing (DebounceManager)
+import UI.Common.State as Common
+import MediaSession
 
-
-
--- 📣
+-- 📣  ░░  EVENTS
 
 
 canPlay : CanPlayEvent -> Manager
@@ -28,26 +29,25 @@ canPlay { trackId, duration } =
 
 
 ended : GenericAudioEvent -> Manager
-ended { trackId } model =
-    if model.repeat then
-        play model
+ended { trackId }  =
+  onlyIfMatchesNowPlaying
+      { trackId = trackId }
+      (\_ model ->
+        if model.repeat then
+            play model
 
-    else
-        Queue.shift model
+        else
+            Queue.shift model
+      )
+
 
 
 hasLoaded : GenericAudioEvent -> Manager
 hasLoaded { trackId } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
-        (\nowPlaying model ->
-            model
-                |> replaceNowPlaying { nowPlaying | loadingState = Loaded }
-         -- |> (if nowPlaying.isPlaying then
-         --           identity
-         --         else
-         --           Return.andThen play
-         --         )
+        (\nowPlaying ->
+            replaceNowPlaying { nowPlaying | loadingState = Loaded }
         )
 
 
@@ -62,33 +62,45 @@ hasStalled { trackId } =
 
 isLoading : GenericAudioEvent -> Manager
 isLoading { trackId } =
-    -- TODO: Debounce?
     onlyIfMatchesNowPlaying
         { trackId = trackId }
         (\nowPlaying ->
             replaceNowPlaying { nowPlaying | loadingState = Loading }
         )
 
+playbackStateChanged : PlaybackStateEvent -> Manager
+playbackStateChanged { trackId, isPlaying } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying model ->
+            { model | nowPlaying = Just { nowPlaying | isPlaying = isPlaying }}
+            |> Return.singleton
+            |> Return.command (
+                  Ports.setMediaSessionPlaybackState
+                  (if isPlaying then
+                    MediaSession.states.playing
+                   else
+                    MediaSession.states.paused
+                  )
+              )
+        )
 
-noteProgress : { trackId : String, progress : Float } -> Manager
-noteProgress { trackId, progress } model =
-    let
-        updatedProgressTable =
-            if not model.rememberProgress then
-                model.progress
+timeUpdated : TimeUpdatedEvent -> Manager
+timeUpdated { trackId, currentTime, duration } =
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying model ->
 
-            else if progress > 0.975 then
-                Dict.remove trackId model.progress
+            { model | nowPlaying = Just { nowPlaying | duration = Just duration, playbackPosition = currentTime }}
+            |> ( if duration >= 30 * 60 then
+                    noteProgress { trackId = trackId, progress = currentTime / duration }
+                else
+                    Return.singleton
+                )
+        )
 
-            else
-                Dict.insert trackId progress model.progress
-    in
-    if model.rememberProgress then
-        User.saveProgress { model | progress = updatedProgressTable }
 
-    else
-        Return.singleton model
-
+-- 📣  ░░  COMMANDS
 
 pause : Manager
 pause model =
@@ -102,17 +114,10 @@ pause model =
                 model
 
         Nothing ->
-            -- TODO?
             Return.singleton model
 
 
-playbackStateChanged : PlaybackStateEvent -> Manager
-playbackStateChanged { trackId, isPlaying } =
-    onlyIfMatchesNowPlaying
-        { trackId = trackId }
-        (\nowPlaying ->
-            replaceNowPlaying { nowPlaying | isPlaying = isPlaying, loadingState = Loaded }
-        )
+
 
 
 playPause : Manager
@@ -151,6 +156,57 @@ seek { trackId, progress } =
         |> Ports.seek
         |> Return.communicate
 
+stop : Manager
+stop model=
+    model.audioElements
+      |> List.filter (.isPreload >> (==) True)
+      |> (\a -> { model | audioElements = a })
+      |> Queue.changeActiveItem Nothing
+      |> Return.effect_
+          (\m ->
+              Ports.renderAudioElements
+              { items = m.audioElements
+              , play = Nothing
+              , volume = m.eqSettings.volume
+              }
+          )
+
+-- 📣
+
+noteProgress : { trackId : String, progress : Float } -> Manager
+noteProgress { trackId, progress } model =
+    let
+        updatedProgressTable =
+            if not model.rememberProgress then
+                model.progress
+
+            else if progress > 0.975 then
+                Dict.remove trackId model.progress
+
+            else
+                Dict.insert trackId progress model.progress
+    in
+    if model.rememberProgress then
+        User.saveProgress { model | progress = updatedProgressTable }
+
+    else
+        Return.singleton model
+
+
+noteProgressDebounce : DebounceManager
+noteProgressDebounce =
+    Common.debounce
+        .progressDebouncer
+        (\d m -> { m | progressDebouncer = d })
+        UI.NoteProgressDebounce
+
+preloadDebounce : DebounceManager
+preloadDebounce =
+    Common.debounce
+        .preloadDebouncer
+        (\d m -> { m | preloadDebouncer = d })
+        UI.AudioPreloadDebounce
+
 
 setDuration : Float -> Manager
 setDuration duration model =
@@ -177,26 +233,15 @@ setDuration duration model =
     Return.singleton model
 
 
-stop : Manager
-stop =
-    -- TODO:
-    Return.singleton
 
 
-timeUpdated : TimeUpdatedEvent -> Manager
-timeUpdated { trackId, currentTime, duration } =
-    onlyIfMatchesNowPlaying
-        { trackId = trackId }
-        (\nowPlaying ->
-            replaceNowPlaying { nowPlaying | duration = Just duration, playbackPosition = currentTime }
-        )
+
+
 
 
 toggleRememberProgress : Manager
 toggleRememberProgress model =
     User.saveSettings { model | rememberProgress = not model.rememberProgress }
-
-
 
 -- 🛠️
 

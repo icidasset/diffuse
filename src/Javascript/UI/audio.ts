@@ -15,6 +15,14 @@ let container: Element | null = null
 
 export function init(a: any) { // TODO
   app = a
+
+  app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
+  app.ports.pause.subscribe(pause)
+  app.ports.play.subscribe(play)
+  app.ports.renderAudioElements.subscribe(renderAudioElements)
+  app.ports.seek.subscribe(seek)
+  app.ports.setMediaSessionPlaybackState.subscribe(setMediaSessionPlaybackState)
+  app.ports.setMediaSessionPositionState.subscribe(setMediaSessionPositionState)
 }
 
 
@@ -57,7 +65,7 @@ type TrackTags = {
 // Ports
 // -----
 
-export function adjustEqualizerSetting({ knob, value }: { knob: string; value: number }): void {
+function adjustEqualizerSetting({ knob, value }: { knob: string; value: number }): void {
   switch (knob) {
     case "VOLUME":
       Array.from(
@@ -69,12 +77,13 @@ export function adjustEqualizerSetting({ knob, value }: { knob: string; value: n
   }
 }
 
-export function pause({ trackId }: { trackId: string }) {
+
+function pause({ trackId }: { trackId: string }) {
   withAudioNode(trackId, audio => audio.pause())
 }
 
-export function play({ trackId, volume }: { trackId: string; volume: number }) {
-  console.log("play", trackId)
+
+function play({ trackId, volume }: { trackId: string; volume: number }) {
   withAudioNode(trackId, audio => {
     audio.volume = volume
     audio.muted = false
@@ -89,7 +98,8 @@ export function play({ trackId, volume }: { trackId: string; volume: number }) {
   })
 }
 
-export async function renderAudioElements(args: {
+
+async function renderAudioElements(args: {
   items: Array<EngineItem>
   play: string | null
   volume: number
@@ -98,12 +108,73 @@ export async function renderAudioElements(args: {
   if (args.play) play({ trackId: args.play, volume: args.volume })
 }
 
-export function seek({ percentage, trackId }: { percentage: number; trackId: string }) {
+
+function seek({ percentage, trackId }: { percentage: number; trackId: string }) {
   withAudioNode(trackId, audio => {
     if (!isNaN(audio.duration)) {
       audio.currentTime = audio.duration * percentage
     }
   })
+}
+
+
+function setMediaSessionPlaybackState(state: MediaSessionPlaybackState) {
+  if (navigator.mediaSession) navigator.mediaSession.playbackState = state
+}
+
+
+function setMediaSessionPositionState({ currentTime, duration }: { currentTime: number, duration: number }) {
+  try {
+    navigator?.mediaSession?.setPositionState({
+      duration: duration,
+      position: currentTime
+    })
+  } catch (_err) { }
+}
+
+
+
+// Media Keys
+// ----------
+
+if ("mediaSession" in navigator) {
+
+  navigator.mediaSession.setActionHandler("play", () => {
+    app.ports.requestPlay.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("pause", () => {
+    app.ports.requestPause.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("previoustrack", () => {
+    app.ports.requestPrevious.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("nexttrack", () => {
+    app.ports.requestNext.send(null)
+  })
+
+
+  navigator.mediaSession.setActionHandler("seekbackward", event => {
+    const seekOffset = event.seekOffset || 10
+    withActiveAudioNode(audio => audio.currentTime = Math.max(audio.currentTime - seekOffset, 0))
+  })
+
+
+  navigator.mediaSession.setActionHandler("seekforward", event => {
+    const seekOffset = event.seekOffset || 10
+    withActiveAudioNode(audio => audio.currentTime = Math.min(audio.currentTime + seekOffset, audio.duration))
+  })
+
+
+  navigator.mediaSession.setActionHandler("seekto", event => {
+    withActiveAudioNode(audio => audio.currentTime = event.seekTime || audio.currentTime)
+  })
+
 }
 
 
@@ -178,10 +249,10 @@ export async function createElement(item: EngineItem) {
   audio.addEventListener("ended", endedEvent)
   audio.addEventListener("error", errorEvent)
   audio.addEventListener("loadstart", loadstartEvent)
-  audio.addEventListener("loadeddata", loadeddataEvent)
+  audio.addEventListener("loadeddata", debounce(1500, loadeddataEvent))
   audio.addEventListener("pause", pauseEvent)
   audio.addEventListener("play", playEvent)
-  audio.addEventListener("seeking", seekingEvent)
+  audio.addEventListener("seeking", debounce(1500, seekingEvent))
   audio.addEventListener("seeked", seekedEvent)
   audio.addEventListener("timeupdate", timeupdateEvent)
 
@@ -201,21 +272,26 @@ function canplayEvent(event: Event) {
   })
 }
 
+
 function endedEvent(event: Event) {
   app.ports.audioEnded.send({
     trackId: (event.target as HTMLAudioElement).id
   })
 }
 
+
 function errorEvent() {}
+
 
 function loadstartEvent(event: Event) {
   initiateLoading(event)
 }
 
+
 function loadeddataEvent(event: Event) {
   finishedLoading(event)
 }
+
 
 function pauseEvent(event: Event) {
   app.ports.audioPlaybackStateChanged.send({
@@ -224,28 +300,37 @@ function pauseEvent(event: Event) {
   })
 }
 
+
 function playEvent(event: Event) {
+  const audio = event.target as HTMLAudioElement
+
   app.ports.audioPlaybackStateChanged.send({
-    trackId: (event.target as HTMLAudioElement).id,
+    trackId: audio.id,
     isPlaying: true
   })
+
+  // In case audio was preloaded:
+  if (audio.readyState === 4) finishedLoading(event)
 }
+
 
 function seekingEvent(event: Event) {
   initiateLoading(event)
 }
 
+
 function seekedEvent(event: Event) {
   finishedLoading(event)
 }
+
 
 function timeupdateEvent(event: Event) {
   const target = event.target as HTMLAudioElement
 
   app.ports.audioTimeUpdated.send({
     trackId: target.id,
-    currentTime : target.currentTime,
-    duration : target.duration
+    currentTime: target.currentTime,
+    duration: target.duration
   })
 }
 
@@ -261,11 +346,21 @@ function finishedLoading(event: Event) {
 }
 
 
-const initiateLoading = debounce(1500, (event: Event) => {
-  app.ports.audioIsLoading.send({
-    trackId: (event.target as HTMLAudioElement).id
+function initiateLoading(event: Event) {
+  const audio = event.target as HTMLAudioElement
+
+  if (audio.readyState < 4) app.ports.audioIsLoading.send({
+    trackId: audio.id
   })
-})
+}
+
+
+function withActiveAudioNode(fn: (node: HTMLAudioElement) => void): void {
+  const nonPreloadNodes: HTMLAudioElement[] = Array.from(document.body.querySelectorAll(`#audio-elements audio[data-is-preload="false"]`));
+  const playingNodes = nonPreloadNodes.filter(n => n.paused === false)
+  const node = playingNodes.length ? playingNodes[0] : nonPreloadNodes[0]
+  if (node) fn(node)
+}
 
 
 function withAudioNode(trackId: string, fn: (node: HTMLAudioElement) => void): void {

@@ -1,20 +1,3 @@
-//
-// Audio engine
-// ♪(´ε｀ )
-//
-// Creates audio elements and interacts with the Web Audio API.
-
-
-import { throttle } from "throttle-debounce"
-import Timer from "timer.js"
-
-
-
-// Audio events
-// ------------
-
-let showedNoNetworkError = false
-let timesStalled = 1
 
 
 function audioErrorEvent(event) {
@@ -93,34 +76,6 @@ function audioStalledEvent(event, notifyAppImmediately) {
 }
 
 
-function audioTimeUpdateEvent(event) {
-  const node = event.target
-
-  if (
-    isNaN(node.duration) ||
-    isNaN(node.currentTime) ||
-    node.duration === 0
-  ) return;
-
-  setDurationIfNecessary.call(this, node)
-  this.app.ports.setAudioPosition.send(node.currentTime)
-
-  if (navigator.mediaSession && navigator.mediaSession.setPositionState) {
-    try {
-      navigator.mediaSession.setPositionState({
-        duration: node.duration,
-        position: node.currentTime
-      })
-    } catch (_err) { }
-  }
-
-  const progress = node.currentTime / node.duration
-
-  if (node.duration >= 30 * 60) {
-    sendProgress(this, progress)
-  }
-}
-
 
 function audioEndEvent(event) {
   if (this.repeat) {
@@ -148,21 +103,6 @@ function audioPauseEvent(event) {
   if (navigator.mediaSession) navigator.mediaSession.playbackState = "paused"
   if (this.scrobbleTimer) this.scrobbleTimer.pause()
 }
-
-
-
-
-
-
-const sendProgress = throttle(30000, (orchestrion, progress) => {
-  orchestrion.app.ports.noteProgress.send({
-    trackId: orchestrion.activeQueueItem.trackId,
-    progress: progress
-  })
-}, {
-  noLeading: false,
-  noTrailing: false
-})
 
 
 let lastSetDuration = 0

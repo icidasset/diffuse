@@ -17,7 +17,7 @@ import UI.Queue.Fill as Fill
 import UI.Queue.Types as Queue exposing (..)
 import UI.Types exposing (..)
 import UI.User.State.Export exposing (..)
-
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 
 
 -- 📣
@@ -28,6 +28,9 @@ update msg =
     case msg of
         Clear ->
             clear
+
+        PreloadNext ->
+            preloadNext
 
         Reset ->
             reset
@@ -174,7 +177,14 @@ fill model =
                     else
                         { m | playingNext = Fill.ordered timestamp nonMissingTracks fillState }
            )
-        |> preloadNext
+        |> Return.communicate
+         (
+            Queue.PreloadNext
+            |> QueueMsg
+            |> Debouncer.provideInput
+            |> AudioPreloadDebounce
+            |> Return.task
+            )
 
 
 insertTrack : EngineItem -> Manager
@@ -340,9 +350,7 @@ showHistoryMenu item mouseEvent model =
 
 toggleRepeat : Manager
 toggleRepeat model =
-    { model | repeat = not model.repeat }
-        |> saveEnclosedUserData
-        |> Return.effect_ (.repeat >> Ports.setRepeat)
+    saveEnclosedUserData { model | repeat = not model.repeat }
 
 
 toggleShuffle : Manager

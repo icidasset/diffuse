@@ -27,7 +27,7 @@ import Random
 import Sources exposing (Source)
 import Time
 import Tracks exposing (..)
-import UI.Audio.Types exposing (AudioLoadingState, NowPlaying)
+import UI.Audio.Types exposing (NowPlaying)
 import UI.DnD as DnD
 import UI.Page exposing (Page)
 import UI.Queue.Types as Queue
@@ -102,6 +102,8 @@ type alias Model =
     -----------------------------------------
     -- Debouncing
     -----------------------------------------
+    , preloadDebouncer : Debouncer Msg Msg
+    , progressDebouncer : Debouncer Msg Msg
     , resizeDebouncer : Debouncer Msg Msg
     , searchDebouncer : Debouncer Msg Msg
 
@@ -204,8 +206,10 @@ type Msg
     | AudioHasStalled { trackId : String }
     | AudioIsLoading { trackId : String }
     | AudioPlaybackStateChanged { trackId : String, isPlaying : Bool }
+    | AudioPreloadDebounce (Debouncer.Msg Msg)
     | AudioTimeUpdated { trackId : String, currentTime : Float, duration : Float }
     | NoteProgress { trackId : String, progress : Float }
+    | NoteProgressDebounce (Debouncer.Msg Msg)
     | Pause
     | Play
     | Seek { trackId : String, progress : Float }

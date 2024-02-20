@@ -11,6 +11,7 @@ import Tracks exposing (IdentifiedTrack)
 
 type Msg
     = Clear
+    | PreloadNext
     | Reset
     | Rewind
     | Select Item
