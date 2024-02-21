@@ -75,23 +75,15 @@ view nowPlaying repeat shuffle =
                 -----------------------------------------
                 -- Errors
                 -----------------------------------------
-                Just Stalled ->
-                    text "Audio connection got interrupted, trying to reconnect ..."
-
-                Just Aborted ->
-                    text "Audio playback got aborted."
-
-                Just DecodingError ->
-                    text "An error occurred while decoding the audio."
-
+                Just DecodeError ->
+                    text "(!) An error occurred while decoding the audio"
                 Just NetworkError ->
-                    text "A network error occurred while fetching the audio."
+                    text "Waiting until your internet connection comes back online ..."
+                Just NotSupportedError ->
+                    text "(!) Your browser does not support playing this type of audio"
 
-                Just NotSupportedOrMissing ->
-                    text "The audio is missing or is in a format not supported by your browser."
-
-                Just UnknownError ->
-                    text "An unknown error occurred."
+                -- Just NotSupportedOrMissing ->
+                --     text "The audio is missing or is in a format not supported by your browser."
             ]
 
         -----------------------------------------

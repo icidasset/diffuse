@@ -11,7 +11,7 @@ import { db, mimeType } from "../common"
 
 
 const silentMp3File =
-  "data:audio/mp3base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
+  "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
 
 
 let app: any // TODO
@@ -27,6 +27,7 @@ export function init(a: any) {
   app.ports.pause.subscribe(pause)
   app.ports.pauseScrobbleTimer.subscribe(pauseScrobbleTimer)
   app.ports.play.subscribe(play)
+  app.ports.reloadAudioNodeIfNeeded.subscribe(reloadAudioNodeIfNeeded)
   app.ports.renderAudioElements.subscribe(renderAudioElements)
   app.ports.resetScrobbleTimer.subscribe(resetScrobbleTimer)
   app.ports.seek.subscribe(seek)
@@ -34,12 +35,6 @@ export function init(a: any) {
   app.ports.setMediaSessionPlaybackState.subscribe(setMediaSessionPlaybackState)
   app.ports.setMediaSessionPositionState.subscribe(setMediaSessionPositionState)
   app.ports.startScrobbleTimer.subscribe(startScrobbleTimer)
-
-  window.addEventListener("online", () => {
-    withActiveAudioNode((audio) => {
-      if (audio.readyState === 0) audio.load()
-    })
-  })
 }
 
 
@@ -119,6 +114,23 @@ function play({ trackId, volume }: { trackId: string, volume: number }) {
       console.error(err, e)
       if (app) app.ports.fromAlien.send({ tag: "", data: null, error: err })
     })
+  })
+}
+
+
+async function reloadAudioNodeIfNeeded(args: { play: boolean, progress: number | null, trackId: string }) {
+  withAudioNode(args.trackId, (audio) => {
+    if (audio.readyState === 0 || audio.error?.code === 2) {
+      audio.load()
+
+      if (args.progress) {
+        audio.setAttribute("data-initial-progress", JSON.stringify(args.progress))
+      }
+
+      if (args.play) {
+        play({ trackId: args.trackId, volume: audio.volume })
+      }
+    }
   })
 }
 
@@ -318,6 +330,7 @@ export async function createElement(item: EngineItem) {
   const audio = new Audio()
   audio.setAttribute("id", item.trackId)
   audio.setAttribute("crossorigin", "anonymous")
+  audio.setAttribute("data-initial-progress", JSON.stringify(item.progress))
   audio.setAttribute("data-is-preload", item.isPreload ? "true" : "false")
   audio.setAttribute("muted", "true")
   audio.setAttribute("preload", "auto")
@@ -333,8 +346,6 @@ export async function createElement(item: EngineItem) {
   audio.addEventListener("timeupdate", timeupdateEvent)
   audio.addEventListener("waiting", debounce(1500, waitingEvent))
 
-  audio.addEventListener("stalled", (event) => console.log("stalled", event))
-
   container?.appendChild(audio)
 }
 
@@ -345,18 +356,26 @@ export async function createElement(item: EngineItem) {
 
 function canplayEvent(event: Event) {
   const target = event.target as HTMLAudioElement
-  if (target.getAttribute("data-is-preload") === "false") console.log("canplay")
+
+  if (target.hasAttribute("data-initial-progress") && target.duration && !isNaN(target.duration)) {
+    const progress = JSON.parse(target.getAttribute("data-initial-progress") as string)
+    target.currentTime = target.duration * progress
+    target.removeAttribute("data-initial-progress")
+  }
+
   finishedLoading(event)
 }
 
 
 function durationchangeEvent(event: Event) {
   const target = event.target as HTMLAudioElement
-  if (!isNaN(target.duration))
+
+  if (!isNaN(target.duration)) {
     app.ports.audioDurationChange.send({
       trackId: target.id,
       duration: target.duration,
     })
+  }
 }
 
 function endedEvent(event: Event) {
@@ -365,8 +384,13 @@ function endedEvent(event: Event) {
   })
 }
 
-function errorEvent(event) {
-  console.log("error", event.target.error)
+function errorEvent(event: Event) {
+  const audio = event.target as HTMLAudioElement
+
+  app.ports.audioError.send({
+    trackId: audio.id,
+    code: audio.error?.code || 0
+  })
 }
 
 
@@ -392,8 +416,6 @@ function playEvent(event: Event) {
 
 
 function suspendEvent(event: Event) {
-  const target = event.target as HTMLAudioElement
-  if (target.getAttribute("data-is-preload") === "false") console.log("suspend")
   finishedLoading(event)
 }
 
@@ -410,8 +432,6 @@ function timeupdateEvent(event: Event) {
 
 
 function waitingEvent(event: Event) {
-  const target = event.target as HTMLAudioElement
-  if (target.getAttribute("data-is-preload") === "false") console.log("waiting")
   initiateLoading(event)
 }
 

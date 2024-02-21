@@ -39,6 +39,7 @@ import UI.Audio.Types exposing (TimeUpdatedEvent)
 import UI.Audio.Types exposing (PlaybackStateEvent)
 import UI.Audio.Types exposing (DurationChangeEvent)
 import UI.Audio.Types exposing (GenericAudioEvent)
+import UI.Audio.Types exposing (ErrorAudioEvent)
 
 
 
@@ -205,9 +206,9 @@ type Msg
       -- Audio
       -----------------------------------------
     | AudioDurationChange DurationChangeEvent
+    | AudioError ErrorAudioEvent
     | AudioEnded GenericAudioEvent
     | AudioHasLoaded GenericAudioEvent
-    | AudioHasStalled GenericAudioEvent
     | AudioIsLoading GenericAudioEvent
     | AudioPlaybackStateChanged PlaybackStateEvent
     | AudioPreloadDebounce (Debouncer.Msg Msg)

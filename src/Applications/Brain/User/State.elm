@@ -97,7 +97,6 @@ loadLocalHypaethralData { initialUrl, methodTask } =
             (\( maybeMethod, hypaethralJson ) ->
                 hypaethralJson
                     |> User.decodeHypaethralData
-                    |> Debug.log "decodeHypaethralData"
                     |> Result.map
                         (\hypaethralData ->
                             Commence

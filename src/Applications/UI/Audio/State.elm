@@ -44,6 +44,24 @@ durationChange { trackId, duration } =
                 |> Return.andThen (notifyScrobblersOfTrackPlaying { duration = duration })
         )
 
+error : ErrorAudioEvent -> Manager
+error { trackId, code } =
+  onlyIfMatchesNowPlaying
+      { trackId = trackId }
+      (\nowPlaying ->
+          replaceNowPlaying (
+            case code of
+              2 ->
+                { nowPlaying | loadingState = NetworkError }
+              3 ->
+                { nowPlaying | loadingState = DecodeError }
+              4 ->
+                { nowPlaying | loadingState = NotSupportedError }
+              _ ->
+                nowPlaying
+          )
+      )
+
 
 ended : GenericAudioEvent -> Manager
 ended { trackId } =
@@ -79,15 +97,6 @@ hasLoaded { trackId } =
         { trackId = trackId }
         (\nowPlaying ->
             replaceNowPlaying { nowPlaying | loadingState = Loaded }
-        )
-
-
-hasStalled : GenericAudioEvent -> Manager
-hasStalled { trackId } =
-    onlyIfMatchesNowPlaying
-        { trackId = trackId }
-        (\nowPlaying ->
-            replaceNowPlaying { nowPlaying | loadingState = Stalled }
         )
 
 

@@ -46,6 +46,9 @@ port pickAverageBackgroundColor : String -> Cmd msg
 port play : { trackId : String, volume : Float } -> Cmd msg
 
 
+port reloadAudioNodeIfNeeded : { play : Bool, progress : Maybe Float, trackId : String } -> Cmd msg
+
+
 port preloadAudio : Queue.EngineItem -> Cmd msg
 
 
@@ -87,6 +90,9 @@ port audioDurationChange : (Audio.DurationChangeEvent -> msg) -> Sub msg
 
 
 port audioEnded : (Audio.GenericAudioEvent -> msg) -> Sub msg
+
+
+port audioError : (Audio.ErrorAudioEvent -> msg) -> Sub msg
 
 
 port audioPlaybackStateChanged : (Audio.PlaybackStateEvent -> msg) -> Sub msg

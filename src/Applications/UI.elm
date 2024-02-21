@@ -145,6 +145,7 @@ init flags url key =
         30
             |> Debouncer.fromSeconds
             |> Debouncer.throttle
+            |> Debouncer.emitWhenUnsettled Nothing
             |> Debouncer.toDebouncer
     , resizeDebouncer =
         0.25
@@ -288,11 +289,11 @@ update msg =
         AudioEnded a ->
             Audio.ended a
 
+        AudioError a ->
+            Audio.error a
+
         AudioHasLoaded a ->
             Audio.hasLoaded a
-
-        AudioHasStalled a ->
-            Audio.hasStalled a
 
         AudioIsLoading a ->
             Audio.isLoading a
@@ -617,6 +618,7 @@ subscriptions _ =
         -----------------------------------------
         , Ports.audioDurationChange AudioDurationChange
         , Ports.audioEnded AudioEnded
+        , Ports.audioError AudioError
         , Ports.audioPlaybackStateChanged AudioPlaybackStateChanged
         , Ports.audioIsLoading AudioIsLoading
         , Ports.audioHasLoaded AudioHasLoaded

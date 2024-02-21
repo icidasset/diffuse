@@ -12,12 +12,9 @@ type AudioLoadingState
     = Loading
     | Loaded
       -- Errors
-    | Stalled
-    | Aborted
-    | DecodingError
+    | DecodeError
     | NetworkError
-    | NotSupportedOrMissing
-    | UnknownError
+    | NotSupportedError
 
 
 type alias NowPlaying =
@@ -36,6 +33,8 @@ type alias NowPlaying =
 type alias DurationChangeEvent =
     { trackId : String, duration : Float }
 
+type alias ErrorAudioEvent =
+    { trackId : String, code : Int }
 
 type alias GenericAudioEvent =
     { trackId : String }
