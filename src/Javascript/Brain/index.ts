@@ -306,7 +306,7 @@ const flags: Record<string, string> = location
 forwardCompatibility().then(initialise)
 
 
-function initialise() {
+async function initialise() {
   app = Elm.Brain.init({
     flags: {
       initialUrl: decodeURIComponent(flags.appHref) || ""

@@ -95,6 +95,7 @@ view extractedBackdropColor collection =
 
             --
             , "absolute"
+            , "break-all"
             , "bottom-0"
             , "flex"
             , "flex-col"

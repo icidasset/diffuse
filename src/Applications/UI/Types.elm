@@ -35,6 +35,10 @@ import UI.Sources.Types as Sources
 import UI.Syncing.Types as Syncing
 import UI.Tracks.Types as Tracks
 import Url exposing (Url)
+import UI.Audio.Types exposing (TimeUpdatedEvent)
+import UI.Audio.Types exposing (PlaybackStateEvent)
+import UI.Audio.Types exposing (DurationChangeEvent)
+import UI.Audio.Types exposing (GenericAudioEvent)
 
 
 
@@ -200,14 +204,14 @@ type Msg
       -----------------------------------------
       -- Audio
       -----------------------------------------
-    | AudioCanPlay { duration : Float, trackId : String }
-    | AudioEnded { trackId : String }
-    | AudioHasLoaded { trackId : String }
-    | AudioHasStalled { trackId : String }
-    | AudioIsLoading { trackId : String }
-    | AudioPlaybackStateChanged { trackId : String, isPlaying : Bool }
+    | AudioDurationChange DurationChangeEvent
+    | AudioEnded GenericAudioEvent
+    | AudioHasLoaded GenericAudioEvent
+    | AudioHasStalled GenericAudioEvent
+    | AudioIsLoading GenericAudioEvent
+    | AudioPlaybackStateChanged PlaybackStateEvent
     | AudioPreloadDebounce (Debouncer.Msg Msg)
-    | AudioTimeUpdated { trackId : String, currentTime : Float, duration : Float }
+    | AudioTimeUpdated TimeUpdatedEvent
     | NoteProgress { trackId : String, progress : Float }
     | NoteProgressDebounce (Debouncer.Msg Msg)
     | Pause

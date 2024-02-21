@@ -22,8 +22,8 @@ import UI.User.State.Export as User
 -- 📣  ░░  EVENTS
 
 
-canPlay : CanPlayEvent -> Manager
-canPlay { trackId, duration } =
+durationChange : DurationChangeEvent -> Manager
+durationChange { trackId, duration } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
         (\nowPlaying model ->
@@ -38,7 +38,7 @@ canPlay { trackId, duration } =
                     }
             in
             model
-                |> replaceNowPlaying { nowPlaying | duration = Just (Debug.log "canPlay" duration) }
+                |> replaceNowPlaying { nowPlaying | duration = Just duration }
                 |> Return.command (Ports.setMediaSessionMetadata tags)
                 |> Return.command (Ports.resetScrobbleTimer { duration = duration, trackId = trackId })
                 |> Return.andThen (notifyScrobblersOfTrackPlaying { duration = duration })
@@ -49,12 +49,27 @@ ended : GenericAudioEvent -> Manager
 ended { trackId } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
-        (\_ model ->
+        (\nowPlaying model ->
             if model.repeat then
-                play model
+                Return.command
+                    (case nowPlaying.duration of
+                        Just duration ->
+                            Ports.resetScrobbleTimer { duration = duration, trackId = trackId }
+
+                        Nothing ->
+                            Cmd.none
+                    )
+                    (play model)
 
             else
-                Queue.shift model
+                Return.andThen
+                    (if Maybe.map (\d -> Tracks.shouldNoteProgress { duration = d }) nowPlaying.duration == Just True then
+                        noteProgress { trackId = trackId, progress = 1.0 }
+
+                     else
+                        Return.singleton
+                    )
+                    (Queue.shift model)
         )
 
 
@@ -116,9 +131,15 @@ timeUpdated { trackId, currentTime, duration } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
         (\nowPlaying model ->
-            { model | nowPlaying = Just { nowPlaying | duration = Just duration, playbackPosition = currentTime } }
-                |> (if duration >= 30 * 60 then
-                        { trackId = trackId, progress = currentTime / duration }
+            let
+              dur =
+                Maybe.withDefault 0 duration
+            in
+            { model | nowPlaying = Just { nowPlaying | duration = duration, playbackPosition = currentTime } }
+                |> (if Tracks.shouldNoteProgress { duration = dur } then
+                        { trackId = trackId
+                        , progress = currentTime / dur
+                        }
                             |> NoteProgress
                             |> Debouncer.provideInput
                             |> NoteProgressDebounce
@@ -129,10 +150,13 @@ timeUpdated { trackId, currentTime, duration } =
                         Return.singleton
                    )
                 |> Return.command
-                    (Ports.setMediaSessionPositionState
-                        { currentTime = currentTime
-                        , duration = duration
-                        }
+                    (case duration of
+                        Just d ->
+                          Ports.setMediaSessionPositionState
+                            { currentTime = currentTime
+                            , duration = d
+                            }
+                        Nothing -> Cmd.none
                     )
         )
 
@@ -216,6 +240,9 @@ stop model =
 noteProgress : { trackId : String, progress : Float } -> Manager
 noteProgress { trackId, progress } model =
     let
+        _ =
+            Debug.log "noteProgress" { trackId = trackId, progress = progress }
+
         updatedProgressTable =
             if not model.rememberProgress then
                 model.progress

@@ -33,7 +33,7 @@ type alias NowPlaying =
 -- 🌳  ░░  EVENTS
 
 
-type alias CanPlayEvent =
+type alias DurationChangeEvent =
     { trackId : String, duration : Float }
 
 
@@ -46,7 +46,7 @@ type alias PlaybackStateEvent =
 
 
 type alias TimeUpdatedEvent =
-    { trackId : String, currentTime : Float, duration : Float }
+    { trackId : String, currentTime : Float, duration : Maybe Float }
 
 
 

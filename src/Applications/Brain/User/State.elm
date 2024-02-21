@@ -97,18 +97,18 @@ loadLocalHypaethralData { initialUrl, methodTask } =
             (\( maybeMethod, hypaethralJson ) ->
                 hypaethralJson
                     |> User.decodeHypaethralData
+                    |> Debug.log "decodeHypaethralData"
                     |> Result.map
                         (\hypaethralData ->
-                            ( hypaethralJson
-                            , hypaethralData
-                            )
+                            Commence
+                                maybeMethod
+                                initialUrl
+                                ( hypaethralJson
+                                , hypaethralData
+                                )
                         )
-                    |> Result.withDefault
-                        ( User.encodeHypaethralData User.emptyHypaethralData
-                        , User.emptyHypaethralData
-                        )
-                    |> Commence maybeMethod initialUrl
-                    |> UserMsg
+                    |> Result.mapError Decode.errorToString
+                    |> Common.reportErrorToUI UserMsg
             )
 
 

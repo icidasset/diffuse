@@ -83,7 +83,7 @@ port toBrain : Alien.Event -> Cmd msg
 -- 📰
 
 
-port audioCanPlay : (Audio.CanPlayEvent -> msg) -> Sub msg
+port audioDurationChange : (Audio.DurationChangeEvent -> msg) -> Sub msg
 
 
 port audioEnded : (Audio.GenericAudioEvent -> msg) -> Sub msg

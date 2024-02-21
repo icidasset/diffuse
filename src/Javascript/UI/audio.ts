@@ -10,12 +10,17 @@ import { db, mimeType } from "../common"
 // 🏔️
 
 
+const silentMp3File =
+  "data:audio/mp3base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
+
+
 let app: any // TODO
 let container: Element | null = null
 let scrobbleTimer: Timer | null = null
 
 
-export function init(a: any) { // TODO
+export function init(a: any) {
+  // TODO
   app = a
 
   app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
@@ -29,6 +34,12 @@ export function init(a: any) { // TODO
   app.ports.setMediaSessionPlaybackState.subscribe(setMediaSessionPlaybackState)
   app.ports.setMediaSessionPositionState.subscribe(setMediaSessionPositionState)
   app.ports.startScrobbleTimer.subscribe(startScrobbleTimer)
+
+  window.addEventListener("online", () => {
+    withActiveAudioNode((audio) => {
+      if (audio.readyState === 0) audio.load()
+    })
+  })
 }
 
 
@@ -49,6 +60,7 @@ type EngineItem = {
   trackPath: string
   url: string
 }
+
 
 /**/
 type TrackTags = {
@@ -71,21 +83,20 @@ type TrackTags = {
 // Ports
 // -----
 
-function adjustEqualizerSetting({ knob, value }: { knob: string; value: number }): void {
+
+function adjustEqualizerSetting({ knob, value }: { knob: string, value: number }): void {
   switch (knob) {
     case "VOLUME":
       Array.from(
-        document.body.querySelectorAll("#audio-elements audio[data-is-preload=\"false\"]")
-      ).forEach(
-        audio => (audio as HTMLAudioElement).volume = value
-      )
-      break;
+        document.body.querySelectorAll('#audio-elements audio[data-is-preload="false"]'),
+      ).forEach((audio) => ((audio as HTMLAudioElement).volume = value))
+      break
   }
 }
 
 
 function pause({ trackId }: { trackId: string }) {
-  withAudioNode(trackId, audio => audio.pause())
+  withAudioNode(trackId, (audio) => audio.pause())
 }
 
 
@@ -94,14 +105,16 @@ function pauseScrobbleTimer() {
 }
 
 
-function play({ trackId, volume }: { trackId: string; volume: number }) {
-  withAudioNode(trackId, audio => {
+function play({ trackId, volume }: { trackId: string, volume: number }) {
+  withAudioNode(trackId, (audio) => {
     audio.volume = volume
     audio.muted = false
 
+    if (audio.readyState === 0) audio.load()
+
     const promise = audio.play() || Promise.resolve()
 
-    promise.catch(e => {
+    promise.catch((e) => {
       const err = "Couldn't play audio automatically. Please resume playback manually."
       console.error(err, e)
       if (app) app.ports.fromAlien.send({ tag: "", data: null, error: err })
@@ -127,19 +140,20 @@ function resetScrobbleTimer({ duration, trackId }: { duration: number, trackId: 
   if (this.scrobbleTimer) this.scrobbleTimer.stop()
 
   scrobbleTimer = new Timer({
-    onend: () => app.ports.scrobble.send({
-      duration: Math.round(duration),
-      timestamp,
-      trackId
-    })
+    onend: () =>
+      app.ports.scrobble.send({
+        duration: Math.round(duration),
+        timestamp,
+        trackId,
+      }),
   })
 
   scrobbleTimer.start(scrobbleTimeoutDuration)
 }
 
 
-function seek({ percentage, trackId }: { percentage: number; trackId: string }) {
-  withAudioNode(trackId, audio => {
+function seek({ percentage, trackId }: { percentage: number, trackId: string }) {
+  withAudioNode(trackId, (audio) => {
     if (!isNaN(audio.duration)) {
       audio.currentTime = audio.duration * percentage
     }
@@ -147,7 +161,15 @@ function seek({ percentage, trackId }: { percentage: number; trackId: string }) 
 }
 
 
-function setMediaSessionMetadata({ album, artist, title }: { album: string | null, artist: string | null, title: string }) {
+function setMediaSessionMetadata({
+  album,
+  artist,
+  title,
+}: {
+  album: string | null
+  artist: string | null
+  title: string
+}) {
   // TODO:
   // artwork: MediaImage[] = [ {
   //   src: URL.createObjectURL(maybeArtwork),
@@ -170,13 +192,19 @@ function setMediaSessionPlaybackState(state: MediaSessionPlaybackState) {
 }
 
 
-function setMediaSessionPositionState({ currentTime, duration }: { currentTime: number, duration: number }) {
+function setMediaSessionPositionState({
+  currentTime,
+  duration,
+}: {
+  currentTime: number
+  duration: number
+}) {
   try {
     navigator?.mediaSession?.setPositionState({
       duration: duration,
-      position: currentTime
+      position: currentTime,
     })
-  } catch (_err) { }
+  } catch (_err) {}
 }
 
 
@@ -189,44 +217,41 @@ function startScrobbleTimer() {
 // Media Keys
 // ----------
 
-if ("mediaSession" in navigator) {
 
+if ("mediaSession" in navigator) {
   navigator.mediaSession.setActionHandler("play", () => {
     app.ports.requestPlay.send(null)
   })
-
 
   navigator.mediaSession.setActionHandler("pause", () => {
     app.ports.requestPause.send(null)
   })
 
-
   navigator.mediaSession.setActionHandler("previoustrack", () => {
     app.ports.requestPrevious.send(null)
   })
-
 
   navigator.mediaSession.setActionHandler("nexttrack", () => {
     app.ports.requestNext.send(null)
   })
 
-
-  navigator.mediaSession.setActionHandler("seekbackward", event => {
+  navigator.mediaSession.setActionHandler("seekbackward", (event) => {
     const seekOffset = event.seekOffset || 10
-    withActiveAudioNode(audio => audio.currentTime = Math.max(audio.currentTime - seekOffset, 0))
+    withActiveAudioNode(
+      (audio) => (audio.currentTime = Math.max(audio.currentTime - seekOffset, 0)),
+    )
   })
 
-
-  navigator.mediaSession.setActionHandler("seekforward", event => {
+  navigator.mediaSession.setActionHandler("seekforward", (event) => {
     const seekOffset = event.seekOffset || 10
-    withActiveAudioNode(audio => audio.currentTime = Math.min(audio.currentTime + seekOffset, audio.duration))
+    withActiveAudioNode(
+      (audio) => (audio.currentTime = Math.min(audio.currentTime + seekOffset, audio.duration)),
+    )
   })
 
-
-  navigator.mediaSession.setActionHandler("seekto", event => {
-    withActiveAudioNode(audio => audio.currentTime = event.seekTime || audio.currentTime)
+  navigator.mediaSession.setActionHandler("seekto", (event) => {
+    withActiveAudioNode((audio) => (audio.currentTime = event.seekTime || audio.currentTime))
   })
-
 }
 
 
@@ -243,14 +268,15 @@ async function render(items: Array<EngineItem>) {
     document.body.appendChild(container)
   }
 
-  const trackIds = items.map(e => e.trackId)
+  const trackIds = items.map((e) => e.trackId)
   const existingNodes = {}
 
   // Manage existing nodes
-  Array.from(container.querySelectorAll("audio")).map((node: Element) => {
+  Array.from(container.querySelectorAll("audio")).map((node: HTMLAudioElement) => {
     if (trackIds.includes(node.id)) {
       existingNodes[node.id] = node
     } else {
+      node.src = silentMp3File
       container?.removeChild(node)
     }
   })
@@ -262,12 +288,10 @@ async function render(items: Array<EngineItem>) {
     if (existingNodes[item.trackId]) {
       existingNodes[item.trackId].setAttribute(
         "data-is-preload",
-        item.isPreload ? "true" : "false"
+        item.isPreload ? "true" : "false",
       )
-
     } else {
       await createElement(item)
-
     }
   }, Promise.resolve())
 }
@@ -275,13 +299,15 @@ async function render(items: Array<EngineItem>) {
 
 export async function createElement(item: EngineItem) {
   const url = item.isCached
-    ? await db("tracks").getItem(item.trackId).then(blob => blob ? URL.createObjectURL(blob as Blob) : item.url)
+    ? await db("tracks")
+        .getItem(item.trackId)
+        .then((blob) => (blob ? URL.createObjectURL(blob as Blob) : item.url))
     : item.url
 
   // Mime + SRC
-  const fileName = item.trackPath.split("/").reverse()[ 0 ]
+  const fileName = item.trackPath.split("/").reverse()[0]
   const fileExtMatch = fileName.match(/\.(\w+)$/)
-  const fileExt = fileExtMatch && fileExtMatch[ 1 ]
+  const fileExt = fileExtMatch && fileExtMatch[1]
   const mime = fileExt ? mimeType(fileExt) : null
 
   const source = document.createElement("source")
@@ -298,15 +324,16 @@ export async function createElement(item: EngineItem) {
   audio.appendChild(source)
 
   audio.addEventListener("canplay", canplayEvent)
+  audio.addEventListener("durationchange", durationchangeEvent)
   audio.addEventListener("ended", endedEvent)
   audio.addEventListener("error", errorEvent)
-  audio.addEventListener("loadstart", loadstartEvent)
-  audio.addEventListener("loadeddata", debounce(1500, loadeddataEvent))
   audio.addEventListener("pause", pauseEvent)
   audio.addEventListener("play", playEvent)
-  audio.addEventListener("seeking", debounce(1500, seekingEvent))
-  audio.addEventListener("seeked", seekedEvent)
+  audio.addEventListener("suspend", suspendEvent)
   audio.addEventListener("timeupdate", timeupdateEvent)
+  audio.addEventListener("waiting", debounce(1500, waitingEvent))
+
+  audio.addEventListener("stalled", (event) => console.log("stalled", event))
 
   container?.appendChild(audio)
 }
@@ -318,37 +345,35 @@ export async function createElement(item: EngineItem) {
 
 function canplayEvent(event: Event) {
   const target = event.target as HTMLAudioElement
-  if (!isNaN(target.duration)) app.ports.audioCanPlay.send({
-    trackId: target.id,
-    duration: target.duration
-  })
+  if (target.getAttribute("data-is-preload") === "false") console.log("canplay")
+  finishedLoading(event)
 }
 
+
+function durationchangeEvent(event: Event) {
+  const target = event.target as HTMLAudioElement
+  if (!isNaN(target.duration))
+    app.ports.audioDurationChange.send({
+      trackId: target.id,
+      duration: target.duration,
+    })
+}
 
 function endedEvent(event: Event) {
   app.ports.audioEnded.send({
-    trackId: (event.target as HTMLAudioElement).id
+    trackId: (event.target as HTMLAudioElement).id,
   })
 }
 
-
-function errorEvent() {}
-
-
-function loadstartEvent(event: Event) {
-  initiateLoading(event)
-}
-
-
-function loadeddataEvent(event: Event) {
-  finishedLoading(event)
+function errorEvent(event) {
+  console.log("error", event.target.error)
 }
 
 
 function pauseEvent(event: Event) {
   app.ports.audioPlaybackStateChanged.send({
     trackId: (event.target as HTMLAudioElement).id,
-    isPlaying: false
+    isPlaying: false,
   })
 }
 
@@ -358,7 +383,7 @@ function playEvent(event: Event) {
 
   app.ports.audioPlaybackStateChanged.send({
     trackId: audio.id,
-    isPlaying: true
+    isPlaying: true,
   })
 
   // In case audio was preloaded:
@@ -366,12 +391,9 @@ function playEvent(event: Event) {
 }
 
 
-function seekingEvent(event: Event) {
-  initiateLoading(event)
-}
-
-
-function seekedEvent(event: Event) {
+function suspendEvent(event: Event) {
+  const target = event.target as HTMLAudioElement
+  if (target.getAttribute("data-is-preload") === "false") console.log("suspend")
   finishedLoading(event)
 }
 
@@ -382,8 +404,15 @@ function timeupdateEvent(event: Event) {
   app.ports.audioTimeUpdated.send({
     trackId: target.id,
     currentTime: target.currentTime,
-    duration: target.duration
+    duration: isNaN(target.duration) ? null : target.duration,
   })
+}
+
+
+function waitingEvent(event: Event) {
+  const target = event.target as HTMLAudioElement
+  if (target.getAttribute("data-is-preload") === "false") console.log("waiting")
+  initiateLoading(event)
 }
 
 
@@ -393,7 +422,7 @@ function timeupdateEvent(event: Event) {
 
 function finishedLoading(event: Event) {
   app.ports.audioHasLoaded.send({
-    trackId: (event.target as HTMLAudioElement).id
+    trackId: (event.target as HTMLAudioElement).id,
   })
 }
 
@@ -401,21 +430,26 @@ function finishedLoading(event: Event) {
 function initiateLoading(event: Event) {
   const audio = event.target as HTMLAudioElement
 
-  if (audio.readyState < 4) app.ports.audioIsLoading.send({
-    trackId: audio.id
-  })
+  if (audio.readyState < 4)
+    app.ports.audioIsLoading.send({
+      trackId: audio.id,
+    })
 }
 
 
 function withActiveAudioNode(fn: (node: HTMLAudioElement) => void): void {
-  const nonPreloadNodes: HTMLAudioElement[] = Array.from(document.body.querySelectorAll(`#audio-elements audio[data-is-preload="false"]`));
-  const playingNodes = nonPreloadNodes.filter(n => n.paused === false)
+  const nonPreloadNodes: HTMLAudioElement[] = Array.from(
+    document.body.querySelectorAll(`#audio-elements audio[data-is-preload="false"]`),
+  )
+  const playingNodes = nonPreloadNodes.filter((n) => n.paused === false)
   const node = playingNodes.length ? playingNodes[0] : nonPreloadNodes[0]
   if (node) fn(node)
 }
 
 
 function withAudioNode(trackId: string, fn: (node: HTMLAudioElement) => void): void {
-  const node = document.body.querySelector(`#audio-elements audio[id="${trackId}"][data-is-preload="false"]`);
+  const node = document.body.querySelector(
+    `#audio-elements audio[id="${trackId}"][data-is-preload="false"]`,
+  )
   if (node) fn(node as HTMLAudioElement)
 }

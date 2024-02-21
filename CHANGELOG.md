@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.5.0
+
+- **Improve audio playback and error handling**.
+
+
 ## 3.4.0
 
 - **Improved audio metadata parsing**.

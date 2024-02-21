@@ -7,7 +7,6 @@
 import type { Program as OddProgram } from "@oddjs/odd"
 import type { ElmPorts } from "./index.d"
 
-import * as ConcurrentTask from "@andrewmacmurray/elm-concurrent-task"
 import { debounce } from "throttle-debounce"
 
 import "./pointer-events"

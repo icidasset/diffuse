@@ -137,14 +137,14 @@ init flags url key =
     -- Debouncing
     -----------------------------------------
     , preloadDebouncer =
-        15
+        30
             |> Debouncer.fromSeconds
             |> Debouncer.debounce
             |> Debouncer.toDebouncer
     , progressDebouncer =
         30
             |> Debouncer.fromSeconds
-            |> Debouncer.debounce
+            |> Debouncer.throttle
             |> Debouncer.toDebouncer
     , resizeDebouncer =
         0.25
@@ -282,8 +282,8 @@ update msg =
         -----------------------------------------
         -- Audio
         -----------------------------------------
-        AudioCanPlay a ->
-            Audio.canPlay a
+        AudioDurationChange a ->
+            Audio.durationChange a
 
         AudioEnded a ->
             Audio.ended a
@@ -615,7 +615,7 @@ subscriptions _ =
         -----------------------------------------
         -- Audio
         -----------------------------------------
-        , Ports.audioCanPlay AudioCanPlay
+        , Ports.audioDurationChange AudioDurationChange
         , Ports.audioEnded AudioEnded
         , Ports.audioPlaybackStateChanged AudioPlaybackStateChanged
         , Ports.audioIsLoading AudioIsLoading
