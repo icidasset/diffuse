@@ -2,6 +2,7 @@
 // Audio engine
 // ♪(´ε｀ )
 
+import Timer from "timer.js"
 import { debounce } from "throttle-debounce"
 import { db, mimeType } from "../common"
 
@@ -11,6 +12,7 @@ import { db, mimeType } from "../common"
 
 let app: any // TODO
 let container: Element | null = null
+let scrobbleTimer: Timer | null = null
 
 
 export function init(a: any) { // TODO
@@ -18,11 +20,15 @@ export function init(a: any) { // TODO
 
   app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
   app.ports.pause.subscribe(pause)
+  app.ports.pauseScrobbleTimer.subscribe(pauseScrobbleTimer)
   app.ports.play.subscribe(play)
   app.ports.renderAudioElements.subscribe(renderAudioElements)
+  app.ports.resetScrobbleTimer.subscribe(resetScrobbleTimer)
   app.ports.seek.subscribe(seek)
+  app.ports.setMediaSessionMetadata.subscribe(setMediaSessionMetadata)
   app.ports.setMediaSessionPlaybackState.subscribe(setMediaSessionPlaybackState)
   app.ports.setMediaSessionPositionState.subscribe(setMediaSessionPositionState)
+  app.ports.startScrobbleTimer.subscribe(startScrobbleTimer)
 }
 
 
@@ -83,6 +89,11 @@ function pause({ trackId }: { trackId: string }) {
 }
 
 
+function pauseScrobbleTimer() {
+  if (this.scrobbleTimer) this.scrobbleTimer.pause()
+}
+
+
 function play({ trackId, volume }: { trackId: string; volume: number }) {
   withAudioNode(trackId, audio => {
     audio.volume = volume
@@ -109,11 +120,47 @@ async function renderAudioElements(args: {
 }
 
 
+function resetScrobbleTimer({ duration, trackId }: { duration: number, trackId: string }) {
+  const timestamp = Math.round(Date.now() / 1000)
+  const scrobbleTimeoutDuration = Math.min(240 + 0.5, duration / 1.95)
+
+  if (this.scrobbleTimer) this.scrobbleTimer.stop()
+
+  scrobbleTimer = new Timer({
+    onend: () => app.ports.scrobble.send({
+      duration: Math.round(duration),
+      timestamp,
+      trackId
+    })
+  })
+
+  scrobbleTimer.start(scrobbleTimeoutDuration)
+}
+
+
 function seek({ percentage, trackId }: { percentage: number; trackId: string }) {
   withAudioNode(trackId, audio => {
     if (!isNaN(audio.duration)) {
       audio.currentTime = audio.duration * percentage
     }
+  })
+}
+
+
+function setMediaSessionMetadata({ album, artist, title }: { album: string | null, artist: string | null, title: string }) {
+  // TODO:
+  // artwork: MediaImage[] = [ {
+  //   src: URL.createObjectURL(maybeArtwork),
+  //   type: maybeArtwork.type
+  // } ]
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title,
+    artist: artist || undefined,
+    album: album || undefined,
+
+    // TODO:
+    // artwork: artwork
   })
 }
 
@@ -130,6 +177,11 @@ function setMediaSessionPositionState({ currentTime, duration }: { currentTime: 
       position: currentTime
     })
   } catch (_err) { }
+}
+
+
+function startScrobbleTimer() {
+  if (this.scrobbleTimer) this.scrobbleTimer.start()
 }
 
 

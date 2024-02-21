@@ -1,6 +1,7 @@
 module UI.Queue.State exposing (..)
 
 import Coordinates
+import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Dict
 import Html.Events.Extra.Mouse as Mouse
 import List.Extra as List
@@ -17,7 +18,7 @@ import UI.Queue.Fill as Fill
 import UI.Queue.Types as Queue exposing (..)
 import UI.Types exposing (..)
 import UI.User.State.Export exposing (..)
-import Debouncer.Basic as Debouncer exposing (Debouncer)
+
 
 
 -- 📣
@@ -178,12 +179,11 @@ fill model =
                         { m | playingNext = Fill.ordered timestamp nonMissingTracks fillState }
            )
         |> Return.communicate
-         (
-            Queue.PreloadNext
-            |> QueueMsg
-            |> Debouncer.provideInput
-            |> AudioPreloadDebounce
-            |> Return.task
+            (Queue.PreloadNext
+                |> QueueMsg
+                |> Debouncer.provideInput
+                |> AudioPreloadDebounce
+                |> Return.task
             )
 
 
@@ -225,14 +225,15 @@ insertTrack item model =
         |> Return.effect_
             (\m ->
                 Ports.renderAudioElements
-                { items = m.audioElements
-                , play =
-                    if item.isPreload then
-                      Nothing
-                    else
-                      Just item.trackId
-                , volume = m.eqSettings.volume
-                }
+                    { items = m.audioElements
+                    , play =
+                        if item.isPreload then
+                            Nothing
+
+                        else
+                            Just item.trackId
+                    , volume = m.eqSettings.volume
+                    }
             )
 
 

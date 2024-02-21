@@ -2,7 +2,7 @@ module MediaSession exposing (states)
 
 
 states =
-  { none = "none"
-  , paused = "paused"
-  , playing = "playing"
-  }
+    { none = "none"
+    , paused = "paused"
+    , playing = "playing"
+    }

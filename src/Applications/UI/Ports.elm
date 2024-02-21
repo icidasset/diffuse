@@ -37,6 +37,9 @@ port openUrlOnNewPage : String -> Cmd msg
 port pause : { trackId : String } -> Cmd msg
 
 
+port pauseScrobbleTimer : () -> Cmd msg
+
+
 port pickAverageBackgroundColor : String -> Cmd msg
 
 
@@ -49,7 +52,10 @@ port preloadAudio : Queue.EngineItem -> Cmd msg
 port reloadApp : () -> Cmd msg
 
 
-port renderAudioElements : { items: List Queue.EngineItem, play : Maybe String, volume : Float } -> Cmd msg
+port renderAudioElements : { items : List Queue.EngineItem, play : Maybe String, volume : Float } -> Cmd msg
+
+
+port resetScrobbleTimer : { duration : Float, trackId : String } -> Cmd msg
 
 
 port seek : { percentage : Float, trackId : String } -> Cmd msg
@@ -58,10 +64,16 @@ port seek : { percentage : Float, trackId : String } -> Cmd msg
 port sendTask : Json.Value -> Cmd msg
 
 
+port setMediaSessionMetadata : { album : Maybe String, artist : Maybe String, title : String } -> Cmd msg
+
+
 port setMediaSessionPlaybackState : String -> Cmd msg
 
 
 port setMediaSessionPositionState : { currentTime : Float, duration : Float } -> Cmd msg
+
+
+port startScrobbleTimer : () -> Cmd msg
 
 
 port toBrain : Alien.Event -> Cmd msg
