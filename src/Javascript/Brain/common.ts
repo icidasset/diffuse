@@ -13,7 +13,7 @@ export const SECRET_KEY_LOCATION = "SECRET_KEY"
 // 🔱
 
 
-export function isLocalHost(url) {
+export function isLocalHost(url: string) {
   return (
     url.startsWith("localhost") ||
     url.startsWith("localhost") ||
@@ -23,7 +23,7 @@ export function isLocalHost(url) {
 }
 
 
-export function parseJsonIfNeeded(a) {
+export function parseJsonIfNeeded(a: string | object) {
   if (typeof a === "string") return JSON.parse(a)
   return a
 }
@@ -76,7 +76,7 @@ export function toCache(key: string, data: unknown) {
 // Crypto
 // ------
 
-export function decryptIfNeeded(data) {
+export function decryptIfNeeded(data: unknown) {
   if (typeof data !== "string") {
     return Promise.resolve(data)
 

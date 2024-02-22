@@ -221,7 +221,9 @@ function setMediaSessionPositionState({
       duration: duration,
       position: currentTime,
     })
-  } catch (_err) {}
+  } catch (_err) {
+    //
+  }
 }
 
 

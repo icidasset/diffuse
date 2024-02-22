@@ -1,3 +1,4 @@
+import "./index.d"
 import "tocca"
 
 // Pointer Events
@@ -14,7 +15,7 @@ tocca({
 
 
 function mousePointerEvent(eventType, mouseEvent) {
-  let pointerEvent: any = new MouseEvent(eventType, mouseEvent)
+  const pointerEvent: any = new MouseEvent(eventType, mouseEvent)
   pointerEvent.pointerId = 1
   pointerEvent.isPrimary = true
   pointerEvent.pointerType = "mouse"
@@ -32,7 +33,7 @@ function mousePointerEvent(eventType, mouseEvent) {
 
 
 function touchPointerEvent(eventType, touchEvent, touch) {
-  let pointerEvent: any = new CustomEvent(eventType, {
+  const pointerEvent: any = new CustomEvent(eventType, {
     bubbles: true,
     cancelable: true
   })
@@ -95,8 +96,8 @@ if (!self.PointerEvent) {
 document.body.addEventListener("touchmove", event => {
   const section = document.body.querySelector("section")
   const isDragging = section && section.classList.contains("dragging-something")
+  const touch = event.touches[0]
 
-  let touch = event.touches[0]
   let node
 
   if (isDragging && touch) {

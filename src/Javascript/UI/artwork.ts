@@ -49,29 +49,6 @@ function albumCover(coverKey: string): Promise<Blob | null> {
 }
 
 
-function gotCachedCover({ key, url }) {
-  const item = orchestrion.activeQueueItem
-
-  if (item && orchestrion.coverPrep && key === orchestrion.coverPrep.key && url) {
-    let artwork = [{ src: url, type: undefined }]
-
-    if (typeof url !== "string") {
-      artwork = [{
-        src: URL.createObjectURL(url),
-        type: url.type
-      }]
-    }
-
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: item.trackTags.title,
-      artist: item.trackTags.artist,
-      album: item.trackTags.album,
-      artwork: artwork
-    })
-  }
-}
-
-
 async function loadAlbumCoversFromDom({ coverView, list }: { coverView: boolean, list: boolean }): Promise<void> {
   let nodes: HTMLElement[] = []
 
@@ -124,38 +101,23 @@ async function loadAlbumCovers(coverPrepList: CoverPrep[]): Promise<void> {
 
 
 // Send a dictionary of the cached covers to the app.
-function cachedCovers(keys: string[]) {
+async function cachedCovers(keys: string[]) {
   const cacheKeys = keys.filter(
     k => k.startsWith("coverCache.")
   )
 
-  const cachePromise = cacheKeys.reduce((acc, key) => {
-    return acc.then(cache => {
-      return db().getItem(key).then(blob => {
-        const cacheKey = key.slice(11)
+  const cache = await cacheKeys.reduce(async (acc, key) => {
+    const c = await acc
+    const blob = await db().getItem(key)
+    const cacheKey = key.slice(11)
 
-        if (blob && typeof blob !== "string" && blob instanceof Blob) {
-          cache[cacheKey] = URL.createObjectURL(blob)
-        }
+    if (blob && typeof blob !== "string" && blob instanceof Blob) {
+      c[cacheKey] = URL.createObjectURL(blob)
+    }
 
-        return cache
-      })
-    })
+    return c
   }, Promise.resolve({}))
 
-  cachePromise.then(cache => {
-    app.ports.insertCoverCache.send(cache)
-    setTimeout(() => loadAlbumCoversFromDom({ list: true, coverView: true }), 500)
-  })
-}
-
-
-function finishedDownloadingArtwork() {
-  if (!orchestrion.audio || !orchestrion.audio.waitingForArtwork || !orchestrion.activeQueueItem) return
-
-  albumCover(orchestrion.audio.waitingForArtwork).then(maybeArtwork => {
-    audioEngine.setMediaSessionMetadata(orchestrion.activeQueueItem, maybeArtwork)
-  })
-
-  orchestrion.audio.waitingForArtwork = null
+  app.ports.insertCoverCache.send(cache)
+  setTimeout(() => loadAlbumCoversFromDom({ list: true, coverView: true }), 500)
 }

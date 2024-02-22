@@ -1,6 +1,6 @@
 import type { Program as OddProgram } from "@oddjs/odd"
+import type { App } from "./elm/types.js"
 
-import { App } from "./elm/types.js"
 import { ODD_CONFIG } from "../common"
 
 
@@ -16,6 +16,8 @@ let odd
 
 
 export function init(a: App) {
+  app = a
+
   app.ports.authenticateWithFission.subscribe(async () => {
     const program = await oddProgram()
     await program.capabilities.request({
@@ -27,7 +29,7 @@ export function init(a: App) {
     // The ODD SDK should collect the capabilities for us,
     // if everything is valid, we'll receive a session.
     oddProgram().then(
-      program => {
+      () => {
         history.replaceState({}, "", location.origin)
         app.ports.collectedFissionCapabilities.send(null)
       }

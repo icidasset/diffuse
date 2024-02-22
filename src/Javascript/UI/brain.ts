@@ -1,4 +1,5 @@
 import type { App } from "./elm/types"
+import * as Tracks from "./tracks"
 
 
 export async function load(): Promise<Worker> {
@@ -25,20 +26,13 @@ export async function load(): Promise<Worker> {
 export function link({ app, brain }: { app: App, brain: Worker }) {
   function handleAction(action, data, _ports) {
     switch (action) {
-      // TODO:
-      // case "DOWNLOAD_TRACKS": return downloadTracks(data)
-      // case "FINISHED_DOWNLOADING_ARTWORK": return finishedDownloadingArtwork()
+      case "DOWNLOAD_TRACKS": return Tracks.download(data)
     }
   }
 
   brain.onmessage = event => {
     if (event.data.action) return handleAction(event.data.action, event.data.data, event.ports)
     if (event.data.tag) app.ports.fromAlien.send(event.data)
-
-    switch (event.data.tag) {
-      // TODO:
-      // case "GOT_CACHED_COVER": return gotCachedCover(event.data.data)
-    }
   }
 
   app.ports.toBrain.subscribe(a => brain.postMessage(a))

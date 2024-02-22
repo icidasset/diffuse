@@ -245,7 +245,7 @@ wire.search = () => {
 }
 
 
-function requestSearch(searchTerm) {
+function requestSearch(searchTerm: string) {
   search.postMessage({
     action: "PERFORM_SEARCH",
     data: searchTerm
@@ -253,7 +253,7 @@ function requestSearch(searchTerm) {
 }
 
 
-function updateSearchIndex(tracksJson) {
+function updateSearchIndex(tracksJson: string) {
   search.postMessage({
     action: "UPDATE_SEARCH_INDEX",
     data: tracksJson
@@ -295,7 +295,7 @@ wire.tags = () => {
 
 const flags: Record<string, string> = location
   .hash
-  .substr(1)
+  .substring(1)
   .split("&")
   .reduce((acc, flag) => {
     const [k, v] = flag.split("=")
@@ -303,7 +303,7 @@ const flags: Record<string, string> = location
   }, {})
 
 
-forwardCompatibility().then(initialise)
+initialise()
 
 
 async function initialise() {
@@ -324,48 +324,4 @@ async function initialise() {
   wire.tags()
 
   self.postMessage({ action: "READY" })
-}
-
-
-async function forwardCompatibility() {
-  // TODO: Future, check version to migrate
-  if (await fromCache("MIGRATED")) return
-
-  await moveOldDbValue({ oldName: "AUTH_SECRET_KEY", newName: "SECRET_KEY" })
-  await moveOldDbValue({ oldName: "AUTH_ENCLOSED_DATA", newName: "ENCLOSED_DATA" })
-
-  const method = await fromCache("AUTH_METHOD")
-
-  if (method === "LOCAL") {
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_favourites.json", newName: "SYNC_LOCAL_favourites.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_playlists.json", newName: "SYNC_LOCAL_playlists.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_progress.json", newName: "SYNC_LOCAL_progress.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_settings.json", newName: "SYNC_LOCAL_settings.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_sources.json", newName: "SYNC_LOCAL_sources.json", parseJSON: true })
-    await moveOldDbValue({ oldName: "AUTH_ANONYMOUS_tracks.json", newName: "SYNC_LOCAL_tracks.json", parseJSON: true })
-
-    await removeCache("AUTH_METHOD")
-
-  } else if (method) {
-    await toCache("SYNC_METHOD", method)
-    await removeCache("AUTH_METHOD")
-
-  }
-
-  await toCache("MIGRATED", "3.3.0")
-}
-
-
-async function moveOldDbValue(
-  { oldName, newName, parseJSON }: {
-    oldName: string
-    newName: string
-    parseJSON?: boolean
-  }
-) {
-  const value = await fromCache(oldName)
-  if (value && typeof value === "string") {
-    await toCache(newName, parseJSON ? JSON.parse(value) : value)
-    await removeCache(oldName)
-  }
 }
