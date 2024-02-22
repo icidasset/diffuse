@@ -1,3 +1,5 @@
+import type { ElmPorts } from "./elm"
+
 export { }
 
 declare global {
@@ -5,16 +7,4 @@ declare global {
 
   const Elm: { UI: ElmMain<ElmPorts> }
   const tocca: any
-}
-
-// ELM
-// ---
-
-export type ElmPorts = {
-  // ← Elm
-  openUrlOnNewPage: PortFromElm<string>
-
-  // → Elm
-  fromAlien: PortToElm<unknown>
-  indicateTouchDevice: PortToElm<void>
 }

@@ -2,6 +2,8 @@
 // Audio engine
 // ♪(´ε｀ )
 
+import type { App } from "./elm/types"
+
 import Timer from "timer.js"
 import { debounce } from "throttle-debounce"
 import { db, mimeType } from "../common"
@@ -14,13 +16,16 @@ const silentMp3File =
   "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV"
 
 
-let app: any // TODO
+let app: App
 let container: Element | null = null
 let scrobbleTimer: Timer | null = null
 
 
-export function init(a: any) {
-  // TODO
+
+// 🚀
+
+
+export function init(a: App) {
   app = a
 
   app.ports.adjustEqualizerSetting.subscribe(adjustEqualizerSetting)
