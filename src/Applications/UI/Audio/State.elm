@@ -44,23 +44,27 @@ durationChange { trackId, duration } =
                 |> Return.andThen (notifyScrobblersOfTrackPlaying { duration = duration })
         )
 
+
 error : ErrorAudioEvent -> Manager
 error { trackId, code } =
-  onlyIfMatchesNowPlaying
-      { trackId = trackId }
-      (\nowPlaying ->
-          replaceNowPlaying (
-            case code of
-              2 ->
-                { nowPlaying | loadingState = NetworkError }
-              3 ->
-                { nowPlaying | loadingState = DecodeError }
-              4 ->
-                { nowPlaying | loadingState = NotSupportedError }
-              _ ->
-                nowPlaying
-          )
-      )
+    onlyIfMatchesNowPlaying
+        { trackId = trackId }
+        (\nowPlaying ->
+            replaceNowPlaying
+                (case code of
+                    2 ->
+                        { nowPlaying | loadingState = NetworkError }
+
+                    3 ->
+                        { nowPlaying | loadingState = DecodeError }
+
+                    4 ->
+                        { nowPlaying | loadingState = NotSupportedError }
+
+                    _ ->
+                        nowPlaying
+                )
+        )
 
 
 ended : GenericAudioEvent -> Manager
@@ -141,8 +145,8 @@ timeUpdated { trackId, currentTime, duration } =
         { trackId = trackId }
         (\nowPlaying model ->
             let
-              dur =
-                Maybe.withDefault 0 duration
+                dur =
+                    Maybe.withDefault 0 duration
             in
             { model | nowPlaying = Just { nowPlaying | duration = duration, playbackPosition = currentTime } }
                 |> (if Tracks.shouldNoteProgress { duration = dur } then
@@ -161,11 +165,13 @@ timeUpdated { trackId, currentTime, duration } =
                 |> Return.command
                     (case duration of
                         Just d ->
-                          Ports.setMediaSessionPositionState
-                            { currentTime = currentTime
-                            , duration = d
-                            }
-                        Nothing -> Cmd.none
+                            Ports.setMediaSessionPositionState
+                                { currentTime = currentTime
+                                , duration = d
+                                }
+
+                        Nothing ->
+                            Cmd.none
                     )
         )
 

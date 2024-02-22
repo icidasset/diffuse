@@ -33,8 +33,10 @@ type alias NowPlaying =
 type alias DurationChangeEvent =
     { trackId : String, duration : Float }
 
+
 type alias ErrorAudioEvent =
     { trackId : String, code : Int }
+
 
 type alias GenericAudioEvent =
     { trackId : String }

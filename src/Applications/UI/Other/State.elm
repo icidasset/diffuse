@@ -2,13 +2,14 @@ module UI.Other.State exposing (..)
 
 import Alien
 import Common exposing (ServiceWorkerStatus(..))
+import Dict
 import Notifications
 import Return exposing (return)
 import Time
 import UI.Common.State as Common
 import UI.Ports as Ports
 import UI.Types exposing (..)
-import Dict
+
 
 
 -- 🔱
@@ -43,28 +44,28 @@ setIsOnline : Bool -> Manager
 setIsOnline bool model =
     -- TODO: Sync when back online if sync method != local
     { model | isOnline = bool }
-    |> Return.singleton
-    |> Return.command
-        (case model.nowPlaying of
-            Just {isPlaying, item} ->
-              let
-                trackId =
-                  (Tuple.second item.identifiedTrack).id
-              in
-              Ports.reloadAudioNodeIfNeeded
-                  { play = isPlaying
-                  , progress =
-                        (if model.rememberProgress then
-                             Dict.get trackId model.progress
+        |> Return.singleton
+        |> Return.command
+            (case model.nowPlaying of
+                Just { isPlaying, item } ->
+                    let
+                        trackId =
+                            (Tuple.second item.identifiedTrack).id
+                    in
+                    Ports.reloadAudioNodeIfNeeded
+                        { play = isPlaying
+                        , progress =
+                            if model.rememberProgress then
+                                Dict.get trackId model.progress
 
-                        else
-                            Nothing
-                        )
-                  , trackId = trackId
-                  }
-            Nothing ->
-              Cmd.none
-        )
+                            else
+                                Nothing
+                        , trackId = trackId
+                        }
+
+                Nothing ->
+                    Cmd.none
+            )
 
 
 setCurrentTime : Time.Posix -> Manager

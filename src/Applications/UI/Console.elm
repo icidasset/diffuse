@@ -77,13 +77,15 @@ view nowPlaying repeat shuffle =
                 -----------------------------------------
                 Just DecodeError ->
                     text "(!) An error occurred while decoding the audio"
+
                 Just NetworkError ->
                     text "Waiting until your internet connection comes back online ..."
+
                 Just NotSupportedError ->
                     text "(!) Your browser does not support playing this type of audio"
 
-                -- Just NotSupportedOrMissing ->
-                --     text "The audio is missing or is in a format not supported by your browser."
+            -- Just NotSupportedOrMissing ->
+            --     text "The audio is missing or is in a format not supported by your browser."
             ]
 
         -----------------------------------------

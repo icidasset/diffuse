@@ -5,7 +5,6 @@ import Browser
 import Browser.Events
 import Browser.Navigation as Nav
 import Common exposing (ServiceWorkerStatus(..), Switch(..))
-import ConcurrentTask
 import Debouncer.Basic as Debouncer
 import Dict
 import Equalizer
@@ -105,7 +104,6 @@ init flags url key =
     , isOnline = flags.isOnline
     , isTauri = flags.isTauri
     , isTouchDevice = False
-    , jsTasks = ConcurrentTask.pool
     , lastFm = LastFm.initialModel
     , navKey = key
     , page = page
@@ -533,15 +531,6 @@ update msg =
             Adjunct.keyboardInput a
 
         -----------------------------------------
-        -- ☠️ JS Tasks
-        -----------------------------------------
-        JavascriptTaskCompleted a ->
-            javascriptTaskCompleted a
-
-        JavascriptTaskProgress a ->
-            javascriptTaskProgress a
-
-        -----------------------------------------
         -- 🦉 Nested
         -----------------------------------------
         SyncingMsg a ->
@@ -579,29 +568,6 @@ update msg =
 
         SetIsOnline a ->
             Other.setIsOnline a
-
-
-
--- ☠️
-
-
-javascriptTaskCompleted : ConcurrentTask.Response Msg Msg -> Manager
-javascriptTaskCompleted response =
-    case response of
-        ConcurrentTask.Success msg ->
-            update msg
-
-        ConcurrentTask.Error msg ->
-            update msg
-
-        ConcurrentTask.UnexpectedError _ ->
-            -- TODO
-            Return.singleton
-
-
-javascriptTaskProgress : ( ConcurrentTask.Pool Msg Msg Msg, Cmd Msg ) -> Manager
-javascriptTaskProgress ( pool, cmd ) model =
-    ( { model | jsTasks = pool }, cmd )
 
 
 

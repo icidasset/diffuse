@@ -6,7 +6,6 @@ import Browser
 import Browser.Navigation as Nav
 import Color exposing (Color)
 import Common exposing (ServiceWorkerStatus, Switch)
-import ConcurrentTask
 import ContextMenu exposing (ContextMenu)
 import Coordinates exposing (Viewport)
 import Debouncer.Basic as Debouncer exposing (Debouncer)
@@ -27,7 +26,7 @@ import Random
 import Sources exposing (Source)
 import Time
 import Tracks exposing (..)
-import UI.Audio.Types exposing (NowPlaying)
+import UI.Audio.Types exposing (DurationChangeEvent, ErrorAudioEvent, GenericAudioEvent, NowPlaying, PlaybackStateEvent, TimeUpdatedEvent)
 import UI.DnD as DnD
 import UI.Page exposing (Page)
 import UI.Queue.Types as Queue
@@ -35,11 +34,6 @@ import UI.Sources.Types as Sources
 import UI.Syncing.Types as Syncing
 import UI.Tracks.Types as Tracks
 import Url exposing (Url)
-import UI.Audio.Types exposing (TimeUpdatedEvent)
-import UI.Audio.Types exposing (PlaybackStateEvent)
-import UI.Audio.Types exposing (DurationChangeEvent)
-import UI.Audio.Types exposing (GenericAudioEvent)
-import UI.Audio.Types exposing (ErrorAudioEvent)
 
 
 
@@ -76,7 +70,6 @@ type alias Model =
     , isOnline : Bool
     , isTauri : Bool
     , isTouchDevice : Bool
-    , jsTasks : ConcurrentTask.Pool Msg Msg Msg
     , lastFm : LastFm.Model
     , navKey : Nav.Key
     , page : Page
@@ -304,11 +297,6 @@ type Msg
       -- ⚗️ Adjunct
       -----------------------------------------
     | KeyboardMsg Keyboard.Msg
-      -----------------------------------------
-      -- ☠️ JS Tasks
-      -----------------------------------------
-    | JavascriptTaskCompleted (ConcurrentTask.Response Msg Msg)
-    | JavascriptTaskProgress ( ConcurrentTask.Pool Msg Msg Msg, Cmd Msg )
       -----------------------------------------
       -- 🦉 Nested
       -----------------------------------------
