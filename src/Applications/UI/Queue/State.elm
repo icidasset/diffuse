@@ -1,13 +1,13 @@
 module UI.Queue.State exposing (..)
 
 import Coordinates
-import Debouncer.Basic as Debouncer exposing (Debouncer)
+import Debouncer.Basic as Debouncer
 import Dict
 import Html.Events.Extra.Mouse as Mouse
 import List.Extra as List
 import Notifications
 import Queue exposing (..)
-import Return exposing (andThen, return)
+import Return exposing (andThen)
 import Return.Ext as Return
 import Tracks exposing (..)
 import UI.Audio.Types exposing (AudioLoadingState(..))

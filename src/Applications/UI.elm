@@ -22,7 +22,6 @@ import Tracks
 import UI.Adjunct as Adjunct
 import UI.Alfred.State as Alfred
 import UI.Audio.State as Audio
-import UI.Audio.Types as Audio
 import UI.Backdrop as Backdrop
 import UI.Common.State as Common
 import UI.DnD as DnD

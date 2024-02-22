@@ -9,7 +9,6 @@ import Json.Decode as Decode
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
-import Queue
 import UI.Audio.Types exposing (AudioLoadingState(..), NowPlaying, nowPlayingIdentifiedTrack)
 import UI.Queue.Types as Queue
 import UI.Tracks.Types as Tracks

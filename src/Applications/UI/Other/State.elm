@@ -3,10 +3,8 @@ module UI.Other.State exposing (..)
 import Alien
 import Common exposing (ServiceWorkerStatus(..))
 import Dict
-import Notifications
 import Return exposing (return)
 import Time
-import UI.Common.State as Common
 import UI.Ports as Ports
 import UI.Types exposing (..)
 

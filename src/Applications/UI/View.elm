@@ -7,12 +7,11 @@ import Common exposing (Switch(..))
 import Conditional exposing (..)
 import ContextMenu exposing (ContextMenu)
 import Html exposing (Html, section)
-import Html.Attributes as A exposing (class, style)
-import Html.Events as E exposing (on)
+import Html.Attributes exposing (class, style)
+import Html.Events exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode
 import Maybe.Extra as Maybe
-import Queue exposing (EngineItem)
 import UI.Alfred.View as Alfred
 import UI.Backdrop as Backdrop
 import UI.Console
@@ -31,7 +30,6 @@ import UI.Syncing.Common as Syncing
 import UI.Syncing.View as Syncing
 import UI.Tracks.View as Tracks
 import UI.Types exposing (..)
-import Url.Builder exposing (crossOrigin)
 import User.Layer
 
 

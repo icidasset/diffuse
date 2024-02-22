@@ -1,20 +1,18 @@
 module UI.Audio.State exposing (..)
 
-import Debouncer.Basic as Debouncer exposing (Debouncer)
+import Debouncer.Basic as Debouncer
 import Dict
 import LastFm
-import Maybe.Extra as Maybe
 import MediaSession
-import Queue
 import Return exposing (return)
 import Return.Ext as Return exposing (communicate)
-import Tracks exposing (Track)
+import Tracks
 import UI.Audio.Types exposing (..)
 import UI.Common.State as Common
 import UI.Common.Types exposing (DebounceManager)
 import UI.Ports as Ports
 import UI.Queue.State as Queue
-import UI.Types as UI exposing (Manager, Model, Msg(..))
+import UI.Types as UI exposing (Manager, Msg(..))
 import UI.User.State.Export as User
 
 
@@ -255,9 +253,6 @@ stop model =
 noteProgress : { trackId : String, progress : Float } -> Manager
 noteProgress { trackId, progress } model =
     let
-        _ =
-            Debug.log "noteProgress" { trackId = trackId, progress = progress }
-
         updatedProgressTable =
             if not model.rememberProgress then
                 model.progress
