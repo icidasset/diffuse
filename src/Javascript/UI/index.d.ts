@@ -1,4 +1,4 @@
-import type { ElmPorts } from "./elm"
+import type { ElmPorts } from "./elm/types"
 
 export { }
 

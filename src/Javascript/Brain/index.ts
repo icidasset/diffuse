@@ -4,62 +4,44 @@
 //
 // This worker is responsible for everything non-UI.
 
-// @ts-ignore
-import * as TaskPort from "elm-taskport"
-
-import * as artwork from "./artwork"
-import * as processing from "./processing"
-import * as user from "./user"
+import * as Application from "./application"
+import * as Artwork from "./artwork"
+import * as Processing from "./processing"
+import * as User from "./user"
+import * as TaskPorts from "./task-ports"
+import * as UI from "./ui"
 
 import { db } from "../common"
 import { fromCache, removeCache, reportError } from "./common"
 import { sendData, toCache } from "./common"
 import { transformUrl } from "../urls"
 
-// @ts-ignore
-import { Elm } from "brain.elm.js"
+
+// 🚀
 
 
-// 🍱
+TaskPorts.register()
+User.TaskPorts.register()
 
+const app = Application.load()
+const brain = self as unknown as Worker
 
-let app
-const wire: any = {}
+// 🖼️
+UI.link(brain, app)
 
+// ⚡
+User.Ports.register(app)
 
-TaskPort.install()
+// wire.ui()
+// wire.caching()
+// wire.artworkCaching()
+// wire.tracksCaching()
+// wire.downloading()
+// wire.search()
+// wire.tags()
 
-
-TaskPort.register("fromCache", fromCache)
-TaskPort.register("removeCache", removeCache)
-TaskPort.register("toCache", ({ key, value }) => toCache(key, value))
-
-
-user.setupTaskPorts()
-
-
-
-// UI
-// ==
-
-wire.ui = () => {
-  app.ports.toUI.subscribe(event => {
-    self.postMessage(event)
-  })
-}
-
-
-self.onmessage = event => {
-  if (event.data.action) return handleAction(event.data.action, event.data.data)
-  if (event.data.tag) return app.ports.fromAlien.send(event.data)
-}
-
-
-function handleAction(action, data) {
-  switch (action) {
-    case "DOWNLOAD_ARTWORK": return downloadArtwork(data)
-  }
-}
+// 🛫
+brain.postMessage({ action: "READY" })
 
 
 
@@ -127,7 +109,7 @@ function shiftArtworkQueue() {
 
 
 function provideArtworkTrackUrls(prep) {
-  artwork
+  Artwork
     .find(prep, app)
     .then(blob => {
       const url = URL.createObjectURL(blob)
@@ -276,52 +258,14 @@ search.onmessage = event => {
 
 wire.tags = () => {
   app.ports.requestTags.subscribe(context => {
-    processing.processContext(context, app).then(newContext => {
+    Processing.processContext(context, app).then(newContext => {
       app.ports.receiveTags.send(newContext)
     })
   })
 
   app.ports.syncTags.subscribe(context => {
-    processing.processContext(context, app).then(newContext => {
+    Processing.processContext(context, app).then(newContext => {
       app.ports.replaceTags.send(newContext)
     })
   })
-}
-
-
-
-// 🚀
-
-
-const flags: Record<string, string> = location
-  .hash
-  .substring(1)
-  .split("&")
-  .reduce((acc, flag) => {
-    const [k, v] = flag.split("=")
-    return { ...acc, [k]: v }
-  }, {})
-
-
-initialise()
-
-
-async function initialise() {
-  app = Elm.Brain.init({
-    flags: {
-      initialUrl: decodeURIComponent(flags.appHref) || ""
-    }
-  })
-
-  user.setupPorts(app)
-
-  wire.ui()
-  wire.caching()
-  wire.artworkCaching()
-  wire.tracksCaching()
-  wire.downloading()
-  wire.search()
-  wire.tags()
-
-  self.postMessage({ action: "READY" })
 }

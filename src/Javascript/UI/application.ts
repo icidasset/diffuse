@@ -14,16 +14,6 @@ let channel: BroadcastChannel
 // 🚀
 
 
-export function init(a: App, c: BroadcastChannel) {
-  app = a
-  channel = c
-
-  app.ports.downloadJsonUsingTauri.subscribe(downloadJsonUsingTauri)
-  app.ports.openUrlOnNewPage.subscribe(openUrlOnNewPage)
-  app.ports.reloadApp.subscribe(reloadApp)
-}
-
-
 export const load = ({ isNativeWrapper, reg }: { isNativeWrapper: boolean, reg: ServiceWorkerRegistration }) => Elm.UI.init({
   node: document.getElementById("elm") || undefined,
   flags: {
@@ -40,6 +30,16 @@ export const load = ({ isNativeWrapper, reg }: { isNativeWrapper: boolean, reg: 
     }
   }
 })
+
+
+export function init(a: App, c: BroadcastChannel) {
+  app = a
+  channel = c
+
+  app.ports.downloadJsonUsingTauri.subscribe(downloadJsonUsingTauri)
+  app.ports.openUrlOnNewPage.subscribe(openUrlOnNewPage)
+  app.ports.reloadApp.subscribe(reloadApp)
+}
 
 
 

@@ -17,14 +17,14 @@ lunr.Pipeline.registerFunction(
 )
 
 
-let index
+let index: lunr.Index
 
 
 
 // Incoming messages
 // -----------------
 
-self.onmessage = event => {
+self.onmessage = (event: MessageEvent) => {
   switch (event.data.action) {
     case "PERFORM_SEARCH":
       performSearch(event.data.data)
@@ -53,8 +53,8 @@ const mapTrack = track => ({
 // Actions
 // -------
 
-function performSearch(rawSearchTerm) {
-  let results =
+function performSearch(rawSearchTerm: string) {
+  let results: string[] =
     []
 
   const searchTerm = rawSearchTerm
@@ -62,7 +62,7 @@ function performSearch(rawSearchTerm) {
     .replace(/\+\s+/g, "+")
     .split(/ +/)
     .reduce(
-      ([ acc, previousOperator, previousPrefix ], chunk) => {
+      ([ acc, previousOperator, previousPrefix ]: [ string[], string, string ], chunk: string): [ string[], string, string ] => {
         const operator = (a => a && a[0])( chunk.match(/^(\+|-)/) )
 
         let chunkWithoutOperator = chunk.replace(/^(\+|-)/, "").replace(/\*$/, "").trim()
@@ -123,35 +123,35 @@ function performSearch(rawSearchTerm) {
 }
 
 
-function updateSearchIndex(input) {
+function updateSearchIndex(input: string | object[]) {
   const tracks = (typeof input == "string")
     ? JSON.parse(input)
     : input
 
-  index = customLunr(function() {
+  index = customLunr((builder: lunr.Builder) => {
     FIELDS.forEach(
-      field => this.field(field)
+      field => builder.field(field)
     )
 
     ;(tracks || [])
       .map(mapTrack)
-      .forEach(t => this.add(t))
+      .forEach(t => builder.add(t))
   })
 }
 
 
 
-function customLunr(config) {
+function customLunr(fn: (b: lunr.Builder) => void) {
   const builder = new lunr.Builder
 
   builder.pipeline.add(removeParenthesesFromToken, lunr.stemmer)
   builder.searchPipeline.add(removeParenthesesFromToken, lunr.stemmer)
 
-  config.call(builder, builder)
+  fn(builder)
   return builder.build()
 }
 
 
-function removeParenthesesFromToken(token) {
+function removeParenthesesFromToken(token: lunr.Token): lunr.Token {
   return token.update(s => s.replace(/\(|\)/, ""))
 }

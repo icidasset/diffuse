@@ -7,10 +7,12 @@
 
 // @ts-ignore
 import * as TaskPort from "elm-taskport"
-import { APP_INFO, ODD_CONFIG } from "../common"
+
+import type { App } from "./elm/types"
 
 import * as crypto from "../crypto"
 
+import { APP_INFO, ODD_CONFIG } from "../common"
 import { decryptIfNeeded, encryptIfPossible, SECRET_KEY_LOCATION } from "./common"
 import { parseJsonIfNeeded, removeCache, toCache } from "./common"
 
@@ -299,16 +301,20 @@ taskPorts.toRemoteStorage = ({ data, fileName, userAddress, token }) => {
 // EXPORT
 // ======
 
-export function setupPorts(app) {
+function registerPorts(app: App) {
   Object.keys(ports).forEach(name => {
     const fn = ports[ name ](app)
     app.ports[ name ].subscribe(fn)
   })
 }
 
-export function setupTaskPorts() {
+function registerTaskPorts() {
   Object.keys(taskPorts).forEach(name => {
     const fn = taskPorts[ name ]
     TaskPort.register(name, fn)
   })
 }
+
+
+export const TaskPorts = { register: registerTaskPorts }
+export const Ports = { register: registerPorts }

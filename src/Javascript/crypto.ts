@@ -40,8 +40,8 @@ export function keyFromPassphrase(passphrase) {
 }
 
 
-export function encrypt(key, string) {
-  let iv = crypto.getRandomValues(new Uint8Array(12))
+export function encrypt(key: CryptoKey, string: string): Promise<string> {
+  const iv = crypto.getRandomValues(new Uint8Array(12))
 
   return crypto.subtle.encrypt(
     {
@@ -61,7 +61,7 @@ export function encrypt(key, string) {
 }
 
 
-export function decrypt(key, string) {
+export function decrypt(key: CryptoKey, string: string): Promise<string> {
   const iv_b64 = string.substring(0, 16)
   const buf_b64 = string.substring(16)
 

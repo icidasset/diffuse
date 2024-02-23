@@ -43,7 +43,9 @@ ServiceWorker
     })
 
     // 🧠
-    Brain.link({ app, brain })
+    Brain.link({
+      app, brain
+    })
 
     // ⚡
     Application.init(app, channel)
@@ -54,4 +56,6 @@ ServiceWorker
     Tracks.init(app)
     UserLayer.init(app)
   })
-  .catch(Errors.failure)
+  .catch(
+    Errors.failure
+  )
