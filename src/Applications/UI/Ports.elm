@@ -3,6 +3,7 @@ port module UI.Ports exposing (..)
 import Alien
 import Json.Encode as Json
 import Queue
+import UI.Audio.Types as Audio
 
 
 
@@ -33,13 +34,19 @@ port loadAlbumCovers : { list : Bool, coverView : Bool } -> Cmd msg
 port openUrlOnNewPage : String -> Cmd msg
 
 
-port pause : () -> Cmd msg
+port pause : { trackId : String } -> Cmd msg
+
+
+port pauseScrobbleTimer : () -> Cmd msg
 
 
 port pickAverageBackgroundColor : String -> Cmd msg
 
 
-port play : () -> Cmd msg
+port play : { trackId : String, volume : Float } -> Cmd msg
+
+
+port reloadAudioNodeIfNeeded : { play : Bool, progress : Maybe Float, trackId : String } -> Cmd msg
 
 
 port preloadAudio : Queue.EngineItem -> Cmd msg
@@ -48,10 +55,31 @@ port preloadAudio : Queue.EngineItem -> Cmd msg
 port reloadApp : () -> Cmd msg
 
 
-port seek : Float -> Cmd msg
+port renderAudioElements : { items : List Queue.EngineItem, play : Maybe String, volume : Float } -> Cmd msg
 
 
-port setRepeat : Bool -> Cmd msg
+port resetScrobbleTimer : { duration : Float, trackId : String } -> Cmd msg
+
+
+port seek : { percentage : Float, trackId : String } -> Cmd msg
+
+
+port sendTask : Json.Value -> Cmd msg
+
+
+port setMediaSessionArtwork : { blobUrl : String, imageType : String } -> Cmd msg
+
+
+port setMediaSessionMetadata : { album : Maybe String, artist : Maybe String, title : String, coverPrep : Maybe Audio.CoverPrep } -> Cmd msg
+
+
+port setMediaSessionPlaybackState : String -> Cmd msg
+
+
+port setMediaSessionPositionState : { currentTime : Float, duration : Float } -> Cmd msg
+
+
+port startScrobbleTimer : () -> Cmd msg
 
 
 port toBrain : Alien.Event -> Cmd msg
@@ -61,7 +89,25 @@ port toBrain : Alien.Event -> Cmd msg
 -- 📰
 
 
-port activeQueueItemEnded : (() -> msg) -> Sub msg
+port audioDurationChange : (Audio.DurationChangeEvent -> msg) -> Sub msg
+
+
+port audioEnded : (Audio.GenericAudioEvent -> msg) -> Sub msg
+
+
+port audioError : (Audio.ErrorAudioEvent -> msg) -> Sub msg
+
+
+port audioPlaybackStateChanged : (Audio.PlaybackStateEvent -> msg) -> Sub msg
+
+
+port audioIsLoading : (Audio.GenericAudioEvent -> msg) -> Sub msg
+
+
+port audioHasLoaded : (Audio.GenericAudioEvent -> msg) -> Sub msg
+
+
+port audioTimeUpdated : (Audio.TimeUpdatedEvent -> msg) -> Sub msg
 
 
 port collectedFissionCapabilities : (() -> msg) -> Sub msg
@@ -88,13 +134,13 @@ port installedNewServiceWorker : (() -> msg) -> Sub msg
 port installingNewServiceWorker : (() -> msg) -> Sub msg
 
 
-port noteProgress : ({ trackId : String, progress : Float } -> msg) -> Sub msg
-
-
 port refreshedAccessToken : (Json.Value -> msg) -> Sub msg
 
 
 port preferredColorSchemaChanged : ({ dark : Bool } -> msg) -> Sub msg
+
+
+port receiveTask : (Json.Value -> msg) -> Sub msg
 
 
 port requestNext : (() -> msg) -> Sub msg
@@ -116,21 +162,6 @@ port requestStop : (() -> msg) -> Sub msg
 
 
 port scrobble : ({ duration : Int, timestamp : Int, trackId : String } -> msg) -> Sub msg
-
-
-port setAudioPosition : (Float -> msg) -> Sub msg
-
-
-port setAudioDuration : (Float -> msg) -> Sub msg
-
-
-port setAudioIsLoading : (Bool -> msg) -> Sub msg
-
-
-port setAudioIsPlaying : (Bool -> msg) -> Sub msg
-
-
-port setAudioHasStalled : (Bool -> msg) -> Sub msg
 
 
 port setAverageBackgroundColor : ({ r : Int, g : Int, b : Int } -> msg) -> Sub msg

@@ -70,15 +70,15 @@ miscCommands model =
 nowPlayingCommands : UI.Model -> List (Item UI.Msg)
 nowPlayingCommands model =
     case model.nowPlaying of
-        Just queueItem ->
+        Just { item } ->
             let
                 ( queueItemIdentifiers, _ ) =
-                    queueItem.identifiedTrack
+                    item.identifiedTrack
 
                 identifiedTrack =
                     model.tracks.harvested
                         |> List.getAt queueItemIdentifiers.indexInList
-                        |> Maybe.withDefault queueItem.identifiedTrack
+                        |> Maybe.withDefault item.identifiedTrack
 
                 ( identifiers, track ) =
                     identifiedTrack
@@ -116,7 +116,7 @@ nowPlayingCommands model =
 
 
 playbackCommands model =
-    [ if model.audioIsPlaying then
+    [ if Maybe.map .isPlaying model.nowPlaying == Just True then
         { icon = Just (Icons.pause 16)
         , title = "Pause"
         , value = Command UI.TogglePlay

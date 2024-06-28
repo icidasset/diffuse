@@ -117,11 +117,8 @@ init flags url key =
     -----------------------------------------
     -- Audio
     -----------------------------------------
-    , audioDuration = 0
-    , audioHasStalled = False
-    , audioIsLoading = False
-    , audioIsPlaying = False
-    , audioPosition = 0
+    , audioElements = []
+    , nowPlaying = Nothing
     , progress = Dict.empty
     , rememberProgress = True
 
@@ -136,6 +133,17 @@ init flags url key =
     -----------------------------------------
     -- Debouncing
     -----------------------------------------
+    , preloadDebouncer =
+        30
+            |> Debouncer.fromSeconds
+            |> Debouncer.debounce
+            |> Debouncer.toDebouncer
+    , progressDebouncer =
+        30
+            |> Debouncer.fromSeconds
+            |> Debouncer.throttle
+            |> Debouncer.emitWhenUnsettled Nothing
+            |> Debouncer.toDebouncer
     , resizeDebouncer =
         0.25
             |> Debouncer.fromSeconds
@@ -174,7 +182,6 @@ init flags url key =
     -- Queue
     -----------------------------------------
     , dontPlay = []
-    , nowPlaying = Nothing
     , playedPreviously = []
     , playingNext = []
     , selectedQueueItem = Nothing
@@ -273,8 +280,35 @@ update msg =
         -----------------------------------------
         -- Audio
         -----------------------------------------
+        AudioDurationChange a ->
+            Audio.durationChange a
+
+        AudioEnded a ->
+            Audio.ended a
+
+        AudioError a ->
+            Audio.error a
+
+        AudioHasLoaded a ->
+            Audio.hasLoaded a
+
+        AudioIsLoading a ->
+            Audio.isLoading a
+
+        AudioPlaybackStateChanged a ->
+            Audio.playbackStateChanged a
+
+        AudioPreloadDebounce a ->
+            Audio.preloadDebounce update a
+
+        AudioTimeUpdated a ->
+            Audio.timeUpdated a
+
         NoteProgress a ->
             Audio.noteProgress a
+
+        NoteProgressDebounce a ->
+            Audio.noteProgressDebounce update a
 
         Pause ->
             Audio.pause
@@ -284,21 +318,6 @@ update msg =
 
         Seek a ->
             Audio.seek a
-
-        SetAudioDuration a ->
-            Audio.setDuration a
-
-        SetAudioHasStalled a ->
-            Audio.setHasStalled a
-
-        SetAudioIsLoading a ->
-            Audio.setIsLoading a
-
-        SetAudioIsPlaying a ->
-            Audio.setIsPlaying a
-
-        SetAudioPosition a ->
-            Audio.setPosition a
 
         Stop ->
             Audio.stop
@@ -562,16 +581,17 @@ subscriptions _ =
         -----------------------------------------
         -- Audio
         -----------------------------------------
-        , Ports.noteProgress NoteProgress
+        , Ports.audioDurationChange AudioDurationChange
+        , Ports.audioEnded AudioEnded
+        , Ports.audioError AudioError
+        , Ports.audioPlaybackStateChanged AudioPlaybackStateChanged
+        , Ports.audioIsLoading AudioIsLoading
+        , Ports.audioHasLoaded AudioHasLoaded
+        , Ports.audioTimeUpdated AudioTimeUpdated
         , Ports.requestPause (always Pause)
         , Ports.requestPlay (always Play)
         , Ports.requestPlayPause (always TogglePlay)
         , Ports.requestStop (always Stop)
-        , Ports.setAudioDuration SetAudioDuration
-        , Ports.setAudioHasStalled SetAudioHasStalled
-        , Ports.setAudioIsLoading SetAudioIsLoading
-        , Ports.setAudioIsPlaying SetAudioIsPlaying
-        , Ports.setAudioPosition SetAudioPosition
 
         -----------------------------------------
         -- Backdrop
@@ -591,7 +611,6 @@ subscriptions _ =
         -----------------------------------------
         -- Queue
         -----------------------------------------
-        , Ports.activeQueueItemEnded (QueueMsg << always Queue.Shift)
         , Ports.requestNext (\_ -> QueueMsg Queue.Shift)
         , Ports.requestPrevious (\_ -> QueueMsg Queue.Rewind)
 

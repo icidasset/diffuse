@@ -15,6 +15,7 @@ import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Playlists exposing (Playlist)
 import Tracks exposing (..)
+import UI.Audio.Types exposing (nowPlayingIdentifiedTrack)
 import UI.Kit
 import UI.Navigation exposing (..)
 import UI.Page as Page
@@ -95,7 +96,7 @@ view model =
                         , favouritesOnly = model.favouritesOnly
                         , infiniteList = model.infiniteList
                         , isVisible = isOnIndexPage
-                        , nowPlaying = model.nowPlaying
+                        , nowPlaying = Maybe.map nowPlayingIdentifiedTrack model.nowPlaying
                         , selectedCover = model.selectedCover
                         , selectedTrackIndexes = model.selectedTrackIndexes
                         , sortBy = model.sortBy
@@ -126,7 +127,7 @@ view model =
                             model.tracks.harvested
                             model.infiniteList
                             model.favouritesOnly
-                            model.nowPlaying
+                            (Maybe.map nowPlayingIdentifiedTrack model.nowPlaying)
                             model.searchTerm
                             model.sortBy
                             model.sortDirection

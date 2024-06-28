@@ -119,8 +119,6 @@ makeArtworkTrackUrls json model =
                         makeTrackUrl model.currentTime trackPath maybeSource
                 in
                 dict
-                    |> Dict.remove "trackPath"
-                    |> Dict.remove "trackSourceId"
                     |> Dict.insert "trackGetUrl" (mkTrackUrl Get)
                     |> Dict.insert "trackHeadUrl" (mkTrackUrl Head)
                     |> Json.Encode.dict identity Json.Encode.string

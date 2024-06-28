@@ -9,8 +9,6 @@
 //
 /// <reference lib="webworker" />
 
-import { } from "../index.d"
-
 
 const KEY =
   /* eslint-disable no-undef */
@@ -19,8 +17,8 @@ const KEY =
 
 const EXCLUDE =
   [ "_headers"
-    , "_redirects"
-    , "CORS"
+  , "_redirects"
+  , "CORS"
   ]
 
 
@@ -39,7 +37,7 @@ let googleDriveToken
 // 📣
 
 
-self.addEventListener("activate", _event => {
+self.addEventListener("activate", () => {
   // Remove all caches except the one with the currently used `KEY`
   caches.keys().then(keys => {
     keys.forEach(k => {
@@ -82,7 +80,7 @@ self.addEventListener("fetch", event => {
       })()
     )
 
-    // When doing a request with basic authentication in the url, put it in the headers instead
+  // When doing a request with basic authentication in the url, put it in the headers instead
   } else if (event.request.url.includes("service_worker_authentication=")) {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("service_worker_authentication")
@@ -96,7 +94,7 @@ self.addEventListener("fetch", event => {
       "Basic " + token
     )
 
-    // When doing a request with access token in the url, put it in the headers instead
+  // When doing a request with access token in the url, put it in the headers instead
   } else if (event.request.url.includes("bearer_token=")) {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("bearer_token")
@@ -112,7 +110,7 @@ self.addEventListener("fetch", event => {
       "Bearer " + token
     )
 
-    // Use cache if internal request and not using native app
+  // Use cache if internal request and not using native app
   } else if (isInternal) {
     event.respondWith(
       isNativeWrapper

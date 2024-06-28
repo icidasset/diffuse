@@ -18,7 +18,6 @@ import UI.Demo as Demo
 import UI.Equalizer.State as Equalizer
 import UI.Page as Page
 import UI.Playlists.Directory
-import UI.Ports as Ports
 import UI.Sources.State as Sources
 import UI.Tracks.State as Tracks
 import UI.Types as UI exposing (..)
@@ -223,10 +222,7 @@ importEnclosed value model =
                 , sortDirection = data.sortDirection
               }
               --
-            , Cmd.batch
-                [ Equalizer.adjustAllKnobs newEqualizerSettings
-                , Ports.setRepeat data.repeat
-                ]
+            , Equalizer.adjustAllKnobs newEqualizerSettings
             )
 
         Err err ->

@@ -15,7 +15,6 @@ import InfiniteList
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
-import Queue
 import Task
 import Tracks exposing (..)
 import UI.Tracks.Scene as Scene
@@ -36,7 +35,7 @@ type alias Dependencies =
     , favouritesOnly : Bool
     , infiniteList : InfiniteList.Model
     , isVisible : Bool
-    , nowPlaying : Maybe Queue.Item
+    , nowPlaying : Maybe IdentifiedTrack
     , selectedCover : Maybe Cover
     , selectedTrackIndexes : List Int
     , sortBy : SortBy
@@ -50,7 +49,7 @@ type alias ItemDependencies =
     { cachedCovers : Maybe (Dict String String)
     , columns : Int
     , containerWidth : Int
-    , nowPlaying : Maybe Queue.Item
+    , nowPlaying : Maybe IdentifiedTrack
     , sortBy : SortBy
     }
 
@@ -664,7 +663,7 @@ coverView : ItemViewOptions -> ItemDependencies -> Cover -> Html Msg
 coverView { clickable, horizontal } { cachedCovers, nowPlaying } cover =
     let
         nowPlayingId =
-            Maybe.unwrap "" (.identifiedTrack >> Tuple.second >> .id) nowPlaying
+            Maybe.unwrap "" (Tuple.second >> .id) nowPlaying
 
         missingTracks =
             List.any

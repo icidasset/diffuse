@@ -49,12 +49,13 @@
             "truqu/elm-base64": "2.0.4",
             "truqu/elm-md5": "1.1.0",
             "wernerdegroot/listzipper": "4.0.0",
-            "ymtszw/elm-xml-decode": "3.2.1"
+            "ymtszw/elm-xml-decode": "3.2.2"
         },
         "indirect": {
             "elm/bytes": "1.0.8",
             "elm/parser": "1.1.0",
             "fredcy/elm-parseint": "2.0.1",
+            "miniBill/elm-xml-parser": "1.0.1",
             "pzp1997/assoc-list": "1.0.0",
             "zwilias/elm-utf-tools": "2.0.1"
         }

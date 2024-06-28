@@ -13,7 +13,7 @@ export const SECRET_KEY_LOCATION = "SECRET_KEY"
 // 🔱
 
 
-export function isLocalHost(url) {
+export function isLocalHost(url: string) {
   return (
     url.startsWith("localhost") ||
     url.startsWith("localhost") ||
@@ -23,7 +23,7 @@ export function isLocalHost(url) {
 }
 
 
-export function parseJsonIfNeeded(a) {
+export function parseJsonIfNeeded(a: unknown) {
   if (typeof a === "string") return JSON.parse(a)
   return a
 }
@@ -57,17 +57,17 @@ export function sendData(app, event, opts: any = {}) {
 // Cache
 // -----
 
-export function removeCache(key: string) {
+export function removeCache(key: string): Promise<void> {
   return db().removeItem(key)
 }
 
 
-export function fromCache(key: string) {
+export function fromCache(key: string): Promise<unknown> {
   return db().getItem(key)
 }
 
 
-export function toCache(key: string, data: unknown) {
+export function toCache(key: string, data: unknown): Promise<unknown> {
   return db().setItem(key, data)
 }
 
@@ -76,11 +76,11 @@ export function toCache(key: string, data: unknown) {
 // Crypto
 // ------
 
-export function decryptIfNeeded(data) {
+export function decryptIfNeeded(data: unknown): Promise<unknown | null> {
   if (typeof data !== "string") {
     return Promise.resolve(data)
 
-  } else if (data.startsWith("{") || data.startsWith("[")) {
+  } else if (typeof data === "string" && (data.startsWith("{") || data.startsWith("["))) {
     return Promise.resolve(data)
 
   } else if (data.length < 15 && Number.isInteger(parseInt(data, 10))) {
@@ -100,9 +100,11 @@ export function decryptIfNeeded(data) {
 
 export async function encryptIfPossible(unencryptedData: string): Promise<string> {
   return unencryptedData
-    ? getSecretKey()
-      .then(secretKey => crypto.encrypt(secretKey, unencryptedData))
-      .catch(_ => unencryptedData)
+    ? getSecretKey().then(secretKey =>
+        secretKey
+          ? crypto.encrypt(secretKey, unencryptedData)
+          : unencryptedData
+      )
     : unencryptedData
 }
 
@@ -110,6 +112,6 @@ export async function encryptIfPossible(unencryptedData: string): Promise<string
 export { encryptIfPossible as encryptWithSecretKey }
 
 
-export function getSecretKey() {
+export function getSecretKey(): Promise<CryptoKey | null> {
   return db().getItem(SECRET_KEY_LOCATION)
 }
