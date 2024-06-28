@@ -106,7 +106,7 @@ export async function getTags(
   filename: string,
   { covers }: { covers: boolean },
 ) {
-  const musicMetadata = await import("music-metadata-browser").then((a) => a.default);
+  const musicMetadata = await import("music-metadata");
   const httpTokenizer = await import("@tokenizer/http").then((a) => a.default);
 
   let tokenizer;

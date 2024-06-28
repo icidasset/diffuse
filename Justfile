@@ -112,13 +112,17 @@ js:
 		--outdir={{BUILD_DIR}}/js/brain/ \
 		--splitting \
 		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
-		--inject:./system/Js/node-shims.js
+		--inject:./system/Js/node-shims.js \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=stream
 
 	# Main
 	{{ESBUILD}} ./src/Javascript/UI/index.ts \
 		--outdir={{BUILD_DIR}}/js/ui/ \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--splitting
+		--splitting \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=stream
 
 
 js-prod:
