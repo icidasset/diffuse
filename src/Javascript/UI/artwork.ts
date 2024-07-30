@@ -32,7 +32,7 @@ export function init(a: App, b: Worker) {
 // 🛠️
 
 
-export function albumCover(coverKey: string): Promise<Blob | null> {
+export function albumCover(coverKey: string): Promise<Blob | "TRIED" | null> {
   return db().getItem(`coverCache.${coverKey}`)
 }
 

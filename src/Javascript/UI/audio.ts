@@ -213,7 +213,7 @@ async function setMediaSessionMetadata({
   if (coverPrep) {
     const blob = await albumCover(coverPrep.cacheKey)
 
-    artwork = blob
+    artwork = blob && typeof blob !== "string"
       ? [{
         src: URL.createObjectURL(blob),
         type: blob.type
