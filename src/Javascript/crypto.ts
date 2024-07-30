@@ -50,7 +50,7 @@ export async function encrypt(key: CryptoKey, string: string): Promise<string> {
       tagLength: 128
     },
     key,
-    Uint8arrays.fromString(string, "base64pad")
+    Uint8arrays.fromString(string, "utf8")
   )
 
   const iv_b64 = Uint8arrays.toString(iv, "base64pad")
