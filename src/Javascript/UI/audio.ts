@@ -8,6 +8,7 @@ import Timer from "timer.js"
 import { debounce } from "throttle-debounce"
 import { CoverPrep, db, mimeType } from "../common"
 import { albumCover, loadAlbumCovers } from "./artwork"
+import { transformUrl } from "../urls"
 
 
 // 🏔️
@@ -352,7 +353,7 @@ export async function createElement(item: EngineItem) {
     ? await db("tracks")
         .getItem(item.trackId)
         .then((blob) => (blob ? URL.createObjectURL(blob as Blob) : item.url))
-    : item.url
+    : await transformUrl(item.url, app)
 
   // Mime + SRC
   const fileName = item.trackPath.split("/").reverse()[0]
