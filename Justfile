@@ -65,7 +65,7 @@ check-versions:
 	{{NPM_DIR}}/.bin/tailwind \
 		--input {{SRC_DIR}}/Css/Application.css \
 		--output {{BUILD_DIR}}/application.css \
-		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm,{{SRC_DIR}}/Javascript/**/*.ts" \
+		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Core/Themes/**/*.elm,{{SRC_DIR}}/Core/UI/**/*.elm,{{SRC_DIR}}/Core/UI.elm,{{SRC_DIR}}/Library/**/*.elm,{{SRC_DIR}}/Javascript/**/*.ts" \
 		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
 		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
 		--jit \
@@ -74,14 +74,14 @@ check-versions:
 
 @elm:
 	echo "> Compiling Elm application"
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js
 
 
 @elm-prod:
 	echo "> Compiling Elm application (optimised)"
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js --optimize
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js --optimize
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js --optimize
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js --optimize
 
 	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/js/brain.elm.js \
 		--minify --outfile={{BUILD_DIR}}/js/brain.elm.tmp.js
