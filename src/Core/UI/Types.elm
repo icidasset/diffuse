@@ -228,7 +228,9 @@ type Msg
       -----------------------------------------
       -- Interface
       -----------------------------------------
+    | AssistWithChangingTheme
     | Blur
+    | ChangeTheme { themeId : String }
     | ContextMenuConfirmation String Msg
     | CopyToClipboard String
     | DismissNotification { id : Int }

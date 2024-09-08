@@ -301,7 +301,11 @@ viewCommands model =
                                 list
                    )
     in
-    [ { icon = Just (Icons.favorite 14)
+    [ { icon = Just (Icons.brush 14)
+      , title = "Change application theme"
+      , value = Command UI.AssistWithChangingTheme
+      }
+    , { icon = Just (Icons.favorite 14)
       , title = toggle model.favouritesOnly "favourites-only mode"
       , value = Command (UI.TracksMsg Tracks.ToggleFavouritesOnly)
       }

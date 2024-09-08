@@ -1,11 +1,30 @@
 module UI.Theme exposing (..)
 
+import Alfred
 import Html exposing (Html)
+import Material.Icons as Icons
 import Themes.Sunrise.Theme as Sunrise
 import Themes.Sunrise.Tracks.Scene.Covers
 import Themes.Sunrise.Tracks.Scene.List
 import Tracks exposing (IdentifiedTrack, Scene)
-import UI.Types exposing (Model, Msg)
+import UI.Types exposing (Model, Msg(..))
+
+
+list =
+    [ { id = "sunrise"
+      , title = "Sunrise (default)"
+      , icon = Just Icons.wb_sunny
+      }
+    ]
+
+
+view : Model -> Html Msg
+view =
+    Sunrise.theme
+
+
+
+-- TODO
 
 
 scrollTracksToTop : Scene -> Cmd Msg
@@ -31,8 +50,3 @@ scrollToNowPlaying scene ( identifiers, track ) model =
             Themes.Sunrise.Tracks.Scene.List.scrollToNowPlaying
                 model.tracks.harvested
                 ( identifiers, track )
-
-
-view : Model -> Html Msg
-view =
-    Sunrise.theme

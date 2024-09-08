@@ -352,8 +352,14 @@ update msg =
         -----------------------------------------
         -- Interface
         -----------------------------------------
+        AssistWithChangingTheme ->
+            Interface.assistWithChangingTheme
+
         Blur ->
             Interface.blur
+
+        ChangeTheme a ->
+            Interface.changeTheme a
 
         ContextMenuConfirmation a b ->
             Interface.contextMenuConfirmation a b

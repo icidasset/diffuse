@@ -1,11 +1,13 @@
 module UI.Interface.State exposing (..)
 
+import Alfred
 import Debouncer.Basic as Debouncer
 import Maybe.Extra as Maybe
 import Notifications
 import Return exposing (return)
 import Return.Ext as Return
 import Tracks
+import UI.Alfred.State as Alfred
 import UI.Common.State as Common
 import UI.Common.Types exposing (DebounceManager)
 import UI.DnD as DnD
@@ -13,6 +15,7 @@ import UI.Page as Page
 import UI.Playlists.State as Playlists
 import UI.Ports as Ports
 import UI.Queue.State as Queue
+import UI.Theme
 import UI.Types exposing (..)
 
 
@@ -20,9 +23,38 @@ import UI.Types exposing (..)
 -- 🔱
 
 
+assistWithChangingTheme : Manager
+assistWithChangingTheme model =
+    { action = \_ -> []
+    , index =
+        [ { name = Just "Themes"
+          , items =
+                List.map
+                    (\theme ->
+                        { icon = Maybe.map (\icon -> icon 16) theme.icon
+                        , title = theme.title
+                        , value = Alfred.Command (ChangeTheme { themeId = theme.id })
+                        }
+                    )
+                    UI.Theme.list
+          }
+        ]
+    , message = "Choose a theme."
+    , operation = Alfred.Query
+    }
+        |> Alfred.create
+        |> (\a -> Alfred.assign a model)
+
+
 blur : Manager
 blur model =
     Return.singleton { model | focusedOnInput = False, pressedKeys = [] }
+
+
+changeTheme : { themeId : String } -> Manager
+changeTheme { themeId } model =
+    -- TODO
+    Return.singleton model
 
 
 contextMenuConfirmation : String -> Msg -> Manager
