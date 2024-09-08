@@ -75,6 +75,10 @@ index deps =
           , Label "Data & Sync" Shown
           , NavigateToPage (Page.Settings Sync)
           )
+        , ( Icon Icons.brush
+          , Label "Change theme" Shown
+          , PerformMsg AssistWithChangingTheme
+          )
         , ( Icon Icons.help_outline
           , Label "Help" Shown
           , OpenLinkInNewPage "about/"
