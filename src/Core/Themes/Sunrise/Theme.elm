@@ -10,7 +10,9 @@ import Html.Attributes exposing (class, style)
 import Html.Events exposing (on)
 import Html.Lazy as Lazy
 import Json.Decode
+import Material.Icons as Icons
 import Maybe.Extra as Maybe
+import Theme exposing (Theme)
 import Themes.Sunrise.Alfred.View as Alfred
 import Themes.Sunrise.Console
 import Themes.Sunrise.ContextMenu as ContextMenu
@@ -32,8 +34,21 @@ import UI.Types exposing (..)
 import User.Layer
 
 
-theme : Model -> Html Msg
-theme model =
+theme : Theme Msg Model
+theme =
+    { id = "sunrise"
+    , title = "Sunrise"
+    , icon = Icons.wb_sunny
+    , view = view
+    }
+
+
+
+-- ㊙️
+
+
+view : Model -> Html Msg
+view model =
     section
         (if Maybe.isJust model.contextMenu || Maybe.isJust model.alfred then
             [ on "tap" (Json.Decode.succeed HideOverlay) ]
@@ -85,27 +100,11 @@ theme model =
         -----------------------------------------
         -- Content
         -----------------------------------------
-        , let
-            opts =
-                { justifyCenter = False
-                , scrolling = not model.isDragging
-                }
-          in
-          if model.isLoading then
-            content
-                { opts | justifyCenter = True }
-                [ loadingAnimation
-                , chunk
-                    [ "italic"
-                    , "mt-5"
-                    , "text-white"
-                    , "text-opacity-30"
-                    ]
-                    [ Html.text "Transmitting particles" ]
-                ]
-
-          else
-            content opts (defaultScreen model)
+        , content
+            { justifyCenter = False
+            , scrolling = not model.isDragging
+            }
+            (defaultScreen model)
         ]
 
 
@@ -239,11 +238,6 @@ inputFocusDecoder =
                     _ ->
                         Json.Decode.fail "NOT_INPUT"
             )
-
-
-loadingAnimation : Html msg
-loadingAnimation =
-    Html.map never UI.Svg.Elements.loading
 
 
 overlay : Maybe (Alfred Msg) -> Maybe (ContextMenu Msg) -> Html Msg

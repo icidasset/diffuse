@@ -24,6 +24,7 @@ import Playlists exposing (Playlist, PlaylistTrack)
 import Queue
 import Random
 import Sources exposing (Source)
+import Theme
 import Time
 import Tracks exposing (..)
 import UI.Audio.Types exposing (DurationChangeEvent, ErrorAudioEvent, GenericAudioEvent, NowPlaying, PlaybackStateEvent, TimeUpdatedEvent)
@@ -76,6 +77,7 @@ type alias Model =
     , pressedKeys : List Keyboard.Key
     , processAutomatically : Bool
     , serviceWorkerStatus : ServiceWorkerStatus
+    , theme : Maybe Theme.Id
     , uuidSeed : Random.Seed
     , url : Url
     , version : String
@@ -230,7 +232,7 @@ type Msg
       -----------------------------------------
     | AssistWithChangingTheme
     | Blur
-    | ChangeTheme { themeId : String }
+    | ChangeTheme Theme.Id
     | ContextMenuConfirmation String Msg
     | CopyToClipboard String
     | DismissNotification { id : Int }

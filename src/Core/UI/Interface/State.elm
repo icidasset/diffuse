@@ -6,6 +6,7 @@ import Maybe.Extra as Maybe
 import Notifications
 import Return exposing (return)
 import Return.Ext as Return
+import Theme
 import Tracks
 import UI.Alfred.State as Alfred
 import UI.Common.State as Common
@@ -17,6 +18,7 @@ import UI.Ports as Ports
 import UI.Queue.State as Queue
 import UI.Theme
 import UI.Types exposing (..)
+import UI.User.State.Export exposing (saveEnclosedUserData)
 
 
 
@@ -25,15 +27,25 @@ import UI.Types exposing (..)
 
 assistWithChangingTheme : Manager
 assistWithChangingTheme model =
-    { action = \_ -> []
+    { action =
+        \{ result } ->
+            case result of
+                Just { value } ->
+                    value
+                        |> Alfred.command
+                        |> Maybe.map List.singleton
+                        |> Maybe.withDefault []
+
+                Nothing ->
+                    []
     , index =
         [ { name = Just "Themes"
           , items =
                 List.map
                     (\theme ->
-                        { icon = Maybe.map (\icon -> icon 16) theme.icon
+                        { icon = Just (theme.icon 16)
                         , title = theme.title
-                        , value = Alfred.Command (ChangeTheme { themeId = theme.id })
+                        , value = Alfred.Command (ChangeTheme { id = theme.id })
                         }
                     )
                     UI.Theme.list
@@ -51,10 +63,9 @@ blur model =
     Return.singleton { model | focusedOnInput = False, pressedKeys = [] }
 
 
-changeTheme : { themeId : String } -> Manager
-changeTheme { themeId } model =
-    -- TODO
-    Return.singleton model
+changeTheme : Theme.Id -> Manager
+changeTheme id model =
+    saveEnclosedUserData { model | theme = Just id }
 
 
 contextMenuConfirmation : String -> Msg -> Manager

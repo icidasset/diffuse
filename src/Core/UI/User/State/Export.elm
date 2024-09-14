@@ -65,6 +65,7 @@ saveEnclosedUserData model =
     , shuffle = model.shuffle
     , sortBy = model.sortBy
     , sortDirection = model.sortDirection
+    , theme = model.theme
     }
         |> encodeEnclosedData
         |> Alien.broadcast Alien.SaveEnclosedUserData

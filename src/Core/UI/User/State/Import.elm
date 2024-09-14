@@ -220,6 +220,7 @@ importEnclosed value model =
                 , searchTerm = data.searchTerm
                 , sortBy = data.sortBy
                 , sortDirection = data.sortDirection
+                , theme = data.theme
               }
               --
             , Equalizer.adjustAllKnobs newEqualizerSettings

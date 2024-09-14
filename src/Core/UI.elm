@@ -109,6 +109,7 @@ init flags url key =
     , pressedKeys = []
     , processAutomatically = True
     , serviceWorkerStatus = serviceWorkerStatus
+    , theme = Nothing
     , uuidSeed = Random.initialSeed flags.initialTime
     , url = url
     , version = flags.version
