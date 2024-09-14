@@ -156,7 +156,9 @@ navigation { bgColor, favouritesOnly, grouping, isOnIndexPage, pressedShift, sce
         [ -----------------------------------------
           -- Part 1
           -----------------------------------------
-          chunk
+          slab
+            (Html.node "search")
+            [ attribute "role" "search" ]
             [ "border-b"
             , "border-r"
             , "border-gray-300"
