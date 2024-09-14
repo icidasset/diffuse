@@ -635,7 +635,6 @@ subscriptions _ =
         -----------------------------------------
         -- 📭 Other
         -----------------------------------------
-        , Ports.collectedFissionCapabilities (\_ -> SyncingMsg <| Syncing.ActivateSync <| User.Fission {})
         , Ports.installedNewServiceWorker (\_ -> InstalledServiceWorker)
         , Ports.installingNewServiceWorker (\_ -> InstallingServiceWorker)
         , Ports.refreshedAccessToken (Alien.broadcast Alien.RefreshedAccessToken >> RedirectToBrain)
@@ -667,9 +666,6 @@ translateAlienData tag data =
     case tag of
         Alien.AddTracks ->
             TracksMsg (Tracks.Add data)
-
-        Alien.CollectFissionCapabilities ->
-            SyncingMsg Syncing.CollectFissionCapabilities
 
         Alien.FinishedProcessingSource ->
             SourcesMsg (Sources.FinishedProcessingSource data)

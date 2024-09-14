@@ -12,10 +12,10 @@ import UI.Navigation exposing (..)
 import UI.Page as Page
 import UI.Settings.Page exposing (Page(..))
 import UI.Svg.Elements
-import UI.Syncing.Common exposing (startDropbox, startFission, startIpfs, startRemoteStorage)
+import UI.Syncing.Common exposing (startDropbox, startIpfs, startRemoteStorage)
 import UI.Syncing.Types as Syncing
 import UI.Types exposing (Msg(..))
-import User.Layer exposing (Method(..), dropboxMethod, fissionMethod, ipfsMethod, methodName, remoteStorageMethod)
+import User.Layer exposing (Method(..), dropboxMethod, ipfsMethod, methodName, remoteStorageMethod)
 
 
 
@@ -32,9 +32,6 @@ view activeMethod =
           (case activeMethod of
             Just (Dropbox d) ->
                 [ changePassphrase (Dropbox d) ]
-
-            Just (Fission _) ->
-                []
 
             Just (Ipfs i) ->
                 [ changePassphrase (Ipfs i) ]
@@ -79,8 +76,7 @@ view activeMethod =
                     |> List.singleton
             , textHref = Nothing
             }
-            [ [ fissionMethod
-              , dropboxMethod
+            [ [ dropboxMethod
               , remoteStorageMethod
               , ipfsMethod
               ]
@@ -104,9 +100,6 @@ methodInfoAction isSelected activeMethod method =
             Dropbox _ ->
                 Just (\_ -> OpenUrlOnNewPage "https://dropbox.com")
 
-            Fission _ ->
-                Just (\_ -> OpenUrlOnNewPage "https://odd.dev")
-
             RemoteStorage _ ->
                 Just (\_ -> OpenUrlOnNewPage "https://remotestorage.io")
 
@@ -122,9 +115,6 @@ methodView activeMethod method =
         isSelected =
             case ( activeMethod, method ) of
                 ( Just (Dropbox _), Dropbox _ ) ->
-                    True
-
-                ( Just (Fission _), Fission _ ) ->
                     True
 
                 ( Just (RemoteStorage _), RemoteStorage _ ) ->
@@ -143,9 +133,6 @@ methodView activeMethod method =
         case method of
             Dropbox _ ->
                 label UI.Svg.Elements.dropboxLogo
-
-            Fission _ ->
-                label UI.Svg.Elements.oddLogo
 
             RemoteStorage _ ->
                 label UI.Svg.Elements.remoteStorageLogo
@@ -173,9 +160,6 @@ methodView activeMethod method =
             case method of
                 Dropbox _ ->
                     Just startDropbox
-
-                Fission _ ->
-                    Just startFission
 
                 RemoteStorage _ ->
                     Just startRemoteStorage

@@ -6,7 +6,7 @@ import Svg
 import UI.Svg.Elements
 import UI.Syncing.Types exposing (..)
 import UI.Types exposing (Msg(..))
-import User.Layer exposing (Method, dropboxMethod, fissionMethod, remoteStorageMethod)
+import User.Layer exposing (Method, dropboxMethod, remoteStorageMethod)
 
 
 
@@ -16,11 +16,6 @@ import User.Layer exposing (Method, dropboxMethod, fissionMethod, remoteStorageM
 startDropbox : Msg
 startDropbox =
     SyncingMsg (TriggerExternalAuth dropboxMethod "")
-
-
-startFission : Msg
-startFission =
-    SyncingMsg (TriggerExternalAuth fissionMethod "")
 
 
 startIpfs : Msg

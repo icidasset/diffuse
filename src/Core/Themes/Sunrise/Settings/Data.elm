@@ -28,9 +28,6 @@ view activeMethod =
             Just (Dropbox d) ->
                 [ changePassphrase (Dropbox d) ]
 
-            Just (Fission _) ->
-                []
-
             Just (Ipfs i) ->
                 [ changePassphrase (Ipfs i) ]
 

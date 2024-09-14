@@ -37,13 +37,7 @@ port updateSearchIndex : Json.Value -> Cmd msg
 -- 📣  ░░  USER LAYER SERVICES
 
 
-port deconstructFission : () -> Cmd msg
-
-
 port deconstructRemoteStorage : () -> Cmd msg
-
-
-port handlePendingFissionAuthorisation : () -> Cmd msg
 
 
 port provideArtworkTrackUrls : Json.Value -> Cmd msg

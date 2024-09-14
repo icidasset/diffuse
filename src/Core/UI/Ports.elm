@@ -16,12 +16,6 @@ port activeQueueItemChanged : Maybe Queue.EngineItem -> Cmd msg
 port adjustEqualizerSetting : { knob : String, value : Float } -> Cmd msg
 
 
-port authenticateWithFission : () -> Cmd msg
-
-
-port collectFissionCapabilities : () -> Cmd msg
-
-
 port copyToClipboard : String -> Cmd msg
 
 
@@ -108,9 +102,6 @@ port audioHasLoaded : (Audio.GenericAudioEvent -> msg) -> Sub msg
 
 
 port audioTimeUpdated : (Audio.TimeUpdatedEvent -> msg) -> Sub msg
-
-
-port collectedFissionCapabilities : (() -> msg) -> Sub msg
 
 
 port downloadTracksFinished : (() -> msg) -> Sub msg

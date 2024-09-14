@@ -57,7 +57,6 @@ type Tag
       -- to UI
       -----------------------------------------
     | AddTracks
-    | CollectFissionCapabilities
     | FinishedProcessingSource
     | FinishedProcessingSources
     | FinishedSyncing
@@ -112,7 +111,6 @@ enum =
         -- To UI
         -----------------------------------------
         , ( "ADD_TRACKS", AddTracks )
-        , ( "COLLECT_FISSION_CAPABILITIES", CollectFissionCapabilities )
         , ( "FINISHED_PROCESSING_SOURCE", FinishedProcessingSource )
         , ( "FINISHED_PROCESSING_SOURCES", FinishedProcessingSources )
         , ( "GOT_CACHED_COVER", GotCachedCover )

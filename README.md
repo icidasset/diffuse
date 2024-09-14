@@ -28,8 +28,6 @@ User layer for user-data storage.
 #### User layer
 
 - [Dropbox](https://www.dropbox.com/)
-- [Fission](https://fission.codes/)
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(Browser)</small>
 - [IPFS](https://ipfs.io/) <small>(using MFS)</small>
 - [RemoteStorage](https://remotestorage.io/)
 

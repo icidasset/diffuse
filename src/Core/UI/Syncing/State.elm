@@ -133,9 +133,6 @@ update msg =
         BootFailure a ->
             bootFailure a
 
-        CollectFissionCapabilities ->
-            collectFissionCapabilities
-
         ExchangeDropboxAuthCode a ->
             exchangeDropboxAuthCode a
 
@@ -260,11 +257,6 @@ bootFailure err model =
         |> andThen Backdrop.setDefault
 
 
-collectFissionCapabilities : Manager
-collectFissionCapabilities model =
-    return model (Ports.collectFissionCapabilities ())
-
-
 externalAuth : Method -> String -> Manager
 externalAuth method string model =
     case method of
@@ -278,12 +270,6 @@ externalAuth method string model =
                 |> String.append "https://www.dropbox.com/oauth2/authorize"
                 |> Nav.load
                 |> return model
-
-        Fission _ ->
-            "Just a moment, loading necessary components ..."
-                |> Notifications.stickyCasual
-                |> Common.showNotificationWithModel model
-                |> Return.command (Ports.authenticateWithFission ())
 
         RemoteStorage _ ->
             string

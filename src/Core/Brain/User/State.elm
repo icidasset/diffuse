@@ -36,15 +36,6 @@ import User.Layer.Methods.Dropbox as Dropbox
 initialCommand : Url -> Cmd Brain.Msg
 initialCommand uiUrl =
     case Url.action uiUrl of
-        [ "authenticate", "fission" ] ->
-            Cmd.batch
-                [ loadEnclosedData
-                , loadLocalHypaethralData
-                    { initialUrl = uiUrl
-                    , methodTask = Task.succeed Nothing
-                    }
-                ]
-
         _ ->
             Cmd.batch
                 [ loadEnclosedData
@@ -216,9 +207,6 @@ commence maybeMethod initialUrl ( hypaethralJson, hypaethralData ) model =
         |> sendHypaethralDataToUI hypaethralJson hypaethralData
         |> andThen
             (case Url.action initialUrl of
-                [ "authenticate", "fission" ] ->
-                    Common.nudgeUI Alien.CollectFissionCapabilities
-
                 _ ->
                     sync { initialTask = Nothing }
             )
@@ -318,12 +306,6 @@ syncCommand initialTask model =
                     , save = Hypaethral.saveDropbox accessToken
                     }
 
-        Just (Fission _) ->
-            attemptSync
-                { retrieve = Hypaethral.retrieveFission
-                , save = Hypaethral.saveFission
-                }
-
         Just (Ipfs { apiOrigin }) ->
             attemptSync
                 { retrieve = Hypaethral.retrieveIpfs apiOrigin
@@ -351,9 +333,6 @@ unsetSyncMethod model =
     , case model.userSyncMethod of
         Just (Dropbox _) ->
             Cmd.none
-
-        Just (Fission _) ->
-            Ports.deconstructFission ()
 
         Just (Ipfs _) ->
             Cmd.none
@@ -431,9 +410,6 @@ saveAllHypaethralDataTask userData method =
     case method of
         Dropbox { accessToken } ->
             save (Hypaethral.saveDropbox accessToken)
-
-        Fission _ ->
-            save Hypaethral.saveFission
 
         Ipfs { apiOrigin } ->
             save (Hypaethral.saveIpfs apiOrigin)
@@ -514,9 +490,6 @@ saveHypaethralDataBits bitsWithoutModifiedAt model =
 
             else
                 save (Hypaethral.saveDropbox accessToken)
-
-        Just (Fission _) ->
-            save Hypaethral.saveFission
 
         Just (Ipfs { apiOrigin }) ->
             save (Hypaethral.saveIpfs apiOrigin)

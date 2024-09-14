@@ -6,23 +6,6 @@
 import * as localforage from "localforage"
 
 
-export const APP_INFO = {
-  creator: "icidasset",
-  name: "Diffuse"
-}
-
-
-export const ODD_CONFIG = {
-  namespace: APP_INFO,
-  permissions: {
-    app: APP_INFO,
-    fs: { public: [ { directory: [ "Apps", APP_INFO.creator, APP_INFO.name ] } ] }
-  },
-  debug: true,
-}
-
-
-
 // 🌳
 
 

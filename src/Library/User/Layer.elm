@@ -43,7 +43,6 @@ import Tracks.Encoding as Tracks
 
 type Method
     = Dropbox { accessToken : String, expiresAt : Int, refreshToken : String }
-    | Fission {}
     | Ipfs { apiOrigin : String }
     | RemoteStorage { userAddress : String, token : String }
 
@@ -51,11 +50,6 @@ type Method
 dropboxMethod : Method
 dropboxMethod =
     Dropbox { accessToken = "", expiresAt = 0, refreshToken = "" }
-
-
-fissionMethod : Method
-fissionMethod =
-    Fission {}
 
 
 ipfsMethod : Method
@@ -151,9 +145,6 @@ methodName method =
         Dropbox _ ->
             "Dropbox"
 
-        Fission _ ->
-            "Fission"
-
         Ipfs _ ->
             "IPFS (using MFS)"
 
@@ -172,9 +163,6 @@ methodFromString string =
                     , refreshToken = r
                     }
                 )
-
-        [ "FISSION" ] ->
-            Just (Fission {})
 
         [ "IPFS", a ] ->
             Just (Ipfs { apiOrigin = a })
@@ -197,9 +185,6 @@ methodToString method =
                 , String.fromInt expiresAt
                 , refreshToken
                 ]
-
-        Fission _ ->
-            "FISSION"
 
         Ipfs { apiOrigin } ->
             String.join
@@ -227,9 +212,6 @@ methodSupportsPublicData method =
     case method of
         Dropbox _ ->
             False
-
-        Fission _ ->
-            True
 
         Ipfs _ ->
             False

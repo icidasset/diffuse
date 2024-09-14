@@ -16,7 +16,6 @@ import * as Errors from "./errors"
 import * as Misc from "./misc"
 import * as ServiceWorker from "./service-worker"
 import * as Tracks from "./tracks"
-import * as UserLayer from "./user-layer"
 
 
 
@@ -54,7 +53,6 @@ ServiceWorker
     Backdrop.init(app)
     Misc.init(app)
     Tracks.init(app)
-    UserLayer.init(app)
   })
   .catch(
     Errors.failure

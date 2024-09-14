@@ -40,7 +40,6 @@
     "tiny-parse-argv": "^2.4.0"
   },
   "dependencies": {
-    "@oddjs/odd": "^0.37.2",
     "@tokenizer/http": "^0.6.2",
     "elm-taskport": "^2.0.1",
     "encoding-japanese": "^2.0.0",
