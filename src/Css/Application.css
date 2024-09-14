@@ -109,15 +109,11 @@ textarea::placeholder {
   opacity: 1;
 }
 
-input:invalid,
-textarea:invalid {
+input:user-invalid,
+textarea:user-invalid {
+  @apply border-base08;
   box-shadow: none;
   outline: none;
-}
-
-input[changed]:invalid,
-textarea[changed]:invalid {
-  @apply border-base08;
 }
 
 select:-moz-focusring {
