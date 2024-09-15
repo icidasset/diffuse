@@ -94,32 +94,41 @@ ordered _ unfilteredTracks state =
 
 
 shuffled : Time.Posix -> List IdentifiedTrack -> State -> List Item
-shuffled timestamp unfilteredTracks s =
+shuffled timestamp unfilteredTracks state =
     let
-        state =
-            if List.isEmpty s.future && not (List.isEmpty s.past) then
-                -- We played every available track,
-                -- disregard the past tracks.
-                { s | past = [] }
-
-            else
-                s
-
-        idsToIgnore =
+        idsToIgnoreWithoutPast =
             [ state.ignored
-            , state.past
-            , state.future
             , Maybe.unwrap [] List.singleton state.activeItem
             ]
                 |> List.map (List.map itemTrackId)
                 |> List.concat
                 |> List.unique
 
+        ( tracksWithPast, idsToIgnoreWithoutPastAfterFilter ) =
+            purifier unfilteredTracks ( [], idsToIgnoreWithoutPast )
+
+        idsToIgnoreWithPast =
+            List.unique (idsToIgnoreWithoutPastAfterFilter ++ List.map itemTrackId state.past)
+
+        ( tracksWithoutPast, idsToIgnoreWithPastAfterFilter ) =
+            purifier tracksWithPast ( [], idsToIgnoreWithPast )
+
+        idsToIgnoreWithFuture =
+            List.unique (idsToIgnoreWithoutPastAfterFilter ++ List.map itemTrackId state.future)
+
+        ( tracksList, _ ) =
+            purifier
+                (case tracksWithoutPast of
+                    [] ->
+                        tracksWithPast
+
+                    t ->
+                        t
+                )
+                ( [], idsToIgnoreWithFuture )
+
         tracks =
-            ( [], idsToIgnore )
-                |> purifier unfilteredTracks
-                |> Tuple.first
-                |> Array.fromList
+            Array.fromList tracksList
 
         amountOfTracks =
             Array.length tracks

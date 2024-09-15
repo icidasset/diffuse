@@ -36,6 +36,9 @@ update msg =
         Reset ->
             reset
 
+        ResetIgnored ->
+            resetIgnored
+
         Rewind ->
             rewind
 
@@ -128,7 +131,7 @@ changeActiveItem maybeItem model =
 
 clear : Manager
 clear model =
-    fill { model | playingNext = [], dontPlay = [] }
+    fill { model | playingNext = [] }
 
 
 fill : Manager
@@ -286,8 +289,13 @@ reset : Manager
 reset model =
     model.playingNext
         |> List.filter (.manualEntry >> (==) True)
-        |> (\f -> { model | playingNext = f, dontPlay = [] })
+        |> (\f -> { model | playingNext = f })
         |> fill
+
+
+resetIgnored : Manager
+resetIgnored model =
+    fill { model | dontPlay = [] }
 
 
 select : Item -> Manager

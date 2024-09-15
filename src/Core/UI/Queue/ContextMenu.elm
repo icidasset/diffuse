@@ -63,7 +63,7 @@ futureNavigationMenu { manualEntries } =
     [ [ Item
             { icon = Icons.not_interested
             , label = "Reset ignored"
-            , msg = QueueMsg Queue.Reset
+            , msg = QueueMsg Queue.ResetIgnored
 
             --
             , active = False

@@ -13,6 +13,7 @@ type Msg
     = Clear
     | PreloadNext
     | Reset
+    | ResetIgnored
     | Rewind
     | Select Item
     | Shift
