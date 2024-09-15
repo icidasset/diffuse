@@ -114,10 +114,12 @@ function play({ trackId, volume }: { trackId: string, volume: number }) {
     audio.muted = false
 
     if (audio.readyState === 0) audio.load()
+    if (!audio.isConnected) return
 
     const promise = audio.play() || Promise.resolve()
 
     promise.catch((e) => {
+      if (!audio.isConnected) return /* The node was removed from the DOM, we can ignore this error */
       const err = "Couldn't play audio automatically. Please resume playback manually."
       console.error(err, e)
       if (app) app.ports.fromAlien.send({ tag: "", data: null, error: err })
