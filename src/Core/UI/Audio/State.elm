@@ -28,13 +28,12 @@ durationChange { trackId, duration } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
         (\nowPlaying ->
-            case nowPlaying.duration of
-                Nothing ->
-                    durationChange_ { trackId = trackId, duration = duration } nowPlaying
+            if nowPlaying.duration == Nothing || nowPlaying.duration /= Just duration then
+                durationChange_ { trackId = trackId, duration = duration } nowPlaying
 
-                Just _ ->
-                    -- Ignore repeating events
-                    Return.singleton
+            else
+                -- Ignore repeating events
+                Return.singleton
         )
 
 
