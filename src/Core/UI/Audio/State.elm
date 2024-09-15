@@ -27,55 +27,66 @@ durationChange : DurationChangeEvent -> Manager
 durationChange { trackId, duration } =
     onlyIfMatchesNowPlaying
         { trackId = trackId }
-        (\nowPlaying model ->
-            let
-                ( identifiers, track ) =
-                    nowPlaying.item.identifiedTrack
+        (\nowPlaying ->
+            case nowPlaying.duration of
+                Nothing ->
+                    durationChange_ { trackId = trackId, duration = duration } nowPlaying
 
-                maybeCover =
-                    List.find
-                        (\c -> List.member trackId c.trackIds)
-                        model.covers.arranged
-
-                coverPrep =
-                    Maybe.map
-                        (\cover ->
-                            { cacheKey = Base64.encode (Tracks.coverKey cover.variousArtists track)
-                            , trackFilename = identifiers.filename
-                            , trackPath = track.path
-                            , trackSourceId = track.sourceId
-                            , variousArtists = boolToString cover.variousArtists
-                            }
-                        )
-                        maybeCover
-
-                coverLoaded =
-                    case ( maybeCover, model.cachedCovers ) of
-                        ( Just cover, Just cachedCovers ) ->
-                            let
-                                key =
-                                    Base64.encode (Tracks.coverKey cover.variousArtists track)
-                            in
-                            Dict.member key cachedCovers
-
-                        _ ->
-                            False
-
-                metadata =
-                    { album = track.tags.album
-                    , artist = track.tags.artist
-                    , title = track.tags.title
-
-                    --
-                    , coverPrep = coverPrep
-                    }
-            in
-            model
-                |> replaceNowPlaying { nowPlaying | coverLoaded = coverLoaded, duration = Just duration }
-                |> Return.command (Ports.setMediaSessionMetadata metadata)
-                |> Return.command (Ports.resetScrobbleTimer { duration = duration, trackId = trackId })
-                |> Return.andThen (notifyScrobblersOfTrackPlaying { duration = duration })
+                Just _ ->
+                    -- Ignore repeating events
+                    Return.singleton
         )
+
+
+durationChange_ : DurationChangeEvent -> NowPlaying -> Manager
+durationChange_ { trackId, duration } nowPlaying model =
+    let
+        ( identifiers, track ) =
+            nowPlaying.item.identifiedTrack
+
+        maybeCover =
+            List.find
+                (\c -> List.member trackId c.trackIds)
+                model.covers.arranged
+
+        coverPrep =
+            Maybe.map
+                (\cover ->
+                    { cacheKey = Base64.encode (Tracks.coverKey cover.variousArtists track)
+                    , trackFilename = identifiers.filename
+                    , trackPath = track.path
+                    , trackSourceId = track.sourceId
+                    , variousArtists = boolToString cover.variousArtists
+                    }
+                )
+                maybeCover
+
+        coverLoaded =
+            case ( maybeCover, model.cachedCovers ) of
+                ( Just cover, Just cachedCovers ) ->
+                    let
+                        key =
+                            Base64.encode (Tracks.coverKey cover.variousArtists track)
+                    in
+                    Dict.member key cachedCovers
+
+                _ ->
+                    False
+
+        metadata =
+            { album = track.tags.album
+            , artist = track.tags.artist
+            , title = track.tags.title
+
+            --
+            , coverPrep = coverPrep
+            }
+    in
+    model
+        |> replaceNowPlaying { nowPlaying | coverLoaded = coverLoaded, duration = Just duration }
+        |> Return.command (Ports.setMediaSessionMetadata metadata)
+        |> Return.command (Ports.resetScrobbleTimer { duration = duration, trackId = trackId })
+        |> Return.andThen (notifyScrobblersOfTrackPlaying { duration = duration })
 
 
 error : ErrorAudioEvent -> Manager
