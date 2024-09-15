@@ -28,7 +28,6 @@ import UI.Backdrop as Backdrop
 import UI.Page as Page
 import UI.Settings.Page
 import UI.Sources.Page
-import UI.Svg.Elements
 import UI.Syncing.Common as Syncing
 import UI.Types exposing (..)
 import User.Layer

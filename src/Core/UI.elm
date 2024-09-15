@@ -48,7 +48,6 @@ import UI.User.State.Import as User
 import UI.View exposing (view)
 import Url exposing (Url)
 import Url.Ext as Url
-import User.Layer as User
 
 
 

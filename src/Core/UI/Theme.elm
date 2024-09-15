@@ -3,14 +3,13 @@ module UI.Theme exposing (..)
 import Chunky exposing (..)
 import Dict exposing (Dict)
 import Html exposing (Html)
-import Material.Icons.Types exposing (Icon)
 import Theme exposing (Theme)
 import Themes.Sunrise.Theme as Sunrise
 import Themes.Sunrise.Tracks.Scene.Covers
 import Themes.Sunrise.Tracks.Scene.List
 import Tracks exposing (IdentifiedTrack, Scene)
 import UI.Svg.Elements
-import UI.Types exposing (Model, Msg(..))
+import UI.Types exposing (Model, Msg)
 
 
 
