@@ -288,13 +288,20 @@ function pickTagsFromMusicMetadata(filename: string, result: IAudioMetadata): Ta
 // 🛠️
 
 
+let client
+
+
 async function mediaInfoClient(covers: boolean) {
   const MediaInfoFactory = await import("mediainfo.js").then((a) => a.default);
 
-  return await MediaInfoFactory({
+  if (client) return client
+
+  client = await MediaInfoFactory({
     coverData: covers,
     locateFile: () => {
       return "../../wasm/media-info.wasm";
     },
   });
+
+  return client
 }
