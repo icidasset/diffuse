@@ -226,7 +226,7 @@ js-prod:
 
 
 @watch-elm:
-	watchexec -p -w {{SRC_DIR}} -e elm -- just elm css
+	watchexec -p -w {{SRC_DIR}} -e elm -- just elm js css
 
 
 @watch-js:

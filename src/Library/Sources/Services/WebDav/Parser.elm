@@ -1,6 +1,7 @@
 module Sources.Services.WebDav.Parser exposing (..)
 
 import Maybe.Extra as Maybe
+import Sources.Pick exposing (isMusicFile)
 import Sources.Processing exposing (Marker, TreeAnswer)
 import Sources.Services.Ipfs.Marker as Marker
 import String.Ext as String
@@ -82,29 +83,43 @@ treeItemDecoder namespace =
         withNamespace =
             String.append namespace
     in
-    map2
-        (\_ h -> h)
-        (oneOf
-            [ -- Audio
-              --------
-              string
-                |> single
-                |> path [ withNamespace "propstat", withNamespace "prop", withNamespace "getcontenttype" ]
-                |> andThen mustBeAudio
+    string
+        |> single
+        |> path [ withNamespace "href" ]
+        |> andThen
+            (\href ->
+                oneOf
+                    [ -- Audio
+                      --------
+                      string
+                        |> single
+                        |> path [ withNamespace "propstat", withNamespace "prop", withNamespace "getcontenttype" ]
+                        |> andThen (mustBeAudio href)
+                        |> map (\_ -> href)
 
-            -- Directory
-            ------------
-            , string
-                |> single
-                |> path [ withNamespace "propstat", withNamespace "prop", withNamespace "resourcetype", withNamespace "collection" ]
-            ]
-        )
-        (path [ withNamespace "href" ] (single string))
+                    -- Directory
+                    ------------
+                    , string
+                        |> single
+                        |> path [ withNamespace "propstat", withNamespace "prop", withNamespace "resourcetype", withNamespace "collection" ]
+                        |> andThen
+                            (\_ ->
+                                if String.endsWith "/@eaDir/" href then
+                                    fail "Ignore Synology metadata"
+
+                                else
+                                    succeed href
+                            )
+                    ]
+            )
 
 
-mustBeAudio : String -> Decoder String
-mustBeAudio contentType =
-    if String.startsWith "audio/" contentType then
+mustBeAudio : String -> String -> Decoder String
+mustBeAudio href contentType =
+    if isMusicFile href then
+        succeed contentType
+
+    else if String.startsWith "audio/" contentType then
         succeed contentType
 
     else
