@@ -40,7 +40,8 @@
     "tiny-parse-argv": "^2.4.0"
   },
   "dependencies": {
-    "@tokenizer/http": "^0.6.2",
+    "@tokenizer/http": "^0.9.1",
+    "@tokenizer/range": "^0.10.0",
     "elm-taskport": "^2.0.1",
     "encoding-japanese": "^2.0.0",
     "fast-text-encoding": "^1.0.6",

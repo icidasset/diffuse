@@ -6,6 +6,7 @@
 
 import type { IAudioMetadata } from "music-metadata"
 import type { GeneralTrack, MediaInfoResult } from "mediainfo.js"
+import type { ITokenizer } from "strtok3"
 
 import * as Uint8arrays from "uint8arrays"
 import { type App } from "./elm/types"
@@ -107,22 +108,17 @@ export async function getTags(
   { covers }: { covers: boolean },
 ) {
   const musicMetadata = await import("music-metadata");
-  const httpTokenizer = await import("@tokenizer/http").then((a) => a.default);
+  const httpTokenizer = await import("@tokenizer/http");
+  const rangeTokenizer = await import("@tokenizer/range");
 
-  let tokenizer;
+  let tokenizer: ITokenizer;
   let mmResult;
 
   try {
-    tokenizer = await httpTokenizer.makeTokenizer(headUrl);
-    tokenizer.fileInfo.url = getUrl;
+    const httpClient = new httpTokenizer.HttpClient(headUrl, { resolveUrl: false });
+    httpClient.resolvedUrl = getUrl
 
-    // @ts-ignore
-    if (tokenizer.rangeRequestClient) {
-      // @ts-ignore
-      tokenizer.rangeRequestClient.url = getUrl;
-      // @ts-ignore
-      tokenizer.rangeRequestClient.resolvedUrl = undefined;
-    }
+    tokenizer = await rangeTokenizer.tokenizer(httpClient);
 
     mmResult = await musicMetadata
       .parseFromTokenizer(tokenizer, { skipCovers: !covers })

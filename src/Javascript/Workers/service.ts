@@ -182,25 +182,16 @@ function newRequestWithAuth(event, urlWithoutToken, authToken) {
     }
   )
 
-  let retries = 0
-
   // TODO: When request fails because access token is expired,
   //       refresh the token, and retry the request.
   const makeFetch = () => fetch(newRequest).then(r => {
     if (r.ok) {
-      retries = 0
       return r
     } else {
       return r.text().then(text => {
         throw new Error(text)
       })
     }
-  }).catch(err => {
-    // Safari keeps getting weird CORS errors from Google Drive, after some time they disappear 🤷‍♂️
-    retries++
-    if (retries <= 1000) return new Promise((resolve, reject) => setTimeout(makeFetch().then(resolve, reject), 1000))
-    else throw new Error(err)
-
   })
 
   event.respondWith(

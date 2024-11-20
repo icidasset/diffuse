@@ -31,8 +31,9 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
             "*"
         ],
         "ExposeHeaders": [
+            "Accept-Ranges",
             "Content-Length",
-            "Content-Type"
+            "Content-Range"
         ],
         "MaxAgeSeconds": 31536000
     }
@@ -118,7 +119,7 @@ Then fill in the following in the input boxes (left to right):
 ALLOWED ORIGINS       *
 ALLOWED METHODS       GET, HEAD
 ALLOWED HEADERS       Range
-EXPOSED HEADERS       Content-Length, Content-Range
+EXPOSED HEADERS       Accept-Ranges, Content-Length, Content-Range
 MAX AGE               0
 ```
 
@@ -147,6 +148,7 @@ cors:
     - https://diffuse.sh
     - http://127.0.0.1:44999
   exposed_headers:
+    - Accept-Ranges
     - Content-Length
-    - Content-Type
+    - Content-Range
 ```
