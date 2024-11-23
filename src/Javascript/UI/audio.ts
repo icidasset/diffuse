@@ -104,7 +104,7 @@ function pause({ trackId }: { trackId: string }) {
 
 
 function pauseScrobbleTimer() {
-  if (this.scrobbleTimer) this.scrobbleTimer.pause()
+  if (scrobbleTimer) scrobbleTimer.pause()
 }
 
 
@@ -117,6 +117,16 @@ function play({ trackId, volume }: { trackId: string, volume: number }) {
     if (!audio.isConnected) return
 
     const promise = audio.play() || Promise.resolve()
+    const didPreload = audio.getAttribute("data-did-preload") === "true"
+    const isPreload = audio.getAttribute("data-is-preload") === "true"
+
+    if (didPreload && !isPreload) {
+      audio.removeAttribute("data-did-preload")
+      app.ports.audioDurationChange.send({
+        trackId: audio.id,
+        duration: audio.duration,
+      })
+    }
 
     promise.catch((e) => {
       if (!audio.isConnected) return /* The node was removed from the DOM, we can ignore this error */
@@ -159,15 +169,17 @@ function resetScrobbleTimer({ duration, trackId }: { duration: number, trackId: 
   const timestamp = Math.round(Date.now() / 1000)
   const scrobbleTimeoutDuration = Math.min(240 + 0.5, duration / 1.95)
 
-  if (this.scrobbleTimer) this.scrobbleTimer.stop()
+  if (scrobbleTimer) scrobbleTimer.stop()
 
   scrobbleTimer = new Timer({
-    onend: () =>
+    onend: () => {
+      scrobbleTimer = undefined
       app.ports.scrobble.send({
         duration: Math.round(duration),
         timestamp,
         trackId,
-      }),
+      })
+    }
   })
 
   scrobbleTimer.start(scrobbleTimeoutDuration)
@@ -262,7 +274,7 @@ function setMediaSessionPositionState({
 
 
 function startScrobbleTimer() {
-  if (this.scrobbleTimer) this.scrobbleTimer.start()
+  if (scrobbleTimer) scrobbleTimer.start()
 }
 
 
@@ -338,8 +350,13 @@ async function render(items: Array<EngineItem>) {
   await items.reduce(async (acc: Promise<void>, item: EngineItem) => {
     await acc
 
-    if (existingNodes[item.trackId]) {
-      existingNodes[item.trackId].setAttribute(
+    const existingNode = existingNodes[item.trackId]
+
+    if (existingNode) {
+      const isPreload = existingNode.getAttribute("data-is-preload")
+      if (isPreload === "true") existingNode.setAttribute("data-did-preload", "true")
+
+      existingNode.setAttribute(
         "data-is-preload",
         item.isPreload ? "true" : "false",
       )
