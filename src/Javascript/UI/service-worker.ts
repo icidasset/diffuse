@@ -35,7 +35,7 @@ export async function load({ isNativeWrapper } : { isNativeWrapper: boolean }): 
 
             if (serverIsOnline) return navigator.serviceWorker.register(
               "service-worker.js",
-              { type: "module" }
+              // { type: "module" }
             )
 
             if (registrations[0]) return registrations

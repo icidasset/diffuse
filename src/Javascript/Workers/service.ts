@@ -11,7 +11,7 @@
 
 
 const KEY =
-  /* eslint-disable no-undef */
+  /* eslint-disable no-undef *//* @ts-ignore */
   `diffuse-${BUILD_TIMESTAMP}`
 
 
@@ -56,7 +56,9 @@ self.addEventListener("install", event => {
   const promise = fetch("tree.json")
     .then(response => response.json())
     .then(tree => {
-      const filteredTree = tree.filter(t => !EXCLUDE.find(u => u === t))
+      const filteredTree = tree
+        .filter(t => !EXCLUDE.find(u => u === t))
+        .filter(u => u.endsWith(".jpg"))
       const whatToCache = [ href, `${href.replace(/\/+$/, "")}/about/` ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
@@ -81,11 +83,11 @@ self.addEventListener("fetch", event => {
     )
 
   // When doing a request with basic authentication in the url, put it in the headers instead
-  } else if (event.request.url.includes("service_worker_authentication=")) {
+  } else if (event.request.url.includes("basic_auth=")) {
     const url = new URL(event.request.url)
-    const token = url.searchParams.get("service_worker_authentication")
+    const token = url.searchParams.get("basic_auth")
 
-    url.searchParams.delete("service_worker_authentication")
+    url.searchParams.delete("basic_auth")
     url.search = "?" + url.searchParams.toString()
 
     newRequestWithAuth(
@@ -161,13 +163,10 @@ addEventListener("message", event => {
 // ⚗️
 
 
-function newRequestWithAuth(event, urlWithoutToken, authToken) {
+function newRequestWithAuth(event: FetchEvent, urlWithoutToken: string, authToken: string) {
   const request = event.request
-  const newHeaders = Object.fromEntries(
-    request.headers.entries()
-  )
-
-  newHeaders[ "authorization" ] = authToken
+  const newHeaders = new Headers(event.request.headers)
+  newHeaders.append("authorization", authToken)
 
   const newRequest = new Request(
     new Request(urlWithoutToken, event.request),
@@ -182,8 +181,6 @@ function newRequestWithAuth(event, urlWithoutToken, authToken) {
     }
   )
 
-  // TODO: When request fails because access token is expired,
-  //       refresh the token, and retry the request.
   const makeFetch = () => fetch(newRequest).then(r => {
     if (r.ok) {
       return r

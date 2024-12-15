@@ -387,7 +387,7 @@ export async function createElement(item: EngineItem) {
   // Audio node
   const audio = new Audio()
   audio.setAttribute("id", item.trackId)
-  audio.setAttribute("crossorigin", "anonymous")
+  audio.setAttribute("crossorigin", "use-credentials")
   audio.setAttribute("data-initial-progress", JSON.stringify(item.progress))
   audio.setAttribute("data-is-preload", item.isPreload ? "true" : "false")
   audio.setAttribute("muted", "true")

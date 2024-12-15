@@ -21,7 +21,8 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
 [
     {
         "AllowedHeaders": [
-            "Range"
+            "Range",
+            "X-Playback-Session-Id"
         ],
         "AllowedMethods": [
             "GET",
@@ -118,7 +119,7 @@ Then fill in the following in the input boxes (left to right):
 ```
 ALLOWED ORIGINS       *
 ALLOWED METHODS       GET, HEAD
-ALLOWED HEADERS       Range
+ALLOWED HEADERS       Range, X-Playback-Session-Id
 EXPOSED HEADERS       Accept-Ranges, Content-Length, Content-Range
 MAX AGE               0
 ```
@@ -137,9 +138,8 @@ cors:
 
   allowed_headers:
     - Authorization
-    - Content-Type
     - Depth
-    - Range
+    - X-Playback-Session-Id
   allowed_methods:
     - GET
     - HEAD
