@@ -29,7 +29,8 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
             "HEAD"
         ],
         "AllowedOrigins": [
-            "*"
+            "https://diffuse.sh",
+            "http://127.0.0.1:44999"
         ],
         "ExposeHeaders": [
             "Accept-Ranges",

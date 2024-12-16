@@ -67,7 +67,9 @@ self.addEventListener("install", event => {
 })
 
 
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", fetchEvent => {
+  const event = fetchEvent as FetchEvent
+
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
@@ -87,14 +89,11 @@ self.addEventListener("fetch", event => {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("basic_auth")
 
-    url.searchParams.delete("basic_auth")
-    url.search = "?" + url.searchParams.toString()
-
-    newRequestWithAuth(
-      event,
+    event.respondWith(newRequestWithAuth(
+      event.request,
       url.toString(),
       "Basic " + token
-    )
+    ))
 
   // When doing a request with access token in the url, put it in the headers instead
   } else if (event.request.url.includes("bearer_token=")) {
@@ -106,11 +105,11 @@ self.addEventListener("fetch", event => {
     url.searchParams.delete("bearer_token")
     url.search = "?" + url.searchParams.toString()
 
-    newRequestWithAuth(
-      event,
+    event.respondWith(newRequestWithAuth(
+      event.request,
       url.toString(),
       "Bearer " + token
-    )
+    ))
 
   // Use cache if internal request and not using native app
   } else if (isInternal) {
@@ -122,15 +121,15 @@ self.addEventListener("fetch", event => {
 
   } else if (event.request.url && event.request.url.startsWith(GOOGLE_DRIVE) && event.request.url.includes("alt=media")) {
     // For some reason Safari starts using the non bearer-token URL while playing audio
-    googleDriveToken
-      ? newRequestWithAuth(
-        event,
-        event.request.url.toString(),
-        "Bearer " + googleDriveToken
-      )
-      : event.respondWith(
-        network(event)
-      )
+    event.respondWith(
+      googleDriveToken
+        ? newRequestWithAuth(
+          event.request,
+          event.request.url.toString(),
+          "Bearer " + googleDriveToken
+        )
+        : network(event)
+    )
 
   }
 })
@@ -163,25 +162,13 @@ addEventListener("message", event => {
 // ⚗️
 
 
-function newRequestWithAuth(event: FetchEvent, urlWithoutToken: string, authToken: string) {
-  const request = event.request
-  const newHeaders = new Headers(event.request.headers)
+function newRequestWithAuth(request: Request, newUrl: string, authToken: string): Promise<Response> {
+  const newHeaders = new Headers(request.headers)
   newHeaders.append("authorization", authToken)
 
-  const newRequest = new Request(
-    new Request(urlWithoutToken, event.request),
-    {
-      headers: newHeaders,
-      credentials: request.credentials,
-      cache: request.cache,
-      method: request.method,
-      mode: request.mode,
-      redirect: request.redirect,
-      referrer: request.referrer,
-    }
-  )
+  const newRequest = new Request(request, { headers: newHeaders })
 
-  const makeFetch = () => fetch(newRequest).then(r => {
+  const makeFetch = () => fetch(newRequest).then(async r => {
     if (r.ok) {
       return r
     } else {
@@ -191,7 +178,5 @@ function newRequestWithAuth(event: FetchEvent, urlWithoutToken: string, authToke
     }
   })
 
-  event.respondWith(
-    makeFetch()
-  )
+  return makeFetch()
 }
