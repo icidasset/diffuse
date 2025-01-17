@@ -96,6 +96,12 @@ nowPlayingCommands model =
 
             --
             , { icon = Just (Icons.queue_music 16)
+              , title = "Add current track to collection"
+              , value = Command (UI.AssistWithAddingTracksToCollection <| [ identifiedTrack ])
+              }
+
+            --
+            , { icon = Just (Icons.queue_music 16)
               , title = "Add current track to playlist"
               , value = Command (UI.AssistWithAddingTracksToPlaylist <| [ identifiedTrack ])
               }
@@ -176,6 +182,10 @@ selectionCommands model =
         tracks ->
             List.concat
                 [ [ { icon = Just (Icons.queue_music 16)
+                    , title = "Add current selection to collection"
+                    , value = Command (UI.AssistWithAddingTracksToCollection tracks)
+                    }
+                  , { icon = Just (Icons.queue_music 16)
                     , title = "Add current selection to playlist"
                     , value = Command (UI.AssistWithAddingTracksToPlaylist tracks)
                     }

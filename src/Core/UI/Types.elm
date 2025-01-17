@@ -20,7 +20,7 @@ import Keyboard
 import LastFm
 import Management
 import Notifications exposing (Notification)
-import Playlists exposing (Playlist, PlaylistTrack)
+import Playlists exposing (Playlist, PlaylistTrack, PlaylistTrackWithoutMetadata)
 import Queue
 import Random
 import Sources exposing (Source)
@@ -124,7 +124,7 @@ type alias Model =
     -- Playlists
     -----------------------------------------
     , editPlaylistContext : Maybe { oldName : String, newName : String }
-    , lastModifiedPlaylist : Maybe String
+    , lastModifiedPlaylist : Maybe { collection : Bool, name : String }
     , newPlaylistContext : Maybe String
     , playlists : List Playlist
     , playlistToActivate : Maybe String
@@ -256,9 +256,11 @@ type Msg
       -- Playlists
       -----------------------------------------
     | ActivatePlaylist Playlist
-    | AddTracksToPlaylist { playlistName : String, tracks : List PlaylistTrack }
+    | AddTracksToPlaylist { collection : Bool, playlistName : String, tracks : List PlaylistTrackWithoutMetadata }
+    | AssistWithAddingTracksToCollection (List IdentifiedTrack)
     | AssistWithAddingTracksToPlaylist (List IdentifiedTrack)
     | AssistWithSelectingPlaylist
+    | CreateCollection
     | CreatePlaylist
     | DeactivatePlaylist
     | DeletePlaylist { playlistName : String }

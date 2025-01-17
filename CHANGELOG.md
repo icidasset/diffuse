@@ -3,8 +3,9 @@
 ## 3.5.0
 
 - **Improve audio playback, processing and error handling**.
-- **No longer resets shuffle history when the collection or search changes**.
+- **Added collections, an alternative to playlists**. Tracks can only appear once in a collection and cannot be ordered.
 - **Basic setup for themes**.
+- No longer resets shuffle history when the collection or search changes.
 - WebDAV improvements.
 - Removed Fission/Webnative user layer (discontinued).
 - Minor improvements/fixes to the artwork downloading process.

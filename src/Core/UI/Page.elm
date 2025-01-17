@@ -1,5 +1,6 @@
 module UI.Page exposing (Page(..), fromUrl, rewriteUrl, sameBase, sources, toString)
 
+import Material.Icons exposing (collections)
 import Maybe.Extra as Maybe
 import Sources exposing (Service(..))
 import UI.Playlists.Page as Playlists
@@ -78,8 +79,11 @@ toString_ page =
         Playlists Playlists.Index ->
             "playlists"
 
-        Playlists Playlists.New ->
-            "playlists/new"
+        Playlists Playlists.NewCollection ->
+            "playlists/new/collection"
+
+        Playlists Playlists.NewPlaylist ->
+            "playlists/new/playlist"
 
         Playlists (Playlists.Edit playlistName) ->
             "playlists/edit/" ++ playlistName
@@ -188,7 +192,8 @@ route =
         -----------------------------------------
         , map (Playlists Playlists.Index) (s "playlists")
         , map (Playlists << Playlists.Edit) (s "playlists" </> s "edit" </> string)
-        , map (Playlists Playlists.New) (s "playlists" </> s "new")
+        , map (Playlists Playlists.NewCollection) (s "playlists" </> s "new" </> s "collection")
+        , map (Playlists Playlists.NewPlaylist) (s "playlists" </> s "new" </> s "playlist")
 
         -----------------------------------------
         -- Queue

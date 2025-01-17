@@ -15,27 +15,30 @@ import UI.Types as UI
 -- CREATE
 
 
-create : List IdentifiedTrack -> List Playlist -> Alfred UI.Msg
-create tracks playlists =
+create : { collectionMode : Bool } -> List IdentifiedTrack -> List Playlist -> Alfred UI.Msg
+create { collectionMode } tracks playlists =
     let
         index =
             makeIndex playlists
+
+        subject =
+            ifThenElse collectionMode "collection" "playlist"
     in
     Alfred.create
-        { action = createAction tracks
+        { action = createAction collectionMode tracks
         , index = index
         , message =
             if List.length tracks == 1 then
-                "Choose or create a playlist to add this track to."
+                "Choose or create a " ++ subject ++ " to add this track to."
 
             else
-                "Choose or create a playlist to add these tracks to."
+                "Choose or create a " ++ subject ++ " to add these tracks to."
         , operation = QueryOrMutation
         }
 
 
-createAction : List IdentifiedTrack -> Alfred.Action UI.Msg
-createAction tracks ctx =
+createAction : Bool -> List IdentifiedTrack -> Alfred.Action UI.Msg
+createAction collectionMode tracks ctx =
     let
         playlistTracks =
             Tracks.toPlaylistTracks tracks
@@ -47,7 +50,8 @@ createAction tracks ctx =
             case Alfred.stringValue result.value of
                 Just playlistName ->
                     [ UI.AddTracksToPlaylist
-                        { playlistName = playlistName
+                        { collection = collectionMode
+                        , playlistName = playlistName
                         , tracks = playlistTracks
                         }
                     ]
@@ -62,7 +66,8 @@ createAction tracks ctx =
             case ctx.searchTerm of
                 Just searchTerm ->
                     [ UI.AddTracksToPlaylist
-                        { playlistName = searchTerm
+                        { collection = collectionMode
+                        , playlistName = searchTerm
                         , tracks = playlistTracks
                         }
                     ]

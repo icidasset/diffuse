@@ -23,7 +23,7 @@ trackMenu :
     { cached : List String
     , cachingInProgress : List String
     , currentTime : Time.Posix
-    , lastModifiedPlaylistName : Maybe String
+    , lastModifiedPlaylistName : Maybe { collection : Bool, name : String }
     , selectedPlaylist : Maybe Playlist
     , showAlternativeMenu : Bool
     , sources : List Source
@@ -152,7 +152,7 @@ cacheAction { cached, cachingInProgress } tracks =
 
 playlistActions :
     { selectedPlaylist : Maybe Playlist
-    , lastModifiedPlaylistName : Maybe String
+    , lastModifiedPlaylistName : Maybe { collection : Bool, name : String }
     }
     -> List IdentifiedTrack
     -> List (ContextMenu.Item Msg)
@@ -170,16 +170,17 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                 )
                 selectedPlaylist
 
-        maybeAddToLastModifiedPlaylist =
+        maybeAddToLastModifiedPlaylist { collection } =
             Maybe.andThen
-                (\n ->
-                    if Maybe.map .name selectedPlaylist /= Just n then
+                (\l ->
+                    if Maybe.map .name selectedPlaylist /= Just l.name && l.collection == collection then
                         justAnItem
                             { icon = Icons.waves
-                            , label = "Add to \"" ++ n ++ "\""
+                            , label = "Add to \"" ++ l.name ++ "\""
                             , msg =
                                 AddTracksToPlaylist
-                                    { playlistName = n
+                                    { collection = collection
+                                    , playlistName = l.name
                                     , tracks = Tracks.toPlaylistTracks tracks
                                     }
 
@@ -198,18 +199,42 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
         -----------------------------------------
         Just playlist ->
             Maybe.values
-                [ justAnItem
+                [ maybeAddToLastModifiedPlaylist { collection = True }
+                , justAnItem
                     { icon = Icons.waves
-                    , label = "Remove from playlist"
+                    , label =
+                        if playlist.collection then
+                            "Remove from collection"
+
+                        else
+                            "Remove from playlist"
                     , msg = RemoveTracksFromPlaylist playlist tracks
 
                     --
                     , active = False
                     }
-                , maybeAddToLastModifiedPlaylist
                 , justAnItem
                     { icon = Icons.waves
-                    , label = "Add to another playlist"
+                    , label =
+                        if playlist.collection then
+                            "Add to another collection"
+
+                        else
+                            "Add to playlist"
+                    , msg = AssistWithAddingTracksToCollection tracks
+
+                    --
+                    , active = False
+                    }
+                , maybeAddToLastModifiedPlaylist { collection = False }
+                , justAnItem
+                    { icon = Icons.waves
+                    , label =
+                        if playlist.collection then
+                            "Add to playlist"
+
+                        else
+                            "Add to another playlist"
                     , msg = AssistWithAddingTracksToPlaylist tracks
 
                     --
@@ -222,7 +247,14 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
         -----------------------------------------
         _ ->
             Maybe.values
-                [ maybeAddToLastModifiedPlaylist
+                [ maybeAddToLastModifiedPlaylist { collection = True }
+                , justAnItem
+                    { icon = Icons.waves
+                    , label = "Add to collection"
+                    , msg = AssistWithAddingTracksToCollection tracks
+                    , active = False
+                    }
+                , maybeAddToLastModifiedPlaylist { collection = False }
                 , justAnItem
                     { icon = Icons.waves
                     , label = "Add to playlist"

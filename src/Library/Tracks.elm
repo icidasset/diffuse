@@ -3,7 +3,7 @@ module Tracks exposing (..)
 import Base64
 import List.Extra as List
 import Maybe.Extra as Maybe
-import Playlists exposing (Playlist, PlaylistTrack)
+import Playlists exposing (Playlist, PlaylistTrack, PlaylistTrackWithoutMetadata)
 import String.Ext as String
 import Time
 import Time.Ext as Time
@@ -442,7 +442,7 @@ shouldRenderGroup identifiers =
         |> Maybe.withDefault False
 
 
-playlistTrackFromTrack : Track -> PlaylistTrack
+playlistTrackFromTrack : Track -> PlaylistTrackWithoutMetadata
 playlistTrackFromTrack track =
     { album = track.tags.album
     , artist = track.tags.artist
@@ -450,7 +450,7 @@ playlistTrackFromTrack track =
     }
 
 
-toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrack
+toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrackWithoutMetadata
 toPlaylistTracks =
     List.map (Tuple.second >> playlistTrackFromTrack)
 

@@ -48,6 +48,12 @@ futureMenu { cached, cachingInProgress, itemIndex } item =
             }
         , Item
             { icon = Icons.waves
+            , label = "Add to collection"
+            , msg = AssistWithAddingTracksToCollection tracks
+            , active = False
+            }
+        , Item
+            { icon = Icons.waves
             , label = "Add to playlist"
             , msg = AssistWithAddingTracksToPlaylist tracks
             , active = False
@@ -75,6 +81,15 @@ futureNavigationMenu { manualEntries } =
 
       else
         [ Item
+            { icon = Icons.waves
+            , label = "Add queue picks to collection"
+            , msg =
+                manualEntries
+                    |> List.map .identifiedTrack
+                    |> AssistWithAddingTracksToCollection
+            , active = False
+            }
+        , Item
             { icon = Icons.waves
             , label = "Add queue picks to playlist"
             , msg =
@@ -120,6 +135,12 @@ historyMenu { cached, cachingInProgress } item =
                     |> QueueMsg
 
             --
+            , active = False
+            }
+        , Item
+            { icon = Icons.waves
+            , label = "Add to collection"
+            , msg = AssistWithAddingTracksToCollection tracks
             , active = False
             }
         , Item

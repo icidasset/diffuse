@@ -427,14 +427,20 @@ update msg =
         AddTracksToPlaylist a ->
             Playlists.addTracksToPlaylist a
 
+        AssistWithAddingTracksToCollection a ->
+            Playlists.assistWithAddingTracksToCollection a
+
         AssistWithAddingTracksToPlaylist a ->
             Playlists.assistWithAddingTracksToPlaylist a
 
         AssistWithSelectingPlaylist ->
             Playlists.assistWithSelectingPlaylist
 
+        CreateCollection ->
+            Playlists.createCollection
+
         CreatePlaylist ->
-            Playlists.create
+            Playlists.createPlaylist
 
         DeactivatePlaylist ->
             Playlists.deactivate

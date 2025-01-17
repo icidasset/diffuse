@@ -62,7 +62,7 @@ listMenu playlist allTracks confirmation coordinates =
         Just _ ->
             ContextMenu
                 [ addToQueue identifiedTracksFromPlaylist
-                , convertToRegularPlaylist tracksFromPlaylist playlist
+                , convertToRegularCollection tracksFromPlaylist playlist
                 , downloadAsZip tracksFromPlaylist playlist
                 , storeInCache tracksFromPlaylist
                 ]
@@ -97,13 +97,14 @@ addToQueue identifiedTracks =
         }
 
 
-convertToRegularPlaylist tracksFromPlaylist playlist =
+convertToRegularCollection tracksFromPlaylist playlist =
     Item
         { icon = Icons.waves
-        , label = "Convert to regular playlist"
+        , label = "Save as regular collection"
         , msg =
             AddTracksToPlaylist
-                { playlistName = playlist.name
+                { collection = True
+                , playlistName = playlist.name
                 , tracks = List.map Tracks.playlistTrackFromTrack tracksFromPlaylist
                 }
 

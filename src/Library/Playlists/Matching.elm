@@ -13,7 +13,7 @@ match playlist =
     List.foldl
         (\( i, t ) ( identifiedTracks, remainingPlaylistTracks ) ->
             let
-                imaginaryPlaylistTrack =
+                im =
                     { album = t.tags.album
                     , artist = t.tags.artist
                     , title = t.tags.title
@@ -22,7 +22,7 @@ match playlist =
                 ( matches, remainingPlaylistTracksWithoutMatches ) =
                     List.foldl
                         (\( pi, pt ) ->
-                            if imaginaryPlaylistTrack == pt then
+                            if im.title == pt.title && im.album == pt.album && im.artist == pt.artist then
                                 Tuple.mapBoth
                                     ((::) ( playlistTrackIdentifiers i pi, t ))
                                     identity
