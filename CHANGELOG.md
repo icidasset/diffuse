@@ -2,8 +2,13 @@
 
 ## 3.5.0
 
-- **Improve audio playback and error handling**.
+- **Improve audio playback, processing and error handling**.
+- **No longer resets shuffle history when the collection or search changes**.
+- **Basic setup for themes**.
+- WebDAV improvements.
+- Removed Fission/Webnative user layer (discontinued).
 - Minor improvements/fixes to the artwork downloading process.
+- A lot of javascript code refactoring.
 
 
 ## 3.4.0
