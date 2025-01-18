@@ -220,7 +220,7 @@ playlistActions { selectedPlaylist, lastModifiedPlaylistName } tracks =
                             "Add to another collection"
 
                         else
-                            "Add to playlist"
+                            "Add to collection"
                     , msg = AssistWithAddingTracksToCollection tracks
 
                     --
