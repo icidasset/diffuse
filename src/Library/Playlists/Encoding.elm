@@ -4,7 +4,6 @@ import Json.Decode as Decode
 import Json.Decode.Ext as Decode
 import Json.Encode as Encode
 import Json.Encode.Ext exposing (..)
-import Maybe.Extra as Maybe
 import Playlists exposing (..)
 import Time.Ext as Time
 

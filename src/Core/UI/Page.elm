@@ -1,6 +1,5 @@
 module UI.Page exposing (Page(..), fromUrl, rewriteUrl, sameBase, sources, toString)
 
-import Material.Icons exposing (collections)
 import Maybe.Extra as Maybe
 import Sources exposing (Service(..))
 import UI.Playlists.Page as Playlists

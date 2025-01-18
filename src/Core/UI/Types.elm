@@ -20,7 +20,7 @@ import Keyboard
 import LastFm
 import Management
 import Notifications exposing (Notification)
-import Playlists exposing (Playlist, PlaylistTrack, PlaylistTrackWithoutMetadata)
+import Playlists exposing (Playlist, PlaylistTrackWithoutMetadata)
 import Queue
 import Random
 import Sources exposing (Source)

@@ -3,7 +3,7 @@ module Tracks exposing (..)
 import Base64
 import List.Extra as List
 import Maybe.Extra as Maybe
-import Playlists exposing (Playlist, PlaylistTrack, PlaylistTrackWithoutMetadata)
+import Playlists exposing (Playlist, PlaylistTrackWithoutMetadata)
 import String.Ext as String
 import Time
 import Time.Ext as Time

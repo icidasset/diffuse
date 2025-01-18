@@ -4,7 +4,7 @@ import Alien
 import File.Download
 import Json.Encode
 import List.Extra as List
-import Maybe.Extra as Maybe exposing (isJust)
+import Maybe.Extra as Maybe
 import Playlists.Encoding as Playlists
 import Return exposing (return)
 import Settings exposing (Settings)
