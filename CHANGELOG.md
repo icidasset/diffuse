@@ -7,6 +7,7 @@
 - **Basic setup for themes**.
 - No longer resets shuffle history when the collection or search changes.
 - WebDAV improvements.
+- Directory playlists now work correctly with sources that specify a sub directory.
 - Removed Fission/Webnative user layer (discontinued).
 - Minor improvements/fixes to the artwork downloading process.
 - A lot of javascript code refactoring.
