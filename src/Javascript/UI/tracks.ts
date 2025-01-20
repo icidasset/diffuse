@@ -37,7 +37,7 @@ export async function download(group) {
         .then(fetch)
         .then((r: Response) => {
           const mimeType = r.headers.get("content-type")
-          const fileExt = (mimeType ? fileExtension(mimeType) : null) || "unknown"
+          const fileExt = (mimeType ? fileExtension(mimeType) : null) || track.path.match(/\.(\w+)$/)[1] || "unknown-ext"
 
           return r.blob().then((b: Blob) => folder.file(track.filename + "." + fileExt, b))
         })

@@ -71,6 +71,9 @@ download json model =
                       )
 
                     --
+                    , ( "path"
+                      , Json.Encode.string track.path
+                      )
                     , ( "url"
                       , track
                             |> Queue.makeTrackUrl
