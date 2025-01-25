@@ -76,13 +76,40 @@ keyboardInput msg model =
                 [ Keyboard.Character "]", Keyboard.Control ] ->
                     Queue.shift m
 
-                -- TODO:
-                -- [ Keyboard.Character "{", Keyboard.Shift, Keyboard.Control ] ->
-                --     Audio.seek ((m.audioPosition - 10) / m.audioDuration) m
-                --
-                -- [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
-                --     Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
-                --
+                [ Keyboard.Character "{", Keyboard.Shift, Keyboard.Control ] ->
+                    case m.nowPlaying of
+                        Just { duration, item, playbackPosition } ->
+                            case duration of
+                                Just d ->
+                                    Audio.seek
+                                        { trackId = (Tuple.second item.identifiedTrack).id
+                                        , progress = (playbackPosition - 10) / d
+                                        }
+                                        m
+
+                                Nothing ->
+                                    Return.singleton m
+
+                        Nothing ->
+                            Return.singleton m
+
+                [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
+                    case m.nowPlaying of
+                        Just { duration, item, playbackPosition } ->
+                            case duration of
+                                Just d ->
+                                    Audio.seek
+                                        { trackId = (Tuple.second item.identifiedTrack).id
+                                        , progress = (playbackPosition + 10) / d
+                                        }
+                                        m
+
+                                Nothing ->
+                                    Return.singleton m
+
+                        Nothing ->
+                            Return.singleton m
+
                 -- Meta key
                 --
                 [ Keyboard.Character "K", Keyboard.Meta ] ->
