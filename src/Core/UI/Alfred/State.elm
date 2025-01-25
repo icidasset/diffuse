@@ -2,6 +2,7 @@ module UI.Alfred.State exposing (..)
 
 import Alfred exposing (Alfred)
 import Browser.Dom as Dom
+import Keyboard
 import Process
 import Return exposing (return)
 import Return.Ext as Return
@@ -15,14 +16,31 @@ import UI.Types as UI exposing (Manager)
 
 assign : Alfred UI.Msg -> Manager
 assign instance model =
+    let
+        pressedKeys =
+            List.filter
+                (\k ->
+                    case k of
+                        Keyboard.Meta ->
+                            True
+
+                        Keyboard.Control ->
+                            True
+
+                        _ ->
+                            False
+                )
+                model.pressedKeys
+    in
     250
         |> Process.sleep
         |> Task.andThen (\_ -> Dom.focus "diffuse__alfred")
+        |> Task.andThen (\_ -> Dom.setViewportOf "alfred__results" 0 0)
         |> Task.attempt (\_ -> UI.Bypass)
         -- The "K" key seems to stick when using CMD + K,
         -- aka. Meta key + K, to show the command palette.
         -- https://github.com/ohanhi/keyboard/issues/14
-        |> return { model | alfred = Just instance, pressedKeys = [] }
+        |> return { model | alfred = Just instance, pressedKeys = pressedKeys }
 
 
 gotInput : String -> Manager

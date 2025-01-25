@@ -52,6 +52,19 @@ keyboardInput msg model =
                 [ Keyboard.Escape ] ->
                     hideOverlay m
 
+                -- Meta key
+                --
+                [ Keyboard.Character "K", Keyboard.Meta ] ->
+                    Commands.showPalette m
+
+                -- Ctrl key
+                --
+                [ Keyboard.Character "K", Keyboard.Control ] ->
+                    Commands.showPalette m
+
+                [ Keyboard.Character "L", Keyboard.Control ] ->
+                    Playlists.assistWithSelectingPlaylist m
+
                 _ ->
                     skip
 
@@ -69,6 +82,7 @@ keyboardInput msg model =
                 --
                 -- [ Keyboard.Character "}", Keyboard.Shift, Keyboard.Control ] ->
                 --     Audio.seek ((m.audioPosition + 10) / m.audioDuration) m
+                --
                 -- Meta key
                 --
                 [ Keyboard.Character "K", Keyboard.Meta ] ->

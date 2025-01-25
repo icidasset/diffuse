@@ -7,7 +7,7 @@ import Conditional exposing (ifThenElse)
 import Html exposing (Html, text)
 import Html.Attributes exposing (attribute, autofocus, id, placeholder, style, type_)
 import Html.Events exposing (onInput)
-import Html.Ext exposing (onTapPreventDefault)
+import Html.Ext exposing (onTapPreventDefault, onTapStopPropagation)
 import Json.Decode
 import Material.Icons.Round as Icons
 import Material.Icons.Types exposing (Coloring(..))
@@ -205,7 +205,7 @@ groupView bgColor instance group indexBase =
 
 itemView bgColor instance idx item =
     brick
-        [ onTapPreventDefault (UI.SelectAlfredItem idx)
+        [ onTapStopPropagation (UI.SelectAlfredItem idx)
 
         --
         , if idx == instance.focus then
