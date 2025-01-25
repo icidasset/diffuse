@@ -12,6 +12,7 @@
 - Fixed issue with missing extensions when downloading playlists.
 - Removed Fission/Webnative user layer (discontinued).
 - Minor improvements/fixes to the artwork downloading process.
+- No longer cache all background images when first loading the app.
 - A lot of javascript code refactoring.
 
 

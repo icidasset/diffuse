@@ -119,6 +119,7 @@ tree =
                                             { absolute = False
                                             }
                             )
+                    |> Array.filter (String.contains "images/Background/" >> (==) False)
                     |> Json.Encode.array Json.Encode.string
                     |> Json.Encode.encode 0
                     |> stringToBytes
