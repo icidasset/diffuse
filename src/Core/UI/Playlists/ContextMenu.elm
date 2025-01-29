@@ -6,8 +6,7 @@ import Html.Events.Extra.Mouse
 import Material.Icons.Round as Icons
 import Playlists exposing (Playlist)
 import Playlists.Matching
-import Tracks exposing (IdentifiedTrack, SortBy(..), SortDirection(..))
-import Tracks.Sorting
+import Tracks exposing (IdentifiedTrack)
 import UI.Page
 import UI.Playlists.Page
 import UI.Queue.Types as Queue
