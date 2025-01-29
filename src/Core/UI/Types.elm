@@ -260,6 +260,8 @@ type Msg
     | AssistWithAddingTracksToCollection (List IdentifiedTrack)
     | AssistWithAddingTracksToPlaylist (List IdentifiedTrack)
     | AssistWithSelectingPlaylist
+    | ConvertCollectionToPlaylist { name : String }
+    | ConvertPlaylistToCollection { name : String }
     | CreateCollection
     | CreatePlaylist
     | DeactivatePlaylist

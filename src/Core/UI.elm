@@ -436,6 +436,12 @@ update msg =
         AssistWithSelectingPlaylist ->
             Playlists.assistWithSelectingPlaylist
 
+        ConvertCollectionToPlaylist a ->
+            Playlists.convertCollectionToPlaylist a
+
+        ConvertPlaylistToCollection a ->
+            Playlists.convertPlaylistToCollection a
+
         CreateCollection ->
             Playlists.createCollection
 

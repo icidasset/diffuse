@@ -72,6 +72,7 @@ listMenu playlist allTracks confirmation coordinates =
                 , removePlaylist menuMsg confirmation playlist
                 , renamePlaylist playlist
                 , storeInCache tracksFromPlaylist
+                , convert playlist
                 ]
                 coordinates
 
@@ -88,6 +89,27 @@ addToQueue identifiedTracks =
             { inFront = False, tracks = identifiedTracks }
                 |> Queue.AddTracks
                 |> QueueMsg
+
+        --
+        , active = False
+        }
+
+
+convert playlist =
+    Item
+        { icon = Icons.waves
+        , label =
+            if playlist.collection then
+                "Convert to playlist"
+
+            else
+                "Convert to collection"
+        , msg =
+            if playlist.collection then
+                ConvertCollectionToPlaylist { name = playlist.name }
+
+            else
+                ConvertPlaylistToCollection { name = playlist.name }
 
         --
         , active = False

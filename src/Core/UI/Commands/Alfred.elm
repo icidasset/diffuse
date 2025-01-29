@@ -215,6 +215,26 @@ playlistCommands model =
                                 |> UI.TracksMsg
                                 |> Command
                       }
+
+                    --
+                    , { icon = Just (Icons.waves 16)
+                      , title =
+                            if playlist.collection then
+                                "Convert to playlist"
+
+                            else
+                                "Convert to collection"
+                      , value =
+                            if playlist.collection then
+                                { name = playlist.name }
+                                    |> UI.ConvertCollectionToPlaylist
+                                    |> Command
+
+                            else
+                                { name = playlist.name }
+                                    |> UI.ConvertPlaylistToCollection
+                                    |> Command
+                      }
                     ]
 
                 Nothing ->
