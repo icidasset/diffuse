@@ -266,8 +266,8 @@ deselectCover model =
         { model | selectedCover = Nothing }
 
 
-download : String -> List Track -> Manager
-download zipName tracks model =
+download : { prefixTrackNumber : Bool, zipName : String } -> List Track -> Manager
+download { prefixTrackNumber, zipName } tracks model =
     let
         notification =
             Notifications.stickyCasual "Downloading tracks ..."
@@ -275,12 +275,13 @@ download zipName tracks model =
         downloading =
             Just { notificationId = Notifications.id notification }
     in
-    [ ( "zipName", Json.Encode.string zipName )
+    [ ( "prefixTrackNumber", Json.Encode.bool prefixTrackNumber )
     , ( "trackIds"
       , tracks
             |> List.map .id
             |> Json.Encode.list Json.Encode.string
       )
+    , ( "zipName", Json.Encode.string zipName )
     ]
         |> Json.Encode.object
         |> Alien.broadcast Alien.DownloadTracks

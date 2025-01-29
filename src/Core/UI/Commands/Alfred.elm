@@ -4,6 +4,7 @@ import Alfred exposing (..)
 import Conditional exposing (ifThenElse)
 import List.Extra as List
 import Material.Icons.Round as Icons
+import Playlists.Matching
 import Tracks exposing (Grouping(..), SortBy(..))
 import UI.Page as Page
 import UI.Queue.Types as Queue
@@ -161,22 +162,76 @@ playlistCommands model =
         selection =
             case model.selectedPlaylist of
                 Just playlist ->
-                    [ -- DeselectPlaylist
-                      { icon = Just (Icons.waves 16)
+                    let
+                        identifiedTracksFromPlaylist =
+                            model.tracks.identified
+                                |> Playlists.Matching.match playlist
+                                |> Tuple.first
+
+                        tracksFromPlaylist =
+                            identifiedTracksFromPlaylist
+                                |> (if playlist.collection then
+                                        identity
+
+                                    else
+                                        Tracks.sortByIndexInPlaylist
+                                   )
+                                |> List.map Tuple.second
+                    in
+                    [ { icon = Just (Icons.waves 16)
                       , title = "Deactivate " ++ ifThenElse playlist.collection "collection" "playlist"
                       , value = Command UI.DeselectPlaylist
+                      }
+
+                    --
+                    , { icon = Just (Icons.update 16)
+                      , title = "Add to queue"
+                      , value =
+                            { inFront = False, tracks = identifiedTracksFromPlaylist }
+                                |> Queue.AddTracks
+                                |> UI.QueueMsg
+                                |> Command
+                      }
+
+                    --
+                    , { icon = Just (Icons.offline_bolt 16)
+                      , title = "Store in cache"
+                      , value =
+                            tracksFromPlaylist
+                                |> Tracks.StoreInCache
+                                |> UI.TracksMsg
+                                |> Command
+                      }
+
+                    --
+                    , { icon = Just (Icons.archive 16)
+                      , title = "Download as zip file"
+                      , value =
+                            tracksFromPlaylist
+                                |> Tracks.Download
+                                    { prefixTrackNumber = not playlist.collection
+                                    , zipName = playlist.name
+                                    }
+                                |> UI.TracksMsg
+                                |> Command
                       }
                     ]
 
                 Nothing ->
                     []
     in
-    selection
-        ++ [ { icon = Just (Icons.waves 16)
-             , title = "Select collection or playlist"
-             , value = Command UI.AssistWithSelectingPlaylist
-             }
-           ]
+    [ { icon = Just (Icons.waves 16)
+      , title =
+            case model.selectedPlaylist of
+                Just _ ->
+                    "Select other collection or playlist"
+
+                Nothing ->
+                    "Select collection or playlist"
+      , value = Command UI.AssistWithSelectingPlaylist
+      }
+    ]
+        ++ selection
 
 
 selectionCommands model =

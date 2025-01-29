@@ -450,6 +450,11 @@ playlistTrackFromTrack track =
     }
 
 
+sortByIndexInPlaylist : List IdentifiedTrack -> List IdentifiedTrack
+sortByIndexInPlaylist =
+    List.sortBy (\( i, t ) -> Maybe.withDefault (t.tags.disc * 1000 + t.tags.nr) i.indexInPlaylist)
+
+
 toPlaylistTracks : List IdentifiedTrack -> List PlaylistTrackWithoutMetadata
 toPlaylistTracks =
     List.map (Tuple.second >> playlistTrackFromTrack)

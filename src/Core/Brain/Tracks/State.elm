@@ -45,10 +45,14 @@ add list model =
 download : Json.Value -> Manager
 download json model =
     let
-        ( zipName, trackIds ) =
+        { prefixTrackNumber, trackIds, zipName } =
             json
                 |> Json.decodeValue downloadParamsDecoder
-                |> Result.withDefault ( "?", [] )
+                |> Result.withDefault
+                    { prefixTrackNumber = False
+                    , trackIds = []
+                    , zipName = "failed-to-decode-json"
+                    }
     in
     model.hypaethralUserData.tracks
         |> Tracks.pick trackIds
@@ -57,10 +61,14 @@ download json model =
             (\( idx, track ) ->
                 Json.Encode.object
                     [ ( "filename"
-                      , [ (idx + 1)
-                            |> String.fromInt
-                            |> String.padLeft 2 '0'
-                        , " - "
+                      , [ if prefixTrackNumber then
+                            (idx + 1)
+                                |> String.fromInt
+                                |> String.padLeft 2 '0'
+                                |> (\s -> s ++ " - ")
+
+                          else
+                            ""
                         , track.tags.artist
                             |> Maybe.map (\a -> a ++ " - ")
                             |> Maybe.withDefault ""
@@ -293,12 +301,23 @@ updateSearchIndex data =
 -- ⚗️
 
 
-downloadParamsDecoder : Decoder ( String, List String )
+downloadParamsDecoder :
+    Decoder
+        { prefixTrackNumber : Bool
+        , trackIds : List String
+        , zipName : String
+        }
 downloadParamsDecoder =
-    Json.map2
-        Tuple.pair
-        (Json.field "zipName" <| Json.string)
+    Json.map3
+        (\a b c ->
+            { prefixTrackNumber = a
+            , trackIds = b
+            , zipName = c
+            }
+        )
+        (Json.field "prefixTrackNumber" <| Json.bool)
         (Json.field "trackIds" <| Json.list Json.string)
+        (Json.field "zipName" <| Json.string)
 
 
 makeTrackUrl : Time.Posix -> String -> Maybe Source -> HttpMethod -> String

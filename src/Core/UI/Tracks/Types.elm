@@ -12,7 +12,7 @@ import Tracks exposing (..)
 
 
 type Msg
-    = Download String (List Track)
+    = Download { prefixTrackNumber : Bool, zipName : String } (List Track)
     | DownloadFinished
     | Harvest
     | MarkAsSelected Int { shiftKey : Bool }
