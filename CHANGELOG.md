@@ -5,6 +5,8 @@
 - **Improve audio playback, processing and error handling**.
 - **Added collections, an alternative to playlists**. Tracks can only appear once in a collection and cannot be ordered.
 - **Basic setup for themes**.
+- **Deprecated Google Drive support**. Google Drive sources can still be used, but no longer added through the UI.
+- Removed BTFS support.
 - No longer resets shuffle history when the collection or search changes.
 - WebDAV improvements.
 - Command palette improvements.

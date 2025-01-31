@@ -60,21 +60,6 @@ data:
   directoryPath
 ```
 
-### BTFS
-
-```yaml
-kind:
-  btfs
-
-data:
-  # Required
-  directoryHash
-  name
-
-  # Optional
-  gateway
-```
-
 ### Dropbox
 
 ```yaml
@@ -89,23 +74,6 @@ data:
 
   # Optional
   directoryPath
-```
-
-### Google
-
-```yaml
-kind:
-  google
-
-data:
-  # Required
-  authCode
-  clientId
-  clientSecret
-  name
-
-  # Optional
-  folderId
 ```
 
 ### IPFS

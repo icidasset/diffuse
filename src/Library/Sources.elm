@@ -43,7 +43,6 @@ type Service
     = AmazonS3
     | AzureBlob
     | AzureFile
-    | Btfs
     | Dropbox
     | Google
     | Ipfs
@@ -59,7 +58,6 @@ serviceDictionary =
         , ( "azure_blob", AzureBlob )
         , ( "azurefile", AzureFile )
         , ( "azure_file", AzureFile )
-        , ( "btfs", Btfs )
         , ( "dropbox", Dropbox )
         , ( "google", Google )
         , ( "ipfs", Ipfs )
@@ -105,9 +103,6 @@ worksOffline source =
 
         AzureFile ->
             False
-
-        Btfs ->
-            True
 
         Dropbox ->
             False
