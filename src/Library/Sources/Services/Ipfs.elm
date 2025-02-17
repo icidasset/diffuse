@@ -54,19 +54,9 @@ properties =
       , placeholder = "QmVLDAhCY3X9P2u"
       , password = False
       }
-    , { key = "ipns"
-      , label = "Resolve using IPNS"
-      , placeholder = defaults.ipns
-      , password = False
-      }
     , { key = "gateway"
       , label = "Gateway (Optional)"
       , placeholder = defaultGateway
-      , password = False
-      }
-    , { key = "local"
-      , label = "Resolve IPNS locally"
-      , placeholder = defaults.local
       , password = False
       }
     ]
@@ -79,8 +69,6 @@ initialData =
     Dict.fromList
         [ ( "directoryHash", "" )
         , ( "gateway", defaults.gateway )
-        , ( "ipns", defaults.ipns )
-        , ( "local", defaults.local )
         , ( "name", defaults.name )
         ]
 
@@ -90,30 +78,8 @@ initialData =
 
 
 prepare : String -> SourceData -> Marker -> (Result Http.Error String -> msg) -> Maybe (Cmd msg)
-prepare _ srcData _ toMsg =
-    let
-        domainName =
-            srcData
-                |> Dict.get "directoryHash"
-                |> Maybe.withDefault ""
-                |> String.chopStart "http://"
-                |> String.chopStart "https://"
-                |> String.chopEnd "/"
-                |> String.chopStart "_dnslink."
-    in
-    if isDnsLink srcData then
-        (Just << Http.request)
-            { method = "POST"
-            , headers = []
-            , url = extractGateway srcData ++ "/api/v0/dns?arg=" ++ domainName
-            , body = Http.emptyBody
-            , expect = Http.expectString toMsg
-            , timeout = Nothing
-            , tracker = Nothing
-            }
-
-    else
-        Nothing
+prepare _ _ _ _ =
+    Nothing
 
 
 
@@ -128,83 +94,29 @@ makeTree srcData marker _ resultMsg =
         gateway =
             extractGateway srcData
 
-        resolveWithIpns =
-            case marker of
-                InProgress _ ->
-                    False
-
-                _ ->
-                    srcData
-                        |> Dict.fetch "ipns" defaults.ipns
-                        |> boolFromString
-
-        resolveLocally =
-            srcData
-                |> Dict.fetch "local" defaults.local
-                |> boolFromString
-                |> (\b -> ifThenElse b "true" "false")
-
-        root =
-            rootHash srcData
+        r =
+            root srcData
 
         path =
             case marker of
                 InProgress _ ->
                     marker
                         |> Marker.takeOne
-                        |> Maybe.map (\p -> root ++ "/" ++ p)
+                        |> Maybe.map (\p -> r ++ "/" ++ p)
                         |> Maybe.withDefault ""
 
                 _ ->
-                    root
+                    r
     in
-    (if resolveWithIpns then
-        Http.task
-            { method = "POST"
-            , headers = []
-            , url = gateway ++ "/api/v0/name/resolve?arg=" ++ encodedPath path ++ "&local=" ++ resolveLocally ++ "&encoding=json"
-            , body = Http.emptyBody
-            , resolver = Http.stringResolver ipnsResolver
-            , timeout = Just (60 * 15 * 1000)
-            }
-
-     else
-        Task.succeed { ipfsPath = path }
-    )
-        |> Task.andThen
-            (\{ ipfsPath } ->
-                Http.task
-                    { method = "POST"
-                    , headers = []
-                    , url = gateway ++ "/api/v0/ls?arg=" ++ encodedPath ipfsPath ++ "&encoding=json"
-                    , body = Http.emptyBody
-                    , resolver = Http.stringResolver Common.translateHttpResponse
-                    , timeout = Just (60 * 15 * 1000)
-                    }
-            )
+    { method = "GET"
+    , headers = [ Http.header "Accept" "application/vnd.ipld.dag-json" ]
+    , url = gateway ++ path ++ "?format=dag-json"
+    , body = Http.emptyBody
+    , resolver = Http.stringResolver Common.translateHttpResponse
+    , timeout = Just (60 * 5 * 1000) -- 5 minutes
+    }
+        |> Http.task
         |> Task.attempt resultMsg
-
-
-ipnsResolver : Http.Response String -> Result Http.Error { ipfsPath : String }
-ipnsResolver response =
-    case response of
-        Http.BadUrl_ u ->
-            Err (Http.BadUrl u)
-
-        Http.Timeout_ ->
-            Err Http.Timeout
-
-        Http.NetworkError_ ->
-            Err Http.NetworkError
-
-        Http.BadStatus_ _ body ->
-            Err (Http.BadBody body)
-
-        Http.GoodStatus_ _ body ->
-            body
-                |> Json.decodeString (Json.field "Path" Json.string)
-                |> Result.map (\path -> { ipfsPath = String.chopStart "/ipfs/" path })
-                |> Result.mapError (Json.errorToString >> Http.BadBody)
 
 
 {-| Re-export parser functions.
@@ -249,14 +161,7 @@ We need this to play the track.
 -}
 makeTrackUrl : Time.Posix -> String -> SourceData -> HttpMethod -> String -> String
 makeTrackUrl _ _ srcData _ path =
-    if not (String.contains "/" path) && not (String.contains "." path) then
-        -- If it still uses the old way of doing things
-        -- (ie. each path was a cid)
-        extractGateway srcData ++ "/ipfs/" ++ path
-
-    else
-        -- Or the new way
-        extractGateway srcData ++ "/ipfs/" ++ rootHash srcData ++ "/" ++ encodedPath path
+    extractGateway srcData ++ root srcData ++ "/" ++ encodedPath path
 
 
 
@@ -302,17 +207,15 @@ pathIsDnsLink =
     String.contains "."
 
 
-rootHash : SourceData -> String
-rootHash srcData =
+root : SourceData -> String
+root srcData =
     srcData
         |> Dict.get "directoryHash"
-        |> Maybe.andThen
-            (\path ->
-                if pathIsDnsLink path then
-                    Dict.get "directoryHashFromDnsLink" srcData
-
-                else
-                    Just path
-            )
         |> Maybe.withDefault ""
         |> String.chopEnd "/"
+        |> (if isDnsLink srcData then
+                String.append "/ipns/"
+
+            else
+                String.append "/ipfs/"
+           )
