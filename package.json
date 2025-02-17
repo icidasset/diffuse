@@ -29,7 +29,7 @@
     "eslint": "^8.56.0",
     "events": "^3.3.0",
     "gren-lang": "^0.3.0",
-    "just-install": "^2.0.1",
+    "just-install": "^2.0.2",
     "postcss": "^8.4.34",
     "postcss-custom-properties": "^13.3.4",
     "postcss-import": "^16.0.0",
