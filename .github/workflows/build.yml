@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-13, ubuntu-latest, windows-latest]
+        os: [macos-15, macos-13, ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
