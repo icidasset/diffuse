@@ -1,24 +1,29 @@
 {
-  "productName": "Diffuse",
-  "version": "3.5.0",
-  "identifier": "com.icidasset.diffuse",
-  "build": {
-    "beforeDevCommand": "",
-    "devUrl": "http://localhost:8000",
-    "beforeBuildCommand": "",
-    "frontendDist": "../dist"
-  },
   "app": {
-    "withGlobalTauri": true,
-    "windows": [],
     "security": {
       "csp": null
-    }
+    },
+    "windows": [],
+    "withGlobalTauri": true
+  },
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devUrl": "http://localhost:8000",
+    "frontendDist": "../dist"
   },
   "bundle": {
     "active": true,
-    "targets": "all",
-    "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
-    "category": "Music"
-  }
+    "category": "Music",
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "targets": "all"
+  },
+  "identifier": "com.icidasset.diffuse",
+  "plugins": {},
+  "productName": "Diffuse",
+  "version": "3.5.0"
 }
