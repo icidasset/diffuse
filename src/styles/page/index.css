@@ -1,0 +1,76 @@
+@import "../diffuse/colors.css";
+@import "../diffuse/fonts.css";
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+header,
+main {
+  margin: var(--space-md) var(--space-lg);
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 6px;
+}
+
+h1 svg {
+  fill: oklch(from var(--bg-color) calc(l - 0.5) c h);
+  opacity: 0.125;
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      fill: var(--text-color);
+      opacity: 0.25;
+    }
+  }
+}
+
+h2 {
+  /* color: oklch(from var(--bg-color) calc(l - 0.25) c h); */
+  color: var(--accent);
+
+  font-size: var(--fs-xl);
+  font-weight: 900;
+  letter-spacing: -0.0125em;
+  line-height: 1;
+  margin: var(--space-2xl) 0 var(--space-md);
+  text-transform: uppercase;
+}
+
+h3 {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  line-height: 1;
+  margin: var(--space-xl) 0 var(--space-sm);
+  text-transform: uppercase;
+}
+
+h2 + h3 {
+  margin-top: var(--space-md);
+}
+
+ul,
+ol {
+  padding-left: var(--space-md);
+}
+
+p,
+ul,
+ol {
+  margin: var(--space-sm) 0;
+  max-width: var(--container-sm);
+}
+
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-3xl);
+}
+
+.applet {
+  min-width: min(var(--container-xs), 100%);
+  width: 32.5%;
+}

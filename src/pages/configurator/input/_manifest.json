@@ -1,0 +1,49 @@
+{
+  "name": "diffuse/configurator/input",
+  "title": "Diffuse Configurator | Input",
+  "entrypoint": "index.html",
+  "actions": {
+    "consult": {
+      "title": "Consult",
+      "params_schema": {
+        "type": "string",
+        "description": "The uri to check the availability of."
+      }
+    },
+    "contextualize": {
+      "title": "Contextualize",
+      "description": "Provide context to all inputs.",
+      "params_schema": {
+        "type": "array",
+        "description": "Array of tracks",
+        "items": { "type": "object" }
+      }
+    },
+    "list": {
+      "title": "List",
+      "description": "List tracks from all inputs.",
+      "params_schema": {
+        "type": "array",
+        "description": "A list of (cached) tracks",
+        "items": {
+          "type": "object"
+        }
+      }
+    },
+    "resolve": {
+      "title": "Resolve",
+      "description": "Potentially translates a track uri with a matching scheme into a URL pointing at the audio bytes or an audio stream. If it can be resolved that is, otherwise you'll get `undefined`.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "description": "The HTTP method that is going to be used on the resolved URI."
+          },
+          "uri": { "type": "string", "description": "The URI to resolve." }
+        },
+        "required": ["method", "uri"]
+      }
+    }
+  }
+}

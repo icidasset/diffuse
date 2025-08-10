@@ -1,10 +1,4 @@
 .DS_Store
-.gren
 .zed
-app
-fission.yaml*
-elm-stuff
 node_modules
-/.deploy*
 /dist
-/src/Library/Css/Classes.elm

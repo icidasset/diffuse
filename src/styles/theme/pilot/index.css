@@ -1,0 +1,78 @@
+@import "./variables.css";
+
+/***********************************
+ * Fonts
+ ***********************************/
+:root {
+  font-family: "Inter", sans-serif;
+  font-size: var(--fs-base);
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: "InterVariable", sans-serif;
+    font-feature-settings:
+      "ss03" 2,
+      "ss02" 2;
+    font-optical-sizing: auto;
+  }
+}
+
+body {
+  background-color: var(--delicate-cloud);
+  color: var(--made-in-the-shade);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100dvh;
+}
+
+iframe {
+  border: 0;
+}
+
+/***********************************
+ * Applets (UI)
+ ***********************************/
+#applet__ui__audio {
+  opacity: 0;
+  pointer-events: none;
+  transition: 375ms opacity;
+  transition-delay: 250ms;
+  width: 100%;
+
+  &.has-loaded {
+    opacity: 1;
+    pointer-events: initial;
+  }
+}
+
+/***********************************
+ * Applets (No UI)
+ ***********************************/
+iframe[src*="/configurator/"],
+iframe[src*="/engine/"],
+iframe[src*="/input/"],
+iframe[src*="/orchestrator/"],
+iframe[src*="/processor/"],
+iframe[src*="/output/"] {
+  height: 0;
+  left: 110vw;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  top: 110vh;
+  width: 0;
+}
+
+/* Audio is a special case, iframe needs to be "visible" in order to play the audio. */
+#applet__engine__audio {
+  height: 1px;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 1px;
+}

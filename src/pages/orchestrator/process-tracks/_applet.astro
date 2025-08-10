@@ -1,0 +1,118 @@
+<script>
+  import type { Applet } from "@web-applets/sdk";
+  import type { ManagedOutput, ResolvedUri, Track } from "@applets/core/types.d.ts";
+  import { applet, register } from "@scripts/applet/common";
+  import { tracksCacheId } from "@scripts/output/common";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const context = register<{ isProcessing: boolean }>();
+
+  // Initial data
+  context.data = {
+    isProcessing: false,
+  };
+
+  // Applet connections
+  const configurator = {
+    input: applet("/configurator/input"),
+    input_2: undefined as Applet | undefined,
+    output: applet<ManagedOutput>("/configurator/output"),
+  };
+
+  const processor = {
+    metadata: applet("/processor/metadata"),
+  };
+
+  ////////////////////////////////////////////
+  // PROCESS
+  ////////////////////////////////////////////
+  context.setActionHandler("processInputs", processInputs);
+
+  async function processInputs() {
+    if (context.data.isProcessing) return;
+    context.data = { ...context.data, isProcessing: true };
+    console.log("🪵 Processing initiated");
+
+    const input = configurator.input_2
+      ? configurator.input_2
+      : await applet("/configurator/input", { context: self, newInstance: true });
+
+    if (!configurator.input_2) configurator.input_2 = input;
+
+    const output = await configurator.output;
+    const cachedTracks = output.data.tracks.collection;
+
+    await input.sendAction("contextualize", cachedTracks, {
+      timeoutDuration: 60000 * 5,
+      worker: true,
+    });
+
+    const tracks = await input.sendAction<Track[]>("list", cachedTracks, {
+      timeoutDuration: 60000 * 60 * 24,
+      worker: true,
+    });
+
+    // Process
+    const tracksWithMetadata = await tracks.reduce(
+      async (promise: Promise<Track[]>, track: Track) => {
+        const acc = await promise;
+
+        if (track.tags && track.stats) return [...acc, track];
+
+        const resGet = await input.sendAction<ResolvedUri>(
+          "resolve",
+          { method: "GET", uri: track.uri },
+          {
+            timeoutDuration: 60000 * 5,
+            worker: true,
+          },
+        );
+
+        const resHead = await input.sendAction<ResolvedUri>(
+          "resolve",
+          { method: "HEAD", uri: track.uri },
+          {
+            timeoutDuration: 60000 * 5,
+            worker: true,
+          },
+        );
+
+        if (!resGet) return [...acc, track];
+
+        const metadataProcessor = await processor.metadata;
+        const { stats, tags } = await metadataProcessor.sendAction(
+          "supply",
+          { urls: { get: resGet.url, head: resHead?.url || resGet.url } },
+          {
+            timeoutDuration: 60000 * 15,
+            worker: true,
+          },
+        );
+
+        return [...acc, { ...track, stats, tags }];
+      },
+      Promise.resolve([]),
+    );
+
+    // Save
+    const changed = tracksCacheId(tracksWithMetadata) !== output.data.tracks.cacheId;
+
+    if (changed)
+      await output.sendAction("tracks", tracksWithMetadata, {
+        timeoutDuration: 60000 * 5,
+      });
+
+    // Fin
+    console.log("🪵 Processing completed");
+    context.data = { ...context.data, isProcessing: false };
+  }
+
+  ////////////////////////////////////////////
+  // 🚀
+  ////////////////////////////////////////////
+  context.settled().then(() => {
+    if (context.isMainInstance()) processInputs();
+  });
+</script>

@@ -1,0 +1,6 @@
+{
+  "name": "diffuse/orchestrator/queue-audio",
+  "title": "Diffuse Orchestrator | Queue Audio",
+  "entrypoint": "index.html",
+  "actions": {}
+}

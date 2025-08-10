@@ -1,0 +1,35 @@
+<script>
+  import type { Tasks } from "@scripts/processor/artwork/worker";
+  import type { ArtworkRequest } from "./types";
+  import { register } from "@scripts/applet/common";
+  import { endpoint, SharedWorker } from "@scripts/common";
+  import manifest from "./_manifest.json";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const worker = endpoint<Tasks>(
+    new SharedWorker(new URL("../../../scripts/processor/artwork/worker", import.meta.url), {
+      type: "module",
+      name: manifest.name,
+    }).port,
+  );
+
+  // Register
+  const context = register({ worker });
+
+  ////////////////////////////////////////////
+  // ACTIONS
+  ////////////////////////////////////////////
+
+  async function artwork(request: ArtworkRequest) {
+    return await worker.artwork(request);
+  }
+
+  async function supply(items: ArtworkRequest[]) {
+    return await worker.supply(items);
+  }
+
+  context.setActionHandler("artwork", artwork);
+  context.setActionHandler("supply", supply);
+</script>

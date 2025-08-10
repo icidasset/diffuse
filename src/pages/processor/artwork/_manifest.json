@@ -1,0 +1,38 @@
+{
+  "name": "diffuse/processor/artwork",
+  "title": "Diffuse Processor | Artwork fetcher",
+  "description": "Tries to get artwork for a given URL or stream.",
+  "entrypoint": "index.html",
+  "actions": {
+    "supply": {
+      "title": "Supply",
+      "description": "Get the artwork for a given URL.",
+      "params_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "cacheId": {
+              "type": "string"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "stream": {
+              "type": "object"
+            },
+            "urls": {
+              "type": "object",
+              "properties": {
+                "get": { "type": "string" },
+                "head": { "type": "string" }
+              },
+              "required": ["get", "head"]
+            }
+          },
+          "required": ["cacheId"]
+        }
+      }
+    }
+  }
+}

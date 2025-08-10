@@ -1,0 +1,47 @@
+{
+  "name": "diffuse/engine/queue",
+  "title": "Diffuse Queue",
+  "entrypoint": "index.html",
+  "actions": {
+    "add": {
+      "title": "Add",
+      "description": "Add tracks to the queue.",
+      "params_schema": {
+        "type": "array",
+        "description": "Array of tracks",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "uri": { "type": "string" }
+          },
+          "required": ["id", "uri"]
+        }
+      }
+    },
+    "pool": {
+      "title": "Pool",
+      "description": "Set the queue pool.",
+      "params_schema": {
+        "type": "array",
+        "description": "Array of tracks",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "uri": { "type": "string" }
+          },
+          "required": ["id", "uri"]
+        }
+      }
+    },
+    "shift": {
+      "title": "Shift",
+      "description": "Shift the queue, picking the first item from the up next array and putting the currently playing item into the history list."
+    },
+    "unshift": {
+      "title": "Unshift",
+      "description": "Unshift the queue, going backwards in time, picking the last item from the history array and putting the currently playing item into the up next list."
+    }
+  }
+}

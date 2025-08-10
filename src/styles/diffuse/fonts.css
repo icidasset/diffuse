@@ -1,0 +1,13 @@
+:root {
+  font-family: "Inter", sans-serif;
+  font-size: var(--fs-base);
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: "InterVariable", sans-serif;
+    font-feature-settings:
+      /* "zero" 2, */ "ss03" 2;
+    font-optical-sizing: auto;
+  }
+}

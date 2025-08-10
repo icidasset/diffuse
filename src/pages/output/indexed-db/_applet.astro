@@ -1,0 +1,49 @@
+<script>
+  import type { Actions } from "@scripts/output/indexed-db/worker";
+  import type { ManagedOutput, Track } from "@applets/core/types.d.ts";
+  import { register } from "@scripts/applet/common";
+  import { SharedWorker, endpoint, transfer } from "@scripts/common";
+  import { INITIAL_MANAGED_OUTPUT, outputManager } from "@scripts/output/common";
+  import manifest from "./_manifest.json";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const worker = endpoint<Actions>(
+    new SharedWorker(new URL("../../../scripts/output/indexed-db/worker", import.meta.url), {
+      type: "module",
+      name: manifest.name,
+    }).port,
+  );
+
+  // Register applet
+  const context = register<ManagedOutput>();
+
+  // Initial state
+  context.data = INITIAL_MANAGED_OUTPUT;
+
+  // Output manager
+  const manager = outputManager({
+    context,
+    tracks: {
+      async get() {
+        return worker.getTracks();
+      },
+
+      async put(tracks: Track[]) {
+        return worker.putTracks(transfer(tracks));
+      },
+    },
+  });
+
+  ////////////////////////////////////////////
+  // ACTIONS
+  ////////////////////////////////////////////
+  async function mount() {}
+  async function unmount() {}
+
+  context.setActionHandler("tracks", manager.tracks);
+
+  context.setActionHandler("mount", mount);
+  context.setActionHandler("unmount", unmount);
+</script>

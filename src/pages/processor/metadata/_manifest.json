@@ -1,0 +1,34 @@
+{
+  "name": "diffuse/processor/metadata",
+  "title": "Diffuse Processor | Metadata fetcher",
+  "entrypoint": "index.html",
+  "actions": {
+    "supply": {
+      "title": "Supply",
+      "description": "Get the metadata for a given URL or stream.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "includeArtwork": {
+            "type": "boolean",
+            "description": "Include artwork in the output."
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "object"
+          },
+          "urls": {
+            "type": "object",
+            "properties": {
+              "get": { "type": "string" },
+              "head": { "type": "string" }
+            },
+            "required": ["get", "head"]
+          }
+        }
+      }
+    }
+  }
+}

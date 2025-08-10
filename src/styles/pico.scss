@@ -1,0 +1,6 @@
+@use "@picocss/pico/scss/pico" with (
+  $enable-responsive-spacings: true,
+  $enable-responsive-typography: true
+);
+
+@use "@picocss/pico/scss/colors/utilities";

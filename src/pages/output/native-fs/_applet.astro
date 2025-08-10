@@ -1,0 +1,75 @@
+<script>
+  import type { Actions } from "@scripts/output/native-fs/worker";
+  import * as IDB from "idb-keyval";
+  import type * as FSA from "wicg-file-system-access";
+
+  import type { ManagedOutput, Track } from "@applets/core/types";
+  import { register } from "@scripts/applet/common";
+  import { INITIAL_MANAGED_OUTPUT, outputManager } from "@scripts/output/common";
+  import { endpoint, SharedWorker, transfer } from "@scripts/common";
+  import { IDB_DEVICE_KEY } from "@scripts/output/native-fs/constants";
+  import manifest from "./_manifest.json";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const worker = endpoint<Actions>(
+    new SharedWorker(new URL("../../../scripts/output/native-fs/worker", import.meta.url), {
+      type: "module",
+      name: manifest.name,
+    }).port,
+  );
+
+  // Register applet
+  const context = register<ManagedOutput>();
+
+  // Initial state
+  context.data = INITIAL_MANAGED_OUTPUT;
+
+  // Output manager
+  const manager = outputManager({
+    context,
+
+    async init() {
+      return !!(await IDB.get(IDB_DEVICE_KEY));
+    },
+
+    tracks: {
+      async get() {
+        return worker.getTracks();
+      },
+
+      async put(tracks: Track[]) {
+        return worker.putTracks(transfer(tracks));
+      },
+    },
+  });
+
+  ////////////////////////////////////////////
+  // ACTIONS
+  ////////////////////////////////////////////
+  async function mount() {
+    if (!("showDirectoryPicker" in self)) {
+      throw new Error("[user] The File System Access API is not supported on this platform.");
+    }
+
+    const existingHandle = await IDB.get(IDB_DEVICE_KEY);
+    if (!existingHandle) {
+      const directoryHandle = await self.showDirectoryPicker();
+      await IDB.set(IDB_DEVICE_KEY, directoryHandle);
+      await directoryHandle.requestPermission({ mode: "readwrite" });
+      await manager.load();
+    }
+  }
+
+  async function unmount() {
+    try {
+      await IDB.del(IDB_DEVICE_KEY);
+    } catch (err) {}
+  }
+
+  context.setActionHandler("tracks", manager.tracks);
+
+  context.setActionHandler("mount", mount);
+  context.setActionHandler("unmount", unmount);
+</script>

@@ -1,0 +1,5 @@
+.with-icon {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.75em;
+}

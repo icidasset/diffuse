@@ -1,0 +1,59 @@
+<script>
+  import type { Tasks } from "@scripts/engine/queue/worker";
+  import type { Track } from "@applets/core/types";
+  import type { State } from "./types.d.ts";
+
+  import { register } from "@scripts/applet/common";
+  import { endpoint, SharedWorker, sync, transfer } from "@scripts/common";
+  import manifest from "./_manifest.json";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const port = new SharedWorker(new URL("../../../scripts/engine/queue/worker", import.meta.url), {
+    type: "module",
+    name: manifest.name,
+  }).port;
+
+  const worker = endpoint<Tasks>(port);
+
+  // Register applet
+  const context = register<State>({ mode: "shared-worker", worker });
+  const groupId = context.groupId || "main";
+
+  // Initial state
+  context.data = {
+    future: [],
+    now: null,
+    past: [],
+  };
+
+  context.data = await worker.data(groupId);
+
+  // Keep applet data with worker data in sync
+  sync(context, port, { groupId });
+
+  ////////////////////////////////////////////
+  // ACTIONS
+  ////////////////////////////////////////////
+  context.setActionHandler("add", add);
+  context.setActionHandler("pool", pool);
+  context.setActionHandler("shift", shift);
+  context.setActionHandler("unshift", unshift);
+
+  async function add(items: Track[]) {
+    await worker.add({ groupId, items });
+  }
+
+  async function pool(tracks: Track[]) {
+    await worker.pool({ groupId, tracks });
+  }
+
+  async function shift() {
+    await worker.shift({ groupId });
+  }
+
+  async function unshift() {
+    await worker.unshift({ groupId });
+  }
+</script>

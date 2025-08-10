@@ -1,0 +1,34 @@
+<script>
+  import type { Tasks } from "@scripts/processor/metadata/worker";
+  import type { Extraction, Urls } from "./types";
+  import { register } from "@scripts/applet/common";
+  import { endpoint, SharedWorker, transfer } from "@scripts/common";
+  import manifest from "./_manifest.json";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const worker = endpoint<Tasks>(
+    new SharedWorker(new URL("../../../scripts/processor/metadata/worker", import.meta.url), {
+      type: "module",
+      name: manifest.name,
+    }).port,
+  );
+
+  // Register applet
+  const context = register({ worker });
+
+  ////////////////////////////////////////////
+  // ACTIONS
+  ////////////////////////////////////////////
+  async function supply(args: {
+    includeArtwork?: boolean;
+    mimeType?: string;
+    stream?: ReadableStream;
+    urls?: Urls;
+  }): Promise<Extraction> {
+    return worker.supply(transfer(args));
+  }
+
+  context.setActionHandler("supply", supply);
+</script>

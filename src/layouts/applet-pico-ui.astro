@@ -1,0 +1,24 @@
+---
+import "@styles/reset.css";
+import "@styles/variables.css";
+import "@styles/fonts.css";
+import "@styles/icons/iconoir.css";
+import "@styles/pico.scss";
+import "@styles/applet/common.css";
+
+const { title } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="manifest" href="manifest.json" />
+
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

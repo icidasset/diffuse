@@ -1,0 +1,131 @@
+{
+  "name": "diffuse/engine/audio",
+  "title": "Diffuse Audio",
+  "entrypoint": "index.html",
+  "actions": {
+    "pause": {
+      "title": "Pause",
+      "description": "Pause audio",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "audioId": {
+            "type": "string"
+          }
+        },
+        "required": ["audioId"]
+      }
+    },
+    "play": {
+      "title": "Play",
+      "description": "Play audio",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "audioId": {
+            "type": "string"
+          },
+          "volume": {
+            "type": "number",
+            "default": 0.5
+          }
+        },
+        "required": ["audioId"]
+      }
+    },
+    "render": {
+      "title": "Render",
+      "description": "Determine the active set of audio elements.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "audio": {
+            "type": "array",
+            "description": "The audio items we want to render. These represent the audio elements that are in the DOM.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "isPreload": { "type": "boolean" },
+                "mimeType": { "type": "string" },
+                "progress": { "type": "number" },
+                "url": { "type": "string" }
+              },
+              "required": ["id", "url"]
+            }
+          },
+          "play": {
+            "type": "object",
+            "description": "Pass in this object to immediately start playing one of the rendered audio items.",
+            "properties": {
+              "audioId": {
+                "type": "string",
+                "description": "The id of the rendered audio item we want to play."
+              },
+              "volume": {
+                "type": "number",
+                "default": 0.5,
+                "description": "A number equal to, or between, 0 and 1, that determines how loud the audio should play."
+              }
+            },
+            "required": ["audioId"]
+          }
+        },
+        "required": ["audio"]
+      }
+    },
+    "reload": {
+      "title": "Reload",
+      "description": "Make sure the audio with the given id is loading properly. This should be used when for example, the internet connection comes back and the loading of the audio depended on said internet connection.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "audioId": {
+            "type": "string"
+          },
+          "play": {
+            "type": "boolean"
+          },
+          "progress": {
+            "type": "number"
+          }
+        },
+        "required": ["audioId", "percentage"]
+      }
+    },
+    "seek": {
+      "title": "Seek",
+      "description": "Seek audio to a given position",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "audioId": {
+            "type": "string"
+          },
+          "percentage": {
+            "type": "number",
+            "description": "A number between 0 and 1 that determines the new current position in the audio"
+          }
+        },
+        "required": ["audioId", "percentage"]
+      }
+    },
+    "volume": {
+      "title": "Volume",
+      "description": "Set the volume of all audio and the default value, or a specific audio node.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "audioId": {
+            "type": "string"
+          },
+          "volume": {
+            "type": "number",
+            "description": "A number between 0 and 1 that determines the new volume of all audio elements"
+          }
+        },
+        "required": ["volume"]
+      }
+    }
+  }
+}

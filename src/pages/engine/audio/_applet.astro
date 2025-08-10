@@ -1,0 +1,360 @@
+<script>
+  import { effect, signal } from "spellcaster";
+
+  import type { State, Audio, AudioState } from "./types";
+  import { register } from "@scripts/applet/common";
+
+  ////////////////////////////////////////////
+  // CONSTANTS
+  ////////////////////////////////////////////
+  const SILENT_MP3 =
+    "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const context = register<State>();
+  const groupId = context.groupId ?? "main";
+
+  // Audio elements container
+  const container = document.createElement("div");
+  container.id = "container";
+  document.body.appendChild(container);
+
+  // Default volume
+  const VOLUME_KEY = `@applets/engine/audio/${groupId}/volume`;
+  const vol = localStorage.getItem(VOLUME_KEY);
+
+  // Initial state
+  if (context.isMainInstance())
+    context.data = {
+      isPlaying: false,
+      items: {},
+      volume: {
+        default: vol ? parseFloat(vol) : 0.5,
+      },
+    };
+
+  // State helpers
+  function update(partial: Partial<State>): void {
+    context.data = { ...context.data, ...partial };
+  }
+
+  function updateItems(audioId: string, partial: Partial<AudioState>): void {
+    update({
+      ...context.data,
+      items: {
+        ...(context.data?.items || {}),
+        [audioId]: { ...(context.data?.items?.[audioId] || {}), ...partial },
+      },
+    });
+  }
+
+  // Effects
+  const [defaultVolume, setDefaultVolume] = signal<number | undefined>(undefined);
+  context.scope.ondata = (event: any) => setDefaultVolume(event.data.volume.default);
+
+  effect(() => {
+    if (context.isMainInstance()) {
+      const volume = defaultVolume();
+      if (volume === undefined) return;
+      localStorage.setItem(VOLUME_KEY, volume.toString());
+    }
+  });
+
+  // Unload
+  context.unloadHandler = async () => {
+    await context.settled();
+    hydrateItems();
+  };
+
+  function hydrateItems() {
+    const playingItem = context.data.isPlaying
+      ? Object.values(context.data.items).find((item) => item.isPlaying)
+      : undefined;
+
+    render({
+      audio: Object.values(context.data.items).map((item: AudioState) => {
+        return {
+          id: item.id,
+          isPreload: item.isPreload,
+          mimeType: item.mimeType,
+          progress: item.progress,
+          url: item.url,
+        };
+      }),
+      play: playingItem ? { audioId: playingItem.id } : undefined,
+    });
+  }
+
+  ////////////////////////////////////////////
+  // ACTIONS
+  ////////////////////////////////////////////
+  context.setActionHandler("pause", pause);
+  context.setActionHandler("play", play);
+  context.setActionHandler("reload", reload);
+  context.setActionHandler("render", render);
+  context.setActionHandler("seek", seek);
+  context.setActionHandler("volume", volume);
+
+  function pause({ audioId }: { audioId: string }) {
+    withAudioNode(audioId, (audio) => audio.pause());
+  }
+
+  function play({ audioId, volume }: { audioId: string; volume?: number }) {
+    withAudioNode(audioId, (audio) => {
+      audio.volume = volume ?? context.data.volume.default;
+      audio.muted = false;
+
+      if (audio.readyState === 0) audio.load();
+      if (!audio.isConnected) return;
+
+      const promise = audio.play() || Promise.resolve();
+      const didPreload = audio.getAttribute("data-did-preload") === "true";
+      const isPreload = audio.getAttribute("data-is-preload") === "true";
+
+      if (didPreload && !isPreload) {
+        audio.removeAttribute("data-did-preload");
+      }
+
+      updateItems(audio.id, { isPlaying: true });
+
+      promise.catch((e) => {
+        if (!audio.isConnected)
+          return; /* The node was removed from the DOM, we can ignore this error */
+        const err = "Couldn't play audio automatically. Please resume playback manually.";
+        console.error(err, e);
+        updateItems(audioId, { isPlaying: false });
+      });
+    });
+  }
+
+  function reload(args: { play: boolean; progress?: number; audioId: string }) {
+    withAudioNode(args.audioId, (audio) => {
+      if (audio.readyState === 0 || audio.error?.code === 2) {
+        audio.load();
+
+        if (args.progress !== undefined) {
+          audio.setAttribute("data-initial-progress", JSON.stringify(args.progress));
+        }
+
+        if (args.play) {
+          play({ audioId: args.audioId, volume: audio.volume });
+        }
+      }
+    });
+  }
+
+  async function render(args: { play?: { audioId: string; volume?: number }; audio: Audio[] }) {
+    await renderAudio(args.audio);
+    if (args.play) play({ audioId: args.play.audioId, volume: args.play.volume });
+  }
+
+  function seek({ percentage, audioId }: { percentage: number; audioId: string }) {
+    withAudioNode(audioId, (audio) => {
+      if (!isNaN(audio.duration)) {
+        audio.currentTime = audio.duration * percentage;
+      }
+    });
+  }
+
+  function volume(args: { audioId?: string; volume: number }) {
+    if (!args.audioId) update({ volume: { default: args.volume } });
+
+    Array.from(container.querySelectorAll("audio")).forEach((node) => {
+      const audio = node as HTMLAudioElement;
+      if (audio.getAttribute("data-is-preload") === "true") return;
+      if (args.audioId === undefined || args.audioId === audio.id) {
+        audio.volume = args.volume;
+      }
+    });
+  }
+
+  ////////////////////////////////////////////
+  // RENDER
+  ////////////////////////////////////////////
+  async function renderAudio(audio: Array<Audio>) {
+    const ids = audio.map((a) => a.id);
+    const existingNodes: Record<string, HTMLAudioElement> = {};
+
+    // Manage existing nodes
+    Array.from(container.querySelectorAll("audio")).map((node: HTMLAudioElement) => {
+      if (ids.includes(node.id)) {
+        existingNodes[node.id] = node;
+      } else {
+        node.src = SILENT_MP3;
+        container?.removeChild(node);
+      }
+    });
+
+    // Adjust existing and add new
+    await audio.reduce(async (acc: Promise<void>, item: Audio) => {
+      await acc;
+
+      const existingNode = existingNodes[item.id];
+
+      if (existingNode) {
+        const isPreload = existingNode.getAttribute("data-is-preload");
+        if (isPreload === "true") existingNode.setAttribute("data-did-preload", "true");
+
+        existingNode.setAttribute("data-is-preload", item.isPreload ? "true" : "false");
+      } else {
+        await createElement(item);
+      }
+    }, Promise.resolve());
+
+    // Now playing state
+    const items = audio.reduce((acc, item) => {
+      return {
+        ...acc,
+        [item.id]: context.data?.items?.[item.id] || {
+          duration: 0,
+          id: item.id,
+          loadingState: "loading",
+          isPlaying: true,
+          isPreload: item.isPreload ?? false,
+          mimeType: item.mimeType,
+          progress: item.progress ?? 0,
+          url: item.url,
+        },
+      };
+    }, {});
+
+    update({ items });
+  }
+
+  export async function createElement(audio: Audio) {
+    const source = document.createElement("source");
+    if (audio.mimeType) source.setAttribute("type", audio.mimeType);
+    source.setAttribute("src", audio.url);
+
+    // Audio node
+    const node = new Audio();
+    node.setAttribute("id", audio.id);
+    node.setAttribute("crossorigin", "anonymous");
+    node.setAttribute("data-is-preload", audio.isPreload ? "true" : "false");
+    node.setAttribute("muted", "true");
+    node.setAttribute("preload", "auto");
+
+    if (audio.progress !== undefined) {
+      node.setAttribute("data-initial-progress", JSON.stringify(audio.progress));
+    }
+
+    node.appendChild(source);
+
+    node.addEventListener("canplay", canplayEvent);
+    node.addEventListener("durationchange", durationchangeEvent);
+    node.addEventListener("ended", endedEvent);
+    node.addEventListener("error", errorEvent);
+    node.addEventListener("pause", pauseEvent);
+    node.addEventListener("play", playEvent);
+    node.addEventListener("suspend", suspendEvent);
+    node.addEventListener("timeupdate", timeupdateEvent);
+    node.addEventListener("waiting", waitingEvent);
+
+    container?.appendChild(node);
+  }
+
+  ////////////////////////////////////////////
+  // AUDIO EVENTS
+  ////////////////////////////////////////////
+
+  function canplayEvent(event: Event) {
+    const target = event.target as HTMLAudioElement;
+
+    if (
+      target.hasAttribute("data-initial-progress") &&
+      target.duration &&
+      !isNaN(target.duration)
+    ) {
+      const progress = JSON.parse(target.getAttribute("data-initial-progress") as string);
+      target.currentTime = target.duration * progress;
+      target.removeAttribute("data-initial-progress");
+    }
+
+    finishedLoading(event);
+  }
+
+  function durationchangeEvent(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+
+    if (!isNaN(audio.duration)) {
+      updateItems(audio.id, { duration: audio.duration });
+    }
+  }
+
+  function endedEvent(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+    audio.currentTime = 0;
+    updateItems(audio.id, { hasEnded: true });
+  }
+
+  function errorEvent(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+    const code = audio.error?.code || 0;
+    updateItems(audio.id, { loadingState: { error: { code } } });
+  }
+
+  function pauseEvent(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+    const item = context.data.items[audio.id];
+    const ended = item ? item.hasEnded || item.progress === 1 : false;
+    updateItems(audio.id, { isPlaying: false });
+    update({ isPlaying: ended });
+  }
+
+  function playEvent(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+    updateItems(audio.id, { isPlaying: true });
+    update({ isPlaying: true });
+
+    // In case audio was preloaded:
+    if (audio.readyState === 4) finishedLoading(event);
+  }
+
+  function suspendEvent(event: Event) {
+    finishedLoading(event);
+  }
+
+  function timeupdateEvent(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+
+    updateItems(audio.id, {
+      progress:
+        isNaN(audio.duration) || audio.duration === 0 ? 0 : audio.currentTime / audio.duration,
+    });
+  }
+
+  function waitingEvent(event: Event) {
+    initiateLoading(event);
+  }
+
+  ////////////////////////////////////////////
+  // 🛠️
+  ////////////////////////////////////////////
+
+  function finishedLoading(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+    updateItems(audio.id, { loadingState: "loaded" });
+  }
+
+  function initiateLoading(event: Event) {
+    const audio = event.target as HTMLAudioElement;
+    if (audio.readyState < 4) updateItems(audio.id, { loadingState: "loading" });
+  }
+
+  function withActiveAudioNodes(fn: (node: HTMLAudioElement) => void): void {
+    const nonPreloadNodes: HTMLAudioElement[] = Array.from(
+      container.querySelectorAll(`audio[data-is-preload="false"]`),
+    );
+
+    const playingNodes = nonPreloadNodes.filter((n) => n.paused === false);
+    const node = playingNodes.length ? playingNodes[0] : nonPreloadNodes[0];
+    if (node) fn(node);
+  }
+
+  function withAudioNode(audioId: string, fn: (node: HTMLAudioElement) => void): void {
+    const node = container.querySelector(`audio[id="${audioId}"][data-is-preload="false"]`);
+    if (node) fn(node as HTMLAudioElement);
+  }
+</script>

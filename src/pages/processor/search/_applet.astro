@@ -1,0 +1,34 @@
+<script>
+  import type { Tasks } from "@scripts/processor/search/worker";
+  import type { Track } from "@applets/core/types";
+  import { register } from "@scripts/applet/common";
+  import { endpoint, transfer } from "@scripts/common";
+  import manifest from "./_manifest.json";
+
+  ////////////////////////////////////////////
+  // SETUP
+  ////////////////////////////////////////////
+  const worker = endpoint<Tasks>(
+    new SharedWorker(new URL("../../../scripts/processor/search/worker", import.meta.url), {
+      type: "module",
+      name: manifest.name,
+    }).port,
+  );
+
+  // Register applet
+  const context = register({ worker });
+
+  ////////////////////////////////////////////
+  // ACTIONS
+  ////////////////////////////////////////////
+  context.setActionHandler("search", search);
+  context.setActionHandler("supply", supply);
+
+  async function search(term: string): Promise<Track[]> {
+    return worker.search(term);
+  }
+
+  async function supply(tracks: Track[]) {
+    return worker.supply(transfer(tracks));
+  }
+</script>

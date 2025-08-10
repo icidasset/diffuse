@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.0
+
+**Rewrite from scratch.**
+
+
 ## 3.5.0
 
 - **Improve audio playback, processing and error handling**.
