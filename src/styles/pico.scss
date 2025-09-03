@@ -1,6 +1,7 @@
 @use "@picocss/pico/scss/pico" with (
   $enable-responsive-spacings: true,
-  $enable-responsive-typography: true
+  $enable-responsive-typography: true,
+  $theme-color: "slate"
 );
 
 @use "@picocss/pico/scss/colors/utilities";
