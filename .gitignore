@@ -1,4 +1,5 @@
 .DS_Store
+.netlify
 .zed
 node_modules
 /dist
