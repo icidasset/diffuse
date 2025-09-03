@@ -22,6 +22,7 @@ const orchestrator = {
 // ⚡
 ////////////////////////////////////////////
 const amp = new Webamp({
+  enableMediaSession: true,
   initialTracks: [],
 });
 

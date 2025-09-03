@@ -55,7 +55,7 @@
         "npm:uri-js@^4.4.1",
         "npm:vite-plugin-wasm@^3.4.1",
         "npm:vite-tsconfig-paths@^5.1.4",
-        "npm:webamp@^2.1.2",
+        "npm:webamp@^2.2.0",
         "npm:xxh32@^2.0.5"
       ]
     }

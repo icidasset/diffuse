@@ -25,7 +25,7 @@
     "throttle-debounce": "^5.0.2",
     "uint8arrays": "^5.1.0",
     "uri-js": "^4.4.1",
-    "webamp": "^2.1.2",
+    "webamp": "^2.2.0",
     "xxh32": "^2.0.5"
   },
   "devDependencies": {
