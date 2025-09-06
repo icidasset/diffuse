@@ -213,6 +213,28 @@ const demos = [{ url: "demo/s3-tracks/", title: "Add sample S3 music" }];
       <List items={demos} />
     </section>
 
+    <!-- CROSS-ORIGIN -->
+    <section>
+      <h2 id="cross-origin">Cross-Origin</h2>
+
+      <p>
+        You can use applets from different origins. However, one important caveat to remember is <a
+          href="https://developer.mozilla.org/en-US/docs/Web/Privacy/Guides/State_Partitioning#state_partitioning"
+          >state partitioning</a
+        >. This causes local state (eg. IndexedDB) to be different when the applet is used on a
+        different domain versus using the applet directly. There might be ways around state
+        partitioning, but I haven't found a user-friendly way of doing so.
+      </p>
+
+      <p>
+        <strong
+          >That said, there isn't that much local state that needs to be shared cross origin.</strong
+        > Much of it is associated with the input applets and that configuration is saved in your chosen
+        output applet. So essentially, state partitioning behaves as if the two domains are on different
+        devices; so using an output applet to sync data works nicely.
+      </p>
+    </section>
+
     <!-- BUILD YOUR OWN -->
     <section>
       <h2 id="yours">Build your own</h2>
@@ -224,12 +246,9 @@ const demos = [{ url: "demo/s3-tracks/", title: "Add sample S3 music" }];
 
       <ul>
         <li>
-          Haven't tested this idea cross-origin. No idea if the applets work when included on a
-          different origin (though it should).
-        </li>
-        <li>
-          Currently using a fork of the web applets SDK that adds a few features (waiting on PRs).
-          Meaning that it won't be as easy to write your own applets in the same way as done here.
+          This is currently using a fork of the web applets SDK that adds a few features (waiting on
+          PRs). Meaning that it won't be as easy to write your own applets in the same way as done
+          here.
         </li>
         <li>
           I wrote some custom code on top of the web applets SDK that makes the applets talk to each
@@ -237,7 +256,7 @@ const demos = [{ url: "demo/s3-tracks/", title: "Add sample S3 music" }];
           web applets SDK. Though you can just copy-paste from the Diffuse repo if you want (it's
           not that much code).
         </li>
-        <li><em>... Probably a bunch of stuff I'm forgetting, teaching materials, ...</em></li>
+        <li><em>... Probably a bunch of stuff I'm forgetting, teaching materials, etc ...</em></li>
       </ul>
     </section>
   </main>
