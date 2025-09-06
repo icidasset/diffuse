@@ -1,19 +1,13 @@
-import { type Signal, computed, effect, signal } from "spellcaster/spellcaster.js";
-import { type ElementConfigurator, h, repeat, text } from "spellcaster/hyperscript.js";
+import { type Signal, computed, effect, signal } from "@scripts/spellcaster";
+import { h, repeat, text } from "@scripts/spellcaster/hyperscript.js";
 
-import { applet, hs, reactive } from "@scripts/applet/common";
+import { applet, reactive } from "@scripts/applet/common";
 import { CUSTOM_KEY } from "./constants";
-import { active, setActive } from "./signals";
+import { active } from "./signals";
 import { connection } from "./connections";
 import { context } from "./context";
 import type { List, ListItem, Method } from "./types";
 import { setContextData } from "./events";
-
-// const h = (
-//   tag: string,
-//   props?: Record<string, any> | Signal<Record<string, any>>,
-//   configure?: ElementConfigurator,
-// ) => hs(tag, scope, props, configure);
 
 ////////////////////////////////////////////
 // EFFECTS
@@ -36,13 +30,13 @@ reactive(
 async function mountStorageMethod(method: Method) {
   switch (method) {
     case "custom":
-      setModalIsOpen(true);
+      modalIsOpen(true);
       break;
     default:
       const conn = await connection(method);
       try {
         await conn.sendAction("mount", undefined, { timeoutDuration: 60000 });
-        setActive(method);
+        active(method);
       } catch (err) {
         const msg: string =
           err && typeof err === "object" && "message" in err ? `${err.message}` : `${err}`;
@@ -142,8 +136,8 @@ document.getElementById("options")?.replaceWith(Options());
 ////////////////////////////////////////////
 type CustomAppletState = "waiting" | "connecting" | { error: string } | "connected";
 
-const [modalIsOpen, setModalIsOpen] = signal(false);
-const [customState, setCustomState] = signal<CustomAppletState>("waiting");
+const modalIsOpen = signal(false);
+const customState = signal<CustomAppletState>("waiting");
 
 const Modal = () => {
   const Header = h("header", {}, [
@@ -209,7 +203,7 @@ const Modal = () => {
 
 // Events
 function close() {
-  setModalIsOpen(false);
+  modalIsOpen(false);
 }
 
 async function submit(event: SubmitEvent) {
@@ -222,10 +216,10 @@ async function submit(event: SubmitEvent) {
   if (!input) return;
 
   const url = input.value;
-  setCustomState("connecting");
+  customState("connecting");
 
   const apl = await applet(url).catch((err) => {
-    setCustomState({ error: "Failed to connect" });
+    customState({ error: "Failed to connect" });
     throw err;
   });
 
@@ -236,16 +230,16 @@ async function submit(event: SubmitEvent) {
   });
 
   if (missingAction) {
-    setCustomState({ error: `Applet is missing a required action: "${missingAction}"` });
+    customState({ error: `Applet is missing a required action: "${missingAction}"` });
     return;
   }
 
   localStorage.setItem(CUSTOM_KEY, url);
   await apl.sendAction("mount", undefined, { timeoutDuration: 60000 });
 
-  setActive("custom");
-  setModalIsOpen(false);
-  setCustomState("waiting");
+  active("custom");
+  modalIsOpen(false);
+  customState("waiting");
 }
 
 // Add to DOM

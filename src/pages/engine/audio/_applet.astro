@@ -1,5 +1,5 @@
 <script>
-  import { effect, signal } from "spellcaster";
+  import { effect, signal } from "@scripts/spellcaster";
 
   import type { State, Audio, AudioState } from "./types";
   import { register } from "@scripts/applet/common";
@@ -51,8 +51,8 @@
   }
 
   // Effects
-  const [defaultVolume, setDefaultVolume] = signal<number | undefined>(undefined);
-  context.scope.ondata = (event: any) => setDefaultVolume(event.data.volume.default);
+  const defaultVolume = signal<number | undefined>(undefined);
+  context.scope.ondata = (event: any) => defaultVolume(event.data.volume.default);
 
   effect(() => {
     if (context.isMainInstance()) {

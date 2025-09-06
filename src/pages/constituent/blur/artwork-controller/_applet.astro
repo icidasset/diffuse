@@ -336,8 +336,8 @@ import "@styles/diffuse/fonts.css";
   import { Temporal } from "@js-temporal/polyfill";
   import { xxh32r } from "xxh32/dist/raw.js";
 
-  import { computed, effect, type Signal, signal } from "spellcaster";
-  import { tags, text, type ElementConfigurator } from "spellcaster/hyperscript.js";
+  import { computed, effect, signal } from "@scripts/spellcaster";
+  import { tags, text, type ElementConfigurator } from "@scripts/spellcaster/hyperscript.js";
 
   import type { Track } from "@applets/core/types";
   import { applet, hs, inputUrl, reactive, register } from "@scripts/applet/common";
@@ -356,16 +356,16 @@ import "@styles/diffuse/fonts.css";
   const context = register();
 
   // Signals
-  const [activeTrack, setActiveTrack] = signal<Track | undefined>(undefined);
-  const [artwork, setArtwork] = signal<Artwork[]>([]);
-  const [artworkColor, setArtworkColor] = signal<string | undefined>(undefined);
-  const [artworkLightMode, setArtworkLightMode] = signal<boolean>(false);
-  const [duration, setDuration] = signal<string>("0:00");
-  const [isLoading, setIsLoading] = signal<boolean>(true);
-  const [isPlaying, setIsPlaying] = signal<boolean>(false);
-  const [progress, setProgress] = signal<number>(0);
-  const [time, setTime] = signal<string>("0:00");
-  const [volume, setVolume] = signal<number>(0);
+  const activeTrack = signal<Track | undefined>(undefined);
+  const artwork = signal<Artwork[]>([]);
+  const artworkColor = signal<string | undefined>(undefined);
+  const artworkLightMode = signal<boolean>(false);
+  const duration = signal<string>("0:00");
+  const isLoading = signal<boolean>(true);
+  const isPlaying = signal<boolean>(false);
+  const progress = signal<number>(0);
+  const time = signal<string>("0:00");
+  const volume = signal<number>(0);
 
   // Is main group
   function isMainGroup() {
@@ -402,24 +402,24 @@ import "@styles/diffuse/fonts.css";
     const prog = progress();
     const curr = engine.queue.data.now;
     const audio = curr ? engine.audio.data.items[curr.id] : undefined;
-    const duration = curr?.stats?.duration ?? audio?.duration;
+    const dur = curr?.stats?.duration ?? audio?.duration;
 
-    if (audio && duration != undefined && !isNaN(duration)) {
+    if (audio && dur != undefined && !isNaN(dur)) {
       const p = Temporal.Duration.from({
-        milliseconds: Math.round(duration * prog * 1000),
+        milliseconds: Math.round(dur * prog * 1000),
       }).round({
         largestUnit: "hours",
       });
 
-      const d = Temporal.Duration.from({ milliseconds: Math.round(duration * 1000) }).round({
+      const d = Temporal.Duration.from({ milliseconds: Math.round(dur * 1000) }).round({
         largestUnit: "hours",
       });
 
-      setTime(formatTime(p));
-      setDuration(formatTime(d));
+      time(formatTime(p));
+      duration(formatTime(d));
     } else {
-      setTime("0:00");
-      setDuration("0:00");
+      time("0:00");
+      duration("0:00");
     }
   };
 
@@ -434,7 +434,7 @@ import "@styles/diffuse/fonts.css";
   // ⏳️ Loading
   ////////////////////////////////////////////
 
-  const debouncedSetIsLoading = debounce(2000, setIsLoading);
+  const debouncedSetIsLoading = debounce(2000, isLoading);
 
   ////////////////////////////////////////////
   // 🔊 AUDIO
@@ -450,19 +450,19 @@ import "@styles/diffuse/fonts.css";
     engine.audio,
     (data) =>
       data.isPlaying && (data.items[engine.queue.data.now?.id ?? Infinity]?.isPlaying ?? false),
-    (isPlaying) => setIsPlaying(isPlaying),
+    (i) => isPlaying(i),
   );
 
   reactive(
     engine.audio,
     (data) => data.items[engine.queue.data.now?.id ?? Infinity]?.progress ?? 0,
-    (progress) => setProgress(progress),
+    (p) => progress(p),
   );
 
   reactive(
     engine.audio,
     (data) => data.volume.default,
-    (volume) => setVolume(volume),
+    (v) => volume(v),
   );
 
   ////////////////////////////////////////////
@@ -475,8 +475,8 @@ import "@styles/diffuse/fonts.css";
     engine.queue,
     (data) => data.now,
     (track) => {
-      setActiveTrack(track || undefined);
-      setProgress(0);
+      activeTrack(track || undefined);
+      progress(0);
     },
   );
 
@@ -489,7 +489,7 @@ import "@styles/diffuse/fonts.css";
     const track = engine.queue.data.now;
 
     if (!track) {
-      setArtwork([]);
+      artwork([]);
       return;
     }
 
@@ -516,7 +516,7 @@ import "@styles/diffuse/fonts.css";
 
     const currTrack = activeTrack();
     const currCacheId = currTrack ? await trackArtworkCacheId(currTrack) : undefined;
-    if (cacheId === currCacheId) setArtwork(art);
+    if (cacheId === currCacheId) artwork(art);
   }
 
   ////////////////////////////////////////////
@@ -531,7 +531,7 @@ import "@styles/diffuse/fonts.css";
 
   const h = (
     tag: string,
-    props?: Record<string, any> | Signal<Record<string, any>>,
+    props?: Record<string, any> | (() => Record<string, any>),
     configure?: ElementConfigurator,
   ) => hs(tag, scope, props, configure);
 
@@ -567,7 +567,7 @@ import "@styles/diffuse/fonts.css";
     }
 
     // Add new artwork
-    const blob = new Blob([art[0].bytes], { type: art[0].mime });
+    const blob = new Blob([art[0].bytes.buffer as ArrayBuffer], { type: art[0].mime });
     const url = URL.createObjectURL(blob);
 
     // Create img for new artwork
@@ -586,8 +586,8 @@ import "@styles/diffuse/fonts.css";
       const rgb = color.value;
       const o = Math.round((rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000);
 
-      setArtworkColor(color.rgba);
-      setArtworkLightMode(o > 165);
+      artworkColor(color.rgba);
+      artworkLightMode(o > 165);
       bg.style.backgroundColor = color.rgba;
       main.style.backgroundColor = color.rgba;
       img.style.opacity = "1";
@@ -697,7 +697,7 @@ import "@styles/diffuse/fonts.css";
   const Control = (
     label: string,
     icon: string,
-    props: Record<string, any> | Signal<Record<string, any>>,
+    props: Record<string, any> | (() => Record<string, any>),
   ) => {
     return h("command", props, [h("i", { className: icon, title: label })]);
   };

@@ -1,5 +1,5 @@
-import { computed, effect, type Signal } from "spellcaster";
-import { repeat, tags, text } from "spellcaster/hyperscript.js";
+import { computed, effect, type Signal } from "@scripts/spellcaster";
+import { repeat, tags, text } from "@scripts/spellcaster/hyperscript.js";
 
 import { mount, mounts, unmount } from "./mounting";
 import { isSupported } from "./common";

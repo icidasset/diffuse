@@ -1,5 +1,5 @@
-import { computed, effect, type Signal, signal } from "spellcaster";
-import { type Props, repeat, tags, text } from "spellcaster/hyperscript.js";
+import { computed, effect, type Signal, signal } from "@scripts/spellcaster";
+import { type Props, repeat, tags, text } from "@scripts/spellcaster/hyperscript.js";
 
 import type { Bucket } from "./types";
 import { bucketId, loadBuckets, saveBuckets } from "./common";
@@ -7,8 +7,8 @@ import { bucketId, loadBuckets, saveBuckets } from "./common";
 ////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
-export const [buckets, setBuckets] = signal<Record<string, Bucket>>(await loadBuckets());
-export const [form, setForm] = signal<{
+export const buckets = signal<Record<string, Bucket>>(await loadBuckets());
+export const form = signal<{
   access_key?: string;
   bucket_name?: string;
   host?: string;
@@ -36,7 +36,7 @@ const Bucket = (bucket: Signal<Bucket>) => {
     const col = { ...buckets() };
     delete col[id];
 
-    setBuckets(col);
+    buckets(col);
   };
 
   return tags.li({ onclick, style: "cursor: pointer" }, text(bucket().host));
@@ -71,7 +71,7 @@ function addBucket(event: Event) {
     secretKey: f.secret_key || "",
   };
 
-  setBuckets({
+  buckets({
     ...buckets(),
     [bucketId(bucket)]: bucket,
   });
@@ -111,7 +111,7 @@ function Input(name: string, label: string, placeholder: string, opts: Props = {
 }
 
 function formInput(name: string, value: string) {
-  setForm({ ...form(), [name]: value });
+  form({ ...form(), [name]: value });
 }
 
 // 🚀

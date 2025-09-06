@@ -1,4 +1,4 @@
-import { signal } from "spellcaster";
+import { signal } from "@scripts/spellcaster";
 import * as IDB from "idb-keyval";
 
 import { fetchHandles, fetchHandlesList } from "./common";
@@ -7,7 +7,7 @@ import { IDB_HANDLES } from "./constants";
 ////////////////////////////////////////////
 // SIGNALS
 ////////////////////////////////////////////
-export const [mounts, setMounts] = signal(await fetchHandlesList());
+export const mounts = signal(await fetchHandlesList());
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -20,7 +20,7 @@ export const mount = async () => {
 
       await handle.requestPermission({ mode: "read" });
       await IDB.set(IDB_HANDLES, { ...existingHandles, [id]: handle });
-      setMounts(await fetchHandlesList());
+      mounts(await fetchHandlesList());
     })
     .catch(() => {});
 };
@@ -29,5 +29,5 @@ export const unmount = async (handleId: string) => {
   const handles = await fetchHandles();
   delete handles[handleId];
   await IDB.set(IDB_HANDLES, { ...handles });
-  setMounts(await fetchHandlesList());
+  mounts(await fetchHandlesList());
 };

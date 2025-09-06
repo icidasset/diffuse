@@ -1,5 +1,5 @@
-import { computed, effect, type Signal, signal } from "spellcaster";
-import { type Props, repeat, tags, text } from "spellcaster/hyperscript.js";
+import { computed, effect, type Signal, signal } from "@scripts/spellcaster";
+import { type Props, repeat, tags, text } from "@scripts/spellcaster/hyperscript.js";
 
 import type { Server } from "./types.d.ts";
 import { loadServers, saveServers, serverId } from "./common";
@@ -7,8 +7,8 @@ import { loadServers, saveServers, serverId } from "./common";
 ////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
-export const [servers, setServers] = signal<Record<string, Server>>(await loadServers());
-const [form, setForm] = signal<{
+export const servers = signal<Record<string, Server>>(await loadServers());
+const form = signal<{
   api_key?: string;
   host?: string;
   password?: string;
@@ -34,7 +34,7 @@ const Server = (server: Signal<Server>) => {
     const col = { ...servers() };
     delete col[id];
 
-    setServers(col);
+    servers(col);
   };
 
   return tags.li({ onclick, style: "cursor: pointer" }, text(server().host));
@@ -68,7 +68,7 @@ function addServer(event: Event) {
     password: f.password,
   };
 
-  setServers({
+  servers({
     ...servers(),
     [serverId(server)]: server,
   });
@@ -103,7 +103,7 @@ function Input(name: string, label: string, placeholder: string, opts: Props = {
 }
 
 function formInput(name: string, value: string) {
-  setForm({ ...form(), [name]: value });
+  form({ ...form(), [name]: value });
 }
 
 // 🚀

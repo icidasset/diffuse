@@ -2,9 +2,10 @@ import type { Applet, AppletEvent, AppletScope } from "@web-applets/sdk";
 import * as Comlink from "comlink";
 
 import { applets } from "@web-applets/sdk";
-import { type ElementConfigurator, h } from "spellcaster/hyperscript.js";
-import { effect, isSignal, type Signal, signal } from "spellcaster/spellcaster.js";
 import QS from "query-string";
+
+import { type ElementConfigurator, h } from "@scripts/spellcaster/hyperscript.js";
+import { isSignal, type Signal, signal } from "@scripts/spellcaster";
 
 import type { ResolvedUri } from "@applets/core/types";
 import { transfer, type WorkerTasks } from "@scripts/common";
@@ -168,7 +169,7 @@ export function register<DataType = any>(
     codec,
 
     isMainInstance() {
-      return channelContext?.mainSignal[0]() ?? null;
+      return channelContext?.mainSignal() ?? null;
     },
 
     setActionHandler: <H extends Function>(actionId: string, actionHandler: H) => {
@@ -214,8 +215,7 @@ function broadcastChannel<DataType>({
   instanceId: string;
   scope: AppletScope<DataType>;
 }) {
-  const mainSignal = signal<boolean>(true);
-  const [isMain, setIsMain] = mainSignal;
+  const isMain = signal<boolean>(true);
 
   // One instance to rule them all
   //
@@ -246,7 +246,7 @@ function broadcastChannel<DataType>({
 
       case "PONG": {
         if (event.data.instanceId === instanceId) {
-          setIsMain(false);
+          isMain(false);
         }
         break;
       }
@@ -256,7 +256,7 @@ function broadcastChannel<DataType>({
           // We need to wait until the other side is actually unloaded 🤷‍♀️
           setTimeout(async () => {
             const promised = await makeMainPromise();
-            setIsMain(promised.isMain);
+            isMain(promised.isMain);
             if (promised.isMain) context.unloadHandler?.();
           }, 250);
         }
@@ -339,7 +339,7 @@ function broadcastChannel<DataType>({
       // Check if a main instance is still available,
       // if not, then this is the new main.
       const promised = await makeMainPromise();
-      setIsMain(promised.isMain);
+      isMain(promised.isMain);
 
       if (isMain()) {
         return actionHandler(...args);
@@ -383,7 +383,7 @@ function broadcastChannel<DataType>({
   // Fin
   return {
     channel,
-    mainSignal,
+    mainSignal: isMain,
     promise,
     setActionHandler,
   };
