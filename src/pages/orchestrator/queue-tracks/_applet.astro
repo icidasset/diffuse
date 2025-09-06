@@ -1,5 +1,4 @@
 <script>
-  import type { Applet } from "@web-applets/sdk";
   import type { GroupConsult, ManagedOutput, Track } from "@applets/core/types.d.ts";
   import { applet, reactive, register, wait } from "@scripts/applet/common";
 
@@ -73,7 +72,5 @@
   ////////////////////////////////////////////
   // 🚀
   ////////////////////////////////////////////
-  context.settled().then(() => {
-    monitorTracks();
-  });
+  monitorTracks();
 </script>

@@ -40,10 +40,17 @@ export async function applet<D>(
     src = QS.stringifyUrl({ url: src, query });
   }
 
-  const context = opts.newInstance ? self : opts.context || self.top || self.parent;
-  const existingFrame: HTMLIFrameElement | null = opts.newInstance
-    ? null
-    : context.document.querySelector(`[src="${src}"]`);
+  let context = opts.newInstance ? self : opts.context || self.top || self.parent;
+
+  let existingFrame: HTMLIFrameElement | null;
+
+  // TODO: Ideally we do some cross-origin detection here
+  try {
+    existingFrame = opts.newInstance ? null : context.document.querySelector(`[src="${src}"]`);
+  } catch (err) {
+    existingFrame = null;
+    context = self;
+  }
 
   let frame;
 

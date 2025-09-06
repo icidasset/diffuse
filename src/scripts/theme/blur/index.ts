@@ -12,13 +12,19 @@ if (!container) throw new Error("Missing container");
 const labelA = "Deck A";
 const labelB = "Deck B";
 
-const configurator = {
-  output: await applet<ManagedOutput>("/configurator/output"),
-};
+// const configurator = {
+//   output: await applet<ManagedOutput>("/configurator/output"),
+// };
 
-const _constituent = {
-  a: applet("/constituent/blur/artwork-controller", { container, groupId: labelA }),
-  b: applet("/constituent/blur/artwork-controller", { container, groupId: labelB }),
+const constituent = {
+  a: applet("/constituent/blur/artwork-controller", {
+    container,
+    groupId: labelA,
+  }),
+  b: applet("/constituent/blur/artwork-controller", {
+    container,
+    groupId: labelB,
+  }),
 };
 
 // TODO:
