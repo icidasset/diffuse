@@ -108,7 +108,10 @@ export function groupTracksPerScheme(
 }
 
 export function inIframe() {
-  return window.self !== window.top;
+  const url = new URL(self.location.href);
+  const ui = url.searchParams.get("ui")?.toLowerCase();
+
+  return window.self !== window.top && !(ui === "true" || ui === "t");
 }
 
 export function initialConnections<C extends Record<string, any>>(ids: string[]) {

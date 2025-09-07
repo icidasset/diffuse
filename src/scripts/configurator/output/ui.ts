@@ -118,6 +118,18 @@ const Item = (signal: Signal<ListItem<Method>>) => {
 function clickHandler(method: Method) {
   return async () => {
     const currentlyActive = active();
+
+    // const permission = await navigator.permissions.query({
+    //   name: "storage-access",
+    // });
+
+    // if (permission.state === "prompt") {
+    //   // @ts-ignore
+    //   await document.requestStorageAccess({
+    //     localStorage: true,
+    //   });
+    // }
+
     if (currentlyActive === method && currentlyActive !== "custom") return;
     if (currentlyActive) unmountStorageMethod(currentlyActive);
     await mountStorageMethod(method);

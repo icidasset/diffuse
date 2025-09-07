@@ -1,0 +1,31 @@
+---
+import Page from "../../../layouts/page.astro";
+import "@styles/theme/blur/index.css";
+---
+
+<Page title="Diffuse">
+  <script>
+    import { applet } from "@scripts/applet/common";
+
+    ////////////////////////////////////////////
+    // 🗂️ Applets
+    ////////////////////////////////////////////
+    const container = document.querySelector("main");
+    if (!container) throw new Error("Missing container");
+
+    const labelA = "Deck A";
+    const labelB = "Deck B";
+
+    const constituent = {
+      a: applet("https://applets.diffuse.sh/constituent/blur/artwork-controller", {
+        container,
+      }),
+      b: applet("https://applets.diffuse.sh/constituent/blur/artwork-controller", {
+        container,
+        groupId: labelB,
+      }),
+    };
+  </script>
+
+  <main></main>
+</Page>
