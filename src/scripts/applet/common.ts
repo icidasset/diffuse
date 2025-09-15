@@ -4,7 +4,7 @@ import * as Comlink from "comlink";
 import { applets } from "@web-applets/sdk";
 import QS from "query-string";
 
-import { type ElementConfigurator, h } from "@scripts/spellcaster/hyperscript.js";
+import { type ElementConfigurator, h as hyperscript } from "@scripts/spellcaster/hyperscript.js";
 import { isSignal, type Signal, signal } from "@scripts/spellcaster";
 
 import type { ResolvedUri } from "@applets/core/types";
@@ -462,19 +462,20 @@ export function appletScopePort() {
   return () => port;
 }
 
-export function hs(
-  tag: string,
-  astroScope: string,
-  props?: Record<string, unknown> | Signal<Record<string, unknown>>,
-  configure?: ElementConfigurator,
-) {
-  const propsWithScope =
-    props && isSignal(props)
-      ? () => addScope(astroScope, props())
-      : addScope(astroScope, props || {});
+export const hs =
+  (astroScope: string) =>
+  (
+    tag: string,
+    props?: Record<string, any> | (() => Record<string, any>),
+    configure?: ElementConfigurator,
+  ) => {
+    const propsWithScope =
+      props && isSignal(props)
+        ? () => addScope(astroScope, props())
+        : addScope(astroScope, props || {});
 
-  return h(tag, propsWithScope, configure);
-}
+    return hyperscript(tag, propsWithScope, configure);
+  };
 
 export function wait<A>(applet: Applet<A>, dataFn: (a: A | undefined) => boolean): Promise<void> {
   return new Promise((resolve) => {

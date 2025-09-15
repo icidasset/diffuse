@@ -58,7 +58,8 @@ async function groupConsult(tracks: Track[]): Promise<GroupConsult> {
       : { available, reason: "Server ping failed", tracks };
 
     return {
-      key: `${SCHEME}:${serverId}`,
+      // key: `${SCHEME}:${serverId}`,
+      key: SCHEME,
       grouping,
     };
   });
@@ -115,6 +116,7 @@ async function list(cachedTracks: Track[] = []) {
             ? song.path
             : `/${song.path}`
           : undefined;
+
         const fromCache = path ? cache[sid]?.[path] : undefined;
         if (fromCache) return fromCache;
 

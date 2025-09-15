@@ -3,6 +3,7 @@
     "@automerge/automerge": "^3.0.0-beta.0",
     "@bradenmacdonald/s3-lite-client": "npm:@jsr/bradenmacdonald__s3-lite-client@^0.9.0",
     "@js-temporal/polyfill": "^0.5.1",
+    "@lift-html/alien": "^0.0.1",
     "@okikio/sharedworker": "^1.1.0",
     "@okikio/transferables": "npm:@jsr/okikio__transferables@^1.0.2",
     "@orama/orama": "^3.1.7",

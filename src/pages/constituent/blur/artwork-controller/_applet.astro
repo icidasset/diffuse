@@ -43,7 +43,6 @@ import "@styles/diffuse/fonts.css";
     flex-direction: column;
     font-size: var(--fs-sm);
     height: 100dvh;
-    /* max-width: var(--container-xs); */
     overflow: hidden;
     position: relative;
     transition:
@@ -54,8 +53,10 @@ import "@styles/diffuse/fonts.css";
   /* Artwork */
 
   .artwork {
+    app-region: drag;
     flex: 1;
     position: relative;
+    user-select: none;
   }
 
   .artwork img {
@@ -335,10 +336,12 @@ import "@styles/diffuse/fonts.css";
   import { FastAverageColor } from "fast-average-color";
   import { Temporal } from "@js-temporal/polyfill";
   import { xxh32r } from "xxh32/dist/raw.js";
+  import { debounce } from "throttle-debounce";
 
   import { computed, effect, signal } from "@scripts/spellcaster";
   import { tags, text, type ElementConfigurator } from "@scripts/spellcaster/hyperscript.js";
 
+  import type { Artwork } from "@applets/processor/artwork/types";
   import type { Track } from "@applets/core/types";
   import { applet, hs, inputUrl, reactive, register } from "@scripts/applet/common";
   import { trackArtworkCacheId } from "@scripts/common";
@@ -348,9 +351,6 @@ import "@styles/diffuse/fonts.css";
   ////////////////////////////////////////////
   import type * as AudioEngine from "@applets/engine/audio/types.d.ts";
   import type * as QueueEngine from "@applets/engine/queue/types.d.ts";
-
-  import type { Artwork } from "@applets/processor/artwork/types";
-  import { debounce } from "throttle-debounce";
 
   // Register
   const context = register();
@@ -529,11 +529,7 @@ import "@styles/diffuse/fonts.css";
 
   if (!bg || !controller || !main || !showcase) throw new Error("Missing DOM elements");
 
-  const h = (
-    tag: string,
-    props?: Record<string, any> | (() => Record<string, any>),
-    configure?: ElementConfigurator,
-  ) => hs(tag, scope, props, configure);
+  const h = hs(scope);
 
   ////////////////////////////////////////////
   // UI ░ ARTWORK

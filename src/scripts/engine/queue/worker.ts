@@ -2,7 +2,7 @@ import { getTransferables } from "@okikio/transferables";
 
 import type { Track } from "@applets/core/types.js";
 import type { Item, State } from "./types";
-import { arrayShuffle, postMessages, provide, transfer } from "@scripts/common.ts";
+import { arrayShuffle, postMessages, provide } from "@scripts/common.ts";
 
 ////////////////////////////////////////////
 // SETUP

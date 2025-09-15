@@ -1,5 +1,7 @@
 import { computed } from "alien-signals";
 
+export type Props = Record<string, any> | (() => Record<string, any>);
+
 /**
  * A signal is a zero-argument function that returns a value.
  * Reactive signals created with `signal()` will cause reactive contexts

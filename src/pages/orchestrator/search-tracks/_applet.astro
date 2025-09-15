@@ -5,8 +5,6 @@
   ////////////////////////////////////////////
   // SETUP
   ////////////////////////////////////////////
-  import type * as QueueEngine from "@applets/engine/queue/types.d.ts";
-
   const context = register();
 
   // Applet connections
@@ -15,22 +13,22 @@
     output: applet<ManagedOutput>("/configurator/output"),
   };
 
-  const engine = {
-    queue: applet<QueueEngine.State>("/engine/queue", { groupId: context.groupId }),
+  const processor = {
+    search: applet("/processor/search"),
   };
 
   ////////////////////////////////////////////
-  // QUEUE ⭤ TRACKS
+  // SEARCH ⭤ TRACKS
   ////////////////////////////////////////////
   async function monitorTracks() {
     await context.settled();
 
-    // Add tracks to the queue once the tracks have been loaded;
+    // Add tracks to the search supply once the tracks have been loaded;
     // and every time the collection changes.
 
     const input = await configurator.input;
     const output = await configurator.output;
-    const queue = await engine.queue;
+    const search = await processor.search;
 
     await wait(output, (d) => d?.tracks.state === "loaded");
 
@@ -54,15 +52,11 @@
           tracks = tracks.concat(value.tracks);
         }, []);
 
-        // Set pool
-        await queue.sendAction(
-          "pool",
-          { groupId: context.groupId, tracks },
-          {
-            timeoutDuration: 60000,
-            worker: true,
-          },
-        );
+        // Supply
+        await search.sendAction("supply", tracks, {
+          timeoutDuration: 60000,
+          worker: true,
+        });
       },
     );
   }

@@ -13,8 +13,6 @@ const configurator = {
 };
 
 const orchestrator = {
-  queueAudio: applet("/orchestrator/queue-audio"),
-  queueTracks: applet("/orchestrator/queue-tracks"),
   processTracks: applet("/orchestrator/process-tracks"),
 };
 

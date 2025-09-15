@@ -1,7 +1,7 @@
 <script>
   import type { Applet } from "@web-applets/sdk";
   import type { ManagedOutput, ResolvedUri, Track } from "@applets/core/types.d.ts";
-  import { applet, register } from "@scripts/applet/common";
+  import { applet, register, wait } from "@scripts/applet/common";
   import { tracksCacheId } from "@scripts/output/common";
 
   ////////////////////////////////////////////
@@ -112,7 +112,10 @@
   ////////////////////////////////////////////
   // 🚀
   ////////////////////////////////////////////
-  context.settled().then(() => {
-    if (context.isMainInstance()) processInputs();
+  context.settled().then(async () => {
+    if (context.isMainInstance()) {
+      await wait(await configurator.output, (d) => d?.tracks.state === "loaded");
+      processInputs();
+    }
   });
 </script>

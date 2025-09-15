@@ -1,22 +1,37 @@
 <script>
   import type { Tasks } from "@scripts/processor/search/worker";
   import type { Track } from "@applets/core/types";
+  import type { State } from "@scripts/processor/search/types";
   import { register } from "@scripts/applet/common";
-  import { endpoint, transfer } from "@scripts/common";
+  import { endpoint, sync, transfer } from "@scripts/common";
   import manifest from "./_manifest.json";
 
   ////////////////////////////////////////////
   // SETUP
   ////////////////////////////////////////////
-  const worker = endpoint<Tasks>(
-    new SharedWorker(new URL("../../../scripts/processor/search/worker", import.meta.url), {
+  const port = new SharedWorker(
+    new URL("../../../scripts/processor/search/worker", import.meta.url),
+    {
       type: "module",
       name: manifest.name,
-    }).port,
-  );
+    },
+  ).port;
+
+  const worker = endpoint<Tasks>(port);
 
   // Register applet
-  const context = register({ worker });
+  const context = register<State>({ worker, mode: "shared-worker" });
+
+  // Initial state
+  context.data = {
+    cacheId: "",
+    inserted: new Set<string>(),
+  };
+
+  context.data = await worker.data();
+
+  // Keep applet data with worker data in sync
+  sync(context, port);
 
   ////////////////////////////////////////////
   // ACTIONS

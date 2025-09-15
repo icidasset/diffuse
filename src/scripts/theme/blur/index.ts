@@ -25,6 +25,9 @@ const constituent = {
     container,
     groupId: labelB,
   }),
+  browser: applet("/constituent/blur/browser", {
+    container,
+  }),
 };
 
 // TODO:

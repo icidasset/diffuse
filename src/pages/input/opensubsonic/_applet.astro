@@ -46,7 +46,7 @@
 
   const contextualize = async (tracks: Track[]) => {
     const s = await worker.contextualize(transfer(tracks));
-    ui?.setServers({ ...ui?.servers(), ...s });
+    ui?.servers({ ...ui?.servers(), ...s });
   };
 
   const groupConsult = async (tracks: Track[]) => {

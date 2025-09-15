@@ -2,20 +2,5 @@
   "name": "diffuse/constituent/blur/artwork-controller",
   "title": "Diffuse Blur Theme | Artwork Controller",
   "entrypoint": "index.html",
-  "actions": {
-    "modifyIsPlaying": {
-      "title": "Set is-playing state",
-      "description": "Indicate if audio is playing or not.",
-      "params_schema": {
-        "type": "boolean"
-      }
-    },
-    "modifyProgress": {
-      "title": "Set progress",
-      "description": "Indicate how far the audio has progressed.",
-      "params_schema": {
-        "type": "number"
-      }
-    }
-  }
+  "actions": {}
 }
