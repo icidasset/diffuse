@@ -10,13 +10,8 @@ import "@styles/diffuse/fonts.css";
 ---
 
 <main>
-  <search>
-    <form>
-      <input type="search" placeholder="Search" />
-    </form>
-  </search>
-
-  <blur-list> </blur-list>
+  <blur-search></blur-search>
+  <blur-list></blur-list>
 </main>
 
 <!-- STYLE -->
@@ -51,6 +46,7 @@ import "@styles/diffuse/fonts.css";
     display: block;
     flex: 1;
     overflow: hidden;
+    user-select: none;
 
     & ul {
       height: 100%;
@@ -100,7 +96,7 @@ import "@styles/diffuse/fonts.css";
 
   // Applet connections
   const orchestrator = {
-    // processTracks: isMainGroup() ? applet("/orchestrator/process-tracks") : undefined,
+    processTracks: isMainGroup() ? applet("/orchestrator/process-tracks") : undefined,
     searchTracks: isMainGroup()
       ? applet("/orchestrator/search-tracks", { groupId: context.groupId })
       : undefined,
@@ -115,15 +111,13 @@ import "@styles/diffuse/fonts.css";
   ////////////////////////////////////////////
 
   processor.search.then((search) => {
-    reactive(
-      search,
-      (data) => data.cacheId,
-      async () => {
-        console.log("Search cache id:", search.data.cacheId);
-        const tracks = await search.sendAction("search", $searchTerm().trim(), { worker: true });
-        $tracks(tracks);
-      },
-    );
+    async function fn() {
+      const tracks = await search.sendAction("search", $searchTerm().trim(), { worker: true });
+      $tracks(tracks);
+    }
+
+    reactive(search, (data) => data.cacheId, fn);
+    effect(fn);
   });
 
   ////////////////////////////////////////////
@@ -132,6 +126,31 @@ import "@styles/diffuse/fonts.css";
   const html = (strings: string[] | ArrayLike<string>, ...values: any[]) =>
     String.raw({ raw: strings }, ...values);
   const scope = `data-astro-cid-${astroScope}`;
+
+  ////////////////////////////////////////////
+  // UI ░ SEARCH
+  ////////////////////////////////////////////
+
+  liftAlien("blur-search", {
+    async init() {
+      // const input = document.createElement("input");
+      // input.type = "search";
+      // input.placeholder = "Search";
+
+      // const form = document.createElement("form");
+      // // form
+      // form.appendChild(input);
+
+      // const search = document.createElement("search");
+      // search.appendChild();
+
+      // const search = h("search", {}, []);
+
+      effect(() => {
+        //
+      });
+    },
+  });
 
   ////////////////////////////////////////////
   // UI ░ LIST
@@ -147,7 +166,6 @@ import "@styles/diffuse/fonts.css";
         this.innerHTML = html`
           <ul ${scope}>
             ${$tracks()
-              .slice(0, 100)
               .map((track: Track) => {
                 return html`<li ${scope}>${track.tags?.artist} - ${track.tags?.title}</li>`;
               })
