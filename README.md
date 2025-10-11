@@ -8,5 +8,5 @@ in the form of a static, serverless, web application._
 
 ```shell
 npm install
-deno run dev
+deno run build
 ```

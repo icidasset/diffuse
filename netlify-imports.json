@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@common/": "/common/",
+    "@elements/": "/elements/"
+  }
+}
