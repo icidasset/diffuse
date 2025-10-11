@@ -1,5 +1,9 @@
 .DS_Store
+.enhance
 .netlify
 .zed
 node_modules
 /dist
+
+/public/browser
+/public/static.json
