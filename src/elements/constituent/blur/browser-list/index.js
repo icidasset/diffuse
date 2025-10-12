@@ -1,11 +1,10 @@
 import DiffuseElement from "@common/element.js";
-import { signal } from "@common/signals.js";
+import { signal } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
- * @import {Track} from "@elements/core/types.d.ts"
- *
  * @import {State} from "./types.d.ts"
+ * @import {Track} from "@elements/core/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -43,11 +42,16 @@ class BrowserList extends DiffuseElement {
   render({ html, state }) {
     console.log("Rendering", state.tracks());
 
-    const list = state.tracks().map((t, idx) =>
-      html`
-        <div id="track-${idx}">${t}</div>
-      `
-    );
+    const list = state.tracks().map(
+      /**
+       * @param {Track} t
+       * @param {number} idx
+       */
+      (t, idx) =>
+        html`
+          <div id="track-${idx}">${t}</div>
+        `,
+    ).join("");
 
     return html`
       <style>
@@ -55,16 +59,15 @@ class BrowserList extends DiffuseElement {
         color: blue;
       }
       </style>
-      <section>${list.join("")}</section>
+      <section>${list}</section>
     `;
   }
 }
 
-export { BrowserList as ConstituentBlurBrowserList };
 export default BrowserList;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-customElements.define("constituent-blur-browser-list", BrowserList);
+customElements.define("dcb-browser-list", BrowserList);
