@@ -1,67 +1,37 @@
 import DiffuseElement from "@common/element.js";
-import { effect, signal } from "@common/signals.js";
+import { signal } from "@common/signals.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
- * @import {Signal} from "@common/signals.d.ts"
  * @import {Track} from "@elements/core/types.d.ts"
+ *
+ * @import {State} from "./browser-list.d.ts"
  */
-
-/**
- * @typedef {{ tracks: Signal<Track[]> }} State
- */
-
-/**
- * @type {Track[]}
- */
-const TRACKS = [];
 
 ////////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////////
 
 class List extends DiffuseElement {
-  #teardown = () => {};
-
-  /**
-   * @type {Signal<Track[]>}
-   */
-  tracks = signal(TRACKS);
+  tracks = signal(/** @type {Track[]} */ ([]));
 
   // STATE
 
-  /**
-   * @override
-   * @returns {State}
-   */
   get state() {
     return {
       tracks: this.tracks,
     };
   }
 
-  // LIFECYCLE
-
-  connectedCallback() {
-    this.#teardown = effect(() => {
-      this.innerHTML = this.render({ html: this.html, state: this.state });
-    });
-  }
-
-  disconnectedCallback() {
-    this.#teardown();
-  }
-
   // RENDER
 
   /**
-   * @override
    * @param {RenderArg<State>} _
    */
   render({ html, state }) {
-    console.log("Rendering", state.tracks);
+    console.log("Rendering", state.tracks());
 
-    const list = (state.tracks() || []).map((t) =>
+    const list = state.tracks().map((t) =>
       html`
         <div id="track-${t.id}">${t}</div>
       `
