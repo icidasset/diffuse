@@ -1,6 +1,8 @@
+import { Signal } from "@common/signal.d.ts";
+
 export interface State {
   isPlaying: boolean;
-  items: Record<string, AudioState>;
+  items: Signal<Audio[]>;
   volume: { default: number };
 }
 
@@ -21,8 +23,8 @@ export interface AudioState {
     | "loading"
     | "loaded"
     | {
-        error: { code: number };
-      };
+      error: { code: number };
+    };
   isPlaying: boolean;
   isPreload: boolean;
   mimeType?: string;

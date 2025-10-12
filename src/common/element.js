@@ -1,8 +1,8 @@
 import morphdom from "morphdom/dist/morphdom.js";
-import { effect } from "@common/signals.js";
+import { effect } from "@common/signal.js";
 
 /**
- * @import {HtmlTagFunction} from "./element.d.ts"
+ * @import {HtmlTagFunction, MorphOptions} from "./element.d.ts"
  */
 
 export default class DiffuseElement extends HTMLElement {
@@ -17,6 +17,36 @@ export default class DiffuseElement extends HTMLElement {
     this.morphedRender = this.morphedRender.bind(this);
   }
 
+  /**
+   * @param {string} _name
+   * @param {string} oldValue
+   * @param {string} newValue
+   */
+  attributeChangedCallback(_name, oldValue, newValue) {
+    if (oldValue !== newValue) this.morphedRender();
+  }
+
+  /**
+   * Effect helper that automatically disposes it
+   * when this element is removed from the DOM.
+   *
+   * @param {() => void} fn
+   */
+  effect(fn) {
+    this.#disposables.push(effect(fn));
+  }
+
+  /**
+   * @type {HtmlTagFunction}
+   */
+  html(strings, ...values) {
+    return String.raw({ raw: strings }, ...values);
+  }
+
+  /**
+   * Avoid replacing the whole subtree,
+   * morph the existing DOM into the new given tree.
+   */
   morphedRender() {
     if (!("render" in this && typeof this.render === "function")) return;
     if (!("state" in this)) return;
@@ -34,33 +64,16 @@ export default class DiffuseElement extends HTMLElement {
       root,
       updated,
       {
+        ...this.morphOptions,
         childrenOnly: true,
       },
     );
   }
 
-  /**
-   * @param {string} _name
-   * @param {string} oldValue
-   * @param {string} newValue
-   */
-  attributeChangedCallback(_name, oldValue, newValue) {
-    if (oldValue !== newValue) this.morphedRender();
-  }
+  // MORPH STUFF
 
-  /**
-   * @param {() => void} fn
-   */
-  effect(fn) {
-    this.#disposables.push(effect(fn));
-  }
-
-  /**
-   * @type {HtmlTagFunction}
-   */
-  html(strings, ...values) {
-    return String.raw({ raw: strings }, ...values);
-  }
+  /** @type {MorphOptions} */
+  morphOptions = {};
 
   // LIFECYCLE
 
