@@ -6,14 +6,18 @@ import { effect } from "@common/signals.js";
  */
 
 export default class DiffuseElement extends HTMLElement {
-  #teardown = () => {};
+  #disposables = /** @type {Array<() => void>} */ ([]);
+
+  #teardown() {
+    this.#disposables.forEach((fn) => fn());
+  }
 
   constructor() {
     super();
-    this.process = this.process.bind(this);
+    this.morphedRender = this.morphedRender.bind(this);
   }
 
-  process() {
+  morphedRender() {
     if (!("render" in this && typeof this.render === "function")) return;
     if (!("state" in this)) return;
 
@@ -26,16 +30,13 @@ export default class DiffuseElement extends HTMLElement {
     updated.innerHTML = tmp.trim();
     const root = this.shadowRoot ? this.shadowRoot : this;
 
-    /** @type {Node} */
-    const result = morphdom(
+    morphdom(
       root,
       updated,
       {
         childrenOnly: true,
       },
     );
-
-    return result;
   }
 
   /**
@@ -44,7 +45,14 @@ export default class DiffuseElement extends HTMLElement {
    * @param {string} newValue
    */
   attributeChangedCallback(_name, oldValue, newValue) {
-    if (oldValue !== newValue) this.process();
+    if (oldValue !== newValue) this.morphedRender();
+  }
+
+  /**
+   * @param {() => void} fn
+   */
+  effect(fn) {
+    this.#disposables.push(effect(fn));
   }
 
   /**
@@ -59,11 +67,11 @@ export default class DiffuseElement extends HTMLElement {
   connectedCallback() {
     if (!("render" in this && typeof this.render === "function")) return;
 
-    this.#teardown = effect(() => {
+    this.effect(() => {
       if (!("render" in this && typeof this.render === "function")) return;
       if (!("state" in this)) return;
 
-      this.innerHTML = this.render({ html: this.html, state: this.state });
+      this.morphedRender();
     });
   }
 
