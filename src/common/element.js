@@ -1,19 +1,22 @@
-import morphdom from "morphdom";
+import morphdom from "morphdom/dist/morphdom.js";
+import { effect } from "@common/signals.js";
 
 /**
- * @import {HtmlTagFunction, RenderArg} from "./element.d.ts"
+ * @import {HtmlTagFunction} from "./element.d.ts"
  */
 
-/**
- * @template [State={}]
- */
 export default class DiffuseElement extends HTMLElement {
+  #teardown = () => {};
+
   constructor() {
     super();
     this.process = this.process.bind(this);
   }
 
   process() {
+    if (!("render" in this && typeof this.render === "function")) return;
+    if (!("state" in this)) return;
+
     const tmp = this.render({
       html: this.html,
       state: this.state,
@@ -23,14 +26,16 @@ export default class DiffuseElement extends HTMLElement {
     updated.innerHTML = tmp.trim();
     const root = this.shadowRoot ? this.shadowRoot : this;
 
-    /* @ts-ignore */
-    morphdom(
+    /** @type {Node} */
+    const result = morphdom(
       root,
       updated,
       {
         childrenOnly: true,
       },
     );
+
+    return result;
   }
 
   /**
@@ -49,20 +54,20 @@ export default class DiffuseElement extends HTMLElement {
     return String.raw({ raw: strings }, ...values);
   }
 
-  // TO OVERRIDE
+  // LIFECYCLE
 
-  /**
-   * @param {RenderArg<State>} _arg
-   */
-  render(_arg) {
-    return "";
+  connectedCallback() {
+    if (!("render" in this && typeof this.render === "function")) return;
+
+    this.#teardown = effect(() => {
+      if (!("render" in this && typeof this.render === "function")) return;
+      if (!("state" in this)) return;
+
+      this.innerHTML = this.render({ html: this.html, state: this.state });
+    });
   }
 
-  /**
-   * @returns {State}
-   */
-  get state() {
-    /* @ts-ignore */
-    return {};
+  disconnectedCallback() {
+    this.#teardown();
   }
 }
