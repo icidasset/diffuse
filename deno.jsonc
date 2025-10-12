@@ -15,7 +15,7 @@
     "build": "deno task lume",
     "copy-types": "deno run --allow-read --allow-write tasks/copy-types.ts",
     "deploy:netlify": "npx netlify deploy --prod",
-    "lume": "echo \"import 'lume/cli.ts'\" | DENO_DIR=_vendor deno run --config=./deno.jsonc --allow-read --allow-write --allow-env --allow-net --allow-run -",
+    "lume": "echo \"import 'lume/cli.ts'\" | DENO_DIR=_vendor deno run --config=./deno.jsonc --allow-read --allow-write --allow-env --allow-net --allow-run --allow-sys -",
     "serve": "deno task lume -s",
   },
   "compilerOptions": {
