@@ -92,7 +92,7 @@ class AudioEngine extends DiffuseElement {
       if (!audio.isConnected) return;
 
       const promise = audio.play() || Promise.resolve();
-      item.state = { isPlaying: true };
+      item.state({ isPlaying: true });
 
       promise.catch((e) => {
         if (!audio.isConnected) {
@@ -101,7 +101,7 @@ class AudioEngine extends DiffuseElement {
         const err =
           "Couldn't play audio automatically. Please resume playback manually.";
         console.error(err, e);
-        item.state = { isPlaying: false };
+        item.state({ isPlaying: false });
       });
     });
   }
@@ -202,7 +202,7 @@ class AudioEngine extends DiffuseElement {
 
     if (node) {
       const item = /** @type {AudioEngineItem} */ (node);
-      fn(item.audio, item);
+      if (item) fn(item.audio, item);
     }
   }
 }
@@ -260,20 +260,17 @@ class AudioEngineItem extends HTMLElement {
   get engine() {
     const el = this.closest("de-audio");
     if (el) return /** @type {AudioEngine} */ (el);
-    else throw new Error("Cannot find parent de-audio element");
+    else return null;
   }
 
   // STATE
 
-  get state() {
-    return { ...this.#state };
-  }
-
   /**
-   * @param {Partial<AudioState>} s
+   * @param {Partial<AudioState> | undefined} [s]
    */
-  set state(s) {
-    this.#state = { ...this.#state, ...s };
+  state(s) {
+    if (s) this.#state = { ...this.#state, ...s };
+    else return { ...this.#state };
   }
 
   // EVENTS
@@ -286,7 +283,7 @@ class AudioEngineItem extends HTMLElement {
     const item = engineItem(audio);
 
     if (
-      item.hasAttribute("initial-progress") &&
+      item?.hasAttribute("initial-progress") &&
       audio.duration &&
       !isNaN(audio.duration)
     ) {
@@ -307,7 +304,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
     if (!isNaN(audio.duration)) {
-      engineItem(audio).state = { duration: audio.duration };
+      engineItem(audio)?.state({ duration: audio.duration });
     }
   }
 
@@ -318,7 +315,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     audio.currentTime = 0;
 
-    engineItem(audio).state = { hasEnded: true };
+    engineItem(audio)?.state({ hasEnded: true });
   }
 
   /**
@@ -328,7 +325,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const code = audio.error?.code || 0;
 
-    engineItem(audio).state = { loadingState: { error: { code } } };
+    engineItem(audio)?.state({ loadingState: { error: { code } } });
   }
 
   /**
@@ -337,11 +334,14 @@ class AudioEngineItem extends HTMLElement {
   pauseEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
-    const item = engineItem(audio).state;
-    const ended = item ? item.hasEnded || item.progress === 1 : false;
+    const item = engineItem(audio);
+    const itemState = item?.state();
+    const ended = itemState
+      ? itemState.hasEnded || itemState.progress === 1
+      : false;
 
-    engineItem(audio).state = { isPlaying: false };
-    engineItem(audio).engine.isPlaying(ended);
+    item?.state({ isPlaying: false });
+    item?.engine?.isPlaying(ended);
   }
 
   /**
@@ -350,8 +350,8 @@ class AudioEngineItem extends HTMLElement {
   playEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
-    engineItem(audio).state = { isPlaying: true };
-    engineItem(audio).engine.isPlaying(true);
+    engineItem(audio)?.state({ isPlaying: true });
+    engineItem(audio)?.engine?.isPlaying(true);
 
     // In case audio was preloaded:
     if (audio.readyState === 4) finishedLoading(event);
@@ -370,11 +370,11 @@ class AudioEngineItem extends HTMLElement {
   timeupdateEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
-    engineItem(audio).state = {
+    engineItem(audio)?.state({
       progress: isNaN(audio.duration) || audio.duration === 0
         ? 0
         : audio.currentTime / audio.duration,
-    };
+    });
   }
 
   /**
@@ -397,7 +397,7 @@ export { AudioEngineItem };
 function engineItem(audio) {
   const c = audio.closest("de-audio-item");
   if (c) return /** @type {AudioEngineItem} */ (c);
-  else throw new Error("Cannot find parent de-audio-item element");
+  else return null;
 }
 
 /**
@@ -405,7 +405,7 @@ function engineItem(audio) {
  */
 function finishedLoading(event) {
   const audio = /** @type {HTMLAudioElement} */ (event.target);
-  engineItem(audio).state = { loadingState: "loaded" };
+  engineItem(audio)?.state({ loadingState: "loaded" });
 }
 
 /**
@@ -414,7 +414,7 @@ function finishedLoading(event) {
 function initiateLoading(event) {
   const audio = /** @type {HTMLAudioElement} */ (event.target);
   if (audio.readyState < 4) {
-    engineItem(audio).state = { loadingState: "loading" };
+    engineItem(audio)?.state({ loadingState: "loading" });
   }
 }
 
