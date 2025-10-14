@@ -4,7 +4,7 @@ import { signal } from "@common/signal.js";
 /**
  * @import {RenderArg} from "@common/element.d.ts"
  * @import {State} from "./types.d.ts"
- * @import {Track} from "@elements/core/types.d.ts"
+ * @import {Track} from "@component/core/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -20,18 +20,6 @@ class BrowserList extends DiffuseElement {
     return {
       tracks: this.tracks,
     };
-  }
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   *
-   * TODO: Remove, just an example.
-   */
-  connectedCallback() {
-    super.connectedCallback();
-    this.effect(() => {});
   }
 
   // RENDER

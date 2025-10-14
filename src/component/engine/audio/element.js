@@ -1,22 +1,25 @@
 import DiffuseElement from "@common/element.js";
-import { effect, signal } from "@common/signal.js";
+import { signal } from "@common/signal.js";
 
 /**
- * @import {Audio, AudioState, State} from "./types.d.ts"
+ * @import {Actions, Audio, AudioState, Signals, State} from "./types.d.ts"
  * @import {RenderArg} from "@common/element.d.ts"
- * @import {Signal} from "@common/signal.d.ts"
  */
 
 ////////////////////////////////////////////
 // CONSTANTS
 ////////////////////////////////////////////
-const SILENT_MP3 =
+const _SILENT_MP3 =
   "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV";
 
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
 
+/**
+ * @implements {Actions}
+ * @implements {Signals}
+ */
 class AudioEngine extends DiffuseElement {
   static observedAttributes = ["is-playing", "volume"];
 
@@ -30,35 +33,59 @@ class AudioEngine extends DiffuseElement {
 
   // SIGNALS
 
-  defaultVolume = signal(0.5);
+  volume = signal(0.5);
   isPlaying = signal(false);
   items = signal(/** @type {Audio[]} */ ([]));
 
   // STATE
 
+  /**
+   * @type {State}
+   */
   get state() {
     return {
       isPlaying: this.isPlaying,
       items: this.items,
-      volume: { default: this.defaultVolume() },
+      volume: this.volume,
     };
+  }
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    super.connectedCallback();
+
+    this.effect(() => {
+      // NOTE: Support different volume levels for audio elements?
+
+      Array.from(this.querySelectorAll("de-audio-item audio")).forEach(
+        (node) => {
+          const audio = /** @type {HTMLAudioElement} */ (node);
+          if (audio.hasAttribute("preload")) return;
+          audio.volume = this.volume();
+        },
+      );
+    });
   }
 
   // ACTIONS
 
   /**
-   * @param {{ audioId: string }} _
+   * @type {Actions["pause"]}
    */
   pause({ audioId }) {
     this.withAudioNode(audioId, (audio) => audio.pause());
   }
 
   /**
-   * @param {{ audioId: string; volume?: number }} _
+   * @type {Actions["play"]}
    */
   play({ audioId, volume }) {
     this.withAudioNode(audioId, (audio, item) => {
-      audio.volume = volume ?? this.state.volume.default;
+      audio.volume = volume ?? this.state.volume();
       audio.muted = false;
 
       if (audio.readyState === 0) audio.load();
@@ -80,7 +107,7 @@ class AudioEngine extends DiffuseElement {
   }
 
   /**
-   * @param {{ audioId: string; play: boolean; progress?: number }} args
+   * @type {Actions["reload"]}
    */
   reload(args) {
     this.withAudioNode(args.audioId, (audio, item) => {
@@ -102,7 +129,7 @@ class AudioEngine extends DiffuseElement {
   }
 
   /**
-   * @param {{ audioId: string; percentage: number }} _
+   * @type {Actions["seek"]}
    */
   seek({ audioId, percentage }) {
     this.withAudioNode(audioId, (audio) => {
@@ -113,23 +140,7 @@ class AudioEngine extends DiffuseElement {
   }
 
   /**
-   * @param {{ audioId?: string; volume: number }} args
-   */
-  volume(args) {
-    // TODO:
-    // if (!args.audioId) update({ volume: { default: args.volume } });
-
-    Array.from(this.querySelectorAll("de-audio-item audio")).forEach((node) => {
-      const audio = /** @type {HTMLAudioElement} */ (node);
-      if (audio.hasAttribute("preload")) return;
-      if (args.audioId === undefined || args.audioId === audio.id) {
-        audio.volume = args.volume;
-      }
-    });
-  }
-
-  /**
-   * @param {{ audio: Audio[]; play?: { audioId: string; volume?: number } }} args
+   * @type {Actions["yield"]}
    */
   yield(args) {
     this.items(args.audio);
@@ -202,7 +213,7 @@ export default AudioEngine;
 // ITEM ELEMENT
 ////////////////////////////////////////////
 
-export class AudioEngineItem extends HTMLElement {
+class AudioEngineItem extends HTMLElement {
   /**
    * @type {AudioState}
    */
@@ -373,6 +384,8 @@ export class AudioEngineItem extends HTMLElement {
     initiateLoading(event);
   }
 }
+
+export { AudioEngineItem };
 
 ////////////////////////////////////////////
 // 🛠️
