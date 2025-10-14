@@ -9,7 +9,7 @@
 
     // Source
     "@common/": "./src/common/",
-    "@elements/": "./src/elements/",
+    "@component/": "./src/component/",
   },
   "tasks": {
     "build": "deno task lume",
