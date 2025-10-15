@@ -2,6 +2,9 @@
   "version": "5",
   "specifiers": {
     "jsr:@deno/loader@0.3.6": "0.3.6",
+    "jsr:@mys/m-rpc@~0.12.2": "0.12.2",
+    "jsr:@mys/worker-fn@^3.2.1": "3.2.1",
+    "jsr:@okikio/transferables@^1.0.2": "1.0.2",
     "jsr:@std/cli@1.0.22": "1.0.22",
     "jsr:@std/cli@^1.0.21": "1.0.22",
     "jsr:@std/collections@^1.1.3": "1.1.3",
@@ -42,11 +45,27 @@
     "npm:morphdom@^2.7.7": "2.7.7",
     "npm:postcss-import@16.1.1": "16.1.1_postcss@8.5.6",
     "npm:postcss@8.5.6": "8.5.6",
-    "npm:sass@1.93.2": "1.93.2"
+    "npm:sass@1.93.2": "1.93.2",
+    "npm:xxh32@^2.0.5": "2.0.5"
   },
   "jsr": {
     "@deno/loader@0.3.6": {
       "integrity": "98f08d837c18ece5ba15122264fb29580967407c34e6552e152b8f453a60c2be"
+    },
+    "@mys/m-rpc@0.12.2": {
+      "integrity": "36599d3d4708db9f5c0f7da35a17b7e7da1fafddb69de6cfcdc6afe94cd4f084",
+      "dependencies": [
+        "jsr:@okikio/transferables"
+      ]
+    },
+    "@mys/worker-fn@3.2.1": {
+      "integrity": "330960f21041edd20fa9c5f78b136f62e3781e35797ac635534f003545be76cd",
+      "dependencies": [
+        "jsr:@mys/m-rpc"
+      ]
+    },
+    "@okikio/transferables@1.0.2": {
+      "integrity": "46a80015a1c4672b0b246e38838b3ea1e2edc6c775a235184a2f8eb49a8314f7"
     },
     "@std/cli@1.0.22": {
       "integrity": "50d1e4f87887cb8a8afa29b88505ab5081188f5cad3985460c3b471fa49ff21a"
@@ -488,6 +507,9 @@
         "picocolors"
       ],
       "bin": true
+    },
+    "xxh32@2.0.5": {
+      "integrity": "sha512-glQIaPvLHV4xG2Sn0E4mZWY25JT34+XcG4e2c8OMIH2SXxVrm6MmJ8miCsqGBLtf+rn2YcaeS11vq/66vkXGUQ=="
     }
   },
   "remote": {
@@ -748,9 +770,13 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@mys/m-rpc@~0.12.2",
+      "jsr:@mys/worker-fn@^3.2.1",
+      "jsr:@okikio/transferables@^1.0.2",
       "jsr:@std/fs@^1.0.15",
       "npm:alien-signals@3",
-      "npm:morphdom@^2.7.7"
+      "npm:morphdom@^2.7.7",
+      "npm:xxh32@^2.0.5"
     ]
   }
 }
