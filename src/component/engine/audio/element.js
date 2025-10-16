@@ -422,5 +422,8 @@ function initiateLoading(event) {
 // REGISTER
 ////////////////////////////////////////////
 
-customElements.define("de-audio", AudioEngine);
-customElements.define("de-audio-item", AudioEngineItem);
+export const NAME = "de-audio";
+export const NAME_ITEM = "de-audio-item";
+
+customElements.define(NAME, AudioEngine);
+customElements.define(NAME_ITEM, AudioEngineItem);

@@ -1,8 +1,10 @@
 import { defineWorkerFn, useWorkerFn } from "@mys/worker-fn";
 import { getTransferables } from "@okikio/transferables";
+
 import { xxh32 } from "xxh32";
 
 /**
+ * @import {NodeWorkerOrNodeMessagePort} from "@mys/m-rpc";
  * @import {Announcement} from "./worker.d.ts"
  */
 
@@ -23,21 +25,30 @@ export function announce(name, args) {
  * @template T
  * @param {string} name
  * @param {(args: T) => void} fn
+ * @param {Worker | NodeWorkerOrNodeMessagePort} context
  */
-export function listen(name, fn) {
-  globalThis.addEventListener("message", (event) => {
-    const announcement =
-      /** @type {Announcement<T>} */ (/** @type {unknown} */ (event));
-    const { ns, type } = announcement;
+export function listen(
+  name,
+  fn,
+  context = globalThis,
+) {
+  context.addEventListener(
+    "message",
+    /** @param {MessageEvent} event */ (event) => {
+      const announcement = /** @type {Announcement<T>} */ (event.data);
+      const { ns, type } = announcement;
 
-    if (announcement.name !== name) return;
-    if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
+      if (announcement.name !== name) return;
+      if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
 
-    fn(announcement.args);
-  });
+      fn(announcement.args);
+    },
+  );
 }
 
+////////////////////////////////////////////
 // PRIVATE
+////////////////////////////////////////////
 
 const ANNOUNCEMENT = "announcement";
 
