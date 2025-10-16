@@ -12,6 +12,7 @@ const site = lume({
 site.use(esbuild({
   options: {
     bundle: true,
+    minify: false,
     splitting: true,
   },
 }));

@@ -36,6 +36,7 @@
     "jsr:@std/yaml@1.0.9": "1.0.9",
     "jsr:@std/yaml@^1.0.5": "1.0.9",
     "npm:@types/node@*": "24.2.0",
+    "npm:alien-deepsignals@~0.2.7": "0.2.7_alien-signals@3.0.0",
     "npm:alien-signals@3": "3.0.0",
     "npm:autoprefixer@10.4.21": "10.4.21_postcss@8.5.6",
     "npm:lightningcss-wasm@1.30.1": "1.30.1",
@@ -257,6 +258,12 @@
       "integrity": "sha512-3xyG3pMCq3oYCNg7/ZP+E1ooTaGB4cG8JWRsqqOYQdbWNY4zbaV0Ennrd7stjiJEFZCaybcIgpTjJWHRfBSIDw==",
       "dependencies": [
         "undici-types"
+      ]
+    },
+    "alien-deepsignals@0.2.7_alien-signals@3.0.0": {
+      "integrity": "sha512-fERozTuMRWzO5fv9xBNk1Zm0ZxUllRPiMckoyQcEcCBZ4mpEiZhVnmmSqn26i5KwYnDcZxjS2LAo/o6QjzoEOQ==",
+      "dependencies": [
+        "alien-signals"
       ]
     },
     "alien-signals@3.0.0": {
@@ -774,6 +781,7 @@
       "jsr:@mys/worker-fn@^3.2.1",
       "jsr:@okikio/transferables@^1.0.2",
       "jsr:@std/fs@^1.0.15",
+      "npm:alien-deepsignals@~0.2.7",
       "npm:alien-signals@3",
       "npm:morphdom@^2.7.7",
       "npm:xxh32@^2.0.5"

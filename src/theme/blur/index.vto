@@ -2,12 +2,19 @@
 <html>
   <head>
     <link rel="stylesheet" href="../../styles/theme/blur/index.css" />
-
-    <script type="module">
-      import "../../component/engine/audio/element.js";
-    </script>
   </head>
   <body>
-    <de-audio></de-audio>
+    <de-queue></de-queue>
+
+    <script type="module">
+      import * as Queue from "../../component/engine/queue/element.js";
+      import { effect } from "../../common/signal.js"
+
+      const queue = document.querySelector(Queue.NAME)
+
+      effect(() => {
+        console.log("Future:", queue.future())
+      })
+    </script>
   </body>
 </html>

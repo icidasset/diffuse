@@ -4,6 +4,7 @@
     "@mys/worker-fn": "jsr:@mys/worker-fn@^3.2.1",
     "@okikio/transferables": "jsr:@okikio/transferables@^1.0.2",
     "@std/fs": "jsr:@std/fs@^1.0.15",
+    "alien-deepsignals": "npm:alien-deepsignals@^0.2.7",
     "alien-signals": "npm:alien-signals@^3.0.0",
     "lume/": "https://deno.land/x/lume@v3.0.11/",
     "lume/jsx-runtime": "https://deno.land/x/ssx@v0.1.12/jsx-runtime.ts",

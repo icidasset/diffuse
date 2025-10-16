@@ -1,4 +1,4 @@
-import { Signal } from "@common/signal.d.ts";
+import type { Signal } from "@common/signal.d.ts";
 
 export interface Actions {
   pause: (_: { audioId: string }) => void;
