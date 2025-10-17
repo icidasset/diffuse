@@ -18,39 +18,21 @@ class QueueEngine extends DiffuseElement {
   constructor() {
     super();
 
-    // TODO:
-    // const worker = new SharedWorker(new URL("./worker.js", import.meta.url), {
-    //   type: "module",
-    // });
-    //
-    // const port = worker.port;
-
-    const worker = new Worker(new URL("./worker.js", import.meta.url), {
+    // Setup shared worker
+    const worker = new SharedWorker(new URL("./worker.js", import.meta.url), {
       type: "module",
     });
 
-    const port = worker;
+    const port = worker.port;
+    port.start();
 
+    // Sync data with worker
     listen("future", this.future, port);
     listen("now", this.now, port);
     listen("past", this.past, port);
 
+    // Worker proxy
     this.add = use("add", port);
-
-    this.load(port);
-  }
-
-  /**
-   * @param {Worker} port
-   */
-  async load(port) {
-    const f = await use("future", port)();
-    const n = await use("now", port)();
-    const p = await use("past", port)();
-
-    this.future(f);
-    this.now(n);
-    this.past(p);
   }
 
   // SIGNALS

@@ -1,4 +1,4 @@
-import { announce, define } from "@common/worker.js";
+import { announce, define, ostiary } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
 import { arrayShuffle } from "@common/index.js";
 
@@ -18,22 +18,9 @@ const lake = signal(/** @type {Track[]} */ ([]));
 const now = signal(/** @type {Item | null} */ (null));
 const past = signal(/** @type {Item[]} */ ([]));
 
-effect(() => announce("future", future()));
-effect(() => announce("now", now()));
-effect(() => announce("past", past()));
-
-define("future", () => future());
-define("now", () => now());
-define("past", () => past());
-
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
-
-define("add", add);
-define("pool", pool);
-define("shift", shift);
-define("unshift", unshift);
 
 /**
  * @param {Item[]} items
@@ -81,7 +68,30 @@ function unshift() {
 }
 
 ////////////////////////////////////////////
-// PRIVATE
+// ⚡️
+////////////////////////////////////////////
+
+ostiary((port) => {
+  // Setup RPC
+
+  define("future", () => future(), port);
+  define("now", () => now(), port);
+  define("past", () => past(), port);
+
+  define("add", add, port);
+  define("pool", pool, port);
+  define("shift", shift, port);
+  define("unshift", unshift, port);
+
+  // Communicate
+
+  effect(() => announce("future", future(), port));
+  effect(() => announce("now", now(), port));
+  effect(() => announce("past", past(), port));
+});
+
+////////////////////////////////////////////
+// ⛔️
 ////////////////////////////////////////////
 
 /**
