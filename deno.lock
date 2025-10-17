@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@deno/loader@0.3.6": "0.3.6",
+    "jsr:@fry69/deep-diff@~0.1.10": "0.1.10",
     "jsr:@mys/m-rpc@~0.12.2": "0.12.2",
     "jsr:@mys/worker-fn@^3.2.1": "3.2.1",
     "jsr:@okikio/transferables@^1.0.2": "1.0.2",
@@ -36,7 +37,6 @@
     "jsr:@std/yaml@1.0.9": "1.0.9",
     "jsr:@std/yaml@^1.0.5": "1.0.9",
     "npm:@types/node@*": "24.2.0",
-    "npm:alien-deepsignals@~0.2.7": "0.2.7_alien-signals@3.0.0",
     "npm:alien-signals@3": "3.0.0",
     "npm:autoprefixer@10.4.21": "10.4.21_postcss@8.5.6",
     "npm:lightningcss-wasm@1.30.1": "1.30.1",
@@ -52,6 +52,9 @@
   "jsr": {
     "@deno/loader@0.3.6": {
       "integrity": "98f08d837c18ece5ba15122264fb29580967407c34e6552e152b8f453a60c2be"
+    },
+    "@fry69/deep-diff@0.1.10": {
+      "integrity": "cdd88fefaef1ac896a038a5f3c0895038d8c725e61bac50489c455156e0275f5"
     },
     "@mys/m-rpc@0.12.2": {
       "integrity": "36599d3d4708db9f5c0f7da35a17b7e7da1fafddb69de6cfcdc6afe94cd4f084",
@@ -258,12 +261,6 @@
       "integrity": "sha512-3xyG3pMCq3oYCNg7/ZP+E1ooTaGB4cG8JWRsqqOYQdbWNY4zbaV0Ennrd7stjiJEFZCaybcIgpTjJWHRfBSIDw==",
       "dependencies": [
         "undici-types"
-      ]
-    },
-    "alien-deepsignals@0.2.7_alien-signals@3.0.0": {
-      "integrity": "sha512-fERozTuMRWzO5fv9xBNk1Zm0ZxUllRPiMckoyQcEcCBZ4mpEiZhVnmmSqn26i5KwYnDcZxjS2LAo/o6QjzoEOQ==",
-      "dependencies": [
-        "alien-signals"
       ]
     },
     "alien-signals@3.0.0": {
@@ -777,11 +774,11 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@fry69/deep-diff@~0.1.10",
       "jsr:@mys/m-rpc@~0.12.2",
       "jsr:@mys/worker-fn@^3.2.1",
       "jsr:@okikio/transferables@^1.0.2",
       "jsr:@std/fs@^1.0.15",
-      "npm:alien-deepsignals@~0.2.7",
       "npm:alien-signals@3",
       "npm:morphdom@^2.7.7",
       "npm:xxh32@^2.0.5"
