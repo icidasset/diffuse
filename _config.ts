@@ -26,3 +26,9 @@ export default site;
 site.use(postcss({ includes: false }));
 
 site.add([".css"]);
+
+// BINARY ASSETS
+
+site.add("/favicons");
+site.add("/fonts");
+site.add("/images");
