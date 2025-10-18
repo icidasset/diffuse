@@ -1,0 +1,11 @@
+<ul>
+  {{ for item of items }}
+    <li>
+      {{ if item.title.startsWith("(TODO) ") }}
+        <span>{{item.title}}</span>
+      {{ else }}
+        <a href="{{item.url}}">{{item.title}}</a>
+      {{ /if }}
+    </li>
+  {{ /for }}
+</ul>

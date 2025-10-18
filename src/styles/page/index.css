@@ -16,6 +16,11 @@ a {
   text-underline-offset: 6px;
 }
 
+h1 {
+  margin: var(--space-lg) 0 var(--space-lg);
+  padding-top: var(--space-2xs);
+}
+
 h1 svg {
   fill: oklch(from var(--bg-color) calc(l - 0.5) c h);
   opacity: 0.125;
@@ -70,7 +75,7 @@ ol {
   gap: 0 var(--space-3xl);
 }
 
-.applet {
+.element {
   min-width: min(var(--container-xs), 100%);
   width: 32.5%;
 }
