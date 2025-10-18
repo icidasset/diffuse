@@ -3,13 +3,20 @@ import lume from "lume/mod.ts";
 import esbuild from "lume/plugins/esbuild.ts";
 import postcss from "lume/plugins/postcss.ts";
 
+import * as path from "@std/path";
+import { ensureDirSync } from "@std/fs/ensure-dir";
+import { walkSync } from "@std/fs/walk";
+
 const site = lume({
   src: "./src",
 });
 
+export default site;
+
 // JS
 
 site.use(esbuild({
+  extensions: [".js"],
   options: {
     bundle: true,
     minify: false,
@@ -17,14 +24,11 @@ site.use(esbuild({
   },
 }));
 
-site.add([".js", ".d.ts"]);
-
-export default site;
+site.add([".js"]);
 
 // CSS
 
 site.use(postcss({ includes: false }));
-
 site.add([".css"]);
 
 // BINARY ASSETS
@@ -32,3 +36,24 @@ site.add([".css"]);
 site.add("/favicons");
 site.add("/fonts");
 site.add("/images");
+
+// SCRIPTS
+
+site.script("copy-type-defs", () => {
+  for (
+    const f of walkSync(
+      "./src/",
+      { includeDirs: false, exts: [".d.ts"] },
+    )
+  ) {
+    const dest = "_site/" + f.path.replace(/^src\//, "");
+    const dir = path.dirname(dest);
+    ensureDirSync(dir);
+    console.log(dest);
+    Deno.copyFileSync(f.path, dest);
+  }
+});
+
+site.addEventListener("afterBuild", () => {
+  site.run("copy-type-defs");
+});
