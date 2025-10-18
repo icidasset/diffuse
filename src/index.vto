@@ -1,6 +1,10 @@
 ---
 layout: layouts/diffuse.vto
 
+themes:
+  - url: "theme/blur/"
+    title: "Blur"
+
 engines:
   - url: "engine/audio/"
     title: "Audio"
@@ -43,6 +47,8 @@ engines:
         For example, most themes here will limit the currently playing audio tracks to one item,
         but you might as well create a DJ theme that can play multiple items at the same time.
       </p>
+
+      {{ await comp.list({ items: themes }) }}
     </section>
 
     <!-- ABSTRACTIONS -->
