@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="../../styles/theme/blur/index.css" />
   </head>
   <body>
-    <de-queue></de-queue>
+    <de-queue group="deck-a" shared></de-queue>
 
     <script type="module">
       import * as Queue from "../../component/engine/queue/element.js";
@@ -14,6 +14,10 @@
 
       effect(() => {
         console.log("Future:", queue.future())
+      })
+
+      effect(() => {
+        console.log("Now:", queue.now())
       })
     </script>
   </body>

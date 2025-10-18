@@ -123,5 +123,6 @@ function fill(future) {
     0,
     QUEUE_SIZE - future.length,
   );
+
   return [...future, ...poolSelection];
 }

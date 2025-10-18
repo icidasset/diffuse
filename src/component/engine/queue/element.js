@@ -18,13 +18,22 @@ class QueueEngine extends DiffuseElement {
   constructor() {
     super();
 
-    // Setup shared worker
-    const worker = new SharedWorker(new URL("./worker.js", import.meta.url), {
-      type: "module",
-    });
+    // Setup worker
+    const group = this.getAttribute("group") || crypto.randomUUID();
+    const isShared = this.hasAttribute("shared");
+    const name = `diffuse/engine/queue/${group}`;
+    const url = new URL("./worker.js", import.meta.url);
 
-    const port = worker.port;
-    port.start();
+    let port;
+
+    if (isShared) {
+      const worker = new SharedWorker(url, { name, type: "module" });
+      port = worker.port;
+      port.start();
+    } else {
+      const worker = new Worker(url, { name, type: "module" });
+      port = worker;
+    }
 
     // Sync data with worker
     listen("future", this.future, port);
@@ -33,6 +42,9 @@ class QueueEngine extends DiffuseElement {
 
     // Worker proxy
     this.add = use("add", port);
+    this.pool = use("pool", port);
+    this.shift = use("shift", port);
+    this.unshift = use("unshift", port);
   }
 
   // SIGNALS
