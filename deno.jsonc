@@ -1,32 +1,37 @@
 {
+  "name": "@tokono.ma/diffuse",
+  "version": "4.0.0",
+  "vendor": true,
   "imports": {
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
     "@mys/m-rpc": "jsr:@mys/m-rpc@^0.12.2",
     "@mys/worker-fn": "jsr:@mys/worker-fn@^3.2.1",
     "@okikio/transferables": "jsr:@okikio/transferables@^1.0.2",
-    "@std/fs": "jsr:@std/fs@^1.0.19",
-    "@std/path": "jsr:@std/path@^1.1.2",
     "alien-signals": "npm:alien-signals@^3.0.0",
-    "lume/": "https://deno.land/x/lume@v3.0.11/",
-    "lume/jsx-runtime": "https://deno.land/x/ssx@v0.1.12/jsx-runtime.ts",
-    "morphdom": "npm:morphdom@^2.7.7",
+    "morphdom": "npm:morphdom@^2.7.7/dist/morphdom.js",
     "xxh32": "npm:xxh32@^2.0.5",
 
-    // Source
+    // Paths
     "@common/": "./src/common/",
     "@component/": "./src/component/",
+
+    // Build
+    "@std/fs": "jsr:@std/fs@^1.0.19",
+    "@std/path": "jsr:@std/path@^1.1.2",
+    "lume/": "https://deno.land/x/lume@v3.0.11/",
+    "lume/jsx-runtime": "https://deno.land/x/ssx@v0.1.12/jsx-runtime.ts",
+  },
+  "exports": {
+    ".": "./src/mod.ts",
   },
   "tasks": {
     "build": "deno task lume",
     "deploy:netlify": "npx netlify deploy --prod",
-    "lume": "echo \"import 'lume/cli.ts'\" | DENO_DIR=_vendor deno run --config=./deno.jsonc --allow-read --allow-write --allow-env --allow-net --allow-run --allow-sys -",
+    "lume": "echo \"import 'lume/cli.ts'\" | deno run --config=./deno.jsonc --allow-read --allow-write --allow-env --allow-net --allow-run --allow-sys -",
     "serve": "deno task lume -s",
   },
   "compilerOptions": {
     "checkJs": true,
-    "paths": {
-      "@src/*": ["src/*"],
-    },
     "types": ["lume/types.ts"],
   },
   "unstable": ["temporal", "fmt-component"],
@@ -35,5 +40,8 @@
     "rules": {
       "exclude": ["no-import-prefix"],
     },
+  },
+  "publish": {
+    "include": ["LICENSE", "README.md", "src/**/*.js", "src/**/*.ts"],
   },
 }
