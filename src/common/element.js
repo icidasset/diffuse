@@ -1,4 +1,4 @@
-import morphdom from "morphdom/dist/morphdom.js";
+import morphdom from "morphdom";
 import { effect } from "@common/signal.js";
 
 /**

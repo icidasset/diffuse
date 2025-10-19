@@ -19,7 +19,8 @@ site.use(esbuild({
   extensions: [".js"],
   options: {
     bundle: true,
-    minify: false,
+    // minify: true,
+    // outExtension: { ".js": ".min.js" },
     splitting: true,
   },
 }));
@@ -49,11 +50,10 @@ site.script("copy-type-defs", () => {
     const dest = "_site/" + f.path.replace(/^src\//, "");
     const dir = path.dirname(dest);
     ensureDirSync(dir);
-    console.log(dest);
     Deno.copyFileSync(f.path, dest);
   }
 });
 
-site.addEventListener("afterBuild", () => {
-  site.run("copy-type-defs");
-});
+// site.addEventListener("afterBuild", () => {
+//   site.run("copy-type-defs");
+// });

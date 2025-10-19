@@ -1,5 +1,9 @@
-import type { Track, TrackStats, TrackTags } from "@component/core/types.d.ts";
-import type { Signal } from "@common/signal.d.ts";
+import type {
+  Track,
+  TrackStats,
+  TrackTags,
+} from "../../../component/core/types.d.ts";
+import type { Signal } from "../../../common/signal.d.ts";
 
 export interface Actions {
   add: (items: Item[]) => void;
