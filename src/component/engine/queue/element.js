@@ -18,9 +18,11 @@ class QueueEngine extends DiffuseElement {
   constructor() {
     super();
 
-    // Setup worker
+    // Group
     const group = this.getAttribute("group") || crypto.randomUUID();
-    const isShared = this.hasAttribute("shared");
+    const isShared = this.hasAttribute("group");
+
+    // Setup worker
     const name = `diffuse/engine/queue/${group}`;
     const url = new URL("./worker.js", import.meta.url);
 

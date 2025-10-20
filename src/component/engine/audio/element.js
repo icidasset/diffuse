@@ -1,5 +1,7 @@
 import DiffuseElement from "@common/element.js";
 import { signal } from "@common/signal.js";
+import { define, use } from "@common/worker.js";
+import { lock } from "@common/lock.js";
 
 /**
  * @import {Actions, Audio, AudioState, Signals, State} from "./types.d.ts"
@@ -21,10 +23,69 @@ const _SILENT_MP3 =
  * @implements {Signals}
  */
 class AudioEngine extends DiffuseElement {
-  static observedAttributes = ["is-playing", "volume"];
+  // TODO:
+  // static observedAttributes = ["volume"];
 
   constructor() {
     super();
+
+    // Group
+    const group = this.getAttribute("group") || crypto.randomUUID();
+    const isShared = this.hasAttribute("group");
+
+    // Setup leader election if shared
+    if (isShared) {
+      const name = `diffuse/engine/audio/${group}`;
+
+      const channel = new BroadcastChannel(name);
+      const msg = new MessageChannel();
+
+      channel.onmessage = (event) => msg.port1.postMessage(event.data);
+      msg.port1.addEventListener(
+        "message",
+        (event) => channel.postMessage(event.data),
+      );
+
+      msg.port1.start();
+      msg.port2.start();
+
+      // Port 1 = Incoming, from channel.
+      // Port 2 = Outgoing, to channel.
+
+      this.lock = lock();
+
+      define("pause", this.#pause.bind(this), msg.port2);
+      define("play", this.#play.bind(this), msg.port2);
+      define("reload", this.#reload.bind(this), msg.port2);
+      define("seek", this.#seek.bind(this), msg.port2);
+      define("supply", this.#supply.bind(this), msg.port2);
+
+      /**
+       * @param {string} method
+       * @param {Function} fn
+       */
+      const u = (method, fn) => {
+        /** @param {any[]} args */
+        return async (...args) => {
+          const status = await this.lock?.status.promise;
+          return status === "waiting"
+            ? use(method, msg.port2)(...args)
+            : fn.call(this, ...args);
+        };
+      };
+
+      this.pause = u("pause", this.#pause);
+      this.play = u("play", this.#play);
+      this.reload = u("reload", this.#reload);
+      this.seek = u("seek", this.#seek);
+      this.supply = u("supply", this.#supply);
+    } else {
+      this.pause = this.#pause;
+      this.play = this.#play;
+      this.reload = this.#reload;
+      this.seek = this.#seek;
+      this.supply = this.#supply;
+    }
 
     // TODO: Get volume from previous session if possible
     // const VOLUME_KEY = `@elements/engine/audio/${this.groupId}/volume`;
@@ -35,7 +96,7 @@ class AudioEngine extends DiffuseElement {
 
   volume = signal(0.5);
   isPlaying = signal(false);
-  items = signal(/** @type {Audio[]} */ ([]));
+  #items = signal(/** @type {Audio[]} */ ([]));
 
   // STATE
 
@@ -45,7 +106,7 @@ class AudioEngine extends DiffuseElement {
   get state() {
     return {
       isPlaying: this.isPlaying,
-      items: this.items,
+      items: this.#items,
       volume: this.volume,
     };
   }
@@ -58,9 +119,9 @@ class AudioEngine extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
 
+    // Monitor volume
+    // NOTE: Support different volume levels for audio elements?
     this.effect(() => {
-      // NOTE: Support different volume levels for audio elements?
-
       Array.from(this.querySelectorAll("de-audio-item audio")).forEach(
         (node) => {
           const audio = /** @type {HTMLAudioElement} */ (node);
@@ -69,21 +130,56 @@ class AudioEngine extends DiffuseElement {
         },
       );
     });
+
+    // Setup leader election if shared
+    const isShared = this.hasAttribute("group");
+    const elementLock = this.lock;
+
+    if (isShared && elementLock) {
+      navigator.locks.request(
+        `${name}/lock`,
+        { ifAvailable: true },
+        (lock) => {
+          elementLock.status.resolve(lock ? "acquired" : "waiting");
+          if (lock) return elementLock.promise;
+        },
+      );
+
+      elementLock.status.promise.then((status) => {
+        const name = `diffuse/engine/audio/${
+          this.getAttribute("group") || "main"
+        }`;
+
+        if (status === "acquired") {
+          console.log(`🧙 Elected leader for: ${name}`);
+        } else {
+          console.log(`🔮 Watching leader: ${name}`);
+        }
+      });
+    }
   }
 
-  // ACTIONS
+  /**
+   * @override
+   */
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.lock) this.lock.resolve();
+  }
+
+  // ACTIONS (PRIVATE)
 
   /**
    * @type {Actions["pause"]}
    */
-  pause({ audioId }) {
+  #pause({ audioId }) {
     this.withAudioNode(audioId, (audio) => audio.pause());
   }
 
   /**
    * @type {Actions["play"]}
    */
-  play({ audioId, volume }) {
+  #play({ audioId, volume }) {
     this.withAudioNode(audioId, (audio, item) => {
       audio.volume = volume ?? this.state.volume();
       audio.muted = false;
@@ -109,7 +205,7 @@ class AudioEngine extends DiffuseElement {
   /**
    * @type {Actions["reload"]}
    */
-  reload(args) {
+  #reload(args) {
     this.withAudioNode(args.audioId, (audio, item) => {
       if (audio.readyState === 0 || audio.error?.code === 2) {
         audio.load();
@@ -122,7 +218,7 @@ class AudioEngine extends DiffuseElement {
         }
 
         if (args.play) {
-          this.play({ audioId: args.audioId, volume: audio.volume });
+          this.#play({ audioId: args.audioId, volume: audio.volume });
         }
       }
     });
@@ -131,7 +227,7 @@ class AudioEngine extends DiffuseElement {
   /**
    * @type {Actions["seek"]}
    */
-  seek({ audioId, percentage }) {
+  #seek({ audioId, percentage }) {
     this.withAudioNode(audioId, (audio) => {
       if (!isNaN(audio.duration)) {
         audio.currentTime = audio.duration * percentage;
@@ -140,11 +236,11 @@ class AudioEngine extends DiffuseElement {
   }
 
   /**
-   * @type {Actions["yield"]}
+   * @type {Actions["supply"]}
    */
-  yield(args) {
-    this.items(args.audio);
-    if (args.play) this.play(args.play);
+  #supply(args) {
+    this.#items(args.audio);
+    if (args.play) this.#play(args.play);
   }
 
   // RENDER
@@ -153,8 +249,6 @@ class AudioEngine extends DiffuseElement {
    * @param {RenderArg<State>} _
    */
   render({ html, state }) {
-    console.log("Render");
-
     const nodes = state.items().map((audio) => {
       const ip = audio.progress === undefined
         ? "0"

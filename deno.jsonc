@@ -8,7 +8,9 @@
     "@mys/worker-fn": "jsr:@mys/worker-fn@^3.2.1",
     "@okikio/transferables": "jsr:@okikio/transferables@^1.0.2",
     "alien-signals": "npm:alien-signals@^3.0.0",
+    "broadcast-channel": "npm:broadcast-channel@^7.1.0",
     "morphdom": "npm:morphdom@^2.7.7/dist/morphdom.js",
+    "tab-election": "npm:tab-election@^4.2.8",
     "xxh32": "npm:xxh32@^2.0.5",
 
     // Paths

@@ -4,7 +4,7 @@ import { getTransferables } from "@okikio/transferables";
 import { xxh32 } from "xxh32";
 
 /**
- * @import {NodeWorkerOrNodeMessagePort, WorkerGlobalScope} from "@mys/m-rpc";
+ * @import {WorkerGlobalScope} from "@mys/m-rpc";
  * @import {Announcement} from "./worker.d.ts"
  */
 
