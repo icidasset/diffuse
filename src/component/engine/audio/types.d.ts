@@ -5,7 +5,7 @@ export interface Actions {
   play: (_: { audioId: string; volume?: number }) => void;
   reload: (_: { audioId: string; play: boolean; progress?: number }) => void;
   seek: (_: { audioId: string; percentage: number }) => void;
-  yield: (
+  supply: (
     _: { audio: Audio[]; play?: { audioId: string; volume?: number } },
   ) => void;
 }
@@ -38,8 +38,9 @@ export interface AudioState {
 
 export interface Signals {
   isPlaying: Signal<boolean>;
-  items: Signal<Audio[]>;
   volume: Signal<number>;
 }
 
-export type State = Signals;
+export type State = Signals & {
+  items: Signal<Audio[]>;
+};

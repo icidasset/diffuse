@@ -2,6 +2,7 @@ import lume from "lume/mod.ts";
 
 import esbuild from "lume/plugins/esbuild.ts";
 import postcss from "lume/plugins/postcss.ts";
+import sourceMaps from "lume/plugins/source_maps.ts";
 
 import * as path from "@std/path";
 import { ensureDirSync } from "@std/fs/ensure-dir";
@@ -19,7 +20,7 @@ site.use(esbuild({
   extensions: [".js"],
   options: {
     bundle: true,
-    // minify: true,
+    minify: false,
     // outExtension: { ".js": ".min.js" },
     splitting: true,
   },
@@ -37,6 +38,10 @@ site.add([".css"]);
 site.add("/favicons");
 site.add("/fonts");
 site.add("/images");
+
+// MISC
+
+site.use(sourceMaps());
 
 // SCRIPTS
 
