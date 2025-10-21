@@ -1,11 +1,18 @@
 import morphdom from "morphdom";
-import { effect } from "@common/signal.js";
+
+import { effect, unbiasedSignal } from "@common/signal.js";
+import { define, use } from "@common/worker.js";
 
 /**
- * @import {HtmlTagFunction, MorphOptions} from "./element.d.ts"
+ * @import {BroadcastingStatus, HtmlTagFunction, MorphOptions} from "./element.d.ts"
+ * @import {Signal} from "./signal.d.ts"
  */
 
-export default class DiffuseElement extends HTMLElement {
+/**
+ * Base for custom elements, provides some utility functionality
+ * around rendering and managing signals.
+ */
+export class DiffuseElement extends HTMLElement {
   #disposables = /** @type {Array<() => void>} */ ([]);
 
   #teardown() {
@@ -90,5 +97,159 @@ export default class DiffuseElement extends HTMLElement {
 
   disconnectedCallback() {
     this.#teardown();
+  }
+}
+
+/**
+ * Broadcastable version of the base class.
+ *
+ * Share the state of an element across multiple tabs
+ * of the same origin and have one instance be the leader.
+ */
+export class BroadcastableDiffuseElement extends DiffuseElement {
+  broadcasted = false;
+
+  /** @type {PromiseWithResolvers<void>} */
+  #lock = Promise.withResolvers();
+
+  /** @type {PromiseWithResolvers<BroadcastingStatus>} */
+  #status = Promise.withResolvers();
+
+  constructor() {
+    super();
+
+    this.broadcast = this.broadcast.bind(this);
+
+    /** @type {Signal<Promise<BroadcastingStatus>>} */
+    this.broadcastingStatus = unbiasedSignal(this.#status.promise);
+  }
+
+  /**
+   * @param {string} name
+   */
+  broadcast(name) {
+    const channel = new BroadcastChannel(name);
+    const msg = new MessageChannel();
+
+    this.broadcasted = true;
+    this.name = name;
+
+    channel.addEventListener(
+      "message",
+      async (event) => {
+        const name = event.data.name?.split(":");
+
+        if (name[0] === "leader") {
+          const status = await this.#status.promise;
+          if (status.leader) {
+            msg.port1.postMessage({
+              ...event.data,
+              name: name.splice(1).join(":"),
+            });
+          }
+        } else {
+          msg.port1.postMessage(event.data);
+        }
+      },
+    );
+
+    msg.port1.addEventListener(
+      "message",
+      (event) => channel.postMessage(event.data),
+    );
+
+    msg.port1.start();
+    msg.port2.start();
+
+    async function anyoneWaiting() {
+      const state = await navigator.locks.query();
+      return !!state.pending?.length;
+    }
+
+    /**
+     * @param {string} method
+     * @param {Function} fn
+     */
+    return (method, fn) => {
+      define(method, fn.bind(this), msg.port2);
+
+      /** @param {any[]} args */
+      const leaderOnly = async (...args) => {
+        const status = await this.#status.promise;
+        return status.leader
+          ? fn.call(this, ...args)
+          : use(`leader:${method}`, msg.port2)(...args);
+      };
+
+      /** @param {any[]} args */
+      const replicate = (...args) => {
+        anyoneWaiting().then((bool) => {
+          if (bool) use(method, msg.port2)(...args);
+        });
+        return fn.call(this, ...args);
+      };
+
+      return {
+        leaderOnly,
+        replicate,
+      };
+    };
+  }
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    super.connectedCallback();
+
+    if (!this.broadcasted) return;
+
+    // Grab a lock if it isn't acquired yet,
+    // and hold it until `this.lock.promise` resolves.
+    navigator.locks.request(
+      `${this.name}/lock`,
+      { ifAvailable: true },
+      (lock) => {
+        this.#status.resolve(
+          lock ? { leader: true, initialLeader: true } : { leader: false },
+        );
+        if (lock) return this.#lock.promise;
+      },
+    );
+
+    // When the lock status is initially determined, log its status.
+    // Additionally, wait for lock if needed.
+    this.#status.promise.then((status) => {
+      if (status.leader) {
+        console.log(`🧙 Elected leader for: ${this.name}`);
+      } else {
+        console.log(`🔮 Watching leader: ${this.name}`);
+      }
+
+      // Wait for leadership
+      if (status.leader === false) {
+        navigator.locks.request(
+          `${this.name}/lock`,
+          () => {
+            this.#status = Promise.withResolvers();
+            this.#status.resolve({ leader: true, initialLeader: false });
+
+            this.broadcastingStatus(this.#status.promise);
+
+            return this.#lock.promise;
+          },
+        );
+      }
+    });
+  }
+
+  /**
+   * @override
+   */
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.#lock.resolve();
   }
 }
