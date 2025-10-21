@@ -14,40 +14,6 @@ body {
   height: 100dvh;
 }
 
-iframe {
-  border: 0;
-}
-
-/***********************************
- * Applets (No UI)
- ***********************************/
-iframe[src*="/configurator/"],
-iframe[src*="/engine/"],
-iframe[src*="/input/"],
-iframe[src*="/orchestrator/"],
-iframe[src*="/processor/"],
-iframe[src*="/output/"] {
-  height: 0;
-  left: 110vw;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-  position: absolute;
-  top: 110vh;
-  width: 0;
-}
-
-/* Audio is a special case, iframe needs to be "visible" in order to play the audio. */
-#applet__engine__audio {
-  height: 1px;
-  left: 0;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  width: 1px;
-}
-
 /***********************************
  * Main
  ***********************************/
@@ -60,13 +26,13 @@ main {
   overflow: hidden;
   padding: var(--space-md) var(--space-md);
 
-  & iframe {
+  /* TODO: & iframe {
     border-radius: 6px;
-  }
+  }*/
 }
 
 /***********************************
- * Applets
+ * Elements
  ***********************************/
 
 iframe[src*="/artwork-controller/"] {
