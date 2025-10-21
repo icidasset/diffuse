@@ -1,3 +1,7 @@
+export type BroadcastingStatus =
+  | { leader: true; initialLeader: boolean }
+  | { leader: false };
+
 export type HtmlTagFunction = (
   strings: string[] | ArrayLike<string>,
   ...values: unknown[]

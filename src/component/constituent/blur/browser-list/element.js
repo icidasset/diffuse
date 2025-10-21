@@ -1,4 +1,4 @@
-import DiffuseElement from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 /**

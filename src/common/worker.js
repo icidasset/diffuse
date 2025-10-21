@@ -4,7 +4,7 @@ import { getTransferables } from "@okikio/transferables";
 import { xxh32 } from "xxh32";
 
 /**
- * @import {WorkerGlobalScope} from "@mys/m-rpc";
+ * @import {MRpcCallOptions, WorkerGlobalScope} from "@mys/m-rpc";
  * @import {Announcement} from "./worker.d.ts"
  */
 
@@ -111,12 +111,14 @@ export function define(
 /**
  * @param {string} name
  * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+ * @param {MRpcCallOptions} [options]
  */
 export function use(
   name,
   context = /** @type {WorkerGlobalScope} */ (globalThis),
+  options,
 ) {
-  return useWorkerFn(name, /** @type {any} */ (context));
+  return useWorkerFn(name, /** @type {any} */ (context), options);
 }
 
 ////////////////////////////////////////////

@@ -25,3 +25,5 @@ export function signal(initialValue) {
     if (diff) s(b);
   });
 }
+
+export const unbiasedSignal = alienSignal;
