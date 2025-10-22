@@ -35,5 +35,7 @@ export default MetadataProcessor;
 // REGISTER
 ////////////////////////////////////////////
 
+export const CLASS = MetadataProcessor;
 export const NAME = "dp-metadata";
+
 customElements.define(NAME, MetadataProcessor);

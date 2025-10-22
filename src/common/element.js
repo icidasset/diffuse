@@ -270,3 +270,29 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     this.#lock.resolve();
   }
 }
+
+/**
+ * Component DOM selector.
+ *
+ * Basically `document.querySelector` but returns the element
+ * with the correct type based on the element module given.
+ *
+ * ```
+ * import * as QueryEngine from "@components/engine/query/element.js"
+ *
+ * const instance = component(QueryEngine)
+ * ```
+ *
+ * @template {abstract new (...args: any[]) => any} C
+ * @param {{ CLASS: C; NAME: string }} elementModule
+ * @param {string} [id] Optional id to select
+ */
+export function component(elementModule, id) {
+  const el = document.querySelector(
+    id ? `${elementModule.NAME}#${id}` : elementModule.NAME,
+  );
+  if (!el) {
+    throw new Error(`Element for selector '${elementModule.NAME}' not found.`);
+  }
+  return /** @type {InstanceType<C>} */ (el);
+}

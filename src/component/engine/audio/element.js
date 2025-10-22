@@ -439,6 +439,7 @@ function initiateLoading(event) {
 // REGISTER
 ////////////////////////////////////////////
 
+export const CLASS = AudioEngine;
 export const NAME = "de-audio";
 export const NAME_ITEM = "de-audio-item";
 
