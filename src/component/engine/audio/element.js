@@ -37,7 +37,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       this.seek = fn("seek", this.seek).leaderOnly;
       this.supply = fn("supply", this.supply).replicate;
 
-      this.__isPlaying.set = fn("isPlaying", this.__isPlaying.set).replicate;
+      this.$isPlaying.set = fn("isPlaying", this.$isPlaying.set).replicate;
     }
 
     // TODO: Get volume from previous session if possible
@@ -50,11 +50,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
   #items = signal(/** @type {Audio[]} */ ([]));
   #volume = signal(0.5);
 
-  __isPlaying = signal(false);
+  $isPlaying = signal(false);
 
   // STATE
 
-  isPlaying = this.__isPlaying.get;
+  isPlaying = this.$isPlaying.get;
   items = this.#items.get;
   volume = this.#volume.get;
 
@@ -358,7 +358,7 @@ class AudioEngineItem extends HTMLElement {
       : false;
 
     item?.state({ isPlaying: false });
-    item?.engine?.__isPlaying.set(ended);
+    item?.engine?.$isPlaying.set(ended);
   }
 
   /**
@@ -368,7 +368,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
     engineItem(audio)?.state({ isPlaying: true });
-    engineItem(audio)?.engine?.__isPlaying.set(true);
+    engineItem(audio)?.engine?.$isPlaying.set(true);
 
     // In case audio was preloaded:
     if (audio.readyState === 4) finishedLoading(event);
