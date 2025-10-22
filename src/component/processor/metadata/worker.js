@@ -13,8 +13,6 @@ import { musicMetadataTags } from "./common.js";
  * @type {Actions['supply']}
  */
 export async function supply(args) {
-  console.log(args);
-
   // Construct records
   // TODO: Use other metadata lib as fallback: https://github.com/buzz/mediainfo.js
   return await musicMetadataTags(args).catch(
@@ -36,8 +34,6 @@ export async function supply(args) {
 ////////////////////////////////////////////
 
 ostiary((port) => {
-  console.log("SETUP");
-
   // Setup RPC
   define("supply", supply, port);
 });
