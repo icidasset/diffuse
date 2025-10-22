@@ -2,6 +2,10 @@
   "version": "5",
   "specifiers": {
     "jsr:@deno/loader@0.3.6": "0.3.6",
+    "jsr:@fry69/deep-diff@~0.1.10": "0.1.10",
+    "jsr:@mys/m-rpc@~0.12.2": "0.12.2",
+    "jsr:@mys/worker-fn@^3.2.1": "3.2.1",
+    "jsr:@okikio/transferables@^1.0.2": "1.0.2",
     "jsr:@std/cli@1.0.22": "1.0.22",
     "jsr:@std/cli@^1.0.21": "1.0.22",
     "jsr:@std/collections@^1.1.3": "1.1.3",
@@ -31,6 +35,7 @@
     "jsr:@std/yaml@^1.0.5": "1.0.9",
     "npm:alien-signals@3": "3.0.3",
     "npm:autoprefixer@10.4.21": "10.4.21_postcss@8.5.6",
+    "npm:idb-keyval@^6.2.2": "6.2.2",
     "npm:lightningcss-wasm@1.30.1": "1.30.1",
     "npm:markdown-it-attrs@4.3.1": "4.3.1_markdown-it@14.1.0",
     "npm:markdown-it-deflist@3.0.0": "3.0.0",
@@ -44,6 +49,24 @@
   "jsr": {
     "@deno/loader@0.3.6": {
       "integrity": "98f08d837c18ece5ba15122264fb29580967407c34e6552e152b8f453a60c2be"
+    },
+    "@fry69/deep-diff@0.1.10": {
+      "integrity": "cdd88fefaef1ac896a038a5f3c0895038d8c725e61bac50489c455156e0275f5"
+    },
+    "@mys/m-rpc@0.12.2": {
+      "integrity": "36599d3d4708db9f5c0f7da35a17b7e7da1fafddb69de6cfcdc6afe94cd4f084",
+      "dependencies": [
+        "jsr:@okikio/transferables"
+      ]
+    },
+    "@mys/worker-fn@3.2.1": {
+      "integrity": "330960f21041edd20fa9c5f78b136f62e3781e35797ac635534f003545be76cd",
+      "dependencies": [
+        "jsr:@mys/m-rpc"
+      ]
+    },
+    "@okikio/transferables@1.0.2": {
+      "integrity": "46a80015a1c4672b0b246e38838b3ea1e2edc6c775a235184a2f8eb49a8314f7"
     },
     "@std/cli@1.0.22": {
       "integrity": "50d1e4f87887cb8a8afa29b88505ab5081188f5cad3985460c3b471fa49ff21a"
@@ -183,6 +206,9 @@
       "dependencies": [
         "function-bind"
       ]
+    },
+    "idb-keyval@6.2.2": {
+      "integrity": "sha512-yjD9nARJ/jb1g+CvD0tlhUHOrJ9Sy0P8T9MF3YaLlHnSRpwPfpTX0XIvpmw3gAJUmEu3FiICLBDPXVwyEvrleg=="
     },
     "is-core-module@2.16.1": {
       "integrity": "sha512-UfoeMA6fIJ8wTYFEUjelnaGI67v6+N7qXJEvQuIGa99l4xsCruSYOVSQ0uPANn4dAzm8lkYPaKLrrijLq7x23w==",
@@ -542,6 +568,7 @@
     "https://deno.land/x/lume@v3.0.11/plugins/url.ts": "15f2e80b6fcbf86f8795a3676b8d533bab003ac016ff127e58165a6ac3bffc1a",
     "https://deno.land/x/lume@v3.0.11/plugins/vento.ts": "fd60ee80435994bcf88b2cda9c51eaed0ba49a2363f42920675f2d5a0a4a6ab2",
     "https://deno.land/x/lume@v3.0.11/plugins/yaml.ts": "d0ebf37c38648172c6b95c502753a3edf60278ab4f6a063f3ca00f31e0dd90cc",
+    "https://deno.land/x/ssx@v0.1.12/jsx-runtime.ts": "a334a1ee3a25de7f3b84b7b8d842bcae40e9116f6edb6ec76cb265712c8a2ab8",
     "https://deno.land/x/vento@v2.1.1/core/environment.ts": "36f3e145adfe1af3740cfcfc6ff237d6fe48225d3627123b17022251afbe3074",
     "https://deno.land/x/vento@v2.1.1/core/errors.ts": "8606b682b465d598a394feea135dd2f84033b5ef2a61a23d116ccb782a0a547a",
     "https://deno.land/x/vento@v2.1.1/core/js.ts": "83084240150d7e8b83e43ec8fcf78564a8ba8599c3d517976efbb11b208903b2",
@@ -563,7 +590,69 @@
     "https://deno.land/x/vento@v2.1.1/plugins/mod.ts": "017d5bb3e3c80b7f67271cdf8779686f55916070c5d168a143e6a37c35bcd731",
     "https://deno.land/x/vento@v2.1.1/plugins/set.ts": "cf9dfbf68b52039781fd86ec0b9587a8bcd486fdef9f08989719cfdb7fa233d0",
     "https://deno.land/x/vento@v2.1.1/plugins/trim.ts": "8d33271327b09ffd8f569ebde85125b1324fa9538a54d6072ac97a9fb5d24264",
-    "https://deno.land/x/vento@v2.1.1/plugins/unescape.ts": "1c56f0310c7757880df7684fc6b7bf9efd27fdb6b929b89626802f5a99cb93ee"
+    "https://deno.land/x/vento@v2.1.1/plugins/unescape.ts": "1c56f0310c7757880df7684fc6b7bf9efd27fdb6b929b89626802f5a99cb93ee",
+    "https://esm.sh/@borewit/text-codec@0.1.1/es2022/text-codec.mjs": "ea8f41f92f2798340cf2b568602fc1e6f9957e8192265d92d6d06725d0bbfcff",
+    "https://esm.sh/@borewit/text-codec@0.2.0/es2022/text-codec.mjs": "1fa7af74bcd1b8c1a460836447074360915a752cffe0dbdb8ac472f422a7fbd9",
+    "https://esm.sh/@borewit/text-codec@^0.1.0?target=es2022": "e3ef0acd0c052b05ad09e59f90283c46e8b5d82d92548ab93b11badd8258d78f",
+    "https://esm.sh/@borewit/text-codec@^0.2.0?target=es2022": "41f958f8bdbc8407bd83126648cdeca660a1c86662ad3358ecc544f84e8a9f25",
+    "https://esm.sh/@tokenizer/http@0.9.2/es2022/lib/http-client.mjs": "a3b75a64606cf525497598e45357efbc03a9093f5000b180aca3ab278a9c69f3",
+    "https://esm.sh/@tokenizer/http@0.9.2/lib/http-client.js": "3ebcb337b382c299e9267b8950aa63764404b50909a4f9dfde183005f532fc6b",
+    "https://esm.sh/@tokenizer/inflate@0.2.7/es2022/inflate.mjs": "8fa443aca90ad2baa671baab9f31c244a65d3e415f0856f6cb7c01a91885a4c7",
+    "https://esm.sh/@tokenizer/inflate@^0.2.7?target=es2022": "a0937e70b3279c427154214ee94f847f05ee18590d624ed09e13b166bc4b8802",
+    "https://esm.sh/@tokenizer/range@0.12.0/es2022/range.mjs": "6e0bf369e99ec1608583522af1e3ea8e4967c202ccf0d853d7c180022693da16",
+    "https://esm.sh/@tokenizer/range@0.13.0/es2022/range.mjs": "0aab315c6101c786d5af2a3442c7afdf619cc9c678529440d99cc9c93bc616e9",
+    "https://esm.sh/@tokenizer/range@0.13.0/lib/index.js": "b6884ad1ad20d5ca12bcf051481f1d0f36640df2e4f5d827a8b9d100d56a2514",
+    "https://esm.sh/@tokenizer/range@^0.12.0?target=es2022": "a5be7fc23c6c1538ccdf83ab1d945c97618dbc5c886c099fae9fa2569f9cd389",
+    "https://esm.sh/content-type@1.0.5/es2022/content-type.mjs": "6fd962b99a80821956a22379aded6b7ca37cfbf95be5639047437e03211e1b56",
+    "https://esm.sh/content-type@^1.0.5?target=es2022": "ad3579fa1808af61b587ce37a37756eae3306dfbbdea9d02e31a03e0b2ad70d4",
+    "https://esm.sh/debug@4.4.3/es2022/debug.mjs": "42103c758115e696a3c7c269457f7827d957907fa8abcdbbaca2cb7060c7bd4f",
+    "https://esm.sh/debug@^4.3.7?target=es2022": "0a96b7d9989513d07f02f0d5533e0dc7a49c492107702631f6490d754fbc4fe7",
+    "https://esm.sh/debug@^4.4.0?target=es2022": "0a96b7d9989513d07f02f0d5533e0dc7a49c492107702631f6490d754fbc4fe7",
+    "https://esm.sh/debug@^4.4.3?target=es2022": "0a96b7d9989513d07f02f0d5533e0dc7a49c492107702631f6490d754fbc4fe7",
+    "https://esm.sh/fflate@0.8.2/es2022/fflate.mjs": "51759ec52e8522bbcd6dce941956a878c733975dcc159618c683c659270a59d3",
+    "https://esm.sh/fflate@^0.8.2?target=es2022": "c127de9122b64d0866c6988baf5d7b21d6a1aca3989e8828f9c7f27029081b0c",
+    "https://esm.sh/file-type@21.0.0/es2022/file-type.mjs": "c66d14ae76887e16cca26b4524bef9baba40585a8c499051ad5a0e12c980fcc2",
+    "https://esm.sh/file-type@^21.0.0?target=es2022": "d9b06a8b5508acf4b5e3b5a6e886517f62f112bb4b25f49d409218d243aa6979",
+    "https://esm.sh/ieee754@1.2.1/es2022/ieee754.mjs": "6e87635f6124ae21ea355a521f021a04afc277248bd5097dc85edce4d7017f86",
+    "https://esm.sh/ieee754@^1.2.1?target=es2022": "503072b5aea2f29a14531251e497979ecea64585897d1561010acd83fdb4ce07",
+    "https://esm.sh/media-typer@1.1.0/es2022/media-typer.mjs": "3dc6174765452b8271cad4031a308c8015c67bee4de2b0aff5daec36cb1b766e",
+    "https://esm.sh/media-typer@^1.1.0?target=es2022": "c6132b2b491d8f497c7c2158602814796aaceb5bbcaee6bf086842a0a0e36947",
+    "https://esm.sh/ms@2.1.3/es2022/ms.mjs": "9039464da1f4ae1c2042742d335c82556c048bbe49449b5d0cd5198193afa147",
+    "https://esm.sh/ms@^2.1.3?target=es2022": "05ddb185b1d26c888c647f2aaac723379f0933fb608b3a9a994e602c41900019",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/aiff/AiffParser.mjs": "63997d01b96586c6e4e25ebe00d71749d42cbddc928ae871dbefa01ffbf7ece6",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/apev2/APEv2Parser.mjs": "5428c9b05edde4fb3781da175c3fa6909c741eca89da7f632c5771288a555c80",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/asf/AsfParser.mjs": "ad8173bfeae034c96cd21a091db2336ad5f389d2afda2ffb31c1f6af9f3e743a",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/core.mjs": "dddd9f4492a00db509f80f6e03c2aaee068793a0f6f35e975446fee39bdf5565",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/dsdiff/DsdiffParser.mjs": "6d77407d3d97a56224a169e367848bde75f3a7bd48429f077cb76be9bb6b490b",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/dsf/DsfParser.mjs": "2dfd30eae0cadd1cdbb9d0685e6f0d7598aefa58cd49b3d65048bd8caf492ef8",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/flac/FlacParser.mjs": "9ac86d7a4136b44b039262c20601a12162d447dcc8ac78c661df5b2caff4eeaf",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/matroska/MatroskaParser.mjs": "d43c319eab16d7b05f6e8f7fe7171ab3ccd401539dd5558f171a6005dfade0a5",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/mp4/MP4Parser.mjs": "46f7ebd05e2e95b31eef24f01a3292759d503cd07df6ed851b5e70c76334ca6b",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/mpeg/MpegParser.mjs": "b5cb01e7abccb149d02207a8ae44ec5127c6bd7d386b3b0150f4e0603d6988d5",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/musepack/MusepackParser.mjs": "02fb87f6653928ed7a23f44e0e5ae47d598b6d3aa8074f662d0540eecef5d82e",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/ogg/OggParser.mjs": "bacd1c45fd7b606b2a6ef2b8569469e979fb834eedd58e2e051e40c9a0aae9ae",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/wav/WaveParser.mjs": "aaa526c14b601e5953d91bb13c73c4e78291ccb4f8ff85c24a1b7f4624f9c34c",
+    "https://esm.sh/music-metadata@11.9.0/es2022/lib/wavpack/WavPackParser.mjs": "af8ebb6037058ffb9792e3096a3f67c7eaf7ef2c39518274900b7a99bef552e5",
+    "https://esm.sh/music-metadata@11.9.0/lib/core.js": "57a0a07bfddf9592e6572f2730f6a71acfb3af8719bc6d794cb3fb974d74d8ac",
+    "https://esm.sh/node/process.mjs": "2c8eeaf6090c03d21bdcec5eddb33b105208c9ba3ef2c7be98f4d9b2495a624e",
+    "https://esm.sh/peek-readable@5.4.2/es2022/peek-readable.mjs": "7e784eacb3816872f18606f82cc3f30f2d11e674c5199f84e6cf7d820a3ced23",
+    "https://esm.sh/peek-readable@^5.3.1?target=es2022": "dbd46373159faf17590ec762a4f14921d7a6a5e6c3a64f334f302d96043077b0",
+    "https://esm.sh/strtok3@10.3.4/es2022/core.mjs": "3183a30c522666467d6d0b5234113fe216e1ec79f4bd135002545458323d62f4",
+    "https://esm.sh/strtok3@10.3.4/es2022/lib/stream/AbstractStreamReader.mjs": "675c8d26bd83e2e8907a988ba996e1ca45ae10397579d83ed027c14b13e78134",
+    "https://esm.sh/strtok3@10.3.4/es2022/lib/stream/Errors.mjs": "1459007f24621eb036ba3be2fa592ce39381874722aab8e0302f8d6345a620d6",
+    "https://esm.sh/strtok3@10.3.4/es2022/lib/stream/index.mjs": "7b6b3d37331712b157f2f6108081831b574d2b6493049aa8738834c4961ae633",
+    "https://esm.sh/strtok3@10.3.4/es2022/strtok3.mjs": "7228ab10418d0fcee23ac018de8c4843c796471c691c9e940540a23145d589e6",
+    "https://esm.sh/strtok3@9.1.1/es2022/strtok3.mjs": "f8cf21145d3d1be1cd7b4dff4a006b1587efb84d7c07953ed47a4f2c80759784",
+    "https://esm.sh/strtok3@^10.2.0?target=es2022": "40daa79a2c4d6133be6732ad5ad53831401eda38a72129b911562d6d42d34fe2",
+    "https://esm.sh/strtok3@^10.2.2/core?target=es2022": "9e188cff879adba3fe0cb8eb89d284ccda6b662bfa7b436c81370bda44e63415",
+    "https://esm.sh/strtok3@^10.3.4?target=es2022": "40daa79a2c4d6133be6732ad5ad53831401eda38a72129b911562d6d42d34fe2",
+    "https://esm.sh/strtok3@^9.1.1?target=es2022": "0b1ee38504da3418cd1f101f127415f5ba191b85089ae5a25beffa333c608499",
+    "https://esm.sh/token-types@6.1.1/es2022/token-types.mjs": "2d6a177766ee99c5a482c7bf7c55d38f076beff8e4781d1cb8c295f3cb4da5e9",
+    "https://esm.sh/token-types@^6.0.0?target=es2022": "15b612895b05b0120117c96dc3df21f4e211a7c0b126b36034f1a4ed803d216d",
+    "https://esm.sh/token-types@^6.1.1?target=es2022": "15b612895b05b0120117c96dc3df21f4e211a7c0b126b36034f1a4ed803d216d",
+    "https://esm.sh/uint8array-extras@1.5.0/es2022/uint8array-extras.mjs": "660b5b7967799e1ab7274f0062b66fc33a86c68df583429d8c52fa0b32332ae9",
+    "https://esm.sh/uint8array-extras@^1.4.0?target=es2022": "24bf344529db04523ab848989bd810f22dce714f11f5e9a619dbe113b899b49f",
+    "https://esm.sh/uint8array-extras@^1.5.0?target=es2022": "24bf344529db04523ab848989bd810f22dce714f11f5e9a619dbe113b899b49f"
   },
   "workspace": {
     "dependencies": [
@@ -574,6 +663,7 @@
       "jsr:@std/fs@^1.0.19",
       "jsr:@std/path@^1.1.2",
       "npm:alien-signals@3",
+      "npm:idb-keyval@^6.2.2",
       "npm:morphdom@^2.7.7",
       "npm:uri-js@^4.4.1",
       "npm:xxh32@^2.0.5"
