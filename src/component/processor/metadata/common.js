@@ -1,24 +1,25 @@
 import { parseBlob, parseFromTokenizer, parseWebStream } from "music-metadata";
 import * as URI from "uri-js";
-import * as HTTP_TOKENIZER from "@tokenizer/http";
-import * as RANGE_TOKENIZER from "@tokenizer/range";
+import { HttpClient } from "@tokenizer/http";
+import { tokenizer as rangeTokenizer } from "@tokenizer/range";
 
-import type { TrackStats, TrackTags } from "@applets/core/types";
-import type { Extraction, Urls } from "./types";
+/**
+ * @import { TrackStats, TrackTags } from "@component/core/types.d.ts";
+ * @import { Extraction, Urls } from "./types.d.ts";
+ */
 
 // 🛠️
 
+/**
+ * @param {{ includeArtwork?: boolean; mimeType?: string; stream?: ReadableStream; urls?: Urls; }} _
+ * @returns {Promise<Extraction>}
+ */
 export async function musicMetadataTags({
   includeArtwork,
   mimeType,
   stream,
   urls,
-}: {
-  includeArtwork?: boolean;
-  mimeType?: string;
-  stream?: ReadableStream;
-  urls?: Urls;
-}): Promise<Extraction> {
+}) {
   const uri = urls ? URI.parse(urls.get) : undefined;
   const pathParts = uri?.path?.split("/");
   const filename = pathParts?.[pathParts.length - 1];
@@ -29,7 +30,9 @@ export async function musicMetadataTags({
     const blob = await fetch(urls.get).then((r) => r.blob());
     meta = await parseBlob(blob, { skipCovers: !includeArtwork });
   } else if (urls) {
-    const httpClient = new HTTP_TOKENIZER.HttpClient(urls.head, { resolveUrl: false });
+    const httpClient = new HttpClient(urls.head, {
+      resolveUrl: false,
+    });
     httpClient.resolvedUrl = urls.get;
     const getHeadInfo = httpClient.getHeadInfo;
 
@@ -39,26 +42,39 @@ export async function musicMetadataTags({
       return { ...info, acceptPartialRequests: true };
     };
 
-    const tokenizer = await RANGE_TOKENIZER.tokenizer(httpClient);
+    /** @type {any} */
+    const tokenizer = await rangeTokenizer(httpClient);
 
     meta = await parseFromTokenizer(tokenizer, { skipCovers: !includeArtwork });
   } else if (stream) {
-    meta = await parseWebStream(stream, { mimeType }, { skipCovers: !includeArtwork });
+    meta = await parseWebStream(stream, { mimeType }, {
+      skipCovers: !includeArtwork,
+    });
   } else {
     throw new Error("Missing args, need either some urls or a stream.");
   }
 
-  const stats: TrackStats = {
+  /** @type {TrackStats} */
+  const stats = {
     duration: meta.format.duration,
   };
 
-  const tags: TrackTags = {
+  /** @type {TrackTags} */
+  const tags = {
     album: meta.common.album,
     artist: meta.common.artist,
-    disc: { no: meta.common.disk.no || 1, of: meta.common.disk.of ?? undefined },
-    genre: Array.isArray(meta.common.genre) ? meta.common.genre[0] : meta.common.genre,
+    disc: {
+      no: meta.common.disk.no || 1,
+      of: meta.common.disk.of ?? undefined,
+    },
+    genre: Array.isArray(meta.common.genre)
+      ? meta.common.genre[0]
+      : meta.common.genre,
     title: meta.common.title || filename || urls?.head || "Unknown",
-    track: { no: meta.common.track.no || 1, of: meta.common.track.of ?? undefined },
+    track: {
+      no: meta.common.track.no || 1,
+      of: meta.common.track.of ?? undefined,
+    },
     year: meta.common.year,
   };
 
