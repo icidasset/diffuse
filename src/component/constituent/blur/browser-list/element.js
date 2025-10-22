@@ -18,7 +18,7 @@ class BrowserList extends DiffuseElement {
 
   get state() {
     return {
-      tracks: this.tracks,
+      tracks: this.tracks.get,
     };
   }
 

@@ -1,11 +1,11 @@
 import morphdom from "morphdom";
 
-import { effect, unbiasedSignal } from "@common/signal.js";
+import { effect, signal } from "@common/signal.js";
 import { define, use } from "@common/worker.js";
 
 /**
- * @import {BroadcastingStatus, HtmlTagFunction, MorphOptions} from "./element.d.ts"
- * @import {Signal} from "./signal.d.ts"
+ * @import {BroadcastingStatus, FnParams, FnReturn, HtmlTagFunction, MorphOptions} from "./element.d.ts"
+ * @import {Signal, SignalReader} from "./signal.d.ts"
  */
 
 /**
@@ -109,6 +109,9 @@ export class DiffuseElement extends HTMLElement {
 export class BroadcastableDiffuseElement extends DiffuseElement {
   broadcasted = false;
 
+  #broadcastingStatus;
+  broadcastingStatus;
+
   /** @type {PromiseWithResolvers<void>} */
   #lock = Promise.withResolvers();
 
@@ -121,7 +124,8 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     this.broadcast = this.broadcast.bind(this);
 
     /** @type {Signal<Promise<BroadcastingStatus>>} */
-    this.broadcastingStatus = unbiasedSignal(this.#status.promise);
+    this.#broadcastingStatus = signal(this.#status.promise, { unbiased: true });
+    this.broadcastingStatus = this.#broadcastingStatus.get;
   }
 
   /**
@@ -167,26 +171,39 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     }
 
     /**
+     * @template I
+     * @template O
+     * @template {(...args: I[]) => O} Fn
      * @param {string} method
-     * @param {Function} fn
+     * @param {Fn} fn
      */
     return (method, fn) => {
       define(method, fn.bind(this), msg.port2);
 
-      /** @param {any[]} args */
+      /**
+       * @typedef {FnParams<typeof fn>} P
+       * @typedef {FnReturn<typeof fn>} R
+       */
+
+      /** @param {P} args */
       const leaderOnly = async (...args) => {
         const status = await this.#status.promise;
         return status.leader
-          ? fn.call(this, ...args)
-          : use(`leader:${method}`, msg.port2)(...args);
+          ? /** @type {R} */ (fn.call(this, ...args))
+          : /** @type {Promise<R>} */ (use(`leader:${method}`, msg.port2)(
+            ...args,
+          ));
       };
 
-      /** @param {any[]} args */
+      /**
+       * @param {P} args
+       * @returns {R}
+       */
       const replicate = (...args) => {
         anyoneWaiting().then((bool) => {
           if (bool) use(method, msg.port2)(...args);
         });
-        return fn.call(this, ...args);
+        return /** @type {R} */ (fn.call(this, ...args));
       };
 
       return {
@@ -236,7 +253,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
             this.#status = Promise.withResolvers();
             this.#status.resolve({ leader: true, initialLeader: false });
 
-            this.broadcastingStatus(this.#status.promise);
+            this.#broadcastingStatus.value = this.#status.promise;
 
             return this.#lock.promise;
           },

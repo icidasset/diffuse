@@ -1,7 +1,4 @@
-import {
-  BroadcastableDiffuseElement,
-  DiffuseElement,
-} from "@common/element.js";
+import { BroadcastableDiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 /**
@@ -21,12 +18,8 @@ const _SILENT_MP3 =
 
 /**
  * @implements {Actions}
- * @implements {Signals}
  */
 class AudioEngine extends BroadcastableDiffuseElement {
-  // TODO:
-  // static observedAttributes = ["volume"];
-
   constructor() {
     super();
 
@@ -44,8 +37,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       this.seek = fn("seek", this.seek).leaderOnly;
       this.supply = fn("supply", this.supply).replicate;
 
-      this.isPlaying = fn("isPlaying", this.isPlaying).replicate;
-      this.volume = fn("volume", this.volume).replicate;
+      this.__isPlaying.set = fn("isPlaying", this.__isPlaying.set).replicate;
     }
 
     // TODO: Get volume from previous session if possible
@@ -55,22 +47,16 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
   // SIGNALS
 
-  volume = signal(0.5);
-  isPlaying = signal(false);
   #items = signal(/** @type {Audio[]} */ ([]));
+  #volume = signal(0.5);
+
+  __isPlaying = signal(false);
 
   // STATE
 
-  /**
-   * @type {State}
-   */
-  get state() {
-    return {
-      isPlaying: this.isPlaying,
-      items: this.#items,
-      volume: this.volume,
-    };
-  }
+  isPlaying = this.__isPlaying.get;
+  items = this.#items.get;
+  volume = this.#volume.get;
 
   // LIFECYCLE
 
@@ -98,7 +84,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         (node) => {
           const audio = /** @type {HTMLAudioElement} */ (node);
           if (audio.hasAttribute("preload")) return;
-          audio.volume = this.volume();
+          audio.volume = this.#volume.value;
         },
       );
     });
@@ -118,7 +104,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    */
   play({ audioId, volume }) {
     this.withAudioNode(audioId, (audio, item) => {
-      audio.volume = volume ?? this.state.volume();
+      audio.volume = volume ?? this.volume();
       audio.muted = false;
 
       if (audio.readyState === 0) audio.load();
@@ -176,17 +162,17 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["supply"]}
    */
   supply(args) {
-    this.#items(args.audio);
+    this.#items.value = args.audio;
     if (args.play) this.play(args.play);
   }
 
   // RENDER
 
   /**
-   * @param {RenderArg<State>} _
+   * @param {RenderArg} _
    */
-  render({ html, state }) {
-    const nodes = state.items().map((audio) => {
+  render({ html }) {
+    const nodes = this.items().map((audio) => {
       const ip = audio.progress === undefined
         ? "0"
         : JSON.stringify(audio.progress);
@@ -372,7 +358,7 @@ class AudioEngineItem extends HTMLElement {
       : false;
 
     item?.state({ isPlaying: false });
-    item?.engine?.isPlaying(ended);
+    item?.engine?.__isPlaying.set(ended);
   }
 
   /**
@@ -382,7 +368,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
     engineItem(audio)?.state({ isPlaying: true });
-    engineItem(audio)?.engine?.isPlaying(true);
+    engineItem(audio)?.engine?.__isPlaying.set(true);
 
     // In case audio was preloaded:
     if (audio.readyState === 4) finishedLoading(event);

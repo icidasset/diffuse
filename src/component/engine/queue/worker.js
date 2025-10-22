@@ -26,51 +26,51 @@ export const past = signal(/** @type {Item[]} */ ([]));
  * @type {Actions['add']}
  */
 export function add(items) {
-  future([...future(), ...items]);
+  future.value = [...future.value, ...items];
 }
 
 /**
  * @type {Actions['pool']}
  */
 export function pool(tracks) {
-  lake(tracks);
+  lake.value = tracks;
 
   // TODO: If the pool changes, only remove non-existing tracks
   //       instead of resetting the whole future queue.
   //
   //       What about past queue items?
 
-  future(fill([]));
+  future.value = fill([]);
 
   // Automatically insert track if there isn't any
-  if (!now()) return shift();
+  if (!now.value) return shift();
 }
 
 /**
  * @type {Actions['shift']}
  */
 export function shift() {
-  const n = now();
-  const f = future();
+  const n = now.value;
+  const f = future.value;
 
-  now(f[0] ?? null);
+  now.value = f[0] ?? null;
 
-  if (n) past([...past(), n]);
-  future(fill(f.slice(1)));
+  if (n) past.value = [...past.value, n];
+  future.value = fill(f.slice(1));
 }
 
 /**
  * @type {Actions['unshift']}
  */
 export function unshift() {
-  const p = past();
+  const p = past.value;
   if (p.length === 0) return;
 
-  const n = now();
+  const n = now.value;
   const [last] = p.splice(p.length - 1, 1);
 
-  now(last ?? null);
-  if (n) future([n, ...future()]);
+  now.value = last ?? null;
+  if (n) future.value = [n, ...future.value];
 }
 
 ////////////////////////////////////////////
@@ -80,9 +80,9 @@ export function unshift() {
 ostiary((port) => {
   // Setup RPC
 
-  define("future", () => future(), port);
-  define("now", () => now(), port);
-  define("past", () => past(), port);
+  define("future", future.get, port);
+  define("now", now.get, port);
+  define("past", past.get, port);
 
   define("add", add, port);
   define("pool", pool, port);
@@ -91,9 +91,9 @@ ostiary((port) => {
 
   // Communicate state
 
-  effect(() => announce("future", future(), port));
-  effect(() => announce("now", now(), port));
-  effect(() => announce("past", past(), port));
+  effect(() => announce("future", future.value, port));
+  effect(() => announce("now", now.value, port));
+  effect(() => announce("past", past.value, port));
 });
 
 ////////////////////////////////////////////
@@ -110,10 +110,10 @@ function fill(future) {
   /** @type {Track[]} */
   const pool = [];
 
-  let p = new Set(past().map((t) => t.id));
+  let p = new Set(past.value.map((t) => t.id));
   let reducedPool = pool;
 
-  lake().forEach((track) => {
+  lake.value.forEach((track) => {
     if (p.has(track.id)) {
       p = p.difference(new Set(track.id));
     } else {
@@ -122,7 +122,7 @@ function fill(future) {
   });
 
   if (reducedPool.length === 0) {
-    reducedPool = lake();
+    reducedPool = lake.value;
   }
 
   const poolSelection = arrayShuffle(reducedPool).slice(
