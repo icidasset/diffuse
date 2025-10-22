@@ -44,7 +44,6 @@ export async function musicMetadataTags({
 
     /** @type {any} */
     const tokenizer = await rangeTokenizer(httpClient);
-
     meta = await parseFromTokenizer(tokenizer, { skipCovers: !includeArtwork });
   } else if (stream) {
     meta = await parseWebStream(stream, { mimeType }, {
