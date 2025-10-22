@@ -12,42 +12,6 @@
     <main>
     </main>
 
-    <script type="module">
-      import * as Audio from "../../component/engine/audio/element.js";
-      import * as Queue from "../../component/engine/queue/element.js";
-      import * as Metadata from "../../component/processor/metadata/element.js"
-
-      import { effect } from "../../common/signal.js"
-
-      const audio = document.querySelector(Audio.NAME)
-      const queue = document.querySelector(Queue.NAME)
-      const metadata = document.querySelector(Metadata.NAME)
-
-      const url = "https://archive.org/download/deathofsalesmans00mill/01_Side_1_Death_of_a_salesman_-_Introduction_Act_1__Part_1.mp3"
-
-      // const resp = await metadata.supply({
-      //   urls: { get: url, head: url }
-      // })
-
-      // console.log(resp)
-
-      await audio.supply({
-        audio: [
-          {
-            id: "test",
-            isPreload: false,
-            url: url
-          }
-        ]
-      })
-
-      // effect(() => {
-      //   console.log("Future:", queue.future())
-      // })
-
-      // effect(() => {
-      //   console.log("Now:", queue.now())
-      // })
-    </script>
+    <script src="index.js" type="module"></script>
   </body>
 </html>

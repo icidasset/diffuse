@@ -67,5 +67,7 @@ export default QueueEngine;
 // REGISTER
 ////////////////////////////////////////////
 
+export const CLASS = QueueEngine;
 export const NAME = "de-queue";
+
 customElements.define(NAME, QueueEngine);

@@ -36,5 +36,7 @@ export default ArtworkProcessor;
 // REGISTER
 ////////////////////////////////////////////
 
+export const CLASS = ArtworkProcessor;
 export const NAME = "dp-artwork";
+
 customElements.define(NAME, ArtworkProcessor);
