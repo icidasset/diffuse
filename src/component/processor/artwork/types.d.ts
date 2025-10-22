@@ -1,4 +1,9 @@
-import type { TrackTags } from "@applets/core/types";
+import type { TrackTags } from "@component/core/types.d.ts";
+
+export type Actions = {
+  artwork(request: ArtworkRequest): Promise<Artwork[]>;
+  supply(items: ArtworkRequest[]): void;
+};
 
 export type Artwork = {
   bytes: Uint8Array;

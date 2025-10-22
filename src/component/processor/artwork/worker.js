@@ -1,39 +1,35 @@
-import type { IPicture } from "music-metadata";
 import * as IDB from "idb-keyval";
 
-import type { Artwork, ArtworkRequest } from "./types";
-import type { Extraction } from "../metadata/types";
-import { provide } from "@scripts/common";
-import { IDB_ARTWORK_PREFIX } from "./constants";
-import { musicMetadataTags } from "../metadata/common";
+import { IDB_ARTWORK_PREFIX } from "./constants.js";
+import { musicMetadataTags } from "../metadata/common.js";
 
-// State
-let queue: ArtworkRequest[] = [];
+/**
+ * @import {IPicture} from "music-metadata"
+ * @import {Actions, Artwork, ArtworkRequest} from "./types.d.ts"
+ * @import {Extraction} from "../metadata/types.d.ts"
+ */
 
-////////////////////////////////////////////
-// SETUP
-////////////////////////////////////////////
-
-const actions = {
-  artwork,
-  supply,
-};
-
-const { tasks } = provide({ actions, tasks: actions });
-
-export type Actions = typeof actions;
-export type Tasks = typeof tasks;
+/**
+ * @type {ArtworkRequest[]}
+ */
+let queue = [];
 
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
 
-async function artwork(request: ArtworkRequest) {
+/**
+ * @type {Actions['artwork']}
+ */
+export async function artwork(request) {
   const art = await processRequest(request);
   return art;
 }
 
-function supply(items: ArtworkRequest[]) {
+/**
+ * @type {Actions['supply']}
+ */
+export function supply(items) {
   const exe = !queue[0];
   queue = [...queue, ...items];
   if (exe) shiftQueue();
@@ -42,7 +38,11 @@ function supply(items: ArtworkRequest[]) {
 ////////////////////////////////////////////
 // 🛠️
 ////////////////////////////////////////////
-function escapeLucene(str: string) {
+
+/**
+ * @param {string} str
+ */
+function escapeLucene(str) {
   return [].map
     .call(str, (char) => {
       if (
@@ -65,14 +65,18 @@ function escapeLucene(str: string) {
         char === ":" ||
         char === "\\" ||
         char === "/"
-      )
+      ) {
         return "\\" + char;
-      else return char;
+      } else return char;
     })
     .join("");
 }
 
-async function lastFm(req: ArtworkRequest): Promise<Artwork[]> {
+/**
+ * @param {ArtworkRequest} req
+ * @returns {Promise<Artwork[]>}
+ */
+async function lastFm(req) {
   if (!navigator.onLine) return [];
 
   const query = req.tags?.artist;
@@ -88,38 +92,52 @@ async function lastFm(req: ArtworkRequest): Promise<Artwork[]> {
     });
 }
 
-async function lastFmCover(remainingMatches: any[]): Promise<Artwork[]> {
+/**
+ * @param {any[]} remainingMatches
+ * @returns {Promise<Artwork[]>}
+ */
+async function lastFmCover(remainingMatches) {
   const album = remainingMatches[0];
   const url = album ? album.image[album.image.length - 1]["#text"] : null;
 
   return url && url !== ""
     ? await fetch(url)
-        .then((r) => r.blob())
-        .then(async (b) => [
-          { bytes: await b.arrayBuffer().then((buf) => new Uint8Array(buf)), mime: b.type },
-        ])
-        .catch((err) => {
-          console.error(err);
-          return lastFmCover(remainingMatches.slice(1));
-        })
+      .then((r) => r.blob())
+      .then(async (b) => [
+        {
+          bytes: await b.arrayBuffer().then((buf) => new Uint8Array(buf)),
+          mime: b.type,
+        },
+      ])
+      .catch((err) => {
+        console.error(err);
+        return lastFmCover(remainingMatches.slice(1));
+      })
     : album
-      ? lastFmCover(remainingMatches.slice(1))
-      : [];
+    ? lastFmCover(remainingMatches.slice(1))
+    : [];
 }
 
-async function musicBrainz(req: ArtworkRequest): Promise<Artwork[]> {
+/**
+ * @param {ArtworkRequest} req
+ * @returns {Promise<Artwork[]>}
+ */
+async function musicBrainz(req) {
   const artist = req.tags?.artist;
   const album = req.tags?.album;
 
   if (!navigator.onLine) return [];
   if (!album && !artist) return [];
 
-  const query =
-    `release:"${escapeLucene(album || "")}"` +
-    (req.variousArtists ? `` : ` AND artistname:"${escapeLucene(artist || "")}"`);
+  const query = `release:"${escapeLucene(album || "")}"` +
+    (req.variousArtists
+      ? ``
+      : ` AND artistname:"${escapeLucene(artist || "")}"`);
   const encodedQuery = encodeURIComponent(query);
 
-  return await fetch(`https://musicbrainz.org/ws/2/release/?query=${encodedQuery}&fmt=json`)
+  return await fetch(
+    `https://musicbrainz.org/ws/2/release/?query=${encodedQuery}&fmt=json`,
+  )
     .then((r) => r.json())
     .then((r) => {
       if (r.releases.length === 0 && !req.variousArtists) {
@@ -134,18 +152,31 @@ async function musicBrainz(req: ArtworkRequest): Promise<Artwork[]> {
     });
 }
 
-async function musicBrainzCover(remainingReleases: any[], req: ArtworkRequest): Promise<Artwork[]> {
+/**
+ * @param {any[]} remainingReleases
+ * @param {ArtworkRequest} req
+ * @returns {Promise<Artwork[]>}
+ */
+async function musicBrainzCover(remainingReleases, req) {
   const release = remainingReleases[0];
   if (!release) return [];
 
   const credit = release?.["artist-credit"]?.[0]?.name;
-  if (req.variousArtists && credit !== "Various Artists" && credit !== req.tags?.artist) return [];
+  if (
+    req.variousArtists && credit !== "Various Artists" &&
+    credit !== req.tags?.artist
+  ) return [];
 
-  return await fetch(`https://coverartarchive.org/release/${release.id}/front-1200`)
+  return await fetch(
+    `https://coverartarchive.org/release/${release.id}/front-1200`,
+  )
     .then((r) => r.blob())
     .then(async (b) => {
       if (b.type.startsWith("image/")) {
-        return [{ bytes: await b.arrayBuffer().then((buf) => new Uint8Array(buf)), mime: b.type }];
+        return [{
+          bytes: await b.arrayBuffer().then((buf) => new Uint8Array(buf)),
+          mime: b.type,
+        }];
       } else {
         return musicBrainzCover(remainingReleases.slice(1), req);
       }
@@ -156,7 +187,11 @@ async function musicBrainzCover(remainingReleases: any[], req: ArtworkRequest): 
     });
 }
 
-async function processRequest(req: ArtworkRequest): Promise<Artwork[]> {
+/**
+ * @param {ArtworkRequest} req
+ * @returns {Promise<Artwork[]>}
+ */
+async function processRequest(req) {
   // Check if already processed
   // TODO: Retry if none was found?
   const cache = await IDB.get(`${IDB_ARTWORK_PREFIX}/${req.cacheId}`);
@@ -168,22 +203,31 @@ async function processRequest(req: ArtworkRequest): Promise<Artwork[]> {
   }
 
   // 🚀
-  let art: Artwork[] = [];
+
+  /** @type {Artwork[]} */
+  let art = [];
 
   // Get metadata + possible artwork from file metadata
-  const meta = await musicMetadataTags({ ...req, includeArtwork: true }).catch((err) => {
-    console.error("music-metadata error", err);
-    const extraction: Extraction = {};
-    return extraction;
-  });
+  const meta = await musicMetadataTags({ ...req, includeArtwork: true }).catch(
+    /** @param {Error} err */ (err) => {
+      console.error("music-metadata error", err);
+      /** @type {Extraction} */
+      const extraction = {};
+      return extraction;
+    },
+  );
 
   if (!req.tags && meta.tags) req.tags = meta.tags;
 
   // Add artwork from metadata
-  const fromMeta =
-    meta.artwork?.map((a: IPicture) => {
+  const fromMeta = meta.artwork?.map(
+    /**
+     * @param {IPicture} a
+     */
+    (a) => {
       return { bytes: a.data, mime: a.format };
-    }) || [];
+    },
+  ) || [];
 
   art.push(...fromMeta);
 
