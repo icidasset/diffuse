@@ -1,4 +1,4 @@
-import type { Signal } from "../../../../common/signal.d.ts";
-import type { Track } from "../../../core/types.d.ts";
+import type { SignalReader } from "@common/signal.d.ts";
+import type { Track } from "@component/core/types.d.ts";
 
-export type State = { tracks: Signal<Track[]> };
+export type State = { tracks: SignalReader<Track[]> };

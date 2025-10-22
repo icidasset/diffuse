@@ -3,7 +3,7 @@ import { signal } from "@common/signal.js";
 import { listen, use } from "@common/worker.js";
 
 /**
- * @import {Actions, Item, Signals} from "./types.d.ts"
+ * @import {Actions, Item} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -12,7 +12,6 @@ import { listen, use } from "@common/worker.js";
 
 /**
  * @implements {Actions}
- * @implements {Signals}
  */
 class QueueEngine extends DiffuseElement {
   constructor() {
@@ -38,9 +37,9 @@ class QueueEngine extends DiffuseElement {
     }
 
     // Sync data with worker
-    listen("future", this.future, port);
-    listen("now", this.now, port);
-    listen("past", this.past, port);
+    listen("future", this.#future.set, port);
+    listen("now", this.#now.set, port);
+    listen("past", this.#past.set, port);
 
     // Worker proxy
     this.add = use("add", port);
@@ -51,9 +50,15 @@ class QueueEngine extends DiffuseElement {
 
   // SIGNALS
 
-  future = signal(/** @type {Array<Item>} */ ([]));
-  now = signal(/** @type {Item | null} */ (null));
-  past = signal(/** @type {Array<Item>} */ ([]));
+  #future = signal(/** @type {Array<Item>} */ ([]));
+  #now = signal(/** @type {Item | null} */ (null));
+  #past = signal(/** @type {Array<Item>} */ ([]));
+
+  // STATE
+
+  future = this.#future.get;
+  now = this.#now.get;
+  past = this.#past.get;
 }
 
 export default QueueEngine;

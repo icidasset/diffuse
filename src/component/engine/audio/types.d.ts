@@ -1,4 +1,4 @@
-import type { Signal } from "@common/signal.d.ts";
+import type { SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {
   pause: (_: { audioId: string }) => void;
@@ -36,11 +36,8 @@ export type AudioState = {
   url: string;
 };
 
-export type Signals = {
-  isPlaying: Signal<boolean>;
-  volume: Signal<number>;
-};
-
-export type State = Signals & {
-  items: Signal<Audio[]>;
+export type State = {
+  isPlaying: SignalReader<boolean>;
+  items: SignalReader<Audio[]>;
+  volume: SignalReader<number>;
 };
