@@ -118,7 +118,10 @@ export function use(
   context = /** @type {WorkerGlobalScope} */ (globalThis),
   options,
 ) {
-  return useWorkerFn(name, /** @type {any} */ (context), options);
+  return useWorkerFn(name, /** @type {any} */ (context), {
+    timeout: 60000,
+    ...(options || {}),
+  });
 }
 
 ////////////////////////////////////////////

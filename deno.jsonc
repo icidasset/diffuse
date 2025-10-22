@@ -9,7 +9,13 @@
     "@okikio/transferables": "jsr:@okikio/transferables@^1.0.2",
     "alien-signals": "npm:alien-signals@^3.0.0",
     "morphdom": "npm:morphdom@^2.7.7/dist/morphdom.js",
+    "uri-js": "npm:uri-js@^4.4.1",
     "xxh32": "npm:xxh32@^2.0.5",
+
+    // music-metadata
+    "@tokenizer/http": "https://esm.sh/@tokenizer/http@0.9.2/lib/http-client.js",
+    "@tokenizer/range": "https://esm.sh/@tokenizer/range@0.13.0/lib/index.js",
+    "music-metadata": "https://esm.sh/music-metadata@11.9.0/lib/core.js",
 
     // Paths
     "@common/": "./src/common/",

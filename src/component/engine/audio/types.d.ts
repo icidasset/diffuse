@@ -1,6 +1,6 @@
-import type { Signal } from "../../../common/signal.d.ts";
+import type { Signal } from "@common/signal.d.ts";
 
-export interface Actions {
+export type Actions = {
   pause: (_: { audioId: string }) => void;
   play: (_: { audioId: string; volume?: number }) => void;
   reload: (_: { audioId: string; play: boolean; progress?: number }) => void;
@@ -8,17 +8,17 @@ export interface Actions {
   supply: (
     _: { audio: Audio[]; play?: { audioId: string; volume?: number } },
   ) => void;
-}
+};
 
-export interface Audio {
+export type Audio = {
   id: string;
   isPreload: boolean;
   mimeType?: string;
   progress?: number;
   url: string;
-}
+};
 
-export interface AudioState {
+export type AudioState = {
   duration: number;
   id: string;
   hasEnded: boolean;
@@ -34,12 +34,12 @@ export interface AudioState {
   mimeType?: string;
   progress: number;
   url: string;
-}
+};
 
-export interface Signals {
+export type Signals = {
   isPlaying: Signal<boolean>;
   volume: Signal<number>;
-}
+};
 
 export type State = Signals & {
   items: Signal<Audio[]>;

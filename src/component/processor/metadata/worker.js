@@ -1,0 +1,43 @@
+import { define, ostiary } from "@common/worker.js";
+import { musicMetadataTags } from "./common.js";
+
+/**
+ * @import { Actions, Extraction } from "./types.d.ts";
+ */
+
+////////////////////////////////////////////
+// ACTIONS
+////////////////////////////////////////////
+
+/**
+ * @type {Actions['supply']}
+ */
+export async function supply(args) {
+  console.log(args);
+
+  // Construct records
+  // TODO: Use other metadata lib as fallback: https://github.com/buzz/mediainfo.js
+  return await musicMetadataTags(args).catch(
+    /**
+     * @param {Error} err
+     * @returns {Extraction}
+     */
+    (err) => {
+      console.warn("Metadata processor error:", err);
+      console.log(args);
+
+      return {};
+    },
+  );
+}
+
+////////////////////////////////////////////
+// ⚡️
+////////////////////////////////////////////
+
+ostiary((port) => {
+  console.log("SETUP");
+
+  // Setup RPC
+  define("supply", supply, port);
+});

@@ -1,21 +1,19 @@
-import type {
-  Track,
-  TrackStats,
-  TrackTags,
-} from "../../../component/core/types.d.ts";
-import type { Signal } from "../../../common/signal.d.ts";
+import type { Track, TrackStats, TrackTags } from "@component/core/types.d.ts";
+import type { Signal } from "@common/signal.d.ts";
 
-export interface Actions {
+export type Actions = {
   add: (items: Item[]) => void;
-  // TODO
-}
+  pool: (tracks: Track[]) => void;
+  shift: () => void;
+  unshift: () => void;
+};
 
 export type Item<Stats = TrackStats, Tags = TrackTags> =
   & Track<Stats, Tags>
   & { manualEntry?: boolean };
 
-export interface Signals {
+export type Signals = {
   future: Signal<Item[]>;
   now: Signal<Item | null>;
   past: Signal<Item[]>;
-}
+};

@@ -3,7 +3,7 @@ import { effect, signal } from "@common/signal.js";
 import { arrayShuffle } from "@common/index.js";
 
 /**
- * @import {Item} from "./types.d.ts"
+ * @import {Actions, Item} from "./types.d.ts"
  * @import {Track} from "@component/core/types.d.ts"
  */
 
@@ -13,26 +13,26 @@ const QUEUE_SIZE = 25;
 // STATE
 ////////////////////////////////////////////
 
-const future = signal(/** @type {Item[]} */ ([]));
-const lake = signal(/** @type {Track[]} */ ([]));
-const now = signal(/** @type {Item | null} */ (null));
-const past = signal(/** @type {Item[]} */ ([]));
+export const future = signal(/** @type {Item[]} */ ([]));
+export const lake = signal(/** @type {Track[]} */ ([]));
+export const now = signal(/** @type {Item | null} */ (null));
+export const past = signal(/** @type {Item[]} */ ([]));
 
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
 
 /**
- * @param {Item[]} items
+ * @type {Actions['add']}
  */
-function add(items) {
+export function add(items) {
   future([...future(), ...items]);
 }
 
 /**
- * @param {Track[]} tracks
+ * @type {Actions['pool']}
  */
-function pool(tracks) {
+export function pool(tracks) {
   lake(tracks);
 
   // TODO: If the pool changes, only remove non-existing tracks
@@ -46,7 +46,10 @@ function pool(tracks) {
   if (!now()) return shift();
 }
 
-function shift() {
+/**
+ * @type {Actions['shift']}
+ */
+export function shift() {
   const n = now();
   const f = future();
 
@@ -56,7 +59,10 @@ function shift() {
   future(fill(f.slice(1)));
 }
 
-function unshift() {
+/**
+ * @type {Actions['unshift']}
+ */
+export function unshift() {
   const p = past();
   if (p.length === 0) return;
 
@@ -83,7 +89,7 @@ ostiary((port) => {
   define("shift", shift, port);
   define("unshift", unshift, port);
 
-  // Communicate
+  // Communicate state
 
   effect(() => announce("future", future(), port));
   effect(() => announce("now", now(), port));
