@@ -3,7 +3,7 @@ import { signal } from "@common/signal.js";
 import { listen, use } from "@common/worker.js";
 
 /**
- * @import {Actions, Item} from "./types.d.ts"
+ * @import {Actions, ActionsProxied, Item} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -23,7 +23,7 @@ class QueueEngine extends DiffuseElement {
 
     // Setup worker
     const name = `diffuse/engine/queue/${group}`;
-    const url = new URL("./worker.js", import.meta.url);
+    const url = "/component/engine/queue/worker.js";
 
     let port;
 
@@ -41,10 +41,16 @@ class QueueEngine extends DiffuseElement {
     listen("now", this.#now.set, port);
     listen("past", this.#past.set, port);
 
-    // Worker proxy
+    /** @type {ActionsProxied['add']} */
     this.add = use("add", port);
+
+    /** @type {ActionsProxied['pool']} */
     this.pool = use("pool", port);
+
+    /** @type {ActionsProxied['shift']} */
     this.shift = use("shift", port);
+
+    /** @type {ActionsProxied['unshift']} */
     this.unshift = use("unshift", port);
   }
 

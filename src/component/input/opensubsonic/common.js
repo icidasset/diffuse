@@ -1,16 +1,21 @@
-import { SubsonicAPI, type Child } from "subsonic-api";
+import { SubsonicAPI } from "subsonic-api";
 import * as IDB from "idb-keyval";
 import * as URI from "uri-js";
 import QS from "query-string";
 
-import type { Server } from "./types";
-import { IDB_SERVERS, SCHEME } from "./constants";
-import type { Track } from "@applets/core/types";
+import { IDB_SERVERS, SCHEME } from "./constants.js";
 
-////////////////////////////////////////////
-// 🛠️
-////////////////////////////////////////////
-export function autoTypeToTrackKind(type: Child["type"]): Track["kind"] {
+/**
+ * @import {Child} from "subsonic-api"
+ * @import {Server} from "./types.d.ts";
+ * @import {Track} from "@component/core/types.d.ts";
+ */
+
+/**
+ * @param {Child["type"]} type
+ * @returns {Track["kind"]}
+ */
+export function autoTypeToTrackKind(type) {
   switch (type?.toLowerCase()) {
     case "audiobook":
       return "audiobook";
@@ -26,44 +31,58 @@ export function autoTypeToTrackKind(type: Child["type"]): Track["kind"] {
   }
 }
 
-export function buildURI(server: Server, args: { songId: string; path?: string }) {
+/**
+ * @param {Server} server
+ * @param {{ songId: string; path?: string }} [args]
+ */
+export function buildURI(server, args) {
   return URI.serialize({
     scheme: SCHEME,
     userinfo: server.apiKey
       ? URI.escapeComponent(server.apiKey)
-      : `${URI.escapeComponent(server.username || "")}:${URI.escapeComponent(server.password || "")}`,
+      : `${URI.escapeComponent(server.username || "")}:${
+        URI.escapeComponent(server.password || "")
+      }`,
     host: server.host.replace(/^https?:\/\//, ""),
-    path: args.path,
+    path: args?.path,
     query: QS.stringify({
-      songId: args.songId,
+      songId: args?.songId,
       tls: server.tls ? "t" : "f",
     }),
   });
 }
 
-export async function consultServer(server: Server) {
+/**
+ * @param {Server} server
+ */
+export async function consultServer(server) {
   const client = createClient(server);
   const resp = await client.ping().catch(() => undefined);
 
   return resp?.status?.toLowerCase() === "ok";
 }
 
-export function createClient(server: Server) {
+/**
+ * @param {Server} server
+ */
+export function createClient(server) {
   return new SubsonicAPI({
     url: `http${server.tls ? "s" : ""}://${server.host}`,
-    auth: server.apiKey
-      ? { apiKey: URI.unescapeComponent(server.apiKey) }
-      : {
-          username: URI.unescapeComponent(server.username || ""),
-          password: URI.unescapeComponent(server.password || ""),
-        },
+    auth: server.apiKey ? { apiKey: URI.unescapeComponent(server.apiKey) } : {
+      username: URI.unescapeComponent(server.username || ""),
+      password: URI.unescapeComponent(server.password || ""),
+    },
   });
 }
 
-export function groupTracksByServer(tracks: Track[]) {
-  const acc: Record<string, { server: Server; tracks: Track[] }> = {};
+/**
+ * @param {Track[]} tracks
+ */
+export function groupTracksByServer(tracks) {
+  /** @type {Record<string, { server: Server; tracks: Track[] }>} */
+  const acc = {};
 
-  tracks.forEach((track: Track) => {
+  tracks.forEach((track) => {
     const parsed = parseURI(track.uri);
     if (!parsed) return;
 
@@ -79,21 +98,26 @@ export function groupTracksByServer(tracks: Track[]) {
   return acc;
 }
 
-export async function loadServers(): Promise<Record<string, Server>> {
+/**
+ * @returns {Promise<Record<string, Server>>}
+ */
+export async function loadServers() {
   const i = await IDB.get(IDB_SERVERS);
   return i ? i : {};
 }
 
-export function parseURI(
-  uriString: string,
-): { path: string | undefined; server: Server; songId: string | undefined } | undefined {
+/**
+ * @param {string} uriString
+ * @returns {{ path: string | undefined; server: Server; songId: string | undefined } | undefined}
+ */
+export function parseURI(uriString) {
   const uri = URI.parse(uriString);
   if (uri.scheme !== SCHEME) return undefined;
   if (!uri.host) return undefined;
 
-  let apiKey: string | undefined = undefined;
-  let username: string | undefined = undefined;
-  let password: string | undefined = undefined;
+  let apiKey = undefined;
+  let username = undefined;
+  let password = undefined;
 
   if (uri.userinfo?.includes(":")) {
     // Username + Password
@@ -123,14 +147,21 @@ export function parseURI(
   return { path, server, songId };
 }
 
-export async function saveServers(items: Record<string, Server>) {
+/**
+ * @param {Record<string, Server>} items
+ */
+export async function saveServers(items) {
   await IDB.set(IDB_SERVERS, items);
 }
 
-export function serversFromTracks(tracks: Track[]) {
-  const acc: Record<string, Server> = {};
+/**
+ * @param {Track[]} tracks
+ */
+export function serversFromTracks(tracks) {
+  /** @type {Record<string, Server>} */
+  const acc = {};
 
-  tracks.forEach((track: Track) => {
+  tracks.forEach((track) => {
     const parsed = parseURI(track.uri);
     if (!parsed) return;
 
@@ -143,7 +174,10 @@ export function serversFromTracks(tracks: Track[]) {
   return acc;
 }
 
-export function serverId(server: Server) {
+/**
+ * @param {Server} server
+ */
+export function serverId(server) {
   const parts = {
     host: server.host,
     query: `tls=${server.tls ? "t" : "f"}`,
@@ -151,7 +185,10 @@ export function serverId(server: Server) {
 
   const uri = server.apiKey
     ? URI.serialize({ ...parts, userinfo: server.apiKey })
-    : URI.serialize({ ...parts, userinfo: `${server.username}:${server.password}` });
+    : URI.serialize({
+      ...parts,
+      userinfo: `${server.username}:${server.password}`,
+    });
 
   return btoa(uri);
 }

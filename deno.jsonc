@@ -11,6 +11,8 @@
     "alien-signals": "npm:alien-signals@^3.0.0",
     "idb-keyval": "npm:idb-keyval@^6.2.2",
     "morphdom": "npm:morphdom@^2.7.7/dist/morphdom.js",
+    "query-string": "npm:query-string@^9.3.1",
+    "subsonic-api": "npm:subsonic-api@^3.2.0",
     "uri-js": "npm:uri-js@^4.4.1",
     "xxh32": "npm:xxh32@^2.0.5",
 
