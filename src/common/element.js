@@ -56,11 +56,10 @@ export class DiffuseElement extends HTMLElement {
    */
   morphedRender() {
     if (!("render" in this && typeof this.render === "function")) return;
-    if (!("state" in this)) return;
 
     const tmp = this.render({
       html: this.html,
-      state: this.state,
+      state: "state" in this ? this.state : undefined,
     });
 
     const updated = document.createElement("div");
@@ -89,8 +88,6 @@ export class DiffuseElement extends HTMLElement {
 
     this.effect(() => {
       if (!("render" in this && typeof this.render === "function")) return;
-      if (!("state" in this)) return;
-
       this.morphedRender();
     });
   }

@@ -16,13 +16,15 @@ export type ConsultGrouping =
 
 export type GroupConsult = Record<string, ConsultGrouping>;
 
-export interface InputWorkerTasks {
+export type InputActions = {
   consult(fileUriOrScheme: string): Promise<Consult>;
   contextualize(tracks: Track[]): Promise<void>;
   groupConsult(tracks: Track[]): Promise<GroupConsult>;
   list(cachedTracks: Track[]): Promise<Track[]>;
-  resolve({ method, uri }: { method: string; uri: string }): Promise<ResolvedUri>;
-}
+  resolve(
+    { method, uri }: { method: string; uri: string },
+  ): Promise<ResolvedUri>;
+};
 
 /* OUTPUT */
 
@@ -45,7 +47,7 @@ export type ResolvedUri = undefined | { url: string; expiresAt: number }; // TOD
 export interface Track<Stats = TrackStats, Tags = TrackTags> {
   id: string;
 
-  kind?: "music" | "audiobook" | "podcast" | "miscellaneous";
+  kind?: "music" | "audiobook" | "podcast" | "placeholder" | "miscellaneous";
   stats?: Stats;
   tags?: Tags;
 

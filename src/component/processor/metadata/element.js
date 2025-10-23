@@ -21,7 +21,7 @@ class MetadataProcessor extends DiffuseElement {
 
     // Setup worker
     const name = `diffuse/processor/metadata/${group}`;
-    const url = new URL("./worker.js", import.meta.url);
+    const url = "/component/processor/metadata/worker.js";
     const worker = new Worker(url, { name, type: "module" });
 
     // Worker proxy

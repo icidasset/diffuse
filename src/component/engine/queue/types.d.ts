@@ -8,6 +8,13 @@ export type Actions = {
   unshift: () => void;
 };
 
+export type ActionsProxied = {
+  add: (items: Item[]) => Promise<void>;
+  pool: (tracks: Track[]) => Promise<void>;
+  shift: () => Promise<void>;
+  unshift: () => Promise<void>;
+};
+
 export type Item<Stats = TrackStats, Tags = TrackTags> =
   & Track<Stats, Tags>
   & { manualEntry?: boolean };

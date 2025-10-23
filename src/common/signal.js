@@ -1,5 +1,5 @@
 import deepDiff from "@fry69/deep-diff";
-import { signal as alienSignal } from "alien-signals";
+import { setActiveSub, signal as alienSignal } from "alien-signals";
 
 export * from "alien-signals";
 
@@ -15,7 +15,9 @@ export * from "alien-signals";
  */
 export function signal(initialValue, options) {
   const s = alienSignal(initialValue);
-  const isPrimitive = Object(initialValue) !== initialValue;
+  const isPrimitive = initialValue !== null &&
+    initialValue !== undefined &&
+    Object(initialValue) !== initialValue;
   if (isPrimitive || options?.unbiased === true) {
     return _signal({
       get: () => s(),
@@ -32,6 +34,20 @@ export function signal(initialValue, options) {
     },
   });
 }
+
+/**
+ * @template T
+ * @param {function(): T} fn
+ * @returns {T}
+ */
+export const untracked = (fn) => {
+  const sub = setActiveSub(void 0);
+  try {
+    return fn();
+  } finally {
+    setActiveSub(sub);
+  }
+};
 
 /**
  * @template T
