@@ -6,6 +6,7 @@
     "jsr:@mys/m-rpc@~0.12.2": "0.12.2",
     "jsr:@mys/worker-fn@^3.2.1": "3.2.1",
     "jsr:@okikio/transferables@^1.0.2": "1.0.2",
+    "jsr:@orama/orama@^2.0.6": "2.0.6",
     "jsr:@std/cli@1.0.22": "1.0.22",
     "jsr:@std/cli@^1.0.21": "1.0.22",
     "jsr:@std/collections@^1.1.3": "1.1.3",
@@ -67,6 +68,9 @@
     },
     "@okikio/transferables@1.0.2": {
       "integrity": "46a80015a1c4672b0b246e38838b3ea1e2edc6c775a235184a2f8eb49a8314f7"
+    },
+    "@orama/orama@2.0.6": {
+      "integrity": "0221bbd9a638e42772fc6e082cf057755f83a8cea919c85fa0baa9bb027ab078"
     },
     "@std/cli@1.0.22": {
       "integrity": "50d1e4f87887cb8a8afa29b88505ab5081188f5cad3985460c3b471fa49ff21a"
@@ -660,6 +664,7 @@
       "jsr:@mys/m-rpc@~0.12.2",
       "jsr:@mys/worker-fn@^3.2.1",
       "jsr:@okikio/transferables@^1.0.2",
+      "jsr:@orama/orama@^2.0.6",
       "jsr:@std/fs@^1.0.19",
       "jsr:@std/path@^1.1.2",
       "npm:alien-signals@3",
