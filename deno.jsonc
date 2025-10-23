@@ -7,6 +7,7 @@
     "@mys/m-rpc": "jsr:@mys/m-rpc@^0.12.2",
     "@mys/worker-fn": "jsr:@mys/worker-fn@^3.2.1",
     "@okikio/transferables": "jsr:@okikio/transferables@^1.0.2",
+    "@orama/orama": "jsr:@orama/orama@^2.0.6",
     "alien-signals": "npm:alien-signals@^3.0.0",
     "idb-keyval": "npm:idb-keyval@^6.2.2",
     "morphdom": "npm:morphdom@^2.7.7/dist/morphdom.js",
