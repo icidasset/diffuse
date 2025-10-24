@@ -1,8 +1,9 @@
 import { DiffuseElement } from "@common/element.js";
 import { use } from "@common/worker.js";
+import { outputManager } from "../common.js";
 
 /**
- * @import {OutputActions} from "@component/core/types.d.ts"
+ * @import {OutputActions, OutputManager, Track} from "@component/core/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -10,7 +11,7 @@ import { use } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {OutputActions}
+ * @implements {OutputManager}
  */
 class IndexedDBOutput extends DiffuseElement {
   constructor() {
@@ -21,9 +22,19 @@ class IndexedDBOutput extends DiffuseElement {
     const url = "/component/output/indexed-db/worker.js";
     const worker = new Worker(url, { name, type: "module" });
 
-    // Worker proxy
-    this.getTracks = use("getTracks", worker);
-    this.putTracks = use("putTracks", worker);
+    // Manager
+    const manager = outputManager({
+      tracks: {
+        get: () => {
+          const fn = use("getTracks", worker);
+          console.log("Call", fn, worker);
+          return fn();
+        },
+        put: use("putTracks", worker),
+      },
+    });
+
+    this.tracks = manager.tracks;
   }
 }
 

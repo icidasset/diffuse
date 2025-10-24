@@ -1,6 +1,11 @@
+import "@component/input/opensubsonic/element.js";
+import "@component/output/indexed-db/element.js";
+import "@component/processor/metadata/element.js";
+
 import * as Audio from "@component/engine/audio/element.js";
 import * as Queue from "@component/engine/queue/element.js";
-import * as Metadata from "@component/processor/metadata/element.js";
+
+import "@component/orchestrator/process-tracks/element.js";
 
 import { component } from "@common/element.js";
 import { effect } from "@common/signal.js";
@@ -11,15 +16,6 @@ import { effect } from "@common/signal.js";
 
 const audio = component(Audio);
 const queue = component(Queue);
-const metadata = component(Metadata);
-
-// METADATA
-
-// const resp = await metadata.supply({
-//   urls: { get: url, head: url },
-// });
-
-// console.log(resp);
 
 // QUEUE
 

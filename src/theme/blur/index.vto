@@ -7,7 +7,15 @@
     <de-audio id="deck-a"></de-audio>
     <de-queue id="deck-a"></de-queue>
 
+    <di-opensubsonic></di-opensubsonic>
+    <do-indexed-db id="output"></do-indexed-db>
     <dp-metadata></dp-metadata>
+
+    <do-process-tracks
+      input-selector="di-opensubsonic"
+      metadata-processor-selector="dp-metadata"
+      output-selector="do-indexed-db"
+    ></do-process-tracks>
 
     <main>
     </main>
