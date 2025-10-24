@@ -2,7 +2,7 @@ import { BroadcastableDiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 /**
- * @import {Actions, Audio, AudioState, Signals, State} from "./types.d.ts"
+ * @import {Actions, Audio, AudioState, State} from "./types.d.ts"
  * @import {RenderArg} from "@common/element.d.ts"
  */
 

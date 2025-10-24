@@ -28,7 +28,7 @@ export function signal(initialValue, options) {
   return _signal({
     get: () => s(),
     set: (b) => {
-      const a = s();
+      const a = untracked(() => s());
       const diff = deepDiff(a, b);
       if (diff) s(b);
     },

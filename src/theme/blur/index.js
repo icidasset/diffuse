@@ -29,17 +29,19 @@ effect(() => {
 
   if (now === null) return;
 
-  untracked(() => {
-    audio.supply({
-      audio: [
-        {
-          id: now.id,
-          isPreload: false,
-          url: now.uri,
-        },
-      ],
-    });
+  audio.supply({
+    audio: [
+      {
+        id: now.id,
+        isPreload: false,
+        url: now.uri,
+      },
+    ],
   });
+});
+
+effect(() => {
+  console.log("Audio items:", audio.items());
 });
 
 queue.pool([
