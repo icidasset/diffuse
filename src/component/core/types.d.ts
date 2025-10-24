@@ -37,14 +37,6 @@ export type OutputActions = {
   putTracks(tracks: Track[]): Promise<void>;
 };
 
-export interface ManagedOutput<S = TrackStats, T = TrackTags> {
-  tracks: {
-    cacheId: string;
-    state: "loading" | "loaded";
-    collection: Track<S, T>[];
-  };
-}
-
 /* TRACKS */
 
 export type ResolvedUri = undefined | { url: string; expiresAt: number }; // TODO: Streams?
