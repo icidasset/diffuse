@@ -295,3 +295,23 @@ export function component(elementModule, id) {
   }
   return /** @type {InstanceType<C>} */ (el);
 }
+
+/**
+ * @template {HTMLElement} T
+ * @param {DiffuseElement} parent
+ * @param {string} attribute
+ * @returns {T}
+ */
+export function query(parent, attribute) {
+  const selector = parent.getAttribute(attribute);
+
+  if (!selector) {
+    throw new Error(`Missing required '${attribute}' attribute`);
+  }
+
+  /** @type {T | null} */
+  const element = document.querySelector(selector);
+  if (!element) throw new Error(`Missing required '${selector}' element`);
+
+  return element;
+}
