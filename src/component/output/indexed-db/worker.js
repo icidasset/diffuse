@@ -2,6 +2,7 @@ import * as IDB from "idb-keyval";
 
 import { jsonDecode, jsonEncode } from "@common/index.js";
 import { IDB_PREFIX } from "./constants.js";
+import { define, ostiary } from "@common/worker.js";
 
 /**
  * @import {OutputActions, Track} from "@component/core/types.d.ts";
@@ -15,6 +16,8 @@ import { IDB_PREFIX } from "./constants.js";
  * @type {OutputActions['getTracks']}
  */
 export async function getTracks() {
+  console.log("GET");
+
   const encoded = await get({ name: "tracks.json" });
   if (!encoded) return [];
 
@@ -32,7 +35,17 @@ export async function putTracks(tracks) {
 }
 
 ////////////////////////////////////////////
-// 🛠️
+// ⚡️
+////////////////////////////////////////////
+
+ostiary((port) => {
+  // Setup RPC
+  define("getTracks", getTracks, port);
+  define("putTracks", putTracks, port);
+});
+
+////////////////////////////////////////////
+// ⛔️
 ////////////////////////////////////////////
 
 /**
