@@ -16,8 +16,6 @@ import { define, ostiary } from "@common/worker.js";
  * @type {OutputActions['getTracks']}
  */
 export async function getTracks() {
-  console.log("GET");
-
   const encoded = await get({ name: "tracks.json" });
   if (!encoded) return [];
 

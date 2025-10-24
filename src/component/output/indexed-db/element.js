@@ -25,11 +25,7 @@ class IndexedDBOutput extends DiffuseElement {
     // Manager
     const manager = outputManager({
       tracks: {
-        get: () => {
-          const fn = use("getTracks", worker);
-          console.log("Call", fn, worker);
-          return fn();
-        },
+        get: use("getTracks", worker),
         put: use("putTracks", worker),
       },
     });

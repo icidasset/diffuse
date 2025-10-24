@@ -1,3 +1,5 @@
+import deepDiff from "@fry69/deep-diff";
+
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
@@ -47,7 +49,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
   /**
    * @override
    */
-  connectedCallback() {
+  async connectedCallback() {
     super.connectedCallback();
 
     /** @type {OutputElement | null} */
@@ -56,26 +58,22 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     // Check output element presence
     if (!output) throw new Error("Missing required `output` element");
 
-    // Process whenever tracks are loaded
-    this.effect(async () => {
-      // TODO: Make configurable
-      await customElements.whenDefined("do-indexed-db");
+    // Wait until defined
+    await customElements.whenDefined(output.localName);
 
+    // Process whenever tracks are loaded
+    this.effect(() => {
       const state = output.tracks.state();
-      console.log(state);
       if (state !== "loaded") return;
 
-      this.process(output.tracks.collection());
+      this.process(output);
     });
   }
 
   /**
-   * @param {Track[]} cachedTracks
+   * @param {OutputElement} output
    */
-  async process(cachedTracks) {
-    this.#isProcessing.value = true;
-    console.log("🪵 Processing initiated");
-
+  async process(output) {
     /** @type {InputElement | null} */
     const input = document.querySelector(this.inputSelector);
 
@@ -91,13 +89,54 @@ class ProcessTracksOrchestrator extends DiffuseElement {
       throw new Error("Missing required `metadata-processor` element");
     }
 
+    // Wait until defined
+    await customElements.whenDefined(input.localName);
+    await customElements.whenDefined(metadataProcessor.localName);
+
+    // Start
+    this.#isProcessing.value = true;
+    console.log("🪵 Processing initiated");
+
+    const cachedTracks = output.tracks.collection();
+
     // Contextualize
     await input.contextualize(cachedTracks);
 
     // List
     const tracks = await input.list(cachedTracks);
 
-    console.log(tracks);
+    // Fetch metadata if needed
+    // TODO: Parallelisation
+    const tracksWithMetadata = await tracks.reduce(
+      /**
+       * @param {Promise<Track[]>} promise
+       * @param {Track} track
+       */
+      async (promise, track) => {
+        const acc = await promise;
+
+        if (track.tags && track.stats) return [...acc, track];
+
+        const resGet = await input.resolve({ method: "GET", uri: track.uri });
+        const resHead = await input.resolve({ method: "HEAD", uri: track.uri });
+
+        if (!resGet) return [...acc, track];
+
+        const { stats, tags } = await metadataProcessor.supply({
+          urls: { get: resGet.url, head: resHead?.url || resGet.url },
+        });
+
+        return [...acc, { ...track, stats, tags }];
+      },
+      Promise.resolve([]),
+    );
+
+    // Changed?
+    const diff = deepDiff.diff(tracksWithMetadata, cachedTracks);
+    const changed = !!diff;
+
+    // Save if changed
+    if (changed) await output.tracks.save(tracksWithMetadata);
 
     // Fin
     console.log("🪵 Processing completed");

@@ -107,6 +107,12 @@ export async function loadServers() {
 }
 
 /**
+ * Parse an opensubsonic URI.
+ *
+ * ```
+ * opensubsonic://username:password@server-host:port/path?tls=f
+ * ```
+ *
  * @param {string} uriString
  * @returns {{ path: string | undefined; server: Server; songId: string | undefined } | undefined}
  */
