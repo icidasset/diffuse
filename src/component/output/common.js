@@ -1,4 +1,4 @@
-import { signal } from "@common/signal.js";
+import { effect, signal } from "@common/signal.js";
 
 /**
  * @import {OutputManager, Track} from "@component/core/types.d.ts"
@@ -13,12 +13,8 @@ export function outputManager({ init, tracks }) {
   const ts = signal(/** @type {"loading" | "loaded"} */ ("loading"));
 
   async function loadTracks() {
-    console.log("...");
     if (init && (await init()) === false) return;
-    console.log("start load");
-    const a = await tracks.get();
-    console.log(a);
-    t.value = a;
+    t.value = await tracks.get();
     ts.value = "loaded";
   }
 
@@ -28,11 +24,11 @@ export function outputManager({ init, tracks }) {
     tracks: {
       collection: t.get,
       reload: loadTracks,
-      state: ts.get,
-      store: async (newTracks) => {
+      save: async (newTracks) => {
         t.value = newTracks;
         await tracks.put(newTracks);
       },
+      state: ts.get,
     },
   };
 }

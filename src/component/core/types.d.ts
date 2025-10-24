@@ -47,8 +47,8 @@ export type OutputManager = {
   tracks: {
     collection: SignalReader<Track[]>;
     reload: () => Promise<void>;
+    save: (tracks: Track[]) => Promise<void>;
     state: SignalReader<"loading" | "loaded">;
-    store: (tracks: Track[]) => Promise<void>;
   };
 };
 
