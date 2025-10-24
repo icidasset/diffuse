@@ -32,6 +32,11 @@ export interface Output<S = TrackStats, T = TrackTags> {
   tracks: Track<S, T>[];
 }
 
+export type OutputActions = {
+  getTracks(): Promise<Track[]>;
+  putTracks(tracks: Track[]): Promise<void>;
+};
+
 export interface ManagedOutput<S = TrackStats, T = TrackTags> {
   tracks: {
     cacheId: string;

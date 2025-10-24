@@ -3,7 +3,7 @@ import * as Queue from "@component/engine/queue/element.js";
 import * as Metadata from "@component/processor/metadata/element.js";
 
 import { component } from "@common/element.js";
-import { effect, signal, untracked } from "@common/signal.js";
+import { effect } from "@common/signal.js";
 
 /**
  * @import {Item} from "@component/engine/queue/types.d.ts"
@@ -25,8 +25,6 @@ const metadata = component(Metadata);
 
 effect(() => {
   const now = queue.now();
-  console.log("NOW", now);
-
   if (now === null) return;
 
   audio.supply({
@@ -38,10 +36,6 @@ effect(() => {
       },
     ],
   });
-});
-
-effect(() => {
-  console.log("Audio items:", audio.items());
 });
 
 queue.pool([
