@@ -16,11 +16,8 @@ class ArtworkProcessor extends DiffuseElement {
   constructor() {
     super();
 
-    // Group
-    const group = crypto.randomUUID();
-
     // Setup worker
-    const name = `diffuse/processor/metadata/${group}`;
+    const name = `diffuse/processor/metadata/${this.group}`;
     const url = new URL("./worker.js", import.meta.url);
     const worker = new Worker(url, { name, type: "module" });
 

@@ -21,6 +21,8 @@ export class DiffuseElement extends HTMLElement {
 
   constructor() {
     super();
+
+    this.group = this.getAttribute("group") || crypto.randomUUID();
     this.morphedRender = this.morphedRender.bind(this);
   }
 
