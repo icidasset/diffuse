@@ -11,6 +11,11 @@ import { signal } from "@common/signal.js";
 // ELEMENT
 ////////////////////////////////////////////
 
+/**
+ * Processes inputs into tracks whenever
+ * the already existing tracks are loaded
+ * from the assigned output element.
+ */
 class ProcessTracksOrchestrator extends DiffuseElement {
   constructor() {
     super();

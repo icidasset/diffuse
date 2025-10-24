@@ -4,22 +4,33 @@
     <link rel="stylesheet" href="../../styles/theme/blur/index.css" />
   </head>
   <body>
+    <!-- UI -->
+    <main>
+    </main>
+
+    <!-- Engines -->
     <de-audio></de-audio>
     <de-queue></de-queue>
 
+    <!-- Inputs, Outputs & Processors -->
     <di-opensubsonic></di-opensubsonic>
     <do-indexed-db></do-indexed-db>
     <dp-metadata></dp-metadata>
 
+    <!-- Orchestrators -->
     <do-process-tracks
       input-selector="di-opensubsonic"
       metadata-processor-selector="dp-metadata"
       output-selector="do-indexed-db"
     ></do-process-tracks>
 
-    <main>
-    </main>
+    <do-queue-tracks
+      input-selector="di-opensubsonic"
+      output-selector="do-indexed-db"
+      queue-selector="de-queue"
+    ></do-queue-tracks>
 
+    <!-- Scripts -->
     <script src="index.js" type="module"></script>
   </body>
 </html>
