@@ -24,10 +24,16 @@
       output-selector="do-indexed-db"
     ></do-process-tracks>
 
+    <do-queue-audio
+      input-selector="di-opensubsonic"
+      audio-engine-selector="de-audio"
+      queue-engine-selector="de-queue"
+    ></do-queue-audio>
+
     <do-queue-tracks
       input-selector="di-opensubsonic"
       output-selector="do-indexed-db"
-      queue-selector="de-queue"
+      queue-engine-selector="de-queue"
     ></do-queue-tracks>
 
     <!-- Scripts -->
