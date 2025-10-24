@@ -49,10 +49,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
   #items = signal(/** @type {Audio[]} */ ([]));
   #volume = signal(0.5);
 
+  $hasEnded = signal(false);
   $isPlaying = signal(false);
 
   // STATE
 
+  hasEnded = this.$hasEnded.get;
   isPlaying = this.$isPlaying.get;
   items = this.#items.get;
   volume = this.#volume.get;
@@ -332,6 +334,7 @@ class AudioEngineItem extends HTMLElement {
     audio.currentTime = 0;
 
     engineItem(audio)?.state({ hasEnded: true });
+    engineItem(audio)?.engine?.$hasEnded.set(true);
   }
 
   /**

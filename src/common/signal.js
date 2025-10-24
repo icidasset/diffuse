@@ -10,15 +10,12 @@ export * from "alien-signals";
 /**
  * @template T
  * @param {T} initialValue
- * @param {{ unbiased?: boolean }} [options]
+ * @param {{ eager?: boolean }} [options]
  * @returns {Signal<T>}
  */
 export function signal(initialValue, options) {
   const s = alienSignal(initialValue);
-  const isPrimitive = initialValue !== null &&
-    initialValue !== undefined &&
-    Object(initialValue) !== initialValue;
-  if (isPrimitive || options?.unbiased === true) {
+  if (options?.eager === true) {
     return _signal({
       get: () => s(),
       set: (v) => s(v),

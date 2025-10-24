@@ -123,7 +123,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     this.broadcast = this.broadcast.bind(this);
 
     /** @type {Signal<Promise<BroadcastingStatus>>} */
-    this.#broadcastingStatus = signal(this.#status.promise, { unbiased: true });
+    this.#broadcastingStatus = signal(this.#status.promise, { eager: true });
     this.broadcastingStatus = this.#broadcastingStatus.get;
   }
 

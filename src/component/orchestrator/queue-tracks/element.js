@@ -35,10 +35,10 @@ class QueueTracksOrchestrator extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    // Wait until defined
+    // When defined
     await customElements.whenDefined(this.output.localName);
 
-    // ...
+    // Watch tracks collection
     this.effect(() => {
       const tracks = this.output.tracks.collection();
       this.poolAvailable(tracks);
