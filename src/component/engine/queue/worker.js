@@ -94,10 +94,6 @@ ostiary((port) => {
   effect(() => announce("future", $future.value, port));
   effect(() => announce("now", $now.value, port));
   effect(() => announce("past", $past.value, port));
-
-  effect(() => {
-    console.log("🔮", $now.value);
-  });
 });
 
 ////////////////////////////////////////////
