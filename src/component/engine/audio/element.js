@@ -23,11 +23,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
   constructor() {
     super();
 
-    // Is shared?
-    const isShared = this.hasAttribute("group");
-
     // Setup leader election if shared
-    if (isShared) {
+    if (this.hasAttribute("group")) {
       const fn = this.broadcast(`diffuse/engine/audio/${this.group}`);
 
       this.pause = fn("pause", this.pause).leaderOnly;
