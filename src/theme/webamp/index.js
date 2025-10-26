@@ -13,10 +13,8 @@ import { component } from "@common/element.js";
 import { effect, signal, untracked } from "@common/signal.js";
 
 /**
- * @import {Diff} from "@fry69/deep-diff"
  * @import {URLTrack} from "webamp"
  *
- * @import {Track} from "@component/core/types.d.ts"
  * @import {Item} from "@component/engine/queue/types.d.ts"
  */
 
