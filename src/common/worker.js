@@ -1,7 +1,9 @@
+import Queue from "@mary/ds-queue";
 import { defineWorkerFn, useWorkerFn } from "@mys/worker-fn";
 import { getTransferables } from "@okikio/transferables";
-
+import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
+import { batch } from "./signal.js";
 
 /**
  * @import {MRpcCallOptions, WorkerGlobalScope} from "@mys/m-rpc";
@@ -57,10 +59,10 @@ export function ostiary(
 export function announce(
   name,
   args,
-  context = /** @type {WorkerGlobalScope} */ (globalThis),
+  context,
 ) {
-  const transferables = getTransferables(args);
-  context.postMessage(constructMsg(name, args), { transfer: transferables });
+  outgoing.enqueue(announcement(name, args));
+  flushOutgoingAnnouncements(context);
 }
 
 /**
@@ -74,18 +76,12 @@ export function listen(
   fn,
   context = /** @type {WorkerGlobalScope} */ (globalThis),
 ) {
-  context.addEventListener(
-    "message",
-    /** @param {any} event */ (event) => {
-      const announcement = /** @type {Announcement<T>} */ (event.data);
-      const { ns, type } = announcement;
+  if (!context.incoming) {
+    context.addEventListener("message", incomingAnnouncementsHandler(context));
+    context.incoming = {};
+  }
 
-      if (announcement.name !== name) return;
-      if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
-
-      fn(announcement.args);
-    },
-  );
+  context.incoming[name] = debounceMicrotask(fn, { updateArguments: true });
 }
 
 ////////////////////////////////////////////
@@ -136,7 +132,7 @@ const ANNOUNCEMENT = "announcement";
  * @param {T} args
  * @returns {Announcement<T>}
  */
-function constructMsg(name, args) {
+function announcement(name, args) {
   return {
     ns: ANNOUNCEMENT,
     name,
@@ -146,3 +142,75 @@ function constructMsg(name, args) {
     args,
   };
 }
+
+/**
+ * Process incoming announcements.
+ */
+const flushIncomingAnnouncements = debounceMicrotask(
+  /**
+   * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+   */
+  (context = /** @type {WorkerGlobalScope} */ (globalThis)) => {
+    /** @type {Announcement<any>[]} */
+    const arr = [];
+
+    for (const a of incoming.drain()) {
+      arr.push(a);
+    }
+
+    batch(() => {
+      arr.forEach((announcement) => {
+        context.incoming[announcement.name]?.(announcement.args);
+      });
+    });
+  },
+);
+
+/**
+ * Process outgoing announcements.
+ */
+const flushOutgoingAnnouncements = debounceMicrotask(
+  /**
+   * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+   */
+  (context = /** @type {WorkerGlobalScope} */ (globalThis)) => {
+    /** @type {Announcement<any>[]} */
+    const arr = [];
+
+    for (const a of outgoing.drain()) {
+      arr.push(a);
+    }
+
+    const transferables = getTransferables(arr);
+    context.postMessage(arr, { transfer: transferables });
+  },
+);
+
+/**
+ * @type {Queue<Announcement<any>>}
+ */
+const incoming = new Queue();
+
+/**
+ * @param {MessagePort | Worker | WorkerGlobalScope} context
+ */
+function incomingAnnouncementsHandler(context) {
+  /** @param {any} event */
+  return (event) => {
+    const arr = /** @type {Announcement<any>[]} */ (event.data);
+
+    if (Array.isArray(arr)) {
+      arr.forEach((announcement) => {
+        const { ns, type } = announcement;
+        if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
+        incoming.enqueue(announcement);
+        flushIncomingAnnouncements(context);
+      });
+    }
+  };
+}
+
+/**
+ * @type {Queue<Announcement<any>>}
+ */
+const outgoing = new Queue();

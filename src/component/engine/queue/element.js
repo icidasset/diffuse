@@ -3,7 +3,7 @@ import { signal } from "@common/signal.js";
 import { listen, use } from "@common/worker.js";
 
 /**
- * @import {Actions, ActionsProxied, Item} from "./types.d.ts"
+ * @import {ActionsProxied, Item} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -11,7 +11,7 @@ import { listen, use } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {Actions}
+ * @implements {ActionsProxied}
  */
 class QueueEngine extends DiffuseElement {
   constructor() {

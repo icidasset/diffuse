@@ -1,11 +1,28 @@
 import deepDiff from "@fry69/deep-diff";
-import { setActiveSub, signal as alienSignal } from "alien-signals";
+import {
+  endBatch,
+  setActiveSub,
+  signal as alienSignal,
+  startBatch,
+} from "alien-signals";
 
 export * from "alien-signals";
 
 /**
  * @import {Signal, SignalReader, SignalWriter} from "./signal.d.ts"
  */
+
+/**
+ * @param {function(): void} fn
+ */
+export const batch = (fn) => {
+  startBatch();
+  try {
+    fn();
+  } finally {
+    endBatch();
+  }
+};
 
 /**
  * @template T

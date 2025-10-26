@@ -1,4 +1,5 @@
 import { DiffuseElement, query } from "@common/element.js";
+import { untracked } from "@common/signal.js";
 
 /**
  * @import {InputElement, OutputElement, Track} from "@component/core/types.d.ts"
@@ -41,7 +42,7 @@ class QueueTracksOrchestrator extends DiffuseElement {
     // Watch tracks collection
     this.effect(() => {
       const tracks = this.output.tracks.collection();
-      this.poolAvailable(tracks);
+      untracked(() => this.poolAvailable(tracks));
     });
   }
 
