@@ -17,16 +17,13 @@ class QueueEngine extends DiffuseElement {
   constructor() {
     super();
 
-    // Is shared?
-    const isShared = this.hasAttribute("group");
-
     // Setup worker
     const name = `diffuse/engine/queue/${this.group}`;
     const url = "/component/engine/queue/worker.js";
 
     let port;
 
-    if (isShared) {
+    if (this.hasAttribute("group")) {
       const worker = new SharedWorker(url, { name, type: "module" });
       port = worker.port;
       port.start();

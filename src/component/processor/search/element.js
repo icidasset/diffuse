@@ -19,11 +19,21 @@ class SearchProcessor extends DiffuseElement {
     // Setup worker
     const name = `diffuse/processor/search/${this.group}`;
     const url = "/component/processor/search/worker.js";
-    const worker = new Worker(url, { name, type: "module" });
+
+    let port;
+
+    if (this.hasAttribute("group")) {
+      const worker = new SharedWorker(url, { name, type: "module" });
+      port = worker.port;
+      port.start();
+    } else {
+      const worker = new Worker(url, { name, type: "module" });
+      port = worker;
+    }
 
     // Worker proxy
-    this.search = use("search", worker);
-    this.supply = use("supply", worker);
+    this.search = use("search", port);
+    this.supply = use("supply", port);
   }
 }
 
