@@ -1,7 +1,7 @@
 import Webamp from "webamp/lazy";
-import { throttle } from "throttle-debounce";
+import deepDiff from "@fry69/deep-diff";
 
-// import "@component/orchestrator/process-tracks/element.js";
+import "@component/orchestrator/process-tracks/element.js";
 import "@component/orchestrator/queue-tracks/element.js";
 import "@component/output/indexed-db/element.js";
 import "@component/processor/metadata/element.js";
@@ -11,8 +11,6 @@ import * as Queue from "@component/engine/queue/element.js";
 
 import { component } from "@common/element.js";
 import { effect, signal, untracked } from "@common/signal.js";
-import deepDiff from "@fry69/deep-diff";
-import { debounceMicrotask } from "@vicary/debounce-microtask";
 
 /**
  * @import {Diff} from "@fry69/deep-diff"
