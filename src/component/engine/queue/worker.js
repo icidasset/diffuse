@@ -1,5 +1,5 @@
 import { announce, define, ostiary } from "@common/worker.js";
-import { effect, signal } from "@common/signal.js";
+import { batch, effect, signal } from "@common/signal.js";
 import { arrayShuffle } from "@common/index.js";
 
 /**
@@ -40,23 +40,16 @@ export function pool(tracks) {
   //
   //       What about past queue items?
 
-  $future.value = fill([]);
-
   // Automatically insert track if there isn't any
-  if (!$now.value) return shift();
+  if (!$now.value) _shift(fill([]));
+  else $future.value = fill([]);
 }
 
 /**
  * @type {Actions['shift']}
  */
 export function shift() {
-  const n = $now.value;
-  const f = $future.value;
-
-  $now.value = f[0] ?? null;
-
-  if (n) $past.value = [...$past.value, n];
-  $future.value = fill(f.slice(1));
+  return _shift();
 }
 
 /**
@@ -131,4 +124,16 @@ function fill(future) {
   );
 
   return [...future, ...poolSelection];
+}
+
+/**
+ * @param {Item[]} [future]
+ */
+export function _shift(future) {
+  const n = $now.value;
+  const f = future ?? $future.value;
+
+  if (n) $past.value = [...$past.value, n];
+  $future.value = fill(f.slice(1));
+  $now.value = f[0] ?? null;
 }

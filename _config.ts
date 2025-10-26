@@ -59,6 +59,19 @@ site.script("copy-type-defs", () => {
   }
 });
 
-// site.addEventListener("afterBuild", () => {
-//   site.run("copy-type-defs");
-// });
+site.script("copy-win98-fonts", () => {
+  Deno.copyFileSync(
+    "./node_modules/98.css/fonts/converted/ms_sans_serif.woff2",
+    "./_site/fonts/ms_sans_serif.woff2",
+  );
+
+  Deno.copyFileSync(
+    "./node_modules/98.css/fonts/converted/ms_sans_serif_bold.woff2",
+    "./_site/fonts/ms_sans_serif_bold.woff2",
+  );
+});
+
+site.addEventListener("afterBuild", () => {
+  // site.run("copy-type-defs");
+  site.run("copy-win98-fonts");
+});

@@ -1,0 +1,67 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Diffuse</title>
+
+  <link href="/styles/theme/webamp/index.css" rel="stylesheet" />
+</head>
+<body>
+  <!--
+
+  UI
+
+  -->
+  <main>
+    <div class="desktop">
+      <!-- INPUT -->
+      <!--<a href="/configurator/input/" target="_blank" class="button desktop__item">
+        <img src="/images/icons/windows_98/cd_audio_cd_a-4.png" width="32" />
+        <label>Manage audio inputs</label>
+      </a>-->
+
+      <!-- OUTPUT -->
+      <!--<a href="/configurator/output/" target="_blank" class="button desktop__item">
+        <img src="/images/icons/windows_98/directory_open_file_mydocs_2k-2.png" width="32" />
+        <label>Manage user data</label>
+      </a>-->
+
+      <!-- BROWSE -->
+      <!-- TODO -->
+    </div>
+  </main>
+
+  <!--
+
+  COMPONENTS
+
+  -->
+  <de-queue></de-queue>
+
+  <!-- Inputs, Outputs & Processors -->
+  <di-opensubsonic></di-opensubsonic>
+  <do-indexed-db></do-indexed-db>
+  <dp-metadata></dp-metadata>
+
+  <!-- Orchestrators -->
+  <do-process-tracks
+    input-selector="di-opensubsonic"
+    metadata-processor-selector="dp-metadata"
+    output-selector="do-indexed-db"
+  ></do-process-tracks>
+
+  <do-queue-tracks
+    input-selector="di-opensubsonic"
+    output-selector="do-indexed-db"
+    queue-engine-selector="de-queue"
+  ></do-queue-tracks>
+
+  <!--
+
+  SCRIPTS
+
+  -->
+  <script src="/theme/webamp/index.js" type="module"></script>
+</body>
+</html>
