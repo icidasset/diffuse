@@ -1,5 +1,5 @@
-@import "../diffuse/colors.css";
-@import "../diffuse/fonts.css";
+@import "./styles/diffuse/colors.css";
+@import "./styles/diffuse/fonts.css";
 
 body {
   background-color: var(--bg-color);

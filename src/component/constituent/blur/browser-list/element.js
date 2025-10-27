@@ -58,4 +58,7 @@ export default BrowserList;
 // REGISTER
 ////////////////////////////////////////////
 
-customElements.define("dcb-browser-list", BrowserList);
+export const CLASS = BrowserList;
+export const NAME = "dcb-browser-list";
+
+customElements.define(NAME, BrowserList);
