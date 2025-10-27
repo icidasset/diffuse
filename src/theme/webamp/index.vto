@@ -5,7 +5,7 @@
 
   <title>Diffuse</title>
 
-  <link href="/styles/theme/webamp/index.css" rel="stylesheet" />
+  <link href="index.css" rel="stylesheet" />
 </head>
 <body>
   <!--
@@ -14,22 +14,34 @@
 
   -->
   <main>
-    <div class="desktop">
+    <section class="desktop">
       <!-- INPUT -->
-      <!--<a href="/configurator/input/" target="_blank" class="button desktop__item">
+      <a href="/configurator/input/" target="_blank" class="button desktop__item">
         <img src="/images/icons/windows_98/cd_audio_cd_a-4.png" width="32" />
         <label>Manage audio inputs</label>
-      </a>-->
+      </a>
 
       <!-- OUTPUT -->
-      <!--<a href="/configurator/output/" target="_blank" class="button desktop__item">
+      <a href="/configurator/output/" target="_blank" class="button desktop__item">
         <img src="/images/icons/windows_98/directory_open_file_mydocs_2k-2.png" width="32" />
         <label>Manage user data</label>
-      </a>-->
+      </a>
 
       <!-- BROWSE -->
       <!-- TODO -->
-    </div>
+    </section>
+    <section class="windows">
+      <dtw-window-manager>
+        <dtw-window>
+          <span slot="title">Window</span>
+          <p>👀</p>
+        </dtw-window>
+        <dtw-window>
+          <span slot="title">Window</span>
+          <p>👀</p>
+        </dtw-window>
+      </dtw-window-manager>
+    </section>
   </main>
 
   <!--
@@ -62,6 +74,6 @@
   SCRIPTS
 
   -->
-  <script src="/theme/webamp/index.js" type="module"></script>
+  <script src="index.js" type="module"></script>
 </body>
 </html>

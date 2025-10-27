@@ -1,6 +1,6 @@
 @import "./variables.css";
-@import "../../diffuse/colors.css";
-@import "../../diffuse/fonts.css";
+@import "../../styles/diffuse/colors.css";
+@import "../../styles/diffuse/fonts.css";
 
 /***********************************
  * Base

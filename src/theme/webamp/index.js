@@ -1,7 +1,7 @@
 import Webamp from "webamp/lazy";
 import deepDiff from "@fry69/deep-diff";
 
-import "@component/orchestrator/process-tracks/element.js";
+// import "@component/orchestrator/process-tracks/element.js";
 import "@component/orchestrator/queue-tracks/element.js";
 import "@component/output/indexed-db/element.js";
 import "@component/processor/metadata/element.js";
@@ -11,6 +11,9 @@ import * as Queue from "@component/engine/queue/element.js";
 
 import { component } from "@common/element.js";
 import { effect, signal, untracked } from "@common/signal.js";
+
+import "./window/element.js";
+import "./window-manager/element.js";
 
 /**
  * @import {URLTrack} from "webamp"
@@ -48,7 +51,7 @@ const amp = new /** @type {any} */ (Webamp)({
   },
 });
 
-// Override
+// Override track loader
 const loadFromUrl = amp.media.loadFromUrl.bind(amp.media);
 
 /**
@@ -62,6 +65,9 @@ async function loadOverride(uri, autoPlay) {
 }
 
 amp.media.loadFromUrl = loadOverride.bind(amp.media);
+
+// TODO: Handle minimize
+amp.onMinimize(() => {});
 
 // Render
 const ampNode = document.createElement("div");

@@ -30,8 +30,13 @@ site.add([".js"]);
 
 // CSS
 
-site.use(postcss({ includes: false }));
+site.use(postcss());
 site.add([".css"]);
+
+site.remoteFile(
+  "styles/vendor/98.css",
+  import.meta.resolve("./node_modules/98.css/dist/98.css"),
+);
 
 // BINARY ASSETS
 
@@ -39,11 +44,23 @@ site.add("/favicons");
 site.add("/fonts");
 site.add("/images");
 
+site.remoteFile(
+  "fonts/ms_sans_serif.woff2",
+  import.meta.resolve(
+    "./node_modules/98.css/fonts/converted/ms_sans_serif.woff2",
+  ),
+);
+
+site.remoteFile(
+  "fonts/ms_sans_serif_bold.woff2",
+  import.meta.resolve(
+    "./node_modules/98.css/fonts/converted/ms_sans_serif_bold.woff2",
+  ),
+);
+
 // MISC
 
 site.use(sourceMaps());
-
-// SCRIPTS
 
 site.script("copy-type-defs", () => {
   for (
@@ -59,19 +76,6 @@ site.script("copy-type-defs", () => {
   }
 });
 
-site.script("copy-win98-fonts", () => {
-  Deno.copyFileSync(
-    "./node_modules/98.css/fonts/converted/ms_sans_serif.woff2",
-    "./_site/fonts/ms_sans_serif.woff2",
-  );
-
-  Deno.copyFileSync(
-    "./node_modules/98.css/fonts/converted/ms_sans_serif_bold.woff2",
-    "./_site/fonts/ms_sans_serif_bold.woff2",
-  );
-});
-
 site.addEventListener("afterBuild", () => {
   // site.run("copy-type-defs");
-  site.run("copy-win98-fonts");
 });

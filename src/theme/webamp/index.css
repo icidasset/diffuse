@@ -1,3 +1,7 @@
+/***********************************
+ * Fonts
+ ***********************************/
+
 @font-face {
   font-family: "Pixelated MS Sans Serif";
   src: url("/fonts/ms_sans_serif.woff2") format("woff2");
@@ -12,6 +16,10 @@
   font-style: normal;
 }
 
+/***********************************
+ * 🪟
+ ***********************************/
+
 body {
   background: #3a6ea5;
   color: white;
@@ -20,11 +28,8 @@ body {
   margin: 12px;
 }
 
-main {
-}
-
-iframe {
-  display: none;
+#webamp {
+  isolation: isolate;
 }
 
 /***********************************
