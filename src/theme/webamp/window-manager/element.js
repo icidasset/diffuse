@@ -1,5 +1,6 @@
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
+import { debounceMicrotask } from "@vicary/debounce-microtask";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -19,6 +20,7 @@ class WindowManager extends DiffuseElement {
   // SIGNALS
 
   $activeWindow = signal(/** @type {string | null} */ (null));
+  #lastZindex = 1000;
 
   // LIFECYCLE
 
@@ -28,8 +30,17 @@ class WindowManager extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
 
-    this.addEventListener("click", this.setActiveWindow);
+    // Events
+    this.addEventListener("mousedown", this.focusOnWindow);
+    this.addEventListener("dtw-window-start-move", this.windowMoveStart);
 
+    // Webamp stuff
+    document.body.addEventListener(
+      "mousedown",
+      this.bringWebampToFront.bind(this),
+    );
+
+    // React to active window changing
     this.effect(() => {
       const activeId = this.$activeWindow.value;
       this.setWindowStatuses(activeId);
@@ -41,7 +52,41 @@ class WindowManager extends DiffuseElement {
    */
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.removeEventListener("click", this.setActiveWindow);
+
+    this.removeEventListener("mousedown", this.focusOnWindow);
+    this.removeEventListener("dtw-window-start-move", this.windowMoveStart);
+
+    document.body.removeEventListener(
+      "mousedown",
+      this.bringWebampToFront.bind(this),
+    );
+  }
+
+  /**
+   * @param {MouseEvent} event
+   */
+  bringWebampToFront(event) {
+    if (event.target instanceof HTMLElement) {
+      const webamp = event.target?.closest("#webamp");
+      if (webamp instanceof HTMLElement) {
+        this.#lastZindex++;
+        webamp.style.zIndex = this.#lastZindex.toString();
+      }
+    }
+  }
+
+  /**
+   * @param {Event} event
+   */
+  focusOnWindow(event) {
+    if (event.target instanceof HTMLElement) {
+      const win = event.target?.closest("dtw-window");
+      if (win instanceof HTMLElement === false) return;
+      if (win.id) this.$activeWindow.value = win.id;
+
+      this.#lastZindex++;
+      win.style.zIndex = this.#lastZindex.toString();
+    }
   }
 
   /**
@@ -64,14 +109,40 @@ class WindowManager extends DiffuseElement {
   }
 
   /**
-   * @param {Event} event
+   * @param {any} ogEvent
    */
-  setActiveWindow(event) {
-    if (event.target instanceof HTMLElement) {
-      const window = event.target?.closest("dtw-window");
-      if (!window) return;
-      if (window.id) this.$activeWindow.value = window.id;
-    }
+  windowMoveStart(ogEvent) {
+    /**
+     * @param {Event} event
+     */
+    const moveFn = debounceMicrotask((event) => {
+      if (event instanceof MouseEvent) {
+        const x = event.x - ogEvent.detail.xElement;
+        const y = event.y - ogEvent.detail.yElement;
+        const target = ogEvent.target;
+
+        if (target) {
+          target.style.left = `${x}px`;
+          target.style.top = `${y}px`;
+        }
+      }
+    }, {
+      updateArguments: true,
+    });
+
+    const stopMove = () => {
+      this.removeEventListener("mousemove", moveFn);
+      this.removeEventListener("dtw-window-end-move", stopMove);
+
+      document.removeEventListener("mouseup", stopMove);
+      document.removeEventListener("mouseleave", stopMove);
+    };
+
+    this.addEventListener("mousemove", moveFn);
+    this.addEventListener("dtw-window-end-move", stopMove);
+
+    document.addEventListener("mouseup", stopMove);
+    document.addEventListener("mouseleave", stopMove);
   }
 
   // RENDER
@@ -81,6 +152,12 @@ class WindowManager extends DiffuseElement {
    */
   render({ html }) {
     return html`
+      <style>
+      :host {
+        user-select: none;
+      }
+      </style>
+
       <slot></slot>
     `;
   }

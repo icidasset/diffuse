@@ -23,13 +23,6 @@ class WindowElement extends DiffuseElement {
    */
   connectedCallback() {
     super.connectedCallback();
-
-    const x = Math.floor(
-      Math.random() * (document.body.clientWidth - 300),
-    );
-
-    this.style.position = "relative";
-    this.style.left = `${x}px`;
   }
 
   /**
@@ -64,12 +57,20 @@ class WindowElement extends DiffuseElement {
         border: 0;
         padding: 0;
       }
+
+      .title-bar {
+        user-select: none;
+      }
       </style>
 
       <dialog open>
         <div class="window" style="width: 300px">
-          <div class="title-bar">
-            <div class="title-bar-text">
+          <div
+            class="title-bar"
+            @mousedown="${this.titleBarMouseDown}"
+            @mouseup="${this.titleBarMouseUp}"
+          >
+            <div class="title-bar-text" draggable="false">
               <slot name="title"></slot>
             </div>
             <div class="title-bar-controls">
@@ -84,6 +85,44 @@ class WindowElement extends DiffuseElement {
         </div>
       </dialog>
     `;
+  }
+
+  // EVENTS
+
+  /**
+   * @param {MouseEvent} mouse
+   */
+  titleBarMouseDown(mouse) {
+    const event = new CustomEvent("dtw-window-start-move", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        x: mouse.x,
+        xElement: mouse.layerX,
+        y: mouse.y,
+        yElement: mouse.layerY,
+      },
+    });
+
+    this.dispatchEvent(event);
+  }
+
+  /**
+   * @param {MouseEvent} mouse
+   */
+  titleBarMouseUp(mouse) {
+    const event = new CustomEvent("dtw-window-end-move", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        x: mouse.x,
+        xElement: mouse.layerX,
+        y: mouse.y,
+        yElement: mouse.layerY,
+      },
+    });
+
+    this.dispatchEvent(event);
   }
 }
 
