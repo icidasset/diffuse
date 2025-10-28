@@ -1,11 +1,11 @@
-import morphdom from "morphdom";
+import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
 import { define, use } from "@common/worker.js";
 
 /**
  * @import {BroadcastingStatus, FnParams, FnReturn, HtmlTagFunction, MorphOptions} from "./element.d.ts"
- * @import {Signal, SignalReader} from "./signal.d.ts"
+ * @import {Signal} from "./signal.d.ts"
  */
 
 /**
@@ -21,9 +21,7 @@ export class DiffuseElement extends HTMLElement {
 
   constructor() {
     super();
-
     this.group = this.getAttribute("group") || crypto.randomUUID();
-    this.morphedRender = this.morphedRender.bind(this);
   }
 
   /**
@@ -32,7 +30,7 @@ export class DiffuseElement extends HTMLElement {
    * @param {string} newValue
    */
   attributeChangedCallback(_name, oldValue, newValue) {
-    if (oldValue !== newValue) this.morphedRender();
+    if (oldValue !== newValue) this.#render();
   }
 
   /**
@@ -46,42 +44,20 @@ export class DiffuseElement extends HTMLElement {
   }
 
   /**
-   * @type {HtmlTagFunction}
-   */
-  html(strings, ...values) {
-    return String.raw({ raw: strings }, ...values);
-  }
-
-  /**
    * Avoid replacing the whole subtree,
    * morph the existing DOM into the new given tree.
    */
-  morphedRender() {
+  #render() {
     if (!("render" in this && typeof this.render === "function")) return;
 
     const tmp = this.render({
-      html: this.html,
+      html: html,
       state: "state" in this ? this.state : undefined,
     });
 
-    const updated = document.createElement("div");
-    updated.innerHTML = tmp.trim();
     const root = this.shadowRoot ? this.shadowRoot : this;
-
-    morphdom(
-      root,
-      updated,
-      {
-        ...this.morphOptions,
-        childrenOnly: true,
-      },
-    );
+    render(tmp, root);
   }
-
-  // MORPH STUFF
-
-  /** @type {MorphOptions} */
-  morphOptions = {};
 
   // LIFECYCLE
 
@@ -90,7 +66,7 @@ export class DiffuseElement extends HTMLElement {
 
     this.effect(() => {
       if (!("render" in this && typeof this.render === "function")) return;
-      this.morphedRender();
+      this.#render();
     });
   }
 

@@ -1,4 +1,3 @@
-import Webamp from "webamp/lazy";
 import deepDiff from "@fry69/deep-diff";
 
 // import "@component/orchestrator/process-tracks/element.js";
@@ -14,6 +13,7 @@ import { effect, signal, untracked } from "@common/signal.js";
 
 import "./window/element.js";
 import "./window-manager/element.js";
+import WebampElement from "./webamp.js";
 
 /**
  * @import {URLTrack} from "webamp"
@@ -27,29 +27,25 @@ const queue = component(Queue);
 globalThis.queue = queue;
 
 ////////////////////////////////////////////
-// ⚡
+// 📡
 ////////////////////////////////////////////
 
-/** @type {import("webamp/lazy").default} */
-const amp = new /** @type {any} */ (Webamp)({
-  enableMediaSession: true,
-  initialTracks: [],
+const $currTrack = signal(/** @type {null | number} */ (null));
+const $playlist = signal(/** @type {Item[]} */ ([]));
 
-  /** */
-  handleLoadListEvent: async () => {
-    // TODO
-    return [
-      /* Array of Tracks */
-    ];
-  },
+////////////////////////////////////////////
+// ⚡️
+////////////////////////////////////////////
 
-  /**
-   * @param {any} tracks
-   */
-  handleSaveListEvent: (tracks) => {
-    // TODO
-  },
-});
+const ampElement = document.querySelector("dtw-webamp");
+if (ampElement instanceof WebampElement === false) {
+  throw new Error("Missing webamp element");
+}
+
+const amp = ampElement.amp;
+
+// TODO: Handle minimize
+amp.onMinimize(() => {});
 
 // Override track loader
 const loadFromUrl = amp.media.loadFromUrl.bind(amp.media);
@@ -65,23 +61,6 @@ async function loadOverride(uri, autoPlay) {
 }
 
 amp.media.loadFromUrl = loadOverride.bind(amp.media);
-
-// TODO: Handle minimize
-amp.onMinimize(() => {});
-
-// Render
-const ampNode = document.createElement("div");
-ampNode.style =
-  "height: 100vh; left: 0; position: absolute; top: 0; width: 100%; z-index: -1000;";
-document.body.appendChild(ampNode);
-amp.renderWhenReady(ampNode);
-
-////////////////////////////////////////////
-// 🌊
-////////////////////////////////////////////
-
-const $currTrack = signal(/** @type {null | number} */ (null));
-const $playlist = signal(/** @type {Item[]} */ ([]));
 
 /**
  * Observe changes in Webamp's internal store.

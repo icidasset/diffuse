@@ -26,10 +26,16 @@ body {
   font-family: "Pixelated MS Sans Serif", sans-serif;
   font-size: 12px;
   margin: 12px;
+  overflow: hidden;
 }
 
 #webamp {
   isolation: isolate;
+}
+
+main > section {
+  inset: 0;
+  position: absolute;
 }
 
 /***********************************
@@ -39,6 +45,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  inset: 12px;
 }
 
 .desktop__item {
@@ -72,4 +79,65 @@ body {
       outline-offset: 2px;
     }
   }
+}
+
+/***********************************
+ * Windows
+ ***********************************/
+
+.windows dtw-window {
+  left: 12px;
+  position: absolute;
+  top: 12px;
+  z-index: 999;
+
+  /* Waiting on https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-index#browser_compatibility */
+  &:nth-child(1) {
+    left: 24px;
+    top: 24px;
+  }
+
+  &:nth-child(2) {
+    left: 36px;
+    top: 36px;
+  }
+
+  &:nth-child(3) {
+    left: 48px;
+    top: 48px;
+  }
+
+  &:nth-child(4) {
+    left: 60px;
+    top: 60px;
+  }
+
+  &:nth-child(5) {
+    left: 72px;
+    top: 72px;
+  }
+
+  &:nth-child(6) {
+    left: 84px;
+    top: 84px;
+  }
+
+  &:nth-child(7) {
+    left: 96px;
+    top: 96px;
+  }
+
+  &:nth-child(8) {
+    left: 108px;
+    top: 108px;
+  }
+
+  &:nth-child(9) {
+    left: 120px;
+    top: 120px;
+  }
+}
+
+.windows section {
+  z-index: 999;
 }
