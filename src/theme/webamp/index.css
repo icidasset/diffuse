@@ -42,6 +42,7 @@ main > section {
  * Desktop
  ***********************************/
 .desktop {
+  align-items: start;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -58,6 +59,7 @@ main > section {
   flex-direction: column;
   font-family: inherit;
   text-decoration: none;
+  user-select: none;
 
   &:visited,
   &:active {

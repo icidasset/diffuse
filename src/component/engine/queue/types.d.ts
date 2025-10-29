@@ -2,14 +2,14 @@ import type { Track, TrackStats, TrackTags } from "@component/core/types.d.ts";
 import type { SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {
-  add: (items: Item[]) => void;
+  add: (args: { inFront?: boolean; items: Item[] }) => void;
   pool: (tracks: Track[]) => void;
   shift: () => void;
   unshift: () => void;
 };
 
 export type ActionsProxied = {
-  add: (items: Item[]) => Promise<void>;
+  add: (args: { inFront?: boolean; items: Item[] }) => Promise<void>;
   pool: (tracks: Track[]) => Promise<void>;
   shift: () => Promise<void>;
   unshift: () => Promise<void>;
