@@ -138,7 +138,7 @@ export function _shift(future) {
   const n = $now.value;
   const f = future ?? $future.value;
 
+  $now.value = f[0] ?? null;
   if (n) $past.value = [...$past.value, n];
   $future.value = fill(f.slice(1));
-  $now.value = f[0] ?? null;
 }

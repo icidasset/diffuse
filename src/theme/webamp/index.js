@@ -68,8 +68,12 @@ amp.media.loadFromUrl = loadOverride.bind(amp.media);
  */
 amp.store.subscribe(() => {
   const state = amp.store.getState();
-  if (state.playlist.currentTrack !== null) {
-    $currTrack.value = state.playlist.currentTrack;
+
+  if (
+    state.playlist.currentTrack !== null &&
+    state.playlist.currentTrack - currBase > 0
+  ) {
+    $currTrack.value = state.playlist.currentTrack - currBase;
   }
 });
 
@@ -77,7 +81,7 @@ amp.store.subscribe(() => {
  * Whenever the queue changes update the playlist.
  */
 effect(() => {
-  const now = queue.now();
+  const now = untracked(queue.now);
   const past = untracked(queue.past);
   const future = queue.future();
 
@@ -92,10 +96,9 @@ effect(() => {
     JSON.stringify(untracked($playlist.get).map((i) => i.id)),
   );
 
-  console.log(hashNew, hashOld);
   if (hashNew === hashOld) return;
 
-  const webampTracks = playlist.map((item) => {
+  const webampTracks = playlist.map((item, idx) => {
     /** @type {URLTrack} */
     const urlTrack = {
       url: item.uri,
@@ -107,16 +110,14 @@ effect(() => {
       duration: item.stats?.duration,
     };
 
+    if (item.stats?.duration == undefined) {
+      throw new Error("TODO: Fetch duration");
+    }
     return urlTrack;
   });
 
-  currBase = untracked($playlist.get).length;
-
-  amp.setTracksToPlay([]);
-  amp.appendTracks(webampTracks);
-
-  console.log("SET CURR", currBase + past.length);
-  amp.setCurrentTrack(currBase + past.length);
+  // currBase = currBase + amp.getPlaylistTracks().length;
+  // amp.setCurrentTrack(currBase + (untracked($currTrack.get) ?? 0));
 
   $playlist.value = playlist;
 });
