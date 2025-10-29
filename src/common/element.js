@@ -59,6 +59,11 @@ export class DiffuseElement extends HTMLElement {
     render(tmp, root);
   }
 
+  /** */
+  forceRender() {
+    return this.#render();
+  }
+
   // LIFECYCLE
 
   connectedCallback() {

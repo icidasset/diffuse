@@ -132,14 +132,12 @@ class WindowManager extends DiffuseElement {
 
     const stopMove = () => {
       this.removeEventListener("mousemove", moveFn);
-      this.removeEventListener("dtw-window-end-move", stopMove);
 
       document.removeEventListener("mouseup", stopMove);
       document.removeEventListener("mouseleave", stopMove);
     };
 
     this.addEventListener("mousemove", moveFn);
-    this.addEventListener("dtw-window-end-move", stopMove);
 
     document.addEventListener("mouseup", stopMove);
     document.addEventListener("mouseleave", stopMove);

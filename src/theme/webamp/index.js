@@ -11,9 +11,11 @@ import * as Queue from "@component/engine/queue/element.js";
 import { component } from "@common/element.js";
 import { effect, signal, untracked } from "@common/signal.js";
 
+import "./browser/element.js";
 import "./window/element.js";
 import "./window-manager/element.js";
 import WebampElement from "./webamp.js";
+import { xxh32 } from "xxh32";
 
 /**
  * @import {URLTrack} from "webamp"
@@ -30,6 +32,8 @@ globalThis.queue = queue;
 // 📡
 ////////////////////////////////////////////
 
+let currBase = 0;
+
 const $currTrack = signal(/** @type {null | number} */ (null));
 const $playlist = signal(/** @type {Item[]} */ ([]));
 
@@ -43,9 +47,6 @@ if (ampElement instanceof WebampElement === false) {
 }
 
 const amp = ampElement.amp;
-
-// TODO: Handle minimize
-amp.onMinimize(() => {});
 
 // Override track loader
 const loadFromUrl = amp.media.loadFromUrl.bind(amp.media);
@@ -67,7 +68,9 @@ amp.media.loadFromUrl = loadOverride.bind(amp.media);
  */
 amp.store.subscribe(() => {
   const state = amp.store.getState();
-  $currTrack.value = state.playlist.currentTrack;
+  if (state.playlist.currentTrack !== null) {
+    $currTrack.value = state.playlist.currentTrack;
+  }
 });
 
 /**
@@ -75,7 +78,7 @@ amp.store.subscribe(() => {
  */
 effect(() => {
   const now = queue.now();
-  const past = queue.past();
+  const past = untracked(queue.past);
   const future = queue.future();
 
   const playlist = [
@@ -84,39 +87,38 @@ effect(() => {
     ...future,
   ];
 
-  const diff = deepDiff.diff($playlist.value, playlist, () => true);
+  const hashNew = xxh32(JSON.stringify(playlist.map((i) => i.id)));
+  const hashOld = xxh32(
+    JSON.stringify(untracked($playlist.get).map((i) => i.id)),
+  );
 
-  diff?.forEach((d) => {
-    // TODO: Handle case where an item is inserted into queue at a position that's not the end.
-    // console.log(d);
+  console.log(hashNew, hashOld);
+  if (hashNew === hashOld) return;
 
-    if (d.kind !== "A") return;
-    if (d.item.kind === "N") {
-      const item = /** @type {Item} */ (/** @type {unknown} */ (d.item.rhs));
-      if (!item) return;
+  const webampTracks = playlist.map((item) => {
+    /** @type {URLTrack} */
+    const urlTrack = {
+      url: item.uri,
+      metaData: {
+        title: item.tags?.title || "",
+        artist: item.tags?.artist || "",
+        album: item.tags?.album,
+      },
+      duration: item.stats?.duration,
+    };
 
-      /** @type {URLTrack} */
-      const urlTrack = {
-        url: item.uri,
-        metaData: {
-          title: item.tags?.title || "",
-          artist: item.tags?.artist || "",
-          album: item.tags?.album,
-        },
-        duration: item.stats?.duration,
-      };
-
-      amp.appendTracks([urlTrack]);
-    }
+    return urlTrack;
   });
 
-  if (!diff) return;
+  currBase = untracked($playlist.get).length;
+
+  amp.setTracksToPlay([]);
+  amp.appendTracks(webampTracks);
+
+  console.log("SET CURR", currBase + past.length);
+  amp.setCurrentTrack(currBase + past.length);
 
   $playlist.value = playlist;
-
-  if (untracked($currTrack.get) === null) {
-    amp.setCurrentTrack(past.length);
-  }
 });
 
 /**
@@ -124,7 +126,44 @@ effect(() => {
  * reflect the change in our queue too.
  */
 effect(() => {
-  if (($currTrack.value ?? 0) > untracked(queue.past).length) {
-    queue.shift();
+  console.log("CURR", $currTrack.value);
+
+  // if (($currTrack.value ?? 0) > untracked(queue.past).length) {
+  //   queue.shift();
+  // }
+});
+
+////////////////////////////////////////////
+// DESKTOP
+////////////////////////////////////////////
+
+// Open associated window when click desktop items
+document.body.querySelectorAll(".desktop__item").forEach((element) => {
+  if (element instanceof HTMLElement) {
+    element.addEventListener("dblclick", () => {
+      const f = element.querySelector("label")?.getAttribute("for");
+      if (f) {
+        document.body.querySelector(`dtw-window#${f}`)?.toggleAttribute("open");
+      }
+    });
   }
 });
+
+// Toggle Winamp if click that desktop item
+let winampIsShown = true;
+
+document.body.querySelector("#desktop-winamp")?.addEventListener(
+  "dblclick",
+  () => {
+    if (winampIsShown) amp.close();
+    else {
+      amp.reopen();
+      winampIsShown = true;
+    }
+  },
+);
+
+amp.onClose(() => winampIsShown = false);
+
+// TODO:
+// amp.onMinimize(() => amp.close());

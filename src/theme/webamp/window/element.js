@@ -9,27 +9,13 @@ import { DiffuseElement } from "@common/element.js";
 ////////////////////////////////////////////
 
 class WindowElement extends DiffuseElement {
+  static observedAttributes = ["open"];
+
   constructor() {
     super();
 
     this.id = this.id?.length ? this.id : crypto.randomUUID();
     this.attachShadow({ mode: "open" });
-  }
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  connectedCallback() {
-    super.connectedCallback();
-  }
-
-  /**
-   * @override
-   */
-  disconnectedCallback() {
-    super.disconnectedCallback();
   }
 
   // ACTIONS
@@ -58,25 +44,41 @@ class WindowElement extends DiffuseElement {
         padding: 0;
       }
 
+      .window {
+        min-width: 240px;
+      }
+
       .title-bar {
+        justify-content: unset;
         user-select: none;
+      }
+
+      .title-bar-icon {
+        margin-right: 4px;
+      }
+
+      .title-bar-text {
+        flex: 1;
       }
       </style>
 
-      <dialog open>
-        <div class="window" style="width: 300px">
+      <dialog ?open="${this.hasAttribute("open")}">
+        <div class="window">
           <div
             class="title-bar"
             @mousedown="${this.titleBarMouseDown}"
-            @mouseup="${this.titleBarMouseUp}"
           >
+            <div class="title-bar-icon">
+              <slot name="title-icon"></slot>
+            </div>
             <div class="title-bar-text" draggable="false">
               <slot name="title"></slot>
             </div>
             <div class="title-bar-controls">
               <!--<button aria-label="Minimize"></button>-->
               <!--<button aria-label="Maximize"></button>-->
-              <button aria-label="Close"></button>
+              <button aria-label="Close" @click="${() =>
+                this.removeAttribute("open")}"></button>
             </div>
           </div>
           <div class="window-body">
@@ -94,24 +96,6 @@ class WindowElement extends DiffuseElement {
    */
   titleBarMouseDown(mouse) {
     const event = new CustomEvent("dtw-window-start-move", {
-      bubbles: true,
-      composed: true,
-      detail: {
-        x: mouse.x,
-        xElement: mouse.layerX,
-        y: mouse.y,
-        yElement: mouse.layerY,
-      },
-    });
-
-    this.dispatchEvent(event);
-  }
-
-  /**
-   * @param {MouseEvent} mouse
-   */
-  titleBarMouseUp(mouse) {
-    const event = new CustomEvent("dtw-window-end-move", {
       bubbles: true,
       composed: true,
       detail: {

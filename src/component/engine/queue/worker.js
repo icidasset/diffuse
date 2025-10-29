@@ -1,5 +1,5 @@
 import { announce, define, ostiary } from "@common/worker.js";
-import { batch, effect, signal } from "@common/signal.js";
+import { effect, signal } from "@common/signal.js";
 import { arrayShuffle } from "@common/index.js";
 
 /**
@@ -25,8 +25,10 @@ export const $past = signal(/** @type {Item[]} */ ([]));
 /**
  * @type {Actions['add']}
  */
-export function add(items) {
-  $future.value = [...$future.value, ...items];
+export function add({ inFront, items }) {
+  $future.value = inFront
+    ? [...items, ...$future.value]
+    : [...$future.value, ...items];
 }
 
 /**
@@ -100,7 +102,7 @@ ostiary((port) => {
 function fill(future) {
   if (future.length >= QUEUE_SIZE) return future;
 
-  /** @type {Track[]} */
+  /** @type {Item[]} */
   const pool = [];
 
   let p = new Set($past.value.map((t) => t.id));
@@ -110,7 +112,10 @@ function fill(future) {
     if (p.has(track.id)) {
       p = p.difference(new Set(track.id));
     } else {
-      pool.push(track);
+      pool.push({
+        ...track,
+        manualEntry: false,
+      });
     }
   });
 
