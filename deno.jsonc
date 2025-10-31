@@ -4,6 +4,7 @@
   "vendor": true,
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
+    "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.4",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
     "@mary/ds-queue": "jsr:@mary/ds-queue@^0.1.3",
     "@mys/m-rpc": "jsr:@mys/m-rpc@^0.12.2",

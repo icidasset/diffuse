@@ -1,13 +1,11 @@
-import manifest from "../../../pages/input/s3/_manifest.json";
-
-export const IDB_PREFIX = "@applets/input/s3";
+export const IDB_PREFIX = "@component/input/s3";
 export const IDB_BUCKETS = `${IDB_PREFIX}/buckets`;
-export const SCHEME = manifest.input_properties.scheme;
+export const SCHEME = "s3";
 
 export const ENCODINGS = {
   "\+": "%2B",
   "\!": "%21",
-  '\"': "%22",
+  '"': "%22",
   "\#": "%23",
   "\$": "%24",
   "\&": "%26",

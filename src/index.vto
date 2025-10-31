@@ -8,35 +8,35 @@ themes:
     title: "Webamp"
 
 engines:
-  - url: "engine/audio/"
+  - url: "component/engine/audio/element.js"
     title: "Audio"
-  - url: "engine/queue/"
+  - url: "component/engine/queue/element.js"
     title: "Queue"
 
 input:
-  - url: "input/opensubsonic/"
+  - url: "component/input/opensubsonic/element.js"
     title: "Opensubsonic"
-  - url: "input/s3/"
+  - url: "component/input/s3/element.js"
     title: "S3 (TODO)"
 
 orchestrators:
-  - url: "orchestrator/process-tracks/"
+  - url: "component/orchestrator/process-tracks/element.js"
     title: "Process inputs into tracks"
-  - url: "orchestrator/queue-audio/"
+  - url: "component/orchestrator/queue-audio/element.js"
     title: "Queue ⭤ Audio"
-  - url: "orchestrator/queue-tracks/"
+  - url: "component/orchestrator/queue-tracks/element.js"
     title: "Queue ⭤ Tracks"
 
 output:
-  - url: "output/indexed-db/"
+  - url: "component/output/indexed-db/element.js"
     title: "IndexedDB"
 
 processors:
-  - url: "processor/artwork/"
+  - url: "component/processor/artwork/element.js"
     title: "Artwork"
-  - url: "processor/metadata/"
+  - url: "component/processor/metadata/element.js"
     title: "Metadata"
-  - url: "processor/search/"
+  - url: "component/processor/search/element.js"
     title: "Search"
 
 ---
