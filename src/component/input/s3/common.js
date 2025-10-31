@@ -3,17 +3,25 @@ import * as IDB from "idb-keyval";
 import * as URI from "uri-js";
 import QS from "query-string";
 
-import type { Track } from "@applets/core/types.d.ts";
-import { ENCODINGS, IDB_BUCKETS, SCHEME } from "./constants";
-import type { Bucket } from "./types";
+import { ENCODINGS, IDB_BUCKETS, SCHEME } from "./constants.js";
+
+/**
+ * @import { Track } from "@component/core/types.d.ts";
+ * @import { Bucket } from "./types.d.ts";
+ */
 
 ////////////////////////////////////////////
 // 🛠️
 ////////////////////////////////////////////
-export function bucketsFromTracks(tracks: Track[]) {
-  const acc: Record<string, Bucket> = {};
 
-  tracks.forEach((track: Track) => {
+/**
+ * @param {Track[]} tracks
+ */
+export function bucketsFromTracks(tracks) {
+  /** @type {Record<string, Bucket>} */
+  const acc = {};
+
+  tracks.forEach((track) => {
     const parsed = parseURI(track.uri);
     if (!parsed) return;
 
@@ -26,11 +34,18 @@ export function bucketsFromTracks(tracks: Track[]) {
   return acc;
 }
 
-export function bucketId(bucket: Bucket) {
+/**
+ * @param {Bucket} bucket
+ */
+export function bucketId(bucket) {
   return `${bucket.accessKey}:${bucket.secretKey}@${bucket.host}`;
 }
 
-export function buildURI(bucket: Bucket, path: string) {
+/**
+ * @param {Bucket} bucket
+ * @param {string} path
+ */
+export function buildURI(bucket, path) {
   return URI.serialize({
     scheme: SCHEME,
     userinfo: `${bucket.accessKey}:${bucket.secretKey}`,
@@ -44,15 +59,23 @@ export function buildURI(bucket: Bucket, path: string) {
   });
 }
 
-export async function consultBucket(bucket: Bucket) {
+/**
+ * @param {Bucket} bucket
+ */
+export async function consultBucket(bucket) {
   const client = createClient(bucket);
   return await client.bucketExists(bucket.bucketName);
 }
 
-export function createClient(bucket: Bucket) {
+/**
+ * @param {Bucket} bucket
+ */
+export function createClient(bucket) {
   return new S3Client({
     bucket: bucket.bucketName,
-    endPoint: `http${bucket.host.startsWith("localhost") ? "" : "s"}://${bucket.host}`,
+    endPoint: `http${
+      bucket.host.startsWith("localhost") ? "" : "s"
+    }://${bucket.host}`,
     region: bucket.region,
     pathStyle: false,
     accessKey: bucket.accessKey,
@@ -60,17 +83,24 @@ export function createClient(bucket: Bucket) {
   });
 }
 
-export function encodeAwsUriComponent(a: string) {
+/**
+ * @param {string} a
+ */
+export function encodeAwsUriComponent(a) {
   return encodeURIComponent(a).replace(
     /(\+|!|"|#|\$|&|'|\(|\)|\*|\+|,|:|;|=|\?|@)/gim,
-    (match) => (ENCODINGS as any)[match] ?? match,
+    (match) => /** @type {any} */ (ENCODINGS)[match] ?? match,
   );
 }
 
-export function groupTracksByBucket(tracks: Track[]) {
-  const acc: Record<string, { bucket: Bucket; tracks: Track[] }> = {};
+/**
+ * @param {Track[]} tracks
+ */
+export function groupTracksByBucket(tracks) {
+  /** @type {Record<string, { bucket: Bucket; tracks: Track[] }>} */
+  const acc = {};
 
-  tracks.forEach((track: Track) => {
+  tracks.forEach((track) => {
     const parsed = parseURI(track.uri);
     if (!parsed) return acc;
 
@@ -86,12 +116,19 @@ export function groupTracksByBucket(tracks: Track[]) {
   return acc;
 }
 
-export async function loadBuckets(): Promise<Record<string, Bucket>> {
+/**
+ * @returns {Promise<Record<string, Bucket>>}
+ */
+export async function loadBuckets() {
   const i = await IDB.get(IDB_BUCKETS);
   return i ? i : {};
 }
 
-export function parseURI(uriString: string): { bucket: Bucket; path: string } | undefined {
+/**
+ * @param {string} uriString
+ * @returns {{ bucket: Bucket; path: string } | undefined}
+ */
+export function parseURI(uriString) {
   const uri = URI.parse(uriString);
   if (uri.scheme !== SCHEME) return undefined;
   if (!uri.host) return undefined;
@@ -110,14 +147,19 @@ export function parseURI(uriString: string): { bucket: Bucket; path: string } | 
     secretKey,
   };
 
-  const path = (bucket.path.replace(/\/$/, "") + URI.unescapeComponent(uri.path || "")).replace(
-    /^\//,
-    "",
-  );
+  const path =
+    (bucket.path.replace(/\/$/, "") + URI.unescapeComponent(uri.path || ""))
+      .replace(
+        /^\//,
+        "",
+      );
 
   return { bucket, path };
 }
 
-export async function saveBuckets(items: Record<string, Bucket>) {
+/**
+ * @param {Record<string, Bucket>} items
+ */
+export async function saveBuckets(items) {
   await IDB.set(IDB_BUCKETS, items);
 }
