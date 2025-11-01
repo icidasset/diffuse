@@ -40,7 +40,10 @@ class SearchTracksOrchestrator extends DiffuseElement {
 
     // Watch tracks collection
     this.effect(() => {
-      const tracks = this.output.tracks.collection();
+      const tracks = this.output.tracks.collection().filter((t) =>
+        t.kind !== "placeholder"
+      );
+
       this.supplyAvailable(tracks);
     });
   }
