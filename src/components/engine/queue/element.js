@@ -1,3 +1,5 @@
+import QS from "query-string";
+
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 import { listen, use } from "@common/worker.js";
@@ -17,9 +19,14 @@ class QueueEngine extends DiffuseElement {
   constructor() {
     super();
 
+    // Query
+    const query = QS.stringify({
+      "fill-size": this.getAttribute("fill-size"),
+    });
+
     // Setup worker
     const name = `diffuse/engine/queue/${this.group}`;
-    const url = "/components/engine/queue/worker.js";
+    const url = `/components/engine/queue/worker.js?${query}`;
 
     let port;
 

@@ -1,5 +1,3 @@
-import deepDiff from "@fry69/deep-diff";
-
 // import "@components/orchestrator/process-tracks/element.js";
 import "@components/orchestrator/queue-tracks/element.js";
 import "@components/output/indexed-db/element.js";
@@ -14,14 +12,7 @@ import { effect, signal, untracked } from "@common/signal.js";
 import "./browser/element.js";
 import "./window/element.js";
 import "./window-manager/element.js";
-import WebampElement from "./webamp.js";
-import { xxh32 } from "xxh32";
-
-/**
- * @import {URLTrack} from "webamp"
- *
- * @import {Item} from "@components/engine/queue/types.d.ts"
- */
+import WebampElement from "./webamp/element.js";
 
 const input = component(Input);
 const queue = component(Queue);
@@ -32,10 +23,12 @@ globalThis.queue = queue;
 // 📡
 ////////////////////////////////////////////
 
-let currBase = 0;
+const currBase = 0;
 
 const $currTrack = signal(/** @type {null | number} */ (null));
-const $playlist = signal(/** @type {Item[]} */ ([]));
+const $playlist = signal(/** @type {Set<string>} */ (new Set()), {
+  eager: true,
+});
 
 ////////////////////////////////////////////
 // ⚡️
@@ -91,35 +84,31 @@ effect(() => {
     ...future,
   ];
 
-  const hashNew = xxh32(JSON.stringify(playlist.map((i) => i.id)));
-  const hashOld = xxh32(
-    JSON.stringify(untracked($playlist.get).map((i) => i.id)),
-  );
+  const oldSet = untracked($playlist.get);
+  const newSet = new Set(playlist.map((i) => i.id));
 
-  if (hashNew === hashOld) return;
+  const addedItems = newSet.difference(oldSet);
 
-  const webampTracks = playlist.map((item, idx) => {
-    /** @type {URLTrack} */
-    const urlTrack = {
-      url: item.uri,
-      metaData: {
-        title: item.tags?.title || "",
-        artist: item.tags?.artist || "",
-        album: item.tags?.album,
-      },
-      duration: item.stats?.duration,
-    };
+  // TODO: Can't do removals yet without resetting the webamp instance.
+  // const removedItems = oldSet.difference(newSet);
 
-    if (item.stats?.duration == undefined) {
-      throw new Error("TODO: Fetch duration");
-    }
-    return urlTrack;
+  if (addedItems.size === 0) return;
+
+  playlist.forEach((item, idx) => {
+    if (addedItems.has(item.id) === false) return;
+
+    // TODO
+    if (item.stats?.duration == undefined) return;
+
+    // TODO: Inserting at a specific index doesn't work
+    ampElement.addTrack(item);
   });
 
-  // currBase = currBase + amp.getPlaylistTracks().length;
-  // amp.setCurrentTrack(currBase + (untracked($currTrack.get) ?? 0));
+  if (untracked($currTrack.get) === null) {
+    amp.setCurrentTrack(past.length);
+  }
 
-  $playlist.value = playlist;
+  $playlist.value = newSet;
 });
 
 /**
@@ -127,11 +116,9 @@ effect(() => {
  * reflect the change in our queue too.
  */
 effect(() => {
-  console.log("CURR", $currTrack.value);
-
-  // if (($currTrack.value ?? 0) > untracked(queue.past).length) {
-  //   queue.shift();
-  // }
+  if (($currTrack.value ?? 0) > untracked(queue.past).length) {
+    queue.shift();
+  }
 });
 
 ////////////////////////////////////////////

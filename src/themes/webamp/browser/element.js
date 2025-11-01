@@ -20,9 +20,6 @@ class Browser extends DiffuseElement {
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-selector");
-
-    /** @type {import("../webamp.js").CLASS} */
-    this.amp = query(this, "webamp-selector");
   }
 
   // LIFECYCLE
@@ -67,16 +64,12 @@ class Browser extends DiffuseElement {
    * @param {Track} track
    */
   playTrack(track) {
-    console.log("Play track", track);
-    // this.queue.add({
-    //   inFront: true,
-    //   items: [
-    //     { ...track, manualEntry: true },
-    //   ],
-    // });
-
-    this.amp.addTrack(track);
-    this.amp.amp.setCurrentTrack(this.amp.amp.getPlaylistTracks().length - 1);
+    this.queue.add({
+      inFront: true,
+      items: [
+        { ...track, manualEntry: true },
+      ],
+    });
   }
 
   // RENDER

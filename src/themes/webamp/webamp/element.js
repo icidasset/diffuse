@@ -75,12 +75,9 @@ class WebampElement extends HTMLElement {
           artist: track.tags?.artist,
           title: track.tags?.title,
           album: track.tags?.album,
-          // For now, we lie about these next three things.
-          // TODO: Ideally we would leave these as null and force a media data
-          // fetch when the user starts playing.
-          sampleRate: 44000,
-          bitrate: 192000,
-          numberOfChannels: 2,
+          sampleRate: track.stats?.sampleRate ?? 44000,
+          bitrate: track.stats?.bitrate ?? 192000,
+          numberOfChannels: 2, // TODO
           id: idx,
         });
       },

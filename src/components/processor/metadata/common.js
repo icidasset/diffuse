@@ -55,25 +55,76 @@ export async function musicMetadataTags({
 
   /** @type {TrackStats} */
   const stats = {
+    albumGain: meta.format.albumGain,
+    bitrate: meta.format.bitrate,
+    bitsPerSample: meta.format.bitsPerSample,
+    codec: meta.format.codec,
+    container: meta.format.container,
     duration: meta.format.duration,
+    lossless: meta.format.lossless,
+    numberOfChannels: meta.format.numberOfChannels,
+    sampleRate: meta.format.sampleRate,
+    trackGain: meta.format.trackGain,
   };
 
   /** @type {TrackTags} */
   const tags = {
     album: meta.common.album,
+    albumartist: meta.common.albumartist,
+    albumartists: meta.common.albumartists ??
+      (meta.common.albumartist ? [meta.common.albumartist] : []),
+    albumartistsort: meta.common.albumartistsort,
+    albumsort: meta.common.albumsort,
+    arranger: meta.common.arranger,
     artist: meta.common.artist,
+    artists: meta.common.artists ??
+      (meta.common.artist ? [meta.common.artist] : []),
+    artistsort: meta.common.artistsort,
+    asin: meta.common.asin,
+    averageLevel: meta.common.averageLevel,
+    barcode: meta.common.barcode,
+    bpm: meta.common.bpm,
+    catalognumbers: meta.common.catalognumber,
+    compilation: meta.common.compilation,
+    composers: meta.common.composer,
+    composersort: meta.common.composersort,
+    conductors: meta.common.conductor,
+    date: meta.common.date,
     disc: {
       no: meta.common.disk.no || 1,
       of: meta.common.disk.of ?? undefined,
     },
-    genre: Array.isArray(meta.common.genre)
-      ? meta.common.genre[0]
-      : meta.common.genre,
+    djmixers: meta.common.djmixer,
+    engineers: meta.common.engineer,
+    gapless: meta.common.gapless,
+    genres: Array.isArray(meta.common.genre)
+      ? meta.common.genre
+      : [meta.common.genre],
+    isrc: meta.common.isrc,
+    labels: meta.common.label,
+    lyricists: meta.common.lyricist,
+    media: meta.common.media,
+    mixers: meta.common.mixer,
+    moods: meta.common.mood,
+    originaldate: meta.common.originaldate,
+    originalyear: meta.common.originalyear,
+    peakLevel: meta.common.peakLevel,
+    producers: meta.common.producer,
+    publishers: meta.common.publisher,
+    releasecountry: meta.common.releasecountry,
+    releasedate: meta.common.releasedate,
+    releasestatus: meta.common.releasestatus,
+    releasetypes: meta.common.releasetype,
+    remixers: meta.common.remixer,
+    technicians: meta.common.technician,
     title: meta.common.title || filename || urls?.head || "Unknown",
+    titlesort: meta.common.titlesort,
     track: {
       no: meta.common.track.no || 1,
       of: meta.common.track.of ?? undefined,
     },
+    work: meta.common.work,
+    writers: meta.common.writer,
     year: meta.common.year,
   };
 

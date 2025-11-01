@@ -1,3 +1,5 @@
+import QS from "query-string";
+
 import { announce, define, ostiary } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
 import { arrayShuffle } from "@common/index.js";
@@ -7,7 +9,15 @@ import { arrayShuffle } from "@common/index.js";
  * @import {Track} from "@components/core/types.d.ts"
  */
 
-const QUEUE_SIZE = 25;
+const QUERY = QS.parse(location.search);
+const qFillSize = QUERY?.["fill-size"];
+
+/** @type {number} */
+const FILL_SIZE = qFillSize && qFillSize !== null
+  ? Array.isArray(qFillSize) && qFillSize[0] !== null
+    ? parseInt(qFillSize[0], 10)
+    : parseInt(/** @type {string} */ (qFillSize), 10)
+  : 25;
 
 ////////////////////////////////////////////
 // STATE
@@ -26,6 +36,7 @@ export const $past = signal(/** @type {Item[]} */ ([]));
  * @type {Actions['add']}
  */
 export function add({ inFront, items }) {
+  // TODO: An entry is always manual and should be added in the correct place
   $future.value = inFront
     ? [...items, ...$future.value]
     : [...$future.value, ...items];
@@ -100,7 +111,15 @@ ostiary((port) => {
  * @returns {Item[]}
  */
 function fill(future) {
-  if (future.length >= QUEUE_SIZE) return future;
+  let fillFutureCount = 0;
+  let manualFutureCount = 0;
+
+  future.forEach((item) => {
+    if (item.manualEntry) manualFutureCount++;
+    else fillFutureCount++;
+  });
+
+  if (fillFutureCount >= FILL_SIZE) return future;
 
   /** @type {Item[]} */
   const pool = [];
@@ -125,7 +144,7 @@ function fill(future) {
 
   const poolSelection = arrayShuffle(reducedPool).slice(
     0,
-    QUEUE_SIZE - future.length,
+    FILL_SIZE - fillFutureCount,
   );
 
   return [...future, ...poolSelection];
