@@ -1,1 +1,1 @@
-export * from "./component/engine/audio/element.js";
+export * from "./components/engine/audio/element.js";
