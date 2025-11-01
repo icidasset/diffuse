@@ -1,7 +1,7 @@
 // import * as Uint8 from "uint8arrays";
 
 /**
- * @import {Track} from "@component/core/types.d.ts"
+ * @import {Track} from "@components/core/types.d.ts"
  */
 
 /**
