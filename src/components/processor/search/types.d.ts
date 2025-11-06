@@ -1,4 +1,4 @@
-import type { Track } from "@components/core/types.d.ts";
+import type { Track } from "@common/types.d.ts";
 
 export type Actions = {
   search(term: string): Promise<Track[]>;

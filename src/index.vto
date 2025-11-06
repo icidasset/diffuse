@@ -11,47 +11,76 @@ themes:
 
 # ELEMENTS
 
+configurators:
+  - title: "Input"
+    desc: "Add multiple inputs."
+    todo: true
+  - title: "Output"
+    desc: "Allows the user to configure a specific output."
+    todo: true
+
 engines:
   - url: "components/engine/audio/element.js"
     title: "Audio"
+    desc: "Plays audio through audio elements."
   - url: "components/engine/queue/element.js"
     title: "Queue"
+    desc: "A simple queue for tracks. NOTE: Temporarily automatically adds tracks shuffled to the queue."
 
 input:
   - url: "components/input/opensubsonic/element.js"
     title: "Opensubsonic"
   - url: "components/input/s3/element.js"
-    title: "S3 (TODO)"
+    title: "S3"
+    desc: "AWS S3 and services that provide the same surface API such as Cloudflare R2."
+    todo: true
 
 orchestrators:
   - url: "components/orchestrator/process-tracks/element.js"
     title: "Process inputs into tracks"
+    desc: "Whenever the cached tracks are initially loaded through the passed output element it will contextualize and then list tracks by using the passed input element. Afterwards it loops over all tracks and checks if metadata needs to be fetched. If anything has changed, it'll pass the results to the output element."
   - url: "components/orchestrator/queue-audio/element.js"
     title: "Queue ⭤ Audio"
+    desc: "Connects the given queue engine to the given audio engine."
   - url: "components/orchestrator/queue-tracks/element.js"
     title: "Queue ⭤ Tracks"
+    desc: "Sets the given queue element pool whenever the tracks signal from the given output changes."
+  - url: "components/orchestrator/search-tracks/element.js"
+    title: "Search ⭤ Tracks"
+    desc: "Supplies tracks to the given search processor whenever the tracks collection changes."
 
 output:
-  - url: "components/output/indexed-db/element.js"
-    title: "IndexedDB"
+  - url: "components/output/polymorphic/indexed-db/element.js"
+    title: "Polymorphic / IndexedDB"
+    desc: "Stores output into the local indexedDB. Supports any type of data that indexedDB supports."
 
 processors:
   - url: "components/processor/artwork/element.js"
     title: "Artwork"
+    desc: "Fetches cover art for a given set of tracks, stored locally in indexedDB. Checks the audio metadata first, then MusicBrainz and uses Last.fm as the fallback."
   - url: "components/processor/metadata/element.js"
     title: "Metadata"
+    desc: "Fetch audio metadata for a given set of tracks, adding to the `Track` object."
   - url: "components/processor/search/element.js"
     title: "Search"
+    desc: "Provides a way to search through a collection of tracks, powered by orama.js"
+
+supplements:
+  - title: "Last.fm scrobbler"
+    todo: true
 
 transformers:
-  - url: "components/transformer/output-lenses/element.js"
-    title: "Output Lenses (TODO)"
+  - url: "components/transformer/output/bytes/cambria/element.js"
+    title: "Output / Bytes / Cambria lenses"
+    desc: "Uses the Cambria library to seamlessly translate between data schemas so that no data migration is needed."
+    todo: true
 
 # SCHEMAS
 
 schemas:
   - url: "schemas/output/tracks/lexicon.json"
-    title: "Output / Tracks (TODO)"
+    title: "Output / Tracks"
+    todo: true
 
 ---
 <link rel="stylesheet" href="index.css" />
@@ -111,7 +140,7 @@ schemas:
         title: "Configurators",
         items: configurators,
         content: `
-          Elements that serve as an intermediate in order to make a particular kind of element configurable. In other words, these allow for an element to be swapped out with another that takes the same, or a subset of the actions and data output.
+          Elements that serve as an intermediate in order to make a particular kind of element configurable. In other words, these allow for an element to be swapped out with another that takes the same set of the actions and data output.
         `
       }) }}
 
@@ -143,7 +172,7 @@ schemas:
         title: "Output",
         items: output,
         content: `
-        Output is application-derived data such as playlists. These elements can receive such data and keep it around.
+        Output is application-derived data such as playlists. These elements can receive such data and keep it around. These are categorised by the type of data they ingest, or many types in the case of polymorphic.
         `
       }) }}
 
@@ -167,7 +196,7 @@ schemas:
         title: "Transformers",
         items: transformers,
         content: `
-        Transform data from one schema into another. See schema section below for more information.
+        Transform data from one format or schema into another. See schema section below for more information. Just as configurators, these are intermediates and require to have the same set of actions as the element it targets.
         `
       }) }}
     </div>
@@ -177,7 +206,7 @@ schemas:
   <section>
     <h2 id="schemas">Schemas</h2>
 
-    <p>All of the elements here are built with these specific data schemas in mind. That said, you can mix elements that use different schemas; you just have to put a transformer between them in order to translate between the schemas.</p>
+    <p>All of the elements here are built with these data schemas in mind. That said, you can mix elements that use different schemas; you just have to put a transformer between them in order to translate between the schemas.</p>
 
     {{ await comp.list({ items: schemas }) }}
   </section>

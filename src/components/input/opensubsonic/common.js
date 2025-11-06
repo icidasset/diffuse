@@ -8,7 +8,7 @@ import { IDB_SERVERS, SCHEME } from "./constants.js";
 /**
  * @import {Child} from "subsonic-api"
  * @import {Server} from "./types.d.ts";
- * @import {Track} from "@components/core/types.d.ts";
+ * @import {Track} from "@common/types.d.ts";
  */
 
 /**

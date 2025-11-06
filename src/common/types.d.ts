@@ -1,5 +1,3 @@
-import type { SignalReader } from "@common/signal.d.ts";
-
 /* INPUT */
 
 /**
@@ -29,28 +27,6 @@ export type InputActions = {
 };
 
 export type InputElement = HTMLElement & InputActions;
-
-/* OUTPUT */
-
-export interface Output<S = TrackStats, T = TrackTags> {
-  tracks: Track<S, T>[];
-}
-
-export type OutputActions = {
-  getTracks(): Promise<Track[]>;
-  putTracks(tracks: Track[]): Promise<void>;
-};
-
-export type OutputElement = HTMLElement & OutputManager;
-
-export type OutputManager = {
-  tracks: {
-    collection: SignalReader<Track[]>;
-    reload: () => Promise<void>;
-    save: (tracks: Track[]) => Promise<void>;
-    state: SignalReader<"loading" | "loaded">;
-  };
-};
 
 /* TRACKS */
 

@@ -1,5 +1,5 @@
 import type { IPicture } from "music-metadata";
-import type { TrackStats, TrackTags } from "@components/core/types.d.ts";
+import type { TrackStats, TrackTags } from "@common/types.d.ts";
 
 export type Actions = {
   supply: (

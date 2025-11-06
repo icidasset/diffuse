@@ -14,14 +14,14 @@
 
     <!-- Inputs, Outputs & Processors -->
     <di-opensubsonic></di-opensubsonic>
-    <do-indexed-db></do-indexed-db>
+    <dop-indexed-db></dop-indexed-db>
     <dp-metadata></dp-metadata>
 
     <!-- Orchestrators -->
     <do-process-tracks
       input-selector="di-opensubsonic"
       metadata-processor-selector="dp-metadata"
-      output-selector="do-indexed-db"
+      output-selector="dop-indexed-db"
     ></do-process-tracks>
 
     <do-queue-audio
@@ -32,7 +32,7 @@
 
     <do-queue-tracks
       input-selector="di-opensubsonic"
-      output-selector="do-indexed-db"
+      output-selector="dop-indexed-db"
       queue-engine-selector="de-queue"
     ></do-queue-tracks>
 

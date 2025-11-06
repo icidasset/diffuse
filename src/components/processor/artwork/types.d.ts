@@ -1,4 +1,4 @@
-import type { TrackTags } from "@components/core/types.d.ts";
+import type { TrackTags } from "@common/types.d.ts";
 
 export type Actions = {
   artwork(request: ArtworkRequest): Promise<Artwork[]>;

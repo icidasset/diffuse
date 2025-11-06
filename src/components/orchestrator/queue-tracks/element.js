@@ -2,7 +2,8 @@ import { DiffuseElement, query } from "@common/element.js";
 import { untracked } from "@common/signal.js";
 
 /**
- * @import {InputElement, OutputElement, Track} from "@components/core/types.d.ts"
+ * @import {InputElement, Track} from "@common/types.d.ts"
+ * @import {OutputElement} from "@components/output/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -10,8 +11,8 @@ import { untracked } from "@common/signal.js";
 ////////////////////////////////////////////
 
 /**
- * Fill the queue automatically with tracks
- * whenever tracks have been loaded,
+ * Update the queue pool whenever
+ * tracks have been loaded,
  * or the tracks collection changes.
  */
 class QueueTracksOrchestrator extends DiffuseElement {

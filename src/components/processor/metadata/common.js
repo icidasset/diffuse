@@ -4,7 +4,7 @@ import { HttpClient } from "@tokenizer/http";
 import { tokenizer as rangeTokenizer } from "@tokenizer/range";
 
 /**
- * @import { TrackStats, TrackTags } from "@components/core/types.d.ts";
+ * @import { TrackStats, TrackTags } from "@common/types.d.ts";
  * @import { Extraction, Urls } from "./types.d.ts";
  */
 

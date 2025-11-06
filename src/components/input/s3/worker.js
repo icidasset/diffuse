@@ -12,7 +12,7 @@ import {
 import { SCHEME } from "./constants.js";
 
 /**
- * @import { InputActions as Actions, Track } from "@components/core/types.d.ts";
+ * @import { InputActions as Actions, Track } from "@common/types.d.ts";
  * @import { Bucket } from "./types.d.ts"
  */
 

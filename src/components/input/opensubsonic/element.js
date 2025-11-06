@@ -2,7 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 import { use } from "@common/worker.js";
 
 /**
- * @import {InputActions} from "@components/core/types.d.ts"
+ * @import {InputActions} from "@common/types.d.ts"
  */
 
 ////////////////////////////////////////////

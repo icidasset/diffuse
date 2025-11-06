@@ -79,3 +79,16 @@ ol {
   min-width: min(var(--container-xs), 100%);
   width: 32.5%;
 }
+
+.list-description {
+  font-size: var(--fs-xs);
+  margin-bottom: var(--space-xs);
+  margin-top: var(--space-2xs);
+  opacity: 0.6;
+}
+
+.todo {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  opacity: 0.4;
+}

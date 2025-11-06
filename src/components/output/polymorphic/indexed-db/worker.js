@@ -1,11 +1,10 @@
 import * as IDB from "idb-keyval";
 
-import { jsonDecode, jsonEncode } from "@common/index.js";
 import { IDB_PREFIX } from "./constants.js";
 import { define, ostiary } from "@common/worker.js";
 
 /**
- * @import {OutputActions, Track} from "@components/core/types.d.ts";
+ * @import {Track} from "@common/types.d.ts";
  */
 
 ////////////////////////////////////////////
@@ -13,23 +12,19 @@ import { define, ostiary } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @type {OutputActions['getTracks']}
+ * @returns {Promise<Track[]>}
  */
 export async function getTracks() {
-  const encoded = await get({ name: "tracks.json" });
-  if (!encoded) return [];
-
-  /** @type {Track[]} */
-  const tracks = jsonDecode(encoded);
-  return tracks;
+  /** @type {Track[] | null} */
+  const tracks = await get({ name: "tracks.json" });
+  return tracks ?? [];
 }
 
 /**
- * @type {OutputActions['putTracks']}
+ * @param {Track[]} tracks
  */
 export async function putTracks(tracks) {
-  const data = jsonEncode(tracks);
-  await put({ name: "tracks.json", data });
+  await put({ name: "tracks.json", data: tracks });
 }
 
 ////////////////////////////////////////////
@@ -54,7 +49,7 @@ async function get({ name }) {
 }
 
 /**
- * @param {{ data: Uint8Array; name: string }} _
+ * @param {{ data: any; name: string }} _
  */
 async function put({ data, name }) {
   return await IDB.set(`${IDB_PREFIX}/${name}`, data);

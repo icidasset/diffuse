@@ -7,7 +7,7 @@ import { define, ostiary } from "@common/worker.js";
 import { signal } from "@common/signal.js";
 
 /**
- * @import {Track} from "@components/core/types.d.ts"
+ * @import {Track} from "@common/types.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
 

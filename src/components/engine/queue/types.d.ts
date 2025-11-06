@@ -1,4 +1,4 @@
-import type { Track, TrackStats, TrackTags } from "@components/core/types.d.ts";
+import type { Track, TrackStats, TrackTags } from "@common/types.d.ts";
 import type { SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {

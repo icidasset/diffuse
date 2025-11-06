@@ -5,7 +5,7 @@ import { connectionsFromQuery } from "../common.js";
 import { use } from "@common/worker.js";
 
 /**
- * @import { GroupConsult, InputActions as Actions, Track } from "@components/core/types.d.ts";
+ * @import { GroupConsult, InputActions as Actions, Track } from "@common/types.d.ts";
  */
 
 ////////////////////////////////////////////

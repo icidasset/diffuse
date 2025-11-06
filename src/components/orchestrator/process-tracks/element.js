@@ -4,7 +4,8 @@ import { DiffuseElement, query } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 /**
- * @import {InputElement, OutputElement, Track} from "@components/core/types.d.ts"
+ * @import {InputElement, Track} from "@common/types.d.ts"
+ * @import {OutputElement} from "@components/output/types.d.ts"
  */
 
 ////////////////////////////////////////////

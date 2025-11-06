@@ -16,22 +16,27 @@
   <main>
     <section class="windows">
       <dtw-window-manager>
+        <!-- INPUT -->
         <dtw-window id="input-window">
           <span slot="title-icon"><img src="/images/icons/windows_98/cd_audio_cd_a-0.png" height="14" /></span>
           <span slot="title">Manage audio inputs</span>
           <p>👀</p>
         </dtw-window>
+
+        <!-- OUTPUT -->
         <dtw-window id="output-window">
           <span slot="title-icon"><img src="/images/icons/windows_98/computer_user_pencil-0.png" height="14" /></span>
           <span slot="title">Manage user data</span>
           <p>👀</p>
         </dtw-window>
+
+        <!-- BROWSER -->
         <dtw-window id="browser-window" open>
           <span slot="title-icon"><img src="/images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
           <span slot="title">Browse collection</span>
           <dtw-browser
             input-selector="di-opensubsonic"
-            output-selector="do-indexed-db"
+            output-selector="dop-indexed-db"
             queue-selector="de-queue"
           ></dtw-browser>
         </dtw-window>
@@ -72,21 +77,21 @@
   -->
   <de-queue fill-size="5"></de-queue>
 
-  <!-- Inputs, Outputs & Processors -->
+  <!-- Inputs, Outputs, Processors & Transformers -->
   <di-opensubsonic></di-opensubsonic>
-  <do-indexed-db></do-indexed-db>
+  <dop-indexed-db></dop-indexed-db>
   <dp-metadata></dp-metadata>
 
   <!-- Orchestrators -->
   <do-process-tracks
     input-selector="di-opensubsonic"
     metadata-processor-selector="dp-metadata"
-    output-selector="do-indexed-db"
+    output-selector="dop-indexed-db"
   ></do-process-tracks>
 
   <do-queue-tracks
     input-selector="di-opensubsonic"
-    output-selector="do-indexed-db"
+    output-selector="dop-indexed-db"
     queue-engine-selector="de-queue"
   ></do-queue-tracks>
 

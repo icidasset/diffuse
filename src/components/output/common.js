@@ -1,15 +1,16 @@
-import { effect, signal } from "@common/signal.js";
+import { signal } from "@common/signal.js";
 
 /**
- * @import {OutputManager, Track} from "@components/core/types.d.ts"
+ * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
 /**
- * @param {{ init?: () => Promise<boolean>; tracks: { get(): Promise<Track[]>; put(tracks: Track[]): Promise<void>; } }} _
- * @returns {OutputManager}
+ * @template Tracks
+ * @param {OutputManagerProperties<Tracks>} _
+ * @returns {OutputManager<Tracks>}
  */
 export function outputManager({ init, tracks }) {
-  const t = signal(/** @type {Track[]} */ ([]));
+  const t = signal(/** @type {Tracks} */ (tracks.empty()));
   const ts = signal(/** @type {"loading" | "loaded"} */ ("loading"));
 
   async function loadTracks() {
