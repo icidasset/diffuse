@@ -40,7 +40,7 @@ site.remoteFile(
 
 // BINARY ASSETS
 
-site.add("/favicons");
+site.add("/favicons", "/");
 site.add("/fonts");
 site.add("/images");
 
