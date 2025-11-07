@@ -18,6 +18,9 @@ configurators:
   - title: "Output"
     desc: "Allows the user to configure a specific output."
     todo: true
+  - title: "Scrobbles"
+    desc: "Configure multiple scrobblers (music trackers)."
+    todo: true
 
 engines:
   - url: "components/engine/audio/element.js"
@@ -30,6 +33,7 @@ engines:
 input:
   - url: "components/input/opensubsonic/element.js"
     title: "Opensubsonic"
+    desc: "Add any (open)subsonic server."
   - url: "components/input/s3/element.js"
     title: "S3"
     desc: "AWS S3 and services that provide the same surface API such as Cloudflare R2."
@@ -68,18 +72,39 @@ processors:
 supplements:
   - title: "Last.fm scrobbler"
     todo: true
+  - title: "ListenBrainz scrobbler"
+    todo: true
+  - title: "Rocksky scrobbler"
+    todo: true
+  - title: "Teal.fm scrobbler"
+    todo: true
 
 transformers:
   - url: "components/transformer/output/bytes/cambria/element.js"
     title: "Output / Bytes / Cambria lenses"
     desc: "Uses the Cambria library to seamlessly translate between data schemas so that no data migration is needed."
     todo: true
+  - title: "Output / Bytes / JSON"
+    desc: "Raw data schema output ⇄ JSON Uint8Array."
+    todo: true
+  - title: "Output / String / JSON"
+    desc: "Raw data schema output ⇄ JSON UTF8 string."
+    todo: true
 
 # SCHEMAS
 
 schemas:
-  - url: "schemas/output/tracks/lexicon.json"
-    title: "Output / Tracks"
+  - title: "Output / Favourites"
+    desc: "Indicate a user's favourite audio. Not a property of a track because tracks are associated with a specific source. Favourites may match with multiple tracks. Specified using the audio's title and artist."
+    todo: true
+  - title: "Output / Playlist"
+    desc: "Just like favourites, does not refer to specific tracks. Unlike favourites, must also specify the album. Can also be considered a collection which is basically an unordered playlist."
+    todo: true
+  - title: "Output / Progress"
+    desc: "Used to track progress of (long) audio playback."
+    todo: true
+  - title: "Output / Tracks"
+    desc: "Represents audio that can be played, or a placeholder for a source of tracks. Contains a URI that will resolve to the audio. This object may be cached if convenient."
     todo: true
 
 ---
