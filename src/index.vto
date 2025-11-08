@@ -91,9 +91,9 @@ transformers:
     desc: "Raw data schema output ⇄ JSON UTF8 string."
     todo: true
 
-# SCHEMAS
+# DEFINITIONS
 
-schemas:
+definitions:
   - title: "Output / Favourites"
     desc: "Indicate a user's favourite audio. Not a property of a track because tracks are associated with a specific source. Favourites may match with multiple tracks. Specified using the audio's title and artist."
     todo: true
@@ -227,11 +227,11 @@ schemas:
     </div>
   </section>
 
-  <!-- SCHEMAS -->
+  <!-- DEFINITIONS -->
   <section>
-    <h2 id="schemas">Schemas</h2>
+    <h2 id="definitions">Definitions</h2>
 
-    <p>All of the elements here are built with these data schemas in mind. That said, you can mix elements that use different schemas; you just have to put a transformer between them in order to translate between the schemas.</p>
+    <p>All of the elements here are built with these data definitions in mind. That said, you can mix elements that use different definitions; you just have to put a transformer between them in order to translate between them.</p>
 
     {{ await comp.list({ items: schemas }) }}
   </section>

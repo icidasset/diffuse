@@ -1,3 +1,9 @@
+import type { mainSchema as Track } from "../definitions/types/sh/diffuse/output/tracks.ts";
+
+// RE-EXPORT
+
+export type { mainSchema as Track } from "../definitions/types/sh/diffuse/output/tracks.ts";
+
 /* INPUT */
 
 /**
@@ -31,99 +37,3 @@ export type InputElement = HTMLElement & InputActions;
 /* TRACKS */
 
 export type ResolvedUri = undefined | { url: string; expiresAt: number }; // TODO: Streams?
-
-export interface Track<Stats = TrackStats, Tags = TrackTags> {
-  id: string;
-
-  kind?: "music" | "audiobook" | "podcast" | "placeholder" | "miscellaneous";
-  stats?: Stats;
-  tags?: Tags;
-
-  // NOTE: This is a "semi-permanent" URI.
-  //
-  // Tracks are cached so you can't, for example,
-  // use an URL that expires in several hours.
-  uri: string;
-}
-
-export interface TrackStats {
-  /** Album gain in dB */
-  albumGain?: number;
-
-  /** Bits per second */
-  bitrate?: number;
-
-  /** Bit depth */
-  bitsPerSample?: number;
-
-  /** Compression algorithm used */
-  codec?: string;
-
-  /** Encoding format used */
-  container?: string;
-
-  /** Duration in seconds */
-  duration?: number;
-
-  /** Is track lossless? */
-  lossless?: boolean;
-
-  /** Number of audio channels */
-  numberOfChannels?: number;
-
-  /** Samples per second */
-  sampleRate?: number;
-
-  /** Track gain in dB */
-  trackGain?: number;
-}
-
-export interface TrackTags {
-  album?: string;
-  albumartist?: string;
-  albumartists?: string[];
-  albumartistsort?: string;
-  albumsort?: string;
-  arranger?: string[];
-  artist?: string;
-  artists?: string[];
-  artistsort?: string;
-  asin?: string;
-  averageLevel?: number;
-  barcode?: string;
-  bpm?: number;
-  catalognumbers?: string[];
-  compilation?: boolean;
-  composers?: string[];
-  composersort?: string;
-  conductors?: string[];
-  date?: string;
-  disc: { no: number; of?: number };
-  djmixers?: string[];
-  engineers?: string[];
-  gapless?: boolean;
-  genres?: string[];
-  isrc?: string[];
-  labels?: string[];
-  lyricists?: string[];
-  media?: string;
-  mixers?: string[];
-  moods?: string[];
-  originaldate?: string;
-  originalyear?: number;
-  peakLevel?: number;
-  producers?: string[];
-  publishers?: string[];
-  releasecountry?: string;
-  releasedate?: string;
-  releasestatus?: string;
-  releasetypes?: string[];
-  remixers?: string[];
-  technicians?: string[];
-  title: string;
-  titlesort?: string;
-  track: { no: number; of?: number };
-  work?: string;
-  writers?: string[];
-  year?: number;
-}
