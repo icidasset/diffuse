@@ -92,6 +92,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
           method: "GET",
           uri: track.uri,
         });
+
         const resHead = await this.input.resolve({
           method: "HEAD",
           uri: track.uri,

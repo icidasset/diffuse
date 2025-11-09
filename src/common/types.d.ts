@@ -1,8 +1,8 @@
-import type { mainSchema as Track } from "../definitions/types/sh/diffuse/output/tracks.ts";
+import type { Track } from "../definitions/types.d.ts";
 
 // RE-EXPORT
 
-export type { mainSchema as Track } from "../definitions/types/sh/diffuse/output/tracks.ts";
+export type { Track } from "../definitions/types.d.ts";
 
 /* INPUT */
 

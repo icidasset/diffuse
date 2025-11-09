@@ -37,6 +37,7 @@
     // Paths
     "@common/": "./src/common/",
     "@components/": "./src/components/",
+    "@definitions/": "./src/definitions/",
 
     // Build
     "@std/fs": "jsr:@std/fs@^1.0.19",
