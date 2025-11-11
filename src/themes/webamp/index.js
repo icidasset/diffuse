@@ -2,6 +2,7 @@ import "@components/orchestrator/process-tracks/element.js";
 import "@components/orchestrator/queue-tracks/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/processor/metadata/element.js";
+import "@components/transformer/output/string/json/element.js";
 
 import * as Input from "@components/input/opensubsonic/element.js";
 import * as Queue from "@components/engine/queue/element.js";

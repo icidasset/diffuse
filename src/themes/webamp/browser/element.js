@@ -16,7 +16,7 @@ class Browser extends DiffuseElement {
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
 
-    /** @type {OutputElement} */
+    /** @type {OutputElement<Track[]>} */
     this.output = query(this, "output-selector");
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */

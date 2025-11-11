@@ -4,7 +4,7 @@ import { effect, signal } from "@common/signal.js";
 import { define, use } from "@common/worker.js";
 
 /**
- * @import {BroadcastingStatus, FnParams, FnReturn, HtmlTagFunction, MorphOptions} from "./element.d.ts"
+ * @import {BroadcastingStatus, FnParams, FnReturn} from "./element.d.ts"
  * @import {Signal} from "./signal.d.ts"
  */
 

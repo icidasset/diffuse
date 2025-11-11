@@ -1,13 +1,6 @@
 import type { SignalReader } from "@common/signal.d.ts";
-import type { Track } from "@common/types.d.ts";
 
-// TODO: Do we need this?
-//
-// export interface Output<S = TrackStats, T = TrackTags> {
-//   tracks: Track<S, T>[];
-// }
-
-export type OutputElement = HTMLElement & OutputManager<Track[]>;
+export type OutputElement<Tracks> = HTMLElement & OutputManager<Tracks>;
 
 export type OutputManager<Tracks> = {
   tracks: {

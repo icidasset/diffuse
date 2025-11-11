@@ -36,7 +36,7 @@
           <span slot="title">Browse collection</span>
           <dtw-browser
             input-selector="di-opensubsonic"
-            output-selector="dop-indexed-db"
+            output-selector="#output"
             queue-selector="de-queue"
           ></dtw-browser>
         </dtw-window>
@@ -75,23 +75,26 @@
   COMPONENTS
 
   -->
-  <de-queue fill-size="5"></de-queue>
+  <de-queue fill-size="10"></de-queue>
 
-  <!-- Inputs, Outputs, Processors & Transformers -->
+  <!-- Inputs, Output & Processors -->
   <di-opensubsonic></di-opensubsonic>
   <dop-indexed-db></dop-indexed-db>
   <dp-metadata></dp-metadata>
+
+  <!-- Transformers -->
+  <dtos-json id="output" output-selector="dop-indexed-db"></dtos-json>
 
   <!-- Orchestrators -->
   <do-process-tracks
     input-selector="di-opensubsonic"
     metadata-processor-selector="dp-metadata"
-    output-selector="dop-indexed-db"
+    output-selector="#output"
   ></do-process-tracks>
 
   <do-queue-tracks
     input-selector="di-opensubsonic"
-    output-selector="dop-indexed-db"
+    output-selector="#output"
     queue-engine-selector="de-queue"
   ></do-queue-tracks>
 

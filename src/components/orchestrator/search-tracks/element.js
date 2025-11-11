@@ -21,7 +21,7 @@ class SearchTracksOrchestrator extends DiffuseElement {
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
 
-    /** @type {OutputElement} */
+    /** @type {OutputElement<Track[]>} */
     this.output = query(this, "output-selector");
 
     /** @type {import("@components/processor/search/element.js").CLASS} */

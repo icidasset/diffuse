@@ -58,6 +58,10 @@ site.remoteFile(
   ),
 );
 
+// DEFINITIONS
+
+site.add("/definitions");
+
 // MISC
 
 site.use(sourceMaps());

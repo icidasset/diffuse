@@ -80,8 +80,7 @@ supplements:
     todo: true
 
 transformers:
-  - url: "components/transformer/output/bytes/cambria/element.js"
-    title: "Output / Bytes / Cambria lenses"
+  - title: "Output / Bytes / Cambria lenses"
     desc: "Uses the Cambria library to seamlessly translate between data schemas so that no data migration is needed."
     todo: true
   - title: "Output / Bytes / JSON"
@@ -89,7 +88,7 @@ transformers:
     todo: true
   - title: "Output / String / JSON"
     desc: "Raw data schema output ⇄ JSON UTF8 string."
-    todo: true
+    url: "components/transformer/output/string/json/element.js"
 
 # DEFINITIONS
 
@@ -105,7 +104,7 @@ definitions:
     todo: true
   - title: "Output / Tracks"
     desc: "Represents audio that can be played, or a placeholder for a source of tracks. Contains a URI that will resolve to the audio. This object may be cached if convenient."
-    todo: true
+    url: "definitions/output/tracks.json"
 
 ---
 <link rel="stylesheet" href="index.css" />
@@ -233,7 +232,7 @@ definitions:
 
     <p>All of the elements here are built with these data definitions in mind. That said, you can mix elements that use different definitions; you just have to put a transformer between them in order to translate between them.</p>
 
-    {{ await comp.list({ items: schemas }) }}
+    {{ await comp.list({ items: definitions }) }}
   </section>
 
   <!-- DEMOS -->
