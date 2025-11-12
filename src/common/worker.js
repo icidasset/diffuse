@@ -1,13 +1,19 @@
 import Queue from "@mary/ds-queue";
-import { defineWorkerFn, useWorkerFn } from "@mys/worker-fn";
+
+import { MRpc } from "@mys/m-rpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
+
 import { batch } from "./signal.js";
+
+export { getTransferables } from "@okikio/transferables";
 
 /**
  * @import {MRpcCallOptions, WorkerGlobalScope} from "@mys/m-rpc";
- * @import {Announcement} from "./worker.d.ts"
+ *
+ * @import {IncompleteArray} from "./types.d.ts"
+ * @import {Announcement, ProxiedActions, ProxyProvider} from "./worker.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -44,6 +50,66 @@ export function ostiary(
       callback(port);
     },
   );
+}
+
+/**
+ * @param {MessagePort | Worker} workerOrPort
+ */
+export function portProvider(workerOrPort) {
+  return () => {
+    const channel = new MessageChannel();
+
+    channel.port1.addEventListener("message", (event) => {
+      console.log("SEND", event.data);
+      workerOrPort.postMessage(event.data);
+    });
+
+    /**
+     * @param {Event} event
+     */
+    const workerListener = (event) => {
+      const msgEvent = /** @type {MessageEvent} */ (event);
+      // const data = { ...msgEvent.data, ns };
+      console.log(msgEvent.data);
+      channel.port1.postMessage(msgEvent.data);
+    };
+
+    workerOrPort.addEventListener("message", workerListener);
+
+    channel.port1.start();
+    channel.port2.start();
+
+    return {
+      disconnect: () => {
+        workerOrPort.removeEventListener("message", workerListener);
+        channel.port1.close();
+        channel.port2.close();
+      },
+      port: channel.port2,
+    };
+  };
+}
+
+/**
+ * @template {Record<string, (...args: any[]) => any>} Actions
+ * @template {keyof Actions} T
+ * @template {T[]} U
+ * @param {U & ([T] extends [U[number]] ? unknown : IncompleteArray<T>[])} actions
+ */
+export function proxyProvider(actions) {
+  /**
+   * @type {ProxyProvider<Actions>}
+   */
+  return (workerOrPort) => {
+    /** @type {Record<string | number | symbol, (...args: any[]) => any>} */
+    const proxy = {};
+
+    actions.forEach((action) => {
+      proxy[action] = use(action.toString(), workerOrPort);
+    });
+
+    return /** @type {ProxiedActions<Actions>} */ (proxy);
+  };
 }
 
 ////////////////////////////////////////////
@@ -99,12 +165,14 @@ export function define(
   fn,
   context = /** @type {WorkerGlobalScope} */ (globalThis),
 ) {
-  return defineWorkerFn(name, fn, {
-    port: /** @type {any} */ (context),
-  });
+  const rpc = MRpc.ensureMRpc(context);
+  return rpc.defineLocalFn(name, fn);
 }
 
 /**
+ * @template {(...args: I[]) => O} Fn
+ * @template I
+ * @template O
  * @param {string} name
  * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
  * @param {MRpcCallOptions} [options]
@@ -114,10 +182,25 @@ export function use(
   context = /** @type {WorkerGlobalScope} */ (globalThis),
   options,
 ) {
-  return useWorkerFn(name, /** @type {any} */ (context), {
-    timeout: 60000,
-    ...(options || {}),
+  const rpc = MRpc.ensureMRpc(context);
+  const _fn = rpc.useRemoteFn(name, { timeout: 60000, ...(options || {}) });
+
+  const fn = /** @type {Fn} */ (async (...args) => {
+    try {
+      return await _fn(...args);
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message ===
+          `The remote threw an error when calling the function "${name}".`
+      ) {
+        err.message = `The worker function "${name}" throws an error.`;
+      }
+      throw err;
+    }
   });
+
+  return fn;
 }
 
 ////////////////////////////////////////////

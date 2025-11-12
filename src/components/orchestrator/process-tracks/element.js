@@ -1,7 +1,6 @@
-import deepDiff from "@fry69/deep-diff";
-
 import { DiffuseElement, query } from "@common/element.js";
-import { signal } from "@common/signal.js";
+import { signal, untracked } from "@common/signal.js";
+import { getTransferables, use } from "@common/worker.js";
 
 /**
  * @import {InputElement, Track} from "@common/types.d.ts"
@@ -18,8 +17,15 @@ import { signal } from "@common/signal.js";
  * from the assigned output element.
  */
 class ProcessTracksOrchestrator extends DiffuseElement {
+  #process;
+
   constructor() {
     super();
+
+    // Setup worker
+    const name = `diffuse/orchestrator/process-tracks/${this.group}`;
+    const url = "/components/orchestrator/process-tracks/worker.js";
+    const worker = new Worker(url, { name, type: "module" });
 
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
@@ -29,6 +35,11 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
     /** @type {import("@components/processor/metadata/element.js").CLASS} */
     this.metadataProcessor = query(this, "metadata-processor-selector");
+
+    // Worker proxy
+    this.#process = use("process", worker, {
+      transfer: getTransferables,
+    });
   }
 
   // SIGNALS
@@ -55,7 +66,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
       const state = this.output.tracks.state();
       if (state !== "loaded") return;
 
-      this.process();
+      untracked(() => this.process());
     });
   }
 
@@ -71,50 +82,31 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
     const cachedTracks = this.output.tracks.collection();
 
-    // Contextualize
-    await this.input.contextualize(cachedTracks);
+    // External ports
+    const ports = {
+      input: this.input.port(),
+      metadataProcessor: this.metadataProcessor.port(),
+    };
 
-    // List
-    const tracks = await this.input.list(cachedTracks);
+    console.log(ports);
 
-    // Fetch metadata if needed
-    const tracksWithMetadata = await tracks.reduce(
-      /**
-       * @param {Promise<Track[]>} promise
-       * @param {Track} track
-       */
-      async (promise, track) => {
-        const acc = await promise;
-
-        if (track.tags && track.stats) return [...acc, track];
-
-        const resGet = await this.input.resolve({
-          method: "GET",
-          uri: track.uri,
-        });
-
-        const resHead = await this.input.resolve({
-          method: "HEAD",
-          uri: track.uri,
-        });
-
-        if (!resGet) return [...acc, track];
-
-        const { stats, tags } = await this.metadataProcessor.supply({
-          urls: { get: resGet.url, head: resHead?.url || resGet.url },
-        });
-
-        return [...acc, { ...track, stats, tags }];
+    // Send everything to worker
+    const result = await this.#process({
+      ports: {
+        input: ports.input.port,
+        metadataProcessor: ports.metadataProcessor.port,
       },
-      Promise.resolve([]),
-    );
+      tracks: cachedTracks,
+    });
 
-    // Changed?
-    const diff = deepDiff.diff(tracksWithMetadata, cachedTracks);
-    const changed = !!diff;
+    console.log(result);
 
     // Save if changed
-    if (changed) await this.output.tracks.save(tracksWithMetadata);
+    if (result) await this.output.tracks.save(result);
+
+    // Close external channels
+    ports.input.disconnect();
+    ports.metadataProcessor.disconnect();
 
     // Fin
     console.log("🪵 Processing completed");

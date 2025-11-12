@@ -2,10 +2,11 @@ import QS from "query-string";
 
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
-import { listen, use } from "@common/worker.js";
+import { listen, proxyProvider } from "@common/worker.js";
 
 /**
- * @import {ActionsProxied, Item} from "./types.d.ts"
+ * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts";
+ * @import {Actions, Item} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -13,7 +14,7 @@ import { listen, use } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {ActionsProxied}
+ * @implements {ProxiedActions<Actions>}
  */
 class QueueEngine extends DiffuseElement {
   constructor() {
@@ -44,17 +45,16 @@ class QueueEngine extends DiffuseElement {
     listen("now", this.#now.set, port);
     listen("past", this.#past.set, port);
 
-    /** @type {ActionsProxied['add']} */
-    this.add = use("add", port);
+    /** @type {ProxyProvider<Actions>} */
+    const proxy = proxyProvider(["add", "pool", "shift", "unshift"]);
 
-    /** @type {ActionsProxied['pool']} */
-    this.pool = use("pool", port);
+    // Worker proxy
+    const w = proxy(port);
 
-    /** @type {ActionsProxied['shift']} */
-    this.shift = use("shift", port);
-
-    /** @type {ActionsProxied['unshift']} */
-    this.unshift = use("unshift", port);
+    this.add = w["add"];
+    this.pool = w["pool"];
+    this.shift = w["shift"];
+    this.unshift = w["unshift"];
   }
 
   // SIGNALS

@@ -1,4 +1,4 @@
-import type { Track, TrackStats, TrackTags } from "@common/types.d.ts";
+import type { Track } from "@common/types.d.ts";
 import type { SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {
@@ -8,15 +8,8 @@ export type Actions = {
   unshift: () => void;
 };
 
-export type ActionsProxied = {
-  add: (args: { inFront?: boolean; items: Item[] }) => Promise<void>;
-  pool: (tracks: Track[]) => Promise<void>;
-  shift: () => Promise<void>;
-  unshift: () => Promise<void>;
-};
-
-export type Item<Stats = TrackStats, Tags = TrackTags> =
-  & Track<Stats, Tags>
+export type Item =
+  & Track
   & { manualEntry?: boolean };
 
 export type State = {

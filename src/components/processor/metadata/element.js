@@ -1,7 +1,8 @@
 import { DiffuseElement } from "@common/element.js";
-import { use } from "@common/worker.js";
+import { portProvider, proxyProvider } from "@common/worker.js";
 
 /**
+ * @import {PortProviderMethod, ProxiedActions, ProxyProvider, ProxyProviderMethod} from "@common/worker.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
 
@@ -10,7 +11,9 @@ import { use } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {Actions}
+ * @implements {ProxiedActions<Actions>}
+ * @implements {PortProviderMethod}
+ * @implements {ProxyProviderMethod<Actions>}
  */
 class MetadataProcessor extends DiffuseElement {
   constructor() {
@@ -21,8 +24,14 @@ class MetadataProcessor extends DiffuseElement {
     const url = "/components/processor/metadata/worker.js";
     const worker = new Worker(url, { name, type: "module" });
 
+    /** @type {ProxyProvider<Actions>} */
+    this.proxy = proxyProvider(["supply"]);
+
     // Worker proxy
-    this.supply = use("supply", worker);
+    this.supply = this.proxy(worker).supply;
+
+    // Provide a channel to the worker
+    this.port = portProvider(worker);
   }
 }
 
