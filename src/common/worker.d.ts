@@ -19,12 +19,16 @@ export type PortProviderMethod = { port: PortProvider };
 /** */
 export type ProxiedActions<
   Actions extends Record<string, (...args: any[]) => any>,
-  K extends keyof Actions = keyof Actions,
-  FR = (ReturnType<Actions[K]> extends Promise<unknown> ? ReturnType<Actions[K]>
-    : Promise<ReturnType<Actions[K]>>),
-  F = (...args: Parameters<Actions[K]>) => FR,
-  R = Record<keyof Actions, F>,
-> = R;
+> = {
+  [A in keyof Actions]: ProxiedAction<Actions[A]>;
+};
+
+export type ProxiedAction<
+  Action extends (...args: any[]) => any,
+  PromisedReturn =
+    (ReturnType<Action> extends Promise<unknown> ? ReturnType<Action>
+      : Promise<ReturnType<Action>>),
+> = (...args: Parameters<Action>) => PromisedReturn;
 
 /** */
 export type ProxyProvider<
