@@ -3,6 +3,7 @@ import type {
   PortProviderMethod,
   ProxiedActions,
   ProxyProviderMethod,
+  WorkerProviderMethod,
 } from "./worker.d.ts";
 
 // RE-EXPORT
@@ -39,7 +40,7 @@ export type InputActions = {
 
 export type InputElement =
   & HTMLElement
-  & PortProviderMethod
+  & WorkerProviderMethod
   & ProxiedActions<InputActions>
   & ProxyProviderMethod<InputActions>;
 

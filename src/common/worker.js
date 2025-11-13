@@ -60,7 +60,6 @@ export function portProvider(workerOrPort) {
     const channel = new MessageChannel();
 
     channel.port1.addEventListener("message", (event) => {
-      console.log("SEND", event.data);
       workerOrPort.postMessage(event.data);
     });
 
@@ -69,8 +68,6 @@ export function portProvider(workerOrPort) {
      */
     const workerListener = (event) => {
       const msgEvent = /** @type {MessageEvent} */ (event);
-      // const data = { ...msgEvent.data, ns };
-      console.log(msgEvent.data);
       channel.port1.postMessage(msgEvent.data);
     };
 

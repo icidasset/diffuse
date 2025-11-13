@@ -39,3 +39,9 @@ export type ProxyProvider<
 export type ProxyProviderMethod<
   Actions extends Record<string, (...args: any[]) => any>,
 > = { proxy: ProxyProvider<Actions> };
+
+/** */
+export type WorkerProvider = (group?: string) => Worker;
+
+/** */
+export type WorkerProviderMethod = { worker: WorkerProvider };

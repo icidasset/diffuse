@@ -2,7 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 import { portProvider, proxyProvider } from "@common/worker.js";
 
 /**
- * @import {PortProviderMethod, ProxiedActions, ProxyProvider, ProxyProviderMethod} from "@common/worker.d.ts"
+ * @import {PortProviderMethod, ProxiedActions, ProxyProvider, ProxyProviderMethod, WorkerProviderMethod} from "@common/worker.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
 
@@ -12,7 +12,7 @@ import { portProvider, proxyProvider } from "@common/worker.js";
 
 /**
  * @implements {ProxiedActions<Actions>}
- * @implements {PortProviderMethod}
+ * @implements {WorkerProviderMethod}
  * @implements {ProxyProviderMethod<Actions>}
  */
 class MetadataProcessor extends DiffuseElement {
@@ -20,18 +20,22 @@ class MetadataProcessor extends DiffuseElement {
     super();
 
     // Setup worker
-    const name = `diffuse/processor/metadata/${this.group}`;
-    const url = "/components/processor/metadata/worker.js";
-    const worker = new Worker(url, { name, type: "module" });
+    const worker = this.worker(this.group);
 
     /** @type {ProxyProvider<Actions>} */
     this.proxy = proxyProvider(["supply"]);
 
     // Worker proxy
     this.supply = this.proxy(worker).supply;
+  }
 
-    // Provide a channel to the worker
-    this.port = portProvider(worker);
+  /**
+   * @param {string} [group]
+   */
+  worker(group) {
+    const name = `diffuse/processor/metadata/${group || crypto.randomUUID()}`;
+    const url = "/components/processor/metadata/worker.js";
+    return new Worker(url, { name, type: "module" });
   }
 }
 

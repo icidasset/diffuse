@@ -1,6 +1,6 @@
 import { DiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
-import { getTransferables, use } from "@common/worker.js";
+import { getTransferables, portProvider, use } from "@common/worker.js";
 
 /**
  * @import {InputElement, Track} from "@common/types.d.ts"
@@ -17,6 +17,7 @@ import { getTransferables, use } from "@common/worker.js";
  * from the assigned output element.
  */
 class ProcessTracksOrchestrator extends DiffuseElement {
+  #external;
   #process;
 
   constructor() {
@@ -36,8 +37,15 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     /** @type {import("@components/processor/metadata/element.js").CLASS} */
     this.metadataProcessor = query(this, "metadata-processor-selector");
 
+    // Create new workers specially for track processing
+    this.#external = {
+      input: portProvider(this.input.worker()),
+      metadataProcessor: portProvider(this.metadataProcessor.worker()),
+    };
+
     // Worker proxy
     this.#process = use("process", worker, {
+      timeout: 60000 * 60 * 2, // 2 hours
       transfer: getTransferables,
     });
   }
@@ -82,13 +90,11 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
     const cachedTracks = this.output.tracks.collection();
 
-    // External ports
+    // Establish channel between external workers and our processing worker
     const ports = {
-      input: this.input.port(),
-      metadataProcessor: this.metadataProcessor.port(),
+      input: this.#external.input(),
+      metadataProcessor: this.#external.metadataProcessor(),
     };
-
-    console.log(ports);
 
     // Send everything to worker
     const result = await this.#process({
@@ -99,9 +105,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
       tracks: cachedTracks,
     });
 
-    console.log(result);
-
-    // Save if changed
+    // Save if collection changed
     if (result) await this.output.tracks.save(result);
 
     // Close external channels

@@ -20,8 +20,6 @@ export async function process(args) {
   const { ports } = args;
   const cachedTracks = args.tracks;
 
-  console.log(args);
-
   /** @type {ProxyProvider<InputActions>} */
   const inputProvider = proxyProvider(INPUT_ACTIONS);
   const input = inputProvider(ports.input);
@@ -30,15 +28,14 @@ export async function process(args) {
   const metadataProcessorProvider = proxyProvider(["supply"]);
   const metadataProcessor = metadataProcessorProvider(ports.metadataProcessor);
 
+  ports.input.start();
+  ports.metadataProcessor.start();
+
   // Contextualize
   await input.contextualize(cachedTracks);
 
-  console.log("contextualized");
-
   // List
   const tracks = await input.list(cachedTracks);
-
-  console.log(tracks);
 
   // Fetch metadata if needed
   const tracksWithMetadata = await tracks.reduce(

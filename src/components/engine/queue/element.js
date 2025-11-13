@@ -51,10 +51,10 @@ class QueueEngine extends DiffuseElement {
     // Worker proxy
     const w = proxy(port);
 
-    this.add = w["add"];
-    this.pool = w["pool"];
-    this.shift = w["shift"];
-    this.unshift = w["unshift"];
+    this.add = w.add;
+    this.pool = w.pool;
+    this.shift = w.shift;
+    this.unshift = w.unshift;
   }
 
   // SIGNALS

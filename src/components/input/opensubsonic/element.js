@@ -20,9 +20,7 @@ class OpensubsonicInput extends DiffuseElement {
     super();
 
     // Setup worker
-    const name = `diffuse/input/opensubsonic/${this.group}`;
-    const url = "/components/input/opensubsonic/worker.js";
-    const worker = new Worker(url, { name, type: "module" });
+    const worker = this.worker(this.group);
 
     /** @type {ProxyProvider<InputActions>} */
     this.proxy = proxyProvider([
@@ -44,6 +42,16 @@ class OpensubsonicInput extends DiffuseElement {
 
     // Provide a channel to the worker
     this.port = portProvider(worker);
+  }
+
+  /**
+   * @param {string} [group]
+   */
+  worker(group) {
+    const name = `diffuse/input/opensubsonic/${group || crypto.randomUUID()}`;
+    const url = "/components/input/opensubsonic/worker.js";
+
+    return new Worker(url, { name, type: "module" });
   }
 }
 
