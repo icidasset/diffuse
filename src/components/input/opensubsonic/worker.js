@@ -148,6 +148,7 @@ export async function list(cachedTracks = []) {
 
         /** @type {Track} */
         const track = {
+          $type: "sh.diffuse.output.tracks",
           id: crypto.randomUUID(),
           kind: autoTypeToTrackKind(song.type),
           uri: buildURI(server, { songId: song.id, path }),
@@ -234,6 +235,7 @@ export async function list(cachedTracks = []) {
   // picked up whenever it is re-contextualized.
   return Object.values(servers).map((server) => {
     return {
+      $type: "sh.diffuse.output.tracks",
       id: crypto.randomUUID(),
       kind: "placeholder",
       uri: buildURI(server),

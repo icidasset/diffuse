@@ -110,6 +110,7 @@ export async function list(cachedTracks = []) {
 
         /** @type {Track} */
         const track = {
+          $type: "sh.diffuse.output.tracks",
           id,
           stats,
           tags,
@@ -164,6 +165,7 @@ export function demo() {
 
   /** @type {Track} */
   const track = {
+    $type: "sh.diffuse.output.tracks",
     id: crypto.randomUUID(),
     kind: "placeholder",
     uri,

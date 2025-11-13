@@ -1,10 +1,16 @@
-import type { Track } from "../definitions/types.d.ts";
+import type { Track } from "@definitions/types.d.ts";
+import type {
+  PortProviderMethod,
+  ProxiedActions,
+  ProxyProviderMethod,
+  WorkerProviderMethod,
+} from "./worker.d.ts";
 
 // RE-EXPORT
 
-export type { Track } from "../definitions/types.d.ts";
+export type { Track, TrackStats, TrackTags } from "@definitions/types.d.ts";
 
-/* INPUT */
+// INPUT
 
 /**
  * Consultation.
@@ -32,8 +38,16 @@ export type InputActions = {
   ): Promise<ResolvedUri>;
 };
 
-export type InputElement = HTMLElement & InputActions;
+export type InputElement =
+  & HTMLElement
+  & WorkerProviderMethod
+  & ProxiedActions<InputActions>
+  & ProxyProviderMethod<InputActions>;
 
-/* TRACKS */
+// MISC
+
+export type IncompleteArray<T> = ["Missing required items", T];
+
+// TRACKS
 
 export type ResolvedUri = undefined | { url: string; expiresAt: number }; // TODO: Streams?
