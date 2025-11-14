@@ -10,14 +10,14 @@ import { arrayShuffle } from "@common/index.js";
  */
 
 const QUERY = QS.parse(location.search);
-const qFillSize = QUERY?.["fill-size"];
+const qFill = QUERY?.["fill"];
 
-/** @type {number} */
-const FILL_SIZE = qFillSize && qFillSize !== null
-  ? Array.isArray(qFillSize) && qFillSize[0] !== null
-    ? parseInt(qFillSize[0], 10)
-    : parseInt(/** @type {string} */ (qFillSize), 10)
-  : 25;
+/** @type {number | null} */
+const FILL = qFill && qFill !== null
+  ? Array.isArray(qFill) && qFill[0] !== null
+    ? parseInt(qFill[0], 10)
+    : parseInt(/** @type {string} */ (qFill), 10)
+  : null;
 
 ////////////////////////////////////////////
 // STATE
@@ -35,8 +35,11 @@ export const $past = signal(/** @type {Item[]} */ ([]));
 /**
  * @type {Actions['add']}
  */
-export function add({ inFront, items }) {
-  // TODO: An entry is always manual and should be added in the correct place
+export function add({ inFront, tracks }) {
+  const items = tracks.map((track) => {
+    return { ...track, manualEntry: true };
+  });
+
   $future.value = inFront
     ? [...items, ...$future.value]
     : [...$future.value, ...items];
@@ -107,30 +110,45 @@ ostiary((port) => {
 ////////////////////////////////////////////
 
 /**
+ * Automatically add non-manual items to the queue.
+ *
  * @param {Item[]} future
  * @returns {Item[]}
  */
 function fill(future) {
-  let fillFutureCount = 0;
+  if (!FILL) return future;
+
+  // Count
+  let autoFutureCount = 0;
   let manualFutureCount = 0;
 
   future.forEach((item) => {
     if (item.manualEntry) manualFutureCount++;
-    else fillFutureCount++;
+    else autoFutureCount++;
   });
 
-  if (fillFutureCount >= FILL_SIZE) return future;
+  // Exit early if queue already filled appropriatly
+  if (autoFutureCount >= FILL) return future;
 
+  // Fill
+  return fillShuffle(future, autoFutureCount);
+}
+
+/**
+ * @param {Item[]} future
+ * @param {number} autoFutureCount
+ * @returns {Item[]}
+ */
+export function fillShuffle(future, autoFutureCount) {
+  // Determine pool of available tracks
   /** @type {Item[]} */
   const pool = [];
 
-  let p = new Set($past.value.map((t) => t.id));
+  const pastSet = new Set($past.value.map((i) => i.id));
   let reducedPool = pool;
 
   $lake.value.forEach((track) => {
-    if (p.has(track.id)) {
-      p = p.difference(new Set(track.id));
-    } else {
+    if (pastSet.delete(track.id) === false) {
       pool.push({
         ...track,
         manualEntry: false,
@@ -144,7 +162,7 @@ function fill(future) {
 
   const poolSelection = arrayShuffle(reducedPool).slice(
     0,
-    FILL_SIZE - fillFutureCount,
+    Math.max(0, (FILL ?? 0) - autoFutureCount),
   );
 
   return [...future, ...poolSelection];

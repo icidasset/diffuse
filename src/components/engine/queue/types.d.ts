@@ -2,7 +2,7 @@ import type { Track } from "@common/types.d.ts";
 import type { SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {
-  add: (args: { inFront?: boolean; items: Item[] }) => void;
+  add: (args: { inFront?: boolean; tracks: Track[] }) => void;
   pool: (tracks: Track[]) => void;
   shift: () => void;
   unshift: () => void;

@@ -67,9 +67,7 @@ class Browser extends DiffuseElement {
   playTrack(track) {
     this.queue.add({
       inFront: true,
-      items: [
-        { ...track, manualEntry: true },
-      ],
+      tracks: [track],
     });
   }
 

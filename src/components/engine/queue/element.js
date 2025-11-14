@@ -22,7 +22,7 @@ class QueueEngine extends DiffuseElement {
 
     // Query
     const query = QS.stringify({
-      "fill-size": this.getAttribute("fill-size"),
+      "fill": this.getAttribute("fill"),
     });
 
     // Setup worker
