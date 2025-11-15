@@ -8,7 +8,7 @@
         <a href="{{item.url}}">{{item.title}}</a>
       {{ /if }}
       {{ if item.desc }}
-        <div class="list-description">{{item.desc}}</div>
+        <div class="list-description">{{item.desc |> md(true)}}</div>
       {{ /if }}
     </li>
   {{ /for }}
