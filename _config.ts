@@ -7,6 +7,7 @@ import sourceMaps from "lume/plugins/source_maps.ts";
 import * as path from "@std/path";
 import { ensureDirSync } from "@std/fs/ensure-dir";
 import { walkSync } from "@std/fs/walk";
+import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
 const site = lume({
   src: "./src",
@@ -22,6 +23,7 @@ site.use(esbuild({
     bundle: true,
     minify: false,
     // outExtension: { ".js": ".min.js" },
+    plugins: [nodeModulesPolyfillPlugin()],
     splitting: true,
   },
 }));

@@ -15,6 +15,7 @@
     "@orama/orama": "jsr:@orama/orama@^2.0.6",
     "@vicary/debounce-microtask": "jsr:@vicary/debounce-microtask@^0.1.8",
     "alien-signals": "npm:alien-signals@^3.0.0",
+    "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
     "idb-keyval": "npm:idb-keyval@^6.2.2",
     "lit-html": "npm:lit-html@^3.3.1",
     "morphdom": "npm:morphdom@^2.7.7/dist/morphdom.js",
@@ -57,7 +58,7 @@
   },
   "compilerOptions": {
     "checkJs": true,
-    "lib": ["deno", "dom", "esnext"],
+    "lib": ["deno.ns", "dom", "esnext"],
     "types": ["lume/types.ts"],
   },
   "unstable": ["temporal", "fmt-component"],
