@@ -7,6 +7,6 @@ in the form of a static, serverless, web application._
 ## Build it yourself
 
 ```shell
-npm install
+deno run gen:defs:types
 deno run build
 ```
