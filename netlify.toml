@@ -1,3 +1,0 @@
-[build]
-command = "deno run build"
-publish = "_site"

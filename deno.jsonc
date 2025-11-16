@@ -1,6 +1,6 @@
 {
   "name": "@tokono.ma/diffuse",
-  "version": "4.0.0",
+  "version": "4.0.0-alpha",
   "vendor": true,
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
@@ -51,7 +51,6 @@
   },
   "tasks": {
     "build": "deno task lume",
-    "deploy:netlify": "npx netlify deploy --prod",
     "gen:defs:types": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js",
     "lume": "echo \"import 'lume/cli.ts'\" | deno run --config=./deno.jsonc --allow-read --allow-write --allow-env --allow-net --allow-run --allow-sys -",
     "serve": "deno task lume -s",

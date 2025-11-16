@@ -1,5 +1,4 @@
 .DS_Store
-.netlify
 node_modules
 /_site
 /_vendor
