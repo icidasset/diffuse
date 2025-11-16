@@ -34,7 +34,10 @@ class MetadataProcessor extends DiffuseElement {
    */
   worker(group) {
     const name = `diffuse/processor/metadata/${group || crypto.randomUUID()}`;
-    const url = "/components/processor/metadata/worker.js";
+    const url = import.meta.resolve(
+      "./components/processor/metadata/worker.js",
+    );
+
     return new Worker(url, { name, type: "module" });
   }
 }

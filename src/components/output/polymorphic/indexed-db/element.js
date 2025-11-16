@@ -19,7 +19,10 @@ class IndexedDBOutput extends DiffuseElement {
 
     // Setup worker
     const name = `diffuse/output/polymorphic/indexed-db/${this.group}`;
-    const url = "/components/output/polymorphic/indexed-db/worker.js";
+    const url = import.meta.resolve(
+      "./components/output/polymorphic/indexed-db/worker.js",
+    );
+
     const worker = new Worker(url, { name, type: "module" });
 
     // Manager

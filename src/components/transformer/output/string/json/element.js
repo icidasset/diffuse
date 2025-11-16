@@ -1,5 +1,5 @@
 import { DiffuseElement, query } from "@common/element.js";
-import { computed } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 
 /**
  * @import { OutputElement, OutputManager } from "../../../../output/types.d.ts"
@@ -13,11 +13,18 @@ class JsonStringOutputTransformer extends DiffuseElement {
     /** @type {OutputElement<string>} */
     this.output = query(this, "output-selector");
 
+    // whenDefined signal
+    const $defined = signal(false);
+
+    customElements.whenDefined(this.output.localName).then(
+      () => $defined.value = true,
+    );
+
     /** @type {OutputManager<Track[]>} */
     const manager = {
       tracks: {
         collection: computed(() => {
-          const json = this.output.tracks?.collection() || [];
+          const json = $defined.value ? this.output.tracks?.collection() : [];
 
           // In addition to the above, Some polymorphic outputs
           // use an empty array as the default return value.
@@ -40,7 +47,7 @@ class JsonStringOutputTransformer extends DiffuseElement {
           await customElements.whenDefined(this.output.localName);
           await this.output.tracks.save(json);
         },
-        state: () => this.output.tracks.state(),
+        state: computed(() => this.output.tracks.state()),
       },
     };
 

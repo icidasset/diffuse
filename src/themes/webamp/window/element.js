@@ -35,7 +35,7 @@ class WindowElement extends DiffuseElement {
    */
   render({ html }) {
     return html`
-      <link rel="stylesheet" href="/styles/vendor/98.css" />
+      <link rel="stylesheet" href="../../styles/vendor/98.css" />
 
       <style>
       dialog {

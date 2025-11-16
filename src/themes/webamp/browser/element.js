@@ -80,7 +80,7 @@ class Browser extends DiffuseElement {
     const tracks = this.output.tracks?.collection() || [];
 
     return html`
-      <link rel="stylesheet" href="/styles/vendor/98.css" />
+      <link rel="stylesheet" href="../../styles/vendor/98.css" />
 
       <style>
       @import "./98-vars.css";

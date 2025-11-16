@@ -25,7 +25,10 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
     // Setup worker
     const name = `diffuse/orchestrator/process-tracks/${this.group}`;
-    const url = "/components/orchestrator/process-tracks/worker.js";
+    const url = import.meta.resolve(
+      "./components/orchestrator/process-tracks/worker.js",
+    );
+
     const worker = new Worker(url, { name, type: "module" });
 
     /** @type {InputElement} */
@@ -38,10 +41,13 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     this.metadataProcessor = query(this, "metadata-processor-selector");
 
     // Create new workers specially for track processing
-    this.#external = {
+    this.#external = Promise.all([
+      customElements.whenDefined(this.input.localName),
+      customElements.whenDefined(this.metadataProcessor.localName),
+    ]).then(() => ({
       input: portProvider(this.input.worker()),
       metadataProcessor: portProvider(this.metadataProcessor.worker()),
-    };
+    }));
 
     // Worker proxy
     this.#process = use("process", worker, {
@@ -81,8 +87,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
   // ACTIONS
 
   async process() {
-    await customElements.whenDefined(this.input.localName);
-    await customElements.whenDefined(this.metadataProcessor.localName);
+    const ext = await this.#external;
 
     // Start
     this.#isProcessing.value = true;
@@ -92,8 +97,8 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
     // Establish channel between external workers and our processing worker
     const ports = {
-      input: this.#external.input(),
-      metadataProcessor: this.#external.metadataProcessor(),
+      input: ext.input(),
+      metadataProcessor: ext.metadataProcessor(),
     };
 
     // Send everything to worker

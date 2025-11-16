@@ -49,7 +49,9 @@ class OpensubsonicInput extends DiffuseElement {
    */
   worker(group) {
     const name = `diffuse/input/opensubsonic/${group || crypto.randomUUID()}`;
-    const url = "/components/input/opensubsonic/worker.js";
+    const url = import.meta.resolve(
+      "./components/input/opensubsonic/worker.js",
+    );
 
     return new Worker(url, { name, type: "module" });
   }

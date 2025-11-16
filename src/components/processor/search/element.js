@@ -18,7 +18,9 @@ class SearchProcessor extends DiffuseElement {
 
     // Setup worker
     const name = `diffuse/processor/search/${this.group}`;
-    const url = "/components/processor/search/worker.js";
+    const url = import.meta.resolve(
+      "./components/processor/search/worker.js",
+    );
 
     let port;
 
