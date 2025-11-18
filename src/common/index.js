@@ -1,4 +1,5 @@
 // import * as Uint8 from "uint8arrays";
+import { xxh32r } from "xxh32/dist/raw.js";
 
 /**
  * @import {Track} from "@common/types.d.ts"
@@ -27,31 +28,17 @@ export function arrayShuffle(array) {
 }
 
 /**
- * @param {Track[]} tracks
- * @returns {Track[]}
+ * @param {string | undefined | null} value
  */
-export function cleanUndefinedValuesForTracks(tracks) {
-  return tracks.map((track) => {
-    const t = { ...track };
+export function boolAttr(value) {
+  return value === "";
+}
 
-    if (t.tags) {
-      if ("album" in t.tags && t.tags.album === undefined) delete t.tags.album;
-      if ("artist" in t.tags && t.tags.artist === undefined) {
-        delete t.tags.artist;
-      }
-      if ("genre" in t.tags && t.tags.genre === undefined) delete t.tags.genre;
-      if ("year" in t.tags && t.tags.year === undefined) delete t.tags.year;
-
-      if ("of" in t.tags.disc && t.tags.disc.of === undefined) {
-        delete t.tags.disc.of;
-      }
-      if ("of" in t.tags.track && t.tags.track.of === undefined) {
-        delete t.tags.track.of;
-      }
-    }
-
-    return t;
-  });
+/**
+ * @param {any} object
+ */
+export function hash(object) {
+  return xxh32r(jsonEncode(object)).toString();
 }
 
 /**
@@ -105,6 +92,7 @@ export function jsonEncode(a) {
  * @returns {Promise<string>}
  */
 export async function trackArtworkCacheId(track) {
+  // TODO:
   return "";
   // return await crypto.subtle
   //   .digest("SHA-256", new TextEncoder().encode(track.uri))

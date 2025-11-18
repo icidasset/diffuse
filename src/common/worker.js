@@ -139,12 +139,14 @@ export function listen(
   fn,
   context = /** @type {WorkerGlobalScope} */ (globalThis),
 ) {
-  if (!context.incoming) {
+  const c = /** @type {any} */ (context);
+
+  if (!c.incoming) {
     context.addEventListener("message", incomingAnnouncementsHandler(context));
-    context.incoming = {};
+    c.incoming = {};
   }
 
-  context.incoming[name] = debounceMicrotask(fn, { updateArguments: true });
+  c.incoming[name] = debounceMicrotask(fn, { updateArguments: true });
 }
 
 ////////////////////////////////////////////
@@ -239,8 +241,10 @@ const flushIncomingAnnouncements = debounceMicrotask(
     }
 
     batch(() => {
+      const c = /** @type {any} */ (context);
+
       arr.forEach((announcement) => {
-        context.incoming[announcement.name]?.(announcement.args);
+        c.incoming[announcement.name]?.(announcement.args);
       });
     });
   },

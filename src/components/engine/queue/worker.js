@@ -1,32 +1,23 @@
-import QS from "query-string";
-
 import { announce, define, ostiary } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
-import { arrayShuffle } from "@common/index.js";
+import { arrayShuffle, hash } from "@common/index.js";
 
 /**
  * @import {Actions, Item} from "./types.d.ts"
  * @import {Track} from "@common/types.d.ts"
  */
 
-const QUERY = QS.parse(location.search);
-const qFill = QUERY?.["fill"];
-
-/** @type {number | null} */
-const FILL = qFill && qFill !== null
-  ? Array.isArray(qFill) && qFill[0] !== null
-    ? parseInt(qFill[0], 10)
-    : parseInt(/** @type {string} */ (qFill), 10)
-  : null;
-
 ////////////////////////////////////////////
 // STATE
 ////////////////////////////////////////////
 
-export const $future = signal(/** @type {Item[]} */ ([]));
 export const $lake = signal(/** @type {Track[]} */ ([]));
+
+// Communicated state
+export const $future = signal(/** @type {Item[]} */ ([]));
 export const $now = signal(/** @type {Item | null} */ (null));
 export const $past = signal(/** @type {Item[]} */ ([]));
+export const $poolHash = signal(hash([]));
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -46,19 +37,28 @@ export function add({ inFront, tracks }) {
 }
 
 /**
+ * @type {Actions['fill']}
+ */
+export function fill({ augment, amount, shuffled }) {
+  $future.value = fillQueue(
+    shuffled,
+    amount +
+      (augment
+        ? $future.value.filter((i) => i.manualEntry === false).length
+        : 0),
+    $future.value,
+  );
+}
+
+/**
  * @type {Actions['pool']}
  */
 export function pool(tracks) {
   $lake.value = tracks;
+  $poolHash.value = hash(tracks);
 
-  // TODO: If the pool changes, only remove non-existing tracks
-  //       instead of resetting the whole future queue.
-  //
-  //       What about past queue items?
-
-  // Automatically insert track if there isn't any
-  if (!$now.value) _shift(fill([]));
-  else $future.value = fill([]);
+  // TODO: Clear the queue,
+  //       there might be items in there that are no longer in the pool.
 }
 
 /**
@@ -92,8 +92,10 @@ ostiary((port) => {
   define("future", $future.get, port);
   define("now", $now.get, port);
   define("past", $past.get, port);
+  define("poolHash", $poolHash.get, port);
 
   define("add", add, port);
+  define("fill", fill, port);
   define("pool", pool, port);
   define("shift", shift, port);
   define("unshift", unshift, port);
@@ -103,6 +105,7 @@ ostiary((port) => {
   effect(() => announce("future", $future.value, port));
   effect(() => announce("now", $now.value, port));
   effect(() => announce("past", $past.value, port));
+  effect(() => announce("poolHash", $poolHash.value, port));
 });
 
 ////////////////////////////////////////////
@@ -110,13 +113,15 @@ ostiary((port) => {
 ////////////////////////////////////////////
 
 /**
- * Automatically add non-manual items to the queue.
+ * Add non-manual items to the queue.
  *
+ * @param {boolean} shuffled
+ * @param {number | undefined | null} fillAmount
  * @param {Item[]} future
  * @returns {Item[]}
  */
-function fill(future) {
-  if (!FILL) return future;
+function fillQueue(shuffled, fillAmount, future) {
+  if (!fillAmount) return future;
 
   // Count
   let autoFutureCount = 0;
@@ -127,20 +132,58 @@ function fill(future) {
     else autoFutureCount++;
   });
 
-  // Exit early if queue already filled appropriatly
-  if (autoFutureCount >= FILL) return future;
-
   // Fill
-  return fillShuffle(future, autoFutureCount);
+  if (shuffled) {
+    if (autoFutureCount >= fillAmount) return future;
+    return fillShuffle(fillAmount, future, autoFutureCount);
+  } else {
+    return fillSequentially(fillAmount, future);
+  }
 }
 
 /**
+ * @param {number} fillAmount
+ * @param {Item[]} future
+ * @returns {Item[]}
+ */
+export function fillSequentially(fillAmount, future) {
+  const onlyManual = future.filter((i) => i.manualEntry);
+  const lastManual = onlyManual.slice(-1)[0];
+  const startIndex = lastManual
+    ? $lake.value.findIndex((t) => t.id === lastManual.id) + 1
+    : $now.value
+    ? $lake.value.findIndex((t) => t.id === $now.value?.id) + 1
+    : 0;
+
+  const maxIndex = $lake.value.length - 1;
+  let currIndex = startIndex;
+
+  /** @type {Item[]} */
+  const autoItems = [];
+
+  for (let i = 0; i < fillAmount; i++) {
+    if (currIndex > maxIndex) currIndex = 0;
+    const item = $lake.value[currIndex];
+    if (item) {
+      autoItems.push({
+        ...item,
+        manualEntry: false,
+      });
+    }
+    currIndex++;
+  }
+
+  return [...onlyManual, ...autoItems];
+}
+
+/**
+ * @param {number} fillAmount
  * @param {Item[]} future
  * @param {number} autoFutureCount
  * @returns {Item[]}
  */
-export function fillShuffle(future, autoFutureCount) {
-  // Determine pool of available tracks
+export function fillShuffle(fillAmount, future, autoFutureCount) {
+  // Determine pool of available queue items
   /** @type {Item[]} */
   const pool = [];
 
@@ -162,7 +205,7 @@ export function fillShuffle(future, autoFutureCount) {
 
   const poolSelection = arrayShuffle(reducedPool).slice(
     0,
-    Math.max(0, (FILL ?? 0) - autoFutureCount),
+    Math.max(0, fillAmount - autoFutureCount),
   );
 
   return [...future, ...poolSelection];
@@ -177,5 +220,5 @@ export function _shift(future) {
 
   $now.value = f[0] ?? null;
   if (n) $past.value = [...$past.value, n];
-  $future.value = fill(f.slice(1));
+  $future.value = f.slice(1);
 }

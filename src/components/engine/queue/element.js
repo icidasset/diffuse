@@ -2,7 +2,8 @@ import QS from "query-string";
 
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
-import { listen, proxyProvider } from "@common/worker.js";
+import { listen, proxyProvider, use } from "@common/worker.js";
+import { hash } from "@common/index.js";
 
 /**
  * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts";
@@ -44,14 +45,21 @@ class QueueEngine extends DiffuseElement {
     listen("future", this.#future.set, port);
     listen("now", this.#now.set, port);
     listen("past", this.#past.set, port);
+    listen("poolHash", this.#poolHash.set, port);
+
+    use("future", port)().then(this.#future.set);
+    use("now", port)().then(this.#now.set);
+    use("past", port)().then(this.#past.set);
+    use("poolHash", port)().then(this.#poolHash.set);
 
     /** @type {ProxyProvider<Actions>} */
-    const proxy = proxyProvider(["add", "pool", "shift", "unshift"]);
+    const proxy = proxyProvider(["add", "fill", "pool", "shift", "unshift"]);
 
     // Worker proxy
     const w = proxy(port);
 
     this.add = w.add;
+    this.fill = w.fill;
     this.pool = w.pool;
     this.shift = w.shift;
     this.unshift = w.unshift;
@@ -62,12 +70,14 @@ class QueueEngine extends DiffuseElement {
   #future = signal(/** @type {Array<Item>} */ ([]));
   #now = signal(/** @type {Item | null} */ (null));
   #past = signal(/** @type {Array<Item>} */ ([]));
+  #poolHash = signal(hash([]));
 
   // STATE
 
   future = this.#future.get;
   now = this.#now.get;
   past = this.#past.get;
+  poolHash = this.#poolHash.get;
 }
 
 export default QueueEngine;

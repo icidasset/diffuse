@@ -75,7 +75,7 @@
   COMPONENTS
 
   -->
-  <de-queue fill="10"></de-queue>
+  <de-queue></de-queue>
 
   <!-- Inputs, Output & Processors -->
   <di-opensubsonic></di-opensubsonic>
@@ -86,11 +86,11 @@
   <dtos-json id="output" output-selector="dop-indexed-db"></dtos-json>
 
   <!-- Orchestrators -->
-  <do-process-tracks
+  <!--<do-process-tracks
     input-selector="di-opensubsonic"
     metadata-processor-selector="dp-metadata"
     output-selector="#output"
-  ></do-process-tracks>
+  ></do-process-tracks>-->
 
   <do-queue-tracks
     input-selector="di-opensubsonic"

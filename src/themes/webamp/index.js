@@ -126,6 +126,23 @@ effect(() => {
   }
 });
 
+/**
+ * AUTOPLAY:
+ * Make sure there's always some random tracks in the queue.
+ */
+effect(() => {
+  const _trigger = queue.now();
+  queue.fill({ amount: 10, shuffled: true });
+});
+
+effect(() => {
+  const _trigger = queue.poolHash();
+  queue.fill({ amount: 10, shuffled: true });
+
+  // Automatically insert track if there isn't any
+  if (!queue.now) queue.shift();
+});
+
 ////////////////////////////////////////////
 // DESKTOP
 ////////////////////////////////////////////
