@@ -52,6 +52,10 @@ const loadFromUrl = amp.media.loadFromUrl.bind(amp.media);
 async function loadOverride(uri, autoPlay) {
   const resp = await input.resolve({ method: "GET", uri });
   if (!resp) throw new Error("Failed to resolve URI");
+  if (resp && "stream" in resp) {
+    throw new Error("Webamp does not support playing streams.");
+  }
+
   return await loadFromUrl(resp.url, autoPlay);
 }
 

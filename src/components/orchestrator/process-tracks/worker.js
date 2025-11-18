@@ -1,5 +1,5 @@
 import deepDiff from "@fry69/deep-diff";
-import { define, ostiary, proxyProvider, use } from "@common/worker.js";
+import { define, ostiary, proxyProvider } from "@common/worker.js";
 import { INPUT_ACTIONS } from "@common/constants.js";
 
 /**
@@ -53,15 +53,21 @@ export async function process(args) {
         uri: track.uri,
       });
 
-      const resHead = await input.resolve({
+      if (!resGet) return [...acc, track];
+
+      const resHead = "stream" in resGet ? undefined : await input.resolve({
         method: "HEAD",
         uri: track.uri,
       });
 
-      if (!resGet) return [...acc, track];
-
       const { stats, tags } = await metadataProcessor.supply({
-        urls: { get: resGet.url, head: resHead?.url || resGet.url },
+        stream: "stream" in resGet ? resGet.stream : undefined,
+        urls: "url" in resGet
+          ? {
+            get: resGet.url,
+            head: resHead && "url" in resHead ? resHead.url : resGet.url,
+          }
+          : undefined,
       });
 
       return [...acc, { ...track, stats, tags }];

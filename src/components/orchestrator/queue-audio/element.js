@@ -55,11 +55,15 @@ class QueueAudioOrchestrator extends DiffuseElement {
     const isPlaying = untracked(this.audio.isPlaying);
 
     // Resolve URIs
-    const url = activeTrack
-      ? await this.input.resolve({ method: "GET", uri: activeTrack.uri }).then(
-        (a) => a?.url,
-      )
+    const resolvedUri = activeTrack
+      ? await this.input.resolve({ method: "GET", uri: activeTrack.uri })
       : undefined;
+
+    if (resolvedUri && "stream" in resolvedUri) {
+      throw new Error("Streams are not supported yet.");
+    }
+
+    const url = resolvedUri?.url;
 
     // Check if we still need to render
     if (this.queue.now?.()?.id !== activeTrack?.id) return;

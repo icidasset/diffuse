@@ -50,4 +50,7 @@ export type IncompleteArray<T> = ["Missing required items", T];
 
 // TRACKS
 
-export type ResolvedUri = undefined | { url: string; expiresAt: number }; // TODO: Streams?
+export type ResolvedUri = undefined | {
+  stream: ReadableStream;
+  expiresAt: number;
+} | { url: string; expiresAt: number };
