@@ -56,9 +56,6 @@ export function fill({ augment, amount, shuffled }) {
 export function pool(tracks) {
   $lake.value = tracks;
   $poolHash.value = hash(tracks);
-
-  // TODO: Clear the queue,
-  //       there might be items in there that are no longer in the pool.
 }
 
 /**
@@ -106,6 +103,18 @@ ostiary((port) => {
   effect(() => announce("now", $now.value, port));
   effect(() => announce("past", $past.value, port));
   effect(() => announce("poolHash", $poolHash.value, port));
+
+  // Effects
+
+  // When the pool changes,
+  // make sure all future queue items still exist.
+  effect(() => {
+    const existing = new Set($lake.value.map((t) => t.id));
+
+    $future.value = $future.value.filter((i) => {
+      return existing.has(i.id);
+    });
+  });
 });
 
 ////////////////////////////////////////////
