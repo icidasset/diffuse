@@ -43,7 +43,7 @@ export function bucketId(bucket) {
 
 /**
  * @param {Bucket} bucket
- * @param {string} path
+ * @param {string} [path]
  */
 export function buildURI(bucket, path) {
   return URI.serialize({

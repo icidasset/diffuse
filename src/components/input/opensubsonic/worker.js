@@ -136,7 +136,7 @@ export async function list(cachedTracks = []) {
     const sid = serverId(server);
     const list = await search(client, 0);
 
-    return list
+    let tracks = list
       .filter((song) => !song.isVideo)
       .map((song) => {
         const path = song.path
@@ -225,22 +225,24 @@ export async function list(cachedTracks = []) {
 
         return track;
       });
+
+    // If a server didn't have any tracks,
+    // keep a placeholder track so the server gets
+    // picked up whenever it is re-contextualized.
+    if (!tracks.length) {
+      tracks = [{
+        $type: "sh.diffuse.output.tracks",
+        id: crypto.randomUUID(),
+        kind: "placeholder",
+        uri: buildURI(server),
+      }];
+    }
+
+    return tracks;
   });
 
   const tracks = (await Promise.all(promises)).flat(1);
-  if (tracks.length) return tracks;
-
-  // If a server didn't have any tracks,
-  // keep a placeholder track so the server gets
-  // picked up whenever it is re-contextualized.
-  return Object.values(servers).map((server) => {
-    return {
-      $type: "sh.diffuse.output.tracks",
-      id: crypto.randomUUID(),
-      kind: "placeholder",
-      uri: buildURI(server),
-    };
-  });
+  return tracks;
 }
 
 /**

@@ -99,7 +99,7 @@ export async function list(cachedTracks = []) {
       }),
     );
 
-    return list
+    let tracks = list
       .filter((l) => isAudioFile(l.key))
       .map((l) => {
         const cachedTrack = cache[bid]?.[l.key];
@@ -119,6 +119,20 @@ export async function list(cachedTracks = []) {
 
         return track;
       });
+
+    // If a bucket didn't have any tracks,
+    // keep a placeholder track so the bucket gets
+    // picked up whenever it is re-contextualized.
+    if (!tracks.length) {
+      tracks = [{
+        $type: "sh.diffuse.output.tracks",
+        id: crypto.randomUUID(),
+        kind: "placeholder",
+        uri: buildURI(bucket),
+      }];
+    }
+
+    return tracks;
   });
 
   const tracks = (await Promise.all(promises)).flat(1);
