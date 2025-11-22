@@ -10,6 +10,7 @@
         "properties": {
           "id": { "type": "string" },
           "createdAt": { "type": "string", "format": "datetime" },
+          "ephemeral": { "type": "boolean" },
           "kind": {
             "type": "string",
             "enum": ["audiobook", "miscellaneous", "music", "placeholder", "podcast"]

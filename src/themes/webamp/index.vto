@@ -83,14 +83,15 @@
   <dp-metadata></dp-metadata>
 
   <!-- Transformers -->
-  <dtos-json id="output" output-selector="dop-indexed-db"></dtos-json>
+  <dtor-default id="output" output-selector="dtos-json"></dtor-default>
+  <dtos-json output-selector="dop-indexed-db"></dtos-json>
 
   <!-- Orchestrators -->
-  <!--<do-process-tracks
+  <do-process-tracks
     input-selector="di-opensubsonic"
     metadata-processor-selector="dp-metadata"
     output-selector="#output"
-  ></do-process-tracks>-->
+  ></do-process-tracks>
 
   <do-queue-tracks
     input-selector="di-opensubsonic"
