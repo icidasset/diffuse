@@ -1,6 +1,7 @@
 import type { SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {
+  adjustVolume: (_: { audioId?: string; volume: number }) => void;
   pause: (_: { audioId: string }) => void;
   play: (_: { audioId: string; volume?: number }) => void;
   reload: (_: { audioId: string; play: boolean; progress?: number }) => void;

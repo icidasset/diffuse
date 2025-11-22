@@ -20,6 +20,8 @@ const _SILENT_MP3 =
  * @implements {Actions}
  */
 class AudioEngine extends BroadcastableDiffuseElement {
+  #VOLUME_KEY;
+
   constructor() {
     super();
 
@@ -36,15 +38,18 @@ class AudioEngine extends BroadcastableDiffuseElement {
       this.$isPlaying.set = fn("isPlaying", this.$isPlaying.set).replicate;
     }
 
-    // TODO: Get volume from previous session if possible
-    // const VOLUME_KEY = `@elements/engine/audio/${this.groupId}/volume`;
-    // const vol = localStorage.getItem(VOLUME_KEY);
+    // Get volume from previous session if possible
+    this.#VOLUME_KEY = `@components/engine/audio/${this.group}/volume`;
+    const volume = localStorage.getItem(this.#VOLUME_KEY);
+
+    this.#volume = signal(volume ? parseInt(volume) : 0.5);
+    this.volume = this.#volume.get;
   }
 
   // SIGNALS
 
   #items = signal(/** @type {Audio[]} */ ([]));
-  #volume = signal(0.5);
+  #volume;
 
   $hasEnded = signal(false);
   $isPlaying = signal(false);
@@ -54,7 +59,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
   hasEnded = this.$hasEnded.get;
   isPlaying = this.$isPlaying.get;
   items = this.#items.get;
-  volume = this.#volume.get;
 
   // LIFECYCLE
 
@@ -75,8 +79,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       });
     }
 
-    // Monitor volume
-    // NOTE: Support different volume levels for audio elements?
+    // Monitor volume signal
     this.effect(() => {
       Array.from(this.querySelectorAll("de-audio-item audio")).forEach(
         (node) => {
@@ -85,10 +88,25 @@ class AudioEngine extends BroadcastableDiffuseElement {
           audio.volume = this.#volume.value;
         },
       );
+
+      localStorage.setItem(this.#VOLUME_KEY, this.#volume.value.toString());
     });
   }
 
-  // ACTIONS (PRIVATE)
+  // ACTIONS
+
+  /**
+   * @type {Actions["adjustVolume"]}
+   */
+  adjustVolume(args) {
+    if (args.audioId) {
+      this.withAudioNode(args.audioId, (audio) => {
+        audio.volume = args.volume;
+      });
+    } else {
+      this.#volume.value = args.volume;
+    }
+  }
 
   /**
    * @type {Actions["pause"]}
