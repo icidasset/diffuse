@@ -2,7 +2,7 @@ import { DiffuseElement, query } from "@common/element.js";
 import { untracked } from "@common/signal.js";
 
 /**
- * @import {InputElement} from "@common/types.d.ts"
+ * @import {InputElement} from "@components/input/types.d.ts"
  */
 
 ////////////////////////////////////////////

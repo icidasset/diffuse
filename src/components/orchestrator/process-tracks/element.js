@@ -3,7 +3,8 @@ import { signal, untracked } from "@common/signal.js";
 import { getTransferables, portProvider, use } from "@common/worker.js";
 
 /**
- * @import {InputElement, Track} from "@common/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
+ * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
  */
 

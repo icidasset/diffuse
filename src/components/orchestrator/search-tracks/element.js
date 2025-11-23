@@ -1,7 +1,8 @@
 import { DiffuseElement, query } from "@common/element.js";
 
 /**
- * @import {InputElement, Track} from "@common/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
+ * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
  */
 

@@ -1,4 +1,5 @@
 export type Announcement<T> = MRpcBaseMsg & { type: "announcement"; args: T };
+export type IncompleteArray<T> = ["Missing required items", T];
 
 /**
  * Comes from the `@mys/m-rpc` library,

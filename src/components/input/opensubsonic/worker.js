@@ -19,7 +19,8 @@ import {
 
 /**
  * @import {Child, SubsonicAPI} from "subsonic-api"
- * @import {ConsultGrouping, InputActions as Actions, Track} from "@common/types.d.ts";
+ * @import {Track} from "@definitions/types.d.ts";
+ * @import {ConsultGrouping, InputActions as Actions} from "@components/input/types.d.ts";
  * @import {Server} from "./types.d.ts"
  */
 

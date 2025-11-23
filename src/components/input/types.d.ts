@@ -1,16 +1,10 @@
-import type { Track } from "@definitions/types.d.ts";
 import type {
-  PortProviderMethod,
   ProxiedActions,
   ProxyProviderMethod,
   WorkerProviderMethod,
-} from "./worker.d.ts";
+} from "@common/worker.d.ts";
 
-// RE-EXPORT
-
-export type { Track, TrackStats, TrackTags } from "@definitions/types.d.ts";
-
-// INPUT
+import type { Track } from "@definitions/types.d.ts";
 
 /**
  * Consultation.
@@ -34,7 +28,7 @@ export type InputActions = {
   groupConsult(tracks: Track[]): Promise<GroupConsult>;
   list(cachedTracks: Track[]): Promise<Track[]>;
   resolve(
-    { method, uri }: { method: string; uri: string },
+    { method, uri }: { method?: string; uri: string },
   ): Promise<ResolvedUri>;
 };
 
@@ -43,12 +37,6 @@ export type InputElement =
   & WorkerProviderMethod
   & ProxiedActions<InputActions>
   & ProxyProviderMethod<InputActions>;
-
-// MISC
-
-export type IncompleteArray<T> = ["Missing required items", T];
-
-// TRACKS
 
 export type ResolvedUri = undefined | {
   stream: ReadableStream;

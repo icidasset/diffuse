@@ -3,8 +3,9 @@ import { define, ostiary, proxyProvider } from "@common/worker.js";
 import { INPUT_ACTIONS } from "@common/constants.js";
 
 /**
- * @import {InputActions, Track} from "@common/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
  * @import {ProxyProvider} from "@common/worker.d.ts"
+ * @import {InputActions} from "@components/input/types.d.ts"
  * @import {Actions as MetadataProcessorActions} from "@components/processor/metadata/types.d.ts"
  * @import {Actions} from "./types.d.ts"
  */

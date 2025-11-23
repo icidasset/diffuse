@@ -11,9 +11,7 @@ export { getTransferables } from "@okikio/transferables";
 
 /**
  * @import {MRpcCallOptions, WorkerGlobalScope} from "@mys/m-rpc";
- *
- * @import {IncompleteArray} from "./types.d.ts"
- * @import {Announcement, ProxiedActions, ProxyProvider} from "./worker.d.ts"
+ * @import {Announcement, IncompleteArray, ProxiedActions, ProxyProvider} from "./worker.d.ts"
  */
 
 ////////////////////////////////////////////

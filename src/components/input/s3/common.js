@@ -6,7 +6,7 @@ import QS from "query-string";
 import { ENCODINGS, IDB_BUCKETS, SCHEME } from "./constants.js";
 
 /**
- * @import { Track } from "@common/types.d.ts";
+ * @import { Track } from "@definitions/types.d.ts";
  * @import { Bucket } from "./types.d.ts";
  */
 

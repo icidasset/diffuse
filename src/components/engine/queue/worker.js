@@ -4,7 +4,7 @@ import { arrayShuffle, hash } from "@common/index.js";
 
 /**
  * @import {Actions, Item} from "./types.d.ts"
- * @import {Track} from "@common/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////

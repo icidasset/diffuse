@@ -4,7 +4,7 @@ import { IDB_PREFIX } from "./constants.js";
 import { define, ostiary } from "@common/worker.js";
 
 /**
- * @import {Track} from "@common/types.d.ts";
+ * @import {Track} from "@definitions/types.d.ts";
  */
 
 ////////////////////////////////////////////

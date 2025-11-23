@@ -2,7 +2,7 @@
 import { xxh32r } from "xxh32/dist/raw.js";
 
 /**
- * @import {Track} from "@common/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
  */
 
 /**

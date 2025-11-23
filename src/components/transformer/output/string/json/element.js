@@ -3,7 +3,7 @@ import { computed, signal } from "@common/signal.js";
 
 /**
  * @import { OutputElement, OutputManager } from "../../../../output/types.d.ts"
- * @import { Track } from "@common/types.d.ts"
+ * @import { Track } from "@definitions/types.d.ts"
  */
 
 class JsonStringOutputTransformer extends DiffuseElement {

@@ -16,7 +16,8 @@ import { effect, signal } from "@common/signal.js";
 import { saveBuckets } from "./common.js";
 
 /**
- * @import { InputActions as Actions, Track } from "@common/types.d.ts";
+ * @import { InputActions as Actions } from "@components/input/types.d.ts";
+ * @import { Track } from "@definitions/types.d.ts"
  * @import { Bucket } from "./types.d.ts"
  */
 
