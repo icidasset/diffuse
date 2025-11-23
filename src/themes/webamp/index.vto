@@ -35,7 +35,7 @@
           <span slot="title-icon"><img src="../../images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
           <span slot="title">Browse collection</span>
           <dtw-browser
-            input-selector="di-opensubsonic"
+            input-selector="#input"
             output-selector="#output"
             queue-selector="de-queue"
           ></dtw-browser>
@@ -78,7 +78,7 @@
   <de-queue></de-queue>
 
   <!-- Inputs, Output & Processors -->
-  <di-opensubsonic></di-opensubsonic>
+  <di-opensubsonic id="input"></di-opensubsonic>
   <dop-indexed-db></dop-indexed-db>
   <dp-metadata></dp-metadata>
 
@@ -88,13 +88,13 @@
 
   <!-- Orchestrators -->
   <do-process-tracks
-    input-selector="di-opensubsonic"
+    input-selector="#input"
     metadata-processor-selector="dp-metadata"
     output-selector="#output"
   ></do-process-tracks>
 
   <do-queue-tracks
-    input-selector="di-opensubsonic"
+    input-selector="#input"
     output-selector="#output"
     queue-engine-selector="de-queue"
   ></do-queue-tracks>

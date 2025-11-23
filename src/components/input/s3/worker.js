@@ -10,11 +10,25 @@ import {
   parseURI,
 } from "./common.js";
 import { SCHEME } from "./constants.js";
+import { announce, define, ostiary } from "@common/worker.js";
+import { effect, signal } from "@common/signal.js";
+
+import { saveBuckets } from "./common.js";
 
 /**
  * @import { InputActions as Actions, Track } from "@common/types.d.ts";
  * @import { Bucket } from "./types.d.ts"
  */
+
+////////////////////////////////////////////
+// STATE
+////////////////////////////////////////////
+
+const $buckets = signal(/** @type {Record<string, Bucket>} */ ({}));
+
+effect(() => {
+  saveBuckets($buckets.value);
+});
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -39,7 +53,8 @@ export async function consult(fileUriOrScheme) {
  * @type {Actions['contextualize']}
  */
 export async function contextualize(tracks) {
-  bucketsFromTracks(tracks);
+  const buckets = bucketsFromTracks(tracks);
+  $buckets.value = buckets;
 }
 
 /**
@@ -160,7 +175,9 @@ export async function resolve(
   return { expiresAt: expiresAtSeconds, url };
 }
 
+////////////////////////////////////////////
 // ADDITIONAL ACTIONS
+////////////////////////////////////////////
 
 export function demo() {
   // Credentials are read-only, no worries.
@@ -190,3 +207,25 @@ export function demo() {
     track,
   };
 }
+
+////////////////////////////////////////////
+// ⚡️
+////////////////////////////////////////////
+
+ostiary((port) => {
+  // Setup RPC
+
+  define("buckets", $buckets.get, port);
+
+  define("consult", consult, port);
+  define("contextualize", contextualize, port);
+  define("groupConsult", groupConsult, port);
+  define("list", list, port);
+  define("resolve", resolve, port);
+
+  define("demo", demo, port);
+
+  // Communicate state
+
+  effect(() => announce("buckets", $buckets.value, port));
+});
