@@ -169,7 +169,7 @@ export async function resolve(
 
   const client = createClient(parsed.bucket);
   const url = await client.getPresignedUrl(
-    /** @type {any} */ (method.toUpperCase()),
+    /** @type {any} */ (method?.toUpperCase() ?? "GET"),
     parsed.path,
   );
 

@@ -1,6 +1,7 @@
 import deepDiff from "@fry69/deep-diff";
+
 import { define, ostiary, proxyProvider } from "@common/worker.js";
-import { INPUT_ACTIONS } from "@common/constants.js";
+import { INPUT_ACTIONS } from "@components/input/constants.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"

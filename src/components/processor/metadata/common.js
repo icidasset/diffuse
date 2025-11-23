@@ -71,8 +71,9 @@ export async function musicMetadataTags({
   const tags = {
     album: meta.common.album,
     albumartist: meta.common.albumartist,
-    albumartists: meta.common.albumartists ??
-      (meta.common.albumartist ? [meta.common.albumartist] : []),
+    albumartists: Array.isArray(meta.common.albumartist)
+      ? meta.common.albumartist
+      : (meta.common.albumartist ? [meta.common.albumartist] : undefined),
     albumartistsort: meta.common.albumartistsort,
     albumsort: meta.common.albumsort,
     arranger: meta.common.arranger,
@@ -99,13 +100,19 @@ export async function musicMetadataTags({
     gapless: meta.common.gapless,
     genres: Array.isArray(meta.common.genre)
       ? meta.common.genre
-      : [meta.common.genre],
+      : meta.common.genre
+      ? [meta.common.genre]
+      : undefined,
     isrc: meta.common.isrc,
     labels: meta.common.label,
     lyricists: meta.common.lyricist,
     media: meta.common.media,
     mixers: meta.common.mixer,
-    moods: meta.common.mood,
+    moods: Array.isArray(meta.common.mood)
+      ? meta.common.mood
+      : meta.common.mood
+      ? [meta.common.mood]
+      : undefined,
     originaldate: meta.common.originaldate,
     originalyear: meta.common.originalyear,
     peakLevel: meta.common.peakLevel,
