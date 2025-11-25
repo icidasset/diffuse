@@ -27,15 +27,23 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
     // Setup leader election if shared
     if (this.hasAttribute("group")) {
-      const fn = this.broadcast(`diffuse/engine/audio/${this.group}`);
+      const actions = this.broadcast(`diffuse/engine/audio/${this.group}`, {
+        adjustVolume: { strategy: "leaderOnly", fn: this.adjustVolume },
+        pause: { strategy: "leaderOnly", fn: this.pause },
+        play: { strategy: "leaderOnly", fn: this.play },
+        seek: { strategy: "leaderOnly", fn: this.seek },
+        supply: { strategy: "replicate", fn: this.supply },
 
-      this.pause = fn("pause", this.pause).leaderOnly;
-      this.play = fn("play", this.play).leaderOnly;
-      this.reload = fn("reload", this.reload).leaderOnly;
-      this.seek = fn("seek", this.seek).leaderOnly;
-      this.supply = fn("supply", this.supply).replicate;
+        setIsPlaying: { strategy: "replicate", fn: this.$isPlaying.set },
+      });
 
-      this.$isPlaying.set = fn("isPlaying", this.$isPlaying.set).replicate;
+      this.adjustVolume = actions.adjustVolume;
+      this.pause = actions.pause;
+      this.play = actions.play;
+      this.seek = actions.seek;
+      this.supply = actions.supply;
+
+      this.$isPlaying.set = actions.setIsPlaying;
     }
 
     // Get volume from previous session if possible
@@ -119,6 +127,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["play"]}
    */
   play({ audioId, volume }) {
+    console.log(audioId);
     this.withAudioNode(audioId, (audio, item) => {
       audio.volume = volume ?? this.volume();
       audio.muted = false;
@@ -215,9 +224,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
       `;
     });
 
+    console.log(nodes);
+
     return html`
       <section id="audio-nodes">
-        ${nodes.join("")}
+        ${nodes}
       </section>
     `;
   }

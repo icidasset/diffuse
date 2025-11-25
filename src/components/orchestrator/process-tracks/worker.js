@@ -1,6 +1,6 @@
 import deepDiff from "@fry69/deep-diff";
 
-import { define, ostiary, rpc, workerProxy } from "@common/worker.js";
+import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"

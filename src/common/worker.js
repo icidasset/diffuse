@@ -1,8 +1,6 @@
 import Queue from "@mary/ds-queue";
 
 import { RPCChannel } from "@kunkun/kkrpc";
-
-import { MRpc } from "@mys/m-rpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
@@ -13,7 +11,6 @@ import { BrowserPostMessageIo } from "./worker/rpc.js";
 export { transfer } from "@kunkun/kkrpc";
 
 /**
- * @import {MRpcCallOptions, WorkerGlobalScope} from "@mys/m-rpc";
  * @import {Announcement, MessengerRealm, ProxiedActions} from "./worker.d.ts"
  */
 
@@ -112,12 +109,12 @@ export function announce(
  * @template T
  * @param {string} name
  * @param {(args: T) => void} fn
- * @param {MessagePort | Worker | WorkerGlobalScope} [context]
+ * @param {MessagePort | Worker | MessengerRealm} [context]
  */
 export function listen(
   name,
   fn,
-  context = /** @type {WorkerGlobalScope} */ (globalThis),
+  context = /** @type {MessengerRealm} */ (globalThis),
 ) {
   const c = /** @type {any} */ (context);
 
@@ -134,55 +131,6 @@ export function listen(
 ////////////////////////////////////////////
 
 /**
- * @template {(...args: any[]) => any} Fn
- * @param {string} name
- * @param {Fn} fn
- * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
- */
-export function define(
-  name,
-  fn,
-  context = /** @type {WorkerGlobalScope} */ (globalThis),
-) {
-  const rpc = MRpc.ensureMRpc(context);
-  return rpc.defineLocalFn(name, fn);
-}
-
-/**
- * @template {(...args: I[]) => O} Fn
- * @template I
- * @template O
- * @param {string} name
- * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
- * @param {MRpcCallOptions} [options]
- */
-export function use(
-  name,
-  context = /** @type {WorkerGlobalScope} */ (globalThis),
-  options,
-) {
-  const rpc = MRpc.ensureMRpc(context);
-  const _fn = rpc.useRemoteFn(name, { timeout: 60000, ...(options || {}) });
-
-  const fn = /** @type {Fn} */ (async (...args) => {
-    try {
-      return await _fn(...args);
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        err.message ===
-          `The remote threw an error when calling the function "${name}".`
-      ) {
-        err.message = `The worker function "${name}" throws an error.`;
-      }
-      throw err;
-    }
-  });
-
-  return fn;
-}
-
-/**
  * @template {Record<string, (...args: any[]) => any>} Actions
  * @param {MessagePort | Worker | MessengerRealm} context
  * @param {Actions} actions
@@ -191,7 +139,7 @@ export function rpc(context, actions) {
   const io = new BrowserPostMessageIo(() => context);
 
   /** @type {undefined | RPCChannel<Actions, {}>} */
-  const rpc = new RPCChannel(io, { enableTransfer: true, expose: actions });
+  return new RPCChannel(io, { enableTransfer: true, expose: actions });
 }
 
 /**
@@ -238,9 +186,9 @@ function announcement(name, args) {
  */
 const flushIncomingAnnouncements = debounceMicrotask(
   /**
-   * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+   * @param {MessagePort | Worker | MessengerRealm} [context] Uses `globalThis` by default.
    */
-  (context = /** @type {WorkerGlobalScope} */ (globalThis)) => {
+  (context = /** @type {MessengerRealm} */ (globalThis)) => {
     /** @type {Announcement<any>[]} */
     const arr = [];
 
@@ -265,7 +213,7 @@ const flushOutgoingAnnouncements = debounceMicrotask(
   /**
    * @param {MessagePort | Worker | MessengerRealm} [context] Uses `globalThis` by default.
    */
-  (context = /** @type {WorkerGlobalScope} */ (globalThis)) => {
+  (context = /** @type {MessengerRealm} */ (globalThis)) => {
     /** @type {Announcement<any>[]} */
     const arr = [];
 
@@ -284,7 +232,7 @@ const flushOutgoingAnnouncements = debounceMicrotask(
 const incoming = new Queue();
 
 /**
- * @param {MessagePort | Worker | WorkerGlobalScope} context
+ * @param {MessagePort | Worker | MessengerRealm} context
  */
 function incomingAnnouncementsHandler(context) {
   /** @param {any} event */

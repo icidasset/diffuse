@@ -10,7 +10,7 @@ import {
   parseURI,
 } from "./common.js";
 import { SCHEME } from "./constants.js";
-import { announce, define, ostiary, rpc } from "@common/worker.js";
+import { announce, ostiary, rpc } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
 
 import { saveBuckets } from "./common.js";

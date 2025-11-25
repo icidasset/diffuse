@@ -2,10 +2,11 @@ import QS from "query-string";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import { define, use } from "@common/worker.js";
+import { rpc, workerProxy } from "./worker.js";
 
 /**
  * @import {BroadcastingStatus, FnParams, FnReturn} from "./element.d.ts"
+ * @import {ProxiedActions} from "./worker.d.ts";
  * @import {Signal} from "./signal.d.ts"
  */
 
@@ -160,11 +161,18 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
   }
 
   /**
+   * @template {Record<string, { strategy: "leaderOnly" | "replicate", fn: (...args: any[]) => any }>} ActionsWithStrategy
+   * @template {{ [K in keyof ActionsWithStrategy]: ActionsWithStrategy[K]["fn"] }} Actions
    * @param {string} name
+   * @param {ActionsWithStrategy} actionsWithStrategy
    */
-  broadcast(name) {
+  broadcast(name, actionsWithStrategy) {
     const channel = new BroadcastChannel(name);
     const msg = new MessageChannel();
+
+    /**
+     * @typedef {{ [K in keyof ActionsWithStrategy]: ActionsWithStrategy[K]["fn"] }} A
+     */
 
     this.broadcasted = true;
     this.name = name;
@@ -201,47 +209,52 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
       return !!state.pending?.length;
     }
 
-    /**
-     * @template I
-     * @template O
-     * @template {(...args: I[]) => O} Fn
-     * @param {string} method
-     * @param {Fn} fn
-     */
-    return (method, fn) => {
-      define(method, fn.bind(this), msg.port2);
+    const _rpc = rpc(
+      msg.port2,
+      Object.fromEntries(
+        Object.entries(actionsWithStrategy).map(([k, v]) => {
+          return [k, v.fn];
+        }),
+      ),
+    );
 
-      /**
-       * @typedef {FnParams<typeof fn>} P
-       * @typedef {FnReturn<typeof fn>} R
-       */
+    /** @type {ProxiedActions<Actions>} */
+    const proxy = workerProxy(() => msg.port2);
 
-      /** @param {P} args */
-      const leaderOnly = async (...args) => {
-        const status = await this.#status.promise;
-        return status.leader
-          ? /** @type {R} */ (fn.call(this, ...args))
-          : /** @type {Promise<R>} */ (use(`leader:${method}`, msg.port2)(
-            ...args,
-          ));
-      };
+    /** @type {any} */
+    const actions = {};
 
-      /**
-       * @param {P} args
-       * @returns {R}
-       */
-      const replicate = (...args) => {
-        anyoneWaiting().then((bool) => {
-          if (bool) use(method, msg.port2)(...args);
-        });
-        return /** @type {R} */ (fn.call(this, ...args));
-      };
+    Object.entries(actionsWithStrategy).forEach(
+      ([action, { fn, strategy }]) => {
+        let wrapFn = fn;
 
-      return {
-        leaderOnly,
-        replicate,
-      };
-    };
+        switch (strategy) {
+          case "leaderOnly":
+            /** @param {Parameters<Actions[action]>} args */
+            wrapFn = async (...args) => {
+              const status = await this.#status.promise;
+              return status.leader
+                ? wrapFn.call(this, ...args)
+                : proxy[action](...args);
+            };
+            break;
+
+          case "replicate":
+            /** @param {Parameters<Actions[action]>} args */
+            wrapFn = async (...args) => {
+              anyoneWaiting().then((bool) => {
+                if (bool) proxy[action](...args);
+              });
+              return fn.call(this, ...args);
+            };
+            break;
+        }
+
+        actions[action] = wrapFn;
+      },
+    );
+
+    return /** @type {ProxiedActions<Actions>} */ (actions);
   }
 
   // LIFECYCLE

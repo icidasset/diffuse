@@ -1,7 +1,7 @@
 import * as URI from "uri-js";
 
 import { effect, signal } from "@common/signal.js";
-import { announce, define, ostiary, rpc } from "@common/worker.js";
+import { announce, ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
 import {

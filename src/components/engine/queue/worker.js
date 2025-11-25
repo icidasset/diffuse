@@ -1,4 +1,4 @@
-import { announce, define, ostiary, rpc } from "@common/worker.js";
+import { announce, ostiary, rpc } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
 import { arrayShuffle, hash } from "@common/index.js";
 

@@ -1,7 +1,7 @@
 import * as IDB from "idb-keyval";
 
 import { IDB_PREFIX } from "./constants.js";
-import { define, ostiary, rpc } from "@common/worker.js";
+import { ostiary, rpc } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts";
