@@ -105,7 +105,13 @@ export class BrowserPostMessageIo {
     }
 
     if (message.transfers && message.transfers.length > 0) {
-      console.log(message);
+      const msg = { ...message };
+
+      if (typeof msg.data === "object" && msg.data.payload.args) {
+        if (msg.data.payload.args[0] instanceof HTMLElement) {
+          msg.data.payload.args[0] = undefined;
+        }
+      }
 
       this.#realm().postMessage(
         message.data,
