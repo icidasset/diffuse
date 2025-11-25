@@ -1,4 +1,5 @@
 import type { SignalReader } from "@common/signal.d.ts";
+import type { Track } from "@definitions/types.d.ts";
 
 export type OutputElement<Tracks> = HTMLElement & OutputManager<Tracks>;
 
@@ -18,4 +19,9 @@ export type OutputManagerProperties<Tracks> = {
     get(): Promise<Tracks>;
     put(tracks: Tracks): Promise<void>;
   };
+};
+
+export type OutputWorkerActions = {
+  getTracks(): Promise<Track[]>;
+  putTracks(tracks: Track[]): Promise<void>;
 };

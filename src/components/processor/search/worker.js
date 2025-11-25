@@ -3,7 +3,7 @@ import { xxh32 } from "xxh32";
 // import { pluginQPS } from "@orama/plugin-qps";
 
 import { SCHEMA } from "./constants.js";
-import { define, ostiary } from "@common/worker.js";
+import { define, ostiary, rpc } from "@common/worker.js";
 import { signal } from "@common/signal.js";
 
 /**
@@ -89,10 +89,11 @@ export async function supply(tracks) {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((port) => {
-  // Setup RPC
-  define("search", search, port);
-  define("supply", supply, port);
+ostiary((context) => {
+  rpc(context, {
+    search,
+    supply,
+  });
 });
 
 ////////////////////////////////////////////

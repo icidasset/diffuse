@@ -1,3 +1,4 @@
+import QS from "query-string";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
@@ -21,7 +22,11 @@ export class DiffuseElement extends HTMLElement {
 
   constructor() {
     super();
+
     this.group = this.getAttribute("group") || crypto.randomUUID();
+
+    this.worker = this.worker.bind(this);
+    this.workerLink = this.workerLink.bind(this);
   }
 
   /**
@@ -77,6 +82,52 @@ export class DiffuseElement extends HTMLElement {
 
   disconnectedCallback() {
     this.#teardown();
+  }
+
+  // WORKER
+
+  /** @type {undefined | Worker | SharedWorker} */
+  #worker;
+
+  worker() {
+    const NAME = this.constructor.prototype.constructor.NAME;
+    const WORKER_URL = this.constructor.prototype.constructor.WORKER_URL;
+
+    if (!NAME) throw new Error("Missing `NAME` static property");
+    if (!WORKER_URL) throw new Error("Missing `WORKER_URL` static property");
+
+    // Query
+    const query = QS.stringify(
+      "workerQuery" in this && typeof this.workerQuery === "function"
+        ? this.workerQuery()
+        : {},
+    );
+
+    // Setup worker
+    const name = `${NAME}/${this.group}`;
+    const url = import.meta.resolve("./" + WORKER_URL) + `?${query}`;
+
+    let worker;
+
+    if (this.hasAttribute("group")) {
+      worker = new SharedWorker(url, { name, type: "module" });
+    } else {
+      worker = new Worker(url, { name, type: "module" });
+    }
+
+    return worker;
+  }
+
+  workerLink() {
+    this.#worker ??= this.worker();
+    const worker = this.#worker;
+
+    if (worker instanceof SharedWorker) {
+      worker.port.start();
+      return worker.port;
+    } else {
+      return worker;
+    }
   }
 }
 

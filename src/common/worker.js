@@ -1,17 +1,20 @@
 import Queue from "@mary/ds-queue";
 
+import { RPCChannel } from "@kunkun/kkrpc";
+
 import { MRpc } from "@mys/m-rpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
 
 import { batch } from "./signal.js";
+import { BrowserPostMessageIo } from "./worker/rpc.js";
 
-export { getTransferables } from "@okikio/transferables";
+export { transfer } from "@kunkun/kkrpc";
 
 /**
  * @import {MRpcCallOptions, WorkerGlobalScope} from "@mys/m-rpc";
- * @import {Announcement, IncompleteArray, ProxiedActions, ProxyProvider} from "./worker.d.ts"
+ * @import {Announcement, MessengerRealm, ProxiedActions} from "./worker.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -22,7 +25,7 @@ export { getTransferables } from "@okikio/transferables";
  * Manage incoming connections for a shared worker.
  * If a regular worker is used instead, it'll just execute the callback immediately.
  *
- * @template {MessagePort | Worker | WorkerGlobalScope} T
+ * @template {MessagePort | Worker | MessengerRealm} T
  * @param {(context: MessagePort | T) => void} callback
  * @param {T} [context] Uses `globalThis` by default.
  */
@@ -51,11 +54,12 @@ export function ostiary(
 }
 
 /**
- * @param {MessagePort | Worker} workerOrPort
+ * @param {() => MessagePort | Worker} workerLinkCreator
  */
-export function portProvider(workerOrPort) {
+export function portProvider(workerLinkCreator) {
   return () => {
     const channel = new MessageChannel();
+    const workerOrPort = workerLinkCreator();
 
     channel.port1.addEventListener("message", (event) => {
       workerOrPort.postMessage(event.data);
@@ -85,28 +89,6 @@ export function portProvider(workerOrPort) {
   };
 }
 
-/**
- * @template {Record<string, (...args: any[]) => any>} Actions
- * @template {keyof Actions} T
- * @template {T[]} U
- * @param {U & ([T] extends [U[number]] ? unknown : IncompleteArray<T>[])} actions
- */
-export function proxyProvider(actions) {
-  /**
-   * @type {ProxyProvider<Actions>}
-   */
-  return (workerOrPort) => {
-    /** @type {Record<string | number | symbol, (...args: any[]) => any>} */
-    const proxy = {};
-
-    actions.forEach((action) => {
-      proxy[action] = use(action.toString(), workerOrPort);
-    });
-
-    return /** @type {ProxiedActions<Actions>} */ (proxy);
-  };
-}
-
 ////////////////////////////////////////////
 // RAW
 ////////////////////////////////////////////
@@ -115,7 +97,7 @@ export function proxyProvider(actions) {
  * @template T
  * @param {string} name
  * @param {T} args
- * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+ * @param {MessagePort | Worker | MessengerRealm} [context] Uses `globalThis` by default.
  */
 export function announce(
   name,
@@ -139,12 +121,12 @@ export function listen(
 ) {
   const c = /** @type {any} */ (context);
 
-  if (!c.incoming) {
+  if (!c.__incoming) {
     context.addEventListener("message", incomingAnnouncementsHandler(context));
-    c.incoming = {};
+    c.__incoming = {};
   }
 
-  c.incoming[name] = debounceMicrotask(fn, { updateArguments: true });
+  c.__incoming[name] = debounceMicrotask(fn, { updateArguments: true });
 }
 
 ////////////////////////////////////////////
@@ -200,6 +182,34 @@ export function use(
   return fn;
 }
 
+/**
+ * @template {Record<string, (...args: any[]) => any>} Actions
+ * @param {MessagePort | Worker | MessengerRealm} context
+ * @param {Actions} actions
+ */
+export function rpc(context, actions) {
+  const io = new BrowserPostMessageIo(() => context);
+
+  /** @type {undefined | RPCChannel<Actions, {}>} */
+  const rpc = new RPCChannel(io, { enableTransfer: true, expose: actions });
+}
+
+/**
+ * @template {Record<string, (...args: any[]) => any>} Actions
+ * @param {() => MessagePort | Worker} workerLinkCreator
+ * @returns {ProxiedActions<Actions>}
+ */
+export function workerProxy(workerLinkCreator) {
+  const io = new BrowserPostMessageIo(workerLinkCreator);
+
+  /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
+  const rpc = new RPCChannel(io, { enableTransfer: true });
+
+  /** @type {ProxiedActions<Actions>} */
+  const api = rpc.getAPI();
+  return api;
+}
+
 ////////////////////////////////////////////
 // ⛔️
 ////////////////////////////////////////////
@@ -242,7 +252,7 @@ const flushIncomingAnnouncements = debounceMicrotask(
       const c = /** @type {any} */ (context);
 
       arr.forEach((announcement) => {
-        c.incoming[announcement.name]?.(announcement.args);
+        c.__incoming[announcement.name]?.(announcement.args);
       });
     });
   },
@@ -253,7 +263,7 @@ const flushIncomingAnnouncements = debounceMicrotask(
  */
 const flushOutgoingAnnouncements = debounceMicrotask(
   /**
-   * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+   * @param {MessagePort | Worker | MessengerRealm} [context] Uses `globalThis` by default.
    */
   (context = /** @type {WorkerGlobalScope} */ (globalThis)) => {
     /** @type {Announcement<any>[]} */

@@ -1,11 +1,14 @@
 import { DiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
-import { getTransferables, portProvider, use } from "@common/worker.js";
+import { portProvider, transfer, workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
+ *
+ * @import {Actions} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -21,16 +24,11 @@ class ProcessTracksOrchestrator extends DiffuseElement {
   #external;
   #process;
 
+  static NAME = "diffuse/orchestrator/process-tracks";
+  static WORKER_URL = "components/orchestrator/process-tracks/worker.js";
+
   constructor() {
     super();
-
-    // Setup worker
-    const name = `diffuse/orchestrator/process-tracks/${this.group}`;
-    const url = import.meta.resolve(
-      "./components/orchestrator/process-tracks/worker.js",
-    );
-
-    const worker = new Worker(url, { name, type: "module" });
 
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
@@ -46,15 +44,14 @@ class ProcessTracksOrchestrator extends DiffuseElement {
       customElements.whenDefined(this.input.localName),
       customElements.whenDefined(this.metadataProcessor.localName),
     ]).then(() => ({
-      input: portProvider(this.input.worker()),
-      metadataProcessor: portProvider(this.metadataProcessor.worker()),
+      input: portProvider(this.input.workerLink),
+      metadataProcessor: portProvider(this.metadataProcessor.workerLink),
     }));
 
-    // Worker proxy
-    this.#process = use("process", worker, {
-      timeout: 60000 * 60 * 2, // 2 hours
-      transfer: getTransferables,
-    });
+    /** @type {ProxiedActions<Actions>} */
+    const p = workerProxy(this.workerLink);
+
+    this.#process = p.process;
   }
 
   // SIGNALS
@@ -103,13 +100,16 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     };
 
     // Send everything to worker
-    const result = await this.#process({
+    const result = await this.#process(transfer({
       ports: {
         input: ports.input.port,
         metadataProcessor: ports.metadataProcessor.port,
       },
       tracks: cachedTracks,
-    });
+    }, [
+      ports.input.port,
+      ports.metadataProcessor.port,
+    ]));
 
     // Save if collection changed
     if (result) await this.output.tracks.save(result);

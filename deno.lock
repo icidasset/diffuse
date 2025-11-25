@@ -4,6 +4,7 @@
     "jsr:@bradenmacdonald/s3-lite-client@~0.9.4": "0.9.4",
     "jsr:@deno/loader@0.3.6": "0.3.6",
     "jsr:@fry69/deep-diff@~0.1.10": "0.1.10",
+    "jsr:@kunkun/kkrpc@0.6": "0.6.0",
     "jsr:@mary/ds-queue@~0.1.3": "0.1.3",
     "jsr:@mys/m-rpc@~0.12.2": "0.12.2",
     "jsr:@mys/worker-fn@^3.2.1": "3.2.1",
@@ -41,6 +42,7 @@
     "npm:@atcute/lex-cli@*": "2.3.1",
     "npm:@atcute/lex-cli@^2.3.1": "2.3.1",
     "npm:@atcute/lexicons@^1.2.2": "1.2.2",
+    "npm:@tauri-apps/plugin-shell@^2.2.0": "2.3.3",
     "npm:alien-signals@3": "3.0.3",
     "npm:autoprefixer@10.4.21": "10.4.21_postcss@8.5.6",
     "npm:esbuild-plugins-node-modules-polyfill@^1.7.1": "1.7.1_esbuild@0.25.12",
@@ -54,7 +56,9 @@
     "npm:postcss-import@16.1.1": "16.1.1_postcss@8.5.6",
     "npm:postcss@8.5.6": "8.5.6",
     "npm:query-string@^9.3.1": "9.3.1",
+    "npm:socket.io-client@^4.8.1": "4.8.1",
     "npm:subsonic-api@^3.2.0": "3.2.0",
+    "npm:superjson@^2.2.2": "2.2.5",
     "npm:throttle-debounce@^5.0.2": "5.0.2",
     "npm:uint8arrays@^5.1.0": "5.1.0",
     "npm:uri-js@^4.4.1": "4.4.1",
@@ -70,6 +74,14 @@
     },
     "@fry69/deep-diff@0.1.10": {
       "integrity": "cdd88fefaef1ac896a038a5f3c0895038d8c725e61bac50489c455156e0275f5"
+    },
+    "@kunkun/kkrpc@0.6.0": {
+      "integrity": "44674738cac0712740ee9e2a57048bd53e1086829a2c4f21e15c03333793a19f",
+      "dependencies": [
+        "npm:@tauri-apps/plugin-shell",
+        "npm:socket.io-client",
+        "npm:superjson"
+      ]
     },
     "@mary/ds-queue@0.1.3": {
       "integrity": "a743caa397b924cb08b0bbdffc526eb1ea2d3fc9e675da6edc137c437fc93c76"
@@ -414,13 +426,25 @@
         "tslib"
       ]
     },
+    "@socket.io/component-emitter@3.1.2": {
+      "integrity": "sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA=="
+    },
     "@standard-schema/spec@1.0.0": {
       "integrity": "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="
+    },
+    "@tauri-apps/api@2.9.0": {
+      "integrity": "sha512-qD5tMjh7utwBk9/5PrTA/aGr3i5QaJ/Mlt7p8NilQ45WgbifUNPyKWsA63iQ8YfQq6R8ajMapU+/Q8nMcPRLNw=="
+    },
+    "@tauri-apps/plugin-shell@2.3.3": {
+      "integrity": "sha512-Xod+pRcFxmOWFWEnqH5yZcA7qwAMuaaDkMR1Sply+F8VfBj++CGnj2xf5UoialmjZ2Cvd8qrvSCbU+7GgNVsKQ==",
+      "dependencies": [
+        "@tauri-apps/api"
+      ]
     },
     "@tokenizer/inflate@0.2.7": {
       "integrity": "sha512-MADQgmZT1eKjp06jpI2yozxaU9uVs4GzzgSL+uEq7bVcJ9V1ZXQkeGNql1fsSI0gMy1vhvNTNbUqrx+pZfJVmg==",
       "dependencies": [
-        "debug",
+        "debug@4.4.3",
         "fflate",
         "token-types@6.1.1"
       ]
@@ -582,6 +606,12 @@
     "content-type@1.0.5": {
       "integrity": "sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA=="
     },
+    "copy-anything@4.0.5": {
+      "integrity": "sha512-7Vv6asjS4gMOuILabD3l739tsaxFQmC+a7pLZm02zyvs8p977bL3zEgq3yDk5rn9B0PbYgIv++jmHcuUab4RhA==",
+      "dependencies": [
+        "is-what"
+      ]
+    },
     "core-js@2.6.12": {
       "integrity": "sha512-Kb2wC0fvsWfQrgk8HU5lW6U/Lcs8+9aaYcy4ZFc6DDlo4nZ7n70dEgE5rtR0oG6ufKDUnrwfWL1mXR5ljDatrQ==",
       "deprecated": true,
@@ -592,6 +622,12 @@
     },
     "csstype@3.1.3": {
       "integrity": "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw=="
+    },
+    "debug@4.3.7": {
+      "integrity": "sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==",
+      "dependencies": [
+        "ms"
+      ]
     },
     "debug@4.4.3": {
       "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
@@ -637,6 +673,19 @@
     },
     "endianness@8.0.2": {
       "integrity": "sha512-IU+77+jJ7lpw2qZ3NUuqBZFy3GuioNgXUdsL1L9tooDNTaw0TgOnwNuc+8Ns+haDaTifK97QLzmOANJtI/rGvw=="
+    },
+    "engine.io-client@6.6.3": {
+      "integrity": "sha512-T0iLjnyNWahNyv/lcjS2y4oE358tVS/SYQNxYXGAJ9/GLgH4VCvOQ/mhTjqU88mLZCQgiG8RIegFHYCdVC+j5w==",
+      "dependencies": [
+        "@socket.io/component-emitter",
+        "debug@4.3.7",
+        "engine.io-parser",
+        "ws",
+        "xmlhttprequest-ssl"
+      ]
+    },
+    "engine.io-parser@5.2.3": {
+      "integrity": "sha512-HqD3yTBfnBxIrbnM1DoD6Pcq8NECnh8d4As1Qgh0z5Gg3jRRIqijury0CL3ghu/edArpUYiYqQiDUQBIs4np3Q=="
     },
     "entities@4.5.0": {
       "integrity": "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="
@@ -819,6 +868,9 @@
     "is-typedarray@1.0.0": {
       "integrity": "sha512-cyA56iCMHAh5CdzjJIa4aohJyeO1YbwLi3Jc35MmRU6poroFjIGZzUzupGiRPOjgHg9TLu43xbpwXk523fMxKA=="
     },
+    "is-what@5.5.0": {
+      "integrity": "sha512-oG7cgbmg5kLYae2N5IVd3jm2s+vldjxJzK1pcu9LfpGuQ93MQSzo0okvRna+7y5ifrD+20FE8FvjusyGaz14fw=="
+    },
     "isarray@1.0.0": {
       "integrity": "sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ=="
     },
@@ -948,7 +1000,7 @@
       "dependencies": [
         "assert",
         "buffer",
-        "debug",
+        "debug@4.4.3",
         "music-metadata@3.8.0",
         "readable-stream@3.6.2",
         "remove",
@@ -962,7 +1014,7 @@
         "@borewit/text-codec@0.2.0",
         "@tokenizer/token",
         "content-type",
-        "debug",
+        "debug@4.4.3",
         "file-type@21.0.0",
         "media-typer@1.1.0",
         "strtok3@10.3.4",
@@ -973,7 +1025,7 @@
     "music-metadata@3.8.0": {
       "integrity": "sha512-aIADbp3uCS+ANr4nnFEHzTzMy81OT7PR7WBMW73SJ28Y7P94nnEugmTOj1ICP2JmxBBDlo+MeYVgiPnxVN69tg==",
       "dependencies": [
-        "debug",
+        "debug@4.4.3",
         "file-type@11.1.0",
         "media-typer@0.3.0",
         "strtok3@2.3.0",
@@ -1208,6 +1260,22 @@
     "setimmediate@1.0.5": {
       "integrity": "sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA=="
     },
+    "socket.io-client@4.8.1": {
+      "integrity": "sha512-hJVXfu3E28NmzGk8o1sHhN3om52tRvwYeidbj7xKy2eIIse5IoKX3USlS6Tqt3BHAtflLIkCQBkzVrEEfWUyYQ==",
+      "dependencies": [
+        "@socket.io/component-emitter",
+        "debug@4.3.7",
+        "engine.io-client",
+        "socket.io-parser"
+      ]
+    },
+    "socket.io-parser@4.2.4": {
+      "integrity": "sha512-/GbIKmo8ioc+NIWIhwdecY0ge+qVBSMdgxGygevmdHj24bsfgtCmcUUcQ5ZzcylGFHsN3k4HB4Cgkl96KVnuew==",
+      "dependencies": [
+        "@socket.io/component-emitter",
+        "debug@4.3.7"
+      ]
+    },
     "source-map-js@1.2.1": {
       "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="
     },
@@ -1229,13 +1297,19 @@
     "strtok3@2.3.0": {
       "integrity": "sha512-AA67/1atBh7X0fUTDevjW89by2ZkY9RZAnkwusx5Yc1COYf0ruUbpYOOIs03SnRA1CF9K3+BtRXKOEtKhAXVaQ==",
       "dependencies": [
-        "debug",
+        "debug@4.4.3",
         "then-read-stream",
         "token-types@1.3.2"
       ]
     },
     "subsonic-api@3.2.0": {
       "integrity": "sha512-BADBQ2hONdLb3agCiSDzNzTIFLWJAuxJTUJvC2zDFvXUVfnK3yy7r8xFu3NkrQl8p5UVI7q8Qfm62N1lFxWbww=="
+    },
+    "superjson@2.2.5": {
+      "integrity": "sha512-zWPTX96LVsA/eVYnqOM2+ofcdPqdS1dAF1LN4TS2/MWuUpfitd9ctTa87wt4xrYnZnkLtS69xpBdSxVBP5Rm6w==",
+      "dependencies": [
+        "copy-anything"
+      ]
     },
     "supports-preserve-symlinks-flag@1.0.0": {
       "integrity": "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="
@@ -1354,6 +1428,12 @@
     },
     "winamp-eqf@1.0.0": {
       "integrity": "sha512-yUIb4+lTYBKP4L6nPXdDj1CQBXlJ+/PrNAkT1VbTAgeFjX8lPxAthsUE5NxQP4s8SO4YMJemsrErZ49Bh+/Veg=="
+    },
+    "ws@8.17.1": {
+      "integrity": "sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ=="
+    },
+    "xmlhttprequest-ssl@2.1.2": {
+      "integrity": "sha512-TEU+nJVUUnA4CYJFLvK5X9AOeH4KvDvhIfm0vV1GaQRtchnG0hgK5p8hw/xjv8cunWYCsiPCSDzObPyhEwq3KQ=="
     },
     "xxh32@2.0.5": {
       "integrity": "sha512-glQIaPvLHV4xG2Sn0E4mZWY25JT34+XcG4e2c8OMIH2SXxVrm6MmJ8miCsqGBLtf+rn2YcaeS11vq/66vkXGUQ=="
@@ -1698,6 +1778,7 @@
     "dependencies": [
       "jsr:@bradenmacdonald/s3-lite-client@~0.9.4",
       "jsr:@fry69/deep-diff@~0.1.10",
+      "jsr:@kunkun/kkrpc@0.6",
       "jsr:@mary/ds-queue@~0.1.3",
       "jsr:@mys/m-rpc@~0.12.2",
       "jsr:@mys/worker-fn@^3.2.1",

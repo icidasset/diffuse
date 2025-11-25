@@ -1,7 +1,7 @@
 import * as IDB from "idb-keyval";
 
 import { IDB_PREFIX } from "./constants.js";
-import { define, ostiary } from "@common/worker.js";
+import { define, ostiary, rpc } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts";
@@ -31,10 +31,11 @@ export async function putTracks(tracks) {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((port) => {
-  // Setup RPC
-  define("getTracks", getTracks, port);
-  define("putTracks", putTracks, port);
+ostiary((context) => {
+  rpc(context, {
+    getTracks,
+    putTracks,
+  });
 });
 
 ////////////////////////////////////////////

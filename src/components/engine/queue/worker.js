@@ -1,4 +1,4 @@
-import { announce, define, ostiary } from "@common/worker.js";
+import { announce, define, ostiary, rpc } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
 import { arrayShuffle, hash } from "@common/index.js";
 
@@ -83,26 +83,29 @@ export function unshift() {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((port) => {
+ostiary((context) => {
   // Setup RPC
 
-  define("future", $future.get, port);
-  define("now", $now.get, port);
-  define("past", $past.get, port);
-  define("poolHash", $poolHash.get, port);
+  rpc(context, {
+    add,
+    fill,
+    pool,
+    shift,
+    unshift,
 
-  define("add", add, port);
-  define("fill", fill, port);
-  define("pool", pool, port);
-  define("shift", shift, port);
-  define("unshift", unshift, port);
+    // State
+    future: $future.get,
+    now: $now.get,
+    past: $past.get,
+    poolHash: $poolHash.get,
+  });
 
   // Communicate state
 
-  effect(() => announce("future", $future.value, port));
-  effect(() => announce("now", $now.value, port));
-  effect(() => announce("past", $past.value, port));
-  effect(() => announce("poolHash", $poolHash.value, port));
+  effect(() => announce("future", $future.value, context));
+  effect(() => announce("now", $now.value, context));
+  effect(() => announce("past", $past.value, context));
+  effect(() => announce("poolHash", $poolHash.value, context));
 
   // Effects
 

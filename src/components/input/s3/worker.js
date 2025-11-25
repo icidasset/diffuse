@@ -10,7 +10,7 @@ import {
   parseURI,
 } from "./common.js";
 import { SCHEME } from "./constants.js";
-import { announce, define, ostiary } from "@common/worker.js";
+import { announce, define, ostiary, rpc } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
 
 import { saveBuckets } from "./common.js";
@@ -213,20 +213,24 @@ export function demo() {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((port) => {
+ostiary((context) => {
   // Setup RPC
 
-  define("buckets", $buckets.get, port);
+  rpc(context, {
+    consult,
+    contextualize,
+    groupConsult,
+    list,
+    resolve,
 
-  define("consult", consult, port);
-  define("contextualize", contextualize, port);
-  define("groupConsult", groupConsult, port);
-  define("list", list, port);
-  define("resolve", resolve, port);
+    // Additional actions
+    demo,
 
-  define("demo", demo, port);
+    // State
+    buckets: $buckets.get,
+  });
 
   // Communicate state
 
-  effect(() => announce("buckets", $buckets.value, port));
+  effect(() => announce("buckets", $buckets.value, context));
 });

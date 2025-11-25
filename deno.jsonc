@@ -8,6 +8,7 @@
     "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.2",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.4",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
+    "@kunkun/kkrpc": "jsr:@kunkun/kkrpc@^0.6.0",
     "@mary/ds-queue": "jsr:@mary/ds-queue@^0.1.3",
     "@mys/m-rpc": "jsr:@mys/m-rpc@^0.12.2",
     "@mys/worker-fn": "jsr:@mys/worker-fn@^3.2.1",

@@ -34,7 +34,9 @@ export type ProxiedAction<
 /** */
 export type ProxyProvider<
   Actions extends Record<string, (...args: any[]) => any>,
-> = (workerOrPort: MessagePort | Worker) => ProxiedActions<Actions>;
+> = (
+  workerLinkCreator: () => MessagePort | Worker,
+) => ProxiedActions<Actions>;
 
 /** */
 export type ProxyProviderMethod<
@@ -42,7 +44,14 @@ export type ProxyProviderMethod<
 > = { proxy: ProxyProvider<Actions> };
 
 /** */
-export type WorkerProvider = (group?: string) => Worker;
+export interface MessengerRealm {
+  postMessage: MessagePort["postMessage"];
+  addEventListener: MessagePort["addEventListener"];
+  removeEventListener: MessagePort["removeEventListener"];
+}
+
+/** */
+export type WorkerProvider = (group?: string) => Worker | SharedWorker;
 
 /** */
 export type WorkerProviderMethod = { worker: WorkerProvider };
