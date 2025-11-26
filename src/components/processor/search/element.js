@@ -1,7 +1,8 @@
 import { DiffuseElement } from "@common/element.js";
-import { use } from "@common/worker.js";
+import { workerProxy } from "@common/worker.js";
 
 /**
+ * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts";
  * @import {Actions} from "./types.d.ts"
  */
 
@@ -10,32 +11,20 @@ import { use } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {Actions}
+ * @implements {ProxiedActions<Actions>}
  */
 class SearchProcessor extends DiffuseElement {
+  static NAME = "diffuse/processor/search";
+  static WORKER_URL = "components/processor/search/worker.js";
+
   constructor() {
     super();
 
-    // Setup worker
-    const name = `diffuse/processor/search/${this.group}`;
-    const url = import.meta.resolve(
-      "./components/processor/search/worker.js",
-    );
+    /** @type {ProxiedActions<Actions>} */
+    const p = workerProxy(this.workerLink);
 
-    let port;
-
-    if (this.hasAttribute("group")) {
-      const worker = new SharedWorker(url, { name, type: "module" });
-      port = worker.port;
-      port.start();
-    } else {
-      const worker = new Worker(url, { name, type: "module" });
-      port = worker;
-    }
-
-    // Worker proxy
-    this.search = use("search", port);
-    this.supply = use("supply", port);
+    this.search = p.search;
+    this.supply = p.supply;
   }
 }
 

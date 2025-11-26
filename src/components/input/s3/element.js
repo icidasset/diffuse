@@ -1,5 +1,5 @@
 import { DiffuseElement } from "@common/element.js";
-import { portProvider, proxyProvider } from "@common/worker.js";
+import { portProvider, workerProxy } from "@common/worker.js";
 
 /**
  * @import {InputActions} from "@components/input/types.d.ts"
@@ -13,51 +13,27 @@ import { portProvider, proxyProvider } from "@common/worker.js";
 /**
  * @implements {ProxiedActions<InputActions>}
  * @implements {PortProviderMethod}
- * @implements {ProxyProviderMethod<InputActions>}
  */
 class S3Input extends DiffuseElement {
+  static NAME = "diffuse/input/s3";
+  static WORKER_URL = "components/input/s3/worker.js";
+
   constructor() {
     super();
 
-    // Setup worker
-    const worker = this.worker(this.group);
+    /** @type {ProxiedActions<InputActions & { demo: () => Promise<void> }>} */
+    const p = workerProxy(this.workerLink);
 
-    /** @type {ProxyProvider<InputActions & { demo: () => Promise<void> }>} */
-    this.proxy = proxyProvider([
-      "consult",
-      "contextualize",
-      "groupConsult",
-      "list",
-      "resolve",
+    this.consult = p.consult;
+    this.contextualize = p.contextualize;
+    this.groupConsult = p.groupConsult;
+    this.list = p.list;
+    this.resolve = p.resolve;
 
-      "demo",
-    ]);
-
-    // Worker proxy
-    const w = this.proxy(worker);
-
-    this.consult = w.consult;
-    this.contextualize = w.contextualize;
-    this.groupConsult = w.groupConsult;
-    this.list = w.list;
-    this.resolve = w.resolve;
-
-    this.demo = w.demo;
+    this.demo = p.demo;
 
     // Provide a channel to the worker
-    this.port = portProvider(worker);
-  }
-
-  /**
-   * @param {string} [group]
-   */
-  worker(group) {
-    const name = `diffuse/input/s3/${group || crypto.randomUUID()}`;
-    const url = import.meta.resolve(
-      "./components/input/s3/worker.js",
-    );
-
-    return new Worker(url, { name, type: "module" });
+    this.port = portProvider(this.workerLink);
   }
 }
 

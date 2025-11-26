@@ -1,17 +1,14 @@
-import Queue from "@mary/ds-queue";
-
-import { MRpc } from "@mys/m-rpc";
+import { RPCChannel } from "@kunkun/kkrpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
 
-import { batch } from "./signal.js";
+import { BrowserPostMessageIo } from "./worker/rpc.js";
 
-export { getTransferables } from "@okikio/transferables";
+export { transfer } from "@kunkun/kkrpc";
 
 /**
- * @import {MRpcCallOptions, WorkerGlobalScope} from "@mys/m-rpc";
- * @import {Announcement, IncompleteArray, ProxiedActions, ProxyProvider} from "./worker.d.ts"
+ * @import {Announcement, MessengerRealm, ProxiedActions} from "./worker.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -22,8 +19,8 @@ export { getTransferables } from "@okikio/transferables";
  * Manage incoming connections for a shared worker.
  * If a regular worker is used instead, it'll just execute the callback immediately.
  *
- * @template {MessagePort | Worker | WorkerGlobalScope} T
- * @param {(context: MessagePort | T) => void} callback
+ * @template {MessagePort | Worker | MessengerRealm} T
+ * @param {(context: MessagePort | T, firstConnection: boolean, connectionId: string) => void} callback
  * @param {T} [context] Uses `globalThis` by default.
  */
 export function ostiary(
@@ -31,8 +28,11 @@ export function ostiary(
   context = /** @type {T} */ (/** @type {unknown} */ (globalThis)),
 ) {
   if (/** @type {any} */ (context).onmessage === null) {
-    return callback(context);
+    return callback(context, true, crypto.randomUUID());
   }
+
+  const c = /** @type {any} */ (context);
+  c.__id ??= crypto.randomUUID();
 
   context.addEventListener(
     "connect",
@@ -45,17 +45,19 @@ export function ostiary(
       port.start();
 
       // Initiate setup
-      callback(port);
+      callback(port, !(c.__initiated ?? false), c.__id);
+      c.__initiated = true;
     },
   );
 }
 
 /**
- * @param {MessagePort | Worker} workerOrPort
+ * @param {() => MessagePort | Worker} workerLinkCreator
  */
-export function portProvider(workerOrPort) {
+export function portProvider(workerLinkCreator) {
   return () => {
     const channel = new MessageChannel();
+    const workerOrPort = workerLinkCreator();
 
     channel.port1.addEventListener("message", (event) => {
       workerOrPort.postMessage(event.data);
@@ -85,28 +87,6 @@ export function portProvider(workerOrPort) {
   };
 }
 
-/**
- * @template {Record<string, (...args: any[]) => any>} Actions
- * @template {keyof Actions} T
- * @template {T[]} U
- * @param {U & ([T] extends [U[number]] ? unknown : IncompleteArray<T>[])} actions
- */
-export function proxyProvider(actions) {
-  /**
-   * @type {ProxyProvider<Actions>}
-   */
-  return (workerOrPort) => {
-    /** @type {Record<string | number | symbol, (...args: any[]) => any>} */
-    const proxy = {};
-
-    actions.forEach((action) => {
-      proxy[action] = use(action.toString(), workerOrPort);
-    });
-
-    return /** @type {ProxiedActions<Actions>} */ (proxy);
-  };
-}
-
 ////////////////////////////////////////////
 // RAW
 ////////////////////////////////////////////
@@ -115,36 +95,37 @@ export function proxyProvider(actions) {
  * @template T
  * @param {string} name
  * @param {T} args
- * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+ * @param {MessagePort | Worker | MessengerRealm} [context] Uses `globalThis` by default.
  */
 export function announce(
   name,
   args,
   context,
 ) {
-  outgoing.enqueue(announcement(name, args));
-  flushOutgoingAnnouncements(context);
+  const a = announcement(name, args);
+  const transferables = getTransferables(a);
+  (context ?? globalThis).postMessage(a, { transfer: transferables });
 }
 
 /**
  * @template T
  * @param {string} name
  * @param {(args: T) => void} fn
- * @param {MessagePort | Worker | WorkerGlobalScope} [context]
+ * @param {MessagePort | Worker | MessengerRealm} [context]
  */
 export function listen(
   name,
   fn,
-  context = /** @type {WorkerGlobalScope} */ (globalThis),
+  context = /** @type {MessengerRealm} */ (globalThis),
 ) {
   const c = /** @type {any} */ (context);
 
-  if (!c.incoming) {
+  if (!c.__incoming) {
     context.addEventListener("message", incomingAnnouncementsHandler(context));
-    c.incoming = {};
+    c.__incoming = {};
   }
 
-  c.incoming[name] = debounceMicrotask(fn, { updateArguments: true });
+  c.__incoming[name] = debounceMicrotask(fn, { updateArguments: true });
 }
 
 ////////////////////////////////////////////
@@ -152,52 +133,31 @@ export function listen(
 ////////////////////////////////////////////
 
 /**
- * @template {(...args: any[]) => any} Fn
- * @param {string} name
- * @param {Fn} fn
- * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
+ * @template {Record<string, (...args: any[]) => any>} Actions
+ * @param {MessagePort | Worker | MessengerRealm} context
+ * @param {Actions} actions
  */
-export function define(
-  name,
-  fn,
-  context = /** @type {WorkerGlobalScope} */ (globalThis),
-) {
-  const rpc = MRpc.ensureMRpc(context);
-  return rpc.defineLocalFn(name, fn);
+export function rpc(context, actions) {
+  const io = new BrowserPostMessageIo(() => context);
+
+  /** @type {undefined | RPCChannel<Actions, {}>} */
+  return new RPCChannel(io, { enableTransfer: true, expose: actions });
 }
 
 /**
- * @template {(...args: I[]) => O} Fn
- * @template I
- * @template O
- * @param {string} name
- * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
- * @param {MRpcCallOptions} [options]
+ * @template {Record<string, (...args: any[]) => any>} Actions
+ * @param {() => MessagePort | Worker} workerLinkCreator
+ * @returns {ProxiedActions<Actions>}
  */
-export function use(
-  name,
-  context = /** @type {WorkerGlobalScope} */ (globalThis),
-  options,
-) {
-  const rpc = MRpc.ensureMRpc(context);
-  const _fn = rpc.useRemoteFn(name, { timeout: 60000, ...(options || {}) });
+export function workerProxy(workerLinkCreator) {
+  const io = new BrowserPostMessageIo(workerLinkCreator);
 
-  const fn = /** @type {Fn} */ (async (...args) => {
-    try {
-      return await _fn(...args);
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        err.message ===
-          `The remote threw an error when calling the function "${name}".`
-      ) {
-        err.message = `The worker function "${name}" throws an error.`;
-      }
-      throw err;
-    }
-  });
+  /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
+  const rpc = new RPCChannel(io, { enableTransfer: true });
 
-  return fn;
+  /** @type {ProxiedActions<Actions>} */
+  const api = rpc.getAPI();
+  return api;
 }
 
 ////////////////////////////////////////////
@@ -224,75 +184,15 @@ function announcement(name, args) {
 }
 
 /**
- * Process incoming announcements.
- */
-const flushIncomingAnnouncements = debounceMicrotask(
-  /**
-   * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
-   */
-  (context = /** @type {WorkerGlobalScope} */ (globalThis)) => {
-    /** @type {Announcement<any>[]} */
-    const arr = [];
-
-    for (const a of incoming.drain()) {
-      arr.push(a);
-    }
-
-    batch(() => {
-      const c = /** @type {any} */ (context);
-
-      arr.forEach((announcement) => {
-        c.incoming[announcement.name]?.(announcement.args);
-      });
-    });
-  },
-);
-
-/**
- * Process outgoing announcements.
- */
-const flushOutgoingAnnouncements = debounceMicrotask(
-  /**
-   * @param {MessagePort | Worker | WorkerGlobalScope} [context] Uses `globalThis` by default.
-   */
-  (context = /** @type {WorkerGlobalScope} */ (globalThis)) => {
-    /** @type {Announcement<any>[]} */
-    const arr = [];
-
-    for (const a of outgoing.drain()) {
-      arr.push(a);
-    }
-
-    const transferables = getTransferables(arr);
-    context.postMessage(arr, { transfer: transferables });
-  },
-);
-
-/**
- * @type {Queue<Announcement<any>>}
- */
-const incoming = new Queue();
-
-/**
- * @param {MessagePort | Worker | WorkerGlobalScope} context
+ * @param {MessagePort | Worker | MessengerRealm} context
  */
 function incomingAnnouncementsHandler(context) {
   /** @param {any} event */
   return (event) => {
-    const arr = /** @type {Announcement<any>[]} */ (event.data);
-
-    if (Array.isArray(arr)) {
-      arr.forEach((announcement) => {
-        const { ns, type } = announcement;
-        if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
-        incoming.enqueue(announcement);
-        flushIncomingAnnouncements(context);
-      });
-    }
+    const { ns, type } = event.data;
+    if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
+    const announcement = /** @type {Announcement<any>} */ (event.data);
+    const c = /** @type {any} */ (context);
+    c.__incoming[announcement.name]?.(announcement.args);
   };
 }
-
-/**
- * @type {Queue<Announcement<any>>}
- */
-const outgoing = new Queue();

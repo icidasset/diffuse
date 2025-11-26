@@ -5,6 +5,7 @@ import type {
 } from "@common/worker.d.ts";
 
 import type { Track } from "@definitions/types.d.ts";
+import { DiffuseElement } from "@common/element.js";
 
 /**
  * Consultation.
@@ -33,10 +34,8 @@ export type InputActions = {
 };
 
 export type InputElement =
-  & HTMLElement
-  & WorkerProviderMethod
-  & ProxiedActions<InputActions>
-  & ProxyProviderMethod<InputActions>;
+  & DiffuseElement
+  & ProxiedActions<InputActions>;
 
 export type ResolvedUri = undefined | {
   stream: ReadableStream;

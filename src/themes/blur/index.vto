@@ -9,30 +9,35 @@
     </main>
 
     <!-- Engines -->
-    <de-audio></de-audio>
-    <de-queue></de-queue>
+    <de-audio group="shared"></de-audio>
+    <de-queue group="shared"></de-queue>
 
     <!-- Inputs, Outputs & Processors -->
-    <di-opensubsonic></di-opensubsonic>
     <dop-indexed-db></dop-indexed-db>
     <dp-metadata></dp-metadata>
 
+    <di-opensubsonic id="input"></di-opensubsonic>
+
+    <!-- Transformers -->
+    <dtor-default id="output" output-selector="dtos-json"></dtor-default>
+    <dtos-json output-selector="dop-indexed-db">now</dtos-json>
+
     <!-- Orchestrators -->
     <do-process-tracks
-      input-selector="di-opensubsonic"
+      input-selector="#input"
       metadata-processor-selector="dp-metadata"
-      output-selector="dop-indexed-db"
+      output-selector="#output"
     ></do-process-tracks>
 
     <do-queue-audio
-      input-selector="di-opensubsonic"
+      input-selector="#input"
       audio-engine-selector="de-audio"
       queue-engine-selector="de-queue"
     ></do-queue-audio>
 
     <do-queue-tracks
-      input-selector="di-opensubsonic"
-      output-selector="dop-indexed-db"
+      input-selector="#input"
+      output-selector="#output"
       queue-engine-selector="de-queue"
     ></do-queue-tracks>
 

@@ -1,7 +1,7 @@
 import * as URI from "uri-js";
 
 import { effect, signal } from "@common/signal.js";
-import { announce, define, ostiary } from "@common/worker.js";
+import { announce, ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
 import {
@@ -275,18 +275,21 @@ export async function resolve({ uri }) {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((port) => {
+ostiary((context) => {
   // Setup RPC
 
-  define("servers", $servers.get, port);
+  rpc(context, {
+    consult,
+    contextualize,
+    groupConsult,
+    list,
+    resolve,
 
-  define("consult", consult, port);
-  define("contextualize", contextualize, port);
-  define("groupConsult", groupConsult, port);
-  define("list", list, port);
-  define("resolve", resolve, port);
+    // State
+    servers: $servers.get,
+  });
 
   // Communicate state
 
-  effect(() => announce("servers", $servers.value, port));
+  effect(() => announce("servers", $servers.value, context));
 });

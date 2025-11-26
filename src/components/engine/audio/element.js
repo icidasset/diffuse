@@ -20,36 +20,10 @@ const _SILENT_MP3 =
  * @implements {Actions}
  */
 class AudioEngine extends BroadcastableDiffuseElement {
-  #VOLUME_KEY;
-
-  constructor() {
-    super();
-
-    // Setup leader election if shared
-    if (this.hasAttribute("group")) {
-      const fn = this.broadcast(`diffuse/engine/audio/${this.group}`);
-
-      this.pause = fn("pause", this.pause).leaderOnly;
-      this.play = fn("play", this.play).leaderOnly;
-      this.reload = fn("reload", this.reload).leaderOnly;
-      this.seek = fn("seek", this.seek).leaderOnly;
-      this.supply = fn("supply", this.supply).replicate;
-
-      this.$isPlaying.set = fn("isPlaying", this.$isPlaying.set).replicate;
-    }
-
-    // Get volume from previous session if possible
-    this.#VOLUME_KEY = `@components/engine/audio/${this.group}/volume`;
-    const volume = localStorage.getItem(this.#VOLUME_KEY);
-
-    this.#volume = signal(volume ? parseInt(volume) : 0.5);
-    this.volume = this.#volume.get;
-  }
-
   // SIGNALS
 
   #items = signal(/** @type {Audio[]} */ ([]));
-  #volume;
+  #volume = signal(0.5);
 
   $hasEnded = signal(false);
   $isPlaying = signal(false);
@@ -59,6 +33,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
   hasEnded = this.$hasEnded.get;
   isPlaying = this.$isPlaying.get;
   items = this.#items.get;
+  volume = this.#volume.get;
 
   // LIFECYCLE
 
@@ -66,15 +41,46 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @override
    */
   connectedCallback() {
+    // Setup leader election if shared
+    if (this.hasAttribute("group")) {
+      const actions = this.broadcast(`diffuse/engine/audio/${this.group}`, {
+        adjustVolume: { strategy: "leaderOnly", fn: this.adjustVolume },
+        pause: { strategy: "leaderOnly", fn: this.pause },
+        play: { strategy: "leaderOnly", fn: this.play },
+        seek: { strategy: "leaderOnly", fn: this.seek },
+        supply: { strategy: "replicate", fn: this.supply },
+
+        setIsPlaying: { strategy: "replicate", fn: this.$isPlaying.set },
+      });
+
+      if (actions) {
+        this.adjustVolume = actions.adjustVolume;
+        this.pause = actions.pause;
+        this.play = actions.play;
+        this.seek = actions.seek;
+        this.supply = actions.supply;
+
+        this.$isPlaying.set = actions.setIsPlaying;
+      }
+    }
+
+    // Super
     super.connectedCallback();
+
+    // Get volume from previous session if possible
+    const VOLUME_KEY = `diffuse/engine/audio/${this.group}/volume`;
+    const volume = localStorage.getItem(VOLUME_KEY);
+
+    if (volume != undefined) {
+      this.#volume.set(parseFloat(volume));
+    }
 
     // Manage playback across tabs if needed
     if (this.broadcasted) {
       this.effect(async () => {
         const status = await this.broadcastingStatus();
         if (status.leader && status.initialLeader === false) {
-          // TODO:
-          // console.log("🧙 Leadership acquired");
+          console.log("🧙 Leadership acquired (no actions performed)");
         }
       });
     }
@@ -89,7 +95,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         },
       );
 
-      localStorage.setItem(this.#VOLUME_KEY, this.#volume.value.toString());
+      localStorage.setItem(VOLUME_KEY, this.#volume.value.toString());
     });
   }
 
@@ -217,7 +223,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
     return html`
       <section id="audio-nodes">
-        ${nodes.join("")}
+        ${nodes}
       </section>
     `;
   }

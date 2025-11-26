@@ -5,7 +5,7 @@ import "@components/processor/metadata/element.js";
 import "@components/transformer/output/string/json/element.js";
 import "@components/transformer/output/refiner/default/element.js";
 
-import * as Input from "@components/input/s3/element.js";
+import * as Input from "@components/input/opensubsonic/element.js";
 import * as Queue from "@components/engine/queue/element.js";
 
 import { component } from "@common/element.js";
@@ -141,7 +141,7 @@ effect(() => {
   queue.fill({ amount: 10, shuffled: true });
 
   // Automatically insert track if there isn't any
-  if (!queue.now) queue.shift();
+  if (!queue.now()) queue.shift();
 });
 
 ////////////////////////////////////////////

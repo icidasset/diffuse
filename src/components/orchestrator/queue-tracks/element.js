@@ -39,6 +39,7 @@ class QueueTracksOrchestrator extends DiffuseElement {
     super.connectedCallback();
 
     // When defined
+    await customElements.whenDefined(this.input.localName);
     await customElements.whenDefined(this.output.localName);
 
     // Watch tracks collection

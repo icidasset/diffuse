@@ -1,9 +1,10 @@
 import { DiffuseElement } from "@common/element.js";
-import { use } from "@common/worker.js";
+import { workerProxy } from "@common/worker.js";
 import { outputManager } from "../../common.js";
 
 /**
- * @import {OutputManager} from "../../types.d.ts"
+ * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts"
+ * @import {OutputManager, OutputWorkerActions} from "../../types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -14,23 +15,21 @@ import { outputManager } from "../../common.js";
  * @implements {OutputManager<any>}
  */
 class IndexedDBOutput extends DiffuseElement {
+  static NAME = "diffuse/output/polymorphic/indexed-db";
+  static WORKER_URL = "components/output/polymorphic/indexed-db/worker.js";
+
   constructor() {
     super();
 
-    // Setup worker
-    const name = `diffuse/output/polymorphic/indexed-db/${this.group}`;
-    const url = import.meta.resolve(
-      "./components/output/polymorphic/indexed-db/worker.js",
-    );
-
-    const worker = new Worker(url, { name, type: "module" });
+    /** @type {ProxiedActions<OutputWorkerActions>} */
+    const p = workerProxy(this.workerLink);
 
     // Manager
     const manager = outputManager({
       tracks: {
         empty: () => [],
-        get: use("getTracks", worker),
-        put: use("putTracks", worker),
+        get: p.getTracks,
+        put: p.putTracks,
       },
     });
 

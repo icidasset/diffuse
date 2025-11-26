@@ -1,11 +1,10 @@
 import deepDiff from "@fry69/deep-diff";
 
-import { define, ostiary, proxyProvider } from "@common/worker.js";
-import { INPUT_ACTIONS } from "@components/input/constants.js";
+import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {ProxyProvider} from "@common/worker.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputActions} from "@components/input/types.d.ts"
  * @import {Actions as MetadataProcessorActions} from "@components/processor/metadata/types.d.ts"
  * @import {Actions} from "./types.d.ts"
@@ -22,13 +21,11 @@ export async function process(args) {
   const { ports } = args;
   const cachedTracks = args.tracks;
 
-  /** @type {ProxyProvider<InputActions>} */
-  const inputProvider = proxyProvider(INPUT_ACTIONS);
-  const input = inputProvider(ports.input);
+  /** @type {ProxiedActions<InputActions>} */
+  const input = workerProxy(() => ports.input);
 
-  /** @type {ProxyProvider<MetadataProcessorActions>} */
-  const metadataProcessorProvider = proxyProvider(["supply"]);
-  const metadataProcessor = metadataProcessorProvider(ports.metadataProcessor);
+  /** @type {ProxiedActions<MetadataProcessorActions>} */
+  const metadataProcessor = workerProxy(() => ports.metadataProcessor);
 
   ports.input.start();
   ports.metadataProcessor.start();
@@ -90,6 +87,6 @@ export async function process(args) {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((port) => {
-  define("process", process, port);
+ostiary((context) => {
+  rpc(context, { process });
 });

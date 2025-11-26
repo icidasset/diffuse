@@ -1,10 +1,14 @@
+import QS from "query-string";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import { define, use } from "@common/worker.js";
+import { rpc, workerProxy } from "./worker.js";
+import { BrowserPostMessageIo } from "./worker/rpc.js";
+import { RPCChannel } from "@kunkun/kkrpc";
 
 /**
  * @import {BroadcastingStatus, FnParams, FnReturn} from "./element.d.ts"
+ * @import {ProxiedActions} from "./worker.d.ts";
  * @import {Signal} from "./signal.d.ts"
  */
 
@@ -21,7 +25,11 @@ export class DiffuseElement extends HTMLElement {
 
   constructor() {
     super();
-    this.group = this.getAttribute("group") || crypto.randomUUID();
+
+    this.group = this.getAttribute("group") ?? "default";
+
+    this.worker = this.worker.bind(this);
+    this.workerLink = this.workerLink.bind(this);
   }
 
   /**
@@ -78,6 +86,52 @@ export class DiffuseElement extends HTMLElement {
   disconnectedCallback() {
     this.#teardown();
   }
+
+  // WORKER
+
+  /** @type {undefined | Worker | SharedWorker} */
+  #worker;
+
+  worker() {
+    const NAME = this.constructor.prototype.constructor.NAME;
+    const WORKER_URL = this.constructor.prototype.constructor.WORKER_URL;
+
+    if (!NAME) throw new Error("Missing `NAME` static property");
+    if (!WORKER_URL) throw new Error("Missing `WORKER_URL` static property");
+
+    // Query
+    const query = QS.stringify(
+      "workerQuery" in this && typeof this.workerQuery === "function"
+        ? this.workerQuery()
+        : {},
+    );
+
+    // Setup worker
+    const name = `${NAME}/${this.group}`;
+    const url = import.meta.resolve("./" + WORKER_URL) + `?${query}`;
+
+    let worker;
+
+    if (this.hasAttribute("group")) {
+      worker = new SharedWorker(url, { name, type: "module" });
+    } else {
+      worker = new Worker(url, { name, type: "module" });
+    }
+
+    return worker;
+  }
+
+  workerLink() {
+    this.#worker ??= this.worker();
+    const worker = this.#worker;
+
+    if (worker instanceof SharedWorker) {
+      worker.port.start();
+      return worker.port;
+    } else {
+      return worker;
+    }
+  }
 }
 
 /**
@@ -109,27 +163,41 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
   }
 
   /**
+   * @template {Record<string, { strategy: "leaderOnly" | "replicate", fn: (...args: any[]) => any }>} ActionsWithStrategy
+   * @template {{ [K in keyof ActionsWithStrategy]: ActionsWithStrategy[K]["fn"] }} Actions
    * @param {string} name
+   * @param {ActionsWithStrategy} actionsWithStrategy
    */
-  broadcast(name) {
+  broadcast(name, actionsWithStrategy) {
+    if (this.broadcasted) return;
+
     const channel = new BroadcastChannel(name);
     const msg = new MessageChannel();
+
+    /**
+     * @typedef {{ [K in keyof ActionsWithStrategy]: ActionsWithStrategy[K]["fn"] }} A
+     */
 
     this.broadcasted = true;
     this.name = name;
 
+    const _rpc = rpc(
+      msg.port2,
+      Object.fromEntries(
+        Object.entries(actionsWithStrategy).map(([k, v]) => {
+          return [k, v.fn.bind(this)];
+        }),
+      ),
+    );
+
     channel.addEventListener(
       "message",
       async (event) => {
-        const name = event.data.name?.split(":");
-
-        if (name[0] === "leader") {
+        if (event.data?.includes('"method":"leader:')) {
           const status = await this.#status.promise;
           if (status.leader) {
-            msg.port1.postMessage({
-              ...event.data,
-              name: name.splice(1).join(":"),
-            });
+            const json = event.data.replace('"method":"leader:', '"method":"');
+            msg.port1.postMessage(json);
           }
         } else {
           msg.port1.postMessage(event.data);
@@ -150,47 +218,49 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
       return !!state.pending?.length;
     }
 
-    /**
-     * @template I
-     * @template O
-     * @template {(...args: I[]) => O} Fn
-     * @param {string} method
-     * @param {Fn} fn
-     */
-    return (method, fn) => {
-      define(method, fn.bind(this), msg.port2);
+    const io = new BrowserPostMessageIo(() => msg.port2);
 
-      /**
-       * @typedef {FnParams<typeof fn>} P
-       * @typedef {FnReturn<typeof fn>} R
-       */
+    /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
+    const proxyChannel = new RPCChannel(io, { enableTransfer: true });
 
-      /** @param {P} args */
-      const leaderOnly = async (...args) => {
-        const status = await this.#status.promise;
-        return status.leader
-          ? /** @type {R} */ (fn.call(this, ...args))
-          : /** @type {Promise<R>} */ (use(`leader:${method}`, msg.port2)(
-            ...args,
-          ));
-      };
+    /** @type {ProxiedActions<Actions>} */
+    const proxy = proxyChannel.getAPI();
 
-      /**
-       * @param {P} args
-       * @returns {R}
-       */
-      const replicate = (...args) => {
-        anyoneWaiting().then((bool) => {
-          if (bool) use(method, msg.port2)(...args);
-        });
-        return /** @type {R} */ (fn.call(this, ...args));
-      };
+    /** @type {any} */
+    const actions = {};
 
-      return {
-        leaderOnly,
-        replicate,
-      };
-    };
+    Object.entries(actionsWithStrategy).forEach(
+      ([action, { fn, strategy }]) => {
+        const ogFn = fn.bind(this);
+        let wrapFn = ogFn;
+
+        switch (strategy) {
+          case "leaderOnly":
+            /** @param {Parameters<Actions[action]>} args */
+            wrapFn = async (...args) => {
+              const status = await this.#status.promise;
+              return status.leader
+                ? ogFn(...args)
+                : proxyChannel.callMethod(`leader:${action}`, args);
+            };
+            break;
+
+          case "replicate":
+            /** @param {Parameters<Actions[action]>} args */
+            wrapFn = async (...args) => {
+              anyoneWaiting().then((bool) => {
+                if (bool) proxy[action](...args);
+              });
+              return ogFn(...args);
+            };
+            break;
+        }
+
+        actions[action] = wrapFn;
+      },
+    );
+
+    return /** @type {ProxiedActions<Actions>} */ (actions);
   }
 
   // LIFECYCLE

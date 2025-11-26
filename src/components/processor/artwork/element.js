@@ -1,7 +1,8 @@
 import { DiffuseElement } from "@common/element.js";
-import { use } from "@common/worker.js";
+import { workerProxy } from "@common/worker.js";
 
 /**
+ * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
 
@@ -10,20 +11,20 @@ import { use } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {Actions}
+ * @implements {ProxiedActions<Actions>}
  */
 class ArtworkProcessor extends DiffuseElement {
+  static NAME = "diffuse/processor/artwork";
+  static WORKER_URL = "components/processor/artwork/worker.js";
+
   constructor() {
     super();
 
-    // Setup worker
-    const name = `diffuse/processor/metadata/${this.group}`;
-    const url = new URL("./worker.js", import.meta.url);
-    const worker = new Worker(url, { name, type: "module" });
+    /** @type {ProxiedActions<Actions>} */
+    const p = workerProxy(this.workerLink);
 
-    // Worker proxy
-    this.artwork = use("artwork", worker);
-    this.supply = use("supply", worker);
+    this.artwork = p.artwork;
+    this.supply = p.supply;
   }
 }
 

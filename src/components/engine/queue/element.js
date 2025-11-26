@@ -1,13 +1,11 @@
-import QS from "query-string";
-
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
-import { listen, proxyProvider, use } from "@common/worker.js";
+import { listen, workerProxy } from "@common/worker.js";
 import { hash } from "@common/index.js";
 
 /**
- * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts";
- * @import {Actions, Item} from "./types.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts";
+ * @import {Actions, Item, State} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -18,51 +16,20 @@ import { hash } from "@common/index.js";
  * @implements {ProxiedActions<Actions>}
  */
 class QueueEngine extends DiffuseElement {
+  static NAME = "diffuse/engine/queue";
+  static WORKER_URL = "components/engine/queue/worker.js";
+
   constructor() {
     super();
 
-    // Query
-    const query = QS.stringify({
-      "fill": this.getAttribute("fill"),
-    });
+    /** @type {ProxiedActions<Actions & State>} */
+    this.proxy = workerProxy(this.workerLink);
 
-    // Setup worker
-    const name = `diffuse/engine/queue/${this.group}`;
-    const url = `/components/engine/queue/worker.js?${query}`;
-
-    let port;
-
-    if (this.hasAttribute("group")) {
-      const worker = new SharedWorker(url, { name, type: "module" });
-      port = worker.port;
-      port.start();
-    } else {
-      const worker = new Worker(url, { name, type: "module" });
-      port = worker;
-    }
-
-    // Sync data with worker
-    listen("future", this.#future.set, port);
-    listen("now", this.#now.set, port);
-    listen("past", this.#past.set, port);
-    listen("poolHash", this.#poolHash.set, port);
-
-    use("future", port)().then(this.#future.set);
-    use("now", port)().then(this.#now.set);
-    use("past", port)().then(this.#past.set);
-    use("poolHash", port)().then(this.#poolHash.set);
-
-    /** @type {ProxyProvider<Actions>} */
-    const proxy = proxyProvider(["add", "fill", "pool", "shift", "unshift"]);
-
-    // Worker proxy
-    const w = proxy(port);
-
-    this.add = w.add;
-    this.fill = w.fill;
-    this.pool = w.pool;
-    this.shift = w.shift;
-    this.unshift = w.unshift;
+    this.add = this.proxy.add;
+    this.fill = this.proxy.fill;
+    this.pool = this.proxy.pool;
+    this.shift = this.proxy.shift;
+    this.unshift = this.proxy.unshift;
   }
 
   // SIGNALS
@@ -78,6 +45,30 @@ class QueueEngine extends DiffuseElement {
   now = this.#now.get;
   past = this.#past.get;
   poolHash = this.#poolHash.get;
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    super.connectedCallback();
+
+    // Sync data with worker
+    const link = this.workerLink();
+
+    // Listen for remote data changes
+    listen("future", this.#future.set, link);
+    listen("now", this.#now.set, link);
+    listen("past", this.#past.set, link);
+    listen("poolHash", this.#poolHash.set, link);
+
+    // Fetch current data state
+    this.proxy.future().then(this.#future.set);
+    this.proxy.now().then(this.#now.set);
+    this.proxy.past().then(this.#past.set);
+    this.proxy.poolHash().then(this.#poolHash.set);
+  }
 }
 
 export default QueueEngine;

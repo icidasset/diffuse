@@ -1,4 +1,4 @@
-import { define, ostiary } from "@common/worker.js";
+import { ostiary, rpc } from "@common/worker.js";
 import { musicMetadataTags } from "./common.js";
 
 /**
@@ -33,7 +33,8 @@ export async function supply(args) {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((port) => {
-  // Setup RPC
-  define("supply", supply, port);
+ostiary((context) => {
+  rpc(context, {
+    supply,
+  });
 });
