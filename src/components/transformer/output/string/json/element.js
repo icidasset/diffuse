@@ -10,21 +10,13 @@ class JsonStringOutputTransformer extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {OutputElement<string>} */
-    this.output = query(this, "output-selector");
-
-    // whenDefined signal
-    const $defined = signal(false);
-
-    customElements.whenDefined(this.output.localName).then(
-      () => $defined.value = true,
-    );
-
     /** @type {OutputManager<Track[]>} */
     const manager = {
       tracks: {
         collection: computed(() => {
-          const json = $defined.value ? this.output.tracks?.collection() : [];
+          const json = this.#defined.value
+            ? this.output?.tracks?.collection() ?? []
+            : [];
 
           // In addition to the above, Some polymorphic outputs
           // use an empty array as the default return value.
@@ -40,19 +32,46 @@ class JsonStringOutputTransformer extends DiffuseElement {
             return [];
           }
         }),
-        reload: () => this.output.tracks.reload(),
+        reload: () => this.output?.tracks?.reload() ?? Promise.resolve(),
         save: async (newTracks) => {
           const json = JSON.stringify(newTracks);
+
+          if (!this.output) return;
 
           await customElements.whenDefined(this.output.localName);
           await this.output.tracks.save(json);
         },
-        state: computed(() => this.output.tracks.state()),
+        state: computed(() => this.output?.tracks?.state() ?? "loading"),
       },
     };
 
     // Assign manager properties to class
     this.tracks = manager.tracks;
+  }
+
+  /** @type {OutputElement<string> | undefined} */
+  output = undefined;
+
+  // SIGNALS
+
+  #defined = signal(false);
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    super.connectedCallback();
+
+    /** @type {OutputElement<string>} */
+    const output = query(this, "output-selector");
+    this.output = output;
+
+    // When defined
+    customElements.whenDefined(this.output.localName).then(
+      () => this.#defined.value = true,
+    );
   }
 }
 
