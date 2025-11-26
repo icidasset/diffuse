@@ -20,11 +20,27 @@ const _SILENT_MP3 =
  * @implements {Actions}
  */
 class AudioEngine extends BroadcastableDiffuseElement {
-  #VOLUME_KEY;
+  // SIGNALS
 
-  constructor() {
-    super();
+  #items = signal(/** @type {Audio[]} */ ([]));
+  #volume = signal(0.5);
 
+  $hasEnded = signal(false);
+  $isPlaying = signal(false);
+
+  // STATE
+
+  hasEnded = this.$hasEnded.get;
+  isPlaying = this.$isPlaying.get;
+  items = this.#items.get;
+  volume = this.#volume.get;
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
     // Setup leader election if shared
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(`diffuse/engine/audio/${this.group}`, {
@@ -37,52 +53,34 @@ class AudioEngine extends BroadcastableDiffuseElement {
         setIsPlaying: { strategy: "replicate", fn: this.$isPlaying.set },
       });
 
-      this.adjustVolume = actions.adjustVolume;
-      this.pause = actions.pause;
-      this.play = actions.play;
-      this.seek = actions.seek;
-      this.supply = actions.supply;
+      if (actions) {
+        this.adjustVolume = actions.adjustVolume;
+        this.pause = actions.pause;
+        this.play = actions.play;
+        this.seek = actions.seek;
+        this.supply = actions.supply;
 
-      this.$isPlaying.set = actions.setIsPlaying;
+        this.$isPlaying.set = actions.setIsPlaying;
+      }
     }
 
-    // Get volume from previous session if possible
-    this.#VOLUME_KEY = `@components/engine/audio/${this.group}/volume`;
-    const volume = localStorage.getItem(this.#VOLUME_KEY);
-
-    this.#volume = signal(volume ? parseInt(volume) : 0.5);
-    this.volume = this.#volume.get;
-  }
-
-  // SIGNALS
-
-  #items = signal(/** @type {Audio[]} */ ([]));
-  #volume;
-
-  $hasEnded = signal(false);
-  $isPlaying = signal(false);
-
-  // STATE
-
-  hasEnded = this.$hasEnded.get;
-  isPlaying = this.$isPlaying.get;
-  items = this.#items.get;
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  connectedCallback() {
+    // Super
     super.connectedCallback();
+
+    // Get volume from previous session if possible
+    const VOLUME_KEY = `diffuse/engine/audio/${this.group}/volume`;
+    const volume = localStorage.getItem(VOLUME_KEY);
+
+    if (volume != undefined) {
+      this.#volume.set(parseFloat(volume));
+    }
 
     // Manage playback across tabs if needed
     if (this.broadcasted) {
       this.effect(async () => {
         const status = await this.broadcastingStatus();
         if (status.leader && status.initialLeader === false) {
-          // TODO:
-          // console.log("🧙 Leadership acquired");
+          console.log("🧙 Leadership acquired (no actions performed)");
         }
       });
     }
@@ -97,7 +95,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         },
       );
 
-      localStorage.setItem(this.#VOLUME_KEY, this.#volume.value.toString());
+      localStorage.setItem(VOLUME_KEY, this.#volume.value.toString());
     });
   }
 

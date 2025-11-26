@@ -26,7 +26,7 @@ export class DiffuseElement extends HTMLElement {
   constructor() {
     super();
 
-    this.group = this.getAttribute("group") || crypto.randomUUID();
+    this.group = this.getAttribute("group") ?? "default";
 
     this.worker = this.worker.bind(this);
     this.workerLink = this.workerLink.bind(this);
@@ -169,6 +169,8 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
    * @param {ActionsWithStrategy} actionsWithStrategy
    */
   broadcast(name, actionsWithStrategy) {
+    if (this.broadcasted) return;
+
     const channel = new BroadcastChannel(name);
     const msg = new MessageChannel();
 

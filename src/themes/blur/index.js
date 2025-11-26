@@ -1,7 +1,4 @@
 import "@components/input/opensubsonic/element.js";
-import "@components/orchestrator/process-tracks/element.js";
-import "@components/orchestrator/queue-audio/element.js";
-import "@components/orchestrator/queue-tracks/element.js";
 import "@components/processor/metadata/element.js";
 import "@components/transformer/output/string/json/element.js";
 import "@components/transformer/output/refiner/default/element.js";
@@ -21,6 +18,19 @@ globalThis.audio = audio;
 globalThis.output = output;
 globalThis.queue = queue;
 
+// 🚀
+
+isLeader().then((bool) => {
+  if (!bool) return;
+
+  // Only load orchestrators if leader
+  import("@components/orchestrator/process-tracks/element.js");
+  import("@components/orchestrator/queue-audio/element.js");
+  import("@components/orchestrator/queue-tracks/element.js");
+});
+
+// EFFECTS
+
 effect(() => {
   console.log("Active queue item:", queue.now());
 });
@@ -36,13 +46,21 @@ effect(() => {
   const trigger = queue.now();
   const _other_trigger = queue.poolHash();
 
-  audio
-    .broadcastingStatus()
-    .then((status) => {
-      if (status.leader) {
-        console.log("FILL");
-        queue.fill({ amount: 10, shuffled: true });
-        if (!trigger) queue.shift();
-      }
-    });
+  isLeader().then((bool) => {
+    if (bool) {
+      queue.fill({ amount: 10, shuffled: true });
+      if (!trigger) queue.shift();
+    }
+  });
 });
+
+// 🛠️
+
+async function isLeader() {
+  if (audio.broadcasted) {
+    const status = await audio.broadcastingStatus();
+    return status.leader;
+  } else {
+    return true;
+  }
+}

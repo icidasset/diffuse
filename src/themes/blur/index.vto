@@ -9,8 +9,8 @@
     </main>
 
     <!-- Engines -->
-    <de-audio></de-audio>
-    <de-queue></de-queue>
+    <de-audio group="shared"></de-audio>
+    <de-queue group="shared"></de-queue>
 
     <!-- Inputs, Outputs & Processors -->
     <dop-indexed-db></dop-indexed-db>
@@ -23,11 +23,11 @@
     <dtos-json output-selector="dop-indexed-db">now</dtos-json>
 
     <!-- Orchestrators -->
-    <!--<do-process-tracks
+    <do-process-tracks
       input-selector="#input"
       metadata-processor-selector="dp-metadata"
       output-selector="#output"
-    ></do-process-tracks>-->
+    ></do-process-tracks>
 
     <do-queue-audio
       input-selector="#input"
