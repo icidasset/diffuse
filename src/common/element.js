@@ -3,6 +3,8 @@ import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
 import { rpc, workerProxy } from "./worker.js";
+import { BrowserPostMessageIo } from "./worker/rpc.js";
+import { RPCChannel } from "@kunkun/kkrpc";
 
 /**
  * @import {BroadcastingStatus, FnParams, FnReturn} from "./element.d.ts"
@@ -177,18 +179,23 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     this.broadcasted = true;
     this.name = name;
 
+    const _rpc = rpc(
+      msg.port2,
+      Object.fromEntries(
+        Object.entries(actionsWithStrategy).map(([k, v]) => {
+          return [k, v.fn.bind(this)];
+        }),
+      ),
+    );
+
     channel.addEventListener(
       "message",
       async (event) => {
-        const name = event.data.name?.split(":");
-
-        if (name[0] === "leader") {
+        if (event.data?.includes('"method":"leader:')) {
           const status = await this.#status.promise;
           if (status.leader) {
-            msg.port1.postMessage({
-              ...event.data,
-              name: name.splice(1).join(":"),
-            });
+            const json = event.data.replace('"method":"leader:', '"method":"');
+            msg.port1.postMessage(json);
           }
         } else {
           msg.port1.postMessage(event.data);
@@ -209,24 +216,21 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
       return !!state.pending?.length;
     }
 
-    const _rpc = rpc(
-      msg.port2,
-      Object.fromEntries(
-        Object.entries(actionsWithStrategy).map(([k, v]) => {
-          return [k, v.fn];
-        }),
-      ),
-    );
+    const io = new BrowserPostMessageIo(() => msg.port2);
+
+    /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
+    const proxyChannel = new RPCChannel(io, { enableTransfer: true });
 
     /** @type {ProxiedActions<Actions>} */
-    const proxy = workerProxy(() => msg.port2);
+    const proxy = proxyChannel.getAPI();
 
     /** @type {any} */
     const actions = {};
 
     Object.entries(actionsWithStrategy).forEach(
       ([action, { fn, strategy }]) => {
-        let wrapFn = fn;
+        const ogFn = fn.bind(this);
+        let wrapFn = ogFn;
 
         switch (strategy) {
           case "leaderOnly":
@@ -234,8 +238,8 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
             wrapFn = async (...args) => {
               const status = await this.#status.promise;
               return status.leader
-                ? wrapFn.call(this, ...args)
-                : proxy[action](...args);
+                ? ogFn(...args)
+                : proxyChannel.callMethod(`leader:${action}`, args);
             };
             break;
 
@@ -245,7 +249,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
               anyoneWaiting().then((bool) => {
                 if (bool) proxy[action](...args);
               });
-              return fn.call(this, ...args);
+              return ogFn(...args);
             };
             break;
         }

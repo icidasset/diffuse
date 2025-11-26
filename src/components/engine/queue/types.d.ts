@@ -24,4 +24,5 @@ export type State = {
   future: SignalReader<Item[]>;
   now: SignalReader<Item | null>;
   past: SignalReader<Item[]>;
+  poolHash: SignalReader<string>;
 };

@@ -141,7 +141,7 @@ effect(() => {
   queue.fill({ amount: 10, shuffled: true });
 
   // Automatically insert track if there isn't any
-  if (!queue.now) queue.shift();
+  if (!queue.now()) queue.shift();
 });
 
 ////////////////////////////////////////////

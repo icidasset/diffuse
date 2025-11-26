@@ -1,11 +1,8 @@
-import Queue from "@mary/ds-queue";
-
 import { RPCChannel } from "@kunkun/kkrpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
 
-import { batch } from "./signal.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
 export { transfer } from "@kunkun/kkrpc";
@@ -23,7 +20,7 @@ export { transfer } from "@kunkun/kkrpc";
  * If a regular worker is used instead, it'll just execute the callback immediately.
  *
  * @template {MessagePort | Worker | MessengerRealm} T
- * @param {(context: MessagePort | T) => void} callback
+ * @param {(context: MessagePort | T, firstConnection: boolean, connectionId: string) => void} callback
  * @param {T} [context] Uses `globalThis` by default.
  */
 export function ostiary(
@@ -31,8 +28,11 @@ export function ostiary(
   context = /** @type {T} */ (/** @type {unknown} */ (globalThis)),
 ) {
   if (/** @type {any} */ (context).onmessage === null) {
-    return callback(context);
+    return callback(context, true, crypto.randomUUID());
   }
+
+  const c = /** @type {any} */ (context);
+  c.__id ??= crypto.randomUUID();
 
   context.addEventListener(
     "connect",
@@ -45,7 +45,8 @@ export function ostiary(
       port.start();
 
       // Initiate setup
-      callback(port);
+      callback(port, !(c.__initiated ?? false), c.__id);
+      c.__initiated = true;
     },
   );
 }
@@ -101,8 +102,9 @@ export function announce(
   args,
   context,
 ) {
-  outgoing.enqueue(announcement(name, args));
-  flushOutgoingAnnouncements(context);
+  const a = announcement(name, args);
+  const transferables = getTransferables(a);
+  (context ?? globalThis).postMessage(a, { transfer: transferables });
 }
 
 /**
@@ -182,75 +184,15 @@ function announcement(name, args) {
 }
 
 /**
- * Process incoming announcements.
- */
-const flushIncomingAnnouncements = debounceMicrotask(
-  /**
-   * @param {MessagePort | Worker | MessengerRealm} [context] Uses `globalThis` by default.
-   */
-  (context = /** @type {MessengerRealm} */ (globalThis)) => {
-    /** @type {Announcement<any>[]} */
-    const arr = [];
-
-    for (const a of incoming.drain()) {
-      arr.push(a);
-    }
-
-    batch(() => {
-      const c = /** @type {any} */ (context);
-
-      arr.forEach((announcement) => {
-        c.__incoming[announcement.name]?.(announcement.args);
-      });
-    });
-  },
-);
-
-/**
- * Process outgoing announcements.
- */
-const flushOutgoingAnnouncements = debounceMicrotask(
-  /**
-   * @param {MessagePort | Worker | MessengerRealm} [context] Uses `globalThis` by default.
-   */
-  (context = /** @type {MessengerRealm} */ (globalThis)) => {
-    /** @type {Announcement<any>[]} */
-    const arr = [];
-
-    for (const a of outgoing.drain()) {
-      arr.push(a);
-    }
-
-    const transferables = getTransferables(arr);
-    context.postMessage(arr, { transfer: transferables });
-  },
-);
-
-/**
- * @type {Queue<Announcement<any>>}
- */
-const incoming = new Queue();
-
-/**
  * @param {MessagePort | Worker | MessengerRealm} context
  */
 function incomingAnnouncementsHandler(context) {
   /** @param {any} event */
   return (event) => {
-    const arr = /** @type {Announcement<any>[]} */ (event.data);
-
-    if (Array.isArray(arr)) {
-      arr.forEach((announcement) => {
-        const { ns, type } = announcement;
-        if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
-        incoming.enqueue(announcement);
-        flushIncomingAnnouncements(context);
-      });
-    }
+    const { ns, type } = event.data;
+    if (ns !== ANNOUNCEMENT || type !== ANNOUNCEMENT) return;
+    const announcement = /** @type {Announcement<any>} */ (event.data);
+    const c = /** @type {any} */ (context);
+    c.__incoming[announcement.name]?.(announcement.args);
   };
 }
-
-/**
- * @type {Queue<Announcement<any>>}
- */
-const outgoing = new Queue();

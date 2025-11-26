@@ -4,8 +4,8 @@ import { listen, workerProxy } from "@common/worker.js";
 import { hash } from "@common/index.js";
 
 /**
- * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts";
- * @import {Actions, Item} from "./types.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts";
+ * @import {Actions, Item, State} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -22,14 +22,14 @@ class QueueEngine extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {ProxiedActions<Actions>} */
-    const p = workerProxy(this.workerLink);
+    /** @type {ProxiedActions<Actions & State>} */
+    this.proxy = workerProxy(this.workerLink);
 
-    this.add = p.add;
-    this.fill = p.fill;
-    this.pool = p.pool;
-    this.shift = p.shift;
-    this.unshift = p.unshift;
+    this.add = this.proxy.add;
+    this.fill = this.proxy.fill;
+    this.pool = this.proxy.pool;
+    this.shift = this.proxy.shift;
+    this.unshift = this.proxy.unshift;
   }
 
   // SIGNALS
@@ -63,11 +63,11 @@ class QueueEngine extends DiffuseElement {
     listen("past", this.#past.set, link);
     listen("poolHash", this.#poolHash.set, link);
 
-    // TODO: Fetch current data state
-    // use("future", link)().then(this.#future.set);
-    // use("now", link)().then(this.#now.set);
-    // use("past", link)().then(this.#past.set);
-    // use("poolHash", link)().then(this.#poolHash.set);
+    // Fetch current data state
+    this.proxy.future().then(this.#future.set);
+    this.proxy.now().then(this.#now.set);
+    this.proxy.past().then(this.#past.set);
+    this.proxy.poolHash().then(this.#poolHash.set);
   }
 }
 

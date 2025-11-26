@@ -83,7 +83,7 @@ export function unshift() {
 // ⚡️
 ////////////////////////////////////////////
 
-ostiary((context) => {
+ostiary((context, _firstConnection, _connectionId) => {
   // Setup RPC
 
   rpc(context, {
@@ -100,14 +100,13 @@ ostiary((context) => {
     poolHash: $poolHash.get,
   });
 
-  // Communicate state
+  // Effects
 
+  // Communicate state
   effect(() => announce("future", $future.value, context));
   effect(() => announce("now", $now.value, context));
   effect(() => announce("past", $past.value, context));
   effect(() => announce("poolHash", $poolHash.value, context));
-
-  // Effects
 
   // When the pool changes,
   // make sure all future queue items still exist.

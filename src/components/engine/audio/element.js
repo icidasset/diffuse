@@ -127,7 +127,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["play"]}
    */
   play({ audioId, volume }) {
-    console.log(audioId);
     this.withAudioNode(audioId, (audio, item) => {
       audio.volume = volume ?? this.volume();
       audio.muted = false;
@@ -223,8 +222,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
         </de-audio-item>
       `;
     });
-
-    console.log(nodes);
 
     return html`
       <section id="audio-nodes">
