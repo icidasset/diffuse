@@ -1,11 +1,7 @@
-import type {
-  ProxiedActions,
-  ProxyProviderMethod,
-  WorkerProviderMethod,
-} from "@common/worker.d.ts";
+import type { ProxiedActions } from "@common/worker.d.ts";
 
 import type { Track } from "@definitions/types.d.ts";
-import { DiffuseElement } from "@common/element.js";
+import type { DiffuseElement } from "@common/element.js";
 
 /**
  * Consultation.

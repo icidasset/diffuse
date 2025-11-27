@@ -1,9 +1,9 @@
 import { DiffuseElement } from "@common/element.js";
-import { portProvider, workerProxy } from "@common/worker.js";
+import { workerProxy } from "@common/worker.js";
 
 /**
  * @import {InputActions} from "@components/input/types.d.ts"
- * @import {PortProviderMethod, ProxiedActions, ProxyProvider, ProxyProviderMethod} from "@common/worker.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts"
  */
 
 ////////////////////////////////////////////

@@ -3,7 +3,7 @@ import { workerProxy } from "@common/worker.js";
 import { outputManager } from "../../common.js";
 
 /**
- * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {OutputManager, OutputWorkerActions} from "../../types.d.ts"
  */
 

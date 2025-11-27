@@ -9,15 +9,6 @@ export type IncompleteArray<T> = ["Missing required items", T];
 export type MRpcBaseMsg = { ns: string; name: string; key: number };
 
 /** */
-export type PortProvider = () => {
-  disconnect(): void;
-  port: MessagePort;
-};
-
-/** */
-export type PortProviderMethod = { port: PortProvider };
-
-/** */
 export type ProxiedActions<
   Actions extends Record<string, (...args: any[]) => any>,
 > = {
@@ -32,26 +23,8 @@ export type ProxiedAction<
 > = (...args: Parameters<Action>) => PromisedReturn;
 
 /** */
-export type ProxyProvider<
-  Actions extends Record<string, (...args: any[]) => any>,
-> = (
-  workerLinkCreator: () => MessagePort | Worker,
-) => ProxiedActions<Actions>;
-
-/** */
-export type ProxyProviderMethod<
-  Actions extends Record<string, (...args: any[]) => any>,
-> = { proxy: ProxyProvider<Actions> };
-
-/** */
 export interface MessengerRealm {
   postMessage: MessagePort["postMessage"];
   addEventListener: MessagePort["addEventListener"];
   removeEventListener: MessagePort["removeEventListener"];
 }
-
-/** */
-export type WorkerProvider = (group?: string) => Worker | SharedWorker;
-
-/** */
-export type WorkerProviderMethod = { worker: WorkerProvider };

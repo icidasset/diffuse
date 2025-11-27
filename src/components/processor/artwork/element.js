@@ -2,7 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 import { workerProxy } from "@common/worker.js";
 
 /**
- * @import {ProxiedActions, ProxyProvider} from "@common/worker.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
 

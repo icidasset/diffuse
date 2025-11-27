@@ -52,42 +52,6 @@ export function ostiary(
 }
 
 /**
- * @param {() => MessagePort | Worker} workerLinkCreator
- */
-export function portProvider(workerLinkCreator) {
-  return () => {
-    const channel = new MessageChannel();
-    const workerOrPort = workerLinkCreator();
-
-    channel.port1.addEventListener("message", (event) => {
-      workerOrPort.postMessage(event.data);
-    });
-
-    /**
-     * @param {Event} event
-     */
-    const workerListener = (event) => {
-      const msgEvent = /** @type {MessageEvent} */ (event);
-      channel.port1.postMessage(msgEvent.data);
-    };
-
-    workerOrPort.addEventListener("message", workerListener);
-
-    channel.port1.start();
-    channel.port2.start();
-
-    return {
-      disconnect: () => {
-        workerOrPort.removeEventListener("message", workerListener);
-        channel.port1.close();
-        channel.port2.close();
-      },
-      port: channel.port2,
-    };
-  };
-}
-
-/**
  * @param {Worker | SharedWorker} worker
  */
 export function workerLink(worker) {
@@ -97,6 +61,39 @@ export function workerLink(worker) {
   } else {
     return worker;
   }
+}
+
+/**
+ * @param {MessagePort | Worker} workerLink
+ */
+export function workerTunnel(workerLink) {
+  const channel = new MessageChannel();
+
+  channel.port1.addEventListener("message", (event) => {
+    workerLink.postMessage(event.data);
+  });
+
+  /**
+   * @param {Event} event
+   */
+  const workerListener = (event) => {
+    const msgEvent = /** @type {MessageEvent} */ (event);
+    channel.port1.postMessage(msgEvent.data);
+  };
+
+  workerLink.addEventListener("message", workerListener);
+
+  channel.port1.start();
+  channel.port2.start();
+
+  return {
+    disconnect: () => {
+      workerLink.removeEventListener("message", workerListener);
+      channel.port1.close();
+      channel.port2.close();
+    },
+    port: channel.port2,
+  };
 }
 
 ////////////////////////////////////////////

@@ -1,10 +1,10 @@
 import { DiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
 import {
-  portProvider,
   transfer,
   workerLink,
   workerProxy,
+  workerTunnel,
 } from "@common/worker.js";
 
 /**
@@ -26,9 +26,10 @@ import {
  * from the assigned output element.
  */
 class ProcessTracksOrchestrator extends DiffuseElement {
-  /** @type {Promise<{ input: Worker | SharedWorker; metadataProcessor: Worker | SharedWorker } | undefined>} */
-  #external = Promise.resolve(undefined);
   #process;
+
+  /** @type {Promise<{ input: Worker | SharedWorker; metadataProcessor: Worker | SharedWorker } | undefined>} */
+  #workers = Promise.resolve(undefined);
 
   static NAME = "diffuse/orchestrator/process-tracks";
   static WORKER_URL = "components/orchestrator/process-tracks/worker.js";
@@ -68,7 +69,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     this.metadataProcessor = query(this, "metadata-processor-selector");
 
     // Create new workers specially for track processing
-    this.#external = Promise.all([
+    this.#workers = Promise.all([
       customElements.whenDefined(this.input.localName),
       customElements.whenDefined(this.metadataProcessor.localName),
     ]).then(() => {
@@ -101,21 +102,20 @@ class ProcessTracksOrchestrator extends DiffuseElement {
   async disconnectedCallback() {
     super.disconnectedCallback();
 
-    const ext = await this.#external;
-    if (!ext) return;
+    const workers = await this.#workers;
 
-    if (ext.input instanceof Worker) ext.input.terminate();
-    if (ext.metadataProcessor instanceof Worker) {
-      ext.metadataProcessor.terminate();
+    if (workers?.input instanceof Worker) workers.input.terminate();
+    if (workers?.metadataProcessor instanceof Worker) {
+      workers.metadataProcessor.terminate();
     }
   }
 
   // ACTIONS
 
   async process() {
-    const ext = await this.#external;
+    const workers = await this.#workers;
 
-    if (!ext) return;
+    if (!workers) return;
     if (!this.output) return;
 
     // Start
@@ -126,10 +126,8 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
     // Establish channel between external workers and our processing worker
     const ports = {
-      input: portProvider(() => workerLink(ext.input))(),
-      metadataProcessor: portProvider(() =>
-        workerLink(ext.metadataProcessor)
-      )(),
+      input: workerTunnel(workerLink(workers.input)),
+      metadataProcessor: workerTunnel(workerLink(workers.metadataProcessor)),
     };
 
     // Send everything to worker
