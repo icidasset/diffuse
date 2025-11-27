@@ -150,14 +150,32 @@ export function rpc(context, actions) {
  * @returns {ProxiedActions<Actions>}
  */
 export function workerProxy(workerLinkCreator) {
-  const io = new BrowserPostMessageIo(workerLinkCreator);
+  /** @type {ProxiedActions<Actions> | undefined} */
+  let int_api;
 
-  /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
-  const rpc = new RPCChannel(io, { enableTransfer: true });
+  /** @returns {ProxiedActions<Actions>} */
+  function ensureAPI() {
+    if (!int_api) {
+      const io = new BrowserPostMessageIo(workerLinkCreator);
 
-  /** @type {ProxiedActions<Actions>} */
-  const api = rpc.getAPI();
-  return api;
+      /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
+      const rpc = new RPCChannel(io, { enableTransfer: true });
+
+      int_api = rpc.getAPI();
+    }
+
+    return int_api;
+  }
+
+  // Create proxy that creates RPC API when needed
+  const proxy = new Proxy(() => {}, {
+    get: (_target, prop) => {
+      const api = ensureAPI();
+      return api[prop.toString()];
+    },
+  });
+
+  return /** @type {ProxiedActions<Actions>} */ (/** @type {any} */ (proxy));
 }
 
 ////////////////////////////////////////////
