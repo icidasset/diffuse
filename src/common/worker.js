@@ -87,6 +87,18 @@ export function portProvider(workerLinkCreator) {
   };
 }
 
+/**
+ * @param {Worker | SharedWorker} worker
+ */
+export function workerLink(worker) {
+  if (worker instanceof SharedWorker) {
+    worker.port.start();
+    return worker.port;
+  } else {
+    return worker;
+  }
+}
+
 ////////////////////////////////////////////
 // RAW
 ////////////////////////////////////////////

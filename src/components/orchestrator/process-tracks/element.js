@@ -1,6 +1,11 @@
 import { DiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
-import { portProvider, transfer, workerProxy } from "@common/worker.js";
+import {
+  portProvider,
+  transfer,
+  workerLink,
+  workerProxy,
+} from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -21,8 +26,8 @@ import { portProvider, transfer, workerProxy } from "@common/worker.js";
  * from the assigned output element.
  */
 class ProcessTracksOrchestrator extends DiffuseElement {
-  /** @type {Promise<{ input: ReturnType<portProvider>; metadataProcessor: ReturnType<portProvider> } | undefined> | undefined} */
-  #external = undefined;
+  /** @type {Promise<{ input: Worker | SharedWorker; metadataProcessor: Worker | SharedWorker } | undefined>} */
+  #external = Promise.resolve(undefined);
   #process;
 
   static NAME = "diffuse/orchestrator/process-tracks";
@@ -71,8 +76,8 @@ class ProcessTracksOrchestrator extends DiffuseElement {
       if (!this.metadataProcessor) return undefined;
 
       return {
-        input: portProvider(this.input.workerLink),
-        metadataProcessor: portProvider(this.metadataProcessor.workerLink),
+        input: this.input.worker(),
+        metadataProcessor: this.metadataProcessor.worker(),
       };
     });
 
@@ -88,6 +93,21 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
       untracked(() => this.process());
     });
+  }
+
+  /**
+   * @override
+   */
+  async disconnectedCallback() {
+    super.disconnectedCallback();
+
+    const ext = await this.#external;
+    if (!ext) return;
+
+    if (ext.input instanceof Worker) ext.input.terminate();
+    if (ext.metadataProcessor instanceof Worker) {
+      ext.metadataProcessor.terminate();
+    }
   }
 
   // ACTIONS
@@ -106,8 +126,10 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
     // Establish channel between external workers and our processing worker
     const ports = {
-      input: ext.input(),
-      metadataProcessor: ext.metadataProcessor(),
+      input: portProvider(() => workerLink(ext.input))(),
+      metadataProcessor: portProvider(() =>
+        workerLink(ext.metadataProcessor)
+      )(),
     };
 
     // Send everything to worker

@@ -2,7 +2,7 @@ import QS from "query-string";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import { rpc, workerProxy } from "./worker.js";
+import { rpc, workerLink, workerProxy } from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 import { RPCChannel } from "@kunkun/kkrpc";
 
@@ -121,16 +121,20 @@ export class DiffuseElement extends HTMLElement {
     return worker;
   }
 
-  workerLink() {
-    this.#worker ??= this.worker();
-    const worker = this.#worker;
+  /**
+   * @param {Worker | SharedWorker} [worker]
+   */
+  workerLink(worker) {
+    let w;
 
-    if (worker instanceof SharedWorker) {
-      worker.port.start();
-      return worker.port;
+    if (worker) {
+      w = worker;
     } else {
-      return worker;
+      this.#worker ??= this.worker();
+      w = this.#worker;
     }
+
+    return workerLink(w);
   }
 }
 
