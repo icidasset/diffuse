@@ -28,8 +28,8 @@ import {
 class ProcessTracksOrchestrator extends DiffuseElement {
   #process;
 
-  /** @type {Promise<{ input: Worker | SharedWorker; metadataProcessor: Worker | SharedWorker } | undefined>} */
-  #workers = Promise.resolve(undefined);
+  /** @type {Promise<{ input: Worker | SharedWorker; metadataProcessor: Worker | SharedWorker }> | undefined} */
+  #workers = undefined;
 
   static NAME = "diffuse/orchestrator/process-tracks";
   static WORKER_URL = "components/orchestrator/process-tracks/worker.js";
@@ -60,36 +60,36 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     super.connectedCallback();
 
     /** @type {InputElement} */
-    this.input = query(this, "input-selector");
+    const input = query(this, "input-selector");
 
     /** @type {OutputElement<Track[]>} */
-    this.output = query(this, "output-selector");
+    const output = query(this, "output-selector");
 
     /** @type {import("@components/processor/metadata/element.js").CLASS} */
-    this.metadataProcessor = query(this, "metadata-processor-selector");
+    const metadataProcessor = query(this, "metadata-processor-selector");
+
+    // Assign to self
+    this.input = input;
+    this.output = output;
+    this.metadataProcessor = metadataProcessor;
 
     // Create new workers specially for track processing
     this.#workers = Promise.all([
-      customElements.whenDefined(this.input.localName),
-      customElements.whenDefined(this.metadataProcessor.localName),
+      customElements.whenDefined(input.localName),
+      customElements.whenDefined(metadataProcessor.localName),
     ]).then(() => {
-      if (!this.input) return undefined;
-      if (!this.metadataProcessor) return undefined;
-
       return {
-        input: this.input.worker(),
-        metadataProcessor: this.metadataProcessor.worker(),
+        input: input.worker(),
+        metadataProcessor: metadataProcessor.worker(),
       };
     });
 
     // Wait until defined
-    await customElements.whenDefined(this.output.localName);
+    await customElements.whenDefined(output.localName);
 
     // Process whenever tracks are initially loaded
     this.effect(() => {
-      if (!this.output) return;
-
-      const state = this.output.tracks.state();
+      const state = output.tracks.state();
       if (state !== "loaded") return;
 
       untracked(() => this.process());
