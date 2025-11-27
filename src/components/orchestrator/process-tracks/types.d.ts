@@ -8,5 +8,3 @@ export type Actions = {
     },
   ) => Promise<Track[] | null>;
 };
-
-export type ActionsProxied = Actions;

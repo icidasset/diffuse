@@ -1,10 +1,22 @@
-import { DiffuseElement, query } from "@common/element.js";
+import {
+  callWorkerWithProvisions,
+  DiffuseElement,
+  provisionWorkers,
+  query,
+  terminateWorkers,
+  whenElementsDefined,
+} from "@common/element.js";
 import { untracked } from "@common/signal.js";
+import { workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
+ * @import {ProvisionedWorkers} from "@common/element.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
+ *
+ * @import {Actions} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -17,6 +29,20 @@ import { untracked } from "@common/signal.js";
  * or the tracks collection changes.
  */
 class QueueTracksOrchestrator extends DiffuseElement {
+  static NAME = "diffuse/orchestrator/queue-tracks";
+  static WORKER_URL = "components/orchestrator/queue-tracks/worker.js";
+
+  /** @type {ProxiedActions<Actions>} */
+  #proxy;
+
+  /** @type {Promise<ProvisionedWorkers<"input" | "queue">> | undefined} */
+  #workers = undefined;
+
+  constructor() {
+    super();
+    this.#proxy = workerProxy(this.workerLink);
+  }
+
   /**
    * @override
    */
@@ -24,13 +50,24 @@ class QueueTracksOrchestrator extends DiffuseElement {
     super.connectedCallback();
 
     /** @type {InputElement} */
-    this.input = query(this, "input-selector");
+    const input = query(this, "input-selector");
 
     /** @type {OutputElement<Track[]>} */
-    this.output = query(this, "output-selector");
+    const output = query(this, "output-selector");
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */
-    this.queue = query(this, "queue-engine-selector");
+    const queue = query(this, "queue-engine-selector");
+
+    // Assign to self
+    this.input = input;
+    this.output = output;
+    this.queue = queue;
+
+    // Create new workers
+    this.#workers = whenElementsDefined({ input, queue }).then(() => ({
+      input: input.createWorker(),
+      queue: queue.worker(),
+    }));
 
     // When defined
     await customElements.whenDefined(this.input.localName);
@@ -38,14 +75,20 @@ class QueueTracksOrchestrator extends DiffuseElement {
 
     // Watch tracks collection
     this.effect(() => {
-      if (!this.output) return;
-
-      const tracks = this.output.tracks.collection().filter((t) =>
+      const tracks = output.tracks.collection().filter((t) =>
         t.kind !== "placeholder"
       );
 
       untracked(() => this.poolAvailable(tracks));
     });
+  }
+
+  /**
+   * @override
+   */
+  async disconnectedCallback() {
+    super.disconnectedCallback();
+    terminateWorkers(await this.#workers);
   }
 
   // 🌊
@@ -54,22 +97,11 @@ class QueueTracksOrchestrator extends DiffuseElement {
    * @param {Track[]} cachedTracks
    */
   async poolAvailable(cachedTracks) {
-    if (!this.input) return;
-    if (!this.output) return;
-    if (!this.queue) return;
-
-    const groups = await this.input.groupConsult(cachedTracks);
-
-    /** @type {Track[]} */
-    let availableTracks = [];
-
-    Object.values(groups).forEach((value) => {
-      if (value.available === false) return;
-      availableTracks = availableTracks.concat(value.tracks);
-    }, []);
-
-    // Set pool
-    await this.queue.pool(availableTracks);
+    return await callWorkerWithProvisions(
+      this.#workers,
+      this.#proxy.poolAvailable,
+      { tracks: cachedTracks },
+    );
   }
 }
 

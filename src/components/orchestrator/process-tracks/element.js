@@ -1,4 +1,10 @@
-import { DiffuseElement, query } from "@common/element.js";
+import {
+  callWorkerWithProvisions,
+  DiffuseElement,
+  provisionWorkers,
+  query,
+  terminateWorkers,
+} from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
 import {
   transfer,
@@ -9,6 +15,7 @@ import {
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
+ * @import {ProvisionedWorkers} from "@common/element.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
@@ -26,21 +33,18 @@ import {
  * from the assigned output element.
  */
 class ProcessTracksOrchestrator extends DiffuseElement {
-  #process;
-
-  /** @type {Promise<{ input: Worker | SharedWorker; metadataProcessor: Worker | SharedWorker }> | undefined} */
-  #workers = undefined;
-
   static NAME = "diffuse/orchestrator/process-tracks";
   static WORKER_URL = "components/orchestrator/process-tracks/worker.js";
 
+  /** @type {ProxiedActions<Actions>} */
+  #proxy;
+
+  /** @type {Promise<ProvisionedWorkers<"input" | "metadataProcessor">> | undefined} */
+  #workers = undefined;
+
   constructor() {
     super();
-
-    /** @type {ProxiedActions<Actions>} */
-    const p = workerProxy(this.workerLink);
-
-    this.#process = p.process;
+    this.#proxy = workerProxy(this.workerLink);
   }
 
   // SIGNALS
@@ -73,16 +77,8 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     this.output = output;
     this.metadataProcessor = metadataProcessor;
 
-    // Create new workers specially for track processing
-    this.#workers = Promise.all([
-      customElements.whenDefined(input.localName),
-      customElements.whenDefined(metadataProcessor.localName),
-    ]).then(() => {
-      return {
-        input: input.worker(),
-        metadataProcessor: metadataProcessor.worker(),
-      };
-    });
+    // Create new workers
+    this.#workers = provisionWorkers({ input, metadataProcessor });
 
     // Wait until defined
     await customElements.whenDefined(output.localName);
@@ -101,21 +97,12 @@ class ProcessTracksOrchestrator extends DiffuseElement {
    */
   async disconnectedCallback() {
     super.disconnectedCallback();
-
-    const workers = await this.#workers;
-
-    if (workers?.input instanceof Worker) workers.input.terminate();
-    if (workers?.metadataProcessor instanceof Worker) {
-      workers.metadataProcessor.terminate();
-    }
+    terminateWorkers(await this.#workers);
   }
 
   // ACTIONS
 
   async process() {
-    const workers = await this.#workers;
-
-    if (!workers) return;
     if (!this.output) return;
 
     // Start
@@ -123,31 +110,14 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     console.log("🪵 Processing initiated");
 
     const cachedTracks = this.output.tracks.collection();
-
-    // Establish channel between external workers and our processing worker
-    const ports = {
-      input: workerTunnel(workerLink(workers.input)),
-      metadataProcessor: workerTunnel(workerLink(workers.metadataProcessor)),
-    };
-
-    // Send everything to worker
-    const result = await this.#process(transfer({
-      ports: {
-        input: ports.input.port,
-        metadataProcessor: ports.metadataProcessor.port,
-      },
-      tracks: cachedTracks,
-    }, [
-      ports.input.port,
-      ports.metadataProcessor.port,
-    ]));
+    const result = await callWorkerWithProvisions(
+      this.#workers,
+      this.#proxy.process,
+      { tracks: cachedTracks },
+    );
 
     // Save if collection changed
     if (result) await this.output.tracks.save(result);
-
-    // Close external channels
-    ports.input.disconnect();
-    ports.metadataProcessor.disconnect();
 
     // Fin
     console.log("🪵 Processing completed");

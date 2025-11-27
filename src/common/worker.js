@@ -5,10 +5,11 @@ import { xxh32 } from "xxh32";
 
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
+export { getTransferables } from "@okikio/transferables";
 export { transfer } from "@kunkun/kkrpc";
 
 /**
- * @import {Announcement, MessengerRealm, ProxiedActions} from "./worker.d.ts"
+ * @import {Announcement, MessengerRealm, ProxiedActions, Tunnel} from "./worker.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -64,13 +65,17 @@ export function workerLink(worker) {
 }
 
 /**
- * @param {MessagePort | Worker} workerLink
+ * @param {MessagePort | Worker | SharedWorker} workerOrLink
+ * @returns {Tunnel}
  */
-export function workerTunnel(workerLink) {
+export function workerTunnel(workerOrLink) {
+  const link = workerOrLink instanceof SharedWorker
+    ? workerLink(workerOrLink)
+    : workerOrLink;
   const channel = new MessageChannel();
 
   channel.port1.addEventListener("message", (event) => {
-    workerLink.postMessage(event.data);
+    link.postMessage(event.data);
   });
 
   /**
@@ -81,14 +86,14 @@ export function workerTunnel(workerLink) {
     channel.port1.postMessage(msgEvent.data);
   };
 
-  workerLink.addEventListener("message", workerListener);
+  link.addEventListener("message", workerListener);
 
   channel.port1.start();
   channel.port2.start();
 
   return {
     disconnect: () => {
-      workerLink.removeEventListener("message", workerListener);
+      link.removeEventListener("message", workerListener);
       channel.port1.close();
       channel.port2.close();
     },

@@ -1,9 +1,20 @@
-import { DiffuseElement, query } from "@common/element.js";
+import {
+  callWorkerWithProvisions,
+  DiffuseElement,
+  provisionWorkers,
+  query,
+  terminateWorkers,
+} from "@common/element.js";
+import { transfer, workerProxy, workerTunnel } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
+ * @import {ProvisionedWorkers} from "@common/element.d.ts"
+ * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
+ *
+ * @import {Actions} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -16,6 +27,20 @@ import { DiffuseElement, query } from "@common/element.js";
  * or the tracks collection changes.
  */
 class SearchTracksOrchestrator extends DiffuseElement {
+  static NAME = "diffuse/orchestrator/search-tracks";
+  static WORKER_URL = "components/orchestrator/search-tracks/worker.js";
+
+  /** @type {ProxiedActions<Actions>} */
+  #proxy;
+
+  /** @type {Promise<ProvisionedWorkers<"input" | "search">> | undefined} */
+  #workers = undefined;
+
+  constructor() {
+    super();
+    this.#proxy = workerProxy(this.workerLink);
+  }
+
   /**
    * @override
    */
@@ -23,27 +48,41 @@ class SearchTracksOrchestrator extends DiffuseElement {
     super.connectedCallback();
 
     /** @type {InputElement} */
-    this.input = query(this, "input-selector");
+    const input = query(this, "input-selector");
 
     /** @type {OutputElement<Track[]>} */
-    this.output = query(this, "output-selector");
+    const output = query(this, "output-selector");
 
     /** @type {import("@components/processor/search/element.js").CLASS} */
-    this.search = query(this, "search-processor-selector");
+    const search = query(this, "search-processor-selector");
+
+    // Assign to self
+    this.input = input;
+    this.output = output;
+    this.search = search;
+
+    // Create new workers
+    this.#workers = provisionWorkers({ input, search });
 
     // When defined
     await customElements.whenDefined(this.output.localName);
 
     // Watch tracks collection
     this.effect(() => {
-      if (!this.output) return;
-
-      const tracks = this.output.tracks.collection().filter((t) =>
+      const tracks = output.tracks.collection().filter((t) =>
         t.kind !== "placeholder"
       );
 
       this.supplyAvailable(tracks);
     });
+  }
+
+  /**
+   * @override
+   */
+  async disconnectedCallback() {
+    super.disconnectedCallback();
+    terminateWorkers(await this.#workers);
   }
 
   // 🚛
@@ -52,21 +91,11 @@ class SearchTracksOrchestrator extends DiffuseElement {
    * @param {Track[]} cachedTracks
    */
   async supplyAvailable(cachedTracks) {
-    if (!this.input) return;
-    if (!this.search) return;
-
-    const groups = await this.input.groupConsult(cachedTracks);
-
-    /** @type {Track[]} */
-    let availableTracks = [];
-
-    Object.values(groups).forEach((value) => {
-      if (value.available === false) return;
-      availableTracks = availableTracks.concat(value.tracks);
-    }, []);
-
-    // Set pool
-    await this.search.supply(availableTracks);
+    return await callWorkerWithProvisions(
+      this.#workers,
+      this.#proxy.supplyAvailable,
+      { tracks: cachedTracks },
+    );
   }
 }
 

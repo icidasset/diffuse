@@ -2,13 +2,19 @@ import QS from "query-string";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import { rpc, workerLink, workerProxy } from "./worker.js";
+import {
+  getTransferables,
+  rpc,
+  transfer,
+  workerLink,
+  workerTunnel,
+} from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 import { RPCChannel } from "@kunkun/kkrpc";
 
 /**
- * @import {BroadcastingStatus, FnParams, FnReturn} from "./element.d.ts"
- * @import {ProxiedActions} from "./worker.d.ts";
+ * @import {BroadcastingStatus, FnParams, FnReturn, ProvisionedWorkers} from "./element.d.ts"
+ * @import {ProxiedActions, Tunnel} from "./worker.d.ts";
  * @import {Signal} from "./signal.d.ts"
  */
 
@@ -92,7 +98,7 @@ export class DiffuseElement extends HTMLElement {
   /** @type {undefined | Worker | SharedWorker} */
   #worker;
 
-  worker() {
+  createWorker() {
     const NAME = this.constructor.prototype.constructor.NAME;
     const WORKER_URL = this.constructor.prototype.constructor.WORKER_URL;
 
@@ -121,20 +127,14 @@ export class DiffuseElement extends HTMLElement {
     return worker;
   }
 
-  /**
-   * @param {Worker | SharedWorker} [worker]
-   */
-  workerLink(worker) {
-    let w;
+  worker() {
+    this.#worker ??= this.createWorker();
+    return this.#worker;
+  }
 
-    if (worker) {
-      w = worker;
-    } else {
-      this.#worker ??= this.worker();
-      w = this.#worker;
-    }
-
-    return workerLink(w);
+  workerLink() {
+    const worker = this.worker();
+    return workerLink(worker);
   }
 }
 
@@ -326,6 +326,56 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
 }
 
 /**
+ * @template {string} A
+ * @template {ProvisionedWorkers<A>} B
+ * @template {Record<string, any>} C
+ * @template R
+ * @param {Promise<B> | undefined} provisions
+ * @param {(args: C & { ports: { [K in keyof B]: MessagePort } }) => R} fn
+ * @param {C} fnArgs
+ * @returns {Promise<R>}
+ */
+export async function callWorkerWithProvisions(provisions, fn, fnArgs) {
+  const workers = await provisions;
+  if (!workers) throw new Error("Workers not defined");
+
+  /** @type {Array<[keyof B, Tunnel]>} */
+  const tunnels = Object.keys(workers).map(
+    (value) => {
+      const key = /** @type {keyof B} */ (value);
+      const worker = workers[key];
+      return [key, workerTunnel(worker)];
+    },
+  );
+
+  const ports = /** @type {{ [K in keyof B]: MessagePort }} */ (
+    Object.fromEntries(
+      tunnels.map(([key, tunnel]) => {
+        return [key, tunnel.port];
+      }),
+    )
+  );
+
+  const args = {
+    ...fnArgs,
+    ports,
+  };
+
+  const result = await fn(transfer(
+    args,
+    tunnels.map(([_key, tunnel]) => {
+      return tunnel.port;
+    }),
+  ));
+
+  tunnels.forEach(([_key, tunnel]) => {
+    tunnel.disconnect();
+  });
+
+  return result;
+}
+
+/**
  * Component DOM selector.
  *
  * Basically `document.querySelector` but returns the element
@@ -369,4 +419,42 @@ export function query(parent, attribute) {
   if (!element) throw new Error(`Missing required '${selector}' element`);
 
   return element;
+}
+
+/**
+ * @template {Record<string, DiffuseElement>} T
+ * @param {T} elements
+ * @returns {Promise<{ [K in keyof T]: Worker | SharedWorker }>}
+ */
+export async function provisionWorkers(elements) {
+  await whenElementsDefined(elements);
+
+  const entries = Object.entries(elements).map(([key, element]) => {
+    return [key, element.createWorker()];
+  });
+
+  return Object.fromEntries(entries);
+}
+
+/**
+ * @param {ProvisionedWorkers<any> | undefined} workers
+ */
+export function terminateWorkers(workers) {
+  if (!workers) return;
+
+  Object.values(workers).forEach((worker) => {
+    if (worker instanceof Worker) worker.terminate();
+  });
+}
+
+/**
+ * @template {Record<string, DiffuseElement>} T
+ * @param {T} elements
+ */
+export async function whenElementsDefined(elements) {
+  await Promise.all(
+    Object.values(elements).map((element) =>
+      customElements.whenDefined(element.localName)
+    ),
+  );
 }

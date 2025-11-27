@@ -28,3 +28,9 @@ export interface MessengerRealm {
   addEventListener: MessagePort["addEventListener"];
   removeEventListener: MessagePort["removeEventListener"];
 }
+
+/** */
+export type Tunnel = {
+  disconnect: () => void;
+  port: MessagePort;
+};
