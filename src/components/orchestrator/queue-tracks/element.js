@@ -17,8 +17,11 @@ import { untracked } from "@common/signal.js";
  * or the tracks collection changes.
  */
 class QueueTracksOrchestrator extends DiffuseElement {
-  constructor() {
-    super();
+  /**
+   * @override
+   */
+  async connectedCallback() {
+    super.connectedCallback();
 
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
@@ -28,15 +31,6 @@ class QueueTracksOrchestrator extends DiffuseElement {
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-engine-selector");
-  }
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  async connectedCallback() {
-    super.connectedCallback();
 
     // When defined
     await customElements.whenDefined(this.input.localName);
@@ -44,6 +38,8 @@ class QueueTracksOrchestrator extends DiffuseElement {
 
     // Watch tracks collection
     this.effect(() => {
+      if (!this.output) return;
+
       const tracks = this.output.tracks.collection().filter((t) =>
         t.kind !== "placeholder"
       );
@@ -58,6 +54,10 @@ class QueueTracksOrchestrator extends DiffuseElement {
    * @param {Track[]} cachedTracks
    */
   async poolAvailable(cachedTracks) {
+    if (!this.input) return;
+    if (!this.output) return;
+    if (!this.queue) return;
+
     const groups = await this.input.groupConsult(cachedTracks);
 
     /** @type {Track[]} */

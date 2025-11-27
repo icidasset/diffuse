@@ -12,7 +12,6 @@ import { portProvider, workerProxy } from "@common/worker.js";
 
 /**
  * @implements {ProxiedActions<InputActions>}
- * @implements {PortProviderMethod}
  */
 class S3Input extends DiffuseElement {
   static NAME = "diffuse/input/s3";
@@ -31,9 +30,6 @@ class S3Input extends DiffuseElement {
     this.resolve = p.resolve;
 
     this.demo = p.demo;
-
-    // Provide a channel to the worker
-    this.port = portProvider(this.workerLink);
   }
 }
 

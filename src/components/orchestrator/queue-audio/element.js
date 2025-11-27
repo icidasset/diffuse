@@ -17,8 +17,11 @@ import { untracked } from "@common/signal.js";
  * shift the queue if needed.
  */
 class QueueAudioOrchestrator extends DiffuseElement {
-  constructor() {
-    super();
+  /**
+   * @override
+   */
+  async connectedCallback() {
+    super.connectedCallback();
 
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
@@ -28,15 +31,6 @@ class QueueAudioOrchestrator extends DiffuseElement {
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-engine-selector");
-  }
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  async connectedCallback() {
-    super.connectedCallback();
 
     // Wait until defined
     await customElements.whenDefined(this.audio.localName);
@@ -51,6 +45,10 @@ class QueueAudioOrchestrator extends DiffuseElement {
   // 🛠️
 
   async monitorActiveQueueItem() {
+    if (!this.audio) return;
+    if (!this.input) return;
+    if (!this.queue) return;
+
     const activeTrack = this.queue.now();
     const isPlaying = untracked(this.audio.isPlaying);
 
@@ -85,6 +83,9 @@ class QueueAudioOrchestrator extends DiffuseElement {
   }
 
   async monitorAudioEnd() {
+    if (!this.audio) return;
+    if (!this.queue) return;
+
     if (this.audio.hasEnded()) await this.queue.shift();
   }
 }

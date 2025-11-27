@@ -21,7 +21,8 @@ import { portProvider, transfer, workerProxy } from "@common/worker.js";
  * from the assigned output element.
  */
 class ProcessTracksOrchestrator extends DiffuseElement {
-  #external;
+  /** @type {Promise<{ input: ReturnType<portProvider>; metadataProcessor: ReturnType<portProvider> } | undefined> | undefined} */
+  #external = undefined;
   #process;
 
   static NAME = "diffuse/orchestrator/process-tracks";
@@ -29,24 +30,6 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
   constructor() {
     super();
-
-    /** @type {InputElement} */
-    this.input = query(this, "input-selector");
-
-    /** @type {OutputElement<Track[]>} */
-    this.output = query(this, "output-selector");
-
-    /** @type {import("@components/processor/metadata/element.js").CLASS} */
-    this.metadataProcessor = query(this, "metadata-processor-selector");
-
-    // Create new workers specially for track processing
-    this.#external = Promise.all([
-      customElements.whenDefined(this.input.localName),
-      customElements.whenDefined(this.metadataProcessor.localName),
-    ]).then(() => ({
-      input: portProvider(this.input.workerLink),
-      metadataProcessor: portProvider(this.metadataProcessor.workerLink),
-    }));
 
     /** @type {ProxiedActions<Actions>} */
     const p = workerProxy(this.workerLink);
@@ -70,11 +53,36 @@ class ProcessTracksOrchestrator extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
+    /** @type {InputElement} */
+    this.input = query(this, "input-selector");
+
+    /** @type {OutputElement<Track[]>} */
+    this.output = query(this, "output-selector");
+
+    /** @type {import("@components/processor/metadata/element.js").CLASS} */
+    this.metadataProcessor = query(this, "metadata-processor-selector");
+
+    // Create new workers specially for track processing
+    this.#external = Promise.all([
+      customElements.whenDefined(this.input.localName),
+      customElements.whenDefined(this.metadataProcessor.localName),
+    ]).then(() => {
+      if (!this.input) return undefined;
+      if (!this.metadataProcessor) return undefined;
+
+      return {
+        input: portProvider(this.input.workerLink),
+        metadataProcessor: portProvider(this.metadataProcessor.workerLink),
+      };
+    });
+
     // Wait until defined
     await customElements.whenDefined(this.output.localName);
 
     // Process whenever tracks are initially loaded
     this.effect(() => {
+      if (!this.output) return;
+
       const state = this.output.tracks.state();
       if (state !== "loaded") return;
 
@@ -86,6 +94,9 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
   async process() {
     const ext = await this.#external;
+
+    if (!ext) return;
+    if (!this.output) return;
 
     // Start
     this.#isProcessing.value = true;

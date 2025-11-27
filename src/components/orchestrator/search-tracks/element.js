@@ -16,8 +16,11 @@ import { DiffuseElement, query } from "@common/element.js";
  * or the tracks collection changes.
  */
 class SearchTracksOrchestrator extends DiffuseElement {
-  constructor() {
-    super();
+  /**
+   * @override
+   */
+  async connectedCallback() {
+    super.connectedCallback();
 
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
@@ -27,21 +30,14 @@ class SearchTracksOrchestrator extends DiffuseElement {
 
     /** @type {import("@components/processor/search/element.js").CLASS} */
     this.search = query(this, "search-processor-selector");
-  }
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  async connectedCallback() {
-    super.connectedCallback();
 
     // When defined
     await customElements.whenDefined(this.output.localName);
 
     // Watch tracks collection
     this.effect(() => {
+      if (!this.output) return;
+
       const tracks = this.output.tracks.collection().filter((t) =>
         t.kind !== "placeholder"
       );
@@ -56,6 +52,9 @@ class SearchTracksOrchestrator extends DiffuseElement {
    * @param {Track[]} cachedTracks
    */
   async supplyAvailable(cachedTracks) {
+    if (!this.input) return;
+    if (!this.search) return;
+
     const groups = await this.input.groupConsult(cachedTracks);
 
     /** @type {Track[]} */

@@ -12,7 +12,6 @@ import { portProvider, workerProxy } from "@common/worker.js";
 
 /**
  * @implements {ProxiedActions<InputActions>}
- * @implements {PortProviderMethod}
  */
 class OpensubsonicInput extends DiffuseElement {
   static NAME = "diffuse/input/opensubsonic";
@@ -29,9 +28,6 @@ class OpensubsonicInput extends DiffuseElement {
     this.groupConsult = p.groupConsult;
     this.list = p.list;
     this.resolve = p.resolve;
-
-    // Provide a channel to a worker
-    this.port = portProvider(this.workerLink);
   }
 }
 
