@@ -1,19 +1,17 @@
 import QS from "query-string";
+import { RPCChannel } from "@kunkun/kkrpc";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import {
-  getTransferables,
-  rpc,
-  transfer,
-  workerLink,
-  workerTunnel,
-} from "./worker.js";
+import { rpc, transfer, workerLink, workerTunnel } from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
-import { RPCChannel } from "@kunkun/kkrpc";
+
+// RE-EXPORT
+
+export { workerLink, workerProxy, workerTunnel } from "./worker.js";
 
 /**
- * @import {BroadcastingStatus, FnParams, FnReturn, ProvisionedWorkers} from "./element.d.ts"
+ * @import {BroadcastingStatus, ProvisionedWorker, ProvisionedWorkers} from "./element.d.ts"
  * @import {ProxiedActions, Tunnel} from "./worker.d.ts";
  * @import {Signal} from "./signal.d.ts"
  */
@@ -424,22 +422,28 @@ export function query(parent, attribute) {
 /**
  * @template {Record<string, DiffuseElement>} T
  * @param {T} elements
- * @returns {Promise<{ [K in keyof T]: Worker | SharedWorker }>}
  */
 export async function provisionWorkers(elements) {
   await whenElementsDefined(elements);
 
-  const entries = Object.entries(elements).map(([key, element]) => {
-    return [key, element.createWorker()];
+  /** @type {Record<string, ProvisionedWorker>} */
+  const provisions = {};
+
+  Object.entries(elements).forEach(([key, element]) => {
+    const worker = element.createWorker();
+    provisions[key] = worker;
   });
 
-  return Object.fromEntries(entries);
+  const casted =
+    /** @type {{ [K in keyof T]: ProvisionedWorker}} */ (provisions);
+
+  return casted;
 }
 
 /**
  * @param {ProvisionedWorkers<any> | undefined} workers
  */
-export function terminateWorkers(workers) {
+export function terminateProvisions(workers) {
   if (!workers) return;
 
   Object.values(workers).forEach((worker) => {

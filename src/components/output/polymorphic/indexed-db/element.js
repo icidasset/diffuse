@@ -1,5 +1,4 @@
-import { DiffuseElement } from "@common/element.js";
-import { workerProxy } from "@common/worker.js";
+import { DiffuseElement, workerProxy } from "@common/element.js";
 import { outputManager } from "../../common.js";
 
 /**

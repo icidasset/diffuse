@@ -3,15 +3,10 @@ import {
   DiffuseElement,
   provisionWorkers,
   query,
-  terminateWorkers,
+  terminateProvisions,
+  workerProxy,
 } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
-import {
-  transfer,
-  workerLink,
-  workerProxy,
-  workerTunnel,
-} from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -97,7 +92,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
    */
   async disconnectedCallback() {
     super.disconnectedCallback();
-    terminateWorkers(await this.#workers);
+    terminateProvisions(await this.#workers);
   }
 
   // ACTIONS

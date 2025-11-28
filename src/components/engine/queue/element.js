@@ -1,6 +1,6 @@
-import { DiffuseElement } from "@common/element.js";
+import { DiffuseElement, workerProxy } from "@common/element.js";
 import { signal } from "@common/signal.js";
-import { listen, workerLink, workerProxy } from "@common/worker.js";
+import { listen } from "@common/worker.js";
 import { hash } from "@common/index.js";
 
 /**

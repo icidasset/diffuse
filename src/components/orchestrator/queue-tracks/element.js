@@ -1,13 +1,13 @@
 import {
   callWorkerWithProvisions,
   DiffuseElement,
-  provisionWorkers,
   query,
-  terminateWorkers,
+  terminateProvisions,
   whenElementsDefined,
+  workerProxy,
+  workerTunnel,
 } from "@common/element.js";
 import { untracked } from "@common/signal.js";
-import { workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -64,10 +64,12 @@ class QueueTracksOrchestrator extends DiffuseElement {
     this.queue = queue;
 
     // Create new workers
-    this.#workers = whenElementsDefined({ input, queue }).then(() => ({
-      input: input.createWorker(),
-      queue: queue.worker(),
-    }));
+    this.#workers = whenElementsDefined({ input, queue }).then(() => {
+      return {
+        input: input.createWorker(),
+        queue: queue.worker(),
+      };
+    });
 
     // When defined
     await customElements.whenDefined(this.input.localName);
@@ -88,7 +90,7 @@ class QueueTracksOrchestrator extends DiffuseElement {
    */
   async disconnectedCallback() {
     super.disconnectedCallback();
-    terminateWorkers(await this.#workers);
+    terminateProvisions(await this.#workers);
   }
 
   // 🌊

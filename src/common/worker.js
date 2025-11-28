@@ -65,6 +65,40 @@ export function workerLink(worker) {
 }
 
 /**
+ * @template {Record<string, (...args: any[]) => any>} Actions
+ * @param {() => MessagePort | Worker} workerLinkCreator
+ * @returns {ProxiedActions<Actions>}
+ */
+export function workerProxy(workerLinkCreator) {
+  /** @type {ProxiedActions<Actions> | undefined} */
+  let int_api;
+
+  /** @returns {ProxiedActions<Actions>} */
+  function ensureAPI() {
+    if (!int_api) {
+      const io = new BrowserPostMessageIo(workerLinkCreator);
+
+      /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
+      const rpc = new RPCChannel(io, { enableTransfer: true });
+
+      int_api = rpc.getAPI();
+    }
+
+    return int_api;
+  }
+
+  // Create proxy that creates RPC API when needed
+  const proxy = new Proxy(() => {}, {
+    get: (_target, prop) => {
+      const api = ensureAPI();
+      return api[prop.toString()];
+    },
+  });
+
+  return /** @type {ProxiedActions<Actions>} */ (/** @type {any} */ (proxy));
+}
+
+/**
  * @param {MessagePort | Worker | SharedWorker} workerOrLink
  * @returns {Tunnel}
  */
@@ -156,40 +190,6 @@ export function rpc(context, actions) {
 
   /** @type {undefined | RPCChannel<Actions, {}>} */
   return new RPCChannel(io, { enableTransfer: true, expose: actions });
-}
-
-/**
- * @template {Record<string, (...args: any[]) => any>} Actions
- * @param {() => MessagePort | Worker} workerLinkCreator
- * @returns {ProxiedActions<Actions>}
- */
-export function workerProxy(workerLinkCreator) {
-  /** @type {ProxiedActions<Actions> | undefined} */
-  let int_api;
-
-  /** @returns {ProxiedActions<Actions>} */
-  function ensureAPI() {
-    if (!int_api) {
-      const io = new BrowserPostMessageIo(workerLinkCreator);
-
-      /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
-      const rpc = new RPCChannel(io, { enableTransfer: true });
-
-      int_api = rpc.getAPI();
-    }
-
-    return int_api;
-  }
-
-  // Create proxy that creates RPC API when needed
-  const proxy = new Proxy(() => {}, {
-    get: (_target, prop) => {
-      const api = ensureAPI();
-      return api[prop.toString()];
-    },
-  });
-
-  return /** @type {ProxiedActions<Actions>} */ (/** @type {any} */ (proxy));
 }
 
 ////////////////////////////////////////////

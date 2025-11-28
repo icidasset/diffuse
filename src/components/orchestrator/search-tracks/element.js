@@ -3,9 +3,9 @@ import {
   DiffuseElement,
   provisionWorkers,
   query,
-  terminateWorkers,
+  terminateProvisions,
+  workerProxy,
 } from "@common/element.js";
-import { transfer, workerProxy, workerTunnel } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -82,7 +82,7 @@ class SearchTracksOrchestrator extends DiffuseElement {
    */
   async disconnectedCallback() {
     super.disconnectedCallback();
-    terminateWorkers(await this.#workers);
+    terminateProvisions(await this.#workers);
   }
 
   // 🚛
