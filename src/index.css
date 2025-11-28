@@ -69,10 +69,25 @@ ol {
   max-width: var(--container-sm);
 }
 
+small {
+  font-size: var(--fs-xs);
+}
+
 .columns {
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--space-3xl);
+}
+
+.construct {
+  color: oklch(1 0 0 / 0.75);
+  font-size: var(--fs-2xl);
+  font-weight: 900;
+  line-height: 0.775em;
+  line-height: 1.05cap;
+  margin-bottom: var(--space-md);
+  max-width: var(--container-xl);
+  text-transform: uppercase;
 }
 
 .element {

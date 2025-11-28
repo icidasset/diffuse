@@ -127,44 +127,84 @@ definitions:
         href="images/diffuse-current.svg#diffuse"></use>
     </svg>
   </h1>
-  <p>
-    Diffuse is a collection of custom elements that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital
-    listening experience for you.
+  <p class="construct">
+    Construct your audio player.
   </p>
   <p>
-    <strong>⚠️ Heavily experimental</strong>
+    Diffuse is a collection of components and software that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital
+    audio listening experience for you.
+  </p>
+  <p>
+    <em>⚠️ HEAVILY EXPERIMENTAL</em>
+  </p>
+  <p>
+    <small>Built by <a href="https://tokono.ma">tokono.ma</a></small>
   </p>
 </header>
 <main>
   <div class="columns">
+    <!-- USAGE -->
+    <section>
+      <h2 id="usage">Usage</h2>
+
+      <p>
+        The easiest way to start is by exploring the software. If you prefer a typical traditional web application approach, you can check out <a href="#themes">themes</a>.
+      </p>
+
+      <p>
+        Alternatively, there's <a href="#constituents">constituents</a> which allows you to use any component from any theme interchange&shy;ably, each in a separate browser tab. Each tab talks to each other, so you can for example browse in one tab and play it in another.
+      </p>
+
+      <p>
+        If you're a programmer, you can compose the <a href="#elements">elements</a> listed below to make your own theme. Easily build software by connecting various elements.
+      </p>
+
+      <p>
+        <small>
+          <strong>NOTE:</strong>
+          <em>I'd like there to be a way to compose your own theme without having to write code. Hopefully sometime in the future.</em>
+        </small>
+      </p>
+    </section>
+
     <!-- THEMES -->
     <section>
       <h2 id="themes">Themes</h2>
 
       <p>
         Themes are element compositions and provide a traditional browser web application way of
-        using them. Each theme is unique, not just a skin (ie. not like winamp skins).
+        using them. In other words, pretty much the whole thing, besides your data, lives inside a single browser tab.
       </p>
 
       <p>
-        For example, most themes here will limit the currently playing audio tracks to one item,
-        but you might as well create a DJ theme that can play multiple items at the same time.
+        <small>
+          <strong>NOTE:</strong>
+          Each theme is unique, not just a skin. For example, most themes here will limit the currently playing audio tracks to one item, but you might as well create a DJ theme that can play multiple items at the same time.
+        </small>
       </p>
 
       {{ await comp.list({ items: themes }) }}
     </section>
-
-    <!-- ABSTRACTIONS -->
-    <!--<section></section>-->
   </div>
+
+  <!-- CONSTITUENTS -->
+  <section>
+    <h2 id="constituents">Constituents</h2>
+
+    <p>
+      <small>
+        <strong>TODO:</strong>
+        Explain constituents.
+      </small>
+    </p>
+  </section>
 
   <!-- ELEMENTS -->
   <section>
     <h2 id="elements">Elements</h2>
 
     <p>
-      The (web) components of the system. These
-      are then recombined into an entire music player experience, or whatever you want to build.
+      The (web) components of the system. These custom elements are then recombined into an entire music player experience, or whatever you want to build.
     </p>
 
     <div class="columns">
@@ -243,6 +283,18 @@ definitions:
     {{ await comp.list({ items: definitions }) }}
   </section>
 
+  <!-- CODE -->
+  <section>
+    <h2 id="code">Code your own</h2>
+
+    <p>
+      <small>
+        <strong>TODO:</strong>
+        Explain how to connect the various elements, publish packages, etc.
+      </small>
+    </p>
+  </section>
+
   <!-- DEMOS -->
   <!--<section>
     <h2 id="demos">Demos</h2>
@@ -251,7 +303,4 @@ definitions:
 
     <List items={demos} />
   </section>-->
-
-  <!-- BUILD YOUR OWN -->
-  <!--<section></section>-->
 </main>
