@@ -1,7 +1,8 @@
 import { DiffuseElement, workerProxy } from "@common/element.js";
+import { SCHEME } from "./constants.js";
 
 /**
- * @import {InputActions} from "@components/input/types.d.ts"
+ * @import {InputActions, InputSchemeProvider} from "@components/input/types.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  */
 
@@ -11,10 +12,13 @@ import { DiffuseElement, workerProxy } from "@common/element.js";
 
 /**
  * @implements {ProxiedActions<InputActions>}
+ * @implements {InputSchemeProvider}
  */
 class S3Input extends DiffuseElement {
   static NAME = "diffuse/input/s3";
   static WORKER_URL = "components/input/s3/worker.js";
+
+  SCHEME = SCHEME;
 
   constructor() {
     super();

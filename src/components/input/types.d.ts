@@ -31,7 +31,10 @@ export type InputActions = {
 
 export type InputElement =
   & DiffuseElement
+  & InputSchemeProvider
   & ProxiedActions<InputActions>;
+
+export type InputSchemeProvider = { SCHEME: string };
 
 export type ResolvedUri = undefined | {
   stream: ReadableStream;

@@ -1,11 +1,13 @@
-import "@components/orchestrator/process-tracks/element.js";
+// import "@components/orchestrator/process-tracks/element.js";
 import "@components/orchestrator/queue-tracks/element.js";
+import "@components/input/opensubsonic/element.js";
+import "@components/input/s3/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/processor/metadata/element.js";
 import "@components/transformer/output/string/json/element.js";
 import "@components/transformer/output/refiner/default/element.js";
 
-import * as Input from "@components/input/opensubsonic/element.js";
+import * as Input from "@components/configurator/input/element.js";
 import * as Queue from "@components/engine/queue/element.js";
 
 import { component } from "@common/element.js";

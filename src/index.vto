@@ -17,13 +17,15 @@ themes:
 # ELEMENTS
 
 configurators:
-  - title: "Input"
+  - url: "components/configurator/input/element.js"
+    title: "Input"
     desc: "Add multiple inputs."
-    todo: true
-  - title: "Output"
+  - url: "components/configurator/output/element.js"
+    title: "Output"
     desc: "Allows the user to configure a specific output."
     todo: true
-  - title: "Scrobbles"
+  - url: "components/configurator/scrobbles/element.js"
+    title: "Scrobbles"
     desc: "Configure multiple scrobblers (music trackers)."
     todo: true
 
@@ -42,7 +44,6 @@ input:
   - url: "components/input/s3/element.js"
     title: "S3"
     desc: "AWS S3 and services that provide the same surface API such as Cloudflare R2."
-    todo: true
 
 orchestrators:
   - url: "components/orchestrator/process-tracks/element.js"
@@ -203,7 +204,7 @@ definitions:
         title: "Output",
         items: output,
         content: `
-        Output is application-derived data such as playlists. These elements can receive such data and keep it around. These are categorised by the type of data they ingest, or many types in the case of polymorphic.
+        Output is application-derived data such as playlists. These elements can receive such data and keep it around. These are categorised by the type of data they ingest, or many types in the case of polymorphic. Optionally use transformers to convert output into the expected format.
         `
       }) }}
 
