@@ -1,10 +1,3 @@
-@import "./variables.css";
-@import "../../styles/diffuse/colors.css";
-@import "../../styles/diffuse/fonts.css";
-
-/***********************************
- * Base
- ***********************************/
 body {
   background-color: oklch(from var(--bg-color) calc(l - 0.025) c h);
   color: var(--text-color);

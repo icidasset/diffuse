@@ -1,47 +1,48 @@
-<!doctype html>
-<html>
-  <head>
-    <link rel="stylesheet" href="index.css" />
-  </head>
-  <body>
-    <!-- UI -->
-    <main>
-    </main>
+---
+layout: layouts/diffuse.vto
+base: ../../
 
-    <!-- Engines -->
-    <de-audio group="shared"></de-audio>
-    <de-queue group="shared"></de-queue>
+styles:
+  - ../../styles/base.css
+  - index.css
 
-    <!-- Inputs, Outputs & Processors -->
-    <dop-indexed-db></dop-indexed-db>
-    <dp-metadata></dp-metadata>
+scripts:
+  - index.js
+---
 
-    <di-opensubsonic id="input"></di-opensubsonic>
+<!-- UI -->
+<main>
+</main>
 
-    <!-- Transformers -->
-    <dtor-default id="output" output-selector="dtos-json"></dtor-default>
-    <dtos-json output-selector="dop-indexed-db">now</dtos-json>
+<!-- Engines -->
+<de-audio group="shared"></de-audio>
+<de-queue group="shared"></de-queue>
 
-    <!-- Orchestrators -->
-    <do-process-tracks
-      input-selector="#input"
-      metadata-processor-selector="dp-metadata"
-      output-selector="#output"
-    ></do-process-tracks>
+<!-- Inputs, Outputs & Processors -->
+<dop-indexed-db></dop-indexed-db>
+<dp-metadata></dp-metadata>
 
-    <do-queue-audio
-      input-selector="#input"
-      audio-engine-selector="de-audio"
-      queue-engine-selector="de-queue"
-    ></do-queue-audio>
+<di-opensubsonic id="input"></di-opensubsonic>
 
-    <do-queue-tracks
-      input-selector="#input"
-      output-selector="#output"
-      queue-engine-selector="de-queue"
-    ></do-queue-tracks>
+<!-- Transformers -->
+<dtor-default id="output" output-selector="dtos-json"></dtor-default>
+<dtos-json output-selector="dop-indexed-db">now</dtos-json>
 
-    <!-- Scripts -->
-    <script src="index.js" type="module"></script>
-  </body>
-</html>
+<!-- Orchestrators -->
+<do-process-tracks
+  input-selector="#input"
+  metadata-processor-selector="dp-metadata"
+  output-selector="#output"
+></do-process-tracks>
+
+<do-queue-audio
+  input-selector="#input"
+  audio-engine-selector="de-audio"
+  queue-engine-selector="de-queue"
+></do-queue-audio>
+
+<do-queue-tracks
+  input-selector="#input"
+  output-selector="#output"
+  queue-engine-selector="de-queue"
+></do-queue-tracks>

@@ -16,10 +16,10 @@ import { signal } from "@common/signal.js";
  */
 
 class ArtworkController extends DiffuseElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
+  // constructor() {
+  //   super();
+  //   this.attachShadow({ mode: "open" });
+  // }
 
   // SIGNALS
 
@@ -225,7 +225,7 @@ class ArtworkController extends DiffuseElement {
   render({ html }) {
     return html`
       <style>
-      @import "../../../styles/fonts.css";
+      /*@import "../../../styles/icons/phosphor.css";*/
       @import "./element.css";
       </style>
 

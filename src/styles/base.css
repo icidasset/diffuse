@@ -1,0 +1,7 @@
+@import "./reset.css";
+@import "./variables.css";
+@import "./fonts.css";
+@import "./animations.css";
+
+@import "./diffuse/colors.css";
+@import "./diffuse/fonts.css";

@@ -1,12 +1,4 @@
-@import "../../../styles/reset.css";
-@import "../../../styles/variables.css";
-@import "../../../styles/animations.css";
-/*@import "../../../styles/icons/phosphor.css";*/
-
-@import "../../../styles/diffuse/colors.css";
-@import "../../../styles/diffuse/fonts.css";
-
-:root {
+:host {
   --transition-durition: 500ms;
 }
 
