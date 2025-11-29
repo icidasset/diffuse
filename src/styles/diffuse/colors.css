@@ -3,7 +3,8 @@
   --color-1: oklch(4.1308% 0.25306 109.22);
   --color-2: oklch(98.369% 0.01834 67.664);
   --color-3: oklch(26.787% 0.00168 186.65);
-  --accent: oklch(86.947% 0.25527 28.789);
+  /*--accent: oklch(86.947% 0.25527 28.789);*/
+  --accent: hsl(80, 60.5%, 34.7%);
 
   --bg-color: var(--color-2);
   --text-color: var(--color-1);

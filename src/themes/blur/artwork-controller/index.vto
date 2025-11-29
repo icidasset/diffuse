@@ -1,0 +1,53 @@
+---
+layout: layouts/diffuse.vto
+
+base: "../../../"
+
+scripts:
+  - element.js
+---
+
+<!-- ELEMENTS -->
+
+<de-audio group="constituents"></de-audio>
+<de-queue group="constituents"></de-queue>
+
+<do-queue-tracks
+  input-selector="dc-input"
+  output-selector="#output"
+  queue-engine-selector="de-queue"
+></do-queue-tracks>
+
+<dp-artwork></dp-artwork>
+
+<dtor-default id="output" output-selector="dtos-json"></dtor-default>
+<dtos-json output-selector="dop-indexed-db"></dtos-json>
+<dop-indexed-db></dop-indexed-db>
+
+<dc-input>
+  <di-opensubsonic></di-opensubsonic>
+  <di-s3></di-s3>
+</dc-input>
+
+<db-artwork-controller
+  artwork-processor-selector="dp-artwork"
+  audio-engine-selector="de-queue"
+  input-selector="dc-input"
+  queue-engine-selector="de-queue"
+>
+</db-artwork-controller>
+
+<!-- SCRIPTS -->
+
+<script type="module">
+  import "../../../components/configurator/input/element.js"
+  import "../../../components/engine/audio/element.js"
+  import "../../../components/engine/queue/element.js"
+  import "../../../components/input/opensubsonic/element.js"
+  import "../../../components/input/s3/element.js"
+  import "../../../components/orchestrator/queue-tracks/element.js"
+  import "../../../components/output/polymorphic/indexed-db/element.js"
+  import "../../../components/processor/artwork/element.js"
+  import "../../../components/transformer/output/refiner/default/element.js"
+  import "../../../components/transformer/output/string/json/element.js"
+</script>

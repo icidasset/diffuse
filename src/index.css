@@ -80,9 +80,10 @@ small {
 }
 
 .construct {
-  color: oklch(1 0 0 / 0.75);
+  color: oklch(from currentColor l c h / 0.65);
   font-size: var(--fs-2xl);
   font-weight: 900;
+  letter-spacing: -0.0125em;
   line-height: 0.775em;
   line-height: 1.05cap;
   margin-bottom: var(--space-md);

@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "@common/element.js";
+import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -10,18 +10,7 @@ import { DiffuseElement, query } from "@common/element.js";
 class Browser extends DiffuseElement {
   constructor() {
     super();
-
-    // Enable Shadow DOM
     this.attachShadow({ mode: "open" });
-
-    /** @type {InputElement} */
-    this.input = query(this, "input-selector");
-
-    /** @type {OutputElement<Track[]>} */
-    this.output = query(this, "output-selector");
-
-    /** @type {import("@components/engine/queue/element.js").CLASS} */
-    this.queue = query(this, "queue-selector");
   }
 
   // LIFECYCLE
@@ -32,15 +21,21 @@ class Browser extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
 
-    // Wait for the above dependencies to be defined, then render again.
-    (async () => {
-      await customElements.whenDefined(this.input.localName);
-      await customElements.whenDefined(this.output.localName);
+    /** @type {InputElement} */
+    this.input = query(this, "input-selector");
 
+    /** @type {OutputElement<Track[]>} */
+    this.output = query(this, "output-selector");
+
+    /** @type {import("@components/engine/queue/element.js").CLASS} */
+    this.queue = query(this, "queue-engine-selector");
+
+    // Wait for the above dependencies to be defined, then render again.
+    whenElementsDefined({ input: this.input, output: this.output }).then(() => {
       this.effect(() => {
         this.forceRender();
       });
-    })();
+    });
   }
 
   // EVENTS
@@ -66,7 +61,7 @@ class Browser extends DiffuseElement {
    * @param {Track} track
    */
   playTrack(track) {
-    this.queue.add({
+    this.queue?.add({
       inFront: true,
       tracks: [track],
     });
@@ -78,7 +73,7 @@ class Browser extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const tracks = this.output.tracks?.collection() || [];
+    const tracks = this.output?.tracks?.collection() ?? [];
 
     return html`
       <link rel="stylesheet" href="../../styles/vendor/98.css" />

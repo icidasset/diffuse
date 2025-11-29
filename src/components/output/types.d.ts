@@ -1,7 +1,8 @@
 import type { SignalReader } from "@common/signal.d.ts";
 import type { Track } from "@definitions/types.d.ts";
+import type { DiffuseElement } from "@common/element.js";
 
-export type OutputElement<Tracks> = HTMLElement & OutputManager<Tracks>;
+export type OutputElement<Tracks> = DiffuseElement & OutputManager<Tracks>;
 
 export type OutputManager<Tracks> = {
   tracks: {

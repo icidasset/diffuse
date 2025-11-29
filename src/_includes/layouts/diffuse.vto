@@ -1,5 +1,9 @@
 ---
 title: "Diffuse"
+
+base: "./"
+scripts: []
+styles: []
 ---
 
 <html lang="en">
@@ -13,20 +17,29 @@ title: "Diffuse"
     <title>{{title}}</title>
 
     <!-- Favicons & Mobile -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-    <!-- TODO: <link rel="manifest" href="site.webmanifest" />-->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{base}}apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{base}}favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{base}}favicon-16x16.png" />
+    <!-- TODO: <link rel="manifest" href="{{base}}site.webmanifest" />-->
     <link rel="mask-icon" href="safari-pinned-tab.svg" color="#8a90a9" />
     <meta name="msapplication-TileColor" content="#8a90a9" />
     <meta name="theme-color" content="#8a90a9" />
 
     <!-- Styles -->
     <style>
-      @import "./styles/reset.css";
-      @import "./styles/fonts.css";
-      @import "./styles/variables.css";
+      @import "{{base}}styles/reset.css";
+      @import "{{base}}styles/fonts.css";
+      @import "{{base}}styles/variables.css";
     </style>
+
+    {{ for url of styles }}
+      <link rel="stylesheet" href="{{ url }}" />
+    {{ /for }}
+
+    <!-- Scripts -->
+    {{ for url of scripts }}
+      <script defer src="{{ url }}" type="module"></script>
+    {{ /for }}
   </head>
   <body>
     {{ content }}

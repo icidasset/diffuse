@@ -46,7 +46,7 @@ export class DiffuseElement extends HTMLElement {
   }
 
   /**
-   * Effect helper that automatically disposes it
+   * Effect helper that automatically is disposes
    * when this element is removed from the DOM.
    *
    * @param {() => void} fn
@@ -263,6 +263,15 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     );
 
     return /** @type {ProxiedActions<Actions>} */ (actions);
+  }
+
+  async isLeader() {
+    if (this.broadcasted) {
+      const status = await this.broadcastingStatus();
+      return status.leader;
+    } else {
+      return true;
+    }
   }
 
   // LIFECYCLE

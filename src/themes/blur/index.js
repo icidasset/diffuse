@@ -57,10 +57,5 @@ effect(() => {
 // 🛠️
 
 async function isLeader() {
-  if (audio.broadcasted) {
-    const status = await audio.broadcastingStatus();
-    return status.leader;
-  } else {
-    return true;
-  }
+  return await audio.isLeader();
 }

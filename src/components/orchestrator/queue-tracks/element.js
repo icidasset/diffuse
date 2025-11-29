@@ -1,11 +1,10 @@
 import {
+  BroadcastableDiffuseElement,
   callWorkerWithProvisions,
-  DiffuseElement,
   query,
   terminateProvisions,
   whenElementsDefined,
   workerProxy,
-  workerTunnel,
 } from "@common/element.js";
 import { untracked } from "@common/signal.js";
 
@@ -28,7 +27,7 @@ import { untracked } from "@common/signal.js";
  * tracks have been loaded,
  * or the tracks collection changes.
  */
-class QueueTracksOrchestrator extends DiffuseElement {
+class QueueTracksOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/queue-tracks";
   static WORKER_URL = "components/orchestrator/queue-tracks/worker.js";
 
@@ -77,11 +76,15 @@ class QueueTracksOrchestrator extends DiffuseElement {
 
     // Watch tracks collection
     this.effect(() => {
-      const tracks = output.tracks.collection().filter((t) =>
-        t.kind !== "placeholder"
-      );
+      const tracks = output.tracks.collection();
 
-      untracked(() => this.poolAvailable(tracks));
+      this.isLeader().then((isLeader) => {
+        if (!isLeader) return;
+
+        untracked(() =>
+          this.poolAvailable(tracks.filter((t) => t.kind !== "placeholder"))
+        );
+      });
     });
   }
 

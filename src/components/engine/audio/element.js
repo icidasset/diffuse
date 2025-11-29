@@ -20,6 +20,8 @@ const _SILENT_MP3 =
  * @implements {Actions}
  */
 class AudioEngine extends BroadcastableDiffuseElement {
+  static NAME = "diffuse/engine/audio";
+
   // SIGNALS
 
   #items = signal(/** @type {Audio[]} */ ([]));
@@ -43,15 +45,18 @@ class AudioEngine extends BroadcastableDiffuseElement {
   connectedCallback() {
     // Setup leader election if shared
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(`diffuse/engine/audio/${this.group}`, {
-        adjustVolume: { strategy: "leaderOnly", fn: this.adjustVolume },
-        pause: { strategy: "leaderOnly", fn: this.pause },
-        play: { strategy: "leaderOnly", fn: this.play },
-        seek: { strategy: "leaderOnly", fn: this.seek },
-        supply: { strategy: "replicate", fn: this.supply },
+      const actions = this.broadcast(
+        `${this.constructor.prototype.constructor.NAME}/${this.group}`,
+        {
+          adjustVolume: { strategy: "leaderOnly", fn: this.adjustVolume },
+          pause: { strategy: "leaderOnly", fn: this.pause },
+          play: { strategy: "leaderOnly", fn: this.play },
+          seek: { strategy: "leaderOnly", fn: this.seek },
+          supply: { strategy: "replicate", fn: this.supply },
 
-        setIsPlaying: { strategy: "replicate", fn: this.$isPlaying.set },
-      });
+          setIsPlaying: { strategy: "replicate", fn: this.$isPlaying.set },
+        },
+      );
 
       if (actions) {
         this.adjustVolume = actions.adjustVolume;
@@ -68,7 +73,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
     super.connectedCallback();
 
     // Get volume from previous session if possible
-    const VOLUME_KEY = `diffuse/engine/audio/${this.group}/volume`;
+    const VOLUME_KEY =
+      `${this.constructor.prototype.constructor.NAME}/${this.group}/volume`;
     const volume = localStorage.getItem(VOLUME_KEY);
 
     if (volume != undefined) {

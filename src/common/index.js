@@ -1,4 +1,4 @@
-// import * as Uint8 from "uint8arrays";
+import * as Uint8 from "uint8arrays";
 import { xxh32r } from "xxh32/dist/raw.js";
 
 /**
@@ -92,9 +92,7 @@ export function jsonEncode(a) {
  * @returns {Promise<string>}
  */
 export async function trackArtworkCacheId(track) {
-  // TODO:
-  return "";
-  // return await crypto.subtle
-  //   .digest("SHA-256", new TextEncoder().encode(track.uri))
-  //   .then((a) => Uint8.toString(new Uint8Array(a), "base64url"));
+  return await crypto.subtle
+    .digest("SHA-256", new TextEncoder().encode(track.uri))
+    .then((a) => Uint8.toString(new Uint8Array(a), "base64url"));
 }
