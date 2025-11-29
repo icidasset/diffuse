@@ -43,6 +43,7 @@
     "npm:@atcute/lex-cli@^2.3.1": "2.3.1",
     "npm:@atcute/lexicons@^1.2.2": "1.2.2",
     "npm:@js-temporal/polyfill@~0.5.1": "0.5.1",
+    "npm:@phosphor-icons/web@^2.1.2": "2.1.2",
     "npm:@tauri-apps/plugin-shell@^2.2.0": "2.3.3",
     "npm:alien-signals@3": "3.0.3",
     "npm:autoprefixer@10.4.21": "10.4.21_postcss@8.5.6",
@@ -380,6 +381,9 @@
       "dependencies": [
         "@optique/core"
       ]
+    },
+    "@phosphor-icons/web@2.1.2": {
+      "integrity": "sha512-rPAR9o/bEcp4Cw4DEeZHXf+nlGCMNGkNDRizYHM47NLxz9vvEHp/Tt6FMK1NcWadzw/pFDPnRBGi/ofRya958A=="
     },
     "@redux-devtools/extension@3.3.0_redux@5.0.1": {
       "integrity": "sha512-X34S/rC8S/M1BIrkYD1mJ5f8vlH0BDqxXrs96cvxSBo4FhMdbhU+GUGsmNYov1xjSyLMHgo8NYrUG8bNX7525g==",
@@ -1805,6 +1809,7 @@
       "npm:@atcute/lex-cli@^2.3.1",
       "npm:@atcute/lexicons@^1.2.2",
       "npm:@js-temporal/polyfill@~0.5.1",
+      "npm:@phosphor-icons/web@^2.1.2",
       "npm:alien-signals@3",
       "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
       "npm:fast-average-color@^9.5.0",

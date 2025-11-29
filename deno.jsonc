@@ -15,6 +15,7 @@
     "@mys/worker-fn": "jsr:@mys/worker-fn@^3.2.1",
     "@okikio/transferables": "jsr:@okikio/transferables@^1.0.2",
     "@orama/orama": "jsr:@orama/orama@^2.0.6",
+    "@phosphor-icons/web": "npm:@phosphor-icons/web@^2.1.2",
     "@vicary/debounce-microtask": "jsr:@vicary/debounce-microtask@^0.1.8",
     "alien-signals": "npm:alien-signals@^3.0.0",
     "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",

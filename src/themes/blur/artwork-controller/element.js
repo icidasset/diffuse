@@ -225,7 +225,7 @@ class ArtworkController extends DiffuseElement {
   render({ html }) {
     return html`
       <style>
-      /*@import "../../../styles/icons/phosphor.css";*/
+      @import "../../../styles/vendor/phosphor/fill/style.css";
       @import "./element.css";
       </style>
 
