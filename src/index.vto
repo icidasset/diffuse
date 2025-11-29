@@ -150,7 +150,7 @@ definitions:
       <h2 id="usage">Usage</h2>
 
       <p>
-        The easiest way to start is by exploring the software. If you prefer a typical traditional web application approach, you can check out <a href="#themes">themes</a>.
+        The easiest way to start is by exploring the software. If you prefer a traditional pre&shy;packaged web application approach, you can check out <a href="#themes">themes</a>.
       </p>
 
       <p>
@@ -164,11 +164,39 @@ definitions:
       <p>
         <small>
           <strong>NOTE:</strong>
-          <em>I'd like there to be a way to compose your own theme without having to write code. Hopefully sometime in the future.</em>
+          I'd like there to be a way to compose your own theme without having to write code. Hopefully sometime in the future.
         </small>
       </p>
     </section>
 
+    <!-- DEMO -->
+    <section>
+      <h2 id="demo">Demo</h2>
+
+      <p>Diffuse is not your typical streaming service, you have to add sources of audio. This button here adds a few sample audio files from a S3 bucket.</p>
+
+      <p>
+        <small>
+          <strong>TODO:</strong>
+          Implement button
+        </small>
+      </p>
+
+      <p>
+        Next, select any <a href="#themes">theme</a> from below to play the audio. Or any of the other options suggested in the usage section.
+      </p>
+
+      <p>
+        <small>
+          <strong>NOTE:</strong>
+          The items are added to the default "IndexedDB" output, so make sure that output is configured.
+        </small>
+      </p>
+
+      <List items={[]} />
+    </section>
+  </div>
+  <div class="columns">
     <!-- THEMES -->
     <section>
       <h2 id="themes">Themes</h2>
@@ -187,19 +215,19 @@ definitions:
 
       {{ await comp.list({ items: themes }) }}
     </section>
+
+    <!-- CONSTITUENTS -->
+    <section>
+      <h2 id="constituents">Constituents</h2>
+
+      <p>
+        <small>
+          <strong>TODO:</strong>
+          Explain constituents.
+        </small>
+      </p>
+    </section>
   </div>
-
-  <!-- CONSTITUENTS -->
-  <section>
-    <h2 id="constituents">Constituents</h2>
-
-    <p>
-      <small>
-        <strong>TODO:</strong>
-        Explain constituents.
-      </small>
-    </p>
-  </section>
 
   <!-- ELEMENTS -->
   <section>
@@ -296,13 +324,4 @@ definitions:
       </small>
     </p>
   </section>
-
-  <!-- DEMOS -->
-  <!--<section>
-    <h2 id="demos">Demos</h2>
-
-    <p>Just some utility web pages to help demo the system.</p>
-
-    <List items={demos} />
-  </section>-->
 </main>
