@@ -11,15 +11,14 @@ import { signal } from "@common/signal.js";
  * @import {RenderArg} from "@common/element.d.ts"
  * @import {Track} from "@definitions/types.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
  * @import {Artwork} from "@components/processor/artwork/types.d.ts"
  */
 
 class ArtworkController extends DiffuseElement {
-  // constructor() {
-  //   super();
-  //   this.attachShadow({ mode: "open" });
-  // }
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+  }
 
   // SIGNALS
 
@@ -68,14 +67,6 @@ class ArtworkController extends DiffuseElement {
 
       this.effect(() => {
         debouncedChangeArtwork(queue.now());
-      });
-
-      this.effect(() => {
-        const trigger = queue.now();
-        const _other_trigger = queue.poolHash();
-
-        queue.fill({ amount: 10, shuffled: true });
-        if (!trigger) queue.shift();
       });
 
       // Force render when elements are defined
@@ -138,7 +129,7 @@ class ArtworkController extends DiffuseElement {
 
       // No artwork, fade out existing.
       if (art.length === 0) {
-        this.querySelectorAll(":scope .artwork img").forEach((el) => {
+        this.root().querySelectorAll(".artwork img").forEach((el) => {
           const element = /** @type {HTMLElement} */ (el);
           element.style.opacity = "0";
           const hash = element.getAttribute("data-hash");
@@ -151,8 +142,8 @@ class ArtworkController extends DiffuseElement {
       const hash = xxh32r(art[0].bytes).toString();
 
       /** @type {HTMLImageElement | null} */
-      const existingArtwork = this.querySelector(
-        `:scope .artwork img[data-hash="${hash}"]`,
+      const existingArtwork = this.root().querySelector(
+        `.artwork img[data-hash="${hash}"]`,
       );
 
       // If the artwork is the same, stop here.
@@ -188,16 +179,16 @@ class ArtworkController extends DiffuseElement {
         this.#artworkLightMode.value = o > 165;
 
         /** @type {HTMLElement | null} */
-        const bg = this.querySelector(":scope .controller__background");
+        const bg = this.root().querySelector(".controller__background");
         if (bg) bg.style.backgroundColor = color.rgba;
 
         /** @type {HTMLElement | null} */
-        const main = this.querySelector(":scope main");
+        const main = this.root().querySelector("main");
         if (main) main.style.backgroundColor = color.rgba;
 
         img.style.opacity = "1";
 
-        this.querySelectorAll(":scope .artwork img").forEach((el) => {
+        this.root().querySelectorAll(".artwork img").forEach((el) => {
           if (el === img) return;
 
           const element = /** @type {HTMLElement} */ (el);
@@ -207,13 +198,16 @@ class ArtworkController extends DiffuseElement {
       };
 
       // Insert new artwork
-      this.querySelector(":scope .artwork")?.appendChild(img);
+      this.root().querySelector(".artwork")?.appendChild(img);
     });
 
     this.effect(() => {
-      // if (artworkLightMode()) {
-      //   controller.classList.add("controller__inner--light-mode");
-      // } else controller.classList.remove("controller__inner--light-mode");
+      const controller = this.root().querySelector(".controller__inner");
+      if (!controller) return;
+
+      if (this.#artworkLightMode.value) {
+        controller.classList.add("controller__inner--light-mode");
+      } else controller.classList.remove("controller__inner--light-mode");
     });
   }
 

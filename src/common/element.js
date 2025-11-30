@@ -67,13 +67,17 @@ export class DiffuseElement extends HTMLElement {
       state: "state" in this ? this.state : undefined,
     });
 
-    const root = this.shadowRoot ? this.shadowRoot : this;
-    render(tmp, root);
+    render(tmp, this.root());
   }
 
   /** */
   forceRender() {
     return this.#render();
+  }
+
+  /** */
+  root() {
+    return (this.shadowRoot ?? this);
   }
 
   // LIFECYCLE

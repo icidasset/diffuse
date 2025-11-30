@@ -42,7 +42,10 @@ class InputConfigurator extends DiffuseElement {
    */
   createWorker() {
     const worker = super.createWorker();
-    this.configureWorker(worker);
+
+    // Wait for child elements to be rendered
+    setTimeout(() => this.configureWorker(worker), 0);
+
     return worker;
   }
 
@@ -53,6 +56,9 @@ class InputConfigurator extends DiffuseElement {
    */
   async configureWorker(worker) {
     const inputs = await this.inputTunnels();
+
+    // Check if any inputs are present
+    if (inputs.length === 0) return;
 
     // Configure worker with input ports
     const args = transfer({
@@ -67,7 +73,7 @@ class InputConfigurator extends DiffuseElement {
   }
 
   async inputTunnels() {
-    const inputElements = this.querySelectorAll(":scope > *");
+    const inputElements = this.children;
     const inputs = await Array.from(inputElements).reduce(
       /**
        * @param {Promise<Array<Input>>} acc
