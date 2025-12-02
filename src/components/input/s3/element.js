@@ -1,4 +1,4 @@
-import { DiffuseElement, workerProxy } from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 import { SCHEME } from "./constants.js";
 
 /**
@@ -24,7 +24,7 @@ class S3Input extends DiffuseElement {
     super();
 
     /** @type {ProxiedActions<InputActions & { demo: () => Promise<void> }>} */
-    const p = workerProxy(this.workerLink);
+    const p = this.workerProxy();
 
     this.consult = p.consult;
     this.contextualize = p.contextualize;

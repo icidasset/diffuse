@@ -1,4 +1,4 @@
-import { DiffuseElement, workerProxy } from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 import { outputManager } from "../../common.js";
 
 /**
@@ -21,7 +21,7 @@ class IndexedDBOutput extends DiffuseElement {
     super();
 
     /** @type {ProxiedActions<OutputWorkerActions>} */
-    const p = workerProxy(this.workerLink);
+    const p = this.workerProxy();
 
     // Manager
     const manager = outputManager({

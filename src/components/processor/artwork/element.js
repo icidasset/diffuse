@@ -1,4 +1,4 @@
-import { DiffuseElement, workerProxy } from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts"
@@ -20,7 +20,7 @@ class ArtworkProcessor extends DiffuseElement {
     super();
 
     /** @type {ProxiedActions<Actions>} */
-    const p = workerProxy(this.workerLink);
+    const p = this.workerProxy();
 
     this.artwork = p.artwork;
     this.supply = p.supply;

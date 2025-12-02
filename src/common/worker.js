@@ -1,4 +1,4 @@
-import { RPCChannel, transfer } from "@kunkun/kkrpc";
+import { RPCChannel } from "@kunkun/kkrpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
