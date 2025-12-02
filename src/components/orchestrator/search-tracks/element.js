@@ -1,15 +1,7 @@
-import {
-  callWorkerWithProvisions,
-  DiffuseElement,
-  provisionWorkers,
-  query,
-  terminateProvisions,
-  workerProxy,
-} from "@common/element.js";
+import { DiffuseElement, query } from "@common/element.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {ProvisionedWorkers} from "@common/element.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
@@ -33,13 +25,12 @@ class SearchTracksOrchestrator extends DiffuseElement {
   /** @type {ProxiedActions<Actions>} */
   #proxy;
 
-  /** @type {Promise<ProvisionedWorkers<"input" | "search">> | undefined} */
-  #workers = undefined;
-
   constructor() {
     super();
-    this.#proxy = workerProxy(this.workerLink);
+    this.#proxy = this.workerProxy();
   }
+
+  // LIFECYCLE
 
   /**
    * @override
@@ -61,9 +52,6 @@ class SearchTracksOrchestrator extends DiffuseElement {
     this.output = output;
     this.search = search;
 
-    // Create new workers
-    this.#workers = provisionWorkers({ input, search });
-
     // When defined
     await customElements.whenDefined(this.output.localName);
 
@@ -73,29 +61,23 @@ class SearchTracksOrchestrator extends DiffuseElement {
         t.kind !== "placeholder"
       );
 
-      this.supplyAvailable(tracks);
+      this.#proxy.supplyAvailable(tracks);
     });
   }
+
+  // WORKERS
 
   /**
    * @override
    */
-  async disconnectedCallback() {
-    super.disconnectedCallback();
-    terminateProvisions(await this.#workers);
-  }
+  dependencies() {
+    if (!this.input) throw new Error("Input element not defined yet");
+    if (!this.search) throw new Error("Search element not defined yet");
 
-  // 🚛
-
-  /**
-   * @param {Track[]} cachedTracks
-   */
-  async supplyAvailable(cachedTracks) {
-    return await callWorkerWithProvisions(
-      this.#workers,
-      this.#proxy.supplyAvailable,
-      { tracks: cachedTracks },
-    );
+    return {
+      input: this.input,
+      search: this.search,
+    };
   }
 }
 

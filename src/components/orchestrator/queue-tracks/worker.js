@@ -2,7 +2,7 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {ProxiedActions} from "@common/worker.d.ts"
+ * @import {ActionsWithTunnel, ProxiedActions} from "@common/worker.d.ts"
  * @import {InputActions} from "@components/input/types.d.ts"
  * @import {Actions as QueueEngineActions} from "@components/engine/queue/types.d.ts"
  * @import {Actions} from "./types.d.ts"
@@ -13,11 +13,10 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @type {Actions["poolAvailable"]}
+ * @type {ActionsWithTunnel<Actions>["poolAvailable"]}
  */
-export async function poolAvailable(args) {
-  const { ports } = args;
-  const cachedTracks = args.tracks;
+export async function poolAvailable({ data, ports }) {
+  const cachedTracks = data;
 
   /** @type {ProxiedActions<InputActions>} */
   const input = workerProxy(() => ports.input);

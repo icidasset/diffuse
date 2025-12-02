@@ -1,4 +1,4 @@
-import { DiffuseElement, workerProxy } from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 import { listen } from "@common/worker.js";
 import { hash } from "@common/index.js";
@@ -23,7 +23,7 @@ class QueueEngine extends DiffuseElement {
     super();
 
     /** @type {ProxiedActions<Actions & State>} */
-    this.proxy = workerProxy(this.workerLink);
+    this.proxy = this.workerProxy();
 
     this.add = this.proxy.add;
     this.fill = this.proxy.fill;

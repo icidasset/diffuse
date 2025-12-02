@@ -1,10 +1,8 @@
-import { DiffuseElement, workerProxy } from "@common/element.js";
-import { transfer, workerLink, workerTunnel } from "@common/worker.js";
+import { DiffuseElement, whenElementsDefined } from "@common/element.js";
 
 /**
  * @import {ProxiedActions, Tunnel} from "@common/worker.d.ts"
  * @import {InputActions, InputElement} from "@components/input/types.d.ts"
- * @import {AdditionalActions} from "./types.d.ts"
  */
 
 /**
@@ -26,7 +24,7 @@ class InputConfigurator extends DiffuseElement {
     super();
 
     /** @type {ProxiedActions<InputActions>} */
-    const proxy = workerProxy(this.workerLink);
+    const proxy = this.workerProxy();
 
     this.consult = proxy.consult;
     this.contextualize = proxy.contextualize;
@@ -35,70 +33,32 @@ class InputConfigurator extends DiffuseElement {
     this.resolve = proxy.resolve;
   }
 
-  // WORKER
+  // LIFECYCLE
 
   /**
    * @override
    */
-  createWorker() {
-    const worker = super.createWorker();
-
-    // Wait for child elements to be rendered
-    setTimeout(() => this.configureWorker(worker), 0);
-
-    return worker;
+  async connectedCallback() {
+    super.connectedCallback();
+    await whenElementsDefined(this.inputs());
   }
 
-  // 🛠️
+  // WORKERS
 
   /**
-   * @param {Worker | SharedWorker} worker
+   * @override
    */
-  async configureWorker(worker) {
-    const inputs = await this.inputTunnels();
-
-    // Check if any inputs are present
-    if (inputs.length === 0) return;
-
-    // Configure worker with input ports
-    const args = transfer({
-      ports: Object.fromEntries(inputs.map((input) => {
-        return [input.element.SCHEME, input.tunnel.port];
-      })),
-    }, inputs.map((i) => i.tunnel.port));
-
-    /** @type {ProxiedActions<AdditionalActions>} */
-    const proxy = workerProxy(() => workerLink(worker));
-    proxy.configure(args);
+  dependencies() {
+    return this.inputs();
   }
 
-  async inputTunnels() {
-    const inputElements = this.children;
-    const inputs = await Array.from(inputElements).reduce(
-      /**
-       * @param {Promise<Array<Input>>} acc
-       * @param {Element} el
-       */
-      async (acc, el) => {
-        const rec = await acc;
-        await customElements.whenDefined(el.localName);
-
-        const element = /** @type {InputElement} */ (el);
-        const worker = element.worker();
-        const tunnel = workerTunnel(worker);
-
-        const item = {
-          element,
-          tunnel,
-          worker,
-        };
-
-        return [...rec, item];
-      },
-      Promise.resolve([]),
+  inputs() {
+    return Object.fromEntries(
+      Array.from(this.children).map((element) => {
+        const input = /** @type {InputElement} */ (element);
+        return [input.SCHEME, input];
+      }),
     );
-
-    return inputs;
   }
 }
 

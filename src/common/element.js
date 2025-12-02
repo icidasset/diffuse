@@ -1,9 +1,15 @@
 import QS from "query-string";
-import { RPCChannel } from "@kunkun/kkrpc";
+import { decodeMessage, encodeMessage, RPCChannel } from "@kunkun/kkrpc";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import { rpc, transfer, workerLink, workerTunnel } from "./worker.js";
+import {
+  rpc,
+  transfer,
+  workerLink,
+  workerProxy,
+  workerTunnel,
+} from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
 // RE-EXPORT
@@ -21,11 +27,8 @@ export { workerLink, workerProxy, workerTunnel } from "./worker.js";
  * around rendering and managing signals.
  */
 export class DiffuseElement extends HTMLElement {
+  #connected = Promise.withResolvers();
   #disposables = /** @type {Array<() => void>} */ ([]);
-
-  #teardown() {
-    this.#disposables.forEach((fn) => fn());
-  }
 
   constructor() {
     super();
@@ -55,6 +58,26 @@ export class DiffuseElement extends HTMLElement {
     this.#disposables.push(effect(fn));
   }
 
+  /** */
+  forceRender() {
+    return this.#render();
+  }
+
+  /** */
+  nameWithGroup() {
+    return `${this.constructor.prototype.constructor.NAME}/${this.group}`;
+  }
+
+  /** */
+  root() {
+    return (this.shadowRoot ?? this);
+  }
+
+  /** */
+  whenConnected() {
+    return this.#connected.promise;
+  }
+
   /**
    * Avoid replacing the whole subtree,
    * morph the existing DOM into the new given tree.
@@ -70,19 +93,11 @@ export class DiffuseElement extends HTMLElement {
     render(tmp, this.root());
   }
 
-  /** */
-  forceRender() {
-    return this.#render();
-  }
-
-  /** */
-  root() {
-    return (this.shadowRoot ?? this);
-  }
-
   // LIFECYCLE
 
   connectedCallback() {
+    this.#connected.resolve(null);
+
     if (!("render" in this && typeof this.render === "function")) return;
 
     this.effect(() => {
@@ -95,7 +110,11 @@ export class DiffuseElement extends HTMLElement {
     this.#teardown();
   }
 
-  // WORKER
+  #teardown() {
+    this.#disposables.forEach((fn) => fn());
+  }
+
+  // WORKERS
 
   /** @type {undefined | Worker | SharedWorker} */
   #worker;
@@ -115,7 +134,7 @@ export class DiffuseElement extends HTMLElement {
     );
 
     // Setup worker
-    const name = `${NAME}/${this.group}`;
+    const name = this.nameWithGroup();
     const url = import.meta.resolve("./" + WORKER_URL) + `?${query}`;
 
     let worker;
@@ -129,6 +148,20 @@ export class DiffuseElement extends HTMLElement {
     return worker;
   }
 
+  /** */
+  dependencies() {
+    return Object.fromEntries(
+      Array.from(this.children).flatMap((element) => {
+        if ("nameWithGroup" in element === false) {
+          return [];
+        }
+
+        const d = /** @type {DiffuseElement} */ (element);
+        return [[d.localName, d]];
+      }),
+    );
+  }
+
   worker() {
     this.#worker ??= this.createWorker();
     return this.#worker;
@@ -137,6 +170,74 @@ export class DiffuseElement extends HTMLElement {
   workerLink() {
     const worker = this.worker();
     return workerLink(worker);
+  }
+
+  /**
+   * @template {Record<string, (...args: any[]) => any>} Actions
+   * @returns {ProxiedActions<Actions>}
+   */
+  workerProxy() {
+    return workerProxy(
+      () => this.workerTunnel().port,
+    );
+  }
+
+  /**
+   * @param {{ newWorker?: boolean }} [opts]
+   */
+  workerTunnel({ newWorker } = {}) {
+    // Creates a MessagePort that is connected to the worker.
+    // All the dependencies are added automatically.
+    const worker = newWorker ? this.createWorker() : this.worker();
+    const deps = this.dependencies();
+
+    let toWorker;
+
+    if (Object.keys(deps).length) {
+      toWorker =
+        /**
+         * @param {any} msg
+         */
+        async (msg) => {
+          /** @type {Array<[string, Tunnel]>} */
+          const ports = Object.entries(deps).map(
+            /** @param {[string, DiffuseElement]} _ */
+            ([k, v]) => [k, v.workerTunnel()],
+          );
+
+          const decoded = await decodeMessage(msg);
+          const data = {
+            data: Array.isArray(decoded.args) ? decoded.args[0] : decoded.args,
+            ports: Object.fromEntries(ports.map(([k, v]) => {
+              return [k, v.port];
+            })),
+          };
+
+          const encoded = encodeMessage(
+            {
+              ...decoded,
+              args: Array.isArray(decoded.args)
+                ? [data, ...decoded.args.slice(1)]
+                : decoded.args,
+            },
+            {},
+            true,
+            ports.map(([_k, v]) => v.port),
+          );
+
+          this.#disposables.push(() => {
+            ports.forEach(([_k, v]) => v.disconnect());
+          });
+
+          return {
+            data: encoded,
+            transfer: ports.map(([_k, v]) => v.port),
+          };
+        };
+    }
+
+    const tunnel = workerTunnel(worker, { toWorker });
+    return tunnel;
   }
 }
 
@@ -171,13 +272,13 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
   /**
    * @template {Record<string, { strategy: "leaderOnly" | "replicate", fn: (...args: any[]) => any }>} ActionsWithStrategy
    * @template {{ [K in keyof ActionsWithStrategy]: ActionsWithStrategy[K]["fn"] }} Actions
-   * @param {string} name
+   * @param {string} channelName
    * @param {ActionsWithStrategy} actionsWithStrategy
    */
-  broadcast(name, actionsWithStrategy) {
+  broadcast(channelName, actionsWithStrategy) {
     if (this.broadcasted) return;
 
-    const channel = new BroadcastChannel(name);
+    const channel = new BroadcastChannel(channelName);
     const msg = new MessageChannel();
 
     /**
@@ -185,7 +286,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
      */
 
     this.broadcasted = true;
-    this.name = name;
+    this.channelName = channelName;
 
     const _rpc = rpc(
       msg.port2,
@@ -291,7 +392,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     // Grab a lock if it isn't acquired yet,
     // and hold it until `this.lock.promise` resolves.
     navigator.locks.request(
-      `${this.name}/lock`,
+      `${this.channelName}/lock`,
       { ifAvailable: true },
       (lock) => {
         this.#status.resolve(
@@ -305,15 +406,15 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     // Additionally, wait for lock if needed.
     this.#status.promise.then((status) => {
       if (status.leader) {
-        console.log(`🧙 Elected leader for: ${this.name}`);
+        console.log(`🧙 Elected leader for: ${this.channelName}`);
       } else {
-        console.log(`🔮 Watching leader: ${this.name}`);
+        console.log(`🔮 Watching leader: ${this.channelName}`);
       }
 
       // Wait for leadership
       if (status.leader === false) {
         navigator.locks.request(
-          `${this.name}/lock`,
+          `${this.channelName}/lock`,
           () => {
             this.#status = Promise.withResolvers();
             this.#status.resolve({ leader: true, initialLeader: false });
@@ -334,56 +435,6 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     super.disconnectedCallback();
     this.#lock.resolve();
   }
-}
-
-/**
- * @template {string} A
- * @template {ProvisionedWorkers<A>} B
- * @template {Record<string, any>} C
- * @template R
- * @param {Promise<B> | undefined} provisions
- * @param {(args: C & { ports: { [K in keyof B]: MessagePort } }) => R} fn
- * @param {C} fnArgs
- * @returns {Promise<R>}
- */
-export async function callWorkerWithProvisions(provisions, fn, fnArgs) {
-  const workers = await provisions;
-  if (!workers) throw new Error("Workers not defined");
-
-  /** @type {Array<[keyof B, Tunnel]>} */
-  const tunnels = Object.keys(workers).map(
-    (value) => {
-      const key = /** @type {keyof B} */ (value);
-      const worker = workers[key];
-      return [key, workerTunnel(worker)];
-    },
-  );
-
-  const ports = /** @type {{ [K in keyof B]: MessagePort }} */ (
-    Object.fromEntries(
-      tunnels.map(([key, tunnel]) => {
-        return [key, tunnel.port];
-      }),
-    )
-  );
-
-  const args = {
-    ...fnArgs,
-    ports,
-  };
-
-  const result = await fn(transfer(
-    args,
-    tunnels.map(([_key, tunnel]) => {
-      return tunnel.port;
-    }),
-  ));
-
-  tunnels.forEach(([_key, tunnel]) => {
-    tunnel.disconnect();
-  });
-
-  return result;
 }
 
 /**
@@ -433,32 +484,9 @@ export function query(parent, attribute) {
 }
 
 /**
- * @template {Record<string, DiffuseElement>} T
- * @param {T} elements
+ * @param {Record<string, Worker | SharedWorker>} workers
  */
-export async function provisionWorkers(elements) {
-  await whenElementsDefined(elements);
-
-  /** @type {Record<string, ProvisionedWorker>} */
-  const provisions = {};
-
-  Object.entries(elements).forEach(([key, element]) => {
-    const worker = element.createWorker();
-    provisions[key] = worker;
-  });
-
-  const casted =
-    /** @type {{ [K in keyof T]: ProvisionedWorker}} */ (provisions);
-
-  return casted;
-}
-
-/**
- * @param {ProvisionedWorkers<any> | undefined} workers
- */
-export function terminateProvisions(workers) {
-  if (!workers) return;
-
+export function terminateWorkers(workers) {
   Object.values(workers).forEach((worker) => {
     if (worker instanceof Worker) worker.terminate();
   });

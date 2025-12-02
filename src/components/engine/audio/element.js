@@ -46,7 +46,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
     // Setup leader election if shared
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(
-        `${this.constructor.prototype.constructor.NAME}/${this.group}`,
+        this.nameWithGroup(),
         {
           adjustVolume: { strategy: "leaderOnly", fn: this.adjustVolume },
           pause: { strategy: "leaderOnly", fn: this.pause },

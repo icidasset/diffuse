@@ -4,7 +4,7 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {ProxiedActions} from "@common/worker.d.ts"
+ * @import {ActionsWithTunnel, ProxiedActions} from "@common/worker.d.ts"
  * @import {InputActions} from "@components/input/types.d.ts"
  * @import {Actions as MetadataProcessorActions} from "@components/processor/metadata/types.d.ts"
  * @import {Actions} from "./types.d.ts"
@@ -15,11 +15,10 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @type {Actions["process"]}
+ * @type {ActionsWithTunnel<Actions>["process"]}
  */
-export async function process(args) {
-  const { ports } = args;
-  const cachedTracks = args.tracks;
+export async function process({ data, ports }) {
+  const cachedTracks = data;
 
   /** @type {ProxiedActions<InputActions>} */
   const input = workerProxy(() => ports.input);

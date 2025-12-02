@@ -1,4 +1,4 @@
-import { RPCChannel } from "@kunkun/kkrpc";
+import { RPCChannel, transfer } from "@kunkun/kkrpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
@@ -9,7 +9,7 @@ export { getTransferables } from "@okikio/transferables";
 export { transfer } from "@kunkun/kkrpc";
 
 /**
- * @import {Announcement, MessengerRealm, ProxiedActions, Tunnel} from "./worker.d.ts"
+ * @import {Announcement, Dependencies, MessengerRealm, ProxiedActions, Tunnel} from "./worker.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -90,8 +90,11 @@ export function workerProxy(workerLinkCreator) {
   // Create proxy that creates RPC API when needed
   const proxy = new Proxy(() => {}, {
     get: (_target, prop) => {
-      const api = ensureAPI();
-      return api[prop.toString()];
+      /** @param {Parameters<Actions[any]>} args */
+      return (...args) => {
+        const api = ensureAPI();
+        return api[prop.toString()](...args);
+      };
     },
   });
 
@@ -100,24 +103,31 @@ export function workerProxy(workerLinkCreator) {
 
 /**
  * @param {MessagePort | Worker | SharedWorker} workerOrLink
+ * @param {{ fromWorker?: (message: any) => Promise<{ data: any, transfer?: Transferable[] }>; toWorker?: (message: any) => Promise<{ data: any, transfer?: Transferable[] }> }} [hooks]
  * @returns {Tunnel}
  */
-export function workerTunnel(workerOrLink) {
+export function workerTunnel(workerOrLink, hooks = {}) {
   const link = workerOrLink instanceof SharedWorker
     ? workerLink(workerOrLink)
     : workerOrLink;
   const channel = new MessageChannel();
 
-  channel.port1.addEventListener("message", (event) => {
-    link.postMessage(event.data);
+  channel.port1.addEventListener("message", async (event) => {
+    // Send to worker
+    const { data, transfer } = await hooks?.toWorker?.(event.data) ??
+      { data: event.data };
+    link.postMessage(data, { transfer });
   });
 
   /**
    * @param {Event} event
    */
-  const workerListener = (event) => {
+  const workerListener = async (event) => {
+    // Receive from worker
     const msgEvent = /** @type {MessageEvent} */ (event);
-    channel.port1.postMessage(msgEvent.data);
+    const { data, transfer } = await hooks?.fromWorker?.(msgEvent.data) ??
+      { data: msgEvent.data };
+    channel.port1.postMessage(data, { transfer });
   };
 
   link.addEventListener("message", workerListener);

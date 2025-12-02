@@ -1,16 +1,8 @@
-import {
-  BroadcastableDiffuseElement,
-  callWorkerWithProvisions,
-  query,
-  terminateProvisions,
-  whenElementsDefined,
-  workerProxy,
-} from "@common/element.js";
+import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { untracked } from "@common/signal.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {ProvisionedWorkers} from "@common/element.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
@@ -34,18 +26,23 @@ class QueueTracksOrchestrator extends BroadcastableDiffuseElement {
   /** @type {ProxiedActions<Actions>} */
   #proxy;
 
-  /** @type {Promise<ProvisionedWorkers<"input" | "queue">> | undefined} */
-  #workers = undefined;
-
   constructor() {
     super();
-    this.#proxy = workerProxy(this.workerLink);
+    this.#proxy = this.workerProxy();
   }
+
+  // LIFECYCLE
 
   /**
    * @override
    */
   async connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      this.broadcast(this.nameWithGroup(), {});
+    }
+
+    // Super
     super.connectedCallback();
 
     /** @type {InputElement} */
@@ -62,17 +59,10 @@ class QueueTracksOrchestrator extends BroadcastableDiffuseElement {
     this.output = output;
     this.queue = queue;
 
-    // Create new workers
-    this.#workers = whenElementsDefined({ input, queue }).then(() => {
-      return {
-        input: input.createWorker(),
-        queue: queue.worker(),
-      };
-    });
-
     // When defined
     await customElements.whenDefined(this.input.localName);
     await customElements.whenDefined(this.output.localName);
+    await customElements.whenDefined(this.queue.localName);
 
     // Watch tracks collection
     this.effect(() => {
@@ -82,31 +72,29 @@ class QueueTracksOrchestrator extends BroadcastableDiffuseElement {
         if (!isLeader) return;
 
         untracked(() =>
-          this.poolAvailable(tracks.filter((t) => t.kind !== "placeholder"))
+          this.#proxy.poolAvailable(
+            tracks.filter((t) => t.kind !== "placeholder"),
+          )
         );
       });
     });
+
+    // 🌸
   }
+
+  // WORKERS
 
   /**
    * @override
    */
-  async disconnectedCallback() {
-    super.disconnectedCallback();
-    terminateProvisions(await this.#workers);
-  }
+  dependencies() {
+    if (!this.input) throw new Error("Input element not defined yet");
+    if (!this.queue) throw new Error("Queue element not defined yet");
 
-  // 🌊
-
-  /**
-   * @param {Track[]} cachedTracks
-   */
-  async poolAvailable(cachedTracks) {
-    return await callWorkerWithProvisions(
-      this.#workers,
-      this.#proxy.poolAvailable,
-      { tracks: cachedTracks },
-    );
+    return {
+      input: this.input,
+      queue: this.queue,
+    };
   }
 }
 

@@ -1,16 +1,8 @@
-import {
-  callWorkerWithProvisions,
-  DiffuseElement,
-  provisionWorkers,
-  query,
-  terminateProvisions,
-  workerProxy,
-} from "@common/element.js";
+import { DiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {ProvisionedWorkers} from "@common/element.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
@@ -34,12 +26,9 @@ class ProcessTracksOrchestrator extends DiffuseElement {
   /** @type {ProxiedActions<Actions>} */
   #proxy;
 
-  /** @type {Promise<ProvisionedWorkers<"input" | "metadataProcessor">> | undefined} */
-  #workers = undefined;
-
   constructor() {
     super();
-    this.#proxy = workerProxy(this.workerLink);
+    this.#proxy = this.workerProxy();
   }
 
   // SIGNALS
@@ -72,9 +61,6 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     this.output = output;
     this.metadataProcessor = metadataProcessor;
 
-    // Create new workers
-    this.#workers = provisionWorkers({ input, metadataProcessor });
-
     // Wait until defined
     await customElements.whenDefined(output.localName);
 
@@ -87,12 +73,21 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     });
   }
 
+  // WORKERS
+
   /**
    * @override
    */
-  async disconnectedCallback() {
-    super.disconnectedCallback();
-    terminateProvisions(await this.#workers);
+  dependencies() {
+    if (!this.input) throw new Error("Input element not defined yet");
+    if (!this.metadataProcessor) {
+      throw new Error("Metadata processor element not defined yet");
+    }
+
+    return {
+      input: this.input,
+      metadataProcessor: this.metadataProcessor,
+    };
   }
 
   // ACTIONS
@@ -105,11 +100,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
     console.log("🪵 Processing initiated");
 
     const cachedTracks = this.output.tracks.collection();
-    const result = await callWorkerWithProvisions(
-      this.#workers,
-      this.#proxy.process,
-      { tracks: cachedTracks },
-    );
+    const result = await this.#proxy.process(cachedTracks);
 
     // Save if collection changed
     if (result) await this.output.tracks.save(result);

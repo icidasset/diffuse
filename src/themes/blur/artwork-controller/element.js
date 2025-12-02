@@ -85,6 +85,8 @@ class ArtworkController extends DiffuseElement {
    * @param {Track | null} track
    */
   async #changeArtwork(track) {
+    console.log("QUEUE NOW", track);
+
     if (!track) {
       this.#artwork.value = [];
       return;
@@ -97,6 +99,8 @@ class ArtworkController extends DiffuseElement {
       method: "HEAD",
       uri: track.uri,
     });
+
+    console.log(resGet, this.input);
 
     if (!resGet) return;
 
@@ -116,6 +120,9 @@ class ArtworkController extends DiffuseElement {
       };
 
     const art = await this.artwork?.artwork(request) ?? [];
+
+    console.log(art);
+
     const currCacheId = track ? await trackArtworkCacheId(track) : undefined;
     if (cacheId === currCacheId) this.#artwork.set(art);
   }

@@ -6,43 +6,23 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
 /**
  * @import {Track} from "@definitions/types.d.ts";
  * @import {GroupConsult, InputActions} from "@components/input/types.d.ts"
- * @import {ProxiedActions} from "@common/worker.d.ts"
- * @import {AdditionalActions} from "./types.d.ts"
+ * @import {ActionsWithTunnel, ProxiedActions} from "@common/worker.d.ts"
  */
-
-/** @type {Record<string, ProxiedActions<InputActions>>} */
-const inputs = {};
-
-////////////////////////////////////////////
-// ACTIONS
-////////////////////////////////////////////
-
-/**
- * @type {AdditionalActions["configure"]}
- */
-export function configure({ ports }) {
-  Object.keys(ports).forEach((key) => {
-    inputs[key.toLowerCase()] = workerProxy(() => {
-      const port = ports[key];
-      port.start();
-      return port;
-    });
-  });
-}
 
 ////////////////////////////////////////////
 // INPUT ACTIONS
 ////////////////////////////////////////////
 
 /**
- * @type {InputActions['consult']}
+ * @type {ActionsWithTunnel<InputActions>['consult']}
  */
-export async function consult(fileUriOrScheme) {
+export async function consult({ data, ports }) {
+  const fileUriOrScheme = data;
   const scheme = fileUriOrScheme.includes(":")
     ? URI.parse(fileUriOrScheme).scheme || fileUriOrScheme
     : fileUriOrScheme;
 
-  const input = grabInput(scheme);
+  const input = grabInput(scheme, ports);
 
   if (!input) {
     return { supported: false, reason: "Unsupported scheme" };
@@ -52,13 +32,14 @@ export async function consult(fileUriOrScheme) {
 }
 
 /**
- * @type {InputActions['contextualize']}
+ * @type {ActionsWithTunnel<InputActions>['contextualize']}
  */
-export async function contextualize(tracks) {
-  const groups = groupTracks(tracks);
+export async function contextualize({ data, ports }) {
+  const tracks = data;
+  const groups = groupTracks(tracks, ports);
   const promises = Object.entries(groups).map(
     async ([scheme, tracksGroup]) => {
-      const input = grabInput(scheme);
+      const input = grabInput(scheme, ports);
       if (!input || tracksGroup.length === 0) return;
       return await input.contextualize(tracksGroup);
     },
@@ -68,15 +49,16 @@ export async function contextualize(tracks) {
 }
 
 /**
- * @type {InputActions['groupConsult']}
+ * @type {ActionsWithTunnel<InputActions>['groupConsult']}
  */
-export async function groupConsult(tracks) {
+export async function groupConsult({ data, ports }) {
+  const tracks = data;
   const groups = groupTracksPerScheme(tracks);
 
   /** @type {GroupConsult[]} */
   const consultations = await Promise.all(
     Object.keys(groups).map(async (scheme) => {
-      const input = grabInput(scheme);
+      const input = grabInput(scheme, ports);
 
       if (!input) {
         return {
@@ -98,12 +80,12 @@ export async function groupConsult(tracks) {
 }
 
 /**
- * @type {InputActions['list']}
+ * @type {ActionsWithTunnel<InputActions>['list']}
  */
-export async function list(cachedTracks = []) {
-  const groups = await groupConsult(cachedTracks);
+export async function list({ data, ports }) {
+  const groups = await groupConsult({ data, ports });
 
-  Object.keys(inputs).forEach((scheme) => {
+  Object.keys(ports).forEach((scheme) => {
     if (!groups[scheme]) groups[scheme] = { available: true, tracks: [] };
   });
 
@@ -111,7 +93,7 @@ export async function list(cachedTracks = []) {
     async ([scheme, { available, tracks }]) => {
       if (!available) return tracks;
 
-      const input = grabInput(scheme);
+      const input = grabInput(scheme, ports);
       if (!input) return tracks;
       return await input.list(tracks);
     },
@@ -124,21 +106,16 @@ export async function list(cachedTracks = []) {
 }
 
 /**
- * @type {InputActions['resolve']}
+ * @type {ActionsWithTunnel<InputActions>['resolve']}
  */
-export async function resolve(args) {
-  const scheme = args.uri.split(":", 1)[0];
-  const input = grabInput(scheme);
+export async function resolve({ data, ports }) {
+  const uri = data.uri;
+  const scheme = uri.split(":", 1)[0];
+  const input = grabInput(scheme, ports);
   if (!input) return undefined;
 
-  try {
-    return await input.resolve(args);
-  } catch (err) {
-    console.error(
-      `[configurator/input] Resolve error for scheme '${scheme}'.`,
-      err,
-    );
-  }
+  const result = await input.resolve(data);
+  return result;
 }
 
 ////////////////////////////////////////////
@@ -152,9 +129,6 @@ ostiary((context) => {
     groupConsult,
     list,
     resolve,
-
-    // Additional
-    configure,
   });
 });
 
@@ -164,19 +138,28 @@ ostiary((context) => {
 
 /**
  * @param {string} scheme
+ * @param {Record<string, MessagePort>} ports
+ * @returns {ProxiedActions<InputActions> | null}
  */
-function grabInput(scheme) {
-  return inputs[scheme.toLowerCase()];
+function grabInput(scheme, ports) {
+  const port = ports[scheme];
+  if (!port) return null;
+
+  return workerProxy(() => {
+    port.start();
+    return port;
+  });
 }
 
 /**
  * @param {Track[]} tracks
+ * @param {Record<string, MessagePort>} ports
  */
-function groupTracks(tracks) {
+function groupTracks(tracks, ports) {
   const grouped = groupTracksPerScheme(
     tracks,
     Object.fromEntries(
-      Object.keys(inputs).map((k) => {
+      Object.keys(ports).map((k) => {
         return [k, []];
       }),
     ),

@@ -55,7 +55,10 @@ export function config() {
     const trigger = queue.now();
     const _other_trigger = queue.poolHash();
 
-    queue.fill({ amount: 10, shuffled: true });
-    if (!trigger) queue.shift();
+    oqt.isLeader().then((isLeader) => {
+      if (!isLeader) return;
+      queue.fill({ amount: 10, shuffled: true });
+      if (!trigger) queue.shift();
+    });
   });
 }
