@@ -10,6 +10,7 @@ import { signal } from "@common/signal.js";
 /**
  * @import {RenderArg} from "@common/element.d.ts"
  * @import {Track} from "@definitions/types.d.ts"
+ * @import {AudioStateReadOnly} from "@components/engine/audio/types.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {Artwork} from "@components/processor/artwork/types.d.ts"
  */
@@ -22,7 +23,7 @@ class ArtworkController extends DiffuseElement {
 
   // SIGNALS
 
-  // activeTrack = signal(/** @type {Track | undefined} */ (undefined));
+  // #audio = signal(/** @type {AudioStateReadOnly | undefined} */ (undefined));
   #artwork = signal(/** @type {Artwork[]} */ ([]));
   #artworkColor = signal(/** @type {string | undefined} */ (undefined));
   #artworkLightMode = signal(false);
@@ -62,31 +63,126 @@ class ArtworkController extends DiffuseElement {
       // Changed artwork based on active queue item.
       const debouncedChangeArtwork = debounce(
         1000,
-        this.#changeArtwork.bind(this),
+        this.#setArtwork.bind(this),
       );
 
       this.effect(() => {
         debouncedChangeArtwork(queue.now());
       });
 
-      // Force render when elements are defined
+      this.effect(() => {
+        const curr = queue.now();
+        const aud = curr ? audio.state(curr.id) : undefined;
 
-      // this.effect(() => {
-      //   this.forceRender();
-      // });
+        console.log("NOW", curr, aud);
+      });
+
+      this.effect(() => this.#changeArtworkInDOM());
+      this.effect(() => this.#formatTimestamps());
+      this.effect(() => this.#lightOrDark());
     });
-
-    this.#artworkEffects();
   }
 
-  // EFFECTS
+  ////////////////////////////////////////////
+  // ✨ EFFECTS
+  // 🖼️ Artwork
+  ////////////////////////////////////////////
+
+  /** @type {Record<string, ReturnType<typeof setTimeout>>} */
+  #timeouts = {};
+
+  #changeArtworkInDOM() {
+    const art = this.#artwork.value;
+
+    // No artwork, fade out existing.
+    if (art.length === 0) {
+      this.root().querySelectorAll(".artwork img").forEach((el) => {
+        const element = /** @type {HTMLElement} */ (el);
+        element.style.opacity = "0";
+        const hash = element.getAttribute("data-hash");
+        if (hash) {
+          this.#timeouts[hash] = setTimeout(() => element.remove(), 1000);
+        }
+      });
+      return;
+    }
+
+    // Determine if the current artwork needs to be replaced.
+    const hash = xxh32r(art[0].bytes).toString();
+
+    /** @type {HTMLImageElement | null} */
+    const existingArtwork = this.root().querySelector(
+      `.artwork img[data-hash="${hash}"]`,
+    );
+
+    // If the artwork is the same, stop here.
+    if (existingArtwork) {
+      const timeoutId = this.#timeouts[hash];
+      if (timeoutId) clearTimeout(timeoutId);
+      existingArtwork.style.opacity = "1";
+      return;
+    }
+
+    // Add new artwork
+    const blob = new Blob(
+      [/** @type {ArrayBuffer} */ (art[0].bytes.buffer)],
+      { type: art[0].mime },
+    );
+    const url = URL.createObjectURL(blob);
+
+    /** @type {HTMLImageElement} */
+    const img = document.createElement("img");
+    img.setAttribute("data-hash", hash);
+    img.src = url;
+
+    // Extract average color
+    img.onload = () => {
+      const fac = new FastAverageColor();
+      const color = fac.getColor(img);
+      const rgb = color.value;
+      const o = Math.round(
+        (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000,
+      );
+
+      this.#artworkColor.value = color.rgba;
+      this.#artworkLightMode.value = o > 165;
+
+      /** @type {HTMLElement | null} */
+      const bg = this.root().querySelector(".controller__background");
+      if (bg) bg.style.backgroundColor = color.rgba;
+
+      /** @type {HTMLElement | null} */
+      const main = this.root().querySelector("main");
+      if (main) main.style.backgroundColor = color.rgba;
+
+      img.style.opacity = "1";
+
+      this.root().querySelectorAll(".artwork img").forEach((el) => {
+        if (el === img) return;
+
+        const element = /** @type {HTMLElement} */ (el);
+        element.style.opacity = "0";
+        this.#timeouts[hash] = setTimeout(() => element.remove(), 1000);
+      });
+    };
+
+    // Insert new artwork
+    this.root().querySelector(".artwork")?.appendChild(img);
+  }
+
+  #lightOrDark() {
+    const controller = this.root().querySelector(".controller__inner");
+    if (!controller) return;
+
+    if (this.#artworkLightMode.value) {
+      controller.classList.add("controller__inner--light-mode");
+    } else controller.classList.remove("controller__inner--light-mode");
+  }
 
   /**
    * @param {Track | null} track
    */
-  async #changeArtwork(track) {
-    console.log("QUEUE NOW", track);
-
+  async #setArtwork(track) {
     if (!track) {
       this.#artwork.value = [];
       return;
@@ -99,8 +195,6 @@ class ArtworkController extends DiffuseElement {
       method: "HEAD",
       uri: track.uri,
     });
-
-    console.log(resGet, this.input);
 
     if (!resGet) return;
 
@@ -121,101 +215,72 @@ class ArtworkController extends DiffuseElement {
 
     const art = await this.artwork?.artwork(request) ?? [];
 
-    console.log(art);
+    console.log("ART", art);
 
     const currCacheId = track ? await trackArtworkCacheId(track) : undefined;
     if (cacheId === currCacheId) this.#artwork.set(art);
   }
 
-  #artworkEffects() {
-    /** @type {Record<string, ReturnType<typeof setTimeout>>} */
-    const timeouts = {};
+  ////////////////////////////////////////////
+  // ✨ EFFECTS
+  // ⌚️ Time
+  ////////////////////////////////////////////
+  #formatTimestamps() {
+    const curr = this.queue?.now?.() ?? undefined;
+    const audio = curr ? this.audio?.state(curr.id) : undefined;
+    const prog = audio?.progress() ?? 0;
+    const dur = curr?.stats?.duration ?? audio?.duration();
 
-    this.effect(() => {
-      const art = this.#artwork.value;
+    if (audio && dur != undefined && !isNaN(dur)) {
+      const p = Temporal.Duration.from({
+        milliseconds: Math.round(dur * prog * 1000),
+      }).round({
+        largestUnit: "hours",
+      });
 
-      // No artwork, fade out existing.
-      if (art.length === 0) {
-        this.root().querySelectorAll(".artwork img").forEach((el) => {
-          const element = /** @type {HTMLElement} */ (el);
-          element.style.opacity = "0";
-          const hash = element.getAttribute("data-hash");
-          if (hash) timeouts[hash] = setTimeout(() => element.remove(), 1000);
+      const d = Temporal.Duration.from({ milliseconds: Math.round(dur * 1000) })
+        .round({
+          largestUnit: "hours",
         });
-        return;
-      }
 
-      // Determine if the current artwork needs to be replaced.
-      const hash = xxh32r(art[0].bytes).toString();
+      this.#time.value = this.#formatTime(p);
+      this.#duration.value = this.#formatTime(d);
+    } else {
+      this.#time.value = "0:00";
+      this.#duration.value = "0:00";
+    }
+  }
 
-      /** @type {HTMLImageElement | null} */
-      const existingArtwork = this.root().querySelector(
-        `.artwork img[data-hash="${hash}"]`,
-      );
+  /**
+   * @param {Temporal.Duration} duration
+   */
+  #formatTime(duration) {
+    return `${duration.hours > 0 ? duration.hours.toFixed(0) + ":" : ""}${
+      duration.hours > 0
+        ? (duration.minutes > 9
+          ? duration.minutes.toFixed(0)
+          : "0" + duration.minutes.toFixed(0))
+        : duration.minutes.toFixed(0)
+    }:${
+      duration.seconds > 9
+        ? duration.seconds.toFixed(0)
+        : "0" + duration.seconds.toFixed(0)
+    }`;
+  }
 
-      // If the artwork is the same, stop here.
-      if (existingArtwork) {
-        const timeoutId = timeouts[hash];
-        if (timeoutId) clearTimeout(timeoutId);
-        existingArtwork.style.opacity = "1";
-        return;
-      }
+  // EVENTS
 
-      // Add new artwork
-      const blob = new Blob(
-        [/** @type {ArrayBuffer} */ (art[0].bytes.buffer)],
-        { type: art[0].mime },
-      );
-      const url = URL.createObjectURL(blob);
+  /**
+   * @param {MouseEvent} event
+   */
+  seek(event) {
+    const target = event.target
+      ? /** @type {HTMLProgressElement} */ (event.target)
+      : null;
+    const percentage = target ? event.offsetX / target.clientWidth : 0;
+    const audioId = this.queue?.now()?.id;
 
-      /** @type {HTMLImageElement} */
-      const img = document.createElement("img");
-      img.setAttribute("data-hash", hash);
-      img.src = url;
-
-      // Extract average color
-      img.onload = () => {
-        const fac = new FastAverageColor();
-        const color = fac.getColor(img);
-        const rgb = color.value;
-        const o = Math.round(
-          (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000,
-        );
-
-        this.#artworkColor.value = color.rgba;
-        this.#artworkLightMode.value = o > 165;
-
-        /** @type {HTMLElement | null} */
-        const bg = this.root().querySelector(".controller__background");
-        if (bg) bg.style.backgroundColor = color.rgba;
-
-        /** @type {HTMLElement | null} */
-        const main = this.root().querySelector("main");
-        if (main) main.style.backgroundColor = color.rgba;
-
-        img.style.opacity = "1";
-
-        this.root().querySelectorAll(".artwork img").forEach((el) => {
-          if (el === img) return;
-
-          const element = /** @type {HTMLElement} */ (el);
-          element.style.opacity = "0";
-          timeouts[hash] = setTimeout(() => element.remove(), 1000);
-        });
-      };
-
-      // Insert new artwork
-      this.root().querySelector(".artwork")?.appendChild(img);
-    });
-
-    this.effect(() => {
-      const controller = this.root().querySelector(".controller__inner");
-      if (!controller) return;
-
-      if (this.#artworkLightMode.value) {
-        controller.classList.add("controller__inner--light-mode");
-      } else controller.classList.remove("controller__inner--light-mode");
-    });
+    if (audioId) this.audio?.seek({ audioId, percentage });
   }
 
   // RENDER
@@ -247,8 +312,26 @@ class ArtworkController extends DiffuseElement {
 
           <div class="controller__background"></div>
 
-          <!-- Content -->
-          <section class="controller__inner"></section>
+          <section class="controller__inner">
+            <!-- Now playing -->
+            <cite>
+              <strong>Diffuse</strong>
+              <br />
+              <span></span>
+            </cite>
+
+            <!-- Progress -->
+            <div class="progress">
+              <progress max="100" value="${0}"></progress>
+              <div class="timestamps">
+                <time datetime="${this.#time.value}">${this.#time.value}</time>
+                <time datetime="${this.#time.value}">${this.#duration
+                  .value}</time>
+              </div>
+            </div>
+
+            <!-- Controls -->
+          </section>
         </section>
       </main>
     `;

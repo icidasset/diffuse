@@ -23,13 +23,24 @@ styles:
 
 <script type="module">
   import { config } from "../../../common/constituents/default.js"
+  import QueueAudioOrchestrator from "../../../components/orchestrator/queue-audio/element.js";
 
   import "../../../components/engine/audio/element.js"
   import "../../../components/processor/artwork/element.js"
 
   // Prepare default constituents setup
-  config()
+  const defaults = config()
 
   // Only then initiate artwork controller
   import("./element.js")
+
+  // Orchestrators
+
+  const oqa = new QueueAudioOrchestrator();
+  oqa.setAttribute("group", defaults.GROUP);
+  oqa.setAttribute("input-selector", defaults.configurator.input.localName);
+  oqa.setAttribute("audio-engine-selector", "de-audio");
+  oqa.setAttribute("queue-engine-selector", defaults.engine.queue.localName);
+
+  document.body.append(oqa);
 </script>

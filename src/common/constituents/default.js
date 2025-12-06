@@ -61,4 +61,32 @@ export function config() {
       if (!trigger) queue.shift();
     });
   });
+
+  // Return elements
+  return {
+    GROUP,
+
+    configurator: {
+      input,
+    },
+    engine: {
+      queue,
+    },
+    input: {
+      openSubsonic,
+      s3,
+    },
+    orchestrator: {
+      queueTracks: oqt,
+    },
+    output: {
+      indexedDB: idb,
+    },
+    transformer: {
+      jsonStringOutput: json,
+      refiner: {
+        default: refiner,
+      },
+    },
+  };
 }

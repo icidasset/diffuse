@@ -1,4 +1,4 @@
-import type { SignalReader } from "@common/signal.d.ts";
+import type { Signal, SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {
   adjustVolume: (_: { audioId?: string; volume: number }) => void;
@@ -15,27 +15,40 @@ export type Audio = {
   id: string;
   isPreload: boolean;
   mimeType?: string;
+  // NOTE: Initial progress
   progress?: number;
   url: string;
 };
 
 export type AudioState = {
-  duration: number;
-  id: string;
-  hasEnded: boolean;
-  loadingState:
-    | "initialisation"
-    | "loading"
-    | "loaded"
-    | {
-      error: { code: number };
-    };
-  isPlaying: boolean;
-  isPreload: boolean;
-  mimeType?: string;
-  progress: number;
-  url: string;
+  duration: Signal<number>;
+  hasEnded: Signal<boolean>;
+  isPlaying: Signal<boolean>;
+  isPreload: Signal<boolean>;
+  loadingState: Signal<LoadingState>;
+  progress: Signal<number>;
 };
+
+export type AudioStateReadOnly = {
+  id: string;
+  url: string;
+  mimeType: string | undefined;
+
+  duration: SignalReader<number>;
+  hasEnded: SignalReader<boolean>;
+  isPlaying: SignalReader<boolean>;
+  isPreload: SignalReader<boolean>;
+  loadingState: SignalReader<LoadingState>;
+  progress: SignalReader<number>;
+};
+
+export type LoadingState =
+  | "initialisation"
+  | "loading"
+  | "loaded"
+  | {
+    error: { code: number };
+  };
 
 export type State = {
   isPlaying: SignalReader<boolean>;

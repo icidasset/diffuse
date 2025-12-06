@@ -1,9 +1,10 @@
 import { BroadcastableDiffuseElement } from "@common/element.js";
-import { signal } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 
 /**
- * @import {Actions, Audio, AudioState, State} from "./types.d.ts"
+ * @import {Actions, Audio, AudioState, AudioStateReadOnly, LoadingState} from "./types.d.ts"
  * @import {RenderArg} from "@common/element.d.ts"
+ * @import {SignalReader} from "@common/signal.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -112,7 +113,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    */
   adjustVolume(args) {
     if (args.audioId) {
-      this.withAudioNode(args.audioId, (audio) => {
+      this.#withAudioNode(args.audioId, (audio) => {
         audio.volume = args.volume;
       });
     } else {
@@ -124,14 +125,14 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["pause"]}
    */
   pause({ audioId }) {
-    this.withAudioNode(audioId, (audio) => audio.pause());
+    this.#withAudioNode(audioId, (audio) => audio.pause());
   }
 
   /**
    * @type {Actions["play"]}
    */
   play({ audioId, volume }) {
-    this.withAudioNode(audioId, (audio, item) => {
+    this.#withAudioNode(audioId, (audio, item) => {
       audio.volume = volume ?? this.volume();
       audio.muted = false;
 
@@ -139,7 +140,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       if (!audio.isConnected) return;
 
       const promise = audio.play() || Promise.resolve();
-      item.state({ isPlaying: true });
+      item.$state.isPlaying.set(true);
 
       promise.catch((e) => {
         if (!audio.isConnected) {
@@ -148,7 +149,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         const err =
           "Couldn't play audio automatically. Please resume playback manually.";
         console.error(err, e);
-        item.state({ isPlaying: false });
+        item.$state.isPlaying.set(false);
       });
     });
   }
@@ -157,7 +158,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["reload"]}
    */
   reload(args) {
-    this.withAudioNode(args.audioId, (audio, item) => {
+    this.#withAudioNode(args.audioId, (audio, item) => {
       if (audio.readyState === 0 || audio.error?.code === 2) {
         audio.load();
 
@@ -179,7 +180,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["seek"]}
    */
   seek({ audioId, percentage }) {
-    this.withAudioNode(audioId, (audio) => {
+    this.#withAudioNode(audioId, (audio) => {
       if (!isNaN(audio.duration)) {
         audio.currentTime = audio.duration * percentage;
       }
@@ -237,18 +238,51 @@ class AudioEngine extends BroadcastableDiffuseElement {
   // 🛠️
 
   /**
+   * Get the state of a single audio item.
+   *
    * @param {string} audioId
-   * @param {(audio: HTMLAudioElement, item: AudioEngineItem) => void} fn
+   * @returns {SignalReader<AudioStateReadOnly | undefined>}
    */
-  withAudioNode(audioId, fn) {
+  _state(audioId) {
+    return computed(() => {
+      const _trigger = this.#items.value;
+
+      const s = this.#itemElement(audioId)?.state;
+      return s ? { ...s } : undefined;
+    });
+  }
+
+  /**
+   * Get the state of a single audio item.
+   *
+   * @param {string} audioId
+   * @returns {AudioStateReadOnly | undefined}
+   */
+  state(audioId) {
+    return this._state(audioId)();
+  }
+
+  /**
+   * @param {string} audioId
+   */
+  #itemElement(audioId) {
     const node = this.querySelector(
       `de-audio-item[id="${audioId}"]:not([preload])`,
     );
 
     if (node) {
       const item = /** @type {AudioEngineItem} */ (node);
-      if (item) fn(item.audio, item);
+      return item;
     }
+  }
+
+  /**
+   * @param {string} audioId
+   * @param {(audio: HTMLAudioElement, item: AudioEngineItem) => void} fn
+   */
+  #withAudioNode(audioId, fn) {
+    const item = this.#itemElement(audioId);
+    if (item) fn(item.audio, item);
   }
 }
 
@@ -259,26 +293,21 @@ export default AudioEngine;
 ////////////////////////////////////////////
 
 class AudioEngineItem extends HTMLElement {
-  /**
-   * @type {AudioState}
-   */
-  #state;
-
   constructor() {
     super();
 
     const ip = this.getAttribute("initial-progress");
 
-    this.#state = {
-      duration: 0,
-      hasEnded: false,
-      id: this.id,
-      isPlaying: true,
-      isPreload: this.hasAttribute("preload"),
-      loadingState: "loading",
-      mimeType: this.getAttribute("mime-type") ?? undefined,
-      progress: ip ? parseFloat(ip) : 0,
-      url: this.getAttribute("url") ?? "",
+    /**
+     * @type {AudioState}
+     */
+    this.$state = {
+      duration: signal(0),
+      hasEnded: signal(false),
+      isPlaying: signal(true),
+      isPreload: signal(this.hasAttribute("preload")),
+      loadingState: signal(/** @type {LoadingState} */ ("loading")),
+      progress: signal(ip ? parseFloat(ip) : 0),
     };
 
     const audio = this.audio;
@@ -294,6 +323,31 @@ class AudioEngineItem extends HTMLElement {
     audio.addEventListener("waiting", this.waitingEvent);
   }
 
+  // LIFECYCLE
+
+  connectedCallback() {
+  }
+
+  // STATE
+
+  /**
+   * @type {AudioStateReadOnly}
+   */
+  get state() {
+    return {
+      id: this.id,
+      mimeType: (this.getAttribute("mime-type") ?? undefined),
+      url: (this.getAttribute("url") ?? ""),
+
+      duration: this.$state.duration.get,
+      hasEnded: this.$state.hasEnded.get,
+      isPlaying: this.$state.isPlaying.get,
+      isPreload: this.$state.isPreload.get,
+      loadingState: this.$state.loadingState.get,
+      progress: this.$state.progress.get,
+    };
+  }
+
   // RELATED ELEMENTS
 
   get audio() {
@@ -306,16 +360,6 @@ class AudioEngineItem extends HTMLElement {
     const el = this.closest("de-audio");
     if (el) return /** @type {AudioEngine} */ (el);
     else return null;
-  }
-
-  // STATE
-
-  /**
-   * @param {Partial<AudioState> | undefined} [s]
-   */
-  state(s) {
-    if (s) this.#state = { ...this.#state, ...s };
-    else return { ...this.#state };
   }
 
   // EVENTS
@@ -349,7 +393,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
     if (!isNaN(audio.duration)) {
-      engineItem(audio)?.state({ duration: audio.duration });
+      engineItem(audio)?.$state.duration.set(audio.duration);
     }
   }
 
@@ -360,7 +404,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     audio.currentTime = 0;
 
-    engineItem(audio)?.state({ hasEnded: true });
+    engineItem(audio)?.$state.hasEnded.set(true);
     engineItem(audio)?.engine?.$hasEnded.set(true);
   }
 
@@ -371,7 +415,7 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const code = audio.error?.code || 0;
 
-    engineItem(audio)?.state({ loadingState: { error: { code } } });
+    engineItem(audio)?.$state.loadingState.set({ error: { code } });
   }
 
   /**
@@ -381,12 +425,12 @@ class AudioEngineItem extends HTMLElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
     const item = engineItem(audio);
-    const itemState = item?.state();
+    const itemState = item?.$state;
     const ended = itemState
-      ? itemState.hasEnded || itemState.progress === 1
+      ? itemState.hasEnded.value || itemState.progress.value === 1
       : false;
 
-    item?.state({ isPlaying: false });
+    item?.$state.isPlaying.set(false);
     item?.engine?.$isPlaying.set(ended);
   }
 
@@ -396,7 +440,7 @@ class AudioEngineItem extends HTMLElement {
   playEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
-    engineItem(audio)?.state({ isPlaying: true });
+    engineItem(audio)?.$state.isPlaying.set(true);
     engineItem(audio)?.engine?.$isPlaying.set(true);
 
     // In case audio was preloaded:
@@ -416,11 +460,11 @@ class AudioEngineItem extends HTMLElement {
   timeupdateEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
-    engineItem(audio)?.state({
-      progress: isNaN(audio.duration) || audio.duration === 0
+    engineItem(audio)?.$state.progress.set(
+      isNaN(audio.duration) || audio.duration === 0
         ? 0
         : audio.currentTime / audio.duration,
-    });
+    );
   }
 
   /**
@@ -451,7 +495,7 @@ function engineItem(audio) {
  */
 function finishedLoading(event) {
   const audio = /** @type {HTMLAudioElement} */ (event.target);
-  engineItem(audio)?.state({ loadingState: "loaded" });
+  engineItem(audio)?.$state.loadingState.set("loaded");
 }
 
 /**
@@ -460,7 +504,7 @@ function finishedLoading(event) {
 function initiateLoading(event) {
   const audio = /** @type {HTMLAudioElement} */ (event.target);
   if (audio.readyState < 4) {
-    engineItem(audio)?.state({ loadingState: "loading" });
+    engineItem(audio)?.$state.loadingState.set("loading");
   }
 }
 
