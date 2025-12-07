@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement } from "@common/element.js";
+import { BroadcastableDiffuseElement, keyed } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 
 /**
@@ -10,7 +10,7 @@ import { computed, signal } from "@common/signal.js";
 ////////////////////////////////////////////
 // CONSTANTS
 ////////////////////////////////////////////
-const _SILENT_MP3 =
+const SILENT_MP3 =
   "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV";
 
 ////////////////////////////////////////////
@@ -201,31 +201,43 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
+    const ids = this.items().map((i) => i.id);
+
+    this.querySelectorAll("de-audio-item").forEach((element) => {
+      if (ids.includes(element.id)) return;
+
+      const source = element.querySelector("source");
+      if (source) source.src = SILENT_MP3;
+    });
+
     const nodes = this.items().map((audio) => {
       const ip = audio.progress === undefined
         ? "0"
         : JSON.stringify(audio.progress);
 
-      return html`
-        <de-audio-item
-          id="${audio.id}"
-          initial-progress="${ip}"
-          url="${audio.url}"
-          ${audio.isPreload ? "preload" : ""}
-          ${audio.mimeType ? 'mime-type="' + audio.mimeType + '"' : ""}
-        >
-          <audio
-            crossorigin="anonymous"
-            muted="true"
-            preload="auto"
+      return keyed(
+        audio.id,
+        html`
+          <de-audio-item
+            id="${audio.id}"
+            initial-progress="${ip}"
+            url="${audio.url}"
+            ${audio.isPreload ? "preload" : ""}
+            ${audio.mimeType ? 'mime-type="' + audio.mimeType + '"' : ""}
           >
-            <source
-              src="${audio.url}"
-              ${audio.mimeType ? 'type="' + audio.mimeType + '"' : ""}
-            />
-          </audio>
-        </de-audio-item>
-      `;
+            <audio
+              crossorigin="anonymous"
+              muted="true"
+              preload="auto"
+            >
+              <source
+                src="${audio.url}"
+                ${audio.mimeType ? 'type="' + audio.mimeType + '"' : ""}
+              />
+            </audio>
+          </de-audio-item>
+        `,
+      );
     });
 
     return html`

@@ -6,6 +6,8 @@ import { effect, signal } from "@common/signal.js";
 import { rpc, workerLink, workerProxy, workerTunnel } from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
+export { keyed } from "lit-html/directives/keyed.js";
+
 /**
  * @import {BroadcastingStatus, ProvisionedWorker, ProvisionedWorkers} from "./element.d.ts"
  * @import {ProxiedActions, Tunnel} from "./worker.d.ts";

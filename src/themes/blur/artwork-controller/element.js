@@ -5,34 +5,63 @@ import { debounce } from "throttle-debounce";
 
 import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
 import { trackArtworkCacheId } from "@common/index.js";
-import { signal } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
+ * @import {Signal} from "@common/signal.d.ts"
  * @import {Track} from "@definitions/types.d.ts"
- * @import {AudioStateReadOnly} from "@components/engine/audio/types.d.ts"
+ *
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {Artwork} from "@components/processor/artwork/types.d.ts"
+ * @import AudioEngine from "@components/engine/audio/element.js"
+ * @import QueueEngine from "@components/engine/queue/element.js"
+ * @import ArtworkProcessor from "@components/processor/artwork/element.js"
  */
 
 class ArtworkController extends DiffuseElement {
   constructor() {
     super();
-    this.attachShadow({ mode: "open" });
+
+    // Bind event handlers to self
+    this.next = this.next.bind(this);
+    this.playPause = this.playPause.bind(this);
+    this.previous = this.previous.bind(this);
+    this.seek = this.seek.bind(this);
   }
+
+  // VARIABLES
+
+  /** @type {number | undefined} */
+  #isLoadingTimeout = undefined;
 
   // SIGNALS
 
-  // #audio = signal(/** @type {AudioStateReadOnly | undefined} */ (undefined));
   #artwork = signal(/** @type {Artwork[]} */ ([]));
   #artworkColor = signal(/** @type {string | undefined} */ (undefined));
   #artworkLightMode = signal(false);
   #duration = signal("0:00");
-  // isLoading = signal(true);
-  // isPlaying = signal(false);
-  // progress = signal(0);
+  #isLoading = signal(false);
   #time = signal("0:00");
-  // volume = signal(0);
+
+  // SIGNALS - DEPENDENCIES
+
+  $artwork = signal(/** @type {ArtworkProcessor | undefined} */ (undefined));
+  $audio = signal(/** @type {AudioEngine | undefined} */ (undefined));
+  $input = signal(/** @type {InputElement | undefined} */ (undefined));
+  $queue = signal(/** @type {QueueEngine | undefined} */ (undefined));
+
+  // SIGNALS - COMPUTED
+
+  #audio = computed(() => {
+    const curr = this.$queue.value?.now();
+    return curr ? this.$audio.value?.state(curr.id) : undefined;
+  });
+
+  #isPlaying = computed(() => {
+    return !!this.$queue.value?.now() &&
+      this.$audio.value?.isPlaying() === true;
+  });
 
   // LIFECYCLE
 
@@ -42,22 +71,22 @@ class ArtworkController extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
 
-    /** @type {import("@components/processor/artwork/element.js").CLASS} */
+    /** @type {ArtworkProcessor} */
     const artwork = query(this, "artwork-processor-selector");
 
-    /** @type {import("@components/engine/audio/element.js").CLASS} */
+    /** @type {AudioEngine} */
     const audio = query(this, "audio-engine-selector");
 
     /** @type {InputElement} */
     const input = query(this, "input-selector");
 
-    /** @type {import("@components/engine/queue/element.js").CLASS} */
+    /** @type {QueueEngine} */
     const queue = query(this, "queue-engine-selector");
 
-    this.artwork = artwork;
-    this.audio = audio;
-    this.input = input;
-    this.queue = queue;
+    this.$artwork.value = artwork;
+    this.$audio.value = audio;
+    this.$input.value = input;
+    this.$queue.value = queue;
 
     whenElementsDefined({ audio, artwork, input, queue }).then(() => {
       // Changed artwork based on active queue item.
@@ -66,20 +95,32 @@ class ArtworkController extends DiffuseElement {
         this.#setArtwork.bind(this),
       );
 
-      this.effect(() => {
-        debouncedChangeArtwork(queue.now());
-      });
+      // this.effect(() => {
+      //   debouncedChangeArtwork(queue.now());
+      // });
 
-      this.effect(() => {
-        const curr = queue.now();
-        const aud = curr ? audio.state(curr.id) : undefined;
-
-        console.log("NOW", curr, aud);
-      });
-
-      this.effect(() => this.#changeArtworkInDOM());
+      // this.effect(() => this.#changeArtworkInDOM());
       this.effect(() => this.#formatTimestamps());
       this.effect(() => this.#lightOrDark());
+
+      this.effect(() => {
+        const now = !!queue.now();
+        const bool = !now ||
+          (now && this.#audio()?.loadingState() !== "loaded");
+
+        if (this.#isLoadingTimeout) {
+          clearTimeout(this.#isLoadingTimeout);
+        }
+
+        if (bool) {
+          this.#isLoadingTimeout = setTimeout(
+            () => this.#isLoading.value = true,
+            2000,
+          );
+        } else {
+          this.#isLoading.set(false);
+        }
+      });
     });
   }
 
@@ -190,8 +231,12 @@ class ArtworkController extends DiffuseElement {
 
     const cacheId = await trackArtworkCacheId(track);
 
-    const resGet = await this.input?.resolve({ method: "GET", uri: track.uri });
-    const resHead = await this.input?.resolve({
+    const resGet = await this.$input.value?.resolve({
+      method: "GET",
+      uri: track.uri,
+    });
+
+    const resHead = await this.$input.value?.resolve({
       method: "HEAD",
       uri: track.uri,
     });
@@ -213,7 +258,7 @@ class ArtworkController extends DiffuseElement {
         },
       };
 
-    const art = await this.artwork?.artwork(request) ?? [];
+    const art = await this.$artwork.value?.artwork(request) ?? [];
 
     console.log("ART", art);
 
@@ -226,8 +271,8 @@ class ArtworkController extends DiffuseElement {
   // ⌚️ Time
   ////////////////////////////////////////////
   #formatTimestamps() {
-    const curr = this.queue?.now?.() ?? undefined;
-    const audio = curr ? this.audio?.state(curr.id) : undefined;
+    const curr = this.$queue.value?.now?.() ?? undefined;
+    const audio = this.#audio();
     const prog = audio?.progress() ?? 0;
     const dur = curr?.stats?.duration ?? audio?.duration();
 
@@ -270,6 +315,24 @@ class ArtworkController extends DiffuseElement {
 
   // EVENTS
 
+  playPause() {
+    const audioId = this.$queue.value?.now()?.id;
+
+    if (this.#isPlaying() && audioId) {
+      this.$audio.value?.pause({ audioId });
+    } else if (audioId) {
+      this.$audio.value?.play({ audioId });
+    }
+  }
+
+  previous() {
+    this.$queue.value?.unshift();
+  }
+
+  next() {
+    this.$queue.value?.shift();
+  }
+
   /**
    * @param {MouseEvent} event
    */
@@ -278,9 +341,9 @@ class ArtworkController extends DiffuseElement {
       ? /** @type {HTMLProgressElement} */ (event.target)
       : null;
     const percentage = target ? event.offsetX / target.clientWidth : 0;
-    const audioId = this.queue?.now()?.id;
+    const audioId = this.$queue.value?.now()?.id;
 
-    if (audioId) this.audio?.seek({ audioId, percentage });
+    if (audioId) this.$audio.value?.seek({ audioId, percentage });
   }
 
   // RENDER
@@ -291,7 +354,6 @@ class ArtworkController extends DiffuseElement {
   render({ html }) {
     return html`
       <style>
-      @import "../../../styles/vendor/phosphor/fill/style.css";
       @import "./element.css";
       </style>
 
@@ -315,14 +377,16 @@ class ArtworkController extends DiffuseElement {
           <section class="controller__inner">
             <!-- Now playing -->
             <cite>
-              <strong>Diffuse</strong>
+              <strong>${this.$queue.value?.now()?.tags?.title ||
+                "Diffuse"}</strong>
               <br />
-              <span></span>
+              <span style="font-style: italic"></span>
             </cite>
 
             <!-- Progress -->
-            <div class="progress">
-              <progress max="100" value="${0}"></progress>
+            <div class="progress" @click="${this.seek}">
+              <progress max="100" value="${(this.#audio()?.progress() ??
+                0) * 100}"></progress>
               <div class="timestamps">
                 <time datetime="${this.#time.value}">${this.#time.value}</time>
                 <time datetime="${this.#time.value}">${this.#duration
@@ -331,6 +395,42 @@ class ArtworkController extends DiffuseElement {
             </div>
 
             <!-- Controls -->
+            <menu>
+              <!-- previous -->
+              <li @click="${this.previous}">
+                <i class="ph-fill ph-rewind" title="Previous track"></i>
+              </li>
+              <!-- loading ... -->
+              <div
+                class="animate-bounce menu__loader"
+                style="display: ${this.#isLoading.value ? `inherit` : `none`};"
+              >
+                <i class="ph-fill ph-vinyl-record" title="Loading ..."></i>
+              </div>
+              <!-- play -->
+              <li
+                @click="${this.playPause}"
+                style="display: ${!this.#isLoading.value &&
+                    !this.#isPlaying()
+                  ? `inline`
+                  : `none`};"
+              >
+                <i class="ph-fill ph-play" title="Play"></i>
+              </li>
+              <!-- pause -->
+              <li
+                @click="${this.playPause}"
+                style="display: ${!this.#isLoading.value && this.#isPlaying()
+                  ? `inline`
+                  : `none`};"
+              >
+                <i class="ph-fill ph-pause" title="Pause"></i>
+              </li>
+              <!-- next -->
+              <li @click="${this.next}">
+                <i class="ph-fill ph-fast-forward" title="Next track"></i>
+              </li>
+            </menu>
           </section>
         </section>
       </main>

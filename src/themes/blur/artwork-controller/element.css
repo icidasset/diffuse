@@ -163,9 +163,10 @@ cite {
   transform-origin: center;
 }
 
-.controller command {
+.controller li {
   cursor: pointer;
   line-height: 0;
+  list-style: none;
   transition-duration: var(--transition-durition);
   transition-property: opacity;
 }

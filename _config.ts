@@ -64,11 +64,15 @@ site.remoteFile(
 
 site.add("/definitions");
 
+// PHOSPHOR ICONS
+
 function phosphor(path: string) {
   site.remoteFile(
     `styles/vendor/phosphor/${path}`,
     import.meta.resolve(`./node_modules/@phosphor-icons/web/src/${path}`),
   );
+
+  site.add(`styles/vendor/phosphor/${path}`);
 }
 
 phosphor("fill/style.css");
@@ -76,8 +80,6 @@ phosphor("fill/Phosphor-Fill.svg");
 phosphor("fill/Phosphor-Fill.ttf");
 phosphor("fill/Phosphor-Fill.woff");
 phosphor("fill/Phosphor-Fill.woff2");
-
-// PHOSPHOR ICONS
 
 // MISC
 
