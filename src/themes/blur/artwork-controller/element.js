@@ -3,13 +3,17 @@ import { Temporal } from "@js-temporal/polyfill";
 import { xxh32r } from "xxh32/dist/raw.js";
 import { debounce } from "throttle-debounce";
 
-import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
+import {
+  DiffuseElement,
+  keyed,
+  query,
+  whenElementsDefined,
+} from "@common/element.js";
 import { trackArtworkCacheId } from "@common/index.js";
 import { computed, signal } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
- * @import {Signal} from "@common/signal.d.ts"
  * @import {Track} from "@definitions/types.d.ts"
  *
  * @import {InputElement} from "@components/input/types.d.ts"
@@ -22,12 +26,17 @@ import { computed, signal } from "@common/signal.js";
 class ArtworkController extends DiffuseElement {
   constructor() {
     super();
+    this.attachShadow({ mode: "open" });
 
     // Bind event handlers to self
+    this.artworkLoaded = this.artworkLoaded.bind(this);
+    this.fullVolume = this.fullVolume.bind(this);
+    this.mute = this.mute.bind(this);
     this.next = this.next.bind(this);
     this.playPause = this.playPause.bind(this);
     this.previous = this.previous.bind(this);
     this.seek = this.seek.bind(this);
+    this.setVolume = this.setVolume.bind(this);
   }
 
   // VARIABLES
@@ -95,11 +104,10 @@ class ArtworkController extends DiffuseElement {
         this.#setArtwork.bind(this),
       );
 
-      // this.effect(() => {
-      //   debouncedChangeArtwork(queue.now());
-      // });
+      this.effect(() => {
+        debouncedChangeArtwork(queue.now());
+      });
 
-      // this.effect(() => this.#changeArtworkInDOM());
       this.effect(() => this.#formatTimestamps());
       this.effect(() => this.#lightOrDark());
 
@@ -128,88 +136,6 @@ class ArtworkController extends DiffuseElement {
   // ✨ EFFECTS
   // 🖼️ Artwork
   ////////////////////////////////////////////
-
-  /** @type {Record<string, ReturnType<typeof setTimeout>>} */
-  #timeouts = {};
-
-  #changeArtworkInDOM() {
-    const art = this.#artwork.value;
-
-    // No artwork, fade out existing.
-    if (art.length === 0) {
-      this.root().querySelectorAll(".artwork img").forEach((el) => {
-        const element = /** @type {HTMLElement} */ (el);
-        element.style.opacity = "0";
-        const hash = element.getAttribute("data-hash");
-        if (hash) {
-          this.#timeouts[hash] = setTimeout(() => element.remove(), 1000);
-        }
-      });
-      return;
-    }
-
-    // Determine if the current artwork needs to be replaced.
-    const hash = xxh32r(art[0].bytes).toString();
-
-    /** @type {HTMLImageElement | null} */
-    const existingArtwork = this.root().querySelector(
-      `.artwork img[data-hash="${hash}"]`,
-    );
-
-    // If the artwork is the same, stop here.
-    if (existingArtwork) {
-      const timeoutId = this.#timeouts[hash];
-      if (timeoutId) clearTimeout(timeoutId);
-      existingArtwork.style.opacity = "1";
-      return;
-    }
-
-    // Add new artwork
-    const blob = new Blob(
-      [/** @type {ArrayBuffer} */ (art[0].bytes.buffer)],
-      { type: art[0].mime },
-    );
-    const url = URL.createObjectURL(blob);
-
-    /** @type {HTMLImageElement} */
-    const img = document.createElement("img");
-    img.setAttribute("data-hash", hash);
-    img.src = url;
-
-    // Extract average color
-    img.onload = () => {
-      const fac = new FastAverageColor();
-      const color = fac.getColor(img);
-      const rgb = color.value;
-      const o = Math.round(
-        (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000,
-      );
-
-      this.#artworkColor.value = color.rgba;
-      this.#artworkLightMode.value = o > 165;
-
-      /** @type {HTMLElement | null} */
-      const bg = this.root().querySelector(".controller__background");
-      if (bg) bg.style.backgroundColor = color.rgba;
-
-      /** @type {HTMLElement | null} */
-      const main = this.root().querySelector("main");
-      if (main) main.style.backgroundColor = color.rgba;
-
-      img.style.opacity = "1";
-
-      this.root().querySelectorAll(".artwork img").forEach((el) => {
-        if (el === img) return;
-
-        const element = /** @type {HTMLElement} */ (el);
-        element.style.opacity = "0";
-        this.#timeouts[hash] = setTimeout(() => element.remove(), 1000);
-      });
-    };
-
-    // Insert new artwork
-    this.root().querySelector(".artwork")?.appendChild(img);
-  }
 
   #lightOrDark() {
     const controller = this.root().querySelector(".controller__inner");
@@ -259,9 +185,6 @@ class ArtworkController extends DiffuseElement {
       };
 
     const art = await this.$artwork.value?.artwork(request) ?? [];
-
-    console.log("ART", art);
-
     const currCacheId = track ? await trackArtworkCacheId(track) : undefined;
     if (cacheId === currCacheId) this.#artwork.set(art);
   }
@@ -315,6 +238,37 @@ class ArtworkController extends DiffuseElement {
 
   // EVENTS
 
+  /**
+   * @param {Event} event
+   */
+  artworkLoaded(event) {
+    if (!(event.target instanceof HTMLImageElement)) return;
+
+    const fac = new FastAverageColor();
+    const color = fac.getColor(event.target);
+    const rgb = color.value;
+    const o = Math.round(
+      (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000,
+    );
+
+    this.#artworkColor.value = color.rgba;
+    this.#artworkLightMode.value = o > 165;
+
+    event.target.style.opacity = "1";
+  }
+
+  fullVolume() {
+    this.$audio.value?.adjustVolume({ volume: 1 });
+  }
+
+  mute() {
+    this.$audio.value?.adjustVolume({ volume: 0 });
+  }
+
+  next() {
+    this.$queue.value?.shift();
+  }
+
   playPause() {
     const audioId = this.$queue.value?.now()?.id;
 
@@ -327,10 +281,6 @@ class ArtworkController extends DiffuseElement {
 
   previous() {
     this.$queue.value?.unshift();
-  }
-
-  next() {
-    this.$queue.value?.shift();
   }
 
   /**
@@ -346,19 +296,60 @@ class ArtworkController extends DiffuseElement {
     if (audioId) this.$audio.value?.seek({ audioId, percentage });
   }
 
+  /**
+   * @param {MouseEvent} event
+   */
+  setVolume(event) {
+    const target = event.target
+      ? /** @type {HTMLProgressElement} */ (event.target)
+      : null;
+
+    const percentage = target ? event.offsetX / target.clientWidth : 0;
+    this.$audio.value?.adjustVolume({ volume: percentage });
+  }
+
   // RENDER
 
   /**
    * @param {RenderArg} _
    */
   render({ html }) {
+    const activeQueueItem = this.$queue.value?.now();
+
+    // Artwork
+    const artwork = this.#artwork.value.map((art) => {
+      const hash = xxh32r(art.bytes).toString();
+      const blob = new Blob(
+        [/** @type {ArrayBuffer} */ (art.bytes.buffer)],
+        { type: art.mime },
+      );
+
+      const url = URL.createObjectURL(blob);
+
+      return keyed(
+        hash,
+        html`
+          <img @load="${this.artworkLoaded}" data-hash="${hash}" src="${url}" />
+        `,
+      );
+    });
+
     return html`
       <style>
+      @import "../../../styles/vendor/phosphor/fill/style.css";
       @import "./element.css";
       </style>
 
-      <main>
-        <section class="artwork"></section>
+      <main style="background-color: ${this.#artworkColor.value ??
+        `revert-layer`};">
+        <section class="artwork">
+          <label style="background: ${this.#artworkColor.value ??
+            `revert-layer`}; display: ${`block`};">
+            ${this.group}
+          </label>
+
+          ${artwork}
+        </section>
 
         <section class="controller">
           <div class="gradient-blur">
@@ -372,18 +363,30 @@ class ArtworkController extends DiffuseElement {
             <div></div>
           </div>
 
-          <div class="controller__background"></div>
+          <div
+            class="controller__background"
+            style="background-color: ${this.#artworkColor.value ??
+              `revert-layer`};"
+          >
+          </div>
 
           <section class="controller__inner">
-            <!-- Now playing -->
+            <!-- NOW PLAYING -->
+
             <cite>
-              <strong>${this.$queue.value?.now()?.tags?.title ||
+              <strong>${activeQueueItem?.tags?.title ||
                 "Diffuse"}</strong>
               <br />
-              <span style="font-style: italic"></span>
+              <span style="font-style: ${activeQueueItem
+                ? `normal`
+                : `italic`}">
+                ${activeQueueItem?.tags?.artist ??
+                  (activeQueueItem ? `Waiting on queue ...` : ``)}
+              </span>
             </cite>
 
-            <!-- Progress -->
+            <!-- PROGRESS -->
+
             <div class="progress" @click="${this.seek}">
               <progress max="100" value="${(this.#audio()?.progress() ??
                 0) * 100}"></progress>
@@ -394,12 +397,14 @@ class ArtworkController extends DiffuseElement {
               </div>
             </div>
 
-            <!-- Controls -->
+            <!-- CONTROLS -->
+
             <menu>
               <!-- previous -->
               <li @click="${this.previous}">
                 <i class="ph-fill ph-rewind" title="Previous track"></i>
               </li>
+
               <!-- loading ... -->
               <div
                 class="animate-bounce menu__loader"
@@ -407,6 +412,7 @@ class ArtworkController extends DiffuseElement {
               >
                 <i class="ph-fill ph-vinyl-record" title="Loading ..."></i>
               </div>
+
               <!-- play -->
               <li
                 @click="${this.playPause}"
@@ -417,6 +423,7 @@ class ArtworkController extends DiffuseElement {
               >
                 <i class="ph-fill ph-play" title="Play"></i>
               </li>
+
               <!-- pause -->
               <li
                 @click="${this.playPause}"
@@ -426,11 +433,24 @@ class ArtworkController extends DiffuseElement {
               >
                 <i class="ph-fill ph-pause" title="Pause"></i>
               </li>
+
               <!-- next -->
               <li @click="${this.next}">
                 <i class="ph-fill ph-fast-forward" title="Next track"></i>
               </li>
             </menu>
+
+            <!-- VOLUME -->
+
+            <footer>
+              <i @click="${this.mute}" class="ph-fill ph-speaker-none"></i>
+              <div @click="${this.setVolume}" class="progress-bar">
+                <progress max="100" value="${(this.$audio.value?.volume() ??
+                  0) * 100}"></progress>
+              </div>
+              <i @click="${this
+                .fullVolume}" class="ph-fill ph-speaker-high"></i>
+            </footer>
           </section>
         </section>
       </main>

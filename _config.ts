@@ -11,6 +11,9 @@ import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill
 
 const site = lume({
   src: "./src",
+  server: {
+    debugBar: false,
+  },
 });
 
 export default site;
