@@ -150,8 +150,6 @@ class ArtworkController extends DiffuseElement {
    * @param {Track | null} track
    */
   async #setArtwork(track) {
-    console.log("SET", track);
-
     if (!track) {
       this.#artwork.value = [];
       return;
