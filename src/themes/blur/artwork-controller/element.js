@@ -46,7 +46,7 @@ class ArtworkController extends DiffuseElement {
 
   // SIGNALS
 
-  #artwork = signal(/** @type {Artwork[]} */ ([]));
+  #artwork = signal(/** @type {Artwork[]} */ ([]), { eager: true });
   #artworkColor = signal(/** @type {string | undefined} */ (undefined));
   #artworkLightMode = signal(false);
   #duration = signal("0:00");
@@ -150,6 +150,8 @@ class ArtworkController extends DiffuseElement {
    * @param {Track | null} track
    */
   async #setArtwork(track) {
+    console.log("SET", track);
+
     if (!track) {
       this.#artwork.value = [];
       return;
