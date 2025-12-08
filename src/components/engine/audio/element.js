@@ -453,8 +453,11 @@ class AudioEngineItem extends HTMLElement {
   playEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
 
-    engineItem(audio)?.$state.isPlaying.set(true);
-    engineItem(audio)?.engine?.$isPlaying.set(true);
+    const item = engineItem(audio);
+    item?.$state.hasEnded.set(false);
+    item?.$state.isPlaying.set(true);
+    item?.engine?.$hasEnded.set(false);
+    item?.engine?.$isPlaying.set(true);
 
     // In case audio was preloaded:
     if (audio.readyState === 4) finishedLoading(event);
