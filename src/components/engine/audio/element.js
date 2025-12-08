@@ -94,11 +94,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
     // Monitor volume signal
     this.effect(() => {
-      Array.from(this.querySelectorAll("de-audio-item audio")).forEach(
+      Array.from(this.querySelectorAll("de-audio-item")).forEach(
         (node) => {
-          const audio = /** @type {HTMLAudioElement} */ (node);
-          if (audio.hasAttribute("preload")) return;
-          audio.volume = this.#volume.value;
+          const item = /** @type {AudioEngineItem} */ (node);
+          if (item.hasAttribute("preload")) return;
+          const audio = item.querySelector("audio");
+          if (audio) audio.volume = this.#volume.value;
         },
       );
 
