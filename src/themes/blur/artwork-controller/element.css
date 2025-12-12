@@ -1,5 +1,5 @@
 :host {
-  --transition-durition: 500ms;
+  --transition-durition: 750ms;
 }
 
 main {
@@ -47,8 +47,9 @@ main {
   left: var(--space-xs);
   letter-spacing: var(--tracking-wide);
   line-height: 1;
-  padding: 7px 6px 6px;
+  padding: 8px 6px;
   position: absolute;
+  text-box: trim-both cap alphabetic;
   text-transform: uppercase;
   top: var(--space-xs);
   transition:

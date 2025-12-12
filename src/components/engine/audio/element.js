@@ -1,4 +1,6 @@
-import { BroadcastableDiffuseElement, keyed } from "@common/element.js";
+import { keyed } from "lit-html/directives/keyed.js";
+
+import { BroadcastableDiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 
 /**

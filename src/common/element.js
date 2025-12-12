@@ -6,13 +6,13 @@ import { effect, signal } from "@common/signal.js";
 import { rpc, workerLink, workerProxy, workerTunnel } from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
-export { keyed } from "lit-html/directives/keyed.js";
-
 /**
  * @import {BroadcastingStatus, ProvisionedWorker, ProvisionedWorkers, WorkerOpts} from "./element.d.ts"
  * @import {ProxiedActions, Tunnel} from "./worker.d.ts";
  * @import {Signal} from "./signal.d.ts"
  */
+
+export const DEFAULT_GROUP = "default";
 
 /**
  * Base for custom elements, provides some utility functionality
@@ -25,7 +25,7 @@ export class DiffuseElement extends HTMLElement {
   constructor() {
     super();
 
-    this.group = this.getAttribute("group") ?? "default";
+    this.group = this.getAttribute("group") ?? DEFAULT_GROUP;
 
     this.worker = this.worker.bind(this);
     this.workerLink = this.workerLink.bind(this);

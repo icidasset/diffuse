@@ -3,18 +3,22 @@ import { Temporal } from "@js-temporal/polyfill";
 import { xxh32r } from "xxh32/dist/raw.js";
 import { debounce } from "throttle-debounce";
 
+import { cache } from "lit-html/directives/cache.js";
+import { guard } from "lit-html/directives/guard.js";
+import { keyed } from "lit-html/directives/keyed.js";
+
 import {
+  DEFAULT_GROUP,
   DiffuseElement,
-  keyed,
   query,
   whenElementsDefined,
 } from "@common/element.js";
+
 import { trackArtworkCacheId } from "@common/index.js";
-import { computed, signal } from "@common/signal.js";
+import { computed, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
- * @import {Track} from "@definitions/types.d.ts"
  *
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {Artwork} from "@components/processor/artwork/types.d.ts"
@@ -46,7 +50,14 @@ class ArtworkController extends DiffuseElement {
 
   // SIGNALS
 
-  #artwork = signal(/** @type {Artwork[]} */ ([]), { eager: true });
+  #artwork = signal(
+    /** @type {{ current: Artwork | null; previous: Artwork | null }} */ ({
+      current: null,
+      previous: null,
+    }),
+    { eager: true },
+  );
+
   #artworkColor = signal(/** @type {string | undefined} */ (undefined));
   #artworkLightMode = signal(false);
   #duration = signal("0:00");
@@ -105,7 +116,8 @@ class ArtworkController extends DiffuseElement {
       );
 
       this.effect(() => {
-        debouncedChangeArtwork(queue.now());
+        const _trigger = queue.now();
+        debouncedChangeArtwork();
       });
 
       this.effect(() => this.#formatTimestamps());
@@ -146,12 +158,15 @@ class ArtworkController extends DiffuseElement {
     } else controller.classList.remove("controller__inner--light-mode");
   }
 
-  /**
-   * @param {Track | null} track
-   */
-  async #setArtwork(track) {
+  /** */
+  async #setArtwork() {
+    const track = this.$queue.value?.now();
+    const currArtwork = untracked(this.#artwork.get);
+
     if (!track) {
-      this.#artwork.value = [];
+      if (currArtwork.current) {
+        this.#artwork.value = { current: null, previous: currArtwork.current };
+      }
       return;
     }
 
@@ -184,9 +199,23 @@ class ArtworkController extends DiffuseElement {
         },
       };
 
+    if (this.$queue.value?.now()?.id !== track.id) {
+      return;
+    }
+
     const art = await this.$artwork.value?.artwork(request) ?? [];
-    const currCacheId = track ? await trackArtworkCacheId(track) : undefined;
-    if (cacheId === currCacheId) this.#artwork.set(art);
+
+    const currTrack = this.$queue.value?.now();
+    const currCacheId = currTrack
+      ? await trackArtworkCacheId(currTrack)
+      : undefined;
+
+    if (cacheId === currCacheId) {
+      this.#artwork.set({
+        previous: currArtwork.current,
+        current: art[0] ?? null,
+      });
+    }
   }
 
   ////////////////////////////////////////////
@@ -317,7 +346,20 @@ class ArtworkController extends DiffuseElement {
     const activeQueueItem = this.$queue.value?.now();
 
     // Artwork
-    const artwork = this.#artwork.value.map((art) => {
+    const artworkArr = [
+      { key: "previous", value: this.#artwork.value.previous },
+      { key: "current", value: this.#artwork.value.current },
+    ];
+
+    const artwork = artworkArr.map(({ key, value }) => {
+      const art = value;
+
+      if (art === null) {
+        return html`
+
+        `;
+      }
+
       const hash = xxh32r(art.bytes).toString();
       const blob = new Blob(
         [/** @type {ArrayBuffer} */ (art.bytes.buffer)],
@@ -326,12 +368,18 @@ class ArtworkController extends DiffuseElement {
 
       const url = URL.createObjectURL(blob);
 
-      return keyed(
-        hash,
-        html`
-          <img @load="${this.artworkLoaded}" data-hash="${hash}" src="${url}" />
-        `,
-      );
+      return guard([hash], () =>
+        keyed(
+          hash,
+          html`
+            <img
+              @load="${this.artworkLoaded}"
+              data-hash="${hash}"
+              src="${url}"
+              style="opacity: ${key === `current` ? `0` : `1`}"
+            />
+          `,
+        ));
     });
 
     return html`
@@ -343,8 +391,9 @@ class ArtworkController extends DiffuseElement {
       <main style="background-color: ${this.#artworkColor.value ??
         `revert-layer`};">
         <section class="artwork">
-          <label style="background: ${this.#artworkColor.value ??
-            `revert-layer`}; display: ${`block`};">
+          <label style="display: ${this.group === DEFAULT_GROUP
+            ? `none`
+            : `block`};">
             ${this.group}
           </label>
 
