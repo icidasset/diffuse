@@ -9,7 +9,7 @@ import { BrowserPostMessageIo } from "./worker/rpc.js";
 export { keyed } from "lit-html/directives/keyed.js";
 
 /**
- * @import {BroadcastingStatus, ProvisionedWorker, ProvisionedWorkers} from "./element.d.ts"
+ * @import {BroadcastingStatus, ProvisionedWorker, ProvisionedWorkers, WorkerOpts} from "./element.d.ts"
  * @import {ProxiedActions, Tunnel} from "./worker.d.ts";
  * @import {Signal} from "./signal.d.ts"
  */
@@ -166,21 +166,25 @@ export class DiffuseElement extends HTMLElement {
 
   /**
    * @template {Record<string, (...args: any[]) => any>} Actions
+   * @param {WorkerOpts} [opts]
    * @returns {ProxiedActions<Actions>}
    */
-  workerProxy() {
+  workerProxy(opts) {
     return workerProxy(
-      () => this.workerTunnel().port,
+      () => this.workerTunnel(opts).port,
     );
   }
 
   /**
-   * @param {{ newWorker?: boolean }} [opts]
+   * @param {WorkerOpts} [opts]
    */
-  workerTunnel({ newWorker } = {}) {
+  workerTunnel({ forceNew } = {}) {
     // Creates a MessagePort that is connected to the worker.
     // All the dependencies are added automatically.
-    const worker = newWorker ? this.createWorker() : this.worker();
+    const worker = forceNew === true ||
+        (typeof forceNew === "object" && forceNew.self === true)
+      ? this.createWorker()
+      : this.worker();
     const deps = this.dependencies();
 
     let toWorker;
@@ -194,7 +198,12 @@ export class DiffuseElement extends HTMLElement {
           /** @type {Array<[string, Tunnel]>} */
           const ports = Object.entries(deps).map(
             /** @param {[string, DiffuseElement]} _ */
-            ([k, v]) => [k, v.workerTunnel()],
+            ([k, v]) => {
+              const n = typeof forceNew === "object"
+                ? forceNew.dependencies?.[k] ?? false
+                : false;
+              return [k, v.workerTunnel({ forceNew: n })];
+            },
           );
 
           const decoded = await decodeMessage(msg);

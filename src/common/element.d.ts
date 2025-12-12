@@ -13,3 +13,10 @@ export type RenderArg<State = undefined> = {
   html: HtmlTagFunction;
   state: State;
 };
+
+export type WorkerOpts = {
+  forceNew?: boolean | {
+    self?: boolean;
+    dependencies?: Record<string, boolean>;
+  };
+};

@@ -27,7 +27,13 @@ class SearchTracksOrchestrator extends DiffuseElement {
 
   constructor() {
     super();
-    this.#proxy = this.workerProxy();
+    this.#proxy = this.workerProxy({
+      forceNew: {
+        dependencies: {
+          input: true,
+        },
+      },
+    });
   }
 
   // LIFECYCLE
