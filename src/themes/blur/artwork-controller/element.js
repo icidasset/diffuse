@@ -51,7 +51,7 @@ class ArtworkController extends DiffuseElement {
   // SIGNALS
 
   #artwork = signal(
-    /** @type {{ current: (Artwork & { hash: string; loaded: boolean; url: string }) | null; previous: (Artwork & { hash: string; loaded: boolean; url: string }) | null }} */ ({
+    /** @type {{ current: (Artwork & { hash: string; index: number; loaded: boolean; url: string }) | null; previous: (Artwork & { hash: string; index: number; loaded: boolean; url: string }) | null }} */ ({
       current: null,
       previous: null,
     }),
@@ -224,7 +224,13 @@ class ArtworkController extends DiffuseElement {
           ? { ...currArtwork.current, loaded: false }
           : null,
         current: art
-          ? { ...art, hash: xxh32r(art.bytes).toString(), loaded: false, url }
+          ? {
+            ...art,
+            hash: xxh32r(art.bytes).toString(),
+            index: (currArtwork.current?.index ?? 0) + 1,
+            loaded: false,
+            url,
+          }
           : null,
       });
 
@@ -292,8 +298,6 @@ class ArtworkController extends DiffuseElement {
 
     const hash = event.target.getAttribute("data-hash");
     if (!hash) return;
-
-    // console.log("loaded", hash);
 
     if (hash !== this.#artwork.value.current?.hash) return;
     if (this.#artwork.value.current?.loaded) return;
@@ -378,7 +382,7 @@ class ArtworkController extends DiffuseElement {
       this.#artwork.value.current,
     ].sort((a, b) => {
       if (!a || !b) return 0;
-      return a.hash.localeCompare(b.hash);
+      return a.index % 2 ? 1 : -1;
     });
 
     const artwork = artworkArr.map((art) => {
