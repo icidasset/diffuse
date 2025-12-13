@@ -57,6 +57,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
           seek: { strategy: "leaderOnly", fn: this.seek },
           supply: { strategy: "replicate", fn: this.supply },
 
+          setHasEnded: { strategy: "replicate", fn: this.$hasEnded.set },
           setIsPlaying: { strategy: "replicate", fn: this.$isPlaying.set },
         },
       );
@@ -68,6 +69,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         this.seek = actions.seek;
         this.supply = actions.supply;
 
+        this.$hasEnded.set = actions.setHasEnded;
         this.$isPlaying.set = actions.setIsPlaying;
       }
     }
