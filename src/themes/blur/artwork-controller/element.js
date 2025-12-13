@@ -51,7 +51,7 @@ class ArtworkController extends DiffuseElement {
   // SIGNALS
 
   #artwork = signal(
-    /** @type {{ current: Artwork | null; previous: Artwork | null }} */ ({
+    /** @type {{ current: (Artwork & { hash: string; loaded: boolean; url: string }) | null; previous: (Artwork & { hash: string; loaded: boolean; url: string }) | null }} */ ({
       current: null,
       previous: null,
     }),
@@ -203,7 +203,7 @@ class ArtworkController extends DiffuseElement {
       return;
     }
 
-    const art = await this.$artwork.value?.artwork(request) ?? [];
+    const allArt = await this.$artwork.value?.artwork(request) ?? [];
 
     const currTrack = this.$queue.value?.now();
     const currCacheId = currTrack
@@ -211,9 +211,19 @@ class ArtworkController extends DiffuseElement {
       : undefined;
 
     if (cacheId === currCacheId) {
+      const art = allArt[0];
+      const blob = new Blob(
+        [/** @type {ArrayBuffer} */ (art.bytes.buffer)],
+        { type: art.mime },
+      );
+
+      const url = URL.createObjectURL(blob);
+
       this.#artwork.set({
         previous: currArtwork.current,
-        current: art[0] ?? null,
+        current: art
+          ? { ...art, hash: xxh32r(art.bytes).toString(), loaded: false, url }
+          : null,
       });
     }
   }
@@ -273,6 +283,14 @@ class ArtworkController extends DiffuseElement {
   artworkLoaded(event) {
     if (!(event.target instanceof HTMLImageElement)) return;
 
+    const hash = event.target.getAttribute("data-hash");
+    if (!hash) return;
+
+    console.log("loaded", hash);
+
+    if (hash !== this.#artwork.value.current?.hash) return;
+    if (this.#artwork.value.current?.loaded) return;
+
     const fac = new FastAverageColor();
     const color = fac.getColor(event.target);
     const rgb = color.value;
@@ -282,8 +300,10 @@ class ArtworkController extends DiffuseElement {
 
     this.#artworkColor.value = color.rgba;
     this.#artworkLightMode.value = o > 165;
-
-    event.target.style.opacity = "1";
+    this.#artwork.value = {
+      previous: this.#artwork.value.previous,
+      current: { ...this.#artwork.value.current, loaded: true },
+    };
   }
 
   fullVolume() {
@@ -347,39 +367,26 @@ class ArtworkController extends DiffuseElement {
 
     // Artwork
     const artworkArr = [
-      { key: "previous", value: this.#artwork.value.previous },
-      { key: "current", value: this.#artwork.value.current },
+      this.#artwork.value.previous,
+      this.#artwork.value.current,
     ];
 
-    const artwork = artworkArr.map(({ key, value }) => {
-      const art = value;
-
+    const artwork = artworkArr.map((art) => {
       if (art === null) {
-        return html`
-
-        `;
+        return null;
       }
 
-      const hash = xxh32r(art.bytes).toString();
-      const blob = new Blob(
-        [/** @type {ArrayBuffer} */ (art.bytes.buffer)],
-        { type: art.mime },
+      return keyed(
+        art.hash,
+        cache(html`
+          <img
+            @load="${this.artworkLoaded}"
+            data-hash="${art.hash}"
+            src="${art.url}"
+            style="opacity: ${art.loaded ? `1` : `0`}"
+          />
+        `),
       );
-
-      const url = URL.createObjectURL(blob);
-
-      return guard([hash], () =>
-        keyed(
-          hash,
-          html`
-            <img
-              @load="${this.artworkLoaded}"
-              data-hash="${hash}"
-              src="${url}"
-              style="opacity: ${key === `current` ? `0` : `1`}"
-            />
-          `,
-        ));
     });
 
     return html`
