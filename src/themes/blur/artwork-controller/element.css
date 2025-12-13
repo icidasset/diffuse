@@ -89,6 +89,7 @@ progress[value]::-moz-progress-bar {
 
 .controller {
   flex-shrink: 0;
+  opacity: 1 !important;
   padding: 0 var(--space-md) var(--space-md);
   position: relative;
 }
@@ -118,6 +119,14 @@ cite {
   display: block;
   font-style: normal;
   text-shadow: var(--text-shadow-sm);
+
+  & > span,
+  & > strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .controller__inner--light-mode cite {

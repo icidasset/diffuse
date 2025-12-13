@@ -1,11 +1,8 @@
 import { FastAverageColor } from "fast-average-color";
 import { Temporal } from "@js-temporal/polyfill";
-import { xxh32r } from "xxh32/dist/raw.js";
-import { debounce } from "throttle-debounce";
-
 import { cache } from "lit-html/directives/cache.js";
-import { guard } from "lit-html/directives/guard.js";
-import { keyed } from "lit-html/directives/keyed.js";
+import { debounce } from "throttle-debounce";
+import { xxh32r } from "xxh32/dist/raw.js";
 
 import {
   DEFAULT_GROUP,
@@ -61,7 +58,7 @@ class ArtworkController extends DiffuseElement {
   #artworkColor = signal(/** @type {string | undefined} */ (undefined));
   #artworkLightMode = signal(false);
   #duration = signal("0:00");
-  #isLoading = signal(false);
+  #isLoading = signal(true);
   #time = signal("0:00");
 
   // SIGNALS - DEPENDENCIES
@@ -403,6 +400,7 @@ class ArtworkController extends DiffuseElement {
     return html`
       <style>
       @import "../../../styles/vendor/phosphor/fill/style.css";
+      @import "../../../styles/animations.css";
       @import "./element.css";
       </style>
 
@@ -418,7 +416,7 @@ class ArtworkController extends DiffuseElement {
           ${artwork}
         </section>
 
-        <section class="controller">
+        <section class="controller" style="opacity: 0;">
           <div class="gradient-blur">
             <div></div>
             <div></div>
@@ -443,7 +441,6 @@ class ArtworkController extends DiffuseElement {
             <cite>
               <strong>${activeQueueItem?.tags?.title ||
                 "Diffuse"}</strong>
-              <br />
               <span style="font-style: ${activeQueueItem
                 ? `normal`
                 : `italic`}">
