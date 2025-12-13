@@ -220,11 +220,18 @@ class ArtworkController extends DiffuseElement {
       const url = URL.createObjectURL(blob);
 
       this.#artwork.set({
-        previous: currArtwork.current,
+        previous: currArtwork.current
+          ? { ...currArtwork.current, loaded: false }
+          : null,
         current: art
           ? { ...art, hash: xxh32r(art.bytes).toString(), loaded: false, url }
           : null,
       });
+
+      if (!art) {
+        this.#artworkColor.value = undefined;
+        this.#artworkLightMode.value = false;
+      }
     }
   }
 
@@ -286,7 +293,7 @@ class ArtworkController extends DiffuseElement {
     const hash = event.target.getAttribute("data-hash");
     if (!hash) return;
 
-    console.log("loaded", hash);
+    // console.log("loaded", hash);
 
     if (hash !== this.#artwork.value.current?.hash) return;
     if (this.#artwork.value.current?.loaded) return;
@@ -369,24 +376,24 @@ class ArtworkController extends DiffuseElement {
     const artworkArr = [
       this.#artwork.value.previous,
       this.#artwork.value.current,
-    ];
+    ].sort((a, b) => {
+      if (!a || !b) return 0;
+      return a.hash.localeCompare(b.hash);
+    });
 
     const artwork = artworkArr.map((art) => {
       if (art === null) {
         return null;
       }
 
-      return keyed(
-        art.hash,
-        cache(html`
-          <img
-            @load="${this.artworkLoaded}"
-            data-hash="${art.hash}"
-            src="${art.url}"
-            style="opacity: ${art.loaded ? `1` : `0`}"
-          />
-        `),
-      );
+      return cache(html`
+        <img
+          @load="${this.artworkLoaded}"
+          data-hash="${art.hash}"
+          src="${art.url}"
+          style="opacity: ${art.loaded ? `1` : `0`}"
+        />
+      `);
     });
 
     return html`
