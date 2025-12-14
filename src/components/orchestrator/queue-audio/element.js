@@ -50,7 +50,7 @@ class QueueAudioOrchestrator extends DiffuseElement {
     if (!this.queue) return;
 
     const activeTrack = this.queue.now();
-    const isPlaying = untracked(this.audio.isPlaying);
+    const isPlaying = untracked(this.audio.isPlaying());
 
     // Resolve URIs
     const resolvedUri = activeTrack
@@ -86,7 +86,10 @@ class QueueAudioOrchestrator extends DiffuseElement {
     if (!this.audio) return;
     if (!this.queue) return;
 
-    if (this.audio.hasEnded()) await this.queue.shift();
+    const now = this.queue.now();
+    const aud = now ? this.audio.state(now.id) : undefined;
+
+    if (aud?.hasEnded()) await this.queue.shift();
   }
 }
 

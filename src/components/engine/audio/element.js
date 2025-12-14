@@ -30,13 +30,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
   #items = signal(/** @type {Audio[]} */ ([]));
   #volume = signal(0.5);
 
-  $hasEnded = signal(false);
-  $isPlaying = signal(false);
-
   // STATE
 
-  hasEnded = this.$hasEnded.get;
-  isPlaying = this.$isPlaying.get;
   items = this.#items.get;
   volume = this.#volume.get;
 
@@ -56,9 +51,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
           play: { strategy: "leaderOnly", fn: this.play },
           seek: { strategy: "leaderOnly", fn: this.seek },
           supply: { strategy: "replicate", fn: this.supply },
-
-          setHasEnded: { strategy: "replicate", fn: this.$hasEnded.set },
-          setIsPlaying: { strategy: "replicate", fn: this.$isPlaying.set },
         },
       );
 
@@ -68,9 +60,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
         this.play = actions.play;
         this.seek = actions.seek;
         this.supply = actions.supply;
-
-        this.$hasEnded.set = actions.setHasEnded;
-        this.$isPlaying.set = actions.setIsPlaying;
       }
     }
 
@@ -270,6 +259,21 @@ class AudioEngine extends BroadcastableDiffuseElement {
   }
 
   /**
+   * Convenience signal to track if something is, or was, playing.
+   */
+  isPlaying() {
+    return computed(() => {
+      const item = this.items()?.[0];
+      if (!item) return false;
+
+      const state = this.state(item.id);
+      if (!state) return false;
+
+      return state.isPlaying() || state.hasEnded() || state.progress() === 1;
+    });
+  }
+
+  /**
    * Get the state of a single audio item.
    *
    * @param {string} audioId
@@ -321,7 +325,7 @@ class AudioEngineItem extends HTMLElement {
     this.$state = {
       duration: signal(0),
       hasEnded: signal(false),
-      isPlaying: signal(true),
+      isPlaying: signal(false),
       isPreload: signal(this.hasAttribute("preload")),
       loadingState: signal(/** @type {LoadingState} */ ("loading")),
       progress: signal(ip ? parseFloat(ip) : 0),
@@ -422,7 +426,6 @@ class AudioEngineItem extends HTMLElement {
     audio.currentTime = 0;
 
     engineItem(audio)?.$state.hasEnded.set(true);
-    engineItem(audio)?.engine?.$hasEnded.set(true);
   }
 
   /**
@@ -440,15 +443,9 @@ class AudioEngineItem extends HTMLElement {
    */
   pauseEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
-
     const item = engineItem(audio);
-    const itemState = item?.$state;
-    const ended = itemState
-      ? itemState.hasEnded.value || itemState.progress.value === 1
-      : false;
 
     item?.$state.isPlaying.set(false);
-    item?.engine?.$isPlaying.set(ended);
   }
 
   /**
@@ -460,8 +457,6 @@ class AudioEngineItem extends HTMLElement {
     const item = engineItem(audio);
     item?.$state.hasEnded.set(false);
     item?.$state.isPlaying.set(true);
-    item?.engine?.$hasEnded.set(false);
-    item?.engine?.$isPlaying.set(true);
 
     // In case audio was preloaded:
     if (audio.readyState === 4) finishedLoading(event);
