@@ -76,7 +76,7 @@ class ArtworkController extends DiffuseElement {
   });
 
   #isPlaying = computed(() => {
-    return this.$audio.value?.isPlaying()();
+    return this.$audio.value?.isPlaying();
   });
 
   // LIFECYCLE

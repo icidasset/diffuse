@@ -50,7 +50,7 @@ class QueueAudioOrchestrator extends DiffuseElement {
     if (!this.queue) return;
 
     const activeTrack = this.queue.now();
-    const isPlaying = untracked(this.audio.isPlaying());
+    const isPlaying = untracked(this.audio.isPlaying);
 
     // Resolve URIs
     const resolvedUri = activeTrack

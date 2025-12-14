@@ -25,6 +25,13 @@ const SILENT_MP3 =
 class AudioEngine extends BroadcastableDiffuseElement {
   static NAME = "diffuse/engine/audio";
 
+  constructor() {
+    super();
+
+    this.isPlaying = this.isPlaying.bind(this);
+    this.state = this.state.bind(this);
+  }
+
   // SIGNALS
 
   #items = signal(/** @type {Audio[]} */ ([]));
@@ -244,6 +251,21 @@ class AudioEngine extends BroadcastableDiffuseElement {
   // 🛠️
 
   /**
+   * Convenience signal to track if something is, or was, playing.
+   */
+  _isPlaying() {
+    return computed(() => {
+      const item = this.items()?.[0];
+      if (!item) return false;
+
+      const state = this.state(item.id);
+      if (!state) return false;
+
+      return state.isPlaying() || state.hasEnded() || state.progress() === 1;
+    });
+  }
+
+  /**
    * Get the state of a single audio item.
    *
    * @param {string} audioId
@@ -262,15 +284,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * Convenience signal to track if something is, or was, playing.
    */
   isPlaying() {
-    return computed(() => {
-      const item = this.items()?.[0];
-      if (!item) return false;
-
-      const state = this.state(item.id);
-      if (!state) return false;
-
-      return state.isPlaying() || state.hasEnded() || state.progress() === 1;
-    });
+    return this._isPlaying()();
   }
 
   /**
