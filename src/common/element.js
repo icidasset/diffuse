@@ -283,7 +283,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
    * @template {{ [K in keyof ActionsWithStrategy]: ActionsWithStrategy[K]["fn"] }} Actions
    * @param {string} channelName
    * @param {ActionsWithStrategy} actionsWithStrategy
-   * @param {typeof this.#broadcastingOptions} [options]
+   * @param {{ assumeLeadership?: boolean }} [options]
    */
   broadcast(channelName, actionsWithStrategy, options) {
     if (this.broadcasted) return;
@@ -407,7 +407,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     if (assumeLeadership === undefined || assumeLeadership === true) {
       navigator.locks.request(
         `${this.channelName}/lock`,
-        { ifAvailable: true },
+        assumeLeadership === true ? { steal: true } : { ifAvailable: true },
         (lock) => {
           this.#status.resolve(
             lock ? { leader: true, initialLeader: true } : { leader: false },

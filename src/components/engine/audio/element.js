@@ -162,7 +162,10 @@ class AudioEngine extends BroadcastableDiffuseElement {
       audio.volume = volume ?? this.volume();
       audio.muted = false;
 
-      if (audio.readyState === 0) audio.load();
+      // TODO: Might need this for `data-initial-progress`
+      //       Does seem to cause trouble when broadcasting
+      //       (open multiple sessions and play the next audio)
+      // if (audio.readyState === 0) audio.load();
       if (!audio.isConnected) return;
 
       const promise = audio.play() || Promise.resolve();
@@ -217,7 +220,13 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["supply"]}
    */
   supply(args) {
-    this.#items.value = args.audio;
+    const existingSet = new Set(this.#items.value.map((a) => a.id));
+    const newSet = new Set(args.audio.map((a) => a.id));
+
+    if (newSet.difference(existingSet).size !== 0) {
+      this.#items.value = args.audio;
+    }
+
     if (args.play) this.play(args.play);
   }
 
