@@ -256,6 +256,9 @@ export class DiffuseElement extends HTMLElement {
 export class BroadcastableDiffuseElement extends DiffuseElement {
   broadcasted = false;
 
+  /** @type {{ assumeLeadership?: boolean }} */
+  #broadcastingOptions = {};
+
   #broadcastingStatus;
   broadcastingStatus;
 
@@ -280,9 +283,11 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
    * @template {{ [K in keyof ActionsWithStrategy]: ActionsWithStrategy[K]["fn"] }} Actions
    * @param {string} channelName
    * @param {ActionsWithStrategy} actionsWithStrategy
+   * @param {typeof this.#broadcastingOptions} [options]
    */
-  broadcast(channelName, actionsWithStrategy) {
+  broadcast(channelName, actionsWithStrategy, options) {
     if (this.broadcasted) return;
+    if (options) this.#broadcastingOptions = options;
 
     const channel = new BroadcastChannel(channelName);
     const msg = new MessageChannel();
@@ -395,18 +400,26 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
 
     if (!this.broadcasted) return;
 
-    // Grab a lock if it isn't acquired yet,
+    // Grab a lock if it isn't acquired yet and if needed,
     // and hold it until `this.lock.promise` resolves.
-    navigator.locks.request(
-      `${this.channelName}/lock`,
-      { ifAvailable: true },
-      (lock) => {
-        this.#status.resolve(
-          lock ? { leader: true, initialLeader: true } : { leader: false },
-        );
-        if (lock) return this.#lock.promise;
-      },
-    );
+    const assumeLeadership = this.#broadcastingOptions?.assumeLeadership;
+
+    if (assumeLeadership === undefined || assumeLeadership === true) {
+      navigator.locks.request(
+        `${this.channelName}/lock`,
+        { ifAvailable: true },
+        (lock) => {
+          this.#status.resolve(
+            lock ? { leader: true, initialLeader: true } : { leader: false },
+          );
+          if (lock) return this.#lock.promise;
+        },
+      );
+    } else {
+      this.#status.resolve(
+        { leader: false },
+      );
+    }
 
     // When the lock status is initially determined, log its status.
     // Additionally, wait for lock if needed.

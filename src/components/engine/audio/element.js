@@ -380,7 +380,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   /**
    * @override
    */
-  connectedCallback() {
+  async connectedCallback() {
     const audio = this.audio;
 
     audio.addEventListener("canplay", this.canplayEvent);
@@ -430,6 +430,10 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
             fn: this.$state.loadingState.set,
           },
           setProgress: { strategy: "replicate", fn: this.$state.progress.set },
+        },
+        {
+          // Sync leadership with engine's broadcasting channel
+          assumeLeadership: (await this.engine?.broadcastingStatus())?.leader,
         },
       );
 
