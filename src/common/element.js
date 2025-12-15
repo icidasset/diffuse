@@ -7,11 +7,12 @@ import { rpc, workerLink, workerProxy, workerTunnel } from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
 /**
- * @import {BroadcastingStatus, ProvisionedWorker, ProvisionedWorkers, WorkerOpts} from "./element.d.ts"
+ * @import {BroadcastingStatus, WorkerOpts} from "./element.d.ts"
  * @import {ProxiedActions, Tunnel} from "./worker.d.ts";
  * @import {Signal} from "./signal.d.ts"
  */
 
+export { nothing } from "lit-html";
 export const DEFAULT_GROUP = "default";
 
 /**
@@ -22,10 +23,9 @@ export class DiffuseElement extends HTMLElement {
   #connected = Promise.withResolvers();
   #disposables = /** @type {Array<() => void>} */ ([]);
 
+  /** */
   constructor() {
     super();
-
-    this.group = this.getAttribute("group") ?? DEFAULT_GROUP;
 
     this.worker = this.worker.bind(this);
     this.workerLink = this.workerLink.bind(this);
@@ -53,6 +53,11 @@ export class DiffuseElement extends HTMLElement {
   /** */
   forceRender() {
     return this.#render();
+  }
+
+  /** */
+  get group() {
+    return this.getAttribute("group") ?? DEFAULT_GROUP;
   }
 
   /** */

@@ -1,7 +1,7 @@
 import { keyed } from "lit-html/directives/keyed.js";
 
-import { BroadcastableDiffuseElement } from "@common/element.js";
-import { computed, signal } from "@common/signal.js";
+import { BroadcastableDiffuseElement, nothing } from "@common/element.js";
+import { computed, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {Actions, Audio, AudioState, AudioStateReadOnly, LoadingState} from "./types.d.ts"
@@ -48,12 +48,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @override
    */
   connectedCallback() {
-    // Setup leader election if shared
+    // Setup broadcasting if part of group
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(
         this.nameWithGroup(),
         {
-          adjustVolume: { strategy: "leaderOnly", fn: this.adjustVolume },
+          adjustVolume: { strategy: "replicate", fn: this.adjustVolume },
           pause: { strategy: "leaderOnly", fn: this.pause },
           play: { strategy: "leaderOnly", fn: this.play },
           seek: { strategy: "leaderOnly", fn: this.seek },
@@ -86,9 +86,34 @@ class AudioEngine extends BroadcastableDiffuseElement {
     if (this.broadcasted) {
       this.effect(async () => {
         const status = await this.broadcastingStatus();
-        if (status.leader && status.initialLeader === false) {
-          console.log("🧙 Leadership acquired (no actions performed)");
-        }
+        untracked(() => {
+          if (!(status.leader && status.initialLeader === false)) return;
+
+          console.log("🧙 Leadership acquired");
+          this.items().forEach((item) => {
+            const el = this.#itemElement(item.id);
+            if (!el) return;
+
+            el.removeAttribute("initial-progress");
+
+            if (!el.audio) return;
+
+            const progress = el.$state.progress.value;
+            const canPlay = () => {
+              this.seek({
+                audioId: item.id,
+                percentage: progress,
+              });
+
+              if (el.$state.isPlaying.value) this.play({ audioId: item.id });
+            };
+
+            el.audio.addEventListener("canplay", canPlay, { once: true });
+
+            if (el.audio.readyState === 0) el.audio.load();
+            else canPlay();
+          });
+        });
       });
     }
 
@@ -211,6 +236,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       if (source) source.src = SILENT_MP3;
     });
 
+    const group = this.group;
     const nodes = this.items().map((audio) => {
       const ip = audio.progress === undefined
         ? "0"
@@ -220,11 +246,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
         audio.id,
         html`
           <de-audio-item
+            group="${this.broadcasted ? `${group}/${audio.id}` : nothing}"
             id="${audio.id}"
             initial-progress="${ip}"
+            mime-type="${audio.mimeType ? audio.mimeType : nothing}"
+            preload="${audio.isPreload ? `preload` : nothing}"
             url="${audio.url}"
-            ${audio.isPreload ? "preload" : ""}
-            ${audio.mimeType ? 'mime-type="' + audio.mimeType + '"' : ""}
           >
             <audio
               crossorigin="anonymous"
@@ -327,7 +354,9 @@ export default AudioEngine;
 // ITEM ELEMENT
 ////////////////////////////////////////////
 
-class AudioEngineItem extends HTMLElement {
+class AudioEngineItem extends BroadcastableDiffuseElement {
+  static NAME = "diffuse/engine/audio/item";
+
   constructor() {
     super();
 
@@ -344,7 +373,14 @@ class AudioEngineItem extends HTMLElement {
       loadingState: signal(/** @type {LoadingState} */ ("loading")),
       progress: signal(ip ? parseFloat(ip) : 0),
     };
+  }
 
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
     const audio = this.audio;
 
     audio.addEventListener("canplay", this.canplayEvent);
@@ -356,11 +392,68 @@ class AudioEngineItem extends HTMLElement {
     audio.addEventListener("suspend", this.suspendEvent);
     audio.addEventListener("timeupdate", this.timeupdateEvent);
     audio.addEventListener("waiting", this.waitingEvent);
-  }
 
-  // LIFECYCLE
+    // Setup broadcasting if part of group
+    if (this.hasAttribute("group")) {
+      const actions = this.broadcast(
+        this.nameWithGroup(),
+        {
+          getDuration: { strategy: "leaderOnly", fn: this.$state.duration.get },
+          getHasEnded: { strategy: "leaderOnly", fn: this.$state.hasEnded.get },
+          getIsPlaying: {
+            strategy: "leaderOnly",
+            fn: this.$state.isPlaying.get,
+          },
+          getIsPreload: {
+            strategy: "leaderOnly",
+            fn: this.$state.isPreload.get,
+          },
+          getLoadingState: {
+            strategy: "leaderOnly",
+            fn: this.$state.loadingState.get,
+          },
+          getProgress: { strategy: "leaderOnly", fn: this.$state.progress.get },
 
-  connectedCallback() {
+          // SET
+          setDuration: { strategy: "replicate", fn: this.$state.duration.set },
+          setHasEnded: { strategy: "replicate", fn: this.$state.hasEnded.set },
+          setIsPlaying: {
+            strategy: "replicate",
+            fn: this.$state.isPlaying.set,
+          },
+          setIsPreload: {
+            strategy: "replicate",
+            fn: this.$state.isPreload.set,
+          },
+          setLoadingState: {
+            strategy: "replicate",
+            fn: this.$state.loadingState.set,
+          },
+          setProgress: { strategy: "replicate", fn: this.$state.progress.set },
+        },
+      );
+
+      if (actions) {
+        this.$state.duration.set = actions.setDuration;
+        this.$state.hasEnded.set = actions.setHasEnded;
+        this.$state.isPlaying.set = actions.setIsPlaying;
+        this.$state.isPreload.set = actions.setIsPreload;
+        this.$state.loadingState.set = actions.setLoadingState;
+        this.$state.progress.set = actions.setProgress;
+
+        untracked(async () => {
+          this.$state.duration.value = await actions.getDuration();
+          this.$state.hasEnded.value = await actions.getHasEnded();
+          this.$state.isPlaying.value = await actions.getIsPlaying();
+          this.$state.isPreload.value = await actions.getIsPreload();
+          this.$state.loadingState.value = await actions.getLoadingState();
+          this.$state.progress.value = await actions.getProgress();
+        });
+      }
+    }
+
+    // Super
+    super.connectedCallback();
   }
 
   // STATE
@@ -488,12 +581,12 @@ class AudioEngineItem extends HTMLElement {
    */
   timeupdateEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
+    if (isNaN(audio.duration) || audio.duration === 0) return;
 
-    engineItem(audio)?.$state.progress.set(
-      isNaN(audio.duration) || audio.duration === 0
-        ? 0
-        : audio.currentTime / audio.duration,
-    );
+    const progress = audio.currentTime / audio.duration;
+    if (progress === 0) return;
+
+    engineItem(audio)?.$state.progress.set(progress);
   }
 
   /**
