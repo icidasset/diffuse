@@ -14,13 +14,14 @@ a {
 }
 
 h1 {
-  margin: var(--space-lg) 0 var(--space-lg);
+  margin: var(--space-lg) 0 var(--space-xl);
   padding-top: var(--space-2xs);
 }
 
 h1 svg {
   fill: oklch(from var(--bg-color) calc(l - 0.5) c h);
-  opacity: 0.125;
+  opacity: 0.2;
+  width: 4.25em;
 
   @media (prefers-color-scheme: dark) {
     & {
@@ -77,15 +78,21 @@ small {
 }
 
 .construct {
-  color: oklch(from currentColor l c h / 0.65);
-  font-size: var(--fs-2xl);
+  color: oklch(from currentColor l c h / 0.3);
+  font-size: var(--fs-3xl);
   font-weight: 900;
   letter-spacing: -0.0125em;
   line-height: 0.775em;
-  line-height: 1.05cap;
+  line-height: 0.9cap;
   margin-bottom: var(--space-md);
   max-width: var(--container-xl);
   text-transform: uppercase;
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      color: oklch(from var(--color-2) l c h / 0.75);
+    }
+  }
 }
 
 .element {

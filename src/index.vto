@@ -3,7 +3,7 @@ layout: layouts/diffuse.vto
 
 styles:
   - styles/base.css
-  - index.css
+  - styles/diffuse/page.css
 
 # THEMES
 
@@ -123,12 +123,7 @@ definitions:
 
 <header>
   <h1>
-    <svg viewBox="0 0 902 134" width="160">
-      <title>Diffuse</title>
-      <use
-        xlink:href="images/diffuse-current.svg#diffuse"
-        href="images/diffuse-current.svg#diffuse"></use>
-    </svg>
+    {{ await comp.diffuse.logo() }}
   </h1>
   <p class="construct">
     Construct your audio player.
@@ -193,8 +188,6 @@ definitions:
           The items are added to the default "IndexedDB" output, so make sure that output is configured.
         </small>
       </p>
-
-      <List items={[]} />
     </section>
   </div>
   <div class="columns">
