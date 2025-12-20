@@ -1,5 +1,4 @@
 import type { SignalReader } from "@common/signal.d.ts";
-import type { Track } from "@definitions/types.d.ts";
 import type { DiffuseElement } from "@common/element.js";
 
 export type OutputElement<Tracks> = DiffuseElement & OutputManager<Tracks>;
@@ -22,7 +21,7 @@ export type OutputManagerProperties<Tracks> = {
   };
 };
 
-export type OutputWorkerActions = {
-  getTracks(): Promise<Track[]>;
-  putTracks(tracks: Track[]): Promise<void>;
+export type OutputWorkerActions<DataType> = {
+  get(args: { name: string }): Promise<DataType>;
+  put(args: { data: DataType; name: string }): Promise<void>;
 };

@@ -4,7 +4,8 @@ import { IDB_PREFIX } from "./constants.js";
 import { ostiary, rpc } from "@common/worker.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts";
+ * @import {OutputWorkerActions} from "@components/output/types.d.ts";
+ * @import {SupportedDataTypes} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -12,46 +13,25 @@ import { ostiary, rpc } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @returns {Promise<Track[]>}
+ * @type {OutputWorkerActions<SupportedDataTypes>["get"]}
  */
-export async function getTracks() {
-  /** @type {Track[] | null} */
-  const tracks = await get({ name: "tracks.json" });
-  return tracks ?? [];
+export async function get({ name }) {
+  return await IDB.get(`${IDB_PREFIX}/${name}`);
 }
 
 /**
- * @param {Track[]} tracks
+ * @type {OutputWorkerActions<SupportedDataTypes>["put"]}
  */
-export async function putTracks(tracks) {
-  await put({ name: "tracks.json", data: tracks });
+export async function put({ data, name }) {
+  return await IDB.set(`${IDB_PREFIX}/${name}`, data);
 }
-
 ////////////////////////////////////////////
 // ⚡️
 ////////////////////////////////////////////
 
 ostiary((context) => {
   rpc(context, {
-    getTracks,
-    putTracks,
+    get,
+    put,
   });
 });
-
-////////////////////////////////////////////
-// ⛔️
-////////////////////////////////////////////
-
-/**
- * @param {{ name: string }} _
- */
-async function get({ name }) {
-  return await IDB.get(`${IDB_PREFIX}/${name}`);
-}
-
-/**
- * @param {{ data: any; name: string }} _
- */
-async function put({ data, name }) {
-  return await IDB.set(`${IDB_PREFIX}/${name}`, data);
-}

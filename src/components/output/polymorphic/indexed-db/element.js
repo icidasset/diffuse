@@ -4,6 +4,7 @@ import { outputManager } from "../../common.js";
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {OutputManager, OutputWorkerActions} from "../../types.d.ts"
+ * @import {SupportedDataTypes} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -20,19 +21,25 @@ class IndexedDBOutput extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {ProxiedActions<OutputWorkerActions>} */
+    /** @type {ProxiedActions<OutputWorkerActions<SupportedDataTypes>>} */
     const p = this.workerProxy();
 
-    // Manager
+    /** @type {OutputManager<SupportedDataTypes>} */
     const manager = outputManager({
       tracks: {
-        empty: () => [],
-        get: p.getTracks,
-        put: p.putTracks,
+        empty: () => undefined,
+        get: () => p.get({ name: this.#cat("tracks") }),
+        put: (data) => p.put({ name: this.#cat("tracks"), data }),
       },
     });
 
     this.tracks = manager.tracks;
+  }
+
+  /** @param {string} name */
+  #cat(name) {
+    const key = this.hasAttribute("key") ? this.getAttribute("key") + "/" : "";
+    return `${key}${name}`;
   }
 }
 
