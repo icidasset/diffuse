@@ -73,18 +73,6 @@ class OutputConfigurator extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
     this.#selectedOutput.value = await this.#findSelectedOutput();
-
-    this.effect(() => {
-      console.log("selectedOutput changed", this.#selectedOutput.value);
-    });
-
-    this.effect(() => {
-      console.log("collection changed", this.tracks.collection());
-    });
-
-    this.effect(() => {
-      console.log("state changed", this.tracks.state());
-    });
   }
 
   // MISC
