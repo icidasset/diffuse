@@ -1,7 +1,8 @@
-import "@components/orchestrator/process-tracks/element.js";
-import "@components/orchestrator/queue-tracks/element.js";
+import "@components/configurator/output/element.js";
 import "@components/input/opensubsonic/element.js";
 import "@components/input/s3/element.js";
+import "@components/orchestrator/process-tracks/element.js";
+import "@components/orchestrator/queue-tracks/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/processor/metadata/element.js";
 import "@components/transformer/output/string/json/element.js";
@@ -22,6 +23,7 @@ const input = component(Input);
 const queue = component(Queue);
 
 globalThis.queue = queue;
+globalThis.output = document.querySelector("#output");
 
 ////////////////////////////////////////////
 // 📡

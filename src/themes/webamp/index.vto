@@ -77,18 +77,23 @@
   -->
   <de-queue></de-queue>
 
-  <!-- Inputs, Output & Processors -->
-  <dop-indexed-db></dop-indexed-db>
+  <!-- Processors -->
   <dp-metadata></dp-metadata>
 
+  <!-- Input -->
   <dc-input id="input">
     <di-opensubsonic></di-opensubsonic>
     <di-s3></di-s3>
   </dc-input>
 
-  <!-- Transformers -->
-  <dtor-default id="output" output-selector="dtos-json"></dtor-default>
-  <dtos-json output-selector="dop-indexed-db"></dtos-json>
+  <!-- Output -->
+  <dop-indexed-db id="idb-json-output" key="json"></dop-indexed-db>
+
+  <dc-output>
+    <dtos-json id="idb-json" output-selector="#idb-json-output"></dtos-json>
+  </dc-output>
+
+  <dtor-default id="output" output-selector="dc-output"></dtor-default>
 
   <!-- Orchestrators -->
   <do-process-tracks
