@@ -78,7 +78,8 @@ class OutputConfigurator extends DiffuseElement {
   // MISC
 
   async #findSelectedOutput() {
-    const id = localStorage.getItem(`${STORAGE_PREFIX}/selected/id`);
+    const id = localStorage.getItem(`${STORAGE_PREFIX}/selected/id`) ??
+      this.getAttribute("default");
     const el = id ? this.root().querySelector(`#${id}`) : null;
 
     if (!el) return null;
@@ -117,11 +118,17 @@ class OutputConfigurator extends DiffuseElement {
 
   // ADDITIONAL ACTIONS
 
+  async deselectOutput() {
+    localStorage.removeItem(`${STORAGE_PREFIX}/selected/id`);
+    this.#selectedOutput.value = await this.#findSelectedOutput();
+  }
+
   /**
    * @param {string} id
    */
-  selectOutput(id) {
+  async selectOutput(id) {
     localStorage.setItem(`${STORAGE_PREFIX}/selected/id`, id);
+    this.#selectedOutput.value = await this.#findSelectedOutput();
   }
 }
 
