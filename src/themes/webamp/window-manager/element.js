@@ -35,8 +35,8 @@ class WindowManager extends DiffuseElement {
     super.connectedCallback();
 
     // Events
-    this.addEventListener("mousedown", this.focusOnWindow);
-    this.addEventListener("dtw-window-start-move", this.windowMoveStart);
+    this.root().addEventListener("mousedown", this.focusOnWindow);
+    this.root().addEventListener("dtw-window-start-move", this.windowMoveStart);
 
     // Webamp stuff
     document.body.addEventListener(
@@ -57,8 +57,8 @@ class WindowManager extends DiffuseElement {
   disconnectedCallback() {
     super.disconnectedCallback();
 
-    this.removeEventListener("mousedown", this.focusOnWindow);
-    this.removeEventListener("dtw-window-start-move", this.windowMoveStart);
+    this.root().removeEventListener("mousedown", this.focusOnWindow);
+    this.root().removeEventListener("dtw-window-start-move", this.windowMoveStart);
 
     document.body.removeEventListener(
       "mousedown",
@@ -89,7 +89,7 @@ class WindowManager extends DiffuseElement {
       if (win.id) this.$activeWindow.value = win.id;
 
       this.#lastZindex++;
-      this.setWindowZindex(win.id, this.#lastZindex)
+      win.style.zIndex = this.#lastZindex.toString();
     }
   }
 
@@ -153,15 +153,6 @@ class WindowManager extends DiffuseElement {
 
   /**
    * @param {string} id
-   * @param {number} index
-   */
-  setWindowZindex(id, index) {
-    const w = this.root().querySelector(`dtw-window#${id}`)
-    w.style.zIndex = index.toString();
-  }
-
-  /**
-   * @param {string} id
    */
   toggleWindow(id) {
     const w = this.root().querySelector(`dtw-window#${id}`)
@@ -171,6 +162,8 @@ class WindowManager extends DiffuseElement {
 
     if (w.hasAttribute("open")) {
       this.activateWindow(id)
+      this.#lastZindex++;
+      w.style.zIndex = this.#lastZindex.toString();
     }
   }
 
