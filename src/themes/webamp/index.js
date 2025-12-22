@@ -1,7 +1,7 @@
 import "@components/configurator/output/element.js";
 import "@components/input/opensubsonic/element.js";
 import "@components/input/s3/element.js";
-import "@components/orchestrator/process-tracks/element.js";
+// import "@components/orchestrator/process-tracks/element.js";
 import "@components/orchestrator/queue-tracks/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/processor/metadata/element.js";
@@ -16,7 +16,7 @@ import { effect, signal, untracked } from "@common/signal.js";
 
 import "./browser/element.js";
 import "./window/element.js";
-import "./window-manager/element.js";
+import WindowManager from "./window-manager/element.js";
 import WebampElement from "./webamp/element.js";
 
 const input = component(Input);
@@ -157,9 +157,7 @@ document.body.querySelectorAll(".desktop__item").forEach((element) => {
   if (element instanceof HTMLElement) {
     element.addEventListener("dblclick", () => {
       const f = element.querySelector("label")?.getAttribute("for");
-      if (f) {
-        document.body.querySelector(`dtw-window#${f}`)?.toggleAttribute("open");
-      }
+      if (f) windowManager()?.toggleWindow(f);
     });
   }
 });
@@ -182,3 +180,13 @@ amp.onClose(() => winampIsShown = false);
 
 // TODO:
 // amp.onMinimize(() => amp.close());
+
+////////////////////////////////////////////
+// 🛠️
+////////////////////////////////////////////
+
+function windowManager() {
+  const w = document.body.querySelector("dtw-window-manager");
+  if (w instanceof WindowManager) return w;
+  return null;
+}

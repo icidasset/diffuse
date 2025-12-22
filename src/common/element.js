@@ -61,7 +61,12 @@ export class DiffuseElement extends HTMLElement {
   }
 
   /** */
-  nameWithGroup() {
+  get label() {
+    return this.getAttribute("label") ?? this.id ?? this.localName;
+  }
+
+  /** */
+  get nameWithGroup() {
     return `${this.constructor.prototype.constructor.NAME}/${this.group}`;
   }
 
@@ -131,7 +136,7 @@ export class DiffuseElement extends HTMLElement {
     );
 
     // Setup worker
-    const name = this.nameWithGroup();
+    const name = this.nameWithGroup;
     const url = import.meta.resolve("./" + WORKER_URL) + `?${query}`;
 
     let worker;

@@ -66,7 +66,7 @@ class WindowElement extends DiffuseElement {
         <div class="window">
           <div
             class="title-bar"
-            @mousedown="${this.titleBarMouseDown}"
+            @mousedown="${this.titleBarMouseDown.bind(this)}"
           >
             <div class="title-bar-icon">
               <slot name="title-icon"></slot>
@@ -99,6 +99,7 @@ class WindowElement extends DiffuseElement {
       bubbles: true,
       composed: true,
       detail: {
+        element: this,
         x: mouse.x,
         xElement: mouse.layerX,
         y: mouse.y,

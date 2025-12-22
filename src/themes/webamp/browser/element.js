@@ -98,7 +98,6 @@ class Browser extends DiffuseElement {
       ***********************************/
 
       .sunken-panel {
-        content-visibility: auto;
         height: 30dvh;
         min-height: 80px;
         resize: both;
@@ -116,6 +115,10 @@ class Browser extends DiffuseElement {
         &:first-child {
           width: 40%;
         }
+      }
+
+      table tbody tr {
+        content-visibility: auto;
       }
 
       table td {

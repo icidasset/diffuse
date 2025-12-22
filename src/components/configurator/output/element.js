@@ -118,15 +118,32 @@ class OutputConfigurator extends DiffuseElement {
 
   // ADDITIONAL ACTIONS
 
-  async deselectOutput() {
+  async deselect() {
     localStorage.removeItem(`${STORAGE_PREFIX}/selected/id`);
     this.#selectedOutput.value = await this.#findSelectedOutput();
+  }
+
+  async options() {
+    const deps = this.dependencies();
+    const entries = Object.entries(deps);
+
+    await Promise.all(
+      entries.map(([_k, v]) => customElements.whenDefined(v.localName)),
+    );
+
+    return entries.map(([k, v]) => {
+      return {
+        id: k,
+        label: v.label,
+        element: v,
+      };
+    });
   }
 
   /**
    * @param {string} id
    */
-  async selectOutput(id) {
+  async select(id) {
     localStorage.setItem(`${STORAGE_PREFIX}/selected/id`, id);
     this.#selectedOutput.value = await this.#findSelectedOutput();
   }

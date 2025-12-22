@@ -2,9 +2,10 @@ import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 
+import WindowElement from "../window/element.js"
+
 /**
  * @import {RenderArg} from "@common/element.d.ts"
- * @import WindowElement from "../window/element.js";
  */
 
 ////////////////////////////////////////////
@@ -15,6 +16,9 @@ class WindowManager extends DiffuseElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+
+    this.focusOnWindow = this.focusOnWindow.bind(this)
+    this.windowMoveStart = this.windowMoveStart.bind(this)
   }
 
   // SIGNALS
@@ -27,7 +31,7 @@ class WindowManager extends DiffuseElement {
   /**
    * @override
    */
-  connectedCallback() {
+  async connectedCallback() {
     super.connectedCallback();
 
     // Events
@@ -85,7 +89,7 @@ class WindowManager extends DiffuseElement {
       if (win.id) this.$activeWindow.value = win.id;
 
       this.#lastZindex++;
-      win.style.zIndex = this.#lastZindex.toString();
+      this.setWindowZindex(win.id, this.#lastZindex)
     }
   }
 
@@ -94,18 +98,7 @@ class WindowManager extends DiffuseElement {
    */
   async setWindowStatuses(activeId) {
     await customElements.whenDefined("dtw-window");
-
-    this.querySelectorAll("dtw-window").forEach(
-      (window) => {
-        const win = /** @type {WindowElement} */ (window);
-
-        if (activeId && window.id === activeId) {
-          win.activate();
-        } else {
-          win.deactivate();
-        }
-      },
-    );
+    this.activateWindow(activeId)
   }
 
   /**
@@ -119,7 +112,7 @@ class WindowManager extends DiffuseElement {
       if (event instanceof MouseEvent) {
         const x = event.x - ogEvent.detail.xElement;
         const y = event.y - ogEvent.detail.yElement;
-        const target = ogEvent.target;
+        const target = ogEvent.detail.element;
 
         if (target) {
           target.style.left = `${x}px`;
@@ -131,16 +124,54 @@ class WindowManager extends DiffuseElement {
     });
 
     const stopMove = () => {
-      this.removeEventListener("mousemove", moveFn);
-
+      document.removeEventListener("mousemove", moveFn);
       document.removeEventListener("mouseup", stopMove);
       document.removeEventListener("mouseleave", stopMove);
     };
 
-    this.addEventListener("mousemove", moveFn);
-
+    document.addEventListener("mousemove", moveFn);
     document.addEventListener("mouseup", stopMove);
     document.addEventListener("mouseleave", stopMove);
+  }
+
+  // ACTIONS
+
+  /**
+   * @param {string} id
+   */
+  activateWindow(id) {
+    this.querySelectorAll("dtw-window").forEach(w => {
+      if (w instanceof WindowElement === false) return
+
+      if (activeId && w.id === activeId) {
+        w.activate();
+      } else {
+        w.deactivate();
+      }
+    })
+  }
+
+  /**
+   * @param {string} id
+   * @param {number} index
+   */
+  setWindowZindex(id, index) {
+    const w = this.root().querySelector(`dtw-window#${id}`)
+    w.style.zIndex = index.toString();
+  }
+
+  /**
+   * @param {string} id
+   */
+  toggleWindow(id) {
+    const w = this.root().querySelector(`dtw-window#${id}`)
+    if (w instanceof WindowElement === false) return
+
+    w.toggleAttribute("open")
+
+    if (w.hasAttribute("open")) {
+      this.activateWindow(id)
+    }
   }
 
   // RENDER
@@ -150,13 +181,98 @@ class WindowManager extends DiffuseElement {
    */
   render({ html }) {
     return html`
+      <link rel="stylesheet" href="../../styles/vendor/98.css" />
+
       <style>
       :host {
         user-select: none;
       }
+
+      dtw-window {
+        left: 12px;
+        position: absolute;
+        top: 12px;
+        z-index: 999;
+
+        /* Waiting on https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-index#browser_compatibility */
+        &:nth-child(1) {
+          left: 24px;
+          top: 24px;
+        }
+
+        &:nth-child(2) {
+          left: 36px;
+          top: 36px;
+        }
+
+        &:nth-child(3) {
+          left: 48px;
+          top: 48px;
+        }
+
+        &:nth-child(4) {
+          left: 60px;
+          top: 60px;
+        }
+
+        &:nth-child(5) {
+          left: 72px;
+          top: 72px;
+        }
+
+        &:nth-child(6) {
+          left: 84px;
+          top: 84px;
+        }
+
+        &:nth-child(7) {
+          left: 96px;
+          top: 96px;
+        }
+
+        &:nth-child(8) {
+          left: 108px;
+          top: 108px;
+        }
+
+        &:nth-child(9) {
+          left: 120px;
+          top: 120px;
+        }
+      }
       </style>
 
-      <slot></slot>
+      <!-- INPUT -->
+      <dtw-window id="input-window">
+        <span slot="title-icon"><img src="../../images/icons/windows_98/cd_audio_cd_a-0.png" height="14" /></span>
+        <span slot="title">Manage audio inputs</span>
+        <p>👀</p>
+      </dtw-window>
+
+      <!-- OUTPUT -->
+      <dtw-window id="output-window">
+        <span slot="title-icon"><img src="../../images/icons/windows_98/computer_user_pencil-0.png" height="14" /></span>
+        <span slot="title">Manage user data</span>
+
+        <form>
+          <p>Where do you want to keep your data?</p>
+          <div class="field-row">
+            <input id="idb-json" type="radio" checked />
+            <label for="idb-json">Local only</label>
+          </div>
+        </form>
+      </dtw-window>
+
+      <!-- BROWSER -->
+      <dtw-window id="browser-window" open>
+        <span slot="title-icon"><img src="../../images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
+        <span slot="title">Browse collection</span>
+        <dtw-browser
+          input-selector="#input"
+          output-selector="#output"
+          queue-engine-selector="de-queue"
+        ></dtw-browser>
+      </dtw-window>
     `;
   }
 }

@@ -38,8 +38,10 @@ class IndexedDBOutput extends DiffuseElement {
 
   /** @param {string} name */
   #cat(name) {
-    const key = this.hasAttribute("key") ? this.getAttribute("key") + "/" : "";
-    return `${key}${name}`;
+    const namespace = this.hasAttribute("namespace")
+      ? this.getAttribute("namespace") + "/"
+      : "";
+    return `${namespace}${name}`;
   }
 }
 
