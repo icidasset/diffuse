@@ -26,16 +26,11 @@ class IndexedDBOutput extends DiffuseElement {
 
     /** @type {OutputManager<SupportedDataTypes>} */
     const manager = outputManager({
+      init: this.whenConnected.bind(this),
       tracks: {
         empty: () => undefined,
-        get: () => {
-          if (!this.$connected.value) return undefined
-          return p.get({ name: this.#cat("tracks") })
-        },
-        put: (data) => {
-          if (!this.$connected.value) return
-          return p.put({ name: this.#cat("tracks"), data })
-        },
+        get: () => p.get({ name: this.#cat("tracks") }),
+        put: (data) => p.put({ name: this.#cat("tracks"), data }),
       },
     });
 
