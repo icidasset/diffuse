@@ -1,4 +1,5 @@
 import InputConfigurator from "@components/configurator/input/element.js";
+import OutputConfigurator from "@components/configurator/output/element.js";
 import Queue from "@components/engine/queue/element.js";
 import OpenSubsonic from "@components/input/opensubsonic/element.js";
 import S3 from "@components/input/s3/element.js";
@@ -32,14 +33,22 @@ export function config() {
 
   // Output
   const idb = new IndexedDBOutput();
+  idb.setAttribute("id", "idb-json-output")
+  idb.setAttribute("namespace", "json")
+
   const json = new JsonStringOutput();
-  json.setAttribute("output-selector", idb.localName);
+  json.setAttribute("id", "idb-json")
+  json.setAttribute("output-selector", "#idb-json-output");
+
+  const output = new OutputConfigurator();
+  output.setAttribute("default", "idb-json");
+  output.append(json);
 
   const refiner = new DefaultRefiner();
   refiner.setAttribute("id", "output");
-  refiner.setAttribute("output-selector", json.localName);
+  refiner.setAttribute("output-selector", output.localName);
 
-  document.body.append(idb, json, refiner);
+  document.body.append(idb, output, refiner);
 
   // Orchestrators
   const oqt = new QueueTracksOrchestrator();
@@ -68,6 +77,7 @@ export function config() {
 
     configurator: {
       input,
+      output,
     },
     engine: {
       queue,

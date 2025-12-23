@@ -3,8 +3,8 @@ layout: layouts/diffuse.vto
 base: ../../../
 
 styles:
-  - ../../../styles/vendor/phosphor/fill/style.css
-  - ../../../styles/base.css
+  - styles/vendor/phosphor/fill/style.css
+  - styles/base.css
 ---
 
 <!-- ELEMENTS -->
@@ -23,17 +23,17 @@ styles:
 <!-- SCRIPTS -->
 
 <script type="module">
-  import { config } from "../../../common/constituents/default.js"
-  import QueueAudioOrchestrator from "../../../components/orchestrator/queue-audio/element.js";
+  import { config } from "./common/constituents/default.js"
+  import QueueAudioOrchestrator from "./components/orchestrator/queue-audio/element.js";
 
-  import "../../../components/engine/audio/element.js"
-  import "../../../components/processor/artwork/element.js"
+  import "./components/engine/audio/element.js"
+  import "./components/processor/artwork/element.js"
 
   // Prepare default constituents setup
   const defaults = config()
 
   // Only then initiate artwork controller
-  import("./element.js")
+  import("./themes/blur/artwork-controller/element.js")
 
   // Orchestrators
 

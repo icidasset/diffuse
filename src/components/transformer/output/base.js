@@ -54,9 +54,9 @@ export class OutputTransformer extends DiffuseElement {
           await this.output.whenDefined;
           await this.output.signal()?.tracks.save(newTracks);
         },
-        state: computed(() =>
-          this.output.signal()?.tracks.state() ?? "loading"
-        ),
+        state: computed(() => {
+          return this.output.signal()?.tracks.state() ?? "loading"
+        }),
       },
     };
 

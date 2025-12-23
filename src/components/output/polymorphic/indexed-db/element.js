@@ -28,13 +28,21 @@ class IndexedDBOutput extends DiffuseElement {
     const manager = outputManager({
       tracks: {
         empty: () => undefined,
-        get: () => p.get({ name: this.#cat("tracks") }),
-        put: (data) => p.put({ name: this.#cat("tracks"), data }),
+        get: () => {
+          if (!this.$connected.value) return undefined
+          return p.get({ name: this.#cat("tracks") })
+        },
+        put: (data) => {
+          if (!this.$connected.value) return
+          return p.put({ name: this.#cat("tracks"), data })
+        },
       },
     });
 
     this.tracks = manager.tracks;
   }
+
+  // 🛠️
 
   /** @param {string} name */
   #cat(name) {

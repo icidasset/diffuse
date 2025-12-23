@@ -20,6 +20,8 @@ export const DEFAULT_GROUP = "default";
  * around rendering and managing signals.
  */
 export class DiffuseElement extends HTMLElement {
+  $connected = signal(false)
+
   #connected = Promise.withResolvers();
   #disposables = /** @type {Array<() => void>} */ ([]);
 
@@ -98,6 +100,7 @@ export class DiffuseElement extends HTMLElement {
   // LIFECYCLE
 
   connectedCallback() {
+    this.$connected.value = true
     this.#connected.resolve(null);
 
     if (!("render" in this && typeof this.render === "function")) return;
@@ -109,6 +112,7 @@ export class DiffuseElement extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.$connected.value = false
     this.#teardown();
   }
 

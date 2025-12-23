@@ -121,8 +121,7 @@ class ArtworkController extends DiffuseElement {
 
       this.effect(() => {
         const now = !!queue.now();
-        const bool = !now ||
-          (now && this.#audio()?.loadingState() !== "loaded");
+        const bool = (now && this.#audio()?.loadingState() !== "loaded");
 
         if (this.#isLoadingTimeout) {
           clearTimeout(this.#isLoadingTimeout);
@@ -398,9 +397,7 @@ class ArtworkController extends DiffuseElement {
 
     return html`
       <style>
-      @import "../../../styles/vendor/phosphor/fill/style.css";
-      @import "../../../styles/animations.css";
-      @import "./element.css";
+      @import "${import.meta.resolve('./element.css')}";
       </style>
 
       <main style="background-color: ${this.#artworkColor.value ??

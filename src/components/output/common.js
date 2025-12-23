@@ -1,4 +1,4 @@
-import { signal } from "@common/signal.js";
+import { effect, signal } from "@common/signal.js";
 
 /**
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
@@ -19,7 +19,7 @@ export function outputManager({ init, tracks }) {
     ts.value = "loaded";
   }
 
-  loadTracks();
+  effect(loadTracks);
 
   return {
     tracks: {

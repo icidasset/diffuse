@@ -20,7 +20,8 @@ class JsonStringOutputTransformer extends OutputTransformer {
       tracks: {
         ...base.tracks,
         collection: computed(() => {
-          const json = base.tracks.collection() ?? "[]";
+          let json = base.tracks.collection();
+          if (typeof json !== "string") json = "[]"
 
           // Try parsing JSON
           try {

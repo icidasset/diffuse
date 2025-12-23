@@ -1,3 +1,6 @@
+@import "../../../styles/vendor/phosphor/fill/style.css";
+@import "../../../styles/animations.css";
+
 :host {
   --transition-durition: 750ms;
 }
