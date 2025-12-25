@@ -121,7 +121,7 @@ class ArtworkController extends DiffuseElement {
 
       this.effect(() => {
         const now = !!queue.now();
-        const bool = (now && this.#audio()?.loadingState() !== "loaded");
+        const bool = now && this.#audio()?.loadingState() !== "loaded";
 
         if (this.#isLoadingTimeout) {
           clearTimeout(this.#isLoadingTimeout);
@@ -396,9 +396,13 @@ class ArtworkController extends DiffuseElement {
     });
 
     return html`
-      <style>
-      @import "${import.meta.resolve('./element.css')}";
-      </style>
+      <link rel="stylesheet" href="${import.meta.resolve(
+        "../../../styles/vendor/phosphor/fill/style.css",
+      )}" />
+      <link rel="stylesheet" href="${import.meta.resolve(
+        "../../../styles/animations.css",
+      )}" />
+      <link rel="stylesheet" href="${import.meta.resolve("./element.css")}" />
 
       <main style="background-color: ${this.#artworkColor.value ??
         `revert-layer`};">

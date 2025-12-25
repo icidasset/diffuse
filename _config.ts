@@ -2,6 +2,7 @@ import lume from "lume/mod.ts";
 
 import esbuild from "lume/plugins/esbuild.ts";
 import postcss from "lume/plugins/postcss.ts";
+import purgecss from "lume/plugins/purgecss.ts";
 import sourceMaps from "lume/plugins/source_maps.ts";
 
 import * as path from "@std/path";
@@ -36,6 +37,7 @@ site.add([".js"]);
 // CSS
 
 site.use(postcss());
+site.use(purgecss());
 site.add([".css"]);
 
 site.remoteFile(

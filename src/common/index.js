@@ -1,4 +1,4 @@
-import * as Uint8 from "uint8arrays";
+import { base64url } from "iso-base/rfc4648";
 import { xxh32r } from "xxh32/dist/raw.js";
 
 /**
@@ -94,5 +94,5 @@ export function jsonEncode(a) {
 export async function trackArtworkCacheId(track) {
   return await crypto.subtle
     .digest("SHA-256", new TextEncoder().encode(track.uri))
-    .then((a) => Uint8.toString(new Uint8Array(a), "base64url"));
+    .then((a) => base64url.encode(new Uint8Array(a)));
 }

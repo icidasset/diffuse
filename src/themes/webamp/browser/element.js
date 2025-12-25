@@ -77,10 +77,9 @@ class Browser extends DiffuseElement {
 
     return html`
       <link rel="stylesheet" href="../../styles/vendor/98.css" />
+      <link rel="stylesheet" href="./98-vars.css" />
 
       <style>
-      @import "./98-vars.css";
-
       /***********************************
       * SEARCH
       ***********************************/

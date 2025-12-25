@@ -21,12 +21,11 @@
     "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
     "fast-average-color": "npm:fast-average-color@^9.5.0",
     "idb-keyval": "npm:idb-keyval@^6.2.2",
+    "iso-base": "npm:iso-base@^4.3.0",
     "lit-html": "npm:lit-html@^3.3.1",
-    "morphdom": "npm:morphdom@^2.7.7/dist/morphdom.js",
     "query-string": "npm:query-string@^9.3.1",
     "subsonic-api": "npm:subsonic-api@^3.2.0",
     "throttle-debounce": "npm:throttle-debounce@^5.0.2",
-    "uint8arrays": "npm:uint8arrays@^5.1.0",
     "uri-js": "npm:uri-js@^4.4.1",
     "xxh32": "npm:xxh32@^2.0.5",
 
@@ -48,26 +47,40 @@
     // Build
     "@std/fs": "jsr:@std/fs@^1.0.19",
     "@std/path": "jsr:@std/path@^1.1.2",
-    "lume/": "https://deno.land/x/lume@v3.0.11/",
-    "lume/jsx-runtime": "https://deno.land/x/ssx@v0.1.12/jsx-runtime.ts",
+    "lume/": "https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.2/",
+    "lume/jsx-runtime": "https://cdn.jsdelivr.net/gh/oscarotero/ssx@0.1.14/jsx-runtime.ts",
   },
   "exports": {
     ".": "./src/mod.ts",
   },
   "tasks": {
-    "build": "deno task lume",
-    "gen:defs:types": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js",
-    "lume": "echo \"import 'lume/cli.ts'\" | deno run --config=./deno.jsonc --allow-read --allow-write --allow-env --allow-net --allow-run --allow-sys -",
-    "serve": "deno task lume -s",
+    "build": {
+      "description": "Build the site for production",
+      "command": "deno task lume",
+    },
+    "gen:defs:types": {
+      "description": "Generate definition Typescript types",
+      "command": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js",
+    },
+    "lume": {
+      "description": "Run Lume command",
+      "command": "deno run -P=lume --allow-write --allow-read lume/cli.ts",
+    },
+    "serve": {
+      "description": "Run and serve the site for development",
+      "command": "deno task lume -s",
+    },
   },
   "compilerOptions": {
     "checkJs": true,
     "lib": ["deno.ns", "dom", "esnext"],
     "types": ["lume/types.ts"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "lume",
   },
   "unstable": ["temporal", "fmt-component"],
   "lint": {
-    "plugins": ["https://deno.land/x/lume@v3.0.11/lint.ts"],
+    "plugins": ["https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.2/lint.ts"],
     "rules": {
       "exclude": ["no-import-prefix"],
     },
@@ -75,4 +88,25 @@
   "publish": {
     "include": ["LICENSE", "README.md", "src/**/*.js", "src/**/*.ts"],
   },
+  "permissions": {
+    "lume": {
+      "read": true,
+      "write": ["./"],
+      "import": ["cdn.jsdelivr.net:443", "jsr.io:443", "deno.land:443", "esm.sh:443"],
+      "net": [
+        "0.0.0.0",
+        "cdn.jsdelivr.net:443",
+        "data.jsdelivr.com:443",
+        "jsr.io:443",
+        "deno.land:443",
+        "esm.sh:443",
+        "registry.npmjs.org:443",
+      ],
+      "env": true,
+      "run": true,
+      "ffi": true,
+      "sys": true,
+    },
+  },
+  "lock": false,
 }
