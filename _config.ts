@@ -37,7 +37,7 @@ site.add([".js"]);
 // CSS
 
 site.use(postcss());
-site.use(purgecss());
+// site.use(purgecss());
 site.add([".css"]);
 
 site.remoteFile(
@@ -97,7 +97,7 @@ site.script("copy-type-defs", () => {
       { includeDirs: false, exts: [".d.ts"] },
     )
   ) {
-    const dest = "_site/" + f.path.replace(/^src\//, "");
+    const dest = "dist/" + f.path.replace(/^src\//, "");
     const dir = path.dirname(dest);
     ensureDirSync(dir);
     Deno.copyFileSync(f.path, dest);
