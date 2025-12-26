@@ -2,9 +2,11 @@ import "@components/input/opensubsonic/element.js";
 import "@components/input/s3/element.js";
 import "@components/orchestrator/input/element.js";
 import "@components/orchestrator/output/element.js";
-import "@components/orchestrator/process-tracks/element.js";
+// import "@components/orchestrator/process-tracks/element.js";
 import "@components/orchestrator/queue-tracks/element.js";
+import "@components/orchestrator/search-tracks/element.js";
 import "@components/processor/metadata/element.js";
+import "@components/processor/search/element.js";
 
 import * as Input from "@components/configurator/input/element.js";
 import * as Queue from "@components/engine/queue/element.js";

@@ -1,4 +1,5 @@
 import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
+import { signal } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -10,8 +11,14 @@ import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
 class Browser extends DiffuseElement {
   constructor() {
     super();
+
     this.attachShadow({ mode: "open" });
+    this.performSearch = this.performSearch.bind(this);
   }
+
+  // SIGNALS
+
+  #searchResults = signal(/** @type {Track[]} */ ([]));
 
   // LIFECYCLE
 
@@ -22,19 +29,38 @@ class Browser extends DiffuseElement {
     super.connectedCallback();
 
     /** @type {InputElement} */
-    this.input = query(this, "input-selector");
+    const input = query(this, "input-selector");
 
     /** @type {OutputElement<Track[]>} */
-    this.output = query(this, "output-selector");
+    const output = query(this, "output-selector");
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */
-    this.queue = query(this, "queue-engine-selector");
+    const queue = query(this, "queue-engine-selector");
+
+    /** @type {import("@components/processor/search/element.js").CLASS} */
+    const search = query(this, "search-processor-selector");
+
+    this.input = input;
+    this.output = output;
+    this.queue = queue;
+    this.search = search;
 
     // Wait for the above dependencies to be defined, then render again.
-    whenElementsDefined({ input: this.input, output: this.output }).then(() => {
+    whenElementsDefined({ input, output, search }).then(() => {
+      this.effect(() => {
+        const _cacheId = search.cacheId();
+        this.performSearch();
+      });
+
       this.effect(() => {
         this.forceRender();
       });
+    });
+
+    // Effects
+    this.effect(() => {
+      const _results = this.#searchResults.value;
+      this.root().querySelector(".sunken-panel")?.scrollTo(0, 0);
     });
   }
 
@@ -54,6 +80,7 @@ class Browser extends DiffuseElement {
     tr.parentElement?.querySelector("tr.highlighted")?.classList.remove(
       "highlighted",
     );
+
     tr.classList.add("highlighted");
   }
 
@@ -67,13 +94,21 @@ class Browser extends DiffuseElement {
     });
   }
 
+  async performSearch() {
+    /** @type {HTMLInputElement | null} */
+    const input = this.root().querySelector("#search-input");
+    const term = input?.value?.trim();
+
+    this.#searchResults.value = await this.search?.search(term ?? "") ?? [];
+  }
+
   // RENDER
 
   /**
    * @param {RenderArg} _
    */
   render({ html }) {
-    const tracks = this.output?.tracks?.collection() ?? [];
+    const tracks = this.#searchResults.value;
 
     return html`
       <link rel="stylesheet" href="../../styles/vendor/98.css" />
@@ -129,7 +164,8 @@ class Browser extends DiffuseElement {
 
       <search class="field-row">
         <label for="search-input">Search</label>
-        <input id="search-input" type="search" />
+        <input id="search-input" type="search" @change="${this
+          .performSearch}" />
       </search>
 
       <div class="sunken-panel" style="width: 480px">

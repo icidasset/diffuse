@@ -137,9 +137,9 @@ class WindowManager extends DiffuseElement {
   // ACTIONS
 
   /**
-   * @param {string} id
+   * @param {string | null} activeId
    */
-  activateWindow(id) {
+  activateWindow(activeId) {
     this.querySelectorAll("dtw-window").forEach(w => {
       if (w instanceof WindowElement === false) return
 
@@ -264,6 +264,7 @@ class WindowManager extends DiffuseElement {
           input-selector="#input"
           output-selector="#output"
           queue-engine-selector="de-queue"
+          search-processor-selector="dp-search"
         ></dtw-browser>
       </dtw-window>
     `;

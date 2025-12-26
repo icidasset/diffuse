@@ -63,6 +63,7 @@
 
   <!-- Processors -->
   <dp-metadata></dp-metadata>
+  <dp-search></dp-search>
 
   <!-- Orchestrators -->
   <do-input id="input"></do-input>
@@ -79,6 +80,12 @@
     output-selector="#output"
     queue-engine-selector="de-queue"
   ></do-queue-tracks>
+
+  <do-search-tracks
+    input-selector="#input"
+    output-selector="#output"
+    search-processor-selector="dp-search"
+  ></do-search-tracks>
 
   <!--
 

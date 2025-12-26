@@ -1,8 +1,10 @@
 import { DiffuseElement } from "@common/element.js";
+import { signal } from "@common/signal.js";
+import { listen } from "@common/worker.js";
 
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts";
- * @import {Actions} from "./types.d.ts"
+ * @import {Actions, State} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -19,11 +21,37 @@ class SearchProcessor extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {ProxiedActions<Actions>} */
-    const p = this.workerProxy();
+    /** @type {ProxiedActions<Actions & State>} */
+    this.proxy = this.workerProxy();
 
-    this.search = p.search;
-    this.supply = p.supply;
+    this.search = this.proxy.search;
+    this.supply = this.proxy.supply;
+  }
+
+  // SIGNALS
+
+  #cacheId = signal(/** @type {string} */ (""));
+
+  // STATE
+
+  cacheId = this.#cacheId.get;
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    super.connectedCallback();
+
+    // Sync data with worker
+    const link = this.workerLink();
+
+    // Listen for remote data changes
+    listen("cacheId", this.#cacheId.set, link);
+
+    // Fetch current data state
+    this.proxy.cacheId().then(this.#cacheId.set);
   }
 }
 

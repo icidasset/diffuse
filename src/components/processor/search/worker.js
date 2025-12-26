@@ -3,8 +3,8 @@ import { xxh32 } from "xxh32";
 // import { pluginQPS } from "@orama/plugin-qps";
 
 import { SCHEMA } from "./constants.js";
-import { ostiary, rpc } from "@common/worker.js";
-import { signal } from "@common/signal.js";
+import { announce, ostiary, rpc } from "@common/worker.js";
+import { effect, signal } from "@common/signal.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -15,8 +15,10 @@ import { signal } from "@common/signal.js";
 // STATE
 ////////////////////////////////////////////
 
-export const cacheId = signal(/** @type {string} */ (""));
-export const inserted = signal(/** @type {Set<string>} */ (new Set()));
+export const $inserted = signal(/** @type {Set<string>} */ (new Set()));
+
+// Communicated state
+export const $cacheId = signal(/** @type {string} */ (""));
 
 ////////////////////////////////////////////
 // DATABASE
@@ -71,18 +73,18 @@ export async function supply(tracks) {
     tracksMap[track.id] = track;
   });
 
-  const currentSet = inserted.value;
+  const currentSet = $inserted.value;
   const newSet = new Set(ids);
 
   const removedIds = currentSet.difference(newSet);
   const newIds = newSet.difference(currentSet);
   const newTracks = Array.from(newIds).map((id) => tracksMap[id]);
 
-  await Orama.removeMultiple(await db, Array.from(removedIds));
-  await Orama.insertMultiple(await db, newTracks);
+  await Orama.removeMultiple(db, Array.from(removedIds));
+  await Orama.insertMultiple(db, newTracks);
 
-  inserted.value = newSet;
-  cacheId.value = xxh32(ids.sort().join("")).toString();
+  $inserted.value = newSet;
+  $cacheId.value = xxh32(ids.sort().join("")).toString();
 }
 
 ////////////////////////////////////////////
@@ -93,7 +95,15 @@ ostiary((context) => {
   rpc(context, {
     search,
     supply,
+
+    // State
+    cacheId: $cacheId.get,
   });
+
+  // Effects
+
+  // Communicate state
+  effect(() => announce("cacheId", $cacheId.value, context));
 });
 
 ////////////////////////////////////////////
@@ -105,9 +115,7 @@ ostiary((context) => {
  * @param {Track[]} tracks
  */
 async function _search(term, tracks) {
-  console.log("Search with offset:", tracks.length);
-
-  const results = await Orama.search(await db, {
+  const results = await Orama.search(db, {
     // mode: "hybrid",
     term,
     limit: 10000,
