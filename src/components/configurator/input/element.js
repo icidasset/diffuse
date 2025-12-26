@@ -33,16 +33,6 @@ class InputConfigurator extends DiffuseElement {
     this.resolve = proxy.resolve;
   }
 
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  async connectedCallback() {
-    super.connectedCallback();
-    await whenElementsDefined(this.inputs());
-  }
-
   // WORKERS
 
   /**

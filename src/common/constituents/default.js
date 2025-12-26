@@ -1,7 +1,5 @@
-import InputConfigurator from "@components/configurator/input/element.js";
 import Queue from "@components/engine/queue/element.js";
-import OpenSubsonic from "@components/input/opensubsonic/element.js";
-import S3 from "@components/input/s3/element.js";
+import InputOrchestrator from "@components/orchestrator/input/element.js";
 import OutputOrchestrator from "@components/orchestrator/output/element.js";
 import QueueTracksOrchestrator from "@components/orchestrator/queue-tracks/element.js";
 import { effect } from "../signal.js";
@@ -12,21 +10,17 @@ export const GROUP = "constituents";
  * Default config for constituents.
  */
 export function config() {
-  // Input
-  const openSubsonic = new OpenSubsonic();
-  const s3 = new S3();
-
-  const input = new InputConfigurator();
-  input.setAttribute("id", "input");
-  input.append(openSubsonic, s3);
-
-  document.body.append(input);
-
   // Queue
   const queue = new Queue();
   queue.setAttribute("group", GROUP);
 
   document.body.append(queue);
+
+  // Input
+  const input = new InputOrchestrator();
+  input.setAttribute("id", "input");
+
+  document.body.append(input);
 
   // Output
   const output = new OutputOrchestrator();
@@ -66,11 +60,8 @@ export function config() {
     engine: {
       queue,
     },
-    input: {
-      openSubsonic,
-      s3,
-    },
     orchestrator: {
+      input,
       output,
       queueTracks: oqt,
     },
