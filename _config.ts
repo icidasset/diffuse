@@ -11,6 +11,7 @@ import { walkSync } from "@std/fs/walk";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
 const site = lume({
+  dest: "./dist",
   src: "./src",
   server: {
     debugBar: false,
