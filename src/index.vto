@@ -64,10 +64,10 @@ input:
 orchestrators:
   - url: "components/orchestrator/input/element.js"
     title: "Input"
-    desc: "**A default input configuration.** Contains all inputs provided here."
+    desc: "**A default input configuration.** Contains all the inputs provided here."
   - url: "components/orchestrator/output/element.js"
     title: "Output"
-    desc: "**A default output configuration.** Contains all outputs provided here along with the relevant transformers."
+    desc: "**A default output configuration.** Contains all the outputs provided here along with the relevant transformers."
   - url: "components/orchestrator/process-tracks/element.js"
     title: "Process inputs into tracks"
     desc: "Whenever the cached tracks are initially loaded through the passed output element it will contextualize and then list tracks by using the passed input element. Afterwards it loops over all tracks and checks if metadata needs to be fetched. If anything has changed, it'll pass the results to the output element."
@@ -77,6 +77,9 @@ orchestrators:
   - url: "components/orchestrator/queue-tracks/element.js"
     title: "Queue ⭤ Tracks"
     desc: "Sets the given queue element pool whenever the tracks signal from the given output changes."
+  - title: "Repeat & Shuffle"
+    desc: "An opinionated way to setup repeat & shuffle."
+    todo: true
   - url: "components/orchestrator/search-tracks/element.js"
     title: "Search ⭤ Tracks"
     desc: "Supplies tracks to the given search processor whenever the tracks collection changes."
