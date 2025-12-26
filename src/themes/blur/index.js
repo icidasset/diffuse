@@ -1,10 +1,8 @@
 import "@components/input/opensubsonic/element.js";
 import "@components/processor/metadata/element.js";
-import "@components/transformer/output/string/json/element.js";
-import "@components/transformer/output/refiner/default/element.js";
 
 import * as Audio from "@components/engine/audio/element.js";
-import * as Output from "@components/output/polymorphic/indexed-db/element.js";
+import * as Output from "@components/orchestrator/output/element.js";
 import * as Queue from "@components/engine/queue/element.js";
 
 import { component } from "@common/element.js";
@@ -23,7 +21,7 @@ globalThis.queue = queue;
 isLeader().then((bool) => {
   if (!bool) return;
 
-  // Only load orchestrators if leader
+  // Only load these orchestrators if leader
   import("@components/orchestrator/process-tracks/element.js");
   import("@components/orchestrator/queue-audio/element.js");
   import("@components/orchestrator/queue-tracks/element.js");

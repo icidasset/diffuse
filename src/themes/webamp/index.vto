@@ -70,16 +70,9 @@
     <di-s3></di-s3>
   </dc-input>
 
-  <!-- Output -->
-  <dop-indexed-db id="idb-json-output" namespace="json"></dop-indexed-db>
-
-  <dc-output default="idb-json">
-    <dtos-json id="idb-json" output-selector="#idb-json-output"></dtos-json>
-  </dc-output>
-
-  <dtor-default id="output" output-selector="dc-output"></dtor-default>
-
   <!-- Orchestrators -->
+  <do-output id="output"></do-output>
+
   <do-process-tracks
     input-selector="#input"
     metadata-processor-selector="dp-metadata"
