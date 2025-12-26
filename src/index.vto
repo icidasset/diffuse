@@ -62,6 +62,9 @@ input:
     desc: "AWS S3 and services that provide the same surface API such as Cloudflare R2."
 
 orchestrators:
+  - title: "Output"
+    desc: "**A default output configuration.** Contains all outputs provided here along with the relevant transformers."
+    todo: true
   - url: "components/orchestrator/process-tracks/element.js"
     title: "Process inputs into tracks"
     desc: "Whenever the cached tracks are initially loaded through the passed output element it will contextualize and then list tracks by using the passed input element. Afterwards it loops over all tracks and checks if metadata needs to be fetched. If anything has changed, it'll pass the results to the output element."
@@ -144,8 +147,9 @@ definitions:
     Diffuse is a collection of components and software that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital
     audio listening experience for you.
   </p>
-  <p>
-    <em>⚠️ HEAVILY EXPERIMENTAL</em>
+  <p style="align-items: center; display: flex; gap: var(--space-3xs); opacity: 0.55  ;">
+    <i class="ph-fill ph-seal-warning"></i>
+    <strong style="font-weight: 900;">HEAVILY EXPERIMENTAL</strong>
   </p>
   <p>
     <small>Built by <a href="https://tokono.ma">tokono.ma</a></small>
@@ -337,3 +341,21 @@ definitions:
     </p>
   </section>
 </main>
+
+<!--
+
+###################################
+# COMPONENTS
+###################################
+
+-->
+
+
+
+<!--
+
+###################################
+# COMPONENTS
+###################################
+
+-->
