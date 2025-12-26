@@ -111,9 +111,10 @@ class Browser extends DiffuseElement {
     const tracks = this.#searchResults.value;
 
     return html`
-      <link rel="stylesheet" href="../../styles/vendor/98.css" />
+      <link rel="stylesheet" href="styles/vendor/98.css" />
+
       <style>
-      @import "./98-vars.css";
+      @import "./themes/webamp/98-vars.css";
 
       /***********************************
       * SEARCH
@@ -164,8 +165,7 @@ class Browser extends DiffuseElement {
 
       <search class="field-row">
         <label for="search-input">Search</label>
-        <input id="search-input" type="search" @change="${this
-          .performSearch}" />
+        <input id="search-input" type="search" @change="${this.performSearch}" />
       </search>
 
       <div class="sunken-panel" style="width: 480px">

@@ -1,97 +1,176 @@
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+---
+layout: layouts/diffuse.vto
+base: ../../../
 
-  <title>Diffuse</title>
+styles:
+  - themes/webamp/fonts.css
+  - themes/webamp/index.css
+---
 
-  <link href="index.css" rel="stylesheet" />
-</head>
-<body>
-  <!--
+<!--
 
-  ###################################
-  # UI
-  ###################################
+###################################
+# UI
+###################################
 
-  -->
-  <main>
-    <!-- 🪟 -->
-    <section class="windows">
-      <dtw-window-manager></dtw-window-manager>
-    </section>
+-->
+<main>
+  <!-- 🪟 -->
+  <section class="windows">
+    <style>
+    dtw-window-manager > * {
+      left: 12px;
+      position: absolute;
+      top: 12px;
+      z-index: 999;
 
+      /* Waiting on https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-index#browser_compatibility */
+      &:nth-child(1) {
+        left: 24px;
+        top: 24px;
+      }
 
-    <!-- 🛋️ -->
-    <section class="desktop">
-      <!-- WINAMP -->
-      <a class="button desktop__item" id="desktop-winamp">
-        <img src="../../images/icons/windows_98/winamp2-32x32.png" height="32" />
-        <label>Winamp</label>
-      </a>
+      &:nth-child(2) {
+        left: 36px;
+        top: 36px;
+      }
 
+      &:nth-child(3) {
+        left: 48px;
+        top: 48px;
+      }
+
+      &:nth-child(4) {
+        left: 60px;
+        top: 60px;
+      }
+
+      &:nth-child(5) {
+        left: 72px;
+        top: 72px;
+      }
+
+      &:nth-child(6) {
+        left: 84px;
+        top: 84px;
+      }
+
+      &:nth-child(7) {
+        left: 96px;
+        top: 96px;
+      }
+
+      &:nth-child(8) {
+        left: 108px;
+        top: 108px;
+      }
+
+      &:nth-child(9) {
+        left: 120px;
+        top: 120px;
+      }
+    }
+    </style>
+
+    <dtw-window-manager>
       <!-- INPUT -->
-      <a class="button desktop__item">
-        <img src="../../images/icons/windows_98/cd_audio_cd_a-4.png" height="32" />
-        <label for="input-window">Manage audio inputs</label>
-      </a>
+      <dtw-window id="input-window">
+        <span slot="title-icon"><img src="images/icons/windows_98/cd_audio_cd_a-0.png" height="14" /></span>
+        <span slot="title">Manage audio inputs</span>
+        <p>👀</p>
+      </dtw-window>
 
       <!-- OUTPUT -->
-      <a class="button desktop__item">
-        <img src="../../images/icons/windows_98/computer_user_pencil-0.png" height="32" />
-        <label for="output-window">Manage user data</label>
-      </a>
+      <dtw-window id="output-window">
+        <span slot="title-icon"><img src="images/icons/windows_98/computer_user_pencil-0.png" height="14" /></span>
+        <span slot="title">Manage user data</span>
 
-      <!-- BROWSE -->
-      <a class="button desktop__item">
-        <img src="../../images/icons/windows_98/directory_explorer-5.png" height="32" />
-        <label for="browser-window">Browse collection</label>
-      </a>
-    </section>
-    <!-- ⚡️ -->
-    <dtw-webamp></dtw-webamp>
-  </main>
+        <dtw-output-config></dtw-output-config>
+      </dtw-window>
 
-  <!--
+      <!-- BROWSER -->
+      <dtw-window id="browser-window" open>
+        <span slot="title-icon"><img src="images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
+        <span slot="title">Browse collection</span>
+        <dtw-browser
+          input-selector="#input"
+          output-selector="#output"
+          queue-engine-selector="de-queue"
+          search-processor-selector="dp-search"
+        ></dtw-browser>
+      </dtw-window>
+    </dtw-window-manager>
+  </section>
 
-  ###################################
-  # COMPONENTS
-  ###################################
+  <!-- 🛋️ -->
+  <section class="desktop">
+    <!-- WINAMP -->
+    <a class="button desktop__item" id="desktop-winamp">
+      <img src="images/icons/windows_98/winamp2-32x32.png" height="32" />
+      <label>Winamp</label>
+    </a>
 
-  -->
-  <de-queue></de-queue>
+    <!-- INPUT -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/cd_audio_cd_a-4.png" height="32" />
+      <label for="input-window">Manage audio inputs</label>
+    </a>
 
-  <!-- Processors -->
-  <dp-metadata></dp-metadata>
-  <dp-search></dp-search>
+    <!-- OUTPUT -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/computer_user_pencil-0.png" height="32" />
+      <label for="output-window">Manage user data</label>
+    </a>
 
-  <!-- Orchestrators -->
-  <do-input id="input"></do-input>
-  <do-output id="output"></do-output>
+    <!-- BROWSE -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/directory_explorer-5.png" height="32" />
+      <label for="browser-window">Browse collection</label>
+    </a>
+  </section>
 
-  <do-process-tracks
-    input-selector="#input"
-    metadata-processor-selector="dp-metadata"
-    output-selector="#output"
-  ></do-process-tracks>
+  <!-- ⚡️ -->
+  <dtw-webamp></dtw-webamp>
+</main>
 
-  <do-queue-tracks
-    input-selector="#input"
-    output-selector="#output"
-    queue-engine-selector="de-queue"
-  ></do-queue-tracks>
+<!--
 
-  <do-search-tracks
-    input-selector="#input"
-    output-selector="#output"
-    search-processor-selector="dp-search"
-  ></do-search-tracks>
+###################################
+# COMPONENTS
+###################################
 
-  <!--
+-->
+<de-queue></de-queue>
 
-  SCRIPTS
+<!-- Processors -->
+<dp-metadata></dp-metadata>
+<dp-search></dp-search>
 
-  -->
-  <script src="index.js" type="module"></script>
-</body>
-</html>
+<!-- Orchestrators -->
+<do-input id="input"></do-input>
+<do-output id="output"></do-output>
+
+<do-process-tracks
+  input-selector="#input"
+  metadata-processor-selector="dp-metadata"
+  output-selector="#output"
+></do-process-tracks>
+
+<do-queue-tracks
+  input-selector="#input"
+  output-selector="#output"
+  queue-engine-selector="de-queue"
+></do-queue-tracks>
+
+<do-search-tracks
+  input-selector="#input"
+  output-selector="#output"
+  search-processor-selector="dp-search"
+></do-search-tracks>
+
+<!--
+
+SCRIPTS
+
+-->
+<script src="themes/webamp/index.js" type="module"></script>

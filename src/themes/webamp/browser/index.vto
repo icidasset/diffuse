@@ -1,0 +1,29 @@
+---
+layout: layouts/diffuse.vto
+base: ../../../
+
+styles:
+  - styles/vendor/98.css
+---
+
+<!-- ELEMENTS -->
+
+<dtw-window id="browser-window" open>
+  <span slot="title-icon"><img src="images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
+  <span slot="title">Browse collection</span>
+  <dtw-browser
+    input-selector="#input"
+    output-selector="#output"
+    queue-engine-selector="de-queue"
+    search-processor-selector="dp-search"
+  ></dtw-browser>
+</dtw-window>
+
+<!-- SCRIPTS -->
+
+<script type="module">
+  import { config } from "./common/constituents/default.js"
+
+  // Prepare default constituents setup
+  const defaults = config()
+</script>

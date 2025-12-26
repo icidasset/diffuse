@@ -15,7 +15,9 @@ import { component } from "@common/element.js";
 import { effect, signal, untracked } from "@common/signal.js";
 
 import "./browser/element.js";
+import "./configurators/output.js";
 import "./window/element.js";
+
 import WindowManager from "./window-manager/element.js";
 import WebampElement from "./webamp/element.js";
 

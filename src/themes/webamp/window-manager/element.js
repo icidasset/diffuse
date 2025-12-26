@@ -155,7 +155,7 @@ class WindowManager extends DiffuseElement {
    * @param {string} id
    */
   toggleWindow(id) {
-    const w = this.root().querySelector(`dtw-window#${id}`)
+    const w = this.querySelector(`dtw-window#${id}`)
     if (w instanceof WindowElement === false) return
 
     w.toggleAttribute("open")
@@ -174,99 +174,13 @@ class WindowManager extends DiffuseElement {
    */
   render({ html }) {
     return html`
-      <link rel="stylesheet" href="../../styles/vendor/98.css" />
-
       <style>
       :host {
         user-select: none;
       }
-
-      dtw-window {
-        left: 12px;
-        position: absolute;
-        top: 12px;
-        z-index: 999;
-
-        /* Waiting on https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-index#browser_compatibility */
-        &:nth-child(1) {
-          left: 24px;
-          top: 24px;
-        }
-
-        &:nth-child(2) {
-          left: 36px;
-          top: 36px;
-        }
-
-        &:nth-child(3) {
-          left: 48px;
-          top: 48px;
-        }
-
-        &:nth-child(4) {
-          left: 60px;
-          top: 60px;
-        }
-
-        &:nth-child(5) {
-          left: 72px;
-          top: 72px;
-        }
-
-        &:nth-child(6) {
-          left: 84px;
-          top: 84px;
-        }
-
-        &:nth-child(7) {
-          left: 96px;
-          top: 96px;
-        }
-
-        &:nth-child(8) {
-          left: 108px;
-          top: 108px;
-        }
-
-        &:nth-child(9) {
-          left: 120px;
-          top: 120px;
-        }
-      }
       </style>
 
-      <!-- INPUT -->
-      <dtw-window id="input-window">
-        <span slot="title-icon"><img src="../../images/icons/windows_98/cd_audio_cd_a-0.png" height="14" /></span>
-        <span slot="title">Manage audio inputs</span>
-        <p>👀</p>
-      </dtw-window>
-
-      <!-- OUTPUT -->
-      <dtw-window id="output-window">
-        <span slot="title-icon"><img src="../../images/icons/windows_98/computer_user_pencil-0.png" height="14" /></span>
-        <span slot="title">Manage user data</span>
-
-        <form>
-          <p>Where do you want to keep your data?</p>
-          <div class="field-row">
-            <input id="idb-json" type="radio" checked />
-            <label for="idb-json">Local only</label>
-          </div>
-        </form>
-      </dtw-window>
-
-      <!-- BROWSER -->
-      <dtw-window id="browser-window" open>
-        <span slot="title-icon"><img src="../../images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
-        <span slot="title">Browse collection</span>
-        <dtw-browser
-          input-selector="#input"
-          output-selector="#output"
-          queue-engine-selector="de-queue"
-          search-processor-selector="dp-search"
-        ></dtw-browser>
-      </dtw-window>
+      <slot></slot>
     `;
   }
 }
