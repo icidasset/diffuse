@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "@common/element.js";
+import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
 
 /**
@@ -19,7 +19,7 @@ import { signal, untracked } from "@common/signal.js";
  * the already existing tracks are loaded
  * from the assigned output element.
  */
-class ProcessTracksOrchestrator extends DiffuseElement {
+class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/process-tracks";
   static WORKER_URL = "components/orchestrator/process-tracks/worker.js";
 
@@ -49,6 +49,12 @@ class ProcessTracksOrchestrator extends DiffuseElement {
    * @override
    */
   async connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      this.broadcast(this.nameWithGroup, {});
+    }
+
+    // Super
     super.connectedCallback();
 
     /** @type {InputElement} */
@@ -98,6 +104,7 @@ class ProcessTracksOrchestrator extends DiffuseElement {
 
   async process() {
     if (!this.output) return;
+    if (!(await this.isLeader())) return;
 
     // Start
     this.#isProcessing.value = true;

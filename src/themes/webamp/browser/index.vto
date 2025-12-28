@@ -4,20 +4,35 @@ base: ../../../
 
 styles:
   - styles/vendor/98.css
+  - themes/webamp/fonts.css
+  - themes/webamp/constituent.css
 ---
 
 <!-- ELEMENTS -->
 
-<dtw-window id="browser-window" open>
-  <span slot="title-icon"><img src="images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
-  <span slot="title">Browse collection</span>
-  <dtw-browser
-    input-selector="#input"
-    output-selector="#output"
-    queue-engine-selector="de-queue"
-    search-processor-selector="dp-search"
-  ></dtw-browser>
-</dtw-window>
+<div class="window">
+  <div
+    class="title-bar"
+  >
+    <div class="title-bar-icon">
+      <img src="images/icons/windows_98/directory_explorer-4.png" height="14" />
+    </div>
+    <div class="title-bar-text" draggable="false">
+      Browse collection
+    </div>
+    <div class="title-bar-controls">
+      <button aria-label="Close" onclick="window.close()"></button>
+    </div>
+  </div>
+  <div class="window-body">
+    <dtw-browser
+      input-selector="#input"
+      output-selector="#output"
+      queue-engine-selector="de-queue"
+      search-processor-selector="dp-search"
+    ></dtw-browser>
+  </div>
+</div>
 
 <!-- SCRIPTS -->
 
@@ -26,4 +41,7 @@ styles:
 
   // Prepare default constituents setup
   const defaults = config()
+
+  // Only then initialize the other elements
+  import("./themes/webamp/browser/element.js")
 </script>

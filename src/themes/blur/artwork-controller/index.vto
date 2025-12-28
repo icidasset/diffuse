@@ -36,12 +36,11 @@ styles:
   import("./themes/blur/artwork-controller/element.js")
 
   // Orchestrators
-
   const oqa = new QueueAudioOrchestrator();
   oqa.setAttribute("group", defaults.GROUP);
-  oqa.setAttribute("input-selector", defaults.configurator.input.localName);
+  oqa.setAttribute("input-selector", "#" + defaults.orchestrator.input.id);
   oqa.setAttribute("audio-engine-selector", "de-audio");
   oqa.setAttribute("queue-engine-selector", defaults.engine.queue.localName);
 
-  document.body.append(oqa);
+  document.body.append(oqa)
 </script>

@@ -51,6 +51,21 @@ site.remoteFile(
 site.add("/favicons", "/");
 site.add("/fonts");
 site.add("/images");
+site.add([".woff2"]);
+
+site.remoteFile(
+  "styles/vendor/ms_sans_serif.woff2",
+  import.meta.resolve(
+    "./node_modules/98.css/fonts/converted/ms_sans_serif.woff2",
+  ),
+);
+
+site.remoteFile(
+  "styles/vendor/ms_sans_serif_bold.woff2",
+  import.meta.resolve(
+    "./node_modules/98.css/fonts/converted/ms_sans_serif_bold.woff2",
+  ),
+);
 
 site.remoteFile(
   "fonts/ms_sans_serif.woff2",

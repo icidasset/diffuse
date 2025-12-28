@@ -44,8 +44,10 @@ class WindowElement extends DiffuseElement {
         padding: 0;
       }
 
-      .window {
+      .window-body {
         min-width: 240px;
+        overflow: hidden;
+        resize: both;
       }
 
       .title-bar {
@@ -81,7 +83,8 @@ class WindowElement extends DiffuseElement {
                 this.removeAttribute("open")}"></button>
             </div>
           </div>
-          <div class="window-body">
+          <div class="window-body" style="${this.getAttribute(`window-style`) ??
+            ``}">
             <slot></slot>
           </div>
         </div>

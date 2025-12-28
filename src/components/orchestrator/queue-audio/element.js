@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "@common/element.js";
+import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { untracked } from "@common/signal.js";
 
 /**
@@ -16,11 +16,17 @@ import { untracked } from "@common/signal.js";
  * Vice versa, when the audio ends,
  * shift the queue if needed.
  */
-class QueueAudioOrchestrator extends DiffuseElement {
+class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
   /**
    * @override
    */
   async connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      this.broadcast(this.nameWithGroup, {});
+    }
+
+    // Super
     super.connectedCallback();
 
     /** @type {InputElement} */
@@ -50,6 +56,8 @@ class QueueAudioOrchestrator extends DiffuseElement {
     if (!this.queue) return;
 
     const activeTrack = this.queue.now();
+    if ((await this.isLeader()) === false) return;
+
     const isPlaying = untracked(this.audio.isPlaying);
 
     // Resolve URIs
@@ -89,7 +97,7 @@ class QueueAudioOrchestrator extends DiffuseElement {
     const now = this.queue.now();
     const aud = now ? this.audio.state(now.id) : undefined;
 
-    if (aud?.hasEnded()) await this.queue.shift();
+    if (aud?.hasEnded() && (await this.isLeader())) await this.queue.shift();
   }
 }
 

@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "@common/element.js";
+import { BroadcastableDiffuseElement, query } from "@common/element.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -18,7 +18,7 @@ import { DiffuseElement, query } from "@common/element.js";
  * tracks whenever they have been loaded,
  * or the tracks collection changes.
  */
-class SearchTracksOrchestrator extends DiffuseElement {
+class SearchTracksOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/search-tracks";
   static WORKER_URL = "components/orchestrator/search-tracks/worker.js";
 
@@ -42,6 +42,12 @@ class SearchTracksOrchestrator extends DiffuseElement {
    * @override
    */
   async connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      this.broadcast(this.nameWithGroup, {});
+    }
+
+    // Super
     super.connectedCallback();
 
     /** @type {InputElement} */
@@ -62,11 +68,12 @@ class SearchTracksOrchestrator extends DiffuseElement {
     await customElements.whenDefined(this.output.localName);
 
     // Watch tracks collection
-    this.effect(() => {
-      const tracks = output.tracks.collection().filter((t) =>
-        t.kind !== "placeholder"
-      );
+    this.effect(async () => {
+      const collection = output.tracks.collection();
 
+      if ((await this.isLeader()) === false) return;
+
+      const tracks = collection.filter((t) => t.kind !== "placeholder");
       this.#proxy.supplyAvailable(tracks);
     });
   }

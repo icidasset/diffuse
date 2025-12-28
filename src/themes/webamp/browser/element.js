@@ -92,6 +92,8 @@ class Browser extends DiffuseElement {
       inFront: true,
       tracks: [track],
     });
+
+    this.queue?.shift();
   }
 
   async performSearch() {
@@ -116,6 +118,12 @@ class Browser extends DiffuseElement {
       <style>
       @import "./themes/webamp/98-vars.css";
 
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
       /***********************************
       * SEARCH
       ***********************************/
@@ -133,8 +141,11 @@ class Browser extends DiffuseElement {
       ***********************************/
 
       .sunken-panel {
-        height: 30dvh;
+        flex: 1;
         min-height: 80px;
+      }
+
+      :host([resizable]) .sunken-panel {
         resize: both;
       }
 
@@ -165,10 +176,11 @@ class Browser extends DiffuseElement {
 
       <search class="field-row">
         <label for="search-input">Search</label>
-        <input id="search-input" type="search" @change="${this.performSearch}" />
+        <input id="search-input" type="search" @change="${this
+          .performSearch}" />
       </search>
 
-      <div class="sunken-panel" style="width: 480px">
+      <div class="sunken-panel">
         <table>
           <thead>
             <tr>
