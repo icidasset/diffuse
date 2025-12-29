@@ -124,7 +124,7 @@ effect(() => {
     if (addedItems.has(item.id) === false) return;
 
     // TODO
-    if (item.stats?.duration == undefined) return;
+    // if (item.stats?.duration == undefined) return;
 
     // TODO: Inserting at a specific index doesn't work
     ampElement.addTrack(item);
