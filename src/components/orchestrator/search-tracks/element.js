@@ -70,11 +70,8 @@ class SearchTracksOrchestrator extends BroadcastableDiffuseElement {
     // Watch tracks collection
     this.effect(async () => {
       const collection = output.tracks.collection();
-
       if ((await this.isLeader()) === false) return;
-
-      const tracks = collection.filter((t) => t.kind !== "placeholder");
-      this.#proxy.supplyAvailable(tracks);
+      this.#proxy.supplyAvailable(collection);
     });
   }
 

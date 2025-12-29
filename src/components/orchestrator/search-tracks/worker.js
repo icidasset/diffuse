@@ -16,7 +16,7 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
  * @type {ActionsWithTunnel<Actions>["supplyAvailable"]}
  */
 export async function supplyAvailable({ data, ports }) {
-  const cachedTracks = data;
+  const cachedTracks = data.filter((t) => t.kind !== "placeholder");
 
   /** @type {ProxiedActions<InputActions>} */
   const input = workerProxy(() => ports.input);
@@ -39,7 +39,7 @@ export async function supplyAvailable({ data, ports }) {
   }, []);
 
   // Set pool
-  await search.supply(availableTracks);
+  await search.supply({ tracks: availableTracks });
 }
 
 ////////////////////////////////////////////

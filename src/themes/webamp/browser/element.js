@@ -20,6 +20,17 @@ class Browser extends DiffuseElement {
 
   #searchResults = signal(/** @type {Track[]} */ ([]));
 
+  $input = signal(/** @type {InputElement | undefined} */ (undefined));
+  $output = signal(
+    /** @type {OutputElement<Track[]> | undefined} */ (undefined),
+  );
+  $queue = signal(
+    /** @type {import("@components/engine/queue/element.js").CLASS | undefined} */ (undefined),
+  );
+  $search = signal(
+    /** @type {import("@components/processor/search/element.js").CLASS | undefined} */ (undefined),
+  );
+
   // LIFECYCLE
 
   /**
@@ -40,10 +51,10 @@ class Browser extends DiffuseElement {
     /** @type {import("@components/processor/search/element.js").CLASS} */
     const search = query(this, "search-processor-selector");
 
-    this.input = input;
-    this.output = output;
-    this.queue = queue;
-    this.search = search;
+    this.$input.value = input;
+    this.$output.value = output;
+    this.$queue.value = queue;
+    this.$search.value = search;
 
     // Wait for the above dependencies to be defined, then render again.
     whenElementsDefined({ input, output, search }).then(() => {
@@ -88,12 +99,12 @@ class Browser extends DiffuseElement {
    * @param {Track} track
    */
   playTrack(track) {
-    this.queue?.add({
+    this.$queue.value?.add({
       inFront: true,
       tracks: [track],
     });
 
-    this.queue?.shift();
+    this.$queue.value?.shift();
   }
 
   async performSearch() {
@@ -101,7 +112,9 @@ class Browser extends DiffuseElement {
     const input = this.root().querySelector("#search-input");
     const term = input?.value?.trim();
 
-    this.#searchResults.value = await this.search?.search(term ?? "") ?? [];
+    this.#searchResults.value = await this.$search.value?.search({
+      term: term,
+    }) ?? [];
   }
 
   // RENDER
@@ -110,6 +123,8 @@ class Browser extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
+    const isLoading = this.$output.value?.tracks.state() !== "loaded" ||
+      this.$search.value?.cacheId() === "";
     const tracks = this.#searchResults.value;
 
     return html`
@@ -190,16 +205,24 @@ class Browser extends DiffuseElement {
             </tr>
           </thead>
           <tbody>
-            ${tracks.map((track) => {
-              return html`
-                <tr @click="${this.highlightTableEntry}" @dblclick="${() =>
-                  this.playTrack(track)}">
-                  <td>${track.tags?.title}</td>
-                  <td>${track.tags?.artist}</td>
-                  <td>${track.tags?.album}</td>
+            ${isLoading
+              ? html`
+                <tr>
+                  <td>Loading ...</td>
+                  <td></td>
+                  <td></td>
                 </tr>
-              `;
-            })}
+              `
+              : tracks.map((track) => {
+                return html`
+                  <tr @click="${this.highlightTableEntry}" @dblclick="${() =>
+                    this.playTrack(track)}">
+                    <td>${track.tags?.title}</td>
+                    <td>${track.tags?.artist}</td>
+                    <td>${track.tags?.album}</td>
+                  </tr>
+                `;
+              })}
           </tbody>
         </table>
       </div>
@@ -216,4 +239,4 @@ export default Browser;
 export const CLASS = Browser;
 export const NAME = "dtw-browser";
 
-customElements.define(NAME, Browser);
+customElements.define(NAME, CLASS);

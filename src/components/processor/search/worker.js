@@ -7,8 +7,10 @@ import { announce, ostiary, rpc } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
 
 /**
+ * @import {SearchParams} from "@orama/orama";
+ *
  * @import {Track} from "@definitions/types.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {Actions, Schema} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -50,15 +52,19 @@ const db = Orama.create({
 /**
  * @type {Actions['search']}
  */
-export async function search(term) {
-  term = term.trim();
-  return await _search(term, []);
+export async function search(params) {
+  return await _search(
+    "term" in params && typeof params.term === "string"
+      ? { ...params, term: params.term.trim() }
+      : params,
+    [],
+  );
 }
 
 /**
  * @type {Actions['supply']}
  */
-export async function supply(tracks) {
+export async function supply({ tracks }) {
   // TODO: Generate a hash based on the track itself,
   //       so we can detect changes to tags or other data.
 
@@ -84,7 +90,9 @@ export async function supply(tracks) {
   await Orama.insertMultiple(db, newTracks);
 
   $inserted.value = newSet;
-  $cacheId.value = xxh32(ids.sort().join("")).toString();
+  $cacheId.value = ids.length === 0
+    ? ""
+    : xxh32(ids.sort().join("")).toString();
 }
 
 ////////////////////////////////////////////
@@ -111,13 +119,15 @@ ostiary((context) => {
 ////////////////////////////////////////////
 
 /**
- * @param {string} term
+ * @param {SearchParams<Schema>} params
  * @param {Track[]} tracks
  */
-async function _search(term, tracks) {
+async function _search(params, tracks) {
   const results = await Orama.search(db, {
+    // @ts-ignore: No clue what the correct type is for this one
+    sortBy,
+    ...params,
     // mode: "hybrid",
-    term,
     limit: 10000,
     offset: tracks.length,
   });
@@ -129,8 +139,35 @@ async function _search(term, tracks) {
   );
 
   if (allTracks.length < results.count) {
-    return await _search(term, allTracks);
+    return await _search(params, allTracks);
   } else {
     return allTracks;
   }
+}
+
+/**
+ * @type {Orama.CustomSorterFunction<Orama.TypedDocument<Schema>>}
+ */
+function sortBy(a, b) {
+  const artist = (a[2].tags?.artist ?? "").localeCompare(
+    b[2].tags?.artist ?? "",
+  );
+  if (artist != 0) return artist;
+
+  const album = (a[2].tags?.album ?? "").localeCompare(
+    b[2].tags?.album ?? "",
+  );
+  if (album != 0) return album;
+
+  const discNo = (a[2].tags?.disc?.no ?? 0) - (b[2].tags?.disc?.no ?? 0);
+  if (discNo != 0) return discNo;
+
+  const trackNo = (a[2].tags?.track?.no ?? 0) - (b[2].tags?.track?.no ?? 0);
+  if (trackNo != 0) return trackNo;
+
+  const title = (a[2].tags?.title ?? "").localeCompare(
+    b[2].tags?.title ?? "",
+  );
+  if (title != 0) return title;
+  return 0;
 }

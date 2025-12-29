@@ -76,12 +76,7 @@ class QueueTracksOrchestrator extends BroadcastableDiffuseElement {
 
       this.isLeader().then((isLeader) => {
         if (!isLeader) return;
-
-        untracked(() =>
-          this.#proxy.poolAvailable(
-            tracks.filter((t) => t.kind !== "placeholder"),
-          )
-        );
+        untracked(() => this.#proxy.poolAvailable(tracks));
       });
     });
 
