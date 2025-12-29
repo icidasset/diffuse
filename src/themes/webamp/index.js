@@ -6,10 +6,10 @@ import "@components/orchestrator/output/element.js";
 import "@components/orchestrator/queue-tracks/element.js";
 import "@components/orchestrator/search-tracks/element.js";
 import "@components/processor/metadata/element.js";
-import "@components/processor/search/element.js";
 
 import * as Input from "@components/configurator/input/element.js";
 import * as Queue from "@components/engine/queue/element.js";
+import * as Search from "@components/processor/search/element.js";
 
 import { component } from "@common/element.js";
 import { effect, signal, untracked } from "@common/signal.js";
@@ -21,11 +21,21 @@ import "./window/element.js";
 import WindowManager from "./window-manager/element.js";
 import WebampElement from "./webamp/element.js";
 
+/**
+ * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
+ */
+
 const input = component(Input);
 const queue = component(Queue);
+const search = component(Search);
+
+/** @type {OutputElement<Track[]> | null} */
+const output = document.querySelector("#output");
+if (!output) throw new Error("Missing output element");
 
 globalThis.queue = queue;
-globalThis.output = document.querySelector("#output");
+globalThis.output = output;
 
 ////////////////////////////////////////////
 // 📡
@@ -82,6 +92,10 @@ amp.store.subscribe(() => {
   }
 });
 
+////////////////////////////////////////////
+// 📡
+////////////////////////////////////////////
+
 /**
  * Whenever the queue changes update the playlist.
  */
@@ -133,21 +147,17 @@ effect(() => {
   }
 });
 
-/**
- * AUTOPLAY:
- * Make sure there's always some random tracks in the queue.
- */
-effect(() => {
-  const _trigger = queue.now();
-  queue.fill({ amount: 10, shuffled: true });
-});
+/** */
+const tracksPromise = Promise.withResolvers();
 
 effect(() => {
-  const _trigger = queue.poolHash();
-  queue.fill({ amount: 10, shuffled: true });
+  const state = output.tracks.state();
+  if (state !== "loaded") return;
 
-  // Automatically insert track if there isn't any
-  if (!queue.now()) queue.shift();
+  const cacheId = search.cacheId();
+  if (cacheId === "") return;
+
+  tracksPromise.resolve("loaded");
 });
 
 ////////////////////////////////////////////
@@ -159,10 +169,20 @@ document.body.querySelectorAll(".desktop__item").forEach((element) => {
   if (element instanceof HTMLElement) {
     element.addEventListener("dblclick", () => {
       const f = element.querySelector("label")?.getAttribute("for");
-      if (f) windowManager()?.toggleWindow(f);
+      if (f) return windowManager()?.toggleWindow(f);
     });
   }
 });
+
+// Add batch
+document.body.querySelector("#desktop-batch")?.addEventListener(
+  "dblclick",
+  () => {
+    tracksPromise.promise.then(() => {
+      addBatch();
+    });
+  },
+);
 
 // Toggle Winamp if click that desktop item
 let winampIsShown = true;
@@ -170,8 +190,9 @@ let winampIsShown = true;
 document.body.querySelector("#desktop-winamp")?.addEventListener(
   "dblclick",
   () => {
-    if (winampIsShown) amp.close();
-    else {
+    if (winampIsShown) {
+      amp.close();
+    } else {
       amp.reopen();
       winampIsShown = true;
     }
@@ -186,6 +207,13 @@ amp.onClose(() => winampIsShown = false);
 ////////////////////////////////////////////
 // 🛠️
 ////////////////////////////////////////////
+
+function addBatch() {
+  queue.fill({ augment: true, amount: 50, shuffled: true });
+
+  // Automatically insert track if there isn't any
+  if (!queue.now()) queue.shift();
+}
 
 function windowManager() {
   const w = document.body.querySelector("dtw-window-manager");
