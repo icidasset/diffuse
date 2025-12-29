@@ -123,7 +123,7 @@ class Browser extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const isLoading = this.$output.value?.tracks.state() !== "loaded" ||
+    const isLoading = this.$output.value?.tracks?.state() !== "loaded" ||
       this.$search.value?.cacheId() === "";
     const tracks = this.#searchResults.value;
 
