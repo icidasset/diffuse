@@ -15,5 +15,5 @@ export type Actions = {
 export type Schema = Orama<typeof SCHEMA>;
 
 export type State = {
-  cacheId: SignalReader<string>;
+  cacheId: SignalReader<string | undefined>;
 };

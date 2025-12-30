@@ -41,10 +41,7 @@ globalThis.output = output;
 // 📡
 ////////////////////////////////////////////
 
-const currBase = 0;
-
-const $currTrack = signal(/** @type {null | number} */ (null));
-const $playlist = signal(/** @type {Set<string>} */ (new Set()), {
+const $playlist = signal(/** @type {Array<Track>} */ ([]), {
   eager: true,
 });
 
@@ -78,20 +75,6 @@ async function loadOverride(uri, autoPlay) {
 
 amp.media.loadFromUrl = loadOverride.bind(amp.media);
 
-/**
- * Observe changes in Webamp's internal store.
- */
-amp.store.subscribe(() => {
-  const state = amp.store.getState();
-
-  if (
-    state.playlist.currentTrack !== null &&
-    state.playlist.currentTrack - currBase > 0
-  ) {
-    $currTrack.value = state.playlist.currentTrack - currBase;
-  }
-});
-
 ////////////////////////////////////////////
 // 📡
 ////////////////////////////////////////////
@@ -110,44 +93,17 @@ effect(() => {
     ...future,
   ];
 
-  const oldSet = untracked($playlist.get);
-  const newSet = new Set(playlist.map((i) => i.id));
+  const lengthLastPlaylist = untracked($playlist.get).length;
+  const tracksToAdd = playlist.slice(lengthLastPlaylist);
 
-  const addedItems = newSet.difference(oldSet);
+  $playlist.value = playlist;
 
-  // TODO: Can't do removals yet without resetting the webamp instance.
-  // const removedItems = oldSet.difference(newSet);
-
-  if (addedItems.size === 0) return;
-
-  playlist.forEach((item, idx) => {
-    if (addedItems.has(item.id) === false) return;
-
-    // TODO
-    // if (item.stats?.duration == undefined) return;
-
-    // TODO: Inserting at a specific index doesn't work
-    ampElement.addTrack(item);
-  });
-
-  if (untracked($currTrack.get) === null) {
-    amp.setCurrentTrack(past.length);
-  }
-
-  $playlist.value = newSet;
+  tracksToAdd.forEach((t) => ampElement.addTrack(t));
 });
 
 /**
- * Whenever Webamp's queue changes,
- * reflect the change in our queue too.
+ * Keep note of when search is ready.
  */
-effect(() => {
-  if (($currTrack.value ?? 0) > untracked(queue.past).length) {
-    queue.shift();
-  }
-});
-
-/** */
 const tracksPromise = Promise.withResolvers();
 
 effect(() => {
@@ -155,7 +111,7 @@ effect(() => {
   if (state !== "loaded") return;
 
   const cacheId = search.cacheId();
-  if (cacheId === "") return;
+  if (cacheId === undefined) return;
 
   tracksPromise.resolve("loaded");
 });
@@ -201,18 +157,15 @@ document.body.querySelector("#desktop-winamp")?.addEventListener(
 
 amp.onClose(() => winampIsShown = false);
 
-// TODO:
-// amp.onMinimize(() => amp.close());
-
 ////////////////////////////////////////////
 // 🛠️
 ////////////////////////////////////////////
 
-function addBatch() {
-  queue.fill({ augment: true, amount: 50, shuffled: true });
+async function addBatch() {
+  await queue.fill({ augment: true, amount: 50, shuffled: true });
 
   // Automatically insert track if there isn't any
-  if (!queue.now()) queue.shift();
+  if (!queue.now()) await queue.shift();
 }
 
 function windowManager() {

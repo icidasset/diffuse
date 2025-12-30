@@ -30,7 +30,7 @@ class SearchProcessor extends DiffuseElement {
 
   // SIGNALS
 
-  #cacheId = signal(/** @type {string} */ (""));
+  #cacheId = signal(/** @type {string | undefined} */ (undefined));
 
   // STATE
 

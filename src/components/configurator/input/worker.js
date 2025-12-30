@@ -60,8 +60,6 @@ export async function groupConsult({ data, ports }) {
     Object.keys(groups).map(async (scheme) => {
       const input = grabInput(scheme, ports);
 
-      console.log("🔮", scheme);
-
       if (!input) {
         return {
           [scheme]: {

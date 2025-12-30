@@ -20,7 +20,7 @@ import { effect, signal } from "@common/signal.js";
 export const $inserted = signal(/** @type {Set<string>} */ (new Set()));
 
 // Communicated state
-export const $cacheId = signal(/** @type {string} */ (""));
+export const $cacheId = signal(/** @type {string | undefined} */ (undefined));
 
 ////////////////////////////////////////////
 // DATABASE
@@ -91,7 +91,7 @@ export async function supply({ tracks }) {
 
   $inserted.value = newSet;
   $cacheId.value = ids.length === 0
-    ? ""
+    ? undefined
     : xxh32(ids.sort().join("")).toString();
 }
 
