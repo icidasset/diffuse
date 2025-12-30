@@ -43,7 +43,6 @@ export async function process({ data, ports }) {
      */
     async (promise, track) => {
       const acc = await promise;
-
       if (track.tags && track.stats) return [...acc, track];
 
       const resGet = await input.resolve({

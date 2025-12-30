@@ -16,6 +16,7 @@ import {
   serverId,
   serversFromTracks,
 } from "./common.js";
+import { groupKeyHash } from "../common.js";
 
 /**
  * @import {Child, SubsonicAPI} from "subsonic-api"
@@ -73,12 +74,11 @@ export async function groupConsult(tracks) {
 
       /** @type {ConsultGrouping} */
       const grouping = available
-        ? { available, tracks }
-        : { available, reason: "Server ping failed", tracks };
+        ? { available, scheme: SCHEME, tracks }
+        : { available, reason: "Server ping failed", scheme: SCHEME, tracks };
 
       return {
-        // key: `${SCHEME}:${serverId}`,
-        key: SCHEME,
+        key: await groupKeyHash(SCHEME, serverId),
         grouping,
       };
     },
@@ -98,11 +98,15 @@ export async function list(cachedTracks = []) {
   /** @type {Record<string, Record<string, Track>>} */
   const cache = {};
 
+  /** @type {Record<string, Server>} */
+  const servers = {};
+
   cachedTracks.forEach((t) => {
     const parsed = parseURI(t.uri);
     if (!parsed || !parsed.path) return;
 
-    const sid = serverId(parsed?.server);
+    const sid = serverId(parsed.server);
+    servers[sid] = parsed.server;
 
     cache[sid] ??= {};
     cache[sid][URI.unescapeComponent(parsed.path)] = t;
@@ -131,7 +135,6 @@ export async function list(cachedTracks = []) {
     return songs;
   }
 
-  const servers = await loadServers();
   const promises = Object.values(servers).map(async (server) => {
     const client = createClient(server);
     const sid = serverId(server);

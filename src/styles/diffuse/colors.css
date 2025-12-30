@@ -3,8 +3,19 @@
   --color-1: oklch(4.1308% 0.25306 109.22);
   --color-2: oklch(98.369% 0.01834 67.664);
   --color-3: oklch(26.787% 0.00168 186.65);
-  --accent: oklch(86.947% 0.25527 28.789);
+
+  /* Orange/Red */
+  /*--accent: oklch(86.947% 0.25527 28.789);*/
+  /*--accent: hsl(51, 100%, 50%);*/
+  /*--accent: #9e86b8;*/
+
+  /* Green */
+  /*--accent: hsl(120, 73.4%, 74.9%);*/
+  --accent: hsl(82, 39%, 30.2%);
   /*--accent: hsl(80, 60.5%, 34.7%);*/
+
+  /* Blue */
+  /*--accent: hsl(203, 92%, 75.5%);*/
 
   --bg-color: var(--color-2);
   --text-color: var(--color-1);
@@ -14,5 +25,7 @@
   :root {
     --bg-color: var(--color-3);
     --text-color: var(--color-2);
+
+    --accent: #9e86b8;
   }
 }

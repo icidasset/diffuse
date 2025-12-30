@@ -21,9 +21,7 @@ export async function supply(args) {
      * @returns {Extraction}
      */
     (err) => {
-      console.warn("Metadata processor error:", err);
-      console.log(args);
-
+      console.warn("Metadata processor error:", err, args);
       return {};
     },
   );

@@ -13,6 +13,23 @@ a {
   text-underline-offset: 6px;
 }
 
+button {
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--bg-color);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: var(--leading-tight);
+  padding: var(--space-2xs) var(--space-xs);
+
+  & > span {
+    display: inline-block;
+    padding-top: 1px;
+  }
+}
+
 h1 {
   margin: var(--space-lg) 0 var(--space-xl);
   padding-top: var(--space-2xs);

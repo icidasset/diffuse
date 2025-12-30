@@ -1,4 +1,4 @@
-import { isAudioFile } from "@components/input/common.js";
+import { groupKeyHash, isAudioFile } from "@components/input/common.js";
 import {
   bucketId,
   bucketsFromTracks,
@@ -16,7 +16,7 @@ import { effect, signal } from "@common/signal.js";
 import { saveBuckets } from "./common.js";
 
 /**
- * @import { InputActions as Actions } from "@components/input/types.d.ts";
+ * @import { InputActions as Actions, ConsultGrouping } from "@components/input/types.d.ts";
  * @import { Track } from "@definitions/types.d.ts"
  * @import { Bucket } from "./types.d.ts"
  */
@@ -67,12 +67,14 @@ export async function groupConsult(tracks) {
   const promises = Object.entries(groups).map(
     async ([bucketId, { bucket, tracks }]) => {
       const available = await consultBucket(bucket);
+
+      /** @type {ConsultGrouping} */
       const grouping = available
-        ? { available, tracks }
-        : { available, reason: "Bucket unavailable", tracks };
+        ? { available, scheme: SCHEME, tracks }
+        : { available, reason: "Bucket unavailable", scheme: SCHEME, tracks };
 
       return {
-        key: `${SCHEME}:${bucketId}`,
+        key: await groupKeyHash(SCHEME, bucketId),
         grouping,
       };
     },
@@ -81,6 +83,7 @@ export async function groupConsult(tracks) {
   const entries = (await Promise.all(promises)).map((
     entry,
   ) => [entry.key, entry.grouping]);
+
   return Object.fromEntries(entries);
 }
 
@@ -91,11 +94,15 @@ export async function list(cachedTracks = []) {
   /** @type {Record<string, Record<string, Track>>} */
   const cache = {};
 
+  /** @type {Record<string, Bucket>} */
+  const buckets = {};
+
   cachedTracks.forEach((t) => {
     const parsed = parseURI(t.uri);
     if (!parsed) return;
 
-    const bid = bucketId(parsed?.bucket);
+    const bid = bucketId(parsed.bucket);
+    buckets[bid] = parsed.bucket;
 
     if (cache[bid]) {
       cache[bid][parsed.path] = t;
@@ -104,7 +111,6 @@ export async function list(cachedTracks = []) {
     }
   });
 
-  const buckets = await loadBuckets();
   const promises = Object.values(buckets).map(async (bucket) => {
     const client = createClient(bucket);
     const bid = bucketId(bucket);
@@ -193,7 +199,7 @@ export function demo() {
     secretKey: atob("Z0hPQkdHRzU1aXc0a0RDbjdjWlRJYTVTUDRZWnpERkRzQnFCYWI4Mg=="),
   };
 
-  const uri = buildURI(bucket, "");
+  const uri = buildURI(bucket);
 
   /** @type {Track} */
   const track = {

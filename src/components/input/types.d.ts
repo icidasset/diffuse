@@ -14,8 +14,8 @@ export type Consult =
   | { supported: true; consult: "undetermined" | boolean };
 
 export type ConsultGrouping =
-  | { available: false; reason: string; tracks: Track[] }
-  | { available: true; tracks: Track[] };
+  | { available: false; reason: string; scheme: string; tracks: Track[] }
+  | { available: true; scheme: string; tracks: Track[] };
 
 export type GroupConsult = Record<string, ConsultGrouping>;
 

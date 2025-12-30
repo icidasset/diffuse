@@ -1,3 +1,4 @@
+import { builtinModules } from "node:module";
 import lume from "lume/mod.ts";
 
 import esbuild from "lume/plugins/esbuild.ts";

@@ -75,12 +75,14 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     await customElements.whenDefined(output.localName);
 
     // Process whenever tracks are initially loaded
-    this.effect(() => {
-      const state = output.tracks.state();
-      if (state !== "loaded") return;
+    if (this.hasAttribute("process-when-ready")) {
+      this.effect(() => {
+        const state = output.tracks.state();
+        if (state !== "loaded") return;
 
-      untracked(() => this.process());
-    });
+        untracked(() => this.process());
+      });
+    }
   }
 
   // WORKERS

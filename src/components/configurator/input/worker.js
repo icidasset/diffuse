@@ -60,11 +60,14 @@ export async function groupConsult({ data, ports }) {
     Object.keys(groups).map(async (scheme) => {
       const input = grabInput(scheme, ports);
 
+      console.log("🔮", scheme);
+
       if (!input) {
         return {
           [scheme]: {
             available: false,
             reason: "Unsupported scheme",
+            scheme,
             tracks: groups[scheme] ?? [],
           },
         };
@@ -85,12 +88,8 @@ export async function groupConsult({ data, ports }) {
 export async function list({ data, ports }) {
   const groups = await groupConsult({ data, ports });
 
-  Object.keys(ports).forEach((scheme) => {
-    if (!groups[scheme]) groups[scheme] = { available: true, tracks: [] };
-  });
-
-  const promises = Object.entries(groups).map(
-    async ([scheme, { available, tracks }]) => {
+  const promises = Object.values(groups).map(
+    async ({ available, scheme, tracks }) => {
       if (!available) return tracks;
 
       const input = grabInput(scheme, ports);

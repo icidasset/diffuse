@@ -198,10 +198,9 @@ definitions:
       <p>Diffuse is not your typical streaming service, you have to add sources of audio. This button here adds a few sample audio files.</p>
 
       <p>
-        <small>
-          <strong>TODO:</strong>
-          Implement button
-        </small>
+        <button id="add-sample-content">
+          <span>Add sample content</span>
+        </button>
       </p>
 
       <p>
@@ -360,12 +359,46 @@ definitions:
 
 -->
 
+<di-s3></di-s3>
+<do-input></do-input>
+<do-output></do-output>
+<dp-metadata></dp-metadata>
 
+<do-process-tracks
+  input-selector="do-input"
+  output-selector="do-output"
+  metadata-processor-selector="dp-metadata"
+></do-process-tracks>
 
 <!--
 
 ###################################
-# COMPONENTS
+# SCRIPTS
 ###################################
 
 -->
+
+<script type="module">
+  import "./components/processor/metadata/element.js"
+
+  import * as S3Input from "./components/input/s3/element.js";
+  import * as Input from "./components/orchestrator/input/element.js";
+  import * as Output from "./components/orchestrator/output/element.js";
+  import * as ProcessTracks from "./components/orchestrator/process-tracks/element.js";
+
+  import { component } from "./common/element.js";
+
+  const s3Input = component(S3Input)
+  const output = component(Output)
+  const processTracks = component(ProcessTracks)
+
+  async function addSampleContent() {
+    const demo = await s3Input.demo()
+    const tracks = await output.tracks.collection()
+
+    await output.tracks.save([ ...tracks, demo.track ])
+    await processTracks.process()
+  }
+
+  document.querySelector("#add-sample-content")?.addEventListener("click", addSampleContent)
+</script>
