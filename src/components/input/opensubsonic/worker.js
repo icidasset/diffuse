@@ -103,7 +103,7 @@ export async function list(cachedTracks = []) {
 
   cachedTracks.forEach((t) => {
     const parsed = parseURI(t.uri);
-    if (!parsed || !parsed.path) return;
+    if (!parsed || parsed.path === undefined) return;
 
     const sid = serverId(parsed.server);
     servers[sid] = parsed.server;
