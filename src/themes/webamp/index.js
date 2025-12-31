@@ -99,6 +99,10 @@ effect(() => {
   $playlist.value = playlist;
 
   tracksToAdd.forEach((t) => ampElement.addTrack(t));
+
+  if (lengthLastPlaylist === 0 && playlist.length) {
+    amp.store.dispatch({ type: "BUFFER_TRACK", id: 0 });
+  }
 });
 
 /**
