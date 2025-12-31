@@ -124,7 +124,8 @@ class Browser extends DiffuseElement {
    */
   render({ html }) {
     const isLoading = this.$output.value?.tracks?.state() !== "loaded" ||
-      this.$search.value?.cacheId() === undefined;
+      (this.$output.value?.tracks?.collection()?.length &&
+        this.$search.value?.cacheId() === undefined);
     const tracks = this.#searchResults.value;
 
     return html`
