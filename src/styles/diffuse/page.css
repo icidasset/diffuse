@@ -23,9 +23,17 @@ button {
   font-weight: 500;
   line-height: var(--leading-tight);
   padding: var(--space-2xs) var(--space-xs);
+  transition-duration: 500ms;
+  transition-property: opacity;
+
+  &[disabled] {
+    opacity: 0.5;
+  }
 
   & > span {
-    display: inline-block;
+    align-items: center;
+    display: inline-flex;
+    gap: var(--space-3xs);
     padding-top: 1px;
   }
 }

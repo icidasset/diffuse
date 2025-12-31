@@ -392,13 +392,32 @@ definitions:
   const output = component(Output)
   const processTracks = component(ProcessTracks)
 
+  // Demo
+  const addDemoBtn = document.querySelector("#add-sample-content")
+
   async function addSampleContent() {
+    addDemoBtn.setAttribute("disabled", "")
+    addDemoBtn.innerHTML = `<span>
+      <i class="ph-fill ph-hourglass-medium"></i>
+      Adding source
+    </span>`
+
     const demo = await s3Input.demo()
     const tracks = await output.tracks.collection()
 
     await output.tracks.save([ ...tracks, demo.track ])
+
+    addDemoBtn.innerHTML = `<span>
+      <i class="ph-fill ph-hourglass-medium"></i>
+      Processing source
+    </span>`
+
     await processTracks.process()
+
+    addDemoBtn.innerHTML = `<span>
+      <i class="ph-fill ph-check-fat"></i> Added
+    </span>`
   }
 
-  document.querySelector("#add-sample-content")?.addEventListener("click", addSampleContent)
+  addDemoBtn?.addEventListener("click", addSampleContent)
 </script>
