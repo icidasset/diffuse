@@ -129,7 +129,9 @@ class Browser extends DiffuseElement {
     const tracks = this.#searchResults.value;
 
     return html`
-      <link rel="stylesheet" href="./styles/vendor/98.css" />
+      <link rel="stylesheet" href="${import.meta.resolve(
+        "./styles/vendor/98.css",
+      )}" />
 
       <style>
       @import "./themes/webamp/98-vars.css";
