@@ -2,6 +2,10 @@ body {
   margin: 0;
 }
 
+.title-bar {
+  app-region: drag;
+}
+
 .window {
   box-sizing: border-box;
   display: flex;
