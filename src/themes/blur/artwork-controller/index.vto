@@ -24,6 +24,8 @@ styles:
 
 <script type="module">
   import { config } from "./common/constituents/default.js"
+  import { effect } from "./common/signal.js"
+
   import QueueAudioOrchestrator from "./components/orchestrator/queue-audio/element.js";
 
   import "./components/engine/audio/element.js"
@@ -43,4 +45,16 @@ styles:
   oqa.setAttribute("queue-engine-selector", defaults.engine.queue.localName);
 
   document.body.append(oqa)
+
+  // Effects
+  effect(() => {
+    const rso = defaults.orchestrator.repeatShuffle
+    const repeat = rso.repeat()
+
+    if (repeat && !oqa.hasAttribute("repeat")) {
+      oqa.toggleAttribute("repeat")
+    } else if (!repeat && oqa.hasAttribute("repeat")) {
+      oqa.removeAttribute("repeat")
+    }
+  })
 </script>

@@ -1,5 +1,5 @@
 import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { untracked } from "@common/signal.js";
+import { signal, untracked } from "@common/signal.js";
 
 /**
  * @import {InputElement} from "@components/input/types.d.ts"
@@ -17,10 +17,20 @@ import { untracked } from "@common/signal.js";
  * shift the queue if needed.
  */
 class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
+  static observedAttributes = ["repeat"];
+
+  // SIGNALS
+
+  #repeat = signal(false);
+
+  // LIFE CYCLE
+
   /**
    * @override
    */
   async connectedCallback() {
+    this.#repeat.value = this.hasAttribute("repeat");
+
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       this.broadcast(this.nameWithGroup, {});
@@ -46,6 +56,20 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     // Effects
     this.effect(() => this.monitorActiveQueueItem());
     this.effect(() => this.monitorAudioEnd());
+  }
+
+  /**
+   * @override
+   * @param {string} name
+   * @param {string} oldValue
+   * @param {string} newValue
+   */
+  attributeChangedCallback(name, oldValue, newValue) {
+    super.attributeChangedCallback(name, oldValue, newValue);
+
+    if (name === "repeat") {
+      this.#repeat.value = newValue != null;
+    }
   }
 
   // 🛠️
@@ -97,7 +121,19 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     const now = this.queue.now();
     const aud = now ? this.audio.state(now.id) : undefined;
 
-    if (aud?.hasEnded() && (await this.isLeader())) await this.queue.shift();
+    if (aud?.hasEnded() && (await this.isLeader())) {
+      // TODO: Not sure yet if this is the best way to approach this.
+      //       The idea is that scrobblers would more easily pick this up,
+      //       as opposed to just resetting the audio.
+      if (this.#repeat.value) {
+        await this.queue.add({
+          inFront: true,
+          tracks: [this.queue.now()],
+        });
+      }
+
+      await this.queue.shift();
+    }
   }
 }
 
