@@ -25,12 +25,26 @@ class InputConfig extends DiffuseElement {
       <style>
       @import "./themes/webamp/98-vars.css";
 
+      #tabbed {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .window {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      /* TABS */
+
       menu[role="tablist"] {
         padding-top: 2px;
 
         li > label {
+          cursor: pointer;
           display: block;
-          margin: var(--radio-label-spacing);
+          padding: var(--radio-label-spacing);
         }
 
         /* Copied styles from "li[aria-selected=true]" */
