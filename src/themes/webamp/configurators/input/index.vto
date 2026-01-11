@@ -1,0 +1,42 @@
+---
+layout: layouts/diffuse.vto
+base: ../../../../
+
+styles:
+  - styles/vendor/98.css
+  - themes/webamp/fonts.css
+  - themes/webamp/constituent.css
+---
+
+<!-- ELEMENTS -->
+
+<div class="window">
+  <div
+    class="title-bar"
+  >
+    <div class="title-bar-icon">
+      <img src="images/icons/windows_98/directory_explorer-4.png" height="14" />
+    </div>
+    <div class="title-bar-text" draggable="false">
+      Input configurator
+    </div>
+    <div class="title-bar-controls">
+      <button aria-label="Close" onclick="window.close()"></button>
+    </div>
+  </div>
+  <div class="window-body">
+    <dtw-input-config></dtw-input-config>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+
+<script type="module">
+  import { config } from "./common/constituents/default.js"
+
+  // Prepare default constituents setup
+  const defaults = config()
+
+  // Only then initialize the other elements
+  import("./themes/webamp/configurators/input/element.js")
+</script>
