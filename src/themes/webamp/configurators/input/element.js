@@ -10,8 +10,27 @@ import { signal } from "@common/signal.js";
 class InputConfig extends DiffuseElement {
   constructor() {
     super();
+
     this.attachShadow({ mode: "open" });
   }
+
+  // EVENTS
+
+  /**
+   * @param {Event} event
+   */
+  #addOpenSubsonicServer = (event) => {
+    event.preventDefault();
+    console.log("TODO");
+  };
+
+  /**
+   * @param {Event} event
+   */
+  #addS3Bucket = (event) => {
+    event.preventDefault();
+    console.log("TODO");
+  };
 
   // RENDER
 
@@ -29,6 +48,10 @@ class InputConfig extends DiffuseElement {
         display: flex;
         flex-direction: column;
         height: 100%;
+      }
+
+      fieldset {
+        margin-bottom: var(--element-spacing);
       }
 
       .window {
@@ -68,6 +91,12 @@ class InputConfig extends DiffuseElement {
 
       #tabbed:has(#opensubsonic-tab:checked) #opensubsonic-contents { display: block }
       #tabbed:has(#s3-tab:checked) #s3-contents { display: block }
+
+      /* FORMS */
+
+      input, select, textarea {
+        flex: 1;
+      }
       </style>
 
       <div id="tabbed">
@@ -85,15 +114,126 @@ class InputConfig extends DiffuseElement {
             </label>
           </li>
         </menu>
+
         <div class="window" role="tabpanel">
           <!-- Opensubsonic -->
           <div class="window-body" id="opensubsonic-contents">
-            <p>TODO: Opensubsonic form</p>
+            <fieldset>
+              <legend>Added servers</legend>
+
+              <p>TODO</p>
+            </fieldset>
+
+            <form @submit="${this.#addOpenSubsonicServer}">
+              <fieldset>
+                <legend>Server details</legend>
+
+                <div class="field-row">
+                  <label for="opensubsonic-host">Host domain:*</label>
+                  <input id="opensubsonic-host" type="text" required />
+                </div>
+
+                <div class="field-row">
+                  <label for="opensubsonic-tls">Use HTTPS/TLS:</label>
+                  <select id="opensubsonic-tls">
+                    <option value="true" selected>Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+
+                <p>
+                  Either provide a username & password combination:
+                </p>
+
+                <div class="field-row">
+                  <label for="opensubsonic-username">Username:</label>
+                  <input id="opensubsonic-username" type="text" />
+                </div>
+
+                <div class="field-row">
+                  <label for="opensubsonic-password">Password:</label>
+                  <input id="opensubsonic-password" type="password" />
+                </div>
+
+                <p>
+                  Or an API key:
+                </p>
+
+                <div class="field-row">
+                  <label for="opensubsonic-apikey">API key:</label>
+                  <input id="opensubsonic-apikey" type="text" />
+                </div>
+
+                <p>
+                  * are required fields.
+                </p>
+              </fieldset>
+
+              <p>
+                <input type="submit" value="Add server" />
+              </p>
+            </form>
           </div>
 
           <!-- S3 -->
           <div class="window-body" id="s3-contents">
-            <p>TODO: S3 form</p>
+            <fieldset>
+              <legend>Added buckets</legend>
+
+              <p>TODO</p>
+            </fieldset>
+
+            <form @submit="${this.#addS3Bucket}">
+              <fieldset>
+                <legend>Bucket details</legend>
+
+                <div class="field-row">
+                  <label for="access-key-input">Access Key:*</label>
+                  <input type="text" id="access-key-input" required />
+                </div>
+
+                <div class="field-row">
+                  <label for="secret-key-input">Secret Key:*</label>
+                  <input type="password" id="secret-key-input" required />
+                </div>
+
+                <div class="field-row">
+                  <label for="bucket-name-input">Bucket Name:*</label>
+                  <input type="text" id="bucket-name-input" required />
+                </div>
+
+                <div class="field-row">
+                  <label for="s3-host-input">Host:</label>
+                  <input
+                    type="text"
+                    id="s3-host-input"
+                    placeholder="s3.amazonaws.com"
+                  />
+                </div>
+
+                <div class="field-row">
+                  <label for="region-input">Region:</label>
+                  <input
+                    type="text"
+                    id="region-input"
+                    placeholder="us-east-1"
+                  />
+                </div>
+
+                <div class="field-row">
+                  <label for="path-input">Path:</label>
+                  <input type="text" id="path-input" />
+                </div>
+
+                <p>
+                  * are required fields.
+                </p>
+              </fieldset>
+
+              <p>
+                <input type="submit" value="Add bucket" />
+              </p>
+            </form>
           </div>
         </div>
       </div>
