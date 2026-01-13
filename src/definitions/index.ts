@@ -1,1 +1,1 @@
-export * as ShDiffuseOutputTracks from "./types/sh/diffuse/output/tracks.ts";
+export * as ShDiffuseOutputTracks from "./types/sh/diffuse/output/tracks.js";

@@ -1,17 +1,56 @@
 import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
+import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
+import { buildURI as buildS3cURI } from "@components/input/s3/common.js";
+
 /**
  * @import {RenderArg} from "@common/element.d.ts"
  * @import {Track} from "@definitions/types.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
+ * @import {OutputElement} from "@components/output/types.d.ts"
+ *
+ * @import {Server as OpenSubsonicServer} from "@components/input/opensubsonic/types.d.ts"
+ * @import {Bucket as S3Bucket} from "@components/input/s3/types.d.ts"
  */
 
 class InputConfig extends DiffuseElement {
   constructor() {
     super();
-
     this.attachShadow({ mode: "open" });
+  }
+
+  // SIGNALS
+
+  $input = signal(
+    /** @type {InputElement | undefined} */ (undefined),
+  );
+
+  $output = signal(
+    /** @type {OutputElement<Track[]> | undefined} */ (undefined),
+  );
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    super.connectedCallback();
+
+    /** @type {InputElement} */
+    const input = query(this, "input-selector");
+
+    /** @type {OutputElement<Track[]>} */
+    const output = query(this, "output-selector");
+
+    this.$input.value = input;
+    this.$output.value = output;
+
+    // Wait for the elements to be defined before proceeding
+    whenElementsDefined({ input, output }).then(() => {
+      //
+    });
   }
 
   // EVENTS
@@ -21,7 +60,28 @@ class InputConfig extends DiffuseElement {
    */
   #addOpenSubsonicServer = (event) => {
     event.preventDefault();
-    console.log("TODO");
+
+    const host = this.formElement("opensubsonic-host")?.value;
+    const tls = this.formElement("opensubsonic-tls")?.value === "true";
+    const username = this.formElement("opensubsonic-username")?.value;
+    const password = this.formElement("opensubsonic-password")?.value;
+    const apiKey = this.formElement("opensubsonic-apikey")?.value;
+
+    if (!host) {
+      throw new Error("Missing required `host` input value");
+    }
+
+    /** @type {OpenSubsonicServer} */
+    const server = {
+      host,
+      tls,
+      username,
+      password,
+      apiKey,
+    };
+
+    const uri = buildOpenSubsonicURI(server);
+    return this.addSource(uri);
   };
 
   /**
@@ -29,8 +89,63 @@ class InputConfig extends DiffuseElement {
    */
   #addS3Bucket = (event) => {
     event.preventDefault();
-    console.log("TODO");
+
+    const accessKey = this.formElement("s3-access-key")?.value;
+    const bucketName = this.formElement("s3-bucket-name")?.value;
+    const host = this.formElement("s3-host")?.value ?? "s3.amazonaws.com";
+    const path = this.formElement("s3-path")?.value ?? "/";
+    const region = this.formElement("s3-region")?.value ?? "us-east-1";
+    const secretKey = this.formElement("s3-secret-key")?.value;
+
+    if (!accessKey) throw new Error("Missing required `accessKey` input value");
+    if (!bucketName) {
+      throw new Error("Missing required `bucketName` input value");
+    }
+    if (!secretKey) throw new Error("Missing required `secretKey` input value");
+
+    /** @type {S3Bucket} */
+    const bucket = {
+      accessKey,
+      bucketName,
+      host,
+      path,
+      region,
+      secretKey,
+    };
+
+    const uri = buildS3cURI(bucket);
+    return this.addSource(uri);
   };
+
+  // 🛠️
+
+  /**
+   * @param {string} uri
+   */
+  addSource(uri) {
+    /** @type {Track} */
+    const track = {
+      $type: "sh.diffuse.output.tracks",
+      id: crypto.randomUUID(),
+      kind: "placeholder",
+      uri,
+    };
+
+    const output = this.$output.value;
+    if (!output) throw new Error("Output isn't ready yet!");
+
+    output.tracks.save(
+      [...output.tracks.collection(), track],
+    );
+  }
+
+  /**
+   * @param {string} id
+   * @returns {HTMLInputElement | null}
+   */
+  formElement(id) {
+    return this.root().querySelector(`#${id}`);
+  }
 
   // RENDER
 
@@ -188,41 +303,41 @@ class InputConfig extends DiffuseElement {
                 <legend>Bucket details</legend>
 
                 <div class="field-row">
-                  <label for="access-key-input">Access Key:*</label>
-                  <input type="text" id="access-key-input" required />
+                  <label for="s3-access-key">Access Key:*</label>
+                  <input type="text" id="s3-access-key" required />
                 </div>
 
                 <div class="field-row">
-                  <label for="secret-key-input">Secret Key:*</label>
-                  <input type="password" id="secret-key-input" required />
+                  <label for="s3-secret-key">Secret Key:*</label>
+                  <input type="password" id="s3-secret-key" required />
                 </div>
 
                 <div class="field-row">
-                  <label for="bucket-name-input">Bucket Name:*</label>
-                  <input type="text" id="bucket-name-input" required />
+                  <label for="s3-bucket-name">Bucket Name:*</label>
+                  <input type="text" id="s3-bucket-name" required />
                 </div>
 
                 <div class="field-row">
-                  <label for="s3-host-input">Host:</label>
+                  <label for="s3-host">Host:</label>
                   <input
                     type="text"
-                    id="s3-host-input"
+                    id="s3-host"
                     placeholder="s3.amazonaws.com"
                   />
                 </div>
 
                 <div class="field-row">
-                  <label for="region-input">Region:</label>
+                  <label for="s3-region">Region:</label>
                   <input
                     type="text"
-                    id="region-input"
+                    id="s3-region"
                     placeholder="us-east-1"
                   />
                 </div>
 
                 <div class="field-row">
-                  <label for="path-input">Path:</label>
-                  <input type="text" id="path-input" />
+                  <label for="s3-path">Path:</label>
+                  <input type="text" id="s3-path" />
                 </div>
 
                 <p>

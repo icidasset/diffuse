@@ -17,6 +17,7 @@ import { signal, untracked } from "@common/signal.js";
  * shift the queue if needed.
  */
 class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
+  static NAME = "diffuse/orchestrator/queue-audio";
   static observedAttributes = ["repeat"];
 
   // SIGNALS
@@ -126,10 +127,13 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
       //       The idea is that scrobblers would more easily pick this up,
       //       as opposed to just resetting the audio.
       if (this.#repeat.value) {
-        await this.queue.add({
-          inFront: true,
-          tracks: [this.queue.now()],
-        });
+        const now = this.queue.now();
+        if (now) {
+          await this.queue.add({
+            inFront: true,
+            tracks: [now],
+          });
+        }
       }
 
       await this.queue.shift();

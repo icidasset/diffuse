@@ -20,13 +20,18 @@ class Browser extends DiffuseElement {
 
   #searchResults = signal(/** @type {Track[]} */ ([]));
 
-  $input = signal(/** @type {InputElement | undefined} */ (undefined));
+  $input = signal(
+    /** @type {InputElement | undefined} */ (undefined),
+  );
+
   $output = signal(
     /** @type {OutputElement<Track[]> | undefined} */ (undefined),
   );
+
   $queue = signal(
     /** @type {import("@components/engine/queue/element.js").CLASS | undefined} */ (undefined),
   );
+
   $search = signal(
     /** @type {import("@components/processor/search/element.js").CLASS | undefined} */ (undefined),
   );

@@ -1,6 +1,8 @@
 import Queue from "@components/engine/queue/element.js";
 import InputOrchestrator from "@components/orchestrator/input/element.js";
 import OutputOrchestrator from "@components/orchestrator/output/element.js";
+import MetadataProcessor from "@components/processor/metadata/element.js";
+import ProcessTracksOrchestrator from "@components/orchestrator/process-tracks/element.js";
 import QueueTracksOrchestrator from "@components/orchestrator/queue-tracks/element.js";
 import RepeatShuffleOrchestrator from "@components/orchestrator/repeat-shuffle/element.js";
 import SearchProcessor from "@components/processor/search/element.js";
@@ -31,12 +33,24 @@ export function config() {
   document.body.append(output);
 
   // Processors
+  const metadata = new MetadataProcessor();
+  metadata.setAttribute("group", GROUP);
+
+  document.body.append(metadata);
+
   const search = new SearchProcessor();
   search.setAttribute("group", GROUP);
 
   document.body.append(search);
 
   // Orchestrators
+  const opt = new ProcessTracksOrchestrator();
+  opt.setAttribute("group", GROUP);
+  opt.setAttribute("input-selector", "#input");
+  opt.setAttribute("output-selector", "#output");
+  opt.setAttribute("metadata-processor-selector", metadata.localName);
+  opt.toggleAttribute("process-when-ready");
+
   const oqt = new QueueTracksOrchestrator();
   oqt.setAttribute("group", GROUP);
   oqt.setAttribute("input-selector", "#input");
@@ -53,7 +67,7 @@ export function config() {
   ost.setAttribute("output-selector", "#output");
   ost.setAttribute("search-processor-selector", search.localName);
 
-  document.body.append(oqt, rso, ost);
+  document.body.append(opt, oqt, rso, ost);
 
   // Return elements
   return {
@@ -69,10 +83,12 @@ export function config() {
     orchestrator: {
       input,
       output,
+      processTracks: opt,
       queueTracks: oqt,
       repeatShuffle: rso,
     },
     processor: {
+      metadata,
       search,
     },
   };
