@@ -207,12 +207,6 @@ class ArtworkController extends DiffuseElement {
 
     if (cacheId === currCacheId) {
       const art = allArt[0];
-      const blob = new Blob(
-        [/** @type {ArrayBuffer} */ (art.bytes.buffer)],
-        { type: art.mime },
-      );
-
-      const url = URL.createObjectURL(blob);
 
       this.#artwork.set({
         previous: currArtwork.current
@@ -224,7 +218,12 @@ class ArtworkController extends DiffuseElement {
             hash: xxh32r(art.bytes).toString(),
             index: (currArtwork.current?.index ?? 0) + 1,
             loaded: false,
-            url,
+            url: URL.createObjectURL(
+              new Blob(
+                [/** @type {ArrayBuffer} */ (art.bytes.buffer)],
+                { type: art.mime },
+              ),
+            ),
           }
           : null,
       });

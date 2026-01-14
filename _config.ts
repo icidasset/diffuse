@@ -1,3 +1,4 @@
+import { dotenvRun } from "@dotenv-run/esbuild";
 import { builtinModules } from "node:module";
 import lume from "lume/mod.ts";
 
@@ -29,7 +30,12 @@ site.use(esbuild({
     bundle: true,
     minify: false,
     // outExtension: { ".js": ".min.js" },
-    plugins: [nodeModulesPolyfillPlugin()],
+    plugins: [
+      nodeModulesPolyfillPlugin(),
+      dotenvRun({
+        files: [".env"],
+      }),
+    ],
     splitting: true,
   },
 }));

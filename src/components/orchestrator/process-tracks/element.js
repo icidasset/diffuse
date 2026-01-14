@@ -77,6 +77,11 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     // Process whenever tracks are initially loaded
     if (this.hasAttribute("process-when-ready")) {
       this.effect(() => {
+        const skip =
+          /** @type {any} */ (import.meta).env
+            ?.DISABLE_AUTOMATIC_TRACKS_PROCESSING ?? false;
+        if (skip) return;
+
         const state = output.tracks.state();
         if (state !== "loaded") return;
 

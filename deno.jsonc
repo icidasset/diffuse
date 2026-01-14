@@ -4,7 +4,6 @@
   "vendor": true,
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
-    "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.3.1",
     "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.2",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.4",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
@@ -16,7 +15,6 @@
     "@phosphor-icons/web": "npm:@phosphor-icons/web@^2.1.2",
     "@vicary/debounce-microtask": "jsr:@vicary/debounce-microtask@^0.1.8",
     "alien-signals": "npm:alien-signals@^3.0.0",
-    "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
     "fast-average-color": "npm:fast-average-color@^9.5.0",
     "idb-keyval": "npm:idb-keyval@^6.2.2",
     "iso-base": "npm:iso-base@^4.3.0",
@@ -40,12 +38,15 @@
     "@common/": "./src/common/",
     "@components/": "./src/components/",
     "@definitions/": "./src/definitions/",
+    "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.1",
     "@styles/": "./src/styles/",
+    "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
 
     // Build
+    "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.3.1",
     "@std/fs": "jsr:@std/fs@^1.0.19",
     "@std/path": "jsr:@std/path@^1.1.2",
-    "lume/": "https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.2/",
+    "lume/": "https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.4/",
     "lume/jsx-runtime": "https://cdn.jsdelivr.net/gh/oscarotero/ssx@0.1.14/jsx-runtime.ts",
   },
   "exports": {},
@@ -76,7 +77,7 @@
   },
   "unstable": ["temporal", "fmt-component"],
   "lint": {
-    "plugins": ["https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.2/lint.ts"],
+    "plugins": ["https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.4/lint.ts"],
     "rules": {
       "exclude": ["no-import-prefix"],
     },
