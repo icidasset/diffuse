@@ -1,4 +1,9 @@
-import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
+import {
+  DiffuseElement,
+  nothing,
+  query,
+  whenElementsDefined,
+} from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
@@ -58,8 +63,12 @@ class InputConfig extends DiffuseElement {
   /**
    * @param {Event} event
    */
-  #addOpenSubsonicServer = (event) => {
+  #addOpenSubsonicServer = async (event) => {
     event.preventDefault();
+
+    /** @type {HTMLButtonElement | null} */
+    const button = this.root().querySelector("#opensubsonic-submit");
+    if (button) button.disabled = true;
 
     const host = this.formElement("opensubsonic-host")?.value;
     const tls = this.formElement("opensubsonic-tls")?.value === "true";
@@ -81,40 +90,52 @@ class InputConfig extends DiffuseElement {
     };
 
     const uri = buildOpenSubsonicURI(server);
-    return this.addSource(uri);
+    await this.addSource(uri);
+
+    if (button) button.disabled = false;
   };
 
   /**
    * @param {Event} event
    */
-  #addS3Bucket = (event) => {
+  #addS3Bucket = async (event) => {
     event.preventDefault();
+
+    /** @type {HTMLButtonElement | null} */
+    const button = this.root().querySelector("#opensubsonic-submit");
+    if (button) button.disabled = true;
 
     const accessKey = this.formElement("s3-access-key")?.value;
     const bucketName = this.formElement("s3-bucket-name")?.value;
-    const host = this.formElement("s3-host")?.value ?? "s3.amazonaws.com";
-    const path = this.formElement("s3-path")?.value ?? "/";
-    const region = this.formElement("s3-region")?.value ?? "us-east-1";
+    const host = this.formElement("s3-host")?.value;
+    const path = this.formElement("s3-path")?.value;
+    const region = this.formElement("s3-region")?.value;
     const secretKey = this.formElement("s3-secret-key")?.value;
 
-    if (!accessKey) throw new Error("Missing required `accessKey` input value");
+    if (!accessKey) {
+      throw new Error("Missing required `accessKey` input value");
+    }
     if (!bucketName) {
       throw new Error("Missing required `bucketName` input value");
     }
-    if (!secretKey) throw new Error("Missing required `secretKey` input value");
+    if (!secretKey) {
+      throw new Error("Missing required `secretKey` input value");
+    }
 
     /** @type {S3Bucket} */
     const bucket = {
       accessKey,
       bucketName,
-      host,
-      path,
-      region,
+      host: host?.length ? host : "s3.amazonaws.com",
+      path: path?.length ? path : "/",
+      region: region?.length ? region : "us-east-1",
       secretKey,
     };
 
     const uri = buildS3cURI(bucket);
-    return this.addSource(uri);
+    await this.addSource(uri);
+
+    if (button) button.disabled = false;
   };
 
   // 🛠️
@@ -122,7 +143,7 @@ class InputConfig extends DiffuseElement {
   /**
    * @param {string} uri
    */
-  addSource(uri) {
+  async addSource(uri) {
     /** @type {Track} */
     const track = {
       $type: "sh.diffuse.output.tracks",
@@ -134,9 +155,27 @@ class InputConfig extends DiffuseElement {
     const output = this.$output.value;
     if (!output) throw new Error("Output isn't ready yet!");
 
-    output.tracks.save(
+    await output.tracks.save(
       [...output.tracks.collection(), track],
     );
+  }
+
+  // 🔮
+
+  openSubsonicServers() {
+    const input = document.querySelector("di-opensubsonic");
+    return input
+      ? /** @type {import("@components/input/opensubsonic/element.js").CLASS} */ (input)
+        .serverList()
+      : [];
+  }
+
+  s3Buckets() {
+    const input = document.querySelector("di-s3");
+    return input
+      ? /** @type {import("@components/input/s3/element.js").CLASS} */ (input)
+        .bucketList()
+      : [];
   }
 
   /**
@@ -153,6 +192,9 @@ class InputConfig extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
+    const opensubsonicList = this.openSubsonicServers();
+    const s3List = this.s3Buckets();
+
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
 
@@ -235,8 +277,7 @@ class InputConfig extends DiffuseElement {
           <div class="window-body" id="opensubsonic-contents">
             <fieldset>
               <legend>Added servers</legend>
-
-              <p>TODO</p>
+              ${this.renderList(html, opensubsonicList)}
             </fieldset>
 
             <form @submit="${this.#addOpenSubsonicServer}">
@@ -285,7 +326,7 @@ class InputConfig extends DiffuseElement {
               </fieldset>
 
               <p>
-                <input type="submit" value="Add server" />
+                <button type="submit" id="opensubsonic-submit">Add server</button>
               </p>
             </form>
           </div>
@@ -294,8 +335,7 @@ class InputConfig extends DiffuseElement {
           <div class="window-body" id="s3-contents">
             <fieldset>
               <legend>Added buckets</legend>
-
-              <p>TODO</p>
+              ${this.renderList(html, s3List)}
             </fieldset>
 
             <form @submit="${this.#addS3Bucket}">
@@ -346,13 +386,33 @@ class InputConfig extends DiffuseElement {
               </fieldset>
 
               <p>
-                <input type="submit" value="Add bucket" />
+                <button type="submit" id="s3-submit">Add bucket</button>
               </p>
             </form>
           </div>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   * @param {Array<{ label: string}>} list
+   */
+  renderList(html, list) {
+    return list.length
+      ? html`
+        <ul class="tree-view">
+          ${list.map((item) => {
+            return html`
+              <li>
+                ${item.label}
+              </li>
+            `;
+          })}
+        </ul>
+      `
+      : nothing;
   }
 }
 

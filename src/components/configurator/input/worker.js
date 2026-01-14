@@ -1,6 +1,6 @@
 import * as URI from "uri-js";
 
-import { groupTracksPerScheme } from "@common/index.js";
+import { groupTracksPerScheme } from "@common/utils.js";
 import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**

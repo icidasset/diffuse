@@ -1,7 +1,7 @@
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 import { listen } from "@common/worker.js";
-import { hash } from "@common/index.js";
+import { hash } from "@common/utils.js";
 
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts";

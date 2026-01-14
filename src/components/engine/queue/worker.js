@@ -1,6 +1,6 @@
 import { announce, ostiary, rpc } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
-import { arrayShuffle, hash } from "@common/index.js";
+import { arrayShuffle, hash } from "@common/utils.js";
 
 /**
  * @import {Actions, Item} from "./types.d.ts"

@@ -11,7 +11,7 @@ import {
   whenElementsDefined,
 } from "@common/element.js";
 
-import { trackArtworkCacheId } from "@common/index.js";
+import { trackArtworkCacheId } from "@common/utils.js";
 import { computed, signal, untracked } from "@common/signal.js";
 
 /**
