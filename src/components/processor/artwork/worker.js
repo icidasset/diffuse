@@ -122,7 +122,7 @@ async function lastFmCover(remainingMatches) {
         },
       ])
       .catch((err) => {
-        console.error(err);
+        // console.error(err);
         return lastFmCover(remainingMatches.slice(1));
       })
     : album
@@ -159,7 +159,7 @@ async function musicBrainz(req) {
       }
     })
     .catch((err) => {
-      console.error(err);
+      // console.error(err);
       return [];
     });
 }
