@@ -13,7 +13,7 @@ themes:
     title: "Blur"
     todo: true
     desc: >
-      **A DJ theme with an Apple-inspired playback view.** Features two audio players instead of the usual one.
+      **A theme with an Apple-inspired playback view.** Features two audio players instead of the usual one.
   - title: "Loader"
     todo: true
     desc: >
@@ -184,14 +184,7 @@ definitions:
       </p>
 
       <p>
-        If you're a programmer, you can compose the <a href="#elements">elements</a> listed below to make your own theme. Easily build software by connecting various elements.
-      </p>
-
-      <p>
-        <small>
-          <strong><i class="ph-fill ph-check-square"></i></strong>
-          I'd like there to be a way to compose your own theme without having to write code. Hopefully sometime in the future.
-        </small>
+        The goal is for every user, no matter their experience with web software, to have agency over their software. One can start with making small changes and gradually progress to making big changes.
       </p>
     </section>
 
@@ -255,6 +248,68 @@ definitions:
       </p>
 
       {{ await comp.list({ items: constituents }) }}
+    </section>
+  </div>
+
+  <!-- CODE -->
+  <div class="columns">
+    <section>
+      <h2 id="code">Take control</h2>
+
+      <p>
+        Diffuse ranges from “eating out at a great restaurant”, all the way to “making your favourite meal at home”.
+      </p>
+
+      <ul>
+        <li>
+          <p>
+            <i class="ph-fill ph-storefront"></i> <strong>Level 1</strong>: Pick your restaurant, food comes in all shapes and sizes. The equivalent of choosing a Diffuse <a href="#themes">theme</a>.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-basket"></i> <strong>Level 2</strong>: Take out food from various places, eg. cheese shop + bakery. You choose how you combine the foods and from where you order them. That's <a href="#constituents">constituents</a>.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-pepper"></i> <strong>Level 3</strong>: Now that you know which food is good and how to make combinations, you might make a slight customization, add a little something of your own. For example, add some spice. However, you're not quite confident enough which spice to pick, so you hire some help.
+          </p>
+          <p>
+            This can be done using the <a href="#constituents-loader">constituents loader</a> which allows you to build on top of a familiar foundation. You can load custom constituents using this. You can use snippets from other people or use an LLM to generate something for you (eg. an album art gallery)
+          </p>
+        </li>
+      </ul>
+    </section>
+    <section>
+      <h2 id="code">&nbsp;</h2>
+
+      <ul>
+        <li>
+          <p>
+            <i class="ph-fill ph-knife"></i> <strong>Level 4</strong>: You learned a bit from watching and talking to the help you hired, so you decide to take things in your own hands.
+          </p>
+          <p>
+            You continue to use the <a href="#constituents-loader">constituents loader</a> but learn a bit of HTML, Javascript and CSS; so you can write your own constituent.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-cooking-pot"></i> <strong>Level 5</strong>: At this point you're confident enough to make a meal from scratch. You can start very simple, eg. just throwing a steak in the pan with some butter and some salt to it. Then later add some baked potatoes and go from there. You use a friend's kitchen with all the necessary tools.
+          </p>
+          <p>
+            A similar tool comes into play here, the <a href="#themes-loader">themes loader</a>. Same concept as the constituents loader, but now you need to specify the foundation yourself, the connecting tissue.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-oven"></i> <strong>Level 6</strong>: You were inspired by your friend's kitchen and get yourself a fully equiped kitchen.
+          </p>
+          <p>
+            You can self-host Diffuse, it's <a href="https://tangled.org/tokono.ma/diffuse/blob/v4/">open-source</a>!
+          </p>
+        </li>
+      </ul>
     </section>
   </div>
 
@@ -340,18 +395,6 @@ definitions:
     <p>All of the elements here are built with these data definitions in mind. That said, you can mix elements that use different definitions; you just have to put a transformer between them in order to translate between them, if needed.</p>
 
     {{ await comp.list({ items: definitions }) }}
-  </section>
-
-  <!-- CODE -->
-  <section>
-    <h2 id="code">Code your own</h2>
-
-    <p>
-      <small>
-        <strong>TODO:</strong>
-        Explain how to connect the various elements.
-      </small>
-    </p>
   </section>
 </main>
 

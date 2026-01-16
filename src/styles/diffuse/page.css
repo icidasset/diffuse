@@ -137,3 +137,9 @@ small {
   font-weight: 600;
   opacity: 0.4;
 }
+
+.with-icon {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-3xs);
+}
