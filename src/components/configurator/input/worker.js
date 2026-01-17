@@ -32,20 +32,33 @@ export async function consult({ data, ports }) {
 }
 
 /**
- * @type {ActionsWithTunnel<InputActions>['contextualize']}
+ * @type {ActionsWithTunnel<InputActions>['detach']}
  */
-export async function contextualize({ data, ports }) {
-  const tracks = data;
-  const groups = groupTracks(tracks, ports);
+export async function detach({ data, ports }) {
+  const cachedTracks = data.tracks;
+  const groups = groupTracks(cachedTracks, ports);
+
   const promises = Object.entries(groups).map(
     async ([scheme, tracksGroup]) => {
       const input = grabInput(scheme, ports);
-      if (!input || tracksGroup.length === 0) return;
-      return await input.contextualize(tracksGroup);
+      if (!input || tracksGroup.length === 0) return tracksGroup;
+      if (
+        data.fileUriOrScheme.includes("://")
+          ? data.fileUriOrScheme.startsWith(`${scheme}://`) === false
+          : data.fileUriOrScheme !== scheme
+      ) return tracksGroup;
+
+      return await input.detach({
+        fileUriOrScheme: data.fileUriOrScheme,
+        tracks: tracksGroup,
+      });
     },
   );
 
-  await Promise.all(promises);
+  const nested = await Promise.all(promises);
+  const tracks = nested.flat(1);
+
+  return tracks;
 }
 
 /**
@@ -122,7 +135,7 @@ export async function resolve({ data, ports }) {
 ostiary((context) => {
   rpc(context, {
     consult,
-    contextualize,
+    detach,
     groupConsult,
     list,
     resolve,

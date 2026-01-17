@@ -9,6 +9,11 @@ import { signal } from "@common/signal.js";
 import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
 import { buildURI as buildS3cURI } from "@components/input/s3/common.js";
 
+import { SCHEME as OPENSUBSONIC_SCHEME } from "@components/input/opensubsonic/constants.js";
+import { SCHEME as S3_SCHEME } from "@components/input/s3/constants.js";
+
+import { highlightTableEntry } from "../../common/ui.js";
+
 /**
  * @import {RenderArg} from "@common/element.d.ts"
  * @import {Track} from "@definitions/types.d.ts"
@@ -35,6 +40,10 @@ class InputConfig extends DiffuseElement {
     /** @type {OutputElement<Track[]> | undefined} */ (undefined),
   );
 
+  $sourcesOrchestrator = signal(
+    /** @type {import("@components/orchestrator/sources/element.js").CLASS | undefined} */ (undefined),
+  );
+
   // LIFECYCLE
 
   /**
@@ -49,13 +58,12 @@ class InputConfig extends DiffuseElement {
     /** @type {OutputElement<Track[]>} */
     const output = query(this, "output-selector");
 
+    /** @type {import("@components/orchestrator/sources/element.js").CLASS} */
+    const sourcesOrchestrator = query(this, "sources-orchestrator-selector");
+
     this.$input.value = input;
     this.$output.value = output;
-
-    // Wait for the elements to be defined before proceeding
-    whenElementsDefined({ input, output }).then(() => {
-      //
-    });
+    this.$sourcesOrchestrator.value = sourcesOrchestrator;
   }
 
   // EVENTS
@@ -138,6 +146,44 @@ class InputConfig extends DiffuseElement {
     if (button) button.disabled = false;
   };
 
+  /**
+   * @param {Event} event
+   */
+  #deleteSelected = async (event) => {
+    const button = /** @type {HTMLElement} */ (event.target);
+    const fieldset = event.target ? button.closest("fieldset") : null;
+    if (!fieldset) return;
+
+    const selected = fieldset.querySelector(
+      "table tr.highlighted",
+    );
+    if (!selected) return;
+
+    const uri = selected.getAttribute("data-uri");
+    if (!uri) throw new Error("Missing `uri` attribute");
+
+    const detachedTracks = await this.$input.value?.detach({
+      fileUriOrScheme: uri,
+      tracks: this.$output.value?.tracks.collection() ?? [],
+    });
+
+    if (detachedTracks) this.$output.value?.tracks.save(detachedTracks);
+  };
+
+  /** @param {MouseEvent} event */
+  #highlightTableEntry(event) {
+    highlightTableEntry(event);
+
+    const fieldset = event.target
+      ? /** @type {HTMLElement} */ (event.target).closest("fieldset")
+      : null;
+    if (!fieldset) return;
+
+    fieldset.querySelector('button[role="delete"]')?.removeAttribute(
+      "disabled",
+    );
+  }
+
   // 🛠️
 
   /**
@@ -152,30 +198,9 @@ class InputConfig extends DiffuseElement {
       uri,
     };
 
-    const output = this.$output.value;
-    if (!output) throw new Error("Output isn't ready yet!");
-
-    await output.tracks.save(
-      [...output.tracks.collection(), track],
+    await this.$output.value?.tracks.save(
+      [...(this.$output.value?.tracks.collection() ?? []), track],
     );
-  }
-
-  // 🔮
-
-  openSubsonicServers() {
-    const input = document.querySelector("di-opensubsonic");
-    return input
-      ? /** @type {import("@components/input/opensubsonic/element.js").CLASS} */ (input)
-        .serverList()
-      : [];
-  }
-
-  s3Buckets() {
-    const input = document.querySelector("di-s3");
-    return input
-      ? /** @type {import("@components/input/s3/element.js").CLASS} */ (input)
-        .bucketList()
-      : [];
   }
 
   /**
@@ -192,8 +217,7 @@ class InputConfig extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const opensubsonicList = this.openSubsonicServers();
-    const s3List = this.s3Buckets();
+    const sources = this.$sourcesOrchestrator.value?.sources();
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
@@ -249,6 +273,21 @@ class InputConfig extends DiffuseElement {
       #tabbed:has(#opensubsonic-tab:checked) #opensubsonic-contents { display: block }
       #tabbed:has(#s3-tab:checked) #s3-contents { display: block }
 
+      /* LIST */
+
+      table {
+        table-layout: fixed;
+      }
+
+      table td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      table tbody tr {
+        cursor: pointer;
+      }
+
       /* FORMS */
 
       input, select, textarea {
@@ -276,8 +315,17 @@ class InputConfig extends DiffuseElement {
           <!-- Opensubsonic -->
           <div class="window-body" id="opensubsonic-contents">
             <fieldset>
-              <legend>Added servers</legend>
-              ${this.renderList(html, opensubsonicList)}
+              ${this.renderList(
+                html,
+                sources?.[OPENSUBSONIC_SCHEME] ?? [],
+                "Added servers",
+              )}
+
+              <p>
+                <button disabled role="delete" @click="${this.#deleteSelected}">
+                  Delete selected
+                </button>
+              </p>
             </fieldset>
 
             <form @submit="${this.#addOpenSubsonicServer}">
@@ -334,8 +382,17 @@ class InputConfig extends DiffuseElement {
           <!-- S3 -->
           <div class="window-body" id="s3-contents">
             <fieldset>
-              <legend>Added buckets</legend>
-              ${this.renderList(html, s3List)}
+              ${this.renderList(
+                html,
+                sources?.[S3_SCHEME] ?? [],
+                "Added buckets",
+              )}
+
+              <p>
+                <button disabled role="delete" @click="${this.#deleteSelected}">
+                  Delete selected
+                </button>
+              </p>
             </fieldset>
 
             <form @submit="${this.#addS3Bucket}">
@@ -397,22 +454,30 @@ class InputConfig extends DiffuseElement {
 
   /**
    * @param {RenderArg["html"]} html
-   * @param {Array<{ label: string}>} list
+   * @param {Array<{label: string, uri: string}>} list
+   * @param {string} title
    */
-  renderList(html, list) {
-    return list.length
-      ? html`
-        <ul class="tree-view">
-          ${list.map((item) => {
-            return html`
-              <li>
-                ${item.label}
-              </li>
-            `;
-          })}
-        </ul>
-      `
-      : nothing;
+  renderList(html, list, title) {
+    return html`
+      <div class="sunken-panel">
+        <table style="width: 100%;" @click="${this.#highlightTableEntry}">
+          <thead>
+            <tr>
+              <th>${title}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((item) =>
+              html`
+                <tr data-uri="${item.uri}">
+                  <td>${item.label}</td>
+                </tr>
+              `
+            )}
+          </tbody>
+        </table>
+      </div>
+    `;
   }
 }
 

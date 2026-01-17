@@ -29,9 +29,6 @@ export async function process({ data, ports }) {
   ports.input.start();
   ports.metadataProcessor.start();
 
-  // Contextualize
-  await input.contextualize(cachedTracks);
-
   // List
   const tracks = await input.list(cachedTracks);
 

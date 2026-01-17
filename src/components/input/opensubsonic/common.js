@@ -1,5 +1,4 @@
 import { SubsonicAPI } from "subsonic-api";
-import * as IDB from "idb-keyval";
 import * as URI from "uri-js";
 import QS from "query-string";
 
@@ -99,14 +98,6 @@ export function groupTracksByServer(tracks) {
 }
 
 /**
- * @returns {Promise<Record<string, Server>>}
- */
-export async function loadServers() {
-  const i = await IDB.get(IDB_SERVERS);
-  return i ? i : {};
-}
-
-/**
  * Parse an opensubsonic URI.
  *
  * ```
@@ -151,13 +142,6 @@ export function parseURI(uriString) {
   const songId = typeof qs.songId === "string" ? qs.songId : undefined;
 
   return { path, server, songId };
-}
-
-/**
- * @param {Record<string, Server>} items
- */
-export async function saveServers(items) {
-  await IDB.set(IDB_SERVERS, items);
 }
 
 /**

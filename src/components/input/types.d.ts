@@ -21,18 +21,17 @@ export type GroupConsult = Record<string, ConsultGrouping>;
 
 export type InputActions = {
   consult(fileUriOrScheme: string): Promise<Consult>;
-  contextualize(tracks: Track[]): Promise<void>;
+  detach(args: { fileUriOrScheme: string; tracks: Track[] }): Promise<Track[]>;
   groupConsult(tracks: Track[]): Promise<GroupConsult>;
-  list(cachedTracks: Track[]): Promise<Track[]>;
-  resolve(
-    { method, uri }: { method?: string; uri: string },
-  ): Promise<ResolvedUri>;
+  list(tracks: Track[]): Promise<Track[]>;
+  resolve(args: { method?: string; uri: string }): Promise<ResolvedUri>;
 };
 
 export type InputElement =
   & DiffuseElement
   & InputSchemeProvider
-  & ProxiedActions<InputActions>;
+  & ProxiedActions<InputActions>
+  & { sources: (tracks: Track[]) => Source[] };
 
 export type InputSchemeProvider = { SCHEME: string };
 
@@ -40,3 +39,5 @@ export type ResolvedUri = undefined | {
   stream: ReadableStream;
   expiresAt: number;
 } | { url: string; expiresAt: number };
+
+export type Source = { label: string; uri: string };

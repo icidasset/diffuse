@@ -7,6 +7,7 @@ import QueueTracksOrchestrator from "@components/orchestrator/queue-tracks/eleme
 import RepeatShuffleOrchestrator from "@components/orchestrator/repeat-shuffle/element.js";
 import SearchProcessor from "@components/processor/search/element.js";
 import SearchTracksOrchestrator from "@components/orchestrator/search-tracks/element.js";
+import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
 
 export const GROUP = "constituents";
 
@@ -57,9 +58,9 @@ export function config() {
   oqt.setAttribute("output-selector", "#output");
   oqt.setAttribute("queue-engine-selector", queue.localName);
 
-  const rso = new RepeatShuffleOrchestrator();
-  rso.setAttribute("group", GROUP);
-  rso.setAttribute("queue-engine-selector", queue.localName);
+  const ors = new RepeatShuffleOrchestrator();
+  ors.setAttribute("group", GROUP);
+  ors.setAttribute("queue-engine-selector", queue.localName);
 
   const ost = new SearchTracksOrchestrator();
   ost.setAttribute("group", GROUP);
@@ -67,16 +68,17 @@ export function config() {
   ost.setAttribute("output-selector", "#output");
   ost.setAttribute("search-processor-selector", search.localName);
 
-  document.body.append(opt, oqt, rso, ost);
+  const osr = new SourcesOrchestrator();
+  osr.setAttribute("group", GROUP);
+  osr.setAttribute("input-selector", "#input");
+  osr.setAttribute("output-selector", "#output");
+
+  document.body.append(opt, oqt, ors, ost, osr);
 
   // Return elements
   return {
     GROUP,
 
-    configurator: {
-      input,
-      output,
-    },
     engine: {
       queue,
     },
@@ -85,7 +87,9 @@ export function config() {
       output,
       processTracks: opt,
       queueTracks: oqt,
-      repeatShuffle: rso,
+      repeatShuffle: ors,
+      searchTracks: ost,
+      sources: osr,
     },
     processor: {
       metadata,

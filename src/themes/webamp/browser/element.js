@@ -1,5 +1,6 @@
 import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
 import { signal } from "@common/signal.js";
+import { highlightTableEntry } from "../common/ui.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -81,24 +82,6 @@ class Browser extends DiffuseElement {
   }
 
   // EVENTS
-
-  /**
-   * @param {MouseEvent} event
-   */
-  highlightTableEntry(event) {
-    if (event.target instanceof HTMLElement === false) return;
-
-    const tr = event.target.tagName === "TR"
-      ? event.target
-      : event.target.closest("tr");
-    if (!tr) return;
-
-    tr.parentElement?.querySelector("tr.highlighted")?.classList.remove(
-      "highlighted",
-    );
-
-    tr.classList.add("highlighted");
-  }
 
   /**
    * @param {Track} track
@@ -221,7 +204,7 @@ class Browser extends DiffuseElement {
               `
               : tracks.map((track) => {
                 return html`
-                  <tr @click="${this.highlightTableEntry}" @dblclick="${() =>
+                  <tr @click="${highlightTableEntry}" @dblclick="${() =>
                     this.playTrack(track)}">
                     <td>${track.tags?.title}</td>
                     <td>${track.tags?.artist}</td>

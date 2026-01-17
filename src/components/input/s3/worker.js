@@ -1,35 +1,20 @@
 import { groupKeyHash, isAudioFile } from "@components/input/common.js";
 import {
   bucketId,
-  bucketsFromTracks,
   buildURI,
   consultBucket,
   createClient,
   groupTracksByBucket,
-  loadBuckets,
   parseURI,
 } from "./common.js";
 import { SCHEME } from "./constants.js";
-import { announce, ostiary, rpc } from "@common/worker.js";
-import { effect, signal } from "@common/signal.js";
-
-import { saveBuckets } from "./common.js";
+import { ostiary, rpc } from "@common/worker.js";
 
 /**
  * @import { InputActions as Actions, ConsultGrouping } from "@components/input/types.d.ts";
  * @import { Track } from "@definitions/types.d.ts"
  * @import { Bucket } from "./types.d.ts"
  */
-
-////////////////////////////////////////////
-// STATE
-////////////////////////////////////////////
-
-const $buckets = signal(/** @type {Record<string, Bucket>} */ ({}));
-
-effect(() => {
-  saveBuckets($buckets.value);
-});
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -51,11 +36,11 @@ export async function consult(fileUriOrScheme) {
 }
 
 /**
- * @type {Actions['contextualize']}
+ * @type {Actions['detach']}
  */
-export async function contextualize(tracks) {
-  const buckets = bucketsFromTracks(tracks);
-  $buckets.value = buckets;
+export async function detach({ fileUriOrScheme, tracks }) {
+  console.log("s3", fileUriOrScheme);
+  return tracks;
 }
 
 /**
@@ -144,7 +129,7 @@ export async function list(cachedTracks = []) {
 
     // If a bucket didn't have any tracks,
     // keep a placeholder track so the bucket gets
-    // picked up whenever it is re-contextualized.
+    // picked up as a source.
     if (!tracks.length) {
       tracks = [{
         $type: "sh.diffuse.output.tracks",
@@ -224,19 +209,12 @@ ostiary((context) => {
 
   rpc(context, {
     consult,
-    contextualize,
+    detach,
     groupConsult,
     list,
     resolve,
 
     // Additional actions
     demo,
-
-    // State
-    buckets: $buckets.get,
   });
-
-  // Communicate state
-
-  effect(() => announce("buckets", $buckets.value, context));
 });

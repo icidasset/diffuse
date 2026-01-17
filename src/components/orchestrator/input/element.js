@@ -33,8 +33,8 @@ class InputOrchestrator extends DiffuseElement {
   consult = /** @type {InputActions["consult"]} */ (...args) =>
     this.input.consult(...args);
 
-  contextualize = /** @type {InputActions["contextualize"]} */ (...args) =>
-    this.input.contextualize(...args);
+  detach = /** @type {InputActions["detach"]} */ (...args) =>
+    this.input.detach(...args);
 
   groupConsult = /** @type {InputActions["groupConsult"]} */ (...args) =>
     this.input.groupConsult(...args);

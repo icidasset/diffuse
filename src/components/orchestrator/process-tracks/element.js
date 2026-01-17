@@ -82,15 +82,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
 
         const skip = /** @type {any} */ (import.meta).env
           ?.DISABLE_AUTOMATIC_TRACKS_PROCESSING ?? false;
-        if (skip) {
-          // Should still trigger contextualize which `process` normally does for us.
-          untracked(() => {
-            input.contextualize(
-              output.tracks.collection(),
-            );
-          });
-          return;
-        }
+        if (skip) return;
 
         untracked(() => this.process());
       });

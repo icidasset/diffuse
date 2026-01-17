@@ -8,7 +8,3 @@ export type Bucket = {
   region: string;
   secretKey: string;
 };
-
-export type State = {
-  buckets: SignalReader<Record<string, Bucket>>;
-};

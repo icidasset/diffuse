@@ -1,13 +1,11 @@
 import { DiffuseElement } from "@common/element.js";
 import { SCHEME } from "./constants.js";
-import { computed, signal } from "@common/signal.js";
-import { listen } from "@common/worker.js";
+import { bucketsFromTracks, buildURI } from "./common.js";
 
 /**
  * @import {InputActions, InputSchemeProvider} from "@components/input/types.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
- *
- * @import {Bucket, State} from "./types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -27,11 +25,11 @@ class S3Input extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {ProxiedActions<InputActions & State & { demo: () => Promise<void> }>} */
+    /** @type {ProxiedActions<InputActions & { demo: () => Promise<void> }>} */
     this.proxy = this.workerProxy();
 
     this.consult = this.proxy.consult;
-    this.contextualize = this.proxy.contextualize;
+    this.detach = this.proxy.detach;
     this.groupConsult = this.proxy.groupConsult;
     this.list = this.proxy.list;
     this.resolve = this.proxy.resolve;
@@ -39,44 +37,17 @@ class S3Input extends DiffuseElement {
     this.demo = this.proxy.demo;
   }
 
-  // SIGNALS
-
-  #buckets = signal(/** @type {Record<string, Bucket>} */ ({}));
-
-  // STATE
-
-  buckets = this.#buckets.get;
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  connectedCallback() {
-    super.connectedCallback();
-
-    // Sync data with worker
-    const link = this.workerLink();
-
-    // Listen for remote data changes
-    listen("buckets", this.#buckets.set, link);
-
-    // Fetch current data state
-    this.proxy.buckets().then(this.#buckets.set);
-  }
-
   // 🛠️
 
-  bucketList = computed(() => {
-    const buckets = this.#buckets.value;
-
-    return Object.values(buckets).map((bucket) => {
+  /** @param {Track[]} tracks */
+  sources(tracks) {
+    return Object.values(bucketsFromTracks(tracks)).map((server) => {
       return {
-        label: `${bucket.bucketName} (${bucket.accessKey}, ${bucket.host})`,
-        bucket,
+        label: `${server.bucketName} (${server.host})`,
+        uri: buildURI(server),
       };
     });
-  });
+  }
 }
 
 export default S3Input;

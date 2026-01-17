@@ -1,7 +1,5 @@
 import * as URI from "uri-js";
-
-import { effect, signal } from "@common/signal.js";
-import { announce, ostiary, rpc } from "@common/worker.js";
+import { ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
 import {
@@ -10,11 +8,8 @@ import {
   consultServer,
   createClient,
   groupTracksByServer,
-  loadServers,
   parseURI,
-  saveServers,
   serverId,
-  serversFromTracks,
 } from "./common.js";
 import { groupKeyHash } from "../common.js";
 
@@ -24,16 +19,6 @@ import { groupKeyHash } from "../common.js";
  * @import {ConsultGrouping, InputActions as Actions} from "@components/input/types.d.ts";
  * @import {Server} from "./types.d.ts"
  */
-
-////////////////////////////////////////////
-// STATE
-////////////////////////////////////////////
-
-const $servers = signal(/** @type {Record<string, Server>} */ ({}));
-
-effect(() => {
-  saveServers($servers.value);
-});
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -55,11 +40,11 @@ export async function consult(fileUriOrScheme) {
 }
 
 /**
- * @type {Actions['contextualize']}
+ * @type {Actions['detach']}
  */
-export async function contextualize(tracks) {
-  const servers = serversFromTracks(tracks);
-  $servers.value = servers;
+export async function detach({ fileUriOrScheme, tracks }) {
+  console.log("opensubsonic", fileUriOrScheme);
+  return tracks;
 }
 
 /**
@@ -232,7 +217,7 @@ export async function list(cachedTracks = []) {
 
     // If a server didn't have any tracks,
     // keep a placeholder track so the server gets
-    // picked up whenever it is re-contextualized.
+    // picked up as a source.
     if (!tracks.length) {
       tracks = [{
         $type: "sh.diffuse.output.tracks",
@@ -283,16 +268,9 @@ ostiary((context) => {
 
   rpc(context, {
     consult,
-    contextualize,
+    detach,
     groupConsult,
     list,
     resolve,
-
-    // State
-    servers: $servers.get,
   });
-
-  // Communicate state
-
-  effect(() => announce("servers", $servers.value, context));
 });

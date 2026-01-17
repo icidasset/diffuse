@@ -1,13 +1,11 @@
 import { DiffuseElement } from "@common/element.js";
-import { computed, signal } from "@common/signal.js";
-import { listen } from "@common/worker.js";
 import { SCHEME } from "./constants.js";
+import { buildURI, serversFromTracks } from "./common.js";
 
 /**
  * @import {InputActions, InputSchemeProvider} from "@components/input/types.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
- *
- * @import {Server, State} from "./types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -27,54 +25,27 @@ class OpensubsonicInput extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {ProxiedActions<InputActions & State>} */
+    /** @type {ProxiedActions<InputActions>} */
     this.proxy = this.workerProxy();
 
     this.consult = this.proxy.consult;
-    this.contextualize = this.proxy.contextualize;
+    this.detach = this.proxy.detach;
     this.groupConsult = this.proxy.groupConsult;
     this.list = this.proxy.list;
     this.resolve = this.proxy.resolve;
   }
 
-  // SIGNALS
-
-  #servers = signal(/** @type {Record<string, Server>} */ ({}));
-
-  // STATE
-
-  servers = this.#servers.get;
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  connectedCallback() {
-    super.connectedCallback();
-
-    // Sync data with worker
-    const link = this.workerLink();
-
-    // Listen for remote data changes
-    listen("servers", this.#servers.set, link);
-
-    // Fetch current data state
-    this.proxy.servers().then(this.#servers.set);
-  }
-
   // 🛠️
 
-  serverList = computed(() => {
-    const servers = this.#servers.value;
-
-    return Object.values(servers).map((server) => {
+  /** @param {Track[]} tracks */
+  sources(tracks) {
+    return Object.values(serversFromTracks(tracks)).map((server) => {
       return {
         label: `${server.host} (${server.username ?? server.apiKey})`,
-        server,
+        uri: buildURI(server),
       };
     });
-  });
+  }
 }
 
 export default OpensubsonicInput;
@@ -86,4 +57,4 @@ export default OpensubsonicInput;
 export const CLASS = OpensubsonicInput;
 export const NAME = "di-opensubsonic";
 
-customElements.define(NAME, OpensubsonicInput);
+customElements.define(NAME, CLASS);
