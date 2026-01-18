@@ -1,4 +1,9 @@
-import { groupKeyHash, isAudioFile } from "@components/input/common.js";
+import { ostiary, rpc } from "@common/worker.js";
+import {
+  detach as detachUtil,
+  groupKeyHash,
+  isAudioFile,
+} from "@components/input/common.js";
 import {
   bucketId,
   buildURI,
@@ -8,7 +13,6 @@ import {
   parseURI,
 } from "./common.js";
 import { SCHEME } from "./constants.js";
-import { ostiary, rpc } from "@common/worker.js";
 
 /**
  * @import { InputActions as Actions, ConsultGrouping } from "@components/input/types.d.ts";
@@ -38,9 +42,23 @@ export async function consult(fileUriOrScheme) {
 /**
  * @type {Actions['detach']}
  */
-export async function detach({ fileUriOrScheme, tracks }) {
-  console.log("s3", fileUriOrScheme);
-  return tracks;
+export async function detach(args) {
+  return detachUtil({
+    ...args,
+
+    inputScheme: SCHEME,
+    handleFileUri: ({ fileURI, tracks }) => {
+      const result = parseURI(fileURI);
+      if (!result) return tracks;
+
+      const bid = bucketId(result.bucket);
+      const groups = groupTracksByBucket(tracks);
+
+      delete groups[bid];
+
+      return Object.values(groups).map((a) => a.tracks).flat(1);
+    },
+  });
 }
 
 /**

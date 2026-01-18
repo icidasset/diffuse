@@ -1,6 +1,25 @@
 import { base64url } from "iso-base/rfc4648";
 
 /**
+ * @import {Track} from "@definitions/types.d.ts"
+ */
+
+/**
+ * @param {{ fileUriOrScheme: string; handleFileUri: (args: { fileURI: string; tracks: Track[] }) => Track[]; inputScheme: string; tracks: Track[] }} _
+ */
+export function detach(
+  { fileUriOrScheme, handleFileUri, inputScheme, tracks },
+) {
+  if (!fileUriOrScheme.includes("://")) {
+    // Delete everything if scheme matches
+    if (fileUriOrScheme === inputScheme) return [];
+    return tracks;
+  }
+
+  return handleFileUri({ fileURI: fileUriOrScheme, tracks });
+}
+
+/**
  * @param {string} scheme
  * @param {string} groupId
  */

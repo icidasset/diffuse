@@ -2,7 +2,7 @@ import { SubsonicAPI } from "subsonic-api";
 import * as URI from "uri-js";
 import QS from "query-string";
 
-import { IDB_SERVERS, SCHEME } from "./constants.js";
+import { SCHEME } from "./constants.js";
 
 /**
  * @import {Child} from "subsonic-api"

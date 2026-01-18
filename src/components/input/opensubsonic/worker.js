@@ -2,6 +2,7 @@ import * as URI from "uri-js";
 import { ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
+import { detach as detachUtil, groupKeyHash } from "../common.js";
 import {
   autoTypeToTrackKind,
   buildURI,
@@ -11,7 +12,6 @@ import {
   parseURI,
   serverId,
 } from "./common.js";
-import { groupKeyHash } from "../common.js";
 
 /**
  * @import {Child, SubsonicAPI} from "subsonic-api"
@@ -42,9 +42,23 @@ export async function consult(fileUriOrScheme) {
 /**
  * @type {Actions['detach']}
  */
-export async function detach({ fileUriOrScheme, tracks }) {
-  console.log("opensubsonic", fileUriOrScheme);
-  return tracks;
+export async function detach(args) {
+  return detachUtil({
+    ...args,
+
+    inputScheme: SCHEME,
+    handleFileUri: ({ fileURI, tracks }) => {
+      const result = parseURI(fileURI);
+      if (!result) return tracks;
+
+      const sid = serverId(result.server);
+      const groups = groupTracksByServer(tracks);
+
+      delete groups[sid];
+
+      return Object.values(groups).map((a) => a.tracks).flat(1);
+    },
+  });
 }
 
 /**
