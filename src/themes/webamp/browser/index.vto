@@ -1,11 +1,14 @@
 ---
-layout: layouts/diffuse.vto
+layout: layouts/constituent.vto
 base: ../../../
 
 styles:
   - styles/vendor/98.css
   - themes/webamp/fonts.css
   - themes/webamp/constituent.css
+
+scripts:
+  - themes/webamp/browser/index.js
 ---
 
 <!-- ELEMENTS -->
@@ -25,23 +28,6 @@ styles:
     </div>
   </div>
   <div class="window-body">
-    <dtw-browser
-      input-selector="#input"
-      output-selector="#output"
-      queue-engine-selector="de-queue"
-      search-processor-selector="dp-search"
-    ></dtw-browser>
+    <div id="placeholder"></div>
   </div>
 </div>
-
-<!-- SCRIPTS -->
-
-<script type="module">
-  import { config } from "./common/constituents/default.js"
-
-  // Prepare default constituents setup
-  const defaults = config()
-
-  // Only then initialize the other elements
-  import("./themes/webamp/browser/element.js")
-</script>

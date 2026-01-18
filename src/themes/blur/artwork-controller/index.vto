@@ -1,60 +1,11 @@
 ---
-layout: layouts/diffuse.vto
+layout: layouts/constituent.vto
 base: ../../../
 
 styles:
   - styles/vendor/phosphor/fill/style.css
   - styles/base.css
+
+scripts:
+  - themes/blur/artwork-controller/index.js
 ---
-
-<!-- ELEMENTS -->
-
-<de-audio group="constituents"></de-audio>
-<dp-artwork></dp-artwork>
-
-<db-artwork-controller
-  artwork-processor-selector="dp-artwork"
-  audio-engine-selector="de-audio"
-  input-selector="#input"
-  queue-engine-selector="de-queue"
->
-</db-artwork-controller>
-
-<!-- SCRIPTS -->
-
-<script type="module">
-  import { config } from "./common/constituents/default.js"
-  import { effect } from "./common/signal.js"
-
-  import QueueAudioOrchestrator from "./components/orchestrator/queue-audio/element.js";
-
-  import "./components/engine/audio/element.js"
-  import "./components/processor/artwork/element.js"
-
-  // Prepare default constituents setup
-  const defaults = config()
-
-  // Only then initiate artwork controller
-  import("./themes/blur/artwork-controller/element.js")
-
-  // Orchestrators
-  const oqa = new QueueAudioOrchestrator();
-  oqa.setAttribute("group", defaults.GROUP);
-  oqa.setAttribute("input-selector", "#" + defaults.orchestrator.input.id);
-  oqa.setAttribute("audio-engine-selector", "de-audio");
-  oqa.setAttribute("queue-engine-selector", defaults.engine.queue.localName);
-
-  document.body.append(oqa)
-
-  // Effects
-  effect(() => {
-    const rso = defaults.orchestrator.repeatShuffle
-    const repeat = rso.repeat()
-
-    if (repeat && !oqa.hasAttribute("repeat")) {
-      oqa.toggleAttribute("repeat")
-    } else if (!repeat && oqa.hasAttribute("repeat")) {
-      oqa.removeAttribute("repeat")
-    }
-  })
-</script>

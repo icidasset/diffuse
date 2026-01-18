@@ -395,13 +395,9 @@ class ArtworkController extends DiffuseElement {
     });
 
     return html`
-      <link rel="stylesheet" href="${import.meta.resolve(
-        "../../../styles/vendor/phosphor/fill/style.css",
-      )}" />
-      <link rel="stylesheet" href="${import.meta.resolve(
-        "../../../styles/animations.css",
-      )}" />
-      <link rel="stylesheet" href="${import.meta.resolve("./element.css")}" />
+      <link rel="stylesheet" href="styles/vendor/phosphor/fill/style.css" />
+      <link rel="stylesheet" href="styles/animations.css" />
+      <link rel="stylesheet" href="themes/blur/artwork-controller/element.css" />
 
       <main style="background-color: ${this.#artworkColor.value ??
         `revert-layer`};">

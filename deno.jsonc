@@ -40,6 +40,7 @@
     "@definitions/": "./src/definitions/",
     "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.1",
     "@styles/": "./src/styles/",
+    "@themes/": "./src/themes/",
     "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
 
     // Build

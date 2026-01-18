@@ -47,31 +47,31 @@ export function config() {
   // Orchestrators
   const opt = new ProcessTracksOrchestrator();
   opt.setAttribute("group", GROUP);
-  opt.setAttribute("input-selector", "#input");
-  opt.setAttribute("output-selector", "#output");
-  opt.setAttribute("metadata-processor-selector", metadata.localName);
+  opt.setAttribute("input-selector", input.selector);
+  opt.setAttribute("output-selector", output.selector);
+  opt.setAttribute("metadata-processor-selector", metadata.selector);
   opt.toggleAttribute("process-when-ready");
 
   const oqt = new QueueTracksOrchestrator();
   oqt.setAttribute("group", GROUP);
-  oqt.setAttribute("input-selector", "#input");
-  oqt.setAttribute("output-selector", "#output");
-  oqt.setAttribute("queue-engine-selector", queue.localName);
+  oqt.setAttribute("input-selector", input.selector);
+  oqt.setAttribute("output-selector", output.selector);
+  oqt.setAttribute("queue-engine-selector", queue.selector);
 
   const ors = new RepeatShuffleOrchestrator();
   ors.setAttribute("group", GROUP);
-  ors.setAttribute("queue-engine-selector", queue.localName);
+  ors.setAttribute("queue-engine-selector", queue.selector);
 
   const ost = new SearchTracksOrchestrator();
   ost.setAttribute("group", GROUP);
-  ost.setAttribute("input-selector", "#input");
-  ost.setAttribute("output-selector", "#output");
-  ost.setAttribute("search-processor-selector", search.localName);
+  ost.setAttribute("input-selector", input.selector);
+  ost.setAttribute("output-selector", output.selector);
+  ost.setAttribute("search-processor-selector", search.selector);
 
   const osr = new SourcesOrchestrator();
   osr.setAttribute("group", GROUP);
-  osr.setAttribute("input-selector", "#input");
-  osr.setAttribute("output-selector", "#output");
+  osr.setAttribute("input-selector", input.selector);
+  osr.setAttribute("output-selector", output.selector);
 
   document.body.append(opt, oqt, ors, ost, osr);
 
