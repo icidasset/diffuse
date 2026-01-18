@@ -17,7 +17,9 @@ import { effect, signal } from "@common/signal.js";
 // STATE
 ////////////////////////////////////////////
 
-export const $inserted = signal(/** @type {Set<string>} */ (new Set()));
+export const $inserted = signal(/** @type {Set<string>} */ (new Set()), {
+  eager: true,
+});
 
 // Communicated state
 export const $cacheId = signal(/** @type {string | undefined} */ (undefined));
@@ -82,6 +84,8 @@ export async function supply({ tracks }) {
   const currentSet = $inserted.value;
   const newSet = new Set(ids);
 
+  $inserted.value = newSet;
+
   const removedIds = currentSet.difference(newSet);
   const newIds = newSet.difference(currentSet);
   const newTracks = Array.from(newIds).map((id) => tracksMap[id]);
@@ -89,7 +93,6 @@ export async function supply({ tracks }) {
   await Orama.removeMultiple(db, Array.from(removedIds));
   await Orama.insertMultiple(db, newTracks);
 
-  $inserted.value = newSet;
   $cacheId.value = ids.length === 0
     ? undefined
     : xxh32(ids.sort().join("")).toString();
