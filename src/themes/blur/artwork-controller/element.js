@@ -121,7 +121,11 @@ class ArtworkController extends DiffuseElement {
 
       this.effect(() => {
         const now = !!queue.now();
-        const bool = now && this.#audio()?.loadingState() !== "loaded";
+        const aud = this.#audio()?.loadingState();
+        const bool = now && aud !== "loaded";
+
+        const q = queue.now();
+        // console.log(aud, this.#audio(), q, q && audio.state(q.id));
 
         if (this.#isLoadingTimeout) {
           clearTimeout(this.#isLoadingTimeout);
@@ -133,7 +137,7 @@ class ArtworkController extends DiffuseElement {
             2000,
           );
         } else {
-          this.#isLoading.set(false);
+          this.#isLoading.value = false;
         }
       });
     });

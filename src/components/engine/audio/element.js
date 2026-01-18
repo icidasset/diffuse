@@ -58,16 +58,25 @@ class AudioEngine extends BroadcastableDiffuseElement {
           play: { strategy: "leaderOnly", fn: this.play },
           seek: { strategy: "leaderOnly", fn: this.seek },
           supply: { strategy: "replicate", fn: this.supply },
+
+          // State
+          items: { strategy: "leaderOnly", fn: this.items },
         },
       );
 
-      if (actions) {
-        this.adjustVolume = actions.adjustVolume;
-        this.pause = actions.pause;
-        this.play = actions.play;
-        this.seek = actions.seek;
-        this.supply = actions.supply;
-      }
+      if (!actions) return;
+
+      this.adjustVolume = actions.adjustVolume;
+      this.pause = actions.pause;
+      this.play = actions.play;
+      this.seek = actions.seek;
+      this.supply = actions.supply;
+
+      // Sync items with leader if needed
+      this.broadcastingStatus().then(async (status) => {
+        if (status.leader) return;
+        this.#items.value = await actions.items();
+      });
     }
 
     // Super
@@ -82,41 +91,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
       this.#volume.set(parseFloat(volume));
     }
 
-    // Manage playback across tabs if needed
-    if (this.broadcasted) {
-      this.effect(async () => {
-        const status = await this.broadcastingStatus();
-        untracked(() => {
-          if (!(status.leader && status.initialLeader === false)) return;
-
-          console.log("🧙 Leadership acquired");
-          this.items().forEach((item) => {
-            const el = this.#itemElement(item.id);
-            if (!el) return;
-
-            el.removeAttribute("initial-progress");
-
-            if (!el.audio) return;
-
-            const progress = el.$state.progress.value;
-            const canPlay = () => {
-              this.seek({
-                audioId: item.id,
-                percentage: progress,
-              });
-
-              if (el.$state.isPlaying.value) this.play({ audioId: item.id });
-            };
-
-            el.audio.addEventListener("canplay", canPlay, { once: true });
-
-            if (el.audio.readyState === 0) el.audio.load();
-            else canPlay();
-          });
-        });
-      });
-    }
-
     // Monitor volume signal
     this.effect(() => {
       Array.from(this.querySelectorAll("de-audio-item")).forEach(
@@ -129,6 +103,42 @@ class AudioEngine extends BroadcastableDiffuseElement {
       );
 
       localStorage.setItem(VOLUME_KEY, this.#volume.value.toString());
+    });
+
+    // Only broadcasting stuff from here on out
+    if (!this.broadcasted) return;
+
+    // Manage playback across tabs if needed
+    this.effect(async () => {
+      const status = await this.broadcastingStatus();
+      untracked(() => {
+        if (!(status.leader && status.initialLeader === false)) return;
+
+        console.log("🧙 Leadership acquired");
+        this.items().forEach((item) => {
+          const el = this.#itemElement(item.id);
+          if (!el) return;
+
+          el.removeAttribute("initial-progress");
+
+          if (!el.audio) return;
+
+          const progress = el.$state.progress.value;
+          const canPlay = () => {
+            this.seek({
+              audioId: item.id,
+              percentage: progress,
+            });
+
+            if (el.$state.isPlaying.value) this.play({ audioId: item.id });
+          };
+
+          el.audio.addEventListener("canplay", canPlay, { once: true });
+
+          if (el.audio.readyState === 0) el.audio.load();
+          else canPlay();
+        });
+      });
     });
   }
 
