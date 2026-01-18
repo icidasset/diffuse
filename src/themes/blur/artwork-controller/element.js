@@ -124,9 +124,6 @@ class ArtworkController extends DiffuseElement {
         const aud = this.#audio()?.loadingState();
         const bool = now && aud !== "loaded";
 
-        const q = queue.now();
-        // console.log(aud, this.#audio(), q, q && audio.state(q.id));
-
         if (this.#isLoadingTimeout) {
           clearTimeout(this.#isLoadingTimeout);
         }
