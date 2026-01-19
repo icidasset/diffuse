@@ -31,5 +31,8 @@ export function outputManager({ init, tracks }) {
       },
       state: ts.get,
     },
+    signals: {
+      tracks: t,
+    },
   };
 }

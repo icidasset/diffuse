@@ -51,7 +51,11 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      this.broadcast(this.nameWithGroup, {});
+      const actions = this.broadcast(this.nameWithGroup, {
+        process: { strategy: "leaderOnly", fn: this.process },
+      });
+
+      if (actions) this.process = actions.process;
     }
 
     // Super
@@ -110,7 +114,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
 
   async process() {
     if (!this.output) return;
-    if (!(await this.isLeader())) return;
+    if (this.#isProcessing.value) return;
 
     // Start
     this.#isProcessing.value = true;

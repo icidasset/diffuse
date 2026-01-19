@@ -1,9 +1,9 @@
-import { DiffuseElement } from "@common/element.js";
+import { BroadcastableDiffuseElement } from "@common/element.js";
 import { outputManager } from "../../common.js";
 
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts"
- * @import {OutputManager, OutputWorkerActions} from "../../types.d.ts"
+ * @import {OutputElement, OutputManager, OutputWorkerActions} from "../../types.d.ts"
  * @import {SupportedDataTypes} from "./types.d.ts"
  */
 
@@ -12,29 +12,85 @@ import { outputManager } from "../../common.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {OutputManager<any>}
+ * @implements {OutputElement<any>}
  */
-class IndexedDBOutput extends DiffuseElement {
+class IndexedDBOutput extends BroadcastableDiffuseElement {
   static NAME = "diffuse/output/polymorphic/indexed-db";
   static WORKER_URL = "components/output/polymorphic/indexed-db/worker.js";
+
+  #manager;
 
   constructor() {
     super();
 
     /** @type {ProxiedActions<OutputWorkerActions<SupportedDataTypes>>} */
-    const p = this.workerProxy();
+    this.proxy = this.workerProxy();
 
     /** @type {OutputManager<SupportedDataTypes>} */
-    const manager = outputManager({
+    this.#manager = outputManager({
       init: this.whenConnected.bind(this),
       tracks: {
         empty: () => undefined,
-        get: () => p.get({ name: this.#cat("tracks") }),
-        put: (data) => p.put({ name: this.#cat("tracks"), data }),
+        get: () => this.#get("tracks"),
+        put: (data) => this.#put("tracks", data),
       },
     });
 
-    this.tracks = manager.tracks;
+    this.tracks = this.#manager.tracks;
+  }
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      const actions = this.broadcast(this.nameWithGroup, {
+        put: { strategy: "replicate", fn: this.#putIncoming },
+      });
+
+      if (actions) {
+        this.#put = this.#putOutgoing(actions.put);
+      }
+    }
+
+    // Super
+    super.connectedCallback();
+  }
+
+  // GET & PUT
+
+  /** @param {string} name */
+  #getProxy = (name) => this.proxy.get({ name: this.#cat(name) });
+  #get = this.#getProxy;
+
+  /** @param {string} name; @param {any} data */
+  #putProxy = (name, data) => this.proxy.put({ name: this.#cat(name), data });
+  #put = this.#putProxy;
+
+  /**
+   * @param {(uuidSender: ReturnType<typeof crypto.randomUUID>, name: string, data: any) => Promise<void>} action
+   * @returns {(name: string, data: any) => Promise<void>}
+   */
+  #putOutgoing = (action) => async (name, data) => {
+    return await action(this.uuid, name, data);
+  };
+
+  /**
+   * @param {ReturnType<typeof crypto.randomUUID>} uuidSender
+   * @param {string} name
+   * @param {any} data
+   */
+  #putIncoming(uuidSender, name, data) {
+    if (uuidSender === this.uuid) {
+      // Initiator
+      this.#putProxy(name, data);
+    } else {
+      // Listener
+      if (name === "tracks") this.#manager.signals.tracks.value = data;
+    }
   }
 
   // 🛠️

@@ -17,7 +17,7 @@ import { SCHEME } from "./constants.js";
 /**
  * @import { InputActions as Actions, ConsultGrouping } from "@components/input/types.d.ts";
  * @import { Track } from "@definitions/types.d.ts"
- * @import { Bucket } from "./types.d.ts"
+ * @import { Bucket, Demo } from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -189,6 +189,9 @@ export async function resolve(
 // ADDITIONAL ACTIONS
 ////////////////////////////////////////////
 
+/**
+ * @returns {Demo}
+ */
 export function demo() {
   // Credentials are read-only, no worries.
 

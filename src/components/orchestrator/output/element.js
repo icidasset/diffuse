@@ -1,4 +1,5 @@
-import { DiffuseElement } from "@common/element.js";
+import { ifDefined } from "lit-html/directives/if-defined.js"
+import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
@@ -41,9 +42,12 @@ class OutputOrchestrator extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
+    const group = this.group === DEFAULT_GROUP ? undefined : this.group
+
     return html`
       <dop-indexed-db
         id="do-output__dop-indexed-db__json"
+        group="${ifDefined(group)}"
         namespace="json"
       ></dop-indexed-db>
 

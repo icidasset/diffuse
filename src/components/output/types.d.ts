@@ -1,9 +1,14 @@
-import type { SignalReader } from "@common/signal.d.ts";
+import type { Signal, SignalReader } from "@common/signal.d.ts";
 import type { DiffuseElement } from "@common/element.js";
 
-export type OutputElement<Tracks> = DiffuseElement & OutputManager<Tracks>;
+export type OutputElement<Tracks> =
+  & DiffuseElement
+  & Omit<OutputManager<Tracks>, "signals">;
 
 export type OutputManager<Tracks> = {
+  signals: {
+    tracks: Signal<Tracks>;
+  };
   tracks: {
     collection: SignalReader<Tracks>;
     reload: () => Promise<void>;

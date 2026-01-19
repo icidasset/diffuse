@@ -1,4 +1,4 @@
-import type { SignalReader } from "@common/signal.d.ts";
+import type { Track } from "@definitions/types.d.ts";
 
 export type Bucket = {
   accessKey: string;
@@ -7,4 +7,9 @@ export type Bucket = {
   path: string;
   region: string;
   secretKey: string;
+};
+
+export type Demo = {
+  bucket: Bucket;
+  track: Track;
 };

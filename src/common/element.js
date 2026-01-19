@@ -29,6 +29,7 @@ export class DiffuseElement extends HTMLElement {
   constructor() {
     super();
 
+    this.uuid = crypto.randomUUID();
     this.worker = this.worker.bind(this);
     this.workerLink = this.workerLink.bind(this);
   }

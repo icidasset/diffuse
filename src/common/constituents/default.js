@@ -23,12 +23,14 @@ export function config() {
 
   // Input
   const input = new InputOrchestrator();
+  input.setAttribute("group", GROUP);
   input.setAttribute("id", "input");
 
   document.body.append(input);
 
   // Output
   const output = new OutputOrchestrator();
+  output.setAttribute("group", GROUP);
   output.setAttribute("id", "output");
 
   document.body.append(output);
