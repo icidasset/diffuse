@@ -113,6 +113,11 @@ ostiary((context, _firstConnection, _connectionId) => {
   effect(() => {
     const existing = new Set($lake.value.map((t) => t.id));
 
+    if ($now.value && !existing.has($now.value.id)) {
+      // TODO: Shift queue instead?
+      $now.value = null;
+    }
+
     $future.value = $future.value.filter((i) => {
       return existing.has(i.id);
     });
