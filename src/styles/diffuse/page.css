@@ -123,6 +123,10 @@ ul.columns {
   li::marker {
     content: none;
   }
+
+  li i.ph-fill {
+    opacity: 0.4;
+  }
 }
 
 .construct {
