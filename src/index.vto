@@ -71,10 +71,28 @@ engines:
 input:
   - url: "components/input/opensubsonic/element.js"
     title: "Opensubsonic"
-    desc: "Add any (open)subsonic server."
+    desc: >
+      Add any (open)subsonic server.
+  - title: "HTTPS (Raw)"
+    desc: >
+      Enables usage of tracks with a HTTPS URI.
+    todo: true
+  - title: "HTTPS (JSON)"
+    desc: >
+      Generate tracks based on HTTPS servers that provide JSON (directory) listings.
+    todo: true
   - url: "components/input/s3/element.js"
     title: "S3"
-    desc: "AWS S3 and services that provide the same surface API such as Cloudflare R2."
+    desc: >
+      AWS S3 and services that provide the same surface API such as Cloudflare R2.
+  - title: "Soundcloud"
+    desc: >
+      Add items from your Soundcloud feed.
+    todo: true
+  - title: "WebDAV"
+    desc: >
+      Add any WebDAV server.
+    todo: true
 
 orchestrators:
   - url: "components/orchestrator/input/element.js"
@@ -103,9 +121,16 @@ orchestrators:
     desc: "Supplies tracks to the given search processor whenever the tracks collection changes."
 
 output:
+  - title: "Bytes / Automerge Repo"
+    desc: "Sync with an Automerge repo [sync server](https://github.com/automerge/automerge-repo-sync-server/tree/main)."
+    todo: true
   - url: "components/output/polymorphic/indexed-db/element.js"
     title: "Polymorphic / IndexedDB"
     desc: "Stores output into the local indexedDB. Supports any type of data that indexedDB supports."
+  - title: "Raw / AT Protocol"
+    desc: >
+      Store your user data on the storage associated with your ATProtocol identity. Data is lexicon shaped by default so this element takes in that data directly without any transformations.
+    todo: true
 
 processors:
   - url: "components/processor/artwork/element.js"
@@ -129,6 +154,9 @@ supplements:
     todo: true
 
 transformers:
+  - title: "Output / Bytes / Automerge"
+    desc: "Translate data to and from an Automerge CRDT."
+    todo: true
   - title: "Output / Bytes / Cambria lenses"
     desc: "Uses the Cambria library to seamlessly translate between data schemas so that no data migration is needed."
     todo: true
@@ -173,8 +201,17 @@ definitions:
   </p>
   <p style="align-items: center; display: flex; gap: var(--space-2xs); opacity: 0.55;">
     <i class="ph-fill ph-crane"></i>
-    <strong style="font-weight: 800;">WORK IN PROGRESS</strong>
+    <strong style="font-weight: 700;">WORK IN PROGRESS</strong>
   </p>
+  <ul class="table-of-contents">
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#themes">Themes</a></li>
+    <li><a href="#constituents">Constituents</a></li>
+    <li><a href="#take-control">Take control</a></li>
+    <li><a href="#elements">Elements</a></li>
+    <li><a href="#definitions">Definitions</a></li>
+  </ul>
   <p>
     <small>Built by <a href="https://tokono.ma">tokono.ma</a></small>
   </p>
