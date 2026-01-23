@@ -7,7 +7,7 @@ import { OutputTransformer } from "../../base.js";
  */
 
 /**
- * @extends {OutputTransformer<string>}
+ * @extends {OutputTransformer<Uint8Array>}
  */
 class JsonStringOutputTransformer extends OutputTransformer {
   constructor() {
@@ -20,8 +20,17 @@ class JsonStringOutputTransformer extends OutputTransformer {
       tracks: {
         ...base.tracks,
         collection: computed(() => {
-          let json = base.tracks.collection();
-          if (typeof json !== "string") json = "[]";
+          let data = base.tracks.collection();
+
+          let json;
+
+          if (data instanceof Uint8Array) {
+            const decoder = new TextDecoder();
+            json = decoder.decode(data);
+          }
+
+          if (typeof data !== "string") json = "[]";
+          else json = data;
 
           // Try parsing JSON
           try {
@@ -35,7 +44,9 @@ class JsonStringOutputTransformer extends OutputTransformer {
         }),
         save: async (newTracks) => {
           const json = JSON.stringify(newTracks);
-          await base.tracks.save(json);
+          const encoder = new TextEncoder();
+          const bytes = encoder.encode(json);
+          await base.tracks.save(bytes);
         },
       },
     };

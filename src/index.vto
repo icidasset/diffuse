@@ -162,7 +162,7 @@ transformers:
     todo: true
   - title: "Output / Bytes / JSON"
     desc: "Raw data schema output ⇄ JSON Uint8Array."
-    todo: true
+    url: "components/transformer/output/bytes/json/element.js"
   - title: "Output / Refiner / Default"
     desc: "The task of a refiner transformer is to remove the output state that is not meant to be saved to storage. For example, ephemeral tracks; this transformer will keep them in memory, but they will not be present in the output. **Ideally this is part of every theme, but you may swap it out with another transformer that might provide better defaults.**"
     url: "components/transformer/output/refiner/default/element.js"
@@ -250,13 +250,6 @@ definitions:
       <p>
         Next, select any <a href="#themes">theme</a> from below to play the audio. Or any of the other options suggested in the usage section.
       </p>
-
-      <p>
-        <small>
-          <strong><i class="ph-fill ph-warning"></i></strong>
-          The items are added to the default "IndexedDB" (local-only) output, so make sure that output is configured.
-        </small>
-      </p>
     </section>
   </div>
   <div class="columns">
@@ -303,7 +296,7 @@ definitions:
     <h2 id="take-control">Take control</h2>
 
     <p>
-      <em>Diffuse ranges from “eating out at a great restaurant” all the way to “making your favourite meal at home”.</em>
+      <em>Diffuse ranges from “eating out at a great restaurant” all the way to “making your favourite meal at home”</em>
     </p>
 
     <ul class="columns">
