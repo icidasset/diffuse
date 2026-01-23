@@ -31,21 +31,37 @@ class OutputConfigurator extends DiffuseElement {
         collection: computed(() => {
           const out = this.#selectedOutput.value;
           if (out) return out.tracks.collection();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.tracks.collection();
+
           return this.#memory.tracks.value;
         }),
         reload: () => {
+          const def = this.#defaultOutput.value;
+          if (def) def.tracks.reload();
+
           const out = this.#selectedOutput.value;
           if (out) return out.tracks.reload();
+
           return Promise.resolve();
         },
         save: async (newTracks) => {
+          const def = this.#defaultOutput.value;
+          if (def) await def.tracks.save(newTracks);
+
           const out = this.#selectedOutput.value;
           if (out) return await out.tracks.save(newTracks);
+
           this.#memory.tracks.value = newTracks;
         },
         state: computed(() => {
           const out = this.#selectedOutput.value;
           if (out) return out.tracks.state();
+
+          const def = this.#defaultOutput.value;
+          if (def) def.tracks.state();
+
           return out === undefined ? "loading" : "loaded";
         }),
       },
@@ -56,6 +72,10 @@ class OutputConfigurator extends DiffuseElement {
   }
 
   // SIGNALS
+
+  #defaultOutput = signal(
+    /** @type {Output | null | undefined} */ (undefined),
+  );
 
   #memory = {
     tracks: signal(/** @type {Track[]} */ ([])),
@@ -72,16 +92,20 @@ class OutputConfigurator extends DiffuseElement {
    */
   async connectedCallback() {
     super.connectedCallback();
+
+    const def_ault = this.getAttribute("default");
+    if (def_ault) this.#defaultOutput.value = await this.#findOutput(def_ault);
+
     this.#selectedOutput.value = await this.#findSelectedOutput();
   }
 
   // MISC
 
-  async #findSelectedOutput() {
-    const id = localStorage.getItem(`${STORAGE_PREFIX}/selected/id`) ??
-      this.getAttribute("default");
+  /**
+   * @param {string} id
+   */
+  async #findOutput(id) {
     const el = id ? this.root().querySelector(`#${id}`) : null;
-
     if (!el) return null;
 
     await customElements.whenDefined(el.localName);
@@ -94,6 +118,12 @@ class OutputConfigurator extends DiffuseElement {
     }
 
     return /** @type {Output} */ (/** @type {unknown} */ (el));
+  }
+
+  async #findSelectedOutput() {
+    const id = localStorage.getItem(`${STORAGE_PREFIX}/selected/id`);
+    if (id) return this.#findOutput(id);
+    return undefined;
   }
 
   /**
