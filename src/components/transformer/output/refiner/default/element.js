@@ -2,7 +2,7 @@ import { computed } from "@common/signal.js";
 import { OutputTransformer } from "../../base.js";
 
 /**
- * @import { OutputManager } from "../../../../output/types.d.ts"
+ * @import { OutputManagerDeputy } from "../../../../output/types.d.ts"
  * @import { Track } from "@definitions/types.d.ts"
  */
 
@@ -15,7 +15,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
 
     const base = this.base();
 
-    /** @type {OutputManager<Track[]>} */
+    /** @type {OutputManagerDeputy<Track[]>} */
     const manager = {
       tracks: {
         ...base.tracks,

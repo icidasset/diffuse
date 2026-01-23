@@ -2,7 +2,7 @@ import { DiffuseElement, query } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 
 /**
- * @import { OutputElement, OutputManager } from "../../output/types.d.ts"
+ * @import { OutputElement, OutputManagerDeputy } from "../../output/types.d.ts"
  */
 
 /**
@@ -40,7 +40,7 @@ export class OutputTransformer extends DiffuseElement {
   // MANAGER
 
   base() {
-    /** @type {OutputManager<T | undefined>} */
+    /** @type {OutputManagerDeputy<T | undefined>} */
     const m = {
       tracks: {
         collection: computed(() => {
@@ -55,7 +55,7 @@ export class OutputTransformer extends DiffuseElement {
           await this.output.signal()?.tracks.save(newTracks);
         },
         state: computed(() => {
-          return this.output.signal()?.tracks.state() ?? "loading"
+          return this.output.signal()?.tracks.state() ?? "loading";
         }),
       },
     };

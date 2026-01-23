@@ -3,7 +3,12 @@ import type { DiffuseElement } from "@common/element.js";
 
 export type OutputElement<Tracks> =
   & DiffuseElement
-  & Omit<OutputManager<Tracks>, "signals">;
+  & OutputManagerDeputy<Tracks>;
+
+export type OutputManagerDeputy<Tracks> = Omit<
+  OutputManager<Tracks>,
+  "signals"
+>;
 
 export type OutputManager<Tracks> = {
   signals: {

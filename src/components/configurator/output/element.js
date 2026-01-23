@@ -3,7 +3,7 @@ import { computed, signal } from "@common/signal.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {OutputManager, OutputElement} from "@components/output/types.d.ts"
+ * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  */
 
 /**
@@ -17,7 +17,7 @@ const STORAGE_PREFIX = "diffuse/configurator/output";
 ////////////////////////////////////////////
 
 /**
- * @implements {OutputManager<Track[]>}
+ * @implements {OutputElement<Track[]>}
  */
 class OutputConfigurator extends DiffuseElement {
   static NAME = "diffuse/configurator/output";
@@ -25,7 +25,7 @@ class OutputConfigurator extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {OutputManager<Track[]>} */
+    /** @type {OutputManagerDeputy<Track[]>} */
     const manager = {
       tracks: {
         collection: computed(() => {
