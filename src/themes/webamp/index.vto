@@ -77,7 +77,13 @@ styles:
       <dtw-window id="input-window">
         <span slot="title-icon"><img src="images/icons/windows_98/cd_audio_cd_a-0.png" height="14" /></span>
         <span slot="title">Manage audio inputs</span>
-        <p>👀</p>
+
+        <dtw-input-config
+          input-selector="#input"
+          output-selector="#output"
+          sources-orchestrator-selector="do-sources"
+        ></dtw-input-config>
+
       </dtw-window>
 
       <!-- OUTPUT -->
@@ -92,6 +98,7 @@ styles:
       <dtw-window id="browser-window" window-style="height: 380px; width: 560px;">
         <span slot="title-icon"><img src="images/icons/windows_98/directory_explorer-4.png" height="14" /></span>
         <span slot="title">Browse collection</span>
+
         <dtw-browser
           input-selector="#input"
           output-selector="#output"
@@ -175,6 +182,11 @@ styles:
   output-selector="#output"
   search-processor-selector="dp-search"
 ></do-search-tracks>
+
+<do-sources
+  input-selector="#input"
+  output-selector="#output"
+></do-sources>
 
 <!--
 

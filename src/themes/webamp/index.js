@@ -5,6 +5,7 @@ import "@components/orchestrator/output/element.js";
 import "@components/orchestrator/process-tracks/element.js";
 import "@components/orchestrator/queue-tracks/element.js";
 import "@components/orchestrator/search-tracks/element.js";
+import "@components/orchestrator/sources/element.js";
 import "@components/processor/metadata/element.js";
 
 import * as Input from "@components/configurator/input/element.js";
@@ -15,6 +16,7 @@ import { component } from "@common/element.js";
 import { effect, signal, untracked } from "@common/signal.js";
 
 import "./browser/element.js";
+import "./configurators/input/element.js";
 import "./configurators/output.js";
 import "./window/element.js";
 

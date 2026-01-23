@@ -45,7 +45,7 @@ class WindowElement extends DiffuseElement {
       }
 
       .window-body {
-        min-width: 240px;
+        min-width: 350px;
         overflow: hidden;
         resize: both;
       }

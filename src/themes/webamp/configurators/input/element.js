@@ -1,9 +1,4 @@
-import {
-  DiffuseElement,
-  nothing,
-  query,
-  whenElementsDefined,
-} from "@common/element.js";
+import { DiffuseElement, query } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
@@ -49,7 +44,7 @@ class InputConfig extends DiffuseElement {
   /**
    * @override
    */
-  connectedCallback() {
+  async connectedCallback() {
     super.connectedCallback();
 
     /** @type {InputElement} */
@@ -60,6 +55,10 @@ class InputConfig extends DiffuseElement {
 
     /** @type {import("@components/orchestrator/sources/element.js").CLASS} */
     const sourcesOrchestrator = query(this, "sources-orchestrator-selector");
+
+    await customElements.whenDefined(input.localName);
+    await customElements.whenDefined(output.localName);
+    await customElements.whenDefined(sourcesOrchestrator.localName);
 
     this.$input.value = input;
     this.$output.value = output;
@@ -276,6 +275,7 @@ class InputConfig extends DiffuseElement {
       /* LIST */
 
       table {
+        color: black;
         table-layout: fixed;
       }
 
