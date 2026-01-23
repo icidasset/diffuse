@@ -4,7 +4,7 @@
   "vendor": true,
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
-    "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.2",
+    "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.6",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.4",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
     "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^0.5.1",
