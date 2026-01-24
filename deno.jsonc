@@ -5,6 +5,7 @@
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
     "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.6",
+    "@automerge/automerge": "npm:@automerge/automerge@^3.2.3",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.4",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
     "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^0.5.1",
@@ -40,12 +41,13 @@
     "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.1",
     "@styles/": "./src/styles/",
     "@themes/": "./src/themes/",
-    "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
 
     // Build
     "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.3.1",
     "@std/fs": "jsr:@std/fs@^1.0.19",
     "@std/path": "jsr:@std/path@^1.1.2",
+    "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",
+    "esbuild-plugin-wasm": "npm:esbuild-plugin-wasm@^1.1.0",
     "lume/": "https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.4/",
     "lume/jsx-runtime": "https://cdn.jsdelivr.net/gh/oscarotero/ssx@0.1.14/jsx-runtime.ts",
   },

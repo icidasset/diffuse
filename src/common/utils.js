@@ -88,6 +88,39 @@ export function jsonEncode(a) {
 }
 
 /**
+ * @template {Record<string, any>} T
+ * @param {T} rec
+ */
+export function removeUndefinedValuesFromRecord(rec) {
+  const recClone = { ...rec };
+
+  Object.entries(recClone).forEach(([key, value]) => {
+    if (value === undefined) {
+      delete recClone[key];
+    }
+  });
+
+  return recClone;
+}
+
+/**
+ * @template {Record<string, any>} T
+ * @param {T} rec
+ */
+export function recursivelyCloneRecords(rec) {
+  const recClone = { ...rec };
+
+  Object.entries(recClone).forEach(([key, value]) => {
+    if (typeof value === "object") {
+      /** @ts-ignore */
+      recClone[key] = recursivelyCloneRecords(value);
+    }
+  });
+
+  return recClone;
+}
+
+/**
  * @param {Track} track
  * @returns {Promise<string>}
  */

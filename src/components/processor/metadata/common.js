@@ -3,6 +3,8 @@ import * as URI from "uri-js";
 import { HttpClient } from "@tokenizer/http";
 import { tokenizer as rangeTokenizer } from "@tokenizer/range";
 
+import { removeUndefinedValuesFromRecord } from "@common/utils.js";
+
 /**
  * @import { TrackStats, TrackTags } from "@definitions/types.d.ts";
  * @import { Extraction, Urls } from "./types.d.ts";
@@ -54,7 +56,7 @@ export async function musicMetadataTags({
   }
 
   /** @type {TrackStats} */
-  const stats = {
+  const statsFull = {
     albumGain: meta.format.albumGain,
     bitrate: meta.format.bitrate,
     bitsPerSample: meta.format.bitsPerSample,
@@ -68,7 +70,7 @@ export async function musicMetadataTags({
   };
 
   /** @type {TrackTags} */
-  const tags = {
+  const tagsFull = {
     album: meta.common.album,
     albumartist: meta.common.albumartist,
     albumartists: Array.isArray(meta.common.albumartist)
@@ -93,7 +95,7 @@ export async function musicMetadataTags({
     date: meta.common.date,
     disc: {
       no: meta.common.disk.no || 1,
-      of: meta.common.disk.of ?? undefined,
+      ...(meta.common.disk.of && { of: meta.common.disk.of }),
     },
     djmixers: meta.common.djmixer,
     engineers: meta.common.engineer,
@@ -128,12 +130,15 @@ export async function musicMetadataTags({
     titlesort: meta.common.titlesort,
     track: {
       no: meta.common.track.no || 1,
-      of: meta.common.track.of ?? undefined,
+      ...(meta.common.track.of && { of: meta.common.track.of }),
     },
     work: meta.common.work,
     writers: meta.common.writer,
     year: meta.common.year,
   };
+
+  const stats = removeUndefinedValuesFromRecord(statsFull);
+  const tags = removeUndefinedValuesFromRecord(tagsFull);
 
   return {
     artwork: includeArtwork ? meta.common.picture : undefined,

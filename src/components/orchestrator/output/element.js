@@ -1,8 +1,9 @@
-import { ifDefined } from "lit-html/directives/if-defined.js"
+import { ifDefined } from "lit-html/directives/if-defined.js";
 import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
+// import "@components/transformer/output/bytes/automerge/element.js";
 import "@components/transformer/output/refiner/default/element.js";
 import "@components/transformer/output/string/json/element.js";
 
@@ -16,6 +17,9 @@ import "@components/transformer/output/string/json/element.js";
 // ELEMENT
 ////////////////////////////////////////////
 
+/**
+ * A default setup for managing output.
+ */
 class OutputOrchestrator extends DiffuseElement {
   static NAME = "diffuse/orchestrator/output";
 
@@ -42,9 +46,15 @@ class OutputOrchestrator extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const group = this.group === DEFAULT_GROUP ? undefined : this.group
+    const group = this.group === DEFAULT_GROUP ? undefined : this.group;
 
     return html`
+      <!--<dop-indexed-db
+        id="do-output__dop-indexed-db__bytes--automerge"
+        group="${ifDefined(group)}"
+        namespace="bytes/automerge"
+      ></dop-indexed-db>-->
+
       <dop-indexed-db
         id="do-output__dop-indexed-db__json"
         group="${ifDefined(group)}"
@@ -56,8 +66,14 @@ class OutputOrchestrator extends DiffuseElement {
           id="do-output__dtos-json"
           output-selector="#do-output__dop-indexed-db__json"
         ></dtos-json>
+
+        <!--<dtob-automerge
+          id="do-output__dtob-automerge"
+          output-selector="#do-output__dop-indexed-db__bytes--automerge"
+        ></dtob-automerge>-->
       </dc-output>
 
+      <!-- Entry -->
       <dtor-default
         id="do-output__output"
         output-selector="#do-output__dc-output"

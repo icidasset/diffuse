@@ -2,6 +2,7 @@ import * as URI from "uri-js";
 import { ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
+import { removeUndefinedValuesFromRecord } from "@common/utils.js";
 import { detach as detachUtil, groupKeyHash } from "../common.js";
 import {
   autoTypeToTrackKind,
@@ -156,7 +157,7 @@ export async function list(cachedTracks = []) {
           kind: autoTypeToTrackKind(song.type),
           uri: buildURI(server, { songId: song.id, path }),
 
-          stats: {
+          stats: removeUndefinedValuesFromRecord({
             albumGain: undefined,
             bitrate: song.bitRate ? song.bitRate * 1000 : undefined,
             bitsPerSample: undefined,
@@ -167,8 +168,8 @@ export async function list(cachedTracks = []) {
             numberOfChannels: undefined,
             sampleRate: undefined,
             trackGain: undefined,
-          },
-          tags: {
+          }),
+          tags: removeUndefinedValuesFromRecord({
             album: song.album,
             albumartist: song.albumArtists?.[0]?.name,
             albumartists: song.albumArtists?.map((a) => a.name),
@@ -223,7 +224,7 @@ export async function list(cachedTracks = []) {
             work: undefined,
             writers: undefined,
             year: song.year,
-          },
+          }),
         };
 
         return track;

@@ -1,5 +1,4 @@
 import { dotenvRun } from "@dotenv-run/esbuild";
-import { builtinModules } from "node:module";
 import lume from "lume/mod.ts";
 
 import esbuild from "lume/plugins/esbuild.ts";
@@ -11,6 +10,7 @@ import * as path from "@std/path";
 import { ensureDirSync } from "@std/fs/ensure-dir";
 import { walkSync } from "@std/fs/walk";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
+import { wasmLoader } from "esbuild-plugin-wasm";
 
 const site = lume({
   dest: "./dist",
@@ -27,16 +27,23 @@ export default site;
 site.use(esbuild({
   extensions: [".js"],
   options: {
+    alias: {
+      "@automerge/automerge": "https://esm.sh/@automerge/automerge@^3.2.3",
+    },
     bundle: true,
+    format: "esm",
     minify: false,
     // outExtension: { ".js": ".min.js" },
+    platform: "browser",
     plugins: [
-      nodeModulesPolyfillPlugin(),
       dotenvRun({
         files: [".env"],
       }),
+      nodeModulesPolyfillPlugin(),
+      wasmLoader(),
     ],
     splitting: true,
+    target: "esnext",
   },
 }));
 
