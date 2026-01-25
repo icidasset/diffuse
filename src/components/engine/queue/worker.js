@@ -107,21 +107,6 @@ ostiary((context, _firstConnection, _connectionId) => {
   effect(() => announce("now", $now.value, context));
   effect(() => announce("past", $past.value, context));
   effect(() => announce("poolHash", $poolHash.value, context));
-
-  // When the pool changes,
-  // make sure all future queue items still exist.
-  effect(() => {
-    const existing = new Set($lake.value.map((t) => t.id));
-
-    if ($now.value && !existing.has($now.value.id)) {
-      // TODO: Shift queue instead?
-      $now.value = null;
-    }
-
-    $future.value = $future.value.filter((i) => {
-      return existing.has(i.id);
-    });
-  });
 });
 
 ////////////////////////////////////////////

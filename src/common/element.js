@@ -88,6 +88,11 @@ export class DiffuseElement extends HTMLElement {
     return this.#connected.promise;
   }
 
+  /** */
+  whenDefined() {
+    return customElements.whenDefined(this.localName);
+  }
+
   /**
    * Avoid replacing the whole subtree,
    * morph the existing DOM into the new given tree.

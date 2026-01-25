@@ -35,6 +35,9 @@
     "webamp": "npm:webamp@^2.2.0",
 
     // Paths
+    "@src/": "./src/",
+    "@tests/": "./tests/",
+
     "@common/": "./src/common/",
     "@components/": "./src/components/",
     "@definitions/": "./src/definitions/",
@@ -50,6 +53,11 @@
     "esbuild-plugin-wasm": "npm:esbuild-plugin-wasm@^1.1.0",
     "lume/": "https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.4/",
     "lume/jsx-runtime": "https://cdn.jsdelivr.net/gh/oscarotero/ssx@0.1.14/jsx-runtime.ts",
+
+    // Tests
+    "@astral/astral": "jsr:@astral/astral",
+    "@std/expect": "jsr:@std/expect",
+    "@std/testing/bdd": "jsr:@std/testing/bdd",
   },
   "exports": {
     // .js
