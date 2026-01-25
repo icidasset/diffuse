@@ -20,9 +20,10 @@ describe("components/engine/queue", () => {
       return engine.future();
     });
 
-    expect(items.map((i) => i.id).join("/")).toBe(
-      tracks.map((t) => t.id).join("/"),
-    );
+    const futureIds = items.map((i) => i.id).join("/");
+    const sampleIds = tracks.map((t) => t.id).join("/");
+
+    expect(futureIds).toEqual(sampleIds);
   });
 
   it("pools + fills tracks and shifts the queue", async () => {
@@ -39,6 +40,47 @@ describe("components/engine/queue", () => {
       await engine.shift();
 
       return engine.now();
+    });
+
+    expect(item?.id).toBe(tracks[0].id);
+  });
+
+  it("[shared worker] adds tracks and shifts + unshifts the queue", async () => {
+    const item = await testWeb(async () => {
+      const QueueEngine = await import("@components/engine/queue/element.js");
+      const engine = new QueueEngine.CLASS();
+      engine.setAttribute("group", "tests");
+
+      document.body.append(engine);
+
+      const { tracks } = await import("@src/testing/sample/tracks.js");
+
+      await engine.add({ tracks });
+      await engine.shift();
+      await engine.shift();
+      await engine.unshift();
+
+      return engine.now();
+    });
+
+    expect(item?.id).toBe(tracks[0].id);
+  });
+
+  it("[shared worker] has the correct past", async () => {
+    const item = await testWeb(async () => {
+      const QueueEngine = await import("@components/engine/queue/element.js");
+      const engine = new QueueEngine.CLASS();
+      engine.setAttribute("group", "tests");
+
+      document.body.append(engine);
+
+      const { tracks } = await import("@src/testing/sample/tracks.js");
+
+      await engine.add({ tracks });
+      await engine.shift();
+      await engine.shift();
+
+      return engine.past()[0];
     });
 
     expect(item?.id).toBe(tracks[0].id);
