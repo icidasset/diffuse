@@ -62,7 +62,7 @@ class OutputConfigurator extends DiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) def.tracks.state();
 
-          return out === undefined ? "loading" : "loaded";
+          return def === undefined ? "loading" : "loaded";
         }),
       },
     };
