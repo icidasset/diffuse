@@ -159,6 +159,10 @@ h2 {
   margin-bottom: var(--space-xs);
   margin-top: var(--space-2xs);
   opacity: 0.6;
+
+  a {
+    text-underline-offset: 3px;
+  }
 }
 
 .table-of-contents {
