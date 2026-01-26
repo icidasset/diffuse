@@ -66,6 +66,10 @@ const loadFromUrl = amp.media.loadFromUrl.bind(amp.media);
  * @param {boolean} autoPlay
  */
 async function loadOverride(uri, autoPlay) {
+  if (uri.startsWith("blob:")) {
+    return await loadFromUrl(uri, autoPlay);
+  }
+
   const resp = await input.resolve({ method: "GET", uri });
   if (!resp) throw new Error("Failed to resolve URI");
   if (resp && "stream" in resp) {
