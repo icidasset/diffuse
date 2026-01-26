@@ -1,7 +1,6 @@
 import { DiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 import { listen } from "@common/worker.js";
-import { hash } from "@common/utils.js";
 
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts";
@@ -37,7 +36,7 @@ class QueueEngine extends DiffuseElement {
   #future = signal(/** @type {Array<Item>} */ ([]));
   #now = signal(/** @type {Item | null} */ (null));
   #past = signal(/** @type {Array<Item>} */ ([]));
-  #poolHash = signal(hash([]));
+  #poolHash = signal(/** @type {string | undefined} */ (undefined));
 
   // STATE
 

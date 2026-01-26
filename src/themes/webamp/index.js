@@ -119,6 +119,9 @@ effect(() => {
   const cacheId = search.cacheId();
   if (cacheId === undefined) return;
 
+  const poolHash = queue.poolHash();
+  if (poolHash === undefined) return;
+
   tracksPromise.resolve("loaded");
 });
 

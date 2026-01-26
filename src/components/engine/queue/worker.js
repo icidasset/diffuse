@@ -17,7 +17,7 @@ export const $lake = signal(/** @type {Track[]} */ ([]));
 export const $future = signal(/** @type {Item[]} */ ([]));
 export const $now = signal(/** @type {Item | null} */ (null));
 export const $past = signal(/** @type {Item[]} */ ([]));
-export const $poolHash = signal(hash([]));
+export const $poolHash = signal(/** @type {string | undefined} */ (undefined));
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -55,7 +55,7 @@ export function fill({ augment, amount, shuffled }) {
  */
 export function pool(tracks) {
   $lake.value = tracks;
-  $poolHash.value = hash(tracks);
+  $poolHash.value = tracks.length ? hash(tracks) : undefined;
 }
 
 /**

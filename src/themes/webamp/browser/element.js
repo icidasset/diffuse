@@ -19,6 +19,7 @@ class Browser extends DiffuseElement {
 
   // SIGNALS
 
+  #collectionSize = signal(0);
   #searchResults = signal(/** @type {Track[]} */ ([]));
 
   $input = signal(
@@ -70,8 +71,12 @@ class Browser extends DiffuseElement {
       });
 
       this.effect(() => {
-        this.forceRender();
+        this.#collectionSize.value = output.tracks.collection().filter(
+          (t) => t.kind !== "placeholder",
+        ).length;
       });
+
+      this.forceRender();
     });
 
     // Effects
@@ -112,8 +117,9 @@ class Browser extends DiffuseElement {
    */
   render({ html }) {
     const isLoading = this.$output.value?.tracks?.state() !== "loaded" ||
-      (this.$output.value?.tracks?.collection()?.length &&
+      (this.#collectionSize.value > 0 &&
         this.$search.value?.cacheId() === undefined);
+
     const tracks = this.#searchResults.value;
 
     return html`
