@@ -66,7 +66,7 @@ class Browser extends DiffuseElement {
     // Wait for the above dependencies to be defined, then render again.
     whenElementsDefined({ input, output, search }).then(() => {
       this.effect(() => {
-        const _cacheId = search.cacheId();
+        const _ = search.supplyFingerprint();
         this.performSearch();
       });
 
@@ -118,7 +118,7 @@ class Browser extends DiffuseElement {
   render({ html }) {
     const isLoading = this.$output.value?.tracks?.state() !== "loaded" ||
       (this.#collectionSize.value > 0 &&
-        this.$search.value?.cacheId() === undefined);
+        this.$search.value?.supplyFingerprint() === undefined);
 
     const tracks = this.#searchResults.value;
 
@@ -174,6 +174,7 @@ class Browser extends DiffuseElement {
       }
 
       table tbody tr {
+        cursor: pointer;
         content-visibility: auto;
       }
 

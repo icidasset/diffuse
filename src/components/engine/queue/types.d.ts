@@ -11,8 +11,8 @@ export type Actions = {
       shuffled: boolean;
     },
   ) => void;
-  pool: (tracks: Track[]) => void;
   shift: () => void;
+  supply: (args: { tracks: Track[] }) => void;
   unshift: () => void;
 };
 
@@ -24,5 +24,9 @@ export type State = {
   future: SignalReader<Item[]>;
   now: SignalReader<Item | null>;
   past: SignalReader<Item[]>;
-  poolHash: SignalReader<string | undefined>;
+
+  /**
+   * Initially this is set to `undefined`, but whenever the cache is changed afterwards this will be the hash of the items in the supply.
+   */
+  supplyFingerprint: SignalReader<string | undefined>;
 };

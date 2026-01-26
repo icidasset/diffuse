@@ -22,7 +22,9 @@ export const $inserted = signal(/** @type {Set<string>} */ (new Set()), {
 });
 
 // Communicated state
-export const $cacheId = signal(/** @type {string | undefined} */ (undefined));
+export const $supplyFingerprint = signal(
+  /** @type {string | undefined} */ (undefined),
+);
 
 ////////////////////////////////////////////
 // DATABASE
@@ -93,9 +95,7 @@ export async function supply({ tracks }) {
   await Orama.removeMultiple(db, Array.from(removedIds));
   await Orama.insertMultiple(db, newTracks);
 
-  $cacheId.value = ids.length === 0
-    ? undefined
-    : xxh32(ids.sort().join("")).toString();
+  $supplyFingerprint.value = xxh32(ids.sort().join("")).toString();
 }
 
 ////////////////////////////////////////////
@@ -108,13 +108,15 @@ ostiary((context) => {
     supply,
 
     // State
-    cacheId: $cacheId.get,
+    supplyFingerprint: $supplyFingerprint.get,
   });
 
   // Effects
 
   // Communicate state
-  effect(() => announce("cacheId", $cacheId.value, context));
+  effect(() =>
+    announce("supplyFingerprint", $supplyFingerprint.value, context)
+  );
 });
 
 ////////////////////////////////////////////

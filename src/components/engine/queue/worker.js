@@ -17,7 +17,9 @@ export const $lake = signal(/** @type {Track[]} */ ([]));
 export const $future = signal(/** @type {Item[]} */ ([]));
 export const $now = signal(/** @type {Item | null} */ (null));
 export const $past = signal(/** @type {Item[]} */ ([]));
-export const $poolHash = signal(/** @type {string | undefined} */ (undefined));
+export const $supplyFingerprint = signal(
+  /** @type {string | undefined} */ (undefined),
+);
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -51,18 +53,18 @@ export function fill({ augment, amount, shuffled }) {
 }
 
 /**
- * @type {Actions['pool']}
- */
-export function pool(tracks) {
-  $lake.value = tracks;
-  $poolHash.value = tracks.length ? hash(tracks) : undefined;
-}
-
-/**
  * @type {Actions['shift']}
  */
 export function shift() {
   return _shift();
+}
+
+/**
+ * @type {Actions['supply']}
+ */
+export function supply({ tracks }) {
+  $lake.value = tracks;
+  $supplyFingerprint.value = tracks.length ? hash(tracks) : undefined;
 }
 
 /**
@@ -89,15 +91,15 @@ ostiary((context, _firstConnection, _connectionId) => {
   rpc(context, {
     add,
     fill,
-    pool,
     shift,
+    supply,
     unshift,
 
     // State
     future: $future.get,
     now: $now.get,
     past: $past.get,
-    poolHash: $poolHash.get,
+    supplyFingerprint: $supplyFingerprint.get,
   });
 
   // Effects
@@ -106,7 +108,9 @@ ostiary((context, _firstConnection, _connectionId) => {
   effect(() => announce("future", $future.value, context));
   effect(() => announce("now", $now.value, context));
   effect(() => announce("past", $past.value, context));
-  effect(() => announce("poolHash", $poolHash.value, context));
+  effect(() =>
+    announce("supplyFingerprint", $supplyFingerprint.value, context)
+  );
 });
 
 ////////////////////////////////////////////

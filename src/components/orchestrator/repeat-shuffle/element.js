@@ -53,7 +53,7 @@ class RepeatShuffleOrchestrator extends BroadcastableDiffuseElement {
     // Effects
     this.effect(() => {
       const trigger = queue.now();
-      const _other_trigger = queue.poolHash();
+      const _other_trigger = queue.supplyFingerprint();
 
       this.isLeader().then((isLeader) => {
         if (!isLeader) return;

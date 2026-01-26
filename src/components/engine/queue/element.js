@@ -26,8 +26,8 @@ class QueueEngine extends DiffuseElement {
 
     this.add = this.proxy.add;
     this.fill = this.proxy.fill;
-    this.pool = this.proxy.pool;
     this.shift = this.proxy.shift;
+    this.supply = this.proxy.supply;
     this.unshift = this.proxy.unshift;
   }
 
@@ -36,14 +36,14 @@ class QueueEngine extends DiffuseElement {
   #future = signal(/** @type {Array<Item>} */ ([]));
   #now = signal(/** @type {Item | null} */ (null));
   #past = signal(/** @type {Array<Item>} */ ([]));
-  #poolHash = signal(/** @type {string | undefined} */ (undefined));
+  #supplyFingerprint = signal(/** @type {string | undefined} */ (undefined));
 
   // STATE
 
   future = this.#future.get;
   now = this.#now.get;
   past = this.#past.get;
-  poolHash = this.#poolHash.get;
+  supplyFingerprint = this.#supplyFingerprint.get;
 
   // LIFECYCLE
 
@@ -60,13 +60,13 @@ class QueueEngine extends DiffuseElement {
     listen("future", this.#future.set, link);
     listen("now", this.#now.set, link);
     listen("past", this.#past.set, link);
-    listen("poolHash", this.#poolHash.set, link);
+    listen("supplyFingerprint", this.#supplyFingerprint.set, link);
 
     // Fetch current data state
     this.proxy.future().then(this.#future.set);
     this.proxy.now().then(this.#now.set);
     this.proxy.past().then(this.#past.set);
-    this.proxy.poolHash().then(this.#poolHash.set);
+    this.proxy.supplyFingerprint().then(this.#supplyFingerprint.set);
   }
 }
 

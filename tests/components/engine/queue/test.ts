@@ -4,8 +4,6 @@ import { expect } from "@std/expect";
 import { testWeb } from "@tests/common/index.ts";
 import { tracks } from "@src/testing/sample/tracks.js";
 
-import type { Item } from "@components/engine/queue/types.d.ts";
-
 describe("components/engine/queue", () => {
   it("adds tracks", async () => {
     const items = await testWeb(async () => {
@@ -35,7 +33,7 @@ describe("components/engine/queue", () => {
 
       const { tracks } = await import("@src/testing/sample/tracks.js");
 
-      await engine.pool(tracks);
+      await engine.supply({ tracks });
       await engine.fill({ amount: 1, shuffled: false });
       await engine.shift();
 

@@ -39,7 +39,7 @@ export async function poolAvailable({ data, ports }) {
   }, []);
 
   // Set pool
-  await queue.pool(availableTracks);
+  await queue.supply({ tracks: availableTracks });
 }
 
 ////////////////////////////////////////////

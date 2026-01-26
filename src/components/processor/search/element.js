@@ -30,11 +30,11 @@ class SearchProcessor extends DiffuseElement {
 
   // SIGNALS
 
-  #cacheId = signal(/** @type {string | undefined} */ (undefined));
+  #supplyFingerprint = signal(/** @type {string | undefined} */ (undefined));
 
   // STATE
 
-  cacheId = this.#cacheId.get;
+  supplyFingerprint = this.#supplyFingerprint.get;
 
   // LIFECYCLE
 
@@ -48,10 +48,10 @@ class SearchProcessor extends DiffuseElement {
     const link = this.workerLink();
 
     // Listen for remote data changes
-    listen("cacheId", this.#cacheId.set, link);
+    listen("supplyFingerprint", this.#supplyFingerprint.set, link);
 
     // Fetch current data state
-    this.proxy.cacheId().then(this.#cacheId.set);
+    this.proxy.supplyFingerprint().then(this.#supplyFingerprint.set);
   }
 }
 

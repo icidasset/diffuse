@@ -15,5 +15,8 @@ export type Actions = {
 export type Schema = Orama<typeof SCHEMA>;
 
 export type State = {
-  cacheId: SignalReader<string | undefined>;
+  /**
+   * Initially this is set to `undefined`, but whenever the cache is changed afterwards this will be the hash of the items in the supply.
+   */
+  supplyFingerprint: SignalReader<string | undefined>;
 };

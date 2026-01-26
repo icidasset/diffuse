@@ -34,7 +34,7 @@ effect(() => {
 });
 
 effect(() => {
-  console.log("Queue pool hash:", queue.poolHash());
+  console.log("Queue pool hash:", queue.supplyFingerprint());
 });
 
 /**
@@ -42,7 +42,7 @@ effect(() => {
  */
 effect(() => {
   const trigger = queue.now();
-  const _other_trigger = queue.poolHash();
+  const _other_trigger = queue.supplyFingerprint();
 
   isLeader().then((bool) => {
     if (bool) {

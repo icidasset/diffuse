@@ -85,18 +85,17 @@ amp.media.loadFromUrl = loadOverride.bind(amp.media);
  * Whenever the queue changes update the playlist.
  */
 effect(() => {
-  const now = untracked(queue.now);
-  const past = untracked(queue.past);
   const future = queue.future();
 
   const playlist = [
-    ...past,
-    ...(now ? [now] : []),
     ...future,
   ];
 
   const lengthLastPlaylist = untracked($playlist.get).length;
-  const tracksToAdd = playlist.slice(lengthLastPlaylist);
+  const tracksToAdd = playlist.slice(
+    0,
+    Math.max(0, playlist.length - lengthLastPlaylist),
+  );
 
   $playlist.value = playlist;
 
@@ -116,11 +115,11 @@ effect(() => {
   const state = output.tracks.state();
   if (state !== "loaded") return;
 
-  const cacheId = search.cacheId();
-  if (cacheId === undefined) return;
+  const fingerprintSearch = search.supplyFingerprint();
+  if (fingerprintSearch === undefined) return;
 
-  const poolHash = queue.poolHash();
-  if (poolHash === undefined) return;
+  const fingerprintQueue = queue.supplyFingerprint();
+  if (fingerprintQueue === undefined) return;
 
   tracksPromise.resolve("loaded");
 });
@@ -172,9 +171,6 @@ amp.onClose(() => winampIsShown = false);
 
 async function addBatch() {
   await queue.fill({ augment: true, amount: 50, shuffled: true });
-
-  // Automatically insert track if there isn't any
-  if (!queue.now()) await queue.shift();
 }
 
 function windowManager() {
