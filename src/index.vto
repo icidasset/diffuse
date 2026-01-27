@@ -33,7 +33,8 @@ constituents:
     title: "Blur / Artwork controller"
     desc: >
       Audio playback controller with artwork display.
-  - title: "Loader"
+  - url: "themes/loader/constituent/"
+    title: "Loader"
     desc: >
       **A constituent that loads other constituents!** Load a constituent from a URL, text snippet or from your user data output.
     todo: true
@@ -173,48 +174,63 @@ transformers:
 # DEFINITIONS
 
 definitions:
+  - title: "Output / Constituent"
+    desc: >
+      Custom constituents to keep around.
+    todo: true
   - title: "Output / Favourites"
-    desc: "Indicate a user's favourite audio. Not a property of a track because tracks are associated with a specific source. Favourites may match with multiple tracks. Specified using the audio's title and artist."
+    desc: >
+      Indicate a user's favourite audio. Not a property of a track because tracks are associated with a specific source. Favourites may match with multiple tracks. Specified using the audio's title and artist.
     todo: true
   - title: "Output / Playlist"
-    desc: "Just like favourites, does not refer to specific tracks. Unlike favourites, must also specify the album. Can also be considered a collection which is basically an unordered playlist."
+    desc: >
+      Just like favourites, does not refer to specific tracks. Unlike favourites, must also specify the album. Can also be considered a collection which is basically an unordered playlist.
     todo: true
   - title: "Output / Progress"
-    desc: "Used to track progress of (long) audio playback."
+    desc: >
+      Used to track progress of (long) audio playback.
+    todo: true
+  - title: "Output / Theme"
+    desc: >
+      Custom theme to keep around.
     todo: true
   - title: "Output / Tracks"
-    desc: "Represents audio that can be played, or a placeholder for a source of tracks. Contains a URI that will resolve to the audio. This object may be cached if convenient."
+    desc: >
+      Represents audio that can be played, or a placeholder for a source of tracks. Contains a URI that will resolve to the audio. This object may be cached if convenient.
     url: "definitions/output/tracks.json"
 
 ---
 
 <header>
-  <h1>
-    {{ await comp.diffuse.logo() }}
-  </h1>
-  <p class="construct dither-mask">
-    Construct your audio player.
-  </p>
-  <p>
-    Diffuse is a collection of components and software that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital
-    audio listening experience for you.
-  </p>
-  <p style="align-items: center; display: flex; gap: var(--space-2xs); opacity: 0.55;">
-    <i class="ph-fill ph-crane"></i>
-    <strong style="font-weight: 700;">WORK IN PROGRESS</strong>
-  </p>
-  <ul class="table-of-contents">
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#demo">Demo</a></li>
-    <li><a href="#themes">Themes</a></li>
-    <li><a href="#constituents">Constituents</a></li>
-    <li><a href="#take-control">Take control</a></li>
-    <li><a href="#elements">Elements</a></li>
-    <li><a href="#definitions">Definitions</a></li>
-  </ul>
-  <p>
-    <small>Built by <a href="https://tokono.ma">tokono.ma</a></small>
-  </p>
+  <div>
+    <h1 class="diffuse-logo">
+      {{ await comp.diffuse.logo() }}
+    </h1>
+    <p class="construct dither-mask">
+      Construct your audio player.
+    </p>
+    <p>
+      Diffuse is a collection of components and software that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital
+      audio listening experience for you.
+    </p>
+    <p style="align-items: center; display: flex; gap: var(--space-2xs); opacity: 0.55;">
+      <i class="ph-fill ph-crane"></i>
+      <strong style="font-weight: 700;">WORK IN PROGRESS</strong>
+    </p>
+    <ul class="table-of-contents">
+      <li><a href="#usage">Usage</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#themes">Themes</a></li>
+      <li><a href="#constituents">Constituents</a></li>
+      <li><a href="#take-control">Take control</a></li>
+      <li><a href="#elements">Elements</a></li>
+      <li><a href="#definitions">Definitions</a></li>
+    </ul>
+    <p>
+      <small>Built by <a href="https://tokono.ma">tokono.ma</a></small>
+    </p>
+  </div>
+  <div class="dither-mask filler"></div>
 </header>
 <main>
   <div class="columns">

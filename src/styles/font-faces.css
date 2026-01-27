@@ -1,5 +1,13 @@
 @font-face {
   font-display: swap;
+  font-family: CommitMonoVariable;
+  font-style: normal;
+  font-weight: 100 900;
+  src: url("../fonts/CommitMonoVariable.woff2") format("woff2");
+}
+
+@font-face {
+  font-display: swap;
   font-family: InterVariable;
   font-style: normal;
   font-weight: 100 900;

@@ -11,3 +11,8 @@
     font-optical-sizing: auto;
   }
 }
+
+.monospace-font,
+code {
+  font-family: CommitMonoVariable, "Commit Mono", monospace;
+}

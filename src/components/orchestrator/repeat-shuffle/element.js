@@ -24,6 +24,7 @@ class RepeatShuffleOrchestrator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
+      // TODO: Replicate state (repeat & shuffle)
       this.broadcast(this.nameWithGroup, {});
     }
 

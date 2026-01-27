@@ -1,6 +1,6 @@
 @import "./reset.css";
 @import "./variables.css";
-@import "./fonts.css";
+@import "./font-faces.css";
 @import "./animations.css";
 
 @import "./diffuse/colors.css";

@@ -1,0 +1,122 @@
+---
+layout: layouts/constituent.vto
+base: ../../../
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - styles/vendor/phosphor/fill/style.css
+
+scripts:
+  - index.js
+---
+
+<header>
+  <div>
+    <div>
+      <a class="diffuse-logo" href="./" style="display: inline-block;">
+        {{ await comp.diffuse.logo() }}
+      </a>
+    </div>
+    <p class="construct dither-mask" style="margin-top: 0;">
+      Constituent loader ❈
+    </p>
+    <p>
+      This tool allows you to load a custom <a href="#constituents">constituent</a> besides the <a href="#constituents">existing ones</a>. <strong>If you're missing a feature in Diffuse, this is the place to be!</strong>
+    </p>
+  </div>
+  <div class="dither-mask filler"></div>
+</header>
+<main>
+  <!-- COMMUNITY -->
+  <div class="columns">
+    <section>
+      <h2 id="generate">Generate</h2>
+      <p>
+        TODO: Explain how to instruct AI to generate a constituent for you. For example, "I want a nice album overview grouped by the month they were added to my collection"
+      </p>
+    </section>
+
+    <section>
+      <h2 id="community">Community</h2>
+      <p>
+        Check out some constituents from the community and load them here.
+      </p>
+      <p>
+        <small><i class="ph-fill ph-info"></i> Nothing here yet, we're still in alpha.</small>
+      </p>
+    </section>
+  </div>
+
+  <!-- CONSTRUCT -->
+  <section>
+    <h2 id="construct">Build it yourself</h2>
+    <!--<p></p>-->
+
+    <div class="columns">
+      <div class="flex">
+        <p style="margin-top: 0; max-width: 100%;">
+          If you know a bit of HTML & Javascript, you can write your own or plug in some code you found elsewhere (be careful what to copy/paste though):
+        </p>
+
+        <form>
+          <textarea class="monospace-font" placeholder="<code>goes here</code>"></textarea>
+        </form>
+      </div>
+
+      <div class="flex">
+        <p style="margin-top: 0">
+          Your code here builds on the <a href="themes/loader/constituent/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;body&gt;</code> element.
+        </p>
+        <p style="margin-bottom: 0;">
+          <small>Some tips:</small>
+        </p>
+        <ul style="margin-top: var(--space-3xs);">
+          <li><small>Use <code>type="module"</code> when writing scripts.</small></li>
+        </ul>
+        <p>
+          <span class="button-row">
+            <button disabled>Save</button>
+            <button disabled>Preview</button>
+            <button disabled>Open in new tab</button>
+          </span>
+        </p>
+        <p>
+          Add dependencies for:
+        </p>
+        <form>
+          <select>
+            <option>Playing audio</option>
+            <option>Adding items to the queue</option>
+            <option>Browsing collection</option>
+          </select>
+        </form>
+        <p>
+          <span class="button-row">
+            <button disabled>Add code</button>
+          </span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDATION -->
+  <section>
+    <h2 id="foundation">Foundation</h2>
+    <p>
+      The default configuration for constituents includes the following elements which are loaded automatically:
+    </p>
+    <ul>
+      <li>orchestrator / input</li>
+      <li>orchestrator / output</li>
+      <li>orchestrator / process-tracks <small>(process on launch)</small></li>
+      <li>processor / metadata</li>
+    </ul>
+    <p>
+      Besides this the foundation provides most other elements preconfigured. These are lazy loaded so you do need to call the method in order to load it. For example:
+    </p>
+    <pre><code>{{-
+      "import defaults from \"@common/constituents/default/config.js\"\ndefaults.lazy.engine.audio()"
+    }}</code></pre>
+  </section>
+</main>

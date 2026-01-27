@@ -46,6 +46,8 @@
   --container-5xl: 64rem;
   --container-6xl: 72rem;
   --container-7xl: 80rem;
+  --container-8xl: 88rem;
+  --container-9xl: 96rem;
 
   /* Letter-spacing */
   --tracking-tighter: -0.05em;
