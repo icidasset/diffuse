@@ -1,4 +1,4 @@
-import { effect, signal } from "@common/signal.js";
+import { computed, effect, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
@@ -11,21 +11,26 @@ import { effect, signal } from "@common/signal.js";
  */
 export function outputManager({ init, tracks }) {
   const t = signal(/** @type {Tracks} */ (tracks.empty()));
-  const ts = signal(/** @type {"loading" | "loaded"} */ ("loading"));
+  const ts = signal(
+    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+  );
 
   async function loadTracks() {
     if (init && (await init()) === false) return;
+    ts.value = "loading";
     t.value = await tracks.get();
     ts.value = "loaded";
   }
 
-  effect(loadTracks);
-
   return {
     tracks: {
-      collection: t.get,
+      collection: computed(() => {
+        if (untracked(() => ts.value === "sleeping")) loadTracks();
+        return t.value;
+      }),
       reload: loadTracks,
       save: async (newTracks) => {
+        if (untracked(() => ts.value === "sleeping")) loadTracks();
         t.value = newTracks;
         await tracks.put(newTracks);
       },

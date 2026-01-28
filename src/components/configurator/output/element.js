@@ -1,5 +1,5 @@
 import { DiffuseElement } from "@common/element.js";
-import { computed, signal } from "@common/signal.js";
+import { batch, computed, signal } from "@common/signal.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -60,9 +60,9 @@ class OutputConfigurator extends DiffuseElement {
           if (out) return out.tracks.state();
 
           const def = this.#defaultOutput.value;
-          if (def) def.tracks.state();
+          if (def) return def.tracks.state();
 
-          return def === undefined ? "loading" : "loaded";
+          return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
       },
     };
@@ -85,6 +85,8 @@ class OutputConfigurator extends DiffuseElement {
     /** @type {Output | null | undefined} */ (undefined),
   );
 
+  #setupFinished = signal(false);
+
   // LIFECYCLE
 
   /**
@@ -93,10 +95,21 @@ class OutputConfigurator extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    const def_ault = this.getAttribute("default");
-    if (def_ault) this.#defaultOutput.value = await this.#findOutput(def_ault);
+    /** @type {Output | null | undefined} */
+    let defaultOutput = undefined;
 
-    this.#selectedOutput.value = await this.#findSelectedOutput();
+    const def_ault = this.getAttribute("default");
+    if (def_ault) {
+      defaultOutput = await this.#findOutput(def_ault);
+    }
+
+    const selectedOutput = await this.#findSelectedOutput();
+
+    batch(() => {
+      this.#defaultOutput.value = defaultOutput;
+      this.#selectedOutput.value = selectedOutput;
+      this.#setupFinished.value = true;
+    });
   }
 
   // MISC

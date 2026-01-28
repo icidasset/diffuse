@@ -18,7 +18,7 @@ export type OutputManager<Tracks> = {
     collection: SignalReader<Tracks>;
     reload: () => Promise<void>;
     save: (tracks: Tracks) => Promise<void>;
-    state: SignalReader<"loading" | "loaded">;
+    state: SignalReader<"loading" | "loaded" | "sleeping">;
   };
 };
 

@@ -28,7 +28,7 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
 
     /** @type {OutputManager<SupportedDataTypes>} */
     this.#manager = outputManager({
-      init: this.whenConnected.bind(this),
+      init: () => this.whenConnected(),
       tracks: {
         empty: () => undefined,
         get: () => this.#get("tracks"),
