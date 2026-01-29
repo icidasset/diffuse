@@ -1,8 +1,8 @@
-import { SubsonicAPI } from "subsonic-api";
 import * as URI from "uri-js";
 import QS from "query-string";
 
 import { SCHEME } from "./constants.js";
+import { SubsonicAPIWithoutFetch } from "./class.js";
 
 /**
  * @import {Child} from "subsonic-api"
@@ -65,7 +65,7 @@ export async function consultServer(server) {
  * @param {Server} server
  */
 export function createClient(server) {
-  return new SubsonicAPI({
+  return new SubsonicAPIWithoutFetch({
     url: `http${server.tls ? "s" : ""}://${server.host}`,
     auth: server.apiKey ? { apiKey: URI.unescapeComponent(server.apiKey) } : {
       username: URI.unescapeComponent(server.username || ""),

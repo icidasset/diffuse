@@ -265,7 +265,7 @@ export async function resolve({ uri }) {
   // const expiresAtSeconds = Math.round(Date.now() / 1000) + expiresInSeconds;
 
   const url = await client
-    .download({
+    .stream({
       id: songId,
       format: "raw",
     })
