@@ -170,6 +170,13 @@ small {
   gap: var(--space-2xs);
 }
 
+.chronicle-link {
+  font-size: var(--fs-sm);
+  opacity: 0.55;
+  padding: var(--space-3xs);
+  text-decoration: none;
+}
+
 .todo {
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -243,13 +250,16 @@ ul li::marker {
  */
 
 .diffuse-logo {
+  align-items: center;
+  display: flex;
   font-size: var(--fs-lg);
+  justify-content: space-between;
   margin: var(--space-lg) 0 var(--space-xl);
-  padding-top: var(--space-2xs);
 
   svg {
     fill: oklch(from var(--bg-color) calc(l - 0.5) c h);
     opacity: 0.2;
+    padding: var(--space-3xs) 0;
     width: 4.25em;
 
     @media (prefers-color-scheme: dark) {
