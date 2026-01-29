@@ -21,6 +21,7 @@ dac.setAttribute("artwork-processor-selector", art.selector);
 dac.setAttribute("audio-engine-selector", aud.selector);
 dac.setAttribute("input-selector", defaults.orchestrator.input.selector);
 dac.setAttribute("queue-engine-selector", queue.selector);
+dac.setAttribute("repeat-shuffle-orchestrator-selector", rso.selector);
 
 // Add to DOM
 document.body.append(dac);

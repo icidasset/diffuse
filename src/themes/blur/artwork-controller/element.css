@@ -113,6 +113,38 @@ progress[value]::-moz-progress-bar {
   color: rgba(0, 0, 0, 0.6);
 }
 
+/* Button row */
+
+.button-row {
+  display: inline-flex;
+  gap: 1px;
+
+  button {
+    background: color-mix(in oklch, currentColor 7.5%, transparent);
+    border: 0;
+    color: color-mix(in oklch, currentColor 50%, transparent);
+    cursor: pointer;
+    font-size: var(--fs-base);
+    font-size: calc(var(--fs-base) * 0.9);
+    padding: calc(var(--space-2xs) + 1px) var(--space-sm) var(--space-2xs);
+
+    &[data-enabled="t"] {
+      background-color: color-mix(in oklch, currentColor 25%, transparent);
+      color: currentColor;
+    }
+  }
+
+  button:first-child {
+    border-bottom-left-radius: var(--radius-xl);
+    border-top-left-radius: var(--radius-xl);
+  }
+
+  button:last-child {
+    border-bottom-right-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+  }
+}
+
 /* Now playing */
 
 cite {
@@ -189,7 +221,7 @@ cite {
 
 /* Volume */
 
-footer {
+.volume {
   align-items: center;
   display: flex;
   font-size: var(--fs-xs);
@@ -197,14 +229,24 @@ footer {
   justify-content: space-between;
 }
 
-footer .progress-bar {
+.volume .progress-bar {
   cursor: pointer;
   flex: 1;
   padding: var(--space-2xs) 0;
 }
 
-footer i {
+.volume i {
   cursor: pointer;
+}
+
+/* Footer */
+
+footer {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2xs);
+  justify-content: center;
+  margin-top: var(--space-sm);
 }
 
 /* Gradient blur */

@@ -41,12 +41,12 @@
     "@common/": "./src/common/",
     "@components/": "./src/components/",
     "@definitions/": "./src/definitions/",
-    "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.1",
     "@styles/": "./src/styles/",
     "@themes/": "./src/themes/",
 
     // Build
     "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.3.1",
+    "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.1",
     "@std/fs": "jsr:@std/fs@^1.0.19",
     "@std/path": "jsr:@std/path@^1.1.2",
     "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.7.1",

@@ -22,22 +22,13 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @import AudioEngine from "@components/engine/audio/element.js"
  * @import QueueEngine from "@components/engine/queue/element.js"
  * @import ArtworkProcessor from "@components/processor/artwork/element.js"
+ * @import RepeatShuffleOrchestrator from "@components/orchestrator/repeat-shuffle/element.js"
  */
 
 class ArtworkController extends DiffuseElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-
-    // Bind event handlers to self
-    this.artworkLoaded = this.artworkLoaded.bind(this);
-    this.fullVolume = this.fullVolume.bind(this);
-    this.mute = this.mute.bind(this);
-    this.next = this.next.bind(this);
-    this.playPause = this.playPause.bind(this);
-    this.previous = this.previous.bind(this);
-    this.seek = this.seek.bind(this);
-    this.setVolume = this.setVolume.bind(this);
   }
 
   // VARIABLES
@@ -67,6 +58,7 @@ class ArtworkController extends DiffuseElement {
   $audio = signal(/** @type {AudioEngine | undefined} */ (undefined));
   $input = signal(/** @type {InputElement | undefined} */ (undefined));
   $queue = signal(/** @type {QueueEngine | undefined} */ (undefined));
+  $repeatShuffle = signal(/** @type {RepeatShuffleOrchestrator | undefined} */ (undefined));
 
   // SIGNALS - COMPUTED
 
@@ -99,12 +91,16 @@ class ArtworkController extends DiffuseElement {
     /** @type {QueueEngine} */
     const queue = query(this, "queue-engine-selector");
 
+    /** @type {RepeatShuffleOrchestrator} */
+    const repeatShuffle = query(this, "repeat-shuffle-orchestrator-selector");
+
     this.$artwork.value = artwork;
     this.$audio.value = audio;
     this.$input.value = input;
     this.$queue.value = queue;
+    this.$repeatShuffle.value = repeatShuffle;
 
-    whenElementsDefined({ audio, artwork, input, queue }).then(() => {
+    whenElementsDefined({ audio, artwork, input, queue, repeatShuffle }).then(() => {
       // Changed artwork based on active queue item.
       const debouncedChangeArtwork = debounce(
         1000,
@@ -288,7 +284,7 @@ class ArtworkController extends DiffuseElement {
   /**
    * @param {Event} event
    */
-  artworkLoaded(event) {
+  artworkLoaded = (event) => {
     if (!(event.target instanceof HTMLImageElement)) return;
 
     const hash = event.target.getAttribute("data-hash");
@@ -312,19 +308,19 @@ class ArtworkController extends DiffuseElement {
     };
   }
 
-  fullVolume() {
+  fullVolume = () => {
     this.$audio.value?.adjustVolume({ volume: 1 });
   }
 
-  mute() {
+  mute = () => {
     this.$audio.value?.adjustVolume({ volume: 0 });
   }
 
-  next() {
+  next = () => {
     this.$queue.value?.shift();
   }
 
-  playPause() {
+  playPause = () => {
     const audioId = this.$queue.value?.now()?.id;
 
     if (this.#isPlaying() && audioId) {
@@ -334,14 +330,14 @@ class ArtworkController extends DiffuseElement {
     }
   }
 
-  previous() {
+  previous = () => {
     this.$queue.value?.unshift();
   }
 
   /**
    * @param {MouseEvent} event
    */
-  seek(event) {
+  seek = (event) => {
     const target = event.target
       ? /** @type {HTMLProgressElement} */ (event.target)
       : null;
@@ -354,13 +350,25 @@ class ArtworkController extends DiffuseElement {
   /**
    * @param {MouseEvent} event
    */
-  setVolume(event) {
+  setVolume = (event) => {
     const target = event.target
       ? /** @type {HTMLProgressElement} */ (event.target)
       : null;
 
     const percentage = target ? event.offsetX / target.clientWidth : 0;
     this.$audio.value?.adjustVolume({ volume: percentage });
+  }
+
+  toggleRepeat = () => {
+    const rs = this.$repeatShuffle.value
+    if (!rs) return
+    rs.setRepeat(!rs.repeat())
+  }
+
+  toggleShuffle = () => {
+    const rs = this.$repeatShuffle.value
+    if (!rs) return
+    rs.setShuffle(!rs.shuffle())
   }
 
   // RENDER
@@ -396,6 +404,7 @@ class ArtworkController extends DiffuseElement {
     });
 
     return html`
+      <link rel="stylesheet" href="styles/vendor/phosphor/bold/style.css" />
       <link rel="stylesheet" href="styles/vendor/phosphor/fill/style.css" />
       <link rel="stylesheet" href="styles/animations.css" />
       <link rel="stylesheet" href="themes/blur/artwork-controller/element.css" />
@@ -502,7 +511,7 @@ class ArtworkController extends DiffuseElement {
 
             <!-- VOLUME -->
 
-            <footer>
+            <div class="volume">
               <i @click="${this.mute}" class="ph-fill ph-speaker-none"></i>
               <div @click="${this.setVolume}" class="progress-bar">
                 <progress max="100" value="${(this.$audio.value?.volume() ??
@@ -510,6 +519,20 @@ class ArtworkController extends DiffuseElement {
               </div>
               <i @click="${this
                 .fullVolume}" class="ph-fill ph-speaker-high"></i>
+            </div>
+
+            <footer>
+              <div class="button-row">
+                <button title="Toggle repeat" @click="${this.toggleRepeat}" data-enabled="${this.$repeatShuffle.value?.repeat() ? 't' : 'f'}">
+                  <i class="ph-bold ph-repeat"></i>
+                </button>
+                <!--<button title="Toggle favourite">
+                  <i class="ph-bold ph-star"></i>
+                </button>-->
+                <button title="Toggle shuffle" @click="${this.toggleShuffle}" data-enabled="${this.$repeatShuffle.value?.shuffle() ? 't' : 'f'}">
+                  <i class="ph-bold ph-shuffle"></i>
+                </button>
+              </div>
             </footer>
           </section>
         </section>

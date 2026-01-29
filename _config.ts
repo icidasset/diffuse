@@ -115,6 +115,11 @@ phosphor("fill/Phosphor-Fill.svg");
 phosphor("fill/Phosphor-Fill.ttf");
 phosphor("fill/Phosphor-Fill.woff");
 phosphor("fill/Phosphor-Fill.woff2");
+phosphor("bold/style.css");
+phosphor("bold/Phosphor-Bold.svg");
+phosphor("bold/Phosphor-Bold.ttf");
+phosphor("bold/Phosphor-Bold.woff");
+phosphor("bold/Phosphor-Bold.woff2");
 
 // MISC
 
