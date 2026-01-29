@@ -43,9 +43,11 @@ globalThis.output = output;
 // 📡
 ////////////////////////////////////////////
 
-const $playlist = signal(/** @type {Array<Track>} */ ([]), {
-  eager: true,
-});
+/** @type {Record<string, number>} */
+const index = {};
+
+/** @type {boolean} */
+let initiatedPlaylist = false;
 
 ////////////////////////////////////////////
 // ⚡️
@@ -89,23 +91,37 @@ amp.media.loadFromUrl = loadOverride.bind(amp.media);
  * Whenever the queue changes update the playlist.
  */
 effect(() => {
+  const past = untracked(() => queue.past());
+  const now = untracked(() => queue.now());
   const future = queue.future();
+  const list = [...past, ...(now ? [now] : []), ...future];
 
-  const playlist = [
-    ...future,
-  ];
+  /** @type {Record<string, number>} */
+  const newIdx = {};
 
-  const lengthLastPlaylist = untracked($playlist.get).length;
-  const tracksToAdd = playlist.slice(
-    0,
-    Math.max(0, playlist.length - lengthLastPlaylist),
-  );
+  /** @type {Record<string, Track>} */
+  const idMap = {};
 
-  $playlist.value = playlist;
+  list.forEach((item) => {
+    newIdx[item.id] = (newIdx[item.id] ?? 0) + 1;
+    idMap[item.id] = item;
+  });
+
+  /** @type {Track[]} */
+  const tracksToAdd = [];
+
+  Object.entries(newIdx).forEach(([id, n]) => {
+    const x = index[id] ?? 0;
+    if (n > x) {
+      tracksToAdd.push(idMap[id]);
+      index[id] = x + 1;
+    }
+  });
 
   tracksToAdd.forEach((t) => ampElement.addTrack(t));
 
-  if (lengthLastPlaylist === 0 && playlist.length) {
+  if (!initiatedPlaylist && tracksToAdd.length) {
+    initiatedPlaylist = true;
     amp.store.dispatch({ type: "BUFFER_TRACK", id: 0 });
   }
 });
