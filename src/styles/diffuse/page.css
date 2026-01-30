@@ -170,13 +170,6 @@ small {
   gap: var(--space-2xs);
 }
 
-.chronicle-link {
-  font-size: var(--fs-sm);
-  opacity: 0.55;
-  padding: var(--space-3xs);
-  text-decoration: none;
-}
-
 .todo {
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -266,6 +259,30 @@ ul li::marker {
       fill: var(--text-color);
       opacity: 0.25;
     }
+  }
+}
+
+/**
+ * Status
+ */
+#status {
+  align-items: center;
+  display: flex;
+  font-size: var(--fs-sm);
+  gap: var(--space-3xs);
+
+  a {
+    display: inline-block;
+    opacity: 0.55;
+    padding: var(--space-3xs);
+    text-decoration: none;
+    transition-duration: 250ms;
+    transition-property: opacity;
+  }
+
+  a.hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 }
 

@@ -58,3 +58,30 @@ async function addSampleContent() {
 }
 
 addDemoBtn?.addEventListener("click", addSampleContent);
+
+// Version upgrade (only works with `diffuse-artifacts` deployments)
+if (document.location.hostname.endsWith("diffuse.sh")) {
+  document.querySelectorAll("#status").forEach(async (status) => {
+    const versionOrCid =
+      document.location.pathname.slice(1).split("/")[0]?.toLowerCase() ?? "";
+    const usesCid = versionOrCid.startsWith("bafy");
+    const { default: artifacts } = await import(
+      `${document.location.origin}/artifacts.json`,
+      { with: { type: "json" } }
+    );
+
+    // Latest is located at the end
+    const lastArtifact = Object.values(artifacts).reverse()[0];
+
+    // Check if using latest
+    const isLatest = usesCid
+      ? versionOrCid === lastArtifact.cid
+      : versionOrCid === lastArtifact.version;
+
+    // If using CID, append `/hash/` to href
+    status.querySelectorAll(`[href="/latest/"]`).forEach((a) => {
+      if (usesCid) a.setAttribute("href", "/latest/hash/");
+      if (!isLatest) a.classList.remove("hidden");
+    });
+  });
+}
