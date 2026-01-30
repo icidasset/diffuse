@@ -19,8 +19,12 @@ ol {
 }
 
 header {
-  display: flex;
-  gap: var(--space-lg);
+  display: block;
+
+  @media (min-width: 42rem) {
+    display: flex;
+    gap: var(--space-lg);
+  }
 }
 
 header,
@@ -35,9 +39,13 @@ main {
 }
 
 .columns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--space-3xl);
+  display: block;
+
+  @media (min-width: 42rem) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3xl);
+  }
 }
 
 ul.columns {
