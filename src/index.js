@@ -78,10 +78,22 @@ if (document.location.hostname.endsWith("diffuse.sh")) {
       ? versionOrCid === lastArtifact.cid
       : versionOrCid === lastArtifact.version;
 
+    // Remove loading animation
+    status.querySelectorAll(".ph-spinner").forEach((icon) => {
+      icon.parentElement?.classList.add("hidden");
+      icon.parentElement?.classList.remove("animate-spin");
+      icon.classList.remove("ph-spinner");
+      icon.classList.add("ph-arrow-fat-lines-up");
+    });
+
     // If using CID, append `/hash/` to href
     status.querySelectorAll(`[href="/latest/"]`).forEach((a) => {
       if (usesCid) a.setAttribute("href", "/latest/hash/");
       if (!isLatest) a.classList.remove("hidden");
     });
+  });
+} else {
+  document.querySelectorAll("#status").forEach((status) => {
+    status.remove();
   });
 }

@@ -292,6 +292,11 @@ ul li::marker {
     opacity: 0;
     pointer-events: none;
   }
+
+  .ph-spinner {
+    position: relative;
+    top: 1px;
+  }
 }
 
 /**

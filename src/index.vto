@@ -4,6 +4,7 @@ layout: layouts/diffuse.vto
 styles:
   - styles/base.css
   - styles/diffuse/page.css
+  - styles/vendor/phosphor/bold/style.css
   - styles/vendor/phosphor/fill/style.css
 
 scripts:
@@ -206,8 +207,8 @@ definitions:
     <h1 class="diffuse-logo">
       {{ await comp.diffuse.logo() }}
       <span id="status">
-        <a href="/latest/" title="Upgrade to latest" class="hidden">
-          <i class="ph-fill ph-arrow-fat-lines-up"></i>
+        <a href="/latest/" title="Upgrade to latest" class="animate-spin">
+          <i class="ph-bold ph-spinner"></i>
         </a>
         <a href="/chronicle/" title="Browse versions of Diffuse">
           <i class="ph-fill ph-star-four"></i>
