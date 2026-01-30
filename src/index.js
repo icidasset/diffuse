@@ -81,15 +81,22 @@ if (document.location.hostname.endsWith("diffuse.sh")) {
     // Remove loading animation
     status.querySelectorAll(".ph-spinner").forEach((icon) => {
       icon.parentElement?.classList.add("hidden");
-      icon.parentElement?.classList.remove("animate-spin");
-      icon.classList.remove("ph-spinner");
-      icon.classList.add("ph-arrow-fat-lines-up");
+
+      setTimeout(() => {
+        icon.parentElement?.classList.remove("animate-spin");
+        icon.classList.remove("ph-spinner");
+        icon.classList.add("ph-arrow-fat-lines-up");
+      }, 500);
     });
 
     // If using CID, append `/hash/` to href
     status.querySelectorAll(`[href="/latest/"]`).forEach((a) => {
       if (usesCid) a.setAttribute("href", "/latest/hash/");
-      if (!isLatest) a.classList.remove("hidden");
+      if (!isLatest) {
+        setTimeout(() => {
+          a.classList.remove("hidden");
+        }, 750);
+      }
     });
   });
 } else {
