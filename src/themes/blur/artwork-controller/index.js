@@ -13,7 +13,6 @@ const oqa = defaults.lazy.orchestrator.queueAudio();
 const rso = defaults.lazy.orchestrator.repeatShuffle();
 
 defaults.lazy.orchestrator.queueTracks();
-defaults.lazy.orchestrator.repeatShuffle();
 
 // Controller
 const dac = new ArtworkController();

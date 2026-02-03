@@ -1,4 +1,4 @@
-import { computed, effect, signal, untracked } from "@common/signal.js";
+import { computed, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"

@@ -8,6 +8,32 @@ body {
 }
 
 /**
+ * Code
+ */
+
+code {
+  background: var(--code-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-color);
+  font-size: var(--fs-sm);
+  padding: var(--space-3xs);
+}
+
+.code-block code {
+  border-radius: 0;
+  display: block;
+  overflow: hidden;
+  padding: var(--space-sm);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.code-block {
+  margin: var(--space-sm) 0;
+  max-width: var(--container-xl);
+}
+
+/**
  * Containers
  */
 
@@ -77,14 +103,17 @@ ul.columns {
   min-width: var(--container-3xs);
 }
 
+.flex p {
+  max-width: 100%;
+}
+
 /**
  * Forms
  */
 
 textarea {
   background: transparent;
-  border: 3px solid oklch(from currentColor l c h / 0.25);
-  border-radius: var(--radius-md);
+  border: 3px solid var(--form-color);
   color: inherit;
   font-size: var(--fs-sm);
   height: var(--container-xs);

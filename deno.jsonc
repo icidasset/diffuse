@@ -4,7 +4,9 @@
   "vendor": true,
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
-    "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.6",
+    "@atcute/cbor": "npm:@atcute/cbor@^2.3.0",
+    "@atcute/cid": "npm:@atcute/cid@^2.4.0",
+    "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.7",
     "@automerge/automerge": "npm:@automerge/automerge@^3.2.3",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.4",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
@@ -45,7 +47,7 @@
     "@themes/": "./src/themes/",
 
     // Build
-    "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.3.1",
+    "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.5.3",
     "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.1",
     "@std/fs": "jsr:@std/fs@^1.0.19",
     "@std/path": "jsr:@std/path@^1.1.2",

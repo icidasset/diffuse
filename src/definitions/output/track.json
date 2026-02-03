@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "sh.diffuse.output.tracks",
+  "id": "sh.diffuse.output.track",
   "defs": {
     "main": {
       "type": "record",

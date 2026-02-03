@@ -19,13 +19,19 @@
 
   --bg-color: var(--color-2);
   --text-color: var(--color-1);
+
+  --code-color: oklch(from var(--bg-color) calc(l - 0.0375) c h / 1);
+  --form-color: oklch(from var(--bg-color) calc(l - 0.075) c h / 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --accent: #9e86b8;
+
     --bg-color: var(--color-3);
     --text-color: var(--color-2);
 
-    --accent: #9e86b8;
+    --code-color: oklch(from var(--bg-color) calc(l + 0.0375) c h / 1);
+    --form-color: oklch(from var(--bg-color) calc(l + 0.075) c h / 1);
   }
 }

@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.constituent",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["cid", "html", "label"],
+        "properties": {
+          "cid": {
+            "type": "string",
+            "description": "A DASL CID representing the DRISL-encoded HTML"
+          },
+          "description": { "type": "string" },
+          "html": { "type": "string", "description": "The constituent HTML" },
+          "label": { "type": "string" }
+        }
+      }
+    }
+  }
+}
