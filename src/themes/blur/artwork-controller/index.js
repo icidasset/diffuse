@@ -5,22 +5,25 @@ import ArtworkController from "@themes/blur/artwork-controller/element.js";
 
 // Prerequisites
 const aud = defaults.lazy.engine.audio();
-const queue = defaults.lazy.engine.queue();
-
 const art = defaults.lazy.processor.artwork();
-
 const oqa = defaults.lazy.orchestrator.queueAudio();
-const rso = defaults.lazy.orchestrator.repeatShuffle();
-
-defaults.lazy.orchestrator.queueTracks();
 
 // Controller
 const dac = new ArtworkController();
 dac.setAttribute("artwork-processor-selector", art.selector);
 dac.setAttribute("audio-engine-selector", aud.selector);
-dac.setAttribute("input-selector", defaults.orchestrator.input.selector);
-dac.setAttribute("queue-engine-selector", queue.selector);
-dac.setAttribute("repeat-shuffle-orchestrator-selector", rso.selector);
+dac.setAttribute(
+  "input-selector",
+  defaults.instantiated.orchestrator.input.selector,
+);
+dac.setAttribute(
+  "queue-engine-selector",
+  defaults.instantiated.engine.queue.selector,
+);
+dac.setAttribute(
+  "repeat-shuffle-orchestrator-selector",
+  defaults.instantiated.orchestrator.repeatShuffle.selector,
+);
 
 // Add to DOM
 document.body.append(dac);
