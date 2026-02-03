@@ -247,6 +247,10 @@ ul li::marker {
   a {
     text-underline-offset: 3px;
   }
+
+  code {
+    font-size: var(--fs-xs);
+  }
 }
 
 .table-of-contents {

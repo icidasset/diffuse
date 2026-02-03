@@ -110,70 +110,64 @@ scripts:
   </section>
 
   <!-- FOUNDATION -->
-  <section>
-    <h2 id="foundation">Foundation</h2>
+  <div class="columns" style="margin-top: var(--space-2xl);">
+    <section style="flex-grow: 10; max-width: var(--container-xl);">
+      <h2 id="foundation" style="margin-top: 0;">Foundation</h2>
 
-    <div class="columns">
-      <div class="flex">
-        <p>
-          The default configuration for constituents includes the following elements which are loaded automatically:
-        </p>
-        <ul>
-          <li>
-            <span>Orchestrator / Input</span>
-            <div class="list-description">
-              <small>A prebuilt input configuration with all inputs Diffuse has to offer.</small>
-            </div>
-          </li>
-          <li>
-            <span>Orchestrator / Output</span>
-            <div class="list-description">
-              <small>A prebuilt output configuration with all outputs and their appropriate transformers.</small>
-            </div>
-          </li>
-          <li>
-            <span>Orchestrator / Process inputs into tracks<br /><small>(processing on launch)</small></span>
-            <div class="list-description">
-              <small>Lists all inputs, gathers metadata and then creates tracks where needed.</small>
-            </div>
-          </li>
-          <li>
-            <span>Processor / Metadata</span>
-            <div class="list-description">
-              <small>Processor that fetches metadata of audio files and streams.</small>
-            </div>
-          </li>
-        </ul>
+      <p>
+        Diffuse comes with a foundation that preconfigures all elements so you don't have to set them up yourself, along with an assemblage of elements for certain activities. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times.
+      </p>
+      <p>
+        <small><i class="ph-fill ph-info"></i> Refer to the <a href="#elements">elements index</a> to find out what each element does.</small>
+      </p>
+      <div class="code-block">
+        <code>
+          {{- echo -}}
+            import foundation from "common/constituents/foundation.js"
+          {{ /echo }}
+{{ echo -}}foundation.engine.audio(){{- /echo }}
+{{ echo -}}foundation.engine.queue(){{- /echo }}
+
+{{ echo -}}foundation.orchestrator.input(){{- /echo }}
+{{ echo -}}foundation.orchestrator.output(){{- /echo }}
+{{ echo -}}foundation.orchestrator.queueAudio(){{- /echo }}
+{{ echo -}}foundation.orchestrator.queueTracks(){{- /echo }}
+{{ echo -}}foundation.orchestrator.processTracks(){{- /echo }}
+{{ echo -}}foundation.orchestrator.repeatShuffle(){{- /echo }}
+{{ echo -}}foundation.orchestrator.searchTracks(){{- /echo }}
+{{ echo -}}foundation.orchestrator.sources(){{- /echo }}
+
+{{ echo -}}foundation.processor.artwork(){{- /echo }}
+{{ echo -}}foundation.processor.metadata(){{- /echo }}
+{{ echo -}}foundation.processor.search(){{- /echo -}}
+        </code>
       </div>
 
-      <div class="flex">
-        <p>
-          Besides this the foundation provides most other elements preconfigured. These are lazy loaded so you do need to call the method in order to load it.
-        </p>
+      <p>
+        <small>Assemblages:</small>
+      </p>
+      <ul style="margin-bottom: 0;">
+        <li>
+          <span>Add items to the queue</span>
+          <div class="list-description">
+            <code>foundation.assemblage.addItemsToQueue()</code>
+          </div>
+        </li>
+        <li>
+          <span>Play audio from the queue</span>
+          <div class="list-description">
+            <code>foundation.assemblage.playAudioFromQueue()</code>
+          </div>
+        </li>
+        <li>
+          <span>Search through your collection</span>
+          <div class="list-description" style="margin-bottom: 0;">
+            <code>foundation.assemblage.searchThroughCollection()</code>
+          </div>
+        </li>
+      </ul>
+    </section>
 
-        <div class="code-block">
-          <code>
-            {{- echo -}}
-              import { lazy } from "common/constituents/default/config.js"
-            {{ /echo }}
-{{ echo -}}lazy.engine.audio(){{- /echo }}
-{{ echo -}}lazy.engine.queue(){{- /echo }}
-
-{{ echo -}}lazy.orchestrator.queueAudio(){{- /echo }}
-{{ echo -}}lazy.orchestrator.queueTracks(){{- /echo }}
-{{ echo -}}lazy.orchestrator.repeatShuffle(){{- /echo }}
-{{ echo -}}lazy.orchestrator.searchTracks(){{- /echo }}
-{{ echo -}}lazy.orchestrator.sources(){{- /echo }}
-
-{{ echo -}}lazy.processor.artwork(){{- /echo }}
-{{ echo -}}lazy.processor.search(){{- /echo -}}
-          </code>
-        </div>
-
-        <p>
-          <i class="ph-fill ph-info"></i> Refer to the <a href="#elements">elements index</a> to find out what each element does.
-        </p>
-      </div>
-    </div>
-  </section>
+    <div class="dither-mask filler"></div>
+  </div>
 </main>

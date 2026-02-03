@@ -1,11 +1,13 @@
-import defaults from "@common/constituents/default/config.js";
+import foundation from "@common/constituents/foundation.js";
 import InputConfigElement from "@themes/webamp/configurators/input/element.js";
 
-const sources = defaults.lazy.orchestrator.sources();
+const inp = foundation.orchestrator.input();
+const out = foundation.orchestrator.output();
+const sou = foundation.orchestrator.sources();
 
 const el = new InputConfigElement();
-el.setAttribute("input-selector", defaults.orchestrator.input.selector);
-el.setAttribute("output-selector", defaults.orchestrator.output.selector);
-el.setAttribute("sources-orchestrator-selector", sources.selector);
+el.setAttribute("input-selector", inp.selector);
+el.setAttribute("output-selector", out.selector);
+el.setAttribute("sources-orchestrator-selector", sou.selector);
 
 document.querySelector("#placeholder")?.replaceWith(el);

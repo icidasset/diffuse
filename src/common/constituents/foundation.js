@@ -21,43 +21,84 @@ export const GROUP = "constituents";
 /**
  * Default config for constituents.
  */
-export function config() {
-  // Pre-instantiated
-  const instantiated = {
+export const config = {
+  GROUP,
+
+  /* Some predefined activity groups */
+  assemblage: {
+    addItemsToQueue,
+    playAudioFromQueue,
+    searchThroughCollection,
+  },
+
+  // Elements
+  engine: {
+    audio,
+    queue,
+  },
+  orchestrator: {
+    input,
+    output,
+    queueAudio,
+    queueTracks,
+    processTracks,
+    repeatShuffle,
+    searchTracks,
+    sources,
+  },
+  processor: {
+    artwork,
+    metadata,
+    search,
+  },
+};
+
+export default config;
+
+// 📦️
+
+function addItemsToQueue() {
+  return {
     engine: {
       queue: queue(),
     },
     orchestrator: {
       input: input(),
       output: output(),
-      queueTracks: queueTracks(),
       processTracks: processTracks(),
+      queueTracks: queueTracks(),
       repeatShuffle: repeatShuffle(),
     },
     processor: {
       metadata: metadata(),
     },
   };
+}
 
-  // Return elements
+function playAudioFromQueue() {
+  const base = addItemsToQueue();
+
   return {
-    GROUP,
+    ...base,
+    engine: {
+      ...base.engine,
+      audio: audio(),
+    },
+    orchestrator: {
+      ...base.orchestrator,
+      queueAudio: queueAudio(),
+    },
+  };
+}
 
-    instantiated,
-
-    lazy: {
-      engine: {
-        audio,
-      },
-      orchestrator: {
-        queueAudio,
-        searchTracks,
-        sources,
-      },
-      processor: {
-        artwork,
-        search,
-      },
+function searchThroughCollection() {
+  return {
+    orchestrator: {
+      output: output(),
+      searchTracks: searchTracks(),
+    },
+    processor: {
+      search: search(),
     },
   };
 }

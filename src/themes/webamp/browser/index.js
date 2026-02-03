@@ -1,22 +1,13 @@
-import defaults from "@common/constituents/default/config.js";
+import foundation from "@common/constituents/foundation.js";
 import BrowserElement from "@themes/webamp/browser/element.js";
 
-const search = defaults.lazy.processor.search();
-defaults.lazy.orchestrator.searchTracks();
+const que = foundation.assemblage.addItemsToQueue();
+const sea = foundation.assemblage.searchThroughCollection();
 
 const el = new BrowserElement();
-el.setAttribute(
-  "input-selector",
-  defaults.instantiated.orchestrator.input.selector,
-);
-el.setAttribute(
-  "output-selector",
-  defaults.instantiated.orchestrator.output.selector,
-);
-el.setAttribute(
-  "queue-engine-selector",
-  defaults.instantiated.engine.queue.selector,
-);
-el.setAttribute("search-processor-selector", search.selector);
+el.setAttribute("input-selector", que.orchestrator.input.selector);
+el.setAttribute("output-selector", que.orchestrator.output.selector);
+el.setAttribute("queue-engine-selector", que.engine.queue.selector);
+el.setAttribute("search-processor-selector", sea.processor.search.selector);
 
 document.querySelector("#placeholder")?.replaceWith(el);

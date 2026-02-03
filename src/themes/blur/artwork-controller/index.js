@@ -1,36 +1,33 @@
-import defaults from "@common/constituents/default/config.js";
+import foundation from "@common/constituents/foundation.js";
 import { effect } from "@common/signal.js";
 
 import ArtworkController from "@themes/blur/artwork-controller/element.js";
 
-// Prerequisites
-const aud = defaults.lazy.engine.audio();
-const art = defaults.lazy.processor.artwork();
-const oqa = defaults.lazy.orchestrator.queueAudio();
+// Setup the prerequisite elements
+const assemblage = foundation.assemblage.playAudioFromQueue();
+
+const aud = assemblage.engine.audio;
+const inp = assemblage.orchestrator.input;
+const oqa = assemblage.orchestrator.queueAudio;
+const ors = assemblage.orchestrator.repeatShuffle;
+const que = assemblage.engine.queue;
+
+const art = foundation.processor.artwork();
 
 // Controller
 const dac = new ArtworkController();
 dac.setAttribute("artwork-processor-selector", art.selector);
 dac.setAttribute("audio-engine-selector", aud.selector);
-dac.setAttribute(
-  "input-selector",
-  defaults.instantiated.orchestrator.input.selector,
-);
-dac.setAttribute(
-  "queue-engine-selector",
-  defaults.instantiated.engine.queue.selector,
-);
-dac.setAttribute(
-  "repeat-shuffle-orchestrator-selector",
-  defaults.instantiated.orchestrator.repeatShuffle.selector,
-);
+dac.setAttribute("input-selector", inp.selector);
+dac.setAttribute("queue-engine-selector", que.selector);
+dac.setAttribute("repeat-shuffle-orchestrator-selector", ors.selector);
 
 // Add to DOM
 document.body.append(dac);
 
 // Effect - Link the repeat/shuffle & queue-audio orchestrators
 effect(() => {
-  const repeat = rso.repeat();
+  const repeat = ors.repeat();
 
   if (repeat && !oqa.hasAttribute("repeat")) {
     oqa.toggleAttribute("repeat");

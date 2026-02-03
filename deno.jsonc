@@ -63,8 +63,7 @@
   },
   "exports": {
     // .js
-    "./common/constituents/default.js": "./src/common/constituents/default.js",
-    "./common/constituents/default/config.js": "./src/common/constituents/default/config.js",
+    "./common/constituents/foundation.js": "./src/common/constituents/foundation.js",
     "./common/element.js": "./src/common/element.js",
     "./common/signal.js": "./src/common/signal.js",
     "./common/worker.js": "./src/common/worker.js",
