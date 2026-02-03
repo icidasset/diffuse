@@ -1,7 +1,7 @@
 import foundation from "@common/constituents/foundation.js";
 import BrowserElement from "@themes/webamp/browser/element.js";
 
-const que = foundation.assemblage.addItemsToQueue();
+const que = foundation.assemblage.queueManagement();
 const sea = foundation.assemblage.searchThroughCollection();
 
 const el = new BrowserElement();

@@ -26,8 +26,8 @@ export const config = {
 
   /* Some predefined activity groups */
   assemblage: {
-    addItemsToQueue,
     playAudioFromQueue,
+    queueManagement,
     searchThroughCollection,
   },
 
@@ -57,7 +57,23 @@ export default config;
 
 // 📦️
 
-function addItemsToQueue() {
+function playAudioFromQueue() {
+  const base = queueManagement();
+
+  return {
+    ...base,
+    engine: {
+      ...base.engine,
+      audio: audio(),
+    },
+    orchestrator: {
+      ...base.orchestrator,
+      queueAudio: queueAudio(),
+    },
+  };
+}
+
+function queueManagement() {
   return {
     engine: {
       queue: queue(),
@@ -71,22 +87,6 @@ function addItemsToQueue() {
     },
     processor: {
       metadata: metadata(),
-    },
-  };
-}
-
-function playAudioFromQueue() {
-  const base = addItemsToQueue();
-
-  return {
-    ...base,
-    engine: {
-      ...base.engine,
-      audio: audio(),
-    },
-    orchestrator: {
-      ...base.orchestrator,
-      queueAudio: queueAudio(),
     },
   };
 }
