@@ -36,7 +36,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       }
     });
 
-    /** @type {OutputManagerDeputy<Track[]>} */
+    /** @type {OutputManagerDeputy} */
     const manager = {
       tracks: {
         ...base.tracks,

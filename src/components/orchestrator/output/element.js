@@ -24,10 +24,10 @@ class OutputOrchestrator extends DiffuseElement {
   static NAME = "diffuse/orchestrator/output";
 
   /**
-   * @returns {OutputElement<Track[]>}
+   * @returns {OutputElement}
    */
   get output() {
-    /** @type {OutputElement<Track[]> | null} */
+    /** @type {OutputElement | null} */
     const output = this.querySelector("#do-output__output");
 
     if (!output) throw new Error("Output orchestrator did not render yet.");

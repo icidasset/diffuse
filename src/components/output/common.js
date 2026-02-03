@@ -1,16 +1,19 @@
 import { computed, signal, untracked } from "@common/signal.js";
 
 /**
+ * @import {Track} from "@definitions/types.d.ts"
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
 /**
- * @template Tracks
- * @param {OutputManagerProperties<Tracks>} _
- * @returns {OutputManager<Tracks>}
+ * @template Encoding
+ * @param {OutputManagerProperties<Encoding>} _
+ * @returns {OutputManager<Encoding>}
  */
 export function outputManager({ init, tracks }) {
-  const t = signal(/** @type {Tracks} */ (tracks.empty()));
+  const t = signal(
+    /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
+  );
   const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );

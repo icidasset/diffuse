@@ -135,7 +135,7 @@ export async function list(cachedTracks = []) {
 
         /** @type {Track} */
         const track = {
-          $type: "sh.diffuse.output.tracks",
+          $type: "sh.diffuse.output.track",
           id,
           stats,
           tags,
@@ -150,7 +150,7 @@ export async function list(cachedTracks = []) {
     // picked up as a source.
     if (!tracks.length) {
       tracks = [{
-        $type: "sh.diffuse.output.tracks",
+        $type: "sh.diffuse.output.track",
         id: crypto.randomUUID(),
         kind: "placeholder",
         uri: buildURI(bucket),
@@ -209,7 +209,7 @@ export function demo() {
 
   /** @type {Track} */
   const track = {
-    $type: "sh.diffuse.output.tracks",
+    $type: "sh.diffuse.output.track",
     id: crypto.randomUUID(),
     kind: "placeholder",
     uri,

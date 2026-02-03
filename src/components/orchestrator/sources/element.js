@@ -40,7 +40,7 @@ class Sources extends BroadcastableDiffuseElement {
     /** @type {InputElement} */
     const input = query(this, "input-selector");
 
-    /** @type {OutputElement<Track[]>} */
+    /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
     // Wait until defined

@@ -15,7 +15,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     const base = this.base();
 
-    /** @type {OutputManagerDeputy<Track[]>} */
+    /** @type {OutputManagerDeputy} */
     const manager = {
       tracks: {
         ...base.tracks,

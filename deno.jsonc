@@ -133,7 +133,8 @@
     "./definitions/types.d.ts": "./src/definitions/types.d.ts",
 
     // .ts
-    "./definitions/types/sh/diffuse/output/tracks.ts": "./src/definitions/types/sh/diffuse/output/tracks.ts",
+    "./definitions/types/sh/diffuse/output/constituent.ts": "./src/definitions/types/sh/diffuse/output/constituent.ts",
+    "./definitions/types/sh/diffuse/output/track.ts": "./src/definitions/types/sh/diffuse/output/track.ts",
   },
   "tasks": {
     "build": {

@@ -7,7 +7,7 @@ import { OutputTransformer } from "../../base.js";
  */
 
 /**
- * @extends {OutputTransformer<Track[]>}
+ * @extends {OutputTransformer}
  */
 class DefaultOutputRefinerTransformer extends OutputTransformer {
   constructor() {
@@ -15,7 +15,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
 
     const base = this.base();
 
-    /** @type {OutputManagerDeputy<Track[]>} */
+    /** @type {OutputManagerDeputy} */
     const manager = {
       tracks: {
         ...base.tracks,

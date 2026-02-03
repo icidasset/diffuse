@@ -32,7 +32,7 @@ class InputConfig extends DiffuseElement {
   );
 
   $output = signal(
-    /** @type {OutputElement<Track[]> | undefined} */ (undefined),
+    /** @type {OutputElement | undefined} */ (undefined),
   );
 
   $sourcesOrchestrator = signal(
@@ -50,7 +50,7 @@ class InputConfig extends DiffuseElement {
     /** @type {InputElement} */
     const input = query(this, "input-selector");
 
-    /** @type {OutputElement<Track[]>} */
+    /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
     /** @type {import("@components/orchestrator/sources/element.js").CLASS} */
@@ -191,7 +191,7 @@ class InputConfig extends DiffuseElement {
   async addSource(uri) {
     /** @type {Track} */
     const track = {
-      $type: "sh.diffuse.output.tracks",
+      $type: "sh.diffuse.output.track",
       id: crypto.randomUUID(),
       kind: "placeholder",
       uri,

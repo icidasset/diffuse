@@ -7,7 +7,7 @@ import { batch, computed, signal } from "@common/signal.js";
  */
 
 /**
- * @typedef {OutputElement<Track[]>} Output
+ * @typedef {OutputElement} Output
  */
 
 const STORAGE_PREFIX = "diffuse/configurator/output";
@@ -17,7 +17,7 @@ const STORAGE_PREFIX = "diffuse/configurator/output";
 ////////////////////////////////////////////
 
 /**
- * @implements {OutputElement<Track[]>}
+ * @implements {OutputElement}
  */
 class OutputConfigurator extends DiffuseElement {
   static NAME = "diffuse/configurator/output";
@@ -25,7 +25,7 @@ class OutputConfigurator extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {OutputManagerDeputy<Track[]>} */
+    /** @type {OutputManagerDeputy} */
     const manager = {
       tracks: {
         collection: computed(() => {

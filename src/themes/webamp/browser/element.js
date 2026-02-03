@@ -27,7 +27,7 @@ class Browser extends DiffuseElement {
   );
 
   $output = signal(
-    /** @type {OutputElement<Track[]> | undefined} */ (undefined),
+    /** @type {OutputElement | undefined} */ (undefined),
   );
 
   $queue = signal(
@@ -49,7 +49,7 @@ class Browser extends DiffuseElement {
     /** @type {InputElement} */
     const input = query(this, "input-selector");
 
-    /** @type {OutputElement<Track[]>} */
+    /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */

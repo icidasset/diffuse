@@ -32,7 +32,7 @@ const input = component(Input);
 const queue = component(Queue);
 const search = component(Search);
 
-/** @type {OutputElement<Track[]> | null} */
+/** @type {OutputElement | null} */
 const output = document.querySelector("#output");
 if (!output) throw new Error("Missing output element");
 

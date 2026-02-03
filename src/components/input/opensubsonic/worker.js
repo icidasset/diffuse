@@ -152,7 +152,7 @@ export async function list(cachedTracks = []) {
 
         /** @type {Track} */
         const track = {
-          $type: "sh.diffuse.output.tracks",
+          $type: "sh.diffuse.output.track",
           id: crypto.randomUUID(),
           kind: autoTypeToTrackKind(song.type),
           uri: buildURI(server, { songId: song.id, path }),
@@ -235,7 +235,7 @@ export async function list(cachedTracks = []) {
     // picked up as a source.
     if (!tracks.length) {
       tracks = [{
-        $type: "sh.diffuse.output.tracks",
+        $type: "sh.diffuse.output.track",
         id: crypto.randomUUID(),
         kind: "placeholder",
         uri: buildURI(server),

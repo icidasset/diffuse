@@ -6,7 +6,7 @@
  * @type {Track}
  */
 export const trackA = {
-  $type: "sh.diffuse.output.tracks",
+  $type: "sh.diffuse.output.track",
   id: "sample-a",
   uri: "http://example.com/audio-a.mp3",
   tags: {
@@ -19,7 +19,7 @@ export const trackA = {
  * @type {Track}
  */
 export const trackB = {
-  $type: "sh.diffuse.output.tracks",
+  $type: "sh.diffuse.output.track",
   id: "sample-b",
   uri: "http://example.com/audio-b.mp3",
   tags: {

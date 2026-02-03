@@ -1,33 +1,34 @@
 import type { Signal, SignalReader } from "@common/signal.d.ts";
 import type { DiffuseElement } from "@common/element.js";
+import type { Track } from "@definitions/types.d.ts";
 
-export type OutputElement<Tracks> =
+export type OutputElement<Encoding = null> =
   & DiffuseElement
-  & OutputManagerDeputy<Tracks>;
+  & OutputManagerDeputy<Encoding>;
 
-export type OutputManagerDeputy<Tracks> = Omit<
-  OutputManager<Tracks>,
+export type OutputManagerDeputy<Encoding = null> = Omit<
+  OutputManager<Encoding>,
   "signals"
 >;
 
-export type OutputManager<Tracks> = {
+export type OutputManager<Encoding = null> = {
   signals: {
-    tracks: Signal<Tracks>;
+    tracks: Signal<Encoding extends null ? Track[] : Encoding>;
   };
   tracks: {
-    collection: SignalReader<Tracks>;
+    collection: SignalReader<Encoding extends null ? Track[] : Encoding>;
     reload: () => Promise<void>;
-    save: (tracks: Tracks) => Promise<void>;
+    save: (tracks: Encoding extends null ? Track[] : Encoding) => Promise<void>;
     state: SignalReader<"loading" | "loaded" | "sleeping">;
   };
 };
 
-export type OutputManagerProperties<Tracks> = {
+export type OutputManagerProperties<Encoding = null> = {
   init?: () => Promise<boolean>;
   tracks: {
-    empty(): Tracks;
-    get(): Promise<Tracks>;
-    put(tracks: Tracks): Promise<void>;
+    empty(): Encoding extends null ? Track[] : Encoding;
+    get(): Promise<Encoding extends null ? Track[] : Encoding>;
+    put(tracks: Encoding extends null ? Track[] : Encoding): Promise<void>;
   };
 };
 

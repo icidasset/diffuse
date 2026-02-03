@@ -54,7 +54,7 @@ class QueueTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {InputElement} */
     const input = query(this, "input-selector");
 
-    /** @type {OutputElement<Track[]>} */
+    /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */

@@ -6,7 +6,7 @@ import { computed, signal } from "@common/signal.js";
  */
 
 /**
- * @template T
+ * @template [T=null]
  */
 export class OutputTransformer extends DiffuseElement {
   // SIGNALS
