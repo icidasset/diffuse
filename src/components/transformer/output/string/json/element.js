@@ -17,21 +17,22 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      constituents: {
+        ...base.constituents,
+        collection: computed(() => {
+          const json = base.constituents.collection();
+          return typeof json === "string" ? parseArray(json) : [];
+        }),
+        save: async (newConstituents) => {
+          const json = JSON.stringify(newConstituents);
+          await base.constituents.save(json);
+        },
+      },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
-          let json = base.tracks.collection();
-          if (typeof json !== "string") json = "[]";
-
-          // Try parsing JSON
-          try {
-            return JSON.parse(json);
-          } catch (err) {
-            console.error(
-              "components/transformer/output/string/json: Failed to parse JSON",
-            );
-            return [];
-          }
+          const json = base.tracks.collection();
+          return typeof json === "string" ? parseArray(json) : [];
         }),
         save: async (newTracks) => {
           const json = JSON.stringify(newTracks);
@@ -41,7 +42,20 @@ class JsonStringOutputTransformer extends OutputTransformer {
     };
 
     // Assign manager properties to class
+    this.constituents = manager.constituents;
     this.tracks = manager.tracks;
+  }
+}
+
+/**
+ * @param {string} json
+ */
+function parseArray(json) {
+  try {
+    return JSON.parse(json);
+  } catch (err) {
+    console.error(err);
+    return [];
   }
 }
 

@@ -2,7 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 import { batch, computed, signal } from "@common/signal.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Constituent, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  */
 
@@ -27,6 +27,44 @@ class OutputConfigurator extends DiffuseElement {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      constituents: {
+        collection: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.constituents.collection();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.constituents.collection();
+
+          return this.#memory.constituents.value;
+        }),
+        reload: () => {
+          const def = this.#defaultOutput.value;
+          if (def) def.constituents.reload();
+
+          const out = this.#selectedOutput.value;
+          if (out) return out.constituents.reload();
+
+          return Promise.resolve();
+        },
+        save: async (newConstituents) => {
+          const def = this.#defaultOutput.value;
+          if (def) await def.constituents.save(newConstituents);
+
+          const out = this.#selectedOutput.value;
+          if (out) return await out.constituents.save(newConstituents);
+
+          this.#memory.constituents.value = newConstituents;
+        },
+        state: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.constituents.state();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.constituents.state();
+
+          return this.#setupFinished.value ? "loaded" : "sleeping";
+        }),
+      },
       tracks: {
         collection: computed(() => {
           const out = this.#selectedOutput.value;
@@ -68,6 +106,7 @@ class OutputConfigurator extends DiffuseElement {
     };
 
     // Assign manager properties to class
+    this.constituents = manager.constituents;
     this.tracks = manager.tracks;
   }
 
@@ -78,6 +117,7 @@ class OutputConfigurator extends DiffuseElement {
   );
 
   #memory = {
+    constituents: signal(/** @type {Constituent[]} */ ([])),
     tracks: signal(/** @type {Track[]} */ ([])),
   };
 

@@ -1,7 +1,7 @@
 import { computed, signal, untracked } from "@common/signal.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Constituent, Track} from "@definitions/types.d.ts"
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
@@ -10,13 +10,28 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @param {OutputManagerProperties<Encoding>} _
  * @returns {OutputManager<Encoding>}
  */
-export function outputManager({ init, tracks }) {
+export function outputManager({ init, constituents, tracks }) {
+  const c = signal(
+    /** @type {Encoding extends null ? Constituent[] : Encoding} */ (constituents
+      .empty()),
+  );
+  const cs = signal(
+    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+  );
+
   const t = signal(
     /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
   );
   const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );
+
+  async function loadConstituents() {
+    if (init && (await init()) === false) return;
+    cs.value = "loading";
+    c.value = await constituents.get();
+    cs.value = "loaded";
+  }
 
   async function loadTracks() {
     if (init && (await init()) === false) return;
@@ -26,6 +41,19 @@ export function outputManager({ init, tracks }) {
   }
 
   return {
+    constituents: {
+      collection: computed(() => {
+        if (untracked(() => cs.value === "sleeping")) loadConstituents();
+        return c.value;
+      }),
+      reload: loadConstituents,
+      save: async (newConstituents) => {
+        if (untracked(() => cs.value === "sleeping")) loadConstituents();
+        c.value = newConstituents;
+        await constituents.put(newConstituents);
+      },
+      state: cs.get,
+    },
     tracks: {
       collection: computed(() => {
         if (untracked(() => ts.value === "sleeping")) loadTracks();
@@ -40,6 +68,7 @@ export function outputManager({ init, tracks }) {
       state: ts.get,
     },
     signals: {
+      constituents: c,
       tracks: t,
     },
   };

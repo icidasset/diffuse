@@ -12,7 +12,7 @@ import { outputManager } from "../../common.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {OutputElement<any>}
+ * @implements {OutputElement<SupportedDataTypes>}
  */
 class IndexedDBOutput extends BroadcastableDiffuseElement {
   static NAME = "diffuse/output/polymorphic/indexed-db";
@@ -28,6 +28,11 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
 
     /** @type {OutputManager<SupportedDataTypes>} */
     this.#manager = outputManager({
+      constituents: {
+        empty: () => undefined,
+        get: () => this.#get("constituents"),
+        put: (data) => this.#put("constituents", data),
+      },
       init: () => this.whenConnected(),
       tracks: {
         empty: () => undefined,
@@ -36,6 +41,7 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
       },
     });
 
+    this.constituents = this.#manager.constituents;
     this.tracks = this.#manager.tracks;
   }
 

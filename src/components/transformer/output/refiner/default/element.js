@@ -17,6 +17,12 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      constituents: {
+        ...base.constituents,
+        collection: computed(() => {
+          return base.constituents.collection() ?? [];
+        }),
+      },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
@@ -30,6 +36,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
     };
 
     // Assign manager properties to class
+    this.constituents = manager.constituents;
     this.tracks = manager.tracks;
   }
 }
