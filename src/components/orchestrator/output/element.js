@@ -9,7 +9,6 @@ import "@components/transformer/output/string/json/element.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
- * @import {Track} from "@definitions/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
  */
 
@@ -28,13 +27,17 @@ class OutputOrchestrator extends DiffuseElement {
    */
   get output() {
     /** @type {OutputElement | null} */
-    const output = this.querySelector("#do-output__output");
+    const output = this.root().querySelector("#do-output__output");
 
     if (!output) throw new Error("Output orchestrator did not render yet.");
     return output;
   }
 
   // PROXY OUTPUT ACTIONS
+
+  get constituents() {
+    return this.output.constituents;
+  }
 
   get tracks() {
     return this.output.tracks;

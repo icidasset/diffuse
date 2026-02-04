@@ -1,11 +1,7 @@
-import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
-import { signal } from "@common/signal.js";
+import { DiffuseElement } from "@common/element.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
- * @import {Track} from "@definitions/types.d.ts"
- * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
  */
 
 class OutputConfig extends DiffuseElement {

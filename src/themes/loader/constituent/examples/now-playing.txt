@@ -1,0 +1,29 @@
+<div id="now-playing">Loading ...</div>
+<button>⏭</button>
+
+<script type="module">
+  import foundation from "./common/constituents/foundation.js";
+  import { effect } from "./common/signal.js";
+
+  const components = foundation.assemblage.queueManagement();
+  const queue = components.engine.queue;
+
+  effect(() => {
+    const currentlyPlaying = queue.now();
+    const tags = currentlyPlaying?.tags;
+
+    const element = document.querySelector("#now-playing");
+    if (!element) return;
+
+    if (currentlyPlaying) {
+      element.innerText = `${tags.artist} - ${tags.title}`;
+    } else {
+      element.innerText = "Nothing is playing yet";
+    }
+  });
+
+  document.body.querySelector("button").onclick = () => {
+    if (components.orchestrator.output.tracks.state() !== "loaded") return;
+    queue.shift();
+  };
+</script>

@@ -6,15 +6,15 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": ["cid", "html", "label"],
+        "required": ["cid", "html", "name"],
         "properties": {
           "cid": {
             "type": "string",
-            "description": "A DASL CID representing the DRISL-encoded HTML"
+            "description": "A DASL CID representing the DRISL-encoded HTML (raw 0x55 codec)"
           },
           "description": { "type": "string" },
           "html": { "type": "string", "description": "The constituent HTML" },
-          "label": { "type": "string" }
+          "name": { "type": "string" }
         }
       }
     }

@@ -110,16 +110,14 @@ function audio() {
   const a = new AudioEngine();
   a.setAttribute("group", GROUP);
 
-  addToBodyIfNeeded(a);
-  return a;
+  return findExistingOrAdd(a)
 }
 
 function queue() {
   const q = new Queue();
   q.setAttribute("group", GROUP);
 
-  addToBodyIfNeeded(q);
-  return q;
+  return findExistingOrAdd(q);
 }
 
 // Processors
@@ -127,24 +125,21 @@ function artwork() {
   const a = new ArtworkProcessor();
   a.setAttribute("group", GROUP);
 
-  addToBodyIfNeeded(a);
-  return a;
+  return findExistingOrAdd(a);
 }
 
 function metadata() {
   const m = new MetadataProcessor();
   m.setAttribute("group", GROUP);
 
-  addToBodyIfNeeded(m);
-  return m;
+  return findExistingOrAdd(m);
 }
 
 function search() {
   const s = new SearchProcessor();
   s.setAttribute("group", GROUP);
 
-  addToBodyIfNeeded(s);
-  return s;
+  return findExistingOrAdd(s);
 }
 
 // Orchestrators
@@ -153,8 +148,7 @@ function input() {
   i.setAttribute("group", GROUP);
   i.setAttribute("id", "input");
 
-  addToBodyIfNeeded(i);
-  return i;
+  return findExistingOrAdd(i);
 }
 
 function output() {
@@ -162,8 +156,7 @@ function output() {
   o.setAttribute("group", GROUP);
   o.setAttribute("id", "output");
 
-  addToBodyIfNeeded(o);
-  return o;
+  return findExistingOrAdd(o);
 }
 
 function processTracks() {
@@ -178,7 +171,7 @@ function processTracks() {
   opt.setAttribute("metadata-processor-selector", m.selector);
   opt.toggleAttribute("process-when-ready");
 
-  document.body.append(opt);
+  return findExistingOrAdd(opt);
 }
 
 function queueAudio() {
@@ -192,8 +185,7 @@ function queueAudio() {
   oqa.setAttribute("input-selector", i.selector);
   oqa.setAttribute("queue-engine-selector", q.selector);
 
-  addToBodyIfNeeded(oqa);
-  return oqa;
+  return findExistingOrAdd(oqa);
 }
 
 function queueTracks() {
@@ -207,8 +199,7 @@ function queueTracks() {
   oqt.setAttribute("output-selector", o.selector);
   oqt.setAttribute("queue-engine-selector", q.selector);
 
-  addToBodyIfNeeded(oqt);
-  return oqt;
+  return findExistingOrAdd(oqt);
 }
 
 function repeatShuffle() {
@@ -218,8 +209,7 @@ function repeatShuffle() {
   ors.setAttribute("group", GROUP);
   ors.setAttribute("queue-engine-selector", q.selector);
 
-  addToBodyIfNeeded(ors);
-  return ors;
+  return findExistingOrAdd(ors);
 }
 
 function searchTracks() {
@@ -233,8 +223,7 @@ function searchTracks() {
   ost.setAttribute("output-selector", o.selector);
   ost.setAttribute("search-processor-selector", s.selector);
 
-  addToBodyIfNeeded(ost);
-  return ost;
+  return findExistingOrAdd(ost);
 }
 
 function sources() {
@@ -245,8 +234,7 @@ function sources() {
   so.setAttribute("input-selector", i.selector);
   so.setAttribute("output-selector", o.selector);
 
-  addToBodyIfNeeded(so);
-  return so;
+  return findExistingOrAdd(so);
 }
 
 // 🛠️
@@ -254,7 +242,12 @@ function sources() {
 /**
  * @param {DiffuseElement} element
  */
-export function addToBodyIfNeeded(element) {
+export function findExistingOrAdd(element) {
   const alreadyAdded = document.body.querySelector(element.selector);
-  if (!alreadyAdded) document.body.append(element);
+  if (!alreadyAdded) {
+    document.body.append(element);
+    return element
+  }
+
+  return alreadyAdded
 }

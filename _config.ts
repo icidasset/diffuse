@@ -123,6 +123,7 @@ phosphor("bold/Phosphor-Bold.woff2");
 
 // MISC
 
+site.add("/themes/loader/constituent/examples/");
 site.use(sourceMaps());
 
 site.script("copy-type-defs", () => {

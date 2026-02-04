@@ -5,10 +5,11 @@ base: ../../../
 styles:
   - styles/base.css
   - styles/diffuse/page.css
+  - styles/vendor/phosphor/bold/style.css
   - styles/vendor/phosphor/fill/style.css
 
 scripts:
-  - index.js
+  - themes/loader/constituent/index.js
 ---
 
 <header>
@@ -34,10 +35,7 @@ scripts:
 
     <section class="flex">
       <h2 id="yours" style="margin-top: 0;">Yours</h2>
-
-      <p style="margin-bottom: 0;">
-        <i class="ph-fill ph-info"></i> You have not added any constituents yet. Add or create some using the tools below.
-      </p>
+      <div id="list"></div>
     </section>
   </div>
 
@@ -61,49 +59,47 @@ scripts:
     </section>
   </div>
 
-  <!-- CONSTRUCT -->
+  <!-- BUILD -->
   <section>
     <h2 id="build">Build</h2>
 
-    <div class="columns">
+    <form id="build-form" class="columns">
       <div class="flex">
         <p style="margin-top: 0">
           If you know a bit of HTML & Javascript, you can write your own or plug in some code you found elsewhere:
         </p>
 
-        <form>
-          <textarea class="monospace-font" placeholder="<code>goes here</code>"></textarea>
-        </form>
+        <div>
+          <textarea id="html-input" class="monospace-font" placeholder="<div>goes here</div>"></textarea>
+        </div>
       </div>
 
       <div class="flex">
         <p style="margin-top: 0">
-          Your code here builds on the <a href="themes/loader/constituent/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;body&gt;</code> element.
+          Your code here builds on the <a href="themes/loader/constituent/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;div id="container"&gt;</code> element in the body.
         </p>
+        <input id="name-input" type="text" placeholder="Unique name" name="name" value="Unique name" required />
         <p>
           <span class="button-row">
-            <button disabled>Save</button>
-            <button disabled>Save &amp; Open</button>
-            <button disabled>Preview</button>
+            <button name="save">Save</button>
+            <button name="save+open">Save &amp; Open</button>
           </span>
         </p>
         <p>
-          Add element assemblage:
+          Browse examples:
         </p>
-        <form>
-          <select>
-            <option>Play audio from queue</option>
-            <option>Queue management</option>
-            <option>Search through collection</option>
+        <div>
+          <select id="example-select">
+            <option value="now-playing.txt" selected>Now playing + Next Queue Item</option>
           </select>
-        </form>
+        </div>
         <p>
           <span class="button-row">
-            <button disabled>Add code</button>
+            <button name="load-example">Load example</button>
           </span>
         </p>
       </div>
-    </div>
+    </form>
   </section>
 
   <!-- FOUNDATION -->

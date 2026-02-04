@@ -111,15 +111,20 @@ ul.columns {
  * Forms
  */
 
+input,
 textarea {
   background: transparent;
   border: 3px solid var(--form-color);
   color: inherit;
   font-size: var(--fs-sm);
+  padding: var(--space-2xs);
+  width: 100%;
+}
+
+textarea {
   height: var(--container-xs);
   padding: var(--space-xs);
   resize: none;
-  width: 100%;
 }
 
 /**
