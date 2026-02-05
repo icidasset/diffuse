@@ -4,23 +4,24 @@
   --color-2: oklch(98.369% 0.01834 67.664);
   --color-3: oklch(26.787% 0.00168 186.65);
 
-  /* Orange/Red */
-  /*--accent: oklch(86.947% 0.25527 28.789);*/
-  /*--accent: hsl(51, 100%, 50%);*/
-  /*--accent: #9e86b8;*/
-
   /* Green */
-  /*--accent: hsl(120, 73.4%, 74.9%);*/
   --accent: hsl(82, 39%, 30.2%);
-  /*--accent: hsl(80, 60.5%, 34.7%);*/
 
-  /* Blue */
-  /*--accent: hsl(203, 92%, 75.5%);*/
+  /* Based on accent */
+  --accent-twist-1: oklch(0.4394087182327507 0.07236154661033459 126.18581796616421);
+  --accent-twist-2: oklch(0.595520818778872 0.0651155417011046 241.18580587451083);
+  --accent-twist-3: oklch(0.6455208185961163 0.07999998225841164 241.185809134907);
+  --accent-twist-4: oklch(0.49552082249860496 0.056052673525189174 11.185823191211629);
+  --accent-twist-5: oklch(0.4155208216940155 0.07999998497864118 11.185815502393897);
+
+  /* Derivatives */
+  --accent-mark: oklch(from var(--accent-twist-1) l c h / 0.125);
+  --accent-highlight: oklch(from var(--accent) l c h / 0.375);
 
   --bg-color: var(--color-2);
   --text-color: var(--color-1);
 
-  --code-color: oklch(from var(--bg-color) calc(l - 0.0375) c h / 1);
+  --code-color: oklch(from #fefcf1 l c h);
   --form-color: oklch(from var(--bg-color) calc(l - 0.075) c h / 1);
 }
 
@@ -28,6 +29,14 @@
   :root {
     --accent: #9e86b8;
 
+    /* Based on accent */
+    --accent-twist-1: oklch(0.8304625409973806 0.04463693607878053 306.25919097736113);
+    --accent-twist-2: oklch(0.8598598403285739 0.0562638076130437 71.2592389751063);
+    --accent-twist-3: oklch(0.9098598401854464 0.04000001621772218 71.25925756817853);
+    --accent-twist-4: oklch(0.759859834391464 0.0968658786601377 181.2591638095228);
+    --accent-twist-5: oklch(0.5798598316017731 0.08000002153797516 181.25916489227464);
+
+    /* Derivatives */
     --bg-color: var(--color-3);
     --text-color: var(--color-2);
 

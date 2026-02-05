@@ -69,8 +69,7 @@ scripts:
           If you know a bit of HTML & Javascript, you can write your own or plug in some code you found elsewhere:
         </p>
 
-        <div>
-          <textarea id="html-input" class="monospace-font" placeholder="<div>goes here</div>"></textarea>
+        <div id="html-input-container" class="code-editor monospace-font">
         </div>
       </div>
 
@@ -90,6 +89,10 @@ scripts:
         </p>
         <div>
           <select id="example-select">
+            <button>
+              <selectedcontent></selectedcontent>
+            </button>
+
             <option value="now-playing.txt" selected>Now playing + Next Queue Item</option>
           </select>
         </div>

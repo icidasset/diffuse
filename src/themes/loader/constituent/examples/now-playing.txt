@@ -1,12 +1,23 @@
-<div id="now-playing">Loading ...</div>
-<button>⏭</button>
+<main>
+  <div id="now-playing">Loading tracks ...</div>
+  <button>⏭</button>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/page.css";
+</style>
 
 <script type="module">
   import foundation from "./common/constituents/foundation.js";
-  import { effect } from "./common/signal.js";
+  import { computed, effect } from "./common/signal.js";
 
   const components = foundation.assemblage.queueManagement();
   const queue = components.engine.queue;
+
+  const isLoadingTracks = computed(() => {
+    return components.orchestrator.output.tracks.state() !== "loaded";
+  });
 
   effect(() => {
     const currentlyPlaying = queue.now();
@@ -17,13 +28,14 @@
 
     if (currentlyPlaying) {
       element.innerText = `${tags.artist} - ${tags.title}`;
+    } else if (isLoadingTracks()) {
+      // Keep original text
     } else {
       element.innerText = "Nothing is playing yet";
     }
   });
 
   document.body.querySelector("button").onclick = () => {
-    if (components.orchestrator.output.tracks.state() !== "loaded") return;
     queue.shift();
   };
 </script>

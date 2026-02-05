@@ -110,7 +110,7 @@ function audio() {
   const a = new AudioEngine();
   a.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(a)
+  return findExistingOrAdd(a);
 }
 
 function queue() {
@@ -240,14 +240,17 @@ function sources() {
 // 🛠️
 
 /**
- * @param {DiffuseElement} element
+ * @template {DiffuseElement} T
+ * @param {T} element
+ * @returns {T}
  */
 export function findExistingOrAdd(element) {
+  /** @type {T | null} */
   const alreadyAdded = document.body.querySelector(element.selector);
   if (!alreadyAdded) {
     document.body.append(element);
-    return element
+    return element;
   }
 
-  return alreadyAdded
+  return alreadyAdded;
 }

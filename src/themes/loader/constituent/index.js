@@ -1,6 +1,12 @@
 import * as CID from "@atcute/cid";
 import { html, render } from "lit-html";
 
+import { basicSetup, EditorView } from "codemirror";
+import { css as langCss } from "@codemirror/lang-css";
+import { html as langHtml } from "@codemirror/lang-html";
+import { javascript as langJs } from "@codemirror/lang-javascript";
+import { autocompletion } from "@codemirror/autocomplete";
+
 import foundation from "@common/constituents/foundation.js";
 import { effect } from "@common/signal.js";
 
@@ -55,6 +61,34 @@ const emptyConstituentsList = html`
 // BUILD
 ////////////////////////////////////////////
 
+// Code editor
+const editorContainer = document.body.querySelector("#html-input-container");
+if (!editorContainer) throw new Error("Editor container not found");
+
+const editor = new EditorView({
+  parent: editorContainer,
+  doc: `
+<script type="module">
+  import foundation from "./common/constituents/foundation.js";
+  import { effect } from "./common/signal.js";
+
+  const components = foundation.assemblage.queueManagement();
+
+  effect(() => {
+    const currentlyPlaying = components.engine.queue.now();
+  })
+</script>
+  `.trim(),
+  extensions: [
+    basicSetup,
+    langHtml(),
+    langCss(),
+    langJs(),
+    autocompletion(),
+  ],
+});
+
+// Form submit
 document.querySelector("#build-form")?.addEventListener(
   "submit",
   onBuildSubmit,
@@ -66,15 +100,11 @@ document.querySelector("#build-form")?.addEventListener(
 async function onBuildSubmit(event) {
   event.preventDefault();
 
-  const htmlEl =
-    /** @type {HTMLTextAreaElement | null} */ (document.querySelector(
-      "#html-input",
-    ));
   const nameEl = /** @type {HTMLInputElement | null} */ (document.querySelector(
     "#name-input",
   ));
 
-  const html = htmlEl?.value ?? "";
+  const html = editor.state.doc.toString();
   const cid = await CID.create(0x55, new TextEncoder().encode(html));
   const name = nameEl?.value ?? "nameless";
 
@@ -91,10 +121,14 @@ async function onBuildSubmit(event) {
       /** @type {HTMLSelectElement | null} */
       const selected = document.body.querySelector("#example-select");
 
-      if (htmlEl && selected?.value) {
-        htmlEl.value = await fetch(
+      if (selected?.value) {
+        const text = await fetch(
           `themes/loader/constituent/examples/${selected.value}`,
         ).then((r) => r.text());
+
+        editor.dispatch({
+          changes: { from: 0, to: editor.state.doc.length, insert: text },
+        });
       }
       break;
     }
