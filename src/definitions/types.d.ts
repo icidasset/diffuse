@@ -3,6 +3,12 @@ export type {
 } from "./types/sh/diffuse/output/constituent.ts";
 
 export type {
+  Criterion,
+  Main as Favourite,
+  Transformation,
+} from "./types/sh/diffuse/output/favourite.ts";
+
+export type {
   Main as Track,
   Stats as TrackStats,
   Tags as TrackTags,

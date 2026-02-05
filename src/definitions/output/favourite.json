@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.favourite",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["criteria"],
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "items": { "type": "ref", "ref": "#criterion" }
+          }
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "required": ["field", "value"],
+      "properties": {
+        "field": { "type": "string" },
+        "transformations": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#transformation" }
+        },
+        "value": {
+          "type": "unknown",
+          "description": "Value that should be matched belonging to the given field"
+        }
+      }
+    },
+    "transformation": {
+      "type": "string",
+      "description": "Transformation to apply to the field value before comparison"
+    }
+  }
+}
