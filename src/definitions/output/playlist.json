@@ -6,17 +6,12 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": ["collection", "items", "name"],
+        "required": ["items", "name", "unordered"],
         "nullable": ["autoGenerate"],
         "properties": {
           "autoGenerate": {
             "type": "ref",
             "ref": "#autoGenerate"
-          },
-          "collection": {
-            "type": "boolean",
-            "default": false,
-            "description": "If this property is set to true, the playlist items should not be presented in order. It's considered a collection of tracks."
           },
           "items": {
             "type": "array",
@@ -27,13 +22,18 @@
           },
           "name": {
             "type": "string"
+          },
+          "unordered": {
+            "type": "boolean",
+            "default": false,
+            "description": "If this property is set to true, the playlist items should not be presented in order. It's considered an unordered collection of tracks."
           }
         }
       }
     },
     "autoGenerate": {
       "type": "object",
-      "description": "Auto-generate the items of the playlist, overriding the included items. If this property is set, the playlist should always be treated as a collection.",
+      "description": "Auto-generate the items of the playlist, overriding the included items. If this property is set, the playlist should always be treated as unordered.",
       "required": ["criteria"],
       "properties": {
         "criteria": {

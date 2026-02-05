@@ -178,14 +178,10 @@ definitions:
     desc: >
       Custom constituents to keep around.
     url: "definitions/output/constituent.json"
-  - title: "Output / Favourite"
-    desc: >
-      Indicate a user's favourite audio. Not a property of a track because tracks are associated with a specific source. Favourites may match with multiple tracks. Specified with criteria that will be used to match the tracks.
-    url: "definitions/output/favourite.json"
   - title: "Output / Playlist"
     desc: >
-      Just like favourites, does not refer to specific tracks. Can also be considered a collection which is basically an unordered playlist.
-    todo: true
+      Represents a collection of tracks, which may be ordered or unordered. Tracks are matched based on the given criteria.
+    url: "definitions/output/playlist.json"
   - title: "Output / Progress"
     desc: >
       Used to track progress of (long) audio playback.
