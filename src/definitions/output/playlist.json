@@ -1,0 +1,75 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.playlist",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["collection", "items", "name"],
+        "nullable": ["autoGenerate"],
+        "properties": {
+          "autoGenerate": {
+            "type": "ref",
+            "ref": "#autoGenerate"
+          },
+          "collection": {
+            "type": "boolean",
+            "default": false,
+            "description": "If this property is set to true, the playlist items should not be presented in order. It's considered a collection of tracks."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "ref",
+              "ref": "#item"
+            }
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "autoGenerate": {
+      "type": "object",
+      "description": "Auto-generate the items of the playlist, overriding the included items. If this property is set, the playlist should always be treated as a collection.",
+      "required": ["criteria"],
+      "properties": {
+        "criteria": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#criterion" }
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "required": ["field", "value"],
+      "properties": {
+        "field": { "type": "string" },
+        "transformations": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#transformation" }
+        },
+        "value": {
+          "type": "unknown",
+          "description": "Value that should be matched belonging to the given field"
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["criteria"],
+      "properties": {
+        "criteria": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#criterion" }
+        }
+      }
+    },
+    "transformation": {
+      "type": "string",
+      "description": "Transformation to apply to the field value before comparison"
+    }
+  }
+}

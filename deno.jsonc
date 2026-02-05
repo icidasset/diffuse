@@ -139,6 +139,7 @@
     // .ts
     "./definitions/types/sh/diffuse/output/constituent.ts": "./src/definitions/types/sh/diffuse/output/constituent.ts",
     "./definitions/types/sh/diffuse/output/favourite.ts": "./src/definitions/types/sh/diffuse/output/favourite.ts",
+    "./definitions/types/sh/diffuse/output/playlist.ts": "./src/definitions/types/sh/diffuse/output/playlist.ts",
     "./definitions/types/sh/diffuse/output/track.ts": "./src/definitions/types/sh/diffuse/output/track.ts",
   },
   "tasks": {
