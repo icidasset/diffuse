@@ -25,17 +25,27 @@ if (!listEl) throw new Error("List element not found");
 const output = foundation.orchestrator.output();
 
 effect(() => {
-  const col = output.constituents.collection();
+  const col = output.constituents.collection().sort((a, b) => {
+    return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
+  });
 
   const h = col.length
     ? html`
       <ul>
         ${col.map((c) =>
           html`
-            <li>
+            <li style="margin-bottom: var(--space-2xs)">
               <a href="themes/loader/constituent/s/?cid=${c.cid}">
                 ${c.name}
               </a>
+              <br />
+              <small>
+                <span @click="${deleteConstituent(
+                  c.cid,
+                )}" style="cursor: pointer;">
+                  Delete
+                </span>
+              </small>
             </li>
           `
         )}
@@ -56,6 +66,17 @@ const emptyConstituentsList = html`
     or create some using the tools below.
   </p>
 `;
+
+/**
+ * @param {string} cid
+ */
+function deleteConstituent(cid) {
+  return () => {
+    output.constituents.save(
+      output.constituents.collection().filter((c) => c.cid !== cid),
+    );
+  };
+}
 
 ////////////////////////////////////////////
 // BUILD
@@ -133,11 +154,21 @@ async function onBuildSubmit(event) {
       break;
     }
     case "save":
-      await output.constituents.save([constituent]);
+      await saveConstituent(constituent);
       break;
     case "save+open":
-      await output.constituents.save([constituent]);
+      await saveConstituent(constituent);
       window.open(`${location.href}s/?cid=${constituent.cid}`, "blank");
       break;
   }
+}
+
+/**
+ * @param {Constituent} constituent
+ */
+async function saveConstituent(constituent) {
+  const col = output.constituents.collection();
+  const colWithoutName = col.filter((c) => c.name !== constituent.name);
+
+  await output.constituents.save([...colWithoutName, constituent]);
 }

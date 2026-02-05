@@ -1,0 +1,37 @@
+<main>
+  <button>Generate playlist</button>
+  <ol></ol>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/page.css";
+</style>
+
+<script type="module">
+  import foundation from "./common/constituents/foundation.js";
+
+  const queue = foundation.engine.queue();
+
+  /**
+   * Playlist generator
+   */
+  function generatePlaylist(items) {
+    const playlist = [
+      ...queue.past(),
+      ...(queue.now() ? [queue.now()] : []),
+      ...queue.future().filter((i) => i.manualEntry),
+    ];
+
+    const element = document.querySelector("main ol");
+    if (!element) return;
+
+    element.innerHTML = playlist
+      .map((item) => `<li>${item.tags.artist} - ${item.tags.title}</li>`)
+      .join("");
+  }
+
+  document.body.querySelector("button").onclick = () => {
+    generatePlaylist();
+  };
+</script>
