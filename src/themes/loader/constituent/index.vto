@@ -147,25 +147,25 @@ scripts:
         <li>
           <span>Fill the queue automatically <small>(infinite play)</small></span>
           <div class="list-description">
-            <code>foundation.feature.fillQueueAutomatically()</code>
+            <code>foundation.features.fillQueueAutomatically()</code>
           </div>
         </li>
         <li>
           <span>Play audio from the queue</span>
           <div class="list-description">
-            <code>foundation.feature.playAudioFromQueue()</code>
+            <code>foundation.features.playAudioFromQueue()</code>
           </div>
         </li>
         <li>
           <span>Process inputs <small>(into tracks, etc)</small></span>
           <div class="list-description">
-            <code>foundation.feature.processInputs()</code>
+            <code>foundation.features.processInputs()</code>
           </div>
         </li>
         <li>
           <span>Search through your collection</span>
           <div class="list-description" style="margin-bottom: 0;">
-            <code>foundation.feature.searchThroughCollection()</code>
+            <code>foundation.features.searchThroughCollection()</code>
           </div>
         </li>
       </ul>
@@ -174,7 +174,7 @@ scripts:
         While you have the ability to do whatever you want in a custom constituent, the existing constituents are designed to work a certain way; so here's some things to keep in mind:
       </p>
       <ul>
-        <li><span>In most cases you'll want to call <code>foundation.feature.processInputs()</code> so that your audio files and streams actually show up.</span></li>
+        <li><span>In most cases you'll want to call <code>foundation.features.processInputs()</code> so that your audio files and streams actually show up.</span></li>
         <li><span>Most elements are configured in broadcast mode so they communicate across tabs. There are a few exceptions such as inputs, where we prefer parallelisation.</span></li>
       </ul>
     </section>
