@@ -1,5 +1,6 @@
 <main>
-  <button>Generate playlist</button>
+  <p>Generate a playlist based on playback history:</p>
+  <button>Create</button>
   <ol></ol>
 </main>
 

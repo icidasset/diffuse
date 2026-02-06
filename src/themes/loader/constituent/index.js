@@ -92,14 +92,29 @@ if (!editorContainer) throw new Error("Editor container not found");
 const editor = new EditorView({
   parent: editorContainer,
   doc: `
+<main>
+  <h1 id="now-playing">
+    Waiting on tracks &amp; queue to load ...
+  </h1>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/page.css";
+</style>
+
 <script type="module">
   import foundation from "./common/constituents/foundation.js";
   import { effect } from "./common/signal.js";
 
-  const components = foundation.assemblage.queueManagement();
+  const components = foundation.features.fillQueueAutomatically();
+  const myHtmlElement = document.querySelector("#now-playing");
 
   effect(() => {
     const currentlyPlaying = components.engine.queue.now();
+    if (currentlyPlaying && myHtmlElement) {
+      myHtmlElement.innerText = \`\$\{currentlyPlaying.tags.artist} - \$\{currentlyPlaying.tags.title}\`;
+    }
   })
 </script>
   `.trim(),

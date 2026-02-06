@@ -1,5 +1,5 @@
 <main>
-  <div id="now-playing">Loading tracks ...</div>
+  <p id="now-playing">Loading tracks ...</p>
   <button>⏭</button>
 </main>
 
@@ -12,11 +12,14 @@
   import foundation from "./common/constituents/foundation.js";
   import { computed, effect } from "./common/signal.js";
 
-  const components = foundation.assemblage.queueManagement();
-  const queue = components.engine.queue;
+  foundation.features.processInputs();
+  foundation.features.fillQueueAutomatically();
+
+  const output = foundation.orchestrator.output();
+  const queue = foundation.engine.queue();
 
   const isLoadingTracks = computed(() => {
-    return components.orchestrator.output.tracks.state() !== "loaded";
+    return output.tracks.state() !== "loaded";
   });
 
   effect(() => {
