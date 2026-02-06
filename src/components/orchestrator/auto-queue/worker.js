@@ -16,7 +16,7 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
  * @type {ActionsWithTunnel<Actions>["poolAvailable"]}
  */
 export async function poolAvailable({ data, ports }) {
-  const cachedTracks = data.filter((t) => t.kind !== "placeholder");
+  const cachedTracks = data.tracks.filter((t) => t.kind !== "placeholder");
 
   /** @type {ProxiedActions<InputActions>} */
   const input = workerProxy(() => ports.input);

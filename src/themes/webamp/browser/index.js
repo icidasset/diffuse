@@ -1,13 +1,19 @@
 import foundation from "@common/constituents/foundation.js";
 import BrowserElement from "@themes/webamp/browser/element.js";
 
-const que = foundation.assemblage.queueManagement();
-const sea = foundation.assemblage.searchThroughCollection();
+foundation.features.fillQueueAutomatically();
+foundation.features.processInputs();
+foundation.features.searchThroughCollection();
+
+const inp = foundation.orchestrator.input();
+const out = foundation.orchestrator.output();
+const que = foundation.engine.queue();
+const sea = foundation.processor.search();
 
 const el = new BrowserElement();
-el.setAttribute("input-selector", que.orchestrator.input.selector);
-el.setAttribute("output-selector", que.orchestrator.output.selector);
-el.setAttribute("queue-engine-selector", que.engine.queue.selector);
-el.setAttribute("search-processor-selector", sea.processor.search.selector);
+el.setAttribute("input-selector", inp.selector);
+el.setAttribute("output-selector", out.selector);
+el.setAttribute("queue-engine-selector", que.selector);
+el.setAttribute("search-processor-selector", sea.selector);
 
 document.querySelector("#placeholder")?.replaceWith(el);

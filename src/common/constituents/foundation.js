@@ -1,13 +1,13 @@
 import ArtworkProcessor from "@components/processor/artwork/element.js";
 import AudioEngine from "@components/engine/audio/element.js";
+import AutoQueueOrchestrator from "@components/orchestrator/auto-queue/element.js";
 import Queue from "@components/engine/queue/element.js";
 import InputOrchestrator from "@components/orchestrator/input/element.js";
 import OutputOrchestrator from "@components/orchestrator/output/element.js";
 import MetadataProcessor from "@components/processor/metadata/element.js";
 import ProcessTracksOrchestrator from "@components/orchestrator/process-tracks/element.js";
 import QueueAudioOrchestrator from "@components/orchestrator/queue-audio/element.js";
-import QueueTracksOrchestrator from "@components/orchestrator/queue-tracks/element.js";
-import RepeatShuffleOrchestrator from "@components/orchestrator/repeat-shuffle/element.js";
+import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js";
 import SearchProcessor from "@components/processor/search/element.js";
 import SearchTracksOrchestrator from "@components/orchestrator/search-tracks/element.js";
 import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
@@ -24,10 +24,10 @@ export const GROUP = "constituents";
 export const config = {
   GROUP,
 
-  /* Some predefined activity groups */
-  assemblage: {
+  features: {
+    fillQueueAutomatically,
     playAudioFromQueue,
-    queueManagement,
+    processInputs,
     searchThroughCollection,
   },
 
@@ -35,14 +35,14 @@ export const config = {
   engine: {
     audio,
     queue,
+    repeatShuffle,
   },
   orchestrator: {
+    autoQueue,
     input,
     output,
     queueAudio,
-    queueTracks,
     processTracks,
-    repeatShuffle,
     searchTracks,
     sources,
   },
@@ -57,33 +57,38 @@ export default config;
 
 // 📦️
 
-function playAudioFromQueue() {
-  const base = queueManagement();
-
+function fillQueueAutomatically() {
   return {
-    ...base,
     engine: {
-      ...base.engine,
-      audio: audio(),
+      queue: queue(),
+      repeatShuffle: repeatShuffle(),
     },
     orchestrator: {
-      ...base.orchestrator,
+      autoQueue: autoQueue(),
+      input: input(),
+      output: output(),
+    },
+  };
+}
+
+function playAudioFromQueue() {
+  return {
+    engine: {
+      audio: audio(),
+      queue: queue(),
+    },
+    orchestrator: {
       queueAudio: queueAudio(),
     },
   };
 }
 
-function queueManagement() {
+function processInputs() {
   return {
-    engine: {
-      queue: queue(),
-    },
     orchestrator: {
       input: input(),
       output: output(),
       processTracks: processTracks(),
-      queueTracks: queueTracks(),
-      repeatShuffle: repeatShuffle(),
     },
     processor: {
       metadata: metadata(),
@@ -143,6 +148,22 @@ function search() {
 }
 
 // Orchestrators
+function autoQueue() {
+  const i = input();
+  const o = output();
+  const q = queue();
+  const r = repeatShuffle();
+
+  const aqo = new AutoQueueOrchestrator();
+  aqo.setAttribute("group", GROUP);
+  aqo.setAttribute("input-selector", i.selector);
+  aqo.setAttribute("output-selector", o.selector);
+  aqo.setAttribute("queue-engine-selector", q.selector);
+  aqo.setAttribute("repeat-shuffle-engine-selector", r.selector);
+
+  return findExistingOrAdd(aqo);
+}
+
 function input() {
   const i = new InputOrchestrator();
   i.setAttribute("group", GROUP);
@@ -178,38 +199,23 @@ function queueAudio() {
   const a = audio();
   const i = input();
   const q = queue();
+  const r = repeatShuffle();
 
   const oqa = new QueueAudioOrchestrator();
   oqa.setAttribute("group", GROUP);
   oqa.setAttribute("audio-engine-selector", a.selector);
   oqa.setAttribute("input-selector", i.selector);
   oqa.setAttribute("queue-engine-selector", q.selector);
+  oqa.setAttribute("repeat-shuffle-engine-selector", r.selector);
 
   return findExistingOrAdd(oqa);
 }
 
-function queueTracks() {
-  const i = input();
-  const o = output();
-  const q = queue();
-
-  const oqt = new QueueTracksOrchestrator();
-  oqt.setAttribute("group", GROUP);
-  oqt.setAttribute("input-selector", i.selector);
-  oqt.setAttribute("output-selector", o.selector);
-  oqt.setAttribute("queue-engine-selector", q.selector);
-
-  return findExistingOrAdd(oqt);
-}
-
 function repeatShuffle() {
-  const q = queue();
+  const rse = new RepeatShuffleEngine();
+  rse.setAttribute("group", GROUP);
 
-  const ors = new RepeatShuffleOrchestrator();
-  ors.setAttribute("group", GROUP);
-  ors.setAttribute("queue-engine-selector", q.selector);
-
-  return findExistingOrAdd(ors);
+  return findExistingOrAdd(rse);
 }
 
 function searchTracks() {

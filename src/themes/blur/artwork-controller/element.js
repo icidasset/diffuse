@@ -22,7 +22,7 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @import AudioEngine from "@components/engine/audio/element.js"
  * @import QueueEngine from "@components/engine/queue/element.js"
  * @import ArtworkProcessor from "@components/processor/artwork/element.js"
- * @import RepeatShuffleOrchestrator from "@components/orchestrator/repeat-shuffle/element.js"
+ * @import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js"
  */
 
 class ArtworkController extends DiffuseElement {
@@ -58,7 +58,7 @@ class ArtworkController extends DiffuseElement {
   $audio = signal(/** @type {AudioEngine | undefined} */ (undefined));
   $input = signal(/** @type {InputElement | undefined} */ (undefined));
   $queue = signal(/** @type {QueueEngine | undefined} */ (undefined));
-  $repeatShuffle = signal(/** @type {RepeatShuffleOrchestrator | undefined} */ (undefined));
+  $repeatShuffle = signal(/** @type {RepeatShuffleEngine | undefined} */ (undefined));
 
   // SIGNALS - COMPUTED
 
@@ -91,8 +91,8 @@ class ArtworkController extends DiffuseElement {
     /** @type {QueueEngine} */
     const queue = query(this, "queue-engine-selector");
 
-    /** @type {RepeatShuffleOrchestrator} */
-    const repeatShuffle = query(this, "repeat-shuffle-orchestrator-selector");
+    /** @type {RepeatShuffleEngine} */
+    const repeatShuffle = query(this, "repeat-shuffle-engine-selector");
 
     this.$artwork.value = artwork;
     this.$audio.value = audio;

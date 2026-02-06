@@ -40,9 +40,10 @@ effect(() => {
               </a>
               <br />
               <small>
-                <span @click="${deleteConstituent(
-                  c.cid,
-                )}" style="cursor: pointer;">
+                <span @click="${deleteConstituent({
+                  cid: c.cid,
+                  name: c.name,
+                })}" style="cursor: pointer;">
                   Delete
                 </span>
               </small>
@@ -68,12 +69,14 @@ const emptyConstituentsList = html`
 `;
 
 /**
- * @param {string} cid
+ * @param {{ cid: string; name: string }} _
  */
-function deleteConstituent(cid) {
+function deleteConstituent({ cid, name }) {
   return () => {
     output.constituents.save(
-      output.constituents.collection().filter((c) => c.cid !== cid),
+      output.constituents.collection().filter((c) =>
+        !(c.name === name && c.cid === cid)
+      ),
     );
   };
 }

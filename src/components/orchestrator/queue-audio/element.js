@@ -1,8 +1,9 @@
 import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { signal, untracked } from "@common/signal.js";
+import { untracked } from "@common/signal.js";
 
 /**
  * @import {InputElement} from "@components/input/types.d.ts"
+ * @import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js"
  */
 
 ////////////////////////////////////////////
@@ -18,11 +19,6 @@ import { signal, untracked } from "@common/signal.js";
  */
 class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/queue-audio";
-  static observedAttributes = ["repeat"];
-
-  // SIGNALS
-
-  #repeat = signal(false);
 
   // LIFE CYCLE
 
@@ -30,8 +26,6 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
    * @override
    */
   async connectedCallback() {
-    this.#repeat.value = this.hasAttribute("repeat");
-
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       this.broadcast(this.nameWithGroup, {});
@@ -49,28 +43,18 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     /** @type {import("@components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-engine-selector");
 
+    /** @type {RepeatShuffleEngine} */
+    this.repeatShuffle = query(this, "repeat-shuffle-engine-selector");
+
     // Wait until defined
     await customElements.whenDefined(this.audio.localName);
     await customElements.whenDefined(this.input.localName);
     await customElements.whenDefined(this.queue.localName);
+    await customElements.whenDefined(this.repeatShuffle.localName);
 
     // Effects
     this.effect(() => this.monitorActiveQueueItem());
     this.effect(() => this.monitorAudioEnd());
-  }
-
-  /**
-   * @override
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   */
-  attributeChangedCallback(name, oldValue, newValue) {
-    super.attributeChangedCallback(name, oldValue, newValue);
-
-    if (name === "repeat") {
-      this.#repeat.value = newValue != null;
-    }
   }
 
   // 🛠️
@@ -126,7 +110,7 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
       // TODO: Not sure yet if this is the best way to approach this.
       //       The idea is that scrobblers would more easily pick this up,
       //       as opposed to just resetting the audio.
-      if (this.#repeat.value) {
+      if (this.repeatShuffle?.repeat()) {
         const now = this.queue.now();
         if (now) {
           await this.queue.add({

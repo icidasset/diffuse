@@ -1,12 +1,12 @@
-import { BroadcastableDiffuseElement, query } from "@common/element.js";
+import { BroadcastableDiffuseElement } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
 
-class RepeatShuffleOrchestrator extends BroadcastableDiffuseElement {
-  static NAME = "diffuse/orchestrator/repeat-shuffle";
+class RepeatShuffleEngine extends BroadcastableDiffuseElement {
+  static NAME = "diffuse/engine/repeat-shuffle";
 
   // SIGNALS
 
@@ -21,21 +21,22 @@ class RepeatShuffleOrchestrator extends BroadcastableDiffuseElement {
   /**
    * @override
    */
-  async connectedCallback() {
+  connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      // TODO: Replicate state (repeat & shuffle)
-      this.broadcast(this.nameWithGroup, {});
+      const actions = this.broadcast(this.nameWithGroup, {
+        setRepeat: { strategy: "replicate", fn: this.setRepeat },
+        setShuffle: { strategy: "replicate", fn: this.setShuffle },
+      });
+
+      if (actions) {
+        this.setRepeat = actions.setRepeat;
+        this.setShuffle = actions.setShuffle;
+      }
     }
 
     // Super
     super.connectedCallback();
-
-    /** @type {import("@components/engine/queue/element.js").CLASS} */
-    const queue = query(this, "queue-engine-selector");
-
-    // Assign to self
-    this.queue = queue;
 
     // Signals
     const storagePrefix =
@@ -48,22 +49,7 @@ class RepeatShuffleOrchestrator extends BroadcastableDiffuseElement {
         ? true
         : false;
 
-    // Wait until defined
-    await customElements.whenDefined(queue.localName);
-
     // Effects
-    this.effect(() => {
-      const trigger = queue.now();
-      const _other_trigger = queue.supplyFingerprint();
-
-      this.isLeader().then((isLeader) => {
-        if (!isLeader) return;
-        // TODO: What happens when shuffle changes here? Need to reset queue probably.
-        queue.fill({ amount: 10, shuffled: this.#shuffle.value });
-        if (!trigger) queue.shift();
-      });
-    });
-
     this.effect(() =>
       localStorage.setItem(
         `${storagePrefix}/repeat`,
@@ -82,19 +68,19 @@ class RepeatShuffleOrchestrator extends BroadcastableDiffuseElement {
   // ACTIONS
 
   /** @param {boolean} bool */
-  setRepeat = (bool) => this.#repeat.value = bool;
+  setRepeat = async (bool) => this.#repeat.value = bool;
 
   /** @param {boolean} bool */
-  setShuffle = (bool) => this.#shuffle.value = bool;
+  setShuffle = async (bool) => this.#shuffle.value = bool;
 }
 
-export default RepeatShuffleOrchestrator;
+export default RepeatShuffleEngine;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = RepeatShuffleOrchestrator;
-export const NAME = "do-repeat-shuffle";
+export const CLASS = RepeatShuffleEngine;
+export const NAME = "de-repeat-shuffle";
 
 customElements.define(NAME, CLASS);

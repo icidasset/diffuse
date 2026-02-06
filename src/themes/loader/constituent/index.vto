@@ -112,7 +112,7 @@ scripts:
       <h2 id="foundation" style="margin-top: 0;">Foundation</h2>
 
       <p>
-        Diffuse comes with a foundation that preconfigures all elements so you don't have to set them up yourself, along with an assemblage of elements for certain activities. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times.
+        Diffuse comes with a foundation that preconfigures all elements so you don't have to set them up yourself, along with a combination of elements for certain features. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times.
       </p>
       <p>
         <small><i class="ph-fill ph-info"></i> Refer to the <a href="#elements">elements index</a> to find out what each element does.</small>
@@ -124,13 +124,13 @@ scripts:
           {{ /echo }}
 {{ echo -}}foundation.engine.audio(){{- /echo }}
 {{ echo -}}foundation.engine.queue(){{- /echo }}
+{{ echo -}}foundation.engine.repeatShuffle(){{- /echo }}
 
+{{ echo -}}foundation.orchestrator.autoQueue(){{- /echo }}
 {{ echo -}}foundation.orchestrator.input(){{- /echo }}
 {{ echo -}}foundation.orchestrator.output(){{- /echo }}
 {{ echo -}}foundation.orchestrator.queueAudio(){{- /echo }}
-{{ echo -}}foundation.orchestrator.queueTracks(){{- /echo }}
 {{ echo -}}foundation.orchestrator.processTracks(){{- /echo }}
-{{ echo -}}foundation.orchestrator.repeatShuffle(){{- /echo }}
 {{ echo -}}foundation.orchestrator.searchTracks(){{- /echo }}
 {{ echo -}}foundation.orchestrator.sources(){{- /echo }}
 
@@ -141,27 +141,41 @@ scripts:
       </div>
 
       <p>
-        <small>Assemblages:</small>
+        <small>Features:</small>
       </p>
       <ul style="margin-bottom: 0;">
         <li>
-          <span>Play audio from the queue</span>
+          <span>Fill the queue automatically <small>(infinite play)</small></span>
           <div class="list-description">
-            <code>foundation.assemblage.playAudioFromQueue()</code>
+            <code>foundation.feature.fillQueueAutomatically()</code>
           </div>
         </li>
         <li>
-          <span>Queue management</span>
+          <span>Play audio from the queue</span>
           <div class="list-description">
-            <code>foundation.assemblage.queueManagement()</code>
+            <code>foundation.feature.playAudioFromQueue()</code>
+          </div>
+        </li>
+        <li>
+          <span>Process inputs <small>(into tracks, etc)</small></span>
+          <div class="list-description">
+            <code>foundation.feature.processInputs()</code>
           </div>
         </li>
         <li>
           <span>Search through your collection</span>
           <div class="list-description" style="margin-bottom: 0;">
-            <code>foundation.assemblage.searchThroughCollection()</code>
+            <code>foundation.feature.searchThroughCollection()</code>
           </div>
         </li>
+      </ul>
+      <h3>Notes</h3>
+      <p>
+        While you have the ability to do whatever you want in a custom constituent, the existing constituents are designed to work a certain way; so here's some things to keep in mind:
+      </p>
+      <ul>
+        <li><span>In most cases you'll want to call <code>foundation.feature.processInputs()</code> so that your audio files and streams actually show up.</span></li>
+        <li><span>Most elements are configured in broadcast mode so they communicate across tabs. There are a few exceptions such as inputs, where we prefer parallelisation.</span></li>
       </ul>
     </section>
 
