@@ -67,7 +67,10 @@ engines:
     desc: "Plays audio through audio elements."
   - url: "components/engine/queue/element.js"
     title: "Queue"
-    desc: "A simple queue for tracks."
+    desc: "A queue for tracks."
+  - url: "components/engine/repeat-shuffle/element.js"
+    title: "Repeat & Shuffle"
+    desc: "Signals synced with local storage (classified by group) that decide if audio should be repeated and if the queue should be shuffled when filling it."
 
 input:
   - url: "components/input/opensubsonic/element.js"
@@ -96,6 +99,9 @@ input:
     todo: true
 
 orchestrators:
+  - url: "components/orchestrator/auto-queue/element.js"
+    title: "Automatic queue"
+    desc: "Sets the given queue element pool whenever the tracks signal from the given output changes. Additionally it always fills the queue automatically based (shuffled or regular, based on repeat-shuffle engine)."
   - url: "components/orchestrator/input/element.js"
     title: "Input"
     desc: "**A default input configuration.** Contains all the inputs provided here."
@@ -108,12 +114,6 @@ orchestrators:
   - url: "components/orchestrator/queue-audio/element.js"
     title: "Queue ⭤ Audio"
     desc: "Connects the given queue engine to the given audio engine."
-  - url: "components/orchestrator/queue-tracks/element.js"
-    title: "Queue ⭤ Tracks"
-    desc: "Sets the given queue element pool whenever the tracks signal from the given output changes."
-  - url: "components/orchestrator/repeat-shuffle/element.js"
-    title: "Repeat & Shuffle"
-    desc: "An opinionated way to setup repeat & shuffle."
   - url: "components/orchestrator/sources/element.js"
     title: "Sources"
     desc: "Monitor tracks from the given output to form a list of sources based on the input's sources return value."
