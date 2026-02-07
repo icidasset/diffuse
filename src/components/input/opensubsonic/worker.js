@@ -260,10 +260,6 @@ export async function resolve({ uri }) {
   const songId = parsed.songId;
   if (!songId) return undefined;
 
-  // TODO:
-  // const expiresInSeconds = 60 * 60 * 24 * 7; // 7 days
-  // const expiresAtSeconds = Math.round(Date.now() / 1000) + expiresInSeconds;
-
   const url = await client
     .stream({
       id: songId,

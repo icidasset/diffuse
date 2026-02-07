@@ -18,10 +18,6 @@ main {
   height: 100dvh;
   overflow: hidden;
   padding: var(--space-md) var(--space-md);
-
-  /* TODO: & iframe {
-    border-radius: 6px;
-  }*/
 }
 
 /***********************************

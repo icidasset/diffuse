@@ -39,6 +39,15 @@ export function add({ inFront, tracks }) {
 }
 
 /**
+ * @type {Actions['clear']}
+ */
+export function clear({ manualOnly }) {
+  $future.value = manualOnly
+    ? $future.value.filter((i) => i.manualEntry === true)
+    : [];
+}
+
+/**
  * @type {Actions['fill']}
  */
 export function fill({ augment, amount, shuffled }) {
@@ -90,6 +99,7 @@ ostiary((context, _firstConnection, _connectionId) => {
 
   rpc(context, {
     add,
+    clear,
     fill,
     shift,
     supply,

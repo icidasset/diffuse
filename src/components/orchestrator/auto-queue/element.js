@@ -87,12 +87,22 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
     });
 
     // Automatically fill queue
+    let lastShuffle = repeatShuffle.shuffle();
+
     this.effect(() => {
       const trigger = queue.now();
       const _other_trigger = queue.supplyFingerprint();
+      const shuffled = repeatShuffle.shuffle();
 
       this.isLeader().then((isLeader) => {
         if (!isLeader) return;
+
+        // Clear non-manual items from the queue
+        // when 'shuffle' gets turned off or on.
+        if (shuffled !== lastShuffle) {
+          lastShuffle = shuffled;
+          queue.clear({ manualOnly: true });
+        }
 
         queue.fill({ amount: 10, shuffled: repeatShuffle.shuffle() });
 
@@ -100,9 +110,6 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
         if (!trigger) queue.shift();
       });
     });
-
-    // TODO: Clear non-manual items from the queue
-    //       when 'shuffle' gets turned off or on.
   }
 
   // WORKERS
