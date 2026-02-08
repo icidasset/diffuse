@@ -171,17 +171,11 @@ styles:
   process-when-ready
 ></do-process-tracks>
 
-<do-queue-tracks
-  input-selector="#input"
-  output-selector="#output"
-  queue-engine-selector="de-queue"
-></do-queue-tracks>
-
-<do-search-tracks
+<do-scoped-tracks
   input-selector="#input"
   output-selector="#output"
   search-processor-selector="dp-search"
-></do-search-tracks>
+></do-scoped-tracks>
 
 <do-sources
   input-selector="#input"

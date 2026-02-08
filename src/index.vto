@@ -75,6 +75,10 @@ engines:
   - url: "components/engine/repeat-shuffle/element.js"
     title: "Repeat & Shuffle"
     desc: "Signals synced with local storage (classified by group) that decide if audio should be repeated and if the queue should be shuffled when filling it."
+  - url: "components/engine/scope/element.js"
+    title: "Scope"
+    desc: >
+      Signals that could influence the scope of a set of tracks.
 
 input:
   - url: "components/input/opensubsonic/element.js"
@@ -105,7 +109,7 @@ input:
 orchestrators:
   - url: "components/orchestrator/auto-queue/element.js"
     title: "Automatic queue"
-    desc: "Sets the given queue element pool whenever the tracks signal from the given output changes. Additionally it always fills the queue automatically based (shuffled or regular, based on repeat-shuffle engine)."
+    desc: > Fill the queue automatically with non-manual items (shuffled or regular, based on repeat-shuffle engine).
   - url: "components/orchestrator/input/element.js"
     title: "Input"
     desc: "**A default input configuration.** Contains all the inputs provided here."
@@ -121,9 +125,9 @@ orchestrators:
   - url: "components/orchestrator/sources/element.js"
     title: "Sources"
     desc: "Monitor tracks from the given output to form a list of sources based on the input's sources return value."
-  - url: "components/orchestrator/search-tracks/element.js"
-    title: "Search ⭤ Tracks"
-    desc: "Supplies tracks to the given search processor whenever the tracks collection changes."
+  - url: "components/orchestrator/scoped-tracks/element.js"
+    title: "Scoped Tracks"
+    desc: "Supplies the tracks from the given output to the given search processor whenever the tracks collection changes. Additionally it can perform a search and other ways to reduce the scope of tracks based on the given scope engine. Provides a `tracks` signal similar to `output.tracks.collection`"
 
 output:
   - title: "Bytes / Automerge Repo"

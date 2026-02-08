@@ -518,8 +518,24 @@ export function query(parent, attribute) {
   /** @type {T | null} */
   const element = document.querySelector(selector);
   if (!element) throw new Error(`Missing required '${selector}' element`);
-
   return element;
+}
+
+/**
+ * @template {HTMLElement} T
+ * @param {DiffuseElement} parent
+ * @param {string} attribute
+ */
+export function queryOptional(parent, attribute) {
+  const selector = parent.getAttribute(attribute);
+
+  if (!selector) {
+    return null;
+  }
+
+  /** @type {T | null} */
+  const elementOrNull = document.querySelector(selector);
+  return elementOrNull;
 }
 
 /**

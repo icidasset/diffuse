@@ -9,7 +9,8 @@ import ProcessTracksOrchestrator from "@components/orchestrator/process-tracks/e
 import QueueAudioOrchestrator from "@components/orchestrator/queue-audio/element.js";
 import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js";
 import SearchProcessor from "@components/processor/search/element.js";
-import SearchTracksOrchestrator from "@components/orchestrator/search-tracks/element.js";
+import ScopeEngine from "@components/engine/scope/element.js";
+import ScopedTracksOrchestrator from "@components/orchestrator/scoped-tracks/element.js";
 import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
 
 /**
@@ -36,6 +37,7 @@ export const config = {
     audio,
     queue,
     repeatShuffle,
+    scope,
   },
   orchestrator: {
     autoQueue,
@@ -43,7 +45,7 @@ export const config = {
     output,
     queueAudio,
     processTracks,
-    searchTracks,
+    scopedTracks,
     sources,
   },
   processor: {
@@ -62,11 +64,13 @@ function fillQueueAutomatically() {
     engine: {
       queue: queue(),
       repeatShuffle: repeatShuffle(),
+      scope: scope(),
     },
     orchestrator: {
       autoQueue: autoQueue(),
       input: input(),
       output: output(),
+      scopedTracks: scopedTracks(),
     },
   };
 }
@@ -98,9 +102,12 @@ function processInputs() {
 
 function searchThroughCollection() {
   return {
+    engine: {
+      scope: scope(),
+    },
     orchestrator: {
       output: output(),
-      searchTracks: searchTracks(),
+      scopedTracks: scopedTracks(),
     },
     processor: {
       search: search(),
@@ -123,6 +130,20 @@ function queue() {
   q.setAttribute("group", GROUP);
 
   return findExistingOrAdd(q);
+}
+
+function repeatShuffle() {
+  const r = new RepeatShuffleEngine();
+  r.setAttribute("group", GROUP);
+
+  return findExistingOrAdd(r);
+}
+
+function scope() {
+  const s = new ScopeEngine();
+  s.setAttribute("group", GROUP);
+
+  return findExistingOrAdd(s);
 }
 
 // Processors
@@ -149,17 +170,15 @@ function search() {
 
 // Orchestrators
 function autoQueue() {
-  const i = input();
-  const o = output();
   const q = queue();
   const r = repeatShuffle();
+  const t = scopedTracks();
 
   const aqo = new AutoQueueOrchestrator();
   aqo.setAttribute("group", GROUP);
-  aqo.setAttribute("input-selector", i.selector);
-  aqo.setAttribute("output-selector", o.selector);
   aqo.setAttribute("queue-engine-selector", q.selector);
   aqo.setAttribute("repeat-shuffle-engine-selector", r.selector);
+  aqo.setAttribute("tracks-selector", t.selector);
 
   return findExistingOrAdd(aqo);
 }
@@ -211,25 +230,20 @@ function queueAudio() {
   return findExistingOrAdd(oqa);
 }
 
-function repeatShuffle() {
-  const rse = new RepeatShuffleEngine();
-  rse.setAttribute("group", GROUP);
-
-  return findExistingOrAdd(rse);
-}
-
-function searchTracks() {
+function scopedTracks() {
   const i = input();
   const o = output();
+  const e = scope();
   const s = search();
 
-  const ost = new SearchTracksOrchestrator();
-  ost.setAttribute("group", GROUP);
-  ost.setAttribute("input-selector", i.selector);
-  ost.setAttribute("output-selector", o.selector);
-  ost.setAttribute("search-processor-selector", s.selector);
+  const sto = new ScopedTracksOrchestrator();
+  sto.setAttribute("group", GROUP);
+  sto.setAttribute("input-selector", i.selector);
+  sto.setAttribute("output-selector", o.selector);
+  sto.setAttribute("scope-engine-selector", e.selector);
+  sto.setAttribute("search-processor-selector", s.selector);
 
-  return findExistingOrAdd(ost);
+  return findExistingOrAdd(sto);
 }
 
 function sources() {

@@ -1,13 +1,10 @@
 import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { untracked } from "@common/signal.js";
 
 /**
- * @import {ProxiedActions} from "@common/worker.d.ts"
- * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {DiffuseElement} from "@common/element.js";
+ * @import {SignalReader} from "@common/signal.d.ts";
+ * @import {Track} from "@definitions/types.d.ts"
  * @import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js"
- *
- * @import {Actions} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -17,26 +14,9 @@ import { untracked } from "@common/signal.js";
 /**
  * Update the queue pool whenever tracks have been loaded,
  * or the tracks collection changes.
- *
- * At the same time,
  */
 class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/auto-queue";
-  static WORKER_URL = "components/orchestrator/auto-queue/worker.js";
-
-  /** @type {ProxiedActions<Actions>} */
-  #proxy;
-
-  constructor() {
-    super();
-    this.#proxy = this.workerProxy({
-      forceNew: {
-        dependencies: {
-          input: true,
-        },
-      },
-    });
-  }
 
   // LIFECYCLE
 
@@ -52,37 +32,27 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
     // Super
     super.connectedCallback();
 
-    /** @type {InputElement} */
-    const input = query(this, "input-selector");
-
-    /** @type {OutputElement} */
-    const output = query(this, "output-selector");
-
     /** @type {import("@components/engine/queue/element.js").CLASS} */
     const queue = query(this, "queue-engine-selector");
 
     /** @type {RepeatShuffleEngine} */
     const repeatShuffle = query(this, "repeat-shuffle-engine-selector");
 
-    // Assign to self
-    this.input = input;
-    this.output = output;
-    this.queue = queue;
-    this.repeatShuffle = repeatShuffle;
+    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
+    const tracksElement = query(this, "tracks-selector");
 
     // When defined
-    await customElements.whenDefined(input.localName);
-    await customElements.whenDefined(output.localName);
     await customElements.whenDefined(queue.localName);
     await customElements.whenDefined(repeatShuffle.localName);
+    await customElements.whenDefined(tracksElement.localName);
 
-    // Watch tracks collection
+    // Watch tracks
     this.effect(() => {
-      const tracks = output.tracks.collection();
+      const tracks = tracksElement.tracks();
 
       this.isLeader().then((isLeader) => {
         if (!isLeader) return;
-        untracked(() => this.#proxy.poolAvailable({ tracks }));
+        queue.supply({ tracks });
       });
     });
 
@@ -110,21 +80,6 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
         if (!trigger) queue.shift();
       });
     });
-  }
-
-  // WORKERS
-
-  /**
-   * @override
-   */
-  dependencies() {
-    if (!this.input) throw new Error("Input element not defined yet");
-    if (!this.queue) throw new Error("Queue element not defined yet");
-
-    return {
-      input: this.input,
-      queue: this.queue,
-    };
   }
 }
 

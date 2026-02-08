@@ -1,19 +1,18 @@
 import "@components/input/opensubsonic/element.js";
 import "@components/input/s3/element.js";
-import "@components/orchestrator/auto-queue/element.js";
 import "@components/orchestrator/input/element.js";
 import "@components/orchestrator/output/element.js";
 import "@components/orchestrator/process-tracks/element.js";
-import "@components/orchestrator/search-tracks/element.js";
 import "@components/orchestrator/sources/element.js";
 import "@components/processor/metadata/element.js";
 
 import * as Input from "@components/configurator/input/element.js";
 import * as Queue from "@components/engine/queue/element.js";
 import * as Search from "@components/processor/search/element.js";
+import * as ScopedTracks from "@components/orchestrator/scoped-tracks/element.js";
 
 import { component } from "@common/element.js";
-import { effect, signal, untracked } from "@common/signal.js";
+import { effect, untracked } from "@common/signal.js";
 
 import "./browser/element.js";
 import "./configurators/input/element.js";
@@ -31,6 +30,7 @@ import WebampElement from "./webamp/element.js";
 const input = component(Input);
 const queue = component(Queue);
 const search = component(Search);
+const scopedTracks = component(ScopedTracks);
 
 /** @type {OutputElement | null} */
 const output = document.querySelector("#output");
@@ -124,6 +124,13 @@ effect(() => {
     initiatedPlaylist = true;
     amp.store.dispatch({ type: "BUFFER_TRACK", id: 0 });
   }
+});
+
+/**
+ * Fill queue supply with available tracks.
+ */
+effect(() => {
+  queue.supply({ tracks: scopedTracks.tracks() });
 });
 
 /**

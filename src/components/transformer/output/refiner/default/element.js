@@ -3,7 +3,6 @@ import { OutputTransformer } from "../../base.js";
 
 /**
  * @import { OutputManagerDeputy } from "../../../../output/types.d.ts"
- * @import { Track } from "@definitions/types.d.ts"
  */
 
 /**
