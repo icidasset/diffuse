@@ -199,7 +199,11 @@ function output() {
   return findExistingOrAdd(o);
 }
 
-function processTracks() {
+/**
+ * @param {Object} opts - Options
+ * @param {boolean} [opts.disableWhenReady] - Whether to disable processing when ready.
+ */
+function processTracks(opts = { disableWhenReady: false }) {
   const i = input();
   const o = output();
   const m = metadata();
@@ -209,7 +213,10 @@ function processTracks() {
   opt.setAttribute("input-selector", i.selector);
   opt.setAttribute("output-selector", o.selector);
   opt.setAttribute("metadata-processor-selector", m.selector);
-  opt.toggleAttribute("process-when-ready");
+
+  if (!opts.disableWhenReady) {
+    opt.toggleAttribute("process-when-ready");
+  }
 
   return findExistingOrAdd(opt);
 }

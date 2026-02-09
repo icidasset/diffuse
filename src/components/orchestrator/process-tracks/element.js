@@ -2,7 +2,6 @@ import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
