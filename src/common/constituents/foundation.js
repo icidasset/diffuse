@@ -17,7 +17,8 @@ import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
  * @import { DiffuseElement } from "@toko/diffuse/common/element.js";
  */
 
-export const GROUP = "constituents";
+const url = new URL(document.location.href);
+export const GROUP = url.searchParams.get("group") ?? "constituents";
 
 /**
  * Default config for constituents.
