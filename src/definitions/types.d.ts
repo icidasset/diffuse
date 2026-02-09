@@ -10,6 +10,8 @@ export type {
   Transformation,
 } from "./types/sh/diffuse/output/playlist.ts";
 
+export type { Main as Theme } from "./types/sh/diffuse/output/theme.ts";
+
 export type {
   Main as Track,
   Stats as TrackStats,

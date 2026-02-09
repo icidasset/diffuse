@@ -2,12 +2,33 @@ import * as Automerge from "@automerge/automerge";
 import { base64 } from "iso-base/rfc4648";
 
 /**
- * @import { TracksDocument } from "./types.d.ts";
+ * @import { ConstituentsDocument, PlaylistsDocument, ThemesDocument, TracksDocument } from "./types.d.ts";
  */
+
+/** @type {Automerge.Doc<ConstituentsDocument>} */
+export const INITIAL_CONSTITUENTS_DOCUMENT = Automerge.load(
+  base64.decode(
+    "hW9Kg1fmLLcAeAEQZ2dnbV0O8AUftAeEXT1QVQHsmc9lhGh1ysz4ECa3pEUgzSZG2aF8hob78u7FqeybBQYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8KTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
+  ),
+);
+
+/** @type {Automerge.Doc<PlaylistsDocument>} */
+export const INITIAL_PLAYLISTS_DOCUMENT = Automerge.load(
+  base64.decode(
+    "hW9Kg5IPZcsAeAEQIyp0LRYp0l9bpZKWJXTPlgGtUD/lrIatFjiIwoUdtJhh/sBQFIcpPppxduoIp1ArXwYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8eTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
+  ),
+);
+
+/** @type {Automerge.Doc<ThemesDocument>} */
+export const INITIAL_THEMES_DOCUMENT = Automerge.load(
+  base64.decode(
+    "hW9Kgw5i4LcAeAEQzljXzJAwgqwMkIT3CseCywF4jHbKg9Q2XqVU26bSDj0GtjkQq1HyriZedXU+vUt5wAYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8iTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
+  ),
+);
 
 /** @type {Automerge.Doc<TracksDocument>} */
 export const INITIAL_TRACKS_DOCUMENT = Automerge.load(
   base64.decode(
-    "hW9Kg3QEcPYAeAEQhsIBj6DgCDtXSHEiZhcqigHxj0/xVpP8KdUJQ8e6qVEgaz7v6CpLuCGB58iHmx4plQYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf9Xbz8sGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
+    "hW9Kg+NQ56QAeAEQxkdUqSHSfh9+5TiM1gnDswH+Nh6PA98q+0oB013slgls/ARH8Fi5NvI9jhK2RZ1DTgYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf5eSqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
   ),
 );

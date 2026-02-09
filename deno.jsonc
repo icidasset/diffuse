@@ -149,7 +149,7 @@
     },
     "gen:defs:types": {
       "description": "Generate definition Typescript types",
-      "command": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js",
+      "command": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js && deno run -A ./tasks/replace-gen-import-extensions.ts",
     },
     "lume": {
       "description": "Run Lume command",

@@ -3,7 +3,7 @@ import { OutputTransformer } from "../../base.js";
 
 /**
  * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { Track } from "@definitions/types.d.ts"
+ * @import { Constituent, Track } from "@definitions/types.d.ts"
  */
 
 /**
@@ -17,30 +17,28 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      constituents: {
+        ...base.constituents,
+        collection: computed(() => {
+          const data = base.constituents.collection();
+          /** @type {Constituent[]} */
+          const c = parseArray(data);
+          return c;
+        }),
+        save: async (newConstituents) => {
+          const json = JSON.stringify(newConstituents);
+          const encoder = new TextEncoder();
+          const bytes = encoder.encode(json);
+          await base.constituents.save(bytes);
+        },
+      },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
-          let data = base.tracks.collection();
-
-          let json;
-
-          if (data instanceof Uint8Array) {
-            const decoder = new TextDecoder();
-            json = decoder.decode(data);
-          }
-
-          if (typeof data !== "string") json = "[]";
-          else json = data;
-
-          // Try parsing JSON
-          try {
-            return JSON.parse(json);
-          } catch (err) {
-            console.error(
-              "components/transformer/output/string/json: Failed to parse JSON",
-            );
-            return [];
-          }
+          const data = base.tracks.collection();
+          /** @type {Track[]} */
+          const c = parseArray(data);
+          return c;
         }),
         save: async (newTracks) => {
           const json = JSON.stringify(newTracks);
@@ -53,6 +51,29 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     // Assign manager properties to class
     this.tracks = manager.tracks;
+  }
+}
+
+/**
+ * @param {Uint8Array | string | undefined} data
+ */
+function parseArray(data) {
+  let json;
+
+  if (data instanceof Uint8Array) {
+    const decoder = new TextDecoder();
+    json = decoder.decode(data);
+  } else if (data === undefined) {
+    return [];
+  } else {
+    json = data;
+  }
+
+  try {
+    return JSON.parse(json);
+  } catch (err) {
+    console.error(err);
+    return [];
   }
 }
 
