@@ -35,18 +35,23 @@ effect(() => {
         ${col.map((c) =>
           html`
             <li style="margin-bottom: var(--space-2xs)">
-              <a href="themes/loader/constituent/s/?cid=${c.cid}">
-                ${c.name}
-              </a>
-              <br />
-              <small>
-                <span @click="${deleteConstituent({
-                  cid: c.cid,
-                  name: c.name,
-                })}" style="cursor: pointer;">
-                  Delete
-                </span>
-              </small>
+              <span>${c.name}</span>
+              <div class="list-description">
+                <div class="button-row">
+                  <a href="constituents/l/?cid=${c.cid}" class="button">Open</a>
+                  <button
+                    style="background-color: var(--accent-twist-2);"
+                    @click="${deleteConstituent({
+                      cid: c.cid,
+                      name: c.name,
+                    })}"
+                  >
+                    Delete
+                  </button>
+                  <!--<button style="background-color: var(--accent-twist-1);">Save</button>-->
+                  <!--<button style="background-color: var(--accent-twist-2);">Fork</button>-->
+                </div>
+              </div>
             </li>
           `
         )}
@@ -63,8 +68,7 @@ effect(() => {
 
 const emptyConstituentsList = html`
   <p style="margin-bottom: 0;">
-    <i class="ph-fill ph-info"></i> You have not added any constituents yet. Add
-    or create some using the tools below.
+    <i class="ph-fill ph-info"></i> You have not saved any constituents yet.
   </p>
 `;
 
@@ -73,6 +77,9 @@ const emptyConstituentsList = html`
  */
 function deleteConstituent({ cid, name }) {
   return () => {
+    const c = confirm("Are you sure you want to delete this constituent?");
+    if (!c) return;
+
     output.constituents.save(
       output.constituents.collection().filter((c) =>
         !(c.name === name && c.cid === cid)
@@ -161,9 +168,7 @@ async function onBuildSubmit(event) {
       const selected = document.body.querySelector("#example-select");
 
       if (selected?.value) {
-        const text = await fetch(
-          `themes/loader/constituent/examples/${selected.value}`,
-        ).then((r) => r.text());
+        const text = await fetch(selected.value).then((r) => r.text());
 
         editor.dispatch({
           changes: { from: 0, to: editor.state.doc.length, insert: text },
@@ -176,7 +181,7 @@ async function onBuildSubmit(event) {
       break;
     case "save+open":
       await saveConstituent(constituent);
-      window.open(`${location.href}s/?cid=${constituent.cid}`, "blank");
+      window.open(`./constituents/l/?cid=${constituent.cid}`, "blank");
       break;
   }
 }

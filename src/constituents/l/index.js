@@ -1,3 +1,5 @@
+import * as CID from "@atcute/cid";
+
 import foundation from "@common/constituents/foundation.js";
 import { effect } from "@common/signal.js";
 
@@ -15,10 +17,11 @@ const output = foundation.orchestrator.output();
 // URL PARAMS
 ////////////////////////////////////////////
 
-const url = new URL(document.location.href);
+const docUrl = new URL(document.location.href);
 
-const cid = url.searchParams.get("cid");
-const name = url.searchParams.get("name");
+const cid = docUrl.searchParams.get("cid");
+const name = docUrl.searchParams.get("name");
+const url = docUrl.searchParams.get("url");
 
 ////////////////////////////////////////////
 // LOAD
@@ -29,7 +32,7 @@ if (!containerNull) throw new Error("Container not found");
 
 const container = /** @type {HTMLDivElement} */ (containerNull);
 
-effect(() => {
+effect(async () => {
   const collection = output.constituents.collection();
   if (output.constituents.state() !== "loaded") return;
 
@@ -39,6 +42,20 @@ effect(() => {
     constituent = collection.find((c) => c.cid === cid);
   } else if (name) {
     constituent = collection.find((c) => c.name === name);
+  } else if (url) {
+    const html = await fetch(url).then((res) => res.text());
+    const cid = await CID.create(0x55, new TextEncoder().encode(html));
+    const name = "tryout";
+
+    /** @type {Constituent} */
+    const c = {
+      $type: "sh.diffuse.output.constituent",
+      cid: CID.toString(cid),
+      html,
+      name,
+    };
+
+    constituent = c;
   }
 
   // TODO: Message that constituent was not found

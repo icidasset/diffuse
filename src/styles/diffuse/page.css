@@ -344,17 +344,29 @@ ul li::marker {
 }
 
 .list-description {
+  color: oklch(from currentColor l c h / 0.6);
   font-size: var(--fs-xs);
   margin-bottom: var(--space-xs);
   margin-top: var(--space-2xs);
-  opacity: 0.6;
 
   a {
     text-underline-offset: 3px;
   }
 
+  button,
+  .button {
+    line-height: 1;
+    padding: var(--space-3xs);
+    border-radius: var(--radius-xs);
+  }
+
   code {
     font-size: var(--fs-xs);
+  }
+
+  .button-row {
+    gap: var(--space-3xs);
+    margin: 0 0 var(--space-2xs);
   }
 }
 

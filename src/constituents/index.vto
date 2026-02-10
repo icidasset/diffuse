@@ -1,6 +1,6 @@
 ---
 layout: layouts/constituent.vto
-base: ../../../
+base: ../
 
 styles:
   - styles/base.css
@@ -9,7 +9,23 @@ styles:
   - styles/vendor/phosphor/fill/style.css
 
 scripts:
-  - themes/loader/constituent/index.js
+  - constituents/index.js
+
+# CONSTITUENTS
+
+constituents:
+  - url: "themes/blur/artwork-controller/constituent.html.txt"
+    title: "Blur / Artwork controller"
+    desc: >
+      Audio playback controller with an artwork display.
+  - url: "themes/webamp/browser/constituent.html.txt"
+    title: "Webamp / Browser"
+    desc: >
+      Collection browser + search in a retro, win98, look.
+  - url: "themes/webamp/configurators/input/constituent.html.txt"
+    title: "Webamp / Input Configurator"
+    desc: >
+      Windows 98 styled input configurator where you can add music sources.
 ---
 
 <header>
@@ -19,45 +35,60 @@ scripts:
         {{ await comp.diffuse.logo() }}
       </a>
     </div>
-    <p class="construct dither-mask" style="margin-top: 0;">
-      Constituent loader ❈
+    <p class="construct dither-mask" style="margin-top: 0; max-width: none;">
+      Constituents
     </p>
     <p>
-      <strong>Missing a feature, or prefer a different user interface that is not part of Diffuse? Add it here.</strong> This tool allows you to load a custom <a href="#constituents">constituent</a> besides the <a href="#constituents">existing ones</a>.
+      Constituents are various interface components each loaded in their own web page. Every used component is configured so that it operates in broadcast mode, making all the pages communicate with each other.
     </p>
+
+    <ul class="table-of-contents">
+      <li><a href="constituents/#built-in">Built-in</a></li>
+      <li><a href="constituents/#community">Community</a></li>
+      <li><a href="constituents/#saved">Your collection</a></li>
+      <li><a href="constituents/#examples">Examples</a></li>
+      <li><a href="constituents/#build">Build</a></li>
+      <li><a href="constituents/#foundation">Foundation</a></li>
+    </ul>
   </div>
   <div class="dither-mask filler"></div>
 </header>
 <main>
-  <!-- LIST -->
-  <div class="columns" style="margin-top: var(--space-2xl);">
-    <div class="dither-mask filler flex"></div>
-
-    <section class="flex">
-      <h2 id="yours" style="margin-top: 0;">Yours</h2>
-      <div id="list"></div>
-    </section>
-  </div>
-
-  <!-- GENERATE + COMMUNITY -->
+  <!-- BUILT-IN -->
   <div class="columns">
     <section class="flex">
-      <h2 id="generate">Generate</h2>
-      <p>
-        <small><i class="ph-fill ph-check-square"></i> On the todo list, the idea is to have AI generate a piece of UI for you; building on the logical blocks provided by Diffuse.</small>
-      </p>
+      <h2 id="built-in">Built-in</h2>
+
+      <div style="margin-top: var(--space-lg);">
+        {{ await comp.constituents({ items: constituents }) }}
+      </div>
     </section>
 
     <section class="flex">
       <h2 id="community">Community</h2>
-      <!--<p>
+      <p>
         Check out some constituents from the community and load them here.
-      </p>-->
+      </p>
       <p>
         <small><i class="ph-fill ph-info"></i> Nothing here yet, too early.</small>
       </p>
     </section>
   </div>
+
+  <!-- LIST + EXAMPLES -->
+  <div class="columns">
+    <section class="flex">
+      <h2 id="saved">Your collection</h2>
+      <div id="list"></div>
+    </section>
+
+    <section class="flex">
+      <h2 id="examples">Examples</h2>
+    </section>
+  </div>
+
+  <!-- / -->
+  <div class="dither-mask filler" style="height: var(--space-2xl); margin-top: var(--space-2xl);"></div>
 
   <!-- BUILD -->
   <section>
@@ -75,7 +106,7 @@ scripts:
 
       <div class="flex">
         <p style="margin-top: 0">
-          Your code here builds on the <a href="themes/loader/constituent/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;div id="container"&gt;</code> element in the body.
+          Your code here builds on the <a href="constituents/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;div id="container"&gt;</code> element in the body.
         </p>
         <input id="name-input" type="text" placeholder="Unique name" name="name" value="Unique name" required />
         <p>
@@ -93,8 +124,8 @@ scripts:
               <selectedcontent></selectedcontent>
             </button>
 
-            <option value="now-playing.txt" selected>Now playing & next queue item</option>
-            <option value="generate-playlist.txt">Generate playlist from queue</option>
+            <option value="constituents/examples/now-playing.html.txt" selected>Now playing & next queue item</option>
+            <option value="constituents/examples/generate-playlist.html.txt">Generate playlist from queue</option>
           </select>
         </div>
         <p>

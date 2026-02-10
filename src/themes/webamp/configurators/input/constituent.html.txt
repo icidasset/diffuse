@@ -1,18 +1,3 @@
----
-layout: layouts/constituent.vto
-base: ../../../../
-
-styles:
-  - styles/vendor/98.css
-  - themes/webamp/fonts.css
-  - themes/webamp/constituent.css
-
-scripts:
-  - themes/webamp/configurators/input/index.js
----
-
-<!-- ELEMENTS -->
-
 <div class="window">
   <div
     class="title-bar"
@@ -31,3 +16,11 @@ scripts:
     <div id="placeholder"></div>
   </div>
 </div>
+
+<style>
+  @import "styles/vendor/98.css";
+  @import "themes/webamp/fonts.css";
+  @import "themes/webamp/constituent.css";
+</style>
+
+<script type="module" src="themes/webamp/configurators/input/constituent.js"></script>

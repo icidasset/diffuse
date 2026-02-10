@@ -1,0 +1,43 @@
+---
+layout: layouts/constituent.vto
+base: ../
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - styles/vendor/phosphor/bold/style.css
+  - styles/vendor/phosphor/fill/style.css
+
+scripts:
+  - themes/index.js
+---
+
+<header>
+  <div>
+    <div>
+      <a class="diffuse-logo" href="./" style="display: inline-block;">
+        {{ await comp.diffuse.logo() }}
+      </a>
+    </div>
+    <p class="construct dither-mask" style="margin-top: 0">
+      Themes
+    </p>
+    <p>
+      Themes are element compositions and provide a traditional browser web application way of
+      using them. In other words, pretty much the whole thing, besides your data, lives inside a single browser tab.
+    </p>
+
+    <p>
+      <small>
+        <strong><i class="ph-fill ph-info"></i></strong>
+        Each theme is unique, not just a skin; each one might have a totally different feature set.
+      </small>
+    </p>
+  </div>
+  <div class="dither-mask filler"></div>
+</header>
+<main>
+  <p>
+    TODO
+  </p>
+</main>

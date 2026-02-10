@@ -1,0 +1,7 @@
+<style>
+  @import "styles/vendor/phosphor/bold/style.css";
+  @import "styles/vendor/phosphor/fill/style.css";
+  @import "styles/base.css";
+</style>
+
+<script type="module" src="themes/blur/artwork-controller/constituent.js"></script>
