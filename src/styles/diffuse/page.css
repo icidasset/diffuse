@@ -205,11 +205,6 @@ ul.columns {
  * Forms
  */
 
-/*select,
-::picker(select) {
-  appearance: base-select;
-}*/
-
 input,
 textarea {
   background: transparent;
@@ -274,14 +269,20 @@ h2 + h3 {
 a {
   color: inherit;
   text-underline-offset: 6px;
+
+  &.button {
+    text-decoration: none;
+  }
 }
 
-button {
+button,
+a.button {
   background: var(--accent);
   border: 0;
   border-radius: var(--radius-md);
   color: var(--bg-color);
   cursor: pointer;
+  display: inline-block;
   font-family: inherit;
   font-weight: 500;
   line-height: var(--leading-tight);

@@ -220,11 +220,10 @@ definitions:
       </span>
     </h1>
     <p class="construct dither-mask">
-      Construct your audio player.
+      Your audio<br />your data<br />your rules
     </p>
     <p>
-      Diffuse is a collection of components and software that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital
-      audio listening experience for you.
+      Diffuse is a collection of components and software that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital audio listening experience for you.
     </p>
     <p style="align-items: center; display: flex; gap: var(--space-2xs); opacity: 0.55;">
       <i class="ph-fill ph-crane"></i>
@@ -232,10 +231,9 @@ definitions:
     </p>
     <ul class="table-of-contents">
       <li><a href="#usage">Usage</a></li>
-      <li><a href="#demo">Demo</a></li>
       <li><a href="#themes">Themes</a></li>
       <li><a href="#constituents">Constituents</a></li>
-      <li><a href="#take-control">Take control</a></li>
+      <li><a href="#agency">Agency</a></li>
       <li><a href="#elements">Elements</a></li>
       <li><a href="#definitions">Definitions</a></li>
     </ul>
@@ -246,43 +244,37 @@ definitions:
   <div class="dither-mask filler"></div>
 </header>
 <main>
+  <!-- USAGE -->
+  <section>
+    <h2 id="usage">Usage</h2>
+
+    <div class="columns">
+      <div class="element">
+        <p>
+          The easiest way to start is by exploring the software. If you prefer a traditional pre&shy;packaged application approach, you can check out <a href="themes/">themes</a>. Themes can look and function entirely different from each other, so make sure to explore!
+        </p>
+
+        <p>
+          Alternatively, there's <a href="constituents/">constituents</a> which allows you to use any component from any theme interchange&shy;ably, among pieces that are not in themes; each in a separate browser tab. Each tab talks to each other, so you can for example browse audio in one tab and play it in another.
+        </p>
+      </div>
+
+      <div class="element">
+        <p>
+          <strong style="color: var(--accent); font-weight: 700;">Diffuse is not your typical streaming service though, you have to add sources of audio.</strong> To start you can try out the demo by clicking the button below, or, go to a <a href="themes/">theme</a> or <a href="constituents/">constituent</a> that lets you add your audio input.
+        </p>
+
+        <p>
+          <button id="add-sample-content">
+            <span>Add sample content</span>
+          </button>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- THEMES & CONSTITUENTS -->
   <div class="columns">
-    <!-- USAGE -->
-    <section>
-      <h2 id="usage">Usage</h2>
-
-      <p>
-        The easiest way to start is by exploring the software. If you prefer a traditional pre&shy;packaged web application approach, you can check out <a href="#themes">themes</a>.
-      </p>
-
-      <p>
-        Alternatively, there's <a href="#constituents">constituents</a> which allows you to use any component from any theme interchange&shy;ably, each in a separate browser tab. Each tab talks to each other, so you can for example browse audio in one tab and play it in another.
-      </p>
-
-      <p>
-        The goal is for every user, no matter their experience with web software, to have agency over their software. One can start with making small changes and gradually progress to making big changes.
-      </p>
-    </section>
-
-    <!-- DEMO -->
-    <section>
-      <h2 id="demo">Demo</h2>
-
-      <p>Diffuse is not your typical streaming service, you have to add sources of audio. This button here adds a few sample audio files.</p>
-
-      <p>
-        <button id="add-sample-content">
-          <span>Add sample content</span>
-        </button>
-      </p>
-
-      <p>
-        Next, select any <a href="#themes">theme</a> from below to play the audio. Or any of the other options suggested in the usage section.
-      </p>
-    </section>
-  </div>
-  <div class="columns">
-    <!-- THEMES -->
     <section>
       <h2 id="themes">Themes</h2>
 
@@ -292,16 +284,10 @@ definitions:
       </p>
 
       <p>
-        <small>
-          <strong><i class="ph-fill ph-info"></i></strong>
-          Each theme is unique, not just a skin; each one might have a totally different feature set.
-        </small>
+        <a class="button button--alt" href="themes/">Explore</a>
       </p>
-
-      {{ await comp.list({ items: themes }) }}
     </section>
 
-    <!-- CONSTITUENTS -->
     <section>
       <h2 id="constituents">Constituents</h2>
 
@@ -310,36 +296,33 @@ definitions:
       </p>
 
       <p>
-        <small>
-          <strong><i class="ph-fill ph-info"></i></strong>
-          It also allows non-browser web environments, such as WebViews, to display UI components separately. For example, to enable moveable web views on the desktop.
-        </small>
+        <a class="button button--alt" href="constituents/">Explore</a>
       </p>
-
-      {{ await comp.list({ items: constituents }) }}
     </section>
   </div>
 
-  <!-- TAKE CONTROL -->
+  <!-- AGENCY -->
   <section>
-    <h2 id="take-control">Take control</h2>
+    <h2 id="agency">Agency</h2>
 
     <p>
-      <em>Diffuse ranges from “eating out at a great restaurant” all the way to “making your favourite meal at home”</em>
+      The goal is for every user, no matter their experience, to have agency over their data and their software. One can start with making small changes and gradually progress to making big changes.
     </p>
+
+    <h3>Take control</h3>
 
     <ul class="columns">
       <div class="element">
         <!-- 1 -->
         <li>
           <p>
-            <i class="ph-fill ph-storefront"></i> <strong>Level 1</strong>: Pick your restaurant, food comes in all shapes and sizes. The equivalent of choosing a Diffuse <a href="#themes">theme</a>.
+            <i class="ph-fill ph-storefront"></i> <strong>Level 1</strong>: Pick your restaurant, food comes in all shapes and sizes. The equivalent of choosing a Diffuse <a href="themes/">theme</a>.
           </p>
         </li>
         <!-- 2 -->
         <li>
           <p>
-            <i class="ph-fill ph-basket"></i> <strong>Level 2</strong>: Take out food from various places, eg. cheese shop + bakery. You choose how you combine the foods and from where you order them. That's <a href="#constituents">constituents</a>.
+            <i class="ph-fill ph-basket"></i> <strong>Level 2</strong>: Take out food from various places, eg. cheese shop + bakery. You choose how you combine the foods and from where you order them. That's <a href="constituents/">constituents</a>.
           </p>
         </li>
         <!-- 3 -->
@@ -348,7 +331,7 @@ definitions:
             <i class="ph-fill ph-pepper"></i> <strong>Level 3</strong>: Now that you know which food is good and how to make combinations, you might make a slight customization, add a little something of your own (eg. add some spice). However, you're not quite confident enough which spice to pick, so you hire some help.
           </p>
           <p>
-            This can be done using the <a href="#constituents-loader">constituents loader</a> which allows you to build on top of a familiar preconfigured foundation and load custom constituents. People might share their own, or maybe you use an LLM to generate something for you (eg. an album art gallery).
+            This can be done using the <a href="constituents/#builder">constituents builder</a> which allows you to build on top of a familiar preconfigured foundation and load custom constituents. People might share their own, or maybe you use an LLM to generate something for you (eg. an album art gallery).
           </p>
         </li>
         <!-- 4 -->
@@ -357,7 +340,7 @@ definitions:
             <i class="ph-fill ph-knife"></i> <strong>Level 4</strong>: You learned a bit from watching and talking to the help you hired, so you decide to take things in your own hands.
           </p>
           <p>
-            You continue to use the <a href="#constituents-loader">constituents loader</a> but learn a bit of <a href="https://htmlforpeople.com">HTML</a>, <a href="https://javascript.info">Javascript</a> and <a href="https://htmlforpeople.com/css-basics/">CSS</a>; so you're able to write your own constituent.
+            You continue to use the <a href="constituents/#builder">constituents builder</a> but learn a bit of <a href="https://htmlforpeople.com">HTML</a>, <a href="https://javascript.info">Javascript</a> and <a href="https://htmlforpeople.com/css-basics/">CSS</a>; so you're able to write your own constituent.
           </p>
         </li>
       </div>
@@ -368,7 +351,7 @@ definitions:
             <i class="ph-fill ph-cooking-pot"></i> <strong>Level 5</strong>: At this point you're confident enough to make a meal from scratch. You can start very simple, eg. just throwing a steak in the pan with some butter and some salt to it. Then later add some baked potatoes and go from there.
           </p>
           <p>
-            A similar tool comes into play here, the <a href="#themes-loader">themes loader</a>. Same concept as the constituents loader, but now you need to specify the foundation yourself. You can use the <a href="#elements">elements</a> listed below to do so. The code for these is available from this website or through the <a href="https://jsr.io/@toko/diffuse">Javascript package</a>.
+            A similar tool comes into play here, the <a href="themes/#builder">themes builder</a>. Same concept as the constituents builder, but now you need to specify the foundation yourself. You can use the <a href="#elements">elements</a> listed below to do so. The code for these is available from this website or through the <a href="https://jsr.io/@toko/diffuse">Javascript package</a>.
           </p>
         </li>
         <!-- 6 -->
@@ -377,7 +360,7 @@ definitions:
             <i class="ph-fill ph-storefront"></i> <strong>Level 6</strong>: You open your own restaurant.
           </p>
           <p>
-            You can host the theme you made on any web server, it's only HTML after all. Only difference is that you'll have to create the entire HTML tree, not just the body element, as is the case with the theme loader.
+            You can host the theme you made on any web server, it's only HTML after all. Only difference is that you'll have to create the entire HTML tree, not just the body element, as is the case with the theme builder.
           </p>
         </li>
         <!-- 7 -->
@@ -399,6 +382,10 @@ definitions:
 
     <p>
       The (web) components of the system. These custom elements are then recombined into an entire music player experience, or whatever you want to build.
+    </p>
+
+    <p>
+      Consume these using the constituents <a href="constituents/#builder">builder</a>, the Javascript <a href="https://jsr.io/@toko/diffuse">package</a>, or the linked Javascript files down below.
     </p>
 
     <div class="columns">
