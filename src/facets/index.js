@@ -99,13 +99,13 @@ effect(() => {
                 <div class="button-row">
                   <a href="facets/l/?id=${c.id}" class="button">Open</a>
                   <button
-                    style="background-color: var(--accent-twist-4);"
+                    class="button--bg-twist-4"
                     @click="${() => editFacet(c)}"
                   >
                     Edit
                   </button>
                   <button
-                    style="background-color: var(--accent-twist-2);"
+                    class="button--bg-twist-2"
                     @click="${deleteFacet({
                       id: c.id,
                     })}"
