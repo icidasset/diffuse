@@ -1,5 +1,5 @@
 ---
-layout: layouts/facet.vto
+layout: layouts/diffuse.vto
 base: ../
 
 styles:
@@ -10,6 +10,19 @@ styles:
 
 scripts:
   - themes/index.js
+
+# THEMES
+
+builtIn:
+  - url: "themes/blur/"
+    title: "Blur"
+    todo: true
+    desc: >
+      **A theme with an Apple-inspired playback view.** Features two audio players instead of the usual one.
+  - url: "themes/webamp/"
+    title: "Webamp"
+    desc: >
+      **Winamp 2 + Windows 98**. Uses Webamp as the audio player connected to various Diffuse elements. Also features a desktop-like Windows 98 environment in which you can open "programs" that control the used Diffuse elements.
 ---
 
 <header>
@@ -19,9 +32,11 @@ scripts:
         {{ await comp.diffuse.logo() }}
       </a>
     </div>
+
     <p class="construct dither-mask" style="margin-top: 0">
       Themes
     </p>
+
     <p>
       Themes are element compositions and provide a traditional browser web application way of
       using them. In other words, pretty much the whole thing, besides your data, lives inside a single browser tab.
@@ -33,11 +48,22 @@ scripts:
         Each theme is unique, not just a skin; each one might have a totally different feature set.
       </small>
     </p>
+
+    <ul class="table-of-contents">
+      <li><a href="themes/#built-in">Built-in</a></li>
+    </ul>
   </div>
   <div class="dither-mask filler"></div>
 </header>
 <main>
-  <p>
-    TODO
-  </p>
+  <!-- BUILT-IN -->
+  <div class="columns">
+    <section class="flex">
+      <h2 id="built-in">Built-in</h2>
+
+      {{ await comp.list({ items: builtIn }) }}
+    </section>
+
+    <section class="flex"></section>
+  </div>
 </main>

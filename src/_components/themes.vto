@@ -1,0 +1,17 @@
+<ul>
+  {{ for item of items }}
+    <li data-url="{{item.url}}" data-name="{{item.title}}">
+      <span>{{item.title}}</span>
+      <div class="list-description">
+        <div class="button-row">
+          <a href="themes/l/?url={{encodeURIComponent(item.url)}}" class="button button--bg-twist-1">Try</a>
+          <button rel="save" class="button--bg-twist-2">Save</button>
+          <button rel="fork" class="button--bg-twist-4">Fork</button>
+        </div>
+        <div>
+          {{item.desc |> md(true)}}
+        </div>
+      </div>
+    </li>
+  {{ /for }}
+</ul>
