@@ -13,6 +13,7 @@
     "@codemirror/lang-css": "npm:@codemirror/lang-css@^6.3.1",
     "@codemirror/lang-html": "npm:@codemirror/lang-html@^6.4.11",
     "@codemirror/lang-javascript": "npm:@codemirror/lang-javascript@^6.2.4",
+    "@fcrozatier/htmlcrunch": "jsr:@fcrozatier/htmlcrunch@^1.5.1",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
     "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^0.5.1",
     "@kunkun/kkrpc": "jsr:@kunkun/kkrpc@^0.6.0",

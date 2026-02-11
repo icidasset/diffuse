@@ -5,7 +5,6 @@ base: ../
 styles:
   - styles/base.css
   - styles/diffuse/page.css
-  - styles/vendor/phosphor/bold/style.css
   - styles/vendor/phosphor/fill/style.css
 
 scripts:
@@ -13,7 +12,7 @@ scripts:
 
 # FACETS
 
-facets:
+builtIn:
   - url: "themes/blur/artwork-controller/facet.html.txt"
     title: "Blur / Artwork controller"
     desc: >
@@ -26,6 +25,16 @@ facets:
     title: "Webamp / Input Configurator"
     desc: >
       Windows 98 styled input configurator where you can add music sources.
+
+examples:
+  - url: "facets/examples/now-playing.html.txt"
+    title: "Now playing"
+    desc: >
+      Shows what's currently set to "now playing" in the queue, along with a button to shift the queue to the next track.
+  - url: "facets/examples/generate-playlist.html.txt"
+    title: "Generate playlist"
+    desc: >
+      Make a list of what previously played in the queue.
 ---
 
 <header>
@@ -59,9 +68,7 @@ facets:
     <section class="flex">
       <h2 id="built-in">Built-in</h2>
 
-      <div style="margin-top: var(--space-lg);">
-        {{ await comp.facets({ items: facets }) }}
-      </div>
+      {{ await comp.facets({ items: builtIn }) }}
     </section>
 
     <section class="flex">
@@ -84,6 +91,12 @@ facets:
 
     <section class="flex">
       <h2 id="examples">Examples</h2>
+
+      <p>
+        Some simple examples to help you understand how to build your own facet. Fork them to load them into the code editor below (or save → edit).
+      </p>
+
+      {{ await comp.facets({ items: examples }) }}
     </section>
   </div>
 
@@ -108,29 +121,11 @@ facets:
         <p style="margin-top: 0">
           Your code here builds on the <a href="facets/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;div id="container"&gt;</code> element in the body.
         </p>
-        <input id="name-input" type="text" placeholder="Unique name" name="name" value="Unique name" required />
+        <input id="name-input" type="text" placeholder="Name" name="name" required />
         <p>
           <span class="button-row">
             <button name="save">Save</button>
             <button name="save+open">Save &amp; Open</button>
-          </span>
-        </p>
-        <p>
-          Browse examples:
-        </p>
-        <div>
-          <select id="example-select">
-            <button>
-              <selectedcontent></selectedcontent>
-            </button>
-
-            <option value="facets/examples/now-playing.html.txt" selected>Now playing & next queue item</option>
-            <option value="facets/examples/generate-playlist.html.txt">Generate playlist from queue</option>
-          </select>
-        </div>
-        <p>
-          <span class="button-row">
-            <button name="load-example">Load example</button>
           </span>
         </p>
       </div>

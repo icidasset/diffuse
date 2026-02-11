@@ -1,12 +1,12 @@
 <ul>
   {{ for item of items }}
-    <li>
+    <li data-url="{{item.url}}" data-name="{{item.title}}">
       <span>{{item.title}}</span>
       <div class="list-description">
         <div class="button-row">
-          <a href="facets/l/?url={{encodeURIComponent(item.url)}}" class="button">Try</a>
-          <!--<button style="background-color: var(--accent-twist-1);">Save</button>-->
-          <!--<button style="background-color: var(--accent-twist-2);">Fork</button>-->
+          <a href="facets/l/?url={{encodeURIComponent(item.url)}}" class="button button--bg-twist-1">Try</a>
+          <button rel="save" class="button--bg-twist-2">Save</button>
+          <button rel="fork" class="button--bg-twist-4">Fork</button>
         </div>
         <div>
           {{item.desc |> md(true)}}

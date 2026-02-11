@@ -277,7 +277,8 @@ a {
 
 button,
 a.button {
-  background: var(--accent);
+  --button-bg-opacity: 0.6;
+  background: oklch(from var(--accent) l c h / var(--button-bg-opacity));
   border: 0;
   border-radius: var(--radius-md);
   color: var(--bg-color);
@@ -288,11 +289,36 @@ a.button {
   line-height: var(--leading-tight);
   padding: var(--space-2xs) var(--space-xs);
   transition-duration: 500ms;
-  transition-property: opacity;
+  transition-property: background-color opacity;
 
   &[disabled] {
+    --button-bg-opacity: 0.4;
     cursor: not-allowed;
-    opacity: 0.5;
+  }
+
+  &:hover:not([disabled]),
+  &:focus:not([disabled]) {
+    --button-bg-opacity: 1;
+  }
+
+  &.button--bg-twist-1 {
+    background-color: oklch(from var(--accent-twist-1) l c h / var(--button-bg-opacity));
+  }
+
+  &.button--bg-twist-2 {
+    background-color: oklch(from var(--accent-twist-2) l c h / var(--button-bg-opacity));
+  }
+
+  &.button--bg-twist-3 {
+    background-color: oklch(from var(--accent-twist-3) l c h / var(--button-bg-opacity));
+  }
+
+  &.button--bg-twist-4 {
+    background-color: oklch(from var(--accent-twist-4) l c h / var(--button-bg-opacity));
+  }
+
+  &.button--bg-twist-5 {
+    background-color: oklch(from var(--accent-twist-5) l c h / var(--button-bg-opacity));
   }
 
   & > span {

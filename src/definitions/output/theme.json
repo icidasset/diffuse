@@ -6,18 +6,24 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": ["cid", "html", "name"],
+        "required": ["id", "name"],
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier"
+          },
           "cid": {
             "type": "string",
             "description": "A DASL CID representing the UTF8 encoded HTML (raw 0x55 codec)"
           },
+          "createdAt": { "type": "string", "format": "datetime" },
           "description": { "type": "string" },
           "html": {
             "type": "string",
             "description": "The UTF8 HTML string that makes up the theme"
           },
           "name": { "type": "string" },
+          "updatedAt": { "type": "string", "format": "datetime" },
           "url": {
             "type": "string",
             "description": "An optional URL that points at the theme; can be used to update this artifact"

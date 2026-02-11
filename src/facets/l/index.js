@@ -19,6 +19,7 @@ const output = foundation.orchestrator.output();
 
 const docUrl = new URL(document.location.href);
 
+const id = docUrl.searchParams.get("id");
 const cid = docUrl.searchParams.get("cid");
 const name = docUrl.searchParams.get("name");
 const url = docUrl.searchParams.get("url");
@@ -38,21 +39,19 @@ effect(async () => {
 
   let facet;
 
-  if (cid) {
+  if (id) {
+    facet = collection.find((c) => c.id === id);
+  } else if (cid) {
     facet = collection.find((c) => c.cid === cid);
   } else if (name) {
     facet = collection.find((c) => c.name === name);
   } else if (url) {
-    const html = await fetch(url).then((res) => res.text());
-    const cid = await CID.create(0x55, new TextEncoder().encode(html));
-    const name = "tryout";
-
     /** @type {Facet} */
     const c = {
       $type: "sh.diffuse.output.facet",
-      cid: CID.toString(cid),
-      html,
-      name,
+      id: crypto.randomUUID(),
+      name: "tryout",
+      url,
     };
 
     facet = c;
@@ -60,6 +59,15 @@ effect(async () => {
 
   // TODO: Message that facet was not found
   if (!facet) return;
+
+  // Make sure HTML is loaded
+  if (!facet.html && facet.url) {
+    const html = await fetch(facet.url).then((res) => res.text());
+    const cid = await CID.create(0x55, new TextEncoder().encode(html));
+
+    facet.html = html;
+    facet.cid = CID.toString(cid);
+  }
 
   loadIntoContainer(facet);
 });
@@ -72,7 +80,7 @@ function loadIntoContainer(facet) {
 
   const range = document.createRange();
   range.selectNode(container);
-  const documentFragment = range.createContextualFragment(facet.html);
+  const documentFragment = range.createContextualFragment(facet.html ?? "");
 
   container.innerHTML = "";
   container.append(documentFragment);
