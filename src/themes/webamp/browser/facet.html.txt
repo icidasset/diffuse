@@ -20,7 +20,7 @@
 <style>
   @import "styles/vendor/98.css";
   @import "themes/webamp/fonts.css";
-  @import "themes/webamp/constituent.css";
+  @import "themes/webamp/facet.css";
 </style>
 
-<script type="module" src="themes/webamp/browser/constituent.js"></script>
+<script type="module" src="themes/webamp/browser/facet.js"></script>

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "sh.diffuse.output.constituent",
+  "id": "sh.diffuse.output.facet",
   "defs": {
     "main": {
       "type": "record",
@@ -15,12 +15,12 @@
           "description": { "type": "string" },
           "html": {
             "type": "string",
-            "description": "The UTF8 HTML string that makes up the constituent"
+            "description": "The UTF8 HTML string that makes up the facet"
           },
           "name": { "type": "string" },
           "url": {
             "type": "string",
-            "description": "An optional URL that points at the constituent; can be used to update this artifact"
+            "description": "An optional URL that points at the facet; can be used to update this artifact"
           }
         }
       }

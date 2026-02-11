@@ -28,10 +28,10 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
 
     /** @type {OutputManager<SupportedDataTypes>} */
     this.#manager = outputManager({
-      constituents: {
+      facets: {
         empty: () => undefined,
-        get: () => this.#get("constituents"),
-        put: (data) => this.#put("constituents", data),
+        get: () => this.#get("facets"),
+        put: (data) => this.#put("facets", data),
       },
       init: () => this.whenConnected(),
       tracks: {
@@ -41,7 +41,7 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
       },
     });
 
-    this.constituents = this.#manager.constituents;
+    this.facets = this.#manager.facets;
     this.tracks = this.#manager.tracks;
   }
 

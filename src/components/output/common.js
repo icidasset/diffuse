@@ -1,7 +1,7 @@
 import { computed, signal, untracked } from "@common/signal.js";
 
 /**
- * @import {Constituent, Track} from "@definitions/types.d.ts"
+ * @import {Facet, Track} from "@definitions/types.d.ts"
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
@@ -10,9 +10,9 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @param {OutputManagerProperties<Encoding>} _
  * @returns {OutputManager<Encoding>}
  */
-export function outputManager({ init, constituents, tracks }) {
+export function outputManager({ init, facets, tracks }) {
   const c = signal(
-    /** @type {Encoding extends null ? Constituent[] : Encoding} */ (constituents
+    /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
       .empty()),
   );
   const cs = signal(
@@ -26,10 +26,10 @@ export function outputManager({ init, constituents, tracks }) {
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );
 
-  async function loadConstituents() {
+  async function loadFacets() {
     if (init && (await init()) === false) return;
     cs.value = "loading";
-    c.value = await constituents.get();
+    c.value = await facets.get();
     cs.value = "loaded";
   }
 
@@ -41,16 +41,16 @@ export function outputManager({ init, constituents, tracks }) {
   }
 
   return {
-    constituents: {
+    facets: {
       collection: computed(() => {
-        if (untracked(() => cs.value === "sleeping")) loadConstituents();
+        if (untracked(() => cs.value === "sleeping")) loadFacets();
         return c.value;
       }),
-      reload: loadConstituents,
-      save: async (newConstituents) => {
-        if (untracked(() => cs.value === "sleeping")) loadConstituents();
-        c.value = newConstituents;
-        await constituents.put(newConstituents);
+      reload: loadFacets,
+      save: async (newFacets) => {
+        if (untracked(() => cs.value === "sleeping")) loadFacets();
+        c.value = newFacets;
+        await facets.put(newFacets);
       },
       state: cs.get,
     },
@@ -68,7 +68,7 @@ export function outputManager({ init, constituents, tracks }) {
       state: ts.get,
     },
     signals: {
-      constituents: c,
+      facets: c,
       tracks: t,
     },
   };

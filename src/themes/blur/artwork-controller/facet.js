@@ -1,4 +1,4 @@
-import foundation from "@common/constituents/foundation.js";
+import foundation from "@common/facets/foundation.js";
 import ArtworkController from "@themes/blur/artwork-controller/element.js";
 
 // Setup the prerequisite elements

@@ -1,4 +1,4 @@
-import foundation from "@common/constituents/foundation.js";
+import foundation from "@common/facets/foundation.js";
 import InputConfigElement from "@themes/webamp/configurators/input/element.js";
 import { effect } from "@common/signal.js";
 

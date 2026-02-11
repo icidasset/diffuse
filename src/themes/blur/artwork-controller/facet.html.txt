@@ -4,4 +4,4 @@
   @import "styles/base.css";
 </style>
 
-<script type="module" src="themes/blur/artwork-controller/constituent.js"></script>
+<script type="module" src="themes/blur/artwork-controller/facet.js"></script>

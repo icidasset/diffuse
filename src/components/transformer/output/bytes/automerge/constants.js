@@ -2,11 +2,11 @@ import * as Automerge from "@automerge/automerge";
 import { base64 } from "iso-base/rfc4648";
 
 /**
- * @import { ConstituentsDocument, PlaylistsDocument, ThemesDocument, TracksDocument } from "./types.d.ts";
+ * @import { FacetsDocument, PlaylistsDocument, ThemesDocument, TracksDocument } from "./types.d.ts";
  */
 
-/** @type {Automerge.Doc<ConstituentsDocument>} */
-export const INITIAL_CONSTITUENTS_DOCUMENT = Automerge.load(
+/** @type {Automerge.Doc<FacetsDocument>} */
+export const INITIAL_FACETS_DOCUMENT = Automerge.load(
   base64.decode(
     "hW9Kg1fmLLcAeAEQZ2dnbV0O8AUftAeEXT1QVQHsmc9lhGh1ysz4ECa3pEUgzSZG2aF8hob78u7FqeybBQYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8KTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
   ),

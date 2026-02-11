@@ -68,7 +68,7 @@
   },
   "exports": {
     // .js
-    "./common/constituents/foundation.js": "./src/common/constituents/foundation.js",
+    "./common/facets/foundation.js": "./src/common/facets/foundation.js",
     "./common/element.js": "./src/common/element.js",
     "./common/signal.js": "./src/common/signal.js",
     "./common/worker.js": "./src/common/worker.js",
@@ -137,7 +137,7 @@
     "./definitions/types.d.ts": "./src/definitions/types.d.ts",
 
     // .ts
-    "./definitions/types/sh/diffuse/output/constituent.ts": "./src/definitions/types/sh/diffuse/output/constituent.ts",
+    "./definitions/types/sh/diffuse/output/facet.ts": "./src/definitions/types/sh/diffuse/output/facet.ts",
     "./definitions/types/sh/diffuse/output/playlist.ts": "./src/definitions/types/sh/diffuse/output/playlist.ts",
     "./definitions/types/sh/diffuse/output/theme.ts": "./src/definitions/types/sh/diffuse/output/theme.ts",
     "./definitions/types/sh/diffuse/output/track.ts": "./src/definitions/types/sh/diffuse/output/track.ts",

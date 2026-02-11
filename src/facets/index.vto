@@ -1,5 +1,5 @@
 ---
-layout: layouts/constituent.vto
+layout: layouts/facet.vto
 base: ../
 
 styles:
@@ -9,20 +9,20 @@ styles:
   - styles/vendor/phosphor/fill/style.css
 
 scripts:
-  - constituents/index.js
+  - facets/index.js
 
-# CONSTITUENTS
+# FACETS
 
-constituents:
-  - url: "themes/blur/artwork-controller/constituent.html.txt"
+facets:
+  - url: "themes/blur/artwork-controller/facet.html.txt"
     title: "Blur / Artwork controller"
     desc: >
       Audio playback controller with an artwork display.
-  - url: "themes/webamp/browser/constituent.html.txt"
+  - url: "themes/webamp/browser/facet.html.txt"
     title: "Webamp / Browser"
     desc: >
       Collection browser + search in a retro, win98, look.
-  - url: "themes/webamp/configurators/input/constituent.html.txt"
+  - url: "themes/webamp/configurators/input/facet.html.txt"
     title: "Webamp / Input Configurator"
     desc: >
       Windows 98 styled input configurator where you can add music sources.
@@ -36,19 +36,19 @@ constituents:
       </a>
     </div>
     <p class="construct dither-mask" style="margin-top: 0; max-width: none;">
-      Constituents
+      Facets
     </p>
     <p>
-      Constituents are various interface components each loaded in their own web page. Every used component is configured so that it operates in broadcast mode, making all the pages communicate with each other.
+      Facets are various interface components each loaded in their own web page. Every used component is configured so that it operates in broadcast mode, making all the pages communicate with each other.
     </p>
 
     <ul class="table-of-contents">
-      <li><a href="constituents/#built-in">Built-in</a></li>
-      <li><a href="constituents/#community">Community</a></li>
-      <li><a href="constituents/#saved">Your collection</a></li>
-      <li><a href="constituents/#examples">Examples</a></li>
-      <li><a href="constituents/#build">Build</a></li>
-      <li><a href="constituents/#foundation">Foundation</a></li>
+      <li><a href="facets/#built-in">Built-in</a></li>
+      <li><a href="facets/#community">Community</a></li>
+      <li><a href="facets/#saved">Your collection</a></li>
+      <li><a href="facets/#examples">Examples</a></li>
+      <li><a href="facets/#build">Build</a></li>
+      <li><a href="facets/#foundation">Foundation</a></li>
     </ul>
   </div>
   <div class="dither-mask filler"></div>
@@ -60,14 +60,14 @@ constituents:
       <h2 id="built-in">Built-in</h2>
 
       <div style="margin-top: var(--space-lg);">
-        {{ await comp.constituents({ items: constituents }) }}
+        {{ await comp.facets({ items: facets }) }}
       </div>
     </section>
 
     <section class="flex">
       <h2 id="community">Community</h2>
       <p>
-        Check out some constituents from the community and load them here.
+        Check out some facets from the community and load them here.
       </p>
       <p>
         <small><i class="ph-fill ph-info"></i> Nothing here yet, too early.</small>
@@ -106,7 +106,7 @@ constituents:
 
       <div class="flex">
         <p style="margin-top: 0">
-          Your code here builds on the <a href="constituents/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;div id="container"&gt;</code> element in the body.
+          Your code here builds on the <a href="facets/#foundation">foundation</a> listed below, it'll be injected into a <code>&lt;div id="container"&gt;</code> element in the body.
         </p>
         <input id="name-input" type="text" placeholder="Unique name" name="name" value="Unique name" required />
         <p>
@@ -124,8 +124,8 @@ constituents:
               <selectedcontent></selectedcontent>
             </button>
 
-            <option value="constituents/examples/now-playing.html.txt" selected>Now playing & next queue item</option>
-            <option value="constituents/examples/generate-playlist.html.txt">Generate playlist from queue</option>
+            <option value="facets/examples/now-playing.html.txt" selected>Now playing & next queue item</option>
+            <option value="facets/examples/generate-playlist.html.txt">Generate playlist from queue</option>
           </select>
         </div>
         <p>
@@ -151,7 +151,7 @@ constituents:
       <div class="code-block">
         <code>
           {{- echo -}}
-            import foundation from "common/constituents/foundation.js"
+            import foundation from "common/facets/foundation.js"
           {{ /echo }}
 {{ echo -}}foundation.engine.audio(){{- /echo }}
 {{ echo -}}foundation.engine.queue(){{- /echo }}
@@ -203,7 +203,7 @@ constituents:
       </ul>
       <h3>Notes</h3>
       <p>
-        While you have the ability to do whatever you want in a custom constituent, the existing constituents are designed to work a certain way; so here's some things to keep in mind:
+        While you have the ability to do whatever you want in a custom facet, the existing facets are designed to work a certain way; so here's some things to keep in mind:
       </p>
       <ul>
         <li><span>In most cases you'll want to call <code>foundation.features.processInputs()</code> so that your audio files and streams actually show up.</span></li>

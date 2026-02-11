@@ -1,4 +1,4 @@
-import { GROUP } from "@common/constituents/foundation.js";
+import { GROUP } from "@common/facets/foundation.js";
 
 import InputConfigurator from "@components/configurator/input/element.js";
 import MetadataProcessor from "@components/processor/metadata/element.js";

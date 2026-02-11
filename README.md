@@ -4,7 +4,7 @@
 
 Diffuse provides a range of custom elements: audio input, data output, metadata & artwork processing, audio playback, a queue system, and much more.
 
-It is also aimed at consumers, providing themes and constituents, preconfigured component compositions; while simultaneously trying to be [malleable software](https://www.inkandswitch.com/essay/malleable-software/).
+It is also aimed at consumers, providing themes and facets, preconfigured component compositions; while simultaneously trying to be [malleable software](https://www.inkandswitch.com/essay/malleable-software/).
 
 More information on the [website](https://elements.diffuse.sh/latest/).
 
@@ -25,7 +25,7 @@ From there you can use the custom elements as with any other custom DOM element,
 import QueueEngine from "@toko/diffuse/components/engine/queue/element.js"
 
 const queue = new QueueEngine()
-queue.setAttribute("group", "constituents")
+queue.setAttribute("group", "facets")
 
 document.body.append(queue)
 ````

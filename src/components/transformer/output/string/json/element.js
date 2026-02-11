@@ -3,7 +3,6 @@ import { OutputTransformer } from "../../base.js";
 
 /**
  * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { Track } from "@definitions/types.d.ts"
  */
 
 /**
@@ -17,15 +16,15 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
-      constituents: {
-        ...base.constituents,
+      facets: {
+        ...base.facets,
         collection: computed(() => {
-          const json = base.constituents.collection();
+          const json = base.facets.collection();
           return typeof json === "string" ? parseArray(json) : [];
         }),
-        save: async (newConstituents) => {
-          const json = JSON.stringify(newConstituents);
-          await base.constituents.save(json);
+        save: async (newFacets) => {
+          const json = JSON.stringify(newFacets);
+          await base.facets.save(json);
         },
       },
       tracks: {
@@ -42,7 +41,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
     };
 
     // Assign manager properties to class
-    this.constituents = manager.constituents;
+    this.facets = manager.facets;
     this.tracks = manager.tracks;
   }
 }

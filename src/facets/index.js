@@ -7,11 +7,11 @@ import { html as langHtml } from "@codemirror/lang-html";
 import { javascript as langJs } from "@codemirror/lang-javascript";
 import { autocompletion } from "@codemirror/autocomplete";
 
-import foundation from "@common/constituents/foundation.js";
+import foundation from "@common/facets/foundation.js";
 import { effect } from "@common/signal.js";
 
 /**
- * @import {Constituent} from "@definitions/types.d.ts"
+ * @import {Facet} from "@definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -25,7 +25,7 @@ if (!listEl) throw new Error("List element not found");
 const output = foundation.orchestrator.output();
 
 effect(() => {
-  const col = output.constituents.collection().sort((a, b) => {
+  const col = output.facets.collection().sort((a, b) => {
     return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
   });
 
@@ -38,10 +38,10 @@ effect(() => {
               <span>${c.name}</span>
               <div class="list-description">
                 <div class="button-row">
-                  <a href="constituents/l/?cid=${c.cid}" class="button">Open</a>
+                  <a href="facets/l/?cid=${c.cid}" class="button">Open</a>
                   <button
                     style="background-color: var(--accent-twist-2);"
-                    @click="${deleteConstituent({
+                    @click="${deleteFacet({
                       cid: c.cid,
                       name: c.name,
                     })}"
@@ -57,8 +57,8 @@ effect(() => {
         )}
       </ul>
     `
-    : output.constituents.state() === "loaded"
-    ? emptyConstituentsList
+    : output.facets.state() === "loaded"
+    ? emptyFacetsList
     : html`
       <i class="ph-bold ph-spinner-gap"></i>
     `;
@@ -66,22 +66,22 @@ effect(() => {
   render(h, listEl);
 });
 
-const emptyConstituentsList = html`
+const emptyFacetsList = html`
   <p style="margin-bottom: 0;">
-    <i class="ph-fill ph-info"></i> You have not saved any constituents yet.
+    <i class="ph-fill ph-info"></i> You have not saved any facets yet.
   </p>
 `;
 
 /**
  * @param {{ cid: string; name: string }} _
  */
-function deleteConstituent({ cid, name }) {
+function deleteFacet({ cid, name }) {
   return () => {
-    const c = confirm("Are you sure you want to delete this constituent?");
+    const c = confirm("Are you sure you want to delete this facet?");
     if (!c) return;
 
-    output.constituents.save(
-      output.constituents.collection().filter((c) =>
+    output.facets.save(
+      output.facets.collection().filter((c) =>
         !(c.name === name && c.cid === cid)
       ),
     );
@@ -111,7 +111,7 @@ const editor = new EditorView({
 </style>
 
 <script type="module">
-  import foundation from "./common/constituents/foundation.js";
+  import foundation from "./common/facets/foundation.js";
   import { effect } from "./common/signal.js";
 
   const components = foundation.features.fillQueueAutomatically();
@@ -154,9 +154,9 @@ async function onBuildSubmit(event) {
   const cid = await CID.create(0x55, new TextEncoder().encode(html));
   const name = nameEl?.value ?? "nameless";
 
-  /** @type {Constituent} */
-  const constituent = {
-    $type: "sh.diffuse.output.constituent",
+  /** @type {Facet} */
+  const facet = {
+    $type: "sh.diffuse.output.facet",
     cid: CID.toString(cid),
     html,
     name,
@@ -177,21 +177,21 @@ async function onBuildSubmit(event) {
       break;
     }
     case "save":
-      await saveConstituent(constituent);
+      await saveFacet(facet);
       break;
     case "save+open":
-      await saveConstituent(constituent);
-      window.open(`./constituents/l/?cid=${constituent.cid}`, "blank");
+      await saveFacet(facet);
+      window.open(`./facets/l/?cid=${facet.cid}`, "blank");
       break;
   }
 }
 
 /**
- * @param {Constituent} constituent
+ * @param {Facet} facet
  */
-async function saveConstituent(constituent) {
-  const col = output.constituents.collection();
-  const colWithoutName = col.filter((c) => c.name !== constituent.name);
+async function saveFacet(facet) {
+  const col = output.facets.collection();
+  const colWithoutName = col.filter((c) => c.name !== facet.name);
 
-  await output.constituents.save([...colWithoutName, constituent]);
+  await output.facets.save([...colWithoutName, facet]);
 }

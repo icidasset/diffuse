@@ -21,7 +21,7 @@ themes:
   - title: "Loader"
     todo: true
     desc: >
-      **A theme that loads other themes!** _If you're taking the first steps to customize, checkout the [constituents loader](#constituents) first!_
+      **A theme that loads other themes!** _If you're taking the first steps to customize, checkout the [facets loader](#facets) first!_
   - url: "themes/webamp/"
     title: "Webamp"
     desc: >
@@ -163,10 +163,10 @@ transformers:
 # DEFINITIONS
 
 definitions:
-  - title: "Output / Constituent"
+  - title: "Output / Facet"
     desc: >
-      Constituent pointer or HTML snippet.
-    url: "definitions/output/constituent.json"
+      Facet pointer or HTML snippet.
+    url: "definitions/output/facet.json"
   - title: "Output / Playlist"
     desc: >
       Represents a collection of tracks, which may be ordered or unordered. Tracks are matched based on the given criteria.
@@ -212,7 +212,7 @@ definitions:
     <ul class="table-of-contents">
       <li><a href="#usage">Usage</a></li>
       <li><a href="#themes">Themes</a></li>
-      <li><a href="#constituents">Constituents</a></li>
+      <li><a href="#facets">Facets</a></li>
       <li><a href="#agency">Agency</a></li>
       <li><a href="#elements">Elements</a></li>
       <li><a href="#definitions">Definitions</a></li>
@@ -235,13 +235,13 @@ definitions:
         </p>
 
         <p>
-          Alternatively, there's <a href="constituents/">constituents</a> which allows you to use any component from any theme interchange&shy;ably, among pieces that are not in themes; each in a separate browser tab. Each tab talks to each other, so you can for example browse audio in one tab and play it in another.
+          Alternatively, there's <a href="facets/">facets</a> which allows you to use any component from any theme interchange&shy;ably, among pieces that are not in themes; each in a separate browser tab. Each tab talks to each other, so you can for example browse audio in one tab and play it in another.
         </p>
       </div>
 
       <div class="element">
         <p>
-          <strong style="color: var(--accent); font-weight: 700;">Diffuse is not your typical streaming service though, you have to add sources of audio.</strong> To start you can try out the demo by clicking the button below, or, go to a <a href="themes/">theme</a> or <a href="constituents/">constituent</a> that lets you add your audio input.
+          <strong style="color: var(--accent); font-weight: 700;">Diffuse is not your typical streaming service though, you have to add sources of audio.</strong> To start you can try out the demo by clicking the button below, or, go to a <a href="themes/">theme</a> or <a href="facets/">facet</a> that lets you add your audio input.
         </p>
 
         <p>
@@ -253,7 +253,7 @@ definitions:
     </div>
   </section>
 
-  <!-- THEMES & CONSTITUENTS -->
+  <!-- THEMES & FACETS -->
   <div class="columns">
     <section>
       <h2 id="themes">Themes</h2>
@@ -269,14 +269,14 @@ definitions:
     </section>
 
     <section>
-      <h2 id="constituents">Constituents</h2>
+      <h2 id="facets">Facets</h2>
 
       <p>
-        Constituents are various interface components each loaded in their own web page. Every used component is configured so that it operates in broadcast mode, making all the pages communicate with each other.
+        Facets are various interface components each loaded in their own web page. Every used component is configured so that it operates in broadcast mode, making all the pages communicate with each other.
       </p>
 
       <p>
-        <a class="button button--alt" href="constituents/">Explore</a>
+        <a class="button button--alt" href="facets/">Explore</a>
       </p>
     </section>
   </div>
@@ -302,7 +302,7 @@ definitions:
         <!-- 2 -->
         <li>
           <p>
-            <i class="ph-fill ph-basket"></i> <strong>Level 2</strong>: Take out food from various places, eg. cheese shop + bakery. You choose how you combine the foods and from where you order them. That's <a href="constituents/">constituents</a>.
+            <i class="ph-fill ph-basket"></i> <strong>Level 2</strong>: Take out food from various places, eg. cheese shop + bakery. You choose how you combine the foods and from where you order them. That's <a href="facets/">facets</a>.
           </p>
         </li>
         <!-- 3 -->
@@ -311,7 +311,7 @@ definitions:
             <i class="ph-fill ph-pepper"></i> <strong>Level 3</strong>: Now that you know which food is good and how to make combinations, you might make a slight customization, add a little something of your own (eg. add some spice). However, you're not quite confident enough which spice to pick, so you hire some help.
           </p>
           <p>
-            This can be done using the <a href="constituents/#builder">constituents builder</a> which allows you to build on top of a familiar preconfigured foundation and load custom constituents. People might share their own, or maybe you use an LLM to generate something for you (eg. an album art gallery).
+            This can be done using the <a href="facets/#builder">facets builder</a> which allows you to build on top of a familiar preconfigured foundation and load custom facets. People might share their own, or maybe you use an LLM to generate something for you (eg. an album art gallery).
           </p>
         </li>
         <!-- 4 -->
@@ -320,7 +320,7 @@ definitions:
             <i class="ph-fill ph-knife"></i> <strong>Level 4</strong>: You learned a bit from watching and talking to the help you hired, so you decide to take things in your own hands.
           </p>
           <p>
-            You continue to use the <a href="constituents/#builder">constituents builder</a> but learn a bit of <a href="https://htmlforpeople.com">HTML</a>, <a href="https://javascript.info">Javascript</a> and <a href="https://htmlforpeople.com/css-basics/">CSS</a>; so you're able to write your own constituent.
+            You continue to use the <a href="facets/#builder">facets builder</a> but learn a bit of <a href="https://htmlforpeople.com">HTML</a>, <a href="https://javascript.info">Javascript</a> and <a href="https://htmlforpeople.com/css-basics/">CSS</a>; so you're able to write your own facet.
           </p>
         </li>
       </div>
@@ -331,7 +331,7 @@ definitions:
             <i class="ph-fill ph-cooking-pot"></i> <strong>Level 5</strong>: At this point you're confident enough to make a meal from scratch. You can start very simple, eg. just throwing a steak in the pan with some butter and some salt to it. Then later add some baked potatoes and go from there.
           </p>
           <p>
-            A similar tool comes into play here, the <a href="themes/#builder">themes builder</a>. Same concept as the constituents builder, but now you need to specify the foundation yourself. You can use the <a href="#elements">elements</a> listed below to do so. The code for these is available from this website or through the <a href="https://jsr.io/@toko/diffuse">Javascript package</a>.
+            A similar tool comes into play here, the <a href="themes/#builder">themes builder</a>. Same concept as the facets builder, but now you need to specify the foundation yourself. You can use the <a href="#elements">elements</a> listed below to do so. The code for these is available from this website or through the <a href="https://jsr.io/@toko/diffuse">Javascript package</a>.
           </p>
         </li>
         <!-- 6 -->
@@ -365,7 +365,7 @@ definitions:
     </p>
 
     <p>
-      Consume these using the constituents <a href="constituents/#builder">builder</a>, the Javascript <a href="https://jsr.io/@toko/diffuse">package</a>, or the linked Javascript files down below.
+      Consume these using the facets <a href="facets/#builder">builder</a>, the Javascript <a href="https://jsr.io/@toko/diffuse">package</a>, or the linked Javascript files down below.
     </p>
 
     <div class="columns">

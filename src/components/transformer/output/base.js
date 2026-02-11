@@ -42,21 +42,21 @@ export class OutputTransformer extends DiffuseElement {
   base() {
     /** @type {OutputManagerDeputy<T | undefined>} */
     const m = {
-      constituents: {
+      facets: {
         collection: computed(() => {
-          return this.output.signal()?.constituents?.collection();
+          return this.output.signal()?.facets?.collection();
         }),
         reload: () => {
-          return this.output.signal()?.constituents?.reload() ??
+          return this.output.signal()?.facets?.reload() ??
             Promise.resolve();
         },
-        save: async (newConstituents) => {
-          if (newConstituents === undefined) return;
+        save: async (newFacets) => {
+          if (newFacets === undefined) return;
           await this.output.whenDefined;
-          await this.output.signal()?.constituents.save(newConstituents);
+          await this.output.signal()?.facets.save(newFacets);
         },
         state: computed(() => {
-          return this.output.signal()?.constituents.state() ?? "sleeping";
+          return this.output.signal()?.facets.state() ?? "sleeping";
         }),
       },
       tracks: {

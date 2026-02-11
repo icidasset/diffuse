@@ -35,8 +35,8 @@ class OutputOrchestrator extends DiffuseElement {
 
   // PROXY OUTPUT ACTIONS
 
-  get constituents() {
-    return this.output.constituents;
+  get facets() {
+    return this.output.facets;
   }
 
   get tracks() {

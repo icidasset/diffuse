@@ -18,10 +18,10 @@ import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
  */
 
 const url = new URL(document.location.href);
-export const GROUP = url.searchParams.get("group") ?? "constituents";
+export const GROUP = url.searchParams.get("group") ?? "facets";
 
 /**
- * Default config for constituents.
+ * Default config for facets.
  */
 export const config = {
   GROUP,

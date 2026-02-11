@@ -3,7 +3,7 @@ import { OutputTransformer } from "../../base.js";
 
 /**
  * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { Constituent, Track } from "@definitions/types.d.ts"
+ * @import { Facet, Track } from "@definitions/types.d.ts"
  */
 
 /**
@@ -17,19 +17,19 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
-      constituents: {
-        ...base.constituents,
+      facets: {
+        ...base.facets,
         collection: computed(() => {
-          const data = base.constituents.collection();
-          /** @type {Constituent[]} */
+          const data = base.facets.collection();
+          /** @type {Facet[]} */
           const c = parseArray(data);
           return c;
         }),
-        save: async (newConstituents) => {
-          const json = JSON.stringify(newConstituents);
+        save: async (newFacets) => {
+          const json = JSON.stringify(newFacets);
           const encoder = new TextEncoder();
           const bytes = encoder.encode(json);
-          await base.constituents.save(bytes);
+          await base.facets.save(bytes);
         },
       },
       tracks: {

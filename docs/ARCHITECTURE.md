@@ -33,6 +33,6 @@ Like orchestrator components, these are compositions of elements. Unlike orchest
 ## Other directories
 
 - `src/common`: Common Javascript code shared by various components and/or themes.
-- `src/styles`: Common CSS shared by themes, the index page or constituents (part of themes).
+- `src/styles`: Common CSS shared by themes, the index page or facets.
 - `src/favicons`, `src/fonts`, `src/images` are binary assets for themes and the index page (`src/index.vto`)
 - `src/_components` and `src/_includes` are templates used in `.vto` templates, again themes and index page.

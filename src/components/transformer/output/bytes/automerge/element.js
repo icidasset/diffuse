@@ -5,14 +5,14 @@ import { computed } from "@common/signal.js";
 import { recursivelyCloneRecords } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import {
-  INITIAL_CONSTITUENTS_DOCUMENT,
+  INITIAL_FACETS_DOCUMENT,
   INITIAL_TRACKS_DOCUMENT,
 } from "./constants.js";
 
 /**
  * @import { SignalReader } from "@common/signal.d.ts";
  * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { ConstituentsDocument, PlaylistsDocument, ThemesDocument, TracksDocument } from "./types.d.ts"
+ * @import { FacetsDocument, PlaylistsDocument, ThemesDocument, TracksDocument } from "./types.d.ts"
  */
 
 /**
@@ -24,14 +24,14 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
     const base = this.base();
 
-    /** @type {SignalReader<Automerge.Doc<ConstituentsDocument>>} */
-    const constituentsDocument = computed(() => {
-      const value = base.constituents.collection();
+    /** @type {SignalReader<Automerge.Doc<FacetsDocument>>} */
+    const facetsDocument = computed(() => {
+      const value = base.facets.collection();
 
       if (isUint8Array(value)) {
         return Automerge.load(value);
       } else if (value == undefined) {
-        return INITIAL_CONSTITUENTS_DOCUMENT;
+        return INITIAL_FACETS_DOCUMENT;
       } else {
         // TODO: Better error
         throw new Error("Invalid data type");
@@ -54,20 +54,20 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
-      constituents: {
-        ...base.constituents,
-        collection: computed(() => constituentsDocument().collection),
-        save: async (newConstituents) => {
-          const doc = Automerge.change(constituentsDocument(), (d) => {
-            const clonedCollection = newConstituents.map((constituent) => {
-              return recursivelyCloneRecords(constituent);
+      facets: {
+        ...base.facets,
+        collection: computed(() => facetsDocument().collection),
+        save: async (newFacets) => {
+          const doc = Automerge.change(facetsDocument(), (d) => {
+            const clonedCollection = newFacets.map((facet) => {
+              return recursivelyCloneRecords(facet);
             });
 
             d.collection = clonedCollection;
           });
 
           const bytes = Automerge.save(doc);
-          await base.constituents.save(bytes);
+          await base.facets.save(bytes);
         },
       },
       tracks: {

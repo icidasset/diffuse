@@ -1,6 +1,6 @@
 import type { Signal, SignalReader } from "@common/signal.d.ts";
 import type { DiffuseElement } from "@common/element.js";
-import type { Constituent, Track } from "@definitions/types.d.ts";
+import type { Facet, Track } from "@definitions/types.d.ts";
 
 export type OutputElement<Encoding = null> =
   & DiffuseElement
@@ -12,16 +12,16 @@ export type OutputManagerDeputy<Encoding = null> = Omit<
 >;
 
 export type OutputManager<Encoding = null> = {
-  constituents: {
-    collection: SignalReader<Encoding extends null ? Constituent[] : Encoding>;
+  facets: {
+    collection: SignalReader<Encoding extends null ? Facet[] : Encoding>;
     reload: () => Promise<void>;
     save: (
-      constituents: Encoding extends null ? Constituent[] : Encoding,
+      facets: Encoding extends null ? Facet[] : Encoding,
     ) => Promise<void>;
     state: SignalReader<"loading" | "loaded" | "sleeping">;
   };
   signals: {
-    constituents: Signal<Encoding extends null ? Constituent[] : Encoding>;
+    facets: Signal<Encoding extends null ? Facet[] : Encoding>;
     tracks: Signal<Encoding extends null ? Track[] : Encoding>;
   };
   tracks: {
@@ -33,11 +33,11 @@ export type OutputManager<Encoding = null> = {
 };
 
 export type OutputManagerProperties<Encoding = null> = {
-  constituents: {
-    empty(): Encoding extends null ? Constituent[] : Encoding;
-    get(): Promise<Encoding extends null ? Constituent[] : Encoding>;
+  facets: {
+    empty(): Encoding extends null ? Facet[] : Encoding;
+    get(): Promise<Encoding extends null ? Facet[] : Encoding>;
     put(
-      constituents: Encoding extends null ? Constituent[] : Encoding,
+      facets: Encoding extends null ? Facet[] : Encoding,
     ): Promise<void>;
   };
   init?: () => Promise<boolean>;

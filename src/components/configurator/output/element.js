@@ -2,7 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 import { batch, computed, signal } from "@common/signal.js";
 
 /**
- * @import {Constituent, Track} from "@definitions/types.d.ts"
+ * @import {Facet, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  */
 
@@ -27,40 +27,40 @@ class OutputConfigurator extends DiffuseElement {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
-      constituents: {
+      facets: {
         collection: computed(() => {
           const out = this.#selectedOutput.value;
-          if (out) return out.constituents.collection();
+          if (out) return out.facets.collection();
 
           const def = this.#defaultOutput.value;
-          if (def) return def.constituents.collection();
+          if (def) return def.facets.collection();
 
-          return this.#memory.constituents.value;
+          return this.#memory.facets.value;
         }),
         reload: () => {
           const def = this.#defaultOutput.value;
-          if (def) def.constituents.reload();
+          if (def) def.facets.reload();
 
           const out = this.#selectedOutput.value;
-          if (out) return out.constituents.reload();
+          if (out) return out.facets.reload();
 
           return Promise.resolve();
         },
-        save: async (newConstituents) => {
+        save: async (newFacets) => {
           const def = this.#defaultOutput.value;
-          if (def) await def.constituents.save(newConstituents);
+          if (def) await def.facets.save(newFacets);
 
           const out = this.#selectedOutput.value;
-          if (out) return await out.constituents.save(newConstituents);
+          if (out) return await out.facets.save(newFacets);
 
-          this.#memory.constituents.value = newConstituents;
+          this.#memory.facets.value = newFacets;
         },
         state: computed(() => {
           const out = this.#selectedOutput.value;
-          if (out) return out.constituents.state();
+          if (out) return out.facets.state();
 
           const def = this.#defaultOutput.value;
-          if (def) return def.constituents.state();
+          if (def) return def.facets.state();
 
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
@@ -106,7 +106,7 @@ class OutputConfigurator extends DiffuseElement {
     };
 
     // Assign manager properties to class
-    this.constituents = manager.constituents;
+    this.facets = manager.facets;
     this.tracks = manager.tracks;
   }
 
@@ -117,7 +117,7 @@ class OutputConfigurator extends DiffuseElement {
   );
 
   #memory = {
-    constituents: signal(/** @type {Constituent[]} */ ([])),
+    facets: signal(/** @type {Facet[]} */ ([])),
     tracks: signal(/** @type {Track[]} */ ([])),
   };
 
