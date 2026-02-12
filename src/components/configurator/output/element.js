@@ -2,7 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 import { batch, computed, signal } from "@common/signal.js";
 
 /**
- * @import {Facet, Theme, Track} from "@definitions/types.d.ts"
+ * @import {Facet, Playlist, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  */
 
@@ -141,10 +141,49 @@ class OutputConfigurator extends DiffuseElement {
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
       },
+      playlists: {
+        collection: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.playlists.collection();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.playlists.collection();
+
+          return this.#memory.playlists.value;
+        }),
+        reload: () => {
+          const def = this.#defaultOutput.value;
+          if (def) def.playlists.reload();
+
+          const out = this.#selectedOutput.value;
+          if (out) return out.playlists.reload();
+
+          return Promise.resolve();
+        },
+        save: async (newPlaylists) => {
+          const def = this.#defaultOutput.value;
+          if (def) await def.playlists.save(newPlaylists);
+
+          const out = this.#selectedOutput.value;
+          if (out) return await out.playlists.save(newPlaylists);
+
+          this.#memory.playlists.value = newPlaylists;
+        },
+        state: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.playlists.state();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.playlists.state();
+
+          return this.#setupFinished.value ? "loaded" : "sleeping";
+        }),
+      },
     };
 
     // Assign manager properties to class
     this.facets = manager.facets;
+    this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
   }
@@ -157,6 +196,7 @@ class OutputConfigurator extends DiffuseElement {
 
   #memory = {
     facets: signal(/** @type {Facet[]} */ ([])),
+    playlists: signal(/** @type {Playlist[]} */ ([])),
     themes: signal(/** @type {Theme[]} */ ([])),
     tracks: signal(/** @type {Track[]} */ ([])),
   };

@@ -34,6 +34,11 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
         put: (data) => this.#put("facets", data),
       },
       init: () => this.whenConnected(),
+      playlists: {
+        empty: () => [],
+        get: () => this.#get("playlists"),
+        put: (data) => this.#put("playlists", data),
+      },
       themes: {
         empty: () => undefined,
         get: () => this.#get("themes"),
@@ -47,6 +52,7 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
     });
 
     this.facets = this.#manager.facets;
+    this.playlists = this.#manager.playlists;
     this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
   }
@@ -101,6 +107,8 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
       this.#putProxy(name, data);
     } else {
       // Listener
+      if (name === "facets") this.#manager.signals.facets.value = data;
+      if (name === "playlists") this.#manager.signals.playlists.value = data;
       if (name === "themes") this.#manager.signals.themes.value = data;
       if (name === "tracks") this.#manager.signals.tracks.value = data;
     }

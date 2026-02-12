@@ -28,10 +28,6 @@ engines:
   - url: "components/engine/audio/element.js"
     title: "Audio"
     desc: "Plays audio through audio elements."
-  - title: "Favourites"
-    desc: >
-      Mark tracks as favourites. Automatically creates an unordered 'Favourites' playlist.
-    todo: true
   - url: "components/engine/queue/element.js"
     title: "Queue"
     desc: "A queue for tracks."
@@ -74,6 +70,10 @@ orchestrators:
     title: "Automatic queue"
     desc: >
       Fill the queue automatically with non-manual items (shuffled or regular, based on repeat-shuffle engine).
+  - url: "components/orchestrator/favourites/element.js"
+    title: "Favourites"
+    desc: >
+      Mark tracks as favourites. Automatically creates an unordered 'Favourites' playlist.
   - url: "components/orchestrator/input/element.js"
     title: "Input"
     desc: "**A default input configuration.** Contains all the inputs provided here."

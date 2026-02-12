@@ -1,6 +1,6 @@
 import type { Signal, SignalReader } from "@common/signal.d.ts";
 import type { DiffuseElement } from "@common/element.js";
-import type { Facet, Theme, Track } from "@definitions/types.d.ts";
+import type { Facet, Playlist, Theme, Track } from "@definitions/types.d.ts";
 
 export type OutputElement<Encoding = null> =
   & DiffuseElement
@@ -20,8 +20,17 @@ export type OutputManager<Encoding = null> = {
     ) => Promise<void>;
     state: SignalReader<"loading" | "loaded" | "sleeping">;
   };
+  playlists: {
+    collection: SignalReader<Encoding extends null ? Playlist[] : Encoding>;
+    reload: () => Promise<void>;
+    save: (
+      playlists: Encoding extends null ? Playlist[] : Encoding,
+    ) => Promise<void>;
+    state: SignalReader<"loading" | "loaded" | "sleeping">;
+  };
   signals: {
     facets: Signal<Encoding extends null ? Facet[] : Encoding>;
+    playlists: Signal<Encoding extends null ? Playlist[] : Encoding>;
     themes: Signal<Encoding extends null ? Theme[] : Encoding>;
     tracks: Signal<Encoding extends null ? Track[] : Encoding>;
   };
@@ -50,6 +59,13 @@ export type OutputManagerProperties<Encoding = null> = {
     ): Promise<void>;
   };
   init?: () => Promise<boolean>;
+  playlists: {
+    empty(): Encoding extends null ? Playlist[] : Encoding;
+    get(): Promise<Encoding extends null ? Playlist[] : Encoding>;
+    put(
+      playlists: Encoding extends null ? Playlist[] : Encoding,
+    ): Promise<void>;
+  };
   themes: {
     empty(): Encoding extends null ? Theme[] : Encoding;
     get(): Promise<Encoding extends null ? Theme[] : Encoding>;
