@@ -5,7 +5,6 @@
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
     "@atcute/cbor": "npm:@atcute/cbor@^2.3.0",
-    "@atcute/cid": "https://esm.sh/@atcute/cid@2.4.0",
     "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.7",
     "@automerge/automerge": "npm:@automerge/automerge@^3.2.3",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.4",
@@ -28,6 +27,7 @@
     "idb-keyval": "npm:idb-keyval@^6.2.2",
     "iso-base": "npm:iso-base@^4.3.0",
     "lit-html": "npm:lit-html@^3.3.1",
+    "multiformats": "npm:multiformats@^13.4.2",
     "query-string": "npm:query-string@^9.3.1",
     "subsonic-api": "npm:subsonic-api@^3.2.0",
     "throttle-debounce": "npm:throttle-debounce@^5.0.2",

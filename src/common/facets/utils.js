@@ -1,7 +1,7 @@
 // import { fragments, serializeFragments } from "@fcrozatier/htmlcrunch";
 
-import * as CID from "@atcute/cid";
 import { Temporal } from "@js-temporal/polyfill";
+import * as CID from "../cid.js";
 
 /**
  * @import {Facet} from "@definitions/types.d.ts"
@@ -25,7 +25,7 @@ export async function facetFromUrl({ name, url }, { fetchHTML }) {
     $type: "sh.diffuse.output.facet",
     createdAt: timestamp,
     id: crypto.randomUUID(),
-    cid: cid ? CID.toString(cid) : undefined,
+    cid,
     html,
     name,
     updatedAt: timestamp,

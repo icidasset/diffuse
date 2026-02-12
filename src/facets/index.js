@@ -1,4 +1,3 @@
-import * as CID from "@atcute/cid";
 import { Temporal } from "@js-temporal/polyfill";
 import { html, render } from "lit-html";
 
@@ -8,6 +7,7 @@ import { html as langHtml } from "@codemirror/lang-html";
 import { javascript as langJs } from "@codemirror/lang-javascript";
 import { autocompletion } from "@codemirror/autocomplete";
 
+import * as CID from "@common/cid";
 import foundation from "@common/facets/foundation.js";
 import { effect, signal } from "@common/signal.js";
 import { facetFromUrl } from "@common/facets/utils.js";
@@ -220,14 +220,14 @@ async function onBuildSubmit(event) {
   const facet = $editingFacet.value
     ? {
       ...$editingFacet.value,
-      cid: CID.toString(cid),
+      cid,
       html,
       name,
     }
     : {
       $type: "sh.diffuse.output.facet",
       id: crypto.randomUUID(),
-      cid: CID.toString(cid),
+      cid,
       html,
       name,
     };
@@ -260,7 +260,7 @@ async function editFacet(ogFacet) {
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
 
     facet.html = html;
-    facet.cid = CID.toString(cid);
+    facet.cid = cid;
   }
 
   $editingFacet.value = facet;

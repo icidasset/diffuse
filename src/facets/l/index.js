@@ -1,5 +1,4 @@
-import * as CID from "@atcute/cid";
-
+import * as CID from "@common/cid.js";
 import foundation from "@common/facets/foundation.js";
 import { effect } from "@common/signal.js";
 
@@ -66,7 +65,7 @@ effect(async () => {
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
 
     facet.html = html;
-    facet.cid = CID.toString(cid);
+    facet.cid = cid
   }
 
   loadIntoContainer(facet);
