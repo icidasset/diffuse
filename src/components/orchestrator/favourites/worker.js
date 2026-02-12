@@ -7,6 +7,41 @@ import { createEmptyFavouritesPlaylist } from "./common.js";
  */
 
 ////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////
+
+/**
+ * Build a matching key from a track's tags.
+ * @param {Track} track
+ * @returns {string}
+ */
+function matchKey(track) {
+  return `${track.tags?.artist ?? ""}.${track.tags?.title ?? ""}`;
+}
+
+/**
+ * Extract the matching key from a playlist item's criteria.
+ * @param {{ criteria: { field: string; value: unknown }[] }} item
+ * @returns {string}
+ */
+function itemMatchKey(item) {
+  const artist = item.criteria.find((c) => c.field === "artist")?.value ?? "";
+  const title = item.criteria.find((c) => c.field === "title")?.value ?? "";
+  return `${artist}.${title}`;
+}
+
+/**
+ * Create criteria entries from a track's tags.
+ * @param {Track} track
+ */
+function trackCriteria(track) {
+  return [
+    { field: "artist", value: /** @type {unknown} */ (track.tags?.artist) },
+    { field: "title", value: /** @type {unknown} */ (track.tags?.title) },
+  ];
+}
+
+////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
 
@@ -19,26 +54,22 @@ export async function include({ playlists, tracks }) {
 
   const favourites = playlists.find((p) => p.id === "favourites");
 
-  // Get existing favourite track IDs
-  const existingIds = new Set(
-    favourites?.items.map((item) => /** @type {string} */ (
-      /** @type {unknown} */ (item.criteria.find((c) => c.field === "id")
-        ?.value)
-    )) ?? [],
+  // Get existing favourite keys (artist + title)
+  const existingKeys = new Set(
+    favourites?.items.map((item) => itemMatchKey(item)) ?? [],
   );
 
   // Filter out tracks that are already favourites
   const newTracks = tracks.filter((track) =>
-    !existingIds.has(
-      /** @type {string} */ (/** @type {unknown} */ (track.id)),
-    )
+    !existingKeys.has(matchKey(track))
   );
+
   if (newTracks.length === 0) return null;
 
   // Create or update favourites playlist
   const now = new Date().toISOString();
   const newItems = newTracks.map((track) => ({
-    criteria: [{ field: "id", value: /** @type {unknown} */ (track.id) }],
+    criteria: trackCriteria(track),
   }));
 
   /** @type {Playlist} */
@@ -67,19 +98,13 @@ export async function expel({ playlists, tracks }) {
   const favourites = playlists.find((p) => p.id === "favourites");
   if (!favourites) return null;
 
-  // Create set of track IDs to remove
-  const idsToRemove = new Set(
-    tracks.map((track) => /** @type {unknown} */ (track.id)),
-  );
+  // Create set of track keys to remove
+  const keysToRemove = new Set(tracks.map((track) => matchKey(track)));
 
   // Filter out items matching the tracks to remove
-  const updatedItems = favourites.items.filter((item) => {
-    const trackId = /** @type {string} */ (
-      /** @type {unknown} */ (item.criteria.find((c) => c.field === "id")
-        ?.value)
-    );
-    return !idsToRemove.has(trackId);
-  });
+  const updatedItems = favourites.items.filter((item) =>
+    !keysToRemove.has(itemMatchKey(item))
+  );
 
   // If nothing changed, don't save
   if (updatedItems.length === favourites.items.length) return null;
@@ -106,23 +131,14 @@ export async function toggle({ playlists, tracks }) {
 
   const favourites = playlists.find((p) => p.id === "favourites");
 
-  // Get existing favourite track IDs
-  const existingIds = new Set(
-    favourites?.items.map((item) => /** @type {string} */ (
-      /** @type {unknown} */ (item.criteria.find((c) => c.field === "id")
-        ?.value)
-    )) ?? [],
+  // Get existing favourite keys (artist + title)
+  const existingKeys = new Set(
+    favourites?.items.map((item) => itemMatchKey(item)) ?? [],
   );
 
   // Separate tracks into those to add and those to remove
-  const toAdd = tracks.filter((track) =>
-    !existingIds.has(
-      /** @type {string} */ (/** @type {unknown} */ (track.id)),
-    )
-  );
-  const toRemove = tracks.filter((track) =>
-    existingIds.has(/** @type {string} */ (/** @type {unknown} */ (track.id)))
-  );
+  const toAdd = tracks.filter((track) => !existingKeys.has(matchKey(track)));
+  const toRemove = tracks.filter((track) => existingKeys.has(matchKey(track)));
 
   // Apply add then remove in sequence
   let result = playlists;
