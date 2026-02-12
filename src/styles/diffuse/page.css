@@ -289,7 +289,7 @@ a.button {
   line-height: var(--leading-tight);
   padding: var(--space-2xs) var(--space-xs);
   transition-duration: 500ms;
-  transition-property: background-color opacity;
+  transition-property: background-color, opacity;
 
   &[disabled] {
     --button-bg-opacity: 0.4;
