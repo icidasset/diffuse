@@ -39,6 +39,10 @@ class OutputOrchestrator extends DiffuseElement {
     return this.output.facets;
   }
 
+  get playlists() {
+    return this.output.playlists;
+  }
+
   get themes() {
     return this.output.themes;
   }

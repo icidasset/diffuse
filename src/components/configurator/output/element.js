@@ -65,6 +65,44 @@ class OutputConfigurator extends DiffuseElement {
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
       },
+      playlists: {
+        collection: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.playlists.collection();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.playlists.collection();
+
+          return this.#memory.playlists.value;
+        }),
+        reload: () => {
+          const def = this.#defaultOutput.value;
+          if (def) def.playlists.reload();
+
+          const out = this.#selectedOutput.value;
+          if (out) return out.playlists.reload();
+
+          return Promise.resolve();
+        },
+        save: async (newPlaylists) => {
+          const def = this.#defaultOutput.value;
+          if (def) await def.playlists.save(newPlaylists);
+
+          const out = this.#selectedOutput.value;
+          if (out) return await out.playlists.save(newPlaylists);
+
+          this.#memory.playlists.value = newPlaylists;
+        },
+        state: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.playlists.state();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.playlists.state();
+
+          return this.#setupFinished.value ? "loaded" : "sleeping";
+        }),
+      },
       themes: {
         collection: computed(() => {
           const out = this.#selectedOutput.value;
@@ -137,44 +175,6 @@ class OutputConfigurator extends DiffuseElement {
 
           const def = this.#defaultOutput.value;
           if (def) return def.tracks.state();
-
-          return this.#setupFinished.value ? "loaded" : "sleeping";
-        }),
-      },
-      playlists: {
-        collection: computed(() => {
-          const out = this.#selectedOutput.value;
-          if (out) return out.playlists.collection();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.playlists.collection();
-
-          return this.#memory.playlists.value;
-        }),
-        reload: () => {
-          const def = this.#defaultOutput.value;
-          if (def) def.playlists.reload();
-
-          const out = this.#selectedOutput.value;
-          if (out) return out.playlists.reload();
-
-          return Promise.resolve();
-        },
-        save: async (newPlaylists) => {
-          const def = this.#defaultOutput.value;
-          if (def) await def.playlists.save(newPlaylists);
-
-          const out = this.#selectedOutput.value;
-          if (out) return await out.playlists.save(newPlaylists);
-
-          this.#memory.playlists.value = newPlaylists;
-        },
-        state: computed(() => {
-          const out = this.#selectedOutput.value;
-          if (out) return out.playlists.state();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.playlists.state();
 
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),

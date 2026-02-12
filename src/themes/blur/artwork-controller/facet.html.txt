@@ -9,7 +9,6 @@
   import ArtworkController from "./themes/blur/artwork-controller/element.js";
 
   // Setup the prerequisite elements
-  foundation.features.fillQueueAutomatically();
   foundation.features.playAudioFromQueue();
   foundation.features.processInputs();
 

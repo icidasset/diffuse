@@ -1,0 +1,92 @@
+<main>
+  <div class="panel">
+    <div class="row">
+      <button id="repeat" title="Toggle repeat">
+        <span class="with-icon"><i class="ph-fill ph-repeat"></i> Repeat</span>
+      </button>
+      <button id="shuffle" title="Toggle shuffle">
+        <span class="with-icon"><i class="ph-fill ph-shuffle"></i> Shuffle</span>
+      </button>
+      <button id="favourite" title="Toggle favourite">
+        <span class="with-icon"><i class="ph-fill ph-star"></i> Favourite</span>
+      </button>
+    </div>
+  </div>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/vendor/phosphor/fill/style.css";
+  @import "./styles/lines/ui.css";
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100dvh;
+  }
+
+  .row {
+    display: flex;
+    gap: var(--space-2xs);
+  }
+</style>
+
+<script type="module">
+  import foundation from "./common/facets/foundation.js";
+  import { computed, effect } from "./common/signal.js";
+
+  const ACTIVE_CLASS = "button--accent";
+
+  // Setup
+  foundation.features.fillQueueAutomatically();
+
+  const queue = foundation.engine.queue();
+  const repeatShuffle = foundation.engine.repeatShuffle();
+  const favourites = foundation.orchestrator.favourites();
+
+  // Elements
+  const repeatBtn = document.querySelector("#repeat");
+  const shuffleBtn = document.querySelector("#shuffle");
+  const favouriteBtn = document.querySelector("#favourite");
+
+  // Repeat & Shuffle state
+  effect(() => {
+    repeatBtn.classList.toggle(ACTIVE_CLASS, repeatShuffle.repeat());
+  });
+
+  effect(() => {
+    shuffleBtn.classList.toggle(ACTIVE_CLASS, repeatShuffle.shuffle());
+  });
+
+  // Favourite state
+  const isFavourited = computed(() => {
+    const track = queue.now();
+    if (!track) return false;
+
+    const playlist = favourites.playlist();
+    return playlist.items.some((item) =>
+      item.criteria.some((c) => c.field === "id" && c.value === track.id),
+    );
+  });
+
+  effect(() => {
+    const track = queue.now();
+    favouriteBtn.disabled = !track;
+    favouriteBtn.classList.toggle(ACTIVE_CLASS, isFavourited());
+  });
+
+  // Actions
+  repeatBtn.onclick = () => {
+    repeatShuffle.setRepeat(!repeatShuffle.repeat());
+  };
+
+  shuffleBtn.onclick = () => {
+    repeatShuffle.setShuffle(!repeatShuffle.shuffle());
+  };
+
+  favouriteBtn.onclick = () => {
+    const track = queue.now();
+    if (track) favourites.toggle(track);
+  };
+</script>

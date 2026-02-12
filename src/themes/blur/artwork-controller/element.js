@@ -521,19 +521,13 @@ class ArtworkController extends DiffuseElement {
                 .fullVolume}" class="ph-fill ph-speaker-high"></i>
             </div>
 
-            <footer>
+            <!--<footer>
               <div class="button-row">
-                <button title="Toggle repeat" @click="${this.toggleRepeat}" data-enabled="${this.$repeatShuffle.value?.repeat() ? 't' : 'f'}">
-                  <i class="ph-bold ph-repeat"></i>
-                </button>
-                <!--<button title="Toggle favourite">
+                <button title="Toggle favourite">
                   <i class="ph-bold ph-star"></i>
-                </button>-->
-                <button title="Toggle shuffle" @click="${this.toggleShuffle}" data-enabled="${this.$repeatShuffle.value?.shuffle() ? 't' : 'f'}">
-                  <i class="ph-bold ph-shuffle"></i>
                 </button>
               </div>
-            </footer>
+            </footer>-->
           </section>
         </section>
       </main>

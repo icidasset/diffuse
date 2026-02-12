@@ -1,0 +1,152 @@
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.panel {
+  border: 1px solid var(--form-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+}
+
+/**
+ * Buttons
+ */
+
+button,
+.button {
+  background: transparent;
+  border: 1px solid var(--form-color);
+  border-radius: var(--radius-md);
+  color: currentColor;
+  cursor: pointer;
+  display: inline-block;
+  font-size: var(--fs-xs);
+  font-family: inherit;
+  font-weight: 400;
+  letter-spacing: var(--leading-relaxed);
+  line-height: 1;
+  padding: var(--space-xs) var(--space-sm);
+  text-transform: uppercase;
+
+  & * {
+    pointer-events: none;
+  }
+
+  &[disabled] {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  /*&:hover:not([disabled]),
+  &:focus:not([disabled]) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }*/
+
+  &.button--accent {
+    border-color: var(--accent);
+    color: var(--accent);
+
+    &:hover:not([disabled]),
+    &:focus:not([disabled]) {
+      border-color: var(--text-color);
+      color: var(--text-color);
+    }
+  }
+}
+
+a.button {
+  text-decoration: none;
+}
+
+.button-row {
+  display: inline-flex;
+  gap: var(--space-2xs);
+}
+
+/**
+ * Forms
+ */
+
+input,
+textarea {
+  background: transparent;
+  border: 1px solid var(--form-color);
+  color: inherit;
+  font-size: var(--fs-sm);
+  padding: var(--space-2xs);
+  transition-duration: 250ms;
+  transition-property: border-color;
+  width: 100%;
+
+  &:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+}
+
+textarea {
+  height: var(--container-xs);
+  padding: var(--space-xs);
+  resize: none;
+}
+
+select {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--form-color);
+  border-radius: var(--radius-md);
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  padding: var(--space-2xs) var(--space-xs);
+  transition-duration: 250ms;
+  transition-property: border-color;
+
+  &:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+}
+
+/**
+ * Misc
+ */
+
+.with-icon {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-2xs);
+}
+
+/**
+ * Separators
+ */
+
+hr,
+.separator {
+  border: 0;
+  border-top: 1px solid var(--form-color);
+  margin: var(--space-md) 0;
+}
+
+/**
+ * Tables
+ */
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid var(--form-color);
+  padding: var(--space-2xs) var(--space-xs);
+  text-align: left;
+}
+
+th {
+  font-weight: 600;
+}

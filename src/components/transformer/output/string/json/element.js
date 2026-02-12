@@ -35,7 +35,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
         }),
         save: async (newPlaylists) => {
           const json = JSON.stringify(newPlaylists);
-          await base.facets.save(json);
+          await base.playlists.save(json);
         },
       },
       themes: {
@@ -64,6 +64,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     // Assign manager properties to class
     this.facets = manager.facets;
+    this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
   }

@@ -11,6 +11,7 @@ import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js";
 import SearchProcessor from "@components/processor/search/element.js";
 import ScopeEngine from "@components/engine/scope/element.js";
 import ScopedTracksOrchestrator from "@components/orchestrator/scoped-tracks/element.js";
+import FavouritesOrchestrator from "@components/orchestrator/favourites/element.js";
 import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
 
 /**
@@ -42,6 +43,7 @@ export const config = {
   },
   orchestrator: {
     autoQueue,
+    favourites,
     input,
     output,
     queueAudio,
@@ -252,6 +254,16 @@ function scopedTracks() {
   sto.setAttribute("search-processor-selector", s.selector);
 
   return findExistingOrAdd(sto);
+}
+
+function favourites() {
+  const o = output();
+
+  const fo = new FavouritesOrchestrator();
+  fo.setAttribute("group", GROUP);
+  fo.setAttribute("output-selector", o.selector);
+
+  return findExistingOrAdd(fo);
 }
 
 function sources() {
