@@ -119,12 +119,14 @@ export async function groupConsult(tracks) {
  * @type {Actions['list']}
  */
 export async function list(cachedTracks = []) {
-  // HTTPS input doesn't discover tracks automatically.
-  // It only manages URLs that were added manually.
-  // Just return the cached tracks that match our scheme.
-  return cachedTracks.filter((track) => {
-    const parsed = parseURI(track.uri);
-    return !!parsed;
+  return cachedTracks.map((track) => {
+    const t = { ...track }
+
+    if (t.kind === "placeholder") {
+      t.kind = undefined
+    }
+
+    return t
   });
 }
 

@@ -4,6 +4,7 @@ import { signal } from "@common/signal.js";
 import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
 import { buildURI as buildS3cURI } from "@components/input/s3/common.js";
 
+import { SCHEME as HTTPS_SCHEME } from "@components/input/https/constants.js";
 import { SCHEME as OPENSUBSONIC_SCHEME } from "@components/input/opensubsonic/constants.js";
 import { SCHEME as S3_SCHEME } from "@components/input/s3/constants.js";
 
@@ -109,7 +110,7 @@ class InputConfig extends DiffuseElement {
     event.preventDefault();
 
     /** @type {HTMLButtonElement | null} */
-    const button = this.root().querySelector("#opensubsonic-submit");
+    const button = this.root().querySelector("s3-submit");
     if (button) button.disabled = true;
 
     const accessKey = this.formElement("s3-access-key")?.value;
@@ -141,6 +142,27 @@ class InputConfig extends DiffuseElement {
 
     const uri = buildS3cURI(bucket);
     await this.addSource(uri);
+
+    if (button) button.disabled = false;
+  };
+
+  /**
+   * @param {Event} event
+   */
+  #addHttpsUrl = async (event) => {
+    event.preventDefault();
+
+    /** @type {HTMLButtonElement | null} */
+    const button = this.root().querySelector("#https-submit");
+    if (button) button.disabled = true;
+
+    const url = this.formElement("https-url")?.value;
+
+    if (!url) {
+      throw new Error("Missing required `url` input value");
+    }
+
+    await this.addSource(url);
 
     if (button) button.disabled = false;
   };
@@ -271,6 +293,7 @@ class InputConfig extends DiffuseElement {
 
       #tabbed:has(#opensubsonic-tab:checked) #opensubsonic-contents { display: block }
       #tabbed:has(#s3-tab:checked) #s3-contents { display: block }
+      #tabbed:has(#https-tab:checked) #https-contents { display: block }
 
       /* LIST */
 
@@ -298,20 +321,61 @@ class InputConfig extends DiffuseElement {
       <div id="tabbed">
         <menu role="tablist" class="multirows">
           <li role="tab">
+            <label for="https-tab">
+              <span>HTTPS</span>
+              <input name="input-tab" id="https-tab" type="radio" />
+            </label>
+          </li>
+          <li role="tab">
             <label for="opensubsonic-tab">
               <span>OpenSubsonic</span>
-              <input name="input-tab" id="opensubsonic-tab" type="radio" checked="" />
+              <input name="input-tab" id="opensubsonic-tab" type="radio" />
             </label>
           </li>
           <li role="tab">
             <label for="s3-tab">
               <span>S3</span>
-              <input name="input-tab" id="s3-tab" type="radio" />
+              <input name="input-tab" id="s3-tab" type="radio" checked="" />
             </label>
           </li>
         </menu>
 
         <div class="window" role="tabpanel">
+          <!-- HTTPS -->
+          <div class="window-body" id="https-contents">
+            <fieldset>
+              ${this.renderList(
+                html,
+                sources?.[HTTPS_SCHEME] ?? [],
+                "Added URLs",
+              )}
+
+              <p>
+                <button disabled role="delete" @click="${this.#deleteSelected}">
+                  Delete selected
+                </button>
+              </p>
+            </fieldset>
+
+            <form @submit="${this.#addHttpsUrl}">
+              <fieldset>
+                <div class="field-row">
+                  <label for="https-url">URL:</label>
+                  <input
+                    id="https-url"
+                    type="url"
+                    required
+                    placeholder="https://example.com/audio.mp3"
+                  />
+                </div>
+              </fieldset>
+
+              <p>
+                <button type="submit" id="https-submit">Add URL</button>
+              </p>
+            </form>
+          </div>
+
           <!-- Opensubsonic -->
           <div class="window-body" id="opensubsonic-contents">
             <fieldset>

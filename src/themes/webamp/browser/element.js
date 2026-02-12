@@ -58,25 +58,25 @@ class Browser extends DiffuseElement {
     /** @type {import("@components/processor/search/element.js").CLASS} */
     const search = query(this, "search-processor-selector");
 
-    this.$input.value = input;
-    this.$output.value = output;
-    this.$queue.value = queue;
-    this.$search.value = search;
-
     // Wait for the above dependencies to be defined, then render again.
-    whenElementsDefined({ input, output, search }).then(() => {
+    whenElementsDefined({ input, output, queue, search }).then(() => {
+      this.$input.value = input;
+      this.$output.value = output;
+      this.$queue.value = queue;
+      this.$search.value = search;
+
       this.effect(() => {
         const _ = search.supplyFingerprint();
         this.performSearch();
       });
 
       this.effect(() => {
+        const _trigger = output.tracks.state();
+
         this.#collectionSize.value = output.tracks.collection().filter(
           (t) => t.kind !== "placeholder",
         ).length;
       });
-
-      this.forceRender();
     });
 
     // Effects
