@@ -60,12 +60,13 @@ effect(async () => {
   if (!facet) return;
 
   // Make sure HTML is loaded
+  // TODO: Handle URL loading error
   if (!facet.html && facet.url) {
     const html = await fetch(facet.url).then((res) => res.text());
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
 
     facet.html = html;
-    facet.cid = cid
+    facet.cid = cid;
   }
 
   loadIntoContainer(facet);

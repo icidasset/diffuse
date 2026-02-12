@@ -51,6 +51,9 @@ builtIn:
 
     <ul class="table-of-contents">
       <li><a href="themes/#built-in">Built-in</a></li>
+      <li><a href="themes/#community">Community</a></li>
+      <li><a href="themes/#collection">Your collection</a></li>
+      <li><a href="themes/#build">Build</a></li>
     </ul>
   </div>
   <div class="dither-mask filler"></div>
@@ -64,6 +67,57 @@ builtIn:
       {{ await comp.list({ items: builtIn }) }}
     </section>
 
+    <section class="flex">
+      <h2 id="community">Community</h2>
+      <p>
+        Check out some themes from the community and load them here.
+      </p>
+      <p>
+        <small><i class="ph-fill ph-info"></i> Nothing here yet, too early.</small>
+      </p>
+    </section>
+  </div>
+
+  <!-- YOUR COLLECTION -->
+  <div class="columns">
+    <section class="flex">
+      <h2 id="collection">Your collection</h2>
+      <div id="list"></div>
+    </section>
+
     <section class="flex"></section>
   </div>
+
+  <!-- / -->
+  <div class="dither-mask filler" style="height: var(--space-2xl); margin-top: var(--space-2xl);"></div>
+
+  <!-- BUILD -->
+  <section>
+    <h2 id="build">Build</h2>
+
+    <form id="build-form" class="columns">
+      <div class="flex">
+        <p style="margin-top: 0">
+          If you know a bit of HTML & Javascript, you can write your own or plug in some code you found elsewhere:
+        </p>
+
+        <div id="html-input-container" class="code-editor monospace-font">
+        </div>
+      </div>
+
+      <div class="flex">
+        <p style="margin-top: 0">
+          Your code here will be loaded in a dedicated page, it'll be injected into a <code>&lt;iframe&gt;</code> element in the body. You have access to the elements listed on the <a href="./#elements">index page</a> and the facets <a href="facets/#foundation">foundation</a>.
+        </p>
+        <input id="name-input" type="text" placeholder="Name" name="name" required />
+        <p>
+          <span class="button-row">
+            <button name="save">Save</button>
+            <button name="save+open">Save &amp; Open</button>
+          </span>
+        </p>
+      </div>
+    </form>
+  </section>
+
 </main>
