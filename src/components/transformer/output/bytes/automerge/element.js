@@ -6,6 +6,7 @@ import { recursivelyCloneRecords } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import {
   INITIAL_FACETS_DOCUMENT,
+  INITIAL_THEMES_DOCUMENT,
   INITIAL_TRACKS_DOCUMENT,
 } from "./constants.js";
 
@@ -32,6 +33,20 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
         return Automerge.load(value);
       } else if (value == undefined) {
         return INITIAL_FACETS_DOCUMENT;
+      } else {
+        // TODO: Better error
+        throw new Error("Invalid data type");
+      }
+    });
+
+    /** @type {SignalReader<Automerge.Doc<ThemesDocument>>} */
+    const themesDocument = computed(() => {
+      const value = base.themes.collection();
+
+      if (isUint8Array(value)) {
+        return Automerge.load(value);
+      } else if (value == undefined) {
+        return INITIAL_THEMES_DOCUMENT;
       } else {
         // TODO: Better error
         throw new Error("Invalid data type");
@@ -70,6 +85,22 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
           await base.facets.save(bytes);
         },
       },
+      themes: {
+        ...base.themes,
+        collection: computed(() => themesDocument().collection),
+        save: async (newThemes) => {
+          const doc = Automerge.change(themesDocument(), (d) => {
+            const clonedCollection = newThemes.map((theme) => {
+              return recursivelyCloneRecords(theme);
+            });
+
+            d.collection = clonedCollection;
+          });
+
+          const bytes = Automerge.save(doc);
+          await base.themes.save(bytes);
+        },
+      },
       tracks: {
         ...base.tracks,
         collection: computed(() => tracksDocument().collection),
@@ -89,6 +120,8 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     };
 
     // Assign manager properties to class
+    this.facets = manager.facets;
+    this.themes = manager.themes;
     this.tracks = manager.tracks;
   }
 }

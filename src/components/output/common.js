@@ -1,7 +1,7 @@
 import { computed, signal, untracked } from "@common/signal.js";
 
 /**
- * @import {Facet, Track} from "@definitions/types.d.ts"
+ * @import {Facet, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
@@ -10,7 +10,7 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @param {OutputManagerProperties<Encoding>} _
  * @returns {OutputManager<Encoding>}
  */
-export function outputManager({ init, facets, tracks }) {
+export function outputManager({ init, facets, themes, tracks }) {
   const c = signal(
     /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
       .empty()),
@@ -26,11 +26,25 @@ export function outputManager({ init, facets, tracks }) {
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );
 
+  const th = signal(
+    /** @type {Encoding extends null ? Theme[] : Encoding} */ (themes.empty()),
+  );
+  const ths = signal(
+    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+  );
+
   async function loadFacets() {
     if (init && (await init()) === false) return;
     cs.value = "loading";
     c.value = await facets.get();
     cs.value = "loaded";
+  }
+
+  async function loadThemes() {
+    if (init && (await init()) === false) return;
+    ths.value = "loading";
+    th.value = await themes.get();
+    ths.value = "loaded";
   }
 
   async function loadTracks() {
@@ -54,6 +68,19 @@ export function outputManager({ init, facets, tracks }) {
       },
       state: cs.get,
     },
+    themes: {
+      collection: computed(() => {
+        if (untracked(() => ths.value === "sleeping")) loadThemes();
+        return th.value;
+      }),
+      reload: loadThemes,
+      save: async (newThemes) => {
+        if (untracked(() => ths.value === "sleeping")) loadThemes();
+        th.value = newThemes;
+        await themes.put(newThemes);
+      },
+      state: ths.get,
+    },
     tracks: {
       collection: computed(() => {
         if (untracked(() => ts.value === "sleeping")) loadTracks();
@@ -69,6 +96,7 @@ export function outputManager({ init, facets, tracks }) {
     },
     signals: {
       facets: c,
+      themes: th,
       tracks: t,
     },
   };

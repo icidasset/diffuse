@@ -2,7 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 import { batch, computed, signal } from "@common/signal.js";
 
 /**
- * @import {Facet, Track} from "@definitions/types.d.ts"
+ * @import {Facet, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  */
 
@@ -65,6 +65,44 @@ class OutputConfigurator extends DiffuseElement {
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
       },
+      themes: {
+        collection: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.themes.collection();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.themes.collection();
+
+          return this.#memory.themes.value;
+        }),
+        reload: () => {
+          const def = this.#defaultOutput.value;
+          if (def) def.themes.reload();
+
+          const out = this.#selectedOutput.value;
+          if (out) return out.themes.reload();
+
+          return Promise.resolve();
+        },
+        save: async (newThemes) => {
+          const def = this.#defaultOutput.value;
+          if (def) await def.themes.save(newThemes);
+
+          const out = this.#selectedOutput.value;
+          if (out) return await out.themes.save(newThemes);
+
+          this.#memory.themes.value = newThemes;
+        },
+        state: computed(() => {
+          const out = this.#selectedOutput.value;
+          if (out) return out.themes.state();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.themes.state();
+
+          return this.#setupFinished.value ? "loaded" : "sleeping";
+        }),
+      },
       tracks: {
         collection: computed(() => {
           const out = this.#selectedOutput.value;
@@ -107,6 +145,7 @@ class OutputConfigurator extends DiffuseElement {
 
     // Assign manager properties to class
     this.facets = manager.facets;
+    this.themes = manager.themes;
     this.tracks = manager.tracks;
   }
 
@@ -118,6 +157,7 @@ class OutputConfigurator extends DiffuseElement {
 
   #memory = {
     facets: signal(/** @type {Facet[]} */ ([])),
+    themes: signal(/** @type {Theme[]} */ ([])),
     tracks: signal(/** @type {Track[]} */ ([])),
   };
 

@@ -3,7 +3,7 @@ import { OutputTransformer } from "../../base.js";
 
 /**
  * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { Facet, Track } from "@definitions/types.d.ts"
+ * @import { Facet, Theme, Track } from "@definitions/types.d.ts"
  */
 
 /**
@@ -32,6 +32,21 @@ class JsonStringOutputTransformer extends OutputTransformer {
           await base.facets.save(bytes);
         },
       },
+      themes: {
+        ...base.themes,
+        collection: computed(() => {
+          const data = base.themes.collection();
+          /** @type {Theme[]} */
+          const c = parseArray(data);
+          return c;
+        }),
+        save: async (newThemes) => {
+          const json = JSON.stringify(newThemes);
+          const encoder = new TextEncoder();
+          const bytes = encoder.encode(json);
+          await base.themes.save(bytes);
+        },
+      },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
@@ -50,6 +65,8 @@ class JsonStringOutputTransformer extends OutputTransformer {
     };
 
     // Assign manager properties to class
+    this.facets = manager.facets;
+    this.themes = manager.themes;
     this.tracks = manager.tracks;
   }
 }
