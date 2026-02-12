@@ -7,7 +7,7 @@ import { html as langHtml } from "@codemirror/lang-html";
 import { javascript as langJs } from "@codemirror/lang-javascript";
 import { autocompletion } from "@codemirror/autocomplete";
 
-import * as CID from "@common/cid";
+import * as CID from "@common/cid.js";
 import foundation from "@common/facets/foundation.js";
 import { effect, signal } from "@common/signal.js";
 import { facetFromUrl } from "@common/facets/utils.js";
