@@ -43,7 +43,7 @@
     "webamp": "npm:webamp@^2.2.0",
 
     // Paths
-    "@src/": "./src/",
+    "@testing/": "./src/testing/",
     "@tests/": "./tests/",
 
     "@common/": "./src/common/",
@@ -70,6 +70,7 @@
   "exports": {
     // .js
     "./common/facets/foundation.js": "./src/common/facets/foundation.js",
+    "./common/facets/utils.js": "./src/common/facets/utils.js",
     "./common/element.js": "./src/common/element.js",
     "./common/signal.js": "./src/common/signal.js",
     "./common/worker.js": "./src/common/worker.js",
@@ -88,6 +89,10 @@
     "./components/input/opensubsonic/constants.js": "./src/components/input/opensubsonic/constants.js",
     "./components/input/opensubsonic/element.js": "./src/components/input/opensubsonic/element.js",
     "./components/input/opensubsonic/worker.js": "./src/components/input/opensubsonic/worker.js",
+    "./components/input/https/common.js": "./src/components/input/https/common.js",
+    "./components/input/https/constants.js": "./src/components/input/https/constants.js",
+    "./components/input/https/element.js": "./src/components/input/https/element.js",
+    "./components/input/https/worker.js": "./src/components/input/https/worker.js",
     "./components/input/s3/common.js": "./src/components/input/s3/common.js",
     "./components/input/s3/constants.js": "./src/components/input/s3/constants.js",
     "./components/input/s3/element.js": "./src/components/input/s3/element.js",
@@ -115,6 +120,10 @@
     "./components/processor/search/element.js": "./src/components/processor/search/element.js",
     "./components/processor/search/worker.js": "./src/components/processor/search/worker.js",
     "./components/transformer/output/base.js": "./src/components/transformer/output/base.js",
+    "./components/transformer/output/bytes/automerge/constants.js": "./src/components/transformer/output/bytes/automerge/constants.js",
+    "./components/transformer/output/bytes/automerge/element.js": "./src/components/transformer/output/bytes/automerge/element.js",
+    "./components/transformer/output/bytes/automerge/utils.js": "./src/components/transformer/output/bytes/automerge/utils.js",
+    "./components/transformer/output/bytes/json/element.js": "./src/components/transformer/output/bytes/json/element.js",
     "./components/transformer/output/refiner/default/element.js": "./src/components/transformer/output/refiner/default/element.js",
     "./components/transformer/output/string/json/element.js": "./src/components/transformer/output/string/json/element.js",
 
@@ -127,7 +136,6 @@
     "./components/input/opensubsonic/types.d.ts": "./src/components/input/opensubsonic/types.d.ts",
     "./components/input/s3/types.d.ts": "./src/components/input/s3/types.d.ts",
     "./components/input/types.d.ts": "./src/components/input/types.d.ts",
-    "./components/orchestrator/auto-queue/types.d.ts": "./src/components/orchestrator/auto-queue/types.d.ts",
     "./components/orchestrator/process-tracks/types.d.ts": "./src/components/orchestrator/process-tracks/types.d.ts",
     "./components/orchestrator/scoped-tracks/types.d.ts": "./src/components/orchestrator/scoped-tracks/types.d.ts",
     "./components/output/polymorphic/indexed-db/types.d.ts": "./src/components/output/polymorphic/indexed-db/types.d.ts",
@@ -135,6 +143,7 @@
     "./components/processor/artwork/types.d.ts": "./src/components/processor/artwork/types.d.ts",
     "./components/processor/metadata/types.d.ts": "./src/components/processor/metadata/types.d.ts",
     "./components/processor/search/types.d.ts": "./src/components/processor/search/types.d.ts",
+    "./components/transformer/output/bytes/automerge/types.d.ts": "./src/components/transformer/output/bytes/automerge/types.d.ts",
     "./definitions/types.d.ts": "./src/definitions/types.d.ts",
 
     // .ts
@@ -159,6 +168,10 @@
     "serve": {
       "description": "Run and serve the site for development",
       "command": "deno task lume -s",
+    },
+    "test": {
+      "description": "Run tests",
+      "command": "deno test -A --doc --ignore=README.md",
     },
   },
   "compilerOptions": {

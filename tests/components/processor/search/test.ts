@@ -2,7 +2,7 @@ import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import { testWeb } from "@tests/common/index.ts";
-import { trackA, trackB } from "@src/testing/sample/tracks.js";
+import { trackA, trackB } from "@testing/sample/tracks.js";
 
 describe("components/processor/search", () => {
   it("finds tracks by album", async () => {
@@ -15,7 +15,7 @@ describe("components/processor/search", () => {
       document.body.append(processor);
 
       // Add sample tracks to the supply first
-      const { tracks } = await import("@src/testing/sample/tracks.js");
+      const { tracks } = await import("@testing/sample/tracks.js");
       await processor.supply({ tracks });
 
       // Search for a specific term
@@ -35,7 +35,7 @@ describe("components/processor/search", () => {
       document.body.append(processor);
 
       // Add sample tracks to the supply first
-      const { tracks } = await import("@src/testing/sample/tracks.js");
+      const { tracks } = await import("@testing/sample/tracks.js");
       await processor.supply({ tracks });
 
       // Search for a specific term
@@ -55,7 +55,7 @@ describe("components/processor/search", () => {
       document.body.append(processor);
 
       // Add sample tracks to the supply first
-      const { tracks } = await import("@src/testing/sample/tracks.js");
+      const { tracks } = await import("@testing/sample/tracks.js");
       await processor.supply({ tracks });
 
       // Search for a specific term

@@ -2,7 +2,7 @@ import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import { testWeb } from "@tests/common/index.ts";
-import { tracks } from "@src/testing/sample/tracks.js";
+import { tracks } from "@testing/sample/tracks.js";
 
 describe("components/engine/queue", () => {
   it("adds tracks", async () => {
@@ -12,7 +12,7 @@ describe("components/engine/queue", () => {
 
       document.body.append(engine);
 
-      const { tracks } = await import("@src/testing/sample/tracks.js");
+      const { tracks } = await import("@testing/sample/tracks.js");
 
       await engine.add({ tracks });
       return engine.future();
@@ -31,7 +31,7 @@ describe("components/engine/queue", () => {
 
       document.body.append(engine);
 
-      const { tracks } = await import("@src/testing/sample/tracks.js");
+      const { tracks } = await import("@testing/sample/tracks.js");
 
       await engine.supply({ tracks });
       await engine.fill({ amount: 1, shuffled: false });
@@ -51,7 +51,7 @@ describe("components/engine/queue", () => {
 
       document.body.append(engine);
 
-      const { tracks } = await import("@src/testing/sample/tracks.js");
+      const { tracks } = await import("@testing/sample/tracks.js");
 
       await engine.add({ tracks });
       await engine.shift();
@@ -72,7 +72,7 @@ describe("components/engine/queue", () => {
 
       document.body.append(engine);
 
-      const { tracks } = await import("@src/testing/sample/tracks.js");
+      const { tracks } = await import("@testing/sample/tracks.js");
 
       await engine.add({ tracks });
       await engine.shift();
