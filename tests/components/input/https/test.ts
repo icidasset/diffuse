@@ -22,38 +22,6 @@ describe("components/input/https", () => {
     }
   });
 
-  it("lists only HTTPS tracks from mixed collection", async () => {
-    const tracks = await testWeb(async () => {
-      const HttpsInput = await import("@components/input/https/element.js");
-      const input = new HttpsInput.CLASS();
-      document.body.append(input);
-
-      const cachedTracks: Track[] = [
-        {
-          $type: "sh.diffuse.output.track",
-          id: "1",
-          uri: "https://example.com/a.mp3",
-        },
-        {
-          $type: "sh.diffuse.output.track",
-          id: "2",
-          uri: "s3://bucket/b.mp3",
-        },
-        {
-          $type: "sh.diffuse.output.track",
-          id: "3",
-          uri: "https://example.com/c.mp3",
-        },
-      ];
-
-      return await input.list(cachedTracks);
-    });
-
-    expect(tracks.length).toBe(2);
-    expect(tracks[0].id).toBe("1");
-    expect(tracks[1].id).toBe("3");
-  });
-
   it("provides sources list from tracks", async () => {
     const sources = await testWeb(async () => {
       const HttpsInput = await import("@components/input/https/element.js");

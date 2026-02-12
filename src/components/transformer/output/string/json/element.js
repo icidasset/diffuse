@@ -27,6 +27,17 @@ class JsonStringOutputTransformer extends OutputTransformer {
           await base.facets.save(json);
         },
       },
+      playlists: {
+        ...base.playlists,
+        collection: computed(() => {
+          const json = base.playlists.collection();
+          return typeof json === "string" ? parseArray(json) : [];
+        }),
+        save: async (newPlaylists) => {
+          const json = JSON.stringify(newPlaylists);
+          await base.facets.save(json);
+        },
+      },
       themes: {
         ...base.themes,
         collection: computed(() => {

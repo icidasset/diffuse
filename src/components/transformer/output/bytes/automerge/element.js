@@ -6,6 +6,7 @@ import { recursivelyCloneRecords } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import {
   INITIAL_FACETS_DOCUMENT,
+  INITIAL_PLAYLISTS_DOCUMENT,
   INITIAL_THEMES_DOCUMENT,
   INITIAL_TRACKS_DOCUMENT,
 } from "./constants.js";
@@ -33,6 +34,20 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
         return Automerge.load(value);
       } else if (value == undefined) {
         return INITIAL_FACETS_DOCUMENT;
+      } else {
+        // TODO: Better error
+        throw new Error("Invalid data type");
+      }
+    });
+
+    /** @type {SignalReader<Automerge.Doc<PlaylistsDocument>>} */
+    const playlistsDocument = computed(() => {
+      const value = base.playlists.collection();
+
+      if (isUint8Array(value)) {
+        return Automerge.load(value);
+      } else if (value == undefined) {
+        return INITIAL_PLAYLISTS_DOCUMENT;
       } else {
         // TODO: Better error
         throw new Error("Invalid data type");
@@ -85,6 +100,22 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
           await base.facets.save(bytes);
         },
       },
+      playlists: {
+        ...base.playlists,
+        collection: computed(() => playlistsDocument().collection),
+        save: async (newPlaylists) => {
+          const doc = Automerge.change(playlistsDocument(), (d) => {
+            const clonedCollection = newPlaylists.map((facet) => {
+              return recursivelyCloneRecords(facet);
+            });
+
+            d.collection = clonedCollection;
+          });
+
+          const bytes = Automerge.save(doc);
+          await base.playlists.save(bytes);
+        },
+      },
       themes: {
         ...base.themes,
         collection: computed(() => themesDocument().collection),
@@ -121,6 +152,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
     // Assign manager properties to class
     this.facets = manager.facets;
+    this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
   }
