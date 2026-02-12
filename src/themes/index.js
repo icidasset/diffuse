@@ -97,20 +97,29 @@ effect(() => {
                     `}
                 </div>
                 <div class="button-row">
-                  <a href="themes/l/?id=${c.id}" class="button">Open</a>
+                  <a href="themes/l/?id=${c
+                    .id}" class="button button--bg-twist-1">
+                    <span class="with-icon">
+                      <i class="ph-fill ph-globe"></i> Open
+                    </span>
+                  </a>
                   <button
-                    class="button--bg-twist-4"
+                    class="button--bg-twist-1 button--subtle"
                     @click="${() => editTheme(c)}"
                   >
-                    Edit
+                    <span class="with-icon">
+                      <i class="ph-fill ph-cursor-text"></i> Edit
+                    </span>
                   </button>
                   <button
-                    class="button--bg-twist-2"
+                    class="button--bg-twist-2 button--subtle"
                     @click="${deleteTheme({
                       id: c.id,
                     })}"
                   >
-                    Delete
+                    <span class="with-icon">
+                      <i class="ph-fill ph-eraser"></i> Delete
+                    </span>
                   </button>
                 </div>
               </div>

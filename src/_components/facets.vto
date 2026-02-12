@@ -4,9 +4,21 @@
       <span>{{item.title}}</span>
       <div class="list-description">
         <div class="button-row">
-          <a href="facets/l/?url={{encodeURIComponent(item.url)}}" class="button button--bg-twist-1">Open</a>
-          <button rel="save" class="button--bg-twist-2">Save</button>
-          <button rel="fork" class="button--bg-twist-4">Fork</button>
+          <a href="facets/l/?url={{encodeURIComponent(item.url)}}" class="button button--bg-twist-1">
+            <span class="with-icon">
+              <i class="ph-fill ph-globe"></i> Open
+            </span>
+          </a>
+          <button rel="save" class="button--bg-twist-1 button--subtle">
+            <span class="with-icon">
+              <i class="ph-fill ph-download"></i> Save
+            </span>
+          </button>
+          <button rel="fork" class="button--bg-twist-1 button--subtle">
+            <span class="with-icon">
+              <i class="ph-fill ph-cursor-text"></i> Edit
+            </span>
+          </button>
         </div>
         <div>
           {{item.desc |> md(true)}}
