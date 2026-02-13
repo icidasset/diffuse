@@ -35,7 +35,7 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
       },
       init: () => this.whenConnected(),
       playlists: {
-        empty: () => [],
+        empty: () => undefined,
         get: () => this.#get("playlists"),
         put: (data) => this.#put("playlists", data),
       },

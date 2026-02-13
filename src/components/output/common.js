@@ -6,7 +6,7 @@ import { computed, signal, untracked } from "@common/signal.js";
  */
 
 /**
- * @template Encoding
+ * @template [Encoding=null]
  * @param {OutputManagerProperties<Encoding>} _
  * @returns {OutputManager<Encoding>}
  */
@@ -16,13 +16,6 @@ export function outputManager({ init, facets, playlists, themes, tracks }) {
       .empty()),
   );
   const cs = signal(
-    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
-  );
-
-  const t = signal(
-    /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
-  );
-  const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );
 
@@ -38,6 +31,13 @@ export function outputManager({ init, facets, playlists, themes, tracks }) {
     /** @type {Encoding extends null ? Theme[] : Encoding} */ (themes.empty()),
   );
   const ths = signal(
+    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+  );
+
+  const t = signal(
+    /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
+  );
+  const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );
 
