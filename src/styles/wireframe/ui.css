@@ -4,7 +4,7 @@ body {
 }
 
 .panel {
-  border: 1px solid var(--form-color);
+  border: 2px solid var(--form-color);
   border-radius: var(--radius-md);
   padding: var(--space-sm);
 }
@@ -16,7 +16,7 @@ body {
 button,
 .button {
   background: transparent;
-  border: 1px solid var(--form-color);
+  border: 2px solid var(--form-color);
   border-radius: var(--radius-md);
   color: currentColor;
   cursor: pointer;
@@ -38,21 +38,19 @@ button,
     opacity: 0.4;
   }
 
-  /*&:hover:not([disabled]),
-  &:focus:not([disabled]) {
-    border-color: var(--accent);
-    color: var(--accent);
-  }*/
-
   &.button--accent {
     border-color: var(--accent);
     color: var(--accent);
+  }
 
-    &:hover:not([disabled]),
-    &:focus:not([disabled]) {
-      border-color: var(--text-color);
-      color: var(--text-color);
-    }
+  &.button--active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-color);
+  }
+
+  & > .with-icon {
+    padding-top: 1px;
   }
 }
 
@@ -72,7 +70,7 @@ a.button {
 input,
 textarea {
   background: transparent;
-  border: 1px solid var(--form-color);
+  border: 2px solid var(--form-color);
   color: inherit;
   font-size: var(--fs-sm);
   padding: var(--space-2xs);
@@ -95,7 +93,7 @@ textarea {
 select {
   appearance: none;
   background: transparent;
-  border: 1px solid var(--form-color);
+  border: 2px solid var(--form-color);
   border-radius: var(--radius-md);
   color: inherit;
   font-family: inherit;
@@ -127,7 +125,7 @@ select {
 hr,
 .separator {
   border: 0;
-  border-top: 1px solid var(--form-color);
+  border-top: 2px solid var(--form-color);
   margin: var(--space-md) 0;
 }
 
@@ -142,7 +140,7 @@ table {
 
 th,
 td {
-  border: 1px solid var(--form-color);
+  border: 2px solid var(--form-color);
   padding: var(--space-2xs) var(--space-xs);
   text-align: left;
 }

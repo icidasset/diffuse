@@ -2,13 +2,13 @@
   <div class="panel">
     <div class="row">
       <button id="repeat" title="Toggle repeat">
-        <span class="with-icon"><i class="ph-fill ph-repeat"></i> Repeat</span>
+        <span class="with-icon"><i class="ph-bold ph-repeat"></i> Repeat</span>
       </button>
       <button id="shuffle" title="Toggle shuffle">
-        <span class="with-icon"><i class="ph-fill ph-shuffle"></i> Shuffle</span>
+        <span class="with-icon"><i class="ph-bold ph-shuffle"></i> Shuffle</span>
       </button>
       <button id="favourite" title="Toggle favourite">
-        <span class="with-icon"><i class="ph-fill ph-star"></i> Favourite</span>
+        <span class="with-icon"><i class="ph-bold ph-star"></i> Favourite</span>
       </button>
     </div>
   </div>
@@ -16,8 +16,8 @@
 
 <style>
   @import "./styles/base.css";
-  @import "./styles/vendor/phosphor/fill/style.css";
-  @import "./styles/lines/ui.css";
+  @import "./styles/vendor/phosphor/bold/style.css";
+  @import "./styles/wireframe/ui.css";
 
   body {
     display: flex;
@@ -36,7 +36,7 @@
   import foundation from "./common/facets/foundation.js";
   import { computed, effect } from "./common/signal.js";
 
-  const ACTIVE_CLASS = "button--accent";
+  const ACTIVE_CLASS = "button--active";
 
   // Setup
   foundation.features.fillQueueAutomatically();
