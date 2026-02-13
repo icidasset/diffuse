@@ -25,8 +25,8 @@ function matchKey(track) {
  * @returns {string}
  */
 function itemMatchKey(item) {
-  const artist = item.criteria.find((c) => c.field === "artist")?.value ?? "";
-  const title = item.criteria.find((c) => c.field === "title")?.value ?? "";
+  const artist = item.criteria.find((c) => c.field === "tags.artist")?.value ?? "";
+  const title = item.criteria.find((c) => c.field === "tags.title")?.value ?? "";
   return `${artist}.${title}`;
 }
 
@@ -36,8 +36,8 @@ function itemMatchKey(item) {
  */
 function trackCriteria(track) {
   return [
-    { field: "artist", value: /** @type {unknown} */ (track.tags?.artist) },
-    { field: "title", value: /** @type {unknown} */ (track.tags?.title) },
+    { field: "tags.artist", value: /** @type {unknown} */ (track.tags?.artist) },
+    { field: "tags.title", value: /** @type {unknown} */ (track.tags?.title) },
   ];
 }
 
