@@ -1,5 +1,5 @@
 /**
- * @import {Playlist} from "@definitions/types.d.ts"
+ * @import {Playlist, PlaylistItem, Track} from "@definitions/types.d.ts"
  */
 
 /**
@@ -19,4 +19,22 @@ export function createEmptyFavouritesPlaylist() {
     createdAt: now,
     updatedAt: now,
   });
+}
+
+/**
+ * Check if a track is a favourite based on the `PlaylistItem`.
+ *
+ * @param {Track} track
+ * @param {PlaylistItem} item
+ */
+export function matchItemWithTrack(track, item) {
+  const artist = item.criteria.find((c) => c.field === "artist")?.value
+    .toString()
+    .toLowerCase();
+  const title = item.criteria.find((c) => c.field === "title")?.value
+    .toString()
+    .toLowerCase();
+
+  return track.tags?.artist?.toLowerCase() === artist &&
+    track.tags?.title?.toLowerCase() === title;
 }

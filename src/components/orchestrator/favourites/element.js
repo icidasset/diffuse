@@ -1,6 +1,6 @@
 import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
-import { createEmptyFavouritesPlaylist } from "./common.js";
+import { createEmptyFavouritesPlaylist, matchItemWithTrack } from "./common.js";
 
 /**
  * @import {Playlist, Track} from "@definitions/types.d.ts"
@@ -152,6 +152,19 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
     });
 
     if (result) await output.playlists.save(result);
+  }
+
+  // 🛠️
+
+  /**
+   * Check if a track is a favourite.
+   *
+   * @param {Track} track
+   */
+  isFavourite(track) {
+    return this.playlist().items.some((item) => {
+      return matchItemWithTrack(track, item);
+    });
   }
 }
 

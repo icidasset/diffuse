@@ -64,10 +64,7 @@
     const track = queue.now();
     if (!track) return false;
 
-    const playlist = favourites.playlist();
-    return playlist.items.some((item) =>
-      item.criteria.some((c) => c.field === "id" && c.value === track.id),
-    );
+    return favourites.isFavourite(track);
   });
 
   effect(() => {
