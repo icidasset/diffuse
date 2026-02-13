@@ -1,13 +1,13 @@
 import * as Automerge from "@automerge/automerge";
-import { decodeCBOR, encodeCBOR } from "@char/cbor"
-import bs58check from "bs58check"
+import { decodeCBOR, encodeCBOR } from "@char/cbor";
+import bs58check from "bs58check";
 
 import { DiffuseElement } from "@common/element.js";
 import { outputManager } from "../../common.js";
 
 /**
  * @import { DocumentId, PeerId } from "@automerge/automerge-repo"
- * @import { OutputElement, OutputManager } from "../../types.d.ts"
+ * @import { OutputElement, OutputManager, OutputManagerProperties } from "../../types.d.ts"
  */
 
 /**
@@ -63,8 +63,8 @@ class AutomergeRepoServerOutput extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {OutputManager<Uint8Array>} */
-    this.#manager = outputManager({
+    /** @type {OutputManagerProperties<Uint8Array>} */
+    const properties = {
       facets: {
         empty: () => undefined,
         get: async () => this.#getBytes("facets"),
@@ -72,7 +72,7 @@ class AutomergeRepoServerOutput extends DiffuseElement {
       },
       init: () => this.whenConnected(),
       playlists: {
-        empty: () => [],
+        empty: () => undefined,
         get: async () => this.#getBytes("playlists"),
         put: async (data) => this.#putBytes("playlists", data),
       },
@@ -86,7 +86,9 @@ class AutomergeRepoServerOutput extends DiffuseElement {
         get: async () => this.#getBytes("tracks"),
         put: async (data) => this.#putBytes("tracks", data),
       },
-    });
+    };
+
+    this.#manager = outputManager(properties);
 
     this.facets = this.#manager.facets;
     this.playlists = this.#manager.playlists;
@@ -96,6 +98,9 @@ class AutomergeRepoServerOutput extends DiffuseElement {
 
   // LIFECYCLE
 
+  /**
+   * @override
+   */
   connectedCallback() {
     super.connectedCallback();
     this.#loadDocIds();
@@ -103,6 +108,9 @@ class AutomergeRepoServerOutput extends DiffuseElement {
     this.#connect();
   }
 
+  /**
+   * @override
+   */
   disconnectedCallback() {
     super.disconnectedCallback();
     this.#ws?.close();
@@ -129,11 +137,10 @@ class AutomergeRepoServerOutput extends DiffuseElement {
         bytes[6] = (bytes[6] & 0x0f) | 0x40;
         bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
-        /** @type {DocumentId} */
-        const docId = bs58check.encode(bytes)
-        const url = `automerge:${docId}`
+        const docId = /** @type {DocumentId} */ (bs58check.encode(bytes));
+        const url = `automerge:${docId}`;
 
-        this.#docIds[name] = docId
+        this.#docIds[name] = docId;
       }
     }
 
@@ -267,6 +274,7 @@ class AutomergeRepoServerOutput extends DiffuseElement {
     this.#syncStates[name] = newSyncState;
 
     // Update the output manager signal with fresh bytes
+    // @ts-ignore Not sure what type to use here
     this.#manager.signals[name].value = Automerge.save(newDoc);
 
     // Continue the sync round-trip
@@ -318,14 +326,14 @@ class AutomergeRepoServerOutput extends DiffuseElement {
    * @returns {T}
    */
   #cborDecode(data) {
-    return decodeCBOR(data)
+    return /** @type {T} */ (decodeCBOR(data));
   }
 
   /**
    * @param {unknown} data
    */
   #cborEncode(data) {
-    return encodeCBOR(data)
+    return encodeCBOR(data);
   }
 
   /**
