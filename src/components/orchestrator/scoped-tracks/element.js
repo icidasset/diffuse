@@ -3,10 +3,11 @@ import {
   query,
   queryOptional,
 } from "@common/element.js";
-import { signal, untracked } from "@common/signal.js";
+import { match } from "@common/playlist.js";
+import { computed, signal, untracked } from "@common/signal.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Playlist, Track} from "@definitions/types.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
@@ -41,19 +42,28 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   #input = signal(/** @type {InputElement | null} */ (null));
   #output = signal(/** @type {OutputElement | null} */ (null));
 
-  #search = signal(
-    /** @type {import("@components/processor/search/element.js").CLASS | null} */ (null),
-  );
-
   #scope = signal(
     /** @type {import("@components/engine/scope/element.js").CLASS | null} */ (null),
   );
 
-  #tracks = signal(/** @type {Track[]} */ ([]));
+  #search = signal(
+    /** @type {import("@components/processor/search/element.js").CLASS | null} */ (null),
+  );
+
+  #selectedPlaylist = computed(() => {
+    const playlistId = this.#scope.value?.playlistId();
+    if (!playlistId) return undefined;
+    return this.#output.value?.playlists.collection().find((p) =>
+      p.id === playlistId
+    );
+  });
+
+  #tracksSearch = signal(/** @type {Track[]} */ ([]));
+  #tracksFinal = signal(/** @type {Track[]} */ ([]));
 
   // STATE
 
-  tracks = this.#tracks.get;
+  tracks = this.#tracksFinal.get;
 
   // LIFECYCLE
 
@@ -109,8 +119,17 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         ? await this.#search.value?.search({ term: searchTerm })
         : untracked(() => output.tracks.collection());
 
-      // TODO: Playlist selection
-      this.#tracks.value = searchResults ?? [];
+      this.#tracksSearch.value = searchResults ?? output.tracks.collection();
+    });
+
+    // Watch `#tracksSearch` + Playlist
+    this.effect(() => {
+      const tracks = this.#tracksSearch.value;
+      const playlist = this.#selectedPlaylist();
+
+      this.#tracksFinal.value = playlist
+        ? tracks.filter((t) => playlist.items.some((item) => match(t, item)))
+        : tracks;
     });
   }
 
