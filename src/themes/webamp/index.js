@@ -16,7 +16,7 @@ import { effect, untracked } from "@common/signal.js";
 
 import "./browser/element.js";
 import "./configurators/input/element.js";
-import "./configurators/output.js";
+import "./configurators/output/element.js";
 import "./window/element.js";
 
 import WindowManager from "./window-manager/element.js";
