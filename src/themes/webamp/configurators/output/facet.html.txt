@@ -1,0 +1,36 @@
+<div class="window">
+  <div
+    class="title-bar"
+  >
+    <div class="title-bar-icon">
+      <img src="images/icons/windows_98/directory_explorer-4.png" height="14" />
+    </div>
+    <div class="title-bar-text" draggable="false">
+      Output configurator
+    </div>
+    <div class="title-bar-controls">
+      <button aria-label="Close" onclick="window.close()"></button>
+    </div>
+  </div>
+  <div class="window-body">
+    <div id="placeholder"></div>
+  </div>
+</div>
+
+<style>
+  @import "./styles/vendor/98.css";
+  @import "./themes/webamp/fonts.css";
+  @import "./themes/webamp/facet.css";
+</style>
+
+<script type="module">
+  import foundation from "./common/facets/foundation.js";
+  import OutputConfigElement from "./themes/webamp/configurators/output/element.js";
+
+  const out = foundation.orchestrator.output();
+
+  const el = new OutputConfigElement();
+  el.setAttribute("output-selector", out.selector);
+
+  document.querySelector("#placeholder")?.replaceWith(el);
+</script>

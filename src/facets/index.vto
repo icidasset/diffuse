@@ -29,6 +29,10 @@ builtIn:
     title: "Webamp / Input Configurator"
     desc: >
       Windows 98 styled input configurator where you can add music sources.
+  - url: "themes/webamp/configurators/output/facet.html.txt"
+    title: "Webamp / Output Configurator"
+    desc: >
+      Windows 98 styled output configurator where you can manage your data storage.
 
 examples:
   - url: "facets/examples/now-playing.html.txt"
@@ -158,6 +162,7 @@ examples:
 {{ echo -}}foundation.engine.scope(){{- /echo }}
 
 {{ echo -}}foundation.orchestrator.autoQueue(){{- /echo }}
+{{ echo -}}foundation.orchestrator.favourites(){{- /echo }}
 {{ echo -}}foundation.orchestrator.input(){{- /echo }}
 {{ echo -}}foundation.orchestrator.output(){{- /echo }}
 {{ echo -}}foundation.orchestrator.queueAudio(){{- /echo }}
