@@ -12,7 +12,9 @@ export function match(track, item) {
   return item.criteria.every((c) => {
     /** @type {any} */
     let value = track;
-    let critValue = c.value
+
+    /** @type {any} */
+    let critValue = c.value;
 
     c.field.split(".").forEach((f) => {
       if (value) value = value[f];
@@ -21,8 +23,8 @@ export function match(track, item) {
     if (value && c.transformations) {
       c.transformations.forEach((t) => {
         try {
-          value = value[t]()
-          critValue = value[t]()
+          value = value[t]();
+          critValue = critValue[t]();
         } catch (err) {}
       });
     }
