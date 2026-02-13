@@ -72,7 +72,7 @@
     },
     "transformation": {
       "type": "string",
-      "description": "Transformation to apply to the field value before comparison"
+      "description": "Transformation to apply to the field value before comparison. This transformation is method to call on the value. For example, `toString`"
     }
   }
 }

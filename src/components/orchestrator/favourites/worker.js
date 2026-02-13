@@ -25,8 +25,10 @@ function matchKey(track) {
  * @returns {string}
  */
 function itemMatchKey(item) {
-  const artist = item.criteria.find((c) => c.field === "tags.artist")?.value ?? "";
-  const title = item.criteria.find((c) => c.field === "tags.title")?.value ?? "";
+  const artist = item.criteria.find((c) => c.field === "tags.artist")?.value ??
+    "";
+  const title = item.criteria.find((c) => c.field === "tags.title")?.value ??
+    "";
   return `${artist}.${title}`;
 }
 
@@ -35,9 +37,19 @@ function itemMatchKey(item) {
  * @param {Track} track
  */
 function trackCriteria(track) {
+  const transformations = ["toLowerCase"];
+
   return [
-    { field: "tags.artist", value: /** @type {unknown} */ (track.tags?.artist) },
-    { field: "tags.title", value: /** @type {unknown} */ (track.tags?.title) },
+    {
+      field: "tags.artist",
+      value: /** @type {unknown} */ (track.tags?.artist),
+      transformations,
+    },
+    {
+      field: "tags.title",
+      value: /** @type {unknown} */ (track.tags?.title),
+      transformations,
+    },
   ];
 }
 
