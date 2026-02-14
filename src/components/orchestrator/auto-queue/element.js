@@ -50,7 +50,7 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
     this.effect(() => {
       const tracks = tracksElement.tracks();
 
-      this.isLeader().then((isLeader) => {
+      this.isLeader().then(async (isLeader) => {
         if (!isLeader) return;
         queue.supply({ tracks });
       });
@@ -58,19 +58,22 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
 
     // Automatically fill queue
     let lastShuffle = repeatShuffle.shuffle();
+    let lastFingerprint = queue.supplyFingerprint();
 
     this.effect(() => {
       const trigger = queue.now();
-      const _other_trigger = queue.supplyFingerprint();
+      const fingerprint = queue.supplyFingerprint();
       const shuffled = repeatShuffle.shuffle();
 
       this.isLeader().then((isLeader) => {
         if (!isLeader) return;
 
         // Clear non-manual items from the queue
-        // when 'shuffle' gets turned off or on.
-        if (shuffled !== lastShuffle) {
+        // when 'shuffle' gets turned off or on;
+        // or when queue supply changes.
+        if (shuffled !== lastShuffle || fingerprint !== lastFingerprint) {
           lastShuffle = shuffled;
+          lastFingerprint = fingerprint;
           queue.clear({ manualOnly: true });
         }
 

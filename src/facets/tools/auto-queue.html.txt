@@ -11,6 +11,15 @@
         <span class="with-icon"><i class="ph-bold ph-star"></i> Favourite</span>
       </button>
     </div>
+    <hr />
+    <div class="row">
+      <label class="with-icon" for="playlist">
+        <i class="ph-bold ph-playlist"></i>
+        <select id="playlist">
+          <option value="">All tracks</option>
+        </select>
+      </label>
+    </div>
   </div>
 </main>
 
@@ -26,9 +35,18 @@
     height: 100dvh;
   }
 
-  .row {
-    display: flex;
-    gap: var(--space-2xs);
+  main {
+    padding: var(--space-md);
+  }
+
+  label {
+    flex: 1;
+    letter-spacing: var(--leading-relaxed);
+    text-transform: uppercase;
+  }
+
+  label select {
+    flex: 1;
   }
 </style>
 
@@ -43,12 +61,15 @@
 
   const queue = foundation.engine.queue();
   const repeatShuffle = foundation.engine.repeatShuffle();
+  const scope = foundation.engine.scope();
   const favourites = foundation.orchestrator.favourites();
+  const output = foundation.orchestrator.output();
 
   // Elements
   const repeatBtn = document.querySelector("#repeat");
   const shuffleBtn = document.querySelector("#shuffle");
   const favouriteBtn = document.querySelector("#favourite");
+  const playlistSelect = document.querySelector("#playlist");
 
   // Repeat & Shuffle state
   effect(() => {
@@ -85,5 +106,28 @@
   favouriteBtn.onclick = () => {
     const track = queue.now();
     if (track) favourites.toggle(track);
+  };
+
+  // Playlist state
+  effect(() => {
+    const playlists = output.playlists.collection().sort((a, b) => {
+      a.name.localeCompare(b.name);
+    });
+
+    const currentId = scope.playlistId();
+
+    playlistSelect.innerHTML = `<option value="">All tracks</option>`;
+
+    for (const playlist of playlists) {
+      const option = document.createElement("option");
+      option.value = playlist.id;
+      option.textContent = playlist.name;
+      option.selected = playlist.id === currentId;
+      playlistSelect.appendChild(option);
+    }
+  });
+
+  playlistSelect.onchange = () => {
+    scope.setPlaylistId(playlistSelect.value.length ? playlistSelect.value : undefined);
   };
 </script>
