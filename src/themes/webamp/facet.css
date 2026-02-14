@@ -1,3 +1,5 @@
+@import "../../styles/variables.css";
+
 body {
   margin: 0;
 }
@@ -16,4 +18,14 @@ body {
 .window-body {
   flex: 1;
   overflow: hidden;
+}
+
+.with-icon {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-3xs);
+
+  &.with-icon--large {
+    gap: var(--space-xs);
+  }
 }

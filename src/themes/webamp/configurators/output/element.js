@@ -18,6 +18,7 @@ class OutputConfig extends DiffuseElement {
   render({ html }) {
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
+      <link rel="stylesheet" href="themes/webamp/facet.css" />
 
       <style>
       @import "./themes/webamp/98-vars.css";
@@ -64,7 +65,7 @@ class OutputConfig extends DiffuseElement {
       }
 
       #tabbed:has(#overview-tab:checked) #overview-contents { display: block }
-      #tabbed:has(#automerge-tab:checked) #automerge-contents { display: block }
+      #tabbed:has(#s3-tab:checked) #s3-contents { display: block }
       </style>
 
       <div id="tabbed">
@@ -76,9 +77,9 @@ class OutputConfig extends DiffuseElement {
             </label>
           </li>
           <li role="tab">
-            <label for="automerge-tab">
-              <span>Automerge Repo</span>
-              <input name="output-tab" id="automerge-tab" type="radio" />
+            <label for="s3-tab">
+              <span>S3</span>
+              <input name="output-tab" id="s3-tab" type="radio" />
             </label>
           </li>
         </menu>
@@ -86,21 +87,16 @@ class OutputConfig extends DiffuseElement {
         <div class="window" role="tabpanel">
           <!-- Overview -->
           <div class="window-body" id="overview-contents">
-            <form>
-              <p>Do you want to sync your data somewhere?</p>
-              <div class="field-row">
-                <input id="idb-json" type="radio" checked />
-                <label for="idb-json">No syncing, just keep data locally.</label>
-              </div>
-              <div class="field-row">
-                <input id="idb-json" type="radio" disabled />
-                <label for="idb-json">Automerge Repo</label>
-              </div>
-            </form>
+            <fieldset>
+              <span class="with-icon with-icon--large">
+                <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
+                <span>Here you can configure where to keep your user data.<br />Each storage method comes with its pros and cons.<br />By default your data is only kept locally here in the browser.</span>
+              </span>
+            </fieldset>
           </div>
 
-          <!-- Automerge -->
-          <div class="window-body" id="automerge-contents">
+          <!-- S3 -->
+          <div class="window-body" id="s3-contents">
             <p>TODO</p>
           </div>
         </div>
