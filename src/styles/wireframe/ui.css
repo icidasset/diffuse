@@ -74,6 +74,7 @@ input,
 textarea {
   background: transparent;
   border: 2px solid var(--form-color);
+  border-radius: var(--radius-md);
   color: inherit;
   font-size: var(--fs-sm);
   padding: var(--space-2xs);

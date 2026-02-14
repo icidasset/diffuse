@@ -1,0 +1,147 @@
+<main>
+  <div class="panel">
+    <p>
+      Import data from the previous version of Diffuse (v3). Upload the snapshot JSON file you
+      exported.
+    </p>
+    <hr />
+    <div class="row">
+      <label class="with-icon" for="file">
+        <i class="ph-bold ph-upload"></i>
+        <input id="file" type="file" accept=".json,application/json" />
+      </label>
+    </div>
+    <hr />
+    <div class="row">
+      <button id="import-favourites" disabled>
+        <span class="with-icon"><i class="ph-fill ph-star"></i> Import favourites</span>
+      </button>
+    </div>
+    <div id="status" class="status" hidden></div>
+  </div>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/vendor/phosphor/bold/style.css";
+  @import "./styles/vendor/phosphor/fill/style.css";
+  @import "./styles/wireframe/ui.css";
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100dvh;
+  }
+
+  main {
+    padding: var(--space-md);
+  }
+
+  p {
+    line-height: var(--leading-relaxed);
+    max-width: 42ch;
+  }
+
+  label {
+    flex: 1;
+  }
+
+  input[type="file"] {
+    flex: 1;
+  }
+
+  .status {
+    margin-top: var(--space-sm);
+    font-size: var(--text-sm);
+  }
+
+  .status--success {
+    color: var(--accent);
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--accent-twist-4);
+    }
+  }
+
+  .status--error {
+    color: var(--accent-twist-5);
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--accent-twist-3);
+    }
+  }
+</style>
+
+<script type="module">
+  import foundation from "./common/facets/foundation.js";
+
+  // Setup
+  foundation.features.processInputs();
+
+  const favourites = foundation.orchestrator.favourites();
+  const output = foundation.orchestrator.output();
+
+  // Elements
+  const fileInput = document.querySelector("#file");
+  const importFavouritesBtn = document.querySelector("#import-favourites");
+  const statusEl = document.querySelector("#status");
+
+  // Parsed data
+  let json = null;
+
+  /**
+   * Show a status message.
+   * @param {string} message
+   * @param {"success" | "error"} type
+   */
+  function showStatus(message, type) {
+    statusEl.textContent = message;
+    statusEl.className = `status status--${type}`;
+    statusEl.hidden = false;
+  }
+
+  // Parse file on selection
+  fileInput.onchange = async () => {
+    const file = fileInput.files?.[0];
+
+    json = null;
+    statusEl.hidden = true;
+    importFavouritesBtn.disabled = true;
+
+    if (!file) return;
+
+    try {
+      json = JSON.parse(await file.text());
+    } catch (err) {
+      console.error("Failed to parse JSON:", err);
+      showStatus(`Failed to parse JSON: ${err.message}`, "error");
+      return;
+    }
+
+    if (json.favourites?.data?.length > 0) {
+      importFavouritesBtn.disabled = false;
+    }
+  };
+
+  // Import favourites on button click
+  importFavouritesBtn.onclick = async () => {
+    const items = json?.favourites?.data;
+    if (!items || items.length === 0) return;
+
+    try {
+      const tracks = items.map((item) => ({
+        tags: {
+          artist: item.artist ?? "",
+          title: item.title ?? "",
+        },
+      }));
+
+      await favourites.include(tracks);
+      showStatus(`Imported ${tracks.length} favourite(s).`, "success");
+    } catch (err) {
+      console.error("Import failed:", err);
+      showStatus(`Import failed: ${err.message}`, "error");
+    }
+  };
+</script>
