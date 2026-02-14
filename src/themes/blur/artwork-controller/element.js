@@ -22,7 +22,7 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @import AudioEngine from "@components/engine/audio/element.js"
  * @import QueueEngine from "@components/engine/queue/element.js"
  * @import ArtworkProcessor from "@components/processor/artwork/element.js"
- * @import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js"
+ * @import FavouritesOrchestrator from "@components/orchestrator/favourites/element.js"
  */
 
 class ArtworkController extends DiffuseElement {
@@ -56,9 +56,11 @@ class ArtworkController extends DiffuseElement {
 
   $artwork = signal(/** @type {ArtworkProcessor | undefined} */ (undefined));
   $audio = signal(/** @type {AudioEngine | undefined} */ (undefined));
+  $favourites = signal(
+    /** @type {FavouritesOrchestrator | undefined} */ (undefined),
+  );
   $input = signal(/** @type {InputElement | undefined} */ (undefined));
   $queue = signal(/** @type {QueueEngine | undefined} */ (undefined));
-  $repeatShuffle = signal(/** @type {RepeatShuffleEngine | undefined} */ (undefined));
 
   // SIGNALS - COMPUTED
 
@@ -91,49 +93,51 @@ class ArtworkController extends DiffuseElement {
     /** @type {QueueEngine} */
     const queue = query(this, "queue-engine-selector");
 
-    /** @type {RepeatShuffleEngine} */
-    const repeatShuffle = query(this, "repeat-shuffle-engine-selector");
+    /** @type {FavouritesOrchestrator} */
+    const favourites = query(this, "favourites-orchestrator-selector");
 
-    this.$artwork.value = artwork;
-    this.$audio.value = audio;
-    this.$input.value = input;
-    this.$queue.value = queue;
-    this.$repeatShuffle.value = repeatShuffle;
+    whenElementsDefined({ audio, artwork, favourites, input, queue }).then(
+      () => {
+        this.$artwork.value = artwork;
+        this.$audio.value = audio;
+        this.$input.value = input;
+        this.$queue.value = queue;
+        this.$favourites.value = favourites;
 
-    whenElementsDefined({ audio, artwork, input, queue, repeatShuffle }).then(() => {
-      // Changed artwork based on active queue item.
-      const debouncedChangeArtwork = debounce(
-        1000,
-        this.#setArtwork.bind(this),
-      );
+        // Changed artwork based on active queue item.
+        const debouncedChangeArtwork = debounce(
+          1000,
+          this.#setArtwork.bind(this),
+        );
 
-      this.effect(() => {
-        const _trigger = queue.now();
-        debouncedChangeArtwork();
-      });
+        this.effect(() => {
+          const _trigger = queue.now();
+          debouncedChangeArtwork();
+        });
 
-      this.effect(() => this.#formatTimestamps());
-      this.effect(() => this.#lightOrDark());
+        this.effect(() => this.#formatTimestamps());
+        this.effect(() => this.#lightOrDark());
 
-      this.effect(() => {
-        const now = !!queue.now();
-        const aud = this.#audio()?.loadingState();
-        const bool = now && aud !== "loaded";
+        this.effect(() => {
+          const now = !!queue.now();
+          const aud = this.#audio()?.loadingState();
+          const bool = now && aud !== "loaded";
 
-        if (this.#isLoadingTimeout) {
-          clearTimeout(this.#isLoadingTimeout);
-        }
+          if (this.#isLoadingTimeout) {
+            clearTimeout(this.#isLoadingTimeout);
+          }
 
-        if (bool) {
-          this.#isLoadingTimeout = setTimeout(
-            () => this.#isLoading.value = true,
-            2000,
-          );
-        } else {
-          this.#isLoading.value = false;
-        }
-      });
-    });
+          if (bool) {
+            this.#isLoadingTimeout = setTimeout(
+              () => this.#isLoading.value = true,
+              2000,
+            );
+          } else {
+            this.#isLoading.value = false;
+          }
+        });
+      },
+    );
   }
 
   ////////////////////////////////////////////
@@ -306,19 +310,19 @@ class ArtworkController extends DiffuseElement {
       previous: this.#artwork.value.previous,
       current: { ...this.#artwork.value.current, loaded: true },
     };
-  }
+  };
 
   fullVolume = () => {
     this.$audio.value?.adjustVolume({ volume: 1 });
-  }
+  };
 
   mute = () => {
     this.$audio.value?.adjustVolume({ volume: 0 });
-  }
+  };
 
   next = () => {
     this.$queue.value?.shift();
-  }
+  };
 
   playPause = () => {
     const audioId = this.$queue.value?.now()?.id;
@@ -328,11 +332,11 @@ class ArtworkController extends DiffuseElement {
     } else if (audioId) {
       this.$audio.value?.play({ audioId });
     }
-  }
+  };
 
   previous = () => {
     this.$queue.value?.unshift();
-  }
+  };
 
   /**
    * @param {MouseEvent} event
@@ -345,7 +349,7 @@ class ArtworkController extends DiffuseElement {
     const audioId = this.$queue.value?.now()?.id;
 
     if (audioId) this.$audio.value?.seek({ audioId, percentage });
-  }
+  };
 
   /**
    * @param {MouseEvent} event
@@ -357,19 +361,14 @@ class ArtworkController extends DiffuseElement {
 
     const percentage = target ? event.offsetX / target.clientWidth : 0;
     this.$audio.value?.adjustVolume({ volume: percentage });
-  }
+  };
 
-  toggleRepeat = () => {
-    const rs = this.$repeatShuffle.value
-    if (!rs) return
-    rs.setRepeat(!rs.repeat())
-  }
+  toggleFavourite = () => {
+    const activeQueueItem = this.$queue.value?.now();
+    if (!activeQueueItem) return;
 
-  toggleShuffle = () => {
-    const rs = this.$repeatShuffle.value
-    if (!rs) return
-    rs.setShuffle(!rs.shuffle())
-  }
+    this.$favourites.value?.toggle(activeQueueItem);
+  };
 
   // RENDER
 
@@ -378,6 +377,9 @@ class ArtworkController extends DiffuseElement {
    */
   render({ html }) {
     const activeQueueItem = this.$queue.value?.now();
+    const isFav = activeQueueItem
+      ? this.$favourites.value?.isFavourite(activeQueueItem) ?? false
+      : false;
 
     // Artwork
     const artworkArr = [
@@ -521,13 +523,17 @@ class ArtworkController extends DiffuseElement {
                 .fullVolume}" class="ph-fill ph-speaker-high"></i>
             </div>
 
-            <!--<footer>
+            <footer>
               <div class="button-row">
-                <button title="Toggle favourite">
-                  <i class="ph-bold ph-star"></i>
+                <button
+                  title="Toggle favourite"
+                  data-enabled="${isFav ? `t` : `f`}"
+                  @click="${this.toggleFavourite}"
+                >
+                  <i class="ph-${isFav ? `fill` : `bold`} ph-star"></i>
                 </button>
               </div>
-            </footer>-->
+            </footer>
           </section>
         </section>
       </main>

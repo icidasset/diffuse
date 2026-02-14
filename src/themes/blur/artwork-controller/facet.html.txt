@@ -14,9 +14,9 @@
 
   const aud = foundation.engine.audio();
   const art = foundation.processor.artwork();
+  const fav = foundation.orchestrator.favourites();
   const inp = foundation.orchestrator.input();
   const que = foundation.engine.queue();
-  const rse = foundation.engine.repeatShuffle();
 
   // Controller
   const dac = new ArtworkController();
@@ -24,7 +24,7 @@
   dac.setAttribute("audio-engine-selector", aud.selector);
   dac.setAttribute("input-selector", inp.selector);
   dac.setAttribute("queue-engine-selector", que.selector);
-  dac.setAttribute("repeat-shuffle-engine-selector", rse.selector);
+  dac.setAttribute("favourites-orchestrator-selector", fav.selector);
 
   // Add to DOM
   document.body.append(dac);

@@ -7,9 +7,6 @@
       <button id="shuffle" title="Toggle shuffle">
         <span class="with-icon"><i class="ph-bold ph-shuffle"></i> Shuffle</span>
       </button>
-      <button id="favourite" title="Toggle favourite">
-        <span class="with-icon"><i class="ph-bold ph-star"></i> Favourite</span>
-      </button>
     </div>
     <hr />
     <div class="row">
@@ -62,13 +59,11 @@
   const queue = foundation.engine.queue();
   const repeatShuffle = foundation.engine.repeatShuffle();
   const scope = foundation.engine.scope();
-  const favourites = foundation.orchestrator.favourites();
   const output = foundation.orchestrator.output();
 
   // Elements
   const repeatBtn = document.querySelector("#repeat");
   const shuffleBtn = document.querySelector("#shuffle");
-  const favouriteBtn = document.querySelector("#favourite");
   const playlistSelect = document.querySelector("#playlist");
 
   // Repeat & Shuffle state
@@ -80,20 +75,6 @@
     shuffleBtn.classList.toggle(ACTIVE_CLASS, repeatShuffle.shuffle());
   });
 
-  // Favourite state
-  const isFavourited = computed(() => {
-    const track = queue.now();
-    if (!track) return false;
-
-    return favourites.isFavourite(track);
-  });
-
-  effect(() => {
-    const track = queue.now();
-    favouriteBtn.disabled = !track;
-    favouriteBtn.classList.toggle(ACTIVE_CLASS, isFavourited());
-  });
-
   // Actions
   repeatBtn.onclick = () => {
     repeatShuffle.setRepeat(!repeatShuffle.repeat());
@@ -101,11 +82,6 @@
 
   shuffleBtn.onclick = () => {
     repeatShuffle.setShuffle(!repeatShuffle.shuffle());
-  };
-
-  favouriteBtn.onclick = () => {
-    const track = queue.now();
-    if (track) favourites.toggle(track);
   };
 
   // Playlist state
