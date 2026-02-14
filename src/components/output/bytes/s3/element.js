@@ -1,0 +1,160 @@
+import { BroadcastableDiffuseElement } from "@common/element.js";
+import { outputManager } from "../../common.js";
+
+/**
+ * @import {ProxiedActions} from "@common/worker.d.ts"
+ * @import {OutputElement, OutputManager} from "../../types.d.ts"
+ * @import {Bucket} from "@components/input/s3/types.d.ts"
+ * @import {S3OutputWorkerActions} from "./types.d.ts"
+ */
+
+////////////////////////////////////////////
+// ELEMENT
+////////////////////////////////////////////
+
+/**
+ * @implements {OutputElement<Uint8Array | undefined>}
+ */
+class S3Output extends BroadcastableDiffuseElement {
+  static NAME = "diffuse/output/polymorphic/s3";
+  static WORKER_URL = "components/output/polymorphic/s3/worker.js";
+
+  #manager;
+
+  constructor() {
+    super();
+
+    /** @type {ProxiedActions<S3OutputWorkerActions>} */
+    this.proxy = this.workerProxy();
+
+    /** @type {OutputManager<Uint8Array | undefined>} */
+    this.#manager = outputManager({
+      facets: {
+        empty: () => undefined,
+        get: () => this.#get("facets"),
+        put: (data) => this.#put("facets", data),
+      },
+      init: () => this.whenConnected(),
+      playlists: {
+        empty: () => undefined,
+        get: () => this.#get("playlists"),
+        put: (data) => this.#put("playlists", data),
+      },
+      themes: {
+        empty: () => undefined,
+        get: () => this.#get("themes"),
+        put: (data) => this.#put("themes", data),
+      },
+      tracks: {
+        empty: () => undefined,
+        get: () => this.#get("tracks"),
+        put: (data) => this.#put("tracks", data),
+      },
+    });
+
+    this.facets = this.#manager.facets;
+    this.playlists = this.#manager.playlists;
+    this.themes = this.#manager.themes;
+    this.tracks = this.#manager.tracks;
+  }
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      const actions = this.broadcast(this.nameWithGroup, {
+        put: { strategy: "replicate", fn: this.#putIncoming },
+      });
+
+      if (actions) {
+        this.#put = this.#putOutgoing(actions.put);
+      }
+    }
+
+    // Super
+    super.connectedCallback();
+  }
+
+  // BUCKET
+
+  /**
+   * @param {Bucket} bucket
+   */
+  setBucket(bucket) {
+    this.#bucketValue = bucket;
+  }
+
+  /** @type {Bucket | undefined} */
+  #bucketValue;
+
+  /** @returns {Bucket} */
+  #bucket() {
+    if (!this.#bucketValue) {
+      throw new Error("Bucket not set, call setBucket() first.");
+    }
+    return this.#bucketValue;
+  }
+
+  // GET & PUT
+
+  /** @param {string} name */
+  #getProxy = (name) =>
+    this.proxy.get({ bucket: this.#bucket(), name: this.#cat(name) });
+  #get = this.#getProxy;
+
+  /** @param {string} name; @param {any} data */
+  #putProxy = (name, data) =>
+    this.proxy.put({ bucket: this.#bucket(), data, name: this.#cat(name) });
+  #put = this.#putProxy;
+
+  /**
+   * @param {(uuidSender: ReturnType<typeof crypto.randomUUID>, name: string, data: any) => Promise<void>} action
+   * @returns {(name: string, data: any) => Promise<void>}
+   */
+  #putOutgoing = (action) => async (name, data) => {
+    return await action(this.uuid, name, data);
+  };
+
+  /**
+   * @param {ReturnType<typeof crypto.randomUUID>} uuidSender
+   * @param {string} name
+   * @param {any} data
+   */
+  #putIncoming(uuidSender, name, data) {
+    if (uuidSender === this.uuid) {
+      // Initiator
+      this.#putProxy(name, data);
+    } else {
+      // Listener
+      if (name === "facets") this.#manager.signals.facets.value = data;
+      if (name === "playlists") this.#manager.signals.playlists.value = data;
+      if (name === "themes") this.#manager.signals.themes.value = data;
+      if (name === "tracks") this.#manager.signals.tracks.value = data;
+    }
+  }
+
+  // 🛠️
+
+  /** @param {string} name */
+  #cat(name) {
+    const namespace = this.hasAttribute("namespace")
+      ? this.getAttribute("namespace") + "/"
+      : "";
+    return `${namespace}${name}`;
+  }
+}
+
+export default S3Output;
+
+////////////////////////////////////////////
+// REGISTER
+////////////////////////////////////////////
+
+export const CLASS = S3Output;
+export const NAME = "dop-s3";
+
+customElements.define(NAME, S3Output);
