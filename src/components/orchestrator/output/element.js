@@ -73,7 +73,7 @@ class OutputOrchestrator extends DiffuseElement {
         namespace="json"
       ></dop-indexed-db>
 
-      <dc-output id="do-output__dc-output" default="do-output__dop-indexed-db__json">
+      <dc-output id="do-output__dc-output" default="do-output__dtos-json">
         <dtos-json
           id="do-output__dtos-json"
           output-selector="#do-output__dop-indexed-db__json"
