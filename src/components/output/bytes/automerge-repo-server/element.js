@@ -63,26 +63,28 @@ class AutomergeRepoServerOutput extends DiffuseElement {
   constructor() {
     super();
 
+    this.#ensureDocs();
+
     /** @type {OutputManagerProperties<Uint8Array>} */
     const properties = {
       facets: {
-        empty: () => undefined,
+        empty: () => this.#getBytes("facets"),
         get: async () => this.#getBytes("facets"),
         put: async (data) => this.#putBytes("facets", data),
       },
       init: () => this.whenConnected(),
       playlists: {
-        empty: () => undefined,
+        empty: () => this.#getBytes("playlists"),
         get: async () => this.#getBytes("playlists"),
         put: async (data) => this.#putBytes("playlists", data),
       },
       themes: {
-        empty: () => undefined,
+        empty: () => this.#getBytes("themes"),
         get: async () => this.#getBytes("themes"),
         put: async (data) => this.#putBytes("themes", data),
       },
       tracks: {
-        empty: () => undefined,
+        empty: () => this.#getBytes("tracks"),
         get: async () => this.#getBytes("tracks"),
         put: async (data) => this.#putBytes("tracks", data),
       },
@@ -104,7 +106,6 @@ class AutomergeRepoServerOutput extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
     this.#loadDocIds();
-    this.#ensureDocs();
     this.#connect();
   }
 
