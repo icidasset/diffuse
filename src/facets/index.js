@@ -247,7 +247,7 @@ async function onBuildSubmit(event) {
       break;
     case "save+open":
       await saveFacet(facet);
-      globalThis.open(`./facets/l/?cid=${facet.cid}`, "blank");
+      globalThis.open(`./facets/l/?id=${facet.id}`, "blank");
       break;
   }
 }
@@ -262,6 +262,9 @@ async function editFacet(ogFacet) {
   ));
 
   if (!nameEl) return;
+
+  // Scroll to builder
+  document.querySelector("#build")?.scrollIntoView();
 
   // Make sure HTML is loaded
   if (!facet.html && facet.url) {

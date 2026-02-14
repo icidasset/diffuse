@@ -221,7 +221,7 @@ async function onBuildSubmit(event) {
       break;
     case "save+open":
       await saveTheme(theme);
-      globalThis.open(`./themes/l/?cid=${theme.cid}`, "blank");
+      globalThis.open(`./themes/l/?id=${theme.id}`, "blank");
       break;
   }
 }
