@@ -47,7 +47,7 @@
         "bitsPerSample": { "type": "integer", "description": "Bit depth" },
         "codec": { "type": "string", "description": "Compression algorithm" },
         "container": { "type": "string", "description": "Encoding format" },
-        "duration": { "type": "integer", "description": "Duration in seconds" },
+        "duration": { "type": "integer", "description": "Duration in milliseconds" },
         "lossless": { "type": "boolean", "description": "Is track lossless" },
         "numberOfChannels": { "type": "integer", "description": "Number of audio channels" },
         "sampleRate": { "type": "integer", "description": "Samples per second" },

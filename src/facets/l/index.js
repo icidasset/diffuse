@@ -57,7 +57,10 @@ effect(async () => {
   }
 
   // TODO: Message that facet was not found
-  if (!facet) return;
+  if (!facet) {
+    console.error("Facet not found");
+    return;
+  }
 
   // Make sure HTML is loaded
   // TODO: Handle URL loading error

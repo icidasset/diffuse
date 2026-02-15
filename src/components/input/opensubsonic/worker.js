@@ -159,11 +159,13 @@ export async function list(cachedTracks = []) {
 
           stats: removeUndefinedValuesFromRecord({
             albumGain: undefined,
-            bitrate: song.bitRate ? song.bitRate * 1000 : undefined,
+            bitrate: song.bitRate ? Math.round(song.bitRate * 1000) : undefined,
             bitsPerSample: undefined,
             codec: undefined,
             container: undefined,
-            duration: song.duration,
+            duration: song.duration != null
+              ? Math.round(song.duration * 1000)
+              : undefined,
             lossless: undefined,
             numberOfChannels: undefined,
             sampleRate: undefined,

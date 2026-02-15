@@ -68,7 +68,7 @@ class OutputConfig extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const did = this.#atproto.value?.$did.value ?? null;
+    const did = this.#atproto.value?.did() ?? null;
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />

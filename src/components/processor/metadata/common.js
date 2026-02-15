@@ -57,16 +57,18 @@ export async function musicMetadataTags({
 
   /** @type {TrackStats} */
   const statsFull = {
-    albumGain: meta.format.albumGain,
-    bitrate: meta.format.bitrate,
-    bitsPerSample: meta.format.bitsPerSample,
+    albumGain: maybeRound(meta.format.albumGain),
+    bitrate: maybeRound(meta.format.bitrate),
+    bitsPerSample: maybeRound(meta.format.bitsPerSample),
     codec: meta.format.codec,
     container: meta.format.container,
-    duration: meta.format.duration,
+    duration: meta.format.duration != null
+      ? Math.round(meta.format.duration * 1000)
+      : undefined,
     lossless: meta.format.lossless,
-    numberOfChannels: meta.format.numberOfChannels,
-    sampleRate: meta.format.sampleRate,
-    trackGain: meta.format.trackGain,
+    numberOfChannels: maybeRound(meta.format.numberOfChannels),
+    sampleRate: maybeRound(meta.format.sampleRate),
+    trackGain: maybeRound(meta.format.trackGain),
   };
 
   /** @type {TrackTags} */
@@ -145,4 +147,12 @@ export async function musicMetadataTags({
     stats,
     tags,
   };
+}
+
+/**
+ * @param {number | undefined} value
+ * @returns {number | undefined}
+ */
+function maybeRound(value) {
+  return typeof value === "number" ? Math.round(value) : value;
 }

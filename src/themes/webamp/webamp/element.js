@@ -58,7 +58,9 @@ class WebampElement extends HTMLElement {
         dispatch({
           type: "ADD_TRACK_FROM_URL",
           url: track.uri,
-          duration: track.stats?.duration,
+          duration: track.stats?.duration != null
+            ? track.stats.duration / 1000
+            : undefined,
           defaultName: undefined,
           id: idx,
           atIndex: idx,
@@ -66,7 +68,9 @@ class WebampElement extends HTMLElement {
 
         dispatch({
           type: "SET_MEDIA_DURATION",
-          duration: track.stats?.duration,
+          duration: track.stats?.duration != null
+            ? track.stats.duration / 1000
+            : undefined,
           id: idx,
         });
 

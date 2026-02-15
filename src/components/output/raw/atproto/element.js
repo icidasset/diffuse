@@ -20,32 +20,22 @@ import { login, logout, OAuthUserAgent, restoreOrFinalize } from "./oauth.js";
 class ATProtoOutput extends BroadcastableDiffuseElement {
   static NAME = "diffuse/output/raw/atproto";
 
+  #manager;
+
+  /** @type {PromiseWithResolvers<void>} */
+  #authenticated = Promise.withResolvers();
+
   /** @type {Client | null} */
   #rpc = null;
 
   /** @type {OAuthUserAgent | null} */
   #agent = null;
 
-  /** @type {string | null} */
-  #did = null;
-
-  /** Public signal exposing the authenticated DID (null when not logged in). */
-  $did = signal(/** @type {string | null} */ (null));
-
-  #manager;
-
-  /** @type {PromiseWithResolvers<void>} */
-  #authenticated = Promise.withResolvers();
-
   constructor() {
     super();
 
     /** @type {OutputManager} */
     this.#manager = outputManager({
-      init: async () => {
-        await this.#ensureAuthenticated();
-        return true;
-      },
       facets: {
         empty: () => [],
         get: () => this.#listRecords("sh.diffuse.output.facet"),
@@ -73,6 +63,14 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
   }
+
+  // SIGNALS
+
+  #did = signal(/** @type {string | null} */ (null));
+
+  // STATE
+
+  did = this.#did.get;
 
   // LIFECYCLE
 
@@ -111,14 +109,8 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
   #setSession(session) {
     this.#agent = new OAuthUserAgent(session);
     this.#rpc = new Client({ handler: this.#agent });
-    this.#did = session.info.sub;
-    this.$did.value = session.info.sub;
+    this.#did.value = session.info.sub;
     this.#authenticated.resolve();
-  }
-
-  async #ensureAuthenticated() {
-    await this.whenConnected();
-    return this.#authenticated.promise;
   }
 
   /**
@@ -138,10 +130,9 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     if (this.#agent) {
       await logout(this.#agent);
       this.#agent = null;
-      this.#rpc = null;
-      this.#did = null;
-      this.$did.value = null;
       this.#authenticated = Promise.withResolvers();
+      this.#did.value = null;
+      this.#rpc = null;
     }
   }
 
@@ -153,7 +144,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
    * @returns {Promise<T[]>}
    */
   async #listRecords(collection) {
-    if (!this.#rpc || !this.#did) return [];
+    if (!this.#rpc || !this.#did.value) return [];
 
     const records = [];
     let cursor;
@@ -162,7 +153,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
       /** @type {any} */
       const page = await ok(this.#rpc.get(
         "com.atproto.repo.listRecords",
-        { params: { repo: this.#did, collection, limit: 100, cursor } },
+        { params: { repo: this.#did.value, collection, limit: 100, cursor } },
       ));
 
       for (const record of page.records) {
@@ -180,7 +171,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
    * @param {Array<{ id: string }>} data
    */
   async #putRecordsSync(collection, data) {
-    if (!this.#rpc || !this.#did) return;
+    if (!this.#rpc || !this.#did.value) return;
 
     // 1. Fetch current state
     /** @type {Map<string, { rkey: string, value: unknown }>} */
@@ -191,7 +182,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
       /** @type {any} */
       const page = await ok(this.#rpc.get(
         "com.atproto.repo.listRecords",
-        { params: { repo: this.#did, collection, limit: 100, cursor } },
+        { params: { repo: this.#did.value, collection, limit: 100, cursor } },
       ));
 
       for (const record of page.records) {
@@ -203,7 +194,9 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     } while (cursor);
 
     // 2. Build desired state
-    const desired = new Map(data.map((record) => [record.id, record]));
+    const desired = new Map(
+      data.map((record) => [record.id, { $type: collection, ...record }]),
+    );
 
     // 3. Compute diff
     /** @type {unknown[]} */
@@ -242,7 +235,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     // 4. Apply
     if (writes.length > 0) {
       await this.#rpc.post("com.atproto.repo.applyWrites", {
-        input: { repo: this.#did, writes },
+        input: { repo: this.#did.value, writes },
       });
     }
   }

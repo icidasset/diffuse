@@ -244,16 +244,17 @@ class ArtworkController extends DiffuseElement {
     const curr = this.$queue.value?.now?.() ?? undefined;
     const audio = this.#audio();
     const prog = audio?.progress() ?? 0;
-    const dur = curr?.stats?.duration ?? audio?.duration();
+    const durMs = curr?.stats?.duration ??
+      (audio?.duration() != null ? audio.duration() * 1000 : undefined);
 
-    if (audio && dur != undefined && !isNaN(dur)) {
+    if (audio && durMs != undefined && !isNaN(durMs)) {
       const p = Temporal.Duration.from({
-        milliseconds: Math.round(dur * prog * 1000),
+        milliseconds: Math.round(durMs * prog),
       }).round({
         largestUnit: "hours",
       });
 
-      const d = Temporal.Duration.from({ milliseconds: Math.round(dur * 1000) })
+      const d = Temporal.Duration.from({ milliseconds: Math.round(durMs) })
         .round({
           largestUnit: "hours",
         });

@@ -22,18 +22,27 @@ export { OAuthUserAgent };
  * @import {Session} from "@atcute/oauth-browser-client"
  */
 
-const STORAGE_KEY = "dor-atproto:did";
+const STORAGE_KEY = "diffuse/output/raw/atproto/did";
 
 // CONFIGURE
 // =========
 
+const redirect_uri =
+  (globalThis.location.origin + globalThis.location.pathname +
+    globalThis.location.search).replace(
+      "://localhost",
+      "://127.0.0.1",
+    );
+
 configureOAuth({
   metadata: {
-    client_id: import.meta.env?.VITE_ATPROTO_CLIENT_ID ??
-      "https://elements.diffuse.sh/oauth-client-metadata.json",
-    redirect_uri:
-      window.location.origin.replace("://localhost", "://127.0.0.1") +
-      window.location.pathname,
+    client_id: redirect_uri.startsWith("http://127.0.0.1")
+      ? `http://localhost/?redirect_uri=${
+        encodeURIComponent(redirect_uri)
+      }&scope=${encodeURIComponent("atproto transition:generic")}`
+      : import.meta.env?.ATPROTO_CLIENT_ID ??
+        "https://elements.diffuse.sh/oauth-client-metadata.json",
+    redirect_uri,
   },
   identityResolver: new LocalActorResolver({
     handleResolver: new XrpcHandleResolver({
@@ -63,7 +72,7 @@ export async function login(handle) {
     scope: "atproto transition:generic",
   });
 
-  window.location.assign(authUrl.toString());
+  globalThis.location.assign(authUrl.toString());
 }
 
 // SESSION RESTORE / CALLBACK
@@ -76,9 +85,11 @@ export async function login(handle) {
  * @returns {Promise<Session | null>}
  */
 export async function restoreOrFinalize() {
+  const location = globalThis.location;
+
   // Check for OAuth callback parameters (the library uses response_mode=fragment,
   // so params arrive in the URL hash, not the query string)
-  const params = new URLSearchParams(window.location.hash.slice(1));
+  const params = new URLSearchParams(location.hash.slice(1));
 
   if (params.has("code")) {
     const result = await finalizeAuthorization(params);
@@ -87,7 +98,7 @@ export async function restoreOrFinalize() {
     history.replaceState(
       null,
       "",
-      window.location.pathname + window.location.search,
+      location.pathname + location.search,
     );
 
     // Persist the DID for future session restoration
@@ -105,7 +116,8 @@ export async function restoreOrFinalize() {
         /** @type {`did:${string}:${string}`} */ (did),
         { allowStale: true },
       );
-    } catch {
+    } catch (err) {
+      console.warn(err)
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
