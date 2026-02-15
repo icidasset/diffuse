@@ -47,11 +47,11 @@ class OutputConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newFacets) => {
-          const def = this.#defaultOutput.value;
-          if (def) await def.facets.save(newFacets);
-
           const out = this.#selectedOutput.value;
           if (out) return await out.facets.save(newFacets);
+
+          const def = this.#defaultOutput.value;
+          if (def) return await def.facets.save(newFacets);
 
           this.#memory.facets.value = newFacets;
         },
@@ -85,11 +85,11 @@ class OutputConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newPlaylists) => {
-          const def = this.#defaultOutput.value;
-          if (def) await def.playlists.save(newPlaylists);
-
           const out = this.#selectedOutput.value;
           if (out) return await out.playlists.save(newPlaylists);
+
+          const def = this.#defaultOutput.value;
+          if (def) return await def.playlists.save(newPlaylists);
 
           this.#memory.playlists.value = newPlaylists;
         },
@@ -123,11 +123,11 @@ class OutputConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newThemes) => {
-          const def = this.#defaultOutput.value;
-          if (def) await def.themes.save(newThemes);
-
           const out = this.#selectedOutput.value;
           if (out) return await out.themes.save(newThemes);
+
+          const def = this.#defaultOutput.value;
+          if (def) return await def.themes.save(newThemes);
 
           this.#memory.themes.value = newThemes;
         },
@@ -161,11 +161,11 @@ class OutputConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newTracks) => {
-          const def = this.#defaultOutput.value;
-          if (def) await def.tracks.save(newTracks);
-
           const out = this.#selectedOutput.value;
           if (out) return await out.tracks.save(newTracks);
+
+          const def = this.#defaultOutput.value;
+          if (def) return await def.tracks.save(newTracks);
 
           this.#memory.tracks.value = newTracks;
         },
