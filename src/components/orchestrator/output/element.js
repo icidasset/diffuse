@@ -3,6 +3,7 @@ import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
+import "@components/output/raw/atproto/element.js";
 // import "@components/output/bytes/automerge-repo-server/element.js";
 // import "@components/transformer/output/bytes/automerge/element.js";
 import "@components/transformer/output/refiner/default/element.js";
@@ -78,6 +79,12 @@ class OutputOrchestrator extends DiffuseElement {
           id="do-output__dtos-json"
           output-selector="#do-output__dop-indexed-db__json"
         ></dtos-json>
+
+        <dor-atproto
+          id="do-output__dor-atproto"
+          group="${ifDefined(group)}"
+          label="AT Protocol"
+        ></dor-atproto>
 
         <!--<dor-automerge-repo
           id="do-output__dor-automerge-repo"

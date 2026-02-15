@@ -39,7 +39,48 @@ site.use(esbuild({
       dotenvRun({
         files: [".env"],
       }),
-      nodeModulesPolyfillPlugin(),
+      // Force @atcute/uint8array to use the browser entry (dist/index.js)
+      // instead of the Node entry (dist/index.node.js) which imports from
+      // node:crypto. The @deno/loader Workspace defaults to platform "node",
+      // causing the "node" export condition to match before "default".
+      {
+        name: "atcute-uint8array-browser",
+        setup(build) {
+          build.onLoad(
+            { filter: /@atcute\+uint8array.*index\.node\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(
+                "index.node.js",
+                "index.js",
+              );
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
+      {
+        name: "atcute-multibase-browser",
+        setup(build) {
+          build.onLoad(
+            { filter: /@atcute\+multibase.*-node\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(
+                "-node.js",
+                "-web.js",
+              );
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
+      nodeModulesPolyfillPlugin({
+        globals: {
+          process: true,
+          Buffer: true,
+        },
+      }),
       wasmLoader(),
     ],
     splitting: true,
@@ -124,6 +165,7 @@ phosphor("bold/Phosphor-Bold.woff2");
 // MISC
 
 site.add([".htm"]);
+site.add([".json"]);
 site.add([".txt"]);
 site.use(sourceMaps());
 

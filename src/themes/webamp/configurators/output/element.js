@@ -1,7 +1,9 @@
 import { DiffuseElement } from "@common/element.js";
+import { signal } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
+ * @import {ATProtoOutputElement} from "@components/output/raw/atproto/types.d.ts"
  */
 
 class OutputConfig extends DiffuseElement {
@@ -10,12 +12,64 @@ class OutputConfig extends DiffuseElement {
     this.attachShadow({ mode: "open" });
   }
 
+  // SIGNALS
+
+  #atproto = signal(/** @type {ATProtoOutputElement | null} */ (null));
+
+  // LIFECYCLE
+
+  /** @override */
+  async connectedCallback() {
+    super.connectedCallback();
+
+    await customElements.whenDefined("dor-atproto");
+
+    // TODO: Remove?
+    // The dor-atproto element is rendered by the do-output orchestrator,
+    // which may connect after this element. Wait for it to appear.
+    // await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    /** @type {ATProtoOutputElement | null} */
+    const atproto = document.querySelector("dor-atproto");
+    if (atproto) this.#atproto.value = atproto;
+  }
+
+  // EVENTS
+
+  /** @param {Event} event */
+  #handleAtprotoLogin = async (event) => {
+    event.preventDefault();
+
+    /** @type {HTMLInputElement | null} */
+    const input = this.root().querySelector("#atproto-handle");
+    const handle = input?.value?.trim();
+    if (!handle) return;
+
+    const atproto = this.#atproto.value;
+    if (!atproto) return;
+
+    /** @type {HTMLButtonElement | null} */
+    const button = this.root().querySelector("#atproto-submit");
+    if (button) button.disabled = true;
+
+    await atproto.login(handle);
+  };
+
+  #handleAtprotoLogout = async () => {
+    const atproto = this.#atproto.value;
+    if (!atproto) return;
+
+    await atproto.logout();
+  };
+
   // RENDER
 
   /**
    * @param {RenderArg} _
    */
   render({ html }) {
+    const did = this.#atproto.value?.$did.value ?? null;
+
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
       <link rel="stylesheet" href="themes/webamp/facet.css" />
@@ -65,6 +119,7 @@ class OutputConfig extends DiffuseElement {
       }
 
       #tabbed:has(#overview-tab:checked) #overview-contents { display: block }
+      #tabbed:has(#atproto-tab:checked) #atproto-contents { display: block }
       #tabbed:has(#s3-tab:checked) #s3-contents { display: block }
       </style>
 
@@ -74,6 +129,12 @@ class OutputConfig extends DiffuseElement {
             <label for="overview-tab">
               <span>Overview</span>
               <input name="output-tab" id="overview-tab" type="radio" checked="" />
+            </label>
+          </li>
+          <li role="tab">
+            <label for="atproto-tab">
+              <span>AT Protocol</span>
+              <input name="output-tab" id="atproto-tab" type="radio" />
             </label>
           </li>
           <li role="tab">
@@ -89,29 +150,79 @@ class OutputConfig extends DiffuseElement {
           <div class="window-body" id="overview-contents">
             <fieldset>
               <span class="with-icon with-icon--large">
-                <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
-                <span>Here you can configure where to keep your user data.<br />Each storage method comes with its pros and cons.<br />By default your data is only kept locally here in the browser.</span>
-              </span>
-            </fieldset>
+                <img
+                  src="images/icons/windows_98/computer_user_pencil-0.png"
+                  width="24"
+                />
+                <span>Here you can configure where to keep your user data.<br />Each
+                  storage method comes with its pros and cons.<br />By default your
+                  data is only kept locally here in the browser.</span>
+                </span>
+              </fieldset>
+            </div>
+
+            <!-- AT Protocol -->
+            <div class="window-body" id="atproto-contents">
+              ${did
+                ? html`
+                  <fieldset>
+                    <span class="with-icon with-icon--large">
+                      <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
+                      <span>Signed in as <strong>${did}</strong></span>
+                    </span>
+                  </fieldset>
+
+                  <p>
+                    <button @click="${this
+                      .#handleAtprotoLogout}">Sign out</button>
+                  </p>
+                `
+                : html`
+                  <fieldset>
+                    <span class="with-icon with-icon--large">
+                      <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
+                      <span>Store your user data on the storage associated with your AT Protocol
+                        identity. WORK IN PROGRESS!</span>
+                      </span>
+                    </fieldset>
+
+                    <form @submit="${this.#handleAtprotoLogin}">
+                      <fieldset>
+                        <div class="field-row">
+                          <label for="atproto-handle">Your internet handle:</label>
+                          <input
+                            id="atproto-handle"
+                            type="text"
+                            required
+                            placeholder="you.bsky.social"
+                          />
+                        </div>
+                      </fieldset>
+
+                      <p>
+                        <button type="submit" id="atproto-submit">Sign in</button>
+                      </p>
+                    </form>
+                  `}
+              </div>
+
+              <!-- S3 -->
+              <div class="window-body" id="s3-contents">
+                <p>TODO</p>
+              </div>
+            </div>
           </div>
+        `;
+      }
+    }
 
-          <!-- S3 -->
-          <div class="window-body" id="s3-contents">
-            <p>TODO</p>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-}
+    export default OutputConfig;
 
-export default OutputConfig;
+    ////////////////////////////////////////////
+    // REGISTER
+    ////////////////////////////////////////////
 
-////////////////////////////////////////////
-// REGISTER
-////////////////////////////////////////////
+    export const CLASS = OutputConfig;
+    export const NAME = "dtw-output-config";
 
-export const CLASS = OutputConfig;
-export const NAME = "dtw-output-config";
-
-customElements.define(NAME, CLASS);
+    customElements.define(NAME, CLASS);
