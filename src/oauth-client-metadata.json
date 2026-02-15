@@ -1,5 +1,5 @@
 {
-  "client_id": "https://elements.diffuse.sh/oauth-client-metadata.json",
+  "client_id": "https://elements.diffuse.sh/bafybeidalhvzpez6rklon4cuqrh44f47s6iw34tgqzocr5c3mdhxbkwtsu/oauth-client-metadata.json",
   "client_name": "Diffuse",
   "client_uri": "https://elements.diffuse.sh",
   "redirect_uris": ["https://elements.diffuse.sh/"],
