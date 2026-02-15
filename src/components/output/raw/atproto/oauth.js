@@ -30,7 +30,7 @@ const STORAGE_KEY = "dor-atproto:did";
 configureOAuth({
   metadata: {
     client_id: import.meta.env?.VITE_ATPROTO_CLIENT_ID ??
-      "https://elements.diffuse.sh/bafybeidalhvzpez6rklon4cuqrh44f47s6iw34tgqzocr5c3mdhxbkwtsu/oauth-client-metadata.json",
+      "https://elements.diffuse.sh/oauth-client-metadata.json",
     redirect_uri:
       window.location.origin.replace("://localhost", "://127.0.0.1") +
       window.location.pathname,
