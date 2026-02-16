@@ -6,6 +6,15 @@ body {
   margin: 0;
 }
 
+fieldset + fieldset,
+fieldset + form {
+  margin-top: var(--grouped-element-spacing);
+}
+
+form {
+  margin-bottom: var(--grouped-element-spacing);
+}
+
 p {
   margin: var(--grouped-element-spacing) 0;
 }

@@ -172,7 +172,7 @@ class OutputConfig extends DiffuseElement {
               </span>
             </fieldset>
 
-            <fieldset style="margin-top: var(--grouped-element-spacing);">
+            <fieldset>
               <span class="with-icon with-icon--large">
                 <img
                   src="images/icons/windows_98/msg_information-0.png"
@@ -185,7 +185,7 @@ class OutputConfig extends DiffuseElement {
               </span>
             </fieldset>
 
-            <fieldset style="margin-top: var(--grouped-element-spacing);">
+            <fieldset>
               <legend>Active storage method</legend>
               <span class="with-icon with-icon--large">
                 <img
@@ -225,28 +225,30 @@ class OutputConfig extends DiffuseElement {
                 <fieldset>
                   <span class="with-icon with-icon--large">
                     <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
-                    <span>Store your user data on the storage associated with your AT Protocol
-                      identity. WORK IN PROGRESS!</span>
+                    <span>
+                      Store your user data on the storage associated with your AT Protocol
+                      identity.
                     </span>
+                  </span>
+                </fieldset>
+
+                <form @submit="${this.#handleAtprotoLogin}">
+                  <fieldset>
+                    <div class="field-row">
+                      <label for="atproto-handle">Your internet handle:</label>
+                      <input
+                        id="atproto-handle"
+                        type="text"
+                        required
+                        placeholder="you.bsky.social"
+                      />
+                    </div>
                   </fieldset>
 
-                  <form @submit="${this.#handleAtprotoLogin}">
-                    <fieldset>
-                      <div class="field-row">
-                        <label for="atproto-handle">Your internet handle:</label>
-                        <input
-                          id="atproto-handle"
-                          type="text"
-                          required
-                          placeholder="you.bsky.social"
-                        />
-                      </div>
-                    </fieldset>
-
-                    <p>
-                      <button type="submit" id="atproto-submit">Sign in</button>
-                    </p>
-                  </form>
+                  <p>
+                    <button type="submit" id="atproto-submit">Sign in</button>
+                  </p>
+                </form>
                 `}
             </div>
 
