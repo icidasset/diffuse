@@ -66,9 +66,14 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
   connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
-        put: { strategy: "replicate", fn: this.#putIncoming },
-      });
+      const actions = this.broadcast(
+        `${this.nameWithGroup}${
+          this.namespace.length ? "/" + this.namespace.replace(/\/$/, "") : ""
+        }`,
+        {
+          put: { strategy: "replicate", fn: this.#putIncoming },
+        },
+      );
 
       if (actions) {
         this.#put = this.#putOutgoing(actions.put);
@@ -117,12 +122,15 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
 
   // 🛠️
 
-  /** @param {string} name */
-  #cat(name) {
-    const namespace = this.hasAttribute("namespace")
+  get namespace() {
+    return this.hasAttribute("namespace")
       ? this.getAttribute("namespace") + "/"
       : "";
-    return `${namespace}${name}`;
+  }
+
+  /** @param {string} name */
+  #cat(name) {
+    return `${this.namespace}${name}`;
   }
 }
 
