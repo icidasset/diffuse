@@ -12,7 +12,7 @@ import { BrowserPostMessageIo } from "./worker/rpc.js";
  * @import {Signal} from "./signal.d.ts"
  */
 
-export { nothing } from "lit-html";
+export { html, nothing } from "lit-html";
 export const DEFAULT_GROUP = "default";
 
 /**

@@ -27,6 +27,9 @@ const url = docUrl.searchParams.get("url");
 // LOAD
 ////////////////////////////////////////////
 
+/** @type {string | null} */
+let loadedCid = null;
+
 effect(async () => {
   const collection = output.themes.collection();
   if (output.themes.state() !== "loaded") return;
@@ -64,6 +67,9 @@ effect(async () => {
     theme.cid = cid;
   }
 
+  if (theme.cid === loadedCid) return;
+
+  loadedCid = theme.cid ?? null;
   loadIntoContainer(theme);
 });
 
@@ -73,9 +79,9 @@ effect(async () => {
 function loadIntoContainer(theme) {
   // TODO: Validate if CID matches HTML
 
-  const iframe = document.createElement("iframe")
-  iframe.srcdoc = theme.html ?? ""
+  const iframe = document.createElement("iframe");
+  iframe.srcdoc = theme.html ?? "";
 
-  document.body.innerHTML = ""
-  document.body.append(iframe)
+  document.body.innerHTML = "";
+  document.body.append(iframe);
 }

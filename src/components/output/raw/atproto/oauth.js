@@ -67,12 +67,20 @@ configureOAuth({
  * @param {string} handle
  */
 export async function login(handle) {
+  const location = globalThis.location
+
+  if (location.origin.startsWith("http://localhost")) {
+    location.assign(
+      location.href.replace("http://localhost:", "http://127.0.0.1:"),
+    )
+  }
+
   const authUrl = await createAuthorizationUrl({
     target: { type: "account", identifier: /** @type {any} */ (handle) },
     scope: "atproto transition:generic",
   });
 
-  globalThis.location.assign(authUrl.toString());
+  location.assign(authUrl.toString());
 }
 
 // SESSION RESTORE / CALLBACK

@@ -32,6 +32,9 @@ if (!containerNull) throw new Error("Container not found");
 
 const container = /** @type {HTMLDivElement} */ (containerNull);
 
+/** @type {string | null} */
+let loadedCid = null;
+
 effect(async () => {
   const collection = output.facets.collection();
   if (output.facets.state() !== "loaded") return;
@@ -72,6 +75,9 @@ effect(async () => {
     facet.cid = cid;
   }
 
+  if (facet.cid === loadedCid) return;
+
+  loadedCid = facet.cid ?? null;
   loadIntoContainer(facet);
 });
 

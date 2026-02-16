@@ -1,11 +1,12 @@
-import { DiffuseElement, query } from "@common/element.js";
+import { DiffuseElement, nothing, query } from "@common/element.js";
 import { signal } from "@common/signal.js";
+
 import { NAME as ATPROTO_NAME } from "@components/output/raw/atproto/element.js";
 
 /**
  * @import {ATProtoOutputElement} from "@components/output/raw/atproto/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
- * @import {OutputConfiguratorElement} from "@components/configurator/output/element.js"
+ * @import {OutputConfiguratorElement, OutputOption} from "@components/configurator/output/types.d.ts"
  * @import {RenderArg} from "@common/element.d.ts"
  */
 
@@ -21,7 +22,9 @@ class OutputConfig extends DiffuseElement {
     /** @type {OutputElement | OutputConfiguratorElement | undefined} */ (undefined),
   );
 
-  $atproto = signal(/** @type {ATProtoOutputElement | null} */ (null));
+  $atproto = signal(
+    /** @type {OutputOption<ATProtoOutputElement> | null} */ (null),
+  );
 
   // LIFECYCLE
 
@@ -29,19 +32,22 @@ class OutputConfig extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    /** @type {OutputElement} */
+    /** @type {OutputElement | OutputConfiguratorElement} */
     const output = query(this, "output-selector");
 
     await customElements.whenDefined(output.localName);
 
     this.$output.value = output;
 
-    // Try setting up ATProto output
-    await customElements.whenDefined(ATPROTO_NAME);
+    // Try setting up specific outputs
+    if ("options" in output === false) return;
+    const options = await output.options();
+    const atproto = options.find((o) => o.element.localName === ATPROTO_NAME);
 
-    /** @type {ATProtoOutputElement | null} */
-    const atproto = output.querySelector(ATPROTO_NAME);
-    if (atproto) this.$atproto.value = atproto;
+    if (atproto) {
+      this.$atproto.value =
+        /** @type {OutputOption<ATProtoOutputElement>} */ (atproto);
+    }
   }
 
   // EVENTS
@@ -62,14 +68,31 @@ class OutputConfig extends DiffuseElement {
     const button = this.root().querySelector("#atproto-submit");
     if (button) button.disabled = true;
 
-    await atproto.login(handle);
+    await atproto.element.login(handle);
   };
 
   #handleAtprotoLogout = async () => {
     const atproto = this.$atproto.value;
     if (!atproto) return;
 
-    await atproto.logout();
+    await atproto.element.logout();
+  };
+
+  #handleAtprotoActivate = async () => {
+    const output = this.$output.value;
+    if (!output || !("select" in output)) return;
+
+    const atproto = this.$atproto.value;
+    if (!atproto) return;
+
+    await output.select(atproto.id);
+  };
+
+  #handleDeactivate = async () => {
+    const output = this.$output.value;
+    if (!output || !("deselect" in output)) return;
+
+    await output.deselect();
   };
 
   // RENDER
@@ -78,8 +101,11 @@ class OutputConfig extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const did = this.$atproto.value?.did() ?? null;
-    const selectedOutput = this.$output.value?.selectedOutput();
+    const did = this.$atproto.value?.element.did() ?? null;
+    const selectedOutput =
+      this.$output.value && "selectedOutput" in this.$output.value
+        ? this.$output.value.selectedOutput()
+        : undefined;
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
@@ -87,6 +113,11 @@ class OutputConfig extends DiffuseElement {
 
       <style>
       @import "./themes/webamp/98-vars.css";
+
+      .button-row {
+        display: inline-flex;
+        gap: var(--grouped-button-spacing);
+      }
 
       #tabbed {
         display: flex;
@@ -187,21 +218,30 @@ class OutputConfig extends DiffuseElement {
 
             <fieldset>
               <legend>Active storage method</legend>
-              <span class="with-icon with-icon--large">
+              <div class="with-icon with-icon--large">
                 <img
-                  src="images/icons/windows_98/msg_warning-0.png"
+                  src="images/icons/windows_98/${selectedOutput
+                    ? `directory_channels-2.png`
+                    : `msg_warning-0.png`}"
                   width="24"
                 />
-                <span>
-                  ${
-                    this.$output.value && "selectedOutput" in this.$output.value
-                      ? selectedOutput
-                        ? `Selected output: ${selectedOutput.name}`
-                        : this.#defaultOutputMessage
+                <div>
+                  ${this.$output.value && "selectedOutput" in this.$output.value
+                    ? selectedOutput
+                      ? html`
+                        <p>
+                          Selected output:
+                          <strong>${selectedOutput.label}</strong><br />
+                        </p>
+                        <p>
+                          <button @click="${this
+                            .#handleDeactivate}">Deactivate</button>
+                        </p>
+                      `
                       : this.#defaultOutputMessage
-                    }
-                </span>
-              </span>
+                    : this.#defaultOutputMessage}
+                </div>
+              </div>
             </fieldset>
           </div>
 
@@ -216,9 +256,10 @@ class OutputConfig extends DiffuseElement {
                   </span>
                 </fieldset>
 
-                <p>
+                <p class="button-row">
                   <button @click="${this
                     .#handleAtprotoLogout}">Sign out</button>
+                  ${this.#renderAtprotoActivation(html, selectedOutput)}
                 </p>
               `
               : html`
@@ -249,28 +290,51 @@ class OutputConfig extends DiffuseElement {
                     <button type="submit" id="atproto-submit">Sign in</button>
                   </p>
                 </form>
-                `}
-            </div>
+              `}
+          </div>
 
-            <!-- S3 -->
-            <div class="window-body" id="s3-contents">
-              <p>TODO</p>
-            </div>
+          <!-- S3 -->
+          <div class="window-body" id="s3-contents">
+            <p>TODO</p>
           </div>
         </div>
-      `;
-    }
-
-    #defaultOutputMessage = "Storing data locally in the browser without any backup or syncing enabled."
+      </div>
+    `;
   }
 
-  export default OutputConfig;
+  /**
+   * @param {RenderArg['html']} html
+   * @param {OutputElement | null | undefined} selectedOutput
+   */
+  #renderAtprotoActivation(html, selectedOutput) {
+    const output = this.$output.value;
+    if (!output || !("select" in output)) return nothing;
 
-  ////////////////////////////////////////////
-  // REGISTER
-  ////////////////////////////////////////////
+    const atproto = this.$atproto.value;
+    const isActive = selectedOutput && atproto &&
+      selectedOutput.selector === atproto.element.selector;
 
-  export const CLASS = OutputConfig;
-  export const NAME = "dtw-output-config";
+    return isActive
+      ? html`
+        <button @click="${this.#handleDeactivate}">Deactivate</button>
+      `
+      : html`
+        <button @click="${this
+          .#handleAtprotoActivate}">Activate this storage</button>
+      `;
+  }
 
-  customElements.define(NAME, CLASS);
+  #defaultOutputMessage =
+    "Storing data locally in the browser without any backup or syncing enabled.";
+}
+
+export default OutputConfig;
+
+////////////////////////////////////////////
+// REGISTER
+////////////////////////////////////////////
+
+export const CLASS = OutputConfig;
+export const NAME = "dtw-output-config";
+
+customElements.define(NAME, CLASS);

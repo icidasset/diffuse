@@ -109,6 +109,7 @@ class OutputOrchestrator extends DiffuseElement {
       <dc-output id="do-output__dc-output" default="do-output__dtos-json">
         <dtos-json
           id="do-output__dtos-json"
+          label="IndexedDB as a JSON string"
           output-selector="#do-output__dop-indexed-db__json"
         ></dtos-json>
 

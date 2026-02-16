@@ -268,9 +268,9 @@ class OutputConfigurator extends DiffuseElement {
   /**
    * @override
    */
-  dependencies() {
+  dependencies = () => {
     return Object.fromEntries(
-      Array.from(this.children).flatMap((element) => {
+      Array.from(this.root().children).flatMap((element) => {
         if (element.hasAttribute("id") === false) {
           console.warn(
             "Missing `id` for output configurator child element with `localName` '" +
@@ -287,12 +287,12 @@ class OutputConfigurator extends DiffuseElement {
 
   // ADDITIONAL ACTIONS
 
-  async deselect() {
+  deselect = async () => {
     localStorage.removeItem(`${STORAGE_PREFIX}/selected/id`);
     this.#selectedOutput.value = await this.#findSelectedOutput();
   }
 
-  async options() {
+  options = async () => {
     const deps = this.dependencies();
     const entries = Object.entries(deps);
 
@@ -312,7 +312,7 @@ class OutputConfigurator extends DiffuseElement {
   /**
    * @param {string} id
    */
-  async select(id) {
+  select = async (id) => {
     localStorage.setItem(`${STORAGE_PREFIX}/selected/id`, id);
     this.#selectedOutput.value = await this.#findSelectedOutput();
   }

@@ -34,8 +34,11 @@ p {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 64dvh;
-  width: min(960px, 86dvw);
+
+  &:not([role="tabpanel"]) {
+    height: 64dvh;
+    width: min(960px, 86dvw);
+  }
 }
 
 .window-body {
