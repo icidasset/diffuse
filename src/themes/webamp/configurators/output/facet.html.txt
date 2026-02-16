@@ -18,6 +18,7 @@
 </div>
 
 <style>
+  @import "./styles/variables.css";
   @import "./styles/vendor/98.css";
   @import "./themes/webamp/fonts.css";
   @import "./themes/webamp/facet.css";

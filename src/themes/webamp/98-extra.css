@@ -1,0 +1,22 @@
+fieldset + fieldset,
+fieldset + form {
+  margin-top: var(--grouped-element-spacing);
+}
+
+form {
+  margin-bottom: var(--grouped-element-spacing);
+}
+
+p {
+  margin: var(--grouped-element-spacing) 0;
+}
+
+.with-icon {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-3xs);
+
+  &.with-icon--large {
+    gap: var(--space-xs);
+  }
+}

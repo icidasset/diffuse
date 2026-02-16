@@ -1,22 +1,6 @@
-@import "../../styles/variables.css";
-@import "./98-vars.css";
-
 body {
   background: #3a6ea5;
   margin: 0;
-}
-
-fieldset + fieldset,
-fieldset + form {
-  margin-top: var(--grouped-element-spacing);
-}
-
-form {
-  margin-bottom: var(--grouped-element-spacing);
-}
-
-p {
-  margin: var(--grouped-element-spacing) 0;
 }
 
 #container {
@@ -44,14 +28,4 @@ p {
 .window-body {
   flex: 1;
   overflow: hidden;
-}
-
-.with-icon {
-  align-items: center;
-  display: inline-flex;
-  gap: var(--space-3xs);
-
-  &.with-icon--large {
-    gap: var(--space-xs);
-  }
 }

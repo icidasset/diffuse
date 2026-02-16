@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "@common/element.js";
+import { DiffuseElement, query, queryOptional } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
@@ -40,6 +40,10 @@ class InputConfig extends DiffuseElement {
     /** @type {import("@components/orchestrator/sources/element.js").CLASS | undefined} */ (undefined),
   );
 
+  $processTracksOrchestrator = signal(
+    /** @type {import("@components/orchestrator/process-tracks/element.js").CLASS | undefined} */ (undefined),
+  );
+
   // LIFECYCLE
 
   /**
@@ -57,13 +61,27 @@ class InputConfig extends DiffuseElement {
     /** @type {import("@components/orchestrator/sources/element.js").CLASS} */
     const sourcesOrchestrator = query(this, "sources-orchestrator-selector");
 
+    /** @type {import("@components/orchestrator/process-tracks/element.js").CLASS | null} */
+    const processTracksOrchestrator = queryOptional(
+      this,
+      "process-tracks-orchestrator-selector",
+    );
+
     await customElements.whenDefined(input.localName);
     await customElements.whenDefined(output.localName);
     await customElements.whenDefined(sourcesOrchestrator.localName);
 
+    if (processTracksOrchestrator) {
+      await customElements.whenDefined(processTracksOrchestrator.localName);
+    }
+
     this.$input.value = input;
     this.$output.value = output;
     this.$sourcesOrchestrator.value = sourcesOrchestrator;
+
+    if (processTracksOrchestrator) {
+      this.$processTracksOrchestrator.value = processTracksOrchestrator;
+    }
   }
 
   // EVENTS
@@ -242,6 +260,7 @@ class InputConfig extends DiffuseElement {
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
+      <link rel="stylesheet" href="themes/webamp/98-extra.css" />
 
       <style>
       @import "./themes/webamp/98-vars.css";
@@ -291,6 +310,7 @@ class InputConfig extends DiffuseElement {
         display: none
       }
 
+      #tabbed:has(#overview-tab:checked) #overview-contents { display: block }
       #tabbed:has(#opensubsonic-tab:checked) #opensubsonic-contents { display: block }
       #tabbed:has(#s3-tab:checked) #s3-contents { display: block }
       #tabbed:has(#https-tab:checked) #https-contents { display: block }
@@ -321,6 +341,12 @@ class InputConfig extends DiffuseElement {
       <div id="tabbed">
         <menu role="tablist" class="multirows">
           <li role="tab">
+            <label for="overview-tab">
+              <span>Overview</span>
+              <input name="input-tab" id="overview-tab" type="radio" checked="" />
+            </label>
+          </li>
+          <li role="tab">
             <label for="https-tab">
               <span>HTTPS</span>
               <input name="input-tab" id="https-tab" type="radio" />
@@ -335,12 +361,49 @@ class InputConfig extends DiffuseElement {
           <li role="tab">
             <label for="s3-tab">
               <span>S3</span>
-              <input name="input-tab" id="s3-tab" type="radio" checked="" />
+              <input name="input-tab" id="s3-tab" type="radio" />
             </label>
           </li>
         </menu>
 
         <div class="window" role="tabpanel">
+          <!-- Overview -->
+          <div class="window-body" id="overview-contents">
+            <fieldset>
+              <span class="with-icon with-icon--large">
+                <img
+                  src="images/icons/windows_98/cd_audio_cd_a-0.png"
+                  width="24"
+                />
+                <span>Here you can configure where your audio comes from.<br />Add
+                  sources using the tabs above, then tracks will be processed
+                  automatically.
+                </span>
+              </span>
+            </fieldset>
+
+            ${this.$processTracksOrchestrator.value?.isProcessing()
+              ? html`
+                <fieldset>
+                  <legend>Processing tracks</legend>
+                  <div class="with-icon with-icon--large">
+                    <img
+                      src="images/icons/windows_98/gears-0.png"
+                      width="24"
+                    />
+                    <span>Gathering metadata from your sources ...</span>
+                  </div>
+                  <div
+                    class="progress-indicator segmented"
+                    style="margin-top: var(--grouped-element-spacing);"
+                  >
+                    <div class="progress-indicator-bar" style="width: 100%"></div>
+                  </div>
+                </fieldset>
+              `
+              : ""}
+          </div>
+
           <!-- HTTPS -->
           <div class="window-body" id="https-contents">
             <fieldset>

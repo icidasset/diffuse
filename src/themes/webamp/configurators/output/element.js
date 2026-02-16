@@ -109,7 +109,7 @@ class OutputConfig extends DiffuseElement {
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
-      <link rel="stylesheet" href="themes/webamp/facet.css" />
+      <link rel="stylesheet" href="themes/webamp/98-extra.css" />
 
       <style>
       @import "./themes/webamp/98-vars.css";

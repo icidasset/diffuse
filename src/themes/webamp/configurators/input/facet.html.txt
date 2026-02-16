@@ -1,13 +1,9 @@
 <div class="window">
-  <div
-    class="title-bar"
-  >
+  <div class="title-bar">
     <div class="title-bar-icon">
       <img src="images/icons/windows_98/directory_explorer-4.png" height="14" />
     </div>
-    <div class="title-bar-text" draggable="false">
-      Input configurator
-    </div>
+    <div class="title-bar-text" draggable="false">Input configurator</div>
     <div class="title-bar-controls">
       <button aria-label="Close" onclick="window.close()"></button>
     </div>
@@ -18,6 +14,7 @@
 </div>
 
 <style>
+  @import "./styles/variables.css";
   @import "./styles/vendor/98.css";
   @import "./themes/webamp/fonts.css";
   @import "./themes/webamp/facet.css";
@@ -30,13 +27,14 @@
 
   const inp = foundation.orchestrator.input();
   const out = foundation.orchestrator.output();
-  const pro = foundation.orchestrator.processTracks({ disableWhenReady: true });
+  const pro = foundation.orchestrator.processTracks({ disableWhenReady: false });
   const sou = foundation.orchestrator.sources();
 
   const el = new InputConfigElement();
   el.setAttribute("input-selector", inp.selector);
   el.setAttribute("output-selector", out.selector);
   el.setAttribute("sources-orchestrator-selector", sou.selector);
+  el.setAttribute("process-tracks-orchestrator-selector", pro.selector);
 
   document.querySelector("#placeholder")?.replaceWith(el);
 
