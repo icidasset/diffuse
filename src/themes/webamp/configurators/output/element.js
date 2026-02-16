@@ -1,9 +1,12 @@
-import { DiffuseElement } from "@common/element.js";
+import { DiffuseElement, query } from "@common/element.js";
 import { signal } from "@common/signal.js";
+import { NAME as ATPROTO_NAME } from "@components/output/raw/atproto/element.js";
 
 /**
- * @import {RenderArg} from "@common/element.d.ts"
  * @import {ATProtoOutputElement} from "@components/output/raw/atproto/types.d.ts"
+ * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {OutputConfiguratorElement} from "@components/configurator/output/element.js"
+ * @import {RenderArg} from "@common/element.d.ts"
  */
 
 class OutputConfig extends DiffuseElement {
@@ -14,7 +17,11 @@ class OutputConfig extends DiffuseElement {
 
   // SIGNALS
 
-  #atproto = signal(/** @type {ATProtoOutputElement | null} */ (null));
+  $output = signal(
+    /** @type {OutputElement | OutputConfiguratorElement | undefined} */ (undefined),
+  );
+
+  $atproto = signal(/** @type {ATProtoOutputElement | null} */ (null));
 
   // LIFECYCLE
 
@@ -22,16 +29,19 @@ class OutputConfig extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    await customElements.whenDefined("dor-atproto");
+    /** @type {OutputElement} */
+    const output = query(this, "output-selector");
 
-    // TODO: Remove?
-    // The dor-atproto element is rendered by the do-output orchestrator,
-    // which may connect after this element. Wait for it to appear.
-    // await new Promise((resolve) => requestAnimationFrame(resolve));
+    await customElements.whenDefined(output.localName);
+
+    this.$output.value = output;
+
+    // Try setting up ATProto output
+    await customElements.whenDefined(ATPROTO_NAME);
 
     /** @type {ATProtoOutputElement | null} */
-    const atproto = document.querySelector("dor-atproto");
-    if (atproto) this.#atproto.value = atproto;
+    const atproto = output.querySelector(ATPROTO_NAME);
+    if (atproto) this.$atproto.value = atproto;
   }
 
   // EVENTS
@@ -45,7 +55,7 @@ class OutputConfig extends DiffuseElement {
     const handle = input?.value?.trim();
     if (!handle) return;
 
-    const atproto = this.#atproto.value;
+    const atproto = this.$atproto.value;
     if (!atproto) return;
 
     /** @type {HTMLButtonElement | null} */
@@ -56,7 +66,7 @@ class OutputConfig extends DiffuseElement {
   };
 
   #handleAtprotoLogout = async () => {
-    const atproto = this.#atproto.value;
+    const atproto = this.$atproto.value;
     if (!atproto) return;
 
     await atproto.logout();
@@ -68,7 +78,8 @@ class OutputConfig extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const did = this.#atproto.value?.did() ?? null;
+    const did = this.$atproto.value?.did() ?? null;
+    const selectedOutput = this.$output.value?.selectedOutput();
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
@@ -156,73 +167,108 @@ class OutputConfig extends DiffuseElement {
                 />
                 <span>Here you can configure where to keep your user data.<br />Each
                   storage method comes with its pros and cons.<br />By default your
-                  data is only kept locally here in the browser.</span>
+                  data is only kept locally here in the browser.
                 </span>
-              </fieldset>
-            </div>
+              </span>
+            </fieldset>
 
-            <!-- AT Protocol -->
-            <div class="window-body" id="atproto-contents">
-              ${did
-                ? html`
-                  <fieldset>
-                    <span class="with-icon with-icon--large">
-                      <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
-                      <span>Signed in as <strong>${did}</strong></span>
+            <fieldset style="margin-top: var(--grouped-element-spacing);">
+              <span class="with-icon with-icon--large">
+                <img
+                  src="images/icons/windows_98/msg_information-0.png"
+                  width="24"
+                />
+                <span>
+                  Data does not transfer across storage methods!<br />You can however
+                  merge data between them though, if you wish to do so.
+                </span>
+              </span>
+            </fieldset>
+
+            <fieldset style="margin-top: var(--grouped-element-spacing);">
+              <legend>Active storage method</legend>
+              <span class="with-icon with-icon--large">
+                <img
+                  src="images/icons/windows_98/msg_warning-0.png"
+                  width="24"
+                />
+                <span>
+                  ${
+                    this.$output.value && "selectedOutput" in this.$output.value
+                      ? selectedOutput
+                        ? `Selected output: ${selectedOutput.name}`
+                        : this.#defaultOutputMessage
+                      : this.#defaultOutputMessage
+                    }
+                </span>
+              </span>
+            </fieldset>
+          </div>
+
+          <!-- AT Protocol -->
+          <div class="window-body" id="atproto-contents">
+            ${did
+              ? html`
+                <fieldset>
+                  <span class="with-icon with-icon--large">
+                    <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
+                    <span>Signed in as <strong>${did}</strong></span>
+                  </span>
+                </fieldset>
+
+                <p>
+                  <button @click="${this
+                    .#handleAtprotoLogout}">Sign out</button>
+                </p>
+              `
+              : html`
+                <fieldset>
+                  <span class="with-icon with-icon--large">
+                    <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
+                    <span>Store your user data on the storage associated with your AT Protocol
+                      identity. WORK IN PROGRESS!</span>
                     </span>
                   </fieldset>
 
-                  <p>
-                    <button @click="${this
-                      .#handleAtprotoLogout}">Sign out</button>
-                  </p>
-                `
-                : html`
-                  <fieldset>
-                    <span class="with-icon with-icon--large">
-                      <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
-                      <span>Store your user data on the storage associated with your AT Protocol
-                        identity. WORK IN PROGRESS!</span>
-                      </span>
+                  <form @submit="${this.#handleAtprotoLogin}">
+                    <fieldset>
+                      <div class="field-row">
+                        <label for="atproto-handle">Your internet handle:</label>
+                        <input
+                          id="atproto-handle"
+                          type="text"
+                          required
+                          placeholder="you.bsky.social"
+                        />
+                      </div>
                     </fieldset>
 
-                    <form @submit="${this.#handleAtprotoLogin}">
-                      <fieldset>
-                        <div class="field-row">
-                          <label for="atproto-handle">Your internet handle:</label>
-                          <input
-                            id="atproto-handle"
-                            type="text"
-                            required
-                            placeholder="you.bsky.social"
-                          />
-                        </div>
-                      </fieldset>
+                    <p>
+                      <button type="submit" id="atproto-submit">Sign in</button>
+                    </p>
+                  </form>
+                `}
+            </div>
 
-                      <p>
-                        <button type="submit" id="atproto-submit">Sign in</button>
-                      </p>
-                    </form>
-                  `}
-              </div>
-
-              <!-- S3 -->
-              <div class="window-body" id="s3-contents">
-                <p>TODO</p>
-              </div>
+            <!-- S3 -->
+            <div class="window-body" id="s3-contents">
+              <p>TODO</p>
             </div>
           </div>
-        `;
-      }
+        </div>
+      `;
     }
 
-    export default OutputConfig;
+    #defaultOutputMessage = "Storing data locally in the browser without any backup or syncing enabled."
+  }
 
-    ////////////////////////////////////////////
-    // REGISTER
-    ////////////////////////////////////////////
+  export default OutputConfig;
 
-    export const CLASS = OutputConfig;
-    export const NAME = "dtw-output-config";
+  ////////////////////////////////////////////
+  // REGISTER
+  ////////////////////////////////////////////
 
-    customElements.define(NAME, CLASS);
+  export const CLASS = OutputConfig;
+  export const NAME = "dtw-output-config";
+
+  customElements.define(NAME, CLASS);

@@ -12,6 +12,7 @@ import "@components/transformer/output/string/json/element.js";
 /**
  * @import {RenderArg} from "@common/element.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {OutputConfiguratorElement} from "@components/configurator/output/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -20,6 +21,8 @@ import "@components/transformer/output/string/json/element.js";
 
 /**
  * A default setup for managing output.
+ *
+ * @implements {OutputConfiguratorElement}
  */
 class OutputOrchestrator extends DiffuseElement {
   static NAME = "diffuse/orchestrator/output";
@@ -33,6 +36,17 @@ class OutputOrchestrator extends DiffuseElement {
 
     if (!output) throw new Error("Output orchestrator did not render yet.");
     return output;
+  }
+
+  /**
+   * @returns {OutputConfiguratorElement}
+   */
+  get outputConfigurator() {
+    /** @type {OutputConfiguratorElement | null} */
+    const outputConfigurator = this.root().querySelector("#do-output__dc-output");
+
+    if (!outputConfigurator) throw new Error("Output orchestrator did not render yet.");
+    return outputConfigurator;
   }
 
   // PROXY OUTPUT ACTIONS
@@ -51,6 +65,24 @@ class OutputOrchestrator extends DiffuseElement {
 
   get tracks() {
     return this.output.tracks;
+  }
+
+  // PROXY ADDITIONAL OUTPUT CONFIGURATOR ACTIONS
+
+  get deselect() {
+    return this.outputConfigurator.deselect
+  }
+
+  get options() {
+    return this.outputConfigurator.options
+  }
+
+  get select() {
+    return this.outputConfigurator.select
+  }
+
+  get selectedOutput() {
+    return this.outputConfigurator.selectedOutput
   }
 
   // RENDER

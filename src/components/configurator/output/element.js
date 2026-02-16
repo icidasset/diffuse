@@ -4,6 +4,8 @@ import { batch, computed, signal } from "@common/signal.js";
 /**
  * @import {Facet, Playlist, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
+ *
+ * @import {OutputConfiguratorElement} from "./types.d.ts"
  */
 
 /**
@@ -17,7 +19,7 @@ const STORAGE_PREFIX = "diffuse/configurator/output";
 ////////////////////////////////////////////
 
 /**
- * @implements {OutputElement}
+ * @implements {OutputConfiguratorElement}
  */
 class OutputConfigurator extends DiffuseElement {
   static NAME = "diffuse/configurator/output";
@@ -207,6 +209,10 @@ class OutputConfigurator extends DiffuseElement {
 
   #setupFinished = signal(false);
 
+  // STATE
+
+  selectedOutput = computed(() => this.#selectedOutput.value ?? null);
+
   // LIFECYCLE
 
   /**
@@ -298,7 +304,7 @@ class OutputConfigurator extends DiffuseElement {
       return {
         id: k,
         label: v.label,
-        element: v,
+        element: /** @type {OutputElement} */ (v),
       };
     });
   }
