@@ -2,6 +2,7 @@ import { ifDefined } from "lit-html/directives/if-defined.js";
 import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
+import "@components/configurator/output-fallback/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/output/raw/atproto/element.js";
 // import "@components/output/bytes/automerge-repo-server/element.js";
@@ -117,11 +118,20 @@ class OutputOrchestrator extends DiffuseElement {
           output-selector="#do-output__dop-indexed-db__json"
         ></dtos-json>
 
-        <dor-atproto
-          id="do-output__dor-atproto"
-          group="${ifDefined(group)}"
+        <dc-output-fallback
+          id="do-output__dor-atproto-fallback"
           label="AT Protocol"
-        ></dor-atproto>
+        >
+          <dor-atproto
+            id="do-output__dor-atproto"
+            group="${ifDefined(group)}"
+          ></dor-atproto>
+          <dop-indexed-db
+            id="do-output__dop-indexed-db__atproto"
+            group="${ifDefined(group)}"
+            namespace="atproto"
+          ></dop-indexed-db>
+        </dc-output-fallback>
 
         <!--<dor-automerge-repo
           id="do-output__dor-automerge-repo"
