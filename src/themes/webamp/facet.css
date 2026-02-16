@@ -1,7 +1,15 @@
 @import "../../styles/variables.css";
 
 body {
+  background: #3a6ea5;
   margin: 0;
+}
+
+#container {
+  align-items: center;
+  display: flex;
+  height: 100dvh;
+  justify-content: center;
 }
 
 .title-bar {
@@ -12,7 +20,8 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 64dvh;
+  width: min(960px, 86dvw);
 }
 
 .window-body {
