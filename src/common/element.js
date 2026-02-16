@@ -50,7 +50,9 @@ export class DiffuseElement extends HTMLElement {
    * @param {() => void} fn
    */
   effect(fn) {
-    this.#disposables.push(effect(fn));
+    const unregister = effect(fn);
+    this.#disposables.push(unregister);
+    return unregister;
   }
 
   /** */

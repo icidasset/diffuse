@@ -55,6 +55,7 @@
 
   // Setup
   foundation.features.fillQueueAutomatically();
+  foundation.features.processInputs();
 
   const queue = foundation.engine.queue();
   const repeatShuffle = foundation.engine.repeatShuffle();

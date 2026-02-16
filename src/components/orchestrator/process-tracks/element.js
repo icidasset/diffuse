@@ -38,6 +38,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
   // SIGNALS
 
   #isProcessing = signal(false);
+  #performedInitialProcess = signal(false);
   #progress = signal(/** @type {Progress} */ ({ processed: 0, total: 0 }));
 
   // STATE
@@ -54,10 +55,17 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(this.nameWithGroup, {
+        perfInit: {
+          strategy: "replicate",
+          fn: this.#performedInitialProcess.set,
+        },
         process: { strategy: "leaderOnly", fn: this.process },
       });
 
-      if (actions) this.process = actions.process;
+      if (actions) {
+        this.process = actions.process;
+        this.#isProcessing.set = actions.perfInit;
+      }
     }
 
     // Super
@@ -87,17 +95,26 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     listen("progress", this.#progress.set, link);
     this.#proxy.progress().then(this.#progress.set);
 
-    // Process whenever tracks are initially loaded
+    // Process whenever tracks are initially loaded;
+    // unless already done so (possibly through another instance of this element)
     if (this.hasAttribute("process-when-ready")) {
-      this.effect(() => {
+      const unregister = this.effect(() => {
         const state = output.tracks.state();
         if (state !== "loaded") return;
+
+        if (this.#performedInitialProcess.value) {
+          unregister();
+          return;
+        }
+
+        this.#performedInitialProcess.value = true;
 
         const skip = /** @type {any} */ (import.meta).env
           ?.DISABLE_AUTOMATIC_TRACKS_PROCESSING ?? false;
         if (skip) return;
 
         untracked(() => this.process());
+        unregister();
       });
     }
   }
