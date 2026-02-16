@@ -1,14 +1,23 @@
 import deepDiff from "@fry69/deep-diff";
 
-import { ostiary, rpc, workerProxy } from "@common/worker.js";
+import { effect, signal } from "@common/signal.js";
+import { announce, ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "@common/worker.d.ts"
  * @import {InputActions} from "@components/input/types.d.ts"
  * @import {Actions as MetadataProcessorActions} from "@components/processor/metadata/types.d.ts"
+ *
  * @import {Actions} from "./types.d.ts"
  */
+
+////////////////////////////////////////////
+// STATE
+////////////////////////////////////////////
+
+/** @type {import("@common/signal.d.ts").Signal<{processed: number, total: number}>} */
+const $progress = signal({ processed: 0, total: 0 });
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -19,6 +28,9 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
  */
 export async function process({ data, ports }) {
   const cachedTracks = data;
+
+  // Reset progress
+  $progress.value = { processed: 0, total: 0 };
 
   /** @type {ProxiedActions<InputActions>} */
   const input = workerProxy(() => ports.input);
@@ -32,7 +44,12 @@ export async function process({ data, ports }) {
   // List
   const tracks = await input.list(cachedTracks);
 
+  // Reset progress
+  $progress.value = { processed: 0, total: tracks.length };
+
   // Fetch metadata if needed
+  let processed = 0;
+
   const tracksWithMetadata = await tracks.reduce(
     /**
      * @param {Promise<Track[]>} promise
@@ -40,14 +57,23 @@ export async function process({ data, ports }) {
      */
     async (promise, track) => {
       const acc = await promise;
-      if (track.tags && track.stats) return [...acc, track];
+
+      if (track.tags && track.stats) {
+        processed++;
+        $progress.value = { processed, total: tracks.length };
+        return [...acc, track];
+      }
 
       const resGet = await input.resolve({
         method: "GET",
         uri: track.uri,
       });
 
-      if (!resGet) return [...acc, track];
+      if (!resGet) {
+        processed++;
+        $progress.value = { processed, total: tracks.length };
+        return [...acc, track];
+      }
 
       const resHead = "stream" in resGet ? undefined : await input.resolve({
         method: "HEAD",
@@ -63,6 +89,9 @@ export async function process({ data, ports }) {
           }
           : undefined,
       });
+
+      processed++;
+      $progress.value = { processed, total: tracks.length };
 
       return [...acc, { ...track, stats, tags }];
     },
@@ -83,5 +112,8 @@ export async function process({ data, ports }) {
 ////////////////////////////////////////////
 
 ostiary((context) => {
-  rpc(context, { process });
+  rpc(context, { process, progress: $progress.get });
+
+  // Communicate state
+  effect(() => announce("progress", $progress.value, context));
 });

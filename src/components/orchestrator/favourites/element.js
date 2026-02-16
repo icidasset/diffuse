@@ -60,9 +60,9 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(this.nameWithGroup, {
-        include: { strategy: "replicate", fn: this.include },
-        expel: { strategy: "replicate", fn: this.expel },
-        toggle: { strategy: "replicate", fn: this.toggle },
+        include: { strategy: "leaderOnly", fn: this.include },
+        expel: { strategy: "leaderOnly", fn: this.expel },
+        toggle: { strategy: "leaderOnly", fn: this.toggle },
       });
 
       if (actions) {

@@ -1,4 +1,9 @@
-import { DiffuseElement, query, queryOptional } from "@common/element.js";
+import {
+  DiffuseElement,
+  nothing,
+  query,
+  queryOptional,
+} from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
@@ -240,6 +245,10 @@ class InputConfig extends DiffuseElement {
     await this.$output.value?.tracks.save(
       [...(this.$output.value?.tracks.collection() ?? []), track],
     );
+
+    /** @type {HTMLInputElement | null} */
+    const overviewTab = this.root().querySelector("#overview-tab");
+    if (overviewTab) overviewTab.checked = true;
   }
 
   /**
@@ -382,26 +391,7 @@ class InputConfig extends DiffuseElement {
               </span>
             </fieldset>
 
-            ${this.$processTracksOrchestrator.value?.isProcessing()
-              ? html`
-                <fieldset>
-                  <legend>Processing tracks</legend>
-                  <div class="with-icon with-icon--large">
-                    <img
-                      src="images/icons/windows_98/gears-0.png"
-                      width="24"
-                    />
-                    <span>Gathering metadata from your sources ...</span>
-                  </div>
-                  <div
-                    class="progress-indicator segmented"
-                    style="margin-top: var(--grouped-element-spacing);"
-                  >
-                    <div class="progress-indicator-bar" style="width: 100%"></div>
-                  </div>
-                </fieldset>
-              `
-              : ""}
+            ${this.#renderProcessingProgress(html)}
           </div>
 
           <!-- HTTPS -->
@@ -576,6 +566,40 @@ class InputConfig extends DiffuseElement {
           </div>
         </div>
       </div>
+    `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderProcessingProgress(html) {
+    const orchestrator = this.$processTracksOrchestrator.value;
+    if (!orchestrator?.isProcessing()) return nothing;
+
+    const { processed, total } = orchestrator.progress();
+    const percentage = total > 0 ? Math.round((processed / total) * 100) : 0;
+
+    return html`
+      <fieldset>
+        <legend>Processing tracks</legend>
+        <div class="with-icon with-icon--large">
+          <img
+            src="images/icons/windows_98/gears-0.png"
+            width="24"
+          />
+          <span>
+            ${total === 0
+              ? `Going through all the inputs and gathering the tracks ...`
+              : `Making sure each track has metadata & statistics (${processed} / ${total}) ...`}
+          </span>
+        </div>
+        <div
+          class="progress-indicator"
+          style="margin-top: var(--grouped-element-spacing);"
+        >
+          <div class="progress-indicator-bar" style="width: ${percentage}%"></div>
+        </div>
+      </fieldset>
     `;
   }
 

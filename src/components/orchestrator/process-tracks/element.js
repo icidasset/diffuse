@@ -1,12 +1,13 @@
 import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { signal, untracked } from "@common/signal.js";
+import { listen } from "@common/worker.js";
 
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
  *
- * @import {Actions} from "./types.d.ts"
+ * @import {Actions, Progress} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -37,10 +38,12 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
   // SIGNALS
 
   #isProcessing = signal(false);
+  #progress = signal(/** @type {Progress} */ ({ processed: 0, total: 0 }));
 
   // STATE
 
   isProcessing = this.#isProcessing.get;
+  progress = this.#progress.get;
 
   // LIFECYCLE
 
@@ -75,7 +78,14 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     this.metadataProcessor = metadataProcessor;
 
     // Wait until defined
+    await customElements.whenDefined(input.localName);
     await customElements.whenDefined(output.localName);
+    await customElements.whenDefined(metadataProcessor.localName);
+
+    // Sync progress with worker
+    const link = this.workerLink();
+    listen("progress", this.#progress.set, link);
+    this.#proxy.progress().then(this.#progress.set);
 
     // Process whenever tracks are initially loaded
     if (this.hasAttribute("process-when-ready")) {

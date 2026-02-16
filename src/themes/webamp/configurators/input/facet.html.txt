@@ -27,7 +27,7 @@
 
   const inp = foundation.orchestrator.input();
   const out = foundation.orchestrator.output();
-  const pro = foundation.orchestrator.processTracks({ disableWhenReady: false });
+  const pro = foundation.orchestrator.processTracks({ disableWhenReady: true });
   const sou = foundation.orchestrator.sources();
 
   const el = new InputConfigElement();
