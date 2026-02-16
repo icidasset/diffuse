@@ -181,6 +181,17 @@ class OutputConfigurator extends DiffuseElement {
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
       },
+
+      // Other
+      ready: computed(() => {
+        const out = this.#selectedOutput.value;
+        if (out) return out.ready();
+
+        const def = this.#defaultOutput.value;
+        if (def) return def.ready();
+
+        return this.#setupFinished.value;
+      }),
     };
 
     // Assign manager properties to class
@@ -188,6 +199,7 @@ class OutputConfigurator extends DiffuseElement {
     this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
+    this.ready = manager.ready
   }
 
   // SIGNALS
@@ -212,16 +224,6 @@ class OutputConfigurator extends DiffuseElement {
   // STATE
 
   selectedOutput = computed(() => this.#selectedOutput.value ?? null);
-
-  ready = computed(() => {
-    const out = this.#selectedOutput.value;
-    if (out) return out.ready();
-
-    const def = this.#defaultOutput.value;
-    if (def) return def.ready();
-
-    return this.#setupFinished.value;
-  });
 
   // LIFECYCLE
 

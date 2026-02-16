@@ -40,7 +40,7 @@ configureOAuth({
       ? `http://localhost/?redirect_uri=${
         encodeURIComponent(redirect_uri)
       }&scope=${encodeURIComponent("atproto transition:generic")}`
-      : import.meta.env?.ATPROTO_CLIENT_ID ??
+      : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
         "https://elements.diffuse.sh/oauth-client-metadata.json",
     redirect_uri,
   },
@@ -67,12 +67,12 @@ configureOAuth({
  * @param {string} handle
  */
 export async function login(handle) {
-  const location = globalThis.location
+  const location = globalThis.location;
 
   if (location.origin.startsWith("http://localhost")) {
     location.assign(
       location.href.replace("http://localhost:", "http://127.0.0.1:"),
-    )
+    );
   }
 
   const authUrl = await createAuthorizationUrl({
@@ -125,7 +125,7 @@ export async function restoreOrFinalize() {
         { allowStale: true },
       );
     } catch (err) {
-      console.warn(err)
+      console.warn(err);
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }

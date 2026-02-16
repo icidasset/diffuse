@@ -44,6 +44,9 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           await base.tracks.save(filtered);
         },
       },
+
+      // Other
+      ready: base.ready,
     };
 
     // Assign manager properties to class
@@ -51,7 +54,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
     this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
-    this.ready = base.ready;
+    this.ready = manager.ready;
   }
 }
 

@@ -60,6 +60,9 @@ class JsonStringOutputTransformer extends OutputTransformer {
           await base.tracks.save(json);
         },
       },
+
+      // Other
+      ready: base.ready,
     };
 
     // Assign manager properties to class
@@ -67,7 +70,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
     this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
-    this.ready = base.ready;
+    this.ready = manager.ready;
   }
 }
 
