@@ -49,6 +49,8 @@ class InputConfig extends DiffuseElement {
     /** @type {import("@components/orchestrator/process-tracks/element.js").CLASS | undefined} */ (undefined),
   );
 
+  $tab = signal("overview");
+
   // LIFECYCLE
 
   /**
@@ -246,9 +248,7 @@ class InputConfig extends DiffuseElement {
       [...(this.$output.value?.tracks.collection() ?? []), track],
     );
 
-    /** @type {HTMLInputElement | null} */
-    const overviewTab = this.root().querySelector("#overview-tab");
-    if (overviewTab) overviewTab.checked = true;
+    this.$tab.value = "overview";
   }
 
   /**
@@ -265,8 +265,6 @@ class InputConfig extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const sources = this.$sourcesOrchestrator.value?.sources();
-
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
       <link rel="stylesheet" href="themes/webamp/98-extra.css" />
@@ -300,8 +298,7 @@ class InputConfig extends DiffuseElement {
           padding: var(--radio-label-spacing);
         }
 
-        /* Copied styles from "li[aria-selected=true]" */
-        li:has(input:checked) {
+        li[aria-selected="true"] {
           padding-bottom: 2px;
           margin-top: -2px;
           background-color: var(--surface);
@@ -309,20 +306,7 @@ class InputConfig extends DiffuseElement {
           z-index: 8;
           margin-left: -3px;
         }
-
-        input {
-          display: none
-        }
       }
-
-      .window-body {
-        display: none
-      }
-
-      #tabbed:has(#overview-tab:checked) #overview-contents { display: block }
-      #tabbed:has(#opensubsonic-tab:checked) #opensubsonic-contents { display: block }
-      #tabbed:has(#s3-tab:checked) #s3-contents { display: block }
-      #tabbed:has(#https-tab:checked) #https-contents { display: block }
 
       /* LIST */
 
@@ -349,222 +333,267 @@ class InputConfig extends DiffuseElement {
 
       <div id="tabbed">
         <menu role="tablist" class="multirows">
-          <li role="tab">
-            <label for="overview-tab">
+          <li role="tab" aria-selected="${this.$tab.value === "overview"}">
+            <label @click="${() => this.$tab.value = "overview"}">
               <span>Overview</span>
-              <input name="input-tab" id="overview-tab" type="radio" checked="" />
             </label>
           </li>
-          <li role="tab">
-            <label for="https-tab">
+          <li role="tab" aria-selected="${this.$tab.value === "https"}">
+            <label @click="${() => this.$tab.value = "https"}">
               <span>HTTPS</span>
-              <input name="input-tab" id="https-tab" type="radio" />
             </label>
           </li>
-          <li role="tab">
-            <label for="opensubsonic-tab">
+          <li role="tab" aria-selected="${this.$tab.value === "opensubsonic"}">
+            <label @click="${() => this.$tab.value = "opensubsonic"}">
               <span>OpenSubsonic</span>
-              <input name="input-tab" id="opensubsonic-tab" type="radio" />
             </label>
           </li>
-          <li role="tab">
-            <label for="s3-tab">
+          <li role="tab" aria-selected="${this.$tab.value === "s3"}">
+            <label @click="${() => this.$tab.value = "s3"}">
               <span>S3</span>
-              <input name="input-tab" id="s3-tab" type="radio" />
             </label>
           </li>
         </menu>
 
         <div class="window" role="tabpanel">
-          <!-- Overview -->
-          <div class="window-body" id="overview-contents">
-            <fieldset>
-              <span class="with-icon with-icon--large">
-                <img
-                  src="images/icons/windows_98/cd_audio_cd_a-0.png"
-                  width="24"
-                />
-                <span>Here you can configure where your audio comes from.<br />Add
-                  sources using the tabs above, then tracks will be processed
-                  automatically.
-                </span>
-              </span>
-            </fieldset>
-
-            ${this.#renderProcessingProgress(html)}
-          </div>
-
-          <!-- HTTPS -->
-          <div class="window-body" id="https-contents">
-            <fieldset>
-              ${this.renderList(
-                html,
-                sources?.[HTTPS_SCHEME] ?? [],
-                "Added URLs",
-              )}
-
-              <p>
-                <button disabled role="delete" @click="${this.#deleteSelected}">
-                  Delete selected
-                </button>
-              </p>
-            </fieldset>
-
-            <form @submit="${this.#addHttpsUrl}">
-              <fieldset>
-                <div class="field-row">
-                  <label for="https-url">URL:</label>
-                  <input
-                    id="https-url"
-                    type="url"
-                    required
-                    placeholder="https://example.com/audio.mp3"
-                  />
-                </div>
-              </fieldset>
-
-              <p>
-                <button type="submit" id="https-submit">Add URL</button>
-              </p>
-            </form>
-          </div>
-
-          <!-- Opensubsonic -->
-          <div class="window-body" id="opensubsonic-contents">
-            <fieldset>
-              ${this.renderList(
-                html,
-                sources?.[OPENSUBSONIC_SCHEME] ?? [],
-                "Added servers",
-              )}
-
-              <p>
-                <button disabled role="delete" @click="${this.#deleteSelected}">
-                  Delete selected
-                </button>
-              </p>
-            </fieldset>
-
-            <form @submit="${this.#addOpenSubsonicServer}">
-              <fieldset>
-                <legend>Server details</legend>
-
-                <div class="field-row">
-                  <label for="opensubsonic-host">Host domain:*</label>
-                  <input id="opensubsonic-host" type="text" required />
-                </div>
-
-                <div class="field-row">
-                  <label for="opensubsonic-tls">Use HTTPS/TLS:</label>
-                  <select id="opensubsonic-tls">
-                    <option value="true" selected>Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                </div>
-
-                <p>
-                  Either provide a username & password combination:
-                </p>
-
-                <div class="field-row">
-                  <label for="opensubsonic-username">Username:</label>
-                  <input id="opensubsonic-username" type="text" />
-                </div>
-
-                <div class="field-row">
-                  <label for="opensubsonic-password">Password:</label>
-                  <input id="opensubsonic-password" type="password" />
-                </div>
-
-                <p>
-                  Or an API key:
-                </p>
-
-                <div class="field-row">
-                  <label for="opensubsonic-apikey">API key:</label>
-                  <input id="opensubsonic-apikey" type="text" />
-                </div>
-
-                <p>
-                  * are required fields.
-                </p>
-              </fieldset>
-
-              <p>
-                <button type="submit" id="opensubsonic-submit">Add server</button>
-              </p>
-            </form>
-          </div>
-
-          <!-- S3 -->
-          <div class="window-body" id="s3-contents">
-            <fieldset>
-              ${this.renderList(
-                html,
-                sources?.[S3_SCHEME] ?? [],
-                "Added buckets",
-              )}
-
-              <p>
-                <button disabled role="delete" @click="${this.#deleteSelected}">
-                  Delete selected
-                </button>
-              </p>
-            </fieldset>
-
-            <form @submit="${this.#addS3Bucket}">
-              <fieldset>
-                <legend>Bucket details</legend>
-
-                <div class="field-row">
-                  <label for="s3-access-key">Access Key:*</label>
-                  <input type="text" id="s3-access-key" required />
-                </div>
-
-                <div class="field-row">
-                  <label for="s3-secret-key">Secret Key:*</label>
-                  <input type="password" id="s3-secret-key" required />
-                </div>
-
-                <div class="field-row">
-                  <label for="s3-bucket-name">Bucket Name:*</label>
-                  <input type="text" id="s3-bucket-name" required />
-                </div>
-
-                <div class="field-row">
-                  <label for="s3-host">Host:</label>
-                  <input
-                    type="text"
-                    id="s3-host"
-                    placeholder="s3.amazonaws.com"
-                  />
-                </div>
-
-                <div class="field-row">
-                  <label for="s3-region">Region:</label>
-                  <input
-                    type="text"
-                    id="s3-region"
-                    placeholder="us-east-1"
-                  />
-                </div>
-
-                <div class="field-row">
-                  <label for="s3-path">Path:</label>
-                  <input type="text" id="s3-path" />
-                </div>
-
-                <p>
-                  * are required fields.
-                </p>
-              </fieldset>
-
-              <p>
-                <button type="submit" id="s3-submit">Add bucket</button>
-              </p>
-            </form>
-          </div>
+          ${this.#renderTab(html)}
         </div>
+      </div>
+    `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderTab(html) {
+    switch (this.$tab.value) {
+      case "overview":
+        return this.#renderOverviewTab(html);
+      case "https":
+        return this.#renderHttpsTab(html);
+      case "opensubsonic":
+        return this.#renderOpenSubsonicTab(html);
+      case "s3":
+        return this.#renderS3Tab(html);
+      default:
+        return nothing;
+    }
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderOverviewTab(html) {
+    return html`
+      <div class="window-body">
+        <fieldset>
+          <span class="with-icon with-icon--large">
+            <img
+              src="images/icons/windows_98/cd_audio_cd_a-0.png"
+              width="24"
+            />
+            <span>Here you can configure where your audio comes from.<br />Add sources
+              using the tabs above, then tracks will be processed automatically.
+            </span>
+          </span>
+        </fieldset>
+
+        ${this.#renderProcessingProgress(html)}
+      </div>
+    `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderHttpsTab(html) {
+    const sources = this.$sourcesOrchestrator.value?.sources();
+
+    return html`
+      <div class="window-body">
+        <fieldset>
+          ${this.#renderList(
+            html,
+            sources?.[HTTPS_SCHEME] ?? [],
+            "Added URLs",
+          )}
+
+          <p>
+            <button disabled role="delete" @click="${this.#deleteSelected}">
+              Delete selected
+            </button>
+          </p>
+        </fieldset>
+
+        <form @submit="${this.#addHttpsUrl}">
+          <fieldset>
+            <div class="field-row">
+              <label for="https-url">URL:</label>
+              <input
+                id="https-url"
+                type="url"
+                required
+                placeholder="https://example.com/audio.mp3"
+              />
+            </div>
+          </fieldset>
+
+          <p>
+            <button type="submit" id="https-submit">Add URL</button>
+          </p>
+        </form>
+      </div>
+    `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderOpenSubsonicTab(html) {
+    const sources = this.$sourcesOrchestrator.value?.sources();
+
+    return html`
+      <div class="window-body">
+        <fieldset>
+          ${this.#renderList(
+            html,
+            sources?.[OPENSUBSONIC_SCHEME] ?? [],
+            "Added servers",
+          )}
+
+          <p>
+            <button disabled role="delete" @click="${this.#deleteSelected}">
+              Delete selected
+            </button>
+          </p>
+        </fieldset>
+
+        <form @submit="${this.#addOpenSubsonicServer}">
+          <fieldset>
+            <legend>Server details</legend>
+
+            <div class="field-row">
+              <label for="opensubsonic-host">Host domain:*</label>
+              <input id="opensubsonic-host" type="text" required />
+            </div>
+
+            <div class="field-row">
+              <label for="opensubsonic-tls">Use HTTPS/TLS:</label>
+              <select id="opensubsonic-tls">
+                <option value="true" selected>Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <p>
+              Either provide a username & password combination:
+            </p>
+
+            <div class="field-row">
+              <label for="opensubsonic-username">Username:</label>
+              <input id="opensubsonic-username" type="text" />
+            </div>
+
+            <div class="field-row">
+              <label for="opensubsonic-password">Password:</label>
+              <input id="opensubsonic-password" type="password" />
+            </div>
+
+            <p>
+              Or an API key:
+            </p>
+
+            <div class="field-row">
+              <label for="opensubsonic-apikey">API key:</label>
+              <input id="opensubsonic-apikey" type="text" />
+            </div>
+
+            <p>
+              * are required fields.
+            </p>
+          </fieldset>
+
+          <p>
+            <button type="submit" id="opensubsonic-submit">Add server</button>
+          </p>
+        </form>
+      </div>
+    `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderS3Tab(html) {
+    const sources = this.$sourcesOrchestrator.value?.sources();
+
+    return html`
+      <div class="window-body">
+        <fieldset>
+          ${this.#renderList(
+            html,
+            sources?.[S3_SCHEME] ?? [],
+            "Added buckets",
+          )}
+
+          <p>
+            <button disabled role="delete" @click="${this.#deleteSelected}">
+              Delete selected
+            </button>
+          </p>
+        </fieldset>
+
+        <form @submit="${this.#addS3Bucket}">
+          <fieldset>
+            <legend>Bucket details</legend>
+
+            <div class="field-row">
+              <label for="s3-access-key">Access Key:*</label>
+              <input type="text" id="s3-access-key" required />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-secret-key">Secret Key:*</label>
+              <input type="password" id="s3-secret-key" required />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-bucket-name">Bucket Name:*</label>
+              <input type="text" id="s3-bucket-name" required />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-host">Host:</label>
+              <input
+                type="text"
+                id="s3-host"
+                placeholder="s3.amazonaws.com"
+              />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-region">Region:</label>
+              <input
+                type="text"
+                id="s3-region"
+                placeholder="us-east-1"
+              />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-path">Path:</label>
+              <input type="text" id="s3-path" />
+            </div>
+
+            <p>
+              * are required fields.
+            </p>
+          </fieldset>
+
+          <p>
+            <button type="submit" id="s3-submit">Add bucket</button>
+          </p>
+        </form>
       </div>
     `;
   }
@@ -608,7 +637,7 @@ class InputConfig extends DiffuseElement {
    * @param {Array<{label: string, uri: string}>} list
    * @param {string} title
    */
-  renderList(html, list, title) {
+  #renderList(html, list, title) {
     return html`
       <div class="sunken-panel">
         <table style="width: 100%;" @click="${this.#highlightTableEntry}">
