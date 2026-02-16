@@ -252,11 +252,13 @@ class ArtworkController extends DiffuseElement {
         milliseconds: Math.round(durMs * prog),
       }).round({
         largestUnit: "hours",
+        smallestUnit: "seconds",
       });
 
       const d = Temporal.Duration.from({ milliseconds: Math.round(durMs) })
         .round({
           largestUnit: "hours",
+          smallestUnit: "seconds",
         });
 
       this.#time.value = this.#formatTime(p);
