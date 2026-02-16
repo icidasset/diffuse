@@ -2,7 +2,6 @@ import { DiffuseElement } from "@common/element.js";
 import { batch, computed, signal } from "@common/signal.js";
 
 /**
- * @import {Facet, Playlist, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  */
 
@@ -19,7 +18,6 @@ import { batch, computed, signal } from "@common/signal.js";
  *
  * Checks child output elements in order and delegates
  * to the first one whose `.ready()` signal returns `true`.
- * If none are ready, falls back to in-memory storage.
  *
  * @implements {OutputManagerDeputy}
  */
@@ -33,9 +31,7 @@ class OutputFallbackConfigurator extends DiffuseElement {
     const manager = {
       facets: {
         collection: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.facets.collection();
-          return this.#memory.facets.value;
+          return this.activeOutput()?.facets.collection() ?? [];
         }),
         reload: () => {
           const out = this.activeOutput();
@@ -43,21 +39,15 @@ class OutputFallbackConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newFacets) => {
-          const out = this.activeOutput();
-          if (out) return await out.facets.save(newFacets);
-          this.#memory.facets.value = newFacets;
+          await Promise.all(this.#outputs.value.map((o) => o.facets.save(newFacets)));
         },
         state: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.facets.state();
-          return this.#setupFinished.value ? "loaded" : "sleeping";
+          return this.activeOutput()?.facets.state() ?? "sleeping";
         }),
       },
       playlists: {
         collection: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.playlists.collection();
-          return this.#memory.playlists.value;
+          return this.activeOutput()?.playlists.collection() ?? [];
         }),
         reload: () => {
           const out = this.activeOutput();
@@ -65,21 +55,15 @@ class OutputFallbackConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newPlaylists) => {
-          const out = this.activeOutput();
-          if (out) return await out.playlists.save(newPlaylists);
-          this.#memory.playlists.value = newPlaylists;
+          await Promise.all(this.#outputs.value.map((o) => o.playlists.save(newPlaylists)));
         },
         state: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.playlists.state();
-          return this.#setupFinished.value ? "loaded" : "sleeping";
+          return this.activeOutput()?.playlists.state() ?? "sleeping";
         }),
       },
       themes: {
         collection: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.themes.collection();
-          return this.#memory.themes.value;
+          return this.activeOutput()?.themes.collection() ?? [];
         }),
         reload: () => {
           const out = this.activeOutput();
@@ -87,21 +71,15 @@ class OutputFallbackConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newThemes) => {
-          const out = this.activeOutput();
-          if (out) return await out.themes.save(newThemes);
-          this.#memory.themes.value = newThemes;
+          await Promise.all(this.#outputs.value.map((o) => o.themes.save(newThemes)));
         },
         state: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.themes.state();
-          return this.#setupFinished.value ? "loaded" : "sleeping";
+          return this.activeOutput()?.themes.state() ?? "sleeping";
         }),
       },
       tracks: {
         collection: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.tracks.collection();
-          return this.#memory.tracks.value;
+          return this.activeOutput()?.tracks.collection() ?? [];
         }),
         reload: () => {
           const out = this.activeOutput();
@@ -109,14 +87,10 @@ class OutputFallbackConfigurator extends DiffuseElement {
           return Promise.resolve();
         },
         save: async (newTracks) => {
-          const out = this.activeOutput();
-          if (out) return await out.tracks.save(newTracks);
-          this.#memory.tracks.value = newTracks;
+          await Promise.all(this.#outputs.value.map((o) => o.tracks.save(newTracks)));
         },
         state: computed(() => {
-          const out = this.activeOutput();
-          if (out) return out.tracks.state();
-          return this.#setupFinished.value ? "loaded" : "sleeping";
+          return this.activeOutput()?.tracks.state() ?? "sleeping";
         }),
       },
 
@@ -133,13 +107,6 @@ class OutputFallbackConfigurator extends DiffuseElement {
 
   // SIGNALS
 
-  #memory = {
-    facets: signal(/** @type {Facet[]} */ ([])),
-    playlists: signal(/** @type {Playlist[]} */ ([])),
-    themes: signal(/** @type {Theme[]} */ ([])),
-    tracks: signal(/** @type {Track[]} */ ([])),
-  };
-
   #outputs = signal(/** @type {Output[]} */ ([]));
   #setupFinished = signal(false);
 
@@ -150,7 +117,6 @@ class OutputFallbackConfigurator extends DiffuseElement {
    */
   activeOutput = computed(() => {
     const outputs = this.#outputs.value;
-    // TODO: Not sure if this will cause a signal change too often.
     for (const output of outputs) {
       if (output.ready()) return output;
     }
