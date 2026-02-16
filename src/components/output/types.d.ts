@@ -6,10 +6,9 @@ export type OutputElement<Encoding = null> =
   & DiffuseElement
   & OutputManagerDeputy<Encoding>;
 
-export type OutputManagerDeputy<Encoding = null> = Omit<
-  OutputManager<Encoding>,
-  "signals"
->;
+export type OutputManagerDeputy<Encoding = null> =
+  & Omit<OutputManager<Encoding>, "signals">
+  & { ready: SignalReader<boolean> };
 
 export type OutputManager<Encoding = null> = {
   facets: {

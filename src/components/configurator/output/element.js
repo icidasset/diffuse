@@ -213,6 +213,16 @@ class OutputConfigurator extends DiffuseElement {
 
   selectedOutput = computed(() => this.#selectedOutput.value ?? null);
 
+  ready = computed(() => {
+    const out = this.#selectedOutput.value;
+    if (out) return out.ready();
+
+    const def = this.#defaultOutput.value;
+    if (def) return def.ready();
+
+    return this.#setupFinished.value;
+  });
+
   // LIFECYCLE
 
   /**
@@ -283,14 +293,14 @@ class OutputConfigurator extends DiffuseElement {
         return [[d.id, d]];
       }),
     );
-  }
+  };
 
   // ADDITIONAL ACTIONS
 
   deselect = async () => {
     localStorage.removeItem(`${STORAGE_PREFIX}/selected/id`);
     this.#selectedOutput.value = await this.#findSelectedOutput();
-  }
+  };
 
   options = async () => {
     const deps = this.dependencies();
@@ -307,7 +317,7 @@ class OutputConfigurator extends DiffuseElement {
         element: /** @type {OutputElement} */ (v),
       };
     });
-  }
+  };
 
   /**
    * @param {string} id
@@ -315,7 +325,7 @@ class OutputConfigurator extends DiffuseElement {
   select = async (id) => {
     localStorage.setItem(`${STORAGE_PREFIX}/selected/id`, id);
     this.#selectedOutput.value = await this.#findSelectedOutput();
-  }
+  };
 }
 
 export default OutputConfigurator;

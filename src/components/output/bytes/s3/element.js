@@ -1,4 +1,5 @@
 import { BroadcastableDiffuseElement } from "@common/element.js";
+import { computed, signal } from "@common/signal.js";
 import { outputManager } from "../../common.js";
 
 /**
@@ -58,6 +59,12 @@ class S3Output extends BroadcastableDiffuseElement {
     this.tracks = this.#manager.tracks;
   }
 
+  // STATE
+
+  ready = computed(() => {
+    return this.#bucketSignal.value !== undefined
+  });
+
   // LIFECYCLE
 
   /**
@@ -85,18 +92,17 @@ class S3Output extends BroadcastableDiffuseElement {
    * @param {Bucket} bucket
    */
   setBucket(bucket) {
-    this.#bucketValue = bucket;
+    this.#bucketSignal.value = bucket;
   }
 
-  /** @type {Bucket | undefined} */
-  #bucketValue;
+  #bucketSignal = signal(/** @type {Bucket | undefined} */ (undefined));
 
   /** @returns {Bucket} */
   #bucket() {
-    if (!this.#bucketValue) {
+    if (!this.#bucketSignal.value) {
       throw new Error("Bucket not set, call setBucket() first.");
     }
-    return this.#bucketValue;
+    return this.#bucketSignal.value;
   }
 
   // GET & PUT

@@ -96,6 +96,7 @@ class AutomergeRepoServerOutput extends DiffuseElement {
     this.playlists = this.#manager.playlists;
     this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
+    this.ready = () => true;
   }
 
   // LIFECYCLE

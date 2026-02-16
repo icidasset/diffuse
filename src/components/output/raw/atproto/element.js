@@ -1,12 +1,12 @@
 import { Client, ok } from "@atcute/client";
 import { BroadcastableDiffuseElement } from "@common/element.js";
-import { signal } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 import { outputManager } from "../../common.js";
 import { login, logout, OAuthUserAgent, restoreOrFinalize } from "./oauth.js";
 
 /**
  * @import {Signal} from "@common/signal.d.ts"
- * @import {OutputElement, OutputManager} from "../../types.d.ts"
+ * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
 
@@ -71,6 +71,10 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
   // STATE
 
   did = this.#did.get;
+
+  ready = computed(() => {
+    return this.#did.value !== null && navigator.onLine
+  });
 
   // LIFECYCLE
 

@@ -84,6 +84,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
     this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
+    this.ready = base.ready;
   }
 }
 

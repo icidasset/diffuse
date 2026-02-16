@@ -67,6 +67,10 @@ class OutputOrchestrator extends DiffuseElement {
     return this.output.tracks;
   }
 
+  get ready() {
+    return this.output.ready;
+  }
+
   // PROXY ADDITIONAL OUTPUT CONFIGURATOR ACTIONS
 
   get deselect() {

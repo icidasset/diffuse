@@ -109,6 +109,9 @@ export class OutputTransformer extends DiffuseElement {
           return this.output.signal()?.tracks.state() ?? "sleeping";
         }),
       },
+
+      // Other non-data related state
+      ready: computed(() => this.output.signal()?.ready() ?? false),
     };
 
     return m;
