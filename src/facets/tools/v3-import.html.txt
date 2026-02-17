@@ -165,21 +165,25 @@
       const now = new Date().toISOString();
       const existing = output.playlists.collection() ?? [];
 
-      const newPlaylists = items.map((item) => ({
-        $type: "sh.diffuse.output.playlist",
-        id: crypto.randomUUID(),
-        name: item.name ?? "Untitled",
-        unordered: !!item.collection,
-        items: (item.tracks ?? []).map((track) => ({
-          criteria: [
-            { field: "tags.album", value: track.album ?? "", transformations: ["toLowerCase"] },
-            { field: "tags.artist", value: track.artist ?? "", transformations: ["toLowerCase"] },
-            { field: "tags.title", value: track.title ?? "", transformations: ["toLowerCase"] },
-          ],
-        })),
-        createdAt: now,
-        updatedAt: now,
-      }));
+      const newPlaylists = items
+        .map((item) => ({
+          $type: "sh.diffuse.output.playlist",
+          id: crypto.randomUUID(),
+          name: item.name ?? "Untitled",
+          unordered: !!item.collection,
+          items: (item.tracks ?? []).map((track) => ({
+            criteria: [
+              { field: "tags.album", value: track.album ?? "", transformations: ["toLowerCase"] },
+              { field: "tags.artist", value: track.artist ?? "", transformations: ["toLowerCase"] },
+              { field: "tags.title", value: track.title ?? "", transformations: ["toLowerCase"] },
+            ],
+          })),
+          createdAt: now,
+          updatedAt: now,
+        }))
+        .filter((playlist) => {
+          return existing.find((p) => p.name === playlist.name) === undefined;
+        });
 
       await output.playlists.save([...existing, ...newPlaylists]);
       showStatus(`Imported ${newPlaylists.length} playlist(s).`, "success");

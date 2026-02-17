@@ -4,7 +4,7 @@ import { computed, signal } from "@common/signal.js";
 import { createEmptyFavouritesPlaylist } from "./common.js";
 
 /**
- * @import {Playlist, Track} from "@definitions/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
  * @import {Actions} from "./types.d.ts"
