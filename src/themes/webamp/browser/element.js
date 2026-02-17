@@ -4,7 +4,7 @@ import {
   query,
   whenElementsDefined,
 } from "@common/element.js";
-import { signal, untracked } from "@common/signal.js";
+import { computed, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -41,6 +41,20 @@ class Browser extends DiffuseElement {
   );
 
   $highlightedTrack = signal(/** @type {string | null} */ (null));
+
+  $groupedPlaylists = computed(() => {
+    const playlists = this.$output.value?.playlists.collection()
+      ?.sort((a, b) => a.name.localeCompare(b.name));
+    if (!playlists) return [];
+
+    const ordered = playlists.filter((p) => !p.unordered);
+    const unordered = playlists.filter((p) => p.unordered);
+
+    return [
+      { label: "Ordered", playlists: ordered },
+      { label: "Unordered", playlists: unordered },
+    ].filter((g) => g.playlists.length > 0);
+  });
 
   // STATE
 
@@ -305,16 +319,22 @@ class Browser extends DiffuseElement {
         <select id="playlist-select" @change="${this.setSelectedPlaylistId}">
           <option value="" ?selected="${!playlistId ||
             playlistId === ``}">All tracks</option>
-          ${this.$output.value?.playlists.collection().map((p) =>
+          ${this.$groupedPlaylists().map((group) =>
             html`
-              <option
-                value="${p.id}"
-                ?selected="${p.id === playlistId}"
-              >
-                ${p.name}
-              </option>
+              <optgroup label="${group.label}">
+                ${group.playlists.map((p) =>
+                  html`
+                    <option
+                      value="${p.id}"
+                      ?selected="${p.id === playlistId}"
+                    >
+                      ${p.name}
+                    </option>
+                  `
+                )}
+              </optgroup>
             `
-          ) ?? nothing}
+          )}
         </select>
       </search>
 
