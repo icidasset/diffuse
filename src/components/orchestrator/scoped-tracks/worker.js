@@ -1,3 +1,4 @@
+import { filterByPlaylist as filterByPlaylistFn } from "@common/playlist.js";
 import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
@@ -42,10 +43,29 @@ export async function supplyAvailable({ data, ports }) {
   await search.supply({ tracks: availableTracks });
 }
 
+/**
+ * @type {ActionsWithTunnel<Actions>["searchTracks"]}
+ */
+export async function searchTracks({ data, ports }) {
+  /** @type {ProxiedActions<SearchProcessorActions>} */
+  const search = workerProxy(() => ports.search);
+
+  ports.search.start();
+
+  return await search.search(data);
+}
+
+/**
+ * @type {ActionsWithTunnel<Actions>["filterByPlaylist"]}
+ */
+export async function filterByPlaylist({ data }) {
+  return filterByPlaylistFn(data.tracks, data.playlist);
+}
+
 ////////////////////////////////////////////
 // ⚡️
 ////////////////////////////////////////////
 
 ostiary((context) => {
-  rpc(context, { supplyAvailable });
+  rpc(context, { filterByPlaylist, searchTracks, supplyAvailable });
 });

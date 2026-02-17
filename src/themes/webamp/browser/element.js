@@ -1,30 +1,26 @@
-import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
+import {
+  DiffuseElement,
+  nothing,
+  query,
+  whenElementsDefined,
+} from "@common/element.js";
 import { signal } from "@common/signal.js";
 import { highlightTableEntry } from "../common/ui.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
+ * @import {SignalReader} from "@common/signal.d.ts";
  * @import {Track} from "@definitions/types.d.ts"
- * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
  */
 
 class Browser extends DiffuseElement {
   constructor() {
     super();
-
     this.attachShadow({ mode: "open" });
-    this.performSearch = this.performSearch.bind(this);
   }
 
   // SIGNALS
-
-  #collectionSize = signal(0);
-  #searchResults = signal(/** @type {Track[]} */ ([]));
-
-  $input = signal(
-    /** @type {InputElement | undefined} */ (undefined),
-  );
 
   $output = signal(
     /** @type {OutputElement | undefined} */ (undefined),
@@ -34,8 +30,12 @@ class Browser extends DiffuseElement {
     /** @type {import("@components/engine/queue/element.js").CLASS | undefined} */ (undefined),
   );
 
-  $search = signal(
-    /** @type {import("@components/processor/search/element.js").CLASS | undefined} */ (undefined),
+  $scope = signal(
+    /** @type {import("@components/engine/scope/element.js").CLASS | undefined} */ (undefined),
+  );
+
+  $provider = signal(
+    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> } | undefined} */ (undefined),
   );
 
   // LIFECYCLE
@@ -46,42 +46,29 @@ class Browser extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
 
-    /** @type {InputElement} */
-    const input = query(this, "input-selector");
-
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
+
+    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
+    const provider = query(this, "tracks-selector");
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */
     const queue = query(this, "queue-engine-selector");
 
-    /** @type {import("@components/processor/search/element.js").CLASS} */
-    const search = query(this, "search-processor-selector");
+    /** @type {import("@components/engine/scope/element.js").CLASS} */
+    const scope = query(this, "scope-engine-selector");
 
     // Wait for the above dependencies to be defined, then render again.
-    whenElementsDefined({ input, output, queue, search }).then(() => {
-      this.$input.value = input;
+    whenElementsDefined({ output, provider, queue, scope }).then(() => {
       this.$output.value = output;
+      this.$provider.value = provider;
       this.$queue.value = queue;
-      this.$search.value = search;
-
-      this.effect(() => {
-        const _ = search.supplyFingerprint();
-        this.performSearch();
-      });
-
-      this.effect(() => {
-        const _trigger = output.tracks.state();
-
-        this.#collectionSize.value = output.tracks.collection().filter(
-          (t) => t.kind !== "placeholder",
-        ).length;
-      });
+      this.$scope.value = scope;
     });
 
     // Effects
     this.effect(() => {
-      const _results = this.#searchResults.value;
+      const _results = this.$provider.value?.tracks();
       this.root().querySelector(".sunken-panel")?.scrollTo(0, 0);
     });
   }
@@ -100,15 +87,22 @@ class Browser extends DiffuseElement {
     this.$queue.value?.shift();
   }
 
-  async performSearch() {
+  setSearchTerm = () => {
     /** @type {HTMLInputElement | null} */
     const input = this.root().querySelector("#search-input");
     const term = input?.value?.trim();
 
-    this.#searchResults.value = await this.$search.value?.search({
-      term: term,
-    }) ?? [];
-  }
+    this.$scope.value?.setSearchTerm(term);
+  };
+
+  /**
+   * @param {Event} event
+   */
+  setSelectedPlaylistId = (event) => {
+    const id = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
+
+    this.$scope.value?.setPlaylistId(id === "" ? undefined : id);
+  };
 
   // RENDER
 
@@ -116,11 +110,9 @@ class Browser extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const isLoading = this.$output.value?.tracks?.state() !== "loaded" ||
-      (this.#collectionSize.value > 0 &&
-        this.$search.value?.supplyFingerprint() === undefined);
-
-    const tracks = this.#searchResults.value;
+    const isLoading = this.$output.value?.tracks?.state() !== "loaded";
+    const tracks = this.$provider.value?.tracks() ?? [];
+    const playlistId = this.$scope.value?.playlistId();
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
@@ -144,6 +136,10 @@ class Browser extends DiffuseElement {
 
       search input {
         flex: 1;
+      }
+
+      search select {
+        max-width: 33%;
       }
 
       /***********************************
@@ -186,9 +182,24 @@ class Browser extends DiffuseElement {
       </style>
 
       <search class="field-row">
-        <label for="search-input">Search</label>
+        <label for="search-input">Search:</label>
         <input id="search-input" type="search" @change="${this
-          .performSearch}" />
+          .setSearchTerm}" />
+        <label for="playlist-select">Playlist:</label>
+        <select id="playlist-select" @change="${this.setSelectedPlaylistId}">
+          <option value="" ?selected="${!playlistId ||
+            playlistId === ``}">All tracks</option>
+          ${this.$output.value?.playlists.collection().map((p) =>
+            html`
+              <option
+                value="${p.id}"
+                ?selected="${p.id === playlistId}"
+              >
+                ${p.name}
+              </option>
+            `
+          ) ?? nothing}
+        </select>
       </search>
 
       <div class="sunken-panel">

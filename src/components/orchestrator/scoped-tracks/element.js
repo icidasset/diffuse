@@ -3,7 +3,6 @@ import {
   query,
   queryOptional,
 } from "@common/element.js";
-import { match } from "@common/playlist.js";
 import { computed, signal, untracked } from "@common/signal.js";
 
 /**
@@ -73,7 +72,21 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      this.broadcast(this.nameWithGroup, {});
+      const actions = this.broadcast(this.nameWithGroup, {
+        setTracksSearch: {
+          strategy: "replicate",
+          fn: this.#tracksSearch.set,
+        },
+        setTracksFinal: {
+          strategy: "replicate",
+          fn: this.#tracksFinal.set,
+        },
+      });
+
+      if (actions) {
+        this.#tracksSearch.set = actions.setTracksSearch;
+        this.#tracksFinal.set = actions.setTracksFinal;
+      }
     }
 
     // Super
@@ -116,20 +129,24 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       if ((await this.isLeader()) === false) return;
 
       const searchResults = searchTerm
-        ? await this.#search.value?.search({ term: searchTerm })
+        ? await this.#proxy.searchTracks({ term: searchTerm })
         : untracked(() => output.tracks.collection());
 
-      this.#tracksSearch.value = searchResults ?? output.tracks.collection();
+      this.#tracksSearch.set(searchResults);
     });
 
     // Watch `#tracksSearch` + Playlist
-    this.effect(() => {
+    this.effect(async () => {
       const tracks = this.#tracksSearch.value;
       const playlist = this.#selectedPlaylist();
 
-      this.#tracksFinal.value = playlist
-        ? tracks.filter((t) => playlist.items.some((item) => match(t, item)))
-        : tracks;
+      if ((await this.isLeader()) === false) return;
+
+      this.#tracksFinal.set(
+        playlist
+          ? await this.#proxy.filterByPlaylist({ tracks, playlist })
+          : tracks,
+      );
     });
   }
 
