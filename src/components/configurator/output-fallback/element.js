@@ -132,7 +132,10 @@ class OutputFallbackConfigurator extends DiffuseElement {
     let activeOutput = null;
 
     for (const output of this.#outputs) {
-      if (output.ready()) activeOutput = output;
+      if (output.ready()) {
+        activeOutput = output;
+        break;
+      }
     }
 
     this.#activeOutput.value = activeOutput;

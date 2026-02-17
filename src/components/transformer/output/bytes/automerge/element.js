@@ -2,7 +2,10 @@ import * as Automerge from "@automerge/automerge";
 import { isUint8Array } from "iso-base/utils";
 
 import { computed } from "@common/signal.js";
-import { recursivelyCloneRecords } from "@common/utils.js";
+import {
+  recursivelyCloneRecords,
+  removeUndefinedValuesFromRecord,
+} from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import {
   INITIAL_FACETS_DOCUMENT,
@@ -90,7 +93,9 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
         save: async (newFacets) => {
           const doc = Automerge.change(facetsDocument(), (d) => {
             const clonedCollection = newFacets.map((facet) => {
-              return recursivelyCloneRecords(facet);
+              return removeUndefinedValuesFromRecord(
+                recursivelyCloneRecords(facet),
+              );
             });
 
             d.collection = clonedCollection;
@@ -122,7 +127,9 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
         save: async (newThemes) => {
           const doc = Automerge.change(themesDocument(), (d) => {
             const clonedCollection = newThemes.map((theme) => {
-              return recursivelyCloneRecords(theme);
+              return removeUndefinedValuesFromRecord(
+                recursivelyCloneRecords(theme),
+              );
             });
 
             d.collection = clonedCollection;

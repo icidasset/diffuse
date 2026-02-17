@@ -16,7 +16,8 @@ import { OBJECT_PREFIX } from "./constants.js";
  */
 export async function get({ bucket, name }) {
   const client = createClient(bucket);
-  const key = `${OBJECT_PREFIX}${name}`;
+  const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
+  const key = `${path}/${OBJECT_PREFIX}${name}`;
 
   try {
     const response = await client.getObject(key);
@@ -32,7 +33,8 @@ export async function get({ bucket, name }) {
  */
 export async function put({ bucket, data, name }) {
   const client = createClient(bucket);
-  const key = `${OBJECT_PREFIX}${name}`;
+  const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
+  const key = `${path}/${OBJECT_PREFIX}${name}`;
 
   await client.putObject(key, data);
 }

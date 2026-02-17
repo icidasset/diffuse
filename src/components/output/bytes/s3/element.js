@@ -1,4 +1,5 @@
 import * as IDB from "idb-keyval";
+
 import { BroadcastableDiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 import { outputManager } from "../../common.js";
@@ -77,6 +78,7 @@ class S3Output extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
+      // TODO: Get via leader?
       const actions = this.broadcast(this.nameWithGroup, {
         put: { strategy: "replicate", fn: this.#putIncoming },
       });
@@ -86,23 +88,25 @@ class S3Output extends BroadcastableDiffuseElement {
       }
     }
 
-    // Restore bucket from IndexedDB
+    // Super
+    super.connectedCallback();
+
     /** @type {Bucket | undefined} */
     const stored = await IDB.get(`${STORAGE_PREFIX}/bucket`);
     if (stored) this.#bucket.value = stored;
-
-    // Super
-    super.connectedCallback();
   }
 
   // BUCKET
 
   #bucket = signal(/** @type {Bucket | undefined} */ (undefined));
 
-  /** @returns {Bucket} */
-  get bucket() {
+  /** @returns {Promise<Bucket | undefined>} */
+  async bucket() {
     if (!this.#bucket.value) {
-      throw new Error("Bucket not set, call setBucket() first.");
+      /** @type {Bucket | undefined} */
+      const stored = await IDB.get(`${STORAGE_PREFIX}/bucket`);
+      if (stored) this.#bucket.value = stored;
+      return stored;
     }
 
     return this.#bucket.value;
@@ -119,13 +123,21 @@ class S3Output extends BroadcastableDiffuseElement {
   // GET & PUT
 
   /** @param {string} name */
-  #getProxy = (name) =>
-    this.proxy.get({ bucket: this.bucket, name: this.#cat(name) });
+  #getProxy = async (name) => {
+    const bucket = await this.bucket();
+    if (!bucket) return undefined;
+    return this.proxy.get({ bucket, name: this.#cat(name) });
+  };
+
   #get = this.#getProxy;
 
   /** @param {string} name; @param {any} data */
-  #putProxy = (name, data) =>
-    this.proxy.put({ bucket: this.bucket, data, name: this.#cat(name) });
+  #putProxy = async (name, data) => {
+    const bucket = await this.bucket();
+    if (!bucket) return undefined;
+    return this.proxy.put({ bucket, data, name: this.#cat(name) });
+  };
+
   #put = this.#putProxy;
 
   /**
