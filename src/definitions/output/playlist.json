@@ -7,12 +7,11 @@
       "record": {
         "type": "object",
         "required": ["id", "items", "name", "unordered"],
-        "nullable": ["autoGenerate"],
         "properties": {
           "id": { "type": "string" },
-          "autoGenerate": {
+          "smart": {
             "type": "ref",
-            "ref": "#autoGenerate"
+            "ref": "#smart"
           },
           "createdAt": { "type": "string", "format": "datetime" },
           "items": {
@@ -34,17 +33,6 @@
         }
       }
     },
-    "autoGenerate": {
-      "type": "object",
-      "description": "Auto-generate the items of the playlist, overriding the included items. If this property is set, the playlist should always be treated as unordered.",
-      "required": ["criteria"],
-      "properties": {
-        "criteria": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#criterion" }
-        }
-      }
-    },
     "criterion": {
       "type": "object",
       "required": ["field", "value"],
@@ -62,6 +50,7 @@
     },
     "item": {
       "type": "object",
+      "description": "Does not necessarily match one track. You can make it a smart playlist by having the criteria match multiple tracks.",
       "required": ["criteria"],
       "properties": {
         "criteria": {

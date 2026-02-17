@@ -17,6 +17,11 @@
         <span class="with-icon"><i class="ph-fill ph-star"></i> Import favourites</span>
       </button>
     </div>
+    <div class="row">
+      <button id="import-playlists" disabled>
+        <span class="with-icon"><i class="ph-bold ph-playlist"></i> Import playlists</span>
+      </button>
+    </div>
     <div id="status" class="status" hidden></div>
   </div>
 </main>
@@ -85,6 +90,7 @@
   // Elements
   const fileInput = document.querySelector("#file");
   const importFavouritesBtn = document.querySelector("#import-favourites");
+  const importPlaylistsBtn = document.querySelector("#import-playlists");
   const statusEl = document.querySelector("#status");
 
   // Parsed data
@@ -108,6 +114,7 @@
     json = null;
     statusEl.hidden = true;
     importFavouritesBtn.disabled = true;
+    importPlaylistsBtn.disabled = true;
 
     if (!file) return;
 
@@ -121,6 +128,10 @@
 
     if (json.favourites?.data?.length > 0) {
       importFavouritesBtn.disabled = false;
+    }
+
+    if (json.playlists?.data?.length > 0) {
+      importPlaylistsBtn.disabled = false;
     }
   };
 
@@ -139,6 +150,39 @@
 
       await favourites.include(tracks);
       showStatus(`Imported ${tracks.length} favourite(s).`, "success");
+    } catch (err) {
+      console.error("Import failed:", err);
+      showStatus(`Import failed: ${err.message}`, "error");
+    }
+  };
+
+  // Import playlists on button click
+  importPlaylistsBtn.onclick = async () => {
+    const items = json?.playlists?.data;
+    if (!items || items.length === 0) return;
+
+    try {
+      const now = new Date().toISOString();
+      const existing = output.playlists.collection() ?? [];
+
+      const newPlaylists = items.map((item) => ({
+        $type: "sh.diffuse.output.playlist",
+        id: crypto.randomUUID(),
+        name: item.name ?? "Untitled",
+        unordered: !!item.collection,
+        items: (item.tracks ?? []).map((track) => ({
+          criteria: [
+            { field: "tags.album", value: track.album ?? "", transformations: ["toLowerCase"] },
+            { field: "tags.artist", value: track.artist ?? "", transformations: ["toLowerCase"] },
+            { field: "tags.title", value: track.title ?? "", transformations: ["toLowerCase"] },
+          ],
+        })),
+        createdAt: now,
+        updatedAt: now,
+      }));
+
+      await output.playlists.save([...existing, ...newPlaylists]);
+      showStatus(`Imported ${newPlaylists.length} playlist(s).`, "success");
     } catch (err) {
       console.error("Import failed:", err);
       showStatus(`Import failed: ${err.message}`, "error");
