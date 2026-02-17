@@ -4,8 +4,7 @@ import {
   query,
   whenElementsDefined,
 } from "@common/element.js";
-import { signal } from "@common/signal.js";
-import { highlightTableEntry } from "../common/ui.js";
+import { signal, untracked } from "@common/signal.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -13,6 +12,9 @@ import { highlightTableEntry } from "../common/ui.js";
  * @import {Track} from "@definitions/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
  */
+
+const ROW_HEIGHT = 14;
+const OVERSCAN = 20;
 
 class Browser extends DiffuseElement {
   constructor() {
@@ -26,6 +28,10 @@ class Browser extends DiffuseElement {
     /** @type {OutputElement | undefined} */ (undefined),
   );
 
+  $provider = signal(
+    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> } | undefined} */ (undefined),
+  );
+
   $queue = signal(
     /** @type {import("@components/engine/queue/element.js").CLASS | undefined} */ (undefined),
   );
@@ -34,9 +40,17 @@ class Browser extends DiffuseElement {
     /** @type {import("@components/engine/scope/element.js").CLASS | undefined} */ (undefined),
   );
 
-  $provider = signal(
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> } | undefined} */ (undefined),
-  );
+  $highlightedTrack = signal(/** @type {string | null} */ (null));
+
+  // STATE
+
+  #scrollTop = 0;
+  #viewportHeight = 0;
+  #renderedStartIndex = -1;
+  #renderedEndIndex = -1;
+
+  /** @type {ResizeObserver | undefined} */
+  #resizeObserver;
 
   // LIFECYCLE
 
@@ -69,8 +83,18 @@ class Browser extends DiffuseElement {
     // Effects
     this.effect(() => {
       const _results = this.$provider.value?.tracks();
-      this.root().querySelector(".sunken-panel")?.scrollTo(0, 0);
+
+      untracked(() => {
+        const panel = this.root().querySelector(".sunken-panel");
+        if (panel) {
+          panel.scrollTo(0, 0);
+          this.#scrollTop = 0;
+        }
+      });
     });
+
+    // Scroll & resize tracking (set up once after first render)
+    this.#setupScrollTracking();
 
     this.effect(() => {
       const playlistId = this.$scope.value?.playlistId();
@@ -80,6 +104,68 @@ class Browser extends DiffuseElement {
         /** @type {HTMLSelectElement} */ (select).value = playlistId ?? "";
       }
     });
+  }
+
+  /**
+   * @override
+   */
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.#resizeObserver?.disconnect();
+  }
+
+  // SCROLL
+
+  #setupScrollTracking() {
+    requestAnimationFrame(() => {
+      const panel = this.root().querySelector(".sunken-panel");
+      if (!panel) return;
+
+      panel.addEventListener(
+        "scroll",
+        () => {
+          this.#scrollTop = panel.scrollTop;
+          this.#renderIfWindowChanged(panel);
+        },
+        { passive: true },
+      );
+
+      this.#resizeObserver = new ResizeObserver((entries) => {
+        this.#viewportHeight = entries[0].contentRect.height;
+        this.#renderIfWindowChanged(panel);
+      });
+
+      this.#resizeObserver.observe(panel);
+    });
+  }
+
+  #computeWindow() {
+    const startIndex = Math.max(
+      0,
+      Math.floor(this.#scrollTop / ROW_HEIGHT) - OVERSCAN,
+    );
+    const visibleCount = Math.ceil(this.#viewportHeight / ROW_HEIGHT) +
+      2 * OVERSCAN;
+
+    return { startIndex, endIndex: startIndex + visibleCount };
+  }
+
+  /**
+   * @param {Element} panel
+   */
+  #renderIfWindowChanged(panel) {
+    const { startIndex, endIndex } = this.#computeWindow();
+
+    if (
+      startIndex === this.#renderedStartIndex &&
+      endIndex === this.#renderedEndIndex
+    ) {
+      return;
+    }
+
+    const scrollTop = panel.scrollTop;
+    this.forceRender();
+    panel.scrollTop = scrollTop;
   }
 
   // EVENTS
@@ -119,9 +205,22 @@ class Browser extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
+    const highlighted = this.$highlightedTrack.value;
     const isLoading = this.$output.value?.tracks?.state() !== "loaded";
     const tracks = this.$provider.value?.tracks() ?? [];
     const playlistId = this.$scope.value?.playlistId();
+
+    // Virtual list
+    const totalTracks = tracks.length;
+    const { startIndex, endIndex: rawEnd } = this.#computeWindow();
+    const endIndex = Math.min(totalTracks, rawEnd);
+
+    this.#renderedStartIndex = startIndex;
+    this.#renderedEndIndex = endIndex;
+
+    const visibleTracks = tracks.slice(startIndex, endIndex);
+    const totalHeight = totalTracks * ROW_HEIGHT;
+    const topPad = startIndex * ROW_HEIGHT;
 
     return html`
       <link rel="stylesheet" href="styles/vendor/98.css" />
@@ -164,6 +263,12 @@ class Browser extends DiffuseElement {
         resize: both;
       }
 
+      .virtual-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
       table {
         color: var(--text-color);
         table-layout: fixed;
@@ -178,13 +283,15 @@ class Browser extends DiffuseElement {
         }
       }
 
+      .virtual-scroll table {
+        will-change: transform;
+      }
+
       table tbody tr {
         cursor: pointer;
-        content-visibility: auto;
       }
 
       table td {
-        contain-intrinsic-size: auto 14px;
         overflow: hidden;
         text-overflow: ellipsis;
       }
@@ -212,7 +319,7 @@ class Browser extends DiffuseElement {
       </search>
 
       <div class="sunken-panel">
-        <table>
+        <table class="virtual-header">
           <thead>
             <tr>
               <th>Title</th>
@@ -220,27 +327,39 @@ class Browser extends DiffuseElement {
               <th>Album</th>
             </tr>
           </thead>
-          <tbody>
-            ${isLoading
-              ? html`
-                <tr>
-                  <td>Loading ...</td>
-                  <td></td>
-                  <td></td>
-                </tr>
-              `
-              : tracks.map((track) => {
-                return html`
-                  <tr @click="${highlightTableEntry}" @dblclick="${() =>
-                    this.playTrack(track)}">
-                    <td>${track.tags?.title}</td>
-                    <td>${track.tags?.artist}</td>
-                    <td>${track.tags?.album}</td>
-                  </tr>
-                `;
-              })}
-          </tbody>
         </table>
+        <div class="virtual-scroll" style="height:${totalHeight}px">
+          <table style="transform:translateY(${topPad}px)">
+            <colgroup>
+              <col style="width:40%">
+              <col style="width:30%">
+              <col style="width:30%">
+            </colgroup>
+            <tbody>
+              ${isLoading
+                ? html`
+                  <tr>
+                    <td>Loading ...</td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                `
+                : visibleTracks.map((track) =>
+                  html`
+                    <tr
+                      class="${highlighted === track.id ? `highlighted` : ``}"
+                      @click="${() => this.$highlightedTrack.value = track.id}"
+                      @dblclick="${() => this.playTrack(track)}"
+                    >
+                      <td>${track.tags?.title}</td>
+                      <td>${track.tags?.artist}</td>
+                      <td>${track.tags?.album}</td>
+                    </tr>
+                  `
+                )}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
   }
