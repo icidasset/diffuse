@@ -113,7 +113,7 @@ class OutputConfig extends DiffuseElement {
   /**
    * @param {Event} event
    */
-  #handleS3SetBucket = (event) => {
+  #handleS3SetBucket = async (event) => {
     event.preventDefault();
 
     const s3 = this.$s3.value;
@@ -160,9 +160,16 @@ class OutputConfig extends DiffuseElement {
       secretKey,
     };
 
-    s3.setBucket(bucket);
+    await s3.setBucket(bucket);
 
     if (button) button.disabled = false;
+  };
+
+  #handleS3Unset = async () => {
+    const s3 = this.$s3.value;
+    if (!s3) return;
+
+    await s3.unsetBucket();
   };
 
   #handleS3Activate = async () => {
@@ -365,8 +372,7 @@ class OutputConfig extends DiffuseElement {
         </fieldset>
 
         <p class="button-row">
-          <button @click="${this
-            .#handleAtprotoLogout}">Sign out</button>
+          <button @click="${this.#handleAtprotoLogout}">Sign out</button>
           ${this.#renderAtprotoActivation(html, selectedOutput)}
         </p>
       `;
@@ -399,6 +405,7 @@ class OutputConfig extends DiffuseElement {
 
           <p>
             <button type="submit" id="atproto-submit">Sign in</button>
+            ${this.#renderAtprotoActivation(html, selectedOutput)}
           </p>
         </form>
       `;
@@ -423,15 +430,41 @@ class OutputConfig extends DiffuseElement {
         : undefined;
 
     const configured = () => {
+      const bucket = s3?.bucket();
+
       return html`
         <fieldset>
-          <span class="with-icon with-icon--large">
+          <div class="with-icon with-icon--large">
             <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
-            <span>S3 bucket configured.</span>
+            <div>
+              Bucket configured:
+              <ul
+                style="margin-bottom: 0; padding-left: 0; list-style-position: inside;"
+              >
+                <li>Name: <strong>${bucket?.bucketName}</strong></li>
+                <li>Host: ${bucket?.host}</li>
+                <li>Access key: ${bucket?.accessKey}</li>
+              </ul>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <span class="with-icon with-icon--large">
+            <img
+              src="images/icons/windows_98/msg_information-0.png"
+              width="24"
+            />
+            <span>
+              Make sure the bucket has CORS configured properly.
+            </span>
           </span>
         </fieldset>
 
         <p class="button-row">
+          <button id="s3-unset-bucket" @click="${this.#handleS3Unset}">
+            Remove bucket configuration
+          </button>
           ${this.#renderS3Activation(html, selectedOutput)}
         </p>
       `;
@@ -497,6 +530,7 @@ class OutputConfig extends DiffuseElement {
 
           <p>
             <button type="submit" id="s3-submit">Set bucket</button>
+            ${this.#renderS3Activation(html, selectedOutput)}
           </p>
         </form>
       `;

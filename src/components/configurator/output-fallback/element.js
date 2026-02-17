@@ -143,9 +143,7 @@ class OutputFallbackConfigurator extends DiffuseElement {
 
   // SIGNALS
 
-  #activeOutput = signal(/** @type {OutputElement<Encoding> | null} */ (null), {
-    eager: true,
-  });
+  #activeOutput = signal(/** @type {OutputElement<Encoding> | null} */ (null));
   #setupFinished = signal(false);
 
   // STATE

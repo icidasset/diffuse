@@ -107,7 +107,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
           return;
         }
 
-        this.#performedInitialProcess.value = true;
+        this.#performedInitialProcess.set(true);
 
         const skip = /** @type {any} */ (import.meta).env
           ?.DISABLE_AUTOMATIC_TRACKS_PROCESSING ?? false;

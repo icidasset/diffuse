@@ -100,8 +100,10 @@ class S3Output extends BroadcastableDiffuseElement {
 
   #bucket = signal(/** @type {Bucket | undefined} */ (undefined));
 
+  bucket = this.#bucket.get;
+
   /** @returns {Promise<Bucket | undefined>} */
-  async bucket() {
+  async getBucket() {
     if (!this.#bucket.value) {
       /** @type {Bucket | undefined} */
       const stored = await IDB.get(`${STORAGE_PREFIX}/bucket`);
@@ -120,11 +122,16 @@ class S3Output extends BroadcastableDiffuseElement {
     await IDB.set(`${STORAGE_PREFIX}/bucket`, bucket);
   }
 
+  async unsetBucket() {
+    this.#bucket.value = undefined;
+    await IDB.del(`${STORAGE_PREFIX}/bucket`);
+  }
+
   // GET & PUT
 
   /** @param {string} name */
   #getProxy = async (name) => {
-    const bucket = await this.bucket();
+    const bucket = await this.getBucket();
     if (!bucket) return undefined;
     return this.proxy.get({ bucket, name: this.#cat(name) });
   };
@@ -133,7 +140,7 @@ class S3Output extends BroadcastableDiffuseElement {
 
   /** @param {string} name; @param {any} data */
   #putProxy = async (name, data) => {
-    const bucket = await this.bucket();
+    const bucket = await this.getBucket();
     if (!bucket) return undefined;
     return this.proxy.put({ bucket, data, name: this.#cat(name) });
   };

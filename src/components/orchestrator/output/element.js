@@ -126,7 +126,11 @@ class OutputOrchestrator extends DiffuseElement {
       </dc-output-fallback>
 
       <!-- OUTPUT CONFIGURATOR -->
-      <dc-output id="do-output__dc-output" default="do-output__dc-output__local">
+      <dc-output
+        id="do-output__dc-output"
+        default="do-output__dc-output__local"
+        group="${ifDefined(group)}"
+      >
         <dtos-json
           id="do-output__dc-output__local"
           output-selector="#do-output__dop-indexed-db__json"

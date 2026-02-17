@@ -1,3 +1,8 @@
+:root,
+:host {
+  line-height: 1.4;
+}
+
 fieldset + fieldset,
 fieldset + form {
   margin-top: var(--grouped-element-spacing);
@@ -7,7 +12,9 @@ form {
   margin-bottom: var(--grouped-element-spacing);
 }
 
-p {
+p,
+ul,
+ol {
   margin: var(--grouped-element-spacing) 0;
 }
 

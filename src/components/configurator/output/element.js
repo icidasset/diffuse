@@ -1,4 +1,7 @@
-import { DiffuseElement } from "@common/element.js";
+import {
+  BroadcastableDiffuseElement,
+  DiffuseElement,
+} from "@common/element.js";
 import { batch, computed, signal } from "@common/signal.js";
 
 /**
@@ -21,7 +24,7 @@ const STORAGE_PREFIX = "diffuse/configurator/output";
 /**
  * @implements {OutputConfiguratorElement}
  */
-class OutputConfigurator extends DiffuseElement {
+class OutputConfigurator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/configurator/output";
 
   constructor() {
@@ -199,7 +202,7 @@ class OutputConfigurator extends DiffuseElement {
     this.playlists = manager.playlists;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
-    this.ready = manager.ready
+    this.ready = manager.ready;
   }
 
   // SIGNALS
@@ -231,6 +234,21 @@ class OutputConfigurator extends DiffuseElement {
    * @override
    */
   async connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      const actions = this.broadcast(this.nameWithGroup, {
+        selectOutput: {
+          strategy: "replicate",
+          fn: this.#selectOutput,
+        },
+      });
+
+      if (actions) {
+        this.#selectOutput = actions.selectOutput;
+      }
+    }
+
+    // Super
     super.connectedCallback();
 
     /** @type {Output | null | undefined} */
@@ -244,8 +262,8 @@ class OutputConfigurator extends DiffuseElement {
     const selectedOutput = await this.#findSelectedOutput();
 
     batch(() => {
-      this.#defaultOutput.value = defaultOutput;
       this.#selectedOutput.value = selectedOutput;
+      this.#defaultOutput.value = defaultOutput;
       this.#setupFinished.value = true;
     });
   }
@@ -253,7 +271,14 @@ class OutputConfigurator extends DiffuseElement {
   // MISC
 
   /**
-   * @param {string} id
+   * @param {string | null} id
+   */
+  #selectOutput = async (id) => {
+    this.#selectedOutput.value = await this.#findOutput(id);
+  };
+
+  /**
+   * @param {string | null} id
    */
   async #findOutput(id) {
     const el = id ? this.root().querySelector(`#${id}`) : null;
@@ -301,7 +326,7 @@ class OutputConfigurator extends DiffuseElement {
 
   deselect = async () => {
     localStorage.removeItem(`${STORAGE_PREFIX}/selected/id`);
-    this.#selectedOutput.value = await this.#findSelectedOutput();
+    await this.#selectOutput(null);
   };
 
   options = async () => {
@@ -326,7 +351,7 @@ class OutputConfigurator extends DiffuseElement {
    */
   select = async (id) => {
     localStorage.setItem(`${STORAGE_PREFIX}/selected/id`, id);
-    this.#selectedOutput.value = await this.#findSelectedOutput();
+    await this.#selectOutput(id);
   };
 }
 
