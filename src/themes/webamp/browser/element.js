@@ -71,6 +71,15 @@ class Browser extends DiffuseElement {
       const _results = this.$provider.value?.tracks();
       this.root().querySelector(".sunken-panel")?.scrollTo(0, 0);
     });
+
+    this.effect(() => {
+      const playlistId = this.$scope.value?.playlistId();
+      const select = this.root().querySelector("#playlist-select");
+
+      if (select) {
+        /** @type {HTMLSelectElement} */ (select).value = playlistId ?? "";
+      }
+    });
   }
 
   // EVENTS
