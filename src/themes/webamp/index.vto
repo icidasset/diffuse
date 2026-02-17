@@ -84,7 +84,6 @@ styles:
           sources-orchestrator-selector="do-sources"
           process-tracks-orchestrator-selector="do-process-tracks"
         ></dtw-input-config>
-
       </dtw-window>
 
       <!-- OUTPUT -->
@@ -92,7 +91,9 @@ styles:
         <span slot="title-icon"><img src="images/icons/windows_98/computer_user_pencil-0.png" height="14" /></span>
         <span slot="title">Manage user data</span>
 
-        <dtw-output-config></dtw-output-config>
+        <dtw-output-config
+          output-selector="#output"
+        ></dtw-output-config>
       </dtw-window>
 
       <!-- BROWSER -->
@@ -101,10 +102,10 @@ styles:
         <span slot="title">Browse collection</span>
 
         <dtw-browser
-          input-selector="#input"
           output-selector="#output"
           queue-engine-selector="de-queue"
-          search-processor-selector="dp-search"
+          scope-engine-selector="de-scope"
+          tracks-selector="do-scoped-tracks"
         ></dtw-browser>
       </dtw-window>
     </dtw-window-manager>
@@ -155,6 +156,7 @@ styles:
 
 -->
 <de-queue></de-queue>
+<de-scope></de-scope>
 
 <!-- Processors -->
 <dp-metadata></dp-metadata>

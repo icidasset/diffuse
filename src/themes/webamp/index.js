@@ -1,3 +1,4 @@
+import "@components/engine/scope/element.js";
 import "@components/input/opensubsonic/element.js";
 import "@components/input/s3/element.js";
 import "@components/orchestrator/input/element.js";
