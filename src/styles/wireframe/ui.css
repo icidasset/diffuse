@@ -110,6 +110,11 @@ select {
     border-color: var(--accent);
     outline: none;
   }
+
+  option,
+  optgroup {
+    color: initial;
+  }
 }
 
 /**
