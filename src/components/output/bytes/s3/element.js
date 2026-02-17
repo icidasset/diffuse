@@ -1,12 +1,15 @@
+import * as IDB from "idb-keyval";
 import { BroadcastableDiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 import { outputManager } from "../../common.js";
+
+const STORAGE_PREFIX = "diffuse/output/bytes/s3";
 
 /**
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {OutputElement, OutputManager} from "../../types.d.ts"
  * @import {Bucket} from "@components/input/s3/types.d.ts"
- * @import {S3OutputWorkerActions} from "./types.d.ts"
+ * @import {S3OutputElement, S3OutputWorkerActions} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -15,10 +18,11 @@ import { outputManager } from "../../common.js";
 
 /**
  * @implements {OutputElement<Uint8Array | undefined>}
+ * @implements {S3OutputElement}
  */
 class S3Output extends BroadcastableDiffuseElement {
-  static NAME = "diffuse/output/polymorphic/s3";
-  static WORKER_URL = "components/output/polymorphic/s3/worker.js";
+  static NAME = "diffuse/output/bytes/s3";
+  static WORKER_URL = "components/output/bytes/s3/worker.js";
 
   #manager;
 
@@ -62,7 +66,7 @@ class S3Output extends BroadcastableDiffuseElement {
   // STATE
 
   ready = computed(() => {
-    return this.#bucketSignal.value !== undefined
+    return this.#bucket.value !== undefined;
   });
 
   // LIFECYCLE
@@ -70,7 +74,7 @@ class S3Output extends BroadcastableDiffuseElement {
   /**
    * @override
    */
-  connectedCallback() {
+  async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(this.nameWithGroup, {
@@ -82,39 +86,46 @@ class S3Output extends BroadcastableDiffuseElement {
       }
     }
 
+    // Restore bucket from IndexedDB
+    /** @type {Bucket | undefined} */
+    const stored = await IDB.get(`${STORAGE_PREFIX}/bucket`);
+    if (stored) this.#bucket.value = stored;
+
     // Super
     super.connectedCallback();
   }
 
   // BUCKET
 
+  #bucket = signal(/** @type {Bucket | undefined} */ (undefined));
+
+  /** @returns {Bucket} */
+  get bucket() {
+    if (!this.#bucket.value) {
+      throw new Error("Bucket not set, call setBucket() first.");
+    }
+
+    return this.#bucket.value;
+  }
+
   /**
    * @param {Bucket} bucket
    */
-  setBucket(bucket) {
-    this.#bucketSignal.value = bucket;
-  }
-
-  #bucketSignal = signal(/** @type {Bucket | undefined} */ (undefined));
-
-  /** @returns {Bucket} */
-  #bucket() {
-    if (!this.#bucketSignal.value) {
-      throw new Error("Bucket not set, call setBucket() first.");
-    }
-    return this.#bucketSignal.value;
+  async setBucket(bucket) {
+    this.#bucket.value = bucket;
+    await IDB.set(`${STORAGE_PREFIX}/bucket`, bucket);
   }
 
   // GET & PUT
 
   /** @param {string} name */
   #getProxy = (name) =>
-    this.proxy.get({ bucket: this.#bucket(), name: this.#cat(name) });
+    this.proxy.get({ bucket: this.bucket, name: this.#cat(name) });
   #get = this.#getProxy;
 
   /** @param {string} name; @param {any} data */
   #putProxy = (name, data) =>
-    this.proxy.put({ bucket: this.#bucket(), data, name: this.#cat(name) });
+    this.proxy.put({ bucket: this.bucket, data, name: this.#cat(name) });
   #put = this.#putProxy;
 
   /**
@@ -161,6 +172,6 @@ export default S3Output;
 ////////////////////////////////////////////
 
 export const CLASS = S3Output;
-export const NAME = "dop-s3";
+export const NAME = "dob-s3";
 
 customElements.define(NAME, S3Output);

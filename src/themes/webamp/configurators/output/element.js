@@ -2,12 +2,22 @@ import { DiffuseElement, nothing, query } from "@common/element.js";
 import { signal } from "@common/signal.js";
 
 import { NAME as ATPROTO_NAME } from "@components/output/raw/atproto/element.js";
+import { NAME as S3_NAME } from "@components/output/bytes/s3/element.js";
 
 /**
  * @import {ATProtoOutputElement} from "@components/output/raw/atproto/types.d.ts"
+ *
+ * @import {Bucket as S3Bucket} from "@components/input/s3/types.d.ts"
+ * @import {S3OutputElement} from "@components/output/bytes/s3/types.d.ts"
+ *
  * @import {OutputElement} from "@components/output/types.d.ts"
  * @import {OutputConfiguratorElement, OutputOption} from "@components/configurator/output/types.d.ts"
+ * @import {OutputFallbackConfiguratorElement} from "@components/configurator/output-fallback/types.d.ts"
  * @import {RenderArg} from "@common/element.d.ts"
+ */
+
+/**
+ * @typedef {OutputElement<any>} VariousOutputElements
  */
 
 class OutputConfig extends DiffuseElement {
@@ -19,11 +29,15 @@ class OutputConfig extends DiffuseElement {
   // SIGNALS
 
   $output = signal(
-    /** @type {OutputElement | OutputConfiguratorElement | undefined} */ (undefined),
+    /** @type {OutputElement | OutputConfiguratorElement<VariousOutputElements> | undefined} */ (undefined),
   );
 
   $atproto = signal(
-    /** @type {OutputOption<ATProtoOutputElement> | null} */ (null),
+    /** @type {ATProtoOutputElement | null} */ (null),
+  );
+
+  $s3 = signal(
+    /** @type {S3OutputElement | null} */ (null),
   );
 
   $tab = signal("overview");
@@ -34,7 +48,7 @@ class OutputConfig extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    /** @type {OutputElement | OutputConfiguratorElement} */
+    /** @type {OutputElement | OutputConfiguratorElement<VariousOutputElements>} */
     const output = query(this, "output-selector");
 
     await customElements.whenDefined(output.localName);
@@ -42,13 +56,16 @@ class OutputConfig extends DiffuseElement {
     this.$output.value = output;
 
     // Try setting up specific outputs
-    if ("options" in output === false) return;
-    const options = await output.options();
-    const atproto = options.find((o) => o.element.localName === ATPROTO_NAME);
+    const atproto = output.root().querySelector(ATPROTO_NAME);
 
     if (atproto) {
-      this.$atproto.value =
-        /** @type {OutputOption<ATProtoOutputElement>} */ (atproto);
+      this.$atproto.value = /** @type {ATProtoOutputElement} */ (atproto);
+    }
+
+    const s3 = output.root().querySelector(S3_NAME);
+
+    if (s3) {
+      this.$s3.value = /** @type {S3OutputElement} */ (s3);
     }
   }
 
@@ -70,14 +87,14 @@ class OutputConfig extends DiffuseElement {
     const button = this.root().querySelector("#atproto-submit");
     if (button) button.disabled = true;
 
-    await atproto.element.login(handle);
+    await atproto.login(handle);
   };
 
   #handleAtprotoLogout = async () => {
     const atproto = this.$atproto.value;
     if (!atproto) return;
 
-    await atproto.element.logout();
+    await atproto.logout();
   };
 
   #handleAtprotoActivate = async () => {
@@ -87,7 +104,76 @@ class OutputConfig extends DiffuseElement {
     const atproto = this.$atproto.value;
     if (!atproto) return;
 
-    await output.select(atproto.id);
+    const option = (await output.options()).find((o) =>
+      o.label === "AT Protocol"
+    );
+    if (option) await output.select(option.id);
+  };
+
+  /**
+   * @param {Event} event
+   */
+  #handleS3SetBucket = (event) => {
+    event.preventDefault();
+
+    const s3 = this.$s3.value;
+    if (!s3) return;
+
+    /** @type {HTMLButtonElement | null} */
+    const button = this.root().querySelector("#s3-submit");
+    if (button) button.disabled = true;
+
+    const accessKey =
+      /** @type {HTMLInputElement | null} */ (this.root().querySelector(
+        "#s3-access-key",
+      ))?.value;
+    const bucketName =
+      /** @type {HTMLInputElement | null} */ (this.root().querySelector(
+        "#s3-bucket-name",
+      ))?.value;
+    const host =
+      /** @type {HTMLInputElement | null} */ (this.root().querySelector(
+        "#s3-host",
+      ))?.value;
+    const path =
+      /** @type {HTMLInputElement | null} */ (this.root().querySelector(
+        "#s3-path",
+      ))?.value;
+    const region =
+      /** @type {HTMLInputElement | null} */ (this.root().querySelector(
+        "#s3-region",
+      ))?.value;
+    const secretKey =
+      /** @type {HTMLInputElement | null} */ (this.root().querySelector(
+        "#s3-secret-key",
+      ))?.value;
+
+    if (!accessKey || !bucketName || !secretKey) return;
+
+    /** @type {S3Bucket} */
+    const bucket = {
+      accessKey,
+      bucketName,
+      host: host?.length ? host : "s3.amazonaws.com",
+      path: path?.length ? path : "/",
+      region: region?.length ? region : "us-east-1",
+      secretKey,
+    };
+
+    s3.setBucket(bucket);
+
+    if (button) button.disabled = false;
+  };
+
+  #handleS3Activate = async () => {
+    const output = this.$output.value;
+    if (!output || !("select" in output)) return;
+
+    const s3 = this.$s3.value;
+    if (!s3) return;
+
+    const option = (await output.options()).find((o) => o.label === "S3");
+    if (option) await output.select(option.id);
   };
 
   #handleDeactivate = async () => {
@@ -263,7 +349,7 @@ class OutputConfig extends DiffuseElement {
    * @param {RenderArg["html"]} html
    */
   #renderAtprotoTab(html) {
-    const did = this.$atproto.value?.element.did() ?? null;
+    const did = this.$atproto.value?.did() ?? null;
     const selectedOutput =
       this.$output.value && "selectedOutput" in this.$output.value
         ? this.$output.value.selectedOutput()
@@ -329,24 +415,109 @@ class OutputConfig extends DiffuseElement {
    * @param {RenderArg["html"]} html
    */
   #renderS3Tab(html) {
+    const s3 = this.$s3.value;
+    const ready = s3?.ready() ?? false;
+    const selectedOutput =
+      this.$output.value && "selectedOutput" in this.$output.value
+        ? this.$output.value.selectedOutput()
+        : undefined;
+
+    const configured = () => {
+      return html`
+        <fieldset>
+          <span class="with-icon with-icon--large">
+            <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
+            <span>S3 bucket configured.</span>
+          </span>
+        </fieldset>
+
+        <p class="button-row">
+          ${this.#renderS3Activation(html, selectedOutput)}
+        </p>
+      `;
+    };
+
+    const unconfigured = () => {
+      return html`
+        <fieldset>
+          <span class="with-icon with-icon--large">
+            <img src="images/icons/windows_98/computer_user_pencil-0.png" width="24" />
+            <span>
+              Store your user data on an S3-compatible storage service.
+            </span>
+          </span>
+        </fieldset>
+
+        <form @submit="${this.#handleS3SetBucket}">
+          <fieldset>
+            <legend>Bucket details</legend>
+
+            <div class="field-row">
+              <label for="s3-access-key">Access Key:*</label>
+              <input type="text" id="s3-access-key" required />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-secret-key">Secret Key:*</label>
+              <input type="password" id="s3-secret-key" required />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-bucket-name">Bucket Name:*</label>
+              <input type="text" id="s3-bucket-name" required />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-host">Host:</label>
+              <input
+                type="text"
+                id="s3-host"
+                placeholder="s3.amazonaws.com"
+              />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-region">Region:</label>
+              <input
+                type="text"
+                id="s3-region"
+                placeholder="us-east-1"
+              />
+            </div>
+
+            <div class="field-row">
+              <label for="s3-path">Path:</label>
+              <input type="text" id="s3-path" />
+            </div>
+
+            <p>
+              * are required fields.
+            </p>
+          </fieldset>
+
+          <p>
+            <button type="submit" id="s3-submit">Set bucket</button>
+          </p>
+        </form>
+      `;
+    };
+
     return html`
       <div class="window-body">
-        <p>TODO</p>
+        ${ready ? configured() : unconfigured()}
       </div>
     `;
   }
 
   /**
    * @param {RenderArg['html']} html
-   * @param {OutputElement | null | undefined} selectedOutput
+   * @param {VariousOutputElements | null | undefined} selectedOutput
    */
   #renderAtprotoActivation(html, selectedOutput) {
     const output = this.$output.value;
     if (!output || !("select" in output)) return nothing;
 
-    const atproto = this.$atproto.value;
-    const isActive = selectedOutput && atproto &&
-      selectedOutput.selector === atproto.element.selector;
+    const isActive = selectedOutput?.label === "AT Protocol";
 
     return isActive
       ? html`
@@ -355,6 +526,26 @@ class OutputConfig extends DiffuseElement {
       : html`
         <button @click="${this
           .#handleAtprotoActivate}">Activate this storage</button>
+      `;
+  }
+
+  /**
+   * @param {RenderArg['html']} html
+   * @param {VariousOutputElements | null | undefined} selectedOutput
+   */
+  #renderS3Activation(html, selectedOutput) {
+    const output = this.$output.value;
+    if (!output || !("select" in output)) return nothing;
+
+    const isActive = selectedOutput?.label === "S3";
+
+    return isActive
+      ? html`
+        <button @click="${this.#handleDeactivate}">Deactivate</button>
+      `
+      : html`
+        <button @click="${this
+          .#handleS3Activate}">Activate this storage</button>
       `;
   }
 

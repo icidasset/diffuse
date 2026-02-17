@@ -3,10 +3,10 @@ import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
 import "@components/configurator/output-fallback/element.js";
+import "@components/output/bytes/s3/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/output/raw/atproto/element.js";
-// import "@components/output/bytes/automerge-repo-server/element.js";
-// import "@components/transformer/output/bytes/automerge/element.js";
+import "@components/transformer/output/bytes/automerge/element.js";
 import "@components/transformer/output/refiner/default/element.js";
 import "@components/transformer/output/string/json/element.js";
 
@@ -44,9 +44,13 @@ class OutputOrchestrator extends DiffuseElement {
    */
   get outputConfigurator() {
     /** @type {OutputConfiguratorElement | null} */
-    const outputConfigurator = this.root().querySelector("#do-output__dc-output");
+    const outputConfigurator = this.root().querySelector(
+      "#do-output__dc-output",
+    );
 
-    if (!outputConfigurator) throw new Error("Output orchestrator did not render yet.");
+    if (!outputConfigurator) {
+      throw new Error("Output orchestrator did not render yet.");
+    }
     return outputConfigurator;
   }
 
@@ -75,19 +79,19 @@ class OutputOrchestrator extends DiffuseElement {
   // PROXY ADDITIONAL OUTPUT CONFIGURATOR ACTIONS
 
   get deselect() {
-    return this.outputConfigurator.deselect
+    return this.outputConfigurator.deselect;
   }
 
   get options() {
-    return this.outputConfigurator.options
+    return this.outputConfigurator.options;
   }
 
   get select() {
-    return this.outputConfigurator.select
+    return this.outputConfigurator.select;
   }
 
   get selectedOutput() {
-    return this.outputConfigurator.selectedOutput
+    return this.outputConfigurator.selectedOutput;
   }
 
   // RENDER
@@ -99,27 +103,39 @@ class OutputOrchestrator extends DiffuseElement {
     const group = this.group === DEFAULT_GROUP ? undefined : this.group;
 
     return html`
-      <!--<dob-automerge-repo-server
-        id="do-output__dob-automerge-repo-server"
-        namespace="automerge-repo-server"
-        url="http://localhost:3030"
-      ></dob-automerge-repo-server>-->
-
+      <!-- DEFAULT -->
       <dop-indexed-db
         id="do-output__dop-indexed-db__json"
         group="${ifDefined(group)}"
         namespace="json"
       ></dop-indexed-db>
 
-      <dc-output id="do-output__dc-output" default="do-output__dtos-json">
+      <!-- S3 #2 -->
+      <dc-output-fallback
+        id="do-output__dob-s3-fallback"
+      >
+        <dob-s3
+          id="do-output__dob-s3"
+          group="${ifDefined(group)}"
+        ></dob-s3>
+        <dop-indexed-db
+          id="do-output__dop-indexed-db__s3"
+          group="${ifDefined(group)}"
+          namespace="s3"
+        ></dop-indexed-db>
+      </dc-output-fallback>
+
+      <!-- OUTPUT CONFIGURATOR -->
+      <dc-output id="do-output__dc-output" default="do-output__dc-output__local">
         <dtos-json
-          id="do-output__dtos-json"
-          label="IndexedDB as a JSON string"
+          id="do-output__dc-output__local"
           output-selector="#do-output__dop-indexed-db__json"
+          label="Local"
         ></dtos-json>
 
+        <!-- ATProto -->
         <dc-output-fallback
-          id="do-output__dor-atproto-fallback"
+          id="do-output__dc-output__atproto"
           label="AT Protocol"
         >
           <dor-atproto
@@ -133,15 +149,12 @@ class OutputOrchestrator extends DiffuseElement {
           ></dop-indexed-db>
         </dc-output-fallback>
 
-        <!--<dor-automerge-repo
-          id="do-output__dor-automerge-repo"
-          namespace="automerge-repo"
-        ></dor-automerge-repo>-->
-
-        <!--<dtob-automerge
-          id="do-output__dtob-automerge"
-          output-selector="#do-output__dob-automerge-repo-server"
-        ></dtob-automerge>-->
+        <!-- S3 #1 -->
+        <dtob-automerge
+          id="do-output__dc-output__s3"
+          output-selector="#do-output__dob-s3-fallback"
+          label="S3"
+        ></dtob-automerge>
       </dc-output>
 
       <!-- Entry -->

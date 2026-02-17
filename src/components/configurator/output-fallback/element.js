@@ -1,12 +1,9 @@
 import { DiffuseElement } from "@common/element.js";
-import { batch, computed, signal } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 
 /**
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
- */
-
-/**
- * @typedef {OutputElement} Output
+ * @import {OutputFallbackConfiguratorElement} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -19,7 +16,9 @@ import { batch, computed, signal } from "@common/signal.js";
  * Checks child output elements in order and delegates
  * to the first one whose `.ready()` signal returns `true`.
  *
- * @implements {OutputManagerDeputy}
+ * @template [Encoding=null]
+ * @implements {OutputManagerDeputy<Encoding | undefined>}
+ * @implements {OutputFallbackConfiguratorElement<Encoding>}
  */
 class OutputFallbackConfigurator extends DiffuseElement {
   static NAME = "diffuse/configurator/output-fallback";
@@ -27,75 +26,94 @@ class OutputFallbackConfigurator extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {OutputManagerDeputy} */
+    /** @type {OutputManagerDeputy<Encoding | undefined>} */
     const manager = {
       facets: {
         collection: computed(() => {
-          return this.activeOutput()?.facets.collection() ?? [];
+          return this.#activeOutput.value?.facets.collection();
         }),
         reload: () => {
-          const out = this.activeOutput();
+          const out = this.#activeOutput.value;
           if (out) return out.facets.reload();
           return Promise.resolve();
         },
         save: async (newFacets) => {
-          await Promise.all(this.#outputs.value.map((o) => o.facets.save(newFacets)));
+          if (newFacets !== undefined) {
+            await Promise.all(
+              this.#outputs.map((o) => o.facets.save(newFacets)),
+            );
+          }
         },
         state: computed(() => {
-          return this.activeOutput()?.facets.state() ?? "sleeping";
+          return this.#activeOutput.value?.facets.state() ?? "sleeping";
         }),
       },
       playlists: {
         collection: computed(() => {
-          return this.activeOutput()?.playlists.collection() ?? [];
+          return this.#activeOutput.value?.playlists.collection();
         }),
         reload: () => {
-          const out = this.activeOutput();
+          const out = this.#activeOutput.value;
           if (out) return out.playlists.reload();
           return Promise.resolve();
         },
         save: async (newPlaylists) => {
-          await Promise.all(this.#outputs.value.map((o) => o.playlists.save(newPlaylists)));
+          if (newPlaylists !== undefined) {
+            await Promise.all(
+              this.#outputs.map((o) => o.playlists.save(newPlaylists)),
+            );
+          }
         },
         state: computed(() => {
-          return this.activeOutput()?.playlists.state() ?? "sleeping";
+          return this.#activeOutput.value?.playlists.state() ?? "sleeping";
         }),
       },
       themes: {
         collection: computed(() => {
-          return this.activeOutput()?.themes.collection() ?? [];
+          return this.#activeOutput.value?.themes.collection();
         }),
         reload: () => {
-          const out = this.activeOutput();
+          const out = this.#activeOutput.value;
           if (out) return out.themes.reload();
           return Promise.resolve();
         },
         save: async (newThemes) => {
-          await Promise.all(this.#outputs.value.map((o) => o.themes.save(newThemes)));
+          if (newThemes !== undefined) {
+            await Promise.all(
+              this.#outputs.map((o) => o.themes.save(newThemes)),
+            );
+          }
         },
         state: computed(() => {
-          return this.activeOutput()?.themes.state() ?? "sleeping";
+          return this.#activeOutput.value?.themes.state() ?? "sleeping";
         }),
       },
       tracks: {
         collection: computed(() => {
-          return this.activeOutput()?.tracks.collection() ?? [];
+          return this.#activeOutput.value?.tracks.collection();
         }),
         reload: () => {
-          const out = this.activeOutput();
+          const out = this.#activeOutput.value;
           if (out) return out.tracks.reload();
           return Promise.resolve();
         },
         save: async (newTracks) => {
-          await Promise.all(this.#outputs.value.map((o) => o.tracks.save(newTracks)));
+          if (newTracks !== undefined) {
+            await Promise.all(
+              this.#outputs.map((o) => o.tracks.save(newTracks)),
+            );
+          }
         },
         state: computed(() => {
-          return this.activeOutput()?.tracks.state() ?? "sleeping";
+          return this.#activeOutput.value?.tracks.state() ?? "sleeping";
         }),
       },
 
       // Other
-      ready: this.ready,
+      ready: computed(() => {
+        if (this.#activeOutput.value) return true;
+        return this.#setupFinished.value;
+      }),
     };
 
     this.facets = manager.facets;
@@ -103,30 +121,35 @@ class OutputFallbackConfigurator extends DiffuseElement {
     this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
+
+    this.effect(this.#setActiveOutput);
   }
+
+  #setActiveOutput = () => {
+    const _trigger = this.#setupFinished.value;
+
+    /** @type {OutputElement<Encoding> | null} */
+    let activeOutput = null;
+
+    for (const output of this.#outputs) {
+      if (output.ready()) activeOutput = output;
+    }
+
+    this.#activeOutput.value = activeOutput;
+  };
 
   // SIGNALS
 
-  #outputs = signal(/** @type {Output[]} */ ([]));
+  #activeOutput = signal(/** @type {OutputElement<Encoding> | null} */ (null), {
+    eager: true,
+  });
   #setupFinished = signal(false);
 
   // STATE
 
-  /**
-   * The first child output element whose `.ready()` returns `true`.
-   */
-  activeOutput = computed(() => {
-    const outputs = this.#outputs.value;
-    for (const output of outputs) {
-      if (output.ready()) return output;
-    }
-    return null;
-  });
+  #outputs = /** @type {OutputElement<Encoding>[]} */ ([]);
 
-  ready = computed(() => {
-    if (this.activeOutput()) return true;
-    return this.#setupFinished.value;
-  });
+  activeOutput = this.#activeOutput.get;
 
   // LIFECYCLE
 
@@ -138,21 +161,21 @@ class OutputFallbackConfigurator extends DiffuseElement {
 
     const children = Array.from(this.root().children);
 
-    /** @type {Output[]} */
+    /** @type {OutputElement<Encoding>[]} */
     const outputs = [];
 
     for (const el of children) {
       await customElements.whenDefined(el.localName);
 
       if ("nameWithGroup" in el && "tracks" in el) {
-        outputs.push(/** @type {Output} */ (/** @type {unknown} */ (el)));
+        outputs.push(
+          /** @type {OutputElement<Encoding>} */ (/** @type {unknown} */ (el)),
+        );
       }
     }
 
-    batch(() => {
-      this.#outputs.value = outputs;
-      this.#setupFinished.value = true;
-    });
+    this.#outputs = outputs;
+    this.#setupFinished.value = true;
   }
 
   // MISC
