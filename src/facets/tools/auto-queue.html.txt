@@ -87,20 +87,31 @@
 
   // Playlist state
   effect(() => {
-    const playlists = output.playlists.collection().sort((a, b) => {
-      a.name.localeCompare(b.name);
-    });
+    const playlists = output.playlists.collection().sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
 
     const currentId = scope.playlistId();
+    const ordered = playlists.filter((p) => !p.unordered);
+    const unordered = playlists.filter((p) => p.unordered);
 
     playlistSelect.innerHTML = `<option value="">All tracks</option>`;
 
-    for (const playlist of playlists) {
-      const option = document.createElement("option");
-      option.value = playlist.id;
-      option.textContent = playlist.name;
-      option.selected = playlist.id === currentId;
-      playlistSelect.appendChild(option);
+    for (const [label, group] of [["Ordered", ordered], ["Unordered", unordered]]) {
+      if (group.length === 0) continue;
+
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = label;
+
+      for (const playlist of group) {
+        const option = document.createElement("option");
+        option.value = playlist.id;
+        option.textContent = playlist.name;
+        option.selected = playlist.id === currentId;
+        optgroup.appendChild(option);
+      }
+
+      playlistSelect.appendChild(optgroup);
     }
   });
 
