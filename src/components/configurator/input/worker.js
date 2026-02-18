@@ -89,7 +89,7 @@ export async function groupConsult({ data, ports }) {
   );
 
   return consultations.reduce((acc, c) => {
-    return { ...acc, ...c };
+    return Object.assign(acc, c);
   }, {});
 }
 

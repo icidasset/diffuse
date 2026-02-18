@@ -223,6 +223,7 @@ class Browser extends DiffuseElement {
     const isLoading = this.$output.value?.tracks?.state() !== "loaded";
     const tracks = this.$provider.value?.tracks() ?? [];
     const playlistId = this.$scope.value?.playlistId();
+    const searchTerm = this.$scope.value?.searchTerm() ?? "";
 
     // Virtual list
     const totalTracks = tracks.length;
@@ -314,7 +315,7 @@ class Browser extends DiffuseElement {
       <search class="field-row">
         <label for="search-input">Search:</label>
         <input id="search-input" type="search" @change="${this
-          .setSearchTerm}" />
+          .setSearchTerm}" value="${searchTerm}" />
         <label for="playlist-select">Playlist:</label>
         <select id="playlist-select" @change="${this.setSelectedPlaylistId}">
           <option value="" ?selected="${!playlistId ||

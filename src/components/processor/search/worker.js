@@ -17,9 +17,9 @@ import { effect, signal } from "@common/signal.js";
 // STATE
 ////////////////////////////////////////////
 
-export const $inserted = signal(/** @type {Set<string>} */ (new Set()), {
-  eager: true,
-});
+/** @type {Set<string>} */
+export let inserted = new Set();
+export let insertedFingerprint = "";
 
 // Communicated state
 export const $supplyFingerprint = signal(
@@ -72,30 +72,40 @@ export async function supply({ tracks }) {
   // TODO: Generate a hash based on the track itself,
   //       so we can detect changes to tags or other data.
 
-  /** @type {string[]} */
-  const ids = [];
+  /** @type {Map<string, Track>} */
+  const tracksMap = new Map();
 
-  /** @type {Record<string, Track>} */
-  const tracksMap = {};
+  for (const track of tracks) {
+    tracksMap.set(track.id, track);
+  }
 
-  tracks.forEach((track) => {
-    ids.push(track.id);
-    tracksMap[track.id] = track;
-  });
+  const ids = Array.from(tracksMap.keys());
+  const idsString = ids.sort().join("");
+  const fingerprint = xxh32(idsString).toString();
 
-  const currentSet = $inserted.value;
+  if (fingerprint === insertedFingerprint) return;
+
+  const currentSet = inserted;
   const newSet = new Set(ids);
 
-  $inserted.value = newSet;
+  inserted = newSet;
+  insertedFingerprint = fingerprint;
 
   const removedIds = currentSet.difference(newSet);
   const newIds = newSet.difference(currentSet);
-  const newTracks = Array.from(newIds).map((id) => tracksMap[id]);
+
+  /** @type {Track[]} */
+  const newTracks = [];
+
+  for (const id of newIds) {
+    const track = tracksMap.get(id);
+    if (track) newTracks.push(track);
+  }
 
   await Orama.removeMultiple(db, Array.from(removedIds));
   await Orama.insertMultiple(db, newTracks);
 
-  $supplyFingerprint.value = xxh32(ids.sort().join("")).toString();
+  $supplyFingerprint.value = fingerprint;
 }
 
 ////////////////////////////////////////////

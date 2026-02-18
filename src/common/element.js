@@ -3,7 +3,12 @@ import { decodeMessage, encodeMessage, RPCChannel } from "@kunkun/kkrpc";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import { rpc, workerLink, workerProxy, workerTunnel } from "./worker.js";
+import {
+  rpc,
+  workerLink,
+  workerProxy,
+  workerTunnel,
+} from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
 /**

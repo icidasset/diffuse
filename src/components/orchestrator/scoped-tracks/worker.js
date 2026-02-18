@@ -32,15 +32,20 @@ export async function supplyAvailable({ data, ports }) {
   const groups = await input.groupConsult(cachedTracks);
 
   /** @type {Track[]} */
-  let availableTracks = [];
+  const availableTracks = [];
 
   Object.values(groups).forEach((value) => {
     if (value.available === false) return;
-    availableTracks = availableTracks.concat(value.tracks);
+    for (const track of value.tracks) {
+      availableTracks.push(track);
+    }
   }, []);
 
   // Set pool
-  await search.supply({ tracks: availableTracks });
+  search.supply({ tracks: availableTracks });
+
+  // Fin
+  return { availableTracks };
 }
 
 /**
@@ -48,9 +53,10 @@ export async function supplyAvailable({ data, ports }) {
  */
 export async function searchTracks({ data, ports }) {
   /** @type {ProxiedActions<SearchProcessorActions>} */
-  const search = workerProxy(() => ports.search);
-
-  ports.search.start();
+  const search = workerProxy(() => {
+    ports.search.start();
+    return ports.search;
+  });
 
   return await search.search(data);
 }

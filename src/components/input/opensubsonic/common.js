@@ -57,7 +57,6 @@ export function buildURI(server, args) {
 export async function consultServer(server) {
   const client = createClient(server);
   const resp = await client.ping().catch(() => undefined);
-
   return resp?.status?.toLowerCase() === "ok";
 }
 

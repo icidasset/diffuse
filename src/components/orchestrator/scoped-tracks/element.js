@@ -57,6 +57,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     );
   });
 
+  #tracksAvailable = signal(/** @type {Track[]} */ ([]));
   #tracksSearch = signal(/** @type {Track[]} */ ([]));
   #tracksFinal = signal(/** @type {Track[]} */ ([]));
 
@@ -118,21 +119,26 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     this.effect(async () => {
       const collection = output.tracks.collection();
       if ((await this.isLeader()) === false) return;
-      this.#proxy.supplyAvailable(collection);
+      const { availableTracks } = await this.#proxy.supplyAvailable(collection);
+      this.#tracksAvailable.value = availableTracks;
     });
 
     // Watch search supply
     this.effect(async () => {
       const _trigger = search.supplyFingerprint();
+      const availableTracks = this.#tracksAvailable.value;
       const searchTerm = this.#scope.value?.searchTerm();
 
       if ((await this.isLeader()) === false) return;
 
-      const searchResults = searchTerm
-        ? await this.#proxy.searchTracks({ term: searchTerm })
-        : untracked(() => output.tracks.collection());
-
-      this.#tracksSearch.set(searchResults);
+      if (searchTerm?.length) {
+        const searchResults = await this.#proxy.searchTracks({
+          term: searchTerm,
+        });
+        this.#tracksSearch.set(searchResults);
+      } else {
+        this.#tracksSearch.set(availableTracks);
+      }
     });
 
     // Watch `#tracksSearch` + Playlist
@@ -142,11 +148,11 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 
       if ((await this.isLeader()) === false) return;
 
-      this.#tracksFinal.set(
-        playlist
-          ? await this.#proxy.filterByPlaylist({ tracks, playlist })
-          : tracks,
-      );
+      const final = playlist
+        ? await this.#proxy.filterByPlaylist({ tracks, playlist })
+        : tracks;
+
+      this.#tracksFinal.set(final);
     });
   }
 

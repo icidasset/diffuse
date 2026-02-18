@@ -1,3 +1,7 @@
+import { xxh32 } from "xxh32";
+
+export const EMPTY_FINGERPRINT = xxh32([].join("")).toString();
+
 /**
  * Maps directly on the `Track` definition
  * (ie. `definitions/output/tracks.json`)
