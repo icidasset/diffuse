@@ -45,7 +45,7 @@ const isLocalDev = redirect_uri.startsWith("http://127.0.0.1");
 
 if (!isLocalDev) {
   const url = new URL(location.href);
-  const params = url.searchParams.entries();
+  const params = Object.fromEntries(Array.from(url.searchParams.entries()));
 
   redirect_uri = location.origin + "/oauth/redirect/?" + QS.stringify({
     ...params,
