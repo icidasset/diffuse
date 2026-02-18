@@ -1,4 +1,6 @@
+import QS from "query-string";
 import { configureOAuth } from "@atcute/oauth-browser-client";
+
 import metadata from "../../../../oauth-client-metadata.json" with {
   type: "json",
 };
@@ -31,16 +33,30 @@ const SCOPE = metadata.scope;
 // CONFIGURE
 // =========
 
-const redirect_uri =
-  (globalThis.location.origin + globalThis.location.pathname +
-    globalThis.location.search).replace(
-      "://localhost",
-      "://127.0.0.1",
-    );
+const location = globalThis.location;
+
+let redirect_uri = (location.origin + location.pathname + location.search)
+  .replace(
+    "://localhost",
+    "://127.0.0.1",
+  );
+
+const isLocalDev = redirect_uri.startsWith("http://127.0.0.1");
+
+if (!isLocalDev) {
+  const url = new URL(location.href);
+  const params = url.searchParams.entries();
+
+  redirect_uri = location.origin + "/oauth/redirect?" + QS.stringify({
+    ...params,
+    redirect_path: location.pathname,
+    variant: url.pathname.replace(/(^\/+|\/+$)/g, "").split("/")[0],
+  });
+}
 
 configureOAuth({
   metadata: {
-    client_id: redirect_uri.startsWith("http://127.0.0.1")
+    client_id: isLocalDev
       ? `http://localhost/?redirect_uri=${
         encodeURIComponent(redirect_uri)
       }&scope=${encodeURIComponent(SCOPE)}`
