@@ -39,7 +39,11 @@ configureOAuth({
     client_id: redirect_uri.startsWith("http://127.0.0.1")
       ? `http://localhost/?redirect_uri=${
         encodeURIComponent(redirect_uri)
-      }&scope=${encodeURIComponent("atproto transition:generic")}`
+      }&scope=${
+        encodeURIComponent(
+          "atproto repo?collection=sh.diffuse.output.facet&collection=sh.diffuse.output.playlist&collection=sh.diffuse.output.theme&collection=sh.diffuse.output.track",
+        )
+      }`
       : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
         "https://elements.diffuse.sh/oauth-client-metadata.json",
     redirect_uri,
