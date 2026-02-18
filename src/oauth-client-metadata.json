@@ -2,7 +2,7 @@
   "client_id": "https://elements.diffuse.sh/oauth-client-metadata.json",
   "client_name": "Diffuse",
   "client_uri": "https://elements.diffuse.sh",
-  "redirect_uris": ["https://elements.diffuse.sh/oauth/redirect/"],
+  "redirect_uris": ["https://elements.diffuse.sh/oauth/callback"],
   "scope": "atproto repo?collection=sh.diffuse.output.facet&collection=sh.diffuse.output.playlist&collection=sh.diffuse.output.theme&collection=sh.diffuse.output.track",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
