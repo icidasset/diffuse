@@ -47,7 +47,7 @@ if (!isLocalDev) {
   const url = new URL(location.href);
   const params = url.searchParams.entries();
 
-  redirect_uri = location.origin + "/oauth/redirect?" + QS.stringify({
+  redirect_uri = location.origin + "/oauth/redirect/?" + QS.stringify({
     ...params,
     redirect_path: location.pathname,
     variant: url.pathname.replace(/(^\/+|\/+$)/g, "").split("/")[0],
