@@ -206,17 +206,17 @@ ul.columns {
  */
 
 .dropdown {
-  position: fixed;
-  position-area: bottom span-left;
-  margin: 0;
-  margin-top: var(--space-3xs);
-
   background: var(--bg-color);
   border: 0;
   border-radius: var(--radius-md);
   box-shadow: var(--box-shadow-lg);
+  color: var(--text-color);
   font-size: var(--fs-xs);
+  margin: 0;
+  margin-top: var(--space-3xs);
   padding: 0;
+  position: fixed;
+  position-area: bottom span-left;
   text-align: left;
 
   &::backdrop {
