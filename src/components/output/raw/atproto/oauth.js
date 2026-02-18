@@ -49,7 +49,7 @@ if (!isLocalDev) {
 
   redirect_uri = location.origin + "/oauth/callback?" + QS.stringify({
     ...params,
-    redirect_path: location.pathname.replace(/\/*[^\/]+/, ""),
+    redirect_path: location.pathname,
     variant: url.pathname.replace(/(^\/+|\/+$)/g, "").split("/")[0],
   });
 }
