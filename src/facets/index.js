@@ -67,71 +67,86 @@ if (!listEl) throw new Error("List element not found");
 
 const output = foundation.orchestrator.output();
 
+listEl.innerHTML = "";
+
 effect(() => {
   const col = output.facets.collection().sort((a, b) => {
     return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
   });
 
-  const h = col.length
+  const state = output.facets.state();
+
+  const h = col.length && state === "loaded"
     ? html`
       <ul>
         ${col.map((c) =>
           html`
-            <li style="margin-bottom: var(--space-2xs)">
-              <span>${c.name}</span>
+            <li>
+              <div style="position: relative;">
+                <a href="facets/l/?id=${c.id}">
+                  ${c.name}
+                </a>
+                <button
+                  class="button--fixed button--transparent"
+                  popovertarget="facet-menu-col-${c.id}"
+                  style="anchor-name: --facet-anchor-col-${c
+                    .id}; position: absolute; right: 0; top: 50%; transform: translateY(-50%);"
+                >
+                  <i class="ph-fill ph-dots-three-circle"></i>
+                </button>
+              </div>
               <div class="list-description">
-                <div style="margin-bottom: var(--space-2xs)">
-                  ${c.url && !c.html
-                    ? html`
-                      <span class="with-icon">
-                        <i class="ph-fill ph-binoculars"></i>
-                        <span>Tracking the original <a href="${c
-                          .url}">URL</a></span>
-                      </span>
-                    `
-                    : html`
-                      <span class="with-icon">
-                        <i class="ph-fill ph-code"></i>
-                        <span>Custom code</span>
-                      </span>
-                    `}
-                </div>
-                <div class="button-row">
-                  <a href="facets/l/?id=${c
-                    .id}" class="button button--bg-twist-1">
+                ${c.url && !c.html
+                  ? html`
                     <span class="with-icon">
-                      <i class="ph-fill ph-globe"></i> Open
+                      <i class="ph-fill ph-binoculars"></i>
+                      <span>Tracking the original <a href="${c
+                        .url}">URL</a></span>
                     </span>
-                  </a>
-                  <button
-                    class="button--bg-twist-1 button--subtle"
-                    @click="${() => editFacet(c)}"
-                  >
+                  `
+                  : html`
                     <span class="with-icon">
-                      <i class="ph-fill ph-cursor-text"></i> Edit
+                      <i class="ph-fill ph-code"></i>
+                      <span>Custom code</span>
                     </span>
-                  </button>
-                  <button
-                    class="button--bg-twist-2 button--subtle"
-                    @click="${deleteFacet({
-                      id: c.id,
-                    })}"
-                  >
-                    <span class="with-icon">
-                      <i class="ph-fill ph-eraser"></i> Delete
-                    </span>
-                  </button>
-                </div>
+                  `}
+              </div>
+
+              <!-- Dropdown Menu -->
+              <div
+                id="facet-menu-col-${c.id}"
+                class="dropdown"
+                style="position-anchor: --facet-anchor-col-${c.id}"
+                popover
+              >
+                <a href="facets/l/?id=${c.id}">
+                  <span class="with-icon">
+                    <i class="ph-fill ph-globe"></i> Open
+                  </span>
+                </a>
+                <a @click="${() => editFacet(c)}">
+                  <span class="with-icon">
+                    <i class="ph-fill ph-cursor-text"></i> Edit
+                  </span>
+                </a>
+                <a @click="${deleteFacet({ id: c.id })}">
+                  <span class="with-icon">
+                    <i class="ph-fill ph-eraser"></i> Delete
+                  </span>
+                </a>
               </div>
             </li>
           `
         )}
       </ul>
     `
-    : output.facets.state() === "loaded"
+    : state === "loaded"
     ? emptyFacetsList
     : html`
-      <i class="ph-bold ph-spinner-gap"></i>
+      <div class="with-icon" style="font-size: var(--fs-sm);">
+        <i class="ph-bold ph-spinner-gap"></i>
+        Loading items
+      </div>
     `;
 
   render(h, listEl);

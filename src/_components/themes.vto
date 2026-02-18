@@ -1,28 +1,44 @@
 <ul>
-  {{ for item of items }}
+  {{ for index, item of items }}
     <li data-url="{{item.url}}" data-name="{{item.title}}">
-      <span>{{item.title}}</span>
+      <div style="position: relative;">
+        <a href="themes/l/?url={{encodeURIComponent(item.url)}}">
+          {{item.title}}
+        </a>
+        <button
+          class="button--fixed button--transparent"
+          popovertarget="theme-menu-{{id}}-{{index}}"
+          style="anchor-name: --theme-anchor-{{id}}-{{index}}; position: absolute; right: 0; top: 50%; transform: translateY(-50%);"
+        >
+          <i class="ph-fill ph-dots-three-circle"></i>
+        </button>
+      </div>
       <div class="list-description">
-        <div class="button-row">
-          <a href="themes/l/?url={{encodeURIComponent(item.url)}}" class="button button--bg-twist-1">
-            <span class="with-icon">
-              <i class="ph-fill ph-globe"></i> Open
-            </span>
-          </a>
-          <button rel="save" class="button--bg-twist-1 button--subtle">
-            <span class="with-icon">
-              <i class="ph-fill ph-download"></i> Save
-            </span>
-          </button>
-          <button rel="fork" class="button--bg-twist-1 button--subtle">
-            <span class="with-icon">
-              <i class="ph-fill ph-cursor-text"></i> Edit
-            </span>
-          </button>
-        </div>
-        <div>
-          {{item.desc |> md(true)}}
-        </div>
+        {{item.desc |> md(true)}}
+      </div>
+
+      <!-- Dropdown Menu -->
+      <div
+        id="theme-menu-{{id}}-{{index}}"
+        class="dropdown"
+        style="position-anchor: --theme-anchor-{{id}}-{{index}}"
+        popover
+      >
+        <a href="themes/l/?url={{encodeURIComponent(item.url)}}">
+          <span class="with-icon">
+            <i class="ph-fill ph-globe"></i> Open
+          </span>
+        </a>
+        <a rel="save">
+          <span class="with-icon">
+            <i class="ph-fill ph-download"></i> Save
+          </span>
+        </a>
+        <a rel="fork">
+          <span class="with-icon">
+            <i class="ph-fill ph-cursor-text"></i> Edit
+          </span>
+        </a>
       </div>
     </li>
   {{ /for }}

@@ -5,6 +5,7 @@ base: ../
 styles:
   - styles/base.css
   - styles/diffuse/page.css
+  - styles/vendor/phosphor/bold/style.css
   - styles/vendor/phosphor/fill/style.css
 
 scripts:
@@ -80,7 +81,7 @@ examples:
     <section class="flex">
       <h2 id="built-in">Built-in</h2>
 
-      {{ await comp.facets({ items: builtIn }) }}
+      {{ await comp.facets({ id: "builtin", items: builtIn }) }}
     </section>
 
     <section class="flex">
@@ -98,7 +99,12 @@ examples:
   <div class="columns">
     <section class="flex">
       <h2 id="collection">Your collection</h2>
-      <div id="list"></div>
+      <div id="list">
+        <div class="with-icon" style="font-size: var(--fs-sm);">
+          <i class="ph-bold ph-spinner-gap"></i>
+          Loading items
+        </div>
+      </div>
     </section>
 
     <section class="flex">
@@ -108,7 +114,7 @@ examples:
         Some simple examples to help you understand how to build your own facet. Fork them to load them into the code editor below (or save → edit).
       </p>
 
-      {{ await comp.facets({ items: examples }) }}
+      {{ await comp.facets({ id: "examples", items: examples }) }}
     </section>
   </div>
 

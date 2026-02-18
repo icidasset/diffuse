@@ -202,6 +202,53 @@ ul.columns {
 }
 
 /**
+ * Dropdown menu
+ */
+
+.dropdown {
+  position: fixed;
+  position-area: bottom span-left;
+  margin: 0;
+  margin-top: var(--space-3xs);
+
+  background: var(--bg-color);
+  border: 0;
+  border-radius: var(--radius-md);
+  box-shadow: var(--box-shadow-lg);
+  font-size: var(--fs-xs);
+  padding: 0;
+  text-align: left;
+
+  &::backdrop {
+    background: transparent;
+  }
+
+  & > a {
+    cursor: pointer;
+    display: block;
+    padding: var(--space-3xs) var(--space-2xs);
+    text-decoration: none;
+
+    & > * {
+      pointer-events: none;
+    }
+  }
+
+  & > a:not(:last-child) {
+    border-bottom: 1px solid oklch(from currentColor l c h / 0.05);
+  }
+
+  i {
+    opacity: 0.4;
+    transition: opacity 250ms;
+  }
+
+  a:hover i {
+    opacity: 1;
+  }
+}
+
+/**
  * Forms
  */
 
@@ -325,9 +372,20 @@ a.button {
     background-color: oklch(from var(--accent-twist-5) l c h / var(--button-bg-opacity));
   }
 
+  &.button--transparent {
+    background-color: transparent;
+    color: var(--text-color);
+  }
+
+  &.button--small {
+    font-size: var(--fs-xs);
+    line-height: 1;
+    padding: var(--space-3xs);
+    border-radius: var(--radius-xs);
+  }
+
   &.button--subtle {
     --button-bg-opacity: 0.3;
-    /*background-color: transparent;*/
   }
 
   & > span {
@@ -340,6 +398,12 @@ a.button {
 
 small {
   font-size: var(--fs-xs);
+}
+
+.button-col {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
 }
 
 .button-row {
@@ -378,6 +442,10 @@ ul li::marker {
   width: 32.5%;
 }
 
+/**
+ * Lists
+ */
+
 .list-description {
   color: oklch(from currentColor l c h / 0.6);
   font-size: var(--fs-xs);
@@ -388,20 +456,8 @@ ul li::marker {
     text-underline-offset: 3px;
   }
 
-  button,
-  .button {
-    line-height: 1;
-    padding: var(--space-3xs);
-    border-radius: var(--radius-xs);
-  }
-
   code {
     font-size: var(--fs-xs);
-  }
-
-  .button-row {
-    gap: var(--space-3xs);
-    margin: 0 0 var(--space-2xs);
   }
 }
 
