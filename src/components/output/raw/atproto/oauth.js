@@ -1,4 +1,7 @@
 import { configureOAuth } from "@atcute/oauth-browser-client";
+import metadata from "../../../../oauth-client-metadata.json" with {
+  type: "json",
+};
 
 import {
   CompositeDidDocumentResolver,
@@ -23,6 +26,7 @@ export { OAuthUserAgent };
  */
 
 const STORAGE_KEY = "diffuse/output/raw/atproto/did";
+const SCOPE = metadata.scope;
 
 // CONFIGURE
 // =========
@@ -39,11 +43,7 @@ configureOAuth({
     client_id: redirect_uri.startsWith("http://127.0.0.1")
       ? `http://localhost/?redirect_uri=${
         encodeURIComponent(redirect_uri)
-      }&scope=${
-        encodeURIComponent(
-          "atproto repo?collection=sh.diffuse.output.facet&collection=sh.diffuse.output.playlist&collection=sh.diffuse.output.theme&collection=sh.diffuse.output.track",
-        )
-      }`
+      }&scope=${encodeURIComponent(SCOPE)}`
       : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
         "https://elements.diffuse.sh/oauth-client-metadata.json",
     redirect_uri,
@@ -81,7 +81,7 @@ export async function login(handle) {
 
   const authUrl = await createAuthorizationUrl({
     target: { type: "account", identifier: /** @type {any} */ (handle) },
-    scope: "atproto transition:generic",
+    scope: SCOPE,
   });
 
   location.assign(authUrl.toString());
