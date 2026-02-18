@@ -1,4 +1,3 @@
-import QS from "query-string";
 import { configureOAuth } from "@atcute/oauth-browser-client";
 
 import metadata from "../../../../oauth-client-metadata.json" with {
@@ -44,14 +43,7 @@ let redirect_uri = (location.origin + location.pathname + location.search)
 const isLocalDev = redirect_uri.startsWith("http://127.0.0.1");
 
 if (!isLocalDev) {
-  const url = new URL(location.href);
-  const params = Object.fromEntries(Array.from(url.searchParams.entries()));
-
-  redirect_uri = location.origin + "/oauth/callback?" + QS.stringify({
-    ...params,
-    redirect_path: location.pathname,
-    variant: url.pathname.replace(/(^\/+|\/+$)/g, "").split("/")[0],
-  });
+  redirect_uri = location.origin + "/oauth/callback";
 }
 
 configureOAuth({
@@ -94,6 +86,11 @@ export async function login(handle) {
       location.href.replace("http://localhost:", "http://127.0.0.1:"),
     );
   }
+
+  sessionStorage.setItem(
+    "diffuse/output/raw/atproto/oauth/redirect_path",
+    location.pathname + location.search,
+  );
 
   const authUrl = await createAuthorizationUrl({
     target: { type: "account", identifier: /** @type {any} */ (handle) },
