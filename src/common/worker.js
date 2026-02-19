@@ -68,32 +68,20 @@ export function workerLink(worker) {
  * @returns {ProxiedActions<Actions>}
  */
 export function workerProxy(workerLinkCreator) {
-  /** @type {ProxiedActions<Actions> | undefined} */
-  let int_api;
+  /** @type {RpcChannel<{}, Actions> | undefined} */
+  let channel;
 
-  /** @returns {ProxiedActions<Actions>} */
-  function ensureAPI() {
-    if (!int_api) {
-      /** @type {RpcChannel<Actions, Actions>} */
-      const channel = new RpcChannel(workerLinkCreator());
-      int_api = channel.getAPI();
-    }
-
-    return int_api;
-  }
-
-  // Create proxy that creates RPC API when needed
-  const proxy = new Proxy(() => {}, {
-    get: (_target, prop) => {
+  const proxy = new Proxy(/** @type {any} */ ({}), {
+    get: (_target, /** @type {string} */ prop) => {
       /** @param {Parameters<Actions[any]>} args */
       return (...args) => {
-        const api = ensureAPI();
-        return api[prop.toString()](...args);
+        channel ??= new RpcChannel(workerLinkCreator());
+        return channel.callMethod(prop, args);
       };
     },
   });
 
-  return /** @type {ProxiedActions<Actions>} */ (/** @type {any} */ (proxy));
+  return /** @type {ProxiedActions<Actions>} */ (proxy);
 }
 
 /**
