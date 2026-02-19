@@ -35,6 +35,7 @@
     "idb-keyval": "npm:idb-keyval@^6.2.2",
     "iso-base": "npm:iso-base@^4.3.0",
     "lit-html": "npm:lit-html@^3.3.1",
+    "marked": "npm:marked@^17.0.3",
     "multiformats": "npm:multiformats@^13.4.2",
     "query-string": "npm:query-string@^9.3.1",
     "subsonic-api": "npm:subsonic-api@^3.2.0",

@@ -1,6 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { html, render } from "lit-html";
 import { keyed } from "lit-html/directives/keyed.js";
+import { marked } from "marked";
+import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import { basicSetup, EditorView } from "codemirror";
 import { css as langCss } from "@codemirror/lang-css";
@@ -12,6 +14,7 @@ import * as CID from "@common/cid.js";
 import foundation from "@common/facets/foundation.js";
 import { effect, signal } from "@common/signal.js";
 import { facetFromUrl } from "@common/facets/utils.js";
+import { nothing } from "@common/element.js";
 
 /**
  * @import {Facet} from "@definitions/types.d.ts"
@@ -99,20 +102,29 @@ effect(() => {
                   </button>
                 </div>
                 <div class="list-description">
-                  ${c.url && !c.html
-                    ? html`
-                      <span class="with-icon">
-                        <i class="ph-fill ph-binoculars"></i>
-                        <span>Tracking the original <a href="${c
-                          .url}">URL</a></span>
-                      </span>
-                    `
-                    : html`
-                      <span class="with-icon">
-                        <i class="ph-fill ph-code"></i>
-                        <span>Custom code</span>
-                      </span>
-                    `}
+                  <div>
+                    ${c.description?.trim().length
+                      ? unsafeHTML(
+                        marked.parse(c.description, { async: false }),
+                      )
+                      : nothing}
+                  </div>
+                  <div>
+                    ${c.url && !c.html
+                      ? html`
+                        <span class="with-icon">
+                          <i class="ph-fill ph-binoculars"></i>
+                          <span>Tracking the original <a href="${c
+                            .url}">URL</a></span>
+                        </span>
+                      `
+                      : html`
+                        <span class="with-icon">
+                          <i class="ph-fill ph-code"></i>
+                          <span>Custom code</span>
+                        </span>
+                      `}
+                  </div>
                 </div>
 
                 <!-- Dropdown Menu -->
@@ -240,15 +252,21 @@ async function onBuildSubmit(event) {
     "#name-input",
   ));
 
+  const descriptionEl = /** @type {HTMLTextAreaElement | null} */ (
+    document.querySelector("#description-input")
+  );
+
   const html = editor.state.doc.toString();
   const cid = await CID.create(0x55, new TextEncoder().encode(html));
   const name = nameEl?.value ?? "nameless";
+  const description = descriptionEl?.value ?? "";
 
   /** @type {Facet} */
   const facet = $editingFacet.value
     ? {
       ...$editingFacet.value,
       cid,
+      description,
       html,
       name,
     }
@@ -256,6 +274,7 @@ async function onBuildSubmit(event) {
       $type: "sh.diffuse.output.facet",
       id: crypto.randomUUID(),
       cid,
+      description,
       html,
       name,
     };
@@ -280,6 +299,10 @@ async function editFacet(ogFacet) {
     "#name-input",
   ));
 
+  const descriptionEl = /** @type {HTMLTextAreaElement | null} */ (
+    document.querySelector("#description-input")
+  );
+
   if (!nameEl) return;
 
   // Scroll to builder
@@ -296,6 +319,10 @@ async function editFacet(ogFacet) {
 
   $editingFacet.value = facet;
   nameEl.value = facet.name;
+
+  if (descriptionEl) {
+    descriptionEl.value = facet.description ?? "";
+  }
 
   editor.dispatch({
     changes: { from: 0, to: editor.state.doc.length, insert: facet.html },
