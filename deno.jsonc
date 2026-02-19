@@ -161,7 +161,7 @@
 
     // .ts
     "./definitions/types/sh/diffuse/output/facet.ts": "./src/definitions/types/sh/diffuse/output/facet.ts",
-    "./definitions/types/sh/diffuse/output/playlist.ts": "./src/definitions/types/sh/diffuse/output/playlist.ts",
+    "./definitions/types/sh/diffuse/output/playlistItem.ts": "./src/definitions/types/sh/diffuse/output/playlistItem.ts",
     "./definitions/types/sh/diffuse/output/theme.ts": "./src/definitions/types/sh/diffuse/output/theme.ts",
     "./definitions/types/sh/diffuse/output/track.ts": "./src/definitions/types/sh/diffuse/output/track.ts",
   },

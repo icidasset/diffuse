@@ -1,12 +1,10 @@
 export type { Main as Facet } from "./types/sh/diffuse/output/facet.ts";
 
 export type {
-  AutoGenerate as PlaylistAutoGeneration,
   Criterion,
-  Item as PlaylistItem,
-  Main as Playlist,
+  Main as PlaylistItem,
   Transformation,
-} from "./types/sh/diffuse/output/playlist.ts";
+} from "./types/sh/diffuse/output/playlistItem.ts";
 
 export type { Main as Theme } from "./types/sh/diffuse/output/theme.ts";
 
