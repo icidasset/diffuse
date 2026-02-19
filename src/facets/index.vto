@@ -50,6 +50,8 @@ examples:
       Make a list of what previously played in the queue.
 ---
 
+{{ function facetUrl(facetPath) }}facets/l/?url={{encodeURIComponent(facetPath)}}{{ /function }}
+
 <header>
   <div>
     <div>
@@ -65,18 +67,88 @@ examples:
     </p>
 
     <ul class="table-of-contents">
+      <li><a href="facets/#collection">Your collection</a></li>
+      <li><a href="facets/#featured">Featured</a></li>
+      <li><a href="facets/#usage">Usage</a></li>
       <li><a href="facets/#built-in">Built-in</a></li>
       <li><a href="facets/#community">Community</a></li>
-      <li><a href="facets/#collection">Your collection</a></li>
-      <li><a href="facets/#examples">Examples</a></li>
       <li><a href="facets/#build">Build</a></li>
       <li><a href="facets/#foundation">Foundation</a></li>
+      <li><a href="facets/#examples">Examples</a></li>
+      <li><a href="facets/#notes">Notes</a></li>
     </ul>
   </div>
   <div class="dither-mask filler"></div>
 </header>
 <main>
-  <!-- BUILT-IN -->
+  <!-- YOUR COLLECTION -->
+  <section>
+    <h2 id="collection">Your collection</h2>
+    <div id="list">
+      <div class="with-icon" style="font-size: var(--fs-sm);">
+        <i class="ph-bold ph-spinner-gap"></i>
+        Loading items
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED + USAGE -->
+  <div class="columns">
+    <section class="flex">
+      <h2 id="featured">Featured</h2>
+
+      <ol style="list-style: none; padding-left: 0;">
+        <li>
+          <p>
+            <i class="ph-fill ph-plus"></i>
+            <strong><a href="{{ facetUrl('themes/webamp/configurators/input/facet.html.txt') }}">Add</a></strong> audio from various places on the web and your device.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-queue"></i>
+            <strong><a href="{{ facetUrl('themes/webamp/browser/facet.html.txt') }}">Browse</a></strong> your collection to put something into the queue.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-queue"></i>
+            <strong><a href="{{ facetUrl('facets/tools/auto-queue.html.txt') }}">Automate</a></strong> adding items to the queue, for infinite playback or listening to a playlist.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-music-note"></i>
+            <strong><a href="{{ facetUrl('themes/blur/artwork-controller/facet.html.txt') }}">Play</a></strong> queued songs.
+          </p>
+        </li>
+        <li>
+          <p>
+            <i class="ph-fill ph-person"></i>
+            <strong><a href="{{ facetUrl('themes/webamp/configurators/output/facet.html.txt') }}">Manage</a></strong> your user data, sync with your other devices or other people.
+          </p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="flex">
+      <h2 id="usage">Usage</h2>
+      <p>
+        To use these facets, simply open whichever ones provide the functionality that you're looking for at a given moment. You can browse existing ones here and create one below.
+      </p>
+      <p>
+        For example, say you want to play music; two options would be: (1) <a href="{{ facetUrl('themes/webamp/browser/facet.html.txt') }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ facetUrl('facets/tools/auto-queue.html.txt') }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ facetUrl('themes/blur/artwork-controller/facet.html.txt') }}">controller</a> could be used.
+      </p>
+      <p>
+        <em>You might ask, why can't I do all of this in just one window? That's what <a href="themes/">themes</a> are for, if you need something more streamlined. If you however want a customised experience, or prefer certain interfaces for certain things, that's what facets are for.</em>
+      </p>
+      <p>
+        <small><i class="ph-fill ph-info"></i> Every facet has access to your audio collection and your user data, along with any other shared state.</small>
+      </p>
+    </section>
+  </div>
+
+  <!-- BUILT-IN + COMMUNITY -->
   <div class="columns">
     <section class="flex">
       <h2 id="built-in">Built-in</h2>
@@ -92,29 +164,6 @@ examples:
       <p>
         <small><i class="ph-fill ph-info"></i> Nothing here yet, too early.</small>
       </p>
-    </section>
-  </div>
-
-  <!-- LIST + EXAMPLES -->
-  <div class="columns">
-    <section class="flex">
-      <h2 id="collection">Your collection</h2>
-      <div id="list">
-        <div class="with-icon" style="font-size: var(--fs-sm);">
-          <i class="ph-bold ph-spinner-gap"></i>
-          Loading items
-        </div>
-      </div>
-    </section>
-
-    <section class="flex">
-      <h2 id="examples">Examples</h2>
-
-      <p>
-        Some simple examples to help you understand how to build your own facet. Fork them to load them into the code editor below (or save → edit).
-      </p>
-
-      {{ await comp.facets({ id: "examples", items: examples }) }}
     </section>
   </div>
 
@@ -151,9 +200,9 @@ examples:
   </section>
 
   <!-- FOUNDATION -->
-  <div class="columns" style="margin-top: var(--space-2xl);">
-    <section style="flex-grow: 10; max-width: var(--container-xl);">
-      <h2 id="foundation" style="margin-top: 0;">Foundation</h2>
+  <div class="columns">
+    <section class="flex">
+      <h2 id="foundation">Foundation</h2>
 
       <p>
         Diffuse comes with a foundation that preconfigures all elements so you don't have to set them up yourself, along with a combination of elements for certain features. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times.
@@ -215,16 +264,26 @@ examples:
           </div>
         </li>
       </ul>
-      <h3>Notes</h3>
+    </section>
+
+    <section class="flex">
+      <h2 id="examples">Examples</h2>
+
+      <p>
+        Some simple examples to help you understand how to build your own facet. Fork them to load them into the code editor below (or save → edit).
+      </p>
+
+      {{ await comp.facets({ id: "examples", items: examples }) }}
+
+      <h2 id="notes">Notes</h2>
       <p>
         While you have the ability to do whatever you want in a custom facet, the existing facets are designed to work a certain way; so here's some things to keep in mind:
       </p>
       <ul>
         <li><span>In most cases you'll want to call <code>foundation.features.processInputs()</code> so that your audio files and streams actually show up.</span></li>
         <li><span>Most elements are configured in broadcast mode so they communicate across tabs. There are a few exceptions such as inputs, where we prefer parallelisation.</span></li>
+        <li><span>You can use facets in combination with themes by adding the elements used in the theme to a group and then passing in the group name as a URL query parameter (eg. <code>group=facets</code>)</span></li>
       </ul>
     </section>
-
-    <div class="dither-mask filler"></div>
   </div>
 </main>
