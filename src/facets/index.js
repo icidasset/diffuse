@@ -1,5 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { html, render } from "lit-html";
+import { keyed } from "lit-html/directives/keyed.js";
 
 import { basicSetup, EditorView } from "codemirror";
 import { css as langCss } from "@codemirror/lang-css";
@@ -80,63 +81,66 @@ effect(() => {
     ? html`
       <ul>
         ${col.map((c) =>
-          html`
-            <li>
-              <div style="position: relative;">
-                <a href="facets/l/?id=${c.id}">
-                  ${c.name}
-                </a>
-                <button
-                  class="button--fixed button--transparent"
-                  popovertarget="facet-menu-col-${c.id}"
-                  style="anchor-name: --facet-anchor-col-${c
-                    .id}; position: absolute; right: 0; top: 50%; transform: translateY(-50%);"
-                >
-                  <i class="ph-fill ph-dots-three-circle"></i>
-                </button>
-              </div>
-              <div class="list-description">
-                ${c.url && !c.html
-                  ? html`
-                    <span class="with-icon">
-                      <i class="ph-fill ph-binoculars"></i>
-                      <span>Tracking the original <a href="${c
-                        .url}">URL</a></span>
-                    </span>
-                  `
-                  : html`
-                    <span class="with-icon">
-                      <i class="ph-fill ph-code"></i>
-                      <span>Custom code</span>
-                    </span>
-                  `}
-              </div>
+          keyed(
+            c.id,
+            html`
+              <li>
+                <div style="position: relative;">
+                  <a href="facets/l/?id=${c.id}">
+                    ${c.name}
+                  </a>
+                  <button
+                    class="button--fixed button--transparent"
+                    popovertarget="facet-menu-col-${c.id}"
+                    style="anchor-name: --facet-anchor-col-${c
+                      .id}; position: absolute; right: 0; top: 50%; transform: translateY(-50%);"
+                  >
+                    <i class="ph-fill ph-dots-three-circle"></i>
+                  </button>
+                </div>
+                <div class="list-description">
+                  ${c.url && !c.html
+                    ? html`
+                      <span class="with-icon">
+                        <i class="ph-fill ph-binoculars"></i>
+                        <span>Tracking the original <a href="${c
+                          .url}">URL</a></span>
+                      </span>
+                    `
+                    : html`
+                      <span class="with-icon">
+                        <i class="ph-fill ph-code"></i>
+                        <span>Custom code</span>
+                      </span>
+                    `}
+                </div>
 
-              <!-- Dropdown Menu -->
-              <div
-                id="facet-menu-col-${c.id}"
-                class="dropdown"
-                style="position-anchor: --facet-anchor-col-${c.id}"
-                popover
-              >
-                <a href="facets/l/?id=${c.id}">
-                  <span class="with-icon">
-                    <i class="ph-fill ph-globe"></i> Open
-                  </span>
-                </a>
-                <a @click="${() => editFacet(c)}">
-                  <span class="with-icon">
-                    <i class="ph-fill ph-cursor-text"></i> Edit
-                  </span>
-                </a>
-                <a @click="${deleteFacet({ id: c.id })}">
-                  <span class="with-icon">
-                    <i class="ph-fill ph-eraser"></i> Delete
-                  </span>
-                </a>
-              </div>
-            </li>
-          `
+                <!-- Dropdown Menu -->
+                <div
+                  id="facet-menu-col-${c.id}"
+                  class="dropdown"
+                  style="position-anchor: --facet-anchor-col-${c.id}"
+                  popover
+                >
+                  <a href="facets/l/?id=${c.id}">
+                    <span class="with-icon">
+                      <i class="ph-fill ph-globe"></i> Open
+                    </span>
+                  </a>
+                  <a @click="${() => editFacet(c)}">
+                    <span class="with-icon">
+                      <i class="ph-fill ph-cursor-text"></i> Edit
+                    </span>
+                  </a>
+                  <a @click="${deleteFacet({ id: c.id })}">
+                    <span class="with-icon">
+                      <i class="ph-fill ph-eraser"></i> Delete
+                    </span>
+                  </a>
+                </div>
+              </li>
+            `,
+          )
         )}
       </ul>
     `
