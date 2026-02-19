@@ -55,17 +55,26 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(this.nameWithGroup, {
-        perfInit: {
+        getPerfInit: {
+          strategy: "leaderOnly",
+          fn: this.#performedInitialProcess.get,
+        },
+        setPerfInit: {
           strategy: "replicate",
           fn: this.#performedInitialProcess.set,
         },
         process: { strategy: "leaderOnly", fn: this.process },
       });
 
-      if (actions) {
-        this.process = actions.process;
-        this.#isProcessing.set = actions.perfInit;
-      }
+      if (!actions) return;
+
+      this.process = actions.process;
+      this.#isProcessing.set = actions.setPerfInit;
+
+      // Sync #performedInitialProcess with leader
+      actions.getPerfInit().then((val) => {
+        this.#performedInitialProcess.set(val);
+      });
     }
 
     // Super
@@ -85,13 +94,15 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     this.output = output;
     this.metadataProcessor = metadataProcessor;
 
+    // Worker link
+    const link = this.workerLink();
+
     // Wait until defined
     await customElements.whenDefined(input.localName);
     await customElements.whenDefined(output.localName);
     await customElements.whenDefined(metadataProcessor.localName);
 
     // Sync progress with worker
-    const link = this.workerLink();
     listen("progress", this.#progress.set, link);
     this.#proxy.progress().then(this.#progress.set);
 
