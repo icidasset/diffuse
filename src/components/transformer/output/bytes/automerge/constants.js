@@ -2,7 +2,7 @@ import * as Automerge from "@automerge/automerge";
 import { base64 } from "iso-base/rfc4648";
 
 /**
- * @import { FacetsDocument, PlaylistsDocument, ThemesDocument, TracksDocument } from "./types.d.ts";
+ * @import { FacetsDocument, PlaylistItemsDocument, ThemesDocument, TracksDocument } from "./types.d.ts";
  */
 
 /** @type {Automerge.Doc<FacetsDocument>} */
@@ -12,7 +12,7 @@ export const INITIAL_FACETS_DOCUMENT = Automerge.load(
   ),
 );
 
-/** @type {Automerge.Doc<PlaylistsDocument>} */
+/** @type {Automerge.Doc<PlaylistItemsDocument>} */
 export const INITIAL_PLAYLISTS_DOCUMENT = Automerge.load(
   base64.decode(
     "hW9Kg5IPZcsAeAEQIyp0LRYp0l9bpZKWJXTPlgGtUD/lrIatFjiIwoUdtJhh/sBQFIcpPppxduoIp1ArXwYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8eTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",

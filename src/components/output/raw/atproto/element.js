@@ -41,10 +41,10 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
         get: () => this.#listRecords("sh.diffuse.output.facet"),
         put: (data) => this.#putRecords("sh.diffuse.output.facet", data),
       },
-      playlists: {
+      playlistItems: {
         empty: () => [],
-        get: () => this.#listRecords("sh.diffuse.output.playlist"),
-        put: (data) => this.#putRecords("sh.diffuse.output.playlist", data),
+        get: () => this.#listRecords("sh.diffuse.output.playlistItem"),
+        put: (data) => this.#putRecords("sh.diffuse.output.playlistItem", data),
       },
       themes: {
         empty: () => [],
@@ -59,7 +59,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     });
 
     this.facets = this.#manager.facets;
-    this.playlists = this.#manager.playlists;
+    this.playlistItems = this.#manager.playlistItems;
     this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
   }
@@ -73,7 +73,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
   did = this.#did.get;
 
   ready = computed(() => {
-    return this.#did.value !== null && navigator.onLine
+    return this.#did.value !== null && navigator.onLine;
   });
 
   // LIFECYCLE
@@ -279,7 +279,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
       /** @type {Record<string, Signal<unknown[]>>} */
       const collectionMap = {
         "sh.diffuse.output.facet": this.#manager.signals.facets,
-        "sh.diffuse.output.playlist": this.#manager.signals.playlists,
+        "sh.diffuse.output.playlistItem": this.#manager.signals.playlistItems,
         "sh.diffuse.output.theme": this.#manager.signals.themes,
         "sh.diffuse.output.track": this.#manager.signals.tracks,
       };

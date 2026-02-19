@@ -27,15 +27,15 @@ class JsonStringOutputTransformer extends OutputTransformer {
           await base.facets.save(json);
         },
       },
-      playlists: {
-        ...base.playlists,
+      playlistItems: {
+        ...base.playlistItems,
         collection: computed(() => {
-          const json = base.playlists.collection();
+          const json = base.playlistItems.collection();
           return typeof json === "string" ? parseArray(json) : [];
         }),
-        save: async (newPlaylists) => {
-          const json = JSON.stringify(newPlaylists);
-          await base.playlists.save(json);
+        save: async (newPlaylistItems) => {
+          const json = JSON.stringify(newPlaylistItems);
+          await base.playlistItems.save(json);
         },
       },
       themes: {
@@ -67,7 +67,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     // Assign manager properties to class
     this.facets = manager.facets;
-    this.playlists = manager.playlists;
+    this.playlistItems = manager.playlistItems;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;

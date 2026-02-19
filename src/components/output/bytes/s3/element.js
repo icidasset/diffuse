@@ -41,10 +41,10 @@ class S3Output extends BroadcastableDiffuseElement {
         put: (data) => this.#put("facets", data),
       },
       init: () => this.whenConnected(),
-      playlists: {
+      playlistItems: {
         empty: () => undefined,
-        get: () => this.#get("playlists"),
-        put: (data) => this.#put("playlists", data),
+        get: () => this.#get("playlistItems"),
+        put: (data) => this.#put("playlistItems", data),
       },
       themes: {
         empty: () => undefined,
@@ -59,7 +59,7 @@ class S3Output extends BroadcastableDiffuseElement {
     });
 
     this.facets = this.#manager.facets;
-    this.playlists = this.#manager.playlists;
+    this.playlistItems = this.#manager.playlistItems;
     this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
   }
@@ -167,7 +167,9 @@ class S3Output extends BroadcastableDiffuseElement {
     } else {
       // Listener
       if (name === "facets") this.#manager.signals.facets.value = data;
-      if (name === "playlists") this.#manager.signals.playlists.value = data;
+      if (name === "playlistItems") {
+        this.#manager.signals.playlistItems.value = data;
+      }
       if (name === "themes") this.#manager.signals.themes.value = data;
       if (name === "tracks") this.#manager.signals.tracks.value = data;
     }

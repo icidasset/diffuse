@@ -5,7 +5,7 @@ import {
 import { batch, computed, signal } from "@common/signal.js";
 
 /**
- * @import {Facet, Playlist, Theme, Track} from "@definitions/types.d.ts"
+ * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  *
  * @import {OutputConfiguratorElement} from "./types.d.ts"
@@ -70,40 +70,40 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
       },
-      playlists: {
+      playlistItems: {
         collection: computed(() => {
           const out = this.#selectedOutput.value;
-          if (out) return out.playlists.collection();
+          if (out) return out.playlistItems.collection();
 
           const def = this.#defaultOutput.value;
-          if (def) return def.playlists.collection();
+          if (def) return def.playlistItems.collection();
 
-          return this.#memory.playlists.value;
+          return this.#memory.playlistItems.value;
         }),
         reload: () => {
           const def = this.#defaultOutput.value;
-          if (def) def.playlists.reload();
+          if (def) def.playlistItems.reload();
 
           const out = this.#selectedOutput.value;
-          if (out) return out.playlists.reload();
+          if (out) return out.playlistItems.reload();
 
           return Promise.resolve();
         },
-        save: async (newPlaylists) => {
+        save: async (newPlaylistItems) => {
           const out = this.#selectedOutput.value;
-          if (out) return await out.playlists.save(newPlaylists);
+          if (out) return await out.playlistItems.save(newPlaylistItems);
 
           const def = this.#defaultOutput.value;
-          if (def) return await def.playlists.save(newPlaylists);
+          if (def) return await def.playlistItems.save(newPlaylistItems);
 
-          this.#memory.playlists.value = newPlaylists;
+          this.#memory.playlistItems.value = newPlaylistItems;
         },
         state: computed(() => {
           const out = this.#selectedOutput.value;
-          if (out) return out.playlists.state();
+          if (out) return out.playlistItems.state();
 
           const def = this.#defaultOutput.value;
-          if (def) return def.playlists.state();
+          if (def) return def.playlistItems.state();
 
           return this.#setupFinished.value ? "loaded" : "sleeping";
         }),
@@ -199,7 +199,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     // Assign manager properties to class
     this.facets = manager.facets;
-    this.playlists = manager.playlists;
+    this.playlistItems = manager.playlistItems;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
@@ -213,7 +213,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   #memory = {
     facets: signal(/** @type {Facet[]} */ ([])),
-    playlists: signal(/** @type {Playlist[]} */ ([])),
+    playlistItems: signal(/** @type {PlaylistItem[]} */ ([])),
     themes: signal(/** @type {Theme[]} */ ([])),
     tracks: signal(/** @type {Track[]} */ ([])),
   };

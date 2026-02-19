@@ -59,21 +59,21 @@ export class OutputTransformer extends DiffuseElement {
           return this.output.signal()?.facets.state() ?? "sleeping";
         }),
       },
-      playlists: {
+      playlistItems: {
         collection: computed(() => {
-          return this.output.signal()?.playlists?.collection();
+          return this.output.signal()?.playlistItems?.collection();
         }),
         reload: () => {
-          return this.output.signal()?.playlists?.reload() ??
+          return this.output.signal()?.playlistItems?.reload() ??
             Promise.resolve();
         },
-        save: async (newPlaylists) => {
-          if (newPlaylists === undefined) return;
+        save: async (newPlaylistItems) => {
+          if (newPlaylistItems === undefined) return;
           await this.output.whenDefined;
-          await this.output.signal()?.playlists.save(newPlaylists);
+          await this.output.signal()?.playlistItems.save(newPlaylistItems);
         },
         state: computed(() => {
-          return this.output.signal()?.playlists.state() ?? "sleeping";
+          return this.output.signal()?.playlistItems.state() ?? "sleeping";
         }),
       },
       themes: {

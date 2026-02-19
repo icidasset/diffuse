@@ -19,7 +19,7 @@ const PROTOCOL_VERSION = "1";
 
 const COLLECTIONS = /** @type {const} */ ([
   "facets",
-  "playlists",
+  "playlistItems",
   "themes",
   "tracks",
 ]);
@@ -73,10 +73,10 @@ class AutomergeRepoServerOutput extends DiffuseElement {
         put: async (data) => this.#putBytes("facets", data),
       },
       init: () => this.whenConnected(),
-      playlists: {
-        empty: () => this.#getBytes("playlists"),
-        get: async () => this.#getBytes("playlists"),
-        put: async (data) => this.#putBytes("playlists", data),
+      playlistItems: {
+        empty: () => this.#getBytes("playlistItems"),
+        get: async () => this.#getBytes("playlistItems"),
+        put: async (data) => this.#putBytes("playlistItems", data),
       },
       themes: {
         empty: () => this.#getBytes("themes"),
@@ -93,7 +93,7 @@ class AutomergeRepoServerOutput extends DiffuseElement {
     this.#manager = outputManager(properties);
 
     this.facets = this.#manager.facets;
-    this.playlists = this.#manager.playlists;
+    this.playlistItems = this.#manager.playlistItems;
     this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
     this.ready = () => true;

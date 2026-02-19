@@ -1,6 +1,35 @@
 /**
- * @import {Playlist, PlaylistItem, Track} from "@definitions/types.d.ts"
+ * @import {PlaylistItem, Track} from "@definitions/types.d.ts"
  */
+
+/**
+ * Bundle playlist items into their respective playlists.
+ *
+ * @param {PlaylistItem[]} items
+ */
+export function gather(items) {
+  /**
+   * @type {Map<string, { items: PlaylistItem[]; name: string; unordered: boolean }>}
+   */
+  const playlistMap = new Map();
+
+  for (const item of items) {
+    const existing = playlistMap.get(item.playlist);
+
+    if (!existing) {
+      playlistMap.set(item.playlist, {
+        items: [item],
+        name: item.playlist,
+        unordered: item.position == null,
+      });
+    } else if (item.position == null) {
+      existing.items.push(item);
+      existing.unordered = true;
+    }
+  }
+
+  return playlistMap;
+}
 
 /**
  * @param {any} val
@@ -52,23 +81,25 @@ export function match(track, item) {
  * Filter tracks by playlist membership using an indexed lookup.
  *
  * @param {Track[]} tracks
- * @param {Playlist} playlist
+ * @param {PlaylistItem[]} playlistItems
  */
-export function filterByPlaylist(tracks, playlist) {
+export function filterByPlaylist(tracks, playlistItems) {
   // Group playlist items by criteria shape, building a Set index per shape.
-  const shapes = playlist.items
+  const shapes = playlistItems
     .reduce(
-      (acc, item) => {
-        const shapeKey = item.criteria
+      (acc, playlistItem) => {
+        const shapeKey = playlistItem.criteria
           .map((c) => `${c.field}\0${(c.transformations ?? []).join(",")}`)
           .join("\0\0");
 
         const group = acc.get(shapeKey) ?? acc
-          .set(shapeKey, { criteria: item.criteria, keys: new Set() })
+          .set(shapeKey, { criteria: playlistItem.criteria, keys: new Set() })
           .get(shapeKey);
 
         group?.keys.add(
-          item.criteria.map((c) => transform(c.value, c.transformations)).join(
+          playlistItem.criteria.map((c) =>
+            transform(c.value, c.transformations)
+          ).join(
             "\0",
           ),
         );

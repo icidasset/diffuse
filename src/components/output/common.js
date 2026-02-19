@@ -1,7 +1,7 @@
 import { computed, signal, untracked } from "@common/signal.js";
 
 /**
- * @import {Facet, Playlist, Theme, Track} from "@definitions/types.d.ts"
+ * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
@@ -10,7 +10,7 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @param {OutputManagerProperties<Encoding>} _
  * @returns {OutputManager<Encoding>}
  */
-export function outputManager({ init, facets, playlists, themes, tracks }) {
+export function outputManager({ init, facets, playlistItems, themes, tracks }) {
   const c = signal(
     /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
       .empty()),
@@ -20,7 +20,7 @@ export function outputManager({ init, facets, playlists, themes, tracks }) {
   );
 
   const pl = signal(
-    /** @type {Encoding extends null ? Playlist[] : Encoding} */ (playlists
+    /** @type {Encoding extends null ? PlaylistItem[] : Encoding} */ (playlistItems
       .empty()),
   );
   const pls = signal(
@@ -48,10 +48,10 @@ export function outputManager({ init, facets, playlists, themes, tracks }) {
     cs.value = "loaded";
   }
 
-  async function loadPlaylists() {
+  async function loadPlaylistItems() {
     if (init && (await init()) === false) return;
     pls.value = "loading";
-    pl.value = await playlists.get();
+    pl.value = await playlistItems.get();
     pls.value = "loaded";
   }
 
@@ -83,16 +83,16 @@ export function outputManager({ init, facets, playlists, themes, tracks }) {
       },
       state: cs.get,
     },
-    playlists: {
+    playlistItems: {
       collection: computed(() => {
-        if (untracked(() => pls.value === "sleeping")) loadPlaylists();
+        if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
         return pl.value;
       }),
-      reload: loadPlaylists,
-      save: async (newPlaylists) => {
-        if (untracked(() => pls.value === "sleeping")) loadPlaylists();
-        pl.value = newPlaylists;
-        await playlists.put(newPlaylists);
+      reload: loadPlaylistItems,
+      save: async (newPlaylistItems) => {
+        if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
+        pl.value = newPlaylistItems;
+        await playlistItems.put(newPlaylistItems);
       },
       state: pls.get,
     },
@@ -124,7 +124,7 @@ export function outputManager({ init, facets, playlists, themes, tracks }) {
     },
     signals: {
       facets: c,
-      playlists: pl,
+      playlistItems: pl,
       themes: th,
       tracks: t,
     },

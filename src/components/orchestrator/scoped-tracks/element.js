@@ -49,11 +49,12 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {import("@components/processor/search/element.js").CLASS | null} */ (null),
   );
 
-  #selectedPlaylist = computed(() => {
-    const playlistId = this.#scope.value?.playlistId();
-    if (!playlistId) return undefined;
-    return this.#output.value?.playlists.collection().find((p) =>
-      p.id === playlistId
+  #selectedPlaylistItems = computed(() => {
+    const playlist = this.#scope.value?.playlist();
+    if (!playlist) return undefined;
+
+    return this.#output.value?.playlistItems.collection().filter((p) =>
+      p.playlist === playlist
     );
   });
 
@@ -144,12 +145,12 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     // Watch `#tracksSearch` + Playlist
     this.effect(async () => {
       const tracks = this.#tracksSearch.value;
-      const playlist = this.#selectedPlaylist();
+      const playlistItems = this.#selectedPlaylistItems();
 
       if ((await this.isLeader()) === false) return;
 
-      const final = playlist
-        ? await this.#proxy.filterByPlaylist({ tracks, playlist })
+      const final = playlistItems?.length
+        ? await this.#proxy.filterByPlaylist({ tracks, playlistItems })
         : tracks;
 
       this.#tracksFinal.set(final);

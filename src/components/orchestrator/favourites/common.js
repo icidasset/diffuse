@@ -1,22 +1,9 @@
 /**
- * @import {Playlist} from "@definitions/types.d.ts"
- */
-
-/**
- * Creates an empty favourites playlist structure.
+ * Filter playlist items that belong to the favourites playlist.
  *
- * @returns {Playlist}
+ * @param {import("@definitions/types.d.ts").PlaylistItem[]} playlistItems
+ * @returns {import("@definitions/types.d.ts").PlaylistItem[]}
  */
-export function createEmptyFavouritesPlaylist() {
-  const now = new Date().toISOString();
-
-  return /** @type {Playlist} */ ({
-    $type: "sh.diffuse.output.playlist",
-    id: "favourites",
-    name: "Favourites",
-    unordered: true,
-    items: [],
-    createdAt: now,
-    updatedAt: now,
-  });
+export function filterFavourites(playlistItems) {
+  return playlistItems.filter((item) => item.playlist === "Favourites");
 }

@@ -17,7 +17,7 @@ import {
 /**
  * @import { SignalReader } from "@common/signal.d.ts";
  * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { FacetsDocument, PlaylistsDocument, ThemesDocument, TracksDocument } from "./types.d.ts"
+ * @import { FacetsDocument, PlaylistItemsDocument, ThemesDocument, TracksDocument } from "./types.d.ts"
  */
 
 /**
@@ -43,9 +43,9 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       }
     });
 
-    /** @type {SignalReader<Automerge.Doc<PlaylistsDocument>>} */
+    /** @type {SignalReader<Automerge.Doc<PlaylistItemsDocument>>} */
     const playlistsDocument = computed(() => {
-      const value = base.playlists.collection();
+      const value = base.playlistItems.collection();
 
       if (isUint8Array(value)) {
         return Automerge.load(value);
@@ -105,20 +105,20 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
           await base.facets.save(bytes);
         },
       },
-      playlists: {
-        ...base.playlists,
+      playlistItems: {
+        ...base.playlistItems,
         collection: computed(() => playlistsDocument().collection),
-        save: async (newPlaylists) => {
+        save: async (newPlaylistItems) => {
           const doc = Automerge.change(playlistsDocument(), (d) => {
-            const clonedCollection = newPlaylists.map((facet) => {
-              return recursivelyCloneRecords(facet);
+            const clonedCollection = newPlaylistItems.map((item) => {
+              return recursivelyCloneRecords(item);
             });
 
             d.collection = clonedCollection;
           });
 
           const bytes = Automerge.save(doc);
-          await base.playlists.save(bytes);
+          await base.playlistItems.save(bytes);
         },
       },
       themes: {
@@ -162,7 +162,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
     // Assign manager properties to class
     this.facets = manager.facets;
-    this.playlists = manager.playlists;
+    this.playlistItems = manager.playlistItems;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;

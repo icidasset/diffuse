@@ -10,10 +10,10 @@ class ScopeEngine extends BroadcastableDiffuseElement {
 
   // SIGNALS
 
-  #playlistId = signal(/** @type {string | undefined} */ (undefined));
+  #playlist = signal(/** @type {string | undefined} */ (undefined));
   #searchTerm = signal(/** @type {string | undefined} */ (undefined));
 
-  playlistId = this.#playlistId.get;
+  playlist = this.#playlist.get;
   searchTerm = this.#searchTerm.get;
 
   // LIFECYCLE
@@ -25,12 +25,12 @@ class ScopeEngine extends BroadcastableDiffuseElement {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(this.nameWithGroup, {
-        setPlaylistId: { strategy: "replicate", fn: this.setPlaylistId },
+        setPlaylist: { strategy: "replicate", fn: this.setPlaylist },
         setSearchTerm: { strategy: "replicate", fn: this.setSearchTerm },
       });
 
       if (actions) {
-        this.setPlaylistId = actions.setPlaylistId;
+        this.setPlaylist = actions.setPlaylist;
         this.setSearchTerm = actions.setSearchTerm;
       }
     }
@@ -42,7 +42,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
     const storagePrefix =
       `${this.constructor.prototype.constructor.NAME}/${this.group}/`;
 
-    this.#playlistId.value =
+    this.#playlist.value =
       localStorage.getItem(`${storagePrefix}/playlistId`) ?? undefined;
     this.#searchTerm.value =
       localStorage.getItem(`${storagePrefix}/searchTerm`) ?? undefined;
@@ -50,7 +50,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
     // Effects
     this.effect(() => {
       const key = `${storagePrefix}/playlistId`;
-      const val = this.#playlistId.value;
+      const val = this.#playlist.value;
 
       if (val) localStorage.setItem(key, val);
       else localStorage.removeItem(key);
@@ -68,7 +68,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   // ACTIONS
 
   /** @param {string | undefined} val */
-  setPlaylistId = async (val) => this.#playlistId.value = val;
+  setPlaylist = async (val) => this.#playlist.value = val;
 
   /** @param {string | undefined} val */
   setSearchTerm = async (val) => this.#searchTerm.value = val;

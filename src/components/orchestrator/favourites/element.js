@@ -1,7 +1,7 @@
 import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { match as matchPlaylistItem } from "@common/playlist.js";
 import { computed, signal } from "@common/signal.js";
-import { createEmptyFavouritesPlaylist } from "./common.js";
+import { filterFavourites } from "./common.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -39,16 +39,14 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
   // STATE
 
   /**
-   * Returns the favourites playlist.
-   * @returns {Playlist}
+   * Returns the favourites playlist items.
    */
-  playlist = computed(() => {
+  playlistItems = computed(() => {
     const output = this.#output.value;
-    if (!output) return createEmptyFavouritesPlaylist();
+    if (!output) return [];
 
-    const playlists = output.playlists.collection();
-    return playlists?.find((p) => p.id === "favourites") ??
-      createEmptyFavouritesPlaylist();
+    const playlistItems = output.playlistItems.collection();
+    return filterFavourites(playlistItems ?? []);
   });
 
   // LIFECYCLE
@@ -100,12 +98,13 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const playlists = output.playlists.collection();
+    const playlistItems = output.playlistItems.collection();
     const result = await this.#proxy.include({
-      playlists,
+      playlistItems,
       tracks: tracksArray,
     });
-    if (result) await output.playlists.save(result);
+
+    if (result) await output.playlistItems.save(result);
   }
 
   /**
@@ -122,13 +121,13 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const playlists = output.playlists.collection();
+    const playlistItems = output.playlistItems.collection();
     const result = await this.#proxy.expel({
-      playlists,
+      playlistItems,
       tracks: tracksArray,
     });
 
-    if (result) await output.playlists.save(result);
+    if (result) await output.playlistItems.save(result);
   }
 
   /**
@@ -146,13 +145,13 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const playlists = output.playlists.collection();
+    const playlistItems = output.playlistItems.collection();
     const result = await this.#proxy.toggle({
-      playlists,
+      playlistItems,
       tracks: tracksArray,
     });
 
-    if (result) await output.playlists.save(result);
+    if (result) await output.playlistItems.save(result);
   }
 
   // 🛠️
@@ -163,7 +162,7 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
    * @param {Track} track
    */
   isFavourite(track) {
-    return this.playlist().items.some((item) => {
+    return this.playlistItems().some((item) => {
       return matchPlaylistItem(track, item);
     });
   }

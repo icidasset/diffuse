@@ -1,13 +1,13 @@
-import type { Playlist, Track } from "@definitions/types.d.ts";
+import type { PlaylistItem, Track } from "@definitions/types.d.ts";
 
 export type Actions = {
-  include(args: { playlists: Playlist[]; tracks: Track[] }): Promise<
-    Playlist[] | null
+  include(args: { playlistItems: PlaylistItem[]; tracks: Track[] }): Promise<
+    PlaylistItem[] | null
   >;
-  expel(args: { playlists: Playlist[]; tracks: Track[] }): Promise<
-    Playlist[] | null
+  expel(args: { playlistItems: PlaylistItem[]; tracks: Track[] }): Promise<
+    PlaylistItem[] | null
   >;
-  toggle(args: { playlists: Playlist[]; tracks: Track[] }): Promise<
-    Playlist[] | null
+  toggle(args: { playlistItems: PlaylistItem[]; tracks: Track[] }): Promise<
+    PlaylistItem[] | null
   >;
 };

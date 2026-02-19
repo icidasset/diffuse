@@ -48,24 +48,24 @@ class OutputFallbackConfigurator extends DiffuseElement {
           return this.#activeOutput.value?.facets.state() ?? "sleeping";
         }),
       },
-      playlists: {
+      playlistItems: {
         collection: computed(() => {
-          return this.#activeOutput.value?.playlists.collection();
+          return this.#activeOutput.value?.playlistItems.collection();
         }),
         reload: () => {
           const out = this.#activeOutput.value;
-          if (out) return out.playlists.reload();
+          if (out) return out.playlistItems.reload();
           return Promise.resolve();
         },
-        save: async (newPlaylists) => {
-          if (newPlaylists !== undefined) {
+        save: async (newPlaylistItems) => {
+          if (newPlaylistItems !== undefined) {
             await Promise.all(
-              this.#outputs.map((o) => o.playlists.save(newPlaylists)),
+              this.#outputs.map((o) => o.playlistItems.save(newPlaylistItems)),
             );
           }
         },
         state: computed(() => {
-          return this.#activeOutput.value?.playlists.state() ?? "sleeping";
+          return this.#activeOutput.value?.playlistItems.state() ?? "sleeping";
         }),
       },
       themes: {
@@ -117,7 +117,7 @@ class OutputFallbackConfigurator extends DiffuseElement {
     };
 
     this.facets = manager.facets;
-    this.playlists = manager.playlists;
+    this.playlistItems = manager.playlistItems;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;

@@ -43,12 +43,31 @@ class Browser extends DiffuseElement {
   $highlightedTrack = signal(/** @type {string | null} */ (null));
 
   $groupedPlaylists = computed(() => {
-    const playlists = this.$output.value?.playlists.collection()
-      ?.sort((a, b) => a.name.localeCompare(b.name));
-    if (!playlists) return [];
+    const items = this.$output.value?.playlistItems.collection();
+    if (!items?.length) return [];
 
-    const ordered = playlists.filter((p) => !p.unordered);
-    const unordered = playlists.filter((p) => p.unordered);
+    // Group items by playlist name
+    /** @type {Map<string, { name: string, unordered: boolean }>} */
+    const playlistMap = new Map();
+
+    for (const item of items) {
+      const existing = playlistMap.get(item.playlist);
+      if (!existing) {
+        playlistMap.set(item.playlist, {
+          name: item.playlist,
+          unordered: item.position == null,
+        });
+      } else if (item.position == null) {
+        existing.unordered = true;
+      }
+    }
+
+    const all = [...playlistMap.values()].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    const ordered = all.filter((p) => !p.unordered);
+    const unordered = all.filter((p) => p.unordered);
 
     return [
       { label: "Ordered", playlists: ordered },
@@ -111,11 +130,11 @@ class Browser extends DiffuseElement {
     this.#setupScrollTracking();
 
     this.effect(() => {
-      const playlistId = this.$scope.value?.playlistId();
+      const playlist = this.$scope.value?.playlist();
       const select = this.root().querySelector("#playlist-select");
 
       if (select) {
-        /** @type {HTMLSelectElement} */ (select).value = playlistId ?? "";
+        /** @type {HTMLSelectElement} */ (select).value = playlist ?? "";
       }
     });
   }
@@ -207,10 +226,10 @@ class Browser extends DiffuseElement {
   /**
    * @param {Event} event
    */
-  setSelectedPlaylistId = (event) => {
-    const id = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
+  setSelectedPlaylist = (event) => {
+    const value = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
 
-    this.$scope.value?.setPlaylistId(id === "" ? undefined : id);
+    this.$scope.value?.setPlaylist(value === "" ? undefined : value);
   };
 
   // RENDER
@@ -222,7 +241,7 @@ class Browser extends DiffuseElement {
     const highlighted = this.$highlightedTrack.value;
     const isLoading = this.$output.value?.tracks?.state() !== "loaded";
     const tracks = this.$provider.value?.tracks() ?? [];
-    const playlistId = this.$scope.value?.playlistId();
+    const playlist = this.$scope.value?.playlist();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
 
     // Virtual list
@@ -314,20 +333,25 @@ class Browser extends DiffuseElement {
 
       <search class="field-row">
         <label for="search-input">Search:</label>
-        <input id="search-input" type="search" @change="${this
-          .setSearchTerm}" value="${searchTerm}" />
+        <input
+          id="search-input"
+          type="search"
+          @change="${this
+            .setSearchTerm}"
+          value="${searchTerm}"
+        />
         <label for="playlist-select">Playlist:</label>
-        <select id="playlist-select" @change="${this.setSelectedPlaylistId}">
-          <option value="" ?selected="${!playlistId ||
-            playlistId === ``}">All tracks</option>
+        <select id="playlist-select" @change="${this.setSelectedPlaylist}">
+          <option value="" ?selected="${!playlist ||
+            playlist === ``}">All tracks</option>
           ${this.$groupedPlaylists().map((group) =>
             html`
               <optgroup label="${group.label}">
                 ${group.playlists.map((p) =>
                   html`
                     <option
-                      value="${p.id}"
-                      ?selected="${p.id === playlistId}"
+                      value="${p.name}"
+                      ?selected="${p.name === playlist}"
                     >
                       ${p.name}
                     </option>

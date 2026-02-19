@@ -22,10 +22,10 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           return base.facets.collection() ?? [];
         }),
       },
-      playlists: {
-        ...base.playlists,
+      playlistItems: {
+        ...base.playlistItems,
         collection: computed(() => {
-          return base.playlists.collection() ?? [];
+          return base.playlistItems.collection() ?? [];
         }),
       },
       themes: {
@@ -51,7 +51,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
 
     // Assign manager properties to class
     this.facets = manager.facets;
-    this.playlists = manager.playlists;
+    this.playlistItems = manager.playlistItems;
     this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;

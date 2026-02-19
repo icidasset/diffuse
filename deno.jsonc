@@ -184,7 +184,7 @@
     },
     "test": {
       "description": "Run tests",
-      "command": "deno test -A --doc --ignore=README.md",
+      "command": "deno test -A --doc --ignore=README.md --ignore=./docs/ --ignore=./dist/",
     },
   },
   "compilerOptions": {

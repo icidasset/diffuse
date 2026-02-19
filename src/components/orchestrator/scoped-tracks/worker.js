@@ -65,7 +65,7 @@ export async function searchTracks({ data, ports }) {
  * @type {ActionsWithTunnel<Actions>["filterByPlaylist"]}
  */
 export async function filterByPlaylist({ data }) {
-  return filterByPlaylistFn(data.tracks, data.playlist);
+  return filterByPlaylistFn(data.tracks, data.playlistItems);
 }
 
 ////////////////////////////////////////////

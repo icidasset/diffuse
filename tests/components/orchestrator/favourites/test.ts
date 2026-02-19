@@ -28,12 +28,12 @@ describe("components/orchestrator/favourites", () => {
 
       await fav.include(tracks[0]);
 
-      return fav.playlist();
+      return fav.playlistItems();
     });
 
-    expect(favourites.items.length).toBe(1);
-    expect(favourites.items[0].criteria[0].value).toBe(tracks[0].tags?.artist);
-    expect(favourites.items[0].criteria[1].value).toBe(tracks[0].tags?.title);
+    expect(favourites.length).toBe(1);
+    expect(favourites[0].criteria[0].value).toBe(tracks[0].tags?.artist);
+    expect(favourites[0].criteria[1].value).toBe(tracks[0].tags?.title);
   });
 
   it("includes multiple tracks", async () => {
@@ -59,14 +59,14 @@ describe("components/orchestrator/favourites", () => {
 
       await fav.include(tracks);
 
-      return fav.playlist();
+      return fav.playlistItems();
     });
 
-    expect(favourites.items.length).toBe(2);
-    expect(favourites.items[0].criteria[0].value).toBe(tracks[0].tags?.artist);
-    expect(favourites.items[0].criteria[1].value).toBe(tracks[0].tags?.title);
-    expect(favourites.items[1].criteria[0].value).toBe(tracks[1].tags?.artist);
-    expect(favourites.items[1].criteria[1].value).toBe(tracks[1].tags?.title);
+    expect(favourites.length).toBe(2);
+    expect(favourites[0].criteria[0].value).toBe(tracks[0].tags?.artist);
+    expect(favourites[0].criteria[1].value).toBe(tracks[0].tags?.title);
+    expect(favourites[1].criteria[0].value).toBe(tracks[1].tags?.artist);
+    expect(favourites[1].criteria[1].value).toBe(tracks[1].tags?.title);
   });
 
   it("does not include duplicate tracks", async () => {
@@ -93,10 +93,10 @@ describe("components/orchestrator/favourites", () => {
       await fav.include(tracks[0]);
       await fav.include(tracks[0]);
 
-      return fav.playlist();
+      return fav.playlistItems();
     });
 
-    expect(favourites.items.length).toBe(1);
+    expect(favourites.length).toBe(1);
   });
 
   it("expels tracks", async () => {
@@ -123,12 +123,12 @@ describe("components/orchestrator/favourites", () => {
       await fav.include(tracks);
       await fav.expel(tracks[0]);
 
-      return fav.playlist();
+      return fav.playlistItems();
     });
 
-    expect(favourites.items.length).toBe(1);
-    expect(favourites.items[0].criteria[0].value).toBe(tracks[1].tags?.artist);
-    expect(favourites.items[0].criteria[1].value).toBe(tracks[1].tags?.title);
+    expect(favourites.length).toBe(1);
+    expect(favourites[0].criteria[0].value).toBe(tracks[1].tags?.artist);
+    expect(favourites[0].criteria[1].value).toBe(tracks[1].tags?.title);
   });
 
   it("toggles tracks", async () => {
@@ -154,15 +154,15 @@ describe("components/orchestrator/favourites", () => {
 
       // Toggle on
       await fav.toggle(tracks[0]);
-      const afterAdd = fav.playlist();
+      const afterAdd = fav.playlistItems();
 
       // Toggle off
       await fav.toggle(tracks[0]);
-      const afterRemove = fav.playlist();
+      const afterRemove = fav.playlistItems();
 
       return {
-        afterAddCount: afterAdd.items.length,
-        afterRemoveCount: afterRemove.items.length,
+        afterAddCount: afterAdd.length,
+        afterRemoveCount: afterRemove.length,
       };
     });
 
@@ -197,11 +197,11 @@ describe("components/orchestrator/favourites", () => {
       // Toggle both — should remove first, add second
       await fav.toggle(tracks);
 
-      return fav.playlist();
+      return fav.playlistItems();
     });
 
-    expect(favourites.items.length).toBe(1);
-    expect(favourites.items[0].criteria[0].value).toBe(tracks[1].tags?.artist);
-    expect(favourites.items[0].criteria[1].value).toBe(tracks[1].tags?.title);
+    expect(favourites.length).toBe(1);
+    expect(favourites[0].criteria[0].value).toBe(tracks[1].tags?.artist);
+    expect(favourites[0].criteria[1].value).toBe(tracks[1].tags?.title);
   });
 });

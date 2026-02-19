@@ -163,30 +163,33 @@
 
     try {
       const now = new Date().toISOString();
-      const existing = output.playlists.collection() ?? [];
+      const existing = output.playlistItems.collection() ?? [];
+      const existingPlaylistNames = new Set(existing.map((p) => p.playlist));
 
-      const newPlaylists = items
-        .map((item) => ({
-          $type: "sh.diffuse.output.playlist",
-          id: crypto.randomUUID(),
-          name: item.name ?? "Untitled",
-          unordered: !!item.collection,
-          items: (item.tracks ?? []).map((track) => ({
+      const newPlaylistItems = items
+        .filter((item) => !existingPlaylistNames.has(item.name ?? "Untitled"))
+        .flatMap((item) => {
+          const playlistName = item.name ?? "Untitled";
+          const isUnordered = !!item.collection;
+
+          return (item.tracks ?? []).map((track, index) => ({
+            $type: "sh.diffuse.output.playlistItem",
+            id: crypto.randomUUID(),
+            playlist: playlistName,
+            position: isUnordered ? undefined : index,
             criteria: [
               { field: "tags.album", value: track.album ?? "", transformations: ["toLowerCase"] },
               { field: "tags.artist", value: track.artist ?? "", transformations: ["toLowerCase"] },
               { field: "tags.title", value: track.title ?? "", transformations: ["toLowerCase"] },
             ],
-          })),
-          createdAt: now,
-          updatedAt: now,
-        }))
-        .filter((playlist) => {
-          return existing.find((p) => p.name === playlist.name) === undefined;
+            createdAt: now,
+            updatedAt: now,
+          }));
         });
 
-      await output.playlists.save([...existing, ...newPlaylists]);
-      showStatus(`Imported ${newPlaylists.length} playlist(s).`, "success");
+      await output.playlistItems.save([...existing, ...newPlaylistItems]);
+      const playlistCount = new Set(newPlaylistItems.map((p) => p.playlist)).size;
+      showStatus(`Imported ${playlistCount} playlist(s).`, "success");
     } catch (err) {
       console.error("Import failed:", err);
       showStatus(`Import failed: ${err.message}`, "error");

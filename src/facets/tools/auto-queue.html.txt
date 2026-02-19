@@ -50,6 +50,7 @@
 <script type="module">
   import foundation from "./common/facets/foundation.js";
   import { computed, effect } from "./common/signal.js";
+  import * as Playlist from "./common/playlist.js";
 
   const ACTIVE_CLASS = "button--active";
 
@@ -87,17 +88,21 @@
 
   // Playlist state
   effect(() => {
-    const playlists = output.playlists.collection().sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    const items = output.playlistItems.collection();
+    const currentPlaylist = scope.playlist();
 
-    const currentId = scope.playlistId();
-    const ordered = playlists.filter((p) => !p.unordered);
-    const unordered = playlists.filter((p) => p.unordered);
+    // Group items by playlist name
+    const playlistMap = Playlist.gather(items);
+    const all = [...playlistMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const ordered = all.filter((p) => !p.unordered);
+    const unordered = all.filter((p) => p.unordered);
 
     playlistSelect.innerHTML = `<option value="">All tracks</option>`;
 
-    for (const [label, group] of [["Ordered", ordered], ["Unordered", unordered]]) {
+    for (const [label, group] of [
+      ["Ordered", ordered],
+      ["Unordered", unordered],
+    ]) {
       if (group.length === 0) continue;
 
       const optgroup = document.createElement("optgroup");
@@ -105,9 +110,9 @@
 
       for (const playlist of group) {
         const option = document.createElement("option");
-        option.value = playlist.id;
+        option.value = playlist.name;
         option.textContent = playlist.name;
-        option.selected = playlist.id === currentId;
+        option.selected = playlist.name === currentPlaylist;
         optgroup.appendChild(option);
       }
 
@@ -116,6 +121,6 @@
   });
 
   playlistSelect.onchange = () => {
-    scope.setPlaylistId(playlistSelect.value.length ? playlistSelect.value : undefined);
+    scope.setPlaylist(playlistSelect.value.length ? playlistSelect.value : undefined);
   };
 </script>
