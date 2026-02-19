@@ -1,10 +1,9 @@
 import QS from "query-string";
-import { decodeMessage, encodeMessage, RPCChannel } from "@kunkun/kkrpc";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
 import { rpc, workerLink, workerProxy, workerTunnel } from "./worker.js";
-import { BrowserPostMessageIo } from "./worker/rpc.js";
+import { RpcChannel } from "./worker/rpc-channel.js";
 
 /**
  * @import {BroadcastingStatus, WorkerOpts} from "./element.d.ts"
@@ -233,32 +232,24 @@ export class DiffuseElement extends HTMLElement {
             },
           );
 
-          const decoded = await decodeMessage(msg);
           const data = {
-            data: Array.isArray(decoded.args) ? decoded.args[0] : decoded.args,
+            data: Array.isArray(msg.args) ? msg.args[0] : msg.args,
             ports: Object.fromEntries(ports.map(([k, v]) => {
               return [k, v.port];
             })),
           };
-
-          const encoded = encodeMessage(
-            {
-              ...decoded,
-              args: Array.isArray(decoded.args)
-                ? [data, ...decoded.args.slice(1)]
-                : decoded.args,
-            },
-            {},
-            true,
-            ports.map(([_k, v]) => v.port),
-          );
 
           this.#disposables.push(() => {
             ports.forEach(([_k, v]) => v.disconnect());
           });
 
           return {
-            data: encoded,
+            data: {
+              ...msg,
+              args: Array.isArray(msg.args)
+                ? [data, ...msg.args.slice(1)]
+                : msg.args,
+            },
             transfer: ports.map(([_k, v]) => v.port),
           };
         };
@@ -333,11 +324,13 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     channel.addEventListener(
       "message",
       async (event) => {
-        if (event.data?.includes('"method":"leader:')) {
+        if (event.data?.method?.startsWith("leader:")) {
           const status = await this.#status.promise;
           if (status.leader) {
-            const json = event.data.replace('"method":"leader:', '"method":"');
-            msg.port1.postMessage(json);
+            msg.port1.postMessage({
+              ...event.data,
+              method: event.data.method.slice("leader:".length),
+            });
           }
         } else {
           msg.port1.postMessage(event.data);
@@ -358,10 +351,8 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
       return !!state.pending?.length;
     }
 
-    const io = new BrowserPostMessageIo(() => msg.port2);
-
-    /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
-    const proxyChannel = new RPCChannel(io, { enableTransfer: false });
+    /** @type {RpcChannel<{}, Actions>} */
+    const proxyChannel = new RpcChannel(msg.port2);
 
     /** @type {ProxiedActions<Actions>} */
     const proxy = proxyChannel.getAPI();

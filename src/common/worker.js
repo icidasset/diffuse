@@ -1,15 +1,12 @@
-import { RPCChannel, transfer } from "@kunkun/kkrpc";
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
 
-import { BrowserPostMessageIo } from "./worker/rpc.js";
+import { RpcChannel } from "./worker/rpc-channel.js";
 
 export { getTransferables } from "@okikio/transferables";
-export { transfer } from "@kunkun/kkrpc";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
  * @import {Announcement, MessengerRealm, ProxiedActions, Tunnel} from "./worker.d.ts"
  */
 
@@ -54,22 +51,6 @@ export function ostiary(
 }
 
 /**
- * @param {Uint8Array} data
- * @returns {Track[]}
- */
-export function tracksIn(data) {
-  return JSON.parse(new TextDecoder().decode(data));
-}
-
-/**
- * @param {Track[]} tracks
- */
-export function tracksOut(tracks) {
-  const buffer = new TextEncoder().encode(JSON.stringify(tracks));
-  return transfer(buffer, [buffer]);
-}
-
-/**
  * @param {Worker | SharedWorker} worker
  */
 export function workerLink(worker) {
@@ -93,12 +74,9 @@ export function workerProxy(workerLinkCreator) {
   /** @returns {ProxiedActions<Actions>} */
   function ensureAPI() {
     if (!int_api) {
-      const io = new BrowserPostMessageIo(workerLinkCreator);
-
-      /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
-      const rpc = new RPCChannel(io, { enableTransfer: false });
-
-      int_api = rpc.getAPI();
+      /** @type {RpcChannel<Actions, Actions>} */
+      const channel = new RpcChannel(workerLinkCreator());
+      int_api = channel.getAPI();
     }
 
     return int_api;
@@ -213,10 +191,7 @@ export function listen(
  * @param {Actions} actions
  */
 export function rpc(context, actions) {
-  const io = new BrowserPostMessageIo(() => context);
-
-  /** @type {undefined | RPCChannel<Actions, {}>} */
-  return new RPCChannel(io, { enableTransfer: false, expose: actions });
+  return new RpcChannel(context, { expose: actions });
 }
 
 ////////////////////////////////////////////
