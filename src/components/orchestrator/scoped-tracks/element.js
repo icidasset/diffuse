@@ -3,10 +3,10 @@ import {
   query,
   queryOptional,
 } from "@common/element.js";
-import { computed, signal, untracked } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 
 /**
- * @import {Playlist, Track} from "@definitions/types.d.ts"
+ * @import {Track} from "@definitions/types.d.ts"
  * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
@@ -115,9 +115,12 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     await customElements.whenDefined(output.localName);
     if (scope) await customElements.whenDefined(scope.localName);
 
+    const startTime = performance.now();
+
     // Watch tracks collection
     this.effect(async () => {
       const collection = output.tracks.collection();
+      console.log("🫠", collection);
       if ((await this.isLeader()) === false) return;
       const { availableTracks } = await this.#proxy.supplyAvailable(collection);
       this.#tracksAvailable.value = availableTracks;
@@ -151,6 +154,9 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       const final = playlist
         ? await this.#proxy.filterByPlaylist({ tracks, playlist })
         : tracks;
+
+      const endTime = performance.now();
+      console.log("🚀", final, endTime - startTime);
 
       this.#tracksFinal.set(final);
     });

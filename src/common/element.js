@@ -3,12 +3,7 @@ import { decodeMessage, encodeMessage, RPCChannel } from "@kunkun/kkrpc";
 import { html, render } from "lit-html";
 
 import { effect, signal } from "@common/signal.js";
-import {
-  rpc,
-  workerLink,
-  workerProxy,
-  workerTunnel,
-} from "./worker.js";
+import { rpc, workerLink, workerProxy, workerTunnel } from "./worker.js";
 import { BrowserPostMessageIo } from "./worker/rpc.js";
 
 /**
@@ -366,7 +361,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     const io = new BrowserPostMessageIo(() => msg.port2);
 
     /** @type {undefined | RPCChannel<{}, ProxiedActions<Actions>>} */
-    const proxyChannel = new RPCChannel(io, { enableTransfer: true });
+    const proxyChannel = new RPCChannel(io, { enableTransfer: false });
 
     /** @type {ProxiedActions<Actions>} */
     const proxy = proxyChannel.getAPI();
