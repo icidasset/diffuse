@@ -85,7 +85,10 @@ class OutputConfig extends DiffuseElement {
 
     /** @type {HTMLButtonElement | null} */
     const button = this.root().querySelector("#atproto-submit");
-    if (button) button.disabled = true;
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Loading ...";
+    }
 
     await atproto.login(handle);
   };
