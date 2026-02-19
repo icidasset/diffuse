@@ -37,7 +37,7 @@ export class RpcChannel {
       if (!msg || msg.__rpc !== true) return;
 
       if (msg.type === "request") {
-        this.#handleRequest(msg);
+        if (this.#actions) this.#handleRequest(msg);
       } else if (msg.type === "response") {
         this.#handleResponse(msg);
       }
@@ -120,6 +120,7 @@ export class RpcChannel {
     const fn = this.#actions?.[/** @type {keyof LocalAPI} */ (method)];
 
     if (typeof fn !== "function") {
+      console.log(method, id, fn, this.#actions);
       this.#port.postMessage({
         __rpc: true,
         id,

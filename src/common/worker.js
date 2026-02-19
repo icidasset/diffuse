@@ -174,12 +174,16 @@ export function listen(
 ////////////////////////////////////////////
 
 /**
- * @template {Record<string, (...args: any[]) => any>} Actions
+ * @template {Record<string, (...args: any[]) => any>} LocalAPI
+ * @template {Record<string, (...args: any[]) => any>} RemoteAPI
  * @param {MessagePort | Worker | MessengerRealm} context
- * @param {Actions} actions
+ * @param {RemoteAPI} actions
+ * @returns {RpcChannel<{}, RemoteAPI>}
  */
 export function rpc(context, actions) {
-  return new RpcChannel(context, { expose: actions });
+  /** @type {RpcChannel<{}, RemoteAPI>} */
+  const channel = new RpcChannel(context, { expose: actions });
+  return channel;
 }
 
 ////////////////////////////////////////////

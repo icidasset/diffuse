@@ -312,12 +312,15 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     this.broadcasted = true;
     this.channelName = channelName;
 
+    /** @type {RpcChannel<{}, Actions>} */
     const _rpc = rpc(
       msg.port2,
-      Object.fromEntries(
-        Object.entries(actionsWithStrategy).map(([k, v]) => {
-          return [k, v.fn.bind(this)];
-        }),
+      /** @type {Actions} */ (
+        Object.fromEntries(
+          Object.entries(actionsWithStrategy).map(([k, v]) => {
+            return [k, v.fn.bind(this)];
+          }),
+        )
       ),
     );
 
