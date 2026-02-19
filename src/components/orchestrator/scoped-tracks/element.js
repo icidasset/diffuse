@@ -122,7 +122,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       const collection = output.tracks.collection();
       console.log("🫠", collection);
       if ((await this.isLeader()) === false) return;
-      const { availableTracks } = await this.#proxy.supplyAvailable(collection);
+      const { availableTracks } = await this.#proxy.supply(collection);
       this.#tracksAvailable.value = availableTracks;
     });
 

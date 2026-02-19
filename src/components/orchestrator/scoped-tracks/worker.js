@@ -14,9 +14,9 @@ import { ostiary, rpc, workerProxy } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @type {ActionsWithTunnel<Actions>["supplyAvailable"]}
+ * @type {ActionsWithTunnel<Actions>["supply"]}
  */
-export async function supplyAvailable({ data, ports }) {
+export async function supply({ data, ports }) {
   const cachedTracks = data.filter((t) => t.kind !== "placeholder");
 
   /** @type {ProxiedActions<InputActions>} */
@@ -73,5 +73,5 @@ export async function filterByPlaylist({ data }) {
 ////////////////////////////////////////////
 
 ostiary((context) => {
-  rpc(context, { filterByPlaylist, searchTracks, supplyAvailable });
+  rpc(context, { filterByPlaylist, searchTracks, supply });
 });

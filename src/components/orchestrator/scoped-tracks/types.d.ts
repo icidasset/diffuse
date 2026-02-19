@@ -8,5 +8,5 @@ export type Actions = {
     args: { tracks: Track[]; playlist: Playlist },
   ): Promise<Track[]>;
   searchTracks(params: SearchParams<Schema>): Promise<Track[]>;
-  supplyAvailable(tracks: Track[]): Promise<{ availableTracks: Track[] }>;
+  supply(tracks: Track[]): Promise<{ availableTracks: Track[] }>;
 };

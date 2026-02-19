@@ -113,6 +113,8 @@ export class BrowserPostMessageIo {
         }
       }
 
+      console.log(message)
+
       this.#realm().postMessage(
         message.data,
         /** @type {Transferable[]} */ (message.transfers),

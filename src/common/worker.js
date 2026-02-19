@@ -65,7 +65,7 @@ export function tracksIn(data) {
  * @param {Track[]} tracks
  */
 export function tracksOut(tracks) {
-  const buffer = new TextEncoder().encode(JSON.stringify(tracks))
+  const buffer = new TextEncoder().encode(JSON.stringify(tracks));
   return transfer(buffer, [buffer]);
 }
 
