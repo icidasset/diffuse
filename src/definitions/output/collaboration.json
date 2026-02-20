@@ -35,14 +35,13 @@
     },
     "playlist": {
       "type": "object",
-      "required": ["id", "hint", "kind"],
+      "required": ["kind", "playlist"],
       "properties": {
-        "id": { "type": "string" },
-        "hint": {
+        "kind": { "type": "string", "const": "playlist" },
+        "playlist": {
           "type": "string",
-          "description": "Hint at where this collaborator resides and/or what the id represents."
-        },
-        "kind": { "type": "string", "const": "playlist" }
+          "description": "The name of the playlist, matches the `playlist` property of a playlist item"
+        }
       }
     }
   }
