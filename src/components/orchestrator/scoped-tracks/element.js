@@ -4,6 +4,7 @@ import {
   queryOptional,
 } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
+import { filterByPlaylist } from "@common/playlist.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -116,9 +117,12 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     await customElements.whenDefined(output.localName);
     if (scope) await customElements.whenDefined(scope.localName);
 
+    const startTime = performance.now();
+
     // Watch tracks collection
     this.effect(async () => {
       const collection = output.tracks.collection();
+      console.log("🫠", collection.length);
       if ((await this.isLeader()) === false) return;
       const { availableTracks } = await this.#proxy.supply(collection);
       this.#tracksAvailable.value = availableTracks;
@@ -133,7 +137,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       if ((await this.isLeader()) === false) return;
 
       if (searchTerm?.length) {
-        const searchResults = await this.#proxy.searchTracks({
+        const searchResults = await search.search({
           term: searchTerm,
         });
         this.#tracksSearch.set(searchResults);
@@ -150,8 +154,11 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       if ((await this.isLeader()) === false) return;
 
       const final = playlistItems?.length
-        ? await this.#proxy.filterByPlaylist({ tracks, playlistItems })
+        ? filterByPlaylist(tracks, playlistItems)
         : tracks;
+
+      const endTime = performance.now();
+      console.log("🚀", endTime - startTime);
 
       this.#tracksFinal.set(final);
     });

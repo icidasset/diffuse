@@ -48,30 +48,10 @@ export async function supply({ data, ports }) {
   return { availableTracks };
 }
 
-/**
- * @type {ActionsWithTunnel<Actions>["searchTracks"]}
- */
-export async function searchTracks({ data, ports }) {
-  /** @type {ProxiedActions<SearchProcessorActions>} */
-  const search = workerProxy(() => {
-    ports.search.start();
-    return ports.search;
-  });
-
-  return await search.search(data);
-}
-
-/**
- * @type {ActionsWithTunnel<Actions>["filterByPlaylist"]}
- */
-export async function filterByPlaylist({ data }) {
-  return filterByPlaylistFn(data.tracks, data.playlistItems);
-}
-
 ////////////////////////////////////////////
 // ⚡️
 ////////////////////////////////////////////
 
 ostiary((context) => {
-  rpc(context, { filterByPlaylist, searchTracks, supply });
+  rpc(context, { supply });
 });

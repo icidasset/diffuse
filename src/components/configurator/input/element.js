@@ -1,4 +1,4 @@
-import { DiffuseElement, whenElementsDefined } from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 
 /**
  * @import {ProxiedActions, Tunnel} from "@common/worker.d.ts"
