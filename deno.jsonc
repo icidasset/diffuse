@@ -31,6 +31,7 @@
     "bs58check": "npm:bs58check@^4.0.0",
     "codemirror": "npm:codemirror@^6.0.2",
     "fast-average-color": "npm:fast-average-color@^9.5.0",
+    "fast-uri": "npm:fast-uri@^3.1.0",
     "idb-keyval": "npm:idb-keyval@^6.2.2",
     "iso-base": "npm:iso-base@^4.3.0",
     "lit-html": "npm:lit-html@^3.3.1",

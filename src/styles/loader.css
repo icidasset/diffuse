@@ -1,0 +1,28 @@
+body {
+  background: var(--bg-color);
+}
+
+@scope (.diffuse) {
+  :scope {
+    color: var(--text-color);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .flex {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2xs);
+    justify-content: center;
+  }
+
+  #diffuse-loader {
+    font-size: var(--fs-md);
+    letter-spacing: var(--leading-loose);
+    text-transform: uppercase;
+  }
+}

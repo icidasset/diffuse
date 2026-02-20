@@ -2,7 +2,7 @@
   {{ for index, item of items }}
     <li data-url="{{item.url}}" data-name="{{item.title}}">
       <div style="position: relative;">
-        <a href="facets/l/?url={{encodeURIComponent(item.url)}}">
+        <a href="{{ item.url |> facetURL }}">
           {{item.title}}
         </a>
         <button
@@ -24,7 +24,7 @@
         style="position-anchor: --facet-anchor-{{id}}-{{index}}"
         popover
       >
-        <a href="facets/l/?url={{encodeURIComponent(item.url)}}">
+        <a href="{{ item.url |> facetURL }}">
           <span class="with-icon">
             <i class="ph-fill ph-globe"></i> Open
           </span>

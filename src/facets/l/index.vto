@@ -2,8 +2,19 @@
 layout: layouts/facet.vto
 base: ../../
 
+styles:
+  - styles/vendor/phosphor/fill/style.css
+  - styles/base.css
+  - styles/loader.css
+
 scripts:
   - facets/l/index.js
 ---
 
-<div id="container"></div>
+<div id="container">
+  <div class="diffuse">
+    <div id="diffuse-loader" class="flex">
+      <i class="ph-fill ph-music-notes animate-bounce"></i>
+    </div>
+  </div>
+</div>

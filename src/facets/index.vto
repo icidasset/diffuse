@@ -50,8 +50,6 @@ examples:
       Make a list of what previously played in the queue.
 ---
 
-{{ function facetUrl(facetPath) }}facets/l/?url={{encodeURIComponent(facetPath)}}{{ /function }}
-
 <header>
   <div>
     <div>
@@ -101,31 +99,31 @@ examples:
         <li>
           <p>
             <i class="ph-fill ph-plus"></i>
-            <strong><a href="{{ facetUrl('themes/webamp/configurators/input/facet.html.txt') }}">Add</a></strong> audio from various places on the web and your device.
+            <strong><a href="{{ ('themes/webamp/configurators/input/facet.html.txt') |> facetURL }}">Add</a></strong> audio from various places on the web and your device.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-queue"></i>
-            <strong><a href="{{ facetUrl('themes/webamp/browser/facet.html.txt') }}">Browse</a></strong> your collection to put something into the queue.
+            <strong><a href="{{ ('themes/webamp/browser/facet.html.txt') |> facetURL }}">Browse</a></strong> your collection to put something into the queue.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-queue"></i>
-            <strong><a href="{{ facetUrl('facets/tools/auto-queue.html.txt') }}">Automate</a></strong> adding items to the queue, for infinite playback or listening to a playlist.
+            <strong><a href="{{ ('facets/tools/auto-queue.html.txt') |> facetURL }}">Automate</a></strong> adding items to the queue, for infinite playback or listening to a playlist.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-music-note"></i>
-            <strong><a href="{{ facetUrl('themes/blur/artwork-controller/facet.html.txt') }}">Play</a></strong> queued songs.
+            <strong><a href="{{ ('themes/blur/artwork-controller/facet.html.txt') |> facetURL }}">Play</a></strong> queued songs.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-person"></i>
-            <strong><a href="{{ facetUrl('themes/webamp/configurators/output/facet.html.txt') }}">Manage</a></strong> your user data, sync with your other devices or other people.
+            <strong><a href="{{ ('themes/webamp/configurators/output/facet.html.txt') |> facetURL }}">Manage</a></strong> your user data, sync with your other devices or other people.
           </p>
         </li>
       </ol>
@@ -137,7 +135,7 @@ examples:
         To use these facets, simply open whichever ones provide the functionality that you're looking for at a given moment. You can browse existing ones here and create one below.
       </p>
       <p>
-        For example, say you want to play music; two options would be: (1) <a href="{{ facetUrl('themes/webamp/browser/facet.html.txt') }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ facetUrl('facets/tools/auto-queue.html.txt') }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ facetUrl('themes/blur/artwork-controller/facet.html.txt') }}">controller</a> could be used.
+        For example, say you want to play music; two options would be: (1) <a href="{{ ('themes/webamp/browser/facet.html.txt') |> facetURL }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ ('facets/tools/auto-queue.html.txt') |> facetURL }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ ('themes/blur/artwork-controller/facet.html.txt') |> facetURL }}">controller</a> could be used.
       </p>
       <p>
         <em>You might ask, why can't I do all of this in just one window? That's what <a href="themes/">themes</a> are for, if you need something more streamlined. If you however want a customised experience, or prefer certain interfaces for certain things, that's what facets are for.</em>

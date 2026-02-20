@@ -1,10 +1,21 @@
 ---
-layout: layouts/facet.vto
+layout: layouts/diffuse.vto
 base: ../../
+
+styles:
+  - styles/vendor/phosphor/fill/style.css
+  - styles/base.css
+  - styles/loader.css
+  - themes/l/index.css
 
 scripts:
   - themes/l/index.js
-
-styles:
-  - themes/l/index.css
 ---
+
+<div id="container">
+  <div class="diffuse">
+    <div id="diffuse-loader" class="flex">
+      <i class="ph-fill ph-music-notes animate-bounce"></i>
+    </div>
+  </div>
+</div>

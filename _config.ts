@@ -140,6 +140,20 @@ site.remoteFile(
 
 site.add("/definitions");
 
+// HELPERS
+
+site.helper("facetURL", (text) => {
+  let key = "path";
+
+  if (text.includes("://")) {
+    key = "uri";
+  }
+
+  return `facets/l/?${key}=${encodeURIComponent(text)}`;
+}, {
+  type: "filter",
+});
+
 // PHOSPHOR ICONS
 
 function phosphor(path: string) {
