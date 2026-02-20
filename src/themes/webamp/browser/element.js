@@ -1,10 +1,6 @@
-import {
-  DiffuseElement,
-  nothing,
-  query,
-  whenElementsDefined,
-} from "@common/element.js";
+import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
 import { computed, signal, untracked } from "@common/signal.js";
+import * as Playlist from "@common/playlist.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -48,19 +44,7 @@ class Browser extends DiffuseElement {
 
     // Group items by playlist name
     /** @type {Map<string, { name: string, unordered: boolean }>} */
-    const playlistMap = new Map();
-
-    for (const item of items) {
-      const existing = playlistMap.get(item.playlist);
-      if (!existing) {
-        playlistMap.set(item.playlist, {
-          name: item.playlist,
-          unordered: item.position == null,
-        });
-      } else if (item.position == null) {
-        existing.unordered = true;
-      }
-    }
+    const playlistMap = Playlist.gather(items);
 
     const all = [...playlistMap.values()].sort((a, b) =>
       a.name.localeCompare(b.name)

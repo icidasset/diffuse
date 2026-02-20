@@ -2,80 +2,7 @@
  * @import {PlaylistItem, Track} from "@definitions/types.d.ts"
  */
 
-/**
- * Bundle playlist items into their respective playlists.
- *
- * @param {PlaylistItem[]} items
- */
-export function gather(items) {
-  /**
-   * @type {Map<string, { items: PlaylistItem[]; name: string; unordered: boolean }>}
-   */
-  const playlistMap = new Map();
-
-  for (const item of items) {
-    const existing = playlistMap.get(item.playlist);
-
-    if (!existing) {
-      playlistMap.set(item.playlist, {
-        items: [item],
-        name: item.playlist,
-        unordered: item.position == null,
-      });
-    } else if (item.position == null) {
-      existing.items.push(item);
-      existing.unordered = true;
-    }
-  }
-
-  return playlistMap;
-}
-
-/**
- * @param {any} val
- * @param {string[] | undefined} transformations
- */
-function transform(val, transformations) {
-  if (!val || !transformations) return val;
-  return transformations.reduce((v, t) => {
-    try {
-      return v[t]();
-    } catch (_) {
-      return v;
-    }
-  }, val);
-}
-
-/**
- * Check if a track matches the criteria of a playlist item.
- *
- * @param {Track} track
- * @param {PlaylistItem} item
- */
-export function match(track, item) {
-  return item.criteria.every((c) => {
-    /** @type {any} */
-    let value = track;
-
-    /** @type {any} */
-    let critValue = c.value;
-
-    c.field.split(".").forEach((f) => {
-      if (value) value = value[f];
-    });
-
-    if (value && c.transformations) {
-      c.transformations.forEach((t) => {
-        try {
-          value = value[t]();
-          critValue = critValue[t]();
-        } catch (err) {}
-      });
-    }
-
-    return critValue === value;
-  });
-}
+import { Temporal } from "@js-temporal/polyfill";
 
 /**
  * Filter tracks by playlist membership using an indexed lookup.
@@ -132,4 +59,144 @@ export function filterByPlaylist(tracks, playlistItems) {
       )
     )
   );
+}
+
+/**
+ * Bundle playlist items into their respective playlists.
+ *
+ * @param {PlaylistItem[]} items
+ */
+export function gather(items) {
+  /**
+   * @type {Map<string, { items: PlaylistItem[]; name: string; unordered: boolean }>}
+   */
+  const playlistMap = new Map();
+
+  for (const item of items) {
+    const existing = playlistMap.get(item.playlist);
+
+    if (!existing) {
+      playlistMap.set(item.playlist, {
+        items: [item],
+        name: item.playlist,
+        unordered: item.positionedAfter == null,
+      });
+    } else {
+      existing.items.push(item);
+      existing.unordered = existing.unordered === false
+        ? false
+        : item.positionedAfter == null;
+    }
+  }
+
+  return playlistMap;
+}
+
+/**
+ * Check if a track matches the criteria of a playlist item.
+ *
+ * @param {Track} track
+ * @param {PlaylistItem} item
+ */
+export function match(track, item) {
+  return item.criteria.every((c) => {
+    /** @type {any} */
+    let value = track;
+
+    /** @type {any} */
+    let critValue = c.value;
+
+    c.field.split(".").forEach((f) => {
+      if (value) value = value[f];
+    });
+
+    if (value && c.transformations) {
+      c.transformations.forEach((t) => {
+        try {
+          value = value[t]();
+          critValue = critValue[t]();
+        } catch (err) {}
+      });
+    }
+
+    return critValue === value;
+  });
+}
+
+/**
+ * Sort playlist items by their `positionedAfter` linked-list order.
+ * Items with no `positionedAfter` are placed first.
+ *
+ * @param {PlaylistItem[]} items
+ * @returns {PlaylistItem[]}
+ */
+export function sort(items) {
+  if (items.length <= 1) return items;
+
+  /** @type {Map<string | null, PlaylistItem[]>} */
+  const afterMap = new Map();
+
+  for (const item of items) {
+    const key = item.positionedAfter ?? null;
+    const group = afterMap.get(key);
+    if (group) {
+      group.push(item);
+    } else {
+      afterMap.set(key, [item]);
+    }
+  }
+
+  // Sort each group by updatedAt so collisions have a deterministic order.
+  for (const group of afterMap.values()) {
+    if (group.length > 1) {
+      group.sort((a, b) => {
+        if (!a.updatedAt || !b.updatedAt) return a.updatedAt ? 1 : -1;
+        return Temporal.ZonedDateTime.compare(
+          Temporal.ZonedDateTime.from(a.updatedAt),
+          Temporal.ZonedDateTime.from(b.updatedAt),
+        );
+      });
+    }
+  }
+
+  /** @type {PlaylistItem[]} */
+  const sorted = [];
+  const visited = new Set();
+
+  /** @type {PlaylistItem[]} */
+  const queue = [...(afterMap.get(null) ?? [])];
+
+  while (queue.length > 0) {
+    const current = /** @type {PlaylistItem} */ (queue.shift());
+    if (visited.has(current.id)) continue;
+    visited.add(current.id);
+    sorted.push(current);
+
+    const next = afterMap.get(current.id);
+    if (next) queue.unshift(...next);
+  }
+
+  // Append any items not reachable from a head (e.g. broken chains).
+  for (const item of items) {
+    if (!visited.has(item.id)) {
+      sorted.push(item);
+    }
+  }
+
+  return sorted;
+}
+
+/**
+ * @param {any} val
+ * @param {string[] | undefined} transformations
+ */
+function transform(val, transformations) {
+  if (!val || !transformations) return val;
+  return transformations.reduce((v, t) => {
+    try {
+      return v[t]();
+    } catch (_) {
+      return v;
+    }
+  }, val);
 }

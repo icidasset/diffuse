@@ -79,6 +79,7 @@
 </style>
 
 <script type="module">
+  import { Temporal } from "@js-temporal/polyfill";
   import foundation from "./common/facets/foundation.js";
 
   // Setup
@@ -162,7 +163,7 @@
     if (!items || items.length === 0) return;
 
     try {
-      const now = new Date().toISOString();
+      const now = Temporal.Now.zonedDateTimeISO().toString();
       const existing = output.playlistItems.collection() ?? [];
       const existingPlaylistNames = new Set(existing.map((p) => p.playlist));
 

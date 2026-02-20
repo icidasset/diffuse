@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill";
 import { ostiary, rpc } from "@common/worker.js";
 import { filterFavourites } from "./common.js";
 
@@ -39,7 +40,7 @@ function itemMatchKey(item) {
  */
 function createFavouriteItem(track) {
   const transformations = ["toLowerCase"];
-  const now = new Date().toISOString();
+  const now = Temporal.Now.zonedDateTimeISO().toString();
 
   return /** @type {PlaylistItem} */ ({
     $type: "sh.diffuse.output.playlistItem",

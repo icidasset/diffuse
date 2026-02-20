@@ -15,7 +15,10 @@
             "items": { "type": "ref", "ref": "#criterion" }
           },
           "playlist": { "type": "string" },
-          "position": { "type": "integer" },
+          "positionedAfter": {
+            "type": "string",
+            "description": "Id of the item that this item should be positioned after"
+          },
           "updatedAt": { "type": "string", "format": "datetime" }
         }
       }
