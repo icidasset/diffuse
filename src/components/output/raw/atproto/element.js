@@ -1,8 +1,15 @@
-import { Client, ok } from "@atcute/client";
+import { Client, ClientResponseError, ok } from "@atcute/client";
 import { BroadcastableDiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 import { outputManager } from "../../common.js";
-import { login, logout, OAuthUserAgent, restoreOrFinalize } from "./oauth.js";
+import {
+  clearStoredSession,
+  login,
+  logout,
+  OAuthUserAgent,
+  restoreOrFinalize,
+  TokenRefreshError,
+} from "./oauth.js";
 
 /**
  * @import {Signal} from "@common/signal.d.ts"
@@ -38,22 +45,22 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     this.#manager = outputManager({
       facets: {
         empty: () => [],
-        get: () => this.#listRecords("sh.diffuse.output.facet"),
+        get: () => this.listRecords("sh.diffuse.output.facet"),
         put: (data) => this.#putRecords("sh.diffuse.output.facet", data),
       },
       playlistItems: {
         empty: () => [],
-        get: () => this.#listRecords("sh.diffuse.output.playlistItem"),
+        get: () => this.listRecords("sh.diffuse.output.playlistItem"),
         put: (data) => this.#putRecords("sh.diffuse.output.playlistItem", data),
       },
       themes: {
         empty: () => [],
-        get: () => this.#listRecords("sh.diffuse.output.theme"),
+        get: () => this.listRecords("sh.diffuse.output.theme"),
         put: (data) => this.#putRecords("sh.diffuse.output.theme", data),
       },
       tracks: {
         empty: () => [],
-        get: () => this.#listRecords("sh.diffuse.output.track"),
+        get: () => this.listRecords("sh.diffuse.output.track"),
         put: (data) => this.#putRecords("sh.diffuse.output.track", data),
       },
     });
@@ -97,26 +104,6 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
 
   // AUTH
 
-  async #tryRestore() {
-    await this.whenConnected();
-
-    const session = await restoreOrFinalize();
-
-    if (session) {
-      this.#setSession(session);
-    }
-  }
-
-  /**
-   * @param {import("@atcute/oauth-browser-client").Session} session
-   */
-  #setSession(session) {
-    this.#agent = new OAuthUserAgent(session);
-    this.#rpc = new Client({ handler: this.#agent });
-    this.#did.value = session.info.sub;
-    this.#authenticated.resolve();
-  }
-
   /**
    * Initiate the OAuth flow.
    * Navigates the browser to the authorization server.
@@ -140,34 +127,119 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     }
   }
 
+  /**
+   * Clear session state without contacting the server.
+   * Used when the session has already been revoked.
+   */
+  #clearSession() {
+    this.#agent = null;
+    this.#authenticated = Promise.withResolvers();
+    this.#did.value = null;
+    this.#rpc = null;
+    clearStoredSession();
+  }
+
+  /**
+   * @param {unknown} err
+   * @returns {boolean}
+   */
+  #isSessionError(err) {
+    if (err instanceof TokenRefreshError) return true;
+    // OAuthUserAgent.handle() swallows TokenRefreshError and returns the
+    // original 401 response, which ok() wraps as a ClientResponseError.
+    if (err instanceof ClientResponseError && err.status === 401) return true;
+    if (err && typeof err === "object" && "cause" in err) {
+      return this.#isSessionError(/** @type {any} */ (err).cause);
+    }
+    return false;
+  }
+
+  async #tryRestore() {
+    await this.whenConnected();
+
+    try {
+      const session = await restoreOrFinalize();
+
+      if (session) {
+        this.#setSession(session);
+      }
+    } catch (err) {
+      if (this.#isSessionError(err)) {
+        this.#clearSession();
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  /**
+   * @param {import("@atcute/oauth-browser-client").Session} session
+   */
+  #setSession(session) {
+    const agent = new OAuthUserAgent(session);
+
+    // Intercept token refresh to detect session revocation proactively.
+    // OAuthUserAgent.handle() swallows TokenRefreshError silently,
+    // so we hook into getSession to clear state as soon as refresh fails.
+    const originalGetSession = agent.getSession.bind(agent);
+    agent.getSession = /** @param {any[]} args */ (...args) => {
+      const promise = originalGetSession(...args);
+
+      promise.catch((err) => {
+        if (err instanceof TokenRefreshError) {
+          this.#clearSession();
+        }
+      });
+
+      return promise;
+    };
+
+    this.#agent = agent;
+    this.#rpc = new Client({ handler: agent });
+    this.#did.value = session.info.sub;
+    this.#authenticated.resolve();
+  }
+
   // RECORDS
 
   /**
    * @template T
    * @param {string} collection
+   * @param {string} [did]
    * @returns {Promise<T[]>}
    */
-  async #listRecords(collection) {
-    if (!this.#rpc || !this.#did.value) return [];
+  async listRecords(collection, did) {
+    did ??= this.#did.value ?? undefined;
 
-    const records = [];
-    let cursor;
+    if (!this.#rpc || !did) return [];
 
-    do {
-      /** @type {any} */
-      const page = await ok(this.#rpc.get(
-        "com.atproto.repo.listRecords",
-        { params: { repo: this.#did.value, collection, limit: 100, cursor } },
-      ));
+    try {
+      const records = [];
+      let cursor;
 
-      for (const record of page.records) {
-        records.push(record.value);
+      do {
+        /** @type {any} */
+        const page = await ok(this.#rpc.get(
+          "com.atproto.repo.listRecords",
+          { params: { repo: did, collection, limit: 100, cursor } },
+        ));
+
+        for (const record of page.records) {
+          records.push(record.value);
+        }
+
+        cursor = page.cursor;
+      } while (cursor);
+
+      return records;
+    } catch (err) {
+      if (this.#isSessionError(err)) {
+        this.#clearSession();
+        return [];
       }
 
-      cursor = page.cursor;
-    } while (cursor);
-
-    return records;
+      throw err;
+    }
   }
 
   /**
@@ -177,70 +249,79 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
   async #putRecordsSync(collection, data) {
     if (!this.#rpc || !this.#did.value) return;
 
-    // 1. Fetch current state
-    /** @type {Map<string, { rkey: string, value: unknown }>} */
-    const existing = new Map();
-    let cursor;
+    try {
+      // 1. Fetch current state
+      /** @type {Map<string, { rkey: string, value: unknown }>} */
+      const existing = new Map();
+      let cursor;
 
-    do {
-      /** @type {any} */
-      const page = await ok(this.#rpc.get(
-        "com.atproto.repo.listRecords",
-        { params: { repo: this.#did.value, collection, limit: 100, cursor } },
-      ));
+      do {
+        /** @type {any} */
+        const page = await ok(this.#rpc.get(
+          "com.atproto.repo.listRecords",
+          { params: { repo: this.#did.value, collection, limit: 100, cursor } },
+        ));
 
-      for (const record of page.records) {
-        const rkey = record.uri.split("/").pop();
-        existing.set(record.value.id, { rkey, value: record.value });
+        for (const record of page.records) {
+          const rkey = record.uri.split("/").pop();
+          existing.set(record.value.id, { rkey, value: record.value });
+        }
+
+        cursor = page.cursor;
+      } while (cursor);
+
+      // 2. Build desired state
+      const desired = new Map(
+        data.map((record) => [record.id, { $type: collection, ...record }]),
+      );
+
+      // 3. Compute diff
+      /** @type {unknown[]} */
+      const writes = [];
+
+      for (const [id, { rkey }] of existing) {
+        if (!desired.has(id)) {
+          writes.push({
+            $type: "com.atproto.repo.applyWrites#delete",
+            collection,
+            rkey,
+          });
+        }
       }
 
-      cursor = page.cursor;
-    } while (cursor);
+      for (const [id, record] of desired) {
+        const entry = existing.get(id);
 
-    // 2. Build desired state
-    const desired = new Map(
-      data.map((record) => [record.id, { $type: collection, ...record }]),
-    );
+        if (!entry) {
+          writes.push({
+            $type: "com.atproto.repo.applyWrites#create",
+            collection,
+            rkey: id,
+            value: record,
+          });
+        } else if (JSON.stringify(entry.value) !== JSON.stringify(record)) {
+          writes.push({
+            $type: "com.atproto.repo.applyWrites#update",
+            collection,
+            rkey: entry.rkey,
+            value: record,
+          });
+        }
+      }
 
-    // 3. Compute diff
-    /** @type {unknown[]} */
-    const writes = [];
-
-    for (const [id, { rkey }] of existing) {
-      if (!desired.has(id)) {
-        writes.push({
-          $type: "com.atproto.repo.applyWrites#delete",
-          collection,
-          rkey,
+      // 4. Apply
+      if (writes.length > 0) {
+        await this.#rpc.post("com.atproto.repo.applyWrites", {
+          input: { repo: this.#did.value, writes },
         });
       }
-    }
-
-    for (const [id, record] of desired) {
-      const entry = existing.get(id);
-
-      if (!entry) {
-        writes.push({
-          $type: "com.atproto.repo.applyWrites#create",
-          collection,
-          rkey: id,
-          value: record,
-        });
-      } else if (JSON.stringify(entry.value) !== JSON.stringify(record)) {
-        writes.push({
-          $type: "com.atproto.repo.applyWrites#update",
-          collection,
-          rkey: entry.rkey,
-          value: record,
-        });
+    } catch (err) {
+      if (this.#isSessionError(err)) {
+        this.#clearSession();
+        return;
       }
-    }
 
-    // 4. Apply
-    if (writes.length > 0) {
-      await this.#rpc.post("com.atproto.repo.applyWrites", {
-        input: { repo: this.#did.value, writes },
-      });
+      throw err;
     }
   }
 

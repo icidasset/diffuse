@@ -18,9 +18,10 @@ import {
   finalizeAuthorization,
   getSession,
   OAuthUserAgent,
+  TokenRefreshError,
 } from "@atcute/oauth-browser-client";
 
-export { OAuthUserAgent };
+export { OAuthUserAgent, TokenRefreshError };
 
 /**
  * @import {Session} from "@atcute/oauth-browser-client"
@@ -139,16 +140,32 @@ export async function restoreOrFinalize() {
     try {
       return await getSession(
         /** @type {`did:${string}:${string}`} */ (did),
-        { allowStale: true },
       );
     } catch (err) {
       console.warn(err);
-      localStorage.removeItem(STORAGE_KEY);
+      clearStoredSession();
       return null;
     }
   }
 
   return null;
+}
+
+// CLEAR SESSION
+// =============
+
+/**
+ * Remove stored session data without contacting the server.
+ * Used when the session has already been revoked.
+ */
+export function clearStoredSession() {
+  const did = localStorage.getItem(STORAGE_KEY);
+
+  if (did) {
+    deleteStoredSession(/** @type {`did:${string}:${string}`} */ (did));
+  }
+
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 // LOGOUT
