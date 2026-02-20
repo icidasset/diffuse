@@ -24,9 +24,9 @@
           },
           "name": { "type": "string" },
           "updatedAt": { "type": "string", "format": "datetime" },
-          "url": {
+          "uri": {
             "type": "string",
-            "description": "An optional URL that points at the theme; can be used to update this artifact"
+            "description": "An optional URI that points at the theme; can be used to update this artifact"
           }
         }
       }
