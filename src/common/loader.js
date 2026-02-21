@@ -120,7 +120,6 @@ export function createLoader(config) {
  */
 export async function loadURI(uri) {
   const u = URI.parse(uri);
-  console.log(u);
 
   switch (u.scheme) {
     case "at":
@@ -144,9 +143,13 @@ export async function loadURI(uri) {
  * @returns {Promise<T>}
  */
 export async function ensureHTML(item) {
+  console.log(item.html, item.uri);
+
   if (!item.html && item.uri) {
     const html = await loadURI(item.uri);
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
+
+    console.log(html);
 
     item.html = html;
     item.cid = cid;
@@ -181,6 +184,7 @@ export function renderError(container, error, options) {
 
 /**
  * @param {string} uri
+ * @returns {Promise<string>}
  */
 async function atprotoLoader(uri) {
   const parts = uri.replace(/at:\/\//, "").split("/");
@@ -218,6 +222,7 @@ async function atprotoLoader(uri) {
 
 /**
  * @param {string} url
+ * @returns {Promise<string>}
  */
 async function httpLoader(url) {
   return fetch(url).then((res) => res.text());

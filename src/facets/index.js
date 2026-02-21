@@ -13,8 +13,9 @@ import { autocompletion } from "@codemirror/autocomplete";
 import * as CID from "@common/cid.js";
 import foundation from "@common/facets/foundation.js";
 import { effect, signal } from "@common/signal.js";
-import { facetFromUrl } from "@common/facets/utils.js";
+import { facetFromURI } from "@common/facets/utils.js";
 import { nothing } from "@common/element.js";
+import { loadURI } from "@common/loader.js";
 
 /**
  * @import {Facet} from "@definitions/types.d.ts"
@@ -34,21 +35,21 @@ document.body.addEventListener(
     const rel = target.getAttribute("rel");
     if (!rel) return;
 
-    const url = target.closest("li")?.getAttribute("data-url");
-    if (!url) return;
+    const uri = target.closest("li")?.getAttribute("data-uri");
+    if (!uri) return;
 
     const name = target.closest("li")?.getAttribute("data-name");
     if (!name) return;
 
     switch (rel) {
       case "fork": {
-        const facet = await facetFromUrl({ name, url }, { fetchHTML: true });
+        const facet = await facetFromURI({ name, uri }, { fetchHTML: true });
         editFacet(facet);
         document.querySelector("#build")?.scrollIntoView();
         break;
       }
       case "save": {
-        const facet = await facetFromUrl({ name, url }, { fetchHTML: false });
+        const facet = await facetFromURI({ name, uri }, { fetchHTML: false });
         const out = foundation.orchestrator.output();
 
         out.facets.save([
@@ -110,12 +111,12 @@ effect(() => {
                       : nothing}
                   </div>
                   <div>
-                    ${c.url && !c.html
+                    ${c.uri && !c.html
                       ? html`
                         <span class="with-icon">
                           <i class="ph-fill ph-binoculars"></i>
                           <span>Tracking the original <a href="${c
-                            .url}">URL</a></span>
+                            .uri}">URI</a></span>
                         </span>
                       `
                       : html`
@@ -309,8 +310,8 @@ async function editFacet(ogFacet) {
   document.querySelector("#build")?.scrollIntoView();
 
   // Make sure HTML is loaded
-  if (!facet.html && facet.url) {
-    const html = await fetch(facet.url).then((res) => res.text());
+  if (!facet.html && facet.uri) {
+    const html = await loadURI(facet.uri);
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
 
     facet.html = html;

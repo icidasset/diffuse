@@ -1,8 +1,8 @@
 <ul>
   {{ for index, item of items }}
-    <li data-url="{{item.url}}" data-name="{{item.title}}">
+    <li data-uri="{{ item.url |> facetOrThemeURI }}" data-name="{{item.title}}">
       <div style="position: relative;">
-        <a href="themes/l/?url={{encodeURIComponent(item.url)}}">
+        <a href="{{ item.url |> themeLoaderURL }}">
           {{item.title}}
         </a>
         <button
@@ -24,7 +24,7 @@
         style="position-anchor: --theme-anchor-{{id}}-{{index}}"
         popover
       >
-        <a href="themes/l/?url={{encodeURIComponent(item.url)}}">
+        <a href="{{ item.url |> themeLoaderURL }}">
           <span class="with-icon">
             <i class="ph-fill ph-globe"></i> Open
           </span>

@@ -142,7 +142,15 @@ site.add("/definitions");
 
 // HELPERS
 
-site.helper("facetURL", (text) => {
+site.filter("facetOrThemeURI", (text) => {
+  if (text.includes("://")) {
+    return text;
+  } else {
+    return `diffuse://${text}`;
+  }
+});
+
+site.filter("facetLoaderURL", (text) => {
   let key = "path";
 
   if (text.includes("://")) {
@@ -150,8 +158,16 @@ site.helper("facetURL", (text) => {
   }
 
   return `facets/l/?${key}=${encodeURIComponent(text)}`;
-}, {
-  type: "filter",
+});
+
+site.filter("themeLoaderURL", (text) => {
+  let key = "path";
+
+  if (text.includes("://")) {
+    key = "uri";
+  }
+
+  return `themes/l/?${key}=${encodeURIComponent(text)}`;
 });
 
 // PHOSPHOR ICONS

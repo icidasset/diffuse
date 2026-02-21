@@ -1,6 +1,8 @@
 // import { fragments, serializeFragments } from "@fcrozatier/htmlcrunch";
 
 import { Temporal } from "@js-temporal/polyfill";
+
+import { loadURI } from "../loader.js";
 import * as CID from "../cid.js";
 
 /**
@@ -8,13 +10,11 @@ import * as CID from "../cid.js";
  */
 
 /**
- * @param {{ name: string; url: string }} _args
+ * @param {{ name: string; uri: string }} _args
  * @param {{ fetchHTML: boolean }} options
  */
-export async function facetFromUrl({ name, url }, { fetchHTML }) {
-  const html = fetchHTML
-    ? await fetch(url).then((res) => res.text())
-    : undefined;
+export async function facetFromURI({ name, uri }, { fetchHTML }) {
+  const html = fetchHTML ? await loadURI(uri) : undefined;
   const cid = html
     ? await CID.create(0x55, new TextEncoder().encode(html))
     : undefined;
@@ -29,7 +29,7 @@ export async function facetFromUrl({ name, url }, { fetchHTML }) {
     html,
     name,
     updatedAt: timestamp,
-    url,
+    uri,
   };
 
   return facet;
