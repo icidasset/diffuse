@@ -74,13 +74,14 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
   // SIGNALS
 
   #did = signal(/** @type {string | null} */ (null));
+  #isOnline = signal(navigator.onLine);
 
   // STATE
 
   did = this.#did.get;
 
   ready = computed(() => {
-    return this.#did.value !== null && navigator.onLine;
+    return this.#did.value !== null && this.#isOnline.value;
   });
 
   // LIFECYCLE
@@ -100,7 +101,19 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
     super.connectedCallback();
 
     this.#tryRestore();
+
+    globalThis.addEventListener("online", this.#online);
+    globalThis.addEventListener("offline", this.#offline);
   }
+
+  /** @override */
+  disconnectedCallback() {
+    globalThis.removeEventListener("online", this.#online);
+    globalThis.removeEventListener("offline", this.#offline);
+  }
+
+  #offline = () => this.#isOnline.set(false);
+  #online = () => this.#isOnline.set(true);
 
   // AUTH
 
