@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill";
 import { html, render } from "lit-html";
 import { keyed } from "lit-html/directives/keyed.js";
 
@@ -279,10 +278,8 @@ async function editTheme(ogTheme) {
 async function saveTheme(theme) {
   const col = output.themes.collection();
   const colWithoutId = col.filter((c) => c.id !== theme.id);
-  const timestamp = Temporal.Now.zonedDateTimeISO().toString();
-
   await output.themes.save([...colWithoutId, {
     ...theme,
-    updatedAt: timestamp,
+    updatedAt: new Date().toISOString(),
   }]);
 }

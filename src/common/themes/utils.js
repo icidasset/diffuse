@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill";
 import * as CID from "../cid.js";
 
 /**
@@ -16,7 +15,7 @@ export async function themeFromUrl({ name, url }, { fetchHTML }) {
   const cid = html
     ? await CID.create(0x55, new TextEncoder().encode(html))
     : undefined;
-  const timestamp = Temporal.Now.zonedDateTimeISO().toString();
+  const timestamp = new Date().toISOString();
 
   /** @type {Theme} */
   const theme = {

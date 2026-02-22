@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill";
 import { html, render } from "lit-html";
 import { keyed } from "lit-html/directives/keyed.js";
 import { marked } from "marked";
@@ -336,10 +335,8 @@ async function editFacet(ogFacet) {
 async function saveFacet(facet) {
   const col = output.facets.collection();
   const colWithoutId = col.filter((c) => c.id !== facet.id);
-  const timestamp = Temporal.Now.zonedDateTimeISO().toString();
-
   await output.facets.save([...colWithoutId, {
     ...facet,
-    updatedAt: timestamp,
+    updatedAt: new Date().toISOString(),
   }]);
 }
