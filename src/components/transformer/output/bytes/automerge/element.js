@@ -4,7 +4,7 @@ import { isUint8Array } from "iso-base/utils";
 
 import "@components/output/polymorphic/indexed-db/element.js";
 
-import { computed, signal, untracked } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 import {
   recursivelyCloneRecords,
   removeUndefinedValuesFromRecord,
@@ -38,42 +38,54 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
      * @param {SignalReader<Uint8Array | undefined>} localCollection
      * @param {SignalReader<Uint8Array | undefined>} remoteCollection
      * @param {Automerge.Doc<T>} initial
-     * @returns {SignalReader<Automerge.Doc<T>>}
+     * @returns {SignalReader<{ doc: Automerge.Doc<T>; diverged: boolean; local: boolean; remote: boolean; }>}
      */
-    const mergedDoc = (localCollection, remoteCollection, initial) =>
+    const state = (localCollection, remoteCollection, initial) =>
       computed(() => {
         const l = loadDocument(localCollection);
         const r = remote.ready() ? loadDocument(remoteCollection) : undefined;
 
-        console.log("Local:", l);
-        console.log("Remote:", r);
+        if (!r) {
+          return l
+            ? { doc: l, diverged: true, local: false, remote: true }
+            : { doc: initial, diverged: false, local: false, remote: false };
+        } else if (!l) {
+          return { doc: r, diverged: true, local: true, remote: false };
+        }
 
-        if (!r) return l ?? initial;
-        if (!l) return r;
+        const lh = Automerge.getHeads(l)[0];
+        const rh = Automerge.getHeads(r)[0];
+        const diverged = lh !== rh;
 
-        console.log("Merging");
-        return Automerge.merge(Automerge.clone(l), Automerge.clone(r));
+        return {
+          doc: diverged
+            ? Automerge.merge(Automerge.clone(l), Automerge.clone(r))
+            : r,
+          diverged,
+          local: Automerge.hasHeads(r, [lh]),
+          remote: Automerge.hasHeads(l, [rh]),
+        };
       });
 
-    const facetsDoc = mergedDoc(
+    const facets = state(
       computed(() => local()?.facets?.collection()),
       remote.facets.collection,
       INITIAL_FACETS_DOCUMENT,
     );
 
-    const playlistItemsDoc = mergedDoc(
+    const playlistItems = state(
       computed(() => local()?.playlistItems?.collection()),
       remote.playlistItems.collection,
       INITIAL_PLAYLIST_ITEMS_DOCUMENT,
     );
 
-    const themesDoc = mergedDoc(
+    const themes = state(
       computed(() => local()?.themes?.collection()),
       remote.themes.collection,
       INITIAL_THEMES_DOCUMENT,
     );
 
-    const tracksDoc = mergedDoc(
+    const tracks = state(
       computed(() => local()?.tracks?.collection()),
       remote.tracks.collection,
       INITIAL_TRACKS_DOCUMENT,
@@ -82,7 +94,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     this.facets = automergeEntry(
       computed(() => local()?.facets),
       remote.facets,
-      facetsDoc,
+      computed(() => facets().doc),
       {
         stripUndefined: true,
       },
@@ -91,13 +103,13 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     this.playlistItems = automergeEntry(
       computed(() => local()?.playlistItems),
       remote.playlistItems,
-      playlistItemsDoc,
+      computed(() => playlistItems().doc),
     );
 
     this.themes = automergeEntry(
       computed(() => local()?.themes),
       remote.themes,
-      themesDoc,
+      computed(() => themes().doc),
       {
         stripUndefined: true,
       },
@@ -106,10 +118,56 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     this.tracks = automergeEntry(
       computed(() => local()?.tracks),
       remote.tracks,
-      tracksDoc,
+      computed(() => tracks().doc),
     );
 
     this.ready = () => true;
+
+    // Effects
+    this.effect(() => {
+      const l = local();
+      if (!l) return;
+
+      this.effect(() => {
+        if (remote.facets.state() !== "loaded") return;
+        const s = facets();
+        if (s.diverged) {
+          const bytes = Automerge.save(s.doc);
+          if (l && s.local) l.facets.save(bytes);
+          if (s.remote) remote.facets.save(bytes);
+        }
+      });
+
+      this.effect(() => {
+        if (remote.playlistItems.state() !== "loaded") return;
+        const s = playlistItems();
+        if (s.diverged) {
+          const bytes = Automerge.save(s.doc);
+          if (l && s.local) l.playlistItems.save(bytes);
+          if (s.remote) remote.playlistItems.save(bytes);
+        }
+      });
+
+      this.effect(() => {
+        if (remote.themes.state() !== "loaded") return;
+        const s = themes();
+        if (s.diverged) {
+          const bytes = Automerge.save(s.doc);
+          if (l && s.local) l.themes.save(bytes);
+          if (s.remote) remote.themes.save(bytes);
+        }
+      });
+
+      this.effect(() => {
+        if (remote.tracks.state() !== "loaded") return;
+        const s = tracks();
+        if (s.diverged) {
+          const bytes = Automerge.save(s.doc);
+          if (l && s.local) l.tracks.save(bytes);
+          if (s.remote) remote.tracks.save(bytes);
+        }
+      });
+    });
   }
 
   // SIGNALS
@@ -196,9 +254,7 @@ export function automergeEntry(local, remote, document, opts) {
       });
 
       const bytes = Automerge.save(doc);
-
-      await untracked(local)?.save(bytes);
-      await remote.save(bytes);
+      await local()?.save(bytes);
     },
     state: computed(() => local()?.state() ?? "sleeping"),
   };
