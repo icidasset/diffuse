@@ -1,5 +1,6 @@
 import { Client, ClientResponseError, ok } from "@atcute/client";
-import { BroadcastableDiffuseElement } from "@common/element.js";
+
+import { DiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 import { outputManager } from "../../common.js";
 import {
@@ -24,7 +25,7 @@ import {
 /**
  * @implements {ATProtoOutputElement}
  */
-class ATProtoOutput extends BroadcastableDiffuseElement {
+class ATProtoOutput extends DiffuseElement {
   static NAME = "diffuse/output/raw/atproto";
 
   #manager;
@@ -88,16 +89,6 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
 
   /** @override */
   connectedCallback() {
-    if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
-        put: { strategy: "replicate", fn: this.#putIncoming },
-      });
-
-      if (actions) {
-        this.#put = this.#putOutgoing(actions.put);
-      }
-    }
-
     super.connectedCallback();
 
     this.#tryRestore();
@@ -259,7 +250,7 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
    * @param {string} collection
    * @param {Array<{ id: string }>} data
    */
-  async #putRecordsSync(collection, data) {
+  async #putRecords(collection, data) {
     if (!this.#rpc || !this.#did.value) return;
 
     try {
@@ -335,51 +326,6 @@ class ATProtoOutput extends BroadcastableDiffuseElement {
       }
 
       throw err;
-    }
-  }
-
-  // GET & PUT (broadcasting layer)
-
-  /**
-   * @param {string} collection
-   * @param {Array<{ id: string }>} data
-   */
-  #putProxy = (collection, data) => this.#putRecordsSync(collection, data);
-  #put = this.#putProxy;
-
-  /**
-   * @param {string} collection
-   * @param {Array<{ id: string }>} data
-   */
-  #putRecords = (collection, data) => this.#put(collection, data);
-
-  /**
-   * @param {(uuidSender: ReturnType<typeof crypto.randomUUID>, collection: string, data: Array<{ id: string }>) => Promise<void>} action
-   * @returns {(collection: string, data: Array<{ id: string }>) => Promise<void>}
-   */
-  #putOutgoing = (action) => async (collection, data) => {
-    return await action(this.uuid, collection, data);
-  };
-
-  /**
-   * @param {ReturnType<typeof crypto.randomUUID>} uuidSender
-   * @param {string} collection
-   * @param {Array<{ id: string }>} data
-   */
-  #putIncoming(uuidSender, collection, data) {
-    if (uuidSender === this.uuid) {
-      this.#putProxy(collection, data);
-    } else {
-      /** @type {Record<string, Signal<unknown[]>>} */
-      const collectionMap = {
-        "sh.diffuse.output.facet": this.#manager.signals.facets,
-        "sh.diffuse.output.playlistItem": this.#manager.signals.playlistItems,
-        "sh.diffuse.output.theme": this.#manager.signals.themes,
-        "sh.diffuse.output.track": this.#manager.signals.tracks,
-      };
-
-      const sig = collectionMap[collection];
-      if (sig) sig.value = data;
     }
   }
 }

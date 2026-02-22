@@ -49,7 +49,7 @@ export function buildURI(bucket, path) {
   return URI.serialize({
     scheme: SCHEME,
     userinfo: `${bucket.accessKey}:${bucket.secretKey}`,
-    host: bucket.host.replace(/^https?:\/\//, ""),
+    host: bucket.host.replace(/^\w+:\/\//, ""),
     path: path,
     query: QS.stringify({
       bucketName: bucket.bucketName,

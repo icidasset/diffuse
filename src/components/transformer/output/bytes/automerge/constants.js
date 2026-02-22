@@ -13,7 +13,7 @@ export const INITIAL_FACETS_DOCUMENT = Automerge.load(
 );
 
 /** @type {Automerge.Doc<PlaylistItemsDocument>} */
-export const INITIAL_PLAYLISTS_DOCUMENT = Automerge.load(
+export const INITIAL_PLAYLIST_ITEMS_DOCUMENT = Automerge.load(
   base64.decode(
     "hW9Kg5IPZcsAeAEQIyp0LRYp0l9bpZKWJXTPlgGtUD/lrIatFjiIwoUdtJhh/sBQFIcpPppxduoIp1ArXwYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8eTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
   ),

@@ -79,7 +79,6 @@ export function createLoader(config) {
     } else {
       const source = config.source();
       const collection = source.collection();
-      console.log(source.state(), collection);
       if (source.state() !== "loaded") return;
 
       if (id) {
@@ -143,13 +142,9 @@ export async function loadURI(uri) {
  * @returns {Promise<T>}
  */
 export async function ensureHTML(item) {
-  console.log(item.html, item.uri);
-
   if (!item.html && item.uri) {
     const html = await loadURI(item.uri);
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
-
-    console.log(html);
 
     item.html = html;
     item.cid = cid;

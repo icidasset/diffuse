@@ -7,7 +7,7 @@ import {
 import { signal } from "@common/signal.js";
 
 import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
-import { buildURI as buildS3cURI } from "@components/input/s3/common.js";
+import { buildURI as buildS3URI } from "@components/input/s3/common.js";
 
 import { SCHEME as HTTPS_SCHEME } from "@components/input/https/constants.js";
 import { SCHEME as OPENSUBSONIC_SCHEME } from "@components/input/opensubsonic/constants.js";
@@ -148,9 +148,11 @@ class InputConfig extends DiffuseElement {
     if (!accessKey) {
       throw new Error("Missing required `accessKey` input value");
     }
+
     if (!bucketName) {
       throw new Error("Missing required `bucketName` input value");
     }
+
     if (!secretKey) {
       throw new Error("Missing required `secretKey` input value");
     }
@@ -165,7 +167,7 @@ class InputConfig extends DiffuseElement {
       secretKey,
     };
 
-    const uri = buildS3cURI(bucket);
+    const uri = buildS3URI(bucket);
     await this.addSource(uri);
 
     if (button) button.disabled = false;

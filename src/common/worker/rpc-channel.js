@@ -120,7 +120,6 @@ export class RpcChannel {
     const fn = this.#actions?.[/** @type {keyof LocalAPI} */ (method)];
 
     if (typeof fn !== "function") {
-      console.log(method, id, fn, this.#actions);
       this.#port.postMessage({
         __rpc: true,
         id,
@@ -136,6 +135,7 @@ export class RpcChannel {
           this.#port.postMessage({ __rpc: true, id, type: "response", result });
         },
         (err) => {
+          console.error(err)
           this.#port.postMessage({
             __rpc: true,
             id,
@@ -145,6 +145,7 @@ export class RpcChannel {
         },
       );
     } catch (err) {
+      console.error(err)
       this.#port.postMessage({
         __rpc: true,
         id,

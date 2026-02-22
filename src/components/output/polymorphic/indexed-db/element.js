@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement } from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 import { outputManager } from "../../common.js";
 
 /**
@@ -14,7 +14,7 @@ import { outputManager } from "../../common.js";
 /**
  * @implements {OutputElement<SupportedDataTypes>}
  */
-class IndexedDBOutput extends BroadcastableDiffuseElement {
+class IndexedDBOutput extends DiffuseElement {
   static NAME = "diffuse/output/polymorphic/indexed-db";
   static WORKER_URL = "components/output/polymorphic/indexed-db/worker.js";
 
@@ -55,72 +55,17 @@ class IndexedDBOutput extends BroadcastableDiffuseElement {
     this.playlistItems = this.#manager.playlistItems;
     this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
+
     this.ready = () => true;
-  }
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  connectedCallback() {
-    // Broadcast if needed
-    if (this.hasAttribute("group")) {
-      const actions = this.broadcast(
-        `${this.nameWithGroup}${
-          this.namespace.length ? "/" + this.namespace.replace(/\/$/, "") : ""
-        }`,
-        {
-          put: { strategy: "replicate", fn: this.#putIncoming },
-        },
-      );
-
-      if (actions) {
-        this.#put = this.#putOutgoing(actions.put);
-      }
-    }
-
-    // Super
-    super.connectedCallback();
   }
 
   // GET & PUT
 
   /** @param {string} name */
-  #getProxy = (name) => this.proxy.get({ name: this.#cat(name) });
-  #get = this.#getProxy;
+  #get = (name) => this.proxy.get({ name: this.#cat(name) });
 
   /** @param {string} name; @param {any} data */
-  #putProxy = (name, data) => this.proxy.put({ name: this.#cat(name), data });
-  #put = this.#putProxy;
-
-  /**
-   * @param {(uuidSender: ReturnType<typeof crypto.randomUUID>, name: string, data: any) => Promise<void>} action
-   * @returns {(name: string, data: any) => Promise<void>}
-   */
-  #putOutgoing = (action) => async (name, data) => {
-    return await action(this.uuid, name, data);
-  };
-
-  /**
-   * @param {ReturnType<typeof crypto.randomUUID>} uuidSender
-   * @param {string} name
-   * @param {any} data
-   */
-  #putIncoming(uuidSender, name, data) {
-    if (uuidSender === this.uuid) {
-      // Initiator
-      this.#putProxy(name, data);
-    } else {
-      // Listener
-      if (name === "facets") this.#manager.signals.facets.value = data;
-      if (name === "playlistItems") {
-        this.#manager.signals.playlistItems.value = data;
-      }
-      if (name === "themes") this.#manager.signals.themes.value = data;
-      if (name === "tracks") this.#manager.signals.tracks.value = data;
-    }
-  }
+  #put = (name, data) => this.proxy.put({ name: this.#cat(name), data });
 
   // 🛠️
 

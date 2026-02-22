@@ -157,7 +157,7 @@ class OutputConfig extends DiffuseElement {
     const bucket = {
       accessKey,
       bucketName,
-      host: host?.length ? host : "s3.amazonaws.com",
+      host: host?.length ? host.replace(/^\w+:\/\//, "") : "s3.amazonaws.com",
       path: path?.length ? path : "/",
       region: region?.length ? region : "us-east-1",
       secretKey,

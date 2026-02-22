@@ -1,7 +1,10 @@
 import * as Automerge from "@automerge/automerge";
+import { ifDefined } from "lit-html/directives/if-defined.js";
 import { isUint8Array } from "iso-base/utils";
 
-import { computed } from "@common/signal.js";
+import "@components/output/polymorphic/indexed-db/element.js";
+
+import { computed, signal, untracked } from "@common/signal.js";
 import {
   recursivelyCloneRecords,
   removeUndefinedValuesFromRecord,
@@ -9,15 +12,15 @@ import {
 import { OutputTransformer } from "../../base.js";
 import {
   INITIAL_FACETS_DOCUMENT,
-  INITIAL_PLAYLISTS_DOCUMENT,
+  INITIAL_PLAYLIST_ITEMS_DOCUMENT,
   INITIAL_THEMES_DOCUMENT,
   INITIAL_TRACKS_DOCUMENT,
 } from "./constants.js";
 
 /**
+ * @import { RenderArg } from "@common/element.d.ts"
  * @import { SignalReader } from "@common/signal.d.ts";
- * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { FacetsDocument, PlaylistItemsDocument, ThemesDocument, TracksDocument } from "./types.d.ts"
+ * @import { OutputElement } from "@components/output/types.d.ts";
  */
 
 /**
@@ -27,149 +30,179 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
   constructor() {
     super();
 
-    const base = this.base();
+    const remote = this.base();
+    const local = this.#localOutput.get;
 
-    /** @type {SignalReader<Automerge.Doc<FacetsDocument>>} */
-    const facetsDocument = computed(() => {
-      const value = base.facets.collection();
+    /**
+     * @template T
+     * @param {SignalReader<Uint8Array | undefined>} localCollection
+     * @param {SignalReader<Uint8Array | undefined>} remoteCollection
+     * @param {Automerge.Doc<T>} initial
+     * @returns {SignalReader<Automerge.Doc<T>>}
+     */
+    const mergedDoc = (localCollection, remoteCollection, initial) =>
+      computed(() => {
+        const l = loadDocument(localCollection);
+        const r = remote.ready() ? loadDocument(remoteCollection) : undefined;
 
-      if (isUint8Array(value)) {
-        return Automerge.load(value);
-      } else if (value == undefined) {
-        return INITIAL_FACETS_DOCUMENT;
-      } else {
-        // TODO: Better error
-        throw new Error("Invalid data type");
-      }
-    });
+        console.log("Local:", l);
+        console.log("Remote:", r);
 
-    /** @type {SignalReader<Automerge.Doc<PlaylistItemsDocument>>} */
-    const playlistsDocument = computed(() => {
-      const value = base.playlistItems.collection();
+        if (!r) return l ?? initial;
+        if (!l) return r;
 
-      if (isUint8Array(value)) {
-        return Automerge.load(value);
-      } else if (value == undefined) {
-        return INITIAL_PLAYLISTS_DOCUMENT;
-      } else {
-        // TODO: Better error
-        throw new Error("Invalid data type");
-      }
-    });
+        console.log("Merging");
+        return Automerge.merge(Automerge.clone(l), Automerge.clone(r));
+      });
 
-    /** @type {SignalReader<Automerge.Doc<ThemesDocument>>} */
-    const themesDocument = computed(() => {
-      const value = base.themes.collection();
+    const facetsDoc = mergedDoc(
+      computed(() => local()?.facets?.collection()),
+      remote.facets.collection,
+      INITIAL_FACETS_DOCUMENT,
+    );
 
-      if (isUint8Array(value)) {
-        return Automerge.load(value);
-      } else if (value == undefined) {
-        return INITIAL_THEMES_DOCUMENT;
-      } else {
-        // TODO: Better error
-        throw new Error("Invalid data type");
-      }
-    });
+    const playlistItemsDoc = mergedDoc(
+      computed(() => local()?.playlistItems?.collection()),
+      remote.playlistItems.collection,
+      INITIAL_PLAYLIST_ITEMS_DOCUMENT,
+    );
 
-    /** @type {SignalReader<Automerge.Doc<TracksDocument>>} */
-    const tracksDocument = computed(() => {
-      const value = base.tracks.collection();
+    const themesDoc = mergedDoc(
+      computed(() => local()?.themes?.collection()),
+      remote.themes.collection,
+      INITIAL_THEMES_DOCUMENT,
+    );
 
-      if (isUint8Array(value)) {
-        return Automerge.load(value);
-      } else if (value == undefined) {
-        return INITIAL_TRACKS_DOCUMENT;
-      } else {
-        // TODO: Better error
-        throw new Error("Invalid data type");
-      }
-    });
+    const tracksDoc = mergedDoc(
+      computed(() => local()?.tracks?.collection()),
+      remote.tracks.collection,
+      INITIAL_TRACKS_DOCUMENT,
+    );
 
-    /** @type {OutputManagerDeputy} */
-    const manager = {
-      facets: {
-        ...base.facets,
-        collection: computed(() => facetsDocument().collection),
-        save: async (newFacets) => {
-          const doc = Automerge.change(facetsDocument(), (d) => {
-            const clonedCollection = newFacets.map((facet) => {
-              return removeUndefinedValuesFromRecord(
-                recursivelyCloneRecords(facet),
-              );
-            });
-
-            d.collection = clonedCollection;
-          });
-
-          const bytes = Automerge.save(doc);
-          await base.facets.save(bytes);
-        },
+    this.facets = automergeEntry(
+      computed(() => local()?.facets),
+      remote.facets,
+      facetsDoc,
+      {
+        stripUndefined: true,
       },
-      playlistItems: {
-        ...base.playlistItems,
-        collection: computed(() => playlistsDocument().collection),
-        save: async (newPlaylistItems) => {
-          const doc = Automerge.change(playlistsDocument(), (d) => {
-            const clonedCollection = newPlaylistItems.map((item) => {
-              return recursivelyCloneRecords(item);
-            });
+    );
 
-            d.collection = clonedCollection;
-          });
+    this.playlistItems = automergeEntry(
+      computed(() => local()?.playlistItems),
+      remote.playlistItems,
+      playlistItemsDoc,
+    );
 
-          const bytes = Automerge.save(doc);
-          await base.playlistItems.save(bytes);
-        },
+    this.themes = automergeEntry(
+      computed(() => local()?.themes),
+      remote.themes,
+      themesDoc,
+      {
+        stripUndefined: true,
       },
-      themes: {
-        ...base.themes,
-        collection: computed(() => themesDocument().collection),
-        save: async (newThemes) => {
-          const doc = Automerge.change(themesDocument(), (d) => {
-            const clonedCollection = newThemes.map((theme) => {
-              return removeUndefinedValuesFromRecord(
-                recursivelyCloneRecords(theme),
-              );
-            });
+    );
 
-            d.collection = clonedCollection;
-          });
+    this.tracks = automergeEntry(
+      computed(() => local()?.tracks),
+      remote.tracks,
+      tracksDoc,
+    );
 
-          const bytes = Automerge.save(doc);
-          await base.themes.save(bytes);
-        },
-      },
-      tracks: {
-        ...base.tracks,
-        collection: computed(() => tracksDocument().collection),
-        save: async (newTracks) => {
-          const doc = Automerge.change(tracksDocument(), (d) => {
-            const clonedCollection = newTracks.map((track) => {
-              return recursivelyCloneRecords(track);
-            });
+    this.ready = () => true;
+  }
 
-            d.collection = clonedCollection;
-          });
+  // SIGNALS
 
-          const bytes = Automerge.save(doc);
-          await base.tracks.save(bytes);
-        },
-      },
+  #localOutput = signal(
+    /** @type {OutputElement<Uint8Array | undefined> | undefined} */ (undefined),
+  );
 
-      // Other
-      ready: base.ready,
-    };
+  // LIFECYCLE
 
-    // Assign manager properties to class
-    this.facets = manager.facets;
-    this.playlistItems = manager.playlistItems;
-    this.themes = manager.themes;
-    this.tracks = manager.tracks;
-    this.ready = manager.ready;
+  /**
+   * @override
+   */
+  connectedCallback() {
+    super.connectedCallback();
+
+    /** @type {OutputElement<Uint8Array | undefined> | null} */
+    const local = this.root().querySelector("dop-indexed-db");
+    if (!local) throw new Error("Can't find local output");
+
+    // When defined
+    customElements.whenDefined(local.localName).then(() => {
+      this.#localOutput.value = local;
+    });
+  }
+
+  // RENDER
+
+  /**
+   * @param {RenderArg} _
+   */
+  render({ html }) {
+    return html`
+      <dop-indexed-db
+        namespace="${ifDefined(this.getAttribute(`namespace`))}"
+      ></dop-indexed-db>
+    `;
   }
 }
 
 export default AutomergeBytesOutputTransformer;
+
+////////////////////////////////////////////
+// 🛠️
+////////////////////////////////////////////
+
+/**
+ * @template T
+ * @param {SignalReader<Uint8Array | undefined>} source
+ * @returns {Automerge.Doc<T> | undefined}
+ */
+export function loadDocument(source) {
+  const value = source();
+
+  if (isUint8Array(value)) {
+    return Automerge.load(value);
+  } else if (value == undefined) {
+    return undefined;
+  } else {
+    throw new Error("Invalid data type");
+  }
+}
+
+/**
+ * @template {Record<string, any>} T
+ * @param {SignalReader<{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> } | undefined>} local
+ * @param {{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }} remote
+ * @param {SignalReader<Automerge.Doc<{ collection: T[] }>>} document
+ * @param {{ stripUndefined?: boolean }} [opts]
+ * @returns {{ collection: SignalReader<T[]>, reload: () => Promise<void>, save: (items: T[]) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }}
+ */
+export function automergeEntry(local, remote, document, opts) {
+  return {
+    collection: computed(() => document().collection),
+    reload: remote.reload,
+    save: async (/** @type {T[]} */ newItems) => {
+      const doc = Automerge.change(document(), (d) => {
+        d.collection = newItems.map((item) => {
+          const cloned = recursivelyCloneRecords(item);
+          return opts?.stripUndefined
+            ? removeUndefinedValuesFromRecord(cloned)
+            : cloned;
+        });
+      });
+
+      const bytes = Automerge.save(doc);
+
+      await untracked(local)?.save(bytes);
+      await remote.save(bytes);
+    },
+    state: computed(() => local()?.state() ?? "sleeping"),
+  };
+}
 
 ////////////////////////////////////////////
 // REGISTER

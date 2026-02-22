@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "@common/element.js";
+import { BroadcastableDiffuseElement, query } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 
 /**
@@ -8,7 +8,7 @@ import { computed, signal } from "@common/signal.js";
 /**
  * @template [T=null]
  */
-export class OutputTransformer extends DiffuseElement {
+export class OutputTransformer extends BroadcastableDiffuseElement {
   // SIGNALS
 
   #output = signal(/** @type {OutputElement<T> | undefined} */ (undefined));

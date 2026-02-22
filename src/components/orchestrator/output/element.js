@@ -2,12 +2,12 @@ import { ifDefined } from "lit-html/directives/if-defined.js";
 import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
-import "@components/configurator/output-fallback/element.js";
 import "@components/output/bytes/s3/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/output/raw/atproto/element.js";
 import "@components/transformer/output/bytes/automerge/element.js";
 import "@components/transformer/output/refiner/default/element.js";
+import "@components/transformer/output/replicator/broadcast/element.js";
 import "@components/transformer/output/string/json/element.js";
 
 /**
@@ -103,27 +103,16 @@ class OutputOrchestrator extends DiffuseElement {
     const group = this.group === DEFAULT_GROUP ? undefined : this.group;
 
     return html`
-      <!-- DEFAULT -->
+      <!-- IDB-ONLY #2 -->
       <dop-indexed-db
         id="do-output__dop-indexed-db__json"
-        group="${ifDefined(group)}"
         namespace="json"
       ></dop-indexed-db>
 
       <!-- S3 #2 -->
-      <dc-output-fallback
-        id="do-output__dob-s3-fallback"
-      >
-        <dob-s3
-          id="do-output__dob-s3"
-          group="${ifDefined(group)}"
-        ></dob-s3>
-        <dop-indexed-db
-          id="do-output__dop-indexed-db__s3"
-          group="${ifDefined(group)}"
-          namespace="s3"
-        ></dop-indexed-db>
-      </dc-output-fallback>
+      <dob-s3
+        id="do-output__dob-s3"
+      ></dob-s3>
 
       <!-- OUTPUT CONFIGURATOR -->
       <dc-output
@@ -131,6 +120,7 @@ class OutputOrchestrator extends DiffuseElement {
         default="do-output__dc-output__local"
         group="${ifDefined(group)}"
       >
+        <!-- IDB-ONLY #1 -->
         <dtos-json
           id="do-output__dc-output__local"
           output-selector="#do-output__dop-indexed-db__json"
@@ -138,34 +128,32 @@ class OutputOrchestrator extends DiffuseElement {
         ></dtos-json>
 
         <!-- ATProto -->
-        <dc-output-fallback
+        <dor-atproto
           id="do-output__dc-output__atproto"
           label="AT Protocol"
-        >
-          <dor-atproto
-            id="do-output__dor-atproto"
-            group="${ifDefined(group)}"
-          ></dor-atproto>
-          <dop-indexed-db
-            id="do-output__dop-indexed-db__atproto"
-            group="${ifDefined(group)}"
-            namespace="atproto"
-          ></dop-indexed-db>
-        </dc-output-fallback>
+        ></dor-atproto>
 
         <!-- S3 #1 -->
         <dtob-automerge
           id="do-output__dc-output__s3"
-          output-selector="#do-output__dob-s3-fallback"
+          namespace="s3"
+          output-selector="#do-output__dob-s3"
           label="S3"
         ></dtob-automerge>
       </dc-output>
 
-      <!-- Entry -->
+      <!-- Refiner -->
       <dtor-default
-        id="do-output__output"
+        id="do-output__dtor-default"
         output-selector="#do-output__dc-output"
       ></dtor-default>
+
+      <!-- Entry ⬆️ -->
+      <dtor-broadcast
+        id="do-output__output"
+        output-selector="#do-output__dtor-default"
+        group="${ifDefined(group)}"
+      ></dtor-broadcast>
     `;
   }
 }

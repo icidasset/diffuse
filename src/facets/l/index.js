@@ -14,8 +14,6 @@ createLoader({
       document.querySelector("#container")
     );
 
-    console.log(facet);
-
     const range = document.createRange();
     range.selectNode(container);
     const documentFragment = range.createContextualFragment(facet.html ?? "");

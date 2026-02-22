@@ -1,6 +1,6 @@
 import * as IDB from "idb-keyval";
 
-import { BroadcastableDiffuseElement } from "@common/element.js";
+import { DiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 import { outputManager } from "../../common.js";
 
@@ -21,7 +21,7 @@ const STORAGE_PREFIX = "diffuse/output/bytes/s3";
  * @implements {OutputElement<Uint8Array | undefined>}
  * @implements {S3OutputElement}
  */
-class S3Output extends BroadcastableDiffuseElement {
+class S3Output extends DiffuseElement {
   static NAME = "diffuse/output/bytes/s3";
   static WORKER_URL = "components/output/bytes/s3/worker.js";
 
@@ -64,10 +64,14 @@ class S3Output extends BroadcastableDiffuseElement {
     this.tracks = this.#manager.tracks;
   }
 
+  // SIGNALS
+
+  #isOnline = signal(navigator.onLine);
+
   // STATE
 
   ready = computed(() => {
-    return this.#bucket.value !== undefined;
+    return this.#bucket.value !== undefined && this.#isOnline.value;
   });
 
   // LIFECYCLE
@@ -76,25 +80,24 @@ class S3Output extends BroadcastableDiffuseElement {
    * @override
    */
   async connectedCallback() {
-    // Broadcast if needed
-    if (this.hasAttribute("group")) {
-      // TODO: Get via leader?
-      const actions = this.broadcast(this.nameWithGroup, {
-        put: { strategy: "replicate", fn: this.#putIncoming },
-      });
-
-      if (actions) {
-        this.#put = this.#putOutgoing(actions.put);
-      }
-    }
-
-    // Super
     super.connectedCallback();
 
     /** @type {Bucket | undefined} */
     const stored = await IDB.get(`${STORAGE_PREFIX}/bucket`);
     if (stored) this.#bucket.value = stored;
+
+    globalThis.addEventListener("online", this.#online);
+    globalThis.addEventListener("offline", this.#offline);
   }
+
+  /** @override */
+  disconnectedCallback() {
+    globalThis.removeEventListener("online", this.#online);
+    globalThis.removeEventListener("offline", this.#offline);
+  }
+
+  #offline = () => this.#isOnline.set(false);
+  #online = () => this.#isOnline.set(true);
 
   // BUCKET
 
@@ -130,50 +133,18 @@ class S3Output extends BroadcastableDiffuseElement {
   // GET & PUT
 
   /** @param {string} name */
-  #getProxy = async (name) => {
+  #get = async (name) => {
     const bucket = await this.getBucket();
     if (!bucket) return undefined;
     return this.proxy.get({ bucket, name: this.#cat(name) });
   };
 
-  #get = this.#getProxy;
-
   /** @param {string} name; @param {any} data */
-  #putProxy = async (name, data) => {
+  #put = async (name, data) => {
     const bucket = await this.getBucket();
     if (!bucket) return undefined;
     return this.proxy.put({ bucket, data, name: this.#cat(name) });
   };
-
-  #put = this.#putProxy;
-
-  /**
-   * @param {(uuidSender: ReturnType<typeof crypto.randomUUID>, name: string, data: any) => Promise<void>} action
-   * @returns {(name: string, data: any) => Promise<void>}
-   */
-  #putOutgoing = (action) => async (name, data) => {
-    return await action(this.uuid, name, data);
-  };
-
-  /**
-   * @param {ReturnType<typeof crypto.randomUUID>} uuidSender
-   * @param {string} name
-   * @param {any} data
-   */
-  #putIncoming(uuidSender, name, data) {
-    if (uuidSender === this.uuid) {
-      // Initiator
-      this.#putProxy(name, data);
-    } else {
-      // Listener
-      if (name === "facets") this.#manager.signals.facets.value = data;
-      if (name === "playlistItems") {
-        this.#manager.signals.playlistItems.value = data;
-      }
-      if (name === "themes") this.#manager.signals.themes.value = data;
-      if (name === "tracks") this.#manager.signals.tracks.value = data;
-    }
-  }
 
   // 🛠️
 
