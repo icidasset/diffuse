@@ -13,7 +13,6 @@ import {
 } from "./oauth.js";
 
 /**
- * @import {Signal} from "@common/signal.d.ts"
  * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
@@ -76,10 +75,12 @@ class ATProtoOutput extends DiffuseElement {
 
   #did = signal(/** @type {string | null} */ (null));
   #isOnline = signal(navigator.onLine);
+  #rev = signal(/** @type {string | null} */ (null));
 
   // STATE
 
   did = this.#did.get;
+  rev = this.#rev.get;
 
   ready = computed(() => {
     return this.#did.value !== null && this.#isOnline.value;
@@ -207,6 +208,35 @@ class ATProtoOutput extends DiffuseElement {
   // RECORDS
 
   /**
+   * Fetch the latest commit rev for this repo.
+   * Returns `null` if not authenticated or on error.
+   *
+   * @returns {Promise<string | null>}
+   */
+  async getLatestCommit() {
+    const did = this.#did.value;
+    if (!this.#rpc || !did) return null;
+
+    try {
+      /** @type {any} */
+      const result = await ok(this.#rpc.get(
+        "com.atproto.sync.getLatestCommit",
+        { params: { did } },
+      ));
+
+      this.#rev.value = result.rev;
+      return result.rev;
+    } catch (err) {
+      if (this.#isSessionError(err)) {
+        this.#clearSession();
+        return null;
+      }
+
+      throw err;
+    }
+  }
+
+  /**
    * @template T
    * @param {string} collection
    * @param {string} [did]
@@ -315,9 +345,14 @@ class ATProtoOutput extends DiffuseElement {
 
       // 4. Apply
       if (writes.length > 0) {
-        await this.#rpc.post("com.atproto.repo.applyWrites", {
+        /** @type {any} */
+        const result = await ok(this.#rpc.post("com.atproto.repo.applyWrites", {
           input: { repo: this.#did.value, writes },
-        });
+        }));
+
+        if (result?.commit?.rev) {
+          this.#rev.value = result.commit.rev;
+        }
       }
     } catch (err) {
       if (this.#isSessionError(err)) {

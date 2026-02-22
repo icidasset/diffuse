@@ -135,7 +135,7 @@ export class RpcChannel {
           this.#port.postMessage({ __rpc: true, id, type: "response", result });
         },
         (err) => {
-          console.error(err)
+          console.error(err);
           this.#port.postMessage({
             __rpc: true,
             id,
@@ -145,7 +145,7 @@ export class RpcChannel {
         },
       );
     } catch (err) {
-      console.error(err)
+      console.error(err);
       this.#port.postMessage({
         __rpc: true,
         id,

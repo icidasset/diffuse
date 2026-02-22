@@ -6,6 +6,7 @@ import "@components/output/bytes/s3/element.js";
 import "@components/output/polymorphic/indexed-db/element.js";
 import "@components/output/raw/atproto/element.js";
 import "@components/transformer/output/bytes/automerge/element.js";
+import "@components/transformer/output/raw/atproto-sync/element.js";
 import "@components/transformer/output/refiner/default/element.js";
 import "@components/transformer/output/replicator/broadcast/element.js";
 import "@components/transformer/output/string/json/element.js";
@@ -103,16 +104,13 @@ class OutputOrchestrator extends DiffuseElement {
     const group = this.group === DEFAULT_GROUP ? undefined : this.group;
 
     return html`
-      <!-- IDB-ONLY #2 -->
       <dop-indexed-db
         id="do-output__dop-indexed-db__json"
         namespace="json"
       ></dop-indexed-db>
 
-      <!-- S3 #2 -->
-      <dob-s3
-        id="do-output__dob-s3"
-      ></dob-s3>
+      <dob-s3 id="do-output__dob-s3"></dob-s3>
+      <dor-atproto id="do-output__dor-atproto"></dor-atproto>
 
       <!-- OUTPUT CONFIGURATOR -->
       <dc-output
@@ -120,7 +118,7 @@ class OutputOrchestrator extends DiffuseElement {
         default="do-output__dc-output__local"
         group="${ifDefined(group)}"
       >
-        <!-- IDB-ONLY #1 -->
+        <!-- Local -->
         <dtos-json
           id="do-output__dc-output__local"
           output-selector="#do-output__dop-indexed-db__json"
@@ -128,12 +126,14 @@ class OutputOrchestrator extends DiffuseElement {
         ></dtos-json>
 
         <!-- ATProto -->
-        <dor-atproto
+        <dtor-atproto-sync
           id="do-output__dc-output__atproto"
+          namespace="atproto"
+          output-selector="#do-output__dor-atproto"
           label="AT Protocol"
-        ></dor-atproto>
+        ></dtor-atproto-sync>
 
-        <!-- S3 #1 -->
+        <!-- S3 -->
         <dtob-automerge
           id="do-output__dc-output__s3"
           namespace="s3"
@@ -142,13 +142,13 @@ class OutputOrchestrator extends DiffuseElement {
         ></dtob-automerge>
       </dc-output>
 
-      <!-- Refiner -->
+      <!-- REFINER -->
       <dtor-default
         id="do-output__dtor-default"
         output-selector="#do-output__dc-output"
       ></dtor-default>
 
-      <!-- Entry ⬆️ -->
+      <!-- ENTRY ⬆️ -->
       <dtor-broadcast
         id="do-output__output"
         output-selector="#do-output__dtor-default"
