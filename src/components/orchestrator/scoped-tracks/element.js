@@ -5,6 +5,7 @@ import {
 } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
 import { filterByPlaylist } from "@common/playlist.js";
+import { trackURIBase, uniqueTrackURIs } from "@common/track.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -96,23 +97,24 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     if (scope) this.#scope.value = scope;
 
     // When defined
+    await customElements.whenDefined(input.localName);
     await customElements.whenDefined(output.localName);
     if (scope) await customElements.whenDefined(scope.localName);
-
-    let startTime = performance.now();
 
     // Watch tracks collection
     this.effect(async () => {
       const collection = output.tracks.collection();
       if ((await this.isLeader()) === false) return;
 
-      const endTime = performance.now();
-      console.log("🫠", collection.length, endTime - startTime);
+      /** @type {string[]} */
+      const uris = [];
+      const tracks = collection.filter((t) => {
+        uris.push(t.uri);
+        return t.kind !== "placeholder";
+      });
 
-      // Consult input
-      const groups = await input.groupConsult(
-        collection.map((t) => t.uri),
-      );
+      // Consult inputs
+      const groups = collection.length ? await input.groupConsult(uris) : {};
 
       /** @type {Set<string>} */
       const availableUris = new Set();
@@ -124,8 +126,8 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         }
       });
 
-      const availableTracks = collection.filter((t) => {
-        return t.kind !== "placeholder" && availableUris.has(t.uri);
+      const availableTracks = tracks.filter((t) => {
+        return availableUris.has(t.uri);
       });
 
       // Set pool
@@ -162,9 +164,6 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       const final = playlistItems?.length
         ? filterByPlaylist(tracks, playlistItems)
         : tracks;
-
-      const endTime = performance.now();
-      console.log("🚀", endTime - startTime);
 
       this.#tracksFinal.set(final);
     });
