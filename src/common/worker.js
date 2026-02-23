@@ -85,21 +85,35 @@ export function workerProxy(workerLinkCreator) {
 }
 
 /**
- * @param {MessagePort | Worker | SharedWorker} workerOrLink
+ * @param {() => MessagePort | Worker | SharedWorker} workerCreator
  * @param {{ fromWorker?: (message: any) => Promise<{ data: any, transfer?: Transferable[] }>; toWorker?: (message: any) => Promise<{ data: any, transfer?: Transferable[] }> }} [hooks]
  * @returns {Tunnel}
  */
-export function workerTunnel(workerOrLink, hooks = {}) {
-  const link = workerOrLink instanceof SharedWorker
-    ? workerLink(workerOrLink)
-    : workerOrLink;
+export function workerTunnel(workerCreator, hooks = {}) {
+  /** @type {MessagePort | Worker | undefined} */
+  let link;
+
   const channel = new MessageChannel();
+
+  function ensureLink() {
+    if (link) return link;
+
+    const workerOrLink = workerCreator();
+
+    link = workerOrLink instanceof SharedWorker
+      ? workerLink(workerOrLink)
+      : workerOrLink;
+
+    link.addEventListener("message", workerListener);
+
+    return link;
+  }
 
   channel.port1.addEventListener("message", async (event) => {
     // Send to worker
     const { data, transfer } = await hooks?.toWorker?.(event.data) ??
       { data: event.data };
-    link.postMessage(data, { transfer });
+    ensureLink().postMessage(data, { transfer });
   });
 
   /**
@@ -113,14 +127,12 @@ export function workerTunnel(workerOrLink, hooks = {}) {
     channel.port1.postMessage(data, { transfer });
   };
 
-  link.addEventListener("message", workerListener);
-
   channel.port1.start();
   channel.port2.start();
 
   return {
     disconnect: () => {
-      link.removeEventListener("message", workerListener);
+      link?.removeEventListener("message", workerListener);
       channel.port1.close();
       channel.port2.close();
     },

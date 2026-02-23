@@ -202,15 +202,16 @@ export class DiffuseElement extends HTMLElement {
   }
 
   /**
+   * Creates a MessagePort that is connected to the worker.
+   * All the dependencies are added automatically.
+   *
    * @param {WorkerOpts} [opts]
    */
   workerTunnel({ forceNew } = {}) {
-    // Creates a MessagePort that is connected to the worker.
-    // All the dependencies are added automatically.
     const worker = forceNew === true ||
         (typeof forceNew === "object" && forceNew.self === true)
-      ? this.createWorker()
-      : this.worker();
+      ? () => this.createWorker()
+      : () => this.worker();
     const deps = this.dependencies();
 
     let toWorker;

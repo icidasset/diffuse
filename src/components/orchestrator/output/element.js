@@ -38,8 +38,6 @@ class OutputOrchestrator extends DiffuseElement {
       const set = this.outputConfigurator.activated();
       const newlyActicated = set.difference(previouslyActivated);
 
-      console.log(newlyActicated);
-
       newlyActicated.forEach((id) => {
         switch (id) {
           case "do-output__dc-output__local": {
