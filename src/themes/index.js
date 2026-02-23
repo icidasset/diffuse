@@ -10,7 +10,8 @@ import { autocompletion } from "@codemirror/autocomplete";
 import * as CID from "@common/cid.js";
 import foundation from "@common/facets/foundation.js";
 import { effect, signal } from "@common/signal.js";
-import { themeFromUrl } from "@common/themes/utils.js";
+import { themeFromURI } from "@common/themes/utils.js";
+import { loadURI } from "@common/loader.js";
 
 /**
  * @import {Theme} from "@definitions/types.d.ts"
@@ -30,21 +31,21 @@ document.body.addEventListener(
     const rel = target.getAttribute("rel");
     if (!rel) return;
 
-    const url = target.closest("li")?.getAttribute("data-url");
-    if (!url) return;
+    const uri = target.closest("li")?.getAttribute("data-uri");
+    if (!uri) return;
 
     const name = target.closest("li")?.getAttribute("data-name");
     if (!name) return;
 
     switch (rel) {
       case "fork": {
-        const theme = await themeFromUrl({ name, url }, { fetchHTML: true });
+        const theme = await themeFromURI({ name, uri }, { fetchHTML: true });
         editTheme(theme);
         document.querySelector("#build")?.scrollIntoView();
         break;
       }
       case "save": {
-        const theme = await themeFromUrl({ name, url }, { fetchHTML: false });
+        const theme = await themeFromURI({ name, uri }, { fetchHTML: false });
         const out = foundation.orchestrator.output();
 
         out.themes.save([
@@ -98,12 +99,12 @@ effect(() => {
                   </button>
                 </div>
                 <div class="list-description">
-                  ${c.url && !c.html
+                  ${c.uri && !c.html
                     ? html`
                       <span class="with-icon">
                         <i class="ph-fill ph-binoculars"></i>
                         <span>Tracking the original <a href="${c
-                          .url}">URL</a></span>
+                          .uri}">URI</a></span>
                       </span>
                     `
                     : html`
@@ -256,8 +257,8 @@ async function editTheme(ogTheme) {
   if (!nameEl) return;
 
   // Make sure HTML is loaded
-  if (!theme.html && theme.url) {
-    const html = await fetch(theme.url).then((res) => res.text());
+  if (!theme.html && theme.uri) {
+    const html = await loadURI(theme.uri);
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
 
     theme.html = html;
