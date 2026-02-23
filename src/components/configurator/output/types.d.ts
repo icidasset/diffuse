@@ -7,7 +7,12 @@ export type OutputConfiguratorElement<ElementType = OutputElement> =
     deselect: () => Promise<void>;
     options: () => Promise<Array<OutputOption<ElementType>>>;
     select: (id: string) => Promise<void>;
-    selectedOutput: SignalReader<ElementType | null>;
+
+    /** Output-element ids that have been selected earlier. */
+    activated: SignalReader<Set<string>>;
+
+    /** Selected output element. */
+    selected: SignalReader<ElementType | null>;
   };
 
 export type OutputOption<ElementType = OutputElement> = {

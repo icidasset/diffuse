@@ -11,8 +11,7 @@ import { NAME as S3_NAME } from "@components/output/bytes/s3/element.js";
  * @import {S3OutputElement} from "@components/output/bytes/s3/types.d.ts"
  *
  * @import {OutputElement} from "@components/output/types.d.ts"
- * @import {OutputConfiguratorElement, OutputOption} from "@components/configurator/output/types.d.ts"
- * @import {OutputFallbackConfiguratorElement} from "@components/configurator/output-fallback/types.d.ts"
+ * @import {OutputConfiguratorElement} from "@components/configurator/output/types.d.ts"
  * @import {RenderArg} from "@common/element.d.ts"
  */
 
@@ -100,7 +99,10 @@ class OutputConfig extends DiffuseElement {
     await atproto.logout();
   };
 
-  #handleAtprotoActivate = async () => {
+  /** @param {Event} event */
+  #handleAtprotoActivate = async (event) => {
+    event.preventDefault();
+
     const output = this.$output.value;
     if (!output || !("select" in output)) return;
 
@@ -175,7 +177,10 @@ class OutputConfig extends DiffuseElement {
     await s3.unsetBucket();
   };
 
-  #handleS3Activate = async () => {
+  /** @param {Event} event */
+  #handleS3Activate = async (event) => {
+    event.preventDefault();
+
     const output = this.$output.value;
     if (!output || !("select" in output)) return;
 
@@ -291,8 +296,8 @@ class OutputConfig extends DiffuseElement {
    */
   #renderOverviewTab(html) {
     const selectedOutput =
-      this.$output.value && "selectedOutput" in this.$output.value
-        ? this.$output.value.selectedOutput()
+      this.$output.value && "selected" in this.$output.value
+        ? this.$output.value.selected()
         : undefined;
 
     return html`
@@ -334,7 +339,7 @@ class OutputConfig extends DiffuseElement {
             />
             <div>
               ${this.$output.value &&
-                  "selectedOutput" in this.$output.value
+                  "selected" in this.$output.value
                 ? selectedOutput
                   ? html`
                     <p>
@@ -361,8 +366,8 @@ class OutputConfig extends DiffuseElement {
   #renderAtprotoTab(html) {
     const did = this.$atproto.value?.did() ?? null;
     const selectedOutput =
-      this.$output.value && "selectedOutput" in this.$output.value
-        ? this.$output.value.selectedOutput()
+      this.$output.value && "selected" in this.$output.value
+        ? this.$output.value.selected()
         : undefined;
 
     const authenticated = () => {
@@ -428,8 +433,8 @@ class OutputConfig extends DiffuseElement {
     const s3 = this.$s3.value;
     const ready = s3?.ready() ?? false;
     const selectedOutput =
-      this.$output.value && "selectedOutput" in this.$output.value
-        ? this.$output.value.selectedOutput()
+      this.$output.value && "selected" in this.$output.value
+        ? this.$output.value.selected()
         : undefined;
 
     const configured = () => {

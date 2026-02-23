@@ -1,10 +1,8 @@
-import {
-  BroadcastableDiffuseElement,
-  DiffuseElement,
-} from "@common/element.js";
-import { batch, computed, signal } from "@common/signal.js";
+import { BroadcastableDiffuseElement } from "@common/element.js";
+import { batch, computed, signal, trigger } from "@common/signal.js";
 
 /**
+ * @import {DiffuseElement} from "@common/element.js"
  * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
  *
@@ -34,7 +32,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     const manager = {
       facets: {
         collection: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.facets.collection();
 
           const def = this.#defaultOutput.value;
@@ -46,13 +44,13 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) def.facets.reload();
 
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.facets.reload();
 
           return Promise.resolve();
         },
         save: async (newFacets) => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return await out.facets.save(newFacets);
 
           const def = this.#defaultOutput.value;
@@ -61,7 +59,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           this.#memory.facets.value = newFacets;
         },
         state: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.facets.state();
 
           const def = this.#defaultOutput.value;
@@ -72,7 +70,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       },
       playlistItems: {
         collection: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.playlistItems.collection();
 
           const def = this.#defaultOutput.value;
@@ -84,13 +82,13 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) def.playlistItems.reload();
 
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.playlistItems.reload();
 
           return Promise.resolve();
         },
         save: async (newPlaylistItems) => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return await out.playlistItems.save(newPlaylistItems);
 
           const def = this.#defaultOutput.value;
@@ -99,7 +97,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           this.#memory.playlistItems.value = newPlaylistItems;
         },
         state: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.playlistItems.state();
 
           const def = this.#defaultOutput.value;
@@ -110,7 +108,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       },
       themes: {
         collection: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.themes.collection();
 
           const def = this.#defaultOutput.value;
@@ -122,13 +120,13 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) def.themes.reload();
 
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.themes.reload();
 
           return Promise.resolve();
         },
         save: async (newThemes) => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return await out.themes.save(newThemes);
 
           const def = this.#defaultOutput.value;
@@ -137,7 +135,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           this.#memory.themes.value = newThemes;
         },
         state: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.themes.state();
 
           const def = this.#defaultOutput.value;
@@ -148,7 +146,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       },
       tracks: {
         collection: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.tracks.collection();
 
           const def = this.#defaultOutput.value;
@@ -160,13 +158,13 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) def.tracks.reload();
 
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.tracks.reload();
 
           return Promise.resolve();
         },
         save: async (newTracks) => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return await out.tracks.save(newTracks);
 
           const def = this.#defaultOutput.value;
@@ -175,7 +173,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           this.#memory.tracks.value = newTracks;
         },
         state: computed(() => {
-          const out = this.#selectedOutput.value;
+          const out = this.#selected.value;
           if (out) return out.tracks.state();
 
           const def = this.#defaultOutput.value;
@@ -187,7 +185,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
       // Other
       ready: computed(() => {
-        const out = this.#selectedOutput.value;
+        const out = this.#selected.value;
         if (out) return out.ready();
 
         const def = this.#defaultOutput.value;
@@ -207,6 +205,8 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   // SIGNALS
 
+  #activated = signal(/** @type {Set<string>} */ (new Set()), { eager: true });
+
   #defaultOutput = signal(
     /** @type {Output | null | undefined} */ (undefined),
   );
@@ -218,7 +218,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     tracks: signal(/** @type {Track[]} */ ([])),
   };
 
-  #selectedOutput = signal(
+  #selected = signal(
     /** @type {Output | null | undefined} */ (undefined),
   );
 
@@ -226,7 +226,8 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   // STATE
 
-  selectedOutput = computed(() => this.#selectedOutput.value ?? null);
+  activated = this.#activated.get;
+  selected = computed(() => this.#selected.value ?? null);
 
   // LIFECYCLE
 
@@ -251,31 +252,39 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     // Super
     super.connectedCallback();
 
-    /** @type {Output | null | undefined} */
-    let defaultOutput = undefined;
-
+    // Outputs
     const def_ault = this.getAttribute("default");
-    if (def_ault) {
-      defaultOutput = await this.#findOutput(def_ault);
-    }
-
-    const selectedOutput = await this.#findSelectedOutput();
+    const selectedOutputId = localStorage.getItem(
+      `${STORAGE_PREFIX}/selected/id`,
+    );
 
     batch(() => {
-      this.#selectedOutput.value = selectedOutput;
+      /** @type {Set<string>} */
+      const activated = new Set();
+
+      if (def_ault) {
+        activated.add(def_ault);
+      }
+
+      if (selectedOutputId) {
+        activated.add(selectedOutputId);
+      }
+
+      this.#activated.value = activated;
+    });
+
+    /** @type {Output | null} */
+    const defaultOutput = def_ault ? await this.#findOutput(def_ault) : null;
+    const selectedOutput = await this.#findOutput(selectedOutputId);
+
+    batch(() => {
+      this.#selected.value = selectedOutput;
       this.#defaultOutput.value = defaultOutput;
       this.#setupFinished.value = true;
     });
   }
 
   // MISC
-
-  /**
-   * @param {string | null} id
-   */
-  #selectOutput = async (id) => {
-    this.#selectedOutput.value = await this.#findOutput(id);
-  };
 
   /**
    * @param {string | null} id
@@ -296,11 +305,16 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     return /** @type {Output} */ (/** @type {unknown} */ (el));
   }
 
-  async #findSelectedOutput() {
-    const id = localStorage.getItem(`${STORAGE_PREFIX}/selected/id`);
-    if (id) return this.#findOutput(id);
-    return undefined;
-  }
+  /**
+   * @param {string | null} id
+   */
+  #selectOutput = async (id) => {
+    if (id) {
+      this.#activated.value = new Set([...this.#activated.value.values(), id]);
+    }
+
+    this.#selected.value = await this.#findOutput(id);
+  };
 
   /**
    * @override
@@ -333,14 +347,10 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     const deps = this.dependencies();
     const entries = Object.entries(deps);
 
-    await Promise.all(
-      entries.map(([_k, v]) => customElements.whenDefined(v.localName)),
-    );
-
     return entries.map(([k, v]) => {
       return {
         id: k,
-        label: v.label,
+        label: v.label ?? v.getAttribute("label"),
         element: /** @type {OutputElement} */ (v),
       };
     });

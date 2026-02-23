@@ -2,14 +2,8 @@ import { ifDefined } from "lit-html/directives/if-defined.js";
 import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
-import "@components/output/bytes/s3/element.js";
-import "@components/output/polymorphic/indexed-db/element.js";
-import "@components/output/raw/atproto/element.js";
-import "@components/transformer/output/bytes/automerge/element.js";
-import "@components/transformer/output/raw/atproto-sync/element.js";
 import "@components/transformer/output/refiner/default/element.js";
 import "@components/transformer/output/replicator/broadcast/element.js";
-import "@components/transformer/output/string/json/element.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -28,6 +22,51 @@ import "@components/transformer/output/string/json/element.js";
  */
 class OutputOrchestrator extends DiffuseElement {
   static NAME = "diffuse/orchestrator/output";
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  async connectedCallback() {
+    super.connectedCallback();
+
+    /** @type {Set<string>} */
+    let previouslyActivated = new Set();
+
+    this.effect(() => {
+      const set = this.outputConfigurator.activated();
+      const newlyActicated = set.difference(previouslyActivated);
+
+      console.log(newlyActicated);
+
+      newlyActicated.forEach((id) => {
+        switch (id) {
+          case "do-output__dc-output__local": {
+            import("@components/output/polymorphic/indexed-db/element.js");
+            import("@components/transformer/output/string/json/element.js");
+            break;
+          }
+          case "do-output__dc-output__atproto": {
+            import("@components/output/raw/atproto/element.js");
+            import(
+              "@components/transformer/output/raw/atproto-sync/element.js"
+            );
+            break;
+          }
+          case "do-output__dc-output__s3": {
+            import("@components/output/bytes/s3/element.js");
+            import("@components/transformer/output/bytes/automerge/element.js");
+            break;
+          }
+        }
+      });
+
+      previouslyActivated = set;
+    });
+  }
+
+  // ELEMENT GETTERS
 
   /**
    * @returns {OutputElement}
@@ -52,6 +91,7 @@ class OutputOrchestrator extends DiffuseElement {
     if (!outputConfigurator) {
       throw new Error("Output orchestrator did not render yet.");
     }
+
     return outputConfigurator;
   }
 
@@ -79,6 +119,10 @@ class OutputOrchestrator extends DiffuseElement {
 
   // PROXY ADDITIONAL OUTPUT CONFIGURATOR ACTIONS
 
+  get activated() {
+    return this.outputConfigurator.activated;
+  }
+
   get deselect() {
     return this.outputConfigurator.deselect;
   }
@@ -91,8 +135,8 @@ class OutputOrchestrator extends DiffuseElement {
     return this.outputConfigurator.select;
   }
 
-  get selectedOutput() {
-    return this.outputConfigurator.selectedOutput;
+  get selected() {
+    return this.outputConfigurator.selected;
   }
 
   // RENDER
