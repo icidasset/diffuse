@@ -228,6 +228,8 @@ class Browser extends DiffuseElement {
     const playlist = this.$scope.value?.playlist();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
 
+    console.log(tracks, this.$provider.value)
+
     // Virtual list
     const totalTracks = tracks.length;
     const { startIndex, endIndex: rawEnd } = this.#computeWindow();

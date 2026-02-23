@@ -3,7 +3,7 @@ import {
   query,
   queryOptional,
 } from "@common/element.js";
-import { computed, signal } from "@common/signal.js";
+import { batch, computed, signal } from "@common/signal.js";
 import { filterByPlaylist } from "@common/playlist.js";
 import { trackURIBase, uniqueTrackURIs } from "@common/track.js";
 
@@ -59,6 +59,22 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(this.nameWithGroup, {
+        getTracksAvailable: {
+          strategy: "leaderOnly",
+          fn: this.#tracksAvailable.get,
+        },
+        getTracksSearch: {
+          strategy: "leaderOnly",
+          fn: this.#tracksSearch.get,
+        },
+        getTracksFinal: {
+          strategy: "leaderOnly",
+          fn: this.#tracksFinal.get,
+        },
+        setTracksAvailable: {
+          strategy: "replicate",
+          fn: this.#tracksAvailable.set,
+        },
         setTracksSearch: {
           strategy: "replicate",
           fn: this.#tracksSearch.set,
@@ -69,10 +85,22 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         },
       });
 
-      if (actions) {
-        this.#tracksSearch.set = actions.setTracksSearch;
-        this.#tracksFinal.set = actions.setTracksFinal;
-      }
+      if (!actions) return;
+
+      this.#tracksAvailable.set = actions.setTracksAvailable;
+      this.#tracksSearch.set = actions.setTracksSearch;
+      this.#tracksFinal.set = actions.setTracksFinal;
+
+      // Sync signal state with leader
+      Promise.all([
+        actions.getTracksAvailable(),
+        actions.getTracksSearch(),
+        actions.getTracksFinal(),
+      ]).then(([available, search, final]) => batch(() => {
+        this.#tracksAvailable.value = available;
+        this.#tracksSearch.value = search;
+        this.#tracksFinal.value = final;
+      }));
     }
 
     // Super

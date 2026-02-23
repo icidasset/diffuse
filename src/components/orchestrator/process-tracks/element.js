@@ -73,7 +73,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
 
       // Sync #performedInitialProcess with leader
       actions.getPerfInit().then((val) => {
-        this.#performedInitialProcess.set(val);
+        this.#performedInitialProcess.value = val;
       });
     }
 
