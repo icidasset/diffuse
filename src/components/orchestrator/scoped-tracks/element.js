@@ -8,11 +8,8 @@ import { filterByPlaylist } from "@common/playlist.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
- * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {InputElement} from "@components/input/types.d.ts"
  * @import {OutputElement} from "@components/output/types.d.ts"
- *
- * @import {Actions} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -21,21 +18,6 @@ import { filterByPlaylist } from "@common/playlist.js";
 
 class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/scoped-tracks";
-  static WORKER_URL = "components/orchestrator/scoped-tracks/worker.js";
-
-  /** @type {ProxiedActions<Actions>} */
-  #proxy;
-
-  constructor() {
-    super();
-    this.#proxy = this.workerProxy({
-      forceNew: {
-        dependencies: {
-          input: true,
-        },
-      },
-    });
-  }
 
   // SIGNALS
 
@@ -122,10 +104,33 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     // Watch tracks collection
     this.effect(async () => {
       const collection = output.tracks.collection();
-      console.log("🫠", collection.length);
       if ((await this.isLeader()) === false) return;
-      const { availableTracks } = await this.#proxy.supply(collection);
-      this.#tracksAvailable.value = availableTracks;
+
+      console.log("🫠", collection.length);
+
+      // Consult input
+      const groups = await input.groupConsult(
+        collection.map((t) => t.uri),
+      );
+
+      /** @type {Set<string>} */
+      const availableUris = new Set();
+
+      Object.values(groups).forEach((value) => {
+        if (value.available === false) return;
+        for (const uri of value.uris) {
+          availableUris.add(uri);
+        }
+      });
+
+      const availableTracks = collection.filter((t) => {
+        return t.kind !== "placeholder" && availableUris.has(t.uri);
+      });
+
+      // Set pool
+      search.supply({ tracks: availableTracks });
+
+      this.#tracksAvailable.set(availableTracks);
     });
 
     // Watch search supply
@@ -162,21 +167,6 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 
       this.#tracksFinal.set(final);
     });
-  }
-
-  // WORKERS
-
-  /**
-   * @override
-   */
-  dependencies() {
-    if (!this.#input.value) throw new Error("Input element not defined yet");
-    if (!this.#search.value) throw new Error("Search element not defined yet");
-
-    return {
-      input: this.#input.value,
-      search: this.#search.value,
-    };
   }
 }
 
