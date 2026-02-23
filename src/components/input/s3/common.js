@@ -3,6 +3,7 @@ import * as IDB from "idb-keyval";
 import * as URI from "uri-js";
 import QS from "query-string";
 
+import { cachedConsult } from "@components/input/common.js";
 import { ENCODINGS, IDB_BUCKETS, SCHEME } from "./constants.js";
 
 /**
@@ -66,6 +67,8 @@ export async function consultBucket(bucket) {
   const client = createClient(bucket);
   return await client.bucketExists(bucket.bucketName);
 }
+
+export const consultBucketCached = cachedConsult(consultBucket, bucketId);
 
 /**
  * @param {Bucket} bucket

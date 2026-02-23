@@ -1,10 +1,12 @@
 import { ostiary, rpc } from "@common/worker.js";
-import {
-  detach as detachUtil,
-  groupKeyHash,
-} from "@components/input/common.js";
+import { detach as detachUtil, groupKey } from "@components/input/common.js";
 
-import { groupTracksByHost, groupUrisByHost, parseURI } from "./common.js";
+import {
+  consultHostCached,
+  groupTracksByHost,
+  groupUrisByHost,
+  parseURI,
+} from "./common.js";
 import { SCHEME } from "./constants.js";
 
 /**
@@ -28,21 +30,8 @@ export async function consult(fileUriOrScheme) {
     return { supported: false, reason: "Invalid HTTPS URL" };
   }
 
-  // Ping the URL to check if it's reachable
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-    const response = await fetch(parsed.url, {
-      method: "HEAD",
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-    return { supported: true, consult: response.ok };
-  } catch (error) {
-    return { supported: true, consult: false };
-  }
+  const consult = await consultHostCached(parsed.url);
+  return { supported: true, consult };
 }
 
 /**
@@ -75,26 +64,8 @@ export async function groupConsult(uris) {
 
   const promises = Object.entries(groups).map(
     async ([_domainId, { host, uris }]) => {
-      // Pick one URI to test reachability
       const testUri = uris[0];
-      let available = false;
-
-      if (testUri) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-          const response = await fetch(testUri, {
-            method: "HEAD",
-            signal: controller.signal,
-          });
-
-          clearTimeout(timeoutId);
-          available = response.ok;
-        } catch {
-          available = false;
-        }
-      }
+      const available = testUri ? await consultHostCached(testUri) : false;
 
       /** @type {ConsultGrouping} */
       const grouping = available
@@ -102,7 +73,7 @@ export async function groupConsult(uris) {
         : { available, reason: "Host unreachable", scheme: SCHEME, uris };
 
       return {
-        key: await groupKeyHash(SCHEME, host),
+        key: groupKey(SCHEME, host),
         grouping,
       };
     },

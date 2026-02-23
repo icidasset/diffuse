@@ -1,3 +1,5 @@
+import { cachedConsult } from "@components/input/common.js";
+
 /**
  * @import {Track} from "@definitions/types.d.ts"
  */
@@ -236,3 +238,24 @@ export function parseURI(uriString) {
     return undefined;
   }
 }
+
+/** @param {string} uri */
+async function consultHost(uri) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(uri, {
+      method: "HEAD",
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+export const consultHostCached = cachedConsult(
+  consultHost,
+  (uri) => new URL(uri).host,
+);

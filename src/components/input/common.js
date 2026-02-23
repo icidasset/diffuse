@@ -1,8 +1,35 @@
-import { base64url } from "iso-base/rfc4648";
-
 /**
  * @import {Track} from "@definitions/types.d.ts"
  */
+
+/**
+ * Creates a time-cached version of an async consult function.
+ * Results are cached per key for the given TTL.
+ *
+ * @template T
+ * @param {(arg: T) => Promise<boolean>} fn
+ * @param {(arg: T) => string} keyFn
+ * @param {number} ttl - Cache TTL in milliseconds
+ * @returns {(arg: T) => Promise<boolean>}
+ */
+export function cachedConsult(fn, keyFn, ttl = 60_000 * 5) {
+  /** @type {Map<string, { value: boolean; expiry: number }>} */
+  const cache = new Map();
+
+  return async (arg) => {
+    const key = keyFn(arg);
+    const now = Date.now();
+    const cached = cache.get(key);
+
+    if (cached && cached.expiry > now) {
+      return cached.value;
+    }
+
+    const value = await fn(arg);
+    cache.set(key, { value, expiry: now + ttl });
+    return value;
+  };
+}
 
 /**
  * @param {{ fileUriOrScheme: string; handleFileUri: (args: { fileURI: string; tracks: Track[] }) => Track[]; inputScheme: string; tracks: Track[] }} _
@@ -23,10 +50,8 @@ export function detach(
  * @param {string} scheme
  * @param {string} groupId
  */
-export async function groupKeyHash(scheme, groupId) {
-  const rawBytes = new TextEncoder().encode(`${scheme}://${groupId}`);
-  const hashedBytes = await crypto.subtle.digest("SHA-256", rawBytes);
-  return base64url.encode(new Uint8Array(hashedBytes));
+export function groupKey(scheme, groupId) {
+  return `${scheme}://${groupId}`;
 }
 
 /**

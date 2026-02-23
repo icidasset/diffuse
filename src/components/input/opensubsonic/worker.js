@@ -3,11 +3,11 @@ import { ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
 import { removeUndefinedValuesFromRecord } from "@common/utils.js";
-import { detach as detachUtil, groupKeyHash } from "../common.js";
+import { detach as detachUtil, groupKey } from "../common.js";
 import {
   autoTypeToTrackKind,
   buildURI,
-  consultServer,
+  consultServerCached,
   createClient,
   groupTracksByServer,
   groupUrisByServer,
@@ -37,7 +37,7 @@ export async function consult(fileUriOrScheme) {
   const parsed = parseURI(fileUriOrScheme);
   if (!parsed) return { supported: true, consult: "undetermined" };
 
-  const consult = await consultServer(parsed.server);
+  const consult = await consultServerCached(parsed.server);
   return { supported: true, consult };
 }
 
@@ -71,7 +71,7 @@ export async function groupConsult(uris) {
 
   const promises = Object.entries(groups).map(
     async ([serverId, { server, uris }]) => {
-      const available = await consultServer(server);
+      const available = await consultServerCached(server);
 
       /** @type {ConsultGrouping} */
       const grouping = available
@@ -79,7 +79,7 @@ export async function groupConsult(uris) {
         : { available, reason: "Server ping failed", scheme: SCHEME, uris };
 
       return {
-        key: await groupKeyHash(SCHEME, serverId),
+        key: groupKey(SCHEME, serverId),
         grouping,
       };
     },

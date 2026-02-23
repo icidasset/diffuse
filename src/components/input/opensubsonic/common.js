@@ -2,6 +2,7 @@ import * as URI from "uri-js";
 import QS from "query-string";
 
 import { SCHEME } from "./constants.js";
+import { cachedConsult } from "@components/input/common.js";
 import { SubsonicAPIWithoutFetch } from "./class.js";
 
 /**
@@ -59,6 +60,8 @@ export async function consultServer(server) {
   const resp = await client.ping().catch(() => undefined);
   return resp?.status?.toLowerCase() === "ok";
 }
+
+export const consultServerCached = cachedConsult(consultServer, serverId);
 
 /**
  * @param {Server} server

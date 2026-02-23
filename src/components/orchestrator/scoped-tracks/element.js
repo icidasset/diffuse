@@ -99,14 +99,15 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     await customElements.whenDefined(output.localName);
     if (scope) await customElements.whenDefined(scope.localName);
 
-    const startTime = performance.now();
+    let startTime = performance.now();
 
     // Watch tracks collection
     this.effect(async () => {
       const collection = output.tracks.collection();
       if ((await this.isLeader()) === false) return;
 
-      console.log("🫠", collection.length);
+      const endTime = performance.now();
+      console.log("🫠", collection.length, endTime - startTime);
 
       // Consult input
       const groups = await input.groupConsult(

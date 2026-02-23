@@ -1,13 +1,13 @@
 import { ostiary, rpc } from "@common/worker.js";
 import {
   detach as detachUtil,
-  groupKeyHash,
+  groupKey,
   isAudioFile,
 } from "@components/input/common.js";
 import {
   bucketId,
   buildURI,
-  consultBucket,
+  consultBucketCached,
   createClient,
   groupTracksByBucket,
   groupUrisByBucket,
@@ -36,7 +36,7 @@ export async function consult(fileUriOrScheme) {
   const parsed = parseURI(fileUriOrScheme);
   if (!parsed) return { supported: true, consult: "undetermined" };
 
-  const consult = await consultBucket(parsed.bucket);
+  const consult = await consultBucketCached(parsed.bucket);
   return { supported: true, consult };
 }
 
@@ -70,7 +70,7 @@ export async function groupConsult(uris) {
 
   const promises = Object.entries(groups).map(
     async ([bucketId, { bucket, uris }]) => {
-      const available = await consultBucket(bucket);
+      const available = await consultBucketCached(bucket);
 
       /** @type {ConsultGrouping} */
       const grouping = available
@@ -78,7 +78,7 @@ export async function groupConsult(uris) {
         : { available, reason: "Bucket unavailable", scheme: SCHEME, uris };
 
       return {
-        key: await groupKeyHash(SCHEME, bucketId),
+        key: groupKey(SCHEME, bucketId),
         grouping,
       };
     },
