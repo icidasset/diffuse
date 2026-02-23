@@ -1,4 +1,3 @@
-import { filterByPlaylist as filterByPlaylistFn } from "@common/playlist.js";
 import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
@@ -29,17 +28,21 @@ export async function supply({ data, ports }) {
   ports.search.start();
 
   // Consult input
-  const groups = await input.groupConsult(cachedTracks);
+  const groups = await input.groupConsult(
+    cachedTracks.map((t) => t.uri),
+  );
 
-  /** @type {Track[]} */
-  const availableTracks = [];
+  /** @type {Set<string>} */
+  const availableUris = new Set();
 
   Object.values(groups).forEach((value) => {
     if (value.available === false) return;
-    for (const track of value.tracks) {
-      availableTracks.push(track);
+    for (const uri of value.uris) {
+      availableUris.add(uri);
     }
-  }, []);
+  });
+
+  const availableTracks = cachedTracks.filter((t) => availableUris.has(t.uri));
 
   // Set pool
   search.supply({ tracks: availableTracks });

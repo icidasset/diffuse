@@ -14,15 +14,15 @@ export type Consult =
   | { supported: true; consult: "undetermined" | boolean };
 
 export type ConsultGrouping =
-  | { available: false; reason: string; scheme: string; tracks: Track[] }
-  | { available: true; scheme: string; tracks: Track[] };
+  | { available: false; reason: string; scheme: string; uris: string[] }
+  | { available: true; scheme: string; uris: string[] };
 
 export type GroupConsult = Record<string, ConsultGrouping>;
 
 export type InputActions = {
   consult(fileUriOrScheme: string): Promise<Consult>;
   detach(args: { fileUriOrScheme: string; tracks: Track[] }): Promise<Track[]>;
-  groupConsult(tracks: Track[]): Promise<GroupConsult>;
+  groupConsult(uris: string[]): Promise<GroupConsult>;
   list(tracks: Track[]): Promise<Track[]>;
   resolve(args: { method?: string; uri: string }): Promise<ResolvedUri>;
 };

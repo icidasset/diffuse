@@ -117,6 +117,29 @@ export function groupTracksByBucket(tracks) {
 }
 
 /**
+ * @param {string[]} uris
+ */
+export function groupUrisByBucket(uris) {
+  /** @type {Record<string, { bucket: Bucket; uris: string[] }>} */
+  const acc = {};
+
+  uris.forEach((uri) => {
+    const parsed = parseURI(uri);
+    if (!parsed) return acc;
+
+    const id = bucketId(parsed.bucket);
+
+    if (acc[id]) {
+      acc[id].uris.push(uri);
+    } else {
+      acc[id] = { bucket: parsed.bucket, uris: [uri] };
+    }
+  });
+
+  return acc;
+}
+
+/**
  * @returns {Promise<Record<string, Bucket>>}
  */
 export async function loadBuckets() {

@@ -63,6 +63,23 @@ export function groupTracksPerScheme(
 }
 
 /**
+ * @param {string[]} uris
+ * @returns {Record<string, string[]>}
+ */
+export function groupUrisPerScheme(uris) {
+  /** @type {Record<string, string[]>} */
+  const acc = {};
+
+  uris.forEach((uri) => {
+    const scheme = uri.substring(0, uri.indexOf(":"));
+    acc[scheme] ??= [];
+    acc[scheme].push(uri);
+  });
+
+  return acc;
+}
+
+/**
  * @param {unknown} test
  */
 export function isPrimitive(test) {

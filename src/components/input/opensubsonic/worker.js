@@ -10,6 +10,7 @@ import {
   consultServer,
   createClient,
   groupTracksByServer,
+  groupUrisByServer,
   parseURI,
   serverId,
 } from "./common.js";
@@ -65,17 +66,17 @@ export async function detach(args) {
 /**
  * @type {Actions['groupConsult']}
  */
-export async function groupConsult(tracks) {
-  const groups = groupTracksByServer(tracks);
+export async function groupConsult(uris) {
+  const groups = groupUrisByServer(uris);
 
   const promises = Object.entries(groups).map(
-    async ([serverId, { server, tracks }]) => {
+    async ([serverId, { server, uris }]) => {
       const available = await consultServer(server);
 
       /** @type {ConsultGrouping} */
       const grouping = available
-        ? { available, scheme: SCHEME, tracks }
-        : { available, reason: "Server ping failed", scheme: SCHEME, tracks };
+        ? { available, scheme: SCHEME, uris }
+        : { available, reason: "Server ping failed", scheme: SCHEME, uris };
 
       return {
         key: await groupKeyHash(SCHEME, serverId),

@@ -4,7 +4,7 @@ import {
   groupKeyHash,
 } from "@components/input/common.js";
 
-import { groupTracksByHost, parseURI } from "./common.js";
+import { groupTracksByHost, groupUrisByHost, parseURI } from "./common.js";
 import { SCHEME } from "./constants.js";
 
 /**
@@ -70,21 +70,21 @@ export async function detach(args) {
 /**
  * @type {Actions['groupConsult']}
  */
-export async function groupConsult(tracks) {
-  const groups = groupTracksByHost(tracks);
+export async function groupConsult(uris) {
+  const groups = groupUrisByHost(uris);
 
   const promises = Object.entries(groups).map(
-    async ([_domainId, { host, tracks }]) => {
-      // Pick one track to test reachability
-      const testTrack = tracks[0];
+    async ([_domainId, { host, uris }]) => {
+      // Pick one URI to test reachability
+      const testUri = uris[0];
       let available = false;
 
-      if (testTrack) {
+      if (testUri) {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-          const response = await fetch(testTrack.uri, {
+          const response = await fetch(testUri, {
             method: "HEAD",
             signal: controller.signal,
           });
@@ -98,8 +98,8 @@ export async function groupConsult(tracks) {
 
       /** @type {ConsultGrouping} */
       const grouping = available
-        ? { available, scheme: SCHEME, tracks }
-        : { available, reason: "Host unreachable", scheme: SCHEME, tracks };
+        ? { available, scheme: SCHEME, uris }
+        : { available, reason: "Host unreachable", scheme: SCHEME, uris };
 
       return {
         key: await groupKeyHash(SCHEME, host),
@@ -120,13 +120,13 @@ export async function groupConsult(tracks) {
  */
 export async function list(cachedTracks = []) {
   return cachedTracks.map((track) => {
-    const t = { ...track }
+    const t = { ...track };
 
     if (t.kind === "placeholder") {
-      t.kind = undefined
+      t.kind = undefined;
     }
 
-    return t
+    return t;
   });
 }
 

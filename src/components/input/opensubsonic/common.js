@@ -97,6 +97,29 @@ export function groupTracksByServer(tracks) {
 }
 
 /**
+ * @param {string[]} uris
+ */
+export function groupUrisByServer(uris) {
+  /** @type {Record<string, { server: Server; uris: string[] }>} */
+  const acc = {};
+
+  uris.forEach((uri) => {
+    const parsed = parseURI(uri);
+    if (!parsed) return;
+
+    const id = serverId(parsed.server);
+
+    if (acc[id]) {
+      acc[id].uris.push(uri);
+    } else {
+      acc[id] = { server: parsed.server, uris: [uri] };
+    }
+  });
+
+  return acc;
+}
+
+/**
  * Parse an opensubsonic URI.
  *
  * ```

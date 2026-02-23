@@ -84,6 +84,32 @@ export function groupTracksByHost(tracks) {
 }
 
 /**
+ * Group URIs by host.
+ *
+ * @param {string[]} uris
+ * @returns {Record<string, { host: string; uris: string[] }>}
+ */
+export function groupUrisByHost(uris) {
+  /** @type {Record<string, { host: string; uris: string[] }>} */
+  const acc = {};
+
+  uris.forEach((uri) => {
+    const parsed = parseURI(uri);
+    if (!parsed) return;
+
+    const host = parsed.host;
+
+    if (acc[host]) {
+      acc[host].uris.push(uri);
+    } else {
+      acc[host] = { host, uris: [uri] };
+    }
+  });
+
+  return acc;
+}
+
+/**
  * Extract unique hosts from tracks.
  *
  * @param {Track[]} tracks

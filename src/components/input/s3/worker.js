@@ -10,6 +10,7 @@ import {
   consultBucket,
   createClient,
   groupTracksByBucket,
+  groupUrisByBucket,
   parseURI,
 } from "./common.js";
 import { SCHEME } from "./constants.js";
@@ -64,17 +65,17 @@ export async function detach(args) {
 /**
  * @type {Actions['groupConsult']}
  */
-export async function groupConsult(tracks) {
-  const groups = groupTracksByBucket(tracks);
+export async function groupConsult(uris) {
+  const groups = groupUrisByBucket(uris);
 
   const promises = Object.entries(groups).map(
-    async ([bucketId, { bucket, tracks }]) => {
+    async ([bucketId, { bucket, uris }]) => {
       const available = await consultBucket(bucket);
 
       /** @type {ConsultGrouping} */
       const grouping = available
-        ? { available, scheme: SCHEME, tracks }
-        : { available, reason: "Bucket unavailable", scheme: SCHEME, tracks };
+        ? { available, scheme: SCHEME, uris }
+        : { available, reason: "Bucket unavailable", scheme: SCHEME, uris };
 
       return {
         key: await groupKeyHash(SCHEME, bucketId),

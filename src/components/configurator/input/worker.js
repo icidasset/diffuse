@@ -1,6 +1,6 @@
 import * as URI from "uri-js";
 
-import { groupTracksPerScheme } from "@common/utils.js";
+import { groupTracksPerScheme, groupUrisPerScheme } from "@common/utils.js";
 import { ostiary, rpc, workerProxy } from "@common/worker.js";
 
 /**
@@ -65,8 +65,8 @@ export async function detach({ data, ports }) {
  * @type {ActionsWithTunnel<InputActions>['groupConsult']}
  */
 export async function groupConsult({ data, ports }) {
-  const tracks = data;
-  const groups = groupTracksPerScheme(tracks);
+  const uris = data;
+  const groups = groupUrisPerScheme(uris);
 
   /** @type {GroupConsult[]} */
   const consultations = await Promise.all(
@@ -79,12 +79,12 @@ export async function groupConsult({ data, ports }) {
             available: false,
             reason: "Unsupported scheme",
             scheme,
-            tracks: groups[scheme] ?? [],
+            uris: groups[scheme] ?? [],
           },
         };
       }
 
-      return await input.groupConsult(groups[scheme] ?? {});
+      return await input.groupConsult(groups[scheme] ?? []);
     }),
   );
 
@@ -97,22 +97,32 @@ export async function groupConsult({ data, ports }) {
  * @type {ActionsWithTunnel<InputActions>['list']}
  */
 export async function list({ data, ports }) {
-  const groups = await groupConsult({ data, ports });
+  const tracks = data;
+  const uris = tracks.map((/** @type {Track} */ t) => t.uri);
+
+  /** @type {Map<string, Track>} */
+  const tracksByUri = new Map(
+    tracks.map((/** @type {Track} */ t) => [t.uri, t]),
+  );
+
+  const groups = await groupConsult({ data: uris, ports });
 
   const promises = Object.values(groups).map(
-    async ({ available, scheme, tracks }) => {
-      if (!available) return tracks;
+    async ({ available, scheme, uris }) => {
+      const groupTracks = uris
+        .map((uri) => tracksByUri.get(uri))
+        .filter((/** @type {Track | undefined} */ t) => t !== undefined);
+
+      if (!available) return groupTracks;
 
       const input = grabInput(scheme, ports);
-      if (!input) return tracks;
-      return await input.list(tracks);
+      if (!input) return groupTracks;
+      return await input.list(groupTracks);
     },
   );
 
   const nested = await Promise.all(promises);
-  const tracks = nested.flat(1);
-
-  return tracks;
+  return nested.flat(1);
 }
 
 /**
