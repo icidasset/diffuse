@@ -100,12 +100,8 @@ effect(() => {
   /** @type {Record<string, number>} */
   const newIdx = {};
 
-  /** @type {Record<string, Track>} */
-  const idMap = {};
-
   list.forEach((item) => {
     newIdx[item.id] = (newIdx[item.id] ?? 0) + 1;
-    idMap[item.id] = item;
   });
 
   /** @type {Track[]} */
@@ -114,7 +110,8 @@ effect(() => {
   Object.entries(newIdx).forEach(([id, n]) => {
     const x = index[id] ?? 0;
     if (n > x) {
-      tracksToAdd.push(idMap[id]);
+      const track = output.tracks.collection().find((t) => t.id === id);
+      if (track) tracksToAdd.push(track);
       index[id] = x + 1;
     }
   });
@@ -131,7 +128,8 @@ effect(() => {
  * Fill queue supply with available tracks.
  */
 effect(() => {
-  queue.supply({ tracks: scopedTracks.tracks() });
+  const tracks = scopedTracks.tracks();
+  queue.supply({ trackIds: tracks.map((t) => t.id) });
 });
 
 /**

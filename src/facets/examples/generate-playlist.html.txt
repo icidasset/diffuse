@@ -13,22 +13,27 @@
   import foundation from "./common/facets/foundation.js";
 
   const queue = foundation.engine.queue();
+  const output = foundation.orchestrator.output();
 
   /**
    * Playlist generator
    */
-  function generatePlaylist(items) {
-    const playlist = [
+  function generatePlaylist() {
+    const queueItems = [
       ...queue.past(),
       ...(queue.now() ? [queue.now()] : []),
       ...queue.future().filter((i) => i.manualEntry),
     ];
 
+    const playlist = queueItems
+      .map((item) => output.tracks.collection().find(t => t.id === item.id))
+      .filter((t) => t);
+
     const element = document.querySelector("main ol");
     if (!element) return;
 
     element.innerHTML = playlist
-      .map((item) => `<li>${item.tags.artist} - ${item.tags.title}</li>`)
+      .map((track) => `<li>${track.tags.artist} - ${track.tags.title}</li>`)
       .join("");
   }
 

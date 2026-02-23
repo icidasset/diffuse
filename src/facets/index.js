@@ -220,7 +220,8 @@ const editor = new EditorView({
   const myHtmlElement = document.querySelector("#now-playing");
 
   effect(() => {
-    const currentlyPlaying = components.engine.queue.now();
+    const now = components.engine.queue.now();
+    const currentlyPlaying = now ? components.orchestrator.output.tracks.collection().find(t => t.id === now.id) : undefined;
     if (currentlyPlaying && myHtmlElement) {
       myHtmlElement.innerText = \`\$\{currentlyPlaying.tags.artist} - \$\{currentlyPlaying.tags.title}\`;
     }

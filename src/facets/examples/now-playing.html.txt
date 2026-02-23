@@ -23,7 +23,8 @@
   });
 
   effect(() => {
-    const currentlyPlaying = queue.now();
+    const now = components.engine.queue.now();
+    const currentlyPlaying = now ? output.tracks.collection().find(t => t.id === now.id) : undefined;
     const tags = currentlyPlaying?.tags;
 
     const element = document.querySelector("#now-playing");

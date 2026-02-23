@@ -193,7 +193,7 @@ class Browser extends DiffuseElement {
   playTrack(track) {
     this.$queue.value?.add({
       inFront: true,
-      tracks: [track],
+      trackIds: [track.id],
     });
 
     this.$queue.value?.shift();

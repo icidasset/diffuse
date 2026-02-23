@@ -52,7 +52,7 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
 
       this.isLeader().then(async (isLeader) => {
         if (!isLeader) return;
-        queue.supply({ tracks });
+        queue.supply({ trackIds: tracks.map((t) => t.id) });
       });
     });
 

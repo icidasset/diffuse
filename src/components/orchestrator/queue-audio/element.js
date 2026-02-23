@@ -3,6 +3,7 @@ import { untracked } from "@common/signal.js";
 
 /**
  * @import {InputElement} from "@components/input/types.d.ts"
+ * @import {OutputElement} from "@components/output/types.d.ts"
  * @import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js"
  */
 
@@ -34,11 +35,14 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     // Super
     super.connectedCallback();
 
+    /** @type {import("@components/engine/audio/element.js").CLASS} */
+    this.audio = query(this, "audio-engine-selector");
+
     /** @type {InputElement} */
     this.input = query(this, "input-selector");
 
-    /** @type {import("@components/engine/audio/element.js").CLASS} */
-    this.audio = query(this, "audio-engine-selector");
+    /** @type {OutputElement} */
+    this.output = query(this, "output-selector");
 
     /** @type {import("@components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-engine-selector");
@@ -64,7 +68,10 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     if (!this.input) return;
     if (!this.queue) return;
 
-    const activeTrack = this.queue.now();
+    const activeItem = this.queue.now();
+    const activeTrack = activeItem
+      ? this.output?.tracks.collection().find((t) => t.id === activeItem.id)
+      : undefined;
     if ((await this.isLeader()) === false) return;
 
     const isPlaying = untracked(this.audio.isPlaying);
@@ -81,21 +88,21 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     const url = resolvedUri?.url;
 
     // Check if we still need to render
-    if (this.queue.now?.()?.id !== activeTrack?.id) return;
+    if (this.queue.now?.()?.id !== activeItem?.id) return;
 
     // Play new active queue item
     // TODO: Take URL expiration timestamp into account
     // TODO: Preload next queue item
     this.audio.supply({
-      audio: activeTrack && url
+      audio: activeItem && url
         ? [{
-          id: activeTrack.id,
+          id: activeItem.id,
           isPreload: false,
           url,
         }]
         // TODO: Keep preloads
         : [],
-      play: activeTrack && isPlaying ? { audioId: activeTrack.id } : undefined,
+      play: activeItem && isPlaying ? { audioId: activeItem.id } : undefined,
     });
   }
 
@@ -115,7 +122,7 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
         if (now) {
           await this.queue.add({
             inFront: true,
-            tracks: [now],
+            trackIds: [now.id],
           });
         }
       }

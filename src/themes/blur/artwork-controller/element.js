@@ -18,6 +18,7 @@ import { computed, signal, untracked } from "@common/signal.js";
  * @import {RenderArg} from "@common/element.d.ts"
  *
  * @import {InputElement} from "@components/input/types.d.ts"
+ * @import {OutputElement} from "@components/output/types.d.ts"
  * @import {Artwork} from "@components/processor/artwork/types.d.ts"
  * @import AudioEngine from "@components/engine/audio/element.js"
  * @import QueueEngine from "@components/engine/queue/element.js"
@@ -60,16 +61,25 @@ class ArtworkController extends DiffuseElement {
     /** @type {FavouritesOrchestrator | undefined} */ (undefined),
   );
   $input = signal(/** @type {InputElement | undefined} */ (undefined));
+  $output = signal(/** @type {OutputElement | undefined} */ (undefined));
   $queue = signal(/** @type {QueueEngine | undefined} */ (undefined));
 
   // SIGNALS - COMPUTED
 
-  #audio = computed(() => {
+  audio = computed(() => {
     const curr = this.$queue.value?.now();
     return curr ? this.$audio.value?.state(curr.id) : undefined;
   });
 
-  #isPlaying = computed(() => {
+  currentTrack = computed(() => {
+    const item = this.$queue.value?.now();
+    if (!item) return undefined;
+    return this.$output.value?.tracks.collection().find((t) =>
+      t.id === item.id
+    );
+  });
+
+  isPlaying = computed(() => {
     return this.$audio.value?.isPlaying();
   });
 
@@ -90,54 +100,59 @@ class ArtworkController extends DiffuseElement {
     /** @type {InputElement} */
     const input = query(this, "input-selector");
 
+    /** @type {OutputElement} */
+    const output = query(this, "output-selector");
+
     /** @type {QueueEngine} */
     const queue = query(this, "queue-engine-selector");
 
     /** @type {FavouritesOrchestrator} */
     const favourites = query(this, "favourites-orchestrator-selector");
 
-    whenElementsDefined({ audio, artwork, favourites, input, queue }).then(
-      () => {
-        this.$artwork.value = artwork;
-        this.$audio.value = audio;
-        this.$input.value = input;
-        this.$queue.value = queue;
-        this.$favourites.value = favourites;
+    whenElementsDefined({ audio, artwork, favourites, input, output, queue })
+      .then(
+        () => {
+          this.$artwork.value = artwork;
+          this.$audio.value = audio;
+          this.$input.value = input;
+          this.$output.value = output;
+          this.$queue.value = queue;
+          this.$favourites.value = favourites;
 
-        // Changed artwork based on active queue item.
-        const debouncedChangeArtwork = debounce(
-          1000,
-          this.#setArtwork.bind(this),
-        );
+          // Changed artwork based on active queue item.
+          const debouncedChangeArtwork = debounce(
+            1000,
+            this.#setArtwork.bind(this),
+          );
 
-        this.effect(() => {
-          const _trigger = queue.now();
-          debouncedChangeArtwork();
-        });
+          this.effect(() => {
+            const _trigger = this.currentTrack();
+            debouncedChangeArtwork();
+          });
 
-        this.effect(() => this.#formatTimestamps());
-        this.effect(() => this.#lightOrDark());
+          this.effect(() => this.#formatTimestamps());
+          this.effect(() => this.#lightOrDark());
 
-        this.effect(() => {
-          const now = !!queue.now();
-          const aud = this.#audio()?.loadingState();
-          const bool = now && aud !== "loaded";
+          this.effect(() => {
+            const now = !!queue.now();
+            const aud = this.audio()?.loadingState();
+            const bool = now && aud !== "loaded";
 
-          if (this.#isLoadingTimeout) {
-            clearTimeout(this.#isLoadingTimeout);
-          }
+            if (this.#isLoadingTimeout) {
+              clearTimeout(this.#isLoadingTimeout);
+            }
 
-          if (bool) {
-            this.#isLoadingTimeout = setTimeout(
-              () => this.#isLoading.value = true,
-              2000,
-            );
-          } else {
-            this.#isLoading.value = false;
-          }
-        });
-      },
-    );
+            if (bool) {
+              this.#isLoadingTimeout = setTimeout(
+                () => this.#isLoading.value = true,
+                2000,
+              );
+            } else {
+              this.#isLoading.value = false;
+            }
+          });
+        },
+      );
   }
 
   ////////////////////////////////////////////
@@ -156,7 +171,7 @@ class ArtworkController extends DiffuseElement {
 
   /** */
   async #setArtwork() {
-    const track = this.$queue.value?.now();
+    const track = this.currentTrack();
     const currArtwork = untracked(this.#artwork.get);
 
     if (!track) {
@@ -195,13 +210,14 @@ class ArtworkController extends DiffuseElement {
         },
       };
 
-    if (this.$queue.value?.now()?.id !== track.id) {
+    if (this.$queue.value?.now()?.id !== track?.id) {
       return;
     }
 
     const allArt = await this.$artwork.value?.artwork(request) ?? [];
 
-    const currTrack = this.$queue.value?.now();
+    // Check if queue item has changed while fetching the artwork
+    const currTrack = this.currentTrack();
     const currCacheId = currTrack
       ? await trackArtworkCacheId(currTrack)
       : undefined;
@@ -241,10 +257,10 @@ class ArtworkController extends DiffuseElement {
   // ⌚️ Time
   ////////////////////////////////////////////
   #formatTimestamps() {
-    const curr = this.$queue.value?.now?.() ?? undefined;
-    const audio = this.#audio();
+    const currTrack = this.currentTrack();
+    const audio = this.audio();
     const prog = audio?.progress() ?? 0;
-    const durMs = curr?.stats?.duration ??
+    const durMs = currTrack?.stats?.duration ??
       (audio?.duration() != null ? audio.duration() * 1000 : undefined);
 
     if (audio && durMs != undefined && !isNaN(durMs)) {
@@ -330,7 +346,7 @@ class ArtworkController extends DiffuseElement {
   playPause = () => {
     const audioId = this.$queue.value?.now()?.id;
 
-    if (this.#isPlaying() && audioId) {
+    if (this.isPlaying() && audioId) {
       this.$audio.value?.pause({ audioId });
     } else if (audioId) {
       this.$audio.value?.play({ audioId });
@@ -367,10 +383,10 @@ class ArtworkController extends DiffuseElement {
   };
 
   toggleFavourite = () => {
-    const activeQueueItem = this.$queue.value?.now();
-    if (!activeQueueItem) return;
+    const track = this.currentTrack();
+    if (!track) return;
 
-    this.$favourites.value?.toggle(activeQueueItem);
+    this.$favourites.value?.toggle(track);
   };
 
   // RENDER
@@ -379,7 +395,7 @@ class ArtworkController extends DiffuseElement {
    * @param {RenderArg} _
    */
   render({ html }) {
-    const activeQueueItem = this.$queue.value?.now();
+    const activeQueueItem = this.currentTrack();
     const isFav = activeQueueItem
       ? this.$favourites.value?.isFavourite(activeQueueItem) ?? false
       : false;
@@ -462,7 +478,7 @@ class ArtworkController extends DiffuseElement {
             <!-- PROGRESS -->
 
             <div class="progress" @click="${this.seek}">
-              <progress max="100" value="${(this.#audio()?.progress() ??
+              <progress max="100" value="${(this.audio()?.progress() ??
                 0) * 100}"></progress>
               <div class="timestamps">
                 <time datetime="${this.#time.value}">${this.#time.value}</time>
@@ -491,7 +507,7 @@ class ArtworkController extends DiffuseElement {
               <li
                 @click="${this.playPause}"
                 style="display: ${!this.#isLoading.value &&
-                    !this.#isPlaying()
+                    !this.isPlaying()
                   ? `inline`
                   : `none`};"
               >
@@ -501,7 +517,7 @@ class ArtworkController extends DiffuseElement {
               <!-- pause -->
               <li
                 @click="${this.playPause}"
-                style="display: ${!this.#isLoading.value && this.#isPlaying()
+                style="display: ${!this.#isLoading.value && this.isPlaying()
                   ? `inline`
                   : `none`};"
               >

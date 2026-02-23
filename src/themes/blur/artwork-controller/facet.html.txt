@@ -16,6 +16,7 @@
   const art = foundation.processor.artwork();
   const fav = foundation.orchestrator.favourites();
   const inp = foundation.orchestrator.input();
+  const out = foundation.orchestrator.output();
   const que = foundation.engine.queue();
 
   // Controller
@@ -23,6 +24,7 @@
   dac.setAttribute("artwork-processor-selector", art.selector);
   dac.setAttribute("audio-engine-selector", aud.selector);
   dac.setAttribute("input-selector", inp.selector);
+  dac.setAttribute("output-selector", out.selector);
   dac.setAttribute("queue-engine-selector", que.selector);
   dac.setAttribute("favourites-orchestrator-selector", fav.selector);
 

@@ -1,8 +1,7 @@
-import type { Track } from "@definitions/types.d.ts";
 import type { SignalReader } from "@common/signal.d.ts";
 
 export type Actions = {
-  add: (args: { inFront?: boolean; tracks: Track[] }) => void;
+  add: (args: { inFront?: boolean; trackIds: string[] }) => void;
   /**
    * Clear the `future()` items.
    */
@@ -16,13 +15,14 @@ export type Actions = {
     },
   ) => void;
   shift: () => void;
-  supply: (args: { tracks: Track[] }) => void;
+  supply: (args: { trackIds: string[] }) => void;
   unshift: () => void;
 };
 
-export type Item =
-  & Track
-  & { manualEntry?: boolean };
+export type Item = {
+  id: string;
+  manualEntry: boolean;
+};
 
 export type State = {
   future: SignalReader<Item[]>;

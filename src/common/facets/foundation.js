@@ -227,6 +227,7 @@ function processTracks(opts = { disableWhenReady: false }) {
 function queueAudio() {
   const a = audio();
   const i = input();
+  const o = output();
   const q = queue();
   const r = repeatShuffle();
 
@@ -234,6 +235,7 @@ function queueAudio() {
   oqa.setAttribute("group", GROUP);
   oqa.setAttribute("audio-engine-selector", a.selector);
   oqa.setAttribute("input-selector", i.selector);
+  oqa.setAttribute("output-selector", o.selector);
   oqa.setAttribute("queue-engine-selector", q.selector);
   oqa.setAttribute("repeat-shuffle-engine-selector", r.selector);
 

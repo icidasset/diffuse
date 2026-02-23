@@ -1,17 +1,18 @@
 import { announce, ostiary, rpc } from "@common/worker.js";
 import { effect, signal } from "@common/signal.js";
-import { arrayShuffle, hash } from "@common/utils.js";
+import { arrayShuffle } from "@common/utils.js";
+import { xxh32 } from "xxh32";
 
 /**
  * @import {Actions, Item} from "./types.d.ts"
- * @import {Track} from "@definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////
 // STATE
 ////////////////////////////////////////////
 
-export const $lake = signal(/** @type {Track[]} */ ([]));
+/** Ordered list of available track IDs. */
+export const $lake = signal(/** @type {string[]} */ ([]));
 
 // Communicated state
 export const $future = signal(/** @type {Item[]} */ ([]));
@@ -28,9 +29,9 @@ export const $supplyFingerprint = signal(
 /**
  * @type {Actions['add']}
  */
-export function add({ inFront, tracks }) {
-  const items = tracks.map((track) => {
-    return { ...track, manualEntry: true };
+export function add({ inFront, trackIds }) {
+  const items = trackIds.map((id) => {
+    return { id, manualEntry: true };
   });
 
   $future.value = inFront
@@ -71,9 +72,11 @@ export function shift() {
 /**
  * @type {Actions['supply']}
  */
-export function supply({ tracks }) {
-  $lake.value = tracks;
-  $supplyFingerprint.value = tracks.length ? hash(tracks) : undefined;
+export function supply({ trackIds }) {
+  $lake.value = trackIds;
+  $supplyFingerprint.value = trackIds.length
+    ? xxh32(trackIds.join("\0")).toString()
+    : undefined;
 }
 
 /**
@@ -140,10 +143,9 @@ function fillQueue(shuffled, fillAmount, future) {
 
   // Count
   let autoFutureCount = 0;
-  let manualFutureCount = 0;
 
   future.forEach((item) => {
-    if (item.manualEntry) manualFutureCount++;
+    if (item.manualEntry) {}
     else autoFutureCount++;
   });
 
@@ -165,9 +167,9 @@ export function fillSequentially(fillAmount, future) {
   const onlyManual = future.filter((i) => i.manualEntry);
   const lastManual = onlyManual.slice(-1)[0];
   const startIndex = lastManual
-    ? $lake.value.findIndex((t) => t.id === lastManual.id) + 1
+    ? $lake.value.indexOf(lastManual.id) + 1
     : $now.value
-    ? $lake.value.findIndex((t) => t.id === $now.value?.id) + 1
+    ? $lake.value.indexOf($now.value.id) + 1
     : 0;
 
   const maxIndex = $lake.value.length - 1;
@@ -178,12 +180,9 @@ export function fillSequentially(fillAmount, future) {
 
   for (let i = 0; i < fillAmount; i++) {
     if (currIndex > maxIndex) currIndex = 0;
-    const item = $lake.value[currIndex];
-    if (item) {
-      autoItems.push({
-        ...item,
-        manualEntry: false,
-      });
+    const id = $lake.value[currIndex];
+    if (id) {
+      autoItems.push({ id, manualEntry: false });
     }
     currIndex++;
   }
@@ -205,17 +204,14 @@ export function fillShuffle(fillAmount, future, autoFutureCount) {
   const pastSet = new Set($past.value.map((i) => i.id));
   let reducedPool = pool;
 
-  $lake.value.forEach((track) => {
-    if (pastSet.delete(track.id) === false) {
-      pool.push({
-        ...track,
-        manualEntry: false,
-      });
+  $lake.value.forEach((id) => {
+    if (pastSet.delete(id) === false) {
+      pool.push({ id, manualEntry: false });
     }
   });
 
   if (reducedPool.length === 0) {
-    reducedPool = $lake.value;
+    reducedPool = $lake.value.map((id) => ({ id, manualEntry: false }));
   }
 
   const poolSelection = arrayShuffle(reducedPool).slice(
