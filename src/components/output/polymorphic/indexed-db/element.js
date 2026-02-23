@@ -1,8 +1,10 @@
+import * as IDB from "idb-keyval";
+
+import { IDB_PREFIX } from "./constants.js";
 import { DiffuseElement } from "@common/element.js";
 import { outputManager } from "../../common.js";
 
 /**
- * @import {ProxiedActions} from "@common/worker.d.ts"
  * @import {OutputElement, OutputManager, OutputWorkerActions} from "../../types.d.ts"
  * @import {SupportedDataTypes} from "./types.d.ts"
  */
@@ -22,9 +24,6 @@ class IndexedDBOutput extends DiffuseElement {
 
   constructor() {
     super();
-
-    /** @type {ProxiedActions<OutputWorkerActions<SupportedDataTypes>>} */
-    this.proxy = this.workerProxy();
 
     /** @type {OutputManager<SupportedDataTypes>} */
     this.#manager = outputManager({
@@ -62,10 +61,10 @@ class IndexedDBOutput extends DiffuseElement {
   // GET & PUT
 
   /** @param {string} name */
-  #get = (name) => this.proxy.get({ name: this.#cat(name) });
+  #get = (name) => IDB.get(`${IDB_PREFIX}/${this.#cat(name)}`);
 
   /** @param {string} name; @param {any} data */
-  #put = (name, data) => this.proxy.put({ name: this.#cat(name), data });
+  #put = (name, data) => IDB.set(`${IDB_PREFIX}/${this.#cat(name)}`, data);
 
   // 🛠️
 
