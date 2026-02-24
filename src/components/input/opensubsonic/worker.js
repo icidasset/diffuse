@@ -1,4 +1,4 @@
-import * as URI from "uri-js";
+import * as URI from "fast-uri";
 import { ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
@@ -110,7 +110,7 @@ export async function list(cachedTracks = []) {
     servers[sid] = parsed.server;
 
     cache[sid] ??= {};
-    cache[sid][URI.unescapeComponent(parsed.path)] = t;
+    cache[sid][decodeURIComponent(parsed.path)] = t;
   });
 
   /**

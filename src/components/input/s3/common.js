@@ -1,6 +1,6 @@
 import { S3Client } from "@bradenmacdonald/s3-lite-client";
 import * as IDB from "idb-keyval";
-import * as URI from "uri-js";
+import * as URI from "fast-uri";
 import QS from "query-string";
 
 import { cachedConsult } from "@components/input/common.js";
@@ -174,7 +174,7 @@ export function parseURI(uriString) {
   };
 
   const path =
-    (bucket.path.replace(/\/$/, "") + URI.unescapeComponent(uri.path || ""))
+    (bucket.path.replace(/\/$/, "") + decodeURIComponent(uri.path || ""))
       .replace(
         /^\//,
         "",

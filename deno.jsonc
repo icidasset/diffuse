@@ -40,7 +40,6 @@
     "query-string": "npm:query-string@^9.3.1",
     "subsonic-api": "npm:subsonic-api@^3.2.0",
     "throttle-debounce": "npm:throttle-debounce@^5.0.2",
-    "uri-js": "npm:uri-js@^4.4.1",
     "xxh32": "npm:xxh32@^2.0.5",
 
     // music-metadata

@@ -1,4 +1,4 @@
-import * as URI from "uri-js";
+import * as URI from "fast-uri";
 
 import { groupTracksPerScheme, groupUrisPerScheme } from "@common/utils.js";
 import { ostiary, rpc, workerProxy } from "@common/worker.js";

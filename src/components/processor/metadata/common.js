@@ -1,5 +1,5 @@
 import { parseBlob, parseFromTokenizer, parseWebStream } from "music-metadata";
-import * as URI from "uri-js";
+import * as URI from "fast-uri";
 import { HttpClient } from "@tokenizer/http";
 import { tokenizer as rangeTokenizer } from "@tokenizer/range";
 

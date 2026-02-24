@@ -1,4 +1,4 @@
-import * as URI from "uri-js";
+import * as URI from "fast-uri";
 import QS from "query-string";
 
 import { SCHEME } from "./constants.js";
@@ -39,9 +39,9 @@ export function buildURI(server, args) {
   return URI.serialize({
     scheme: SCHEME,
     userinfo: server.apiKey
-      ? URI.escapeComponent(server.apiKey)
-      : `${URI.escapeComponent(server.username || "")}:${
-        URI.escapeComponent(server.password || "")
+      ? encodeURIComponent(server.apiKey)
+      : `${encodeURIComponent(server.username || "")}:${
+        encodeURIComponent(server.password || "")
       }`,
     host: server.host.replace(/^https?:\/\//, ""),
     path: args?.path,
@@ -69,9 +69,9 @@ export const consultServerCached = cachedConsult(consultServer, serverId);
 export function createClient(server) {
   return new SubsonicAPIWithoutFetch({
     url: `http${server.tls ? "s" : ""}://${server.host}`,
-    auth: server.apiKey ? { apiKey: URI.unescapeComponent(server.apiKey) } : {
-      username: URI.unescapeComponent(server.username || ""),
-      password: URI.unescapeComponent(server.password || ""),
+    auth: server.apiKey ? { apiKey: decodeURIComponent(server.apiKey) } : {
+      username: decodeURIComponent(server.username || ""),
+      password: decodeURIComponent(server.password || ""),
     },
   });
 }
