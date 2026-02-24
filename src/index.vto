@@ -93,6 +93,10 @@ output:
   - url: "components/output/polymorphic/indexed-db/element.js"
     title: "Polymorphic / IndexedDB"
     desc: "Stores output into the local indexedDB. Supports any type of data that indexedDB supports."
+  - url: "components/output/bytes/s3/element.js"
+    title: "Bytes / S3"
+    desc: >
+      Store output data on AWS S3 or compatible services such as Cloudflare R2.
   - url: "components/output/raw/atproto/element.js"
     title: "Raw / AT Protocol"
     desc: >
@@ -129,9 +133,15 @@ transformers:
   - title: "Output / Bytes / JSON"
     desc: "Raw data schema output ⇄ JSON Uint8Array."
     url: "components/transformer/output/bytes/json/element.js"
+  - title: "Output / Raw / AT Protocol Sync"
+    desc: "Wraps an AT Protocol output with a local IndexedDB cache. Uses the repo revision to skip unnecessary fetches and performs union merges with tombstone tracking when both local and remote have diverged."
+    url: "components/transformer/output/raw/atproto-sync/element.js"
   - title: "Output / Refiner / Default"
     desc: "The task of a refiner transformer is to remove the output state that is not meant to be saved to storage. For example, ephemeral tracks; this transformer will keep them in memory, but they will not be present in the output. **Ideally this is part of every theme, but you may swap it out with another transformer that might provide better defaults.**"
     url: "components/transformer/output/refiner/default/element.js"
+  - title: "Output / Replicator / Broadcast"
+    desc: "Replicates output `save` actions across browser tabs using a broadcast channel, keeping groups in sync."
+    url: "components/transformer/output/replicator/broadcast/element.js"
   - title: "Output / String / JSON"
     desc: "Raw data schema output ⇄ JSON UTF8 string."
     url: "components/transformer/output/string/json/element.js"
