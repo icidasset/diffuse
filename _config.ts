@@ -60,6 +60,22 @@ site.use(esbuild({
         },
       },
       {
+        name: "atcute-tid-browser",
+        setup(build) {
+          build.onLoad(
+            { filter: /@atcute\+tid.*random-node\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(
+                "random-node.js",
+                "random-web.js",
+              );
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
+      {
         name: "atcute-multibase-browser",
         setup(build) {
           build.onLoad(

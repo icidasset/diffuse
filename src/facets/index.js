@@ -9,6 +9,8 @@ import { html as langHtml } from "@codemirror/lang-html";
 import { javascript as langJs } from "@codemirror/lang-javascript";
 import { autocompletion } from "@codemirror/autocomplete";
 
+import * as TID from "@atcute/tid";
+
 import * as CID from "@common/cid.js";
 import foundation from "@common/facets/foundation.js";
 import { effect, signal } from "@common/signal.js";
@@ -273,7 +275,7 @@ async function onBuildSubmit(event) {
     }
     : {
       $type: "sh.diffuse.output.facet",
-      id: crypto.randomUUID(),
+      id: TID.now(),
       cid,
       description,
       html,

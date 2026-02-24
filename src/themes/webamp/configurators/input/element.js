@@ -1,3 +1,5 @@
+import * as TID from "@atcute/tid";
+
 import {
   DiffuseElement,
   nothing,
@@ -241,7 +243,7 @@ class InputConfig extends DiffuseElement {
     /** @type {Track} */
     const track = {
       $type: "sh.diffuse.output.track",
-      id: crypto.randomUUID(),
+      id: TID.now(),
       kind: "placeholder",
       uri,
     };

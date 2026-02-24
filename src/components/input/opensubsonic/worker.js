@@ -1,4 +1,5 @@
 import * as URI from "fast-uri";
+import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
@@ -154,7 +155,7 @@ export async function list(cachedTracks = []) {
         /** @type {Track} */
         const track = {
           $type: "sh.diffuse.output.track",
-          id: crypto.randomUUID(),
+          id: TID.now(),
           kind: autoTypeToTrackKind(song.type),
           uri: buildURI(server, { songId: song.id, path }),
 
@@ -239,7 +240,7 @@ export async function list(cachedTracks = []) {
     if (!tracks.length) {
       tracks = [{
         $type: "sh.diffuse.output.track",
-        id: crypto.randomUUID(),
+        id: TID.now(),
         kind: "placeholder",
         uri: buildURI(server),
       }];

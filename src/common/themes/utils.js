@@ -1,3 +1,5 @@
+import * as TID from "@atcute/tid";
+
 import { loadURI } from "../loader.js";
 import * as CID from "../cid.js";
 
@@ -20,7 +22,7 @@ export async function themeFromURI({ name, uri }, { fetchHTML }) {
   const theme = {
     $type: "sh.diffuse.output.theme",
     createdAt: timestamp,
-    id: crypto.randomUUID(),
+    id: TID.now(),
     cid,
     html,
     name,

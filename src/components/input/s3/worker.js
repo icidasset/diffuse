@@ -1,3 +1,4 @@
+import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "@common/worker.js";
 import {
   detach as detachUtil,
@@ -130,7 +131,7 @@ export async function list(cachedTracks = []) {
       .map((l) => {
         const cachedTrack = cache[bid]?.[l.key];
 
-        const id = cachedTrack?.id || crypto.randomUUID();
+        const id = cachedTrack?.id || TID.now();
         const stats = cachedTrack?.stats;
         const tags = cachedTrack?.tags;
 
@@ -152,7 +153,7 @@ export async function list(cachedTracks = []) {
     if (!tracks.length) {
       tracks = [{
         $type: "sh.diffuse.output.track",
-        id: crypto.randomUUID(),
+        id: TID.now(),
         kind: "placeholder",
         uri: buildURI(bucket),
       }];
@@ -211,7 +212,7 @@ export function demo() {
   /** @type {Track} */
   const track = {
     $type: "sh.diffuse.output.track",
-    id: crypto.randomUUID(),
+    id: TID.now(),
     kind: "placeholder",
     uri,
   };

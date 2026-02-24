@@ -1,4 +1,5 @@
 import * as URI from "fast-uri";
+import * as TID from "@atcute/tid";
 import { Client, ok, simpleFetchHandler } from "@atcute/client";
 import {
   CompositeDidDocumentResolver,
@@ -61,7 +62,7 @@ export function createLoader(config) {
     if (path) {
       item = {
         $type: config.$type,
-        id: crypto.randomUUID(),
+        id: TID.now(),
         name: "temporary",
         uri: `diffuse://${path}`,
       };
@@ -70,7 +71,7 @@ export function createLoader(config) {
     } else if (uri) {
       item = {
         $type: config.$type,
-        id: crypto.randomUUID(),
+        id: TID.now(),
         name: "temporary",
         uri,
       };

@@ -1,3 +1,5 @@
+import * as TID from "@atcute/tid";
+
 import { ostiary, rpc } from "@common/worker.js";
 import { filterFavourites } from "./common.js";
 
@@ -43,7 +45,7 @@ function createFavouriteItem(track) {
 
   return /** @type {PlaylistItem} */ ({
     $type: "sh.diffuse.output.playlistItem",
-    id: crypto.randomUUID(),
+    id: TID.now(),
     playlist: "Favourites",
     criteria: [
       {

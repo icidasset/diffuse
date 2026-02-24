@@ -1,5 +1,7 @@
 // import { fragments, serializeFragments } from "@fcrozatier/htmlcrunch";
 
+import * as TID from "@atcute/tid";
+
 import { loadURI } from "../loader.js";
 import * as CID from "../cid.js";
 
@@ -22,7 +24,7 @@ export async function facetFromURI({ name, uri }, { fetchHTML }) {
   const facet = {
     $type: "sh.diffuse.output.facet",
     createdAt: timestamp,
-    id: crypto.randomUUID(),
+    id: TID.now(),
     cid,
     html,
     name,

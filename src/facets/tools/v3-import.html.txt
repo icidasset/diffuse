@@ -79,6 +79,7 @@
 </style>
 
 <script type="module">
+  import * as TID from "@atcute/tid";
   import foundation from "./common/facets/foundation.js";
 
   // Setup
@@ -174,7 +175,7 @@
 
           return (item.tracks ?? []).map((track, index) => ({
             $type: "sh.diffuse.output.playlistItem",
-            id: crypto.randomUUID(),
+            id: TID.now(),
             playlist: playlistName,
             position: isUnordered ? undefined : index,
             criteria: [

@@ -5,6 +5,7 @@
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
     "@atcute/cbor": "npm:@atcute/cbor@^2.3.0",
+    "@atcute/tid": "npm:@atcute/tid@^1.0.0",
     "@atcute/client": "npm:@atcute/client@^4.2.1",
     "@atcute/identity-resolver": "npm:@atcute/identity-resolver@^1.2.2",
     "@atcute/lexicons": "npm:@atcute/lexicons@^1.2.7",
