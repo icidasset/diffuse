@@ -3,7 +3,7 @@ export type Container<T> = {
    * CID of the inventory,
    * which in turns represents the current state of the data.
    */
-  cid: string;
+  cid?: string;
   data: T[];
   inventory: Inventory;
 };

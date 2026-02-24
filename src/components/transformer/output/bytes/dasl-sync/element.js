@@ -28,13 +28,13 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     const local = this.#localOutput.get;
 
     /**
-     * @template {{ id: string }} T
+     * @template {{ id: string; updatedAt: string }} T
      * @param {SignalReader<Uint8Array | undefined>} localCollection
      * @param {SignalReader<Uint8Array | undefined>} remoteCollection
-     * @returns {SignalReader<{ container: Container<T>; diverged: boolean; local: boolean; remote: boolean; }>}
+     * @returns {SignalReader<{ container: Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T>>; promise: Promise<Container<T>> } }; diverged: boolean; local: boolean; remote: boolean; }>}
      */
-    const state = (localCollection, remoteCollection) =>
-      computed(() => {
+    const state = (localCollection, remoteCollection) => {
+      return computed(() => {
         const lb = localCollection();
         const rb = remote.ready() ? remoteCollection() : undefined;
 
@@ -54,7 +54,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
             }
             : {
               container: {
-                cid: "",
                 data: [],
                 inventory: { current: {}, removed: [] },
               },
@@ -67,16 +66,28 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         }
 
         const diverged = this.hasDiverged({ local: l, remote: r });
+        const mergedSignal = signal(
+          /** @type {Container<T> | undefined} */ (undefined),
+        );
+
+        let promise;
+
+        if (diverged.local || diverged.remote) {
+          promise = this.merge(l, r).then(mergedSignal.set).then(
+            mergedSignal.get,
+          );
+        }
 
         return {
           container: diverged.local || diverged.remote
-            ? /* this.merge(l, r) */ l
+            ? { local: l, merged: { promise, signal: mergedSignal.get } }
             : r,
           diverged: diverged.local || diverged.remote,
           local: diverged.local,
           remote: diverged.remote,
         };
       });
+    };
 
     const facets = state(
       computed(() => local()?.facets?.collection()),
@@ -98,7 +109,30 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remote.tracks.collection,
     );
 
-    this.facets = undefined;
+    this.facets = {
+      collection: computed(() => {
+        const container = facets().container;
+
+        if ("merged" in container) {
+          return container.merged.signal() ?? container.local;
+        }
+
+        return container;
+      }),
+      reload: remote.facets.reload,
+
+      /** @param {Facet[]} data */
+      save: async (data) => {
+        let container = facets().container;
+
+        if ("merged" in container) {
+          container = await container.merged.promise;
+        }
+
+        container;
+      },
+    };
+
     this.playlistItems = undefined;
     this.themes = undefined;
     this.tracks = undefined;
@@ -135,7 +169,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
   // 🛠️
 
   /**
-   * @template {{ id: string }} T
+   * @template {{ id: string; updatedAt: string }} T
    * @param {{ local: Container<T>, remote: Container<T> }} _
    * @returns {{ local: boolean, remote: boolean }} Which store needs updating?
    */
@@ -237,7 +271,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
   }
 
   /**
-   * @template {{ id: string }} T
+   * @template {{ id: string; updatedAt: string }} T
    * @param {{ previous: Container<T> | undefined, collection: T[] }} _
    * @returns {Promise<Container<T>>}
    */
