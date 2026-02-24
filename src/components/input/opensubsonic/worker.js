@@ -1,9 +1,11 @@
-import * as URI from "fast-uri";
 import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "@common/worker.js";
 
 import { SCHEME } from "./constants.js";
-import { removeUndefinedValuesFromRecord } from "@common/utils.js";
+import {
+  removeUndefinedValuesFromRecord,
+  safeDecodeURIComponent,
+} from "@common/utils.js";
 import { detach as detachUtil, groupKey } from "../common.js";
 import {
   autoTypeToTrackKind,
@@ -111,7 +113,7 @@ export async function list(cachedTracks = []) {
     servers[sid] = parsed.server;
 
     cache[sid] ??= {};
-    cache[sid][decodeURIComponent(parsed.path)] = t;
+    cache[sid][safeDecodeURIComponent(parsed.path)] = t;
   });
 
   /**

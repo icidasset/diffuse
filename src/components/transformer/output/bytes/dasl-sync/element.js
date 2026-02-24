@@ -31,7 +31,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
      * @template {{ id: string; updatedAt: string }} T
      * @param {SignalReader<Uint8Array | undefined>} localCollection
      * @param {SignalReader<Uint8Array | undefined>} remoteCollection
-     * @returns {SignalReader<{ container: Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T>>; promise: Promise<Container<T>> } }; diverged: boolean; local: boolean; remote: boolean; }>}
+     * @returns {SignalReader<{ container: Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T> | undefined>; promise: Promise<Container<T>> } }; diverged: boolean; local: boolean; remote: boolean; }>}
      */
     const state = (localCollection, remoteCollection) => {
       return computed(() => {
@@ -70,18 +70,25 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
           /** @type {Container<T> | undefined} */ (undefined),
         );
 
-        let promise;
+        /**
+         * @type {Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T> | undefined>; promise: Promise<Container<T>> } }}
+         */
+        let container = r;
 
         if (diverged.local || diverged.remote) {
-          promise = this.merge(l, r).then(mergedSignal.set).then(
-            mergedSignal.get,
-          );
+          const promise = this.merge(l, r).then((c) => {
+            mergedSignal.set(c);
+            return c;
+          });
+
+          container = {
+            local: l,
+            merged: { promise, signal: mergedSignal.get },
+          };
         }
 
         return {
-          container: diverged.local || diverged.remote
-            ? { local: l, merged: { promise, signal: mergedSignal.get } }
-            : r,
+          container,
           diverged: diverged.local || diverged.remote,
           local: diverged.local,
           remote: diverged.remote,
@@ -89,6 +96,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       });
     };
 
+    // Container signals
     const facets = state(
       computed(() => local()?.facets?.collection()),
       remote.facets.collection,
@@ -109,37 +117,93 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remote.tracks.collection,
     );
 
-    this.facets = {
-      collection: computed(() => {
-        const container = facets().container;
+    this.facets = this.managerProp(
+      computed(() => local()?.facets),
+      remote.facets,
+      facets,
+    );
 
-        if ("merged" in container) {
-          return container.merged.signal() ?? container.local;
-        }
+    this.playlistItems = this.managerProp(
+      computed(() => local()?.playlistItems),
+      remote.playlistItems,
+      playlistItems,
+    );
 
-        return container;
-      }),
-      reload: remote.facets.reload,
+    this.themes = this.managerProp(
+      computed(() => local()?.themes),
+      remote.themes,
+      themes,
+    );
 
-      /** @param {Facet[]} data */
-      save: async (data) => {
-        let container = facets().container;
-
-        if ("merged" in container) {
-          container = await container.merged.promise;
-        }
-
-        container;
-      },
-    };
-
-    this.playlistItems = undefined;
-    this.themes = undefined;
-    this.tracks = undefined;
+    this.tracks = this.managerProp(
+      computed(() => local()?.tracks),
+      remote.tracks,
+      tracks,
+    );
 
     this.ready = () => true;
 
     // Effects
+    this.effect(() => {
+      const l = local();
+      if (!l) return;
+
+      this.effect(async () => {
+        if (remote.facets.state() !== "loaded") return;
+        const s = facets();
+        if (s.diverged) {
+          const bytes = this.save(
+            "merged" in s.container
+              ? await s.container.merged.promise
+              : s.container,
+          );
+          if (l && s.local) l.facets.save(bytes);
+          if (s.remote) remote.facets.save(bytes);
+        }
+      });
+
+      this.effect(async () => {
+        if (remote.playlistItems.state() !== "loaded") return;
+        const s = playlistItems();
+        if (s.diverged) {
+          const bytes = this.save(
+            "merged" in s.container
+              ? await s.container.merged.promise
+              : s.container,
+          );
+          if (l && s.local) l.playlistItems.save(bytes);
+          if (s.remote) remote.playlistItems.save(bytes);
+        }
+      });
+
+      this.effect(async () => {
+        if (remote.themes.state() !== "loaded") return;
+        const s = themes();
+        if (s.diverged) {
+          const bytes = this.save(
+            "merged" in s.container
+              ? await s.container.merged.promise
+              : s.container,
+          );
+          if (l && s.local) l.themes.save(bytes);
+          if (s.remote) remote.themes.save(bytes);
+        }
+      });
+
+      this.effect(async () => {
+        if (remote.tracks.state() !== "loaded") return;
+        const s = tracks();
+        if (s.diverged) {
+          const bytes = this.save(
+            "merged" in s.container
+              ? await s.container.merged.promise
+              : s.container,
+          );
+          if (l && s.local) l.tracks.save(bytes);
+          if (s.remote) remote.tracks.save(bytes);
+        }
+      });
+    });
   }
 
   // SIGNALS
@@ -166,7 +230,59 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     });
   }
 
-  // 🛠️
+  // DATA FUNCTIONS
+
+  /**
+   * @template {{ id: string; updatedAt: string }} T
+   * @param {{ previous: Container<T>, collection: T[] }} _
+   * @returns {Promise<Container<T>>}
+   */
+  async updateContainer({ previous, collection }) {
+    const inventory = previous.inventory;
+
+    const collIds = collection.map(({ id }) => id);
+
+    const currSet = new Set(Object.keys(inventory.current));
+    const collSet = new Set(collIds);
+
+    const newSet = collSet.difference(currSet);
+    const remSet = currSet.difference(collSet);
+
+    const alreadyRemoved = new Set(inventory.removed);
+    const allRemoved = alreadyRemoved.union(remSet);
+
+    /** @type {Record<string, string>} */
+    const current = { ...inventory.current };
+
+    /** @type Promise<void>[] */
+    const promises = [];
+
+    collection.forEach((a) => {
+      if (!newSet.has(a.id)) return;
+
+      // Item is new, calculate CID and add it to the `current` dictionary
+      const encoded = encode(a);
+
+      promises.push((async () => {
+        const cid = await CID.create(0x71, encoded);
+        current[a.id] = cid;
+      })());
+    });
+
+    await Promise.all(promises);
+
+    const newInventory = {
+      current,
+      removed: Array.from(allRemoved),
+    };
+
+    return {
+      // TODO: Do we need this? Too big of a perf penalty?
+      cid: await CID.create(0x71, encode(newInventory)),
+      data: collection,
+      inventory: newInventory,
+    };
+  }
 
   /**
    * @template {{ id: string; updatedAt: string }} T
@@ -272,53 +388,51 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
   /**
    * @template {{ id: string; updatedAt: string }} T
-   * @param {{ previous: Container<T> | undefined, collection: T[] }} _
-   * @returns {Promise<Container<T>>}
+   * @param {Container<T>} container
+   * @returns {Uint8Array}
    */
-  async save({ previous, collection }) {
-    const inventory = previous?.inventory ?? { current: {}, removed: [] };
+  save(container) {
+    return encode(container);
+  }
 
-    const collIds = collection.map(({ id }) => id);
+  // OUTPUT MANAGER FUNCTIONS
 
-    const currSet = new Set(Object.keys(inventory.current));
-    const collSet = new Set(collIds);
-
-    const newSet = collSet.difference(currSet);
-    const remSet = currSet.difference(collSet);
-
-    const alreadyRemoved = new Set(inventory.removed);
-    const allRemoved = alreadyRemoved.union(remSet);
-
-    /** @type {Record<string, string>} */
-    const current = { ...inventory.current };
-
-    /** @type Promise<void>[] */
-    const promises = [];
-
-    collection.forEach((a) => {
-      if (!newSet.has(a.id)) return;
-
-      // Item is new, calculate CID and add it to the `current` dictionary
-      const encoded = encode(a);
-
-      promises.push((async () => {
-        const cid = await CID.create(0x71, encoded);
-        current[a.id] = cid;
-      })());
-    });
-
-    await Promise.all(promises);
-
-    const newInventory = {
-      current,
-      removed: Array.from(allRemoved),
-    };
-
+  /**
+   * @template {{ id: string; updatedAt: string }} T
+   * @param {SignalReader<{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> } | undefined>} local
+   * @param {{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }} remote
+   * @param {SignalReader<{ container: Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T> | undefined>; promise: Promise<Container<T>> } }}>} container
+   * @returns {{ collection: SignalReader<T[]>, reload: () => Promise<void>, save: (items: T[]) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }}
+   */
+  managerProp(local, remote, container) {
     return {
-      // TODO: Do we need this? Too big of a perf penalty?
-      cid: await CID.create(0x71, encode(newInventory)),
-      data: collection,
-      inventory: newInventory,
+      collection: computed(() => {
+        const c = container().container;
+
+        if ("merged" in c) {
+          return c.merged.signal()?.data ?? c.local?.data;
+        }
+
+        return c.data;
+      }),
+      reload: remote.reload,
+      save: async (/** @type {T[]} */ newItems) => {
+        let c = container().container;
+
+        if ("merged" in c) {
+          c = await c.merged.promise;
+        }
+
+        const adjustedContainer = await this.updateContainer({
+          collection: newItems,
+          previous: c,
+        });
+
+        const bytes = this.save(adjustedContainer);
+
+        await local()?.save(bytes);
+      },
+      state: computed(() => local()?.state() ?? "sleeping"),
     };
   }
 
@@ -343,6 +457,6 @@ export default DaslBytesSyncOutputTransformer;
 ////////////////////////////////////////////
 
 export const CLASS = DaslBytesSyncOutputTransformer;
-export const NAME = "dtob-automerge";
+export const NAME = "dtob-dasl-sync";
 
 customElements.define(NAME, CLASS);

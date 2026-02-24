@@ -54,7 +54,7 @@ class OutputOrchestrator extends DiffuseElement {
           }
           case "do-output__dc-output__s3": {
             import("@components/output/bytes/s3/element.js");
-            import("@components/transformer/output/bytes/automerge/element.js");
+            import("@components/transformer/output/bytes/dasl-sync/element.js");
             break;
           }
         }
@@ -176,12 +176,12 @@ class OutputOrchestrator extends DiffuseElement {
         ></dtor-atproto-sync>
 
         <!-- S3 -->
-        <dtob-automerge
+        <dtob-dasl-sync
           id="do-output__dc-output__s3"
           namespace="s3"
           output-selector="#do-output__dob-s3"
           label="S3"
-        ></dtob-automerge>
+        ></dtob-dasl-sync>
       </dc-output>
 
       <!-- REFINER -->

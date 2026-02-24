@@ -3,6 +3,7 @@ import QS from "query-string";
 
 import { SCHEME } from "./constants.js";
 import { cachedConsult } from "@components/input/common.js";
+import { safeDecodeURIComponent } from "@common/utils.js";
 import { SubsonicAPIWithoutFetch } from "./class.js";
 
 /**
@@ -69,9 +70,9 @@ export const consultServerCached = cachedConsult(consultServer, serverId);
 export function createClient(server) {
   return new SubsonicAPIWithoutFetch({
     url: `http${server.tls ? "s" : ""}://${server.host}`,
-    auth: server.apiKey ? { apiKey: decodeURIComponent(server.apiKey) } : {
-      username: decodeURIComponent(server.username || ""),
-      password: decodeURIComponent(server.password || ""),
+    auth: server.apiKey ? { apiKey: safeDecodeURIComponent(server.apiKey) } : {
+      username: safeDecodeURIComponent(server.username || ""),
+      password: safeDecodeURIComponent(server.password || ""),
     },
   });
 }

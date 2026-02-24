@@ -5,7 +5,6 @@ import {
 } from "@common/element.js";
 import { batch, computed, signal } from "@common/signal.js";
 import { filterByPlaylist } from "@common/playlist.js";
-import { trackURIBase, uniqueTrackURIs } from "@common/track.js";
 
 /**
  * @import {Track} from "@definitions/types.d.ts"
@@ -96,11 +95,13 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         actions.getTracksAvailable(),
         actions.getTracksSearch(),
         actions.getTracksFinal(),
-      ]).then(([available, search, final]) => batch(() => {
-        this.#tracksAvailable.value = available;
-        this.#tracksSearch.value = search;
-        this.#tracksFinal.value = final;
-      }));
+      ]).then(([available, search, final]) =>
+        batch(() => {
+          this.#tracksAvailable.value = available;
+          this.#tracksSearch.value = search;
+          this.#tracksFinal.value = final;
+        })
+      );
     }
 
     // Super

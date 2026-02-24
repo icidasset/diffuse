@@ -4,6 +4,7 @@ import * as URI from "fast-uri";
 import QS from "query-string";
 
 import { cachedConsult } from "@components/input/common.js";
+import { safeDecodeURIComponent } from "@common/utils.js";
 import { ENCODINGS, IDB_BUCKETS, SCHEME } from "./constants.js";
 
 /**
@@ -174,7 +175,7 @@ export function parseURI(uriString) {
   };
 
   const path =
-    (bucket.path.replace(/\/$/, "") + decodeURIComponent(uri.path || ""))
+    (bucket.path.replace(/\/$/, "") + safeDecodeURIComponent(uri.path || ""))
       .replace(
         /^\//,
         "",

@@ -138,6 +138,18 @@ export function recursivelyCloneRecords(rec) {
 }
 
 /**
+ * @param {string} str
+ * @returns {string}
+ */
+export function safeDecodeURIComponent(str) {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return str;
+  }
+}
+
+/**
  * @param {Track} track
  * @returns {Promise<string>}
  */
