@@ -158,6 +158,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     console.log("🪵 Processing initiated");
 
     const cachedTracks = this.output.tracks.collection();
+    console.log(cachedTracks);
     const result = await this.#proxy.process(cachedTracks);
 
     // Save if collection changed

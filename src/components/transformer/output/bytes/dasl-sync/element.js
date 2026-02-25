@@ -5,7 +5,7 @@ import deepDiff from "@fry69/deep-diff";
 import "@components/output/polymorphic/indexed-db/element.js";
 
 import * as CID from "@common/cid.js";
-import { computed, signal, untracked } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 import { compareTimestamps } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import { IDB_PREFIX } from "./constants.js";
@@ -26,135 +26,71 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
     /**
      * @template {{ id: string; updatedAt: string }} T
+     * @param {string} kind
      * @param {SignalReader<Uint8Array | undefined>} localCollection
      * @param {SignalReader<Uint8Array | undefined>} remoteCollection
+     * @param {SignalReader<"loading" | "loaded" | "sleeping">} remoteState
      * @param {{ saveLocal: (bytes: Uint8Array) => void, saveRemote: (bytes: Uint8Array) => Promise<void> }} sync
      */
-    const state = (localCollection, remoteCollection, sync) => {
+    const state = (
+      kind,
+      localCollection,
+      remoteCollection,
+      remoteState,
+      sync,
+    ) => {
       /**
-       * @typedef {{ container: Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T> | undefined>; promise: Promise<Container<T>> } }; diverged: boolean; local: boolean; remote: boolean; }} State
+       * @typedef {Container<T>} State
        */
-
-      const sig = signal(
-        /** @type {State} */ ({
-          container: {
-            cid: undefined,
-            data: [],
-            inventory: { current: {}, removed: [] },
-          },
-          diverged: false,
-          local: false,
-          remote: false,
-        }),
-        { eager: true },
-      );
 
       /** @returns {State} */
       const determine = () => {
         const lb = localCollection();
         const rb = remote.ready() ? remoteCollection() : undefined;
+        const rs = remoteState();
 
         /** @type {Container<T> | undefined} */
         const l = lb ? decode(lb) : undefined;
 
         /** @type {Container<T> | undefined} */
-        const r = rb ? decode(rb) : undefined;
+        const r = rb && rs === "loaded" ? decode(rb) : undefined;
 
         if (!r) {
-          return l
-            ? {
-              container: l,
-              diverged: remote.ready(),
-              local: false,
-              remote: remote.ready(),
+          if (l) {
+            if (remote.ready() && rs === "loaded") {
+              const bytes = this.save(l);
+              sync.saveRemote(bytes);
             }
-            : {
-              container: {
-                cid: undefined,
-                data: [],
-                inventory: { current: {}, removed: [] },
-              },
-              diverged: false,
-              local: false,
-              remote: false,
-            };
+
+            return l;
+          }
+
+          return {
+            cid: undefined,
+            data: [],
+            inventory: { current: {}, removed: [] },
+          };
         } else if (!l) {
-          return { container: r, diverged: true, local: true, remote: false };
+          const bytes = this.save(r);
+          sync.saveLocal(bytes);
+          return r;
         }
 
         const diverged = this.hasDiverged({ local: l, remote: r });
-        const mergedSignal = signal(
-          /** @type {Container<T> | undefined} */ (undefined),
-        );
-
-        /**
-         * @type {State["container"]}
-         */
-        let container = r;
 
         if (diverged.local || diverged.remote) {
-          const promise = this.merge(l, r).then((c) => {
+          this.merge(l, r).then((c) => {
             console.log("Merged:", c);
             const bytes = this.save(c);
             if (diverged.local) sync.saveLocal(bytes);
             if (diverged.remote) sync.saveRemote(bytes);
-            mergedSignal.set(c);
-            return c;
           });
-
-          container = {
-            local: l,
-            merged: { promise, signal: mergedSignal.get },
-          };
         }
 
-        return {
-          container,
-          diverged: diverged.local || diverged.remote,
-          local: diverged.local,
-          remote: diverged.remote,
-        };
+        return l;
       };
 
-      this.effect(() => {
-        const result = determine();
-        const current = untracked(sig.get);
-
-        const newCID = "merged" in result.container
-          ? undefined // handle async case separately
-          : result.container.cid;
-
-        const currentCID = "merged" in current.container
-          ? undefined
-          : current.container.cid;
-
-        // Skip if both are non-merged and CIDs match
-        if (
-          newCID !== undefined && currentCID !== undefined &&
-          newCID === currentCID
-        ) {
-          return;
-        }
-
-        // For the non-merged common case, set synchronously
-        if (!("merged" in result.container)) {
-          sig.set(result);
-          return;
-        }
-
-        // Only go async for the merge case
-        result.container.merged.promise.then(async (merged) => {
-          const cur = untracked(sig.get);
-          const curCID = "merged" in cur.container
-            ? (await cur.container.merged.promise).cid
-            : cur.container.cid;
-          if (merged.cid !== curCID) {
-            sig.set(result);
-          }
-        });
-      });
-
-      return sig.get;
+      return computed(determine);
     };
 
     // Local
@@ -167,8 +103,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
     // Container signals
     const facets = state(
+      "facets",
       local.facets.get,
       remote.facets.collection,
+      remote.facets.state,
       {
         saveLocal: this.putLocalFn("facets", local.facets),
         saveRemote: remote.facets.save,
@@ -176,8 +114,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     );
 
     const playlistItems = state(
+      "playlistItems",
       local.playlistItems.get,
       remote.playlistItems.collection,
+      remote.playlistItems.state,
       {
         saveLocal: this.putLocalFn("playlistItems", local.playlistItems),
         saveRemote: remote.playlistItems.save,
@@ -185,8 +125,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     );
 
     const themes = state(
+      "themes",
       local.themes.get,
       remote.themes.collection,
+      remote.themes.state,
       {
         saveLocal: this.putLocalFn("themes", local.themes),
         saveRemote: remote.themes.save,
@@ -194,8 +136,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     );
 
     const tracks = state(
+      "tracks",
       local.tracks.get,
       remote.tracks.collection,
+      remote.tracks.state,
       {
         saveLocal: this.putLocalFn("tracks", local.tracks),
         saveRemote: remote.tracks.save,
@@ -414,31 +358,19 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
    * @template {{ id: string; updatedAt: string }} T
    * @param {{ save: (bytes: Uint8Array) => Promise<void> | void }} local
    * @param {{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }} remote
-   * @param {SignalReader<{ container: Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T> | undefined>; promise: Promise<Container<T>> } }}>} container
+   * @param {SignalReader<Container<T>>} container
    * @returns {{ collection: SignalReader<T[]>, reload: () => Promise<void>, save: (items: T[]) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }}
    */
   managerProp(local, remote, container) {
     return {
       collection: computed(() => {
-        const c = container().container;
-
-        if ("merged" in c) {
-          return c.merged.signal()?.data ?? c.local?.data;
-        }
-
-        return c.data;
+        return container().data;
       }),
       reload: remote.reload,
       save: async (/** @type {T[]} */ newItems) => {
-        let c = container().container;
-
-        if ("merged" in c) {
-          c = await c.merged.promise;
-        }
-
         const adjustedContainer = await this.updateContainer({
           collection: newItems,
-          previous: c,
+          previous: container(),
         });
 
         console.log("Save:", newItems);
@@ -448,12 +380,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         await local.save(bytes);
       },
       state: computed(() => {
-        const c = container().container;
-
-        /** @type {Container<T> | undefined} */
-        const cont = "merged" in c ? c.merged.signal() : c;
-
-        if (cont?.cid) return "loaded";
+        if (container().cid) return "loaded";
         return "loading";
       }),
     };
