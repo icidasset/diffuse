@@ -5,7 +5,7 @@ import deepDiff from "@fry69/deep-diff";
 import "@components/output/polymorphic/indexed-db/element.js";
 
 import * as CID from "@common/cid.js";
-import { computed, signal } from "@common/signal.js";
+import { computed, signal, untracked } from "@common/signal.js";
 import { compareTimestamps } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import { IDB_PREFIX } from "./constants.js";
@@ -14,6 +14,13 @@ import { IDB_PREFIX } from "./constants.js";
  * @import { Signal, SignalReader } from "@common/signal.d.ts";
  * @import { Container } from "./types.d.ts"
  */
+
+/** @type {Container<any>} */
+const EMPTY = {
+  cid: undefined,
+  data: [],
+  inventory: { current: {}, removed: [] },
+};
 
 /**
  * @extends {OutputTransformer<Uint8Array>}
@@ -30,21 +37,27 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
      * @param {SignalReader<Uint8Array | undefined>} localCollection
      * @param {SignalReader<Uint8Array | undefined>} remoteCollection
      * @param {SignalReader<"loading" | "loaded" | "sleeping">} remoteState
-     * @param {{ saveLocal: (bytes: Uint8Array) => void, saveRemote: (bytes: Uint8Array) => Promise<void> }} sync
+     * @param {{ saveLocal: (bytes: Uint8Array) => Promise<void>; saveRemote: (bytes: Uint8Array) => Promise<void> }} sync
      */
     const state = (
       kind,
       localCollection,
       remoteCollection,
       remoteState,
-      sync,
+      { saveLocal, saveRemote },
     ) => {
-      /**
-       * @typedef {Container<T>} State
-       */
+      const container = signal(/** @type {Container<T>} */ (EMPTY), {
+        eager: true,
+      });
 
-      /** @returns {State} */
-      const determine = () => {
+      const isReady = signal(false);
+
+      let isMerging = false;
+
+      this.effect(() => {
+        if (!isReady.value) return;
+        if (isMerging) return;
+
         const lb = localCollection();
         const rb = remote.ready() ? remoteCollection() : undefined;
         const rs = remoteState();
@@ -57,40 +70,44 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
         if (!r) {
           if (l) {
+            container.value = l;
+
             if (remote.ready() && rs === "loaded") {
               const bytes = this.save(l);
-              sync.saveRemote(bytes);
+              saveRemote(bytes);
             }
-
-            return l;
           }
-
-          return {
-            cid: undefined,
-            data: [],
-            inventory: { current: {}, removed: [] },
-          };
         } else if (!l) {
+          container.value = r;
+
           const bytes = this.save(r);
-          sync.saveLocal(bytes);
-          return r;
+          saveLocal(bytes);
+        } else {
+          container.value = l;
+
+          if (this.hasDiverged({ local: l, remote: r })) {
+            isMerging = true;
+
+            this.merge(l, r).then(async (c) => {
+              container.value = c;
+
+              const bytes = this.save(c);
+              await saveLocal(bytes);
+
+              if (remote.ready() && rs === "loaded") {
+                await saveRemote(bytes);
+              }
+
+              isMerging = false;
+            });
+          }
         }
+      });
 
-        const diverged = this.hasDiverged({ local: l, remote: r });
-
-        if (diverged.local || diverged.remote) {
-          this.merge(l, r).then((c) => {
-            console.log("Merged:", c);
-            const bytes = this.save(c);
-            if (diverged.local) sync.saveLocal(bytes);
-            if (diverged.remote) sync.saveRemote(bytes);
-          });
-        }
-
-        return l;
-      };
-
-      return computed(determine);
+      return computed(() => {
+        if (!untracked(isReady.get)) isReady.value = true;
+        return container.get();
+      });
     };
 
     // Local
@@ -235,24 +252,9 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
   /**
    * @template {{ id: string; updatedAt: string }} T
    * @param {{ local: Container<T>, remote: Container<T> }} _
-   * @returns {{ local: boolean, remote: boolean }} Which store needs updating?
    */
   hasDiverged({ local, remote }) {
-    const diverged = local.cid !== remote.cid;
-
-    if (!diverged) {
-      return {
-        local: false,
-        remote: false,
-      };
-    }
-
-    // TODO: Could be improved.
-    //       We might not need to save on both ends.
-    return {
-      local: true,
-      remote: true,
-    };
+    return local.cid !== remote.cid;
   }
 
   /**
@@ -262,7 +264,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
    * @returns {Promise<Container<T>>}
    */
   async merge(a, b) {
-    console.log("MERGE", a, b);
+    console.log("Merging:", a, b);
 
     const removedA = new Set(a.inventory.removed);
     const removedB = new Set(b.inventory.removed);
@@ -298,7 +300,14 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         const itemB = mapB.get(id);
 
         if (!itemA || !itemB) {
-          console.warn("Should have found item but didn't!");
+          console.warn("Should have found both items but didn't!");
+          continue;
+        }
+
+        // Items are identical, no merge or CID recomputation needed
+        if (currentA[id] === currentB[id]) {
+          data.push(itemA);
+          current[id] = currentA[id];
           continue;
         }
 
@@ -364,7 +373,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
   managerProp(local, remote, container) {
     return {
       collection: computed(() => {
-        return container().data;
+        return container()?.data ?? [];
       }),
       reload: remote.reload,
       save: async (/** @type {T[]} */ newItems) => {
@@ -373,14 +382,11 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
           previous: container(),
         });
 
-        console.log("Save:", newItems);
         const bytes = this.save(adjustedContainer);
-
-        console.log("Bytes:", bytes);
         await local.save(bytes);
       },
       state: computed(() => {
-        if (container().cid) return "loaded";
+        if (container()?.cid) return "loaded";
         return "loading";
       }),
     };

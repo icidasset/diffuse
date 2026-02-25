@@ -1,4 +1,4 @@
-import { computed, signal, untracked } from "@common/signal.js";
+import { batch, computed, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
@@ -8,12 +8,17 @@ import { computed, signal, untracked } from "@common/signal.js";
 /**
  * @template [Encoding=null]
  * @param {OutputManagerProperties<Encoding>} _
+ * @param {{ eager?: boolean }} [signalOpts]
  * @returns {OutputManager<Encoding>}
  */
-export function outputManager({ init, facets, playlistItems, themes, tracks }) {
+export function outputManager(
+  { init, facets, playlistItems, themes, tracks },
+  signalOpts,
+) {
   const c = signal(
     /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
       .empty()),
+    { eager: signalOpts?.eager ?? false },
   );
   const cs = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -22,6 +27,7 @@ export function outputManager({ init, facets, playlistItems, themes, tracks }) {
   const pl = signal(
     /** @type {Encoding extends null ? PlaylistItem[] : Encoding} */ (playlistItems
       .empty()),
+    { eager: signalOpts?.eager ?? false },
   );
   const pls = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -29,6 +35,7 @@ export function outputManager({ init, facets, playlistItems, themes, tracks }) {
 
   const th = signal(
     /** @type {Encoding extends null ? Theme[] : Encoding} */ (themes.empty()),
+    { eager: signalOpts?.eager ?? false },
   );
   const ths = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -36,6 +43,7 @@ export function outputManager({ init, facets, playlistItems, themes, tracks }) {
 
   const t = signal(
     /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
+    { eager: signalOpts?.eager ?? false },
   );
   const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -77,8 +85,10 @@ export function outputManager({ init, facets, playlistItems, themes, tracks }) {
       }),
       reload: loadFacets,
       save: async (newFacets) => {
-        if (untracked(() => cs.value === "sleeping")) loadFacets();
-        c.value = newFacets;
+        batch(() => {
+          if (untracked(() => cs.value === "sleeping")) cs.value = "loaded";
+          c.value = newFacets;
+        });
         await facets.put(newFacets);
       },
       state: cs.get,
@@ -90,8 +100,10 @@ export function outputManager({ init, facets, playlistItems, themes, tracks }) {
       }),
       reload: loadPlaylistItems,
       save: async (newPlaylistItems) => {
-        if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
-        pl.value = newPlaylistItems;
+        batch(() => {
+          if (untracked(() => pls.value === "sleeping")) pls.value = "loaded";
+          pl.value = newPlaylistItems;
+        });
         await playlistItems.put(newPlaylistItems);
       },
       state: pls.get,
@@ -103,8 +115,10 @@ export function outputManager({ init, facets, playlistItems, themes, tracks }) {
       }),
       reload: loadThemes,
       save: async (newThemes) => {
-        if (untracked(() => ths.value === "sleeping")) loadThemes();
-        th.value = newThemes;
+        batch(() => {
+          if (untracked(() => ths.value === "sleeping")) ths.value = "loaded";
+          th.value = newThemes;
+        });
         await themes.put(newThemes);
       },
       state: ths.get,
@@ -116,8 +130,10 @@ export function outputManager({ init, facets, playlistItems, themes, tracks }) {
       }),
       reload: loadTracks,
       save: async (newTracks) => {
-        if (untracked(() => ts.value === "sleeping")) loadTracks();
-        t.value = newTracks;
+        batch(() => {
+          if (untracked(() => ts.value === "sleeping")) ts.value = "loaded";
+          t.value = newTracks;
+        });
         await tracks.put(newTracks);
       },
       state: ts.get,

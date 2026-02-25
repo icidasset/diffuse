@@ -11,7 +11,9 @@ import { computed, signal } from "@common/signal.js";
 export class OutputTransformer extends BroadcastableDiffuseElement {
   // SIGNALS
 
-  #output = signal(/** @type {OutputElement<T> | undefined} */ (undefined));
+  #output = signal(/** @type {OutputElement<T> | undefined} */ (undefined), {
+    eager: true,
+  });
   #outputWhenDefined = Promise.withResolvers();
 
   output = {
