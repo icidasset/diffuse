@@ -2,7 +2,7 @@
  * @import {PlaylistItem, Track} from "@definitions/types.d.ts"
  */
 
-import { Temporal } from "@js-temporal/polyfill";
+import { compareTimestamps } from "@common/utils.js";
 
 /**
  * Filter tracks by playlist membership using an indexed lookup.
@@ -151,10 +151,7 @@ export function sort(items) {
     if (group.length > 1) {
       group.sort((a, b) => {
         if (!a.updatedAt || !b.updatedAt) return a.updatedAt ? 1 : -1;
-        return Temporal.ZonedDateTime.compare(
-          Temporal.ZonedDateTime.from(a.updatedAt),
-          Temporal.ZonedDateTime.from(b.updatedAt),
-        );
+        return compareTimestamps(a.updatedAt, b.updatedAt);
       });
     }
   }

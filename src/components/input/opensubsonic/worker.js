@@ -112,8 +112,9 @@ export async function list(cachedTracks = []) {
     const sid = serverId(parsed.server);
     servers[sid] = parsed.server;
 
+    const path = safeDecodeURIComponent(parsed.path);
     cache[sid] ??= {};
-    cache[sid][safeDecodeURIComponent(parsed.path)] = t;
+    cache[sid][path] = t;
   });
 
   /**
@@ -154,10 +155,14 @@ export async function list(cachedTracks = []) {
         const fromCache = path ? cache[sid]?.[path] : undefined;
         if (fromCache) return fromCache;
 
+        const now = new Date().toISOString();
+
         /** @type {Track} */
         const track = {
           $type: "sh.diffuse.output.track",
           id: TID.now(),
+          createdAt: now,
+          updatedAt: now,
           kind: autoTypeToTrackKind(song.type),
           uri: buildURI(server, { songId: song.id, path }),
 
@@ -240,9 +245,13 @@ export async function list(cachedTracks = []) {
     // keep a placeholder track so the server gets
     // picked up as a source.
     if (!tracks.length) {
+      const now = new Date().toISOString();
+
       tracks = [{
         $type: "sh.diffuse.output.track",
         id: TID.now(),
+        createdAt: now,
+        updatedAt: now,
         kind: "placeholder",
         uri: buildURI(server),
       }];

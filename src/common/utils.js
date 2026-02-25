@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill";
 import { base64url } from "iso-base/rfc4648";
 import { xxh32r } from "xxh32/dist/raw.js";
 
@@ -32,6 +33,17 @@ export function arrayShuffle(array) {
  */
 export function boolAttr(value) {
   return value === "";
+}
+
+/**
+ * @param {string} a
+ * @param {string} b
+ */
+export function compareTimestamps(a, b) {
+  return Temporal.Instant.compare(
+    Temporal.Instant.from(a),
+    Temporal.Instant.from(b),
+  );
 }
 
 /**
@@ -142,11 +154,13 @@ export function recursivelyCloneRecords(rec) {
  * @returns {string}
  */
 export function safeDecodeURIComponent(str) {
-  try {
-    return decodeURIComponent(str);
-  } catch {
-    return str;
-  }
+  return str.replace(
+    /%u([0-9A-Fa-f]{4})|%([0-9A-Fa-f]{2})/g,
+    (_, unicode, byte) =>
+      unicode
+        ? String.fromCharCode(parseInt(unicode, 16))
+        : String.fromCharCode(parseInt(byte, 16)),
+  );
 }
 
 /**

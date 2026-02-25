@@ -240,10 +240,14 @@ class InputConfig extends DiffuseElement {
    * @param {string} uri
    */
   async addSource(uri) {
+    const now = new Date().toISOString();
+
     /** @type {Track} */
     const track = {
       $type: "sh.diffuse.output.track",
       id: TID.now(),
+      createdAt: now,
+      updatedAt: now,
       kind: "placeholder",
       uri,
     };

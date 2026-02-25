@@ -134,11 +134,14 @@ export async function list(cachedTracks = []) {
         const id = cachedTrack?.id || TID.now();
         const stats = cachedTrack?.stats;
         const tags = cachedTrack?.tags;
+        const now = new Date().toISOString();
 
         /** @type {Track} */
         const track = {
           $type: "sh.diffuse.output.track",
           id,
+          createdAt: cachedTrack?.createdAt ?? now,
+          updatedAt: cachedTrack?.updatedAt ?? now,
           stats,
           tags,
           uri: buildURI(bucket, l.key),
@@ -151,9 +154,13 @@ export async function list(cachedTracks = []) {
     // keep a placeholder track so the bucket gets
     // picked up as a source.
     if (!tracks.length) {
+      const now = new Date().toISOString();
+
       tracks = [{
         $type: "sh.diffuse.output.track",
         id: TID.now(),
+        createdAt: now,
+        updatedAt: now,
         kind: "placeholder",
         uri: buildURI(bucket),
       }];
@@ -208,11 +215,14 @@ export function demo() {
   };
 
   const uri = buildURI(bucket);
+  const now = new Date().toISOString();
 
   /** @type {Track} */
   const track = {
     $type: "sh.diffuse.output.track",
     id: TID.now(),
+    createdAt: now,
+    updatedAt: now,
     kind: "placeholder",
     uri,
   };

@@ -93,7 +93,12 @@ export async function process({ data, ports }) {
       processed++;
       $progress.value = { processed, total: tracks.length };
 
-      return [...acc, { ...track, stats, tags }];
+      return [...acc, {
+        ...track,
+        stats,
+        tags,
+        updatedAt: new Date().toISOString(),
+      }];
     },
     Promise.resolve([]),
   );
