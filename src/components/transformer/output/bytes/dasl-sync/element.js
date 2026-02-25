@@ -5,7 +5,7 @@ import deepDiff from "@fry69/deep-diff";
 import "@components/output/polymorphic/indexed-db/element.js";
 
 import * as CID from "@common/cid.js";
-import { computed, signal, untracked } from "@common/signal.js";
+import { computed, signal } from "@common/signal.js";
 import { compareTimestamps } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import { IDB_PREFIX } from "./constants.js";
@@ -51,12 +51,11 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       });
 
       const isReady = signal(false);
-
-      let isMerging = false;
+      const isMerging = signal(false);
 
       this.effect(() => {
         if (!isReady.value) return;
-        if (isMerging) return;
+        if (isMerging.value) return;
 
         const lb = localCollection();
         const rb = remote.ready() ? remoteCollection() : undefined;
@@ -86,7 +85,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
           container.value = l;
 
           if (this.hasDiverged({ local: l, remote: r })) {
-            isMerging = true;
+            isMerging.value = true;
 
             this.merge(l, r).then(async (c) => {
               container.value = c;
@@ -98,14 +97,14 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
                 await saveRemote(bytes);
               }
 
-              isMerging = false;
+              isMerging.value = false;
             });
           }
         }
       });
 
       return computed(() => {
-        if (!untracked(isReady.get)) isReady.value = true;
+        if (!isReady.get()) isReady.value = true;
         return container.get();
       });
     };
@@ -264,8 +263,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
    * @returns {Promise<Container<T>>}
    */
   async merge(a, b) {
-    console.log("Merging:", a, b);
-
     const removedA = new Set(a.inventory.removed);
     const removedB = new Set(b.inventory.removed);
     const allRemoved = removedA.union(removedB);
@@ -373,7 +370,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
   managerProp(local, remote, container) {
     return {
       collection: computed(() => {
-        return container()?.data ?? [];
+        return container().data;
       }),
       reload: remote.reload,
       save: async (/** @type {T[]} */ newItems) => {
@@ -386,7 +383,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         await local.save(bytes);
       },
       state: computed(() => {
-        if (container()?.cid) return "loaded";
+        if (container().cid) return "loaded";
         return "loading";
       }),
     };
