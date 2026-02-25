@@ -451,7 +451,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         const c = container().container;
 
         /** @type {Container<T> | undefined} */
-        const cont = "merged" in c ? c.signal() : c;
+        const cont = "merged" in c ? c.merged.signal() : c;
 
         if (cont?.cid) return "loaded";
         return "loading";
