@@ -28,8 +28,9 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
      * @template {{ id: string; updatedAt: string }} T
      * @param {SignalReader<Uint8Array | undefined>} localCollection
      * @param {SignalReader<Uint8Array | undefined>} remoteCollection
+     * @param {{ saveLocal: (bytes: Uint8Array) => void, saveRemote: (bytes: Uint8Array) => Promise<void> }} sync
      */
-    const state = (localCollection, remoteCollection) => {
+    const state = (localCollection, remoteCollection, sync) => {
       /**
        * @typedef {{ container: Container<T> | { local: Container<T>; merged: { signal: SignalReader<Container<T> | undefined>; promise: Promise<Container<T>> } }; diverged: boolean; local: boolean; remote: boolean; }} State
        */
@@ -94,6 +95,9 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         if (diverged.local || diverged.remote) {
           const promise = this.merge(l, r).then((c) => {
             console.log("Merged:", c);
+            const bytes = this.save(c);
+            if (diverged.local) sync.saveLocal(bytes);
+            if (diverged.remote) sync.saveRemote(bytes);
             mergedSignal.set(c);
             return c;
           });
@@ -165,21 +169,37 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     const facets = state(
       local.facets.get,
       remote.facets.collection,
+      {
+        saveLocal: this.putLocalFn("facets", local.facets),
+        saveRemote: remote.facets.save,
+      },
     );
 
     const playlistItems = state(
       local.playlistItems.get,
       remote.playlistItems.collection,
+      {
+        saveLocal: this.putLocalFn("playlistItems", local.playlistItems),
+        saveRemote: remote.playlistItems.save,
+      },
     );
 
     const themes = state(
       local.themes.get,
       remote.themes.collection,
+      {
+        saveLocal: this.putLocalFn("themes", local.themes),
+        saveRemote: remote.themes.save,
+      },
     );
 
     const tracks = state(
       local.tracks.get,
       remote.tracks.collection,
+      {
+        saveLocal: this.putLocalFn("tracks", local.tracks),
+        saveRemote: remote.tracks.save,
+      },
     );
 
     // Output manager
@@ -208,67 +228,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     );
 
     this.ready = () => true;
-
-    // Effects
-    // this.effect(async () => {
-    //   if (remote.facets.state() !== "loaded") return;
-    //   const s = facets();
-    //   if (s.diverged) {
-    //     const bytes = this.save(
-    //       "merged" in s.container
-    //         ? await s.container.merged.promise
-    //         : s.container,
-    //     );
-    //     local.facets.set(bytes);
-    //     this.putLocal("facets", bytes);
-    //     if (s.remote) remote.facets.save(bytes);
-    //   }
-    // });
-
-    // this.effect(async () => {
-    //   if (remote.playlistItems.state() !== "loaded") return;
-    //   const s = playlistItems();
-    //   if (s.diverged) {
-    //     const bytes = this.save(
-    //       "merged" in s.container
-    //         ? await s.container.merged.promise
-    //         : s.container,
-    //     );
-    //     local.playlistItems.set(bytes);
-    //     this.putLocal("playlistItems", bytes);
-    //     if (s.remote) remote.playlistItems.save(bytes);
-    //   }
-    // });
-
-    // this.effect(async () => {
-    //   if (remote.themes.state() !== "loaded") return;
-    //   const s = themes();
-    //   if (s.diverged) {
-    //     const bytes = this.save(
-    //       "merged" in s.container
-    //         ? await s.container.merged.promise
-    //         : s.container,
-    //     );
-    //     local.themes.set(bytes);
-    //     this.putLocal("themes", bytes);
-    //     if (s.remote) remote.themes.save(bytes);
-    //   }
-    // });
-
-    // this.effect(async () => {
-    //   if (remote.tracks.state() !== "loaded") return;
-    //   const s = tracks();
-    //   if (s.diverged) {
-    //     const bytes = this.save(
-    //       "merged" in s.container
-    //         ? await s.container.merged.promise
-    //         : s.container,
-    //     );
-    //     local.tracks.set(bytes);
-    //     this.putLocal("tracks", bytes);
-    //     if (s.remote) remote.tracks.save(bytes);
-    //   }
-    // });
   }
 
   // DATA FUNCTIONS
@@ -488,7 +447,15 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         console.log("Bytes:", bytes);
         await local.save(bytes);
       },
-      state: computed(() => "loaded"),
+      state: computed(() => {
+        const c = container().container;
+
+        /** @type {Container<T> | undefined} */
+        const cont = "merged" in c ? c.signal() : c;
+
+        if (cont?.cid) return "loaded";
+        return "loading";
+      }),
     };
   }
 
