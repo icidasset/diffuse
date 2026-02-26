@@ -46,9 +46,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remoteState,
       { saveLocal, saveRemote },
     ) => {
-      const container = signal(/** @type {Container<T>} */ (EMPTY), {
-        eager: true,
-      });
+      const container = signal(/** @type {Container<T>} */ (EMPTY));
 
       const isReady = signal(false);
       const isMerging = signal(false);
@@ -395,9 +393,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
    * @param {string} name
    */
   local(name) {
-    const s = signal(/** @type {Uint8Array | undefined} */ (undefined), {
-      eager: true,
-    });
+    const s = signal(/** @type {Uint8Array | undefined} */ (undefined));
 
     this.getLocal(name).then(s.set);
 

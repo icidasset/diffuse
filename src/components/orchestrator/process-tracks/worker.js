@@ -17,7 +17,9 @@ import { announce, ostiary, rpc, workerProxy } from "@common/worker.js";
 ////////////////////////////////////////////
 
 /** @type {import("@common/signal.d.ts").Signal<{processed: number, total: number}>} */
-const $progress = signal({ processed: 0, total: 0 });
+const $progress = signal({ processed: 0, total: 0 }, {
+  compare: (a, b) => !deepDiff(a, b),
+});
 
 ////////////////////////////////////////////
 // ACTIONS

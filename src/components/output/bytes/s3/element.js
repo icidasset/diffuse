@@ -56,8 +56,6 @@ class S3Output extends DiffuseElement {
         get: () => this.#get("tracks"),
         put: (data) => this.#put("tracks", data),
       },
-    }, {
-      eager: true,
     });
 
     this.facets = this.#manager.facets;

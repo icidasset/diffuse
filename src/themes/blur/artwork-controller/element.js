@@ -44,7 +44,6 @@ class ArtworkController extends DiffuseElement {
       current: null,
       previous: null,
     }),
-    { eager: true },
   );
 
   #artworkColor = signal(/** @type {string | undefined} */ (undefined));

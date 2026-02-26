@@ -1,4 +1,3 @@
-import deepDiff from "@fry69/deep-diff";
 import {
   endBatch,
   setActiveSub,
@@ -27,25 +26,26 @@ export const batch = (fn) => {
 /**
  * @template T
  * @param {T} initialValue
- * @param {{ eager?: boolean }} [options]
+ * @param {{ compare?: (a: T, b: T) => boolean }} [options]
  * @returns {Signal<T>}
  */
 export function signal(initialValue, options) {
   const s = alienSignal(initialValue);
-  if (options?.eager === true) {
+  if (options?.compare) {
+    const compare = options.compare;
+
     return _signal({
       get: () => s(),
-      set: (v) => s(v),
+      set: (b) => {
+        const a = untracked(() => s());
+        if (!compare(a, b)) s(b);
+      },
     });
   }
 
   return _signal({
     get: () => s(),
-    set: (b) => {
-      const a = untracked(() => s());
-      const diff = deepDiff(a, b);
-      if (diff) s(b);
-    },
+    set: (v) => s(v),
   });
 }
 

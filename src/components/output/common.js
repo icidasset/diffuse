@@ -1,3 +1,4 @@
+import deepDiff from "@fry69/deep-diff";
 import { batch, computed, signal, untracked } from "@common/signal.js";
 
 /**
@@ -8,17 +9,21 @@ import { batch, computed, signal, untracked } from "@common/signal.js";
 /**
  * @template [Encoding=null]
  * @param {OutputManagerProperties<Encoding>} _
- * @param {{ eager?: boolean }} [signalOpts]
+ * @param {{ compare?: boolean }} [signalOpts]
  * @returns {OutputManager<Encoding>}
  */
 export function outputManager(
   { init, facets, playlistItems, themes, tracks },
   signalOpts,
 ) {
+  const compareOpt = signalOpts?.compare
+    ? { compare: (a, b) => !deepDiff(a, b) }
+    : undefined;
+
   const c = signal(
     /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
       .empty()),
-    { eager: signalOpts?.eager ?? false },
+    compareOpt,
   );
   const cs = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -27,7 +32,7 @@ export function outputManager(
   const pl = signal(
     /** @type {Encoding extends null ? PlaylistItem[] : Encoding} */ (playlistItems
       .empty()),
-    { eager: signalOpts?.eager ?? false },
+    compareOpt,
   );
   const pls = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -35,7 +40,7 @@ export function outputManager(
 
   const th = signal(
     /** @type {Encoding extends null ? Theme[] : Encoding} */ (themes.empty()),
-    { eager: signalOpts?.eager ?? false },
+    compareOpt,
   );
   const ths = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -43,7 +48,7 @@ export function outputManager(
 
   const t = signal(
     /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
-    { eager: signalOpts?.eager ?? false },
+    compareOpt,
   );
   const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),

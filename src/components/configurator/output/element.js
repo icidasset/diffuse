@@ -205,7 +205,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   // SIGNALS
 
-  #activated = signal(/** @type {Set<string>} */ (new Set()), { eager: true });
+  #activated = signal(/** @type {Set<string>} */ (new Set()));
 
   #defaultOutput = signal(
     /** @type {Output | null | undefined} */ (undefined),
