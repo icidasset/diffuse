@@ -105,6 +105,7 @@
     "./components/input/s3/element.js": "./src/components/input/s3/element.js",
     "./components/input/s3/worker.js": "./src/components/input/s3/worker.js",
     "./components/orchestrator/auto-queue/element.js": "./src/components/orchestrator/auto-queue/element.js",
+    "./components/orchestrator/media-session/element.js": "./src/components/orchestrator/media-session/element.js",
     "./components/orchestrator/input/element.js": "./src/components/orchestrator/input/element.js",
     "./components/orchestrator/output/element.js": "./src/components/orchestrator/output/element.js",
     "./components/orchestrator/process-tracks/element.js": "./src/components/orchestrator/process-tracks/element.js",

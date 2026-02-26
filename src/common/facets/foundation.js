@@ -12,6 +12,7 @@ import SearchProcessor from "@components/processor/search/element.js";
 import ScopeEngine from "@components/engine/scope/element.js";
 import ScopedTracksOrchestrator from "@components/orchestrator/scoped-tracks/element.js";
 import FavouritesOrchestrator from "@components/orchestrator/favourites/element.js";
+import MediaSessionOrchestrator from "@components/orchestrator/media-session/element.js";
 import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
 
 /**
@@ -45,6 +46,7 @@ export const config = {
     autoQueue,
     favourites,
     input,
+    mediaSession,
     output,
     queueAudio,
     processTracks,
@@ -85,6 +87,7 @@ function playAudioFromQueue() {
       queue: queue(),
     },
     orchestrator: {
+      mediaSession: mediaSession(),
       queueAudio: queueAudio(),
     },
   };
@@ -186,12 +189,38 @@ function autoQueue() {
   return findExistingOrAdd(aqo);
 }
 
+function favourites() {
+  const o = output();
+
+  const fo = new FavouritesOrchestrator();
+  fo.setAttribute("group", GROUP);
+  fo.setAttribute("output-selector", o.selector);
+
+  return findExistingOrAdd(fo);
+}
+
 function input() {
   const i = new InputOrchestrator();
   i.setAttribute("group", GROUP);
   i.setAttribute("id", "input");
 
   return findExistingOrAdd(i);
+}
+
+function mediaSession() {
+  const a = audio();
+  const aw = artwork();
+  const o = output();
+  const q = queue();
+
+  const mso = new MediaSessionOrchestrator();
+  mso.setAttribute("group", GROUP);
+  mso.setAttribute("audio-engine-selector", a.selector);
+  mso.setAttribute("artwork-processor-selector", aw.selector);
+  mso.setAttribute("output-selector", o.selector);
+  mso.setAttribute("queue-engine-selector", q.selector);
+
+  return findExistingOrAdd(mso);
 }
 
 function output() {
@@ -256,16 +285,6 @@ function scopedTracks() {
   sto.setAttribute("search-processor-selector", s.selector);
 
   return findExistingOrAdd(sto);
-}
-
-function favourites() {
-  const o = output();
-
-  const fo = new FavouritesOrchestrator();
-  fo.setAttribute("group", GROUP);
-  fo.setAttribute("output-selector", o.selector);
-
-  return findExistingOrAdd(fo);
 }
 
 function sources() {
