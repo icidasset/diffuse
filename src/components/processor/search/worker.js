@@ -143,6 +143,7 @@ async function _search(params, tracks) {
     sortBy,
     ...params,
     // mode: "hybrid",
+    threshold: 0, // AND operator: all search terms must match in at least one property
     limit: 10000,
     offset: tracks.length,
   });
