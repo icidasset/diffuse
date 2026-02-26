@@ -46,6 +46,9 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
         collection: computed(() => {
           return this.output.signal()?.facets?.collection();
         }),
+        loaded: () => {
+          return this.output.signal()?.facets?.loaded() ?? Promise.resolve();
+        },
         reload: () => {
           return this.output.signal()?.facets?.reload() ??
             Promise.resolve();
@@ -63,6 +66,9 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
         collection: computed(() => {
           return this.output.signal()?.playlistItems?.collection();
         }),
+        loaded: () => {
+          return this.output.signal()?.playlistItems?.loaded() ?? Promise.resolve();
+        },
         reload: () => {
           return this.output.signal()?.playlistItems?.reload() ??
             Promise.resolve();
@@ -80,6 +86,9 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
         collection: computed(() => {
           return this.output.signal()?.themes?.collection();
         }),
+        loaded: () => {
+          return this.output.signal()?.themes?.loaded() ?? Promise.resolve();
+        },
         reload: () => {
           return this.output.signal()?.themes?.reload() ??
             Promise.resolve();
@@ -97,6 +106,9 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
         collection: computed(() => {
           return this.output.signal()?.tracks?.collection();
         }),
+        loaded: () => {
+          return this.output.signal()?.tracks?.loaded() ?? Promise.resolve();
+        },
         reload: () => {
           return this.output.signal()?.tracks?.reload() ?? Promise.resolve();
         },

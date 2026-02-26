@@ -18,6 +18,7 @@ export type OutputManagerDeputy<Encoding = null> =
 export type OutputManager<Encoding = null> = {
   facets: {
     collection: SignalReader<Encoding extends null ? Facet[] : Encoding>;
+    loaded: () => Promise<void>;
     reload: () => Promise<void>;
     save: (
       facets: Encoding extends null ? Facet[] : Encoding,
@@ -26,6 +27,7 @@ export type OutputManager<Encoding = null> = {
   };
   playlistItems: {
     collection: SignalReader<Encoding extends null ? PlaylistItem[] : Encoding>;
+    loaded: () => Promise<void>;
     reload: () => Promise<void>;
     save: (
       playlistItems: Encoding extends null ? PlaylistItem[] : Encoding,
@@ -40,6 +42,7 @@ export type OutputManager<Encoding = null> = {
   };
   themes: {
     collection: SignalReader<Encoding extends null ? Theme[] : Encoding>;
+    loaded: () => Promise<void>;
     reload: () => Promise<void>;
     save: (
       themes: Encoding extends null ? Theme[] : Encoding,
@@ -48,6 +51,7 @@ export type OutputManager<Encoding = null> = {
   };
   tracks: {
     collection: SignalReader<Encoding extends null ? Track[] : Encoding>;
+    loaded: () => Promise<void>;
     reload: () => Promise<void>;
     save: (tracks: Encoding extends null ? Track[] : Encoding) => Promise<void>;
     state: SignalReader<"loading" | "loaded" | "sleeping">;

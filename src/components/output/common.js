@@ -1,29 +1,23 @@
 import deepDiff from "@fry69/deep-diff";
-import { batch, computed, signal, untracked } from "@common/signal.js";
+import { batch, computed, effect, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
+ * @import {SignalReader} from "@common/signal.d.ts";
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
 /**
  * @template [Encoding=null]
  * @param {OutputManagerProperties<Encoding>} _
- * @param {{ compare?: boolean }} [signalOpts]
  * @returns {OutputManager<Encoding>}
  */
 export function outputManager(
   { init, facets, playlistItems, themes, tracks },
-  signalOpts,
 ) {
-  const compareOpt = signalOpts?.compare
-    ? { compare: (a, b) => !deepDiff(a, b) }
-    : undefined;
-
   const c = signal(
     /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
       .empty()),
-    compareOpt,
   );
   const cs = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -32,7 +26,6 @@ export function outputManager(
   const pl = signal(
     /** @type {Encoding extends null ? PlaylistItem[] : Encoding} */ (playlistItems
       .empty()),
-    compareOpt,
   );
   const pls = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -40,7 +33,6 @@ export function outputManager(
 
   const th = signal(
     /** @type {Encoding extends null ? Theme[] : Encoding} */ (themes.empty()),
-    compareOpt,
   );
   const ths = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
@@ -48,11 +40,30 @@ export function outputManager(
 
   const t = signal(
     /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
-    compareOpt,
   );
   const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );
+
+  /**
+   * @param {() => void} loader
+   * @param {SignalReader<"loading" | "loaded" | "sleeping">} state
+   */
+  function promiseLoadedState(loader, state) {
+    return () =>
+      new Promise((resolve) => {
+        const stop = effect(() => {
+          if (state() === "loaded") {
+            stop();
+            resolve(void 0);
+          }
+        });
+
+        if (state() === "sleeping") {
+          loader();
+        }
+      });
+  }
 
   async function loadFacets() {
     if (init && (await init()) === false) return;
@@ -88,6 +99,7 @@ export function outputManager(
         if (untracked(() => cs.value === "sleeping")) loadFacets();
         return c.value;
       }),
+      loaded: promiseLoadedState(loadFacets, cs.get),
       reload: loadFacets,
       save: async (newFacets) => {
         batch(() => {
@@ -103,6 +115,7 @@ export function outputManager(
         if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
         return pl.value;
       }),
+      loaded: promiseLoadedState(loadPlaylistItems, pls.get),
       reload: loadPlaylistItems,
       save: async (newPlaylistItems) => {
         batch(() => {
@@ -118,6 +131,7 @@ export function outputManager(
         if (untracked(() => ths.value === "sleeping")) loadThemes();
         return th.value;
       }),
+      loaded: promiseLoadedState(loadThemes, ths.get),
       reload: loadThemes,
       save: async (newThemes) => {
         batch(() => {
@@ -133,6 +147,7 @@ export function outputManager(
         if (untracked(() => ts.value === "sleeping")) loadTracks();
         return t.value;
       }),
+      loaded: promiseLoadedState(loadTracks, ts.get),
       reload: loadTracks,
       save: async (newTracks) => {
         batch(() => {

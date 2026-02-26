@@ -1,5 +1,7 @@
 import { GROUP } from "@common/facets/foundation.js";
 
+import { effect } from "@common/signal.js";
+
 import InputConfigurator from "@components/configurator/input/element.js";
 import MetadataProcessor from "@components/processor/metadata/element.js";
 import OutputOrchestrator from "@components/orchestrator/output/element.js";
@@ -41,14 +43,14 @@ async function addSampleContent() {
   </span>`;
 
   const demo = await s3.demo();
-  const tracks = output.tracks.collection();
-
-  await output.tracks.save([...tracks, demo.track]);
+  await output.tracks.loaded();
 
   addDemoBtn.innerHTML = `<span>
     <i class="ph-fill ph-hourglass-medium"></i>
     Processing source
   </span>`;
+
+  await output.tracks.save([...output.tracks.collection(), demo.track]);
 
   await pto.process();
 
