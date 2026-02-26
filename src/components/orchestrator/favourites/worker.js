@@ -1,7 +1,5 @@
-import * as TID from "@atcute/tid";
-
 import { ostiary, rpc } from "@common/worker.js";
-import { filterFavourites } from "./common.js";
+import { createFavouriteItem, filterFavourites } from "./common.js";
 
 /**
  * @import {PlaylistItem, Track} from "@definitions/types.d.ts"
@@ -18,7 +16,7 @@ import { filterFavourites } from "./common.js";
  * @returns {string}
  */
 function matchKey(track) {
-  return `${track.tags?.artist ?? ""}.${track.tags?.title ?? ""}`;
+  return `${track.tags?.artist ?? ""}.${track.tags?.title ?? ""}`.toLowerCase();
 }
 
 /**
@@ -31,37 +29,7 @@ function itemMatchKey(item) {
     "";
   const title = item.criteria.find((c) => c.field === "tags.title")?.value ??
     "";
-  return `${artist}.${title}`;
-}
-
-/**
- * Create a favourites playlist item from a track.
- * @param {Track} track
- * @returns {PlaylistItem}
- */
-function createFavouriteItem(track) {
-  const transformations = ["toLowerCase"];
-  const now = new Date().toISOString();
-
-  return /** @type {PlaylistItem} */ ({
-    $type: "sh.diffuse.output.playlistItem",
-    id: TID.now(),
-    playlist: "Favourites",
-    criteria: [
-      {
-        field: "tags.artist",
-        value: /** @type {unknown} */ (track.tags?.artist),
-        transformations,
-      },
-      {
-        field: "tags.title",
-        value: /** @type {unknown} */ (track.tags?.title),
-        transformations,
-      },
-    ],
-    createdAt: now,
-    updatedAt: now,
-  });
+  return `${artist}.${title}`.toLowerCase();
 }
 
 ////////////////////////////////////////////

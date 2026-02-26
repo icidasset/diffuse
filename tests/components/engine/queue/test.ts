@@ -14,7 +14,7 @@ describe("components/engine/queue", () => {
 
       const { tracks } = await import("@testing/sample/tracks.js");
 
-      await engine.add({ tracks });
+      await engine.add({ trackIds: tracks.map((t) => t.id) });
       return engine.future();
     });
 
@@ -33,7 +33,7 @@ describe("components/engine/queue", () => {
 
       const { tracks } = await import("@testing/sample/tracks.js");
 
-      await engine.supply({ tracks });
+      await engine.supply({ trackIds: tracks.map((t) => t.id) });
       await engine.fill({ amount: 1, shuffled: false });
       await engine.shift();
 
@@ -53,7 +53,7 @@ describe("components/engine/queue", () => {
 
       const { tracks } = await import("@testing/sample/tracks.js");
 
-      await engine.add({ tracks });
+      await engine.add({ trackIds: tracks.map((t) => t.id) });
       await engine.shift();
       await engine.shift();
       await engine.unshift();
@@ -74,7 +74,7 @@ describe("components/engine/queue", () => {
 
       const { tracks } = await import("@testing/sample/tracks.js");
 
-      await engine.add({ tracks });
+      await engine.add({ trackIds: tracks.map((t) => t.id) });
       await engine.shift();
       await engine.shift();
 
