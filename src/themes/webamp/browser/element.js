@@ -322,7 +322,7 @@ class Browser extends DiffuseElement {
           type="search"
           @change="${this
             .setSearchTerm}"
-          value="${searchTerm}"
+          .value="${searchTerm}"
         />
         <label for="playlist-select">Playlist:</label>
         <select id="playlist-select" @change="${this.setSelectedPlaylist}">

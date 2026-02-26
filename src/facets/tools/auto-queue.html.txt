@@ -17,6 +17,12 @@
         </select>
       </label>
     </div>
+    <div class="row">
+      <label class="with-icon" for="search">
+        <i class="ph-bold ph-magnifying-glass"></i>
+        <input id="search" type="search" placeholder="Search" />
+      </label>
+    </div>
   </div>
 </main>
 
@@ -42,6 +48,7 @@
     text-transform: uppercase;
   }
 
+  label input,
   label select {
     flex: 1;
   }
@@ -66,6 +73,7 @@
   // Elements
   const repeatBtn = document.querySelector("#repeat");
   const shuffleBtn = document.querySelector("#shuffle");
+  const searchInput = document.querySelector("#search");
   const playlistSelect = document.querySelector("#playlist");
 
   // Repeat & Shuffle state
@@ -84,6 +92,15 @@
 
   shuffleBtn.onclick = () => {
     repeatShuffle.setShuffle(!repeatShuffle.shuffle());
+  };
+
+  // Search state
+  effect(() => {
+    searchInput.value = scope.searchTerm() ?? "";
+  });
+
+  searchInput.oninput = () => {
+    scope.setSearchTerm(searchInput.value.trim() || undefined);
   };
 
   // Playlist state
