@@ -12,6 +12,7 @@
           "createdAt": { "type": "string", "format": "datetime" },
           "criteria": {
             "type": "array",
+            "description": "Criteria for matching this item against a set of tracks",
             "items": { "type": "ref", "ref": "#criterion" }
           },
           "playlist": { "type": "string", "description": "The name of the playlist" },
@@ -27,7 +28,9 @@
       "type": "object",
       "required": ["field", "value"],
       "properties": {
+        "amount": { "type": "integer", "minimum": 0 },
         "field": { "type": "string" },
+        "mode": { "type": "string", "knownValues": ["include", "exclude"], "default": "include" },
         "transformations": {
           "type": "array",
           "items": { "type": "ref", "ref": "#transformation" }
