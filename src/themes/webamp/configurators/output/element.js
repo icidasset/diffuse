@@ -39,6 +39,7 @@ class OutputConfig extends DiffuseElement {
     /** @type {S3OutputElement | null} */ (null),
   );
 
+  $atprotoError = signal(/** @type {string | null} */ (null));
   $tab = signal("overview");
 
   // LIFECYCLE
@@ -89,7 +90,19 @@ class OutputConfig extends DiffuseElement {
       button.textContent = "Loading ...";
     }
 
-    await atproto.login(handle);
+    this.$atprotoError.value = null;
+
+    try {
+      await atproto.login(handle);
+    } catch (err) {
+      this.$atprotoError.value = err instanceof Error
+        ? err.message
+        : "login failed";
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Sign in";
+      }
+    }
   };
 
   #handleAtprotoLogout = async () => {
@@ -410,6 +423,19 @@ class OutputConfig extends DiffuseElement {
               />
             </div>
           </fieldset>
+
+          ${this.$atprotoError.value
+            ? html`
+              <fieldset>
+                <span class="with-icon with-icon--large">
+                  <img src="images/icons/windows_98/msg_error-0.png" width="24" />
+                  <span>
+                    Sign in failed, please check the provided handle and try again.
+                  </span>
+                </span>
+              </fieldset>
+            `
+            : nothing}
 
           <p>
             <button type="submit" id="atproto-submit">Sign in</button>
