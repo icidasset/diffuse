@@ -91,9 +91,28 @@ class InputConfig extends DiffuseElement {
     if (processTracksOrchestrator) {
       this.$processTracksOrchestrator.value = processTracksOrchestrator;
     }
+
+    // EFFECTS
+
+    let skip = true;
+
+    this.effect(() => {
+      if (skip) {
+        skip = false;
+        return;
+      }
+
+      const _trigger = sourcesOrchestrator.sources();
+      if (output.tracks.state() !== "loaded") return;
+      processTracksOrchestrator?.process();
+    });
   }
 
   // EVENTS
+
+  #processSources = () => {
+    this.$processTracksOrchestrator.value?.process();
+  };
 
   /**
    * @param {Event} event
@@ -611,7 +630,28 @@ class InputConfig extends DiffuseElement {
    */
   #renderProcessingProgress(html) {
     const orchestrator = this.$processTracksOrchestrator.value;
-    if (!orchestrator?.isProcessing()) return nothing;
+    if (!orchestrator?.isProcessing()) {
+      return html`
+        <fieldset>
+          <div class="with-icon with-icon--large">
+            <img
+              src="images/icons/windows_98/gears-0.png"
+              width="24"
+            />
+            <div>
+              <p>
+                Go through all the inputs you've added and get the last audio files and
+                their metadata.
+              </p>
+              <p>
+                <button @click="${this
+                  .#processSources}">Process sources</button>
+              </p>
+            </div>
+          </div>
+        </fieldset>
+      `;
+    }
 
     const { processed, total } = orchestrator.progress();
     const percentage = total > 0 ? Math.round((processed / total) * 100) : 0;

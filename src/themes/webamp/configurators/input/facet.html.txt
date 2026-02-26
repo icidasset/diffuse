@@ -23,7 +23,6 @@
 <script type="module">
   import foundation from "@diffuse/foundation";
   import InputConfigElement from "./themes/webamp/configurators/input/element.js";
-  import { effect } from "./common/signal.js";
 
   const inp = foundation.orchestrator.input();
   const out = foundation.orchestrator.output();
@@ -37,15 +36,4 @@
   el.setAttribute("process-tracks-orchestrator-selector", pro.selector);
 
   document.querySelector("#placeholder")?.replaceWith(el);
-
-  // EFFECTS
-
-  let initEffect = false;
-
-  effect(() => {
-    const _trigger = sou.sources();
-    if (out.tracks.state() !== "loaded") return;
-    if (initEffect) pro.process();
-    initEffect = true;
-  });
 </script>
