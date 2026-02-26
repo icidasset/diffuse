@@ -215,7 +215,7 @@ const editor = new EditorView({
 </style>
 
 <script type="module">
-  import foundation from "./common/facets/foundation.js";
+  import foundation from "@diffuse/foundation";
   import { effect } from "./common/signal.js";
 
   const components = foundation.features.fillQueueAutomatically();

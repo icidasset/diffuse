@@ -48,9 +48,9 @@
 </style>
 
 <script type="module">
-  import foundation from "./common/facets/foundation.js";
-  import { computed, effect } from "./common/signal.js";
-  import * as Playlist from "./common/playlist.js";
+  import foundation from "@diffuse/foundation";
+  import { computed, effect } from "@diffuse/common/signal.js";
+  import * as Playlist from "@diffuse/common/playlist.js";
 
   const ACTIVE_CLASS = "button--active";
 

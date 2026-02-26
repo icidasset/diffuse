@@ -21,7 +21,7 @@
 </style>
 
 <script type="module">
-  import foundation from "./common/facets/foundation.js";
+  import foundation from "@diffuse/foundation";
   import InputConfigElement from "./themes/webamp/configurators/input/element.js";
   import { effect } from "./common/signal.js";
 

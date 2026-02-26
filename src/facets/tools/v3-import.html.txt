@@ -80,7 +80,7 @@
 
 <script type="module">
   import * as TID from "@atcute/tid";
-  import foundation from "./common/facets/foundation.js";
+  import foundation from "@diffuse/foundation";
 
   // Setup
   foundation.features.processInputs();
