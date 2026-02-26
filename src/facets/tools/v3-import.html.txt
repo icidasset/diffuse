@@ -173,19 +173,33 @@
           const playlistName = item.name ?? "Untitled";
           const isUnordered = !!item.collection;
 
-          return (item.tracks ?? []).map((track, index) => ({
-            $type: "sh.diffuse.output.playlistItem",
-            id: TID.now(),
-            playlist: playlistName,
-            position: isUnordered ? undefined : index,
-            criteria: [
-              { field: "tags.album", value: track.album ?? "", transformations: ["toLowerCase"] },
-              { field: "tags.artist", value: track.artist ?? "", transformations: ["toLowerCase"] },
-              { field: "tags.title", value: track.title ?? "", transformations: ["toLowerCase"] },
-            ],
-            createdAt: now,
-            updatedAt: now,
-          }));
+          const playlistItems = [];
+
+          (item.tracks ?? []).forEach((track, index) => {
+            playlistItems.push({
+              $type: "sh.diffuse.output.playlistItem",
+              id: TID.now(),
+              playlist: playlistName,
+              positionedAfter: isUnordered
+                ? undefined
+                : index > 0
+                  ? playlistItems[index - 1].id
+                  : undefined,
+              criteria: [
+                { field: "tags.album", value: track.album ?? "", transformations: ["toLowerCase"] },
+                {
+                  field: "tags.artist",
+                  value: track.artist ?? "",
+                  transformations: ["toLowerCase"],
+                },
+                { field: "tags.title", value: track.title ?? "", transformations: ["toLowerCase"] },
+              ],
+              createdAt: now,
+              updatedAt: now,
+            });
+          });
+
+          return playlistItems;
         });
 
       await output.playlistItems.save([...existing, ...newPlaylistItems]);
