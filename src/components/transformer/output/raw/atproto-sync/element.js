@@ -4,6 +4,7 @@ import "@components/output/polymorphic/indexed-db/element.js";
 
 import { computed, signal } from "@common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import { promiseLoadedState } from "@toko/diffuse/components/output/common.js";
 
 /**
  * @import { RenderArg } from "@common/element.d.ts"
@@ -53,6 +54,16 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
           const data = l[name].collection();
           return Array.isArray(data) ? data : [];
         }),
+        loaded: promiseLoadedState(
+          computed(() => {
+            const l = local();
+            if (!l) return [];
+            l[name].collection();
+          }),
+          computed(() => {
+            return local()?.[name]?.state() ?? "sleeping";
+          }),
+        ),
         reload: async () => {
           await this.#sync();
         },

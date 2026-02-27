@@ -8,6 +8,26 @@ import { batch, computed, effect, signal, untracked } from "@common/signal.js";
  */
 
 /**
+ * @param {() => void} loader
+ * @param {SignalReader<"loading" | "loaded" | "sleeping">} state
+ */
+export function promiseLoadedState(loader, state) {
+  return () =>
+    new Promise((resolve) => {
+      const stop = effect(() => {
+        if (state() === "loaded") {
+          stop();
+          resolve(void 0);
+        }
+      });
+
+      if (state() === "sleeping") {
+        loader();
+      }
+    });
+}
+
+/**
  * @template [Encoding=null]
  * @param {OutputManagerProperties<Encoding>} _
  * @returns {OutputManager<Encoding>}
@@ -44,26 +64,6 @@ export function outputManager(
   const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
   );
-
-  /**
-   * @param {() => void} loader
-   * @param {SignalReader<"loading" | "loaded" | "sleeping">} state
-   */
-  function promiseLoadedState(loader, state) {
-    return () =>
-      new Promise((resolve) => {
-        const stop = effect(() => {
-          if (state() === "loaded") {
-            stop();
-            resolve(void 0);
-          }
-        });
-
-        if (state() === "sleeping") {
-          loader();
-        }
-      });
-  }
 
   async function loadFacets() {
     if (init && (await init()) === false) return;

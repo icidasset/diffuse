@@ -47,14 +47,18 @@ if (!isLocalDev) {
   redirect_uri = location.origin + "/oauth/callback";
 }
 
+const client_id = isLocalDev
+  ? `http://localhost/?redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${
+    encodeURIComponent(SCOPE)
+  }`
+  : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
+    "https://elements.diffuse.sh/oauth-client-metadata.json";
+
+console.log(client_id);
+
 configureOAuth({
   metadata: {
-    client_id: isLocalDev
-      ? `http://localhost/?redirect_uri=${
-        encodeURIComponent(redirect_uri)
-      }&scope=${encodeURIComponent(SCOPE)}`
-      : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
-        "https://elements.diffuse.sh/oauth-client-metadata.json",
+    client_id,
     redirect_uri,
   },
   identityResolver: new LocalActorResolver({

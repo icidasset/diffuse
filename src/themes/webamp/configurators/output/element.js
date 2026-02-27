@@ -40,6 +40,8 @@ class OutputConfig extends DiffuseElement {
   );
 
   $atprotoError = signal(/** @type {string | null} */ (null));
+  $passkeyError = signal(/** @type {string | null} */ (null));
+  $passkeyWorking = signal(false);
   $tab = signal("overview");
 
   // LIFECYCLE
@@ -110,6 +112,50 @@ class OutputConfig extends DiffuseElement {
     if (!atproto) return;
 
     await atproto.logout();
+  };
+
+  #handlePasskeySetup = async () => {
+    const atproto = this.$atproto.value;
+    if (!atproto) return;
+
+    this.$passkeyError.value = null;
+    this.$passkeyWorking.value = true;
+
+    try {
+      await atproto.setupPasskey();
+    } catch (err) {
+      this.$passkeyError.value = err instanceof Error
+        ? err.message
+        : "Passkey setup failed";
+    } finally {
+      this.$passkeyWorking.value = false;
+    }
+  };
+
+  #handlePasskeyAdopt = async () => {
+    const atproto = this.$atproto.value;
+    if (!atproto) return;
+
+    this.$passkeyError.value = null;
+    this.$passkeyWorking.value = true;
+
+    try {
+      await atproto.adoptPasskey();
+    } catch (err) {
+      this.$passkeyError.value = err instanceof Error
+        ? err.message
+        : "Passkey adoption failed";
+    } finally {
+      this.$passkeyWorking.value = false;
+    }
+  };
+
+  #handlePasskeyRemove = async () => {
+    const atproto = this.$atproto.value;
+    if (!atproto) return;
+
+    this.$passkeyError.value = null;
+    await atproto.removePasskey();
   };
 
   /** @param {Event} event */
@@ -384,6 +430,12 @@ class OutputConfig extends DiffuseElement {
         : undefined;
 
     const authenticated = () => {
+      const atproto = this.$atproto.value;
+      const passkeyActive = atproto?.passkeyActive() ?? false;
+      const lockedTracksCount = atproto?.lockedTracks().length ?? 0;
+
+      console.log(lockedTracksCount);
+
       return html`
         <fieldset>
           <span class="with-icon with-icon--large">
@@ -391,6 +443,100 @@ class OutputConfig extends DiffuseElement {
             <span>Signed in as <strong>${did}</strong></span>
           </span>
         </fieldset>
+
+        <fieldset>
+          <legend>Passkey encryption (optional)</legend>
+
+          <div class="with-icon with-icon--large">
+            <img src="images/icons/windows_98/keys-5.png" width="24" />
+
+            <div>
+              ${passkeyActive
+                ? html`
+                  <p class="with-icon with-icon--large">
+                    <img
+                      src="images/icons/windows_98/directory_channels-2.png"
+                      width="24"
+                    />
+                    Passkey active — track URIs are encrypted.
+                  </p>
+
+                  ${this.$passkeyError.value
+                    ? html`
+                      <fieldset>
+                        <span class="with-icon with-icon--large">
+                          <img src="images/icons/windows_98/msg_error-0.png" width="24" />
+                          <span>${this.$passkeyError.value}</span>
+                        </span>
+                      </fieldset>
+                    `
+                    : nothing}
+
+                  <p>
+                    <button @click="${this
+                      .#handlePasskeyRemove}">Remove passkey</button>
+                  </p>
+                `
+                : html`
+                  <p>
+                    Data stored on the AT Protocol is public by default.<br />
+                    This feature optionally hides any passwords and other<br />
+                    sensitive authentication details from the inputs you've added.
+                  </p>
+                  <p>
+                    Note that, with this enabled, other people can NOT play audio listed on your
+                    account.
+                  </p>
+
+                  ${this.$passkeyError.value
+                    ? html`
+                      <fieldset>
+                        <span class="with-icon with-icon--large">
+                          <img src="images/icons/windows_98/msg_error-0.png" width="24" />
+                          <span>${this.$passkeyError.value}</span>
+                        </span>
+                      </fieldset>
+                    `
+                    : nothing}
+
+                  <p class="button-row">
+                    <button
+                      ?disabled="${this.$passkeyWorking.value}"
+                      @click="${this.#handlePasskeySetup}"
+                    >
+                      ${this.$passkeyWorking.value
+                        ? "Setting up ..."
+                        : "Set up passkey encryption"}
+                    </button>
+                    <button
+                      ?disabled="${this.$passkeyWorking.value}"
+                      @click="${this.#handlePasskeyAdopt}"
+                    >
+                      ${this.$passkeyWorking.value
+                        ? "Authenticating ..."
+                        : "Use existing passkey"}
+                    </button>
+                  </p>
+                `}
+            </div>
+          </div>
+        </fieldset>
+
+        ${lockedTracksCount > 0
+          ? html`
+            <fieldset>
+              <legend></legend>
+              <p class="with-icon with-icon--large">
+                <img
+                  src="images/icons/windows_98/msg_warning-0.png"
+                  width="24"
+                />
+                ${lockedTracksCount} encrypted track(s) cannot be played until you unlock them with
+                your passkey.
+              </p>
+            </fieldset>
+          `
+          : nothing}
 
         <p class="button-row">
           <button @click="${this.#handleAtprotoLogout}">Sign out</button>

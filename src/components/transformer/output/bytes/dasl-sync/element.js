@@ -9,6 +9,7 @@ import { computed, signal } from "@common/signal.js";
 import { compareTimestamps } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import { IDB_PREFIX } from "./constants.js";
+import { promiseLoadedState } from "@toko/diffuse/components/output/common.js";
 
 /**
  * @import { Signal, SignalReader } from "@common/signal.d.ts";
@@ -363,13 +364,20 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
    * @param {{ save: (bytes: Uint8Array) => Promise<void> | void }} local
    * @param {{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }} remote
    * @param {SignalReader<Container<T>>} container
-   * @returns {{ collection: SignalReader<T[]>, reload: () => Promise<void>, save: (items: T[]) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }}
+   * @returns {{ collection: SignalReader<T[]>, loaded: () => Promise<void>; reload: () => Promise<void>, save: (items: T[]) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }}
    */
   managerProp(local, remote, container) {
     return {
       collection: computed(() => {
         return container().data;
       }),
+      loaded: promiseLoadedState(
+        computed(() => container()),
+        computed(() => {
+          if (container().cid) return "loaded";
+          return "loading";
+        }),
+      ),
       reload: remote.reload,
       save: async (/** @type {T[]} */ newItems) => {
         const adjustedContainer = await this.updateContainer({

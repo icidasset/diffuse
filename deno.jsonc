@@ -21,6 +21,7 @@
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",
     "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^0.5.1",
     "@mary/ds-queue": "jsr:@mary/ds-queue@^0.1.3",
+    "@noble/ciphers": "npm:@noble/ciphers@^2.1.1",
     "@okikio/transferables": "jsr:@okikio/transferables@^1.0.2",
     "@orama/orama": "npm:@orama/orama@^3.1.18",
     "@phosphor-icons/web": "npm:@phosphor-icons/web@^2.1.2",
