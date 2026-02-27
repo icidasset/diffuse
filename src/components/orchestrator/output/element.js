@@ -3,7 +3,6 @@ import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/output/element.js";
 import "@components/transformer/output/refiner/default/element.js";
-import "@components/transformer/output/replicator/broadcast/element.js";
 
 /**
  * @import {RenderArg} from "@common/element.d.ts"
@@ -152,16 +151,18 @@ class OutputOrchestrator extends DiffuseElement {
       <dop-indexed-db
         id="do-output__dop-indexed-db__json"
         namespace="json"
+        group="${ifDefined(group)}"
       ></dop-indexed-db>
 
       <!-- ⚙️ S3 -->
-      <dob-s3 id="do-output__dob-s3"></dob-s3>
+      <dob-s3 id="do-output__dob-s3" group="${ifDefined(group)}"></dob-s3>
 
       <!-- ⚙️ ATPROTO -->
       <dtor-atproto-sync
         id="do-output__dtor-atproto-sync"
         namespace="atproto"
         output-selector="#do-output__dor-atproto"
+        group="${ifDefined(group)}"
       ></dtor-atproto-sync>
 
       <dor-atproto id="do-output__dor-atproto"></dor-atproto>
@@ -198,18 +199,11 @@ class OutputOrchestrator extends DiffuseElement {
         ></dtob-dasl-sync>
       </dc-output>
 
-      <!-- REFINERS -->
+      <!-- ENTRY ⬆️ -->
       <dtor-default
-        id="do-output__dtor-default"
+        id="do-output__output"
         output-selector="#do-output__dc-output"
       ></dtor-default>
-
-      <!-- ENTRY ⬆️ -->
-      <dtor-broadcast
-        id="do-output__output"
-        output-selector="#do-output__dtor-default"
-        group="${ifDefined(group)}"
-      ></dtor-broadcast>
     `;
   }
 }

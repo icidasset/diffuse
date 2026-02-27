@@ -1,8 +1,7 @@
 import { Client, ClientResponseError, ok } from "@atcute/client";
 
-import { DiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
-import { outputManager } from "../../common.js";
+import { BroadcastedOutputElement, outputManager } from "../../common.js";
 
 import {
   clearStoredSession,
@@ -25,7 +24,7 @@ import {
 /**
  * @implements {ATProtoOutputElement}
  */
-class ATProtoOutput extends DiffuseElement {
+class ATProtoOutput extends BroadcastedOutputElement {
   static NAME = "diffuse/output/raw/atproto";
 
   #manager;
@@ -89,6 +88,8 @@ class ATProtoOutput extends DiffuseElement {
 
   /** @override */
   connectedCallback() {
+    this.replicateSavedData(this.#manager);
+
     super.connectedCallback();
 
     this.#tryRestore();

@@ -39,6 +39,13 @@ export type OutputManager<Encoding = null> = {
     playlistItems: Signal<Encoding extends null ? PlaylistItem[] : Encoding>;
     themes: Signal<Encoding extends null ? Theme[] : Encoding>;
     tracks: Signal<Encoding extends null ? Track[] : Encoding>;
+
+    states: {
+      facets: Signal<"loading" | "loaded" | "sleeping">;
+      playlistItems: Signal<"loading" | "loaded" | "sleeping">;
+      themes: Signal<"loading" | "loaded" | "sleeping">;
+      tracks: Signal<"loading" | "loaded" | "sleeping">;
+    };
   };
   themes: {
     collection: SignalReader<Encoding extends null ? Theme[] : Encoding>;

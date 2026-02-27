@@ -175,6 +175,21 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
     const key = await deriveCipherKey(result.prfSecond);
     await storeCipherKey(this.namespace, key);
     this.#encryptionKey.value = key;
+
+    let saved = false;
+
+    const stop = this.effect(() => {
+      if (saved) {
+        stop();
+        return;
+      }
+
+      const unlocked = this.tracks.collection();
+      if (this.tracks.state() !== "loaded") return;
+
+      saved = true;
+      this.tracks.save(unlocked);
+    });
   }
 
   /**
@@ -191,6 +206,21 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
     const key = await deriveCipherKey(result.prfSecond);
     await storeCipherKey(this.namespace, key);
     this.#encryptionKey.value = key;
+
+    let saved = false;
+
+    const stop = this.effect(() => {
+      if (saved) {
+        stop();
+        return;
+      }
+
+      const unlocked = this.tracks.collection();
+      if (this.tracks.state() !== "loaded") return;
+
+      saved = true;
+      this.tracks.save(unlocked);
+    });
   }
 
   /**
@@ -199,15 +229,22 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
   async removePasskey() {
     await removeStoredPasskey(this.namespace);
 
-    // Capture decrypted tracks while encryption key is still in memory
-    const unlocked = this.tracks.collection();
+    let removed = false;
 
-    this.#encryptionKey.value = null;
+    const stop = this.effect(() => {
+      if (removed) {
+        stop();
+        return;
+      }
 
-    console.log(unlocked, this.tracks.state(), this.lockedTracks());
+      const unlocked = this.tracks.collection();
+      if (this.tracks.state() !== "loaded") return;
 
-    // Re-save as plaintext (key is now null, so save skips encryption)
-    await this.tracks.save(unlocked);
+      removed = true;
+
+      this.#encryptionKey.value = null;
+      this.tracks.save(unlocked);
+    });
   }
 }
 

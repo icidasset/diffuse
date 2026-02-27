@@ -1,11 +1,63 @@
-import deepDiff from "@fry69/deep-diff";
+import { BroadcastableDiffuseElement } from "@common/element.js";
 import { batch, computed, effect, signal, untracked } from "@common/signal.js";
 
 /**
  * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
- * @import {SignalReader} from "@common/signal.d.ts";
+ * @import {SignalReader, SignalWriter} from "@common/signal.d.ts";
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
+
+export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
+  /**
+   * @param {OutputManager<any>} manager
+   */
+  replicateSavedData(manager) {
+    // Broadcast if needed
+    if (!this.hasAttribute("group")) return;
+
+    /**
+     * @template T
+     * @param {{ save: (data: T) => Promise<void>; set: SignalWriter<T> }} _
+     * @returns {(data: T) => Promise<void>}
+     */
+    const fn = ({ save, set }) => async (data) => {
+      if (await this.isLeader()) {
+        return save(data);
+      } else {
+        return set(data);
+      }
+    };
+
+    const actions = this.broadcast(this.nameWithGroup, {
+      saveFacets: {
+        strategy: "replicate",
+        fn: fn({ save: manager.facets.save, set: manager.signals.facets.set }),
+      },
+      savePlaylistItems: {
+        strategy: "replicate",
+        fn: fn({
+          save: manager.playlistItems.save,
+          set: manager.signals.playlistItems.set,
+        }),
+      },
+      saveThemes: {
+        strategy: "replicate",
+        fn: fn({ save: manager.themes.save, set: manager.signals.themes.set }),
+      },
+      saveTracks: {
+        strategy: "replicate",
+        fn: fn({ save: manager.tracks.save, set: manager.signals.tracks.set }),
+      },
+    });
+
+    if (actions) {
+      manager.facets.save = actions.saveFacets;
+      manager.playlistItems.save = actions.savePlaylistItems;
+      manager.themes.save = actions.saveThemes;
+      manager.tracks.save = actions.saveTracks;
+    }
+  }
+}
 
 /**
  * @param {() => void} loader
@@ -177,6 +229,13 @@ export function outputManager(
       playlistItems: pl,
       themes: th,
       tracks: t,
+
+      states: {
+        facets: cs,
+        playlistItems: pls,
+        themes: ths,
+        tracks: ts,
+      },
     },
   };
 }

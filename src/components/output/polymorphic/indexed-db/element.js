@@ -1,8 +1,7 @@
 import * as IDB from "idb-keyval";
 
 import { IDB_PREFIX } from "./constants.js";
-import { DiffuseElement } from "@common/element.js";
-import { outputManager } from "../../common.js";
+import { BroadcastedOutputElement, outputManager } from "../../common.js";
 
 /**
  * @import {OutputElement, OutputManager, OutputWorkerActions} from "../../types.d.ts"
@@ -16,7 +15,7 @@ import { outputManager } from "../../common.js";
 /**
  * @implements {OutputElement<SupportedDataTypes>}
  */
-class IndexedDBOutput extends DiffuseElement {
+class IndexedDBOutput extends BroadcastedOutputElement {
   static NAME = "diffuse/output/polymorphic/indexed-db";
   static WORKER_URL = "components/output/polymorphic/indexed-db/worker.js";
 
@@ -56,6 +55,15 @@ class IndexedDBOutput extends DiffuseElement {
     this.tracks = this.#manager.tracks;
 
     this.ready = () => true;
+  }
+
+  // LIFECYCLE
+
+  /** @override */
+  connectedCallback() {
+    this.replicateSavedData(this.#manager);
+
+    super.connectedCallback();
   }
 
   // GET & PUT

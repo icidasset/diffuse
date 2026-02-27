@@ -1,8 +1,7 @@
 import * as IDB from "idb-keyval";
 
-import { DiffuseElement } from "@common/element.js";
 import { computed, signal } from "@common/signal.js";
-import { outputManager } from "../../common.js";
+import { BroadcastedOutputElement, outputManager } from "../../common.js";
 
 const STORAGE_PREFIX = "diffuse/output/bytes/s3";
 
@@ -21,7 +20,7 @@ const STORAGE_PREFIX = "diffuse/output/bytes/s3";
  * @implements {OutputElement<Uint8Array | undefined>}
  * @implements {S3OutputElement}
  */
-class S3Output extends DiffuseElement {
+class S3Output extends BroadcastedOutputElement {
   static NAME = "diffuse/output/bytes/s3";
   static WORKER_URL = "components/output/bytes/s3/worker.js";
 
@@ -80,6 +79,8 @@ class S3Output extends DiffuseElement {
    * @override
    */
   async connectedCallback() {
+    this.replicateSavedData(this.#manager);
+
     super.connectedCallback();
 
     /** @type {Bucket | undefined} */
