@@ -65,6 +65,20 @@ export const untracked = (fn) => {
 
 /**
  * @template T
+ * @param {function(): Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+export const untrackedAsync = async (fn) => {
+  const sub = setActiveSub(void 0);
+  try {
+    return await fn();
+  } finally {
+    setActiveSub(sub);
+  }
+};
+
+/**
+ * @template T
  * @param {{ get: SignalReader<T>; set: SignalWriter<T> }} _
  * @returns {Signal<T>}
  */

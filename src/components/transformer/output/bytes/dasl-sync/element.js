@@ -5,7 +5,7 @@ import deepDiff from "@fry69/deep-diff";
 import "@components/output/polymorphic/indexed-db/element.js";
 
 import * as CID from "@common/cid.js";
-import { computed, signal } from "@common/signal.js";
+import { computed, signal, untracked } from "@common/signal.js";
 import { compareTimestamps } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import { IDB_PREFIX } from "./constants.js";
@@ -47,14 +47,17 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remoteState,
       { saveLocal, saveRemote },
     ) => {
-      const container = signal(/** @type {Container<T>} */ (EMPTY));
+      const container = signal(
+        /** @type {Container<T>} */ (EMPTY),
+        { compare: (a, b) => a.cid === b.cid },
+      );
 
       const isReady = signal(false);
-      const isMerging = signal(false);
+      const merging = signal({ isBusy: false, lastCID: "" });
 
       this.effect(() => {
         if (!isReady.value) return;
-        if (isMerging.value) return;
+        if (merging.value.isBusy) return;
 
         const lb = localCollection();
         const rb = remote.ready() ? remoteCollection() : undefined;
@@ -72,7 +75,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
             if (remote.ready() && rs === "loaded") {
               const bytes = this.save(l);
-              saveRemote(bytes);
+              untracked(() => saveRemote(bytes));
             }
           }
         } else if (!l) {
@@ -80,25 +83,27 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
           const bytes = this.save(r);
           saveLocal(bytes);
-        } else {
-          container.value = l;
+        } else if (
+          rs === "loaded" && this.hasDiverged({ local: l, remote: r })
+        ) {
+          untracked(() => {
+            merging.value = { isBusy: true, lastCID: merging.value.lastCID };
+          });
 
-          if (this.hasDiverged({ local: l, remote: r })) {
-            isMerging.value = true;
+          this.merge(l, r).then(async (c) => {
+            if (c.cid === merging.value.lastCID) return;
 
-            this.merge(l, r).then(async (c) => {
-              container.value = c;
+            container.value = c;
 
-              const bytes = this.save(c);
-              await saveLocal(bytes);
+            const bytes = this.save(c);
+            await saveLocal(bytes);
 
-              if (remote.ready() && rs === "loaded") {
-                await saveRemote(bytes);
-              }
+            if (remote.ready() && rs === "loaded") {
+              await untracked(() => saveRemote(bytes));
+            }
 
-              isMerging.value = false;
-            });
-          }
+            merging.value = { isBusy: false, lastCID: c.cid ?? "" };
+          });
         }
       });
 
