@@ -14,9 +14,23 @@ import { batch, computed, effect, signal, untracked } from "@common/signal.js";
 export function promiseLoadedState(loader, state) {
   return () =>
     new Promise((resolve) => {
+      let resolved = false;
+
       const stop = effect(() => {
+        if (resolved) {
+          try {
+            stop();
+          } catch {}
+          return;
+        }
+
         if (state() === "loaded") {
-          stop();
+          try {
+            stop();
+          } catch {
+            resolved = true;
+          }
+
           resolve(void 0);
         }
       });

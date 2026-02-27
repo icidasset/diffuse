@@ -54,8 +54,6 @@ const client_id = isLocalDev
   : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
     "https://elements.diffuse.sh/oauth-client-metadata.json";
 
-console.log(client_id);
-
 configureOAuth({
   metadata: {
     client_id,

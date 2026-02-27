@@ -50,6 +50,9 @@ class OutputOrchestrator extends DiffuseElement {
             import(
               "@components/transformer/output/raw/atproto-sync/element.js"
             );
+            import(
+              "@components/transformer/output/refiner/track-uri-passkey/element.js"
+            );
             break;
           }
           case "do-output__dc-output__s3": {
@@ -151,7 +154,16 @@ class OutputOrchestrator extends DiffuseElement {
         namespace="json"
       ></dop-indexed-db>
 
+      <!-- ⚙️ S3 -->
       <dob-s3 id="do-output__dob-s3"></dob-s3>
+
+      <!-- ⚙️ ATPROTO -->
+      <dtor-atproto-sync
+        id="do-output__dtor-atproto-sync"
+        namespace="atproto"
+        output-selector="#do-output__dor-atproto"
+      ></dtor-atproto-sync>
+
       <dor-atproto id="do-output__dor-atproto"></dor-atproto>
 
       <!-- OUTPUT CONFIGURATOR -->
@@ -160,22 +172,24 @@ class OutputOrchestrator extends DiffuseElement {
         default="do-output__dc-output__local"
         group="${ifDefined(group)}"
       >
-        <!-- Local -->
+        <!-- local -->
         <dtos-json
           id="do-output__dc-output__local"
           output-selector="#do-output__dop-indexed-db__json"
           label="Local"
         ></dtos-json>
 
-        <!-- ATProto -->
-        <dtor-atproto-sync
+        <!-- atproto -->
+        <dtor-track-uri-passkey
           id="do-output__dc-output__atproto"
           namespace="atproto"
-          output-selector="#do-output__dor-atproto"
+          output-selector="#do-output__dtor-atproto-sync"
+          group="${ifDefined(group)}"
           label="AT Protocol"
-        ></dtor-atproto-sync>
+        >
+        </dtor-track-uri-passkey>
 
-        <!-- S3 -->
+        <!-- s3 -->
         <dtob-dasl-sync
           id="do-output__dc-output__s3"
           namespace="s3"
@@ -184,7 +198,7 @@ class OutputOrchestrator extends DiffuseElement {
         ></dtob-dasl-sync>
       </dc-output>
 
-      <!-- REFINER -->
+      <!-- REFINERS -->
       <dtor-default
         id="do-output__dtor-default"
         output-selector="#do-output__dc-output"

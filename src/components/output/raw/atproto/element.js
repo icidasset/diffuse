@@ -13,20 +13,7 @@ import {
   TokenRefreshError,
 } from "./oauth.js";
 
-import {
-  adoptPasskeyPrfResult,
-  createPasskey,
-  decryptUri,
-  deriveCipherKey,
-  encryptUri,
-  isEncryptedUri,
-  loadStoredCipherKey,
-  removeStoredPasskey,
-  storeCipherKey,
-} from "./passkey.js";
-
 /**
- * @import {Track} from "@definitions/types.d.ts"
  * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
@@ -74,12 +61,8 @@ class ATProtoOutput extends DiffuseElement {
       },
       tracks: {
         empty: () => [],
-        get: async () => {
-          const { locked, unlocked } = await this.#getTracks();
-          this.#lockedTracks.value = locked;
-          return unlocked;
-        },
-        put: (data) => this.#putTracks(data),
+        get: () => this.listRecords("sh.diffuse.output.track"),
+        put: (data) => this.#putRecords("sh.diffuse.output.track", data),
       },
     });
 
@@ -93,19 +76,10 @@ class ATProtoOutput extends DiffuseElement {
 
   #did = signal(/** @type {string | null} */ (null));
   #isOnline = signal(navigator.onLine);
-  #lockedTracks = signal(/** @type {Track[]} */ ([]));
-  #passkeyActive = signal(false);
   #rev = signal(/** @type {string | null} */ (null));
-
-  // STATE
-
-  /** @type {Uint8Array | null} */
-  #encryptionKey = null;
 
   did = this.#did.get;
   rev = this.#rev.get;
-  lockedTracks = this.#lockedTracks.get;
-  passkeyActive = this.#passkeyActive.get;
 
   ready = computed(() => {
     return this.#did.value !== null && !!this.#rpc && this.#isOnline.value;
@@ -116,14 +90,6 @@ class ATProtoOutput extends DiffuseElement {
   /** @override */
   connectedCallback() {
     super.connectedCallback();
-
-    loadStoredCipherKey().then((key) => {
-      if (key) {
-        this.#encryptionKey = key;
-        this.#passkeyActive.value = true;
-        this.#decryptLockedTracks();
-      }
-    });
 
     this.#tryRestore();
 
@@ -161,8 +127,6 @@ class ATProtoOutput extends DiffuseElement {
       this.#agent = null;
       this.#authenticated = Promise.withResolvers();
       this.#did.value = null;
-      this.#encryptionKey = null;
-      this.#passkeyActive.value = false;
       this.#rpc = null;
     }
   }
@@ -175,8 +139,6 @@ class ATProtoOutput extends DiffuseElement {
     this.#agent = null;
     this.#authenticated = Promise.withResolvers();
     this.#did.value = null;
-    this.#encryptionKey = null;
-    this.#passkeyActive.value = false;
     this.#rpc = null;
 
     clearStoredSession();
@@ -241,77 +203,6 @@ class ATProtoOutput extends DiffuseElement {
     this.#rpc = new Client({ handler: agent });
     this.#did.value = session.info.sub;
     this.#authenticated.resolve();
-  }
-
-  // PASSKEY
-
-  /**
-   * Register a new passkey for track URI encryption.
-   * Throws if the authenticator does not support the PRF extension.
-   */
-  async setupPasskey() {
-    const result = await createPasskey();
-
-    if (!result.supported) {
-      throw new Error(result.reason);
-    }
-  }
-
-  /**
-   * Adopt an existing passkey via discoverable-credential
-   * lookup. Stores the credential ID locally and derives the cipher key.
-   */
-  async adoptPasskey() {
-    const result = await adoptPasskeyPrfResult();
-
-    if (!result.supported) {
-      throw new Error(result.reason);
-    }
-
-    this.#encryptionKey = await deriveCipherKey(result.prfSecond);
-    this.#passkeyActive.value = true;
-
-    await storeCipherKey(this.#encryptionKey);
-    await this.#decryptLockedTracks();
-  }
-
-  /**
-   * Remove the stored passkey credential and clear in-memory key material.
-   */
-  async removePasskey() {
-    await removeStoredPasskey();
-    this.#encryptionKey = null;
-    this.#passkeyActive.value = false;
-    this.#lockedTracks.value = [];
-  }
-
-  /**
-   * Attempt to decrypt tracks that were held back due to a missing key.
-   * Called automatically after `unlockWithPasskey()`.
-   */
-  async #decryptLockedTracks() {
-    const key = this.#encryptionKey;
-    if (!key) return;
-
-    const locked = this.#lockedTracks.value;
-    if (locked.length === 0) return;
-
-    const results = locked.map((track) => {
-      try {
-        const uri = decryptUri(key, track.uri);
-        return { ...track, uri };
-      } catch {
-        return null;
-      }
-    });
-
-    const decrypted = results.filter((r) => r !== null);
-    const stillLocked = locked.filter((_, i) => results[i] === null);
-
-    this.#lockedTracks.value = stillLocked;
-
-    const current = this.#manager.signals.tracks.value;
-    this.#manager.signals.tracks.value = [...current, ...decrypted];
   }
 
   // RECORDS
@@ -386,49 +277,6 @@ class ATProtoOutput extends DiffuseElement {
   }
 
   /**
-   * Fetch tracks and separate encrypted-but-locked records from usable ones.
-   * Encrypted records with no key in memory are stored in `#lockedTracks`
-   * and excluded from the returned array.
-   *
-   * @returns {Promise<{ locked: Track[]; unlocked: Track[] }>}
-   */
-  async #getTracks() {
-    /** @type {Track[]} */
-    const raw = await this.listRecords("sh.diffuse.output.track");
-
-    /** @type {Track[]} */
-    const unlocked = [];
-
-    /** @type {Track[]} */
-    const locked = [];
-
-    console.log("Get tracks", raw);
-
-    for (const track of raw) {
-      if (!isEncryptedUri(track.uri)) {
-        unlocked.push(track);
-      } else if (this.#encryptionKey) {
-        try {
-          const uri = decryptUri(this.#encryptionKey, track.uri);
-          unlocked.push({ ...track, uri });
-        } catch {
-          locked.push(track);
-        }
-      } else {
-        locked.push(track);
-      }
-    }
-
-    console.log("Locked", locked);
-    console.log("Unlocked", unlocked);
-
-    return {
-      locked,
-      unlocked,
-    };
-  }
-
-  /**
    * @param {string} collection
    * @param {Array<{ id: string }>} data
    */
@@ -495,11 +343,13 @@ class ATProtoOutput extends DiffuseElement {
         }
       }
 
-      // 4. Apply
-      if (writes.length > 0) {
+      // 4. Apply in batches of 100
+      for (let i = 0; i < writes.length; i += 100) {
+        const batch = writes.slice(i, i + 100);
+
         /** @type {any} */
         const result = await ok(this.#rpc.post("com.atproto.repo.applyWrites", {
-          input: { repo: this.#did.value, writes },
+          input: { repo: this.#did.value, writes: batch },
         }));
 
         if (result?.commit?.rev) {
@@ -514,26 +364,6 @@ class ATProtoOutput extends DiffuseElement {
 
       throw err;
     }
-  }
-
-  /**
-   * @param {Track[]} tracks
-   */
-  async #putTracks(tracks) {
-    const key = this.#encryptionKey;
-
-    if (key) {
-      tracks = tracks.map((track) => {
-        return {
-          ...track,
-          uri: encryptUri(key, track.uri),
-        };
-      });
-
-      tracks = tracks.concat(this.#lockedTracks.value);
-    }
-
-    this.#putRecords("sh.diffuse.output.track", tracks);
   }
 }
 

@@ -9,8 +9,21 @@ import { utf8 } from "iso-base/utf8";
 // CONSTANTS
 ////////////////////////////////////////////
 
-const IDB_KEY = "diffuse/output/raw/atproto/passkey";
-const IDB_KEY_CIPHER = "diffuse/output/raw/atproto/passkey/cipher-key";
+const IDB_PREFIX = "diffuse/transformer/output/refiner/track-uri-passkey";
+
+/**
+ * @param {string} namespace
+ * @returns {{ credential: string, cipher: string }}
+ */
+function idbKeys(namespace) {
+  const prefix = namespace && namespace.length
+    ? `${IDB_PREFIX}/${namespace}`
+    : IDB_PREFIX;
+  return {
+    credential: `${prefix}/passkey`,
+    cipher: `${prefix}/passkey/cipher-key`,
+  };
+}
 
 ////////////////////////////////////////////
 // RELYING PARTY
@@ -31,9 +44,10 @@ export function relyingParty() {
 /**
  * Register a new passkey with the PRF extension.
  *
- * @returns {Promise<{ supported: true, credentialId: Uint8Array } | { supported: false, reason: string }>}
+ * @param {string} namespace
+ * @returns {Promise<{ supported: true, credentialId: Uint8Array, prfSecond: ArrayBuffer } | { supported: false, reason: string }>}
  */
-export async function createPasskey() {
+export async function createPasskey(namespace) {
   const rp = relyingParty();
   const challenge = crypto.getRandomValues(new Uint8Array(32));
   const userId = crypto.getRandomValues(new Uint8Array(16));
@@ -97,10 +111,22 @@ export async function createPasskey() {
     };
   }
 
-  const credentialId = new Uint8Array(credential.rawId);
-  await IDB.set(IDB_KEY, { credentialId: Array.from(credentialId) });
+  // @ts-ignore — PRF is not yet in the TS DOM types
+  const prfSecond = extensions.prf?.results?.second;
 
-  return { supported: true, credentialId };
+  if (!prfSecond) {
+    return {
+      supported: false,
+      reason: "Authenticator did not return PRF results at registration time",
+    };
+  }
+
+  const credentialId = new Uint8Array(credential.rawId);
+  await IDB.set(idbKeys(namespace).credential, {
+    credentialId: Array.from(credentialId),
+  });
+
+  return { supported: true, credentialId, prfSecond: /** @type {ArrayBuffer} */ (prfSecond) };
 }
 
 /**
@@ -108,9 +134,10 @@ export async function createPasskey() {
  * (no `allowCredentials`), so it works on a new device that has no stored
  * credential ID yet. Saves the credential ID to IDB and returns PRF material.
  *
+ * @param {string} namespace
  * @returns {Promise<{ supported: true, credentialId: Uint8Array, prfSecond: ArrayBuffer } | { supported: false, reason: string }>}
  */
-export async function adoptPasskeyPrfResult() {
+export async function adoptPasskeyPrfResult(namespace) {
   const rp = relyingParty();
   const challenge = crypto.getRandomValues(new Uint8Array(32));
 
@@ -163,7 +190,9 @@ export async function adoptPasskeyPrfResult() {
   }
 
   const credentialId = new Uint8Array(assertion.rawId);
-  await IDB.set(IDB_KEY, { credentialId: Array.from(credentialId) });
+  await IDB.set(idbKeys(namespace).credential, {
+    credentialId: Array.from(credentialId),
+  });
 
   return {
     supported: true,
@@ -175,29 +204,33 @@ export async function adoptPasskeyPrfResult() {
 /**
  * Remove the stored passkey credential ID and cached cipher key from IDB.
  *
+ * @param {string} namespace
  * @returns {Promise<void>}
  */
-export async function removeStoredPasskey() {
-  await Promise.all([IDB.del(IDB_KEY), IDB.del(IDB_KEY_CIPHER)]);
+export async function removeStoredPasskey(namespace) {
+  const keys = idbKeys(namespace);
+  await Promise.all([IDB.del(keys.credential), IDB.del(keys.cipher)]);
 }
 
 /**
  * Persist the derived cipher key to IDB so it survives page reloads.
  *
+ * @param {string} namespace
  * @param {Uint8Array} key
  * @returns {Promise<void>}
  */
-export async function storeCipherKey(key) {
-  await IDB.set(IDB_KEY_CIPHER, key);
+export async function storeCipherKey(namespace, key) {
+  await IDB.set(idbKeys(namespace).cipher, key);
 }
 
 /**
  * Retrieve the previously persisted cipher key from IDB.
  *
+ * @param {string} namespace
  * @returns {Promise<Uint8Array | undefined>}
  */
-export async function loadStoredCipherKey() {
-  return IDB.get(IDB_KEY_CIPHER);
+export async function loadStoredCipherKey(namespace) {
+  return IDB.get(idbKeys(namespace).cipher);
 }
 
 ////////////////////////////////////////////
