@@ -165,7 +165,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @returns {Promise<T>}
    */
   async #withRetry(fn) {
-    let delay = 30_000;
+    let delay = 10_000;
     for (let attempt = 0;; attempt++) {
       try {
         return await fn();
@@ -173,8 +173,10 @@ class ATProtoOutput extends BroadcastedOutputElement {
         if (attempt < 5 && this.#isRateLimitError(err)) {
           let wait = delay;
           if (err instanceof ClientResponseError) {
-            const retryAfter = err.headers.get("retry-after");
-            if (retryAfter) wait = parseFloat(retryAfter) * 1000;
+            const resetAt = err.headers.get("ratelimit-reset");
+            if (resetAt) {
+              wait = Math.max(0, parseFloat(resetAt) * 1000 - Date.now());
+            }
           }
           await new Promise((r) => setTimeout(r, wait));
           delay *= 2;
