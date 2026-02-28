@@ -57,7 +57,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
+      const actions = this.broadcast(this.identifier, {
         getTracksAvailable: {
           strategy: "leaderOnly",
           fn: this.#tracksAvailable.get,

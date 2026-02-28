@@ -1,5 +1,6 @@
 import { BroadcastableDiffuseElement } from "@common/element.js";
 import { batch, computed, effect, signal, untracked } from "@common/signal.js";
+import { strictEquality } from "@common/compare.js";
 
 /**
  * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
@@ -21,32 +22,39 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
      * @returns {(data: T) => Promise<void>}
      */
     const fn = ({ save, set }) => async (data) => {
-      if (await this.isLeader()) {
-        return save(data);
-      } else {
-        return set(data);
-      }
+      await untracked(async () => {
+        if (await this.isLeader()) {
+          return save(data);
+        } else {
+          return set(data);
+        }
+      });
     };
 
-    const actions = this.broadcast(this.nameWithGroup, {
+    const ogFacetsSave = manager.facets.save.bind(this);
+    const ogPlaylistItemsSave = manager.playlistItems.save.bind(this);
+    const ogThemesSave = manager.themes.save.bind(this);
+    const ogTracksSave = manager.tracks.save.bind(this);
+
+    const actions = this.broadcast(this.identifier, {
       saveFacets: {
         strategy: "replicate",
-        fn: fn({ save: manager.facets.save, set: manager.signals.facets.set }),
+        fn: fn({ save: ogFacetsSave, set: manager.signals.facets.set }),
       },
       savePlaylistItems: {
         strategy: "replicate",
         fn: fn({
-          save: manager.playlistItems.save,
+          save: ogPlaylistItemsSave,
           set: manager.signals.playlistItems.set,
         }),
       },
       saveThemes: {
         strategy: "replicate",
-        fn: fn({ save: manager.themes.save, set: manager.signals.themes.set }),
+        fn: fn({ save: ogThemesSave, set: manager.signals.themes.set }),
       },
       saveTracks: {
         strategy: "replicate",
-        fn: fn({ save: manager.tracks.save, set: manager.signals.tracks.set }),
+        fn: fn({ save: ogTracksSave, set: manager.signals.tracks.set }),
       },
     });
 
@@ -107,6 +115,7 @@ export function outputManager(
   );
   const cs = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    { compare: strictEquality },
   );
 
   const pl = signal(
@@ -115,6 +124,7 @@ export function outputManager(
   );
   const pls = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    { compare: strictEquality },
   );
 
   const th = signal(
@@ -122,6 +132,7 @@ export function outputManager(
   );
   const ths = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    { compare: strictEquality },
   );
 
   const t = signal(
@@ -129,6 +140,7 @@ export function outputManager(
   );
   const ts = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    { compare: strictEquality },
   );
 
   async function loadFacets() {

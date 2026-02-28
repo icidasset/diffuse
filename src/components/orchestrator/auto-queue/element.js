@@ -26,7 +26,7 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      this.broadcast(this.nameWithGroup, {});
+      this.broadcast(this.identifier, {});
     }
 
     // Super

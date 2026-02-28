@@ -1,18 +1,21 @@
-import * as IDB from "idb-keyval";
 import { decode, encode } from "@atcute/cbor";
+import { ifDefined } from "lit-html/directives/if-defined.js";
 import deepDiff from "@fry69/deep-diff";
 
 import "@components/output/polymorphic/indexed-db/element.js";
 
 import * as CID from "@common/cid.js";
-import { computed, signal, untracked } from "@common/signal.js";
+import { diff, strictEquality } from "@common/compare.js";
+import { computed, signal } from "@common/signal.js";
 import { compareTimestamps } from "@common/utils.js";
 import { OutputTransformer } from "../../base.js";
-import { IDB_PREFIX } from "./constants.js";
-import { promiseLoadedState } from "@toko/diffuse/components/output/common.js";
+import { promiseLoadedState } from "@components/output/common.js";
 
 /**
- * @import { Signal, SignalReader } from "@common/signal.d.ts";
+ * @import { SignalReader } from "@common/signal.d.ts";
+ * @import { RenderArg } from "@common/element.d.ts"
+ * @import { OutputElement } from "@components/output/types.d.ts"
+ *
  * @import { Container } from "./types.d.ts"
  */
 
@@ -27,10 +30,13 @@ const EMPTY = {
  * @extends {OutputTransformer<Uint8Array>}
  */
 class DaslBytesSyncOutputTransformer extends OutputTransformer {
+  static NAME = "diffuse/transformer/output/bytes/dasl-sync";
+
   constructor() {
     super();
 
     const remote = this.base();
+    const local = this.#localOutput.get;
 
     /**
      * @template {{ id: string; updatedAt: string }} T
@@ -49,11 +55,13 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     ) => {
       const container = signal(
         /** @type {Container<T>} */ (EMPTY),
-        { compare: (a, b) => a.cid === b.cid },
+        { compare: strictEquality },
       );
 
       const isReady = signal(false);
-      const merging = signal({ isBusy: false, lastCID: "" });
+      const merging = signal({ isBusy: false, lastCID: "" }, {
+        compare: diff,
+      });
 
       this.effect(() => {
         if (!isReady.value) return;
@@ -74,36 +82,50 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
             container.value = l;
 
             if (remote.ready() && rs === "loaded") {
-              const bytes = this.save(l);
-              untracked(() => saveRemote(bytes));
+              this.isLeader().then((isLeader) => {
+                if (!isLeader) return;
+                const bytes = this.save(l);
+                saveRemote(bytes);
+              });
             }
           }
         } else if (!l) {
           container.value = r;
 
-          const bytes = this.save(r);
-          saveLocal(bytes);
+          this.isLeader().then((isLeader) => {
+            if (!isLeader) return;
+            const bytes = this.save(r);
+            saveLocal(bytes);
+          });
         } else if (
           rs === "loaded" && this.hasDiverged({ local: l, remote: r })
         ) {
-          untracked(() => {
+          // Async merge
+          this.isLeader().then((isLeader) => {
+            if (!isLeader) return;
+
             merging.value = { isBusy: true, lastCID: merging.value.lastCID };
+
+            this.merge(l, r).then(async (c) => {
+              container.value = c;
+
+              if (c.cid === merging.value.lastCID) return;
+
+              const bytes = this.save(c);
+
+              if (c.cid !== l.cid) {
+                await saveLocal(bytes);
+              }
+
+              if (remote.ready() && rs === "loaded" && c.cid !== r.cid) {
+                await saveRemote(bytes);
+              }
+
+              merging.value = { isBusy: false, lastCID: c.cid ?? "" };
+            });
           });
-
-          this.merge(l, r).then(async (c) => {
-            if (c.cid === merging.value.lastCID) return;
-
-            container.value = c;
-
-            const bytes = this.save(c);
-            await saveLocal(bytes);
-
-            if (remote.ready() && rs === "loaded") {
-              await untracked(() => saveRemote(bytes));
-            }
-
-            merging.value = { isBusy: false, lastCID: c.cid ?? "" };
-          });
+        } else {
+          container.value = l;
         }
       });
 
@@ -113,85 +135,105 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       });
     };
 
-    // Local
-    const local = {
-      facets: this.local("facets"),
-      playlistItems: this.local("playlistItems"),
-      themes: this.local("themes"),
-      tracks: this.local("tracks"),
-    };
-
     // Container signals
     const facets = state(
       "facets",
-      local.facets.get,
+      computed(() => local()?.facets.collection()),
       remote.facets.collection,
       remote.facets.state,
       {
-        saveLocal: this.putLocalFn("facets", local.facets),
+        saveLocal: async (v) => local()?.facets.save(v),
         saveRemote: remote.facets.save,
       },
     );
 
     const playlistItems = state(
       "playlistItems",
-      local.playlistItems.get,
+      computed(() => local()?.playlistItems.collection()),
       remote.playlistItems.collection,
       remote.playlistItems.state,
       {
-        saveLocal: this.putLocalFn("playlistItems", local.playlistItems),
+        saveLocal: async (v) => local()?.playlistItems.save(v),
         saveRemote: remote.playlistItems.save,
       },
     );
 
     const themes = state(
       "themes",
-      local.themes.get,
+      computed(() => local()?.themes.collection()),
       remote.themes.collection,
       remote.themes.state,
       {
-        saveLocal: this.putLocalFn("themes", local.themes),
+        saveLocal: async (v) => local()?.themes.save(v),
         saveRemote: remote.themes.save,
       },
     );
 
     const tracks = state(
       "tracks",
-      local.tracks.get,
+      computed(() => local()?.tracks.collection()),
       remote.tracks.collection,
       remote.tracks.state,
       {
-        saveLocal: this.putLocalFn("tracks", local.tracks),
+        saveLocal: async (v) => local()?.tracks.save(v),
         saveRemote: remote.tracks.save,
       },
     );
 
     // Output manager
     this.facets = this.managerProp(
-      { save: this.putLocalFn("facets", local.facets) },
+      { save: async (v) => local()?.facets.save(v) },
       remote.facets,
       facets,
     );
 
     this.playlistItems = this.managerProp(
-      { save: this.putLocalFn("playlistItems", local.playlistItems) },
+      { save: async (v) => local()?.playlistItems.save(v) },
       remote.playlistItems,
       playlistItems,
     );
 
     this.themes = this.managerProp(
-      { save: this.putLocalFn("themes", local.themes) },
+      { save: async (v) => local()?.themes.save(v) },
       remote.themes,
       themes,
     );
 
     this.tracks = this.managerProp(
-      { save: this.putLocalFn("tracks", local.tracks) },
+      { save: async (v) => local()?.tracks.save(v) },
       remote.tracks,
       tracks,
     );
 
     this.ready = () => true;
+  }
+
+  // SIGNALS
+
+  #localOutput = signal(
+    /** @type {OutputElement<any> | undefined} */ (undefined),
+  );
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  async connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      this.broadcast(this.identifier, {});
+    }
+
+    super.connectedCallback();
+
+    /** @type {OutputElement<any> | null} */
+    const local = this.root().querySelector("dop-indexed-db");
+    if (!local) throw new Error("Can't find local output");
+
+    customElements.whenDefined(local.localName).then(() => {
+      this.#localOutput.value = local;
+    });
   }
 
   // DATA FUNCTIONS
@@ -400,53 +442,18 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     };
   }
 
-  // INDEXED-DB
+  // RENDER
 
   /**
-   * @param {string} name
+   * @param {RenderArg} _
    */
-  local(name) {
-    const s = signal(/** @type {Uint8Array | undefined} */ (undefined));
-
-    this.getLocal(name).then(s.set);
-
-    return s;
-  }
-
-  /**
-   * @param {string} name
-   * @returns {Promise<Uint8Array | undefined>}
-   */
-  getLocal(name) {
-    return IDB.get(`${IDB_PREFIX}/${this.#cat(name)}`);
-  }
-
-  /** @param {string} name; @param {Uint8Array} data  */
-  putLocal(name, data) {
-    return IDB.set(`${IDB_PREFIX}/${this.#cat(name)}`, data);
-  }
-
-  /**
-   * @param {string} name
-   * @param {Signal<Uint8Array | undefined>} signal
-   */
-  putLocalFn =
-    (name, signal) => /** @param {Uint8Array} data */ async (data) => {
-      signal.value = data;
-      await this.putLocal(name, data);
-    };
-
-  // 🛠️
-
-  get namespace() {
-    return this.hasAttribute("namespace")
-      ? this.getAttribute("namespace") + "/"
-      : "";
-  }
-
-  /** @param {string} name */
-  #cat(name) {
-    return `${this.namespace}${name}`;
+  render({ html }) {
+    return html`
+      <dop-indexed-db
+        group="${ifDefined(this.getAttribute(`group`))}"
+        namespace="${ifDefined(this.getAttribute(`namespace`))}"
+      ></dop-indexed-db>
+    `;
   }
 }
 

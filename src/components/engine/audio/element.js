@@ -51,7 +51,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
     // Setup broadcasting if part of group
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(
-        this.nameWithGroup,
+        this.identifier,
         {
           adjustVolume: { strategy: "replicate", fn: this.adjustVolume },
           pause: { strategy: "leaderOnly", fn: this.pause },
@@ -415,7 +415,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     // Setup broadcasting if part of group
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(
-        this.nameWithGroup,
+        this.identifier,
         {
           getDuration: { strategy: "leaderOnly", fn: this.$state.duration.get },
           getHasEnded: { strategy: "leaderOnly", fn: this.$state.hasEnded.get },
@@ -487,8 +487,8 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   get state() {
     return {
       id: this.id,
-      mimeType: (this.getAttribute("mime-type") ?? undefined),
-      url: (this.getAttribute("url") ?? ""),
+      mimeType: this.getAttribute("mime-type") ?? undefined,
+      url: this.getAttribute("url") ?? "",
 
       duration: this.$state.duration.get,
       hasEnded: this.$state.hasEnded.get,

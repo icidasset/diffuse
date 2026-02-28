@@ -1,5 +1,5 @@
 import { BroadcastableDiffuseElement } from "@common/element.js";
-import { batch, computed, signal, trigger } from "@common/signal.js";
+import { batch, computed, signal } from "@common/signal.js";
 
 /**
  * @import {DiffuseElement} from "@common/element.js"
@@ -273,7 +273,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
+      const actions = this.broadcast(this.identifier, {
         selectOutput: {
           strategy: "replicate",
           fn: this.#selectOutput,
@@ -332,7 +332,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     await customElements.whenDefined(el.localName);
 
     if (
-      "nameWithGroup" in el === false ||
+      "identifier" in el === false ||
       "tracks" in el === false
     ) {
       return null;

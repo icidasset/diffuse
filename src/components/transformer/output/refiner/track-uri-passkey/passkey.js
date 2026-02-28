@@ -16,9 +16,7 @@ const IDB_PREFIX = "diffuse/transformer/output/refiner/track-uri-passkey";
  * @returns {{ credential: string, cipher: string }}
  */
 function idbKeys(namespace) {
-  const prefix = namespace && namespace.length
-    ? `${IDB_PREFIX}/${namespace}`
-    : IDB_PREFIX;
+  const prefix = namespace?.length ? `${IDB_PREFIX}/${namespace}` : IDB_PREFIX;
   return {
     credential: `${prefix}/passkey`,
     cipher: `${prefix}/passkey/cipher-key`,
@@ -126,7 +124,11 @@ export async function createPasskey(namespace) {
     credentialId: Array.from(credentialId),
   });
 
-  return { supported: true, credentialId, prfSecond: /** @type {ArrayBuffer} */ (prfSecond) };
+  return {
+    supported: true,
+    credentialId,
+    prfSecond: /** @type {ArrayBuffer} */ (prfSecond),
+  };
 }
 
 /**

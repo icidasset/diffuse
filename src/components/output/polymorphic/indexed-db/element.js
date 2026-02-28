@@ -62,7 +62,6 @@ class IndexedDBOutput extends BroadcastedOutputElement {
   /** @override */
   connectedCallback() {
     this.replicateSavedData(this.#manager);
-
     super.connectedCallback();
   }
 
@@ -76,15 +75,9 @@ class IndexedDBOutput extends BroadcastedOutputElement {
 
   // 🛠️
 
-  get namespace() {
-    return this.hasAttribute("namespace")
-      ? this.getAttribute("namespace") + "/"
-      : "";
-  }
-
   /** @param {string} name */
   #cat(name) {
-    return `${this.namespace}${name}`;
+    return `${this.namespace?.length ? this.namespace + "/" : ""}${name}`;
   }
 }
 

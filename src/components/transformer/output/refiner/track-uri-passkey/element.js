@@ -113,12 +113,6 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
   passkeyActive = computed(() => this.#encryptionKey.get() !== null);
   lockedTracks = this.#lockedTracks.get;
 
-  // NAMESPACE
-
-  get namespace() {
-    return this.getAttribute("namespace") ?? "";
-  }
-
   // LIFECYCLE
 
   /** @override */
@@ -150,7 +144,7 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
 
     super.connectedCallback();
 
-    loadStoredCipherKey(this.namespace).then((key) => {
+    loadStoredCipherKey(this.namespace ?? "").then((key) => {
       if (key) {
         this.#encryptionKey.value = key;
       }
@@ -166,14 +160,15 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
    * Throws if the authenticator does not support the PRF extension.
    */
   async setupPasskey() {
-    const result = await createPasskey(this.namespace);
+    const namespace = this.namespace ?? "";
+    const result = await createPasskey(namespace);
 
     if (!result.supported) {
       throw new Error(result.reason);
     }
 
     const key = await deriveCipherKey(result.prfSecond);
-    await storeCipherKey(this.namespace, key);
+    await storeCipherKey(namespace, key);
     this.#encryptionKey.value = key;
 
     let saved = false;
@@ -197,14 +192,15 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
    * lookup. Stores the credential ID locally and derives the cipher key.
    */
   async adoptPasskey() {
-    const result = await adoptPasskeyPrfResult(this.namespace);
+    const namespace = this.namespace ?? "";
+    const result = await adoptPasskeyPrfResult(namespace);
 
     if (!result.supported) {
       throw new Error(result.reason);
     }
 
     const key = await deriveCipherKey(result.prfSecond);
-    await storeCipherKey(this.namespace, key);
+    await storeCipherKey(namespace, key);
     this.#encryptionKey.value = key;
 
     let saved = false;
@@ -227,7 +223,8 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
    * Remove the stored passkey credential and clear in-memory key material.
    */
   async removePasskey() {
-    await removeStoredPasskey(this.namespace);
+    const namespace = this.namespace ?? "";
+    await removeStoredPasskey(namespace);
 
     let removed = false;
 

@@ -24,7 +24,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
+      const actions = this.broadcast(this.identifier, {
         setPlaylist: { strategy: "replicate", fn: this.setPlaylist },
         setSearchTerm: { strategy: "replicate", fn: this.setSearchTerm },
       });

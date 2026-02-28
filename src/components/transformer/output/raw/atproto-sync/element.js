@@ -350,6 +350,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
   render({ html }) {
     return html`
       <dop-indexed-db
+        group="${ifDefined(this.getAttribute(`group`))}"
         namespace="${ifDefined(this.getAttribute(`namespace`))}"
       ></dop-indexed-db>
     `;

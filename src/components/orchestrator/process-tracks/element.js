@@ -54,7 +54,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
+      const actions = this.broadcast(this.identifier, {
         getPerfInit: {
           strategy: "leaderOnly",
           fn: this.#performedInitialProcess.get,

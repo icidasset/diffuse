@@ -64,13 +64,23 @@ export class DiffuseElement extends HTMLElement {
   }
 
   /** */
+  get identifier() {
+    const ns = this.namespace;
+    return `${this.constructor.prototype.constructor.NAME}/${this.group}${
+      ns?.length ? "/" + ns : ""
+    }`;
+  }
+
+  /** */
   get label() {
     return this.getAttribute("label") ?? this.id ?? this.localName;
   }
 
   /** */
-  get nameWithGroup() {
-    return `${this.constructor.prototype.constructor.NAME}/${this.group}`;
+  get namespace() {
+    return this.getAttribute("namespace")
+      ? this.getAttribute("namespace")
+      : undefined;
   }
 
   /** */
@@ -151,7 +161,7 @@ export class DiffuseElement extends HTMLElement {
     );
 
     // Setup worker
-    const name = this.nameWithGroup;
+    const name = this.identifier;
     const url = import.meta.resolve("./" + WORKER_URL) + `?${query}`;
 
     let worker;
@@ -169,7 +179,7 @@ export class DiffuseElement extends HTMLElement {
   dependencies() {
     return Object.fromEntries(
       Array.from(this.children).flatMap((element) => {
-        if ("nameWithGroup" in element === false) {
+        if ("identifier" in element === false) {
           return [];
         }
 

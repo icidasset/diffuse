@@ -195,6 +195,7 @@ class OutputOrchestrator extends DiffuseElement {
           id="do-output__dc-output__s3"
           namespace="s3"
           output-selector="#do-output__dob-s3"
+          group="${ifDefined(group)}"
           label="S3"
         ></dtob-dasl-sync>
       </dc-output>

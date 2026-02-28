@@ -57,7 +57,7 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
   async connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
+      const actions = this.broadcast(this.identifier, {
         include: { strategy: "leaderOnly", fn: this.include },
         expel: { strategy: "leaderOnly", fn: this.expel },
         toggle: { strategy: "leaderOnly", fn: this.toggle },

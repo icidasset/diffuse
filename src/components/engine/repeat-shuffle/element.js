@@ -24,7 +24,7 @@ class RepeatShuffleEngine extends BroadcastableDiffuseElement {
   connectedCallback() {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
-      const actions = this.broadcast(this.nameWithGroup, {
+      const actions = this.broadcast(this.identifier, {
         setRepeat: { strategy: "replicate", fn: this.setRepeat },
         setShuffle: { strategy: "replicate", fn: this.setShuffle },
       });
@@ -40,7 +40,7 @@ class RepeatShuffleEngine extends BroadcastableDiffuseElement {
 
     // Signals
     const storagePrefix =
-      `${this.constructor.prototype.constructor.NAME}/${this.group}/`;
+      `${this.constructor.prototype.constructor.NAME}/${this.group}`;
 
     this.#repeat.value =
       localStorage.getItem(`${storagePrefix}/repeat`) === "true" ? true : false;

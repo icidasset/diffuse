@@ -28,12 +28,6 @@ class Sources extends BroadcastableDiffuseElement {
    * @override
    */
   async connectedCallback() {
-    // Broadcast if needed
-    if (this.hasAttribute("group")) {
-      this.broadcast(this.nameWithGroup, {});
-    }
-
-    // Super
     super.connectedCallback();
 
     /** @type {InputElement} */
