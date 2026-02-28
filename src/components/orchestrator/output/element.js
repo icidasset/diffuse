@@ -165,7 +165,10 @@ class OutputOrchestrator extends DiffuseElement {
         group="${ifDefined(group)}"
       ></dtor-atproto-sync>
 
-      <dor-atproto id="do-output__dor-atproto"></dor-atproto>
+      <dor-atproto
+        id="do-output__dor-atproto"
+        group="${ifDefined(group)}"
+      ></dor-atproto>
 
       <!-- OUTPUT CONFIGURATOR -->
       <dc-output

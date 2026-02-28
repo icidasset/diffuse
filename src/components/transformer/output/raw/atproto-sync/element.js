@@ -108,8 +108,9 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       const l = local();
       if (!l) return;
 
-      this.effect(() => {
+      this.effect(async () => {
         if (!remote.ready()) return;
+        if (!(await this.isLeader())) return;
         this.#sync();
       });
     });
@@ -331,6 +332,11 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
   /** @override */
   connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      this.broadcast(this.identifier, {});
+    }
+
     super.connectedCallback();
 
     /** @type {OutputElement<any> | null} */
