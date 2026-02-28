@@ -142,7 +142,6 @@ class S3Output extends BroadcastedOutputElement {
 
   /** @param {string} name; @param {any} data */
   #put = async (name, data) => {
-    console.log("PUT", name);
     const bucket = await this.getBucket();
     if (!bucket) return undefined;
     return this.proxy.put({ bucket, data, name: this.#cat(name) });
