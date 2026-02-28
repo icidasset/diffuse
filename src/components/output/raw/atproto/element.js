@@ -149,6 +149,46 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @param {unknown} err
    * @returns {boolean}
    */
+  #isRateLimitError(err) {
+    if (err instanceof ClientResponseError && err.status === 429) return true;
+    if (err && typeof err === "object" && "cause" in err) {
+      return this.#isRateLimitError(/** @type {any} */ (err).cause);
+    }
+    return false;
+  }
+
+  /**
+   * Retry an async operation on rate-limit errors, respecting Retry-After.
+   *
+   * @template T
+   * @param {() => Promise<T>} fn
+   * @returns {Promise<T>}
+   */
+  async #withRetry(fn) {
+    let delay = 5_000;
+    for (let attempt = 0;; attempt++) {
+      try {
+        return await fn();
+      } catch (err) {
+        if (attempt < 3 && this.#isRateLimitError(err)) {
+          let wait = delay;
+          if (err instanceof ClientResponseError) {
+            const retryAfter = err.headers.get("retry-after");
+            if (retryAfter) wait = parseFloat(retryAfter) * 1000;
+          }
+          await new Promise((r) => setTimeout(r, wait));
+          delay *= 2;
+          continue;
+        }
+        throw err;
+      }
+    }
+  }
+
+  /**
+   * @param {unknown} err
+   * @returns {boolean}
+   */
   #isSessionError(err) {
     if (err instanceof TokenRefreshError) return true;
     // OAuthUserAgent.handle() swallows TokenRefreshError and returns the
@@ -216,17 +256,20 @@ class ATProtoOutput extends BroadcastedOutputElement {
    */
   async getLatestCommit() {
     const did = this.#did.value;
-    if (!this.#rpc || !did) return null;
+
+    const rpc = this.#rpc;
+    if (!rpc || !did) return null;
 
     try {
-      /** @type {any} */
-      const result = await ok(this.#rpc.get(
-        "com.atproto.sync.getLatestCommit",
-        { params: { did } },
-      ));
+      const result = await this.#withRetry(() =>
+        ok(rpc.get(
+          "com.atproto.sync.getLatestCommit",
+          { params: { did } },
+        ))
+      );
 
-      this.#rev.value = result.rev;
-      return result.rev;
+      this.#rev.value = result?.rev;
+      return result?.rev;
     } catch (err) {
       if (this.#isSessionError(err)) {
         this.#clearSession();
@@ -246,24 +289,28 @@ class ATProtoOutput extends BroadcastedOutputElement {
   async listRecords(collection, did) {
     did ??= this.#did.value ?? undefined;
 
-    if (!this.#rpc || !did) return [];
+    const rpc = this.#rpc;
+    if (!rpc || !did) return [];
 
     try {
       const records = [];
+
+      /** @type {any} */
       let cursor;
 
       do {
-        /** @type {any} */
-        const page = await ok(this.#rpc.get(
-          "com.atproto.repo.listRecords",
-          { params: { repo: did, collection, limit: 100, cursor } },
-        ));
+        const page = await this.#withRetry(() =>
+          ok(rpc.get(
+            "com.atproto.repo.listRecords",
+            { params: { repo: did, collection, limit: 100, cursor } },
+          ))
+        );
 
-        for (const record of page.records) {
+        for (const record of (page?.records ?? [])) {
           records.push(record.value);
         }
 
-        cursor = page.cursor;
+        cursor = page?.cursor;
       } while (cursor);
 
       return records;
@@ -282,27 +329,33 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @param {Array<{ id: string }>} data
    */
   async #putRecords(collection, data) {
-    if (!this.#rpc || !this.#did.value) return;
+    const rpc = this.#rpc;
+    if (!rpc || !this.#did.value) return;
 
     try {
       // 1. Fetch current state
       /** @type {Map<string, { rkey: string, value: unknown }>} */
       const existing = new Map();
+
+      /** @type {any} */
       let cursor;
 
       do {
-        /** @type {any} */
-        const page = await ok(this.#rpc.get(
-          "com.atproto.repo.listRecords",
-          { params: { repo: this.#did.value, collection, limit: 100, cursor } },
-        ));
+        const page = await this.#withRetry(() =>
+          ok(rpc.get(
+            "com.atproto.repo.listRecords",
+            {
+              params: { repo: this.#did.value, collection, limit: 100, cursor },
+            },
+          ))
+        );
 
-        for (const record of page.records) {
+        for (const record of (page?.records ?? [])) {
           const rkey = record.uri.split("/").pop();
           existing.set(record.value.id, { rkey, value: record.value });
         }
 
-        cursor = page.cursor;
+        cursor = page?.cursor;
       } while (cursor);
 
       // 2. Build desired state
@@ -348,10 +401,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
       for (let i = 0; i < writes.length; i += 100) {
         const batch = writes.slice(i, i + 100);
 
-        /** @type {any} */
-        const result = await ok(this.#rpc.post("com.atproto.repo.applyWrites", {
-          input: { repo: this.#did.value, writes: batch },
-        }));
+        const result = await this.#withRetry(() =>
+          ok(rpc.post("com.atproto.repo.applyWrites", {
+            input: { repo: this.#did.value, writes: batch },
+          }))
+        );
 
         if (result?.commit?.rev) {
           this.#rev.value = result.commit.rev;
