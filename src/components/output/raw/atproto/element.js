@@ -165,12 +165,12 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @returns {Promise<T>}
    */
   async #withRetry(fn) {
-    let delay = 5_000;
+    let delay = 30_000;
     for (let attempt = 0;; attempt++) {
       try {
         return await fn();
       } catch (err) {
-        if (attempt < 3 && this.#isRateLimitError(err)) {
+        if (attempt < 5 && this.#isRateLimitError(err)) {
           let wait = delay;
           if (err instanceof ClientResponseError) {
             const retryAfter = err.headers.get("retry-after");
