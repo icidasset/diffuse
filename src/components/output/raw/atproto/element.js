@@ -149,48 +149,6 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @param {unknown} err
    * @returns {boolean}
    */
-  #isRateLimitError(err) {
-    if (err instanceof ClientResponseError && err.status === 429) return true;
-    if (err && typeof err === "object" && "cause" in err) {
-      return this.#isRateLimitError(/** @type {any} */ (err).cause);
-    }
-    return false;
-  }
-
-  /**
-   * Retry an async operation on rate-limit errors, respecting Retry-After.
-   *
-   * @template T
-   * @param {() => Promise<T>} fn
-   * @returns {Promise<T>}
-   */
-  async #withRetry(fn) {
-    let delay = 10_000;
-    for (let attempt = 0;; attempt++) {
-      try {
-        return await fn();
-      } catch (err) {
-        if (attempt < 5 && this.#isRateLimitError(err)) {
-          let wait = delay;
-          if (err instanceof ClientResponseError) {
-            const resetAt = err.headers.get("ratelimit-reset");
-            if (resetAt) {
-              wait = Math.max(0, parseFloat(resetAt) * 1000 - Date.now());
-            }
-          }
-          await new Promise((r) => setTimeout(r, wait));
-          delay *= 2;
-          continue;
-        }
-        throw err;
-      }
-    }
-  }
-
-  /**
-   * @param {unknown} err
-   * @returns {boolean}
-   */
   #isSessionError(err) {
     if (err instanceof TokenRefreshError) return true;
     // OAuthUserAgent.handle() swallows TokenRefreshError and returns the
@@ -263,12 +221,10 @@ class ATProtoOutput extends BroadcastedOutputElement {
     if (!rpc || !did) return null;
 
     try {
-      const result = await this.#withRetry(() =>
-        ok(rpc.get(
-          "com.atproto.sync.getLatestCommit",
-          { params: { did } },
-        ))
-      );
+      const result = await ok(rpc.get(
+        "com.atproto.sync.getLatestCommit",
+        { params: { did } },
+      ));
 
       this.#rev.value = result?.rev;
       return result?.rev;
@@ -301,12 +257,10 @@ class ATProtoOutput extends BroadcastedOutputElement {
       let cursor;
 
       do {
-        const page = await this.#withRetry(() =>
-          ok(rpc.get(
-            "com.atproto.repo.listRecords",
-            { params: { repo: did, collection, limit: 100, cursor } },
-          ))
-        );
+        const page = await ok(rpc.get(
+          "com.atproto.repo.listRecords",
+          { params: { repo: did, collection, limit: 100, cursor } },
+        ));
 
         for (const record of (page?.records ?? [])) {
           records.push(record.value);
@@ -343,14 +297,12 @@ class ATProtoOutput extends BroadcastedOutputElement {
       let cursor;
 
       do {
-        const page = await this.#withRetry(() =>
-          ok(rpc.get(
-            "com.atproto.repo.listRecords",
-            {
-              params: { repo: this.#did.value, collection, limit: 100, cursor },
-            },
-          ))
-        );
+        const page = await ok(rpc.get(
+          "com.atproto.repo.listRecords",
+          {
+            params: { repo: this.#did.value, collection, limit: 100, cursor },
+          },
+        ));
 
         for (const record of (page?.records ?? [])) {
           const rkey = record.uri.split("/").pop();
@@ -403,11 +355,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
       for (let i = 0; i < writes.length; i += 100) {
         const batch = writes.slice(i, i + 100);
 
-        const result = await this.#withRetry(() =>
-          ok(rpc.post("com.atproto.repo.applyWrites", {
-            input: { repo: this.#did.value, writes: batch },
-          }))
-        );
+        const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
+          input: { repo: this.#did.value, writes: batch },
+        }));
 
         if (result?.commit?.rev) {
           this.#rev.value = result.commit.rev;
