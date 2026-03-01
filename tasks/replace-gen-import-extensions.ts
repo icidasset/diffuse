@@ -1,9 +1,12 @@
 import { readTextFileSync } from "@std/fs/unstable-read-text-file";
 import { writeTextFileSync } from "@std/fs/unstable-write-text-file";
 
-const PATH = "./src/definitions/index.ts";
+function replace(path: string) {
+  const text = readTextFileSync(path);
+  const withTsImports = text.replaceAll(/\.js";/g, '.ts";');
 
-const text = readTextFileSync(PATH);
-const withTsImports = text.replaceAll(/\.js";/g, '.ts";');
+  writeTextFileSync(path, withTsImports);
+}
 
-writeTextFileSync(PATH, withTsImports);
+replace("./src/definitions/index.ts");
+replace("./src/definitions/types/sh/diffuse/output/trackBundle.ts");

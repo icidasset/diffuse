@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.trackBundle",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "tracks"],
+        "properties": {
+          "id": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "tracks": {
+            "type": "array",
+            "description": "A bundle of tracks",
+            "items": { "type": "ref", "ref": "sh.diffuse.output.track" }
+          },
+          "updatedAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

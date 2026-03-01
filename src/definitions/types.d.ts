@@ -13,3 +13,7 @@ export type {
   Stats as TrackStats,
   Tags as TrackTags,
 } from "./types/sh/diffuse/output/track.ts";
+
+export type {
+  Main as TrackBundle,
+} from "./types/sh/diffuse/output/trackBundle.ts";

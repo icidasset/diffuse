@@ -1,4 +1,5 @@
 import { Client, ClientResponseError, ok } from "@atcute/client";
+import * as TID from "@atcute/tid";
 
 import { computed, signal } from "@common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
@@ -13,6 +14,7 @@ import {
 } from "./oauth.js";
 
 /**
+ * @import {TrackBundle} from "@definitions/types.d.ts"
  * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
@@ -60,8 +62,29 @@ class ATProtoOutput extends BroadcastedOutputElement {
       },
       tracks: {
         empty: () => [],
-        get: () => this.listRecords("sh.diffuse.output.track"),
-        put: (data) => this.#putRecords("sh.diffuse.output.track", data),
+        get: async () => {
+          const bundles = await this.listRecords(
+            "sh.diffuse.output.trackBundle",
+          );
+
+          return bundles.flatMap((bundle) => bundle.tracks ?? []);
+        },
+        put: (data) => {
+          /** @type {TrackBundle[]} */
+          const bundles = [];
+
+          for (let i = 0; i < data.length; i += 100) {
+            bundles.push({
+              $type: "sh.diffuse.output.trackBundle",
+              id: TID.now(),
+              tracks: data.slice(i, i + 100),
+            });
+          }
+
+          return this.#putRecords("sh.diffuse.output.trackBundle", bundles, {
+            batchSize: 1,
+          });
+        },
       },
     });
 
@@ -283,8 +306,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
   /**
    * @param {string} collection
    * @param {Array<{ id: string }>} data
+   * @param {{ batchSize?: number }} [options]
    */
-  async #putRecords(collection, data) {
+  async #putRecords(collection, data, { batchSize = 100 } = {}) {
     const rpc = this.#rpc;
     if (!rpc || !this.#did.value) return;
 
@@ -351,9 +375,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
         }
       }
 
-      // 4. Apply in batches of 100
-      for (let i = 0; i < writes.length; i += 100) {
-        const batch = writes.slice(i, i + 100);
+      // 4. Apply in batches
+      for (let i = 0; i < writes.length; i += batchSize) {
+        const batch = writes.slice(i, i + batchSize);
 
         const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
           input: { repo: this.#did.value, writes: batch },

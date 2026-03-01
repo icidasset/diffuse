@@ -1,9 +1,9 @@
 {
-  "client_id": "https://measures-cancel-archive-www.trycloudflare.com/oauth-client-metadata.tunnel.json",
+  "client_id": "https://handed-pixels-solo-folks.trycloudflare.com/oauth-client-metadata.tunnel.json",
   "client_name": "Diffuse",
-  "client_uri": "https://measures-cancel-archive-www.trycloudflare.com",
-  "redirect_uris": ["https://measures-cancel-archive-www.trycloudflare.com/oauth/callback"],
-  "scope": "atproto repo?collection=sh.diffuse.output.facet&collection=sh.diffuse.output.playlistItem&collection=sh.diffuse.output.theme&collection=sh.diffuse.output.track",
+  "client_uri": "https://handed-pixels-solo-folks.trycloudflare.com",
+  "redirect_uris": ["https://handed-pixels-solo-folks.trycloudflare.com/oauth/callback"],
+  "scope": "atproto repo?collection=sh.diffuse.output.facet&collection=sh.diffuse.output.playlistItem&collection=sh.diffuse.output.theme&collection=sh.diffuse.output.track&collection=sh.diffuse.output.trackBundle",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
   "token_endpoint_auth_method": "none",

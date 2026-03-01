@@ -190,7 +190,8 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
       this.#storeRev(atproto.rev());
       this.#clearDirty();
-    } finally {
+    } catch (err) {
+      console.warn("Sync failed:", err);
       this.#syncing = false;
     }
   }
